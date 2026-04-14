@@ -1,0 +1,15 @@
+[package]
+name    = "postgres-store"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common   = { path = "../common" }
+sqlx     = { workspace = true }
+tokio    = { workspace = true }
+serde    = { workspace = true }
+uuid     = { workspace = true }
+chrono   = { workspace = true }
+thiserror = { workspace = true }
+anyhow   = { workspace = true }
+tracing  = { workspace = true }
