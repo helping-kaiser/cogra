@@ -1,0 +1,55 @@
+[workspace]
+members = [
+    "crates/api",
+    "crates/graph-engine",
+    "crates/postgres-store",
+    "crates/common",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Web framework + GraphQL
+axum = { version = "0.7" }
+async-graphql = { version = "7" }
+async-graphql-axum = { version = "7" }
+
+# PostgreSQL
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "migrate"] }
+
+# Graph DB — Memgraph via bolt protocol (neo4rs is bolt-compatible)
+neo4rs = { version = "0.8" }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+# Error handling
+thiserror = { version = "2" }
+anyhow = { version = "1" }
+
+# Tracing / logging
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Config
+config = { version = "0.14" }
+
+# Shared primitive types
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

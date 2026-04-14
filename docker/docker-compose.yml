@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gnp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gnp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gnp_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-gnp_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gnp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  memgraph:
+    # memgraph-platform bundles Memgraph + Memgraph Lab (visual graph explorer)
+    image: memgraph/memgraph-platform:latest
+    container_name: gnp_memgraph
+    restart: unless-stopped
+    ports:
+      - "${MEMGRAPH_PORT:-7687}:7687"   # Bolt protocol (used by neo4rs)
+      - "3000:3000"                      # Memgraph Lab UI
+    volumes:
+      - memgraph_data:/var/lib/memgraph
+    # Community edition has no auth by default.
+    # To enable: add --bolt-server-name-for-init and --init-data-directory flags.
+
+volumes:
+  postgres_data:
+  memgraph_data:

@@ -1,0 +1,13 @@
+[package]
+name    = "graph-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common   = { path = "../common" }
+neo4rs   = { workspace = true }
+tokio    = { workspace = true }
+serde    = { workspace = true }
+thiserror = { workspace = true }
+anyhow   = { workspace = true }
+tracing  = { workspace = true }
