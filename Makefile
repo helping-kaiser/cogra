@@ -4,11 +4,28 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help up down reset-db migrate ci lint fmt test build logs dev
+.PHONY: help init up down reset-db migrate api run ci lint fmt test build logs dev
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+init: ## First-time setup: copy .env, check & install dependencies
+	@if [ ! -f .env ]; then \
+		cp .env.example .env; \
+		echo "Created .env from .env.example"; \
+	else \
+		echo ".env already exists, skipping"; \
+	fi
+	@command -v docker >/dev/null 2>&1 || { echo "Error: docker is not installed"; exit 1; }
+	@command -v cargo >/dev/null 2>&1 || { echo "Error: cargo is not installed (install via https://rustup.rs)"; exit 1; }
+	@if ! command -v sqlx >/dev/null 2>&1; then \
+		echo "Installing sqlx-cli..."; \
+		cargo install sqlx-cli --no-default-features --features postgres; \
+	else \
+		echo "sqlx-cli already installed"; \
+	fi
+	@echo "All dependencies ready."
 
 up: ## Start all services (Postgres + Memgraph)
 	$(DOCKER_COMPOSE) up -d
@@ -28,11 +45,16 @@ reset-db: ## Wipe all data volumes and restart fresh
 migrate: ## Run pending Postgres migrations
 	sqlx migrate run --source migrations --database-url $(DATABASE_URL)
 
-dev: up ## Start services and prepare for local development
+api: ## Start the API server
+	$(CARGO) run -p api
+
+dev: up ## Start DBs, run migrations, then start the API
 	@echo "Waiting for Postgres to be ready..."
 	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
 	$(MAKE) migrate
-	@echo "Ready. Run: cargo run -p api"
+	$(MAKE) api
+
+run: init dev ## Full start: init + dev (first-time friendly)
 
 ci: lint test ## Run full CI pipeline locally (lint + test)
 

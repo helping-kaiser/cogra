@@ -67,6 +67,8 @@ make logs         follow docker compose logs
 
 - [Architecture](docs/architecture.md) — system design, data flow, design principles
 - [Data Model](docs/data-model.md) — Postgres schema + graph node/edge definitions
+- [Edge Tensor Model](docs/edge-tensor-model.md) — multi-dimensional directional edges, node types, append-only layers
+- [Feed Ranking](docs/feed-ranking.md) — ranking algorithm for ordering target nodes from a root node's perspective
 - [API Spec](docs/api-spec.md) — GraphQL schema and query examples
 - [Development Guide](docs/development.md) — local setup, tools, workflows
 - [Graph DB Decision Record](docs/graph-db-options.md) — why Memgraph, alternatives considered
