@@ -345,33 +345,13 @@ Jakob -> Post_X:
 
 **Layer count as a signal:** The number of layers on an edge is itself
 meaningful. An edge with 50 layers represents a deep, frequently-revisited
-relationship. An edge with 1 layer is a passing interaction. How exactly to
-use this signal is an open question (see section 9).
+relationship. An edge with 1 layer is a passing interaction. How exactly
+this signal factors into ranking is an open question — see
+[open-questions.md Q1](open-questions.md).
 
 ---
 
-## 9. Open Questions
-
-These are known unknowns that need to be resolved as the project progresses:
-
-1. **Layer count usage**: The number of layers on an edge is a signal, but
-   how does it factor into ranking? Is it a modifier on the dimension values?
-   A separate ranking parameter?
-
-2. **Cross-type dimension comparability**: When the ranking algorithm
-   traverses `User -> User -> Comment -> Post`, it crosses three edge types
-   with different dimension meanings. How exactly are
-   sentiment-toward-a-user and sentiment-toward-a-post combined? The math is
-   uniform (both are floats) but the semantics differ.
-
-3. **Minimum interaction for edge creation**: Does viewing a post for 3
-   seconds create an edge? Does scrolling past it? Where is the line between
-   "implicit signal" and "explicit action"? This ties into the transparency
-   principle — implicit signals feel like surveillance.
-
----
-
-## 10. Relationship to feed ranking
+## 9. Relationship to feed ranking
 
 The [feed ranking algorithm](feed-ranking.md) is a general rule for
 ordering target nodes in any signed, weighted graph from a root node's
@@ -390,6 +370,6 @@ operates on in CoGra:
 
 How the continuous tensor values map into the ranker's signed-edge
 math (sign + weight, product, per-dimension contribution, or
-something else) is not yet pinned down. This is closely related to
-the cross-type dimension comparability question in §9 and will be
-resolved in a follow-up.
+something else) is not yet pinned down. See
+[open-questions.md Q2](open-questions.md) for the full shape of this
+question and the options considered.

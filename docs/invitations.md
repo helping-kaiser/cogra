@@ -34,20 +34,9 @@ Both directions are needed because edges are strictly directional (see
 - The new actor's edge toward the inviter gives the new actor their
   first outbound connection, which the ranking algorithm can walk.
 
-## Default values (OPEN DESIGN QUESTION)
+## Default values
 
 The initial dimension values on the new actor's edge toward the
-inviter are a design decision. Tradeoffs:
-
-- **High positive defaults** (e.g. sentiment +0.8, closeness +0.7) —
-  you presumably like the person who invited you. But this biases the
-  new user's feed heavily toward one person's graph neighborhood for
-  their first days on the platform.
-- **Moderate positive defaults** (e.g. +0.3, +0.3) — softer start,
-  but the new user's feed will be thin until they build more edges.
-- **Neutral defaults** (0.0, 0.0) — no bias but also not much of a
-  foothold. May leave the feed nearly empty.
-
-The new actor can update this edge over time like any other; these are
-only initial values. Choosing them well matters because they shape the
-first week of the new user's experience.
+inviter are an open design decision — they shape the first week of
+the new user's experience. The question and the options considered
+are tracked in [open-questions.md Q6](open-questions.md).
