@@ -143,7 +143,7 @@ CREATE TABLE hashtags (
 The `author_id` columns on `posts`, `comments`, and `chat_messages` are
 **caches** of a fact that lives in the graph. The true author is the actor
 whose incoming edge to the node has the earliest layer 1 timestamp (see
-[Graph Model — Authorship](graph-model.md#7-authorship)). The
+[authorship.md](authorship.md)). The
 Postgres column exists because "who wrote this?" is asked on every render and
 scanning all incoming edges every time would be expensive.
 
