@@ -144,6 +144,14 @@ Junction nodes enable approval-required relationships and role management
 without parallel edges. All three junction types — ChatMember,
 CompanyMember, ItemOwnership — share a common shape.
 
+Junction approval is one application of CoGra's broader governance
+primitive (weighted role-based voting) — see
+[governance.md](governance.md) for the full shape (five components,
+two vote shapes, weight-at-tally-time rule) that junction approval,
+message moderation, and future voting patterns all share. This
+section focuses on how the primitive specifically applies to
+junction relationships.
+
 ### The two-edge approval pattern
 
 A junction relationship is created in two steps:
@@ -164,11 +172,14 @@ needed:
 - Both edges exist → active.
 
 The **approval policy** for each relationship is "N actor edges from
-specific roles required toward the junction node." Open chats have N = 1
-(the joining user); invite-only and request-entry chats have N = 2 (user +
-admin, in either order); governance-heavy joins can require larger N with
-weighted multi-sig (weights derived from role properties on the approving
-actors' own junction nodes).
+specific roles required toward the junction node" — an instance of
+the threshold policy described in
+[governance.md §2.4](governance.md). Open chats have N = 1 (the
+joining user); invite-only and request-entry chats have N = 2 (user +
+admin, in either order); governance-heavy joins can require larger N
+with weighted multi-sig (weights derived from role properties on the
+approving actors' own junction nodes, per
+[governance.md §2.3](governance.md)).
 
 ### Revocation and state transitions
 
