@@ -13,7 +13,7 @@ Every edge in the graph is:
   two edges. A follow with no follow-back is one edge.
 - **Multi-dimensional** — every edge carries exactly **2 dimensions** plus
   **system dimensions**. The meaning of those 2 dimensions depends on the edge
-  type (see section 5).
+  type (see [edges.md](edges.md) for the full catalog).
 - **Append-only** — interactions add layers; they never overwrite. You cannot
   hide that you disliked someone in the past. Your current feelings are the
   top layer, but the full history is preserved. Append-only is a project-wide
@@ -96,7 +96,7 @@ algorithm never needs to branch on edge category.
 
 Created by actor nodes (User, Company) toward any other node. Express
 **opinion and interaction**. The 2 dimensions carry subjective meaning
-(sentiment, relevance, closeness — varies by edge type, see section 5).
+(sentiment, relevance, closeness — varies by edge type, see [edges.md](edges.md)).
 
 ### Structural edges
 
@@ -110,7 +110,7 @@ Why give structural edges the same shape instead of making them different:
   at each hop.
 - Structural edges can carry meaningful weight where the shape calls for
   it. The concrete case today is state-bearing approval-pattern edges on
-  junction nodes — see §6 for how revocation and state transitions are
+  junction nodes — see §5 for how revocation and state transitions are
   encoded in structural edge layers. A pinned comment's `Comment -> Post`
   weight could work similarly.
 
@@ -132,7 +132,7 @@ fact**. The canonical example is approval-required junctions:
 
 These are two different facts, so two edges is correct. In contrast,
 `Comment -> Post` does not need a `Post -> Comment` companion: the reverse
-would carry the same fact and just duplicate storage. See §6 for the full
+would carry the same fact and just duplicate storage. See §5 for the full
 junction approval pattern.
 
 ---
@@ -159,7 +159,7 @@ Edge {
 actor edge, regardless of what the dimension represents. Uniformity is a
 first-class design goal: the ranking algorithm never branches on dimension
 type, and the math stays consistent across every edge in the graph. See
-§7 for how negative values are interpreted when a dimension wouldn't
+§6 for how negative values are interpreted when a dimension wouldn't
 obviously have a negative meaning.
 
 An edge between two nodes is a **stack of layers**. Each interaction appends a
@@ -168,81 +168,7 @@ is always available.
 
 ---
 
-## 5. Complete Edge Catalog
-
-### Actor edges
-
-All actor edges are created by User or Company nodes toward other nodes. The
-2 dimensions are set by the actor.
-
-**User as actor:**
-
-| Edge type | Dimension 1 | Dimension 2 |
-|-----------|-------------|-------------|
-| User -> User | **Sentiment** (love to hate) | **Closeness** (how much we interact / know each other) |
-| User -> Company | **Sentiment** (love to hate) | **Closeness** (how much I engage with this brand) |
-| User -> Post | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-| User -> Comment | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-| User -> Chat | **Sentiment** (like to dislike) | **Relevance** (how important is this chat to me) |
-| User -> ChatMessage | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-| User -> ChatMember | **Sentiment** (approve to reject) | **Relevance** (how important is this membership to me) |
-| User -> CompanyMember | **Sentiment** (approve to reject) | **Relevance** (how important is this membership to me) |
-| User -> ItemOwnership | **Sentiment** (approve to reject) | **Relevance** (how important is this transfer to me) |
-| User -> Item | **Sentiment** (want to avoid) | **Relevance** (how interesting to me) |
-| User -> Hashtag | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-
-**Company as actor:**
-
-| Edge type | Dimension 1 | Dimension 2 |
-|-----------|-------------|-------------|
-| Company -> User | **Sentiment** | **Relevance** (how valuable is this user to the company) |
-| Company -> Company | **Sentiment** | **Relevance** |
-| Company -> Post | **Sentiment** | **Relevance** |
-| Company -> Comment | **Sentiment** | **Relevance** |
-| Company -> Chat | **Sentiment** | **Relevance** |
-| Company -> ChatMessage | **Sentiment** | **Relevance** |
-| Company -> ChatMember | **Sentiment** (approve to reject) | **Relevance** |
-| Company -> CompanyMember | **Sentiment** (approve to reject) | **Relevance** |
-| Company -> ItemOwnership | **Sentiment** (approve to reject) | **Relevance** |
-| Company -> Item | **Sentiment** | **Relevance** (how important is this product) |
-| Company -> Hashtag | **Sentiment** | **Relevance** |
-
-### Structural edges
-
-Structural edges are system-created. Dimensions are `(0.0, 0.0)`.
-
-**Containment / belonging:**
-
-| Edge type | Meaning |
-|-----------|---------|
-| Comment -> Post | This comment is on this post |
-| Comment -> Comment | This comment is a reply to that comment |
-| Comment -> Chat | This comment is on this chat as a whole |
-| Comment -> ChatMessage | This comment is on this specific message |
-| Comment -> Item | This comment is on this item |
-| ChatMessage -> Chat | This message belongs to this chat |
-| ChatMember -> Chat | This membership claims to be about this chat (claim) |
-| CompanyMember -> Company | This membership claims to be about this company (claim) |
-| ItemOwnership -> Item | This ownership claim relates to this item (claim) |
-
-**Approval completion** (paired with the claim edges above — see §6):
-
-| Edge type | Meaning |
-|-----------|---------|
-| Chat -> ChatMember | This chat has accepted this member |
-| Company -> CompanyMember | This company has accepted this member |
-| Item -> ItemOwnership | This item's ownership transfer to this claim is complete |
-
-**Tagging:**
-
-| Edge type | Meaning |
-|-----------|---------|
-| Post -> Hashtag | This post is tagged with this hashtag |
-| Item -> Hashtag | This item is tagged with this hashtag |
-
----
-
-## 6. Junction Node Flows
+## 5. Junction Node Flows
 
 Junction nodes enable approval-required relationships and role management
 without parallel edges. All three junction types — ChatMember,
@@ -352,7 +278,7 @@ ItemOwnership nodes per item.
 
 ---
 
-## 7. Dimension Semantics
+## 6. Dimension Semantics
 
 ### Why the dimensions differ per edge type
 
@@ -400,7 +326,7 @@ The two dimensions are independent. Examples:
 
 ---
 
-## 8. Directionality: Inbound Edges Don't Affect Your Graph
+## 7. Directionality: Inbound Edges Don't Affect Your Graph
 
 This is a critical design decision for anti-spam and anti-manipulation:
 
@@ -425,7 +351,7 @@ Two independent edges. Removing one does not remove the other.
 
 ---
 
-## 9. Append-Only History (edges)
+## 8. Append-Only History (edges)
 
 This section covers the edge-specific shape of append-only history.
 For the project-wide principle — including node properties and
@@ -450,11 +376,11 @@ Jakob -> Post_X:
 **Layer count as a signal:** The number of layers on an edge is itself
 meaningful. An edge with 50 layers represents a deep, frequently-revisited
 relationship. An edge with 1 layer is a passing interaction. How exactly to
-use this signal is an open question (see section 10).
+use this signal is an open question (see section 9).
 
 ---
 
-## 10. Open Questions
+## 9. Open Questions
 
 These are known unknowns that need to be resolved as the project progresses:
 
@@ -477,7 +403,7 @@ These are known unknowns that need to be resolved as the project progresses:
 
 ---
 
-## 11. Relationship to Feed Ranking
+## 10. Relationship to Feed Ranking
 
 The [feed ranking algorithm](feed-ranking.md) currently operates on simple
 signed (+/-) edges. The tensor model described here is the next evolution:
