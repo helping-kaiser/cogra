@@ -2,5 +2,5 @@
 // Holds connection pools for Memgraph (graph-engine) and Postgres (postgres-store).
 
 fn main() {
-    println!("graph_and_pull api — not yet implemented");
+    println!("cogra api — not yet implemented");
 }

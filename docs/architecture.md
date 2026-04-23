@@ -2,7 +2,7 @@
 
 ## Overview
 
-graph_and_pull is a spike for **Peer Network** — a social media platform where
+CoGra is a spike for **Peer Network** — a social media platform where
 feed ranking is driven entirely by the social graph and explicit user
 interactions, not AI algorithms.
 

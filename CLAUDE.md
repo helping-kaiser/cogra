@@ -12,7 +12,7 @@ that replaces AI-driven content algorithms with a transparent, graph-driven,
 user-controlled system. The current Peer Network platform works like Instagram.
 This repo explores the architecture for its next evolution: the graph network.
 
-Working name: **graph_and_pull** (candidates: CoGra = Content Graph).
+Project name: **CoGra** (Content Graph).
 
 ### Core Principles
 
