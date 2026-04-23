@@ -109,7 +109,7 @@ decaying).
 
 ## Q3 — Minimum interaction required to create an edge
 
-**Where it shows up:** [graph-model.md §9](graph-model.md) (referenced from the transparency principle)
+**Where it shows up:** [graph-model.md §1](graph-model.md) (transparency principle)
 **Status:** open
 
 ### Context

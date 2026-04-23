@@ -192,9 +192,9 @@ Even open chats can have roles. Joining may be free, but **other roles
 ChatMember junction node (see
 [graph-model.md §2](graph-model.md)). An admin's
 disavowal may weigh more than a regular member's. How exactly
-admin/mod powers compose with community voting is an
-implementation-level design concern (thresholds, veto, tie-breaking)
-that sits on top of the primitives described here.
+admin/mod powers compose with community voting (thresholds, veto,
+tie-breaking) is tracked in
+[open-questions.md Q8](open-questions.md).
 
 ---
 
