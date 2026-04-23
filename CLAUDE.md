@@ -73,6 +73,8 @@ Read these before making changes to data models or algorithms:
   root node's perspective.
 - [Chats](docs/chats.md) — chats/messages as first-class public content;
   privacy via E2EE of content only.
+- [Authorship](docs/authorship.md) — how authorship is derived from the
+  earliest incoming edge.
 - [Data Model](docs/data-model.md) — Postgres schema + graph definitions.
 
 ---

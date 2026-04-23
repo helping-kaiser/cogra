@@ -125,7 +125,7 @@ fact**. The canonical example is approval-required junctions:
 
 These are two different facts, so two edges is correct. In contrast,
 `Comment -> Post` does not need a `Post -> Comment` companion: the reverse
-would carry the same fact and just duplicate storage. See §8 for the full
+would carry the same fact and just duplicate storage. See §7 for the full
 junction approval pattern.
 
 ---
@@ -152,7 +152,7 @@ Edge {
 actor edge, regardless of what the dimension represents. Uniformity is a
 first-class design goal: the ranking algorithm never branches on dimension
 type, and the math stays consistent across every edge in the graph. See
-§9 for how negative values are interpreted when a dimension wouldn't
+§8 for how negative values are interpreted when a dimension wouldn't
 obviously have a negative meaning.
 
 An edge between two nodes is a **stack of layers**. Each interaction appends a
@@ -218,7 +218,7 @@ Structural edges are system-created. Dimensions are `(0.0, 0.0)`.
 | CompanyMember -> Company | This membership claims to be about this company (claim) |
 | ItemOwnership -> Item | This ownership claim relates to this item (claim) |
 
-**Approval completion** (paired with the claim edges above — see §8):
+**Approval completion** (paired with the claim edges above — see §7):
 
 | Edge type | Meaning |
 |-----------|---------|
@@ -256,36 +256,7 @@ other.
 
 ---
 
-## 7. Authorship
-
-There is no special authorship mechanism. Authorship is a **derived fact**:
-the author of a node is the actor whose incoming edge has the earliest
-layer 1 timestamp. A node cannot exist without someone creating it, so the
-very first edge ever created toward a node identifies the author.
-
-The dimension values on the author's edge are just normal opinion values —
-the author's initial feelings about their own content (typically high positive
-sentiment and relevance).
-
-**Example:** Jakob creates a post. His actor edge `Jakob -> Post_X` is
-layer 1, with the earliest timestamp of any incoming edge on Post_X. That
-makes Jakob the author. Later, Alice likes the same post — her edge
-`Alice -> Post_X` also has a layer 1, but its timestamp is later than
-Jakob's. The author is always the earliest.
-
-**Caching:** Looking up "who authored this?" by scanning all incoming layer 1
-timestamps on every view would be expensive. The author ID should be cached:
-- **On the node itself** as a property (`author_id`) — keeps the info in the
-  graph for traversal queries.
-- **In Postgres metadata** (e.g. `posts.author_id`) — for display queries
-  that don't need the graph.
-
-Both are derived caches. The graph (earliest incoming layer 1) is the source
-of truth.
-
----
-
-## 8. Junction Node Flows
+## 7. Junction Node Flows
 
 Junction nodes enable approval-required relationships and role management
 without parallel edges. All three junction types — ChatMember,
@@ -358,13 +329,14 @@ No one can take ownership without the current owner's explicit approval.
 Earlier ItemOwnership nodes still have their `Item -> ItemOwnership` edges
 from when they were current — the **current** owner is identified by the
 most recent `Item -> ItemOwnership` approval edge (analogous to how
-authorship is derived from the earliest incoming edge in §7). See §12 for
-the open question on how superseded states — and departures like leaving a
-chat or company — are encoded under append-only.
+authorship is derived from the earliest incoming edge — see
+[authorship.md](authorship.md)). See §11 for the open question on how
+superseded states — and departures like leaving a chat or company — are
+encoded under append-only.
 
 ---
 
-## 9. Dimension Semantics
+## 8. Dimension Semantics
 
 ### Why the dimensions differ per edge type
 
@@ -412,7 +384,7 @@ The two dimensions are independent. Examples:
 
 ---
 
-## 10. Directionality: Inbound Edges Don't Affect Your Graph
+## 9. Directionality: Inbound Edges Don't Affect Your Graph
 
 This is a critical design decision for anti-spam and anti-manipulation:
 
@@ -437,7 +409,7 @@ Two independent edges. Removing one does not remove the other.
 
 ---
 
-## 11. Append-Only History
+## 10. Append-Only History
 
 Each edge is not a single value but a stack of layers:
 
@@ -458,11 +430,11 @@ Jakob -> Post_X:
 **Layer count as a signal:** The number of layers on an edge is itself
 meaningful. An edge with 50 layers represents a deep, frequently-revisited
 relationship. An edge with 1 layer is a passing interaction. How exactly to
-use this signal is an open question (see section 12).
+use this signal is an open question (see section 11).
 
 ---
 
-## 12. Open Questions
+## 11. Open Questions
 
 These are known unknowns that need to be resolved as the project progresses:
 
@@ -504,7 +476,7 @@ These are known unknowns that need to be resolved as the project progresses:
 
 ---
 
-## 13. Relationship to Feed Ranking
+## 12. Relationship to Feed Ranking
 
 The [feed ranking algorithm](feed-ranking.md) currently operates on simple
 signed (+/-) edges. The tensor model described here is the next evolution:
