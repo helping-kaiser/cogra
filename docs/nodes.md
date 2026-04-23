@@ -97,9 +97,7 @@ and media, Chat descriptions all live in Postgres — not on the graph.
 
 Junction nodes represent relationships that have **roles**, need
 **approval flows** (multi-sig), and can themselves be interacted
-with (liked, voted on, etc.). They follow the same pattern as
-ChatMessage (which is a junction between a Chat and the content
-within it).
+with (liked, voted on, etc.).
 
 | Node type | Connects | Why it's a node |
 |-----------|----------|-----------------|
