@@ -319,36 +319,9 @@ actors' own junction nodes).
 
 ### Chat Membership (ChatMember)
 
-Three chat types, differing only in the approval policy:
-
-**Open chat** — no approval required.
-1. User creates an actor edge toward a new **ChatMember** node.
-2. System creates `ChatMember -> Chat` (claim).
-3. Policy satisfied immediately; system creates `Chat -> ChatMember`
-   (approval).
-4. User is an active member.
-
-**Invite-only chat** — admin invites, user accepts.
-1. Admin (or other member with invite rights) creates an actor edge toward
-   a new **ChatMember** node for the invitee.
-2. System creates `ChatMember -> Chat` (claim, pending).
-3. Invitee creates an actor edge toward the same ChatMember node
-   (accepting).
-4. Policy satisfied (both required edges exist); system creates
-   `Chat -> ChatMember` (approval).
-5. User is an active member.
-
-**Request-entry chat** — user requests, admin approves.
-1. User creates an actor edge toward a new **ChatMember** node (request).
-2. System creates `ChatMember -> Chat` (claim, pending).
-3. An admin creates an actor edge toward the same ChatMember node
-   (approving).
-4. Policy satisfied; system creates `Chat -> ChatMember` (approval).
-5. User is an active member.
-
-The invite-only and request-entry flows are topologically identical — the
-only difference is which party initiates. Multi-sig variants (e.g. two
-admins required) are just a higher N in the approval policy.
+Chat-specific flows (open / invite-only / request-entry) are explained
+in [docs/chats.md](chats.md). They are all variants of the two-edge
+approval pattern described above.
 
 ### Company Membership (CompanyMember)
 
@@ -564,29 +537,23 @@ These are known unknowns that need to be resolved as the project progresses:
    "implicit signal" and "explicit action"? This ties into the transparency
    principle — implicit signals feel like surveillance.
 
-6. **Chat and ChatMessage ranking**: How do chats fit into the feed? Are they
-   ranked alongside posts and comments, or do they have their own separate
-   ranking context? A chat is a persistent container; a ChatMessage is
-   ephemeral-feeling. The ranking dynamics likely differ from public content.
-
-7. **Company vs User distinction**: Companies can do most things users can
+6. **Company vs User distinction**: Companies can do most things users can
    (author posts, own items, connect to hashtags). What can't they do? Can a
    Company follow a User? Can Companies have sentiment toward each other? The
    boundary between Company and User node types needs clarification —
    especially for the economic model where companies are ad-revenue sources.
 
-8. **State transitions on junction relationships under append-only**: How
+7. **State transitions on junction relationships under append-only**: How
    are departures encoded — a member leaving a chat, getting kicked from a
    company, an ItemOwnership being superseded by the next transfer? The
    `Parent -> Junction` approval edge cannot be deleted (append-only), so
-   "no longer active" needs a different representation. Candidates: a new
-   layer on the approval edge marking revocation (requires structural edges
-   to carry state in layers, which they currently don't); a dedicated
-   "revoked" actor edge from admin/system; a separate junction-node
-   property; deriving "current" purely from timestamps (works for
-   sequential cases like ItemOwnership but not for leaving a chat).
+   "no longer active" needs a different representation. Leading proposal:
+   encode state transitions as new layers on the structural edges themselves
+   (see [chats.md §8](chats.md) for the membership-specific version). Formal
+   resolution should apply uniformly to ChatMember, CompanyMember, and
+   ItemOwnership.
 
-9. **Invitation default values**: What sentiment/closeness values should the
+8. **Invitation default values**: What sentiment/closeness values should the
    auto-created edge from the new actor toward the inviter have? Too high
    and it biases the new user's feed heavily toward one person. Too low and
    the new user has a weak starting position in the graph.

@@ -71,6 +71,8 @@ Read these before making changes to data models or algorithms:
   edges are 2-dimensional directional tensors with append-only layers.
 - [Feed Ranking](docs/feed-ranking.md) — how target nodes are ranked from a
   root node's perspective.
+- [Chats](docs/chats.md) — chats/messages as first-class public content;
+  privacy via E2EE of content only.
 - [Data Model](docs/data-model.md) — Postgres schema + graph definitions.
 
 ---
