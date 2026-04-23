@@ -75,6 +75,8 @@ Read these before making changes to data models or algorithms:
   privacy via E2EE of content only.
 - [Authorship](docs/authorship.md) — how authorship is derived from the
   earliest incoming edge.
+- [Invitations](docs/invitations.md) — the two-edge onboarding pattern
+  for new actors.
 - [Data Model](docs/data-model.md) — Postgres schema + graph definitions.
 
 ---

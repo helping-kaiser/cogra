@@ -125,7 +125,7 @@ fact**. The canonical example is approval-required junctions:
 
 These are two different facts, so two edges is correct. In contrast,
 `Comment -> Post` does not need a `Post -> Comment` companion: the reverse
-would carry the same fact and just duplicate storage. See §7 for the full
+would carry the same fact and just duplicate storage. See §6 for the full
 junction approval pattern.
 
 ---
@@ -152,7 +152,7 @@ Edge {
 actor edge, regardless of what the dimension represents. Uniformity is a
 first-class design goal: the ranking algorithm never branches on dimension
 type, and the math stays consistent across every edge in the graph. See
-§8 for how negative values are interpreted when a dimension wouldn't
+§7 for how negative values are interpreted when a dimension wouldn't
 obviously have a negative meaning.
 
 An edge between two nodes is a **stack of layers**. Each interaction appends a
@@ -218,7 +218,7 @@ Structural edges are system-created. Dimensions are `(0.0, 0.0)`.
 | CompanyMember -> Company | This membership claims to be about this company (claim) |
 | ItemOwnership -> Item | This ownership claim relates to this item (claim) |
 
-**Approval completion** (paired with the claim edges above — see §7):
+**Approval completion** (paired with the claim edges above — see §6):
 
 | Edge type | Meaning |
 |-----------|---------|
@@ -235,28 +235,7 @@ Structural edges are system-created. Dimensions are `(0.0, 0.0)`.
 
 ---
 
-## 6. Invitations
-
-When an actor (User or Company) invites a new actor to the platform, **two
-actor edges** are created:
-
-```
-Inviter -[sentiment: +X, closeness: +Y]-> New Actor   (layer 1: "I invited them")
-New Actor -[sentiment: +X, closeness: +Y]-> Inviter   (layer 1: "they invited me")
-```
-
-Both are normal actor edges. This ensures the new actor has **at least one
-outgoing edge** from the moment they join — without it, they would have zero
-hops to anywhere in the graph and no way to calculate a feed.
-
-The initial dimension values for the new actor's edge toward the inviter are a
-design decision (likely moderate positive defaults — you presumably like the
-person who invited you). The new actor can update this edge over time like any
-other.
-
----
-
-## 7. Junction Node Flows
+## 6. Junction Node Flows
 
 Junction nodes enable approval-required relationships and role management
 without parallel edges. All three junction types — ChatMember,
@@ -330,13 +309,13 @@ Earlier ItemOwnership nodes still have their `Item -> ItemOwnership` edges
 from when they were current — the **current** owner is identified by the
 most recent `Item -> ItemOwnership` approval edge (analogous to how
 authorship is derived from the earliest incoming edge — see
-[authorship.md](authorship.md)). See §11 for the open question on how
+[authorship.md](authorship.md)). See §10 for the open question on how
 superseded states — and departures like leaving a chat or company — are
 encoded under append-only.
 
 ---
 
-## 8. Dimension Semantics
+## 7. Dimension Semantics
 
 ### Why the dimensions differ per edge type
 
@@ -384,7 +363,7 @@ The two dimensions are independent. Examples:
 
 ---
 
-## 9. Directionality: Inbound Edges Don't Affect Your Graph
+## 8. Directionality: Inbound Edges Don't Affect Your Graph
 
 This is a critical design decision for anti-spam and anti-manipulation:
 
@@ -409,7 +388,7 @@ Two independent edges. Removing one does not remove the other.
 
 ---
 
-## 10. Append-Only History
+## 9. Append-Only History
 
 Each edge is not a single value but a stack of layers:
 
@@ -430,11 +409,11 @@ Jakob -> Post_X:
 **Layer count as a signal:** The number of layers on an edge is itself
 meaningful. An edge with 50 layers represents a deep, frequently-revisited
 relationship. An edge with 1 layer is a passing interaction. How exactly to
-use this signal is an open question (see section 11).
+use this signal is an open question (see section 10).
 
 ---
 
-## 11. Open Questions
+## 10. Open Questions
 
 These are known unknowns that need to be resolved as the project progresses:
 
@@ -469,14 +448,10 @@ These are known unknowns that need to be resolved as the project progresses:
    resolution should apply uniformly to ChatMember, CompanyMember, and
    ItemOwnership.
 
-6. **Invitation default values**: What sentiment/closeness values should the
-   auto-created edge from the new actor toward the inviter have? Too high
-   and it biases the new user's feed heavily toward one person. Too low and
-   the new user has a weak starting position in the graph.
 
 ---
 
-## 12. Relationship to Feed Ranking
+## 11. Relationship to Feed Ranking
 
 The [feed ranking algorithm](feed-ranking.md) currently operates on simple
 signed (+/-) edges. The tensor model described here is the next evolution:

@@ -87,6 +87,7 @@ make logs         follow docker compose logs
 - [Feed Ranking](docs/feed-ranking.md) — ranking algorithm for ordering target nodes from a root node's perspective
 - [Chats](docs/chats.md) — chats and messages as first-class public content; privacy via end-to-end encryption of content only
 - [Authorship](docs/authorship.md) — how authorship is derived from the earliest incoming edge
+- [Invitations](docs/invitations.md) — the two-edge onboarding pattern for new actors
 - [Architecture](docs/architecture.md) — system design, dual-database split, data flow
 - [Data Model](docs/data-model.md) — PostgreSQL schema (display metadata)
 - [Graph DB Decision Record](docs/graph-db-options.md) — why Memgraph, alternatives considered
