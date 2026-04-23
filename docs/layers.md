@@ -174,10 +174,12 @@ exception exists because append-only alone cannot solve "this layer
 
 ### Out of scope
 
-- **Who authorizes a redaction, and how**: a policy question
-  (thresholds, legal process, appeal rights). Belongs in a future
-  policy doc.
-- **Retention / pruning for storage cost**: at some point storing
-  infinite history has cost. Whether to compact old layers, and how,
-  is an implementation optimization concern separate from the
-  principle.
+Two questions are deliberately not answered here and are tracked
+separately:
+
+- **Who authorizes a redaction, and through what process** — a policy
+  question (thresholds, legal process, appeal rights). See
+  [open-questions.md Q9](open-questions.md).
+- **Retention / pruning for storage cost** — an implementation
+  optimization concern separate from the principle. See
+  [open-questions.md Q10](open-questions.md).

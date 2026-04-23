@@ -150,9 +150,10 @@ scanning all incoming edges every time would be expensive.
 ### posts.author_id does not use a foreign key
 
 `posts.author_id` can reference either `users.id` or `companies.id`. A
-standard FK constraint can't point to two tables. Options for enforcement
-(check constraint, polymorphic FK, or application-level validation) are a
-design decision for implementation time.
+standard FK constraint can't point to two tables, so some enforcement
+strategy is needed. The options (check constraint, polymorphic FK, or
+application-level validation) are tracked in
+[open-questions.md Q7](open-questions.md).
 
 ---
 
