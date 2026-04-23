@@ -38,7 +38,7 @@ algorithm that needs it (e.g. detecting opinion shifts or weighting
 by interaction frequency).
 
 See [graph-model.md §4](graph-model.md) for the edge structure and
-[graph-model.md §9](graph-model.md) for edge-specific history
+[graph-model.md §8](graph-model.md) for edge-specific history
 details.
 
 ---

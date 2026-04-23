@@ -35,7 +35,7 @@ A chat's behavior is defined by two independent choices:
 
 ### Join policy — who can become a member
 
-Specified in [graph-model.md §6](graph-model.md) as the
+Specified in [graph-model.md §5](graph-model.md) as the
 two-edge approval pattern. Four shapes:
 
 - **Open** — anyone joins, no approval required.
@@ -173,7 +173,7 @@ property without changing the graph model.
 
 Open public chats face an obvious question: without an admin, who
 stops a bad message from dominating? CoGra's answer reuses the
-no-push principle from [graph-model.md §8](graph-model.md):
+no-push principle from [graph-model.md §7](graph-model.md):
 
 **The chat moves away from a message. It never moves the message
 away.**
@@ -204,7 +204,7 @@ that sits on top of the primitives described here.
 
 ## 7. Join flows
 
-*(This content was moved from [graph-model.md §6](graph-model.md).
+*(This content was moved from [graph-model.md §5](graph-model.md).
 The generic two-edge approval pattern these flows instantiate remains
 there as a graph-level primitive.)*
 
@@ -251,7 +251,7 @@ Membership is encoded in the two-edge approval pattern:
 Append-only means the existing approval edge cannot be removed once
 created. State transitions are instead **encoded as new layers on the
 structural edges themselves** — the formal rule is in
-[graph-model.md §6](graph-model.md) ("Revocation and
+[graph-model.md §5](graph-model.md) ("Revocation and
 state transitions"). For a chat membership:
 
 - **Voluntary leave.** The user adds a new layer on their actor edge
