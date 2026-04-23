@@ -96,8 +96,17 @@ Read these before making changes to data models or algorithms:
 
 - **Never introduce AI-based ranking or recommendations.** The graph and its
   weights are the only ranking mechanism.
-- **Never allow edge deletion.** Edges are append-only. New layers on top,
-  never remove or overwrite.
+- **Never delete graph structure.** Nodes, edges, and layer stacks are never
+  removed. State transitions are always layered, never destructive. The only
+  permitted "deletion" on the graph is **in-place redaction** of a specific
+  node-property layer's contents when the content itself is illegal — the
+  layer stays, its value is replaced with a visible `[redacted — ...]`
+  marker. Postgres-side display content follows the same spirit: deletion
+  is a narrow exception for illegal material, and the fact of deletion
+  always leaves a visible trace. See [docs/layers.md](docs/layers.md) §5
+  for the full policy.
+- **Never erase silently.** Any redaction or takedown — graph-side or
+  Postgres-side — must leave a visible mark. No silent removal of history.
 - **Never let inbound edges affect a user's feed.** Only outgoing edges from
   the viewing user shape their feed.
 - **Never break edge tensor uniformity.** All edges (actor and structural)
