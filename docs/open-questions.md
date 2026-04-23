@@ -14,6 +14,32 @@ a design question, it's a rewriting task, so it's not listed here.)
 
 ---
 
+## Resolution order
+
+The questions below are listed in **topic** order (roughly: ranking
+primitives → onboarding → data model → chats → policy). The
+**resolution** order is different — some questions genuinely can't be
+answered until others are. Work them in roughly the order below;
+within a phase, order is flexible.
+
+| Phase | # | Question | Why here |
+|:---:|:---:|:---:|---|
+| 1. Independent quick wins | 1 | **Q7** | Pure Postgres implementation call; independent of everything else. |
+| | 2 | **Q8** | Self-contained to chats; independent of ranking math. |
+| 2. Principle-driven | 3 | **Q3** | Principle-driven (transparency). Gates Q5 — the likely answer ("only explicit actions create edges") rules out Q5's implicit-view-edge options. |
+| 3. Ranking foundation | 4 | **Q2** | The keystone. Every downstream ranking question needs the primitive operation defined (what a float edge value *means* to the ranker). |
+| | 5 | **Q6** | Depends on Q2: "good" default values on invitation edges only mean something once the ranking math gives them meaning. |
+| | 6 | **Q4** | Now that ranking primitives exist, decay can compose with `R/h/i/j/k`. |
+| | 7 | **Q1** | Now that primitives *and* decay are settled, layer count finds its place (modifier? separate parameter? folded into `i`?). |
+| 4. Build on foundations | 8 | **Q5** | Gated by Q3 (what signals are allowed) and informed by Q4 (decay may absorb part of "seen"). |
+| 5. Scale concerns | 9 | **Q10** | Gated by Q1 — compaction has to preserve (or explicitly degrade) the layer-count signal. Only pressing at scale. |
+| 6. Policy, externally gated | 10 | **Q9** | Independent of technical work and independent of what blocks technical work. Needs legal + decentralization-roadmap input; don't let it gate anything else. |
+
+As questions resolve, their blocks disappear from below. This table
+stays until all ten are closed.
+
+---
+
 ## Q1 — Layer count as a ranking signal
 
 **Where it shows up:** [graph-model.md §8](graph-model.md) (append-only history)
