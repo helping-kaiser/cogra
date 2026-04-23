@@ -35,7 +35,7 @@ A chat's behavior is defined by two independent choices:
 
 ### Join policy — who can become a member
 
-Specified in [edge-tensor-model.md §7](edge-tensor-model.md) as the
+Specified in [edge-tensor-model.md §6](edge-tensor-model.md) as the
 two-edge approval pattern. Four shapes:
 
 - **Open** — anyone joins, no approval required.
@@ -173,7 +173,7 @@ property without changing the graph model.
 
 Open public chats face an obvious question: without an admin, who
 stops a bad message from dominating? CoGra's answer reuses the
-no-push principle from [edge-tensor-model.md §9](edge-tensor-model.md):
+no-push principle from [edge-tensor-model.md §8](edge-tensor-model.md):
 
 **The chat moves away from a message. It never moves the message
 away.**
@@ -204,7 +204,7 @@ that sits on top of the primitives described here.
 
 ## 7. Join flows
 
-*(This content was moved from [edge-tensor-model.md §7](edge-tensor-model.md).
+*(This content was moved from [edge-tensor-model.md §6](edge-tensor-model.md).
 The generic two-edge approval pattern these flows instantiate remains
 there as a graph-level primitive.)*
 
@@ -250,7 +250,7 @@ Membership is encoded in the two-edge approval pattern:
 
 Append-only means the existing approval edge cannot be removed once
 created. The leading proposal — pending formal resolution of
-[edge-tensor-model.md §11 Q#5](edge-tensor-model.md) — is to **encode
+[edge-tensor-model.md §10 Q#5](edge-tensor-model.md) — is to **encode
 state transitions as new layers on the structural edges themselves**:
 
 - **Voluntary leave.** The user adds a new layer on their actor edge
