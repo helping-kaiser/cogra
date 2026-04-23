@@ -30,9 +30,12 @@ These are non-negotiable. Every decision must be evaluated against them:
 2. **All edges are directional.** Nothing can push onto you. Inbound edges
    from others never affect your feed. Only your outgoing edges shape what you
    see.
-3. **Append-only edges.** Edge history is immutable. You cannot delete or
-   overwrite past interactions. New layers are added on top. Transparency and
-   auditability over convenience.
+3. **Append-only on the graph.** Graph state (edges and node properties) is
+   immutable — you cannot delete or overwrite past interactions or values.
+   New layers are added on top. The principle extends to Postgres-side
+   display content, which uses versioned rows rather than overwrites.
+   Transparency and auditability over convenience. See
+   [docs/layers.md](docs/layers.md) for the full rule.
 4. **Fair economics.** Ad revenue distributes across the economic landscape of
    the graph. Bot clusters earn nothing because real users never point toward
    them. Pull marketing, not push marketing.
@@ -69,6 +72,8 @@ Read these before making changes to data models or algorithms:
 
 - [Graph Model](docs/graph-model.md) — the edge/node system. All
   edges are 2-dimensional directional tensors with append-only layers.
+- [Layers](docs/layers.md) — the append-only principle applied to edges,
+  node properties, and Postgres-side display content.
 - [Feed Ranking](docs/feed-ranking.md) — how target nodes are ranked from a
   root node's perspective.
 - [Chats](docs/chats.md) — chats/messages as first-class public content;
