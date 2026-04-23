@@ -84,6 +84,7 @@ make logs         follow docker compose logs
 ### Design
 
 - [Graph Model](docs/graph-model.md) — the core: node types, multi-dimensional directional edges, append-only layers, junction nodes
+- [Layers](docs/layers.md) — append-only principle across edges, node properties, and Postgres-side display content
 - [Feed Ranking](docs/feed-ranking.md) — ranking algorithm for ordering target nodes from a root node's perspective
 - [Chats](docs/chats.md) — chats and messages as first-class public content; privacy via end-to-end encryption of content only
 - [Authorship](docs/authorship.md) — how authorship is derived from the earliest incoming edge

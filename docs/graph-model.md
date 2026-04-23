@@ -16,7 +16,9 @@ Every edge in the graph is:
   type (see section 5).
 - **Append-only** — interactions add layers; they never overwrite. You cannot
   hide that you disliked someone in the past. Your current feelings are the
-  top layer, but the full history is preserved.
+  top layer, but the full history is preserved. Append-only is a project-wide
+  rule that extends beyond edges to node properties and Postgres-side display
+  content — see [layers.md](layers.md) for the general principle.
 
 And the graph itself is:
 - **Fully transparent** — every node and every edge in the graph is visible
@@ -423,7 +425,11 @@ Two independent edges. Removing one does not remove the other.
 
 ---
 
-## 9. Append-Only History
+## 9. Append-Only History (edges)
+
+This section covers the edge-specific shape of append-only history.
+For the project-wide principle — including node properties and
+Postgres-side display content — see [layers.md](layers.md).
 
 Each edge is not a single value but a stack of layers:
 
