@@ -16,7 +16,7 @@ New Actor -[sentiment: +X, closeness: +Y]-> Inviter    (layer 1: "they invited m
 ```
 
 Both are normal actor edges (see
-[graph-model.md §5](graph-model.md) for the edge catalog).
+[edges.md](edges.md) for the edge catalog).
 Neither is special-cased in the graph model.
 
 ## Why two edges

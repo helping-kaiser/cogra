@@ -36,7 +36,7 @@ Every company has, or at some point had, at least one
 active members** is a company that has gone out of business — the
 history is preserved (members come and go via state transitions on
 the structural edges, per
-[graph-model.md §6](graph-model.md)), but no one
+[graph-model.md §5](graph-model.md)), but no one
 currently acts on the company's behalf.
 
 ## Membership: CompanyMember
@@ -63,7 +63,7 @@ edge dimensions — see
 ## Approval flow
 
 CompanyMember uses the **two-edge approval pattern** described in
-[graph-model.md §6](graph-model.md):
+[graph-model.md §5](graph-model.md):
 
 1. Actor (User or Company) creates an actor edge toward a new
    **CompanyMember** node.
@@ -86,7 +86,7 @@ properties on the approving actors' own CompanyMember nodes.
 Departures follow the general state-transition rule for junction
 approval pairs — new layers on the structural edges encode the flip,
 and the relationship is active iff both top layers have `dim1 > 0`.
-See [graph-model.md §6](graph-model.md) for the formal
+See [graph-model.md §5](graph-model.md) for the formal
 rule, and [chats.md §8](chats.md) for the chat-side version of the
 same mechanism applied to ChatMember. For CompanyMember: a member
 voluntarily leaving adds a negative layer to their actor edge and the
