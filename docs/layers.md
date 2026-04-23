@@ -117,8 +117,67 @@ here: Postgres display content is append-only too.
 
 ## 5. Deletion policy
 
-Pointer — see [§5 Deletion policy](#5-deletion-policy) once the
-separate deletion-policy change lands. Until then: the default rule
-is append-only at all three levels (graph structure, node property
-layer contents, Postgres display content). Exceptions for illegal
-content are addressed in the follow-up commit.
+Append-only is the norm, but not absolute everywhere. Three tiers,
+each with its own rule:
+
+### Graph structure is never deleted
+
+Nodes, edges, and the layer stacks themselves are **never removed**.
+No node deletion, no edge deletion, no layer removal, ever. This is
+absolute. The graph's job is to be the transparent auditable record;
+erasing from it would defeat the whole point.
+
+### Layer contents on node properties — redactable for illegal content only
+
+The contents of a specific layer on a node property can be redacted
+**in place** when the content itself is illegal (an illegal username,
+an illegal chat title, etc.). Redaction replaces the stored value
+with a marker like `[redacted — illegal content, removed at T=X]`;
+the layer's timestamp, layer number, and position in the stack are
+preserved. The fact that a layer existed at that time, and that
+something there was redacted, stays visible.
+
+Example — Alice's username history after Layer 2 is taken down:
+
+```
+User_Alice.username:
+  Layer 1 (T=0):  "alice"
+  Layer 2 (T=5):  "[redacted — illegal content, removed at T=11]"
+  Layer 3 (T=10): "alice_the_dev"
+```
+
+The node itself is untouched. Other property layer stacks are
+untouched. Only the offending layer's content is replaced.
+
+### Postgres / media display content — deletable for illegal content only
+
+Display content (message bodies, post text, profile text, images,
+videos) can be deleted from Postgres or media servers in the same
+narrow exception: illegal material, court-ordered takedowns, legally
+mandated removals. The deletion still leaves a visible trace — a
+tombstone version row or equivalent marker — so the history shows
+that content existed and was removed. Implementation specifics
+belong in [data-model.md](data-model.md).
+
+### The operating principle
+
+**No silent deletion, ever.** Whether a takedown happens via
+in-place layer redaction or via Postgres version tombstones, the
+fact of the deletion is recorded. You can always see that a change
+happened, even when the illegal content itself is gone.
+
+The hope is that the community's graph-level mechanisms (voting to
+move away from messages, down-weighting, social feedback) handle
+most bad content without ever needing the deletion exception. The
+exception exists because append-only alone cannot solve "this layer
+4 content is still illegal and still findable."
+
+### Out of scope
+
+- **Who authorizes a redaction, and how**: a policy question
+  (thresholds, legal process, appeal rights). Belongs in a future
+  policy doc.
+- **Retention / pruning for storage cost**: at some point storing
+  infinite history has cost. Whether to compact old layers, and how,
+  is an implementation optimization concern separate from the
+  principle.
