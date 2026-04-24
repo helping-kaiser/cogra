@@ -41,8 +41,33 @@ What's being decided. Always a graph object whose state can change:
 - A junction relationship (e.g. a ChatMember approval).
 - A structural edge's state-bearing dimension (e.g. a chat's stance
   toward a message).
-- A node property (e.g. a chat's own `disavowal_threshold` — yes,
-  governance of governance is in scope).
+- A node property (e.g. a chat's own `disavowal_threshold`) —
+  governance of governance is in scope.
+
+#### How subjects are addressed
+
+A vote edge needs a node endpoint — edges can't point at edges or
+at properties. Each subject type has a natural node to address:
+
+- **Junction relationship** — the junction IS a node. Votes point
+  directly at it.
+- **Structural edge state** — the edge's target is a node. Votes
+  point at that target; when the tally crosses threshold, the
+  system writes a new state layer on the edge. The edge itself is
+  never the target of a vote.
+- **Node property** — a **Proposal** node (see
+  [nodes.md §2](nodes.md)) is created as the subject. It carries
+  `target_node_id`, `target_property`, and `proposed_value`. Votes
+  point at the Proposal; when the tally crosses threshold, a
+  cascade (see [graph-model.md §5](graph-model.md)) writes a new
+  layer on the target property with `proposed_value`. Multiple
+  Proposals targeting the same property coexist; each passes or
+  fails on its own votes. Reverting a passed change requires a
+  counter-Proposal — consistent with §6.
+
+Whether the vote edge uses Shape A or Shape B (§3) is a separate,
+per-application choice about whether personal sentiment stays
+coupled to the vote. It is not determined by the subject type.
 
 ### 2.2 Eligibility
 
@@ -75,11 +100,19 @@ What tally triggers the outcome. Possible shapes:
 - Simple count (N or more affirmative votes).
 - Percentage of eligible voting weight.
 - Supermajority for irreversible decisions.
-- Quorum + percentage (N voters participate, M% agree).
+- Quorum + percentage (M% of eligible weight participates, N% of
+  cast weight agrees).
 
-Exact numeric values are per-context and may themselves be node
-properties on the subject, so a chat can configure its own
-threshold.
+Percentages scale with the voter pool; fixed counts don't. An
+instance that picks fixed numbers has to defend why it won't need
+re-tuning as the pool grows.
+
+**All numeric parameters are tunable via this same primitive.**
+Role weights, quorum %, threshold % — every number is a node
+property on the subject, not a hardcoded constant. Changing any of
+them is done via a Proposal (see §2.1), voted on by the same
+eligibility rules. Defaults exist to bootstrap; they are not fixed
+rules.
 
 ### 2.5 Outcome
 
