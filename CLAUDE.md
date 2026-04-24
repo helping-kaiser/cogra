@@ -72,6 +72,10 @@ Read these before making changes to data models or algorithms:
 
 - [Graph Model](docs/graph-model.md) — the edge/node system. All
   edges are 2-dimensional directional tensors with append-only layers.
+- [Governance](docs/governance.md) — weighted role-based voting as
+  a reusable primitive. Five components, two vote shapes,
+  append-only. Junction approvals, chat moderation, and future
+  governance patterns all plug into it.
 - [Nodes](docs/nodes.md) — full node catalog with per-type graph
   properties.
 - [Edges](docs/edges.md) — full edge catalog plus the
