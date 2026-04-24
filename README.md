@@ -84,6 +84,7 @@ make logs         follow docker compose logs
 ### Design
 
 - [Graph Model](docs/graph-model.md) — the core: node categories, edge categories, dimensions, directionality, append-only, junction approval pattern
+- [Governance](docs/governance.md) — weighted role-based voting as a reusable primitive across junction approvals, chat moderation, and future governance patterns
 - [Nodes](docs/nodes.md) — full node catalog: what each type is, its graph-side properties, and where display content lives
 - [Edges](docs/edges.md) — full edge catalog and the relationship-label scheme at the graph layer
 - [Layers](docs/layers.md) — append-only principle across edges, node properties, and Postgres-side display content
