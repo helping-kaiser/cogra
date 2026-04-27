@@ -53,17 +53,14 @@ graph topology.
 
 ### 3. All ranking comes from the graph
 
-There are no materialized counters, no popularity scores, no algorithm-driven
-signals stored as node properties. Feed ranking is computed from the
+There are no materialized counters, no popularity scores, no
+algorithm-driven signals stored as node properties. Feed ranking
+is computed at query time from the
 [edge tensor model](../primitive/graph-model.md) using the
-[feed ranking algorithm](../primitive/feed-ranking.md):
-
-- **Personal relevance** (`h`) — weighted opinion from your connections
-- **Importance** (`i`) — strength of your connections to those who reacted
-- **Controversy** (`j`) — net opinion independent of you
-- **Popularity** (`k`) — raw interaction count
-
-These are computed at query time from the edges, not pre-aggregated.
+[feed ranking algorithm](../primitive/feed-ranking.md). The
+algorithm itself — its parameters, sort order, and tie-breaker
+chain — lives in `feed-ranking.md`; this doc covers only how the
+system runs it (per-viewer, off the central hot path).
 
 ### 4. Edges are the source of truth
 
