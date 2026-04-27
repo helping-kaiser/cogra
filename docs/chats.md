@@ -305,16 +305,20 @@ state transitions"). For a chat membership:
   toward the ChatMember (negative sentiment = withdrawing their claim)
   and the system adds a new layer on `ChatMember -> Chat` reflecting
   the retraction. The top layers now disagree with the membership
-  being active.
-- **Kicked by admin.** The admin adds a new layer on their actor edge
-  toward the ChatMember (negative sentiment = approval withdrawn) and
-  the system adds a new layer on `Chat -> ChatMember` reflecting that
-  the chat no longer accepts the member.
+  being active. Self-determined; no governance vote.
+- **Removed by community.** Members vote to disavow the ChatMember
+  via the member-disavowal instance defined in §6 — Shape B vote
+  with the chat's configured quorum and threshold. When the
+  threshold is crossed, the system adds a new layer on
+  `Chat -> ChatMember` reflecting that the chat no longer accepts
+  the member. There is no admin-unilateral kick path; admins
+  participate in the disavowal vote with their role-weighted vote
+  alongside everyone else.
 
 In both cases, the relationship is active iff both edges' top layers
 have `dim1 > 0`. The full history — including the moment of
-departure and who triggered it — stays visible, as everywhere else
-in the graph.
+departure and the votes that drove it — stays visible, as
+everywhere else in the graph.
 
 ---
 
