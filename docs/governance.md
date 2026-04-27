@@ -329,6 +329,12 @@ case that genuinely needs them deserves its own design pass.
   design.
 - **Delegation / proxies.** No "proxy voter" mechanism. Adds a
   layer to eligibility rules and needs its own design.
+- **Ranked, multi-seat, or budget-allocation ballots.** All votes
+  are binary (support / oppose on a single subject). Ranked
+  preferences ("B over A"), multi-seat allocations beyond parallel
+  binary Proposals (§8), and proportional budget splits across N
+  options aren't expressible in the current primitive. Use cases
+  that genuinely need any of these deserve their own design pass.
 
 These aren't refused — they're just not addressed by the current
 primitive. Any of them would extend governance.md rather than
