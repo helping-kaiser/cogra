@@ -32,7 +32,16 @@ decision reuses:
 
 ## 2. The five components
 
-Every vote-based decision specifies:
+Every vote-based decision specifies the components below.
+
+A single subject node can host **multiple coexisting governance
+instances**, each scoped to a specific decision-type and
+parameterized independently. A Collective may have one instance
+for "fire worker" (1-of-1 from CEO) and a different one for
+"remove board member" (2/3 of the board) — same node, different
+instances, routed by the subject's role. See
+[collectives.md](collectives.md) for the worked-out social-contract
+patterns.
 
 ### 2.1 Subject
 
@@ -265,6 +274,14 @@ design discussion (§8).
   Proposals on `Chat.title`, `Chat.content_privacy`,
   `Chat.join_policy`, and `ChatMember.role`. Defaults vary by
   stakes; thresholds are themselves chat properties.
+- **Collective governance (full social contract)** —
+  [collectives.md](collectives.md). Membership changes (hire /
+  fire / promote), property changes (`name`, `governance_rules`,
+  `ownership_pct`), and any other decision-type the collective
+  defines. A Collective hosts as many instances as its social
+  contract specifies; each is parameterized for its own
+  decision-type. Eligibility, weights, and thresholds are all
+  per-instance.
 
 Future cases get added here as they're designed.
 
