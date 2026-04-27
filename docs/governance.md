@@ -53,6 +53,17 @@ What's being decided. Always a graph object whose state can change:
 - A node property (e.g. a chat's own `disavowal_threshold`) —
   governance of governance is in scope.
 
+**What governance does NOT cover — actor sovereignty.** A User's
+own node properties (`username`, profile fields) and their
+outgoing actor edges are sovereign: the User changes them
+themselves, with no vote and no eligibility check. Governance
+applies to **shared** state (junctions, structural edges, and
+properties on nodes that represent more than one actor — Chats,
+Collectives, Items, Proposals). The
+[redaction exception in layers.md §5](layers.md) is the only path
+by which someone outside the actor can alter sovereign content,
+and only for illegal material with a visible trace.
+
 #### How subjects are addressed
 
 A vote edge needs a node endpoint — edges can't point at edges or
