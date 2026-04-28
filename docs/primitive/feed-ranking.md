@@ -173,50 +173,106 @@ artifacts that don't reflect social reality.
 
 ## 4. Per-target metrics
 
-For each reactor `B` of the target (a node with a direct actor edge
-to the target) and each path from `U` reaching `B` of length `R-1`,
-the path produces a **2-tuple**:
+A target `t` is generally reachable from `U` via **multiple paths**
+of varying lengths. The personalized metrics (`h`, `i`) aggregate
+signal across all those paths, with each path's contribution
+weighted by a distance decay `d(R_π)`. The absolute metrics (`j`,
+`k`) are global properties of the target — they describe its
+reception across the graph and are independent of U's position, so
+no `d(R)` weighting applies.
+
+### 4.1 Path contribution and distance decay
+
+For a path `π` from `U` to `t` of length `R_π` (per §3.1), the
+path produces a **2-tuple**:
 
 ```
-path_tuple = (s_path, c_path)
+path_tuple(π) = (s_path(π), c_path(π))
 ```
 
-Each metric is computed by aggregating these path tuples across
-reactors and paths. Each metric is itself a 2-tuple — one component
-per dim track.
+computed via the rules in §3.3 and §3.4.
+
+Each path's contribution is scaled by a decay factor based on its
+length:
+
+```
+d(R) = 0.1^(R-1)        (default)
+```
+
+So `d(1) = 1`, `d(2) = 0.1`, `d(3) = 0.01`, `d(4) = 0.001`, ...
+
+Steep decay reflects "closeness is the most important factor in the
+graph." Direct connections (R=1) carry full weight; each additional
+hop reduces the path's contribution by 10×. Bots and viral-distant
+content cannot dominate a user's feed by sheer multi-path count
+alone — at any reasonable graph density, distant paths contribute
+proportionally to how far they are.
+
+The decay function is a frontend-tunable parameter. A user who wants
+a broader-network feed can soften the decay (e.g., `0.5^(R-1)`); one
+who wants only direct-friend signal can steepen it (e.g.,
+`0.01^(R-1)`). The default is calibrated so that a single strong
+R=2 path roughly matches ~15 strong R=3 paths' aggregate
+contribution — balancing direct signal with friend-of-friend buzz.
+
+### 4.2 The four metrics
+
+The four metrics form a symmetric grid: **opinion** vs. **reach**,
+each in **personal** and **absolute** flavors. Personal metrics
+depend on U's position in the graph and use `d(R)` decay;
+absolute metrics are global properties of the target, unweighted
+by U's distance.
+
+|         | **Personal** (uses `d(R)`)  | **Absolute** (no `d(R)`)    |
+|---------|-----------------------------|-----------------------------|
+| Opinion | `h` — personal opinion       | `j` — absolute opinion       |
+| Reach   | `i` — personal reach         | `k` — absolute reach         |
+
+Each metric is a **2-tuple** (one component per dim track):
 
 | Symbol | Name | Sentiment component (`*_s`) | Closeness component (`*_c`) |
 |---|---|---|---|
-| `h` | personal relevance | `H_s = ∑ s_path` over the **full R-edge path** to target | `H_c = ∑ c_path` over the full R-edge path |
-| `i` | reach strength | `I_s = ∑ s_path` over the **first R−1 edges** (`U → reactor`) | `I_c = ∑ c_path` over the first R−1 edges |
-| `j` | absolute opinion | `J_s = ∑ dim1(B → target)` over reactors `B` (signed) | `J_c = ∑ dim2(B → target)` (signed; equivalent to taint over a 1-edge chain) |
-| `k` | absolute intensity | `K_s = ∑ \|dim1(B → target)\|` over reactors | `K_c = ∑ \|dim2(B → target)\|` |
-
-Sums are taken over all paths from `U` to each reactor `B` of length
-`R` (for `h`) or `R−1` (for `i`), and across all reactors of the
-target (for `j` and `k`).
+| `h` | personal opinion | `H_s = ∑_π d(R_π) · s_path(π)` over all paths to `t` | `H_c = ∑_π d(R_π) · c_path(π)` over all paths to `t` |
+| `i` | personal reach | `I_s = ∑_π d(R_π) · s_path_R−1(π)` over first R−1 edges of each path | `I_c = ∑_π d(R_π) · c_path_R−1(π)` over first R−1 edges |
+| `j` | absolute opinion | `J_s = ∑_B dim1(B → t)` over reactors `B` (signed) | `J_c = ∑_B dim2(B → t)` over reactors (signed) |
+| `k` | absolute reach | `K_s = ∑_B \|dim1(B → t)\|` over reactors | `K_c = ∑_B \|dim2(B → t)\|` over reactors |
 
 Reading:
-- `h` — personalized signal: trust- and connection-weighted reach to
-  the target.
-- `i` — U-anchored reach: how strongly U reaches the reactors,
+- `h` — personal opinion: trust- and connection-weighted opinion
+  toward the target, summed across all paths from U with closer
+  paths weighted more.
+- `i` — personal reach: how strongly U reaches the reactors,
   *regardless* of what they thought of the target.
-- `j` — target's net valence: what reactors think, ignoring U.
-- `k` — target's interaction intensity: total magnitude of
-  reactions, regardless of direction.
+- `j` — absolute opinion: target's net valence in the graph at
+  large — what reactors collectively think of `t`. Same value
+  for every viewer.
+- `k` — absolute reach: target's total interaction reach — how
+  much reaction volume `t` has accumulated, signs absorbed. Same
+  for every viewer.
 
 Each metric uses **both `dim1` and `dim2`** through the parallel
 tracks. No metric drops a dimension; no dimension drops a metric.
 
-### 4.1 Tuple collapse to scalar
+A target with one R=2 path and 15 R=3 paths to the same content has
+**meaningfully different** `h` and `i` from one with only the R=2
+path — the multi-path sum captures the breadth of engagement across
+U's network, weighted by how directly each path reaches U. `j` and
+`k` are unaffected by this difference (they describe the target's
+graph-wide reception, not U's reach).
+
+### 4.3 Tuple collapse to scalar
 
 Each metric's 2-tuple is collapsed to a scalar at sort time:
 
 ```
-score(metric) = M_s + M_c        (default — equal weight)
+h(t) = H_s(t) + H_c(t)
+i(t) = I_s(t) + I_c(t)
+j(t) = J_s(t) + J_c(t)
+k(t) = K_s(t) + K_c(t)
 ```
 
-A frontend may override the collapse with a weighted combination:
+Default collapser is **sum** (equal weight to both tracks). A
+frontend may override with a weighted combination:
 
 ```
 score(metric) = α × M_s + β × M_c
@@ -225,11 +281,11 @@ score(metric) = α × M_s + β × M_c
 — for example, `α = 2, β = 1` to favor sentiment-weighted ordering,
 or `α = 1, β = 2` to favor closeness-weighted ordering.
 
-The default is **sum** because it correctly handles the case where
-both tracks are negative: a path the graph is pushing down on both
-axes should stay pushed down. A **product** collapser was rejected
-for this reason — it would flip `(−)(−) → +` and surface paths the
-math is trying to suppress.
+Sum is the default because it correctly handles the case where both
+tracks are negative: a path the graph is pushing down on both axes
+should stay pushed down. A **product** collapser was rejected for
+this reason — it would flip `(−)(−) → +` and surface paths the math
+is trying to suppress.
 
 ---
 
