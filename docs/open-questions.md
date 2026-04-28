@@ -24,13 +24,12 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Ranking foundation | 1 | **Q2** | The keystone. Every downstream ranking question needs the primitive operation defined (what a float edge value *means* to the ranker). |
-| | 2 | **Q6** | Depends on Q2: "good" default values on invitation edges only mean something once the ranking math gives them meaning. |
-| | 3 | **Q4** | Now that ranking primitives exist, decay can compose with `R/h/i/j/k`. |
-| | 4 | **Q1** | Now that primitives *and* decay are settled, layer count finds its place (modifier? separate parameter? folded into `i`?). |
-| 2. Build on foundations | 5 | **Q5** | Informed by Q4 (decay may absorb part of "seen"). Q3 already ruled out the implicit-view-edge options. |
-| 3. Scale concerns | 6 | **Q10** | Gated by Q1 — compaction has to preserve (or explicitly degrade) the layer-count signal. Only pressing at scale. |
-| 4. Policy, externally gated | 7 | **Q9** | Independent of technical work and independent of what blocks technical work. Needs legal + decentralization-roadmap input; don't let it gate anything else. |
+| 1. Onboarding | 1 | **Q6** | Now that the ranking math is defined (Q2), invitation-edge defaults can be designed against concrete ranking behavior. |
+| 2. Decay & layer signal | 2 | **Q4** | Decay composes with `R/h/i/j/k` — needs the metrics defined (now done) before decay can be designed. |
+| | 3 | **Q1** | Layer count finds its place once primitives and decay are settled (modifier? separate parameter? folded into `i`?). |
+| 3. Build on foundations | 4 | **Q5** | Informed by Q4 (decay may absorb part of "seen"). Q3 already ruled out the implicit-view-edge options. |
+| 4. Scale concerns | 5 | **Q10** | Gated by Q1 — compaction has to preserve (or explicitly degrade) the layer-count signal. Only pressing at scale. |
+| 5. Policy, externally gated | 6 | **Q9** | Independent of technical work and independent of what blocks technical work. Needs legal + decentralization-roadmap input; don't let it gate anything else. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -41,6 +40,7 @@ questions are closed.
 - Q7 — see [data-model.md](implementation/data-model.md) §"author_id + author_type".
 - Q8 — see [chats.md §6](instances/chats.md) and [governance.md §7](primitive/governance.md).
 - Q3 — see [graph-model.md §3](primitive/graph-model.md) "What creates an actor edge — stances, not events".
+- Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md) (dim1/dim2 unification, filtering vs. graph math). S's intrinsic derivation deferred — flagged as a forward sub-question.
 
 ---
 
@@ -78,62 +78,9 @@ None yet.
 
 ### Related
 
-Q2 (cross-type dimension comparability) — if layer count modifies a
-dimension, it has to modify it consistently across edge types.
-
----
-
-## Q2 — Cross-type dimension comparability and float-to-sign mapping
-
-**Where it shows up:** [graph-model.md §9](primitive/graph-model.md) (relationship to feed ranking)
-**Status:** open
-
-### Context
-
-Two tangled sub-questions that are best resolved together:
-
-**(a) Cross-type combination.** The ranking algorithm traverses paths
-that cross edge types with different dimension meanings — for example
-`User -> User -> Comment -> Post`. The `User -> User` dimensions are
-*sentiment* and *closeness*; the `Comment -> Post` structural edge is
-*(0, 0)* by default; the `User -> Post` dimensions are *sentiment* and
-*relevance*. The math is uniform (all `f64` in `[-1, +1]`) but the
-semantics differ.
-
-**(b) Float-to-sign mapping.** [feed-ranking.md](primitive/feed-ranking.md)
-is framed over a **signed** graph (each edge is `+` or `-`). CoGra's
-actual edges carry **continuous** values in `[-1, +1]`. How continuous
-values map into the ranker's signed math is not specified.
-
-### The question
-
-**(a)** When the ranker walks across edge types, how are dimensions
-with different meanings combined into a single scalar per hop?
-
-**(b)** How does a `[-1, +1]` tensor edge feed into the ranker's
-per-hop sign/weight?
-
-### Options considered
-
-For (b), plausible shapes:
-
-- **Sign + weight:** `sign = sign(dim1)`, `weight = |dim1| * |dim2|`
-  (or similar). Keeps ranker math unchanged; dim2 becomes a magnitude.
-- **Product:** single scalar `dim1 * dim2`, pass the sign and
-  magnitude of the product to the ranker. Collapses information early.
-- **Per-dimension contribution:** compute `h/i/j/k` twice, once per
-  dimension, then combine. Preserves information at ranking time but
-  doubles the compute.
-- **Primary dimension only:** ranker uses `dim1` (sentiment in most
-  edge types); `dim2` is a secondary signal used elsewhere (filtering,
-  suggestions, decay weighting).
-
-None ruled out. (a) depends on what (b) settles.
-
-### Related
-
-Q1 (layer count), Q4 (time decay — decay needs to know what it's
-decaying).
+The dim1/dim2 grammar is now uniform project-wide
+([graph-model.md §6](primitive/graph-model.md)), so a layer-count
+modifier on a dimension would compose consistently across edge types.
 
 ---
 

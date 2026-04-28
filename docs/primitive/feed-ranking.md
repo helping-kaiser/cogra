@@ -1,25 +1,35 @@
 # Ranking via Weighted Graph Connections
 
-A general framework for ranking and ordering **target nodes** in a **signed,
-weighted graph**, relative to a chosen **root node**.
+A general framework for ranking and ordering **target nodes** in a graph
+where edges carry **2-dimensional tensors**, relative to a chosen
+**root node**.
 
-The social-feed setup (User -> other Users -> Posts) that originally motivated
-this is shown as an *example* at the end. The rule itself is layer-agnostic --
-it applies to any signed graph where a root node wants to rank some set of
-target nodes reachable through intermediate connections.
+The social-feed setup (User → other Users → Posts) that originally
+motivated this is shown as examples at the end. The rule itself is
+layer-agnostic — it applies to any graph where edges encode
+`(valence, connection-weight)` per edge and a root wants to rank some
+set of target nodes reachable through intermediate connections.
 
 ---
 
-## 1. Setup (general)
+## 1. Setup
 
-A **signed graph** with:
-- a **root node** `U` -- the perspective we rank from,
+A graph with:
+- a **root node** `U` — the perspective we rank from,
 - one or more layers of **intermediate nodes**,
-- a set of **target nodes** -- what we're ranking,
-- every edge carrying a sign `+` or `-` (and optionally a weight).
+- a set of **target nodes** — what we're ranking,
+- two edge categories (per [graph-model.md §3](graph-model.md)):
+  - **Actor edges**: created by actors. Carry a 2D tensor
+    `(dim1, dim2)`, each in `[-1.0, +1.0]`.
+    - `dim1` is **signed valence** (sentiment / approval / affirmation).
+    - `dim2` is **signed connection-weight** (closeness / relevance /
+      importance).
+  - **Structural edges**: system-created topology. Do not contribute
+    factors to the ranking math; only count toward path length and
+    (where state-bearing) gate traversability — see §3.1.
 
-The algorithm's job: given this graph, produce an ordered list of the target
-nodes as seen from `U`.
+The algorithm's job: given this graph, produce an ordered list of the
+target nodes as seen from `U`.
 
 ---
 
@@ -27,241 +37,311 @@ nodes as seen from `U`.
 
 | Symbol | Name | Meaning |
 |--------|------|---------|
-| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Targets with the same `R` form a comparison group. In the example, `R = 2` for both posts. |
-| `S` | Scalar value of a node | An intrinsic scalar assigned to each node. Used in the **sort** phase to pre-order nodes within an `R` group. |
+| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Targets with the same `R` form a comparison group. Both actor and structural edges count toward `R`. |
+| `S` | Scalar value of a node | An intrinsic scalar assigned to each node. Used in the **sort** phase to pre-order nodes within an `R` group. (S's exact derivation is left as a follow-up — see [open-questions.md](../open-questions.md).) |
 
 ---
 
-## 3. Per-target metrics
+## 3. Per-edge composition along a path
 
-Four quantities are computed per target node from the signed edges in its
-neighborhood back to `U`. Two are **relative** (weighted by `U`'s
-relationships); two are **absolute** (independent of `U`).
+Per-target metrics (§4) are computed by composing edge tensors along
+each path from `U` to a reactor (a node with an actor edge to the
+target). The composition uses **parallel tracks**: `dim1` and `dim2`
+flow independently through the path product and only collapse to a
+scalar at sort time.
 
-| Symbol | Name | Alias | Interpretation |
-|--------|------|-------|----------------|
-| `h` | relative opinion | *personal relevance* (a.k.a. affinity / relevancy) | Net opinion toward the target from `U`'s connected nodes, each weighted by `U`'s relationship to it. A `+`-linked node liking the target contributes `+`; a `-`-linked node liking it contributes `-`; etc. |
-| `i` | relative connection | *importance* | Strength / number of connections between `U` and the nodes that reacted to the target. |
-| `j` | absolute opinion | *controversy* | Net opinion on the target, independent of `U` -- raw sentiment across all reacting nodes. |
-| `k` | absolute connection | *popularity* | Raw number of interactions with the target, independent of `U`. |
+### 3.1 Which edges contribute factors
+
+Only **actor edges** contribute factors to the path products.
+Structural edges count toward `R` (path length) but do not contribute
+factors — they are pure topology.
+
+State-bearing structural edges (junction approval pairs, see
+[graph-model.md §5](graph-model.md)) act as **gates on traversability**:
+a path is traversable through such an edge only if its top-layer
+`dim1` is positive (the relationship is currently affirmed). Their
+values do not enter the ranking math; they only decide whether the
+path exists at all.
+
+### 3.2 Zero handling
+
+A factor of `0` (in `dim1` or `dim2`) is **skipped** in the path
+product (treated as multiplicative identity). The hop still counts
+toward `R`.
+
+If after skipping zeros there are no remaining factors in a given
+dimension's product, the contribution for that dimension is **`0`**,
+not `1`. The "no signal at all" case maps to zero, not to identity.
+
+### 3.3 dim1 chain — signed multiplication
+
+For a path with actor edges `e_1, e_2, ..., e_R'` (where `R'` is the
+number of actor edges in the path; structural edges are skipped per
+§3.1):
+
+```
+s_path = ∏ dim1(e_k)    over actor edges with dim1(e_k) ≠ 0
+       = 0              if all actor-edge dim1 in path are zero
+```
+
+Signed multiplication preserves **signed-graph balance**: the
+"enemy of my enemy is my friend" pattern. Sentiment has trust
+transitivity — a real social property, well-studied in signed
+graph theory. A path with an even number of negative `dim1`
+factors flips back to positive; an odd number stays negative. The
+math captures this structural property at every path length.
+
+### 3.4 dim2 chain — taint sign × magnitude product
+
+`dim2` does not have a transitivity rule. "I avoid A; A avoids B"
+tells us nothing about my relationship to B — closeness doesn't
+compose the way sentiment does. Signed multiplication of `dim2`
+along a path would produce sign flips that don't correspond to any
+real social pattern (two avoidances would compose to a positive
+"connection," which is meaningless).
+
+Instead, dim2 composes via a **taint rule**:
+
+```
+|c_path|     = ∏ |dim2(e_k)|   over actor edges with dim2(e_k) ≠ 0
+sign(c_path) = -1   if ANY dim2(e_k) in the path is negative
+             = +1   otherwise
+c_path       = sign(c_path) × |c_path|
+
+c_path       = 0    if all actor-edge dim2 in path are zero
+```
+
+Two important properties:
+
+- **Magnitude decays naturally with path length.** The product of
+  `|dim2| ≤ 1` factors shrinks with each hop, matching the decay
+  behavior of `s_path`. The two tracks scale together — neither
+  dominates the other purely by path length.
+- **Any avoidance taints the path.** A single negative `dim2`
+  anywhere in the path flips the closeness signal to negative,
+  regardless of magnitude. Avoidance is non-transitive but
+  *carrying*: any cut-off connection along a route reduces what
+  flows through it.
+
+A weakest-link rule (`min(dim2)`) was considered and rejected: it
+keeps `c_path` magnitude pinned to the most-negative hop, which
+doesn't decay with path length and would dominate `s_path` for
+deeper paths.
+
+A signed-multiplication rule (matching dim1) was also considered
+and rejected: it produces "two-avoidances → positive connection"
+artifacts that don't reflect social reality.
 
 ---
 
-## 4. Algorithm
+## 4. Per-target metrics
 
-The ranking runs in two phases: a coarse **sort** into buckets, then a finer
-**order** within buckets using cumulative tie-breakers.
-
-### Step 1 -- Sort (bucketing, descending priority)
-
-```
-R  ->  S  ->  k  ->  j  ->  i  ->  h
-```
-
-Targets are bucketed first by reach `R`, then by scalar `S`, then popularity
-`k`, controversy `j`, importance `i`, and finally personal relevance `h`.
-
-### Step 2 -- Order (final sequence with cumulative tie-breakers)
-
-Within each `R` group, the final order uses cumulative sums starting from `h`:
+For each reactor `B` of the target (a node with a direct actor edge
+to the target) and each path from `U` reaching `B` of length `R-1`,
+the path produces a **2-tuple**:
 
 ```
-R  ->  h
-        -> if equal:  h + i
-        -> if equal:  h + i + j
-        -> if equal:  h + i + j + k
+path_tuple = (s_path, c_path)
 ```
 
-1. Order primarily by `h` (personal relevance).
-2. If tied -- compare by `h + i`.
-3. If still tied -- compare by `h + i + j`.
-4. If still tied -- compare by `h + i + j + k`.
+Each metric is computed by aggregating these path tuples across
+reactors and paths. Each metric is itself a 2-tuple — one component
+per dim track.
 
-> **Why `S` doesn't reappear in the order step:** during the sort step, nodes
-> are already placed in scalar order. The cumulative tie-breakers `h`,
-> `h+i`, `h+i+j`, `h+i+j+k` resolve any remaining ties inside that scalar
-> order, so re-applying `S` at the end would not change the result.
+| Symbol | Name | Sentiment component (`*_s`) | Closeness component (`*_c`) |
+|---|---|---|---|
+| `h` | personal relevance | `H_s = ∑ s_path` over the **full R-edge path** to target | `H_c = ∑ c_path` over the full R-edge path |
+| `i` | reach strength | `I_s = ∑ s_path` over the **first R−1 edges** (`U → reactor`) | `I_c = ∑ c_path` over the first R−1 edges |
+| `j` | absolute opinion | `J_s = ∑ dim1(B → target)` over reactors `B` (signed) | `J_c = ∑ dim2(B → target)` (signed; equivalent to taint over a 1-edge chain) |
+| `k` | absolute intensity | `K_s = ∑ \|dim1(B → target)\|` over reactors | `K_c = ∑ \|dim2(B → target)\|` |
+
+Sums are taken over all paths from `U` to each reactor `B` of length
+`R` (for `h`) or `R−1` (for `i`), and across all reactors of the
+target (for `j` and `k`).
+
+Reading:
+- `h` — personalized signal: trust- and connection-weighted reach to
+  the target.
+- `i` — U-anchored reach: how strongly U reaches the reactors,
+  *regardless* of what they thought of the target.
+- `j` — target's net valence: what reactors think, ignoring U.
+- `k` — target's interaction intensity: total magnitude of
+  reactions, regardless of direction.
+
+Each metric uses **both `dim1` and `dim2`** through the parallel
+tracks. No metric drops a dimension; no dimension drops a metric.
+
+### 4.1 Tuple collapse to scalar
+
+Each metric's 2-tuple is collapsed to a scalar at sort time:
+
+```
+score(metric) = M_s + M_c        (default — equal weight)
+```
+
+A frontend may override the collapse with a weighted combination:
+
+```
+score(metric) = α × M_s + β × M_c
+```
+
+— for example, `α = 2, β = 1` to favor sentiment-weighted ordering,
+or `α = 1, β = 2` to favor closeness-weighted ordering.
+
+The default is **sum** because it correctly handles the case where
+both tracks are negative: a path the graph is pushing down on both
+axes should stay pushed down. A **product** collapser was rejected
+for this reason — it would flip `(−)(−) → +` and surface paths the
+math is trying to suppress.
 
 ---
 
-## 5. Example -- Social feed (User -> User -> Post)
+## 5. Algorithm
 
-This is the specific instance the algorithm was developed against, and is only
-one possible shape the graph can take.
+The ranking runs in two phases: a coarse **sort** into buckets, then
+a finer **order** within buckets using cumulative tie-breakers.
 
-### Node roles
-- **Root**: the viewing user `U`.
-- **Intermediate layer** (other users):
-  - `f_A`, `f_B` -- friends, signed `+` from `U`.
-  - `f'_C`, `f'_D` -- disliked, signed `-` from `U`.
-- **Targets**: `Post 1`, `Post 2`.
-- **Reach**: `R = 2` for both posts (two hops: `U -> user -> post`).
-
-### Edge signs in this example
-
-**`U` -> other users** (U's feelings):
-
-| Edge | Sign |
-|------|:----:|
-| `U -> f_A`  | `+` |
-| `U -> f_B`  | `+` |
-| `U -> f'_C` | `-` |
-| `U -> f'_D` | `-` |
-
-**Other users -> posts** -- each intermediate user is connected to **both**
-posts:
-
-| From    | -> Post 1 | -> Post 2 |
-|---------|:---------:|:---------:|
-| `f_A`   | `+` | `+` |
-| `f_B`   | `+` | `-` |
-| `f'_C`  | `+` | `+` |
-| `f'_D`  | `+` | `-` |
-
-### Diagram
+### Step 1 — Sort (bucketing, descending priority)
 
 ```
-                               U
-                     +  /    +\    -/     \ -
-                       /      \    /       \
-                     f_A     f_B  f'_C     f'_D
-                      |\      |\   /|      /|
-                      | \     | \ / |     / |
-                      |  \    |  X  |    /  |          (each f-node has
-                      |   \   | / \ |   /   |           one edge to EACH
-                      v    v  vv   vv  v    v           post -- 4 edges
-                   +--------------+ +--------------+    arrive at each post)
-                   |   Post 1     | |   Post 2     |
-                   | fA:+  fB:+   | | fA:+  fB:-   |
-                   | f'C:+ f'D:+  | | f'C:+ f'D:-  |
-                   +--------------+ +--------------+
+R  →  S  →  k  →  j  →  i  →  h
 ```
 
-If the ASCII crossings are hard to parse, the edge tables above are the
-canonical source of truth.
+Targets are bucketed first by reach `R` (closer is higher), then by
+scalar `S` (intrinsic node weight), then by `k`, `j`, `i`, `h` —
+each collapsed to scalar per §4.1.
 
-### Metric matrices for this example
+### Step 2 — Order (final sequence with cumulative tie-breakers)
 
-Each matrix has one row per intermediate user. The contribution rule per
-metric is:
+Within each `R` group, the final order uses cumulative sums starting
+from `h`:
 
-| Metric | Per-user contribution |
-|--------|-----------------------|
-| `h` | `sign(U -> user)  *  sign(user -> post)` |
-| `i` | `sign(U -> user)` (only for users who reacted) |
-| `j` | `sign(user -> post)` |
-| `k` | `1` for each user who reacted |
+```
+R  →  h
+        →  if equal:  h + i
+        →  if equal:  h + i + j
+        →  if equal:  h + i + j + k
+```
 
-The sum of the contribution column is the value of that metric for the post.
+1. Order primarily by `h` (personalized).
+2. If tied — compare by `h + i`.
+3. If still tied — compare by `h + i + j`.
+4. If still tied — compare by `h + i + j + k`.
 
-#### Post 1 -- all f-nodes reacted `+`
+The cascade activates only on **strict equality** at each level.
+With float math, exact ties on `h` are rare; the cascade kicks in
+mostly for sparse graphs (where many targets have `h ≈ 0` exactly)
+and for users who default to `+1/0/-1` integer values (where ties
+are common).
 
-**Matrix `h` (relative opinion)**
+> **Why `S` doesn't reappear in the order step.** During the sort
+> step, nodes are already placed in scalar order. The cumulative
+> tie-breakers `h, h+i, h+i+j, h+i+j+k` resolve any remaining ties
+> inside that scalar order, so re-applying `S` at the end would not
+> change the result.
 
-| User   | `sign(U -> user)` | `sign(user -> post)` | contribution |
-|--------|:-----------------:|:--------------------:|:------------:|
-| f_A    | `+`               | `+`                  | `+`          |
-| f_B    | `+`               | `+`                  | `+`          |
-| f'_C   | `-`               | `+`                  | `-`          |
-| f'_D   | `-`               | `+`                  | `-`          |
-| **Sum**|                   |                      | **`0`**      |
+### 5.1 Filtering vs ranking
 
-**Matrix `i` (relative connection)**
+Hard "never show me content from user X" exclusion is a
+**frontend concern**, applied as a post-ranking filter. The graph
+math uses `dim2 < 0` as a continuous taint signal (§3.4) but does
+not snap such paths to zero — paths are reduced smoothly via the
+taint rule, proportional to the rest of the path's strength. This
+separation lets the math stay smooth and continuous while still
+letting users enforce hard exclusions in their UI.
 
-| User   | `sign(U -> user)` | contribution |
-|--------|:-----------------:|:------------:|
-| f_A    | `+`               | `+`          |
-| f_B    | `+`               | `+`          |
-| f'_C   | `-`               | `-`          |
-| f'_D   | `-`               | `-`          |
-| **Sum**|                   | **`0`**      |
-
-**Matrix `j` (absolute opinion)**
-
-| User   | `sign(user -> post)` | contribution |
-|--------|:--------------------:|:------------:|
-| f_A    | `+`                  | `+`          |
-| f_B    | `+`                  | `+`          |
-| f'_C   | `+`                  | `+`          |
-| f'_D   | `+`                  | `+`          |
-| **Sum**|                      | **`+4`**     |
-
-**Matrix `k` (absolute connection)**
-
-| User   | reacted? | contribution |
-|--------|:--------:|:------------:|
-| f_A    | yes      | `1`          |
-| f_B    | yes      | `1`          |
-| f'_C   | yes      | `1`          |
-| f'_D   | yes      | `1`          |
-| **Sum**|          | **`4`**      |
-
-#### Post 2 -- signs: f_A `+`, f_B `-`, f'_C `+`, f'_D `-`
-
-**Matrix `h` (relative opinion)**
-
-| User   | `sign(U -> user)` | `sign(user -> post)` | contribution |
-|--------|:-----------------:|:--------------------:|:------------:|
-| f_A    | `+`               | `+`                  | `+`          |
-| f_B    | `+`               | `-`                  | `-`          |
-| f'_C   | `-`               | `+`                  | `-`          |
-| f'_D   | `-`               | `-`                  | `+`          |
-| **Sum**|                   |                      | **`0`**      |
-
-**Matrix `i` (relative connection)**
-
-| User   | `sign(U -> user)` | contribution |
-|--------|:-----------------:|:------------:|
-| f_A    | `+`               | `+`          |
-| f_B    | `+`               | `+`          |
-| f'_C   | `-`               | `-`          |
-| f'_D   | `-`               | `-`          |
-| **Sum**|                   | **`0`**      |
-
-**Matrix `j` (absolute opinion)**
-
-| User   | `sign(user -> post)` | contribution |
-|--------|:--------------------:|:------------:|
-| f_A    | `+`                  | `+`          |
-| f_B    | `-`                  | `-`          |
-| f'_C   | `+`                  | `+`          |
-| f'_D   | `-`                  | `-`          |
-| **Sum**|                      | **`0`**      |
-
-**Matrix `k` (absolute connection)**
-
-| User   | reacted? | contribution |
-|--------|:--------:|:------------:|
-| f_A    | yes      | `1`          |
-| f_B    | yes      | `1`          |
-| f'_C   | yes      | `1`          |
-| f'_D   | yes      | `1`          |
-| **Sum**|          | **`4`**      |
-
-#### Resulting metric vector
-
-| Post   | `R` | `h` | `i` | `j` | `k` |
-|--------|:---:|:---:|:---:|:---:|:---:|
-| Post 1 | `2` | `0` | `0` | `+4`| `4` |
-| Post 2 | `2` | `0` | `0` | `0` | `4` |
-
-Both posts tie on `h` (`0`), on `h + i` (`0`), and diverge on `h + i + j`
-(`+4` vs. `0`), so Post 1 ranks above Post 2 in the final order.
+For where ranking and filtering compute (client-side, miner nodes,
+etc.), see §8.
 
 ---
 
-## 6. Summary
+## 6. Examples
 
-- General rule: any signed graph, any root, any number of intermediate layers,
-  any target layer.
-- For each target node, compute `R`, `S`, `h`, `i`, `j`, `k`.
-- **Sort** by `R -> S -> k -> j -> i -> h`.
-- **Order** inside each `R` group by `h`, then `h + i`, then `h + i + j`,
-  then `h + i + j + k`.
-- `S` is not reused in the ordering phase -- scalar order is already set in
-  the sort phase and the tie-breaker chain completes the resolution.
-- The `User -> User -> Post` scenario is a specific example of this rule, not
-  the rule itself.
+These examples use small floats (and `±1` unit values for the
+exhaustive R=2 table) to illustrate the math. All paths use only
+actor edges; structural edges in real paths would be skipped in the
+products per §3.1.
+
+### 6.1 R=2, all 16 sign combinations
+
+Path: `U → A → post`. Each edge `(dim1, dim2)` with values in
+`{+1, -1}`. Score = `s_path + c_path` (default sum collapser).
+
+| # | U→A | A→post | s_path | c_path | score | reading |
+|---|---|---|:---:|:---:|:---:|---|
+| 1 | (+,+) | (+,+) | +1 | +1 | **+2** | Close friend loves it. Strong show. |
+| 2 | (+,+) | (+,−) | +1 | −1 | 0 | Friend likes, doesn't care. Neutral. |
+| 3 | (+,+) | (−,+) | −1 | +1 | 0 | Friend dislikes but cares. Neutral. |
+| 4 | (+,+) | (−,−) | −1 | −1 | **−2** | Friend dislikes, doesn't care. Strong hide. |
+| 5 | (+,−) | (+,+) | +1 | −1 | 0 | Estranged-but-liked friend's friend likes it. Neutral. |
+| 6 | (+,−) | (+,−) | +1 | −1 | 0 | Estranged friend, content not interesting. Neutral. (Taint rule prevents the false `(+)·(+) → strong show` artifact a signed product would produce.) |
+| 7 | (+,−) | (−,+) | −1 | −1 | **−2** | Estranged friend dislikes content + cares. Strong hide. |
+| 8 | (+,−) | (−,−) | −1 | −1 | **−2** | Estranged friend dislikes, doesn't care. Strong hide. (Path crosses an avoided connection — taint applies.) |
+| 9 | (−,+) | (+,+) | −1 | +1 | 0 | Frenemy likes content. Neutral. |
+| 10 | (−,+) | (+,−) | −1 | −1 | **−2** | Frenemy likes, doesn't care. Strong hide. |
+| 11 | (−,+) | (−,+) | +1 | +1 | **+2** | Frenemy dislikes + cares. Strong show — signed-graph balance: what my close adversary hates, I might like. |
+| 12 | (−,+) | (−,−) | +1 | −1 | 0 | Frenemy dislikes, doesn't care. Neutral. |
+| 13 | (−,−) | (+,+) | −1 | −1 | **−2** | **Cut-off enemy likes content.** Strong hide. (Avoidance taints; sentiment chain also negative.) |
+| 14 | (−,−) | (+,−) | −1 | −1 | **−2** | Cut-off enemy likes, doesn't care. Strong hide. |
+| 15 | (−,−) | (−,+) | +1 | −1 | 0 | Cut-off enemy dislikes + cares. Neutral. (Sentiment balance flips to positive; taint pulls dim2 negative; cancel.) |
+| 16 | (−,−) | (−,−) | +1 | −1 | 0 | Cut-off enemy dislikes, doesn't care. Neutral. (Taint rule prevents the false `+2` a signed product would produce.) |
+
+Cases 6 and 16 are the ones the taint rule fixes: signed
+multiplication of `dim2` would have given `+1` (two negatives
+multiplying), inflating `score` to `+2` and falsely surfacing
+content along avoided paths. The taint rule keeps `c_path = −1`,
+yielding the correct neutral score.
+
+### 6.2 R=3, representative cases
+
+Path `U → A → B → post`, with floats so magnitude behavior is visible.
+
+| # | U→A | A→B | B→post | s_path | \|c\| | sign | c_path | score | reading |
+|---|---|---|---|:---:|:---:|:---:|:---:|:---:|---|
+| R3-1 | (+0.8, +0.7) | (+0.6, +0.6) | (+0.7, +0.5) | +0.336 | 0.21 | + | +0.21 | **+0.55** | Friend chain, all positive. Solid show. |
+| R3-2 | (+0.8, +0.7) | (+0.6, −0.5) | (+0.7, +0.5) | +0.336 | 0.175 | − | −0.175 | **+0.16** | Avoidance in middle hop. Sentiment chain stays positive; dim2 tainted. Mild positive overall. |
+| R3-3 | (+0.5, +0.7) | (+0.5, −0.9) | (+0.5, +0.7) | +0.125 | 0.441 | − | −0.441 | **−0.32** | Strong middle avoidance + weak sentiment chain → mild hide. |
+| R3-4 | (+0.9, +0.7) | (+0.9, −0.3) | (+0.9, +0.7) | +0.729 | 0.147 | − | −0.147 | **+0.58** | Same shape as R3-3 but stronger sentiment + weaker avoidance → strong show. Sentiment wins. |
+| R3-5 | (−0.7, +0.8) | (−0.6, +0.7) | (+0.5, +0.6) | +0.21 | 0.336 | + | +0.336 | **+0.55** | Frenemy of frenemy likes it — pure signed-graph balance, no taint. Strong show. |
+| R3-6 | (−0.5, −0.5) | (−0.5, −0.5) | (+0.5, +0.5) | +0.125 | 0.125 | − | −0.125 | **0** | Cut-off chain ending in friend who likes post. Sentiment balance says `+`; taint says `−`. Cancel → neutral. |
+| R3-7 | (−0.9, +0.9) | (−0.9, +0.9) | (+0.5, +0.7) | +0.405 | 0.567 | + | +0.567 | **+0.97** | Two close-adversary hops + post-loving end. No avoidance → strong show via sentiment balance. |
+| R3-8 | (+0.9, −0.5) | (+0.7, +0.6) | (+0.8, +0.8) | +0.504 | 0.24 | − | −0.24 | **+0.26** | Path through estranged-but-liked friend. Sentiment chain stays positive but taint pulls dim2 negative → mild show. |
+
+R3-3 vs R3-4 demonstrates the **graceful magnitude tradeoff**: same
+path shape, different strengths of central avoidance — score moves
+smoothly between hide and show. The math doesn't snap.
+
+### 6.3 R=4, including the signed-graph-balance edge case
+
+Path `U → A → B → C → post`.
+
+| # | hops | s_path | \|c\| | sign | c_path | score | reading |
+|---|---|:---:|:---:|:---:|:---:|:---:|---|
+| R4-1 | (+0.9,+0.9) × 4 | +0.6561 | 0.6561 | + | +0.656 | **+1.31** | Pure friend-chain, deep into graph. Strong show. |
+| R4-2 | (+0.5,+0.5) × 4 | +0.0625 | 0.0625 | + | +0.063 | **+0.125** | Tepid 4-hop chain. Faint show — magnitude decays naturally. |
+| R4-3 | (+0.9,+0.9)·(+0.9,+0.9)·(+0.9,−0.5)·(+0.9,+0.9) | +0.6561 | 0.3645 | − | −0.365 | **+0.29** | One avoidance mid-chain. Sentiment intact; dim2 tainted but with full magnitude. Mild show. |
+| R4-4 | (+0.9,+0.9) × 3 · (+0.9,−0.05) | +0.6561 | 0.0364 | − | −0.036 | **+0.62** | Tiny avoidance at end of strong chain — dim2 magnitude is also tiny (decayed naturally), so taint barely dents the score. Strong show preserved. |
+| R4-5 | (+0.9,+0.9) × 3 · (+0.9,−1.0) | +0.6561 | 0.729 | − | −0.729 | **−0.07** | Same chain, maximal avoidance at end — full taint magnitude. Net mild hide. Strong rejection at last hop overrides chain. |
+| R4-6 | (−0.8,−0.8)·(−0.7,−0.7)·(−0.6,−0.6)·(+0.5,+0.5) | −0.168 | 0.168 | − | −0.168 | **−0.34** | Path through three avoided people to a friend who likes post. Mild hide. |
+| R4-7 | (−0.9,+0.9) × 4 | +0.6561 | 0.6561 | + | +0.656 | **+1.31** | 4-hop pure-frenemy chain, no avoidance. Even-count of dim1 negatives → balance flips to positive. **Mathematically consistent with signed-graph balance at all path lengths.** |
+
+R4-4 vs R4-5 validates the magnitude-scaling property: same path
+shape, different strength of last-hop avoidance — taint magnitude
+scales accordingly, and the score moves smoothly.
+
+R4-7 is signed-graph balance played out at depth. The math is
+consistent, but in practice:
+- Pure 4-hop frenemy chains are rare in real social graphs.
+- The cumulative cascade `h+i` correctly favors a friendship chain
+  with the same `h`. Friendship's `i_s = +0.729` and `i_c = +0.729`
+  (sum = +1.458); R4-7 frenemy's `i_s = (-0.9)³ = −0.729` and
+  `i_c = +0.729` (sum = 0). On exact `h` ties, friendship wins
+  decisively.
+
+The cascade tie-break matters here only on exact `h` equality. With
+floats, if magnitudes differ even slightly, the higher `h` wins
+outright. R4-7 is theoretical enough that it shouldn't dominate
+real feeds in practice.
 
 ---
 
@@ -327,13 +407,18 @@ Every node type — Post, Comment, Chat, ChatMessage, Item, future
 additions — is independently filterable. A user who wants only posts
 gets only posts; one who wants posts and chats gets both.
 
+Hard "never show me content from user X" exclusions are also a
+viewer-side concern (per §5.1). The graph math taints paths through
+avoided connections via §3.4, but does not enforce hard exclusions —
+that lives in the frontend filter layer.
+
 The filter is user-controlled in the frontend. The ranking pipeline
 is indifferent to it; the filter decides what to render from the
 ranked output.
 
 ### What this means for the algorithm spec
 
-The algorithm in §1–§6 describes **how** ranking works, not
+The algorithm in §1–§5 describes **how** ranking works, not
 **where** it runs. Whether a client, a Rust worker, or a future
 miner implements it, the rules are the same. The spec stays
 unified; the deployment doesn't.
