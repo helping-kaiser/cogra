@@ -169,6 +169,60 @@ A signed-multiplication rule (matching dim1) was also considered
 and rejected: it produces "two-avoidances → positive connection"
 artifacts that don't reflect social reality.
 
+### 3.5 Bot resistance via the dim2 asymmetry
+
+The asymmetry between dim1 (signed multiplication) and dim2
+(taint sign + magnitude) gives users a community-driven defense
+against bot clusters that doesn't require any algorithmic
+gatekeeping.
+
+Three layered defenses, all properties of the math:
+
+1. **Inbound edges don't affect feeds**
+   ([graph-model.md §7](graph-model.md)). A bot cluster cannot
+   insert itself into U's feed by creating outgoing edges *toward*
+   U. Influence requires U (or a transitive contact) to have an
+   outgoing edge *into* the cluster.
+
+2. **Non-engagement keeps clusters isolated.** Per the
+   action-creates-edges rule
+   ([graph-model.md §3](graph-model.md)), no actor edge is created
+   without an explicit gesture. A user who simply ignores a bot
+   cluster creates no path into it from their neighborhood.
+
+3. **`(0, -1)` is the decisive defender edge.** When real users
+   detect a bot account and want to mark it, the optimal edge
+   shape is `dim1 = 0, dim2 = -1`:
+   - `dim1 = 0` zeros the sentiment chain (kill rule, §3.2). Bots
+     cannot recover this with internal sign-flipping; once any
+     dim1 in the chain is zero, `s_path = 0` permanently.
+   - `dim2 = -1` taints `c_path` (taint rule, §3.4). The taint sign
+     is a one-way assignment — once any `dim2 < 0` exists in the
+     path, `sign(c_path) = -1` for the rest of the path,
+     irrespective of subsequent edges.
+   - Total path contribution: `0 + (negative magnitude) =
+     negative`. The path is suppressed in U's feed.
+
+   Setting `(-1, 0)` (negative sentiment, zero closeness) is
+   *less* robust: bots can chain `dim1 = -1` edges internally to
+   flip `s_path` back positive via signed-graph balance, while
+   `dim2 = 0` provides no defensive contribution. The asymmetric
+   taint rule on dim2 — which dim1 doesn't have — is what makes
+   `(0, -1)` decisive.
+
+This is community-driven defense, not gatekeeping. The math gives
+users tools (signed dims, both axes); communities use them. The
+fundamental constraint is that bot clusters can always create
+infinitely more edges than real users can — but they cannot bypass
+inbound directionality, cannot manufacture outgoing edges from real
+users into themselves, and cannot un-taint `dim2` once a real user
+has marked it.
+
+The full adversarial-robustness story is **not yet complete** —
+sophisticated bots can still engineer score positions via mixed
+path types. See [open-questions.md Q11](../open-questions.md) for
+the unresolved problem.
+
 ---
 
 ## 4. Per-target metrics
