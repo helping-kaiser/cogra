@@ -428,6 +428,31 @@ viewer to be aware of, and the graph's transparency principle
 favors showing them over hiding. They sort below positives because
 the score itself is negative; that's it.
 
+**Exact `h(t) = 0` is the zero-jail.** Targets whose aggregate `h(t)`
+is exactly zero are banished from the feed — sorted below the
+negatives, into nothingness. This is the only sort position
+**immovable under unbounded internal cluster amplification**: a
+cluster with infinite internal nodes can tune its target's `h(t)`
+to any non-zero value (positive or negative) but cannot move it off
+exact zero once every path from `U` into the cluster has at least
+one severance edge `(0, 0)` along it. Zero-jail is the math-level
+realization of full community severance (see §3.5).
+
+Why exact, not an `[−ε, 0]` interval: bots facing an interval-jail
+simply tune their amplification to land at `−ε − δ` and re-enter
+the visible feed below the positives. Only the single point
+`h(t) = 0` is unreachable by bot tuning, and only when full
+severance is in place. The interval cut is not defensible; the
+point cut is.
+
+A target that produces `h(t) = 0` from cancellation of positive
+and negative path contributions (no severance involved) lands in
+the same bucket. With float math, exact cancellation is rare in
+practice; in sparse graphs or with `+1/0/-1` integer values where
+it can happen, the outcome — "the graph's signal toward this
+target sums to neutral" — is a reasonable thing to push out of the
+default feed.
+
 The cascade activates only on **strict equality** at each level.
 With float math, exact ties on `h` are rare; the cascade kicks in
 mostly for sparse graphs (where many targets have `h ≈ 0` exactly)
@@ -435,13 +460,6 @@ and for users who default to `+1/0/-1` integer values (where ties
 are common). `S` (the intrinsic node scalar) is the deepest
 fallback — see [open-questions.md](../open-questions.md) for its
 derivation.
-
-> **Adversarial robustness of the default sort is an open question.**
-> The math is honest about path-product values, but bots can
-> engineer their content's score by mixing path types (positive,
-> zero, negative) to land at chosen positions in the feed. See
-> [open-questions.md Q11](../open-questions.md) for the unresolved
-> question and current thinking.
 
 ### 5.1 Filtering vs ranking
 
