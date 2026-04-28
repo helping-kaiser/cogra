@@ -276,6 +276,95 @@ covers how the defense cascades to that user, how the math applies
 uniformly to clusters of any composition, and how a self-redeeming
 node returns to the graph.
 
+### 3.6 Cascading severance and redemption
+
+#### The transit-node problem
+
+A cluster is held open to `U`'s feed by any real user with a
+non-`(0, 0)` outgoing edge into the cluster. Severance against the
+cluster is only complete when **every** such entry path is dead.
+
+A single real user — whether knowingly malicious, unknowingly
+captured by a sophisticated impersonation, or simply slow to update
+their edges — can therefore keep the cluster reachable from a
+viewer's neighborhood. The math doesn't distinguish "real user
+innocently still connected" from "real user actively bridging the
+cluster"; both are live transit nodes.
+
+#### Cascading severance
+
+The defense extends naturally to transit nodes. Traversal
+transparency lets a viewer audit *how* a piece of content arrived
+in their feed (see [graph-model.md](graph-model.md) for the
+transparency principle). When the viewer sees cluster content
+reaching them through a specific real user, they can sever the
+transit node itself with `(0, 0)`. Every path that reached the
+cluster through that transit node is now killed at the transit hop
+in the kill rule (§3.2).
+
+As more viewers cascade severance outward through the graph, the
+cluster's reach contracts. Full severance is achieved when, for
+every viewer, every path into the cluster passes through at least
+one severance edge — at which point `h(t) = 0` exactly for every
+target inside (§3.5), and §5's zero-jail banishes those targets
+from view.
+
+#### The math has no cluster-type category
+
+The cascade applies uniformly to any cluster the broader community
+wants to disengage from — bot networks, coordinated harassment
+groups, ideological cliques, content the broader graph judges as
+low-signal. The math operates on path-set properties; it does not
+inspect cluster composition. The community decides cluster-by-
+cluster via their severance edges, and the math executes
+identically.
+
+A cluster of real humans who behave as a closed group can therefore
+itself be placed in zero-jail. **Internal interactions within the
+cluster continue unchanged** — each member's outgoing edges to
+other members are unaffected, so their feeds of each other still
+function. The cluster only loses external reach. There is no
+special category for "humans" vs. "bots"; there is only *reachable
+from your graph* vs. *not*.
+
+This is consistent with the architecture's broader stance: anyone
+can fork or self-host (CLAUDE.md), and clusters that have been
+severed from one part of the graph can continue to operate among
+themselves or on a separate instance entirely. Severance is local
+to the severing community; it is not a global ban.
+
+#### Redemption
+
+Append-only layers (see [layers.md](layers.md)) make severance
+**reversible by the severed node's own action**. A user who has
+been severed by their community — because they were holding a
+cluster open, whether by ignorance, captured invitation, or earlier
+intent — can:
+
+1. **Update their own outgoing edges to the cluster to `(0, 0)`.**
+   This appends a new severance layer on top of the existing layer
+   stack. The old positive layer remains in history (transparency);
+   the top-of-stack value is now severance, and the user is no
+   longer a live transit node.
+2. **Wait for community signal to update.** Other users observing
+   the updated edge state can choose to add a new positive layer to
+   their own outgoing edges toward the redeeming user, restoring
+   positive path flow. This is the same append-only mechanism that
+   placed them in zero-jail; it runs in the other direction.
+
+The redemption is fully transparent: the layer stack records the
+sequence of stances over time. The severed user's history is
+preserved (they had positive edges to the cluster, then severed
+them); the community's response is preserved (they severed the
+user, then restored). Nothing is hidden, and the community's
+trust decision is made against the visible record.
+
+Discovery of one's own zero-jail state and the specific gestures
+that invite re-edges from the community are tracked as
+[open-questions.md Q12 and Q13](../open-questions.md). The
+mechanism above is the math-level frame; the UX surface is
+unfinished.
+
 ---
 
 ## 4. Per-target metrics
