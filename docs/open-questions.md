@@ -299,3 +299,115 @@ Q1 (layer count as signal — compaction changes what layer count
 means), Q9 (redaction authority — retention decisions affect what
 can still be redacted).
 
+---
+
+## Q12 — Discovery of one's own zero-jail state
+
+**Where it shows up:** [feed-ranking.md §3.5–§3.6](primitive/feed-ranking.md)
+**Status:** open
+
+### Context
+
+Severance is invisible from the severed node's *outgoing* feed
+view: their feed is determined entirely by their own outgoing
+edges, so even after the community has marked them with `(0, 0)`
+from the inbound side, their own feed continues to function
+normally (subject to whatever they have severed themselves). The
+severed node's *popularity* — the rate at which their content
+reaches real users' feeds — collapses, but they may not directly
+observe this drop.
+
+Traversal transparency means the severance is on-graph and
+auditable. But "auditable" is not the same as "surfaced": a user
+must actively traverse the inbound side of the graph to discover
+that their community has severed them, and must trace the cause to
+the specific outgoing edge that placed them in a transit position
+relative to a cluster.
+
+For the sophisticated impersonation case (a real user invited by a
+bot, unaware that the bot is a bot) this matters: redemption (Q13)
+requires the severed node to identify *which* of their outgoing
+edges is holding the cluster open, then update it to `(0, 0)`.
+Without a UX surface that points them at that edge, redemption is
+gated on graph-traversal sophistication.
+
+### The question
+
+How does the system surface a node's own severance state — and the
+cause — well enough that an innocent transit node can recognize
+they have been severed and identify the specific outgoing edge(s)
+responsible, without compromising any of the principles (no central
+judgment, all visibility flows from the graph itself, no inbound
+edges affecting feed)?
+
+### Options considered
+
+None worked out yet. Surfaced as possibilities only:
+
+- **Client-side severance count.** "You appear in N severance
+  cascades" computed from the inbound graph slice the client
+  already holds.
+- **Outgoing-edge cluster hint.** When a node's outgoing edges
+  point into a heavily-severed cluster, surface that as a UI hint.
+- **Explicit notification edges.** A separate edge type for "I
+  severed you because of this path."
+
+### Related
+
+Q13 (the return mechanism — discovery is the precondition for
+acting), Q5 (already-seen tracking — similar tension between
+graph-native and UX-only state).
+
+---
+
+## Q13 — Pathway back in: redemption gestures
+
+**Where it shows up:** [feed-ranking.md §3.6](primitive/feed-ranking.md)
+**Status:** open
+
+### Context
+
+A node that has been severed and that subsequently severs their own
+outgoing edges to the cluster (`(0, 0)` on each) is mathematically
+reconnectable: the layer-append model lets community members add a
+new positive layer atop their existing severance layer, restoring
+positive path flow from `U` through the redeeming node.
+
+What is *missing* is the social/UX surface that invites the
+community to do so. The math allows it; the gestures don't yet
+exist. Without them, redemption is silent — it depends on community
+members independently noticing the severed node's update and
+deciding to act on it. For minor cases this may be fine. For the
+captured-by-impersonation case (the redeeming node has no easy way
+to broadcast "I have severed and seek restoration") it leaves the
+return-pathway slow and fragile.
+
+### The question
+
+What gestures — graph-level, UX-level, or both — let a
+self-redeeming node signal to the community that they have severed
+their connections to the cluster and are seeking restoration,
+without breaching the principles (no inbound-edge effects, no
+central authority, no AI moderation)?
+
+### Options considered
+
+None worked out yet. Surfaced as possibilities only:
+
+- **Implicit (no new mechanism).** Rely on community members
+  traversing the redeemed user's outgoing edges and noticing the
+  severance themselves. Pure graph signal.
+- **Visibility surface for severance updates.** A UI affordance
+  that lets a client see "this node, who I severed, has updated
+  their outgoing edges to the cluster I severed them for."
+- **Community endorsement edges from non-severed users.** Trust
+  propagating back into the redeeming node's neighborhood by way
+  of edges from other nodes that have not severed them. Similar
+  in shape to invitation patterns ([invitations.md](primitive/invitations.md)).
+
+### Related
+
+Q12 (self-discovery — must come first), Q6 (initial dimension
+values on invitation edges — a similar "introduce a node into the
+network" shape).
+
