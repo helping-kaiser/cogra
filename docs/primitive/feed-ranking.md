@@ -455,6 +455,114 @@ The cause-pointing aid lives in §3.7.2 (auto-detection via
 path patterns) and §3.7.3 (community bot-defense posts as
 supplementary evidence).
 
+#### 3.7.2 Bot-cluster identification — auto-detection from path patterns
+
+The cause-pointing gap closes via direct analysis of the
+viewer's subgraph for path patterns characteristic of bot
+bridges. This is graph math on existing state — no AI
+classification, no central allow/blocklist, no per-account
+verdict beyond what the path structure says. The client (or a
+delegated miner) computes the analysis from the same
+subgraph it pulls for ranking; the path-set the analysis
+reads is the same path-set used to compute `h(t)` (§4).
+
+**The hourglass signal.** For viewer `U` and any node `B` in
+`U`'s outbound subgraph, examine the paths from `U` to
+content and accounts behind `B`. Two patterns characterize:
+
+- **Fan pattern.** Content `t` behind `B` is reachable from
+  `U` via diverse paths through multiple intermediates — many
+  distinct chains, no common bottleneck. `B` is one of
+  several routes to that part of the graph. Normal
+  connectedness.
+- **Hourglass pattern.** Content `t` behind `B` is reachable
+  from `U` *only through `B`* (or with `B` on the
+  overwhelming majority of paths). `B` is the sole bridge
+  into that subgraph from `U`'s perspective.
+
+A pure hourglass is the bot-bridge signature. The cluster
+behind that node has no other entry into `U`'s graph — exactly
+the topology of a bot cluster a real user has bridged into.
+Bots cannot manufacture outgoing edges from real users
+([graph-model.md §7](graph-model.md)), so the cluster's only
+entry points are the legitimate user-created edges. If only
+one such edge exists from `U`'s reachable subgraph (or
+cascading severance has reduced the cluster's open bridges to
+one), the path pattern is unambiguous.
+
+**Differentiating from legit hubs.** Influencers, popular
+accounts, and big bridging nodes also generate hourglass-shaped
+paths — many users reach a lot of content through them. The
+differentiator is whether the content behind the suspect bridge
+has alternative paths into the broader graph. Real content
+circulates through multiple channels; bot content typically
+does not.
+
+For each suspect bridge `B`, the analysis samples some
+downstream content and checks: is this content reachable from
+`U` via *any* path that does not go through `B`? Even one
+alternative path within the traversal window indicates `B` is
+one route among several (legit hub). No alternative paths
+indicates `B` is the sole route (suspected bot bridge).
+
+The check is bounded computation — a 1–2 hop traversal beyond
+`B`'s downstream targets, looking for any inbound edge that
+does not trace back through `B`. False positives are still
+possible (a brand-new viral account with one early bridge would
+look bot-shaped briefly), but the heuristic is sharp enough for
+first-cut detection.
+
+**Detection sharpens with severance.** In a fresh, fully
+connected graph a bot cluster may have multiple live entries
+and the hourglass pattern is weak. As soon as any user severs
+one of the entries, the cluster's reach contracts and the
+hourglass forms more clearly for everyone else. The first
+detection often comes from a manually-identified bot
+(triggering a §3.7.3 post); auto-detection then takes over for
+the rest of the network as the cluster's bridges narrow. The
+two mechanisms reinforce each other.
+
+**Bot-defense page.** The frontend assembles a bot-defense
+page from this analysis: a list of suspect bridge nodes
+detected in the viewer's subgraph, each with a frontend-computed
+**score** representing the likelihood of being a bot bridge.
+Inputs to the score include (at minimum) hourglass-purity of
+the path pattern and the result of the alternative-paths check.
+Frontends may add additional inputs; the doc does not specify a
+formula. The page also surfaces the viewer's path to each
+suspect — the actual chain of intermediates — so users who
+want to verify the score's basis can drill in.
+
+**Path-length-aware action guidance.** The action recommendation
+for each suspect depends on hop count. Frontends present these
+as tooltips, not enforcement:
+
+- **1 hop** (direct edge `viewer → suspect`): clean fix by
+  updating the edge to `(0, 0)`. No collateral.
+- **2 hops** (`viewer → C → suspect`): updating `viewer → C`
+  to `(0, 0)` kills the path but with collateral — the viewer
+  loses everything else flowing through `C`, not just the bot
+  content. Frontend can surface "this also disconnects you
+  from N other accounts you reach via `C`." Alternative:
+  signal `C` to act (out-of-band, or via the post mechanism in
+  §3.7.3).
+- **3+ hops**: graph-level severance is high-collateral and
+  rarely worth the cost — the viewer is far from the bridge,
+  and closer-to-bridge users are the natural fixers.
+  Recommended approach: use the frontend filter (per §5.1) to
+  block content from the suspect directly, or signal a closer
+  user (the path itself names them — `D` in
+  `viewer → C → D → suspect` is the cheapest fixer).
+
+The cutoffs are frontend-tunable defaults. Some users may
+prefer aggressive (2-hop maximum direct action); others
+conservative (1-hop only). The doc does not enforce a number.
+
+**No automatic action.** Detection populates the page; the user
+always decides whether and how to act. The math does not
+auto-banish on hourglass detection. Severance still requires
+the user's `(0, 0)` gesture, exactly as specified in §3.5–§3.6.
+
 ---
 
 ## 4. Per-target metrics
