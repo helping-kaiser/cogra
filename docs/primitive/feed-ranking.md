@@ -648,9 +648,134 @@ graph judges as low-signal. Community posts can target any
 such cluster; the `bot-defense` tag is shorthand, not a
 type-restriction. The auto-detection mechanism in §3.7.2
 similarly does not check for "botness" specifically — it
-checks for path patterns characteristic of *isolated
-clusters reachable through narrow bridges*, which captures
-all of the above.
+checks for path patterns characteristic of *isolated clusters
+reachable through narrow bridges*, which captures all of the
+above.
+
+#### 3.7.4 Severance redemption — the outbound side
+
+Per §3.6, append-only layers make severance reversible: the
+severed node updates their own outbound edges to the cluster
+to `(0, 0)`, and community members can append a new positive
+layer to their own outbound edge toward the redeeming node.
+The math allows this; the surface for the severer makes the
+redemption signal visible.
+
+**What signals redemption.** The clean answer comes from
+applying §3.7.2's hourglass detection to `T`'s outbound
+edges. `T` is in the redeemed state when they have **no
+remaining positive outbound edges to nodes exhibiting
+hourglass-bridge patterns** — `T` no longer holds open any
+isolated cluster reachable through a narrow bridge.
+
+This is graph-derivable; the severer does not need to
+remember why they severed `T`. Severance edges do not carry
+reasons (graph state does not represent intent), and the
+severer's app cannot reliably reconstruct intent from
+inbound edges weeks or months later. The hourglass check
+sidesteps the question by asking "does `T` *currently* bridge
+into any suspect cluster?" — a property of the graph state
+right now, not of past history.
+
+**The check is binary, not gradient.** A genuine transit-node
+case has one or two outbound edges to a suspect cluster,
+typically formed without scrutiny (an invite accepted
+casually, an early positive engagement that aged badly).
+Cleaning those up is a small, finite act. A user with *many*
+positive outbound edges to suspect bridges is much more
+likely a member of the cluster themselves than a transit, and
+the discovery and auto-detection surfaces (§3.7.1, §3.7.2)
+should already classify them accordingly — they are the
+cluster's body, not its bridge. The redemption check is thus
+naturally binary: `T` has no remaining bridges (redeemed), or
+`T` still has bridges (not redeemed). There is no "halfway
+redeemed" state worth surfacing as such.
+
+**Computing the check.** The severer's client makes an
+explicit self-query for `T`'s outbound state — analogous to
+the inbound self-query in §3.7.1, since `T` is severed and
+not in the severer's normal feed pull. For each of `T`'s
+positive-valued outbound edges to target `V`, the client runs
+the §3.7.2 hourglass-and-alternative-paths analysis on `V`
+from `T`'s subgraph perspective. If any `V` classifies as a
+suspect bridge, `T` still has open bridges. If none do, `T`'s
+bridges are clean.
+
+**Surfacing.** The severer's client surfaces:
+
+- A status: "`T` has [N] positive outbound edges to suspect
+  bridges. `T` appears [redeemed | still bridging]."
+- The list of bridges (if any remain) for inspection.
+- Full layer-stack history of `T`'s outbound, available for
+  audit. The severer can see when each edge was created, when
+  (and if) it was severed, and the sequence of changes over
+  time. The decision to restore is made against this complete
+  record, not against a single point-in-time signal.
+
+**Decision is individual.** The math signal is one input; the
+severer's own judgment and the visible layer history are
+others. The severer may add a new positive layer to `S → T`
+(restoring `T` from `S`'s perspective), wait for more
+evidence, or do nothing. **No automatic restoration.**
+
+The friction is intentional. Per the §3.7 intro: a severed
+user re-attaching to a live bot bridge is a network failure.
+Per-severer individual review with full history visible is the
+design's answer.
+
+**Ongoing watch.** The check runs continuously over the
+severer's watch list. If `T` re-attaches to a suspect bridge
+after a previous clean state, the signal flips back, and the
+severer's client surfaces the change.
+
+#### 3.7.5 Self-redemption posts
+
+The structural redemption signal in §3.7.4 (`T`'s outbound has
+no remaining suspect-bridge edges) is necessary but easy to
+miss — the severer has to be running the outbound-watch query
+and looking. To make redemption more discoverable and to add
+human-evaluated context, the severed user can author a
+**self-redemption post**, symmetric to the community
+bot-defense posts in §3.7.3.
+
+The post is a regular post on the graph with a structural edge
+to the same `bot-defense` Tag node (or a sibling redemption
+tag if the data model later distinguishes; the surface treats
+them equivalently). The body explains the fix in `T`'s own
+words — what edge they updated, what they observed, why they
+believe they were a transit node, what they will do
+differently.
+
+**Visibility despite severance.** The severed user's own feed
+is unaffected by severance (their feed runs on their outbound
+edges, which still work). Their *posts*, however, are
+zero-jailed for anyone who has severed them — the path through
+their content does not reach those severers' main feeds. The
+self-redemption post needs a different surface to reach the
+severers.
+
+The frontend's "review severed accounts" view (the surface
+from §3.7.4) is exactly that. The severer's client, which
+already runs the outbound-watch self-query, also fetches
+recent posts from severed accounts and surfaces them in this
+view. Self-redemption posts (recognized via the tag) are
+highlighted separately within that view.
+
+**Cross-checking against graph state.** The severer can
+compare the post's claims to the §3.7.4 structural signal.
+Post says "I severed my edge to V," graph confirms the
+hourglass check passes → consistent. Post claims redemption
+but graph still shows positive outbound to suspect bridges →
+inconsistent (likely a false claim, or `T` misunderstands what
+they need to fix). The severer trusts the math first, then
+reads the post for context.
+
+**Same trust mechanisms apply.** A bot can publish a
+self-redemption post claiming innocence. The same defenses
+cover it: the post is evaluated by each severer individually,
+against the full layer-stack history visible on graph and
+against the structural redemption signal. Post claims and
+graph state must be consistent for the severer to accept.
 
 ---
 
