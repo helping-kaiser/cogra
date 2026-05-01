@@ -359,11 +359,101 @@ them); the community's response is preserved (they severed the
 user, then restored). Nothing is hidden, and the community's
 trust decision is made against the visible record.
 
-Discovery of one's own zero-jail state and the specific gestures
-that invite re-edges from the community are tracked as
-[open-questions.md Q12 and Q13](../open-questions.md). The
-mechanism above is the math-level frame; the UX surface is
-unfinished.
+Discovery of one's own zero-jail state and the specific
+gestures that invite re-edges from the community are covered
+in §3.7.
+
+### 3.7 Post-severance surfaces
+
+§3.5 and §3.6 specify the math: severance kills paths via the
+kill rule, cascading severance and append-only redemption
+operate on edge values. This section specifies the
+**surfaces** built on top of that math — how a severed node
+discovers their state and identifies the cause edge, and how
+a severer learns when someone they severed has updated their
+outgoing edges and might warrant re-evaluation.
+
+Three properties hold throughout:
+
+- **All surfaces are client- or miner-computed from existing
+  graph state.** No new edge types, no new node types beyond
+  what the graph already supports, no backend logic beyond
+  the subgraph it already serves. The surfaces are
+  derivations over the layer-stack data the client already
+  has access to (or can fetch on demand for self-queries).
+- **Discovery is loud; redemption is deliberate.** A severed
+  node should learn quickly so they can act — the discovery
+  surface is continuous and visible. A severer reviewing
+  whether to restore a severed account requires deliberate
+  per-severer review with the full layer-stack history
+  visible, not automatic mass restoration. One real user
+  re-attached to a live bot bridge is a network failure, so
+  the bar for restoration is the severer's own gesture, not
+  any system automatism.
+- **Frontend latitude on presentation.** This section spells
+  out what data is available and what the client can derive
+  from it. Visual styling, notification frequency,
+  aggregation thresholds, and badge design are frontend
+  concerns and intentionally not specified here. Where path
+  cutoffs or scoring formulas appear below, treat them as
+  frontend-tunable defaults like `d(R)` (§4.1) — guidance
+  surfaced as tooltips, not enforced rules.
+
+#### 3.7.1 Severance discovery — the inbound side
+
+Inbound edges do not affect the viewer's feed
+([graph-model.md §7](graph-model.md)), so the feed-pull
+traversal does not include them. Discovering one's own
+severance state therefore requires an **explicit
+self-query** — the client (or a delegated miner) requests
+inbound state on demand, separately from the feed pull. The
+data is on the graph and traversable; it is just not
+pre-loaded for free.
+
+For node `U` running this self-query, two derived surfaces
+are available:
+
+**Severance pattern.** Count inbound edges with top-of-stack
+value `(0, 0)`. For each, identify the severer `S` and the
+severance layer's timestamp. The directional edge structure
+provides a natural per-edge weighting:
+
+- A severance from `S` where `U` has an outbound edge to `S`
+  with non-`(0, 0)` top-of-stack — `U` considers `S` part of
+  their network. **Strong per-edge signal.**
+- A severance from `S` where `U` has no outbound edge to `S`,
+  or has `(0, 0)` top-of-stack toward `S` — `S` is outside
+  `U`'s outbound network. **Weaker per-edge, but volume
+  matters.** A celebrity or hub will have thousands of
+  inbound edges from non-trusted-network users under normal
+  conditions; a sudden burst of severance from this category
+  is itself a meaningful signal even though no individual
+  severer is in `U`'s network.
+
+Frontends present these two categories with different
+prominence — neither is dismissed. Trusted-network severance
+is the per-edge alarm; stranger-severance volume is the
+population-level alarm.
+
+**Outbound-edge audit list.** List `U`'s outbound edges with
+metadata derivable from the layer stacks: when each was
+created, top-of-stack values, layer count. This is the audit
+material — `U` reviews their outbound list with the severance
+pattern as context.
+
+**The cause-pointing gap.** No automatic on-graph signal
+points from "you are severed" to "this specific outbound edge
+is the cause." Severance walks backward from a cluster to
+transit nodes; it does not propagate forward to sever the
+cluster endpoints (the trusted-network severers update their
+edge to `U`, not to the cluster behind `U`, because they had
+no edge there to update — see §3.6). The cause information
+lives at the severers' content traversals, not in the inbound
+severance data the discovery surface sees.
+
+The cause-pointing aid lives in §3.7.2 (auto-detection via
+path patterns) and §3.7.3 (community bot-defense posts as
+supplementary evidence).
 
 ---
 
