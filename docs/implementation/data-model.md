@@ -117,8 +117,12 @@ CREATE TABLE items (
 );
 
 -- Hashtag registry (name lookup + metadata)
+-- id is derived via UUIDv5 from the canonical name (see "Node identity
+-- strategies" below). No DEFAULT — the API must always supply the
+-- deterministic UUID; relying on a random fallback would break content-
+-- addressing.
 CREATE TABLE hashtags (
-    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    id         UUID        PRIMARY KEY,
     name       TEXT        NOT NULL UNIQUE,  -- stored lowercase, no '#'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -183,6 +187,103 @@ LEFT JOIN collectives c ON p.author_type = 'collective' AND c.id = p.author_id;
 2. The same UUID is written to Postgres and Memgraph in the same request.
 3. Postgres uses `UUID` as the primary key type with a `DEFAULT
    gen_random_uuid()` fallback, but the API always supplies it explicitly.
+   (Exception: hashtags drop the DEFAULT — see "Node identity strategies"
+   below.)
 4. Memgraph nodes store the UUID as a `String` property named `id`.
 5. Memgraph indexes: `CREATE INDEX ON :User(id)`, `CREATE INDEX ON :Post(id)`,
    etc. for all node types.
+
+---
+
+## Node identity strategies
+
+Different node types have different *kinds* of identity. The data model
+uses three strategies, chosen per type based on what the node
+fundamentally *is*. Stating the strategies explicitly here so future node
+types are designed against a conscious choice rather than schema
+intuition.
+
+### Type 1 — Identity is a canonical string
+
+A node whose existence *is* a string concept. Two creations of the same
+string should converge on one node, no matter where in the graph (or
+which forked instance) they happen.
+
+- **Hashtag**: a hashtag is its name. `#bot-defense` is one concept; the
+  Postgres table forbids two rows with the same canonical name.
+
+For these types, the UUID is **content-addressed**: derived
+deterministically from the canonical string via
+`UUIDv5(HASHTAG_NAMESPACE, canonical_name)` with a fixed project-scoped
+namespace UUID. Same name → same UUID *across any instance or fork*. The
+UUID is mathematically redundant with the name (both encode the same
+identity), but the UUID is still the database key and the bridge between
+Postgres and Memgraph (per "The Boundary Rule" earlier in this doc).
+
+The canonical-name normalization (currently for hashtags: lowercase, no
+`#`) is **load-bearing**: it determines what counts as "the same"
+hashtag. Changing the normalization later would invalidate previously-
+minted UUIDs. Treat the normalization as part of the schema, not a UI
+affordance.
+
+The namespace UUID is fixed at the project level and **never changes**.
+Changing it would break every previously-derived hashtag UUID.
+Implementation MUST commit the namespace value to source so all
+instances and forks compute identical UUIDs.
+
+Federation across separated instances of these types requires **no
+reconciliation** — instances independently compute the same UUIDs from
+the same names by construction.
+
+### Type 2 — Identity is a chosen handle (display label)
+
+A node that has a UNIQUE display handle within an instance, but the
+handle is a label, not the deep identity. Two separate humans named
+"alice" are two different users; they should not collapse to one node
+just because they picked the same handle.
+
+- **User**: identified by `users.id` (UUID). `username` is UNIQUE per
+  instance for cross-reference (`@alice`) but is not the user's
+  identity.
+- **Collective**: identified by `collectives.id` (UUID). `handle` is
+  UNIQUE per instance, same shape.
+
+UUIDs for these types are **random** (`gen_random_uuid()`). The UNIQUE
+constraint on the handle prevents within-instance collision.
+
+Federation across separated instances requires explicit reconciliation
+for the handle: instance A's `@alice` and instance B's `@alice` could be
+the same person or two different people. A federation protocol must
+decide. Tracked as a forward question in
+[open-questions.md](../open-questions.md) (Q15).
+
+### Type 3 — Identity is per-creation
+
+A node that is a discrete thing brought into existence at a specific
+moment. There is no canonical concept the node "represents"; every
+creation is its own node.
+
+- **Post, Comment, ChatMessage**: a piece of content authored at a
+  specific time. Two posts with identical text by different authors are
+  different posts.
+- **Chat**: a conversation container. Two chats with the same title are
+  different chats.
+- **Item**: a goods entry.
+- **Junction nodes** (ChatMember, CollectiveMember, ItemOwnership,
+  Proposal, etc.): represent a relationship instance.
+
+UUIDs for these types are **random**. There is no UNIQUE constraint on
+any user-facing field; identity is the UUID alone.
+
+Federation across separated instances requires reconciliation only for
+*cross-references* (e.g. a post in instance A referenced by content in
+instance B). Same Q15 as type 2.
+
+### When adding a new node type
+
+Decide which strategy applies first. The choice determines the schema
+(UNIQUE constraint? content-addressed UUID? random UUID with no
+constraint?) and the cross-instance behavior (free dedup vs.
+reconciliation needed). Recording the strategy alongside the new node
+type in [nodes.md](../primitive/nodes.md) keeps the conscious choice
+visible to future readers.
