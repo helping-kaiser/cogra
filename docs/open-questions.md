@@ -26,7 +26,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. Scale concerns | 1 | **Q10** | Pure storage-cost optimization for graph-side layer history. With Q1 resolved (layer count is not a ranking signal) and Q5 resolved (seen-list compaction is its own track in Postgres), compaction only needs to preserve audit and transparency goals, not a ranking input. Only pressing at scale. |
 | 2. Policy, externally gated | 2 | **Q9** | Independent of technical work and independent of what blocks technical work. Needs legal + decentralization-roadmap input; don't let it gate anything else. |
-| 3. Federation, post-spike | 3 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol. Deferred until federation becomes concrete. |
+| 3. Federation phase | 3 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -143,7 +143,7 @@ constraint on compaction is audit/transparency, not ranking math.
 ## Q15 — Cross-instance federation: identity reconciliation for handle-based and per-creation nodes
 
 **Where it shows up:** [data-model.md "Node identity strategies"](implementation/data-model.md) (Type 2 and Type 3 federation notes)
-**Status:** open (deferred — post-spike)
+**Status:** open (deferred — federation phase)
 
 ### Context
 

@@ -7,12 +7,13 @@ single source of truth for how to work on this project.
 
 ## What This Project Is
 
-A spike for **Peer Network** (Peer Network PSE GmbH) — a social media platform
-that replaces AI-driven content algorithms with a transparent, graph-driven,
-user-controlled system. The current Peer Network platform works like Instagram.
-This repo explores the architecture for its next evolution: the graph network.
-
-Project name: **CoGra** (Content Graph).
+**CoGra** (Content Graph) is the **graph-architecture exploration** for
+**Peer Network**'s next evolution (Peer Network PSE GmbH) — a social media
+platform that replaces AI-driven content algorithms with a transparent,
+graph-driven, user-controlled system. The current Peer Network platform works
+like Instagram. This repo branches off from main Peer Network development to
+design and prototype the graph network that will succeed it; it is a
+multi-year effort, not a short throwaway exploration.
 
 **Mission:** decentralize the power of social media. The goal is not to
 become the next Instagram/X/TikTok with a graph bolted on — it is to shift

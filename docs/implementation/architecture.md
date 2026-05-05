@@ -2,9 +2,10 @@
 
 ## Overview
 
-CoGra is a spike for **Peer Network** — a social media platform where
-feed ranking is driven entirely by the social graph and explicit user
-interactions, not AI algorithms.
+CoGra is the **graph-architecture exploration** for **Peer Network**'s
+next evolution — a social media platform where feed ranking is driven
+entirely by the social graph and explicit user interactions, not AI
+algorithms.
 
 The system uses a dual-database architecture. A social network has two
 fundamentally different data access patterns that map poorly to a single
