@@ -60,7 +60,7 @@ in the math is uniform.
 
 ## 2. Structural edges
 
-System-created. Dimensions default to `(0.0, 0.0)` unless the edge
+System-created. Dimensions default to `(0, 0)` unless the edge
 participates in a state-bearing pattern (junction approval pairs —
 see [graph-model.md](graph-model.md) for the rule).
 
