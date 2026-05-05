@@ -74,11 +74,11 @@ The invitee values the inviter as a person but does not share their
 content tastes — different hobbies, different topics. Two natural
 choices for the invitee's outbound edge:
 
-- `(+1.0, +1.0)` — full strength on both axes. The inviter's
+- `(+1, +1)` — full strength on both axes. The inviter's
   neighborhood dominates the invitee's feed even after additional
   edges are formed, because the inviter-edge path products stay at
   full strength.
-- `(+1.0, -1.0)` — high sentiment, negative interest. *"I love
+- `(+1, -1)` — high sentiment, negative interest. *"I love
   this person but their content is not what I want to see."* Once
   the invitee adds a second edge, e.g. `(+0.5, +0.5)` to a hashtag
   they care about, the second edge dominates the feed: the
