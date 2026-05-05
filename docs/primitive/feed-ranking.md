@@ -991,7 +991,7 @@ separation lets the math stay smooth and continuous while still
 letting users enforce hard exclusions in their UI.
 
 For where ranking and filtering compute (client-side, miner nodes,
-etc.), see §8.
+etc.), see §9.
 
 ---
 
