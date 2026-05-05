@@ -44,8 +44,8 @@ CREATE TABLE users (
 -- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
 CREATE TABLE collectives (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name          TEXT        NOT NULL,
-    handle        TEXT        NOT NULL UNIQUE,
+    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
+    display_name  TEXT        NOT NULL,
     description   TEXT,
     avatar_url    TEXT,
     website_url   TEXT,
@@ -275,8 +275,8 @@ just because they picked the same handle.
 - **User**: identified by `users.id` (UUID). `username` is UNIQUE per
   instance for cross-reference (`@alice`) but is not the user's
   identity.
-- **Collective**: identified by `collectives.id` (UUID). `handle` is
-  UNIQUE per instance, same shape.
+- **Collective**: identified by `collectives.id` (UUID). `name` is
+  UNIQUE per instance, same shape — analogous to `users.username`.
 
 UUIDs for these types are **random** (`gen_random_uuid()`). The UNIQUE
 constraint on the handle prevents within-instance collision.
