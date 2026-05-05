@@ -71,7 +71,7 @@ Created by actor nodes (User, Collective) toward any other node. Express
 ### Structural edges
 
 Express **containment or belonging** between nodes. Created by the system,
-not by actors. By default the 2 dimensions are `(0.0, 0.0)` — neutral
+not by actors. By default the 2 dimensions are `(0, 0)` — neutral
 structural links.
 
 Why give structural edges the same shape instead of making them different:
@@ -206,9 +206,9 @@ Every edge, regardless of category, has the same shape:
 Edge {
     // --- 2 dimensions (meaning varies by edge type) ---
     dimension_1: f64,   // actor edges: e.g. sentiment, range [-1.0, +1.0]
-                        // structural edges: 0.0
+                        // structural edges: 0
     dimension_2: f64,   // actor edges: e.g. relevance, range [-1.0, +1.0]
-                        // structural edges: 0.0
+                        // structural edges: 0
 
     // --- System dimensions (same for all edge types) ---
     timestamp:   DateTime,  // when this layer was created
@@ -408,7 +408,7 @@ them distinct.
 The decoupling is real and important. A valid edge shape:
 
 ```
-+1.0 sentiment, -0.5 interest  →  "I love this person, but their
++1 sentiment, -0.5 interest  →  "I love this person, but their
                                    content isn't for me"
 ```
 
@@ -427,15 +427,15 @@ not "how close are we."
 
 Every actor-edge dimension is bipolar in `[-1.0, +1.0]`:
 
-- `0.0` = no opinion / no interest / neutral.
+- `0` = no opinion / no interest / neutral.
 - Positive = the "forward" meaning (like, approve, want-to-see, relevant).
 - Negative = the **active opposite**, not merely the absence.
 
 The polarity matters most where the forward meaning sounds like a one-sided
-scale — most notably **interest**. An interest of `0.0` means "I don't
+scale — most notably **interest**. An interest of `0` means "I don't
 engage with this target's content"; a negative interest means "I am actively
 avoiding this content / output" (muted, blocked, ghosted). The two are
-distinct signals, and collapsing negative interest into `0.0` would discard
+distinct signals, and collapsing negative interest into `0` would discard
 real information. The same reading extends to relevance (negative = "I
 actively don't want this in my feed") and to approval dimensions on junction
 nodes (negative = active rejection, not abstention).
@@ -468,7 +468,7 @@ The two dimensions are independent. Examples:
   from power (+0.75 sentiment), but I have no ties to that country and I'm not
   into politics (-0.5 relevance).
 - **Low sentiment, high relevance**: I don't have strong feelings about a new
-  tax law (0.0 sentiment), but it directly affects my business (+0.9
+  tax law (0 sentiment), but it directly affects my business (+0.9
   relevance).
 - **User → User**: I love my childhood best friend (+0.9 sentiment), but our
   hobbies have diverged completely; their posts are not what I want in my

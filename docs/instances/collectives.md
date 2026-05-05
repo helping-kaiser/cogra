@@ -192,22 +192,13 @@ governance.
 
 ## Leaving / being removed
 
-Two paths out of an active membership:
+State transitions on a CollectiveMember junction follow the
+primitive — see [graph-model.md §5](../primitive/graph-model.md)
+("Revocation and state transitions") for voluntary leave and
+governance-instance removal mechanics.
 
-- **Voluntary leave.** The member adds a new negative layer on
-  their actor edge toward the CollectiveMember junction. The system
-  cascades to `CollectiveMember -> Collective` with `dim1 < 0`.
-  Self-determined; no governance vote.
-- **Removal via governance instance.** The collective applies its
-  "remove member" instance — eligibility, weights, and threshold
-  per the social contract above. When that instance's threshold is
-  crossed, the system adds a new layer on
-  `Collective -> CollectiveMember` with `dim1 < 0`. The shape of
-  "removal" varies enormously across collectives — a 1-of-1 CEO
-  firing instance and a 2/3-of-board expulsion instance are both
-  valid configurations.
-
-In both cases the relationship is active iff both edges' top
-layers have `dim1 > 0`, and the full history — including the
-votes that drove a removal — stays visible, as everywhere else in
-the graph.
+The collective-specific piece is the removal instance itself:
+eligibility, weights, and threshold come from the social contract
+above. The shape of "removal" varies enormously across collectives —
+a 1-of-1 CEO firing instance and a 2/3-of-board expulsion instance
+are both valid configurations.
