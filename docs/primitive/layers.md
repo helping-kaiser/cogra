@@ -45,7 +45,7 @@ details.
 
 ## 3. Layers on nodes
 
-Nodes can change over time — a user's username, a chat's title, a
+Nodes can change over time — a user's username, a chat's name, a
 ChatMember's role, a CollectiveMember's ownership percentage. These
 changes add layers to the **specific property** that changed, not to
 the whole node.
@@ -67,7 +67,7 @@ Only what the graph **actually needs** for traversal, ranking, or
 routing. Example authored properties that layer:
 
 - User: `username` (the handle used for mentions/lookups).
-- Chat: `title` (if needed for routing/display hints), content-
+- Chat: `name` (if needed for routing/display hints), content-
   privacy setting (plaintext vs E2EE — the graph needs this to
   know what to route).
 - ChatMember / CollectiveMember: `role`, role-attached quantities
