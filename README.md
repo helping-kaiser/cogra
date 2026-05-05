@@ -1,6 +1,7 @@
 # CoGra
 
-A spike for **Peer Network** — exploring how a graph-driven social media
+The **graph-architecture exploration** for **Peer Network**'s next
+evolution — designing and prototyping how a graph-driven social media
 platform can replace AI content algorithms with transparent, user-controlled
 feed ranking based on the social graph.
 
