@@ -275,38 +275,22 @@ member — they just see that the chat has moved away.
 
 ## 7. Join flows
 
-*(This content was moved from [graph-model.md §5](../primitive/graph-model.md).
-The generic two-edge approval pattern these flows instantiate remains
-there as a graph-level primitive.)*
+The two-edge approval pattern from
+[graph-model.md §5](../primitive/graph-model.md) instantiates as
+three chat-specific shapes. The mechanics — actor edge to a
+ChatMember junction, system writes the claim, both edges required
+for active membership — are identical to the primitive. The
+chat-specific piece is **who creates the actor edge(s)**:
 
-### Open chat
-1. User creates an actor edge toward a new **ChatMember** node.
-2. System creates `ChatMember -> Chat` (claim).
-3. Policy satisfied immediately; system creates `Chat -> ChatMember`
-   (approval).
-4. User is an active member.
-
-### Invite-only chat
-1. Admin (or member with invite rights) creates an actor edge toward a
-   new **ChatMember** node for the invitee.
-2. System creates `ChatMember -> Chat` (claim, pending).
-3. Invitee creates an actor edge toward the same ChatMember node
-   (accepting).
-4. Policy satisfied; system creates `Chat -> ChatMember` (approval).
-5. User is an active member.
-
-### Request-entry chat
-1. User creates an actor edge toward a new **ChatMember** node
-   (request).
-2. System creates `ChatMember -> Chat` (claim, pending).
-3. An admin creates an actor edge toward the same ChatMember node
-   (approving).
-4. Policy satisfied; system creates `Chat -> ChatMember` (approval).
-5. User is an active member.
+| Variant         | Actor edges required                                                |
+|-----------------|---------------------------------------------------------------------|
+| Open chat       | Would-be member alone; policy satisfied immediately on the claim.   |
+| Invite-only     | Admin (or invite-rights member) **and** invitee, both required.     |
+| Request-entry   | Would-be member **and** an approving admin, both required.          |
 
 Invite-only and request-entry are **topologically identical** — only
-who initiates differs. Multi-sig variants are just a higher N in the
-approval policy.
+who initiates first differs. Multi-sig variants are just a higher N
+in the approval policy.
 
 ---
 
