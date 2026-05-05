@@ -1229,10 +1229,11 @@ the time-decay factor is applied only on the `B → t` hop. The
 their top layer was added. This carries the **stances-not-events**
 rule (§3, [graph-model.md §3](graph-model.md)) through to time:
 silence on a relationship edge is not a partial revocation of the
-stance — the stance still holds until the actor changes it.
-Active-relationship signal lives in **layer count**
-([open-questions.md Q1](../open-questions.md)) — frequency of
-interaction, not recency of last interaction.
+stance — the stance still holds until the actor changes it. A user
+who wants their feed to reflect a closer or more distant
+relationship updates the edge's top-layer dim values; the layer
+count itself does not amplify the contribution (see
+[graph-model.md §8](graph-model.md)).
 
 **Post-node age has no separate decay.** It falls out
 automatically: the **authorship edge** is itself a normal actor
