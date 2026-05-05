@@ -312,37 +312,17 @@ approval policy.
 
 ## 8. Membership lifecycle
 
-Membership is encoded in the two-edge approval pattern:
-
-- Only the claim (`ChatMember -> Chat`) exists → pending.
-- Both edges exist → active.
-
-### Departures (leaving, kicked, revoked)
-
-Append-only means the existing approval edge cannot be removed once
-created. State transitions are instead **encoded as new layers on the
-structural edges themselves** — the formal rule is in
+Membership is encoded in the two-edge approval pattern: claim-only
+edge → pending; both edges → active. State transitions (voluntary
+leave, community removal) follow the primitive — see
 [graph-model.md §5](../primitive/graph-model.md) ("Revocation and
-state transitions"). For a chat membership:
+state transitions") for the rule.
 
-- **Voluntary leave.** The user adds a new layer on their actor edge
-  toward the ChatMember (negative sentiment = withdrawing their claim)
-  and the system adds a new layer on `ChatMember -> Chat` reflecting
-  the retraction. The top layers now disagree with the membership
-  being active. Self-determined; no governance vote.
-- **Removed by community.** Members vote to disavow the ChatMember
-  via the member-disavowal instance defined in §6 — Shape B vote
-  with the chat's configured quorum and threshold. When the
-  threshold is crossed, the system adds a new layer on
-  `Chat -> ChatMember` reflecting that the chat no longer accepts
-  the member. There is no admin-unilateral kick path; admins
-  participate in the disavowal vote with their role-weighted vote
-  alongside everyone else.
-
-In both cases, the relationship is active iff both edges' top layers
-have `dim1 > 0`. The full history — including the moment of
-departure and the votes that drove it — stays visible, as
-everywhere else in the graph.
+The chat-specific configuration is the removal instance: chats use
+the member-disavowal instance defined in §6 — a Shape B vote with
+the chat's configured quorum and threshold. There is no
+admin-unilateral kick path; admins participate in the disavowal
+vote with their role-weighted vote alongside everyone else.
 
 ---
 
