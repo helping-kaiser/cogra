@@ -92,9 +92,10 @@ CREATE TABLE comments (
 
 -- Chats: conversation containers
 CREATE TABLE chats (
-    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name       TEXT,       -- null for 1:1 chats
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT,       -- null for 1:1 chats
+    description TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Chat messages: individual messages within a chat
@@ -165,10 +166,10 @@ and treated as acceptable feed character rather than a defect.
 
 - **Edge data** (sentiment, interest, relevance, layers) — graph-only
 - **Feed ordering / ranking** — graph-only
-- **Interaction history** (who liked what, who interacted with whom) —
+- **Interaction history** (who reacted to what, who interacted with whom) —
   graph-only (encoded in tensor edges)
-- **Counts** (followers, likes, comments) — derived from graph edges at query
-  time, not materialized
+- **Counts** (inbound edges, reactions, comments) — derived from graph edges
+  at query time, not materialized
 - **Membership / ownership state** — graph-only (junction nodes: ChatMember,
   CollectiveMember, ItemOwnership)
 
