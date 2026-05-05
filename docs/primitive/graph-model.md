@@ -524,11 +524,21 @@ Jakob -> Post_X:
 - The full history is available for algorithms that need it (e.g., detecting
   opinion shifts, weighting by interaction frequency).
 
-**Layer count as a signal:** The number of layers on an edge is itself
-meaningful. An edge with 50 layers represents a deep, frequently-revisited
-relationship. An edge with 1 layer is a passing interaction. How exactly
-this signal factors into ranking is an open question — see
-[open-questions.md Q1](../open-questions.md).
+**Layers are metadata for audit, history, and UI** — not a ranking
+input. Ranking sees only the **top layer** of each edge: the user's
+current expressed stance. Layer count, layer timestamps, and the
+sequence of past values are available to UI surfaces (e.g., a "this
+edge has been revised N times" indicator, or a stale-edge prompt
+suggesting review) and to anyone auditing the graph's history, but
+they do not amplify or attenuate the ranking math.
+
+This follows from **stances, not events** (§3): the graph trusts
+the user's last-expressed stance until they change it. Most users
+update reactively — when they notice their feed reflecting
+connections they no longer care about — rather than actively
+maintaining edges, similar to pruning a stale subscription list.
+The system does not infer intent from interaction frequency; it
+reflects what the user last said.
 
 ---
 
