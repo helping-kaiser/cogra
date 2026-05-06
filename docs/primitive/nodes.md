@@ -49,7 +49,9 @@ Entities that take actions and create edges.
 
 ### Graph-side properties
 
-- **User**: `username` (the handle used for mentions and lookups).
+- **User**: `username` (the handle used for mentions and lookups);
+  `network_role` (`member` / `moderator`) — backs platform-wide
+  governance per [network.md](network.md).
 - **Collective**: `name` (the handle used for mentions and lookups,
   analogous to `username` on User).
 

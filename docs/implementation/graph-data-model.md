@@ -50,10 +50,11 @@ constraints/indexes the application relies on.
 
 #### `:User`
 
-| Property   | Type   | Notes |
+| Property       | Type   | Notes |
 |---|---|---|
-| `id`       | String | UUID v4. Always set by the API. |
-| `username` | String | Handle for mentions/lookups. Layered per [layers.md](../primitive/layers.md). |
+| `id`           | String | UUID v4. Always set by the API. |
+| `username`     | String | Handle for mentions/lookups. Layered per [layers.md](../primitive/layers.md). |
+| `network_role` | String | `'member'` or `'moderator'`. Layered. Backs platform-wide governance — see [network.md](../primitive/network.md). |
 
 ```cypher
 CREATE CONSTRAINT ON (u:User) ASSERT u.id IS UNIQUE;
