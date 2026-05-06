@@ -99,11 +99,15 @@ CREATE INDEX ON :Comment(id);
 
 #### `:Chat`
 
-| Property          | Type   | Notes |
+| Property | Type   | Notes |
 |---|---|---|
-| `id`              | String | UUID v4. |
-| `name`            | String | Optional; layered. The graph carries it for routing/display hints. |
-| `content_privacy` | String | `'plaintext'` or `'e2ee'`. Per current [nodes.md L88](../primitive/nodes.md). **Pending redesign in PR A** — see chat-content note below. |
+| `id`     | String | UUID v4. |
+| `name`   | String | Optional; layered. The graph carries it for routing/display hints. |
+
+The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
+not on the graph — message bodies are always Postgres-side per
+[chats.md §4-5](../instances/chats.md), so the graph never reads it.
+See [data-model.md](data-model.md).
 
 ```cypher
 CREATE CONSTRAINT ON (c:Chat) ASSERT c.id IS UNIQUE;
@@ -258,18 +262,12 @@ unified two-axis dimension grammar.
 
 ## Pending redesigns (tracked for PR A)
 
-Two items in the schema above are documented as currently committed but
-flagged for revision in the next PR:
+One item in the schema above is documented as currently committed but
+flagged for revision later in PR A:
 
-- **`Chat.content_privacy` as a graph property.** Reaffirming that
-  message content is exclusively a Postgres concern (the lean-graph
-  principle) makes `content_privacy` Postgres-only. The graph never
-  reads or routes on it. PR A removes it from `:Chat`. Also resolves
-  the §4 / §5 inconsistency in [chats.md](../instances/chats.md)
-  about message body location.
 - **`Proposal.target_node_id` / `target_property` / `proposed_value`
-  as properties.** A foreign-key-in-a-graph-DB anti-pattern. PR A
-  replaces with a `(:Proposal)-[:TARGETS]->(target)` structural edge,
-  keeping `target_property` and `proposed_value` as Proposal-node
-  properties (the change is intrinsic to the proposal, not the
-  relationship).
+  as properties.** A foreign-key-in-a-graph-DB anti-pattern. A later
+  commit in PR A replaces with a `(:Proposal)-[:TARGETS]->(target)`
+  structural edge, keeping `target_property` and `proposed_value` as
+  Proposal-node properties (the change is intrinsic to the proposal,
+  not the relationship).

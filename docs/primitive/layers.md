@@ -67,9 +67,7 @@ Only what the graph **actually needs** for traversal, ranking, or
 routing. Example authored properties that layer:
 
 - User: `username` (the handle used for mentions/lookups).
-- Chat: `name` (if needed for routing/display hints), content-
-  privacy setting (plaintext vs E2EE — the graph needs this to
-  know what to route).
+- Chat: `name` (if needed for routing/display hints).
 - ChatMember / CollectiveMember: `role`, role-attached quantities
   (`ownership_pct`, `voting_weight`).
 

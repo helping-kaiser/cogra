@@ -84,9 +84,12 @@ Entities that are acted upon by actors.
 Most content nodes have minimal graph-side properties — the substance
 lives in Postgres. Specific cases:
 
-- **Chat**: `name` (if needed for routing or display hints) and
-  `content_privacy` (plaintext vs E2EE — the graph needs this to
-  know what to route). See [chats.md](../instances/chats.md).
+- **Chat**: `name` (if needed for routing or display hints). See
+  [chats.md](../instances/chats.md). The `content_privacy` setting
+  (plaintext vs E2EE) lives in Postgres alongside the chat row —
+  message bodies are always a Postgres concern (see
+  [chats.md §4-5](../instances/chats.md)), so the graph never reads
+  the privacy setting.
 - **Hashtag**: its tag string — the tag *is* the identifier. The
   UUID is content-addressed (`UUIDv5` of the canonical name with
   a fixed namespace); see
