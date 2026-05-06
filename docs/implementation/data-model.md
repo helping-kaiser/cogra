@@ -78,16 +78,21 @@ CREATE TABLE media_attachments (
     display_order SMALLINT     NOT NULL DEFAULT 0
 );
 
--- Comments: responses to posts or other comments
--- Comments are full nodes in the graph (can be liked, replied to)
+-- Comments: responses to any commentable content node.
+-- Comments are full nodes in the graph (can be liked, replied to).
+-- target_id + target_type identify the parent — Post, Comment, Chat,
+-- ChatMessage, or Item per edges.md §2 Containment. See
+-- "target_id + target_type — discriminator, not foreign key" below for
+-- why there is no SQL FK on this column.
 CREATE TABLE comments (
-    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    post_id           UUID        NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    author_id         UUID        NOT NULL,
-    author_type       TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    parent_comment_id UUID        REFERENCES comments(id),
-    content           TEXT        NOT NULL,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    target_id   UUID        NOT NULL,
+    target_type TEXT        NOT NULL CHECK (target_type IN
+                            ('post', 'comment', 'chat', 'chat_message', 'item')),
+    author_id   UUID        NOT NULL,
+    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    content     TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Chats: conversation containers
@@ -209,6 +214,27 @@ FROM posts p
 LEFT JOIN users     u ON p.author_type = 'user'    AND u.id = p.author_id
 LEFT JOIN collectives c ON p.author_type = 'collective' AND c.id = p.author_id;
 ```
+
+### target_id + target_type — same shape, different reason
+
+`comments.target_id` references either `posts.id`, `comments.id`,
+`chats.id`, `chat_messages.id`, or `items.id` — see
+[edges.md §2 Containment](../primitive/edges.md). A standard SQL
+foreign key can't point to five tables, so the table carries a
+`target_type` discriminator with a `CHECK` on the same five values
+the graph uses.
+
+The graph is the source of truth here too: a comment's parent is
+encoded in the `Comment → Target :CONTAINMENT` structural edge.
+Postgres `target_id` is a cache. Same cache-rebuild rule as
+`author_id`: if the cache disagrees with the graph, rebuild from the
+graph.
+
+This is also why old `posts(id) ON DELETE CASCADE` and a separate
+`parent_comment_id` column are gone: posts and comments are graph
+nodes that are never deleted (per [layers.md §5](../primitive/layers.md)),
+and reply chains live on the graph as `Comment → Comment`
+containment edges — Postgres doesn't need a parallel column.
 
 ---
 
