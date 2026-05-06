@@ -12,16 +12,16 @@ classification change requires **at least one moderator's positive
 vote** in the tally. Bots can flood the community side but cannot
 cross the gate without compromising a real moderator.
 
-Messages in end-to-end-encrypted chats are out of scope — encrypted
-bodies are not readable by the community, so they are moderated
-chat-internally via [chats.md §6](../instances/chats.md) disavowal.
+Encrypted ChatMessages are moderable once the chat key has been
+disclosed (see §5); until then their bodies aren't readable by the
+community and chat-internal disavowal
+([chats.md §6](../instances/chats.md)) is the alternative recourse.
 
 ## 1. The three classifications
 
 `moderation_status` is a graph-side property on every user-input-
-bearing node — User, Collective, Post, Comment, ChatMessage
-(plaintext only), Chat, Item, Hashtag (see
-[nodes.md](nodes.md)). Three values:
+bearing node — User, Collective, Post, Comment, ChatMessage,
+Chat, Item, Hashtag (see [nodes.md](nodes.md)). Three values:
 
 | Value | Meaning | Effect |
 |---|---|---|
@@ -114,20 +114,41 @@ they are not fixed rules.
 - **User, Collective** — for the user-authored fields (avatar,
   bio, profile text, name).
 - **Post, Comment** — content bodies and media.
-- **ChatMessage** — in plaintext chats.
+- **ChatMessage** — both `plaintext` and `encrypted` per
+  [chats.md §5](../instances/chats.md). Encrypted messages are
+  classifiable once readable (see "encrypted message classification"
+  below).
 - **Chat** — name, description, image.
 - **Item** — name, description, media.
 - **Hashtag** — the canonical name itself.
 
 **Out of scope:**
 
-- ChatMessages in end-to-end-encrypted chats — the community
-  cannot read encrypted bodies, so platform-wide moderation
-  cannot classify them. They are moderated chat-internally via
-  the disavowal mechanism in [chats.md §6](../instances/chats.md).
 - Junction nodes (`ChatMember`, `CollectiveMember`,
   `ItemOwnership`) and `Proposal` nodes — they carry no
   user-authored content fields.
+
+### Encrypted message classification
+
+For a moderation Proposal targeting an encrypted ChatMessage to be
+useful, voters need to be able to read the body. The disclosure
+path is **independent of the moderation primitive** — any chat
+member can release the chat's symmetric key (per
+[chats.md §5](../instances/chats.md)) through any normal authoring
+gesture: a Comment on the chat, a public Post, a plaintext
+ChatMessage in the same chat, an off-graph channel, anything. The
+system permits voluntary disclosure by participants by design.
+
+Once the key has been disclosed publicly, anyone holding it can
+decrypt the chat's encrypted bodies and read the evidence; the
+moderation Proposal proceeds like any other. Until disclosure,
+encrypted bodies cannot be classified by community moderation, and
+chat-internal disavowal ([chats.md §6](../instances/chats.md)) is
+the only platform-level recourse.
+
+This matters in practice for cases like contracts in private chats
+(forthcoming with the economics) where one party may need to
+surface the other's misbehavior.
 
 ## 6. Coexistence with chat-internal moderation
 
