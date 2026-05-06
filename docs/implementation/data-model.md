@@ -214,11 +214,11 @@ three properties:
   tables can be compacted, pruned, or replaced without leaving a
   visible trace.
 
-The pattern's first instance is the seen-list (`user_view_log`).
-Future instances — a hidden-actors list (frontend-side "don't show
-me Bob's content" — see
-[feed-ranking.md §3.5](../primitive/feed-ranking.md)), and similar
-viewer-tunable filters — will land here as they're designed.
+Instances below: the seen-list (`user_view_log`), the hidden-actors
+list (`user_hidden_actors`, frontend-side "don't show me Bob's
+content" — see [feed-ranking.md §3.5](../primitive/feed-ranking.md)),
+and the chat-read pointer (`chat_read_state`). Further viewer-
+tunable filters slot in here as they're designed.
 
 ```sql
 -- View log: per-viewer record of which content nodes have been seen.
@@ -251,6 +251,19 @@ CREATE TABLE user_hidden_actors (
     hidden_type TEXT        NOT NULL CHECK (hidden_type IN ('user', 'collective')),
     hidden_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (viewer_id, hidden_id, hidden_type)
+);
+
+-- Chat read state: per-user, per-chat 'last read' pointer.
+-- ChatMessages are timestamp-ordered, so a single TIMESTAMPTZ marks
+-- where the user has read up to. Unread = messages with created_at
+-- > last_read_at. UPSERTed each time the user reads further; the
+-- row's most recent update IS last_read_at, so no separate
+-- updated_at column is needed.
+CREATE TABLE chat_read_state (
+    user_id      UUID        NOT NULL,
+    chat_id      UUID        NOT NULL,
+    last_read_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (user_id, chat_id)
 );
 ```
 
