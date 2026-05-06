@@ -239,6 +239,21 @@ user-year bound, trade-off, frontend tunability) lives with the
 seen-list mechanism in
 [feed-ranking.md §8.5](../primitive/feed-ranking.md).
 
+```sql
+-- Hidden actors: per-viewer list of users/collectives the viewer
+-- doesn't want in their feed. Applied as a post-rank exclusion
+-- filter on the viewer's side (see feed-ranking.md §3.5).
+-- hidden_type disambiguates which table the hidden_id refers to,
+-- same shape as author_type / target_type elsewhere.
+CREATE TABLE user_hidden_actors (
+    viewer_id   UUID        NOT NULL,
+    hidden_id   UUID        NOT NULL,
+    hidden_type TEXT        NOT NULL CHECK (hidden_type IN ('user', 'collective')),
+    hidden_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (viewer_id, hidden_id, hidden_type)
+);
+```
+
 ---
 
 ## What is intentionally NOT in Postgres
