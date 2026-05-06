@@ -196,7 +196,7 @@ CREATE TABLE hashtags (
 );
 ```
 
-### Personal frontend-filter state
+### Personal frontend state
 
 A category of per-viewer tables whose role is to feed the viewer's
 **frontend** (or their delegated miner) — not the graph. They share
@@ -207,7 +207,7 @@ three properties:
   backend-side default for the central frontend. Self-hosted
   clients, on-device caches, and miners can keep the same data
   locally and pass it to the calculator as a JSON array; the
-  math/filter is the same regardless of where the data came from.
+  shape is the same regardless of where the data came from.
 - **Operational, not graph history.** Exempt from the append-only
   rule that governs edges, node properties, and Postgres-side
   display content (see [layers.md](../primitive/layers.md)). These
@@ -217,8 +217,8 @@ three properties:
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
 content" — see [feed-ranking.md §3.5](../primitive/feed-ranking.md)),
-and the chat-read pointer (`chat_read_state`). Further viewer-
-tunable filters slot in here as they're designed.
+and the chat-read pointer (`chat_read_state`). Further per-viewer
+state slots in here as it's designed.
 
 ```sql
 -- View log: per-viewer record of which content nodes have been seen.
