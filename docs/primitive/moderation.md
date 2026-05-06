@@ -169,7 +169,42 @@ platform outcome is destructive (`illegal` → redaction); the
 chat-internal outcome is non-destructive (the chat moves away;
 the message stays).
 
-## 7. Platform guidelines
+## 7. Noise vs consistency — what the mod gate does and doesn't solve
+
+A bot net could try to flood the system by **mass-creating**
+moderation Proposals against legitimate content and **mass-voting**
+on each other's Proposals. Two distinct concerns, only one of
+which the mod gate addresses:
+
+- **Consistency.** No spam Proposal can apply without a real
+  moderator's positive vote (§3). A million bot-authored
+  Proposals against legitimate content cannot cross threshold.
+  The classification cannot drift from `'normal'` without mod
+  consent. The mod gate fully covers this.
+- **Noise (operational).** Mods reviewing the queue could be
+  drowned in bot-authored Proposals, with real reports buried in
+  the noise. The mod gate doesn't address this directly.
+
+Noise is handled out-of-graph by the same mechanisms used for the
+rest of the platform:
+
+- **Feed-ranking.** Moderator UIs surface Proposals through the
+  same per-viewer ranking ([feed-ranking.md](feed-ranking.md))
+  used for content. Bot-authored Proposals from severed clusters
+  land at zero `h(t)` and never surface to honest mods. Real
+  reports surface because they originate from non-severed users
+  with real reach into the moderator's network.
+- **API rate limits.** Per-author throttling on Proposal creation
+  is an operational concern, same as login rate limits — it lives
+  in the API layer, not the graph primitive.
+
+Premature graph-level defenses (e.g. a `vote-restricted` role)
+are deliberately not added. If real-world experience proves the
+operational mechanisms insufficient, a graph-level role can be
+added later — but adding it speculatively would risk being wrong
+about the real attack shape.
+
+## 8. Platform guidelines
 
 The Network publishes normative platform guidelines covering what
 counts as `illegal`, what counts as `sensitive`, and what is "not
