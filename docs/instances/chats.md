@@ -29,11 +29,7 @@ members, some of which may choose to run with encrypted content."
 
 ---
 
-## 2. The two orthogonal axes
-
-A chat's behavior is defined by two independent choices:
-
-### Join policy — who can become a member
+## 2. Join policy — who can become a member
 
 Specified in [graph-model.md §5](../primitive/graph-model.md) as the
 two-edge approval pattern. Four shapes:
@@ -43,24 +39,9 @@ two-edge approval pattern. Four shapes:
 - **Request-entry** — user requests, admin approves.
 - **Multi-sig** — N approvers required (governance-heavy chats).
 
-### Content privacy — who can read messages
-
-Message bodies always live in Postgres — see §4 below. The privacy
-setting controls how that body row is stored:
-
-- **Plaintext** — ChatMessage bodies are stored in Postgres as
-  readable text. Anyone with API or database access can read them.
-- **End-to-end encrypted (E2EE)** — ChatMessage bodies are stored
-  in Postgres as ciphertext. Only members holding the decryption
-  key can read; even the database operator never sees plaintext.
-
-The two axes are independent. Every combination is valid:
-
-| Join × privacy | Plaintext                                 | E2EE                                                  |
-|----------------|-------------------------------------------|-------------------------------------------------------|
-| Open           | Public forum (anyone joins, anyone reads) | Open group with private content                       |
-| Invite-only    | Members-only forum                        | Classic private group; 1:1 DM is this with 2 members  |
-| Request-entry  | Request-only forum                        | Gated private community                               |
+Privacy of message contents is **per-message**, not per-chat — see
+§5. A single chat can carry both plaintext and encrypted messages
+freely.
 
 ---
 
@@ -156,38 +137,75 @@ Postgres-side display content.
 ## 5. Encryption as the privacy mechanism
 
 The graph carries chat **topology only** — it never holds message
-bodies, encrypted or not. Per §4, every body lives in Postgres. For an
-E2EE chat the body row in Postgres is a **ciphertext blob**; for a
-plaintext chat it's readable text.
+bodies, encrypted or not. Per §4, every body lives in Postgres.
+**Privacy is per-message, not per-chat:** each ChatMessage carries
+a `content_privacy` flag (`plaintext` / `encrypted`) that tells
+the frontend whether to attempt decryption. A single chat can mix
+plaintext and encrypted messages freely.
 
-An observer with API or database access sees:
+For an encrypted message, the body row in Postgres is a
+**ciphertext blob**; for a plaintext message it's readable text.
 
-- Graph: that the ChatMessage exists, its author (see
+### The chat-level decryption key
+
+Each chat has one symmetric **chat key**. Every member derives it
+deterministically from their own private key and the chat's id —
+the standard messenger-crypto pattern (Signal, MLS). Joining a
+chat as a member therefore gives that User the ability to derive
+the chat key; leaving doesn't revoke this (cryptography can't
+forget). New members can derive the same key once added.
+
+An observer's view:
+
+- **Graph:** the ChatMessage exists, its author (see
   [authorship.md](../primitive/authorship.md)), its creation
   timestamp, its structural position (`ChatMessage → Chat`).
-- Postgres: the body row — ciphertext if the chat is E2EE,
-  plaintext otherwise.
+- **Postgres:** the body row — ciphertext if `content_privacy =
+  'encrypted'`, plaintext otherwise.
+- **Members** of the chat additionally hold the chat key and can
+  decrypt encrypted bodies.
+- **Non-members** see only what the graph and Postgres expose —
+  plaintext bodies are readable to anyone with API access;
+  encrypted bodies appear as ciphertext.
 
-For E2EE chats, decrypting the body requires the per-chat symmetric
-key held by members.
+### Disclosure and irreversibility
 
-Important to be explicit about:
+Any chat member can disclose the chat key publicly — through any
+normal authoring gesture: a Comment on the chat, a public Post, a
+plaintext ChatMessage in the same chat, an off-graph channel,
+anything. The system permits this by design. Encryption protects
+against people *outside* the chat reading content; a participant
+sharing what was said to them is a normal social and legal posture
+the graph doesn't restrict.
 
-- **No layer of the system is a trusted party for decryption.** The
-  graph holds no body content at all. The Postgres operator holds
-  ciphertext for E2EE chats and never sees the key.
-- **Privacy is key management, not a graph or database feature.** If a
-  member leaks the key or forwards decrypted content, nothing in the
-  system can prevent it — same as every E2EE system.
-- **Metadata is public by design.** The fact that users A and B share
-  a chat is a public graph fact. This is a deliberate departure from
-  apps that try to hide who talks to whom.
+Once disclosed, the key cannot be un-disclosed. Every encrypted
+message ever sent in that chat under that key becomes readable by
+anyone in possession of the leaked key — past, present, future.
 
-### Key management
+A future feature ("chat key rotation") may let members vote a new
+chat key into use via Proposal targeting some `Chat.key_*`
+property. Rotation would only encrypt **new** messages under the
+new key — past messages stay under the leaked old key, since
+append-only forbids re-encrypting historical content. This
+feature is a forward consideration; not committed yet.
 
-CoGra **does not reinvent crypto**. Key exchange, per-member key
-rotation, and forward secrecy use an established open-source protocol
-(e.g. the Signal protocol, MLS). No custom crypto. Picking the specific
+### Important properties
+
+- **No layer of the system is a trusted party for decryption.**
+  The graph holds no body content at all. The Postgres operator
+  holds ciphertext for encrypted messages and never sees the key.
+- **Privacy is key management, not a graph or database feature.**
+  Once a member leaks the key, nothing in the system can prevent
+  others from reading — same as every E2EE system.
+- **Metadata is public by design.** The fact that users A and B
+  share a chat is a public graph fact. CoGra deliberately doesn't
+  hide who talks to whom.
+
+### Key management library
+
+CoGra **does not reinvent crypto**. Key derivation, key exchange,
+forward secrecy use an established open-source protocol (e.g. the
+Signal protocol, MLS). No custom crypto. Picking the specific
 library is an implementation decision, not a design decision.
 
 ### Searching and indexing
