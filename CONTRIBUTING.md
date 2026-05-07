@@ -89,9 +89,6 @@ them:
   dimensions.
 - **Never store graph topology in Postgres or content in
   Memgraph.** Each database does what it's built for.
-- **Never make design decisions autonomously.** Always ask. Suggest
-  options, explain trade-offs, but let the human decide. Design
-  reasoning often exists that isn't visible in the code.
 - **Never skip tests.** Linting, unit tests, and integration tests
   are created alongside the code, not after.
 
@@ -161,10 +158,6 @@ Skip:
 - Filler subsections.
 - Length-for-length's-sake.
 - Per-commit prose that duplicates the commit body.
-
-**Push and open the PR directly** when commits are ready. File
-edits get reviewed one-by-one as they're proposed; once they're in,
-no separate "want me to push?" step is needed.
 
 ### Tests
 
