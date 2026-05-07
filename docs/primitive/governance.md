@@ -326,6 +326,11 @@ design discussion (§9).
   on every classification change (`sensitive` / `illegal` and
   un-classification back to `normal`); mod weight = member
   weight = 1.
+- **`:Network` parameter amendments** — [network.md §7](network.md).
+  Shape B from the User node directly. Two amendment-rule pairs
+  on the `:Network` singleton — a baseline pair for low-stakes
+  parameters and a critical pair for parameters with destructive
+  or platform-wide reach. Mod gate required for both.
 
 Future cases get added here as they're designed.
 
