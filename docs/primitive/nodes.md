@@ -101,15 +101,18 @@ Entities that are acted upon by actors.
 Most content nodes have minimal graph-side properties — the substance
 lives in Postgres. Specific cases:
 
-- **Chat**: `name` (if needed for routing or display hints) and
+- **Chat**: `name` (if needed for routing or display hints),
   `join_policy` (`open` / `invite-only` / `request-entry` /
   `multi-sig`) — the graph reads `join_policy` when an actor's claim
-  toward a `ChatMember` arrives, to decide what approval is required.
-  See [chats.md §2](../instances/chats.md). The `content_privacy`
-  setting (plaintext vs E2EE) lives in Postgres alongside the chat
-  row — message bodies are always a Postgres concern (see
-  [chats.md §4-5](../instances/chats.md)), so the graph never reads
-  the privacy setting.
+  toward a `ChatMember` arrives, to decide what approval is required —
+  and `epoch`, the integer chat-key-rotation counter (see
+  [chats.md §5](../instances/chats.md): advanced on every
+  membership change and on every passing mid-epoch rotation Proposal).
+  See [chats.md §2](../instances/chats.md). The per-message
+  `content_privacy` flag (plaintext vs E2EE) lives in Postgres
+  alongside each ChatMessage body row — message bodies are always
+  a Postgres concern (see [chats.md §4-5](../instances/chats.md)),
+  so the graph never reads the privacy flag.
 - **Hashtag**: its tag string — the tag *is* the identifier. The
   UUID is content-addressed (`UUIDv5` of the canonical name with
   a fixed namespace); see
@@ -185,10 +188,34 @@ Collectives, Items) own the display content.
 
 ---
 
+## 4. System nodes
+
+A small fourth category for **singleton, instance-level
+configuration** that doesn't fit actor / content / junction:
+
+| Node type | Description |
+|-----------|-------------|
+| **Network** | Singleton per instance. Carries Network-level configuration parameters (moderation thresholds, role-change quorums, eligibility definitions). Targeted by Proposals when those parameters are changed. See [network.md](network.md). |
+
+System nodes carry no user-authored content of their own — every
+property they hold is governance-managed via Proposals. They are
+graph-resident because governance reads and writes them, and because
+the Proposal primitive needs a node to target.
+
+### Graph-side properties
+
+See [network.md](network.md) for the full property list and defaults.
+
+### Postgres-side content
+
+None — system nodes have no display content.
+
+---
+
 ## What this doc is not
 
-- **Not the conceptual model.** The three categories (actor,
-  content, junction) and why they matter are in
+- **Not the conceptual model.** The four categories (actor, content,
+  junction, system) and why they matter are in
   [graph-model.md §2](graph-model.md).
 - **Not the Memgraph schema.** Concrete property types,
   constraints, and per-label indexes live in

@@ -108,10 +108,13 @@ CREATE INDEX ON :Comment(id);
 
 | Property            | Type   | Notes |
 |---|---|---|
-| `id`                | String | UUID v4. |
-| `name`              | String | Optional; layered. The graph carries it for routing/display hints. |
-| `join_policy`       | String | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md). |
-| `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. See [moderation.md](../primitive/moderation.md). |
+| `id`                     | String  | UUID v4. |
+| `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. |
+| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md). |
+| `moderation_status`      | String  | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. See [moderation.md](../primitive/moderation.md). |
+| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §5](../instances/chats.md). |
+| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md). |
+| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
@@ -129,12 +132,17 @@ CREATE INDEX ON :Chat(id);
 |---|---|---|
 | `id`                | String | UUID v4. |
 | `author_id`         | String | Cached. |
-| `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. **Plaintext chats only** — community moderation can't classify content it can't read. See [moderation.md](../primitive/moderation.md). |
+| `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. The protocol does not gate classification on disclosure of the chat key; "moderate only after reading" is a normative requirement on moderators, not a protocol invariant — see [moderation.md §5](../primitive/moderation.md). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMessage) ASSERT m.id IS UNIQUE;
 CREATE INDEX ON :ChatMessage(id);
 ```
+
+The `epoch` index a ciphertext was encrypted under lives in
+Postgres alongside the body row, not on the graph — message bodies
+are always Postgres-side per [chats.md §5](../instances/chats.md),
+so the graph never reads it. See [data-model.md](data-model.md).
 
 #### `:Item`
 
@@ -224,6 +232,38 @@ Additional properties pending — committed alongside the
 CREATE CONSTRAINT ON (o:ItemOwnership) ASSERT o.id IS UNIQUE;
 CREATE INDEX ON :ItemOwnership(id);
 ```
+
+### System nodes
+
+#### `:Network`
+
+A **singleton per instance** carrying Network-level configuration —
+moderation thresholds, role-change quorums, eligibility-definition
+parameters. Properties are layered per
+[layers.md](../primitive/layers.md); each is settable via a Proposal
+targeting that property name. See
+[network.md](../primitive/network.md).
+
+| Property                          | Type    | Notes |
+|---|---|---|
+| `id`                              | String  | UUID v4. Always set by the API at instance bootstrap. |
+| `mod_role_change_quorum`          | Float   | Minimum fraction of active members that must cast a vote on a `User.network_role` Proposal. Default `0.30`. |
+| `mod_role_change_threshold`       | Float   | Fraction of cast votes required in favor for a `User.network_role` Proposal to pass. Default `0.50`. Mod-gate applies (≥1 existing mod positive vote). |
+| `moderation_sensitive_quorum`     | Float   | Quorum for `'sensitive'` classification Proposals. Default `0.01` (1%). |
+| `moderation_sensitive_threshold`  | Float   | Pass-threshold for `'sensitive'`. Default `0.50`. Mod-gate applies. |
+| `moderation_illegal_quorum`       | Float   | Quorum for `'illegal'` classification Proposals. Default `0.02` (2%). |
+| `moderation_illegal_threshold`    | Float   | Pass-threshold for `'illegal'`. Default `0.667` (2/3). Mod-gate applies. |
+| `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
+
+```cypher
+CREATE CONSTRAINT ON (n:Network) ASSERT n.id IS UNIQUE;
+CREATE INDEX ON :Network(id);
+```
+
+There is exactly **one** `:Network` node per CoGra instance.
+Singleton enforcement is application-level (the bootstrap path
+creates it; ordinary code paths never insert a second). The
+instance configuration knows the singleton's `id`.
 
 ---
 
