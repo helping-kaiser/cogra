@@ -152,27 +152,41 @@ CREATE TABLE comments (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Chats: conversation containers
--- content_privacy controls how message bodies in chat_messages are stored
--- (plaintext vs ciphertext). The graph never reads it — see chats.md §4-5.
+-- Chats: conversation containers.
+-- Privacy is per-message (chat_messages.content_privacy), not per-chat —
+-- a single chat can carry both plaintext and encrypted messages. See
+-- chats.md §5.
 CREATE TABLE chats (
-    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            TEXT,       -- null for 1:1 chats
-    description     TEXT,
-    image_id        UUID        REFERENCES media_attachments(id),
-    content_privacy TEXT        NOT NULL DEFAULT 'plaintext'
-                                CHECK (content_privacy IN ('plaintext', 'e2ee')),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT,       -- null for 1:1 chats
+    description TEXT,
+    image_id    UUID        REFERENCES media_attachments(id),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Chat messages: individual messages within a chat
+-- Chat messages: individual messages within a chat.
+-- content_privacy is per-message (see chats.md §5): 'plaintext' bodies are
+-- readable text; 'encrypted' bodies are ciphertext under the chat's
+-- member-derived symmetric key for the epoch the message was authored in.
+-- A chat can carry both freely.
+--
+-- epoch records which key the ciphertext is under (see chats.md §5: chat
+-- keys are organized in epochs, advanced on membership change and on
+-- passing mid-epoch rotation Proposals). NULL for plaintext rows; NOT NULL
+-- for encrypted rows. The frontend uses it to pick the right key.
 CREATE TABLE chat_messages (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id     UUID        NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
-    author_id   UUID        NOT NULL,
-    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    content     TEXT        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_id         UUID        NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+    author_id       UUID        NOT NULL,
+    author_type     TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    content         TEXT        NOT NULL,
+    content_privacy TEXT        NOT NULL DEFAULT 'plaintext'
+                                CHECK (content_privacy IN ('plaintext', 'encrypted')),
+    epoch           INTEGER     CHECK (
+                                  (content_privacy = 'plaintext' AND epoch IS NULL) OR
+                                  (content_privacy = 'encrypted' AND epoch >= 1)
+                                ),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Items: physical or digital goods (future)

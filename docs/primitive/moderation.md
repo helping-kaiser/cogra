@@ -12,16 +12,21 @@ classification change requires **at least one moderator's positive
 vote** in the tally. Bots can flood the community side but cannot
 cross the gate without compromising a real moderator.
 
-Messages in end-to-end-encrypted chats are out of scope — encrypted
-bodies are not readable by the community, so they are moderated
-chat-internally via [chats.md §6](../instances/chats.md) disavowal.
+Encrypted ChatMessages can technically be voted on at any time —
+the protocol does **not** block a Proposal against a ciphertext.
+"Moderate only after disclosure" is a normative requirement on
+moderators, not a protocol invariant; voting blind is a
+mod-conduct violation, addressable through the same primitive
+that handles any mod misconduct (see §5). Until the relevant
+chat key has been disclosed, chat-internal disavowal
+([chats.md §6](../instances/chats.md)) is the only meaningful
+recourse.
 
 ## 1. The three classifications
 
 `moderation_status` is a graph-side property on every user-input-
-bearing node — User, Collective, Post, Comment, ChatMessage
-(plaintext only), Chat, Item, Hashtag (see
-[nodes.md](nodes.md)). Three values:
+bearing node — User, Collective, Post, Comment, ChatMessage,
+Chat, Item, Hashtag (see [nodes.md](nodes.md)). Three values:
 
 | Value | Meaning | Effect |
 |---|---|---|
@@ -80,18 +85,21 @@ weighted-voters.
 The Network ([network.md](network.md)) is the eligibility-and-
 voting body for moderation Proposals.
 
-- **Eligibility:** all active Network members (every User).
+- **Eligibility:** all active Network members (every User with at
+  least one outgoing actor edge inside the
+  `Network.active_threshold_days` window).
 - **Vote weight:** 1 per voter — mod or member.
 - **Vote shape:** Shape B from the voter's User node directly.
   See [governance.md §3](governance.md) for the relaxation
   that permits a User node (rather than a junction) to carry
   the vote for Network-level governance.
-- **Default thresholds (starting points, not fixed rules):**
+- **Thresholds (read from the `:Network` singleton — see
+  [graph-data-model.md](../implementation/graph-data-model.md)):**
 
-  | Action | Quorum (% of active Network) | Pass-threshold (of cast) | Mod gate |
+  | Action | Quorum property | Pass-threshold property | Mod gate |
   |---|---|---|---|
-  | Classify `sensitive` | ≥1% | >50% | ≥1 mod positive |
-  | Classify `illegal` | ≥2% | ≥2/3 | ≥1 mod positive |
+  | Classify `sensitive`         | `Network.moderation_sensitive_quorum` (default 1%) | `Network.moderation_sensitive_threshold` (default >50%) | ≥1 mod positive |
+  | Classify `illegal`           | `Network.moderation_illegal_quorum` (default 2%) | `Network.moderation_illegal_threshold` (default ≥2/3) | ≥1 mod positive |
   | Un-classify back to `normal` | symmetric to the original action | symmetric | ≥1 mod positive |
 
 Quorum percentages are deliberately low so decisions can actually
@@ -99,9 +107,10 @@ finish — at network scale, even 1-2% participation in a specific
 decision is high. The mod gate carries the integrity guarantee;
 quorum just keeps a single mod from acting unilaterally.
 
-Every number above is a Network-level parameter, itself amendable
-via the same Proposal primitive ([governance.md §2.4](governance.md)).
-Defaults exist to bootstrap; they are not fixed rules.
+Every number above is a property of the `:Network` singleton,
+itself amendable via the same Proposal primitive
+([governance.md §2.4](governance.md)). Defaults exist to bootstrap;
+they are not fixed rules.
 
 ## 5. Scope
 
@@ -110,20 +119,65 @@ Defaults exist to bootstrap; they are not fixed rules.
 - **User, Collective** — for the user-authored fields (avatar,
   bio, profile text, name).
 - **Post, Comment** — content bodies and media.
-- **ChatMessage** — in plaintext chats.
+- **ChatMessage** — both `plaintext` and `encrypted` per
+  [chats.md §5](../instances/chats.md). Encrypted messages are
+  classifiable once readable (see "encrypted message classification"
+  below).
 - **Chat** — name, description, image.
 - **Item** — name, description, media.
 - **Hashtag** — the canonical name itself.
 
 **Out of scope:**
 
-- ChatMessages in end-to-end-encrypted chats — the community
-  cannot read encrypted bodies, so platform-wide moderation
-  cannot classify them. They are moderated chat-internally via
-  the disavowal mechanism in [chats.md §6](../instances/chats.md).
 - Junction nodes (`ChatMember`, `CollectiveMember`,
   `ItemOwnership`) and `Proposal` nodes — they carry no
   user-authored content fields.
+
+### Encrypted message classification
+
+For a moderation Proposal targeting an encrypted ChatMessage to be
+useful, voters need to be able to read the body. The disclosure
+path is **independent of the moderation primitive** — any chat
+member can release the relevant epoch's chat key (per
+[chats.md §5](../instances/chats.md)) through any normal authoring
+gesture: a Comment on the chat, a public Post, a plaintext
+ChatMessage in the same chat, an off-graph channel, anything. The
+system permits voluntary disclosure by participants by design.
+Disclosure is scoped to the disclosed epoch only; leaking Kᵢ
+exposes E_i's messages and no others.
+
+This matters in practice for cases like contracts in private chats
+(forthcoming with the economics) where one party may need to
+surface the other's misbehavior.
+
+#### Why this is a norm, not a protocol gate
+
+The protocol does **not** block a Proposal from being authored
+against an opaque ciphertext, and does not block votes from being
+cast on it. The system is honest about this: technically, a bot
+swarm can vote `+1` on encrypted bodies all day, and a malicious
+moderator can cross the gate (§3) without reading anything. What
+prevents this is the role definition, not the code:
+
+- **Bot voting on ciphertext** is the same noise-vs-consistency
+  problem as any other bot voting (§7) — the mod gate is what
+  guarantees consistency, since no Proposal crosses without a
+  real moderator's positive vote.
+- **A moderator voting on undisclosed ciphertext** is a
+  mod-conduct violation. The remedy is the same Proposal
+  primitive applied to that User's `network_role` — the Network
+  votes the offender out of the moderator role
+  ([network.md](network.md)). No special mechanism, just the same
+  governance the rest of the platform uses.
+
+The integrity guarantee is therefore a **two-part claim**: the
+mod gate (§3) blocks the consistency attack; the de-mod-ing path
+addresses the moderator-misconduct attack. Together they make
+"moderate only after disclosure" a load-bearing norm rather than
+a protocol invariant — which is the most we can offer without
+graph-level guards that would be both too weak (off-graph
+disclosure exists, and the graph cannot detect it) and too strict
+(legitimate cases like contract disputes would be blocked).
 
 ## 6. Coexistence with chat-internal moderation
 
@@ -144,7 +198,42 @@ platform outcome is destructive (`illegal` → redaction); the
 chat-internal outcome is non-destructive (the chat moves away;
 the message stays).
 
-## 7. Platform guidelines
+## 7. Noise vs consistency — what the mod gate does and doesn't solve
+
+A bot net could try to flood the system by **mass-creating**
+moderation Proposals against legitimate content and **mass-voting**
+on each other's Proposals. Two distinct concerns, only one of
+which the mod gate addresses:
+
+- **Consistency.** No spam Proposal can apply without a real
+  moderator's positive vote (§3). A million bot-authored
+  Proposals against legitimate content cannot cross threshold.
+  The classification cannot drift from `'normal'` without mod
+  consent. The mod gate fully covers this.
+- **Noise (operational).** Mods reviewing the queue could be
+  drowned in bot-authored Proposals, with real reports buried in
+  the noise. The mod gate doesn't address this directly.
+
+Noise is handled out-of-graph by the same mechanisms used for the
+rest of the platform:
+
+- **Feed-ranking.** Moderator UIs surface Proposals through the
+  same per-viewer ranking ([feed-ranking.md](feed-ranking.md))
+  used for content. Bot-authored Proposals from severed clusters
+  land at zero `h(t)` and never surface to honest mods. Real
+  reports surface because they originate from non-severed users
+  with real reach into the moderator's network.
+- **API rate limits.** Per-author throttling on Proposal creation
+  is an operational concern, same as login rate limits — it lives
+  in the API layer, not the graph primitive.
+
+Premature graph-level defenses (e.g. a `vote-restricted` role)
+are deliberately not added. If real-world experience proves the
+operational mechanisms insufficient, a graph-level role can be
+added later — but adding it speculatively would risk being wrong
+about the real attack shape.
+
+## 8. Platform guidelines
 
 The Network publishes normative platform guidelines covering what
 counts as `illegal`, what counts as `sensitive`, and what is "not
