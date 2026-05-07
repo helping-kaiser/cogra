@@ -318,7 +318,7 @@ design discussion (§9).
   contract specifies; each is parameterized for its own
   decision-type. Eligibility, weights, and thresholds are all
   per-instance.
-- **Network moderator role changes** — [network.md §4](network.md).
+- **Network moderator role changes** — [network.md §5](network.md).
   Shape B from the User node directly. Multi-sig: ≥1 existing
   moderator's positive vote plus a community-quorum threshold.
 - **Content moderation classifications** — [moderation.md](../instances/moderation.md).
