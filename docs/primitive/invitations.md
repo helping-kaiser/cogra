@@ -105,9 +105,13 @@ explicitly skips the choice.
 Invitations are typically shared through messenger apps and other
 social channels rather than over email — the inviter generates a
 link and posts it where their community will see it. This means
-the inviter does **not know in advance who will accept**: anyone
-holding the link who has not already used it can register through
-it.
+the inviter does **not know in advance who will accept**.
+
+The link is **time-gated and multi-use**, not single-use.
+Influencers and public communities need to onboard many people
+through the same shared link, so consuming it on first use would
+defeat the mechanism. Different invitees produce different User
+nodes; the link expires by time, not by use.
 
 ### Pre-committed inviter values
 
