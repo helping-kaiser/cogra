@@ -42,9 +42,17 @@ Every node type that carries open user-authored content — avatars,
 profile text, post bodies, comment bodies, message bodies, chat
 descriptions, item descriptions, hashtag names — carries an
 additional `moderation_status` graph property:
-`'normal'` / `'sensitive'` / `'illegal'`, default `'normal'`,
-layered. The Network-wide governance instance described in
+`'normal'` / `'sensitive'`, default `'normal'`, layered. The
+Network-wide governance instance described in
 [moderation.md](../instances/moderation.md) is what sets it.
+
+`'illegal'` is **not** a value of this property. Illegal-content
+classification operates per-field, not per-node — it writes a
+redaction marker on the targeted field's top layer per
+[layers.md §5](layers.md). When any field on a node carries a
+redaction marker, the system automatically advances the node's
+`moderation_status` to `'sensitive'` if it isn't already, so
+frontend filtering treats the node as a unit.
 
 The property applies to: **User, Collective, Post, Comment,
 ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,
