@@ -26,47 +26,14 @@ Postgres holds all human-readable metadata. It knows nothing about the social
 graph, edge weights, or feed ranking. Every table here exists to answer the
 question: "given a UUID, what do I render on screen?"
 
-### Actor metadata
+### Foundation
+
+`media_attachments` is referenced by both actor tables (avatars)
+and several content tables (chat images, post galleries via
+junctions, etc.), so it is defined first. The asset row never
+points at a parent — see "Why parents point at attachments" below.
 
 ```sql
--- Users: identity and profile display data
-CREATE TABLE users (
-    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    username      TEXT        NOT NULL UNIQUE,
-    display_name  TEXT        NOT NULL,
-    bio           TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
-CREATE TABLE collectives (
-    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
-    display_name  TEXT        NOT NULL,
-    description   TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
-### Content metadata
-
-```sql
--- Posts: content authored by users or collectives
-CREATE TABLE posts (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id   UUID        NOT NULL,
-    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    content     TEXT        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- Media attachments: asset metadata only (URL, mime, size, alt text,
 -- display options, uploader). Parents (posts, comments, chat messages,
 -- items, users, collectives, chats) point at attachments via either a
@@ -98,41 +65,47 @@ CREATE TABLE media_attachments (
 );
 CREATE INDEX media_attachments_author_idx
     ON media_attachments (author_type, author_id);
+```
 
--- Junction: posts → attachments (ordered, optionally a cover).
--- display_order and is_cover are parent-specific facts about the
--- relationship, not properties of the asset.
-CREATE TABLE post_attachments (
-    post_id       UUID     NOT NULL REFERENCES posts(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (post_id, attachment_id)
+### Actor metadata
+
+```sql
+-- Users: identity and profile display data
+CREATE TABLE users (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    username      TEXT        NOT NULL UNIQUE,
+    display_name  TEXT        NOT NULL,
+    bio           TEXT,
+    avatar_id     UUID        REFERENCES media_attachments(id),
+    website_url   TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Junction: comments → attachments (ordered).
-CREATE TABLE comment_attachments (
-    comment_id    UUID     NOT NULL REFERENCES comments(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (comment_id, attachment_id)
+-- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
+CREATE TABLE collectives (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
+    display_name  TEXT        NOT NULL,
+    description   TEXT,
+    avatar_id     UUID        REFERENCES media_attachments(id),
+    website_url   TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+```
 
--- Junction: chat messages → attachments (ordered).
-CREATE TABLE chat_message_attachments (
-    chat_message_id UUID     NOT NULL REFERENCES chat_messages(id),
-    attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order   SMALLINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (chat_message_id, attachment_id)
-);
+### Content nodes
 
--- Junction: items → attachments (ordered, optionally a cover).
-CREATE TABLE item_attachments (
-    item_id       UUID     NOT NULL REFERENCES items(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (item_id, attachment_id)
+```sql
+-- Posts: content authored by users or collectives
+CREATE TABLE posts (
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id   UUID        NOT NULL,
+    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    content     TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Comments: responses to any commentable content node.
@@ -207,6 +180,49 @@ CREATE TABLE hashtags (
     id         UUID        PRIMARY KEY,
     name       TEXT        NOT NULL UNIQUE,  -- stored lowercase, no '#'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### Content–attachment junctions
+
+Per-parent join tables connecting content nodes to media assets
+(see "Why parents point at attachments" below).
+
+```sql
+-- Junction: posts → attachments (ordered, optionally a cover).
+-- display_order and is_cover are parent-specific facts about the
+-- relationship, not properties of the asset.
+CREATE TABLE post_attachments (
+    post_id       UUID     NOT NULL REFERENCES posts(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (post_id, attachment_id)
+);
+
+-- Junction: comments → attachments (ordered).
+CREATE TABLE comment_attachments (
+    comment_id    UUID     NOT NULL REFERENCES comments(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (comment_id, attachment_id)
+);
+
+-- Junction: chat messages → attachments (ordered).
+CREATE TABLE chat_message_attachments (
+    chat_message_id UUID     NOT NULL REFERENCES chat_messages(id),
+    attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order   SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (chat_message_id, attachment_id)
+);
+
+-- Junction: items → attachments (ordered, optionally a cover).
+CREATE TABLE item_attachments (
+    item_id       UUID     NOT NULL REFERENCES items(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (item_id, attachment_id)
 );
 ```
 
