@@ -328,6 +328,63 @@ CREATE TABLE user_preferences (
 
 ---
 
+### Authentication state
+
+Backend-only tables that gate participation in the graph (writing
+edges, authoring nodes, voting, joining junctions). Reading the
+graph never requires a row here — see
+[auth.md](auth.md) and [graph-model.md §1](../primitive/graph-model.md).
+
+```sql
+-- Refresh tokens: one row per active session. The raw token is
+-- never persisted — only its SHA-256 hash, so a database read does
+-- not yield usable tokens. Rotation, revocation, and reuse-detection
+-- semantics live in auth.md §Tokens.
+CREATE TABLE auth_refresh_tokens (
+    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID         NOT NULL,
+    token_hash    BYTEA        NOT NULL UNIQUE,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    last_used_at  TIMESTAMPTZ,
+    expires_at    TIMESTAMPTZ  NOT NULL,
+    device_label  TEXT,
+    revoked_at    TIMESTAMPTZ
+);
+CREATE INDEX auth_refresh_tokens_user_idx
+    ON auth_refresh_tokens (user_id, expires_at);
+
+-- Pending registrations: pre-User-node holding state. Created when
+-- a registration form is submitted and consumed when the email-
+-- verification step creates the User node, or expires after 24 h.
+-- See auth.md §Account lifecycle for why no User node exists in
+-- this state.
+--
+-- invitation_token_id is the invitation the registrant came in
+-- through (NULL only for the first-user genesis bootstrap, see
+-- auth.md §First-user genesis bootstrap).
+-- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
+-- edge values toward the inviter, written to the graph edge on
+-- verification per invitations.md.
+-- email_verification_token_hash stores SHA-256 of the single-use
+-- verification token, same hashing rationale as refresh tokens.
+CREATE TABLE auth_pending_registrations (
+    id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    username                      TEXT         NOT NULL,
+    email                         TEXT         NOT NULL,
+    password_hash                 TEXT         NOT NULL,
+    invitation_token_id           UUID,
+    invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
+    invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
+    email_verification_token_hash BYTEA        NOT NULL UNIQUE,
+    created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    expires_at                    TIMESTAMPTZ  NOT NULL
+);
+CREATE INDEX auth_pending_registrations_email_idx
+    ON auth_pending_registrations (email);
+```
+
+---
+
 ### Application registry
 
 ```sql
