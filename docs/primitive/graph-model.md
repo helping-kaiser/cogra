@@ -276,15 +276,19 @@ needed:
 - Only the claim edge exists → pending.
 - Both edges exist → active.
 
-The **approval policy** for each relationship is "N actor edges
-from specific roles required toward the junction node" — an
-instance of the threshold policy described in
-[governance.md §2.4](governance.md). N ranges from 1 (single
-approver: the joining actor or a single decider) to multi-sig with
-weighted votes (weights derived from role properties on the
-approving actors' own junction nodes, per
-[governance.md §2.3](governance.md)). Specific applications pick
-their N — see [chats.md](../instances/chats.md) and
+The **approval policy** for each relationship uses **Shape A**
+voting (per [governance.md §3](governance.md)): the joining or
+inviting actor's edge toward the junction node carries their
+position. The threshold itself is one of the policy shapes from
+[governance.md §2.4](governance.md) — typically simple-count
+("N actor edges from specific roles required toward the junction
+node"), but weighted-count and other shapes from §2.4 are
+admissible. N ranges from 1 (single approver: the joining actor
+or a single decider) to multi-sig with weighted votes (weights
+derived from role properties on the approving actors' own
+junction nodes, per [governance.md §2.3](governance.md)).
+Specific applications pick their N — see
+[chats.md](../instances/chats.md) and
 [collectives.md](../instances/collectives.md).
 
 ### Revocation and state transitions
