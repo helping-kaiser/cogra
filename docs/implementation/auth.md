@@ -59,32 +59,44 @@ Three paths reach the same end state — a User node plus the
 account's invitation edges in the graph and credentials in
 Postgres.
 
+### Invitation generation (inviter side)
+
+When an authenticated user generates an invite link, the server
+writes one row to `auth_invitations` (see [data-model.md](data-model.md))
+carrying the inviter's UUID, their pre-committed `(dim1, dim2)`
+edge values, and the link's expiry. The link URL itself carries
+only the row id; the pre-committed dim values stay server-side
+so they cannot be tampered with by relaying the link. Per
+[invitations.md](../primitive/invitations.md), links are
+time-gated and multi-use — the row stays valid until `expires_at`
+or until the inviter explicitly revokes it (`revoked_at`).
+
 ### Invitation acceptance (the default path)
 
 1. **Invite-link click.** The invitee opens the URL. The server
-   validates the invitation token (not expired, within any
-   usage limits the link carries — see
-   [invitations.md](../primitive/invitations.md)) and renders
-   the registration form. Invite links are time-gated and
-   multi-use; many invitees can register through the same link.
+   looks up the `auth_invitations` row by id, validates that it
+   is unexpired and not revoked, and renders the registration
+   form. Invite links are time-gated and multi-use; many invitees
+   can register through the same row.
 2. **Registration submit.** The invitee submits username, email,
    password, and their outgoing-edge values toward the inviter.
    The server creates a **pending registration record** —
-   *not* a User node — and sends a verification email to the
+   *not* a User node — referencing the `auth_invitations` row
+   via `invitation_id`, and sends a verification email to the
    submitted address.
 3. **Email verification.** The invitee clicks the verification
    link. The server atomically:
    - Creates the User node with the registered username.
    - Writes the two invitation edges per
      [invitations.md](../primitive/invitations.md), using the
-     pre-committed inviter values from the link and the invitee
-     values from the form.
+     pre-committed inviter values read from `auth_invitations`
+     and the invitee values from the pending-registration row.
    - Issues the first session (access + refresh token).
    - Deletes the pending registration record.
 
 If verification doesn't happen within 24 hours, the pending
 record expires. No User node is created, no edges are written.
-The invitation link itself is unaffected — its lifecycle is
+The invitation row itself is unaffected — its lifecycle is
 independent of any one pending registration.
 
 **Why no User node before verification:** the graph has no
