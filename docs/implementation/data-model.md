@@ -144,7 +144,7 @@ CREATE TABLE chats (
 -- for encrypted rows. The frontend uses it to pick the right key.
 CREATE TABLE chat_messages (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id         UUID        NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+    chat_id         UUID        NOT NULL REFERENCES chats(id),
     author_id       UUID        NOT NULL,
     author_type     TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
     content         TEXT        NOT NULL,
