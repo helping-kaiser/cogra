@@ -99,6 +99,10 @@ Cross-cutting design questions live in
 - **Never make design decisions autonomously.** Always ask.
   Suggest options, explain trade-offs, but let the human decide.
   Design reasoning often exists that isn't visible in the code.
+- **Never deviate silently.** If you have reason to break a rule
+  in this file, name the rule and the reason — let the human
+  accept or reject. Silent deviations look identical to violations
+  from the outside; announced ones can be evaluated.
 - **Never skip tests.** Linting, unit tests, and integration tests
   are created alongside the code, not after.
 
