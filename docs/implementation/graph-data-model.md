@@ -225,8 +225,9 @@ CREATE INDEX ON :CollectiveMember(id);
 |---|---|---|
 | `id`     | String | UUID v4. |
 
-Additional properties pending — committed alongside the
-[items.md](../instances/items.md) design pass.
+No additional properties — transfer state lives entirely in the
+surrounding edges (claim, approval, and supersession layers per
+[items.md](../instances/items.md)).
 
 ```cypher
 CREATE CONSTRAINT ON (o:ItemOwnership) ASSERT o.id IS UNIQUE;
