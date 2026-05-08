@@ -5,11 +5,6 @@ This document covers the **PostgreSQL schema** — the metadata/display layer.
 For the graph model (nodes, edges, tensor dimensions, append-only layers),
 see [Graph Model](../primitive/graph-model.md).
 
-> **Note:** This schema is a starting point. The production Peer Network
-> backend has an existing Postgres schema with additional display data tables
-> that will need to be reviewed and integrated. See:
-> https://github.com/peer-network/peer_backend/tree/main/sql_files_for_import
-
 ## The Boundary Rule
 
 > If the data is needed to **navigate or weight** the graph → Memgraph.
@@ -26,47 +21,14 @@ Postgres holds all human-readable metadata. It knows nothing about the social
 graph, edge weights, or feed ranking. Every table here exists to answer the
 question: "given a UUID, what do I render on screen?"
 
-### Actor metadata
+### Foundation
+
+`media_attachments` is referenced by both actor tables (avatars)
+and several content tables (chat images, post galleries via
+junctions, etc.), so it is defined first. The asset row never
+points at a parent — see "Why parents point at attachments" below.
 
 ```sql
--- Users: identity and profile display data
-CREATE TABLE users (
-    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    username      TEXT        NOT NULL UNIQUE,
-    display_name  TEXT        NOT NULL,
-    bio           TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
-CREATE TABLE collectives (
-    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
-    display_name  TEXT        NOT NULL,
-    description   TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
-### Content metadata
-
-```sql
--- Posts: content authored by users or collectives
-CREATE TABLE posts (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id   UUID        NOT NULL,
-    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    content     TEXT        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- Media attachments: asset metadata only (URL, mime, size, alt text,
 -- display options, uploader). Parents (posts, comments, chat messages,
 -- items, users, collectives, chats) point at attachments via either a
@@ -98,41 +60,47 @@ CREATE TABLE media_attachments (
 );
 CREATE INDEX media_attachments_author_idx
     ON media_attachments (author_type, author_id);
+```
 
--- Junction: posts → attachments (ordered, optionally a cover).
--- display_order and is_cover are parent-specific facts about the
--- relationship, not properties of the asset.
-CREATE TABLE post_attachments (
-    post_id       UUID     NOT NULL REFERENCES posts(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (post_id, attachment_id)
+### Actor metadata
+
+```sql
+-- Users: identity and profile display data
+CREATE TABLE users (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    username      TEXT        NOT NULL UNIQUE,
+    display_name  TEXT        NOT NULL,
+    bio           TEXT,
+    avatar_id     UUID        REFERENCES media_attachments(id),
+    website_url   TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Junction: comments → attachments (ordered).
-CREATE TABLE comment_attachments (
-    comment_id    UUID     NOT NULL REFERENCES comments(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (comment_id, attachment_id)
+-- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
+CREATE TABLE collectives (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
+    display_name  TEXT        NOT NULL,
+    description   TEXT,
+    avatar_id     UUID        REFERENCES media_attachments(id),
+    website_url   TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+```
 
--- Junction: chat messages → attachments (ordered).
-CREATE TABLE chat_message_attachments (
-    chat_message_id UUID     NOT NULL REFERENCES chat_messages(id),
-    attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order   SMALLINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (chat_message_id, attachment_id)
-);
+### Content nodes
 
--- Junction: items → attachments (ordered, optionally a cover).
-CREATE TABLE item_attachments (
-    item_id       UUID     NOT NULL REFERENCES items(id),
-    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
-    display_order SMALLINT NOT NULL DEFAULT 0,
-    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (item_id, attachment_id)
+```sql
+-- Posts: content authored by users or collectives
+CREATE TABLE posts (
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id   UUID        NOT NULL,
+    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    content     TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Comments: responses to any commentable content node.
@@ -207,6 +175,49 @@ CREATE TABLE hashtags (
     id         UUID        PRIMARY KEY,
     name       TEXT        NOT NULL UNIQUE,  -- stored lowercase, no '#'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### Content–attachment junctions
+
+Per-parent join tables connecting content nodes to media assets
+(see "Why parents point at attachments" below).
+
+```sql
+-- Junction: posts → attachments (ordered, optionally a cover).
+-- display_order and is_cover are parent-specific facts about the
+-- relationship, not properties of the asset.
+CREATE TABLE post_attachments (
+    post_id       UUID     NOT NULL REFERENCES posts(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (post_id, attachment_id)
+);
+
+-- Junction: comments → attachments (ordered).
+CREATE TABLE comment_attachments (
+    comment_id    UUID     NOT NULL REFERENCES comments(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (comment_id, attachment_id)
+);
+
+-- Junction: chat messages → attachments (ordered).
+CREATE TABLE chat_message_attachments (
+    chat_message_id UUID     NOT NULL REFERENCES chat_messages(id),
+    attachment_id   UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order   SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (chat_message_id, attachment_id)
+);
+
+-- Junction: items → attachments (ordered, optionally a cover).
+CREATE TABLE item_attachments (
+    item_id       UUID     NOT NULL REFERENCES items(id),
+    attachment_id UUID     NOT NULL REFERENCES media_attachments(id),
+    display_order SMALLINT NOT NULL DEFAULT 0,
+    is_cover      BOOLEAN  NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (item_id, attachment_id)
 );
 ```
 
@@ -324,6 +335,63 @@ CREATE TABLE user_preferences (
         (content_filtering_severity_level BETWEEN 0 AND 10)
     )
 );
+```
+
+---
+
+### Authentication state
+
+Backend-only tables that gate participation in the graph (writing
+edges, authoring nodes, voting, joining junctions). Reading the
+graph never requires a row here — see
+[auth.md](auth.md) and [graph-model.md §1](../primitive/graph-model.md).
+
+```sql
+-- Refresh tokens: one row per active session. The raw token is
+-- never persisted — only its SHA-256 hash, so a database read does
+-- not yield usable tokens. Rotation, revocation, and reuse-detection
+-- semantics live in auth.md §Tokens.
+CREATE TABLE auth_refresh_tokens (
+    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID         NOT NULL,
+    token_hash    BYTEA        NOT NULL UNIQUE,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    last_used_at  TIMESTAMPTZ,
+    expires_at    TIMESTAMPTZ  NOT NULL,
+    device_label  TEXT,
+    revoked_at    TIMESTAMPTZ
+);
+CREATE INDEX auth_refresh_tokens_user_idx
+    ON auth_refresh_tokens (user_id, expires_at);
+
+-- Pending registrations: pre-User-node holding state. Created when
+-- a registration form is submitted and consumed when the email-
+-- verification step creates the User node, or expires after 24 h.
+-- See auth.md §Account lifecycle for why no User node exists in
+-- this state.
+--
+-- invitation_token_id is the invitation the registrant came in
+-- through (NULL only for the first-user genesis bootstrap, see
+-- auth.md §First-user genesis bootstrap).
+-- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
+-- edge values toward the inviter, written to the graph edge on
+-- verification per invitations.md.
+-- email_verification_token_hash stores SHA-256 of the single-use
+-- verification token, same hashing rationale as refresh tokens.
+CREATE TABLE auth_pending_registrations (
+    id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    username                      TEXT         NOT NULL,
+    email                         TEXT         NOT NULL,
+    password_hash                 TEXT         NOT NULL,
+    invitation_token_id           UUID,
+    invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
+    invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
+    email_verification_token_hash BYTEA        NOT NULL UNIQUE,
+    created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    expires_at                    TIMESTAMPTZ  NOT NULL
+);
+CREATE INDEX auth_pending_registrations_email_idx
+    ON auth_pending_registrations (email);
 ```
 
 ---

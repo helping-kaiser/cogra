@@ -73,13 +73,9 @@ them:
 - **Never delete graph structure.** Nodes, edges, and layer stacks
   are never removed. State transitions are always layered, never
   destructive. The only permitted "deletion" on the graph is
-  **in-place redaction** of a specific node-property layer's
-  contents when the content itself is illegal — the layer stays,
-  its value is replaced with a visible `[redacted — ...]` marker.
-  Postgres-side display content follows the same spirit: deletion
-  is a narrow exception for illegal material, and the fact of
-  deletion always leaves a visible trace. See
-  [docs/primitive/layers.md §5](docs/primitive/layers.md).
+  in-place redaction per
+  [docs/primitive/layers.md §5](docs/primitive/layers.md). The
+  same spirit applies to Postgres-side display content.
 - **Never erase silently.** Any redaction or takedown — graph-side
   or Postgres-side — must leave a visible mark.
 - **Never let inbound edges affect a user's feed.** Only outgoing

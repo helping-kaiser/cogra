@@ -37,7 +37,7 @@ in the math is uniform.
 | User → ChatMember | **Sentiment** (approve to reject) | **Importance** (how important is this membership to me) |
 | User → CollectiveMember | **Sentiment** (approve to reject) | **Importance** (how important is this membership to me) |
 | User → ItemOwnership | **Sentiment** (approve to reject) | **Importance** (how important is this transfer to me) |
-| User → Item | **Sentiment** (want to avoid) | **Relevance** (how interesting to me) |
+| User → Item | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Hashtag | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly I want this change) |
 
