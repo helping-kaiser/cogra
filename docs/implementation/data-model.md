@@ -364,13 +364,39 @@ CREATE TABLE auth_refresh_tokens (
 CREATE INDEX auth_refresh_tokens_user_idx
     ON auth_refresh_tokens (user_id, expires_at);
 
+-- Invitations: one row per generated invite link. The link itself
+-- carries only the row id; the pre-committed inviter edge values,
+-- inviter identity, and time-gate live here. Time-gated and
+-- multi-use per invitations.md — many invitees can register
+-- through the same row. Rows are append-only in spirit (no
+-- updates to inviter_dim1 / inviter_dim2 / inviter_id after
+-- creation); revocation sets revoked_at.
+--
+-- inviter_id references the inviting User; same no-FK shape as
+-- auth_refresh_tokens.user_id (different actor types are not
+-- supported here today — only Users issue invitations).
+-- inviter_dim1 / inviter_dim2 are the values that will be written
+-- to the inviter's outgoing edge toward each accepting invitee
+-- per invitations.md "Pre-committed inviter values."
+CREATE TABLE auth_invitations (
+    id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    inviter_id   UUID         NOT NULL,
+    inviter_dim1 REAL         NOT NULL CHECK (inviter_dim1 BETWEEN -1.0 AND 1.0),
+    inviter_dim2 REAL         NOT NULL CHECK (inviter_dim2 BETWEEN -1.0 AND 1.0),
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    expires_at   TIMESTAMPTZ  NOT NULL,
+    revoked_at   TIMESTAMPTZ
+);
+CREATE INDEX auth_invitations_inviter_idx
+    ON auth_invitations (inviter_id);
+
 -- Pending registrations: pre-User-node holding state. Created when
 -- a registration form is submitted and consumed when the email-
 -- verification step creates the User node, or expires after 24 h.
 -- See auth.md §Account lifecycle for why no User node exists in
 -- this state.
 --
--- invitation_token_id is the invitation the registrant came in
+-- invitation_id is the auth_invitations row the registrant came in
 -- through (NULL only for the first-user genesis bootstrap, see
 -- auth.md §First-user genesis bootstrap).
 -- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
@@ -383,7 +409,7 @@ CREATE TABLE auth_pending_registrations (
     username                      TEXT         NOT NULL,
     email                         TEXT         NOT NULL,
     password_hash                 TEXT         NOT NULL,
-    invitation_token_id           UUID,
+    invitation_id                 UUID         REFERENCES auth_invitations(id),
     invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
     invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
     email_verification_token_hash BYTEA        NOT NULL UNIQUE,
