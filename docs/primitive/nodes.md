@@ -177,8 +177,10 @@ Per-type properties committed so far:
   `ownership_pct` at tally time. See
   [governance.md §2.3](governance.md) for how the weight function
   reads these.
-- **ItemOwnership**: properties pending — to be committed alongside
-  the items.md design pass.
+- **ItemOwnership**: no per-instance properties beyond `id`.
+  Transfer state lives entirely in the surrounding edges (claim,
+  approval, and supersession layers per
+  [items.md](../instances/items.md)).
 
 ### Postgres-side content
 
