@@ -5,11 +5,6 @@ This document covers the **PostgreSQL schema** — the metadata/display layer.
 For the graph model (nodes, edges, tensor dimensions, append-only layers),
 see [Graph Model](../primitive/graph-model.md).
 
-> **Note:** This schema is a starting point. The production Peer Network
-> backend has an existing Postgres schema with additional display data tables
-> that will need to be reviewed and integrated. See:
-> https://github.com/peer-network/peer_backend/tree/main/sql_files_for_import
-
 ## The Boundary Rule
 
 > If the data is needed to **navigate or weight** the graph → Memgraph.
