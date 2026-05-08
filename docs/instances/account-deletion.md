@@ -201,12 +201,12 @@ incomplete redaction from the request record.
 [layers.md §5](../primitive/layers.md) redaction mechanism but differ in
 authorization, scope, and archive treatment:
 
-|                | Moderation (illegal)                              | Account deletion                                  |
-|----------------|---------------------------------------------------|---------------------------------------------------|
-| Authorization  | Network governance + mod gate                     | User self-service (with grace)                    |
-| Scope          | One specific content node                         | User profile + (opt-in) all authored content      |
-| Archive hold   | Per case — evidence retention or immediate destroy | Per row — short for PII, 10y for financial data |
-| Initiator      | Any active Network member                         | The account owner                                 |
+|                | Moderation (illegal)                                              | Account deletion                                  |
+|----------------|-------------------------------------------------------------------|---------------------------------------------------|
+| Authorization  | Network governance + mod gate                                     | User self-service (with grace)                    |
+| Scope          | One specific field on a content node, or the node's `'full'` set  | User profile + (opt-in) all authored content      |
+| Archive hold   | Set asynchronously by `legal_admin` per case                      | Per row — short for PII, longer for financial data |
+| Initiator      | Any active Network member                                         | The account owner                                 |
 
 The two paths run independently. A user under active moderation
 can still request account deletion. Conversely, illegal-content

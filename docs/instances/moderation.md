@@ -2,8 +2,9 @@
 
 CoGra moderates publicly-visible content via the same governance
 primitive everything else uses: any User can create a Proposal
-classifying content as `sensitive` or `illegal`; the Network votes
-Shape B; threshold-cross applies the classification via cascade.
+classifying content as `sensitive` (per-node soft flag) or
+`illegal` (per-field redaction); the Network votes Shape B;
+threshold-cross applies the classification via cascade.
 **No privileged moderator role with extra weight** — mods exist as
 a gate, not as weighted voters.
 
@@ -22,45 +23,81 @@ chat key has been disclosed, chat-internal disavowal
 ([chats.md §6](chats.md)) is the only meaningful
 recourse.
 
-## 1. The three classifications
+## 1. The two classification paths
 
-`moderation_status` is a graph-side property on every user-input-
-bearing node — User, Collective, Post, Comment, ChatMessage,
-Chat, Item, Hashtag (see [nodes.md](../primitive/nodes.md)). Three values:
+`sensitive` and `illegal` operate on different units. Both are
+authorized by the same governance instance below; only the
+cascade outcome differs.
 
-| Value | Meaning | Effect |
-|---|---|---|
-| `normal` | Default; community has not classified. | None. |
-| `sensitive` | Community-classified mature / disturbing / etc. | Soft flag. Frontend respects each viewer's `content_filtering_severity_level` (see [data-model.md](../implementation/data-model.md) "User preferences"). Content stays. |
-| `illegal` | Community-classified illegal under the platform guidelines. | Redaction cascade per [layers.md §5](../primitive/layers.md) — graph-side in-place redaction, Postgres-side tombstone. |
+### `sensitive` — node-level soft flag
 
-The property is layered, so the full classification history is
-preserved.
+Every user-input-bearing node carries a `moderation_status` graph
+property (`'normal'` / `'sensitive'`, default `'normal'`,
+layered — see [nodes.md](../primitive/nodes.md)). A passing
+`'sensitive'` Proposal flips the top layer of this property to
+`'sensitive'`. Effect: frontend respects each viewer's
+`content_filtering_severity_level` (see
+[data-model.md](../implementation/data-model.md) "User
+preferences"); content stays. Reversible via a counter-Proposal
+back to `'normal'`.
 
-For `'illegal'` content, the redacted original is written to the
-[retention archive](../primitive/retention-archive.md) with a
-per-row legal hold set per case — prosecution-evidence content
-holds until the relevant statute expires; content illegal to
-retain at all (e.g., CSAM) is reported to authorities and
-immediately scheduled for hard-delete. The hold decision is made
-at redaction time by the moderator and legal admin together.
+### `illegal` — per-field redaction
+
+Illegal-content classification is per-field, not per-node. A
+passing `'illegal'` Proposal targets either (a) one specific
+user-input field of the content node (e.g., a Post's `content`,
+a User's `username`, a Chat's `name`), or (b) the literal
+`'full'` shorthand, which targets every user-input field plus
+every attached media on that node. Threshold-cross fires the
+redaction cascade:
+
+1. Each targeted field's top layer is replaced with a redaction
+   marker per [layers.md §5](../primitive/layers.md). For media
+   targets, the underlying `media_attachments` row is
+   tombstoned and the asset is removed from object storage.
+2. Each redacted original is written to the
+   [retention archive](../primitive/retention-archive.md)
+   automatically. The `legal_hold_until` value is set
+   asynchronously by `legal_admin` after case review (see
+   retention-archive.md) — the cascade itself does not block
+   on this decision. `legal_admin` chooses what happens next:
+   report to authorities, retain for prosecution evidence,
+   schedule statutory hard-delete, etc.
+3. The node's `moderation_status` is auto-flipped to
+   `'sensitive'` (if currently `'normal'`) so frontend filters
+   treat the partially-redacted node as a unit. This is a
+   system-side derivation, not a separate Proposal.
+
+The cascade is bounded to what the Proposal targeted and does
+**not** propagate to descendants. Classifying a Post's body
+illegal does not redact the Post's Comments; each requires its
+own classification.
 
 ## 2. Reports = Proposals on the graph
 
 A user reporting content **is** the act of creating a Proposal:
 
-- **Subject:** a Proposal node ([nodes.md](../primitive/nodes.md)) with target =
-  the content node (via `:TARGETS` edge), `target_property =
-  'moderation_status'`, `proposed_value = 'sensitive'` or
-  `'illegal'`.
+- **Subject:** a Proposal node
+  ([nodes.md](../primitive/nodes.md)) with target = the content
+  node (via `:TARGETS` edge). `target_property` and
+  `proposed_value` depend on the path:
+  - `'sensitive'` Proposal: `target_property = 'moderation_status'`,
+    `proposed_value = 'sensitive'`.
+  - `'illegal'` Proposal: `target_property` is a specific
+    user-input field name on the target node (e.g., `'username'`,
+    `'bio'`, `'content'`, `'avatar'`) — or the literal `'full'`
+    to redact every user-input field plus every attached media on
+    the node. `proposed_value = 'illegal'`.
 - **First reporter** authors the Proposal — the system reads the
   authoring as their +1 vote.
 - **Subsequent reporters** cast Shape B votes
-  ([governance.md §3](../primitive/governance.md)) on the existing Proposal
-  rather than authoring duplicates.
-- **Threshold-cross** triggers the cascade: the proposed value is
-  written to `moderation_status`, and on `'illegal'` the
-  layers.md §5 redaction cascade fires.
+  ([governance.md §3](../primitive/governance.md)) on the existing
+  Proposal rather than authoring duplicates. A reporter who
+  wants a different target field on the same content node (e.g.,
+  one Proposal already targets `content`, they want `'full'`)
+  authors a separate Proposal — these are independent
+  classifications, not duplicates.
+- **Threshold-cross** triggers the cascade described in §1.
 
 There is **no separate Postgres reports table**. Reports live on
 the graph as Proposal authoring + Shape B vote layers — fully
@@ -126,18 +163,35 @@ bootstrap; they are not fixed rules.
 
 ## 5. Scope
 
-**In scope** (`moderation_status` exists on these node types):
+`moderation_status` (the sensitive flag) is a graph-side property
+on every user-input-bearing node — User, Collective, Post,
+Comment, ChatMessage, Chat, Item, Hashtag.
 
-- **User, Collective** — for the user-authored fields (avatar,
-  bio, profile text, name).
-- **Post, Comment** — content bodies and media.
-- **ChatMessage** — both `plaintext` and `encrypted` per
-  [chats.md §5](chats.md). Encrypted messages are
-  classifiable once readable (see "encrypted message classification"
-  below).
-- **Chat** — name, description, image.
-- **Item** — name, description, media.
-- **Hashtag** — the canonical name itself.
+**Illegal-classification target fields** — valid `target_property`
+values for an `'illegal'` Proposal:
+
+| Node | Targetable fields | `'full'` covers |
+|---|---|---|
+| **User** | `username`, `display_name`, `bio`, `avatar`, `website_url` | all of the above |
+| **Collective** | `name`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
+| **Post** | `content`, `attachments` (all attached media on the post) | both |
+| **Comment** | `content`, `attachments` | both |
+| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §5](chats.md); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
+| **Chat** | `name`, `description`, `image` | all three |
+| **Item** | `name`, `description`, `attachments` | all of the above |
+| **Hashtag** | `name` | n/a (only field) |
+
+The field-name set per node type tracks the user-input fields
+enumerated in [nodes.md](../primitive/nodes.md) and
+[data-model.md](../implementation/data-model.md). Adding a new
+user-input field to any of these node types automatically adds it
+to the valid `target_property` set; the cascade handler must
+know how to redact it (graph-side layer marker, Postgres
+tombstone version row, or media tombstone + asset removal).
+
+Per-attachment targeting (redacting one specific attachment on a
+Post that has several) is a future refinement — the current shape
+redacts all attachments under `target_property = 'attachments'`.
 
 **Out of scope:**
 
@@ -204,9 +258,9 @@ Two distinct mechanisms can apply to a plaintext chat message:
 
 Both can apply to the same content and produce different outcomes
 — a chat-disavowed message is still platform-`'normal'` until the
-Network classifies it, and a message classified `'illegal'`
-platform-wide stays in any chat that hasn't disavowed it. The
-platform outcome is destructive (`illegal` → redaction); the
+Network classifies it, and a message with platform-redacted
+content stays in any chat that hasn't disavowed it. The platform
+outcome on `'illegal'` is destructive (per-field redaction); the
 chat-internal outcome is non-destructive (the chat moves away;
 the message stays).
 
