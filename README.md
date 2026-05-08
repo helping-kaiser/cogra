@@ -1,93 +1,78 @@
 # CoGra
 
-The **graph-architecture exploration** for **Peer Network**'s next
-evolution — designing and prototyping how a graph-driven social media
-platform can replace AI content algorithms with transparent, user-controlled
-feed ranking based on the social graph.
+**CoGra** (Content Graph) is the **graph-architecture exploration**
+for **Peer Network**'s next evolution — a social media platform
+where the social graph and explicit user interactions drive feed
+ranking, replacing AI content algorithms with a transparent, user-
+controlled system.
 
-No AI algorithms. No push marketing. No black boxes. Every user's feed is
-computed from their own position in the graph and the weighted edges they
-create through explicit interactions.
+The current Peer Network platform works like Instagram. This repo
+branches off from main Peer Network development to design and
+prototype the graph network that will succeed it; it is a multi-
+year effort, not a short throwaway exploration.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full set of project
-principles, hard rules, and the contribution workflow.
-[CLAUDE.md](CLAUDE.md) mirrors the same rules for AI-assistant
-sessions and adds session-hygiene guidance specific to that
-context.
+## Mission
 
-## Architecture
+Decentralize the power of social media. The goal is not to become
+the next Instagram/X/TikTok with a graph bolted on — it is to
+shift power from social-media companies to users, where weight
+and ranking are owned by users themselves. Every design decision
+must resist re-centralization.
 
-Two databases, each doing what it does best:
+## What CoGra commits to
 
-- **Memgraph** — the social graph: nodes (users, collectives, posts, comments,
-  chats, items, hashtags, junction nodes), directional tensor edges, and all
-  traversal/ranking queries in Cypher.
-- **PostgreSQL** — metadata: profiles, post content, media URLs, display data.
-  Everything needed to render a page, nothing needed to weight the graph.
+**No AI in the feed.** Ranking is computed from each viewer's own
+position in the graph and the weighted edges they create through
+explicit interactions. There are no learned models, no popularity
+amplifiers, no engagement loops.
 
-```
-┌─────────────┐     GraphQL      ┌────────────────────────────────────────┐
-│   Client    │ ──────────────── │             API  (Axum)                │
-└─────────────┘                  └──────────────┬─────────────────────────┘
-                                                │
-                              ┌─────────────────┴──────────────────┐
-                              │                                     │
-                   ┌──────────▼──────────┐             ┌───────────▼───────────┐
-                   │   graph-engine      │             │   postgres-store      │
-                   │  (Cypher / bolt)    │             │      (SQLx)           │
-                   └──────────┬──────────┘             └───────────┬───────────┘
-                              │                                     │
-                   ┌──────────▼──────────┐             ┌───────────▼───────────┐
-                   │     Memgraph        │             │      PostgreSQL        │
-                   │   (graph layer)     │             │   (metadata layer)    │
-                   └─────────────────────┘             └───────────────────────┘
-```
+**Directional edges only.** What you see is shaped by your
+outgoing edges, never by who points at you. Bot clusters and
+unwanted attention can't insert themselves into your feed by
+liking your content.
 
-The shared key between both databases is the **UUID** assigned at creation
-time. Memgraph stores graph topology (nodes + tensor edges). PostgreSQL stores
-everything needed to display content.
+**Append-only history.** Graph state — edges and node properties —
+is immutable. New layers go on top; nothing is silently deleted
+or overwritten. The only carve-out is in-place redaction of
+illegal content, and even that leaves a visible trace.
+Transparency and auditability over convenience.
 
-## Crate Structure
+**Fair economics.** Ad revenue distributes across the economic
+landscape of the graph. Bot clusters earn nothing because real
+users never point toward them. Pull marketing, not push.
 
-| Crate | Role |
-|---|---|
-| `api` | Axum HTTP server, async-graphql schema, request handlers |
-| `graph-engine` | Cypher queries against Memgraph via bolt protocol |
-| `postgres-store` | SQLx queries, migrations, metadata CRUD |
-| `common` | Shared domain types, error types, UUIDs |
+**User comes first.** Users choose what they see, including ads.
+No amount of money changes that. No one forces their way into
+another user's feed.
 
-## Quick Start
+**Transparency, openness, freedom of the mind.** The system is a
+visible, auditable graph. The codebase is fully open source —
+forking, self-hosting, and running disconnected graphs are
+architecturally supported. Nothing in the system rewards outrage,
+runs dark patterns, or infers stances the user did not explicitly
+take.
+
+The full set of project principles, hard rules, and the
+contribution workflow live in [CONTRIBUTING.md](CONTRIBUTING.md).
+AI-assistant rules and session-hygiene guidance for Claude on
+this repo live in [CLAUDE.md](CLAUDE.md).
+
+## Quick start
 
 ```bash
-make run          # first-time: init + start DBs + migrate + start API
-make dev          # returning: start DBs + migrate + start API
-make api          # just the API (if DBs already running)
+make run    # first-time: init + start DBs + migrate + start API
+make dev    # returning: start DBs + migrate + start API
 ```
 
-Memgraph Lab (visual graph browser): http://localhost:3000
-
-## Make Commands
-
-Full make-target list and dev workflow live in
+Full make-target list, environment variables, and the dev
+workflow live in
 [docs/implementation/development.md](docs/implementation/development.md).
 
-## Documentation
+## Where to go next
 
-Docs are organized in three layers under `docs/`:
-
-- **`docs/primitive/`** — what the graph IS and how it BEHAVES (graph-model, nodes, edges, layers, governance, authorship, feed-ranking, invitations).
-- **`docs/instances/`** — concrete applications of the primitive (chats, collectives, items).
-- **`docs/implementation/`** — system and code-level concerns (architecture, data-model, development, api-spec, graph-db-options).
-
-See [docs/README.md](docs/README.md) for the full index by layer and the suggested reading order. Cross-cutting design questions live in [docs/open-questions.md](docs/open-questions.md).
-
-## Tech Stack
-
-| Concern | Choice |
-|---|---|
-| Language | Rust 2021 |
-| API | Axum + async-graphql |
-| Graph DB | Memgraph (openCypher, bolt protocol) |
-| Metadata DB | PostgreSQL 16 (SQLx) |
-| Local dev | Docker Compose |
-| CI | GitHub Actions |
+- **Design docs** — [docs/README.md](docs/README.md) (start here for the
+  graph model, instance docs, and implementation specs).
+- **Project rules and workflow** — [CONTRIBUTING.md](CONTRIBUTING.md).
+- **AI-assistant guidance** — [CLAUDE.md](CLAUDE.md).
+- **Build commands** — [Makefile](Makefile) and
+  [docs/implementation/development.md](docs/implementation/development.md).
