@@ -1,12 +1,31 @@
 # API Specification
 
-> **OUTDATED — pending redesign.** This spec was written before the
-> [Graph Model](../primitive/graph-model.md) was designed. The GraphQL schema
-> below does not reflect the current node types (Collective, Chat, ChatMessage,
-> Item, junction nodes), the uniform tensor edge model (no more named
-> relationships like "follow" or "like"), or the append-only edge principle
-> (no "unlike" or "delete" operations). A full API redesign session is needed
-> to map the tensor model to a GraphQL schema.
+> **OUTDATED — needs a full rebuild before implementation.** This
+> spec was written before the
+> [Graph Model](../primitive/graph-model.md) was designed; nothing
+> below should be treated as authoritative. A full rebuild needs
+> to cover at minimum:
+>
+> - The current node catalog (User, Collective, Post, Comment,
+>   Chat, ChatMessage, Item, Hashtag, Proposal, Network) plus
+>   junction nodes (ChatMember, CollectiveMember, ItemOwnership) —
+>   see [nodes.md](../primitive/nodes.md).
+> - The uniform `(dim1, dim2)` tensor edge model — no per-action
+>   relationship types like "follow" or "like" — and the
+>   append-only layer semantics (no "unlike" or "delete"
+>   operations); see
+>   [graph-model.md](../primitive/graph-model.md) and
+>   [layers.md](../primitive/layers.md).
+> - Governance flows (Proposals, Shape A / Shape B votes,
+>   tally-time eligibility) — see
+>   [governance.md](../primitive/governance.md).
+> - Per-field moderation targets and the redaction cascade — see
+>   [moderation.md](../instances/moderation.md).
+> - Auth flows (invitation acceptance, sessions, token rotation) —
+>   see [auth.md](auth.md).
+>
+> Until that rebuild lands, treat any GraphQL fragments below as
+> historical reference, not as a contract.
 
 The API is a GraphQL endpoint served by Axum + async-graphql.
 
