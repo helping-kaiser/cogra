@@ -26,9 +26,9 @@ Both current authorization paths use it:
 The archive's hard-delete-on-hold-expiry is the **only point in
 the system where data is genuinely removed** (not the only
 mechanism — the redaction itself is the mechanism, see
-[layers.md §5](layers.md); the archive entry's eventual
+[layers.md §5](layers.md#5-deletion-policy); the archive entry's eventual
 hard-delete is the post-redaction statutory end state).
-[layers.md §5](layers.md)'s "no silent deletion" rule still
+[layers.md §5](layers.md#5-deletion-policy)'s "no silent deletion" rule still
 holds: the redaction leaves an auditable mark on public surfaces
 that does not change at hard-delete time; the archive entry's
 existence and its destruction are both private and never visible
@@ -90,7 +90,7 @@ A scheduled job hard-deletes rows where
 `legal_hold_until < now()` and no other statute extends the hold.
 
 This is the **only path in the system where data is genuinely
-removed**. [layers.md §5](layers.md) declares "no silent deletion,
+removed**. [layers.md §5](layers.md#5-deletion-policy) declares "no silent deletion,
 ever"; this is the explicit, statutorily required exception.
 
 The exception is honest because:
@@ -132,7 +132,7 @@ control mechanics belong in
 
 ## What this doc is not
 
-- **Not the redaction mechanism.** [layers.md §5](layers.md)
+- **Not the redaction mechanism.** [layers.md §5](layers.md#5-deletion-policy)
   defines in-place layer markers and Postgres tombstone
   semantics. The archive is what happens to the original *after*
   redaction.

@@ -15,7 +15,7 @@ the outside.
 In CoGra, a chat is a **public node on the graph**. Its existence, its
 member list, and its message count are visible to every actor on the
 graph (see the transparency principle in
-[graph-model.md §1](../primitive/graph-model.md)). **Topology is always
+[graph-model.md §1](../primitive/graph-model.md#1-core-principles)). **Topology is always
 public**; what's private is the *content* of individual messages, if
 the chat chose to encrypt them.
 
@@ -31,7 +31,7 @@ members, some of which may choose to run with encrypted content."
 
 ## 2. Join policy — who can become a member
 
-Specified in [graph-model.md §5](../primitive/graph-model.md) as the
+Specified in [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows) as the
 two-edge approval pattern. Four shapes:
 
 - **Open** — anyone joins, no approval required.
@@ -95,7 +95,7 @@ this as
 ChatMessage --[:REFERENCES]--> X
 ```
 
-See [edges.md §2 Reference](../primitive/edges.md) for the full
+See [edges.md §2 Reference](../primitive/edges.md#2-structural-edges) for the full
 catalog.
 
 The actor's gesture is **authoring a ChatMessage with a target**:
@@ -114,7 +114,7 @@ graph state (a ChatMessage with `:REFERENCES`), so the referenced
 node propagates through the actor's network via path traversal.
 External sharing (link copy, share-to-another-app, export) creates
 no graph state — see
-[graph-model.md §3](../primitive/graph-model.md) — and so does not
+[graph-model.md §3](../primitive/graph-model.md#3-edge-categories) — and so does not
 amplify reach within CoGra.
 
 ### Message edits
@@ -224,7 +224,7 @@ Members may also rotate the chat key **without a membership
 change** — for example, after a member's device has been
 compromised but before they have left the chat. The mechanism is
 the ordinary property-change Proposal flow (§6, [governance.md
-§2.1](../primitive/governance.md)): a Proposal targets
+§2.1](../primitive/governance.md#21-subject)): a Proposal targets
 `Chat.epoch` with `proposed_value = current + 1`. On
 threshold-cross, the property advances and current members re-run
 the group-key-update procedure off-graph. No new mechanism is
@@ -289,7 +289,7 @@ property without changing the graph model.
 
 Open public chats face an obvious question: without an admin, who
 stops a bad message from dominating? CoGra's answer reuses the
-no-push principle from [graph-model.md §7](../primitive/graph-model.md):
+no-push principle from [graph-model.md §7](../primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph):
 
 **The chat moves away from a message (or a member). It never moves
 the message or the member away.**
@@ -335,13 +335,13 @@ Starting points, not fixed rules:
 | Quorum          | ≥ 20% of total eligible weight has cast a vote                        | ≥ 40% of total eligible weight has cast a vote                        |
 | Threshold       | > 50% of cast weight disavowing                                       | ≥ 2/3 of cast weight disavowing                                       |
 | Outcome         | New layer on `Chat → ChatMessage`                                    | New layer on `Chat → ChatMember`                                     |
-| Takes effect at | New-vote threshold-crossing ([governance.md §6](../primitive/governance.md))       | Same                                                                  |
+| Takes effect at | New-vote threshold-crossing ([governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect))       | Same                                                                  |
 
 **Every number above is a node property on the `Chat`.** Role
 weights, quorum %, threshold % — none of them are hardcoded.
 Members change any of them via a Proposal node targeting the
 chat's property, voted by the same eligibility rules (see
-[governance.md §2.1](../primitive/governance.md)). The defaults above exist
+[governance.md §2.1](../primitive/governance.md#21-subject)). The defaults above exist
 to bootstrap new chats; they are not fixed rules, and the same
 primitive that governs disavowals also governs changes to the
 disavowal rules themselves.
@@ -349,7 +349,7 @@ disavowal rules themselves.
 ### How roles fit in
 
 Roles (admin, mod, member) are carried as properties on the
-`ChatMember` junction node (see [graph-model.md §2](../primitive/graph-model.md)).
+`ChatMember` junction node (see [graph-model.md §2](../primitive/graph-model.md#2-node-categories)).
 An admin's disavowal weight is higher than a member's but it is
 never a veto — in any chat large enough that an admin's weight is
 a small fraction of the pool, an admin cannot single-handedly
@@ -363,7 +363,7 @@ the primitive, not from a special rule.
 ### Property and role changes via Proposals
 
 Beyond disavowal, the chat's other state changes use the Proposal
-mechanism (see [governance.md §2.1](../primitive/governance.md)). `ChatMember.role`
+mechanism (see [governance.md §2.1](../primitive/governance.md#21-subject)). `ChatMember.role`
 (promote / demote), `Chat.name`, `Chat.join_policy`, and `Chat.epoch`
 (mid-epoch key rotation, see §5) are all node properties; each change
 is a Proposal voted on by chat members under chat-defined parameters.
@@ -396,7 +396,7 @@ member — they just see that the chat has moved away.
 ## 7. Join flows
 
 The two-edge approval pattern from
-[graph-model.md §5](../primitive/graph-model.md) instantiates as
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows) instantiates as
 three chat-specific shapes. The mechanics — actor edge to a
 ChatMember junction, system writes the claim, both edges required
 for active membership — are identical to the primitive. The
@@ -419,7 +419,7 @@ in the approval policy.
 Membership is encoded in the two-edge approval pattern: claim-only
 edge → pending; both edges → active. State transitions (voluntary
 leave, community removal) follow the primitive — see
-[graph-model.md §5](../primitive/graph-model.md) ("Revocation and
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows) ("Revocation and
 state transitions") for the rule.
 
 The chat-specific configuration is the removal instance: chats use

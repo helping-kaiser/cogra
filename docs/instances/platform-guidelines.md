@@ -21,7 +21,7 @@ voting on a moderation Proposal must match one of:
 Content the Network treats as unlawful or so universally
 prohibited that hosting it is itself a harm. Crossing the
 `illegal` threshold triggers the redaction cascade
-([layers.md §5](../primitive/layers.md)) and archive-with-legal-
+([layers.md §5](../primitive/layers.md#5-deletion-policy)) and archive-with-legal-
 hold ([retention-archive.md](../primitive/retention-archive.md)).
 
 Starter list — adapted from the conventions of established
@@ -137,7 +137,7 @@ sets these two properties to the new version's values.
 
 **Vote shape.** Shape B from the voter's User node, same as
 moderation Proposals
-([moderation.md §4](moderation.md)).
+([moderation.md §4](moderation.md#4-eligibility-weights-thresholds)).
 
 **Threshold.**
 
@@ -149,14 +149,14 @@ The defaults are slightly higher than `illegal` classification
 (2% / ≥2/3) because guideline changes shift the normative frame
 for *all future* moderation, not a single piece of content. The
 `guidelines_change_*` thresholds themselves fall in the critical
-bucket of [network.md §7](../primitive/network.md) — amending
+bucket of [network.md §7](../primitive/network.md#7-amending-network-parameters) — amending
 them needs the supermajority that protects platform-wide
 governance.
 
 **Mod gate.** Same as moderation classifications — at least one
 moderator's positive vote is required. Same bot-defense
 reasoning as
-[moderation.md §3](moderation.md).
+[moderation.md §3](moderation.md#3-the-mod-gate-rule).
 
 **Drafting and discussion.** The Proposal carries the new version
 number and hash. The actual text — the new version's diff against
@@ -165,7 +165,7 @@ request) prior to the vote so members can review what they are
 voting on. Voters who cast `+1` without reviewing the linked
 text are operating on the same normative honor system as
 moderators voting on encrypted ChatMessages
-([moderation.md §5](moderation.md)) — addressable through the
+([moderation.md §5](moderation.md#5-scope)) — addressable through the
 same Proposal mechanism applied to that user's role or
 participation.
 

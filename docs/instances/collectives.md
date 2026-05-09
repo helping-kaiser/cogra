@@ -42,13 +42,13 @@ Every collective has, or at some point had, at least one
 **zero active members** is a collective that has dissolved — the
 history is preserved (members come and go via state transitions on
 the structural edges, per
-[graph-model.md §5](../primitive/graph-model.md)), but no one currently acts on
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)), but no one currently acts on
 the collective's behalf.
 
 ## Membership: CollectiveMember
 
 A `CollectiveMember` is a junction node (see
-[graph-model.md §2](../primitive/graph-model.md)) connecting **Collective to
+[graph-model.md §2](../primitive/graph-model.md#2-node-categories)) connecting **Collective to
 User or Collective**. A collective can be a member of another
 collective — subsidiaries, holdings, partner firms, coalitions of
 bands under a label, households as members of a co-op.
@@ -65,13 +65,13 @@ the node itself (not in edge dimensions):
   etc.).
 
 Role properties stay on the junction node rather than being encoded
-in edge dimensions — see [graph-model.md §2](../primitive/graph-model.md) for the
+in edge dimensions — see [graph-model.md §2](../primitive/graph-model.md#2-node-categories) for the
 reasoning.
 
 ## Approval flow
 
 CollectiveMember uses the **two-edge approval pattern** described in
-[graph-model.md §5](../primitive/graph-model.md):
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
 
 1. Actor (User or Collective) creates an actor edge toward a new
    **CollectiveMember** node.
@@ -103,7 +103,7 @@ all of these without any primitive changes.
 ### Per-decision-type instances
 
 Every decision-type in a collective is a separate governance
-instance per [governance.md §2](../primitive/governance.md). Each instance has
+instance per [governance.md §2](../primitive/governance.md#2-the-five-components). Each instance has
 its own:
 
 - **Subject** — what's being decided (a CollectiveMember junction
@@ -200,7 +200,7 @@ governance.
 ## Leaving / being removed
 
 State transitions on a CollectiveMember junction follow the
-primitive — see [graph-model.md §5](../primitive/graph-model.md)
+primitive — see [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
 ("Revocation and state transitions") for voluntary leave and
 governance-instance removal mechanics.
 
