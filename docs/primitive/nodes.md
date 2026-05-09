@@ -42,17 +42,28 @@ Every node type that carries open user-authored content — avatars,
 profile text, post bodies, comment bodies, message bodies, chat
 descriptions, item descriptions, hashtag names — carries an
 additional `moderation_status` graph property:
-`'normal'` / `'sensitive'`, default `'normal'`, layered. The
-Network-wide governance instance described in
+`'normal'` / `'sensitive'` / `'illegal'`, default `'normal'`,
+layered. The Network-wide governance instance described in
 [moderation.md](../instances/moderation.md) is what sets it.
 
-`'illegal'` is **not** a value of this property. Illegal-content
-classification operates per-field, not per-node — it writes a
-redaction marker on the targeted field's top layer per
-[layers.md §5](layers.md). When any field on a node carries a
-redaction marker, the system automatically advances the node's
-`moderation_status` to `'sensitive'` if it isn't already, so
-frontend filtering treats the node as a unit.
+The two non-default values reach the node by different paths:
+
+- `'sensitive'` — set directly by a passing `'sensitive'`
+  classification Proposal (community-flagged
+  mature/disturbing/etc.).
+- `'illegal'` — set automatically by the system when any field
+  on the node receives a redaction marker per
+  [layers.md §5](layers.md). Illegal-content classification
+  itself is **per-field**, not per-node — the Proposal targets
+  one field (or the `'full'` shorthand) and the field's top
+  layer is replaced with a redaction marker. The auto-flip on
+  `moderation_status` exists so frontends can distinguish three
+  filter states: normal content, soft-filterable sensitive
+  content, and partially-or-fully-redacted illegal content
+  (which a viewer may want hidden entirely).
+
+`'illegal'` is the strongest state — it isn't downgraded by a
+later `'sensitive'` Proposal while redacted fields remain.
 
 The property applies to: **User, Collective, Post, Comment,
 ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,

@@ -78,8 +78,8 @@ If you find yourself defining a new mechanism inside an
 - [moderation](instances/moderation.md) — `sensitive` (per-node
   flag) and `illegal` (per-field redaction); reports as
   Proposals on the graph; mod-vote-required-for-every-classification
-  gate; per-field redaction cascade with auto-sensitive on the
-  parent node.
+  gate; per-field redaction cascade with auto-flip of the parent
+  node's `moderation_status` to `'illegal'`.
 - [platform-guidelines](instances/platform-guidelines.md) — the
   normative document the Network references when classifying
   content; bucket contents; amendment procedure pinned by
