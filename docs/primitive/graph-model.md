@@ -277,16 +277,16 @@ needed:
 - Both edges exist → active.
 
 The **approval policy** for each relationship uses **Shape A**
-voting (per [governance.md §3](governance.md)): the joining or
+voting (per [governance.md §3](governance.md#3-the-two-vote-shapes)): the joining or
 inviting actor's edge toward the junction node carries their
 position. The threshold itself is one of the policy shapes from
-[governance.md §2.4](governance.md) — typically simple-count
+[governance.md §2.4](governance.md#24-threshold-policy) — typically simple-count
 ("N actor edges from specific roles required toward the junction
 node"), but weighted-count and other shapes from §2.4 are
 admissible. N ranges from 1 (single approver: the joining actor
 or a single decider) to multi-sig with weighted votes (weights
 derived from role properties on the approving actors' own
-junction nodes, per [governance.md §2.3](governance.md)).
+junction nodes, per [governance.md §2.3](governance.md#23-weight-function)).
 Specific applications pick their N — see
 [chats.md](../instances/chats.md) and
 [collectives.md](../instances/collectives.md).
@@ -340,7 +340,7 @@ changes:
       a multi-sig approval.
     - Community-vote instance (Shape B disavowal with quorum and
       threshold) — used by ChatMember per
-      [chats.md §6](../instances/chats.md) and configurable per
+      [chats.md §6](../instances/chats.md#6-moderation) and configurable per
       [collectives.md](../instances/collectives.md).
   When the instance's threshold is crossed, the system adds a new
   layer on the **approval-side** structural edge with `dim1 < 0`.
@@ -403,7 +403,7 @@ This unification keeps the ranking math single-shape — the algorithm
 reads `(dim1, dim2)` from any actor edge without branching on edge
 type. The interpretation (sentiment vs. interest, sentiment vs.
 relevance) lives at the user-presentation layer; the math sees a
-uniform 2D tensor. See [feed-ranking.md §3](feed-ranking.md) for how
+uniform 2D tensor. See [feed-ranking.md §3](feed-ranking.md#3-per-edge-composition-along-a-path) for how
 the two axes compose along a path under different rules — `dim1` via
 signed multiplication (signed-graph balance), `dim2` via taint sign ×
 magnitude product (no transitivity for connection).
@@ -464,7 +464,7 @@ ranking math uniform and avoids per-dimension clamping or branching logic.
 ### Negative `dim2` in the graph math vs. as a frontend filter
 
 The graph math uses negative `dim2` as a **continuous taint signal**
-(see [feed-ranking.md §3.4](feed-ranking.md)): a path that crosses an
+(see [feed-ranking.md §3.4](feed-ranking.md#34-dim2-chain--taint-sign--magnitude-product)): a path that crosses an
 avoided connection has its interest signal flipped negative, but its
 magnitude is the natural product of `|dim2|` along the path —
 proportional to the rest of the path's strength. Negative `dim2` is
@@ -583,4 +583,4 @@ balance), `dim2` chain via taint sign × magnitude product (no
 transitivity for connection-weight). Each metric (`h`, `i`, `j`,
 `k`) is itself a 2-tuple `(sentiment-component, interest-component)`,
 collapsed to a scalar (default: sum) only at sort time. See
-[feed-ranking.md §3-§4](feed-ranking.md) for the full rule.
+[feed-ranking.md §3-§4](feed-ranking.md#3-per-edge-composition-along-a-path) for the full rule.

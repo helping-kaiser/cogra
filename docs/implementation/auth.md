@@ -2,7 +2,7 @@
 
 Server-side credential management for CoGra. Auth gates
 **participation** — writing to the graph — but not **reading**, per
-[graph-model.md §1](../primitive/graph-model.md). A frontend can
+[graph-model.md §1](../primitive/graph-model.md#1-core-principles). A frontend can
 serve any actor's view of the graph to any reader; account
 holders can additionally create edges, author nodes, vote in
 governance instances, and join junctions.
@@ -294,7 +294,7 @@ upgrade.
 
 ## Cross-references
 
-- [graph-model.md §1](../primitive/graph-model.md) —
+- [graph-model.md §1](../primitive/graph-model.md#1-core-principles) —
   read-vs-participation distinction.
 - [invitations.md](../primitive/invitations.md) — invitation
   primitive that registration consumes.

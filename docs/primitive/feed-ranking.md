@@ -18,7 +18,7 @@ A graph with:
 - a **root node** `U` — the perspective we rank from,
 - one or more layers of **intermediate nodes**,
 - a set of **target nodes** — what we're ranking,
-- two edge categories (per [graph-model.md §3](graph-model.md)):
+- two edge categories (per [graph-model.md §3](graph-model.md#3-edge-categories)):
   - **Actor edges**: created by actors. Carry a 2D tensor
     `(dim1, dim2)`, each in `[-1.0, +1.0]`.
     - `dim1` is **signed valence** (sentiment / approval / affirmation).
@@ -78,7 +78,7 @@ explicit depth cap. The dataminer's R-fetch limit (typically `R ≤
 5` or `6` in practice) bounds traversal at the system level.
 
 State-bearing structural edges (junction approval pairs, see
-[graph-model.md §5](graph-model.md)) act as **gates on traversability**:
+[graph-model.md §5](graph-model.md#5-junction-node-flows)) act as **gates on traversability**:
 a path is traversable through such an edge only if its top-layer
 `dim1` is positive (the relationship is currently affirmed). Their
 values do not enter the ranking math; they only decide whether the
@@ -244,14 +244,14 @@ the entry path-set is fully community-marked.
 #### Three layered defenses
 
 1. **Inbound edges don't affect feeds**
-   ([graph-model.md §7](graph-model.md)). A cluster cannot insert
+   ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)). A cluster cannot insert
    itself into `U`'s feed by creating outgoing edges *toward* `U`.
    Influence requires `U` (or a transitive contact) to have an
    outgoing edge *into* the cluster.
 
 2. **Non-engagement keeps clusters isolated.** Per the
    action-creates-edges rule
-   ([graph-model.md §3](graph-model.md)), no actor edge is created
+   ([graph-model.md §3](graph-model.md#3-edge-categories)), no actor edge is created
    without an explicit gesture. A user who simply ignores a cluster
    creates no path into it from their neighborhood.
 
@@ -327,7 +327,7 @@ edges. The mental model is that the severing community is
 **moving infinitely far away** from the severed node or cluster —
 not that the cluster is being "banned" from anywhere else. This
 follows directly from the no-push principle
-([graph-model.md §7](graph-model.md)): a community can only ever
+([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)): a community can only ever
 reduce its *own* paths.
 
 - **Internal interactions within the severed cluster continue
@@ -415,7 +415,7 @@ Three properties hold throughout:
 #### 3.7.1 Severance discovery — the inbound side
 
 Inbound edges do not affect the viewer's feed
-([graph-model.md §7](graph-model.md)), so the feed-pull
+([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), so the feed-pull
 traversal does not include them. Discovering one's own
 severance state therefore requires an **explicit
 self-query** — the client (or a delegated miner) requests
@@ -497,7 +497,7 @@ A pure hourglass is the bot-bridge signature. The cluster
 behind that node has no other entry into `U`'s graph — exactly
 the topology of a bot cluster a real user has bridged into.
 Bots cannot manufacture outgoing edges from real users
-([graph-model.md §7](graph-model.md)), so the cluster's only
+([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), so the cluster's only
 entry points are the legitimate user-created edges. If only
 one such edge exists from `U`'s reachable subgraph (or
 cascading severance has reduced the cluster's open bridges to
@@ -593,7 +593,7 @@ to Hashtag nodes already exist (per the data model). The
 bot-defense post is a **usage convention** that frontends
 recognize via the hashtag. Hashtag identity is content-
 addressed (UUIDv5 of the canonical name; see
-[data-model.md "Node identity strategies"](../implementation/data-model.md)),
+[data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
 so any user creating `bot-defense` independently lands on the
 same Hashtag node automatically.
 
@@ -602,7 +602,7 @@ The post inherits the graph's existing trust mechanisms:
 
 - **Bot-authored posts don't reach trusted feeds.** Per the
   inbound-edges-don't-affect-feeds rule
-  ([graph-model.md §7](graph-model.md)), a bot's post reaches
+  ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), a bot's post reaches
   viewer `V` only if `V` (or a transitive contact) has an
   outgoing edge into the bot's neighborhood. False accusations
   by bot accounts about innocent targets mostly stay in the
@@ -1045,7 +1045,7 @@ A post is "friend-authored" from U's perspective if:
 2. `post.author_id == A`.
 
 `author_id` is a cached property on the post node (per
-[authorship.md "Caching"](authorship.md)) — derived from the
+[authorship.md "Caching"](authorship.md#caching)) — derived from the
 earliest incoming layer-1 timestamp but read directly without
 scanning at view time. The check is one property read per
 candidate post.
@@ -1239,13 +1239,13 @@ mechanism.
 the time-decay factor is applied only on the `B → t` hop. The
 `U → A` and `A → B` edges are full-weight regardless of when
 their top layer was added. This carries the **stances-not-events**
-rule ([graph-model.md §3](graph-model.md)) through to time:
+rule ([graph-model.md §3](graph-model.md#3-edge-categories)) through to time:
 silence on a relationship edge is not a partial revocation of the
 stance — the stance still holds until the actor changes it. A user
 who wants their feed to reflect a closer or more distant
 relationship updates the edge's top-layer dim values; the layer
 count itself does not amplify the contribution (see
-[graph-model.md §8](graph-model.md)).
+[graph-model.md §8](graph-model.md#8-append-only-history-edges)).
 
 **Post-node age has no separate decay.** It falls out
 automatically: the **authorship edge** is itself a normal actor
@@ -1517,7 +1517,7 @@ unified; the deployment doesn't.
 
 - **Not per-item suppression.** Muting a specific post, message, or
   chat is a different mechanism (actor edges plus, for chats,
-  community moderation voting — see [chats.md §6](../instances/chats.md)).
+  community moderation voting — see [chats.md §6](../instances/chats.md#6-moderation)).
   Per-item mutes live on the graph as edges.
 - **Not a cache-everything strategy.** The backend can't meaningfully
   precompute ranked feeds because they're fully personalized. It can

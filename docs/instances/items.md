@@ -15,7 +15,7 @@ below is committed to regardless.
 ## Ownership: ItemOwnership
 
 An `ItemOwnership` is a junction node (see
-[graph-model.md §2](../primitive/graph-model.md)) representing a
+[graph-model.md §2](../primitive/graph-model.md#2-node-categories)) representing a
 specific ownership claim. Each transfer creates a **new**
 ItemOwnership node — old ones are never removed. Together they form
 an **append-only chain of an item's ownership history**.
@@ -27,7 +27,7 @@ from the most recent approved ItemOwnership (see below).
 ## Transfer flow
 
 ItemOwnership uses the **two-edge approval pattern** described in
-[graph-model.md §5](../primitive/graph-model.md):
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
 
 1. **Acquirer** (User or Collective) creates an actor edge toward a new
    **ItemOwnership** node.
@@ -48,7 +48,7 @@ edge is created, the system **automatically** adds a new layer on the
 **previous** ItemOwnership's `Item → ItemOwnership` approval edge
 with `dim1 < 0` — marking it revoked/superseded. This uses the
 general state-transition mechanism on structural edges described in
-[graph-model.md §5](../primitive/graph-model.md).
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
 
 The invariant is: **at most one ItemOwnership per item has a positive
 top layer on its approval edge at any time.** Identifying the current

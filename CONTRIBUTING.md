@@ -74,7 +74,7 @@ them:
   are never removed. State transitions are always layered, never
   destructive. The only permitted "deletion" on the graph is
   in-place redaction per
-  [docs/primitive/layers.md §5](docs/primitive/layers.md). The
+  [docs/primitive/layers.md §5](docs/primitive/layers.md#5-deletion-policy). The
   same spirit applies to Postgres-side display content.
 - **Never erase silently.** Any redaction or takedown — graph-side
   or Postgres-side — must leave a visible mark.

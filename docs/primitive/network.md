@@ -49,7 +49,7 @@ It carries:
 All properties are layered, so every parameter change has a
 preserved history. Each is amendable via a standard Proposal
 targeting the property — same primitive as everything else (see
-[governance.md §2.1](governance.md)); §7 below specifies which
+[governance.md §2.1](governance.md#21-subject)); §7 below specifies which
 amendment-rule pair gates which property. The full property list
 and defaults live in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -96,7 +96,7 @@ it is community-driven.
 ## 5. Mod role changes via multi-sig Proposal
 
 Adding or removing a moderator uses the standard Proposal mechanism
-([governance.md §2.1](governance.md)):
+([governance.md §2.1](governance.md#21-subject)):
 
 - **Subject:** A Proposal targeting `User.network_role` of the user
   being promoted or demoted, with `proposed_value` set to the new
@@ -126,7 +126,7 @@ scoped governance instance:
   (governance of governance) — see §7.
 
 Each is a Shape B governance instance per
-[governance.md §3](governance.md). Two consequences:
+[governance.md §3](governance.md#3-the-two-vote-shapes). Two consequences:
 
 - **The eligibility carrier is the User node itself**, not a
   junction. Network membership has no separate gesture, so there is
@@ -167,7 +167,7 @@ property count without adding meaningful differentiation. Two
 buckets capture the gradient that matters in practice.
 
 The mod gate uses the same bot-defense reasoning as content
-moderation ([moderation.md §3](../instances/moderation.md)).
+moderation ([moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)).
 Without it, a coordinated push could drag a baseline-pair
 threshold to trivially low values and weaponize the loosened
 parameter.
