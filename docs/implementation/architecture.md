@@ -105,7 +105,14 @@ All graph state lives in edges. Edges are:
 - **Directional** — A → B and B → A are independent
 - **Multi-dimensional** — 2 user dimensions + system dimensions
 - **Append-only** — new layers on top, never delete or overwrite
-- **Uniform** — actor and structural edges have the same tensor shape
+- **Uniform in shape, not in meaning** — actor and structural
+  edges share the same tensor shape (so the ranking algorithm
+  never branches on edge category) but their dimensions carry
+  completely different semantics. Actor-edge dimensions are
+  signed valence and connection-weight a user expressed
+  toward a target; structural-edge dimensions are typically
+  `0` or carry approval-pair state. Same struct, different
+  reading. See [graph-model.md §3](../primitive/graph-model.md).
 
 There are no per-action relationship types like FOLLOWS, LIKED, or CREATED.
 Actor edges share one `:ACTOR` label and structural edges have a small fixed

@@ -18,10 +18,11 @@ adds the **user self-service authorization path** — parallel to
 [moderation.md](moderation.md)'s community-driven authorization
 for illegal content.
 
-Future triggers — court order, next-of-kin under § 1922 BGB,
-network-admin emergency action — reuse the same redaction scope
-and archive mechanism. Each gets its own authorization rules; the
-redaction action is shared.
+Future triggers — court order, next-of-kin under applicable
+inheritance law (e.g., § 1922 BGB in Germany; equivalents
+elsewhere), network-admin emergency action — reuse the same
+redaction scope and archive mechanism. Each gets its own
+authorization rules; the redaction action is shared.
 
 ## 1. Two redaction levels
 

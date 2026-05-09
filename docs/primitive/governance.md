@@ -28,6 +28,15 @@ decision reuses:
   four things (subject, eligibility, weights, threshold) and plugs
   into the primitive.
 
+**Each application is a parameterization, not a new mechanism.**
+Junction approval, chat-message disavowal, network moderator role
+changes, content moderation, and `:Network` parameter amendments
+all run on the same primitive — they differ only in the values
+they pick for the components in §2 (subject, eligibility, weights,
+threshold) and the carrier shape in §3. If a new governance need
+arises, it gets parameters and slots in here, not its own
+mechanism. The full list of current applications is in §7.
+
 ---
 
 ## 2. The five components

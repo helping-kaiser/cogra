@@ -182,6 +182,11 @@ The target node itself is reached via a `:TARGETS` structural edge
 (`Proposal → Target`), not a foreign-key property — see
 [edges.md §2](../primitive/edges.md).
 
+`:Proposal` intentionally has no `moderation_status` property:
+Proposals carry no user-authored content fields, so they fall
+outside the universal moderation property per
+[nodes.md §"Universal: moderation_status"](../primitive/nodes.md).
+
 ```cypher
 CREATE CONSTRAINT ON (p:Proposal) ASSERT p.id IS UNIQUE;
 CREATE INDEX ON :Proposal(id);
