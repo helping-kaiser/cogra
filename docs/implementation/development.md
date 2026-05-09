@@ -6,7 +6,7 @@
 |---|---|---|
 | Rust (stable) | Language toolchain | https://rustup.rs |
 | Docker + Compose | Local databases | https://docs.docker.com/get-docker |
-| sqlx-cli | Running migrations | `cargo install sqlx-cli --no-default-features --features postgres` (or use `make init`) |
+| sqlx-cli | Running migrations | Auto-installed by `make init`; manual: `cargo install sqlx-cli --no-default-features --features postgres` |
 
 Verify everything is in place:
 ```bash
