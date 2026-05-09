@@ -241,7 +241,7 @@ three properties:
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §3.5](../primitive/feed-ranking.md)),
+content" — see [feed-ranking.md §3.5](../primitive/feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`). Further per-viewer state slots in here as it's
 designed.
@@ -263,7 +263,7 @@ CREATE INDEX user_view_log_recency_idx
 The seen-list's compaction policy (1-year default, ~7 MB/active-
 user-year bound, trade-off, frontend tunability) lives with the
 seen-list mechanism in
-[feed-ranking.md §8.5](../primitive/feed-ranking.md).
+[feed-ranking.md §8.5](../primitive/feed-ranking.md#85-compaction--drop-entries-older-than-1-year).
 
 ```sql
 -- Hidden actors: per-viewer list of users/collectives the viewer
@@ -344,7 +344,7 @@ CREATE TABLE user_preferences (
 Backend-only tables that gate participation in the graph (writing
 edges, authoring nodes, voting, joining junctions). Reading the
 graph never requires a row here — see
-[auth.md](auth.md) and [graph-model.md §1](../primitive/graph-model.md).
+[auth.md](auth.md) and [graph-model.md §1](../primitive/graph-model.md#1-core-principles).
 
 ```sql
 -- Refresh tokens: one row per active session. The raw token is
@@ -503,7 +503,7 @@ LEFT JOIN collectives c ON p.author_type = 'collective' AND c.id = p.author_id;
 
 `comments.target_id` references either `posts.id`, `comments.id`,
 `chats.id`, `chat_messages.id`, or `items.id` — see
-[edges.md §2 Containment](../primitive/edges.md). A standard SQL
+[edges.md §2 Containment](../primitive/edges.md#2-structural-edges). A standard SQL
 foreign key can't point to five tables, so the table carries a
 `target_type` discriminator with a `CHECK` on the same five values
 the graph uses.
@@ -516,7 +516,7 @@ graph.
 
 This is also why old `posts(id) ON DELETE CASCADE` and a separate
 `parent_comment_id` column are gone: posts and comments are graph
-nodes that are never deleted (per [layers.md §5](../primitive/layers.md)),
+nodes that are never deleted (per [layers.md §5](../primitive/layers.md#5-deletion-policy)),
 and reply chains live on the graph as `Comment → Comment`
 containment edges — Postgres doesn't need a parallel column.
 

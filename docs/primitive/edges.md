@@ -17,7 +17,7 @@ nodes. The 2 dimensions are set by the actor and follow the uniform
 [graph-model.md](graph-model.md).
 
 Across every actor-edge type the two dimensions follow the same
-underlying grammar (see [graph-model.md §6](graph-model.md)):
+underlying grammar (see [graph-model.md §6](graph-model.md#6-dimension-semantics)):
 `dim1` is **signed valence** (sentiment / approval / affirmation);
 `dim2` is **signed connection-weight** (interest / relevance /
 importance). The labels in the tables below differ to highlight the
@@ -102,7 +102,7 @@ Paired with the claim edges above — see
 
 System-created when a Proposal node is created. Records which node
 the Proposal targets (the node whose property is proposed for
-change — see [governance.md §2.1](governance.md)).
+change — see [governance.md §2.1](governance.md#21-subject)).
 
 | Edge type | Meaning |
 |-----------|---------|
@@ -137,7 +137,7 @@ can point at anything with a graph identity.
 ### Voting (Shape B)
 
 System-created when a voter casts a Shape B vote (see
-[governance.md §3](governance.md)). The edge runs from the voter's
+[governance.md §3](governance.md#3-the-two-vote-shapes)). The edge runs from the voter's
 **eligibility junction** to the subject; `dim1` carries vote
 direction (`+1` support, `-1` oppose, intermediate values allowed),
 `dim2` is `0`.

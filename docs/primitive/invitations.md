@@ -30,7 +30,7 @@ in the graph, no feed to calculate. The inviter edge gives them a
 starting position.
 
 Both directions are needed because edges are strictly directional (see
-[graph-model.md §1](graph-model.md)):
+[graph-model.md §1](graph-model.md#1-core-principles)):
 
 - The inviter's edge toward the new actor expresses the inviter's
   opinion (they liked this person enough to bring them in).
@@ -55,7 +55,7 @@ The inviter's edge `Inviter → New Actor` controls how the new
 actor's eventual content traverses the inviter's network. Positive
 values let their posts surface in the inviter's friends' feeds via
 the path mechanics in
-[feed-ranking.md §3](feed-ranking.md); weaker values are a softer
+[feed-ranking.md §3](feed-ranking.md#3-per-edge-composition-along-a-path); weaker values are a softer
 introduction. The inviter is signaling to their network how
 strongly to weight this new person's voice. This influences the new
 actor's **early popularity** in the graph.
@@ -84,7 +84,7 @@ choices for the invitee's outbound edge:
   they care about, the second edge dominates the feed: the
   inviter-edge path products have positive sentiment chains and
   negative interest chains, which tend to cancel under the sum
-  collapser in [feed-ranking.md §4.3](feed-ranking.md).
+  collapser in [feed-ranking.md §4.3](feed-ranking.md#43-tuple-collapse-to-scalar).
 
 The broader lesson: invitation-edge values encode a relationship
 stance the math respects until the edge gets a new layer. Picking
@@ -136,7 +136,7 @@ influencers cannot effectively invite their audiences without them
 — and the abuse case is self-correcting: the inviter's network
 can sever the bridge through the cascading-severance mechanism
 described in
-[feed-ranking.md §3.5–§3.6](feed-ranking.md), at which point the
+[feed-ranking.md §3.5–§3.6](feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge), at which point the
 entire cluster reachable through that bridge is zero-jailed from
 the network's perspective. Inviters who learn this lesson become
 more selective with where they post their links.

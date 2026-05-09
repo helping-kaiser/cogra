@@ -69,7 +69,7 @@ themselves, with no vote and no eligibility check. Governance
 applies to **shared** state (junctions, structural edges, and
 properties on nodes that represent more than one actor — Chats,
 Collectives, Items, Proposals). The
-[redaction exception in layers.md §5](layers.md) is the only path
+[redaction exception in layers.md §5](layers.md#5-deletion-policy) is the only path
 by which someone outside the actor can alter sovereign content,
 and only for illegal material with a visible trace.
 
@@ -85,12 +85,12 @@ at properties. Each subject type has a natural node to address:
   system writes a new state layer on the edge. The edge itself is
   never the target of a vote.
 - **Node property** — a **Proposal** node (see
-  [nodes.md §2](nodes.md)) is created as the subject. It carries
+  [nodes.md §2](nodes.md#2-content-nodes)) is created as the subject. It carries
   `target_property` and `proposed_value` as node properties, and a
   `:TARGETS` structural edge to the target node (see
-  [edges.md §2](edges.md)). Votes point at the Proposal; when the
+  [edges.md §2](edges.md#2-structural-edges)). Votes point at the Proposal; when the
   tally crosses threshold, a cascade (see
-  [graph-model.md §5](graph-model.md)) writes a new layer on the
+  [graph-model.md §5](graph-model.md#5-junction-node-flows)) writes a new layer on the
   target property with `proposed_value`. Multiple Proposals
   targeting the same property coexist; each passes or fails on its
   own votes. Reverting a passed change requires a counter-Proposal —
@@ -133,7 +133,7 @@ the voter's eligibility junction:
 doesn't naturally fall out of role + ownership. When present it is
 read directly as the voter's weight; when absent the instance falls
 back to whatever rule it defines over `role` and other properties.
-See [nodes.md §3](nodes.md) for the property declaration.
+See [nodes.md §3](nodes.md#3-junction-nodes) for the property declaration.
 
 ### 2.4 Threshold policy
 
@@ -161,7 +161,7 @@ rules.
 What state change happens when the threshold is crossed. Always a
 new layer on a structural edge (state-bearing) or a new layer on a
 node property. Never a deletion; always append-only. Cascades are
-allowed — see [graph-model.md §5](graph-model.md).
+allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ---
 
@@ -308,15 +308,15 @@ design discussion (§9).
 
 ### Existing
 
-- **Junction approvals** — [graph-model.md §5](graph-model.md).
+- **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
   Shape A. Threshold: N actor edges from specified roles.
-- **Chat message disavowal** — [chats.md §6](../instances/chats.md). Shape B.
+- **Chat message disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
   Quorum + weighted-majority threshold.
-- **Chat member disavowal** — [chats.md §6](../instances/chats.md). Shape B.
+- **Chat member disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
   Higher quorum + weighted-supermajority threshold.
-- **Chat property and role changes** — [chats.md §6](../instances/chats.md).
+- **Chat property and role changes** — [chats.md §6](../instances/chats.md#6-moderation).
   Proposals on `Chat.name`, `Chat.join_policy`, `Chat.epoch`
-  (mid-epoch chat-key rotation, see [chats.md §5](../instances/chats.md)),
+  (mid-epoch chat-key rotation, see [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism)),
   and `ChatMember.role`. Defaults vary by stakes; thresholds are
   themselves chat properties.
 - **Collective governance (full social contract)** —
@@ -327,7 +327,7 @@ design discussion (§9).
   contract specifies; each is parameterized for its own
   decision-type. Eligibility, weights, and thresholds are all
   per-instance.
-- **Network moderator role changes** — [network.md §5](network.md).
+- **Network moderator role changes** — [network.md §5](network.md#5-mod-role-changes-via-multi-sig-proposal).
   Shape B from the User node directly. Multi-sig: ≥1 existing
   moderator's positive vote plus a community-quorum threshold.
 - **Content moderation classifications** — [moderation.md](../instances/moderation.md).
@@ -335,7 +335,7 @@ design discussion (§9).
   on every classification change (`sensitive` / `illegal` and
   un-classification back to `normal`); mod weight = member
   weight = 1.
-- **`:Network` parameter amendments** — [network.md §7](network.md).
+- **`:Network` parameter amendments** — [network.md §7](network.md#7-amending-network-parameters).
   Shape B from the User node directly. Two amendment-rule pairs
   on the `:Network` singleton — a baseline pair for low-stakes
   parameters and a critical pair for parameters with destructive

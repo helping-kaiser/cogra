@@ -20,7 +20,7 @@ moderators, not a protocol invariant; voting blind is a
 mod-conduct violation, addressable through the same primitive
 that handles any mod misconduct (see §5). Until the relevant
 chat key has been disclosed, chat-internal disavowal
-([chats.md §6](chats.md)) is the only meaningful
+([chats.md §6](chats.md#6-moderation)) is the only meaningful
 recourse.
 
 ## 1. The two classification paths
@@ -52,7 +52,7 @@ every attached media on that node. Threshold-cross fires the
 redaction cascade:
 
 1. Each targeted field's top layer is replaced with a redaction
-   marker per [layers.md §5](../primitive/layers.md). For media
+   marker per [layers.md §5](../primitive/layers.md#5-deletion-policy). For media
    targets, the underlying `media_attachments` row is
    tombstoned and the asset is removed from object storage.
 2. Each redacted original is written to the
@@ -94,7 +94,7 @@ A user reporting content **is** the act of creating a Proposal:
 - **First reporter** authors the Proposal — the system reads the
   authoring as their +1 vote.
 - **Subsequent reporters** cast Shape B votes
-  ([governance.md §3](../primitive/governance.md)) on the existing
+  ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)) on the existing
   Proposal rather than authoring duplicates. A reporter who
   wants a different target field on the same content node (e.g.,
   one Proposal already targets `content`, they want `'full'`)
@@ -138,7 +138,7 @@ voting body for moderation Proposals.
   `Network.active_threshold_days` window).
 - **Vote weight:** 1 per voter — mod or member.
 - **Vote shape:** Shape B from the voter's User node directly.
-  See [governance.md §3](../primitive/governance.md) for the relaxation
+  See [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes) for the relaxation
   that permits a User node (rather than a junction) to carry
   the vote for Network-level governance.
 - **Thresholds (read from the `:Network` singleton — see
@@ -157,7 +157,7 @@ quorum just keeps a single mod from acting unilaterally.
 
 Every number above is a property of the `:Network` singleton,
 amendable via the rules in
-[network.md §7](../primitive/network.md) — the
+[network.md §7](../primitive/network.md#7-amending-network-parameters) — the
 `moderation_illegal_*` thresholds fall in the critical bucket
 (higher quorum, supermajority threshold) because their abuse
 drives the redaction cascade; the `moderation_sensitive_*`
@@ -179,7 +179,7 @@ values for an `'illegal'` Proposal:
 | **Collective** | `name`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
 | **Post** | `content`, `attachments` (all attached media on the post) | both |
 | **Comment** | `content`, `attachments` | both |
-| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §5](chats.md); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
+| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §5](chats.md#5-encryption-as-the-privacy-mechanism); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
 | **Chat** | `name`, `description`, `image` | all three |
 | **Item** | `name`, `description`, `attachments` | all of the above |
 | **Hashtag** | `name` | n/a (only field) |
@@ -208,7 +208,7 @@ For a moderation Proposal targeting an encrypted ChatMessage to be
 useful, voters need to be able to read the body. The disclosure
 path is **independent of the moderation primitive** — any chat
 member can release the relevant epoch's chat key (per
-[chats.md §5](chats.md)) through any normal authoring
+[chats.md §5](chats.md#5-encryption-as-the-privacy-mechanism)) through any normal authoring
 gesture: a Comment on the chat, a public Post, a plaintext
 ChatMessage in the same chat, an off-graph channel, anything. The
 system permits voluntary disclosure by participants by design.
@@ -255,7 +255,7 @@ Two distinct mechanisms can apply to a plaintext chat message:
 - **Platform moderation (this doc).** Network-level
   classification. Drives the redaction cascade for `illegal`.
   Eligibility = every User.
-- **Chat-internal disavowal** ([chats.md §6](chats.md)).
+- **Chat-internal disavowal** ([chats.md §6](chats.md#6-moderation)).
   The chat's stance toward a message or member. Eligibility =
   active ChatMembers of that chat.
 
@@ -325,7 +325,7 @@ of the canonical document bytes).
 - **Not the Network primitive.** Membership, the moderator role,
   and how mods come and go are in [network.md](../primitive/network.md).
 - **Not the redaction mechanism.** The redaction cascade is
-  defined in [layers.md §5](../primitive/layers.md) and the
+  defined in [layers.md §5](../primitive/layers.md#5-deletion-policy) and the
   archive disposition in
   [retention-archive.md](../primitive/retention-archive.md); this
   doc provides the community-driven authorization for

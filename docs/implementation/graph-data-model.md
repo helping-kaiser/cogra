@@ -6,7 +6,7 @@ Memgraph carries the **bare minimum** needed for traversal, ranking,
 governance, and authorship derivation. Everything else — display content,
 counts, per-viewer operational state — lives in Postgres. The leaner the
 graph stays, the better it scales. See
-[architecture.md §1](architecture.md) for the full split.
+[architecture.md §1](architecture.md#1-graph-db-owns-topology-postgres-owns-content) for the full split.
 
 For the conceptual model (node categories, edge dimensions, append-only
 rule, junction approval pattern), see:
@@ -35,7 +35,7 @@ fields.
    addressed UUID (UUIDv5 of the canonical name with a fixed
    project-scoped namespace) so independent creations of the same
    hashtag converge on one node — see
-   [data-model.md "Node identity strategies"](data-model.md) for the
+   [data-model.md "Node identity strategies"](data-model.md#node-identity-strategies) for the
    three identity strategies and their federation properties.
 
 ---
@@ -110,15 +110,15 @@ CREATE INDEX ON :Comment(id);
 |---|---|---|
 | `id`                     | String  | UUID v4. |
 | `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. |
-| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md). |
+| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md#2-join-policy--who-can-become-a-member). |
 | `moderation_status`      | String  | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). |
-| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §5](../instances/chats.md). |
-| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md). |
-| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md). |
+| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
+| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
+| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
-[chats.md §4-5](../instances/chats.md), so the graph never reads it.
+[chats.md §4-5](../instances/chats.md#4-chatmessages-as-first-class-content), so the graph never reads it.
 See [data-model.md](data-model.md).
 
 ```cypher
@@ -132,7 +132,7 @@ CREATE INDEX ON :Chat(id);
 |---|---|---|
 | `id`                | String | UUID v4. |
 | `author_id`         | String | Cached. |
-| `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). The protocol does not gate classification on disclosure of the chat key; "moderate only after reading" is a normative requirement on moderators, not a protocol invariant — see [moderation.md §5](../instances/moderation.md). |
+| `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). The protocol does not gate classification on disclosure of the chat key; "moderate only after reading" is a normative requirement on moderators, not a protocol invariant — see [moderation.md §5](../instances/moderation.md#5-scope). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMessage) ASSERT m.id IS UNIQUE;
@@ -141,7 +141,7 @@ CREATE INDEX ON :ChatMessage(id);
 
 The `epoch` index a ciphertext was encrypted under lives in
 Postgres alongside the body row, not on the graph — message bodies
-are always Postgres-side per [chats.md §5](../instances/chats.md),
+are always Postgres-side per [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism),
 so the graph never reads it. See [data-model.md](data-model.md).
 
 #### `:Item`
@@ -160,7 +160,7 @@ CREATE INDEX ON :Item(id);
 
 | Property            | Type   | Notes |
 |---|---|---|
-| `id`                | String | UUIDv5, content-addressed from `name`. See [data-model.md "Node identity strategies"](data-model.md). |
+| `id`                | String | UUIDv5, content-addressed from `name`. See [data-model.md "Node identity strategies"](data-model.md#node-identity-strategies). |
 | `name`              | String | Canonical form: lowercase, no `#`. |
 | `moderation_status` | String | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). |
 
@@ -175,24 +175,24 @@ CREATE INDEX ON :Hashtag(id);
 | Property          | Type    | Notes |
 |---|---|---|
 | `id`              | String  | UUID v4. |
-| `target_property` | String  | Name of the property on the target node, or a moderation-specific directive: `'attachments'` (all attached media) or `'full'` (every user-input field plus all attachments) — see [moderation.md §5](../instances/moderation.md). |
-| `proposed_value`  | Variant | The proposed new value (type matches the target property). For illegal-classification Proposals it is the literal `'illegal'`; the cascade handler interprets that to write redaction markers and archive originals per [moderation.md §1](../instances/moderation.md). |
+| `target_property` | String  | Name of the property on the target node, or a moderation-specific directive: `'attachments'` (all attached media) or `'full'` (every user-input field plus all attachments) — see [moderation.md §5](../instances/moderation.md#5-scope). |
+| `proposed_value`  | Variant | The proposed new value (type matches the target property). For illegal-classification Proposals it is the literal `'illegal'`; the cascade handler interprets that to write redaction markers and archive originals per [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths). |
 
 The target node itself is reached via a `:TARGETS` structural edge
 (`Proposal → Target`), not a foreign-key property — see
-[edges.md §2](../primitive/edges.md).
+[edges.md §2](../primitive/edges.md#2-structural-edges).
 
 `:Proposal` intentionally has no `moderation_status` property:
 Proposals carry no user-authored content fields, so they fall
 outside the universal moderation property per
-[nodes.md §"Universal: moderation_status"](../primitive/nodes.md).
+[nodes.md §"Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status).
 
 ```cypher
 CREATE CONSTRAINT ON (p:Proposal) ASSERT p.id IS UNIQUE;
 CREATE INDEX ON :Proposal(id);
 ```
 
-See [governance.md §2.1](../primitive/governance.md) for the role of
+See [governance.md §2.1](../primitive/governance.md#21-subject) for the role of
 Proposal nodes.
 
 ### Junction nodes
@@ -263,9 +263,9 @@ targeting that property name. See
 | `guidelines_hash`                 | String  | SHA-256 hex digest of the canonical guidelines document at the current version. 64 lowercase hex chars. Set at bootstrap to the digest of the version-1 doc; updated together with `guidelines_version` on each amendment. |
 | `guidelines_change_quorum`        | Float   | Quorum for guidelines amendment Proposals. Default `0.05` (5%). |
 | `guidelines_change_threshold`     | Float   | Pass-threshold for guidelines amendments. Default `0.667` (2/3). Mod-gate applies. |
-| `property_change_quorum`          | Float   | Quorum for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself). Default `0.05` (5%). Mod-gate applies. See [network.md §7](../primitive/network.md). |
+| `property_change_quorum`          | Float   | Quorum for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself). Default `0.05` (5%). Mod-gate applies. See [network.md §7](../primitive/network.md#7-amending-network-parameters). |
 | `property_change_threshold`       | Float   | Pass-threshold for the same. Default `0.667` (2/3). Mod-gate applies. |
-| `critical_property_change_quorum` | Float   | Quorum for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself). Default `0.10` (10%). Mod-gate applies. See [network.md §7](../primitive/network.md). |
+| `critical_property_change_quorum` | Float   | Quorum for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself). Default `0.10` (10%). Mod-gate applies. See [network.md §7](../primitive/network.md#7-amending-network-parameters). |
 | `critical_property_change_threshold` | Float | Pass-threshold for the same. Default `0.75` (3/4). Mod-gate applies. |
 | `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
 
@@ -285,7 +285,7 @@ instance configuration knows the singleton's `id`.
 
 Memgraph relationships carry exactly one label. The catalog and the rules
 for picking the right one live in
-[edges.md §3](../primitive/edges.md). Per-label assignment:
+[edges.md §3](../primitive/edges.md#3-edge-labels-at-the-graph-layer). Per-label assignment:
 
 | Label          | Endpoints                                                                | Source     |
 |---|---|---|
@@ -309,8 +309,8 @@ Every edge carries the same property shape, regardless of label:
 | `timestamp` | LocalDateTime  | When this layer was created. |
 | `layer`     | Integer        | Layer number (≥ 1). |
 
-See [graph-model.md §4](../primitive/graph-model.md) for the edge
-structure and [graph-model.md §6](../primitive/graph-model.md) for the
+See [graph-model.md §4](../primitive/graph-model.md#4-edge-structure) for the edge
+structure and [graph-model.md §6](../primitive/graph-model.md#6-dimension-semantics) for the
 unified two-axis dimension grammar.
 
 ---
@@ -323,7 +323,7 @@ unified two-axis dimension grammar.
   [data-model.md](data-model.md).
 - **Materialized aggregations** — counts, sums, or averages over
   edges. Derivable from graph traversal at query time. See
-  [architecture.md §3](architecture.md).
+  [architecture.md §3](architecture.md#3-all-ranking-comes-from-the-graph).
 - **Per-viewer operational state** — `user_view_log` (seen-list)
   and similar per-viewer filter data. Lives in Postgres, or wherever
   the viewer chooses to store it. See
