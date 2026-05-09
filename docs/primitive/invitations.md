@@ -104,27 +104,34 @@ indefinitely. Frontends should make customization the primary path
 during the invitation flow; the defaults only kick in if the user
 explicitly skips the choice.
 
-## Open invite links
+## Link modes: single-use and multi-use
 
-Invitations are typically shared through messenger apps and other
-social channels rather than over email — the inviter generates a
-link and posts it where their community will see it. This means
-the inviter does **not know in advance who will accept**.
+When generating an invite link, the inviter picks **single-use or
+multi-use**. Both modes are time-gated.
 
-The link is **time-gated and multi-use**, not single-use.
-Influencers and public communities need to onboard many people
-through the same shared link, so consuming it on first use would
-defeat the mechanism. Different invitees produce different User
-nodes; the link expires by time, not by use.
+- **Single-use.** Consumed on the first accepted registration.
+  Best for targeted invites — sending a specific link to a
+  specific person. Even if the link leaks, the worst case is one
+  accidental join, with no broader bot-cluster exposure.
+- **Multi-use.** Many invitees can register through the same link
+  until its timer expires. Different invitees produce different
+  User nodes. Influencers and public communities need this mode
+  to onboard their audience through a single shared link —
+  typically posted over messenger or social channels, where the
+  inviter does **not know in advance who will accept**.
+
+The remaining subsections describe mechanics common to both
+modes; the bot-cluster trade-off applies specifically to
+multi-use links shared publicly.
 
 ### Pre-committed inviter values
 
-Because the invitee is unknown at link-generation time, the
-inviter's outgoing edge values are **pre-committed when the link
-is generated**, not chosen per invitee. Whoever accepts inherits
-the values the inviter set on the link. The invitee still chooses
-their own outgoing edge during registration, per "Default values
-and customization" above.
+The inviter's outgoing edge values are **pre-committed when the
+link is generated**, not chosen per invitee — the same mechanic
+applies to both single-use and multi-use links. Whoever accepts
+inherits the values the inviter set on the link. The invitee
+still chooses their own outgoing edge during registration, per
+"Default values and customization" above.
 
 ### Revocation and abandonment
 
@@ -137,16 +144,18 @@ in [auth.md](../implementation/auth.md).
 
 ### The bot-cluster trade-off
 
-Open invite links create an attack surface: a bot cluster can
-join through an influencer's public link and turn the influencer
-into a **bridge node into the cluster**. The same mechanic that
-gives the inviter reach also concentrates the cost of mis-vouching
-onto them.
+Multi-use links shared publicly create an attack surface: a bot
+cluster can join through an influencer's public link and turn
+the influencer into a **bridge node into the cluster**. The same
+mechanic that gives the inviter reach also concentrates the cost
+of mis-vouching onto them. (Single-use links sidestep this by
+construction — at most one accidental join, no cluster bridge.)
 
-The system tolerates this deliberately. Open invite links are
-necessary for high-reach onboarding — public communities and
-influencers cannot effectively invite their audiences without them
-— and the abuse case is self-correcting: the inviter's network
+The system tolerates this deliberately for the multi-use case.
+Public-facing multi-use links are necessary for high-reach
+onboarding — public communities and influencers cannot effectively
+invite their audiences without them — and the abuse case is
+self-correcting: the inviter's network
 can sever the bridge through the cascading-severance mechanism
 described in
 [feed-ranking.md §3.5–§3.6](feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge), at which point the
