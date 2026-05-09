@@ -75,10 +75,11 @@ If you find yourself defining a new mechanism inside an
   (corporate, household, co-op).
 - [items](instances/items.md) — items as content; ItemOwnership
   transfer flow; single-owner invariant.
-- [moderation](instances/moderation.md) — content classifications
-  (`normal` / `sensitive` / `illegal`); reports as Proposals on
-  the graph; mod-vote-required-for-every-classification gate;
-  redaction cascade for illegal.
+- [moderation](instances/moderation.md) — `sensitive` (per-node
+  flag) and `illegal` (per-field redaction); reports as
+  Proposals on the graph; mod-vote-required-for-every-classification
+  gate; per-field redaction cascade with auto-flip of the parent
+  node's `moderation_status` to `'illegal'`.
 - [platform-guidelines](instances/platform-guidelines.md) — the
   normative document the Network references when classifying
   content; bucket contents; amendment procedure pinned by
