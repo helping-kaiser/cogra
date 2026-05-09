@@ -23,12 +23,16 @@ Both current authorization paths use it:
   specific retention period is jurisdiction-dependent, not
   pinned to any one country.
 
-The archive is the **only place in the system where data is
-genuinely deleted** — at hold expiry, by statute.
-[layers.md §5](layers.md)'s "no silent deletion" rule still holds:
-the redaction itself leaves an auditable mark on public surfaces;
-the archive's eventual hard-delete is the statutorily required
-end state, not an erasure of public history.
+The archive's hard-delete-on-hold-expiry is the **only point in
+the system where data is genuinely removed** (not the only
+mechanism — the redaction itself is the mechanism, see
+[layers.md §5](layers.md); the archive entry's eventual
+hard-delete is the post-redaction statutory end state).
+[layers.md §5](layers.md)'s "no silent deletion" rule still
+holds: the redaction leaves an auditable mark on public surfaces
+that does not change at hard-delete time; the archive entry's
+existence and its destruction are both private and never visible
+on public surfaces.
 
 ## 1. Polymorphic shape
 
