@@ -139,6 +139,13 @@ The primitive doesn't pick a power structure; the collective does.
 
 ### Example configurations
 
+The roles used in the configurations below (`CEO`, `founder`,
+`board_member`, `shareholder`, `worker`, etc.) are
+**collective-specific** — each collective's social contract
+defines its own role vocabulary. Roles are not a global enum;
+the primitive only requires that a collective name them
+consistently for its own eligibility/weight rules.
+
 #### Corporate hierarchy
 
 A small company with founders, a CEO, board members, and workers.
