@@ -12,9 +12,9 @@ defined membership: a household, band, co-op, company. Membership is
 explicit and approval-gated.
 
 The Network is the opposite — the set of every User on the graph.
-Membership is **automatic on registration**; there is no approval
-gate; there is no "this band vs that band." It is one Network per
-instance.
+Membership is **automatic on registration** (see
+[invitations.md](invitations.md)); there is no approval gate; there
+is no "this band vs that band." It is one Network per instance.
 
 Federation across instances is a forward question — see
 [open-questions.md Q15](../open-questions.md). Each instance has its
