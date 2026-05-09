@@ -37,8 +37,8 @@ layer is the current state; the full history is available for any
 algorithm that needs it (e.g. detecting opinion shifts or weighting
 by interaction frequency).
 
-See [graph-model.md §4](graph-model.md) for the edge structure and
-[graph-model.md §8](graph-model.md) for edge-specific history
+See [graph-model.md §4](graph-model.md#4-edge-structure) for the edge structure and
+[graph-model.md §8](graph-model.md#8-append-only-history-edges) for edge-specific history
 details.
 
 ---
@@ -99,10 +99,10 @@ would duplicate history that already lives in the source data.
 ### Operational filter state — explicit exception
 
 `user_view_log` (per-viewer seen-list, see
-[feed-ranking.md §8](feed-ranking.md)) is **operational filter
+[feed-ranking.md §8](feed-ranking.md#8-the-already-seen-filter)) is **operational filter
 state**, not graph history. It is exempt from append-only and
 runs a periodic compaction (1-year default — see
-[feed-ranking.md §8.5](feed-ranking.md)). The trace it leaves is
+[feed-ranking.md §8.5](feed-ranking.md#85-compaction--drop-entries-older-than-1-year)). The trace it leaves is
 the visible "history" UI surface fed by the same data, not a
 preserved layer stack.
 

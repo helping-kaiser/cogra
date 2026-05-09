@@ -112,11 +112,11 @@ All graph state lives in edges. Edges are:
   signed valence and connection-weight a user expressed
   toward a target; structural-edge dimensions are typically
   `0` or carry approval-pair state. Same struct, different
-  reading. See [graph-model.md §3](../primitive/graph-model.md).
+  reading. See [graph-model.md §3](../primitive/graph-model.md#3-edge-categories).
 
 There are no per-action relationship types like FOLLOWS, LIKED, or CREATED.
 Actor edges share one `:ACTOR` label and structural edges have a small fixed
-sub-label set (see [edges.md §3](../primitive/edges.md)). The meaning of any
+sub-label set (see [edges.md §3](../primitive/edges.md#3-edge-labels-at-the-graph-layer)). The meaning of any
 single edge is derived from the node types at each end and the dimension
 values, not from a per-action relationship name. See
 [Graph Model](../primitive/graph-model.md).
@@ -184,7 +184,7 @@ A personalized feed splits across two locations: the central backend
 serves the **data**; the viewer's device computes the **ranking**.
 This split is structural, not an optimization — per-actor ranking
 cannot run on the central hot path at any real user count. See
-[feed-ranking.md §9](../primitive/feed-ranking.md) for the full
+[feed-ranking.md §9](../primitive/feed-ranking.md#9-where-ranking-and-filtering-live) for the full
 reasoning and the math/deployment separation.
 
 ```

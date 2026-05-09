@@ -5,7 +5,7 @@ on the graph and where its display content lives.
 
 For the conceptual model — the three categories (actor, content,
 junction) and why they matter — see
-[graph-model.md §2](graph-model.md). For the edges that connect
+[graph-model.md §2](graph-model.md#2-node-categories). For the edges that connect
 nodes, see [edges.md](edges.md).
 
 ---
@@ -30,7 +30,7 @@ What the graph does **not** store as node properties:
   pointers — are rebuilt from the graph, not stored as independent
   primitives. Caches of these values may exist on nodes for query
   efficiency; they don't layer and they don't count as authored
-  properties. See [layers.md §3](layers.md).
+  properties. See [layers.md §3](layers.md#3-layers-on-nodes).
 
 Authored graph-side properties are listed per-type below only where
 the graph genuinely needs them. Most content nodes have minimal
@@ -53,7 +53,7 @@ The two non-default values reach the node by different paths:
   mature/disturbing/etc.).
 - `'illegal'` — set automatically by the system when any field
   on the node receives a redaction marker per
-  [layers.md §5](layers.md). Illegal-content classification
+  [layers.md §5](layers.md#5-deletion-policy). Illegal-content classification
   itself is **per-field**, not per-node — the Proposal targets
   one field (or the `'full'` shorthand) and the field's top
   layer is replaced with a redaction marker. The auto-flip on
@@ -113,7 +113,7 @@ Entities that are acted upon by actors.
 | **ChatMessage** | A single message within a chat. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good. See [items.md](../instances/items.md). |
 | **Hashtag** | A topic tag. Also covers concepts like places (e.g. `#berlin`) — if places ever need dedicated properties they can become their own node type later. |
-| **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes (see [governance.md §2.1](governance.md)). Carries the target, the property name, and the proposed new value. When the vote crosses threshold, a cascade writes a new layer on the target property. |
+| **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes (see [governance.md §2.1](governance.md#21-subject)). Carries the target, the property name, and the proposed new value. When the vote crosses threshold, a cascade writes a new layer on the target property. |
 
 ### Graph-side properties
 
@@ -125,23 +125,23 @@ lives in Postgres. Specific cases:
   `multi-sig`) — the graph reads `join_policy` when an actor's claim
   toward a `ChatMember` arrives, to decide what approval is required —
   and `epoch`, the integer chat-key-rotation counter (see
-  [chats.md §5](../instances/chats.md): advanced on every
+  [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism): advanced on every
   membership change and on every passing mid-epoch rotation Proposal).
-  See [chats.md §2](../instances/chats.md). The per-message
+  See [chats.md §2](../instances/chats.md#2-join-policy--who-can-become-a-member). The per-message
   `content_privacy` flag (plaintext vs E2EE) lives in Postgres
   alongside each ChatMessage body row — message bodies are always
-  a Postgres concern (see [chats.md §4-5](../instances/chats.md)),
+  a Postgres concern (see [chats.md §4-5](../instances/chats.md#4-chatmessages-as-first-class-content)),
   so the graph never reads the privacy flag.
 - **Hashtag**: its tag string — the tag *is* the identifier. The
   UUID is content-addressed (`UUIDv5` of the canonical name with
   a fixed namespace); see
-  [data-model.md "Node identity strategies"](../implementation/data-model.md)
+  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)
   for the full mechanism and the federation implications.
 - **Proposal**: `target_property` and `proposed_value` as node
   properties; the **target node** is reached via a `:TARGETS`
   structural edge (`Proposal → Target`). No display content in
-  Postgres. See [governance.md §2.1](governance.md) for the
-  mechanism and [edges.md §2](edges.md) for the `:TARGETS` label.
+  Postgres. See [governance.md §2.1](governance.md#21-subject) for the
+  mechanism and [edges.md §2](edges.md#2-structural-edges) for the `:TARGETS` label.
 
 Post bodies, Comment bodies, ChatMessage payloads, Item descriptions
 and media, Chat descriptions all live in Postgres — not on the graph.
@@ -194,7 +194,7 @@ Per-type properties committed so far:
   (numeric, optional) where the collective wants to set per-member
   weight directly rather than deriving it from `role` /
   `ownership_pct` at tally time. See
-  [governance.md §2.3](governance.md) for how the weight function
+  [governance.md §2.3](governance.md#23-weight-function) for how the weight function
   reads these.
 - **ItemOwnership**: no per-instance properties beyond `id`.
   Transfer state lives entirely in the surrounding edges (claim,
@@ -237,7 +237,7 @@ None — system nodes have no display content.
 
 - **Not the conceptual model.** The four categories (actor, content,
   junction, system) and why they matter are in
-  [graph-model.md §2](graph-model.md).
+  [graph-model.md §2](graph-model.md#2-node-categories).
 - **Not the Memgraph schema.** Concrete property types,
   constraints, and per-label indexes live in
   [graph-data-model.md](../implementation/graph-data-model.md).

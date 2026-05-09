@@ -11,7 +11,7 @@ on tax and economic records, forthcoming with the economics
 primitive) before the data is permanently destroyed.
 
 The redaction *mechanism* is the one defined in
-[layers.md §5](../primitive/layers.md); the disposition of
+[layers.md §5](../primitive/layers.md#5-deletion-policy); the disposition of
 redacted originals is the
 [retention archive](../primitive/retention-archive.md). This doc
 adds the **user self-service authorization path** — parallel to
@@ -30,7 +30,7 @@ authorization rules; the redaction action is shared.
 information without touching their authored content bodies:
 
 - The `username` layer on the graph User node is replaced with
-  the [layers.md §5](../primitive/layers.md) redaction marker. The User node
+  the [layers.md §5](../primitive/layers.md#5-deletion-policy) redaction marker. The User node
   itself stays; edges and layer stacks stay; counts and authorship
   derivation continue to work.
 - The Postgres `users` row is tombstoned — a new version row in
@@ -85,7 +85,7 @@ similar) at the API layer; the storage form satisfies the
 uniqueness constraint.
 
 The graph-side `User.username` layer carries the standard
-[layers.md §5](../primitive/layers.md) redaction marker, not this string —
+[layers.md §5](../primitive/layers.md#5-deletion-policy) redaction marker, not this string —
 layer values have no uniqueness constraint, and the marker is
 the auditable absence the layer history requires.
 
@@ -182,7 +182,7 @@ tables. The order matters for crash safety:
    archive. Idempotent — the same request can be retried without
    producing duplicates (key on
    `(original_id, original_type, redacted_by)`).
-2. **Graph redaction.** Apply the [layers.md §5](../primitive/layers.md)
+2. **Graph redaction.** Apply the [layers.md §5](../primitive/layers.md#5-deletion-policy)
    redaction markers to the relevant property layers on the User
    node (and, for content-level redaction, on any node-property
    layers that carry user-input strings).
@@ -199,7 +199,7 @@ incomplete redaction from the request record.
 ## 6. Interaction with moderation
 
 [Moderation](moderation.md) and account deletion both invoke the
-[layers.md §5](../primitive/layers.md) redaction mechanism but differ in
+[layers.md §5](../primitive/layers.md#5-deletion-policy) redaction mechanism but differ in
 authorization, scope, and archive treatment:
 
 |                | Moderation (illegal)                                              | Account deletion                                  |
@@ -221,7 +221,7 @@ ordinary retention for illegal content specifically.
 
 - **Not the redaction mechanism.** In-place layer-marker and
   Postgres-tombstone semantics live in
-  [layers.md §5](../primitive/layers.md).
+  [layers.md §5](../primitive/layers.md#5-deletion-policy).
 - **Not the moderation authorization.** Community-driven
   classification of illegal content lives in
   [moderation.md](moderation.md). This doc is a separate
