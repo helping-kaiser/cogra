@@ -1,9 +1,13 @@
 # Invitations
 
-How a new actor (User or Collective) joins the graph and gets their first
-edges. Invitations are the onboarding mechanism that prevents new
-actors from starting as isolated nodes with no path to any other part
-of the graph.
+How a new User joins the graph and gets their first edges.
+Invitations are the User onboarding mechanism that prevents new
+Users from starting as isolated nodes with no path to any other
+part of the graph.
+
+Collectives are not invited — they come into existence through a
+different mechanism. See
+[collectives.md](../instances/collectives.md).
 
 ## The two-edge invitation pattern
 
@@ -121,6 +125,15 @@ is generated**, not chosen per invitee. Whoever accepts inherits
 the values the inviter set on the link. The invitee still chooses
 their own outgoing edge during registration, per "Default values
 and customization" above.
+
+### Revocation and abandonment
+
+The inviter can revoke a link explicitly at any time; otherwise it
+expires when its timer runs out. A link that no one accepts simply
+expires — no User node, no edges, no record beyond the link itself.
+Implementation specifics — email verification, pending-registration
+handling, and the atomic edge-creation step on verification — live
+in [auth.md](../implementation/auth.md).
 
 ### The bot-cluster trade-off
 
