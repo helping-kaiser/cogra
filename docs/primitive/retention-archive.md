@@ -53,13 +53,17 @@ expiry; access-controlled.
 Different content types and authorization paths set different
 `legal_hold_until` values:
 
-- **Illegal content.** Hold rules vary per case. Some illegal
-  content needs to be retained for prosecution (terror financing
-  evidence, fraud records); other illegal content is illegal to
-  retain at all (CSAM) and is reported to authorities and
-  immediately scheduled for hard-delete
-  (`legal_hold_until = redacted_at`). The decision is made at
-  redaction time by the moderator and legal admin together.
+- **Illegal content.** All redacted originals from
+  illegal-classification cascades land in the archive
+  automatically at threshold-cross — the cascade does not block
+  on a hold decision. `legal_admin` reviews each case
+  asynchronously and sets `legal_hold_until` per the relevant
+  law: some content is retained for prosecution (terror financing
+  evidence, fraud records); other content is illegal to retain
+  at all (e.g., CSAM) — `legal_admin` schedules immediate
+  hard-delete (`legal_hold_until = now()`) and reports to
+  authorities. Until reviewed, the row sits with a placeholder
+  hold awaiting `legal_admin` action.
 - **Account deletion.** Statutory retention for tax / economic
   records (e.g., 10 years under German tax law for content tied
   to financial transactions); GDPR storage minimization for

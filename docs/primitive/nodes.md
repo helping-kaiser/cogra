@@ -46,6 +46,25 @@ additional `moderation_status` graph property:
 layered. The Network-wide governance instance described in
 [moderation.md](../instances/moderation.md) is what sets it.
 
+The two non-default values reach the node by different paths:
+
+- `'sensitive'` — set directly by a passing `'sensitive'`
+  classification Proposal (community-flagged
+  mature/disturbing/etc.).
+- `'illegal'` — set automatically by the system when any field
+  on the node receives a redaction marker per
+  [layers.md §5](layers.md). Illegal-content classification
+  itself is **per-field**, not per-node — the Proposal targets
+  one field (or the `'full'` shorthand) and the field's top
+  layer is replaced with a redaction marker. The auto-flip on
+  `moderation_status` exists so frontends can distinguish three
+  filter states: normal content, soft-filterable sensitive
+  content, and partially-or-fully-redacted illegal content
+  (which a viewer may want hidden entirely).
+
+`'illegal'` is the strongest state — it isn't downgraded by a
+later `'sensitive'` Proposal while redacted fields remain.
+
 The property applies to: **User, Collective, Post, Comment,
 ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,
 `CollectiveMember`, `ItemOwnership`) and `Proposal` have no
