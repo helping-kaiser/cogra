@@ -32,10 +32,10 @@ cascade outcome differs.
 ### `sensitive` — node-level soft flag
 
 Every user-input-bearing node carries a `moderation_status` graph
-property (`'normal'` / `'sensitive'`, default `'normal'`,
-layered — see [nodes.md](../primitive/nodes.md)). A passing
-`'sensitive'` Proposal flips the top layer of this property to
-`'sensitive'`. Effect: frontend respects each viewer's
+property (`'normal'` / `'sensitive'` / `'illegal'`, default
+`'normal'`, layered — see [nodes.md](../primitive/nodes.md)). A
+passing `'sensitive'` Proposal flips the top layer of this
+property to `'sensitive'`. Effect: frontend respects each viewer's
 `content_filtering_severity_level` (see
 [data-model.md](../implementation/data-model.md) "User
 preferences"); content stays. Reversible via a counter-Proposal
@@ -64,9 +64,12 @@ redaction cascade:
    report to authorities, retain for prosecution evidence,
    schedule statutory hard-delete, etc.
 3. The node's `moderation_status` is auto-flipped to
-   `'sensitive'` (if currently `'normal'`) so frontend filters
-   treat the partially-redacted node as a unit. This is a
-   system-side derivation, not a separate Proposal.
+   `'illegal'` so frontends can distinguish a partially-or-fully
+   redacted node from a merely sensitive one and hide it
+   entirely if the viewer prefers. This is a system-side
+   derivation, not a separate Proposal. `'illegal'` is the
+   strongest state and is not downgraded by a later
+   `'sensitive'` Proposal while any redacted fields remain.
 
 The cascade is bounded to what the Proposal targeted and does
 **not** propagate to descendants. Classifying a Post's body
