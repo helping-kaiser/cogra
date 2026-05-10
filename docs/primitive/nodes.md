@@ -108,7 +108,7 @@ Entities that are acted upon by actors.
 | Node type | Description |
 |-----------|-------------|
 | **Post** | Content authored by a User or Collective (text, image, video). See [post.md](../instances/post.md). |
-| **Comment** | A response to another content node — Post, Comment, Chat, ChatMessage, or Item. See [edges.md](edges.md) for the full list of valid comment targets. A full node because comments can be liked, disliked, and replied to. |
+| **Comment** | A response to another content node — Post, Comment, Chat, ChatMessage, or Item. See [comment.md](../instances/comment.md); the per-target catalog with edge meanings lives in [edges.md §2 Containment](edges.md#containment--belonging). A full node because comments can be liked, disliked, and replied to. |
 | **Chat** | A conversation container (group or 1:1). See [chats.md](../instances/chats.md). |
 | **ChatMessage** | A single message within a chat. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good. See [items.md](../instances/items.md). |

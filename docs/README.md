@@ -64,12 +64,18 @@ If you find yourself defining a new mechanism inside an
 - [network](primitive/network.md) — the global community of all
   users on an instance; `network_role` (member / moderator);
   genesis-mod bootstrap; multi-sig role changes.
+- [user](primitive/user.md) — per-node doc for the User actor
+  node; on-behalf-of distinction with Collective; creation,
+  edges, network membership, lifecycle.
 
 ### `instances/`
 
 - [chats](instances/chats.md) — chats and ChatMessages as
   first-class public content; E2EE privacy of content only;
   message + member disavowal.
+- [comment](instances/comment.md) — per-node doc for the
+  Comment content node; universal threading primitive that
+  attaches to Post, Comment, Chat, ChatMessage, or Item.
 - [collectives](instances/collectives.md) — collectives as actors;
   social-contract governance with example configurations
   (corporate, household, co-op).
@@ -88,6 +94,12 @@ If you find yourself defining a new mechanism inside an
   PII redaction; identity-default and content-opt-in scope;
   7-day grace period; reuses redaction mechanism + archive
   primitives.
+- [post](instances/post.md) — per-node doc for the Post content
+  node; primary public-content surface; creation, edges,
+  authorship, lifecycle.
+- [comment](instances/comment.md) — per-node doc for the Comment
+  content node; universal threading primitive that attaches to
+  Post, Comment, Chat, ChatMessage, or Item.
 
 ### `implementation/`
 
