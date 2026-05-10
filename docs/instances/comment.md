@@ -1,0 +1,269 @@
+# Comment
+
+The **Comment** is a content node — a response authored by a
+User or Collective on another content node. Comments are the
+platform's universal threading primitive: they attach to Posts,
+to other Comments (replies), to Chats and individual
+ChatMessages, and to Items, layering a discussion surface onto
+every kind of content the graph holds. Comments are full graph
+nodes, not properties of their target — so they can themselves
+be liked, disliked, replied to, embedded, and moderated, with
+their own authored opinion edges and their own
+`moderation_status`.
+
+This doc is the per-node catalog for the Comment: how it is
+created, what it carries on the graph and in Postgres, what
+edges it can participate in, and how it ends. The mechanics
+those topics depend on stay in their topical docs — this doc
+links rather than duplicates.
+
+---
+
+## 1. Creation
+
+A Comment is created by a single authoring gesture from one
+actor — either a User or a Collective — toward exactly one
+**target content node**. There is **no approval flow**: like a
+Post (see [post.md §1](post.md#1-creation)) and unlike junction
+nodes (see [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)),
+a Comment requires no second-party affirmation.
+
+The valid target set — **Post, Comment, Chat, ChatMessage, or
+Item** — is the most distinctive thing about Comments: they are
+the platform's universal threading primitive, not a Post-only
+concept. The canonical per-target list with edge meanings lives
+in [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging);
+this doc and [nodes.md §2](../primitive/nodes.md#2-content-nodes)
+link there rather than mirror, so a future addition to the
+target set lands in one place.
+
+The gesture writes four records atomically:
+
+- A new `:Comment` node on the graph.
+- An outgoing **`Comment → Target`** `:CONTAINMENT` structural
+  edge identifying the parent. Exactly one per Comment; fixed
+  at creation and not re-targeted later.
+- The Postgres `comments` row carrying the body, any
+  attachments, and the cached parent reference (see §3 and
+  [data-model.md](../implementation/data-model.md)).
+- An actor edge from the authoring actor toward the new Comment
+  node — the **authorship edge** (§5). Its `(dim1, dim2)`
+  values are the author's initial opinion of their own
+  response, typically high positive sentiment and relevance.
+
+A Collective authoring a Comment is the same gesture: the graph
+records the Comment as the Collective's, and the off-graph
+authentication that produced it traces — possibly through
+nested CollectiveMember chains — back to one or more Users with
+active sessions per
+[user.md §1](../primitive/user.md#1-user-vs-collective) and
+[auth.md](../implementation/auth.md). Members of the Collective
+do not individually sign or approve the Comment; the
+Collective's social-contract governance defines whether and how
+member consent is required, per
+[collectives.md](collectives.md).
+
+---
+
+## 2. Graph-side properties
+
+A Comment node carries the minimum the graph needs to traverse,
+filter, and rank. Substance lives in Postgres (§3).
+
+- **`moderation_status`** — `'normal'` / `'sensitive'` /
+  `'illegal'`, default `'normal'`, layered. Universal across
+  all user-input-bearing nodes; the per-node mechanics — set
+  by a passing `'sensitive'` Proposal, auto-flipped to
+  `'illegal'` by the redaction cascade — are described in
+  [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status)
+  and §6 below.
+
+The Comment body, attachments, and any other display content do
+**not** live on the graph. The cached `author_id` on the node
+is a derived value rebuilt from the earliest incoming actor edge
+(§5) — it is not an authored property and does not layer.
+Concrete property types and indexes for the graph-side property
+live in
+[graph-data-model.md](../implementation/graph-data-model.md).
+
+---
+
+## 3. Postgres-side content
+
+A Comment's substance is its body and attached media — both
+live in Postgres, linked to the graph node by UUID. Edits to
+display content are append-only per
+[layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
+a new version row, no overwrite.
+
+- **`content`** — the body text. Stored on the `comments` row;
+  see [data-model.md](../implementation/data-model.md).
+- **Attachments** — images, videos, and other media via the
+  `comment_attachments` junction table, which carries
+  per-attachment `display_order`. Each row references one
+  `media_attachments` asset, owned by the same author as the
+  Comment (anti-hijack rule per
+  [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
+
+The `comments` row also caches `target_id` + `target_type` as
+a discriminator pointer to the parent — Post, Comment, Chat,
+ChatMessage, or Item. The graph
+(`Comment → Target :CONTAINMENT`) is the source of truth; the
+Postgres columns are caches rebuildable from the graph. See
+[data-model.md "target_id + target_type"](../implementation/data-model.md#target_id--target_type--same-shape-different-reason).
+
+The cached `comments.author_id` column is a derivation of the
+graph authorship rule — see §5 and
+[authorship.md "Caching"](../primitive/authorship.md#caching).
+
+---
+
+## 4. Edges
+
+### As source (outgoing)
+
+A Comment is not an actor and authors no actor edges. It
+carries exactly one outgoing structural edge, system-created at
+creation and never re-targeted:
+
+- **`Comment → (Post | Comment | Chat | ChatMessage | Item)`
+  `:CONTAINMENT`** — identifies the Comment's parent. The
+  per-target catalog with row-level meanings lives in
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging);
+  this doc deliberately does not mirror that list (§1).
+
+### As target (incoming)
+
+A Comment receives:
+
+- **Actor edges** from Users and Collectives carrying
+  `(sentiment, relevance)` per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  like/dislike surface plus per-viewer relevance, used by
+  [feed-ranking](../primitive/feed-ranking.md) to weight the
+  Comment for each viewer. The earliest of these is the
+  authorship edge (§5).
+- **`Comment → Comment` `:CONTAINMENT`** when another Comment
+  replies to this one. A reply is itself a Comment whose
+  target is the parent Comment; from the parent's perspective
+  this is an incoming `:CONTAINMENT` edge. Reply chains
+  accumulate `R` (path length) naturally and decay via `d(R)`
+  in [feed-ranking](../primitive/feed-ranking.md) — there is
+  no explicit depth cap.
+- **`ChatMessage → Comment` `:REFERENCES`** when a chat message
+  embeds or shares the Comment into a chat. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → Comment` `:TARGETS`** when a moderation
+  Proposal targets a property on the Comment — `'sensitive'`
+  against `moderation_status`, or `'illegal'` against a
+  specific user-input field. See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting)
+  and §6.
+
+---
+
+## 5. Authorship
+
+A Comment's author is the actor whose incoming actor edge has
+the earliest layer-1 timestamp — the same rule that derives
+authorship for every node type
+([authorship.md](../primitive/authorship.md)). Because a
+Comment has no existence before its creation, the author's
+edge is always the earliest incoming edge by construction.
+
+The author's `(dim1, dim2)` on the authorship edge is just a
+normal opinion edge — not a special "author" tag — typically
+carrying high positive sentiment and relevance toward the
+content the author just created.
+
+The cached `author_id` lives both on the graph node (for
+traversal queries) and in `comments.author_id` (for display
+queries that don't need the graph). Both are rebuildable from
+the graph; the graph wins in any disagreement. See
+[authorship.md "Caching"](../primitive/authorship.md#caching).
+
+---
+
+## 6. Lifecycle
+
+Comment nodes are **never deleted**. Per
+[layers.md §5](../primitive/layers.md#5-deletion-policy), the
+only permitted "removal" is in-place layer redaction on graph
+properties or a tombstone version row on Postgres-side display
+content; both preserve a visible record that the change
+occurred.
+
+Two redaction triggers apply to a Comment today:
+
+- **Moderation: `'sensitive'` classification.** A passing
+  `'sensitive'` Proposal flips the top layer of
+  `moderation_status` to `'sensitive'`. No redaction; display
+  content stays. Each viewer's
+  `content_filtering_severity_level` (see
+  [data-model.md](../implementation/data-model.md) "User
+  preferences") decides how aggressively the frontend filters
+  the Comment. Reversible by a counter-Proposal back to
+  `'normal'`. See
+  [moderation.md §1](moderation.md#1-the-two-classification-paths).
+- **Moderation: `'illegal'` classification.** A passing
+  `'illegal'` Proposal targets one of the Comment's user-input
+  fields — `content` (the body), `attachments` (every attached
+  media), or the literal `'full'` shorthand for both — and
+  fires the redaction cascade per
+  [moderation.md §1](moderation.md#1-the-two-classification-paths):
+  the Postgres body row is tombstoned with a version marker,
+  affected `media_attachments` rows are tombstoned and assets
+  removed from object storage, the redacted originals are
+  written to the
+  [retention archive](../primitive/retention-archive.md) under
+  per-row legal hold, and the Comment node's
+  `moderation_status` is auto-flipped to `'illegal'`. The
+  cascade does **not** propagate across the
+  `:CONTAINMENT` edge in either direction — a Comment
+  classified illegal does not redact its replies, and a parent
+  Post, Comment, Chat, ChatMessage, or Item classified illegal
+  does not redact this Comment; each node requires its own
+  classification.
+
+Account deletion of the Comment's author does **not** by
+default affect the Comment's body, attachments, or graph node —
+identity redaction targets the User node's PII only. The
+Comment is content-redacted only if the author opts in to the
+content-level scope of
+[account-deletion.md](account-deletion.md).
+
+The Comment's UUID is stable across every redaction. Authorship
+caches keyed on the UUID stay valid; the outgoing
+`:CONTAINMENT` edge to its target and every incoming actor /
+reply / reference / targeting edge keep pointing at the same
+node. A redacted Comment is a partially-or-fully gutted but
+still-graph-resident content node, not a removed one.
+
+---
+
+## What this doc is not
+
+- **Not the feed-ranking spec.** Where a Comment surfaces in
+  any given viewer's feed — including how reply chains
+  accumulate `R`, how reactor-edge time decay attenuates stale
+  threads, and the seen-list behavior for threads that gain
+  fresh activity — lives in
+  [feed-ranking.md](../primitive/feed-ranking.md).
+- **Not the authorship rule.** The earliest-incoming-edge
+  derivation, the cache rebuild semantics, and the worked
+  example live in [authorship.md](../primitive/authorship.md).
+- **Not the moderation primitive.** The Proposal mechanism, the
+  mod gate, eligibility, thresholds, and the redaction cascade
+  live in [moderation.md](moderation.md).
+- **Not the deletion mechanism.** The redaction primitive lives
+  in [layers.md §5](../primitive/layers.md#5-deletion-policy);
+  the per-row legal hold and archive disposition live in
+  [retention-archive.md](../primitive/retention-archive.md).
+- **Not the edge catalog.** The full per-target containment
+  list, all other edge types Comments participate in, and the
+  label scheme live in [edges.md](../primitive/edges.md).
+- **Not the Memgraph or Postgres schema.** Concrete property
+  types, columns, indexes, and the
+  `comment_attachments` / `media_attachments` shapes live in
+  [graph-data-model.md](../implementation/graph-data-model.md)
+  and [data-model.md](../implementation/data-model.md).
