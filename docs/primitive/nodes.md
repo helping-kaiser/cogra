@@ -112,7 +112,7 @@ Entities that are acted upon by actors.
 | **Chat** | A conversation container (group or 1:1). See [chats.md](../instances/chats.md). |
 | **ChatMessage** | A single message within a chat. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good. See [items.md](../instances/items.md). |
-| **Hashtag** | A topic tag. Also covers concepts like places (e.g. `#berlin`) — if places ever need dedicated properties they can become their own node type later. |
+| **Hashtag** | A topic tag. Also covers concepts like places (e.g. `#berlin`) — if places ever need dedicated properties they can become their own node type later. See [hashtag.md](../instances/hashtag.md). |
 | **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes (see [governance.md §2.1](governance.md#21-subject)). Carries the target, the property name, and the proposed new value. When the vote crosses threshold, a cascade writes a new layer on the target property. |
 
 ### Graph-side properties

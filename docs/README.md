@@ -100,6 +100,9 @@ If you find yourself defining a new mechanism inside an
 - [comment](instances/comment.md) — per-node doc for the Comment
   content node; universal threading primitive that attaches to
   Post, Comment, Chat, ChatMessage, or Item.
+- [hashtag](instances/hashtag.md) — per-node doc for the Hashtag
+  content node; content-addressed UUID makes creation implicit
+  and federation reconciliation-free.
 
 ### `implementation/`
 
