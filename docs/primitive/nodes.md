@@ -1,42 +1,27 @@
 # Nodes
 
-The full catalog of node types in CoGra, plus what each type carries
-on the graph and where its display content lives.
+The catalog of node types in CoGra. Each row gives a one-line
+description and links to the dedicated doc where the per-node
+mechanics live — creation flow, graph-side and Postgres-side
+properties, edges, authorship, and lifecycle.
 
-For the conceptual model — the three categories (actor, content,
-junction) and why they matter — see
-[graph-model.md §2](graph-model.md#2-node-categories). For the edges that connect
-nodes, see [edges.md](edges.md).
+For the conceptual framing — the four categories (actor, content,
+junction, system) and why they matter — see
+[graph-model.md §2](graph-model.md#2-node-categories). For the
+edges that connect nodes, see [edges.md](edges.md). For concrete
+property types, constraints, and indexes, see
+[graph-data-model.md](../implementation/graph-data-model.md). For
+Postgres-side display-content shapes, see
+[data-model.md](../implementation/data-model.md).
+
+The one cross-cutting topic that lives in this doc rather than in
+any single per-node doc is the universal `moderation_status`
+property — same shape and same mechanism across every node type
+that carries user-authored content.
 
 ---
 
-## What lives on the graph
-
-Every node has:
-
-- An identifier (UUID).
-- Layer metadata on any authored properties it carries — timestamps
-  and layer numbers come from the append-only layer system, not from
-  per-node fields. See [layers.md](layers.md).
-- Its edges (separate records, not properties — see
-  [edges.md](edges.md)).
-
-What the graph does **not** store as node properties:
-
-- **Display content** — bios, post bodies, profile text, images,
-  videos, chat descriptions — lives in Postgres or media servers
-  and is linked by UUID. See [data-model.md](../implementation/data-model.md).
-- **Derived values** — authorship, member counts, current-owner
-  pointers — are rebuilt from the graph, not stored as independent
-  primitives. Caches of these values may exist on nodes for query
-  efficiency; they don't layer and they don't count as authored
-  properties. See [layers.md §3](layers.md#3-layers-on-nodes).
-
-Authored graph-side properties are listed per-type below only where
-the graph genuinely needs them. Most content nodes have minimal
-graph-side properties because their substance is display content.
-
-### Universal: `moderation_status`
+## Universal: `moderation_status`
 
 Every node type that carries open user-authored content — avatars,
 profile text, post bodies, comment bodies, message bodies, chat
@@ -53,14 +38,14 @@ The two non-default values reach the node by different paths:
   mature/disturbing/etc.).
 - `'illegal'` — set automatically by the system when any field
   on the node receives a redaction marker per
-  [layers.md §5](layers.md#5-deletion-policy). Illegal-content classification
-  itself is **per-field**, not per-node — the Proposal targets
-  one field (or the `'full'` shorthand) and the field's top
-  layer is replaced with a redaction marker. The auto-flip on
-  `moderation_status` exists so frontends can distinguish three
-  filter states: normal content, soft-filterable sensitive
-  content, and partially-or-fully-redacted illegal content
-  (which a viewer may want hidden entirely).
+  [layers.md §5](layers.md#5-deletion-policy). Illegal-content
+  classification itself is **per-field**, not per-node — the
+  Proposal targets one field (or the `'full'` shorthand) and the
+  field's top layer is replaced with a redaction marker. The
+  auto-flip on `moderation_status` exists so frontends can
+  distinguish three filter states: normal content, soft-filterable
+  sensitive content, and partially-or-fully-redacted illegal
+  content (which a viewer may want hidden entirely).
 
 `'illegal'` is the strongest state — it isn't downgraded by a
 later `'sensitive'` Proposal while redacted fields remain.
@@ -78,26 +63,8 @@ Entities that take actions and create edges.
 
 | Node type | Description |
 |-----------|-------------|
-| **User** | A person on the platform. See [user.md](user.md). |
-| **Collective** | Any group of people that needs a single graph identity to act through — a household, band, co-op, studio, partnership, NGO, company. Created by one founding User; every subsequent gesture is initiated by an authorized CollectiveMember per the Collective's social contract, with the graph attributing the edge to the Collective and no per-edge acting-member trace. Same outgoing-edge catalog as a User (author content, be followed, post items, create actor edges toward other nodes, be members of other Collectives). See [collectives.md](../instances/collectives.md). |
-
-### Graph-side properties
-
-- **User**: `username` (the handle used for mentions and lookups);
-  `network_role` (`member` / `moderator`) — backs platform-wide
-  governance per [network.md](network.md).
-- **Collective**: `name` (the handle used for mentions and lookups,
-  analogous to `username` on User).
-
-Additional authored properties for either type (display name,
-verified flag, etc.) can be added later — each would layer
-independently under the append-only rule.
-
-### Postgres-side content
-
-Profile text (bio, description), profile image, cover image, contact
-info, and other display material. Linked by UUID. See
-[data-model.md](../implementation/data-model.md).
+| **User** | A person on the platform — off-graph credentials authenticate the API requests that originate their edges. See [user.md](user.md). |
+| **Collective** | A group acting through a single graph identity (household, band, co-op, studio, partnership, NGO, company). Created by one founding User; every subsequent gesture is initiated by an authorized CollectiveMember per the Collective's social contract. Same outgoing-edge catalog as a User. See [collectives.md](../instances/collectives.md). |
 
 ---
 
@@ -107,46 +74,13 @@ Entities that are acted upon by actors.
 
 | Node type | Description |
 |-----------|-------------|
-| **Post** | Content authored by a User or Collective (text, image, video). See [post.md](../instances/post.md). |
-| **Comment** | A response to another content node — Post, Comment, Chat, ChatMessage, or Item. See [comment.md](../instances/comment.md); the per-target catalog with edge meanings lives in [edges.md §2 Containment](edges.md#containment--belonging). A full node because comments can be liked, disliked, and replied to. |
-| **Chat** | A conversation container (group or 1:1). See [chats.md](../instances/chats.md). |
-| **ChatMessage** | A single message within a chat. See [chats.md](../instances/chats.md). |
-| **Item** | A physical or digital good. See [items.md](../instances/items.md). |
-| **Hashtag** | A topic tag. Also covers concepts like places (e.g. `#berlin`) — if places ever need dedicated properties they can become their own node type later. See [hashtag.md](../instances/hashtag.md). |
-| **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes. See [proposal.md](../instances/proposal.md); the primitive itself lives in [governance.md §2.1](governance.md#21-subject). |
-
-### Graph-side properties
-
-Most content nodes have minimal graph-side properties — the substance
-lives in Postgres. Specific cases:
-
-- **Chat**: `name` (if needed for routing or display hints),
-  `join_policy` (`open` / `invite-only` / `request-entry` /
-  `multi-sig`) — the graph reads `join_policy` when an actor's claim
-  toward a `ChatMember` arrives, to decide what approval is required —
-  and `epoch`, the integer chat-key-rotation counter (see
-  [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism): advanced on every
-  membership change and on every passing mid-epoch rotation Proposal).
-  See [chats.md §2](../instances/chats.md#2-join-policy--who-can-become-a-member). The per-message
-  `content_privacy` flag (plaintext vs E2EE) lives in Postgres
-  alongside each ChatMessage body row — message bodies are always
-  a Postgres concern (see [chats.md §4-5](../instances/chats.md#4-chatmessages-as-first-class-content)),
-  so the graph never reads the privacy flag.
-- **Hashtag**: its tag string — the tag *is* the identifier. The
-  UUID is content-addressed (`UUIDv5` of the canonical name with
-  a fixed namespace); see
-  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)
-  for the full mechanism and the federation implications.
-- **Proposal**: `target_property` and `proposed_value` as node
-  properties; the **target node** is reached via a `:TARGETS`
-  structural edge (`Proposal → Target`). No display content in
-  Postgres. See [proposal.md](../instances/proposal.md) for the
-  per-node spec, [governance.md §2.1](governance.md#21-subject)
-  for the primitive, and [edges.md §2](edges.md#2-structural-edges)
-  for the `:TARGETS` label.
-
-Post bodies, Comment bodies, ChatMessage payloads, Item descriptions
-and media, Chat descriptions all live in Postgres — not on the graph.
+| **Post** | Content (text and/or media) authored by a User or Collective. The primary public-content surface and the canonical [feed-ranking](feed-ranking.md) target. See [post.md](../instances/post.md). |
+| **Comment** | A response authored on another content node — Post, Comment (reply), Chat, ChatMessage, or Item. The platform's universal threading primitive. See [comment.md](../instances/comment.md); per-target containment list in [edges.md §2](edges.md#containment--belonging). |
+| **Chat** | A conversation container (1:1 or group) — a first-class interactable node visible on the graph, not a private hidden space. See [chats.md](../instances/chats.md). |
+| **ChatMessage** | A single message within a Chat, itself a first-class node — likeable, commentable, embed-able. See [chats.md](../instances/chats.md). |
+| **Item** | A physical or digital good — ownable (via ItemOwnership), transferable, and talked about. See [items.md](../instances/items.md). |
+| **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). See [hashtag.md](../instances/hashtag.md). |
+| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
 
 ---
 
@@ -154,92 +88,38 @@ and media, Chat descriptions all live in Postgres — not on the graph.
 
 Junction nodes represent relationships that have **roles**, need
 **approval flows** (multi-sig), and can themselves be interacted
-with (liked, voted on, etc.).
+with (liked, voted on, etc.). They eliminate the need for parallel
+edges between the same two nodes — see
+[graph-model.md §2](graph-model.md#2-node-categories) for the
+framing and §5 for the approval flow.
 
-| Node type | Connects | Why it's a node |
-|-----------|----------|-----------------|
-| **ChatMember** | Chat ↔ User/Collective | Has roles (admin, mod, member). Entry can require multi-sig approval (invite-only chats). Can be interacted with (vote to kick, promote to admin). See [chats.md](../instances/chats.md). |
-| **CollectiveMember** | Collective ↔ User/Collective | Has roles (founder, shareholder, worker, band member, subsidiary, partner, member). Multi-sig for adding/removing members. Ownership stakes where applicable. Collectives can be members of other collectives (holdings, subsidiaries, label rosters, households as members of co-ops). See [collectives.md](../instances/collectives.md). |
-| **ItemOwnership** | Item ↔ User/Collective | Represents ownership claim. Multi-sig for transfer (acquirer requests, current owner approves). Full ownership history. See [items.md](../instances/items.md). |
-
-### Why junction nodes exist
-
-Junction nodes eliminate the need for parallel edges between the
-same two nodes. A user's **membership** in a chat and their
-**opinion** of that chat are edges to different nodes:
-
-```
-Jakob -[actor edge]-> ChatMember_Jakob_Chat1 -[structural]-> Chat1   (membership)
-Jakob -[actor edge]-> Chat1                                          (opinion)
-```
-
-### Graph-side properties
-
-**Junction nodes carry typed properties** — role and
-role-attached quantities — as properties on the node itself, not
-encoded in edge dimensions. Categorical data belongs in categorical
-fields; quantities need more range and resolution than the bipolar
-`[-1, +1]` edge dimensions provide. Multi-sig weighting for
-approvals is derived from these role properties when actor edges
-toward the junction are evaluated.
-
-Per-type properties committed so far:
-
-- **ChatMember**: `role` (`admin` / `mod` / `member`), plus
-  `voting_weight` (numeric, optional) where the chat wants to set
-  per-member weight directly rather than deriving it from `role`
-  at tally time.
-- **CollectiveMember**: `role` (`founder` / `shareholder` / `worker` /
-  `band member` / `subsidiary` / `partner` / `member`, examples — the
-  set is open-ended per the social contract), `ownership_pct`
-  where the role carries an equity stake, and `voting_weight`
-  (numeric, optional) where the collective wants to set per-member
-  weight directly rather than deriving it from `role` /
-  `ownership_pct` at tally time. See
-  [governance.md §2.3](governance.md#23-weight-function) for how the weight function
-  reads these.
-- **ItemOwnership**: no per-instance properties beyond `id`.
-  Transfer state lives entirely in the surrounding edges (claim,
-  approval, and supersession layers per
-  [items.md](../instances/items.md)).
-
-### Postgres-side content
-
-Junction nodes are lightweight relationship carriers and carry no
-display content in Postgres. The entities they connect (Chats,
-Collectives, Items) own the display content.
+| Node type | Connects | Description |
+|-----------|----------|-------------|
+| **ChatMember** | Chat ↔ User/Collective | Membership in a Chat with role (admin/mod/member). Entry can require multi-sig approval per the chat's `join_policy`; can itself be voted on (kick, promote). See [chats.md](../instances/chats.md). |
+| **CollectiveMember** | Collective ↔ User/Collective | Membership in a Collective with role and role-attached quantities (e.g. `ownership_pct`). Collectives can themselves be CollectiveMembers — nesting is unlimited. See [collectives.md](../instances/collectives.md). |
+| **ItemOwnership** | Item ↔ User/Collective | A specific ownership claim. Each transfer creates a new ItemOwnership; together they form the item's append-only ownership history. See [items.md](../instances/items.md). |
 
 ---
 
 ## 4. System nodes
 
 A small fourth category for **singleton, instance-level
-configuration** that doesn't fit actor / content / junction:
+configuration** that doesn't fit actor / content / junction.
 
 | Node type | Description |
 |-----------|-------------|
-| **Network** | Singleton per instance. Carries Network-level configuration parameters (moderation thresholds, role-change quorums, eligibility definitions). Targeted by Proposals when those parameters are changed. See [network.md](network.md). |
-
-System nodes carry no user-authored content of their own — every
-property they hold is governance-managed via Proposals. They are
-graph-resident because governance reads and writes them, and because
-the Proposal primitive needs a node to target.
-
-### Graph-side properties
-
-See [network.md](network.md) for the full property list and defaults.
-
-### Postgres-side content
-
-None — system nodes have no display content.
+| **Network** | Singleton per instance. Carries Network-level configuration (moderation thresholds, role-change quorums, eligibility definitions). Targeted by Proposals when those parameters are changed. See [network.md](network.md). |
 
 ---
 
 ## What this doc is not
 
-- **Not the conceptual model.** The four categories (actor, content,
-  junction, system) and why they matter are in
+- **Not the conceptual model.** The four categories (actor,
+  content, junction, system) and why they matter are in
   [graph-model.md §2](graph-model.md#2-node-categories).
+- **Not the per-node mechanics.** Creation flow, graph-side and
+  Postgres-side properties, edges, authorship, and lifecycle live
+  in each row's linked doc.
 - **Not the Memgraph schema.** Concrete property types,
   constraints, and per-label indexes live in
   [graph-data-model.md](../implementation/graph-data-model.md).
