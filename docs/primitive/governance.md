@@ -328,13 +328,13 @@ design discussion (§9).
 
 - **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
   Shape A. Threshold: N actor edges from specified roles.
-- **Chat message disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
+- **Chat message disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
   Quorum + weighted-majority threshold.
-- **Chat member disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
+- **Chat member disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
   Higher quorum + weighted-supermajority threshold.
-- **Chat property and role changes** — [chats.md §6](../instances/chats.md#6-moderation).
+- **Chat property and role changes** — [chats.md §7](../instances/chats.md#7-moderation).
   Proposals on `Chat.name`, `Chat.join_policy`, `Chat.epoch`
-  (mid-epoch chat-key rotation, see [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism)),
+  (mid-epoch chat-key rotation, see [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism)),
   and `ChatMember.role`. Defaults vary by stakes; thresholds are
   themselves chat properties.
 - **Collective governance (full social contract)** —
@@ -345,7 +345,7 @@ design discussion (§9).
   contract specifies; each is parameterized for its own
   decision-type. Eligibility, weights, and thresholds are all
   per-instance.
-- **Network moderator role changes** — [network.md §5](network.md#5-mod-role-changes-via-multi-sig-proposal).
+- **Network moderator role changes** — [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
   Shape B from the User node directly. Multi-sig: ≥1 existing
   moderator's positive vote plus a community-quorum threshold.
 - **Content moderation classifications** — [moderation.md](../instances/moderation.md).
@@ -353,7 +353,7 @@ design discussion (§9).
   on every classification change (`sensitive` / `illegal` and
   un-classification back to `normal`); mod weight = member
   weight = 1.
-- **`:Network` parameter amendments** — [network.md §7](network.md#7-amending-network-parameters).
+- **`:Network` parameter amendments** — [network.md §8](network.md#8-amending-network-parameters).
   Shape B from the User node directly. Two amendment-rule pairs
   on the `:Network` singleton — a baseline pair for low-stakes
   parameters and a critical pair for parameters with destructive

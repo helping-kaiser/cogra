@@ -33,7 +33,7 @@ members, some of which may choose to run with encrypted content."
 
 The Chat node carries three graph-side properties relevant to its
 operation: `name` (an optional routing/display hint), `join_policy`
-(this section), and `epoch` (the chat-key-rotation counter, §5),
+(this section), and `epoch` (the chat-key-rotation counter, §6),
 plus the universal `moderation_status` per
 [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status).
 All are layered. Concrete types and indexes live in
@@ -50,7 +50,7 @@ two-edge approval pattern. Four shapes:
 - **Multi-sig** — N approvers required (governance-heavy chats).
 
 Privacy of message contents is **per-message**, not per-chat — see
-§5. A single chat can carry both plaintext and encrypted messages
+§6. A single chat can carry both plaintext and encrypted messages
 freely.
 
 ---
@@ -79,7 +79,170 @@ chats simply participate in it alongside every other node type.
 
 ---
 
-## 4. ChatMessages as first-class content
+## 4. Edges
+
+This doc covers three nodes: the **Chat** container, the
+**ChatMessage** content node, and the **ChatMember** junction.
+Each gets its own subsection. Dimension labels, sub-category
+labels, and traversal semantics are not duplicated here — see
+[edges.md](../primitive/edges.md).
+
+### 4.1 Chat
+
+#### As source (outgoing)
+
+A Chat is not an actor and authors no actor edges. It carries
+one outgoing structural edge type:
+
+- **`Chat → ChatMember` (`:APPROVAL`)** — the approval side of
+  the two-edge approval pattern. Created when the chat's
+  `join_policy` is satisfied for an incoming `ChatMember` claim
+  (§8). State transitions on this edge — member disavowal per
+  §7 Level 2, voluntary leave — append additional `dim1 < 0`
+  layers per
+  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  See
+  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+
+#### As target (incoming)
+
+A Chat receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — sentiment
+  and relevance toward the chat itself ("this chat is a great
+  space", "this chat has gone toxic"), used by
+  [feed-ranking](../primitive/feed-ranking.md) to weight the
+  chat for each viewer.
+- **`ChatMessage → Chat` (`:CONTAINMENT`)** — each message
+  belongs to its chat. See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
+  two-edge approval pattern, paired with the outgoing
+  `Chat → ChatMember` (above) once approval is granted.
+- **`Comment → Chat` (`:CONTAINMENT`)** when a Comment is on
+  the chat as a whole.
+- **`ChatMessage / Post / Comment → Chat` (`:REFERENCES`)** when
+  another content node embeds the Chat — a message sharing a
+  chat into another chat, a Post recommending it, a Comment
+  citing it. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → Chat` (`:TARGETS`)** when a Proposal targets a
+  property on the Chat — `name`, `join_policy`, `epoch` (§6
+  mid-epoch rotation), `moderation_status`, or any
+  governance-parameter property (§7). See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+### 4.2 ChatMessage
+
+#### As source (outgoing)
+
+A ChatMessage is not an actor and authors no actor edges. It
+carries two outgoing structural edge types, both system-created:
+
+- **`ChatMessage → Chat` (`:CONTAINMENT`)** — identifies the
+  message's containing chat. Exactly one per ChatMessage,
+  written at creation and never re-targeted. See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ChatMessage → any node` (`:REFERENCES`)** — one edge per
+  node the message embeds, quotes, or mentions: a Post being
+  shared into the chat, a User or Collective named in the body,
+  a Hashtag in the body, a Proposal pointed at, another
+  ChatMessage being replied to, etc. **Hashtag is included** —
+  unlike Post and Comment, ChatMessage has no `:TAGGING` edge
+  type, so body-tag hashtags also go through `:REFERENCES`. The
+  carve-out rationale and traversal rules live in
+  [edges.md §2 "Reference"](../primitive/edges.md#reference); §5
+  walks the embedding gesture (sharing a post into a chat)
+  end-to-end.
+
+#### As target (incoming)
+
+A ChatMessage receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  like/dislike surface plus per-viewer relevance, used by
+  [feed-ranking](../primitive/feed-ranking.md). The earliest of
+  these is the authorship edge — see
+  [authorship.md](../primitive/authorship.md).
+- **`Comment → ChatMessage` (`:CONTAINMENT`)** when a Comment is
+  written on the specific message.
+- **`ChatMember → ChatMessage` (Shape B vote)** — chat-internal
+  message-disavowal votes (§7 Level 1). The vote runs from the
+  voting member's ChatMember junction to the message with `dim1`
+  carrying vote direction; the carrier is the junction so the
+  vote stays decoupled from the voter's personal sentiment on
+  `User → ChatMessage`. See
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
+  and
+  [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
+- **`ChatMessage / Post / Comment → ChatMessage` (`:REFERENCES`)**
+  when another content node embeds this message — a reply that
+  quotes it, a Post citing it, a different ChatMessage
+  referencing it. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → ChatMessage` (`:TARGETS`)** when a moderation
+  Proposal targets a property on the ChatMessage —
+  `'sensitive'` against `moderation_status`, or `'illegal'`
+  against a specific user-input field. See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+### 4.3 ChatMember
+
+#### As source (outgoing)
+
+A ChatMember is a junction, not an actor. It carries one claim
+edge plus the Shape B vote edges its bearer casts as a
+chat-eligible voter:
+
+- **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
+  two-edge approval pattern, closed by the chat's
+  `Chat → ChatMember` approval edge (§4.1) once `join_policy` is
+  satisfied. See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ChatMember → Proposal` (Shape B vote)** — chat-eligible
+  vote on a Proposal targeting a chat property (`name`,
+  `join_policy`, `epoch`, member-role changes, governance
+  parameters). `dim1` carries vote direction. See
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b).
+- **`ChatMember → ChatMessage` (Shape B vote)** — direct
+  message-disavowal vote (§7 Level 1). `dim1 < 0` opposes the
+  message.
+- **`ChatMember → ChatMember` (Shape B vote)** — direct
+  member-disavowal vote (§7 Level 2), cast against another
+  member of the same chat.
+
+#### As target (incoming)
+
+A ChatMember receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  approve/reject opinion on the membership claim. The acquirer's
+  edge (or the inviter's) initiates the claim under the two-edge
+  approval pattern; the approver(s) close it (§8).
+- **`Chat → ChatMember` (`:APPROVAL`)** — the approval side of
+  the two-edge pattern, paired with the outgoing
+  `ChatMember → Chat` claim above. State transitions — member
+  disavowal per §7 Level 2, voluntary leave — append `dim1 < 0`
+  layers on this edge per
+  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+- **`ChatMember → ChatMember` (Shape B vote)** — incoming
+  member-disavowal votes cast by other active members of the
+  same chat (§7 Level 2).
+- **`ChatMessage / Post / Comment → ChatMember` (`:REFERENCES`)**
+  when a content node embeds the membership — e.g. a message
+  highlighting a moderator. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → ChatMember` (`:TARGETS`)** when a Proposal
+  targets a property on the ChatMember — `role` changes
+  (promote / demote per §7), `voting_weight`, etc. See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+---
+
+## 5. ChatMessages as first-class content
 
 Each individual message is also a node — not a row in a table hidden
 inside the chat:
@@ -144,10 +307,10 @@ Postgres-side display content.
 
 ---
 
-## 5. Encryption as the privacy mechanism
+## 6. Encryption as the privacy mechanism
 
 The graph carries chat **topology only** — it never holds message
-bodies, encrypted or not. Per §4, every body lives in Postgres.
+bodies, encrypted or not. Per §5, every body lives in Postgres.
 **Privacy is per-message, not per-chat:** each ChatMessage carries
 a `content_privacy` flag (`plaintext` / `encrypted`) that tells
 the frontend whether to attempt decryption. A single chat can mix
@@ -172,7 +335,7 @@ epoch and opens a new one — the system advances `Chat.epoch`:
 
 - A new active member (`Chat → ChatMember` activates) — opens E_{i+1}.
 - A member leaves voluntarily — opens E_{i+1}.
-- A member-disavowal vote passes (§6 Level 2) — opens E_{i+1}.
+- A member-disavowal vote passes (§7 Level 2) — opens E_{i+1}.
 
 The new key itself is derived collaboratively by the post-change
 set of members using the underlying group-key protocol
@@ -233,7 +396,7 @@ does not expose any earlier or later epoch.
 Members may also rotate the chat key **without a membership
 change** — for example, after a member's device has been
 compromised but before they have left the chat. The mechanism is
-the ordinary property-change Proposal flow (§6, [governance.md
+the ordinary property-change Proposal flow (§7, [governance.md
 §2.1](../primitive/governance.md#21-subject)): a Proposal targets
 `Chat.epoch` with `proposed_value = current + 1`. On
 threshold-cross, the property advances and current members re-run
@@ -252,7 +415,7 @@ Suggested defaults (starting points, not fixed rules):
 These percentages are themselves node properties on the chat
 (`Chat.rotate_key_quorum`, `Chat.rotate_key_threshold`) and can be
 changed via Proposals targeting them — governance of governance
-applies all the way down, same as everywhere else in §6.
+applies all the way down, same as everywhere else in §7.
 
 Mid-epoch rotation is forward protection only, not a privacy
 upgrade against prior leakage: messages already encrypted under
@@ -295,7 +458,7 @@ property without changing the graph model.
 
 ---
 
-## 6. Moderation
+## 7. Moderation
 
 Open public chats face an obvious question: without an admin, who
 stops a bad message from dominating? CoGra's answer reuses the
@@ -310,14 +473,20 @@ both use Shape B (the vote travels from the voter's `ChatMember`
 junction to the subject, so the chat stance stays decoupled from
 personal sentiment).
 
-### Level 1 — Message disavowal (`Chat → ChatMessage`)
+### Level 1 — Message disavowal
 
-Members vote to disavow a specific `ChatMessage`. If the vote
-passes, a new layer on the `Chat → ChatMessage` structural edge
-signals that the chat no longer associates itself with the message.
-The message is **not** removed — append-only applies. A reader who
-wants to see disavowed content still can; a reader who treats the
-chat's current stance as authoritative simply won't.
+Members vote to disavow a specific `ChatMessage`. Each voter casts
+a `ChatMember → ChatMessage` Shape B structural edge with
+`dim1 < 0`. The chat's disavowal of the message is the **aggregate
+of those incoming edges** once the chat's threshold parameters
+are crossed; no separate outcome edge from the Chat to the
+ChatMessage is written (a ChatMessage has no pre-existing
+approval-style edge from the chat to layer over, unlike a
+ChatMember — see Level 2). Queries computing the chat's current
+stance toward the message tally those Shape B votes. The message
+is **not** removed — append-only applies. A reader who wants to
+see disavowed content still can; a reader who treats the chat's
+current stance as authoritative simply won't.
 
 ### Level 2 — Member disavowal (`Chat → ChatMember`)
 
@@ -344,7 +513,7 @@ Starting points, not fixed rules:
 | Role weights    | `admin = 5`, `mod = 3`, `member = 1`                                  | Same                                                                  |
 | Quorum          | ≥ 20% of total eligible weight has cast a vote                        | ≥ 40% of total eligible weight has cast a vote                        |
 | Threshold       | > 50% of cast weight disavowing                                       | ≥ 2/3 of cast weight disavowing                                       |
-| Outcome         | New layer on `Chat → ChatMessage`                                    | New layer on `Chat → ChatMember`                                     |
+| Outcome         | Threshold-cross on incoming `ChatMember → ChatMessage` Shape B votes (no separate outcome edge) | New layer on `Chat → ChatMember`                                     |
 | Takes effect at | New-vote threshold-crossing ([governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect))       | Same                                                                  |
 
 **Every number above is a node property on the `Chat`.** Role
@@ -381,7 +550,7 @@ the primitive, not from a special rule.
 Beyond disavowal, the chat's other state changes use the Proposal
 mechanism (see [governance.md §2.1](../primitive/governance.md#21-subject)). `ChatMember.role`
 (promote / demote), `Chat.name`, `Chat.join_policy`, and `Chat.epoch`
-(mid-epoch key rotation, see §5) are all node properties; each change
+(mid-epoch key rotation, see §6) are all node properties; each change
 is a Proposal voted on by chat members under chat-defined parameters.
 
 Suggested defaults (starting points, not fixed rules):
@@ -409,7 +578,7 @@ member — they just see that the chat has moved away.
 
 ---
 
-## 7. Join flows
+## 8. Join flows
 
 The two-edge approval pattern from
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows) instantiates as
@@ -430,7 +599,7 @@ in the approval policy.
 
 ---
 
-## 8. Membership lifecycle
+## 9. Membership lifecycle
 
 Membership is encoded in the two-edge approval pattern: claim-only
 edge → pending; both edges → active. State transitions (voluntary
@@ -439,14 +608,14 @@ leave, community removal) follow the primitive — see
 state transitions") for the rule.
 
 The chat-specific configuration is the removal instance: chats use
-the member-disavowal instance defined in §6 — a Shape B vote with
+the member-disavowal instance defined in §7 — a Shape B vote with
 the chat's configured quorum and threshold. There is no
 admin-unilateral kick path; admins participate in the disavowal
 vote with their role-weighted vote alongside everyone else.
 
 Every membership-change event — voluntary leave, member-disavowal
 pass, or new active member — also triggers the automatic chat-key
-rotation described in §5: `Chat.epoch` advances by 1 and the new
+rotation described in §6: `Chat.epoch` advances by 1 and the new
 member set re-runs the group-key-update procedure off-graph. The
 leaving member keeps the keys for past epochs they were active in
 but cannot derive the new one. This is the mechanism that limits
@@ -454,7 +623,7 @@ ex-member leakage to the time they were actually in the chat.
 
 ---
 
-## 9. 1:1 vs group chats
+## 10. 1:1 vs group chats
 
 There is **no structural difference**. A 1:1 chat is a chat with
 exactly two members; a group chat is a chat with three or more. The

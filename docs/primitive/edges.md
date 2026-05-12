@@ -20,7 +20,7 @@ Actor edges from a Collective are initiated by an authorized
 CollectiveMember per the Collective's social contract, but the
 on-graph edge belongs to the Collective itself — there is no
 per-edge record of the acting member. See
-[collectives.md "Acting through the Collective"](../instances/collectives.md#acting-through-the-collective).
+[collectives.md "Acting through the Collective"](../instances/collectives.md#2-acting-through-the-collective).
 
 Across every actor-edge type the two dimensions follow the same
 underlying grammar (see [graph-model.md §6](graph-model.md#6-dimension-semantics)):

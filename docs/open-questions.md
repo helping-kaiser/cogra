@@ -34,7 +34,7 @@ questions are closed.
 **Resolved:**
 
 - Q7 — see [data-model.md §"author_id + author_type"](implementation/data-model.md#author_id--author_type--discriminator-not-foreign-key).
-- Q8 — see [chats.md §6](instances/chats.md#6-moderation) and [governance.md §7](primitive/governance.md#7-instances).
+- Q8 — see [chats.md §7](instances/chats.md#7-moderation) and [governance.md §7](primitive/governance.md#7-instances).
 - Q3 — see [graph-model.md §3](primitive/graph-model.md#3-edge-categories) "What creates an actor edge — stances-not-events".
 - Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md#6-dimension-semantics) (dim1/dim2 unification, filtering vs. graph math). S's intrinsic derivation deferred — tracked as Q16.
 - Q11 — see [feed-ranking.md §3.5–§3.6](primitive/feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge) (`(0, 0)` severance edge, cascading severance, redemption) and [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm) (zero-jail banishment of `h(t) = 0`). Self-discovery and return-pathway UX surfaces are tracked as forward sub-questions Q12 and Q13.
