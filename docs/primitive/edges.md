@@ -11,10 +11,16 @@ directionality, the append-only rule — see
 
 ## 1. Actor edges
 
-All actor edges are created by User or Collective nodes toward other
-nodes. The 2 dimensions are set by the actor and follow the uniform
-`[-1.0, +1.0]` range described in
+All actor edges are created by User or Collective actors toward
+other nodes. The 2 dimensions are set by the actor and follow the
+uniform `[-1.0, +1.0]` range described in
 [graph-model.md](graph-model.md).
+
+Actor edges from a Collective are initiated by an authorized
+CollectiveMember per the Collective's social contract, but the
+on-graph edge belongs to the Collective itself — there is no
+per-edge record of the acting member. See
+[collectives.md "Acting through the Collective"](../instances/collectives.md#acting-through-the-collective).
 
 Across every actor-edge type the two dimensions follow the same
 underlying grammar (see [graph-model.md §6](graph-model.md#6-dimension-semantics)):
