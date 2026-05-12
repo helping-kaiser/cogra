@@ -115,25 +115,41 @@ not to the relationship.
 
 ### Reference
 
-System-created when a ChatMessage embeds another node — sharing a
-post into a chat, quoting a previous message, recommending a user,
-showcasing a band, announcing a new item ownership, pointing at a
-proposal to vote on, etc. The chat message is the carrier: it has
-its own author, timestamp, optional caption text in Postgres, and
-an optional `Comment → ChatMessage` thread. The referenced node is
-what the message points at. See
-[chats.md](../instances/chats.md) for worked-out usage patterns
-(including the personal-newsfeed shape that replaces the old
-container-chat hack).
+System-created when a content node embeds another node — a
+ChatMessage sharing a post into a chat, a Post quoting another
+Post, a Comment citing the original of a re-uploaded image, any
+of the three mentioning a User or Collective, pointing at a
+proposal to vote on, etc. The **carrier** is a content node —
+ChatMessage, Post, or Comment — with its own author, timestamp,
+and Postgres body. The referenced node is what the carrier points
+at. See [chats.md](../instances/chats.md) for the worked-out
+ChatMessage usage patterns (including the personal-newsfeed shape
+that replaces the old container-chat hack); per-carrier specifics
+live in the respective [post.md](../instances/post.md) and
+[comment.md](../instances/comment.md) edge sections.
 
 | Edge type | Meaning |
 |-----------|---------|
 | ChatMessage → any node | This message references this node |
+| Post → any node (except Hashtag) | This post references this node |
+| Comment → any node (except Hashtag) | This comment references this node |
 
 Targets span every node category: actor (User, Collective), content
 (Post, Comment, Chat, ChatMessage, Item, Hashtag, Proposal), and
-junction (ChatMember, CollectiveMember, ItemOwnership). A message
+junction (ChatMember, CollectiveMember, ItemOwnership). A carrier
 can point at anything with a graph identity.
+
+**Hashtag is the one carve-out.** Post and Comment already attach
+to Hashtag via `:TAGGING` (above); a given (source, target) pair
+carries at most one structural edge, so `Post → Hashtag` and
+`Comment → Hashtag` use `:TAGGING` only. `ChatMessage → Hashtag`
+continues to use `:REFERENCES` because ChatMessage has no
+`:TAGGING` edge type.
+
+Traversal rules for `:REFERENCES` — whether reach amplifies the
+same way across all three carrier types, how mention spam is
+priced into ranking — are deferred to the next pass over the
+edge network as a whole.
 
 ### Voting (Shape B)
 
@@ -193,7 +209,7 @@ enough that the endpoint-label-filter approach adds cost or noise.
 | `:CONTAINMENT` | Comment → Post, Comment → Comment, ChatMessage → Chat, Comment → Chat, Comment → ChatMessage, Comment → Item | Content containment and reply structure. Queried for feed assembly and thread rendering. |
 | `:TAGGING` | Post → Hashtag, Comment → Hashtag, Item → Hashtag | Tag associations. Queried by hashtag-centric browsing. |
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |
-| `:REFERENCES` | ChatMessage → any node | The "this message embeds X" relationship. Common query: "what chat messages reference this node?" — feeds embed-rendering and inbound-attention surfaces. |
+| `:REFERENCES` | ChatMessage → any node; Post / Comment → any node except Hashtag | The "this carrier embeds X" relationship. Common query: "what nodes reference this one?" — feeds embed-rendering and inbound-attention surfaces. |
 
 All sub-category labels **replace** `:STRUCTURAL`, not add to it — a
 relationship has exactly one label in Memgraph.

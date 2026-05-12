@@ -153,10 +153,11 @@ A Hashtag receives:
   for the full source catalog.
 - **`ChatMessage → Hashtag` `:REFERENCES`** when a chat
   message embeds the hashtag (e.g. surfacing a topic feed
-  into a chat). See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference) —
-  the reference catalog explicitly enumerates Hashtag among
-  the targets a ChatMessage can point at.
+  into a chat). ChatMessage is the only carrier for this
+  edge: Post and Comment reach Hashtag via `:TAGGING`, and a
+  single structural edge per (source, target) pair is the
+  rule — see the Hashtag carve-out in
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Hashtag` `:TARGETS`** when a moderation
   Proposal targets a property on the Hashtag —
   `'sensitive'` against `moderation_status`, or
