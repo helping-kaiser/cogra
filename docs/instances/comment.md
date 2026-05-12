@@ -123,14 +123,21 @@ graph authorship rule — see §5 and
 ### As source (outgoing)
 
 A Comment is not an actor and authors no actor edges. It
-carries exactly one outgoing structural edge, system-created at
-creation and never re-targeted:
+carries two outgoing structural edge types, both system-created:
 
 - **`Comment → (Post | Comment | Chat | ChatMessage | Item)`
-  `:CONTAINMENT`** — identifies the Comment's parent. The
-  per-target catalog with row-level meanings lives in
+  `:CONTAINMENT`** — identifies the Comment's parent. Exactly
+  one per Comment, written at creation and never re-targeted.
+  The per-target catalog with row-level meanings lives in
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging);
   this doc deliberately does not mirror that list (§1).
+- **`Comment → Hashtag` (`:TAGGING`)** — one edge per hashtag
+  the Comment is tagged with. See
+  [edges.md §2 "Tagging"](../primitive/edges.md#tagging). The
+  Hashtag node is content-addressed by canonical name (per
+  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
+  so the same hashtag across instances resolves to the same
+  node.
 
 ### As target (incoming)
 
