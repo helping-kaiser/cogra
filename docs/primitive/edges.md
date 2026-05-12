@@ -148,6 +148,19 @@ direction (`+1` support, `-1` oppose, intermediate values allowed),
 | ChatMember → Proposal | A chat-eligible vote on a proposed property change |
 | CollectiveMember → Proposal | A collective-eligible vote on a proposed property/role change |
 
+**Network-scope governance is the exception.** For votes on
+Network-wide Proposals (moderator role changes, content moderation,
+`:Network` parameter amendments), no new structural edge is created
+— the carrier is the existing `User → Proposal` **actor edge** from
+§1. That actor edge keeps its normal `(sentiment, importance)`
+meaning; the tally reads `sign(sentiment)` for the binary outcome.
+The "Shape B" framing in governance.md and network.md is
+governance-conceptual (eligibility from the User, not a junction),
+not edge-mechanical. See
+[governance.md §3](governance.md#3-the-two-vote-shapes)
+"Carrier relaxation for Network-level governance" and
+[proposal.md §4](../instances/proposal.md#4-edges).
+
 ---
 
 ## 3. Edge labels at the graph layer
