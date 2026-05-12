@@ -123,7 +123,8 @@ graph authorship rule — see §5 and
 ### As source (outgoing)
 
 A Comment is not an actor and authors no actor edges. It
-carries two outgoing structural edge types, both system-created:
+carries three outgoing structural edge types, all
+system-created:
 
 - **`Comment → (Post | Comment | Chat | ChatMessage | Item)`
   `:CONTAINMENT`** — identifies the Comment's parent. Exactly
@@ -138,6 +139,15 @@ carries two outgoing structural edge types, both system-created:
   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
   so the same hashtag across instances resolves to the same
   node.
+- **`Comment → any node` (`:REFERENCES`)** — one edge per node
+  the Comment embeds, quotes, or mentions: the original of a
+  re-uploaded image on a parent Post, a User or Collective
+  named in the body, a Proposal it cites in debate, etc.
+  Hashtag is the one excluded target — body-tag hashtags go
+  through `:TAGGING` (above) and a single structural edge per
+  (source, target) pair is the rule. The carrier semantics,
+  target catalog, and deferred traversal rules live in
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
 ### As target (incoming)
 
@@ -157,8 +167,10 @@ A Comment receives:
   accumulate `R` (path length) naturally and decay via `d(R)`
   in [feed-ranking](../primitive/feed-ranking.md) — there is
   no explicit depth cap.
-- **`ChatMessage → Comment` `:REFERENCES`** when a chat message
-  embeds or shares the Comment into a chat. See
+- **`ChatMessage / Post / Comment → Comment` `:REFERENCES`**
+  when another content node embeds the Comment — a chat
+  message sharing it into a chat, a Post citing it, another
+  Comment referencing it in debate. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Comment` `:TARGETS`** when a moderation
   Proposal targets a property on the Comment — `'sensitive'`
@@ -240,8 +252,8 @@ content-level scope of
 [account-deletion.md](account-deletion.md).
 
 The Comment's UUID is stable across every redaction. Authorship
-caches keyed on the UUID stay valid; the outgoing
-`:CONTAINMENT` edge to its target and every incoming actor /
+caches keyed on the UUID stay valid; the outgoing `:CONTAINMENT`,
+`:TAGGING`, and `:REFERENCES` edges and every incoming actor /
 reply / reference / targeting edge keep pointing at the same
 node. A redacted Comment is a partially-or-fully gutted but
 still-graph-resident content node, not a removed one.
