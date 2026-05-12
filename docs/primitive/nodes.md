@@ -79,7 +79,7 @@ Entities that take actions and create edges.
 | Node type | Description |
 |-----------|-------------|
 | **User** | A person on the platform. See [user.md](user.md). |
-| **Collective** | Any group of people that needs a single graph identity to act through — a household, band, co-op, studio, partnership, NGO, company. Fully equivalent to Users as actors: can do everything Users can (author content, be followed, post items, create edges toward other nodes, be members of other collectives). See [collectives.md](../instances/collectives.md). |
+| **Collective** | Any group of people that needs a single graph identity to act through — a household, band, co-op, studio, partnership, NGO, company. Created by one founding User; every subsequent gesture is initiated by an authorized CollectiveMember per the Collective's social contract, with the graph attributing the edge to the Collective and no per-edge acting-member trace. Same outgoing-edge catalog as a User (author content, be followed, post items, create actor edges toward other nodes, be members of other Collectives). See [collectives.md](../instances/collectives.md). |
 
 ### Graph-side properties
 
