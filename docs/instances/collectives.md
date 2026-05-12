@@ -28,6 +28,14 @@ This means Collectives are **user-created nodes**: each Collective
 begins with one founding User and a written social contract (see
 [§Creation](#creation)).
 
+On the graph the Collective carries a `name` property — the handle
+used for mentions and lookups, analogous to `User.username` — and
+the universal `moderation_status` per
+[nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status).
+Both are layered per [layers.md](../primitive/layers.md). Concrete
+types and indexes live in
+[graph-data-model.md](../implementation/graph-data-model.md).
+
 ## Creation
 
 A Collective is brought into existence by a single founding
