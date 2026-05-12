@@ -140,14 +140,19 @@ For Network-scope governance (moderation, mod role changes,
 the vote runs from the voter's **User node** directly. Per
 the edges catalog, that edge is the `User → Proposal`
 **actor edge** already listed in
-[edges.md §1](../primitive/edges.md#1-actor-edges):
-sentiment carries vote direction, importance carries
-personal stake. governance.md and network.md describe this
-case as "Shape B" to emphasize the User-node carrier; in
-edge mechanics it collapses to the actor edge — a Proposal
-has no separate personal stance to preserve apart from the
-vote, so the actor edge alone is enough. Treat "Shape B"
-there as governance-conceptual rather than edge-mechanical.
+[edges.md §1](../primitive/edges.md#1-actor-edges) — no
+separate structural vote edge is created. The actor edge
+keeps its normal actor-edge meaning: `dim1` is the voter's
+full sentiment toward the change (positive = support,
+negative = oppose), `dim2` is importance / personal stake.
+The **tally** reads `sign(dim1)` for the binary outcome
+(same rule as Shape A). governance.md and network.md
+describe this case as "Shape B" to emphasize the User-node
+carrier; in edge mechanics it collapses to the actor edge —
+a Proposal has no separate personal stance to preserve apart
+from the vote, so the actor edge alone is enough. Treat
+"Shape B" there as governance-conceptual rather than
+edge-mechanical.
 
 **Reference edges:**
 

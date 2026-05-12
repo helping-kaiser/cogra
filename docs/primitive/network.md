@@ -131,9 +131,16 @@ Each is a Shape B governance instance per
 - **The eligibility carrier is the User node itself**, not a
   junction. Network membership has no separate gesture, so there is
   no `ChatMember`-/`CollectiveMember`-style junction to carry the
-  vote. Vote edges run from the voter's User node to the subject.
-  This relaxes the Shape B carrier rule for the Network case
-  specifically — see governance.md for the relaxation.
+  vote. At the edge layer the vote IS the existing
+  `User → Proposal` actor edge from
+  [edges.md §1](edges.md#1-actor-edges) — no separate structural
+  edge is created. The actor edge keeps its normal `(sentiment,
+  importance)` meaning; the tally reads `sign(sentiment)` for the
+  binary outcome. "Shape B" here is governance-conceptual
+  (eligibility from the User, not a junction), not edge-mechanical.
+  See [governance.md §3](governance.md#3-the-two-vote-shapes)
+  "Carrier relaxation for Network-level governance" for the full
+  resolution.
 - **Mod weight = member weight = 1.** Mods do not outvote the
   community; the "≥1 mod positive vote" rule is a gate, not a
   weighting. (Same rule applied to content classifications in

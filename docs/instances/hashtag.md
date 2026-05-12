@@ -22,8 +22,8 @@ topical docs — this doc links rather than duplicates.
 
 A Hashtag is **brought into existence implicitly by the first
 edge that needs it**. No actor authors it, and no explicit
-"create hashtag" gesture exists. When a Post or Item is
-created with a tag string in its body, the API:
+"create hashtag" gesture exists. When a Post, Comment, or Item
+is created with a tag string in its body, the API:
 
 1. Normalizes the tag string — currently lowercase, no `#`.
 2. Computes the UUID via
@@ -31,8 +31,8 @@ created with a tag string in its body, the API:
 3. Upserts the `:Hashtag` node (the graph node, the registry
    row in Postgres — see §3 — and the `name` graph property
    are written together, idempotently).
-4. Writes the `Post → Hashtag` or `Item → Hashtag`
-   `:TAGGING` edge.
+4. Writes the `Post → Hashtag`, `Comment → Hashtag`, or
+   `Item → Hashtag` `:TAGGING` edge.
 
 Because the UUID is a pure function of the canonical name,
 step 3 is **idempotent**: a second post tagging the same
@@ -145,13 +145,12 @@ A Hashtag receives:
   (per [graph-model.md §7](../primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
 - **`Post → Hashtag` `:TAGGING`** when a Post is tagged
   with this hashtag.
+- **`Comment → Hashtag` `:TAGGING`** when a Comment is
+  tagged with this hashtag.
 - **`Item → Hashtag` `:TAGGING`** when an Item is tagged
-  with this hashtag. Today these are the **only** two
-  tagging sources — see
-  [edges.md §2 "Tagging"](../primitive/edges.md#tagging).
-  Comment, ChatMessage, etc. do not currently tag
-  hashtags; if future use cases require it, the addition
-  lands in `edges.md` and propagates here.
+  with this hashtag. See
+  [edges.md §2 "Tagging"](../primitive/edges.md#tagging)
+  for the full source catalog.
 - **`ChatMessage → Hashtag` `:REFERENCES`** when a chat
   message embeds the hashtag (e.g. surfacing a topic feed
   into a chat). See
@@ -180,11 +179,12 @@ hashtag has no author. The "earliest incoming layer-1 edge"
 rule from
 [authorship.md](../primitive/authorship.md) does not
 meaningfully apply: the first edge a Hashtag receives is
-typically a `:TAGGING` edge from whichever Post or Item
-happened to be created first, but that actor is the author
-of the *post*, not of the topic. Hashtags are registry
-concepts, not authored content; account deletion of any one
-contributor has no effect on the Hashtag itself.
+typically a `:TAGGING` edge from whichever Post, Comment,
+or Item happened to be created first, but that actor is the
+author of the *tagging node*, not of the topic. Hashtags
+are registry concepts, not authored content; account
+deletion of any one contributor has no effect on the
+Hashtag itself.
 
 Two redaction triggers apply to a Hashtag today, both via
 moderation:

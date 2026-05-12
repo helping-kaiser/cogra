@@ -1042,13 +1042,9 @@ A post is "friend-authored" from U's perspective if:
 
 1. There exists a direct R=2 actor edge `U → A` with non-zero
    top-layer `dim2` (A is in U's network), **and**
-2. `post.author_id == A`.
-
-`author_id` is a cached property on the post node (per
-[authorship.md "Caching"](authorship.md#caching)) — derived from the
-earliest incoming layer-1 timestamp but read directly without
-scanning at view time. The check is one property read per
-candidate post.
+2. `post.author_id == A` — one cached-property read per
+   candidate post (see
+   [authorship.md "Caching"](authorship.md#caching)).
 
 Authorship-edge freshness comes from the same top-layer
 timestamp used for `f(Δt)` in §7.
