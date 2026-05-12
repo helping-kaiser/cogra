@@ -24,6 +24,12 @@ This means a single Item typically has many ItemOwnership nodes over
 its lifetime, one per transfer event. The current owner is derived
 from the most recent approved ItemOwnership (see below).
 
+ItemOwnership carries no per-instance properties beyond its `id` —
+transfer state lives entirely in the surrounding edges (claim,
+approval, and supersession layers per the flow below). Concrete
+types and indexes live in
+[graph-data-model.md](../implementation/graph-data-model.md).
+
 ## Transfer flow
 
 ItemOwnership uses the **two-edge approval pattern** described in
