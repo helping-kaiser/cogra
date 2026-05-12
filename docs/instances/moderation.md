@@ -20,7 +20,7 @@ moderators, not a protocol invariant; voting blind is a
 mod-conduct violation, addressable through the same primitive
 that handles any mod misconduct (see §5). Until the relevant
 chat key has been disclosed, chat-internal disavowal
-([chats.md §6](chats.md#6-moderation)) is the only meaningful
+([chats.md §7](chats.md#7-moderation)) is the only meaningful
 recourse.
 
 ## 1. The two classification paths
@@ -179,7 +179,7 @@ values for an `'illegal'` Proposal:
 | **Collective** | `name`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
 | **Post** | `content`, `attachments` (all attached media on the post) | both |
 | **Comment** | `content`, `attachments` | both |
-| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §5](chats.md#5-encryption-as-the-privacy-mechanism); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
+| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §6](chats.md#6-encryption-as-the-privacy-mechanism); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
 | **Chat** | `name`, `description`, `image` | all three |
 | **Item** | `name`, `description`, `attachments` | all of the above |
 | **Hashtag** | `name` | n/a (only field) |
@@ -208,7 +208,7 @@ For a moderation Proposal targeting an encrypted ChatMessage to be
 useful, voters need to be able to read the body. The disclosure
 path is **independent of the moderation primitive** — any chat
 member can release the relevant epoch's chat key (per
-[chats.md §5](chats.md#5-encryption-as-the-privacy-mechanism)) through any normal authoring
+[chats.md §6](chats.md#6-encryption-as-the-privacy-mechanism)) through any normal authoring
 gesture: a Comment on the chat, a public Post, a plaintext
 ChatMessage in the same chat, an off-graph channel, anything. The
 system permits voluntary disclosure by participants by design.
@@ -255,7 +255,7 @@ Two distinct mechanisms can apply to a plaintext chat message:
 - **Platform moderation (this doc).** Network-level
   classification. Drives the redaction cascade for `illegal`.
   Eligibility = every User.
-- **Chat-internal disavowal** ([chats.md §6](chats.md#6-moderation)).
+- **Chat-internal disavowal** ([chats.md §7](chats.md#7-moderation)).
   The chat's stance toward a message or member. Eligibility =
   active ChatMembers of that chat.
 

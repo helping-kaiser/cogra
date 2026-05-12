@@ -340,7 +340,7 @@ changes:
       a multi-sig approval.
     - Community-vote instance (Shape B disavowal with quorum and
       threshold) — used by ChatMember per
-      [chats.md §6](../instances/chats.md#6-moderation) and configurable per
+      [chats.md §7](../instances/chats.md#7-moderation) and configurable per
       [collectives.md](../instances/collectives.md).
   When the instance's threshold is crossed, the system adds a new
   layer on the **approval-side** structural edge with `dim1 < 0`.

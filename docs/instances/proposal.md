@@ -246,7 +246,7 @@ is the node-level progression.
   [moderation.md](moderation.md),
   [platform-guidelines.md](platform-guidelines.md),
   [network.md §§5, 7](../primitive/network.md#5-mod-role-changes-via-multi-sig-proposal),
-  [chats.md §6](chats.md#6-moderation),
+  [chats.md §7](chats.md#7-moderation),
   [collectives.md](collectives.md).
 - **Not the cascade mechanism.** The cascade and the
   redaction-cascade specifics live in
