@@ -141,9 +141,10 @@ A User receives:
   about them (sentiment + interest). See
   [edges.md §1](edges.md#1-actor-edges) for both source-side
   catalogs.
-- **`ChatMessage → User`** (`:REFERENCES`) when a chat message
-  embeds or mentions the User. See
-  [edges.md §2 "Reference"](edges.md#reference).
+- **`ChatMessage / Post / Comment → User`** (`:REFERENCES`)
+  when a content node embeds or mentions the User — a chat
+  message sharing them, a Post or Comment naming them in the
+  body. See [edges.md §2 "Reference"](edges.md#reference).
 - **`Proposal → User`** (`:TARGETS`) when a Proposal targets one
   of the User's graph-side properties — typically a
   `network_role` change per
