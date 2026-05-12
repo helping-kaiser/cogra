@@ -112,13 +112,13 @@ CREATE INDEX ON :Comment(id);
 | `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. |
 | `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md#2-join-policy--who-can-become-a-member). |
 | `moderation_status`      | String  | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). |
-| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
-| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
-| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
+| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
+| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
+| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
-[chats.md §4-5](../instances/chats.md#4-chatmessages-as-first-class-content), so the graph never reads it.
+[chats.md §5-6](../instances/chats.md#5-chatmessages-as-first-class-content), so the graph never reads it.
 See [data-model.md](data-model.md).
 
 ```cypher
@@ -141,7 +141,7 @@ CREATE INDEX ON :ChatMessage(id);
 
 The `epoch` index a ciphertext was encrypted under lives in
 Postgres alongside the body row, not on the graph — message bodies
-are always Postgres-side per [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism),
+are always Postgres-side per [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism),
 so the graph never reads it. See [data-model.md](data-model.md).
 
 #### `:Item`

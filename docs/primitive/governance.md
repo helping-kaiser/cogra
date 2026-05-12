@@ -328,13 +328,13 @@ design discussion (§9).
 
 - **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
   Shape A. Threshold: N actor edges from specified roles.
-- **Chat message disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
+- **Chat message disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
   Quorum + weighted-majority threshold.
-- **Chat member disavowal** — [chats.md §6](../instances/chats.md#6-moderation). Shape B.
+- **Chat member disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
   Higher quorum + weighted-supermajority threshold.
-- **Chat property and role changes** — [chats.md §6](../instances/chats.md#6-moderation).
+- **Chat property and role changes** — [chats.md §7](../instances/chats.md#7-moderation).
   Proposals on `Chat.name`, `Chat.join_policy`, `Chat.epoch`
-  (mid-epoch chat-key rotation, see [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism)),
+  (mid-epoch chat-key rotation, see [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism)),
   and `ChatMember.role`. Defaults vary by stakes; thresholds are
   themselves chat properties.
 - **Collective governance (full social contract)** —
