@@ -17,6 +17,21 @@ the author. Later, Alice likes the same post — her edge
 `Alice → Post_X` also has a layer 1, but its timestamp is later than
 Jakob's. The author is always the earliest.
 
+## Collective-authored content
+
+When a Collective is the author, the rule is unchanged: the
+on-graph author is the actor whose incoming edge has the
+earliest layer-1 timestamp, and that actor is the Collective
+itself. The gesture that produced the edge is initiated
+off-graph by an authorized CollectiveMember per the Collective's
+social contract (see
+[user.md §1](user.md#1-user-vs-collective) and
+[collectives.md "Acting through the Collective"](../instances/collectives.md#acting-through-the-collective)),
+but no acting-member identity is recorded on the authorship
+edge. Querying "who authored this?" returns the Collective; the
+member who initiated the gesture is not derivable from the
+authored node.
+
 ## Caching
 
 Looking up "who authored this?" by scanning all incoming layer 1
