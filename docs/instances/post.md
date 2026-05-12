@@ -99,7 +99,7 @@ authorship rule — see §5 and
 ### As source (outgoing)
 
 A Post is not an actor and authors no actor edges. It carries
-exactly one outgoing structural edge type, system-created:
+two outgoing structural edge types, both system-created:
 
 - **`Post → Hashtag` (`:TAGGING`)** — one edge per hashtag the
   post is tagged with. See
@@ -108,6 +108,16 @@ exactly one outgoing structural edge type, system-created:
   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
   so the same hashtag across instances resolves to the same
   node.
+- **`Post → any node` (`:REFERENCES`)** — one edge per node the
+  Post embeds, quotes, or mentions: another Post it quotes or
+  cites (e.g. pointing at the original of a re-uploaded image),
+  a User or Collective named in the body, a Proposal it
+  campaigns for, etc. Hashtag is the one excluded target —
+  body-tag hashtags go through `:TAGGING` (above) and a single
+  structural edge per (source, target) pair is the rule. The
+  carrier semantics, target catalog, and deferred traversal
+  rules live in
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
 ### As target (incoming)
 
@@ -123,10 +133,13 @@ A Post receives:
 - **`Comment → Post` (`:CONTAINMENT`)** when a Comment is
   written on the Post. See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
-- **`ChatMessage → Post` (`:REFERENCES`)** when a chat message
-  embeds or shares the Post into a chat. See
+- **`ChatMessage / Post / Comment → Post` (`:REFERENCES`)** when
+  another content node embeds the Post — a chat message sharing
+  the Post into a chat, another Post quoting or citing it (e.g.
+  pointing at the original of a re-uploaded image), a Comment
+  citing it. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference) and
-  [chats.md](chats.md) for the worked-out usage patterns
+  [chats.md](chats.md) for the worked-out ChatMessage patterns
   (sharing a post into a chat, the personal-newsfeed shape).
 - **`Proposal → Post` (`:TARGETS`)** when a moderation Proposal
   targets a property on the Post — `'sensitive'` against
@@ -204,9 +217,9 @@ content-redacted only if the author opts in to the content-level
 scope of [account-deletion.md](account-deletion.md).
 
 The Post's UUID is stable across every redaction. Authorship
-caches keyed on the UUID stay valid; the outgoing
-`:TAGGING` edge and every incoming actor / containment /
-reference / targeting edge keep pointing at the same node. A
+caches keyed on the UUID stay valid; the outgoing `:TAGGING`
+and `:REFERENCES` edges and every incoming actor / containment
+/ reference / targeting edge keep pointing at the same node. A
 redacted Post is a partially-or-fully gutted but
 still-graph-resident content node, not a removed one.
 

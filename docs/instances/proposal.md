@@ -156,9 +156,10 @@ edge-mechanical.
 
 **Reference edges:**
 
-- **`ChatMessage → Proposal` (`:REFERENCES`)** when a chat
-  message embeds the Proposal — e.g. surfacing it for chat
-  members to vote on. See
+- **`ChatMessage / Post / Comment → Proposal` (`:REFERENCES`)**
+  when a content node embeds the Proposal — a chat message
+  surfacing it for chat members to vote on, a Post campaigning
+  for support, a Comment citing it in debate. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
 A Proposal **never** receives a `:TARGETS` edge from
