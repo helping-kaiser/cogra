@@ -96,6 +96,7 @@ Paired with the claim edges above — see
 | Edge type | Meaning |
 |-----------|---------|
 | Post → Hashtag | This post is tagged with this hashtag |
+| Comment → Hashtag | This comment is tagged with this hashtag |
 | Item → Hashtag | This item is tagged with this hashtag |
 
 ### Subject targeting
@@ -147,6 +148,19 @@ direction (`+1` support, `-1` oppose, intermediate values allowed),
 | ChatMember → Proposal | A chat-eligible vote on a proposed property change |
 | CollectiveMember → Proposal | A collective-eligible vote on a proposed property/role change |
 
+**Network-scope governance is the exception.** For votes on
+Network-wide Proposals (moderator role changes, content moderation,
+`:Network` parameter amendments), no new structural edge is created
+— the carrier is the existing `User → Proposal` **actor edge** from
+§1. That actor edge keeps its normal `(sentiment, importance)`
+meaning; the tally reads `sign(sentiment)` for the binary outcome.
+The "Shape B" framing in governance.md and network.md is
+governance-conceptual (eligibility from the User, not a junction),
+not edge-mechanical. See
+[governance.md §3](governance.md#3-the-two-vote-shapes)
+"Carrier relaxation for Network-level governance" and
+[proposal.md §4](../instances/proposal.md#4-edges).
+
 ---
 
 ## 3. Edge labels at the graph layer
@@ -177,7 +191,7 @@ enough that the endpoint-label-filter approach adds cost or noise.
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
 | `:CONTAINMENT` | Comment → Post, Comment → Comment, ChatMessage → Chat, Comment → Chat, Comment → ChatMessage, Comment → Item | Content containment and reply structure. Queried for feed assembly and thread rendering. |
-| `:TAGGING` | Post → Hashtag, Item → Hashtag | Tag associations. Queried by hashtag-centric browsing. |
+| `:TAGGING` | Post → Hashtag, Comment → Hashtag, Item → Hashtag | Tag associations. Queried by hashtag-centric browsing. |
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |
 | `:REFERENCES` | ChatMessage → any node | The "this message embeds X" relationship. Common query: "what chat messages reference this node?" — feeds embed-rendering and inbound-attention surfaces. |
 

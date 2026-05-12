@@ -73,9 +73,6 @@ If you find yourself defining a new mechanism inside an
 - [chats](instances/chats.md) — chats and ChatMessages as
   first-class public content; E2EE privacy of content only;
   message + member disavowal.
-- [comment](instances/comment.md) — per-node doc for the
-  Comment content node; universal threading primitive that
-  attaches to Post, Comment, Chat, ChatMessage, or Item.
 - [collectives](instances/collectives.md) — collectives as actors;
   social-contract governance with example configurations
   (corporate, household, co-op).

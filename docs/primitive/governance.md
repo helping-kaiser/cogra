@@ -211,13 +211,31 @@ ChatMember_Jakob_ChatY -[dim1: -1, dim2: 0]-> ChatMessage_X
 #### Carrier relaxation for Network-level governance
 
 For governance instances scoped to the **whole Network** rather than
-to a chat or a collective, the carrier is the **voter's User node
-itself** rather than a junction. Network membership has no
+to a chat or a collective, eligibility runs from the **voter's User
+node itself** rather than a junction. Network membership has no
 join-gesture — every User is a member by virtue of being on the
 graph (see [network.md](network.md)) — so there is no
 `ChatMember`-/`CollectiveMember`-style junction to issue the vote
-from. Vote edges run from the voter's User node to the subject.
-Used by: Network moderator role changes, content moderation.
+from.
+
+At the edge layer this collapses to the existing
+`User → Proposal` **actor edge** from
+[edges.md §1](edges.md#1-actor-edges) — no separate structural vote
+edge is created. The actor edge keeps its normal actor-edge meaning:
+`dim1` is the voter's full sentiment toward the change
+(positive = support, negative = oppose), `dim2` is importance /
+personal stake. The **tally** reads `sign(dim1)` for the binary
+outcome — exactly as in Shape A above, where `dim1` is also a
+full-range sentiment whose sign drives the count. A Proposal has no
+personal stance to preserve apart from the vote itself, so the actor
+edge alone suffices. The "Shape B" framing here is
+governance-conceptual (eligibility from the User, not from a
+junction), not edge-mechanical. See
+[proposal.md §4](../instances/proposal.md#4-edges) for the
+worked-out resolution.
+
+Used by: Network moderator role changes, content moderation,
+`:Network` parameter amendments.
 
 ### Choosing between A and B
 
