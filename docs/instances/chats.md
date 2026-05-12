@@ -31,6 +31,16 @@ members, some of which may choose to run with encrypted content."
 
 ## 2. Join policy — who can become a member
 
+The Chat node carries three graph-side properties relevant to its
+operation: `name` (an optional routing/display hint), `join_policy`
+(this section), and `epoch` (the chat-key-rotation counter, §5),
+plus the universal `moderation_status` per
+[nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status).
+All are layered. Concrete types and indexes live in
+[graph-data-model.md](../implementation/graph-data-model.md).
+
+The graph reads `join_policy` when an actor's claim toward a
+`ChatMember` arrives, to decide what approval is required.
 Specified in [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows) as the
 two-edge approval pattern. Four shapes:
 
@@ -350,6 +360,12 @@ disavowal rules themselves.
 
 Roles (admin, mod, member) are carried as properties on the
 `ChatMember` junction node (see [graph-model.md §2](../primitive/graph-model.md#2-node-categories)).
+The role-weights table above is the default derivation; a
+`ChatMember` may also carry an optional `voting_weight` property
+that sets per-member weight directly, overriding the role-based
+derivation at tally time — useful when a chat wants finer-grained
+control than the three role buckets allow.
+
 An admin's disavowal weight is higher than a member's but it is
 never a veto — in any chat large enough that an admin's weight is
 a small fraction of the pool, an admin cannot single-handedly
