@@ -190,4 +190,4 @@ they are not fixed rules.
   live in [moderation.md](../instances/moderation.md).
 - **Not federation.** Cross-instance Network reconciliation is
   Q15-deferred ([open-questions.md](../open-questions.md)).
-- **Not the User node spec.** See [nodes.md](nodes.md).
+- **Not the User node spec.** See [user.md](user.md).
