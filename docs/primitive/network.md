@@ -44,7 +44,7 @@ It carries:
   `property_change_threshold`) for low-stakes parameters and a
   critical pair (`critical_property_change_quorum`,
   `critical_property_change_threshold`) for parameters whose abuse
-  has destructive or platform-wide reach. See §7.
+  has destructive or platform-wide reach. See §8.
 
 All properties are layered, so every parameter change has a
 preserved history. Each is amendable via a standard Proposal
@@ -74,7 +74,48 @@ history.
 Whether Collectives can be Network members or moderators is
 deferred. For now, only Users carry `network_role`.
 
-## 4. Bootstrap
+## 4. Edges
+
+The `:Network` is a singleton parameter container. It is not an
+actor; it has no Postgres-side display content; and it
+participates in only a narrow set of edges.
+
+### As source (outgoing)
+
+The `:Network` authors no edges of any type. It is purely a
+target that other parts of the graph point at.
+
+### As target (incoming)
+
+The `:Network` node receives:
+
+- **`Proposal → Network` (`:TARGETS`)** when a Proposal targets
+  one of the singleton's parameters — `mod_role_change_*`,
+  `moderation_sensitive_*`, `moderation_illegal_*`,
+  `guidelines_*`, `active_threshold_days`, or the amendment-rule
+  pairs themselves. The amendment-rule pair (baseline or
+  critical) that gates each property is specified in §8. See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+- **`ChatMessage / Post / Comment → Network` (`:REFERENCES`)**
+  when a content node mentions or embeds the singleton (e.g. a
+  Post discussing platform governance). See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+
+Network-wide governance instances do **not** create new
+structural edges to the `:Network` node. Votes on Network-scope
+Proposals — moderator role changes (§6), content moderation
+classifications, and singleton parameter amendments (§8) — use
+the existing `User → Proposal` **actor edge** under the carrier
+relaxation described in
+[edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
+and [governance.md §3](governance.md#3-the-two-vote-shapes). The
+Proposal itself targets the relevant subject (a User for role
+changes, the `:Network` singleton for parameter amendments); the
+votes themselves never carry an edge to or from the Network node.
+
+---
+
+## 5. Bootstrap
 
 Each instance bootstraps with two pieces of out-of-graph state:
 
@@ -93,7 +134,7 @@ or to any user's role runs through governance.
 Bitcoin analogy: someone has to mine the genesis block. From there
 it is community-driven.
 
-## 5. Mod role changes via multi-sig Proposal
+## 6. Mod role changes via multi-sig Proposal
 
 Adding or removing a moderator uses the standard Proposal mechanism
 ([governance.md §2.1](governance.md#21-subject)):
@@ -114,16 +155,16 @@ The multi-sig is the bot defense:
   by community alone (which would let bots strip honest mods), nor
   by other mods alone (which would let mods purge each other).
 
-## 6. Network-wide governance
+## 7. Network-wide governance
 
 The Network is the eligibility-and-voting body for any platform-
 scoped governance instance:
 
-- Adding and removing moderators (§5 above).
+- Adding and removing moderators (§6 above).
 - Content moderation classifications — see
   [moderation.md](../instances/moderation.md).
 - Tuning the `:Network` singleton's parameters themselves
-  (governance of governance) — see §7.
+  (governance of governance) — see §8.
 
 Each is a Shape B governance instance per
 [governance.md §3](governance.md#3-the-two-vote-shapes). Two consequences:
@@ -146,7 +187,7 @@ Each is a Shape B governance instance per
   weighting. (Same rule applied to content classifications in
   [moderation.md](../instances/moderation.md).)
 
-## 7. Amending `:Network` parameters
+## 8. Amending `:Network` parameters
 
 Two amendment-rule pairs gate changes to the singleton's own
 properties, separated by stakes:

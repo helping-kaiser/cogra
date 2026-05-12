@@ -157,7 +157,7 @@ quorum just keeps a single mod from acting unilaterally.
 
 Every number above is a property of the `:Network` singleton,
 amendable via the rules in
-[network.md §7](../primitive/network.md#7-amending-network-parameters) — the
+[network.md §8](../primitive/network.md#8-amending-network-parameters) — the
 `moderation_illegal_*` thresholds fall in the critical bucket
 (higher quorum, supermajority threshold) because their abuse
 drives the redaction cascade; the `moderation_sensitive_*`
