@@ -49,7 +49,7 @@ did not exist a moment ago — the
 collapses to its 1-of-1 special case: the creator's gesture acts
 as both the claim and the approval. This is the same bootstrap
 pattern used for the founder's `CollectiveMember` in
-[collectives.md "Creation"](collectives.md#creation). Every
+[collectives.md "Creation"](collectives.md#1-creation). Every
 subsequent ItemOwnership transfer is a regular two-edge approval
 (§6), not a bootstrap.
 
@@ -62,7 +62,7 @@ sessions per
 [auth.md](../implementation/auth.md). Whether member consent is
 required is determined by the Collective's social-contract
 treatment of content-acts per
-[collectives.md "Acting through the Collective"](collectives.md#acting-through-the-collective).
+[collectives.md "Acting through the Collective"](collectives.md#2-acting-through-the-collective).
 
 ---
 

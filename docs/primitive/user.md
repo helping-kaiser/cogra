@@ -32,7 +32,7 @@ behind each on the off-graph side.
   identity. A Collective has no credentials of its own; its
   actions originate from one or more Users authenticated through
   their own sessions, mediated by membership in the Collective
-  via [CollectiveMember](../instances/collectives.md#membership-collectivemember).
+  via [CollectiveMember](../instances/collectives.md#6-membership-collectivemember).
   A Collective can itself be a CollectiveMember of another
   Collective, so the chain may be nested.
 

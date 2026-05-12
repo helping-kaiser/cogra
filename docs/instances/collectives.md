@@ -22,11 +22,11 @@ is initiated by an authorized member — a User, or a sub-Collective
 acting recursively through its own authorized members — per the
 Collective's social contract. The graph records the action as the
 Collective's; no per-edge record of the acting member is kept.
-The mechanism is in [§Acting through the Collective](#acting-through-the-collective).
+The mechanism is in §2.
 
 This means Collectives are **user-created nodes**: each Collective
 begins with one founding User and a written social contract (see
-[§Creation](#creation)).
+§1).
 
 On the graph the Collective carries a `name` property — the handle
 used for mentions and lookups, analogous to `User.username` — and
@@ -36,14 +36,14 @@ Both are layered per [layers.md](../primitive/layers.md). Concrete
 types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
-## Creation
+## 1. Creation
 
 A Collective is brought into existence by a single founding
 gesture from exactly one **User**:
 
 1. The founding User writes the Collective's social contract
-   (§Governance) — at minimum its initial decision-type rules
-   and its act-as rules (§Acting through the Collective).
+   (§8) — at minimum its initial decision-type rules
+   and its act-as rules (§2).
 2. The system atomically creates the `:Collective` node and the
    founder's `CollectiveMember` junction.
 
@@ -53,7 +53,7 @@ is no prior membership to approve it — the
 collapses to its 1-of-1 special case: the founder signs both
 the claim (`CollectiveMember → Collective`) and the approval
 (`Collective → CollectiveMember`) in the same atomic gesture.
-See [§Approval flow](#approval-flow) for the regular case.
+See §7 for the regular case.
 
 The founder's role on their CollectiveMember junction is
 whatever the social contract names for the inaugural role
@@ -72,8 +72,8 @@ rule that derives authorship for any other node (see
 
 A Collective creating another Collective follows the same
 pattern: the founding Collective acts through one of its
-authorized members (a governance-act per §Acting through the
-Collective), producing the bootstrap gesture, and the new
+authorized members (a governance-act per §2), producing the
+bootstrap gesture, and the new
 sub-Collective's first CollectiveMember junction is
 `parent Collective → new sub-Collective`. The User who
 originated the gesture remains identifiable through the parent
@@ -81,7 +81,7 @@ Collective's own CollectiveMember chain, but is not directly
 recorded on the sub-Collective's graph structure. Nesting depth
 is unlimited.
 
-## Acting through the Collective
+## 2. Acting through the Collective
 
 A Collective produces actor edges, but has no credentials and
 takes no gestures by itself. Every edge attributed to a
@@ -119,7 +119,7 @@ the any-active-member default applies.
 behalf of the Collective, casting votes in governance instances
 the Collective is eligible in, creating or approving
 [ItemOwnership](items.md) junctions, and creating or approving
-[CollectiveMember](#membership-collectivemember) junctions on
+[CollectiveMember](#6-membership-collectivemember) junctions on
 other Collectives. **Default: no member can produce a
 governance-act on behalf of the Collective.** An explicit act-as
 rule in the social contract is required. Governance-acts have
@@ -160,7 +160,7 @@ Collective's edge is produced — the sub-Collective must
 authorize the gesture on its end before the parent Collective's
 on-behalf-of step is reached. Nesting depth is unlimited.
 
-## Economic role — no preferential treatment
+## 3. Economic role — no preferential treatment
 
 No actor type receives preferential treatment in ad-revenue
 distribution. Revenue follows graph topology, not actor type:
@@ -176,17 +176,122 @@ not receive preferential placement, and non-commercial collectives
 (households, hobby groups, co-ops) are not penalized for not buying
 ads.
 
-## Collectives always have members
+## 4. Edges
+
+This doc covers two nodes: the **Collective** actor node and the
+**CollectiveMember** junction. Each gets its own subsection.
+Dimension labels, sub-category labels, and traversal semantics
+are not duplicated here — see
+[edges.md](../primitive/edges.md).
+
+Every outgoing edge from a Collective is **initiated through an
+authorized member** per §2; the graph layer records the edge as
+the Collective's own with no per-edge record of which member
+produced the gesture.
+
+### 4.1 Collective
+
+#### As source (outgoing)
+
+A Collective is an actor. Its outgoing **actor edges** are the
+full row in
+[edges.md §1 "Collective as actor"](../primitive/edges.md#collective-as-actor)
+— Collective → User, Collective → Post, Collective → Item,
+Collective → Proposal, etc. The `(dim1, dim2)` values are set by
+the acting member under the act-as rule routed by §2.
+
+It carries one outgoing **structural** edge type, system-created:
+
+- **`Collective → CollectiveMember` (`:APPROVAL`)** — the
+  approval side of the two-edge approval pattern. Created once
+  the collective's approval policy for the new member's role is
+  satisfied (§7). State transitions — member removal per §9 —
+  append additional `dim1 < 0` layers per
+  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  See
+  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+
+#### As target (incoming)
+
+A Collective receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — sentiment
+  toward the collective and interest in its output, used by
+  [feed-ranking](../primitive/feed-ranking.md) and the follow /
+  interest surface.
+- **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
+  side of the two-edge approval pattern, paired with the
+  outgoing `Collective → CollectiveMember` above. See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ChatMessage / Post / Comment → Collective` (`:REFERENCES`)**
+  when a content node mentions or embeds the Collective. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → Collective` (`:TARGETS`)** when a Proposal
+  targets a property on the Collective — `name`,
+  `moderation_status`, or any social-contract governance
+  parameter (§8). See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+### 4.2 CollectiveMember
+
+#### As source (outgoing)
+
+A CollectiveMember is a junction, not an actor. It carries one
+claim edge plus the Shape B vote edges its bearer casts as a
+collective-eligible voter:
+
+- **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
+  side of the two-edge approval pattern, closed by the
+  collective's `Collective → CollectiveMember` approval edge
+  (§4.1) once the collective's approval policy is satisfied
+  (§7). See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`CollectiveMember → Proposal` (Shape B vote)** —
+  collective-eligible vote on a Proposal targeting a collective
+  property, member role change, or any decision-type instance
+  defined in the social contract (§8). `dim1` carries vote
+  direction. See
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
+  and
+  [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
+
+#### As target (incoming)
+
+A CollectiveMember receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  approve/reject opinion on the membership claim plus importance,
+  used by the two-edge approval flow including any multi-sig
+  co-approval the social contract requires (§7).
+- **`Collective → CollectiveMember` (`:APPROVAL`)** — the
+  approval side of the two-edge pattern, paired with the
+  outgoing `CollectiveMember → Collective` claim above. State
+  transitions — removal per §9 — append `dim1 < 0` layers on
+  this edge per
+  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+- **`ChatMessage / Post / Comment → CollectiveMember`
+  (`:REFERENCES`)** when a content node embeds the membership
+  (e.g. spotlighting a co-op steward). See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → CollectiveMember` (`:TARGETS`)** when a Proposal
+  targets a property on the CollectiveMember — `role` changes
+  (hire / fire / promote per the social contract),
+  `ownership_pct`, etc. See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+## 5. Collectives always have members
 
 Every collective has, or at some point had, at least one
-[CollectiveMember](#membership-collectivemember). A collective with
+[CollectiveMember](#6-membership-collectivemember). A collective with
 **zero active members** is a collective that has dissolved — the
 history is preserved (members come and go via state transitions on
 the structural edges, per
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)), but no one currently acts on
 the collective's behalf.
 
-## Membership: CollectiveMember
+## 6. Membership: CollectiveMember
 
 A `CollectiveMember` is a junction node (see
 [graph-model.md §2](../primitive/graph-model.md#2-node-categories)) connecting **Collective to
@@ -209,7 +314,7 @@ Role properties stay on the junction node rather than being encoded
 in edge dimensions — see [graph-model.md §2](../primitive/graph-model.md#2-node-categories) for the
 reasoning.
 
-## Approval flow
+## 7. Approval flow
 
 CollectiveMember uses the **two-edge approval pattern** described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
@@ -233,9 +338,9 @@ the properties on the approving actors' own CollectiveMember nodes.
 
 The bootstrap case — the founder's CollectiveMember at Collective
 creation — collapses this to its 1-of-1 form, with the founder
-signing both edges atomically. See [§Creation](#creation).
+signing both edges atomically. See §1.
 
-## Governance — the social contract
+## 8. Governance — the social contract
 
 A collective's **social contract** is its set of governance rules:
 which decisions need votes, who can vote on each, with what
@@ -270,7 +375,7 @@ and the subject's role.
 Act-as rules are a second family of rules in the social
 contract, sitting alongside the decision-type instances above.
 They govern the on-behalf-of mechanism described in
-[§Acting through the Collective](#acting-through-the-collective):
+§2:
 which members can produce which classes of gestures as the
 Collective.
 
@@ -282,7 +387,7 @@ state transition on a separate subject. A single-signer rule
 (threshold > `1`) delays the gesture until co-signers satisfy
 the threshold, analogous to a multi-sig junction approval.
 
-The defaults from §Acting through the Collective apply when no
+The defaults from §2 apply when no
 explicit rule covers a gesture: content-acts default to
 any-active-member at threshold `1`; governance-acts default to
 deny. Explicit rules override these — content-acts can be
@@ -382,7 +487,7 @@ rule's **own** configurable parameters. The bootstrap rules are set
 at collective creation; everything afterward is governance of
 governance.
 
-## Leaving / being removed
+## 9. Leaving / being removed
 
 State transitions on a CollectiveMember junction follow the
 primitive — see [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
