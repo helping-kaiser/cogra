@@ -26,7 +26,7 @@ itself. The gesture that produced the edge is initiated
 off-graph by an authorized CollectiveMember per the Collective's
 social contract (see
 [user.md §1](user.md#1-user-vs-collective) and
-[collectives.md "Acting through the Collective"](../instances/collectives.md#acting-through-the-collective)),
+[collectives.md "Acting through the Collective"](../instances/collectives.md#2-acting-through-the-collective)),
 but no acting-member identity is recorded on the authorship
 edge. Querying "who authored this?" returns the Collective; the
 member who initiated the gesture is not derivable from the

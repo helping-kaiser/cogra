@@ -112,13 +112,13 @@ CREATE INDEX ON :Comment(id);
 | `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. |
 | `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §2](../instances/chats.md#2-join-policy--who-can-become-a-member). |
 | `moderation_status`      | String  | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). |
-| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
-| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
-| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism). |
+| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership-change event (system-driven) and on every passing mid-epoch rotation Proposal (user-driven). See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
+| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
+| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
-[chats.md §4-5](../instances/chats.md#4-chatmessages-as-first-class-content), so the graph never reads it.
+[chats.md §5-6](../instances/chats.md#5-chatmessages-as-first-class-content), so the graph never reads it.
 See [data-model.md](data-model.md).
 
 ```cypher
@@ -141,7 +141,7 @@ CREATE INDEX ON :ChatMessage(id);
 
 The `epoch` index a ciphertext was encrypted under lives in
 Postgres alongside the body row, not on the graph — message bodies
-are always Postgres-side per [chats.md §5](../instances/chats.md#5-encryption-as-the-privacy-mechanism),
+are always Postgres-side per [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism),
 so the graph never reads it. See [data-model.md](data-model.md).
 
 #### `:Item`
@@ -263,9 +263,9 @@ targeting that property name. See
 | `guidelines_hash`                 | String  | SHA-256 hex digest of the canonical guidelines document at the current version. 64 lowercase hex chars. Set at bootstrap to the digest of the version-1 doc; updated together with `guidelines_version` on each amendment. |
 | `guidelines_change_quorum`        | Float   | Quorum for guidelines amendment Proposals. Default `0.05` (5%). |
 | `guidelines_change_threshold`     | Float   | Pass-threshold for guidelines amendments. Default `0.667` (2/3). Mod-gate applies. |
-| `property_change_quorum`          | Float   | Quorum for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself). Default `0.05` (5%). Mod-gate applies. See [network.md §7](../primitive/network.md#7-amending-network-parameters). |
+| `property_change_quorum`          | Float   | Quorum for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself). Default `0.05` (5%). Mod-gate applies. See [network.md §8](../primitive/network.md#8-amending-network-parameters). |
 | `property_change_threshold`       | Float   | Pass-threshold for the same. Default `0.667` (2/3). Mod-gate applies. |
-| `critical_property_change_quorum` | Float   | Quorum for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself). Default `0.10` (10%). Mod-gate applies. See [network.md §7](../primitive/network.md#7-amending-network-parameters). |
+| `critical_property_change_quorum` | Float   | Quorum for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself). Default `0.10` (10%). Mod-gate applies. See [network.md §8](../primitive/network.md#8-amending-network-parameters). |
 | `critical_property_change_threshold` | Float | Pass-threshold for the same. Default `0.75` (3/4). Mod-gate applies. |
 | `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
 

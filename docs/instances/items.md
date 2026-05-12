@@ -49,7 +49,7 @@ did not exist a moment ago — the
 collapses to its 1-of-1 special case: the creator's gesture acts
 as both the claim and the approval. This is the same bootstrap
 pattern used for the founder's `CollectiveMember` in
-[collectives.md "Creation"](collectives.md#creation). Every
+[collectives.md "Creation"](collectives.md#1-creation). Every
 subsequent ItemOwnership transfer is a regular two-edge approval
 (§6), not a bootstrap.
 
@@ -62,7 +62,7 @@ sessions per
 [auth.md](../implementation/auth.md). Whether member consent is
 required is determined by the Collective's social-contract
 treatment of content-acts per
-[collectives.md "Acting through the Collective"](collectives.md#acting-through-the-collective).
+[collectives.md "Acting through the Collective"](collectives.md#2-acting-through-the-collective).
 
 ---
 
@@ -132,9 +132,97 @@ Postgres-side display content, no author-bearing row.
 
 ## 4. Edges
 
-*[Section filled in by the cross-doc edges-section PR. Until then,
-the Item-relevant and ItemOwnership-relevant entries are catalogued
-in [edges.md](../primitive/edges.md) §§1-2.]*
+This doc covers two nodes: the **Item** content node and the
+**ItemOwnership** junction. Each gets its own subsection.
+Dimension labels, sub-category labels, and traversal semantics
+are not duplicated here — see
+[edges.md](../primitive/edges.md).
+
+### 4.1 Item
+
+#### As source (outgoing)
+
+An Item is not an actor and authors no actor edges. It carries
+two outgoing structural edge types, both system-created:
+
+- **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
+  of the two-edge approval pattern. Created when the current
+  owner's `(dim1 > 0)` actor edge toward a new `ItemOwnership`
+  satisfies the approval policy (§6). **State transitions on
+  this edge are the supersession mechanism described in §7**:
+  when a subsequent transfer completes, the previous
+  `ItemOwnership`'s `Item → ItemOwnership` top layer flips to
+  `dim1 < 0` automatically. This Edges section catalogues only
+  the edge type and direction; the layer mechanics live in §7.
+  See
+  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+- **`Item → Hashtag` (`:TAGGING`)** — one edge per hashtag the
+  Item is tagged with. See
+  [edges.md §2 "Tagging"](../primitive/edges.md#tagging). The
+  Hashtag node is content-addressed by canonical name (per
+  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
+  so the same hashtag across instances resolves to the same
+  node.
+
+#### As target (incoming)
+
+An Item receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  like/dislike surface plus per-viewer relevance, used by
+  [feed-ranking](../primitive/feed-ranking.md) to weight the
+  Item for each viewer. The earliest of these is the
+  authorship edge (§5).
+- **`Comment → Item` (`:CONTAINMENT`)** when a Comment is
+  written on the Item. See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
+  two-edge approval pattern, paired with the outgoing
+  `Item → ItemOwnership` above.
+- **`ChatMessage / Post / Comment → Item` (`:REFERENCES`)** when
+  another content node embeds the Item — a message sharing it
+  into a chat, a Post recommending or citing it, a Comment
+  pointing at it. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+- **`Proposal → Item` (`:TARGETS`)** when a moderation Proposal
+  targets a property on the Item — `'sensitive'` against
+  `moderation_status`, or `'illegal'` against `name`,
+  `description`, or `attachments` (§8). See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+
+### 4.2 ItemOwnership
+
+#### As source (outgoing)
+
+ItemOwnership is a junction, not an actor. It carries one
+outgoing structural edge type, system-created:
+
+- **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
+  two-edge approval pattern, closed by the item's
+  `Item → ItemOwnership` approval edge (§4.1) once the current
+  owner signs off (§6). At Item creation the claim and the
+  approval are written in the same atomic gesture (§1
+  bootstrap). See
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+
+#### As target (incoming)
+
+An ItemOwnership receives:
+
+- **Actor edges** from Users and Collectives per
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  approve/reject sentiment plus importance on the transfer.
+  The acquirer's edge initiates the claim; the current owner's
+  `(dim1 > 0)` edge closes the transfer (§6).
+- **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
+  of the two-edge pattern, paired with the outgoing
+  `ItemOwnership → Item` claim above. Supersession layers per
+  §7 ride on this edge — see §4.1 for the carve-out.
+- **`ChatMessage / Post / Comment → ItemOwnership`
+  (`:REFERENCES`)** when a content node embeds an ownership
+  record — e.g. a Post citing a provenance chain. See
+  [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
 ---
 
