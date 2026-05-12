@@ -103,6 +103,9 @@ If you find yourself defining a new mechanism inside an
 - [hashtag](instances/hashtag.md) — per-node doc for the Hashtag
   content node; content-addressed UUID makes creation implicit
   and federation reconciliation-free.
+- [proposal](instances/proposal.md) — per-node doc for the
+  Proposal content node; subject carrier for property-level
+  governance votes (target, target_property, proposed_value).
 
 ### `implementation/`
 

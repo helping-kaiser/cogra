@@ -113,7 +113,7 @@ Entities that are acted upon by actors.
 | **ChatMessage** | A single message within a chat. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good. See [items.md](../instances/items.md). |
 | **Hashtag** | A topic tag. Also covers concepts like places (e.g. `#berlin`) — if places ever need dedicated properties they can become their own node type later. See [hashtag.md](../instances/hashtag.md). |
-| **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes (see [governance.md §2.1](governance.md#21-subject)). Carries the target, the property name, and the proposed new value. When the vote crosses threshold, a cascade writes a new layer on the target property. |
+| **Proposal** | A proposed change to a graph-side property on another node — the subject carrier for property-level governance votes. See [proposal.md](../instances/proposal.md); the primitive itself lives in [governance.md §2.1](governance.md#21-subject). |
 
 ### Graph-side properties
 
@@ -140,8 +140,10 @@ lives in Postgres. Specific cases:
 - **Proposal**: `target_property` and `proposed_value` as node
   properties; the **target node** is reached via a `:TARGETS`
   structural edge (`Proposal → Target`). No display content in
-  Postgres. See [governance.md §2.1](governance.md#21-subject) for the
-  mechanism and [edges.md §2](edges.md#2-structural-edges) for the `:TARGETS` label.
+  Postgres. See [proposal.md](../instances/proposal.md) for the
+  per-node spec, [governance.md §2.1](governance.md#21-subject)
+  for the primitive, and [edges.md §2](edges.md#2-structural-edges)
+  for the `:TARGETS` label.
 
 Post bodies, Comment bodies, ChatMessage payloads, Item descriptions
 and media, Chat descriptions all live in Postgres — not on the graph.
