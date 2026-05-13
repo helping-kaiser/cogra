@@ -276,20 +276,61 @@ needed:
 - Only the claim edge exists → pending.
 - Both edges exist → active.
 
-The **approval policy** for each relationship uses **Shape A**
-voting (per [governance.md §3](governance.md#3-the-two-vote-shapes)): the joining or
-inviting actor's edge toward the junction node carries their
-position. The threshold itself is one of the policy shapes from
-[governance.md §2.4](governance.md#24-threshold-policy) — typically simple-count
-("N actor edges from specific roles required toward the junction
-node"), but weighted-count and other shapes from §2.4 are
-admissible. N ranges from 1 (single approver: the joining actor
-or a single decider) to multi-sig with weighted votes (weights
-derived from role properties on the approving actors' own
-junction nodes, per [governance.md §2.3](governance.md#23-weight-function)).
-Specific applications pick their N — see
-[chats.md](../instances/chats.md) and
-[collectives.md](../instances/collectives.md).
+The **approval policy** uses **two voting shapes** (per
+[governance.md §3](governance.md#3-the-two-vote-shapes)),
+combined:
+
+1. The would-be bearer's **Shape A self-claim** — the
+   `User/Collective → new junction` actor edge in step 1 above.
+   This is necessarily Shape A because the bearer has no
+   junction of this type yet from which to cast a Shape B vote;
+   their own junction is the very thing they're claiming.
+2. Zero or more approver **Shape B votes** — each required
+   approver writes a structural edge from their existing
+   eligibility junction toward the new junction
+   (`ChatMember_approver → ChatMember_new`,
+   `CollectiveMember_approver → CollectiveMember_new`,
+   `ItemOwnership_current → ItemOwnership_new`), `dim1 > 0`
+   carrying approval.
+
+The threshold itself is one of the policy shapes from
+[governance.md §2.4](governance.md#24-threshold-policy) —
+typically simple-count or weighted-count of the Shape B approver
+votes (weights derived from role properties on the approver
+junctions, per [governance.md §2.3](governance.md#23-weight-function)).
+N ranges from `0` (open / self-approving — only the bearer's
+Shape A claim is required) through `1` (a single decider) to
+multi-sig with weighted votes. Specific applications pick their
+N — see [chats.md](../instances/chats.md),
+[collectives.md](../instances/collectives.md), and
+[items.md](../instances/items.md).
+
+The unification this gives: **the same `junction → junction`
+Shape B edge that admits a member can later be re-layered to
+remove them.** "I approved this membership, now I want it
+revoked" is a single edge with a layered stance flip, not a
+different edge type — see "Revocation and state transitions"
+below.
+
+#### Bootstrap: founder / creator self-collapse
+
+When a junction is created with no other approver required —
+the founder of a Collective
+([collectives.md §1](../instances/collectives.md#1-creation)),
+the creator of an Item
+([items.md §1](../instances/items.md#1-creation)), the founder
+of a Chat ([chats.md §2.1](../instances/chats.md#21-chat)) —
+the bearer's Shape A self-claim is the only required vote.
+The two-edge approval pattern collapses to its 1-of-1 special
+case: the system writes the approval-side structural edge
+atomically alongside the claim-side, in the same compound
+gesture. No Shape B approver votes are written because no
+existing eligibility junctions yet exist.
+
+Subsequent additions to the same parent (the next ChatMember
+of the chat, the next CollectiveMember of the collective, the
+next ItemOwnership transfer of the item) follow the regular
+pattern with one or more Shape B approver votes.
 
 ### Revocation and state transitions
 
@@ -320,32 +361,37 @@ relationship inactive. The pending state (claim edge only, no
 approval edge yet) still applies — it's a separate case from revoked.
 
 **Who triggers state transitions.** The system is still the only
-entity that writes to structural edges. It reacts to actor-edge
-changes:
+entity that writes to structural edges. It reacts to votes:
 
-- **Voluntary leave / withdrawal.** Actor adds a new negative-sentiment
-  layer on their actor edge toward the junction node. System adds a
-  new layer on the **claim-side** structural edge with `dim1 < 0`.
-  Self-determined; not a governance decision.
-- **Removal via governance instance (kick / fire / expel).** Removal
-  is the outcome of a governance instance defined on the parent
-  node — same primitive as approval, with its own eligibility,
-  weights, and threshold (see
-  [governance.md](governance.md)). Configurations span the full
-  range:
-    - Single-approver instance (1-of-1 from the original approver) —
-      retains the simple "the approver who let you in can revoke"
-      shape where it's appropriate.
-    - Multi-sig instance (N-of-M from named roles) — the inverse of
-      a multi-sig approval.
-    - Community-vote instance (Shape B disavowal with quorum and
-      threshold) — used by ChatMember per
-      [chats.md §7](../instances/chats.md#7-moderation) and configurable per
-      [collectives.md](../instances/collectives.md).
-  When the instance's threshold is crossed, the system adds a new
-  layer on the **approval-side** structural edge with `dim1 < 0`.
-- **System-initiated** (auto-expiry, violation handling, etc.). System
-  adds the appropriate negative layer directly.
+- **Voluntary leave / withdrawal.** The bearer adds a new
+  negative-`dim1` layer on their **own Shape A self-claim**
+  (`User/Collective → junction` actor edge). The system appends a
+  new layer on the **claim-side** structural edge with
+  `dim1 < 0`. Self-determined; not a governance decision.
+- **Removal via governance instance (kick / fire / expel).**
+  Removal uses the **same Shape B vote machinery as approval**,
+  with stance flipped: each eligible voter (typically other
+  holders of the same junction type for the same parent) writes
+  a `dim1 < 0` layer on their existing
+  `junction_voter → junction_target` Shape B edge — appended to
+  the same edge they previously used to approve, or as the
+  layer-1 of that edge if they hadn't voted before. Eligibility,
+  weights, and threshold are configured per parent node (see
+  [governance.md](governance.md) and
+  [chats.md §10](../instances/chats.md#10-moderation),
+  [collectives.md](../instances/collectives.md)). When the
+  instance's threshold is crossed, the system appends a new
+  layer on the **approval-side** structural edge with
+  `dim1 < 0`.
+- **System-initiated** (auto-expiry, violation handling, etc.).
+  The system writes the appropriate negative layer directly on
+  the approval-side edge.
+
+The same `junction → junction` Shape B edge therefore serves the
+full lifecycle of one voter's stance toward one membership /
+ownership: layer-1 carries the original approval (`dim1 > 0`),
+later layers carry shifts in stance, and the eventual removal
+vote is just another `dim1 < 0` layer on the same edge.
 
 **Intermediate states are not materialized.** For multi-vote
 governance instances, the approval-side structural edge stays at

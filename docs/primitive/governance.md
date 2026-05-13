@@ -170,80 +170,93 @@ allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
 Two edge shapes carry votes. Both are append-only; they differ only
 in carrier.
 
-### Shape A — actor edge toward a junction
+### Shape A — actor edge from voter to subject
 
-Used when the subject is **a relationship itself**. The voter
-creates a regular actor edge toward the junction; `dim1` is their
+Used when the voter has **no eligibility junction** to vote
+through. The voter creates an actor edge from their `User` (or
+`Collective`) node directly to the subject; `dim1` carries the
 position (positive = support, negative = oppose).
 
-Example — approving a ChatMember:
+Two cases use Shape A, both because the voter has no junction
+to vote through:
+
+**Would-be bearer's self-claim to a new junction.** The bearer
+of a new ChatMember / CollectiveMember / ItemOwnership has no
+junction of that type yet — their own junction is the very
+thing they're claiming. Their gesture is necessarily a
+`User → junction` actor edge.
 
 ```
-User_Alice -[sentiment: +0.9, relevance: +0.8]-> ChatMember_Bob_ChatY
+User_Bob -[dim1: +0.9, dim2: +0.8]-> ChatMember_Bob_ChatY
 ```
 
-- The vote IS the actor's personal stance toward the junction.
-- Fine because junctions rarely surface as feed content;
-  conflating stance with sentiment has no cost.
-- Used by: all existing junction approval flows.
+**Network-scope governance.** The Network has no per-member
+junction — every User is a member by virtue of being on the
+graph (see [network.md](network.md)) — so every member votes on
+Network-wide Proposals from their User node directly. The
+`User → Proposal` actor edge from
+[edges.md §1](edges.md#1-actor-edges) carries the vote: `dim1`
+is the voter's stance, the tally reads `sign(dim1)` for binary
+outcomes. See [proposal.md §4](../instances/proposal.md#4-edges).
 
-### Shape B — system-created structural edge from eligibility junction to subject
+In both cases the vote IS the actor's own stance toward the
+subject. Other actors may also write actor edges to the same
+subject (e.g. `User_Alice → ChatMember_Bob_ChatY` for personal
+sentiment about Bob's membership) — these are not approval
+votes, just personal sentiment.
 
-Used when the subject is **content** (or anything the voter also
-has a separate personal opinion about). The voter triggers; the
-system creates a structural edge from the voter's eligibility
-junction to the subject, `dim1` carrying vote direction.
+### Shape B — structural edge from eligibility junction to subject
 
-Example — disavowing a ChatMessage:
+Used when the voter has an **existing eligibility junction** to
+vote through. The voter triggers; the system creates a
+structural edge from the voter's junction to the subject,
+`dim1` carrying vote direction.
+
+This is the workhorse shape for chat-internal and
+collective-internal governance:
+
+**Junction approval and removal.** Each required approver of a
+new junction casts a Shape B vote from their existing junction
+of the same type for the same parent. The same edge serves the
+full lifecycle: layer-1 with `dim1 > 0` admits, later layers
+shift stance, an eventual `dim1 < 0` layer is the removal
+vote. See
+[graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ```
-ChatMember_Jakob_ChatY -[dim1: -1, dim2: 0]-> ChatMessage_X
+ChatMember_Alice_ChatY -[dim1: +1, dim2: 0]-> ChatMember_Bob_ChatY    (admit, layer 1)
+ChatMember_Alice_ChatY -[dim1: -1, dim2: 0]-> ChatMember_Bob_ChatY    (remove, layer 2)
 ```
+
+**Disavowal of content or members.** Chat-internal disavowal
+votes flow from `ChatMember` to `ChatMessage` (Level 1) or
+`ChatMember` to `ChatMember` (Level 2). See
+[chats.md §10](../instances/chats.md#10-moderation).
+
+**Votes on Proposals targeting chat / collective properties.**
+`ChatMember → Proposal`, `CollectiveMember → Proposal` — the
+member casts their vote as an eligible chat / collective
+member, not as a personal stance.
+
+In all cases:
 
 - Decouples the vote from the voter's personal sentiment. Their
-  `User → ChatMessage` edge is untouched.
-- Voter identity is the eligibility junction, expressing "I vote as
-  a member of this chat," not "I personally dislike this content."
-- Eligibility loss handled naturally: if the junction goes inactive,
-  the vote drops from the tally (edge stays in history).
-- Used by: chat message disavowal, chat member disavowal.
-
-#### Carrier relaxation for Network-level governance
-
-For governance instances scoped to the **whole Network** rather than
-to a chat or a collective, eligibility runs from the **voter's User
-node itself** rather than a junction. Network membership has no
-join-gesture — every User is a member by virtue of being on the
-graph (see [network.md](network.md)) — so there is no
-`ChatMember`-/`CollectiveMember`-style junction to issue the vote
-from.
-
-At the edge layer this collapses to the existing
-`User → Proposal` **actor edge** from
-[edges.md §1](edges.md#1-actor-edges) — no separate structural vote
-edge is created. The actor edge keeps its normal actor-edge meaning:
-`dim1` is the voter's full sentiment toward the change
-(positive = support, negative = oppose), `dim2` is importance /
-personal stake. The **tally** reads `sign(dim1)` for the binary
-outcome — exactly as in Shape A above, where `dim1` is also a
-full-range sentiment whose sign drives the count. A Proposal has no
-personal stance to preserve apart from the vote itself, so the actor
-edge alone suffices. The "Shape B" framing here is
-governance-conceptual (eligibility from the User, not from a
-junction), not edge-mechanical. See
-[proposal.md §4](../instances/proposal.md#4-edges) for the
-worked-out resolution.
-
-Used by: Network moderator role changes, content moderation,
-`:Network` parameter amendments.
+  `User → User`, `User → ChatMessage`, or `User → ChatMember`
+  edges are untouched.
+- Voter identity is the eligibility junction, expressing "I
+  vote as a member of this chat / collective," not "I
+  personally dislike this content / person."
+- Eligibility loss handled naturally: if the junction goes
+  inactive, the vote drops from the tally (edge stays in
+  history per §5 / [graph-model.md §8](graph-model.md#8-append-only-history-edges)).
 
 ### Choosing between A and B
 
-Use **Shape A** when voting for/against the subject is the same as
-liking/endorsing it. Junction approvals fit this.
-
-Use **Shape B** when voting for/against shouldn't conflate with
-personal sentiment. Content moderation fits this.
+Mechanically: use **Shape A** when the voter has no junction to
+vote through (bearer self-claim to a new junction, Network-scope
+governance); use **Shape B** when the voter has an existing
+junction (every chat-/collective-internal vote, including the
+approver votes that admit and later remove a junction holder).
 
 A future case that doesn't fit either shape is a signal to add a
 third shape to this doc, not to hack an existing one.
@@ -327,34 +340,42 @@ design discussion (§9).
 ### Existing
 
 - **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
-  Shape A. Threshold: N actor edges from specified roles.
-- **Chat message disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
-  Quorum + weighted-majority threshold.
-- **Chat member disavowal** — [chats.md §7](../instances/chats.md#7-moderation). Shape B.
-  Higher quorum + weighted-supermajority threshold.
-- **Chat property and role changes** — [chats.md §7](../instances/chats.md#7-moderation).
-  Proposals on `Chat.name`, `Chat.join_policy`, `Chat.epoch`
-  (mid-epoch chat-key rotation, see [chats.md §6](../instances/chats.md#6-encryption-as-the-privacy-mechanism)),
+  Shape A self-claim by the would-be bearer plus N Shape B
+  approver votes from existing eligibility junctions of the
+  same type for the same parent. Threshold: N is per-policy
+  (open = 0, single approver = 1, multi-sig = N). Same Shape B
+  edges later carry removal votes (stance flipped).
+- **Chat message disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
+  Shape B. Quorum + weighted-majority threshold.
+- **Chat member disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
+  Shape B layered on the same `ChatMember → ChatMember` edges
+  that previously approved the membership.
+- **Chat property and role changes** — [chats.md §10](../instances/chats.md#10-moderation).
+  Shape B `ChatMember → Proposal` votes on `Chat.name`,
+  `Chat.join_policy`, `Chat.epoch` (mid-epoch chat-key rotation,
+  see [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
   and `ChatMember.role`. Defaults vary by stakes; thresholds are
   themselves chat properties.
 - **Collective governance (full social contract)** —
-  [collectives.md](../instances/collectives.md). Membership changes (hire /
-  fire / promote), property changes (`name`, `governance_rules`,
-  `ownership_pct`), and any other decision-type the collective
-  defines. A Collective hosts as many instances as its social
-  contract specifies; each is parameterized for its own
-  decision-type. Eligibility, weights, and thresholds are all
-  per-instance.
+  [collectives.md](../instances/collectives.md). Membership
+  changes (hire / fire / promote), property changes (`name`,
+  `governance_rules`, `ownership_pct`), and any other
+  decision-type the collective defines. A Collective hosts as
+  many instances as its social contract specifies; each is
+  parameterized for its own decision-type. Shape B
+  `CollectiveMember → CollectiveMember / Proposal` for all
+  internal votes.
 - **Network moderator role changes** — [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
-  Shape B from the User node directly. Multi-sig: ≥1 existing
-  moderator's positive vote plus a community-quorum threshold.
+  Shape A from the User node directly (no per-member Network
+  junction exists). Multi-sig: ≥1 existing moderator's positive
+  vote plus a community-quorum threshold.
 - **Content moderation classifications** — [moderation.md](../instances/moderation.md).
-  Shape B from the User node directly. Mod-vote-required gate
+  Shape A from the User node directly. Mod-vote-required gate
   on every classification change (`sensitive` / `illegal` and
   un-classification back to `normal`); mod weight = member
   weight = 1.
 - **`:Network` parameter amendments** — [network.md §8](network.md#8-amending-network-parameters).
-  Shape B from the User node directly. Two amendment-rule pairs
+  Shape A from the User node directly. Two amendment-rule pairs
   on the `:Network` singleton — a baseline pair for low-stakes
   parameters and a critical pair for parameters with destructive
   or platform-wide reach. Mod gate required for both.
