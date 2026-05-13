@@ -30,8 +30,8 @@ ownership" flow.
 The gesture writes the following records atomically:
 
 - A new `:Item` node on the graph.
-- The Postgres `items` row carrying the name and description (see
-  [data-model.md](../implementation/data-model.md)).
+- The Postgres `items` row carrying the name and description
+  (see [data-model.md](../implementation/data-model.md)).
 - `item_attachments` rows for each piece of attached media (zero
   or more).
 - An actor edge from the creator toward the Item — the
@@ -39,19 +39,24 @@ The gesture writes the following records atomically:
   creator's initial opinion of their own item, typically high
   positive sentiment and relevance.
 - A new `:ItemOwnership` junction node for the creator.
+- The creator's `User/Collective → ItemOwnership` actor edge —
+  their **Shape A self-claim** to the ownership.
 - The `ItemOwnership → Item` claim edge.
 - The `Item → ItemOwnership` approval edge with positive top
   layer (`dim1 > 0`).
 
-Because there is no prior owner to approve the creator — the Item
-did not exist a moment ago — the
+Because there is no prior owner to cast a Shape B approval vote
+— the Item did not exist a moment ago — the
 [two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
-collapses to its 1-of-1 special case: the creator's gesture acts
-as both the claim and the approval. This is the same bootstrap
-pattern used for the founder's `CollectiveMember` in
-[collectives.md "Creation"](collectives.md#1-creation). Every
-subsequent ItemOwnership transfer is a regular two-edge approval
-(§6), not a bootstrap.
+collapses to its 1-of-1 special case: the creator's Shape A
+self-claim is the only required vote, and the system writes
+both structural edges atomically alongside it. This is the same
+bootstrap pattern used for the founder's `CollectiveMember` in
+[collectives.md "Creation"](collectives.md#1-creation) and for
+the founder of a Chat in
+[chats.md §2.1](chats.md#21-chat). Every subsequent
+ItemOwnership transfer is a regular two-edge approval (§6) with
+the current owner's Shape B approval vote, not a bootstrap.
 
 A Collective creating an Item is the same gesture: the graph
 records the Item as the Collective's, and the off-graph
@@ -195,26 +200,38 @@ An Item receives:
 
 #### As source (outgoing)
 
-ItemOwnership is a junction, not an actor. It carries one
-outgoing structural edge type, system-created:
+ItemOwnership is a junction, not an actor. It carries:
 
 - **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
   two-edge approval pattern, closed by the item's
   `Item → ItemOwnership` approval edge (§4.1) once the current
-  owner signs off (§6). At Item creation the claim and the
-  approval are written in the same atomic gesture (§1
-  bootstrap). See
+  owner casts their Shape B vote (§6). At Item creation the
+  claim and approval are written in the same atomic gesture
+  (§1 bootstrap). See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ItemOwnership → ItemOwnership` (Shape B vote)** — the
+  current owner's approval vote on a transfer to the new
+  ItemOwnership for the same Item (§6). `dim1 > 0` approves the
+  transfer. Once the transfer completes, the previous owner's
+  ItemOwnership is no longer active (§7), so this edge type
+  rarely carries further layers — but the primitive permits
+  them (e.g. an ex-owner adding a stance update for audit). See
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b).
 
 #### As target (incoming)
 
 An ItemOwnership receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
-  approve/reject sentiment plus importance on the transfer.
-  The acquirer's edge initiates the claim; the current owner's
-  `(dim1 > 0)` edge closes the transfer (§6).
+  [edges.md §1](../primitive/edges.md#1-actor-edges). For the
+  acquirer themselves, the `User/Collective → ItemOwnership`
+  edge is the **Shape A self-claim** that initiates the
+  ownership (§6). For other actors, these edges are personal
+  sentiment about the ownership record — they do not drive the
+  approval vote, which uses Shape B (above).
+- **`ItemOwnership → ItemOwnership` (Shape B vote)** — incoming
+  approval vote from the current owner's existing ItemOwnership
+  (§6).
 - **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
   of the two-edge pattern, paired with the outgoing
   `ItemOwnership → Item` claim above. Supersession layers per
@@ -255,20 +272,35 @@ a transfer relationship, not an authored piece of content.
 ItemOwnership uses the **two-edge approval pattern** described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
 
-1. **Acquirer** (User or Collective) creates an actor edge toward
-   a new **ItemOwnership** node.
-2. System creates `ItemOwnership → Item` (claim, pending).
-3. **Current owner** creates an actor edge toward the same
-   ItemOwnership node with positive sentiment (approval).
-4. Approval policy is satisfied; system creates
-   `Item → ItemOwnership` (approval).
-5. Transfer is complete; the new ItemOwnership is now the active
-   one (§7).
+1. The **acquirer** (User or Collective) writes a
+   `User/Collective → new ItemOwnership` actor edge — their
+   **Shape A self-claim** to the ownership. The acquirer has no
+   ItemOwnership for this item yet, so the claim is necessarily
+   Shape A. The system creates the `ItemOwnership → Item` claim
+   edge in response.
+2. The **current owner** casts a **Shape B vote** from their
+   existing ItemOwnership for this item to the new ItemOwnership
+   (`ItemOwnership_current → ItemOwnership_new`, `dim1 > 0`) —
+   their approval of the transfer.
+3. Approval policy is satisfied (single-approver: just the
+   current owner); the system creates the
+   `Item → ItemOwnership` approval edge.
+4. The system also writes the supersession layer on the
+   previous `Item → ItemOwnership_current` edge with
+   `dim1 < 0`, marking the old ownership inactive (§7).
+5. Transfer is complete; the new ItemOwnership is now the
+   active one.
 
 No one can take ownership without the current owner's explicit
-approval — there is no "take" operation in the graph. Bootstrap
-ItemOwnership at Item creation is the one exception, and it is
-not a transfer: there is no prior owner to skip past (§1).
+Shape B vote — there is no "take" operation in the graph. The
+bootstrap at Item creation (§1) is the one exception: the
+creator's Shape A self-claim is the only required vote because
+no prior ItemOwnership exists, and the two-edge approval pattern
+collapses to its 1-of-1 special case.
+
+The current owner's Shape B vote flows from the very ownership
+record that's about to be superseded — fitting, since approving
+the transfer is the same act that ends their own ownership.
 
 ---
 

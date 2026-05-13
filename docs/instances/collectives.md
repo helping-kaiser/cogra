@@ -42,26 +42,27 @@ A Collective is brought into existence by a single founding
 gesture from exactly one **User**:
 
 1. The founding User writes the Collective's social contract
-   (§8) — at minimum its initial decision-type rules
-   and its act-as rules (§2).
+   (§8) — at minimum its initial decision-type rules and its
+   act-as rules (§2).
 2. The system atomically creates the `:Collective` node and the
    founder's `CollectiveMember` junction.
 
 Because the founder's CollectiveMember is the bootstrap — there
-is no prior membership to approve it — the
+is no prior membership to vote on it — the
 [two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
-collapses to its 1-of-1 special case: the founder signs both
-the claim (`CollectiveMember → Collective`) and the approval
-(`Collective → CollectiveMember`) in the same atomic gesture.
-See §7 for the regular case.
+collapses to its 1-of-1 special case: the founder's `User → CollectiveMember`
+**Shape A self-claim** is the only required vote, and the
+system writes both structural edges (claim and approval)
+atomically alongside it. See §7 for the regular case where
+existing CollectiveMembers cast Shape B approver votes.
 
 The founder's role on their CollectiveMember junction is
 whatever the social contract names for the inaugural role
-(`founder`, `owner`, `partner`, …). There is no special "creator"
-role and no uniqueness constraint on the inaugural role:
-**additional founders are added afterward through the regular
-CollectiveMember addition flow**, and their `founder` (or
-equivalent) role carries the same weight as the bootstrap
+(`founder`, `owner`, `partner`, …). There is no special
+"creator" role and no uniqueness constraint on the inaugural
+role: **additional founders are added afterward through the
+regular CollectiveMember addition flow**, and their `founder`
+(or equivalent) role carries the same weight as the bootstrap
 founder's. The creator-User is identifiable on the graph as the
 earliest layer-1 timestamp among the Collective's incoming
 CollectiveMember-claim edges — the same earliest-incoming-edge
@@ -247,24 +248,34 @@ collective-eligible voter:
   (§4.1) once the collective's approval policy is satisfied
   (§7). See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
-- **`CollectiveMember → Proposal` (Shape B vote)** —
-  collective-eligible vote on a Proposal targeting a collective
-  property, member role change, or any decision-type instance
-  defined in the social contract (§8). `dim1` carries vote
-  direction. See
+- **`CollectiveMember → CollectiveMember` (Shape B vote)** —
+  approver / removal vote on another CollectiveMember of the
+  same Collective. `dim1 > 0` admits or affirms; a later
+  `dim1 < 0` layer on the same edge votes for removal. See
   [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
   and
   [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
+- **`CollectiveMember → Proposal` (Shape B vote)** —
+  collective-eligible vote on a Proposal targeting a collective
+  property, role change, or any decision-type instance defined
+  in the social contract (§8). `dim1` carries vote direction.
 
 #### As target (incoming)
 
 A CollectiveMember receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
-  approve/reject opinion on the membership claim plus importance,
-  used by the two-edge approval flow including any multi-sig
-  co-approval the social contract requires (§7).
+  [edges.md §1](../primitive/edges.md#1-actor-edges). For the
+  bearer themselves, the `User → CollectiveMember` (or
+  `Collective → CollectiveMember` when a Collective is the
+  bearer via sub-Collective membership) edge is the **Shape A
+  self-claim** that initiates the membership (§7). For other
+  actors, these edges are personal sentiment about that
+  membership — they do not drive the approval vote, which uses
+  Shape B (above).
+- **`CollectiveMember → CollectiveMember` (Shape B vote)** —
+  incoming approver / removal votes from other active
+  CollectiveMembers of the same Collective (§7, §9).
 - **`Collective → CollectiveMember` (`:APPROVAL`)** — the
   approval side of the two-edge pattern, paired with the
   outgoing `CollectiveMember → Collective` claim above. State
@@ -275,11 +286,10 @@ A CollectiveMember receives:
   (`:REFERENCES`)** when a content node embeds the membership
   (e.g. spotlighting a co-op steward). See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
-- **`Proposal → CollectiveMember` (`:TARGETS`)** when a Proposal
-  targets a property on the CollectiveMember — `role` changes
-  (hire / fire / promote per the social contract),
-  `ownership_pct`, etc. See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+- **`Proposal → CollectiveMember` (`:TARGETS`)** when a
+  Proposal targets a property on the CollectiveMember — `role`
+  changes (hire / fire / promote per the social contract),
+  `ownership_pct`, etc.
 
 ## 5. Collectives always have members
 
@@ -316,29 +326,36 @@ reasoning.
 
 ## 7. Approval flow
 
-CollectiveMember uses the **two-edge approval pattern** described in
+CollectiveMember uses the **two-edge approval pattern** described
+in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
 
-1. Actor (User or Collective) creates an actor edge toward a new
-   **CollectiveMember** node.
-2. System creates `CollectiveMember → Collective` (claim).
-3. Required approving actors create actor edges toward the same
-   CollectiveMember node. Approval policy depends on the target
-   role — a new shareholder may require approval from existing
-   founders and/or a threshold of current shareholders; adding a
-   worker may be at founder discretion; adding a household member
-   may need only the existing members' approval.
-4. Once the collective's approval policy is satisfied, the system
-   creates `Collective → CollectiveMember` (approval).
-5. Actor is an active member.
+1. The **would-be member** (User or Collective) writes a
+   `User/Collective → new CollectiveMember` actor edge — their
+   **Shape A self-claim** to the membership. The system creates
+   the `CollectiveMember → Collective` claim edge in response.
+2. **Required approvers** — existing CollectiveMembers eligible
+   under the social contract for the target role — each cast a
+   **Shape B vote** from their own existing CollectiveMember to
+   the new one (`CollectiveMember_approver → CollectiveMember_new`,
+   `dim1 > 0`).
+3. Once the social contract's threshold is crossed, the system
+   creates the `Collective → CollectiveMember` approval edge.
+   The membership is active.
 
-Multi-sig approval thresholds are expressed as "N actor edges from
+Approval policy depends on the target role — a new shareholder
+may require approval from existing founders and/or a threshold
+of current shareholders; adding a worker may be at founder
+discretion; adding a household member may need consensus.
+Multi-sig thresholds are expressed as "N Shape B votes from
 specific roles required," with role-weighted voting derived from
-the properties on the approving actors' own CollectiveMember nodes.
+the properties on the approving CollectiveMembers (per
+[governance.md §2.3](../primitive/governance.md#23-weight-function)).
 
-The bootstrap case — the founder's CollectiveMember at Collective
-creation — collapses this to its 1-of-1 form, with the founder
-signing both edges atomically. See §1.
+The bootstrap case — the founder's CollectiveMember at
+Collective creation — collapses this to its 1-of-1 form: only
+the Shape A self-claim is required, no Shape B approver votes
+exist because no prior CollectiveMembers exist. See §1.
 
 ## 8. Governance — the social contract
 
@@ -490,12 +507,25 @@ governance.
 ## 9. Leaving / being removed
 
 State transitions on a CollectiveMember junction follow the
-primitive — see [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
+primitive — see
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
 ("Revocation and state transitions") for voluntary leave and
 governance-instance removal mechanics.
 
-The collective-specific piece is the removal instance itself:
-eligibility, weights, and threshold come from the social contract
-above. The shape of "removal" varies enormously across collectives —
-a 1-of-1 CEO firing instance and a 2/3-of-board expulsion instance
-are both valid configurations.
+- **Voluntary leave** — the bearer adds a negative-`dim1` layer
+  on their own Shape A self-claim
+  (`User/Collective → CollectiveMember`). The system appends a
+  `dim1 < 0` layer on the claim-side structural edge.
+- **Removal** — eligible voters per the social contract's
+  removal instance lay `dim1 < 0` layers on their existing
+  `CollectiveMember_voter → CollectiveMember_target` Shape B
+  edges (the same edges that previously approved the membership,
+  if they voted in the original approval). When the threshold is
+  crossed the system appends a `dim1 < 0` layer on the
+  approval-side `Collective → CollectiveMember` edge.
+
+The shape of "removal" varies enormously across collectives — a
+1-of-1 CEO firing instance and a 2/3-of-board expulsion instance
+are both valid configurations parameterized in the social
+contract (§8). The Shape B edge mechanics are uniform; only the
+threshold differs.
