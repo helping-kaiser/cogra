@@ -49,11 +49,17 @@ The two non-default values reach the node by different paths:
 
 `'illegal'` is the strongest state — it isn't downgraded by a
 later `'sensitive'` Proposal while redacted fields remain.
+`'sensitive'` is reversible via a counter-Proposal back to
+`'normal'`; `'illegal'` is not, because the underlying redaction
+markers are append-only.
 
 The property applies to: **User, Collective, Post, Comment,
 ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,
-`CollectiveMember`, `ItemOwnership`) and `Proposal` have no
-user-input fields and carry no `moderation_status`.
+`CollectiveMember`, `ItemOwnership`) have no user-input fields
+and so carry no `moderation_status`. **Proposal** is in the same
+position — its substance is just `target_property` +
+`proposed_value` + the `:TARGETS` edge, with no user-input field
+to redact and no Postgres-side display content either.
 
 ---
 
@@ -76,11 +82,11 @@ Entities that are acted upon by actors.
 |-----------|-------------|
 | **Post** | Content (text and/or media) authored by a User or Collective. The primary public-content surface and the canonical [feed-ranking](feed-ranking.md) target. See [post.md](../instances/post.md). |
 | **Comment** | A response authored on another content node — Post, Comment (reply), Chat, ChatMessage, or Item. The platform's universal threading primitive. See [comment.md](../instances/comment.md); per-target containment list in [edges.md §2](edges.md#containment--belonging). |
-| **Chat** | A conversation container (1:1 or group) — a first-class interactable node visible on the graph, not a private hidden space. See [chats.md](../instances/chats.md). |
-| **ChatMessage** | A single message within a Chat, itself a first-class node — likeable, commentable, embed-able. See [chats.md](../instances/chats.md). |
+| **Chat** | A conversation container (1:1 or group) — a first-class interactable node visible on the graph, not a private hidden space. Topology (membership, who-talks-to-whom) is public by design; only message bodies are private, and only when encrypted. See [chats.md](../instances/chats.md). |
+| **ChatMessage** | A single message within a Chat, itself a first-class node — likeable, commentable, embed-able. Carries a `content_privacy` flag (`plaintext` / `encrypted`) per message; a single chat can mix both freely. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good — ownable (via ItemOwnership), transferable, and talked about. See [items.md](../instances/items.md). |
-| **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). See [hashtag.md](../instances/hashtag.md). |
-| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
+| **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). The only content node with no authorship — exempt from [authorship.md](authorship.md)'s earliest-incoming-edge rule. See [hashtag.md](../instances/hashtag.md). |
+| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one content node with no user-input fields: carries no `moderation_status` and has no Postgres-side display content. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
 
 ---
 
