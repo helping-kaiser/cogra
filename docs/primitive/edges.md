@@ -40,9 +40,9 @@ in the math is uniform.
 | User → Comment | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Chat | **Sentiment** (like to dislike) | **Relevance** (how important is this chat to me) |
 | User → ChatMessage | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-| User → ChatMember | **Sentiment** (approve to reject) | **Importance** (how important is this membership to me) |
-| User → CollectiveMember | **Sentiment** (approve to reject) | **Importance** (how important is this membership to me) |
-| User → ItemOwnership | **Sentiment** (approve to reject) | **Importance** (how important is this transfer to me) |
+| User → ChatMember | **Sentiment** (endorse to reject) | **Importance** (how important is this membership to me) |
+| User → CollectiveMember | **Sentiment** (endorse to reject) | **Importance** (how important is this membership to me) |
+| User → ItemOwnership | **Sentiment** (endorse to reject) | **Importance** (how important is this transfer to me) |
 | User → Item | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Hashtag | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly I want this change) |
@@ -57,9 +57,9 @@ in the math is uniform.
 | Collective → Comment | **Sentiment** | **Relevance** |
 | Collective → Chat | **Sentiment** | **Relevance** |
 | Collective → ChatMessage | **Sentiment** | **Relevance** |
-| Collective → ChatMember | **Sentiment** (approve to reject) | **Importance** |
-| Collective → CollectiveMember | **Sentiment** (approve to reject) | **Importance** |
-| Collective → ItemOwnership | **Sentiment** (approve to reject) | **Importance** |
+| Collective → ChatMember | **Sentiment** (endorse to reject) | **Importance** |
+| Collective → CollectiveMember | **Sentiment** (endorse to reject) | **Importance** |
+| Collective → ItemOwnership | **Sentiment** (endorse to reject) | **Importance** |
 | Collective → Item | **Sentiment** | **Relevance** (how important is this product) |
 | Collective → Hashtag | **Sentiment** | **Relevance** |
 | Collective → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly the collective wants this change) |
@@ -160,27 +160,41 @@ edge network as a whole.
 ### Voting (Shape B)
 
 System-created when a voter casts a Shape B vote (see
-[governance.md §3](governance.md#3-the-two-vote-shapes)). The edge runs from the voter's
-**eligibility junction** to the subject; `dim1` carries vote
-direction (`+1` support, `-1` oppose, intermediate values allowed),
-`dim2` is `0`.
+[governance.md §3](governance.md#3-the-two-vote-shapes)). The
+edge runs from the voter's **eligibility junction** to the
+subject; `dim1` carries vote direction (`+1` support, `-1`
+oppose, intermediate values allowed), `dim2` is `0`.
 
 | Edge type | Meaning |
 |-----------|---------|
-| ChatMember → Proposal | A chat-eligible vote on a proposed property change |
+| ChatMember → ChatMember | Approval (`dim1 > 0`) or removal (`dim1 < 0`) vote on another chat member's membership |
+| ChatMember → ChatMessage | Chat-internal message-disavowal vote |
+| ChatMember → Proposal | A chat-eligible vote on a proposed chat property or role change |
+| CollectiveMember → CollectiveMember | Approval (`dim1 > 0`) or removal (`dim1 < 0`) vote on another collective member's membership |
 | CollectiveMember → Proposal | A collective-eligible vote on a proposed property/role change |
+| ItemOwnership → ItemOwnership | Current owner's approval vote on a transfer to a new ItemOwnership for the same Item |
 
-**Network-scope governance is the exception.** For votes on
-Network-wide Proposals (moderator role changes, content moderation,
-`:Network` parameter amendments), no new structural edge is created
-— the carrier is the existing `User → Proposal` **actor edge** from
-§1. That actor edge keeps its normal `(sentiment, importance)`
-meaning; the tally reads `sign(sentiment)` for the binary outcome.
-The "Shape B" framing in governance.md and network.md is
-governance-conceptual (eligibility from the User, not a junction),
-not edge-mechanical. See
+**Same edge serves the membership lifecycle.** For approver
+votes on a junction (the `ChatMember → ChatMember`,
+`CollectiveMember → CollectiveMember`, and
+`ItemOwnership → ItemOwnership` rows above), the same edge
+that admits a junction holder can later be re-layered to
+remove them — `dim1 > 0` admits at layer-1, a later
+`dim1 < 0` layer is the removal vote. One edge, layered
+history of one voter's stance toward one membership /
+ownership. See
+[graph-model.md §5](graph-model.md#5-junction-node-flows)
+"Revocation and state transitions".
+
+**Network-scope governance uses Shape A, not Shape B.** Votes
+on Network-wide Proposals (moderator role changes, content
+moderation, `:Network` parameter amendments) are mechanically
+the existing `User → Proposal` **actor edge** from §1, since
+the Network has no per-member junction to vote from. The actor
+edge keeps its normal `(sentiment, importance)` meaning; the
+tally reads `sign(sentiment)` for the binary outcome. See
 [governance.md §3](governance.md#3-the-two-vote-shapes)
-"Carrier relaxation for Network-level governance" and
+"Shape A" and
 [proposal.md §4](../instances/proposal.md#4-edges).
 
 ---
