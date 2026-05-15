@@ -144,10 +144,27 @@ What tally triggers the outcome. Possible shapes:
 - Supermajority for irreversible decisions.
 - Quorum + percentage (M% of eligible weight participates, N% of
   cast weight agrees).
+- **Multi-gate** — two or more independent eligibility groups
+  voting on the same subject; each gate has its own threshold,
+  and the outcome triggers only when **all** gates cross.
 
 Percentages scale with the voter pool; fixed counts don't. An
 instance that picks fixed numbers has to defend why it won't need
 re-tuning as the pool grows.
+
+**Multi-gate decisions are a separation of powers.** When a single
+subject is gated by two or more distinct eligibility groups —
+neither alone can pass it — the structure is intentional: each
+gate counters a failure mode the others cannot. The canonical
+instance is Network moderator role changes
+([network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal)):
+a moderator gate (≥1 existing moderator's positive vote) prevents
+community-only purges by bot floods or coordinated targeting; a
+community gate (quorum + supermajority of active members) prevents
+mod-only coups in which sitting moderators strip honest peers.
+Either gate alone leaves a hole; both gates together close it.
+Future decisions adopt the multi-gate shape when the trust model
+demands more than one veto-bearing group.
 
 **All numeric parameters are tunable via this same primitive.**
 Role weights, quorum %, threshold % — every number is a node
