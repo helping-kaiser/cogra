@@ -30,6 +30,19 @@ And the graph itself is:
   possible but unreachable from anywhere else). Privacy of *content* is
   achieved through end-to-end encryption; topology itself is always public.
 
+**Invariant:** Edges are directional. `A → B` and `B → A` are
+independent edges; one does not imply the other.
+
+**Invariant:** Every change to graph state, after instance
+bootstrap, originates either in an actor gesture (creating or
+layering an actor edge — see §3) or in a governance threshold-cross
+(the system writing or re-layering a structural edge in response to
+votes — see §5). The only two writes that escape this rule are the
+ones that bring the `:Network` singleton into existence: creation
+of the singleton node itself, and the genesis moderator's
+`network_role` layer. Both happen once per instance, at bootstrap.
+See [network.md §2](network.md#2-creation).
+
 ---
 
 ## 2. Node Categories
@@ -214,6 +227,11 @@ topology rules in §5 and the per-instance flows in
 
 ## 4. Edge Structure
 
+**Invariant:** Every edge — actor or structural — carries exactly
+**2 dimensions plus system dimensions**. The shape is uniform across
+every edge type so the ranking algorithm never branches on edge
+category.
+
 Every edge, regardless of category, has the same shape:
 
 ```
@@ -275,6 +293,13 @@ needed:
 
 - Only the claim edge exists → pending.
 - Both edges exist → active.
+
+**Invariant:** A junction relationship's state is derived from the
+two structural edges of its approval pair, not from a stored flag.
+Claim only = pending; claim + approval, both with `dim1 > 0` top
+layers = active; negative top layer on either = inactive. A status
+property on the junction would be a second source of truth that
+could drift; the topology IS the state.
 
 Alongside the claim edge, the system also writes a third
 structural edge — the `:BEARER` edge from the junction to the
@@ -558,6 +583,12 @@ The two dimensions are independent. Examples:
 This is a critical design decision for anti-spam and anti-manipulation:
 
 **Edges created toward you by others do not change your feed.**
+
+**Invariant:** Only outgoing edges from the viewing user shape that
+user's feed. Inbound edges — sentiment, follows, likes from others
+toward the viewer — do not contribute to the viewer's ranking. This
+is the anti-bot foundation: a swarm pointing at you cannot drag your
+own graph anywhere.
 
 If a cluster of bots likes Jakob's posts 10,000 times:
 - The bots now have strong edges toward Jakob — so Jakob appears high in
