@@ -43,6 +43,11 @@ of the singleton node itself, and the genesis moderator's
 `network_role` layer. Both happen once per instance, at bootstrap.
 See [network.md §2](network.md#2-creation).
 
+**Invariant:** Topology is always public — every node and every
+edge is visible without an account. Privacy of content is achieved
+through end-to-end encryption, never through hiding nodes or edges.
+Accounts gate participation (writing), not viewing.
+
 ---
 
 ## 2. Node Categories

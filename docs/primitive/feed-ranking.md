@@ -86,6 +86,11 @@ path exists at all.
 
 ### 3.2 Zero handling — kill rule
 
+**Invariant:** A `0` in either dim of any actor edge along a path
+zeros that dim's path product irreversibly. Zeros are real
+multiplicative factors, never skipped or treated as identity, and
+once a dim is zeroed on a path it cannot be revived downstream.
+
 A factor of `0` in either dim of any actor edge along the path
 zeros that dimension's path product. Zeros are **not** skipped
 or treated as multiplicative identity — they are real factors

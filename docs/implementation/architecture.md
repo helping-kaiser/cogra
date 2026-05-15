@@ -66,6 +66,10 @@ everything needed to display content. See the
 
 ### 1. Graph DB owns topology, Postgres owns content
 
+**Invariant:** Memgraph owns graph topology; Postgres owns display
+content; UUIDs are the shared key. No content in Memgraph; no
+topology in Postgres.
+
 If a piece of data is needed to **navigate or weight** the graph, it goes in
 Memgraph. If it is needed to **display** something, it goes in Postgres.
 
@@ -89,6 +93,10 @@ never needs to know a username; the Postgres store never needs to know the
 graph topology.
 
 ### 3. All ranking comes from the graph
+
+**Invariant:** All feed ranking is computed at query time from
+the edge tensor. There are no materialized counters, popularity
+scores, or algorithm-driven signals stored as node properties.
 
 There are no materialized counters, no popularity scores, no
 algorithm-driven signals stored as node properties. Feed ranking
