@@ -103,7 +103,7 @@ system-created at creation and never re-targeted:
   (Post, Comment, Chat, ChatMessage, Item, Hashtag), junction
   (`ChatMember.role`, `CollectiveMember.role`), and system
   (the `:Network` singleton — see
-  [network.md §8](../primitive/network.md#8-amending-network-parameters)).
+  [network.md §11](../primitive/network.md#11-amending-network-parameters)).
   The property name and proposed value live on the Proposal
   node (§2), not on the edge — the change is intrinsic to
   the Proposal, not to the relationship. See
@@ -136,7 +136,7 @@ choice is per-application:
 
 For Network-scope governance (moderation, mod role changes,
 `:Network` parameter amendments — see
-[network.md §7](../primitive/network.md#7-network-wide-governance)),
+[network.md §10](../primitive/network.md#10-network-wide-governance)),
 the vote runs from the voter's **User node** directly. Per
 the edges catalog, that edge is the `User → Proposal`
 **actor edge** already listed in
@@ -245,7 +245,7 @@ is the node-level progression.
   threshold) live in each application doc:
   [moderation.md](moderation.md),
   [platform-guidelines.md](platform-guidelines.md),
-  [network.md §§6, 8](../primitive/network.md#6-mod-role-changes-via-multi-sig-proposal),
+  [network.md §§9, 11](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal),
   [chats.md §10](chats.md#10-moderation),
   [collectives.md](collectives.md).
 - **Not the cascade mechanism.** The cascade and the

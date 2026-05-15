@@ -382,7 +382,7 @@ design discussion (§9).
   parameterized for its own decision-type. Shape B
   `CollectiveMember → CollectiveMember / Proposal` for all
   internal votes.
-- **Network moderator role changes** — [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
+- **Network moderator role changes** — [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
   Shape A from the User node directly (no per-member Network
   junction exists). Multi-sig: ≥1 existing moderator's positive
   vote plus a community-quorum threshold.
@@ -391,7 +391,7 @@ design discussion (§9).
   on every classification change (`sensitive` / `illegal` and
   un-classification back to `normal`); mod weight = member
   weight = 1.
-- **`:Network` parameter amendments** — [network.md §8](network.md#8-amending-network-parameters).
+- **`:Network` parameter amendments** — [network.md §11](network.md#11-amending-network-parameters).
   Shape A from the User node directly. Two amendment-rule pairs
   on the `:Network` singleton — a baseline pair for low-stakes
   parameters and a critical pair for parameters with destructive
