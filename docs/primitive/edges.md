@@ -97,6 +97,35 @@ Paired with the claim edges above — see
 | Collective → CollectiveMember | This collective has accepted this member |
 | Item → ItemOwnership | This item's ownership transfer to this claim is complete |
 
+### Bearer binding
+
+System-created at junction creation to bind the junction to the
+actor it represents. Distinct from the claim/approval pair: claim
+and approval encode the relationship between the junction and its
+*parent* (Chat / Collective / Item); the bearer edge encodes the
+relationship between the junction and its *bearing actor*.
+
+| Edge type | Meaning |
+|-----------|---------|
+| ChatMember → User \| Collective | This chat membership represents this actor |
+| CollectiveMember → User \| Collective | This collective membership represents this actor |
+| ItemOwnership → User \| Collective | This ownership belongs to this actor |
+
+The edge is written once at junction creation and never re-pointed
+— a junction's bearer is its identity. The actor's Shape A
+self-claim that activates the junction must originate from the
+actor at the other end of `:BEARER`; the API rejects mismatched
+self-claims. This is what enables invite-only flows
+([chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat)):
+the inviter creates the junction with a known bearer before the
+invitee acts.
+
+Common queries:
+- "What junctions am I bearer of (active and pending)?" — single
+  inbound traversal from the actor along `:BEARER`.
+- "Who is the bearer of this junction?" — single outbound
+  traversal from the junction along `:BEARER`.
+
 ### Tagging
 
 | Edge type | Meaning |
@@ -226,6 +255,7 @@ enough that the endpoint-label-filter approach adds cost or noise.
 |---|---|---|
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
+| `:BEARER` | Junction → User \| Collective (e.g. `ChatMember → User`) | Identity binding for a junction. "What junctions does this actor bear?" and "who is this junction's bearer?" run as single one-hop traversals along `:BEARER`. |
 | `:CONTAINMENT` | Comment → Post, Comment → Comment, ChatMessage → Chat, Comment → Chat, Comment → ChatMessage, Comment → Item | Content containment and reply structure. Queried for feed assembly and thread rendering. |
 | `:TAGGING` | Post → Hashtag, Comment → Hashtag, Item → Hashtag | Tag associations. Queried by hashtag-centric browsing. |
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |

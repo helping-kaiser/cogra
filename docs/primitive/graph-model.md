@@ -276,6 +276,18 @@ needed:
 - Only the claim edge exists → pending.
 - Both edges exist → active.
 
+Alongside the claim edge, the system also writes a third
+structural edge — the `:BEARER` edge from the junction to the
+**bearing actor** it represents (`ChatMember → User|Collective`,
+`CollectiveMember → User|Collective`,
+`ItemOwnership → User|Collective`). This edge is identity, not
+state: it's set once at junction creation and never re-pointed,
+and is what lets invite-only flows bind a junction to its
+prospective bearer before that actor has self-claimed. The
+Shape A self-claim that activates the junction must originate
+from the actor at the other end of `:BEARER`. See
+[edges.md §2 "Bearer binding"](edges.md#bearer-binding).
+
 The **approval policy** uses **two voting shapes** (per
 [governance.md §3](governance.md#3-the-two-vote-shapes)),
 combined:
