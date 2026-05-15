@@ -197,6 +197,14 @@ Proposal nodes.
 
 ### Junction nodes
 
+All three junction types bind to their bearing actor via a
+`:BEARER` structural edge — `Junction → User|Collective` — set
+by the API at junction creation, never re-pointed. The Shape A
+self-claim that activates the junction must come from the actor
+this edge points at; mismatched claims are rejected. See
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
+and edge-labels table below.
+
 #### `:ChatMember`
 
 | Property        | Type   | Notes |
@@ -292,6 +300,7 @@ for picking the right one live in
 | `:ACTOR`       | User \| Collective → any node                                            | Actor sets |
 | `:CLAIM`       | Junction → Parent (e.g. `ChatMember → Chat`)                             | System     |
 | `:APPROVAL`    | Parent → Junction (e.g. `Chat → ChatMember`)                             | System     |
+| `:BEARER`      | Junction → User \| Collective (e.g. `ChatMember → User`)                 | System     |
 | `:CONTAINMENT` | Comment → Post / Comment / Chat / ChatMessage / Item; ChatMessage → Chat | System     |
 | `:TAGGING`     | Post → Hashtag, Comment → Hashtag, Item → Hashtag                        | System     |
 | `:TARGETS`     | Proposal → Target Node                                                   | System     |
