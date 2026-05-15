@@ -2,79 +2,165 @@
 
 The **Network** is the global community of every User on a CoGra
 instance — the body that backs platform-wide governance: content
-moderation, dispute resolution, and anything that affects the whole
-instance rather than a specific chat or collective.
+moderation, dispute resolution, and anything that affects the
+whole instance rather than a specific chat or collective.
+
+This doc is the per-node catalog for the `:Network` singleton: how
+it is created, what it carries on the graph, what edges it
+participates in, and how its lifecycle plays out as a graph
+object. The governance applications the singleton hosts —
+membership-and-roles structure, moderator role changes,
+Network-wide governance, and parameter amendments — live in the
+topical appendices after the per-node skeleton (§§8-11). The
+governance primitive itself stays in
+[governance.md](governance.md).
+
+---
 
 ## 1. Distinct from Collective
 
-A [Collective](../instances/collectives.md) is a small group with a
-defined membership: a household, band, co-op, company. Membership is
-explicit and approval-gated.
+A [Collective](../instances/collectives.md) is a small group with
+a defined membership: a household, band, co-op, company.
+Membership is explicit and approval-gated.
 
 The Network is the opposite — the set of every User on the graph.
 Membership is **automatic on registration** (see
-[invitations.md](invitations.md)); there is no approval gate; there
-is no "this band vs that band." It is one Network per instance.
+[invitations.md](invitations.md)); there is no approval gate;
+there is no "this band vs that band." It is one Network per
+instance.
 
 Federation across instances is a forward question — see
-[open-questions.md Q15](../open-questions.md). Each instance has its
-own Network until then.
+[open-questions.md Q15](../open-questions.md). Each instance has
+its own Network until then.
 
-## 2. The :Network singleton
+---
 
-The Network is represented on the graph by a **singleton `:Network`
-node** that holds the instance's configuration parameters. There is
-exactly one per instance.
+## 2. Creation
 
-It carries:
+The `:Network` singleton is brought into existence at **instance
+bootstrap** via two independent system writes — the only steps in
+the system that depend on out-of-graph authority. Every subsequent
+change to the singleton's parameters or to any user's role runs
+through governance.
 
-- Mod role-change quorum and threshold (`mod_role_change_quorum`,
-  `mod_role_change_threshold`).
-- Per-classification moderation quorums and thresholds
-  (`moderation_sensitive_*`, `moderation_illegal_*`).
-- Platform guidelines pointer and amendment thresholds
-  (`guidelines_version`, `guidelines_hash`,
-  `guidelines_change_quorum`, `guidelines_change_threshold`) —
-  see [platform-guidelines.md](../instances/platform-guidelines.md).
-- Eligibility-definition parameters (`active_threshold_days` — the
-  recency window that makes a User count as an "active member" for
-  governance tallies).
-- Amendment-rule pairs that govern changes to the singleton's own
-  parameters: a baseline pair (`property_change_quorum`,
-  `property_change_threshold`) for low-stakes parameters and a
-  critical pair (`critical_property_change_quorum`,
-  `critical_property_change_threshold`) for parameters whose abuse
-  has destructive or platform-wide reach. See §8.
+1. The API creates the `:Network` node with the default property
+   values listed in
+   [graph-data-model.md](../implementation/graph-data-model.md).
+2. Separately, the API layers `'moderator'` onto the configured
+   genesis user's `User.network_role`. The genesis user is
+   hardcoded in the instance configuration — for the central
+   instance run by the project it is the project owner; a
+   federated fork sets its own genesis.
 
-All properties are layered, so every parameter change has a
-preserved history. Each is amendable via a standard Proposal
-targeting the property — same primitive as everything else (see
-[governance.md §2.1](governance.md#21-subject)); §7 below specifies which
-amendment-rule pair gates which property. The full property list
-and defaults live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+The two writes are not packaged into one atomic compound gesture:
+each is its own out-of-graph step. An observer reading the graph
+in between would see a Network with an empty moderator set; the
+window is operationally brief (single bootstrap path) and
+behaviorally inert (no Network-scope Proposal can cross the mod
+gate against an empty moderator set anyway — see §10).
 
-The singleton exists so that platform-wide governance has a graph
-node to target. Without it, statements like "Network parameters are
-amendable via Proposal" are hand-waving — Proposals need a node.
+Bitcoin analogy: someone has to mine the genesis block. From
+there it is community-driven.
 
-## 3. Membership and roles
+---
 
-Every User has a `network_role` graph property:
+## 3. Graph-side properties
 
-- **`member`** — every registered user, automatically. The default.
-- **`moderator`** — a small set of users who gate platform-wide
-  governance actions (see [moderation.md](../instances/moderation.md) for the
-  gating rule).
+The `:Network` node carries the instance's configuration
+parameters. All properties are **layered** per
+[layers.md](layers.md), so every parameter change has a preserved
+history. Each is amendable via a standard Proposal targeting the
+property name (same primitive as everything else — see
+[governance.md §2.1](governance.md#21-subject)), gated by one of
+the amendment-rule pairs called out below.
 
-`network_role` is a graph-side property on the User node, layered
-per [layers.md](layers.md) — promotion and demotion preserve full
-history.
+Concrete property types and defaults live in
+[graph-data-model.md](../implementation/graph-data-model.md);
+this section names each parameter, its role, and which
+amendment-rule pair gates changes to it.
 
-Whether Collectives can be Network members or moderators is
-deferred. For now, only Users carry `network_role`.
+### Eligibility-definition
 
-## 4. Edges
+- **`active_threshold_days`** — recency window that makes a User
+  count as an "active member" for governance tallies (a User
+  with at least one outgoing actor edge within the last N days).
+  Composes with tally-time eligibility per §10. Gating bucket:
+  baseline (§11).
+
+### Mod-role-change governance
+
+- **`mod_role_change_quorum`**, **`mod_role_change_threshold`** —
+  thresholds for the multi-sig Proposal that adds or removes a
+  moderator (§9). Gating bucket: critical (§11).
+
+### Content-moderation governance
+
+- **`moderation_sensitive_quorum`**,
+  **`moderation_sensitive_threshold`** — thresholds for
+  `'sensitive'` classification Proposals. Gating bucket:
+  baseline.
+- **`moderation_illegal_quorum`**, **`moderation_illegal_threshold`**
+  — thresholds for `'illegal'` classification Proposals. Gating
+  bucket: critical.
+
+### Platform-guidelines governance
+
+- **`guidelines_version`**, **`guidelines_hash`** — the pinned
+  version and SHA-256 of the current platform guidelines (see
+  [platform-guidelines.md](../instances/platform-guidelines.md)).
+  Amended together by the guidelines-amendment instance below,
+  not by either property-change bucket.
+- **`guidelines_change_quorum`**, **`guidelines_change_threshold`**
+  — thresholds for the guidelines-amendment instance itself.
+  Gating bucket: critical.
+
+### Amendment-rule pairs (governance of governance)
+
+The pairs that govern changes to the singleton's own parameters,
+split by stakes (§11):
+
+- **Baseline:** **`property_change_quorum`**,
+  **`property_change_threshold`** — for low-stakes parameters
+  (`moderation_sensitive_*`, `active_threshold_days`, and the
+  baseline pair itself).
+- **Critical:** **`critical_property_change_quorum`**,
+  **`critical_property_change_threshold`** — for parameters
+  whose abuse has destructive or platform-wide reach
+  (`mod_role_change_*`, `moderation_illegal_*`,
+  `guidelines_change_*`, and the critical pair itself).
+
+Each pair is self-amending: a baseline-pair amendment passes
+under baseline rules; a critical-pair amendment passes under
+critical rules. Defaults exist to bootstrap; they are not fixed
+rules.
+
+The singleton carries **no `moderation_status` property**. Like
+junction nodes and the Proposal node, it has no user-input fields
+to redact (see
+[nodes.md "Universal: moderation_status"](nodes.md#universal-moderation_status));
+the lifecycle consequence is §7.
+
+The singleton exists so platform-wide governance has a graph
+node to target. Without it, statements like "Network parameters
+are amendable via Proposal" would be hand-waving — Proposals
+need a node.
+
+---
+
+## 4. Postgres-side content
+
+None. The `:Network` singleton is pure graph state. Every
+parameter lives as a layered graph property on the node itself;
+there is no `network` row, no display-content table, no
+per-singleton data keyed by its UUID. The platform-guidelines
+document that the singleton pins via `guidelines_version` and
+`guidelines_hash` lives in the project repo, not in Postgres —
+see
+[platform-guidelines.md](../instances/platform-guidelines.md).
+
+---
+
+## 5. Edges
 
 The `:Network` is a singleton parameter container. It is not an
 actor; it has no Postgres-side display content; and it
@@ -89,105 +175,198 @@ target that other parts of the graph point at.
 
 The `:Network` node receives:
 
-- **`Proposal → Network` (`:TARGETS`)** when a Proposal targets
-  one of the singleton's parameters — `mod_role_change_*`,
-  `moderation_sensitive_*`, `moderation_illegal_*`,
-  `guidelines_*`, `active_threshold_days`, or the amendment-rule
-  pairs themselves. The amendment-rule pair (baseline or
-  critical) that gates each property is specified in §8. See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+- **`Proposal → Network` (`:TARGETS`)** when a Proposal
+  targets one of the singleton's parameters
+  (`mod_role_change_*`, `moderation_sensitive_*`,
+  `moderation_illegal_*`, `guidelines_*`,
+  `active_threshold_days`, or either amendment-rule pair). The
+  amendment-rule pair that gates each property is named in §3.
+  See
+  [edges.md §2 "Subject targeting"](edges.md#subject-targeting).
 - **`ChatMessage / Post / Comment → Network` (`:REFERENCES`)**
   when a content node mentions or embeds the singleton (e.g. a
   Post discussing platform governance). See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](edges.md#reference).
 
-Network-wide governance instances do **not** create new
+Network-scope governance instances do **not** create new
 structural edges to the `:Network` node. Votes on Network-scope
-Proposals — moderator role changes (§6), content moderation
-classifications, and singleton parameter amendments (§8) — use
+Proposals — moderator role changes (§9), content moderation
+classifications, and singleton parameter amendments (§11) — use
 the existing `User → Proposal` **actor edge** under the carrier
 relaxation described in
-[edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
-and [governance.md §3](governance.md#3-the-two-vote-shapes). The
+[edges.md §2 "Voting (Shape B)"](edges.md#voting-shape-b) and
+[governance.md §3](governance.md#3-the-two-vote-shapes). The
 Proposal itself targets the relevant subject (a User for role
-changes, the `:Network` singleton for parameter amendments); the
-votes themselves never carry an edge to or from the Network node.
+changes, the `:Network` singleton for parameter amendments);
+the votes themselves never carry an edge to or from the Network
+node.
 
 ---
 
-## 5. Bootstrap
+## 6. Authorship
 
-Each instance bootstraps with two pieces of out-of-graph state:
+There is no authorship section for the `:Network` singleton — by
+§2 the Network is system-created at bootstrap and has no author
+in the [authorship.md](authorship.md) sense. The
+earliest-incoming-edge rule does not meaningfully apply: the
+first edge the singleton receives is typically a `:TARGETS`
+edge from a property-amendment Proposal or a `:REFERENCES`
+edge from a content node mentioning the network, but those
+edges' authors are authors of the *proposing* or *referencing*
+node, not of the singleton. The Network is a system concept,
+not authored content. (Same shape — though for a different
+reason — as the Hashtag exemption in
+[hashtag.md §5](../instances/hashtag.md#5-lifecycle).)
 
-1. The **`:Network` singleton** is created with the default
-   parameter values listed in
-   [graph-data-model.md](../implementation/graph-data-model.md).
-2. **One hardcoded genesis moderator** is set —
-   `User.network_role = 'moderator'` for a configured user.
+---
 
-For the central instance run by the project, the genesis moderator
-is the project owner. A federated fork sets its own genesis. These
-are the only steps in the system that depend on out-of-graph
-authority — every subsequent change to the singleton's parameters
-or to any user's role runs through governance.
+## 7. Lifecycle
 
-Bitcoin analogy: someone has to mine the genesis block. From there
-it is community-driven.
+The `:Network` singleton is **never deleted**. The append-only
+rule applies as it does to every other node.
 
-## 6. Mod role changes via multi-sig Proposal
+There is no redaction path either. The singleton carries no
+user-input fields, so neither
+[layers.md §5](layers.md#5-deletion-policy)'s in-place redaction
+nor [retention-archive.md](retention-archive.md)'s archive
+disposition has anything to act on. The node's UUID is stable
+across the entire lifetime of the instance.
 
-Adding or removing a moderator uses the standard Proposal mechanism
+The singleton's **state changes** are exclusively parameter
+amendments — passing Proposals targeting one of the layered
+properties from §3, gated by the amendment-rule pair that §3
+assigns. The full mechanism, threshold defaults, mod gate, and
+the rationale for two stakes-tiered buckets live in §11. There
+are no other lifecycle events the singleton has: no membership
+changes (its eligibility set lives on User nodes, §8), no
+transfer, no merge, no archive.
+
+Federation across instances — whether two instances' singletons
+can be reconciled — is the forward question already flagged in
+§1, deferred to
+[open-questions.md Q15](../open-questions.md).
+
+---
+
+## 8. Membership and roles
+
+Every User has a `network_role` graph property:
+
+- **`member`** — every registered user, automatically. The
+  default.
+- **`moderator`** — a small set of users who gate platform-wide
+  governance actions (see
+  [moderation.md](../instances/moderation.md) for the gating
+  rule on content moderation; §9 below for the gating rule on
+  mod role changes themselves).
+
+`network_role` is a graph-side property on the User node,
+layered per [layers.md](layers.md) — promotion and demotion
+preserve full history. It is **not** a property on the Network
+singleton, and the singleton has no incoming structural edge
+representing membership: Network membership has no separate
+gesture, so there is no `ChatMember`-/`CollectiveMember`-style
+junction to bind a User to the Network. The eligibility-set is
+"every User node on the graph," filtered by the recency window
+from §3 (`active_threshold_days`).
+
+Whether Collectives can be Network members or moderators is
+deferred. For now, only Users carry `network_role`.
+
+---
+
+## 9. Mod role changes via multi-sig Proposal
+
+Adding or removing a moderator uses the standard Proposal
+mechanism
 ([governance.md §2.1](governance.md#21-subject)):
 
-- **Subject:** A Proposal targeting `User.network_role` of the user
-  being promoted or demoted, with `proposed_value` set to the new
-  role.
+- **Subject:** A Proposal targeting `User.network_role` of the
+  user being promoted or demoted, with `proposed_value` set to
+  the new role.
 - **Eligibility:** all active Network members.
-- **Threshold:** multi-sig — **≥1 existing moderator's positive vote**
-  plus **`Network.mod_role_change_quorum`** of cast eligible-member
-  votes, with **`Network.mod_role_change_threshold`** in favor.
+- **Threshold:** multi-sig — **≥1 existing moderator's positive
+  vote** plus **`Network.mod_role_change_quorum`** of cast
+  eligible-member votes, with
+  **`Network.mod_role_change_threshold`** in favor.
 
-The multi-sig is the bot defense:
+The two gates implement a **separation of powers** — see
+[governance.md §2.4](governance.md#24-threshold-policy)
+"Multi-gate decisions". Each gate counters a distinct failure
+mode:
 
-- Bots can flood the community side but cannot bypass the mod-vote
-  gate without compromising a real moderator.
-- Removal works the same way — mods cannot be unilaterally removed
-  by community alone (which would let bots strip honest mods), nor
-  by other mods alone (which would let mods purge each other).
+- **Without the community gate**, moderators alone could purge
+  each other — a sitting-mod coup that strips honest mods with
+  no recourse.
+- **Without the moderator gate**, the community alone could
+  strip moderators — a coordinated push (bots or otherwise)
+  removes honest mods at will.
 
-## 7. Network-wide governance
+Both gates required = both failure modes blocked. The
+moderator-gate side also doubles as the bot-defense rule used
+across content moderation (§10,
+[moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)):
+mods are validators, not weighted voters.
 
-The Network is the eligibility-and-voting body for any platform-
-scoped governance instance:
+Removal is symmetric to promotion: same Proposal mechanism with
+`proposed_value = 'member'`, same dual-gate rule. There is no
+privileged path that exempts mod removal from either gate.
 
-- Adding and removing moderators (§6 above).
+---
+
+## 10. Network-wide governance
+
+The Network is the eligibility-and-voting body for any
+platform-scoped governance instance:
+
+- Adding and removing moderators (§9 above).
 - Content moderation classifications — see
   [moderation.md](../instances/moderation.md).
 - Tuning the `:Network` singleton's parameters themselves
-  (governance of governance) — see §8.
+  (governance of governance) — see §11.
 
-Each is a Shape B governance instance per
-[governance.md §3](governance.md#3-the-two-vote-shapes). Two consequences:
+Each runs as a Network-scope governance instance per
+[governance.md §3](governance.md#3-the-two-vote-shapes). Two
+consequences shared across all three:
 
 - **The eligibility carrier is the User node itself**, not a
-  junction. Network membership has no separate gesture, so there is
-  no `ChatMember`-/`CollectiveMember`-style junction to carry the
-  vote. At the edge layer the vote IS the existing
+  junction. Network membership has no separate gesture (§8), so
+  there is no `ChatMember`-/`CollectiveMember`-style junction to
+  carry the vote. At the edge layer the vote IS the existing
   `User → Proposal` actor edge from
   [edges.md §1](edges.md#1-actor-edges) — no separate structural
   edge is created. The actor edge keeps its normal `(sentiment,
-  importance)` meaning; the tally reads `sign(sentiment)` for the
-  binary outcome. "Shape B" here is governance-conceptual
-  (eligibility from the User, not a junction), not edge-mechanical.
-  See [governance.md §3](governance.md#3-the-two-vote-shapes)
-  "Carrier relaxation for Network-level governance" for the full
-  resolution.
-- **Mod weight = member weight = 1.** Mods do not outvote the
-  community; the "≥1 mod positive vote" rule is a gate, not a
-  weighting. (Same rule applied to content classifications in
-  [moderation.md](../instances/moderation.md).)
+  importance)` meaning; the tally reads `sign(sentiment)` for
+  the binary outcome. "Shape B" here is governance-conceptual
+  (eligibility from the User, not a junction), not
+  edge-mechanical. See
+  [governance.md §3](governance.md#3-the-two-vote-shapes)
+  "Carrier relaxation for Network-level governance" for the
+  full resolution.
+- **Mod weight = member weight = 1; mod is a gate, not a
+  weight.** Moderators do not outvote the community; the
+  "≥1 mod positive vote" rule is a procedural gate, never a
+  weighting. Stated symmetrically here and in
+  [moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)
+  — the rule applies uniformly to every Network-scope Proposal
+  (mod role changes, classifications, parameter amendments).
 
-## 8. Amending `:Network` parameters
+The `active_threshold_days` recency window from §3 composes
+naturally with tally-time eligibility per
+[governance.md §2.2](governance.md#22-eligibility): at the
+moment a new or updated vote layer triggers a tally, the
+eligible set is "Users with at least one outgoing actor edge
+whose timestamp falls within the last
+`Network.active_threshold_days` days as of *that* tally." A
+voter whose latest activity has dropped out of the window
+drops from the tally; a voter who becomes active again counts
+the next time their renewed activity puts them back inside.
+The window slides; eligibility is evaluated at a single point
+per tally, not snapshotted at vote time.
+
+---
+
+## 11. Amending `:Network` parameters
 
 Two amendment-rule pairs gate changes to the singleton's own
 properties, separated by stakes:
@@ -215,7 +394,8 @@ property count without adding meaningful differentiation. Two
 buckets capture the gradient that matters in practice.
 
 The mod gate uses the same bot-defense reasoning as content
-moderation ([moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)).
+moderation (§10,
+[moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)).
 Without it, a coordinated push could drag a baseline-pair
 threshold to trivially low values and weaponize the loosened
 parameter.
@@ -224,11 +404,24 @@ Both pairs are **self-amending**: each bucket's own thresholds
 are governed by that bucket's rule. Defaults exist to bootstrap;
 they are not fixed rules.
 
+---
+
 ## What this doc is not
 
-- **Not moderation.** Mechanics of moderation Proposals, the
-  cascade outcomes, and the platform-guidelines reference all
-  live in [moderation.md](../instances/moderation.md).
+- **Not the governance primitive.** Eligibility, weight
+  functions, threshold policies, outcome semantics, the two
+  vote shapes, and multi-gate decisions live in
+  [governance.md](governance.md).
+- **Not the moderation primitive.** Mechanics of moderation
+  Proposals, the cascade outcomes, the content-side mod-gate
+  rule, and the platform-guidelines reference live in
+  [moderation.md](../instances/moderation.md).
+- **Not the Proposal node spec.** Proposal creation, properties,
+  edges, authorship, and lifecycle live in
+  [proposal.md](../instances/proposal.md).
 - **Not federation.** Cross-instance Network reconciliation is
   Q15-deferred ([open-questions.md](../open-questions.md)).
 - **Not the User node spec.** See [user.md](user.md).
+- **Not the Memgraph schema.** Concrete property types, defaults,
+  and indexes live in
+  [graph-data-model.md](../implementation/graph-data-model.md).

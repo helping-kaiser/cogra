@@ -149,7 +149,7 @@ The defaults are slightly higher than `illegal` classification
 (2% / ≥2/3) because guideline changes shift the normative frame
 for *all future* moderation, not a single piece of content. The
 `guidelines_change_*` thresholds themselves fall in the critical
-bucket of [network.md §8](../primitive/network.md#8-amending-network-parameters) — amending
+bucket of [network.md §11](../primitive/network.md#11-amending-network-parameters) — amending
 them needs the supermajority that protects platform-wide
 governance.
 
