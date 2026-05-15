@@ -31,6 +31,12 @@ listed under the most useful one.
   — two users may have multiple parallel 1:1 chats.
 - [Inbound edges don't affect the receiver's feed](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)
   — anti-bot foundation.
+- [Topology is always public](graph-model.md#1-core-principles) —
+  privacy of content is achieved via end-to-end encryption, never
+  by hiding nodes or edges.
+- [Memgraph owns topology, Postgres owns display content](../implementation/architecture.md#1-graph-db-owns-topology-postgres-owns-content)
+  — UUIDs are the shared key; no content in Memgraph, no topology
+  in Postgres.
 
 ## State and lifecycle
 
@@ -65,6 +71,15 @@ listed under the most useful one.
 - [Edges attributed to a Collective carry no per-edge record of the acting member](edges.md#1-actor-edges)
   — accountability lives in the social contract, not in edge
   attribution. Deliberate non-feature.
+
+## Ranking
+
+- [Ranking comes only from the graph](../implementation/architecture.md#3-all-ranking-comes-from-the-graph)
+  — no materialized counters, popularity scores, or ML signals;
+  ranking is computed at query time from the edge tensor.
+- [Kill rule: a `0` in either dim zeros the path product](feed-ranking.md#32-zero-handling--kill-rule)
+  — zeros are real multiplicative factors, never skipped; once a
+  dim is zeroed on a path it cannot be revived downstream.
 
 ---
 
