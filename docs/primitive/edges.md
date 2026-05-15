@@ -22,6 +22,12 @@ on-graph edge belongs to the Collective itself — there is no
 per-edge record of the acting member. See
 [collectives.md "Acting through the Collective"](../instances/collectives.md#2-acting-through-the-collective).
 
+**Invariant:** Edges attributed to a Collective carry no per-edge
+record of the acting member. The Collective IS the actor at the
+graph layer; member-level accountability lives in the Collective's
+social contract, not in edge attribution. Deliberate non-feature —
+not a gap to be filled by a future `acting_user` dimension.
+
 Across every actor-edge type the two dimensions follow the same
 underlying grammar (see [graph-model.md §6](graph-model.md#6-dimension-semantics)):
 `dim1` is **signed valence** (sentiment / approval / affirmation);
@@ -71,6 +77,13 @@ in the math is uniform.
 System-created. Dimensions default to `(0, 0)` unless the edge
 participates in a state-bearing pattern (junction approval pairs —
 see [graph-model.md](graph-model.md) for the rule).
+
+**Invariant:** A given `(source, target)` pair carries at most one
+structural edge. When a relationship between two specific nodes is
+already covered by one structural edge type (e.g. `Post → Hashtag`
+via `:TAGGING`), the same pair never gets a second structural edge
+of a different type (no parallel `Post → Hashtag` via `:REFERENCES`).
+This is what drives the `:TAGGING` / `:REFERENCES` carve-out below.
 
 ### Containment / belonging
 

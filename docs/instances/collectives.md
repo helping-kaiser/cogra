@@ -138,6 +138,13 @@ governance primitive ([governance.md](../primitive/governance.md)):
 routine, reversible-by-the-actor gestures can be permissive;
 consequential, binding gestures require explicit eligibility.
 
+**Invariant:** Collective content-acts default permissive (any
+active member may produce them); governance-acts default deny (no
+member can produce them without an explicit act-as rule in the
+social contract). The asymmetry reflects reversibility: a stray
+Post is reversible by a counter-post, but a stray Proposal vote or
+Item transfer binds the Collective externally.
+
 ### Routing
 
 When a member attempts to act-as a Collective C with a gesture
@@ -640,7 +647,7 @@ only permitted "removal" is in-place layer redaction on graph
 properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change occurred.
 
-**Always-had-a-member invariant.** Every Collective has, or at
+**Invariant — always had a member:** Every Collective has, or at
 some point had, at least one active CollectiveMember. The
 founding gesture (§1) creates the founder's CollectiveMember
 atomically with the Collective node, so a Collective cannot
