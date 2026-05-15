@@ -83,8 +83,9 @@ A ChatMessage is created by a single authoring gesture from an
 active ChatMember of the chat — the same shape a Post or Comment
 uses. The gesture writes atomically:
 
-- A new `:ChatMessage` node carrying `content_privacy` (§3.2)
-  and `moderation_status` (§3.2).
+- A new `:ChatMessage` node carrying `moderation_status` (§3.2).
+  `content_privacy` is a Postgres-side property on the
+  `chat_messages` row (§4.2).
 - The Postgres `chat_messages` row carrying the message body
   (plaintext or ciphertext), the `epoch` index for encrypted
   messages, and any attached media (§4.2).
@@ -133,15 +134,6 @@ The Chat node deliberately does **not** cache an `author_id`
 
 A ChatMessage node carries:
 
-- **`content_privacy`** — `'plaintext'` / `'encrypted'`,
-  layered. Tells the frontend whether to attempt decryption.
-  Per-message, not per-chat — a single chat can mix both freely
-  (§9). Lives on the graph (rather than only in Postgres) so
-  frontends and graph-side queries can determine handling without
-  a body fetch; the Postgres `chat_messages.content_privacy`
-  column mirrors the top layer and pairs with `epoch` under the
-  schema CHECK in
-  [data-model.md](../implementation/data-model.md).
 - **`moderation_status`** — same shape as the Chat property.
 
 The cached `author_id` on the node is derived from the earliest
@@ -197,6 +189,10 @@ in [data-model.md](../implementation/data-model.md).
 A ChatMessage's body lives in Postgres on the `chat_messages`
 row, linked to the graph ChatMessage node by UUID:
 
+- **`content_privacy`** — `'plaintext'` / `'encrypted'`.
+  Per-message, not per-chat — a single chat can mix both freely
+  (§9). The frontend reads this with the body to decide whether
+  to attempt decryption.
 - **`content`** — the message body. For
   `content_privacy = 'plaintext'` this is readable text; for
   `content_privacy = 'encrypted'` this is a ciphertext blob
@@ -500,10 +496,10 @@ project-wide append-only rule.
 
 The graph carries chat **topology only** — it never holds
 message bodies, encrypted or not. **Privacy is per-message, not
-per-chat:** each ChatMessage carries the `content_privacy` flag
-declared in §3.2 that tells the frontend whether to attempt
-decryption. A single chat can mix plaintext and encrypted
-messages freely.
+per-chat:** each ChatMessage's `chat_messages` row in Postgres
+carries the `content_privacy` flag declared in §4.2 that tells
+the frontend whether to attempt decryption. A single chat can
+mix plaintext and encrypted messages freely.
 
 ### Chat keys, organized in epochs
 

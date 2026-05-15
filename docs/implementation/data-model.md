@@ -123,7 +123,7 @@ CREATE TABLE comments (
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
 -- a single chat can carry both plaintext and encrypted messages. See
--- chats.md §5.
+-- chats.md §9.
 CREATE TABLE chats (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     name        TEXT,       -- null for 1:1 chats
@@ -133,12 +133,12 @@ CREATE TABLE chats (
 );
 
 -- Chat messages: individual messages within a chat.
--- content_privacy is per-message (see chats.md §5): 'plaintext' bodies are
+-- content_privacy is per-message (see chats.md §4.2): 'plaintext' bodies are
 -- readable text; 'encrypted' bodies are ciphertext under the chat's
 -- member-derived symmetric key for the epoch the message was authored in.
 -- A chat can carry both freely.
 --
--- epoch records which key the ciphertext is under (see chats.md §5: chat
+-- epoch records which key the ciphertext is under (see chats.md §9: chat
 -- keys are organized in epochs, advanced on membership change and on
 -- passing mid-epoch rotation Proposals). NULL for plaintext rows; NOT NULL
 -- for encrypted rows. The frontend uses it to pick the right key.
