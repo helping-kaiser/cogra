@@ -25,6 +25,12 @@ every actor on the graph (see the transparency principle in
 **Topology is always public**; what's private is the *content* of
 individual messages, if the chat chose to encrypt them.
 
+**Invariant:** Chat topology — the existence of the Chat node, its
+member set, who-talks-to-whom — is always public. Only the **body**
+of individual ChatMessages is private, and only when
+`content_privacy = 'encrypted'` (§4.2). There is no "private chat"
+mode that hides membership or message metadata from the graph.
+
 Chats and ChatMessages are **first-class interactable nodes**.
 Users can like them, comment on them, and rank them in feeds —
 just like posts.
@@ -536,6 +542,14 @@ automatic and not voted**; otherwise an evicted member could
 vote-block their own removal from future epochs, defeating the
 point.
 
+**Invariant:** Chat-key rotation on a membership change is
+automatic — `Chat.epoch` advances by `1` the moment the
+membership transition takes effect, without a separate vote.
+Mid-epoch rotation (§ "Mid-epoch rotation via Proposal" below)
+is the only path that runs through governance; rotation
+triggered by joins, leaves, or member-disavowal passes never
+does.
+
 Each encrypted ChatMessage's body row in Postgres carries an
 `epoch` index pointing at the key it was encrypted under
 (§4.2). The graph never reads it; the frontend uses it to pick
@@ -922,6 +936,11 @@ the new one.
 There is **no structural difference**. A 1:1 chat is a chat
 with exactly two members; a group chat is a chat with three or
 more. The same node types, the same edges, the same flows.
+
+**Invariant:** No structural 1:1 chat uniqueness. Two users may
+have any number of parallel 1:1 chats; the graph imposes no
+uniqueness constraint over `(actor_a, actor_b)` member pairs.
+Uniformity over special-casing.
 
 In particular, CoGra **does not enforce** that two users can
 have at most one 1:1 chat with each other. Reasons:

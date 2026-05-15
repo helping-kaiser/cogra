@@ -108,6 +108,15 @@ transparent, fully auditable, append-only by construction.
 
 ## 3. The mod-gate rule
 
+**Invariant:** Moderator weight equals member weight equals `1`.
+The `network_role = 'moderator'` role is a procedural **gate** on
+Network-scope governance — at least one positive mod vote required
+for any classification (this section) and for any moderator role
+change ([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal))
+— not a vote weight. Mods are validators, not weighted voters; they
+cannot outvote the community, and the community cannot remove a
+moderator without a moderator's participation.
+
 For **any** moderation Proposal to cross threshold, the tally must
 include **at least one positive vote from a User with
 `network_role = 'moderator'`**. This is not a weight — mods count

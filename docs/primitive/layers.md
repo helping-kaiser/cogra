@@ -132,6 +132,14 @@ each with its own rule:
 
 ### Graph structure is never deleted
 
+**Invariant:** No node, edge, or layer is ever removed from the
+graph. The structure is append-only and absolute — there is no API
+path, no admin escape hatch, no court-order path that deletes graph
+topology. State transitions (revocation, departure, supersession)
+are encoded as new layers on existing edges, not as deletions.
+"Deletion" in CoGra always means in-place layer redaction or a
+Postgres tombstone version row — see below.
+
 Nodes, edges, and the layer stacks themselves are **never removed**.
 No node deletion, no edge deletion, no layer removal, ever. This is
 absolute. The graph's job is to be the transparent auditable record;
@@ -176,6 +184,12 @@ Implementation specifics belong in
 [data-model.md](../implementation/data-model.md).
 
 ### The operating principle
+
+**Invariant:** No silent deletion. Every redaction — graph-side
+layer marker or Postgres tombstone version row — leaves a visible
+record that the change happened. A reader scanning the graph or the
+content tables can always tell that something was there and was
+removed, even when they cannot see the original content.
 
 **No silent deletion, ever.** Whether a takedown happens via
 in-place layer redaction or via Postgres version tombstones, the

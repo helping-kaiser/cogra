@@ -39,9 +39,11 @@ its own Network until then.
 
 The `:Network` singleton is brought into existence at **instance
 bootstrap** via two independent system writes — the only steps in
-the system that depend on out-of-graph authority. Every subsequent
-change to the singleton's parameters or to any user's role runs
-through governance.
+the system that depend on out-of-graph authority (see the global
+invariant in
+[graph-model.md §1](graph-model.md#1-core-principles)). Every
+subsequent change to the singleton's parameters or to any user's
+role runs through governance.
 
 1. The API creates the `:Network` node with the default property
    values listed in

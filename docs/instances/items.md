@@ -325,9 +325,10 @@ This uses the general state-transition mechanism on structural
 edges described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
 
-The invariant is: **at most one ItemOwnership per item has a
-positive top layer on its approval edge at any time.** Identifying
-the current owner is therefore a single-edge query — "find the
+**Invariant — single active ownership:** At most one
+ItemOwnership per Item has a positive top layer on its
+`Item → ItemOwnership` approval edge at any time. Identifying the
+current owner is therefore a single-edge query — "find the
 ItemOwnership whose `Item → ItemOwnership` top layer has
 `dim1 > 0`" — with no timestamp comparisons required.
 
@@ -336,6 +337,12 @@ edge isn't removed, it just has a newer layer that flips its
 state to revoked. Together the chain of ItemOwnership nodes forms
 an **append-only history of the item's ownership** — every past
 owner remains visible, only the active one changes.
+
+**Invariant — append-only ownership chain:** ItemOwnership nodes
+and the layers on their approval edges are never deleted. Every
+past owner of an Item remains visible on the graph as a
+superseded ItemOwnership; only the active one changes with each
+transfer.
 
 ---
 
@@ -417,6 +424,14 @@ model.
 ---
 
 ## 9. Shared ownership routes through a Collective
+
+**Invariant — no parallel co-ownership:** An Item has at most one
+active ItemOwnership at any time (§7); the graph does not support
+parallel ItemOwnership junctions for the same Item by different
+actors. Shared ownership must route through a Collective: the
+Collective holds the single ItemOwnership, and internal sharing
+is the Collective's social contract, not a graph-level
+mechanism.
 
 The single-owner invariant (§7) is deliberate. There is **no
 direct co-ownership** of an Item by multiple parallel
