@@ -39,6 +39,8 @@ The gesture writes the following records atomically:
   creator's initial opinion of their own item, typically high
   positive sentiment and relevance.
 - A new `:ItemOwnership` junction node for the creator.
+- The `ItemOwnership → User/Collective` `:BEARER` structural
+  edge, binding the junction to the creator.
 - The creator's `User/Collective → ItemOwnership` actor edge —
   their **Shape A self-claim** to the ownership.
 - The `ItemOwnership → Item` claim edge.
@@ -98,8 +100,11 @@ in [graph-data-model.md](../implementation/graph-data-model.md).
 
 ItemOwnership carries no per-instance properties beyond its
 `id` — transfer state lives entirely in the surrounding edges
-(claim, approval, and supersession layers per §§6-7). Concrete
-types and indexes live in
+(claim, approval, and supersession layers per §§6-7). Bearer
+identity rides on the `ItemOwnership → User/Collective`
+`:BEARER` edge written at creation; see §1 and
+[edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
+Concrete types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 ---
@@ -209,6 +214,12 @@ ItemOwnership is a junction, not an actor. It carries:
   claim and approval are written in the same atomic gesture
   (§1 bootstrap). See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
+  binding edge written at junction creation, pointing at the
+  actor the ownership represents. Never re-pointed; the Shape A
+  self-claim that activates the ownership must originate from
+  this actor (§§1, 6). See
+  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`ItemOwnership → ItemOwnership` (Shape B vote)** — the
   current owner's approval vote on a transfer to the new
   ItemOwnership for the same Item (§6). `dim1 > 0` approves the

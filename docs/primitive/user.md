@@ -141,6 +141,12 @@ A User receives:
   about them (sentiment + interest). See
   [edges.md §1](edges.md#1-actor-edges) for both source-side
   catalogs.
+- **`ChatMember / CollectiveMember / ItemOwnership → User`**
+  (`:BEARER`) — identity-binding edges from junction nodes the
+  User bears (active or pending). One inbound traversal lists
+  every membership and ownership the User holds, including
+  invitations not yet accepted. See
+  [edges.md §2 "Bearer binding"](edges.md#bearer-binding).
 - **`ChatMessage / Post / Comment → User`** (`:REFERENCES`)
   when a content node embeds or mentions the User — a chat
   message sharing them, a Post or Comment naming them in the
@@ -151,9 +157,10 @@ A User receives:
   [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
 
 A User's relationship to a junction node (ChatMember,
-CollectiveMember, ItemOwnership) runs through the User's
-*outgoing* actor edge to the junction; there is no structural
-junction → User edge. See
+CollectiveMember, ItemOwnership) runs through both the User's
+*outgoing* actor edge to the junction (the Shape A self-claim,
+once authored) and the *incoming* `:BEARER` edge from the
+junction (identity, written at junction creation). See
 [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ---

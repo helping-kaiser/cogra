@@ -52,9 +52,10 @@ is no prior membership to vote on it — the
 [two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
 collapses to its 1-of-1 special case: the founder's `User → CollectiveMember`
 **Shape A self-claim** is the only required vote, and the
-system writes both structural edges (claim and approval)
-atomically alongside it. See §7 for the regular case where
-existing CollectiveMembers cast Shape B approver votes.
+system writes both structural edges (claim and approval) plus
+the `CollectiveMember → User` `:BEARER` identity edge atomically
+alongside it. See §7 for the regular case where existing
+CollectiveMembers cast Shape B approver votes.
 
 The founder's role on their CollectiveMember junction is
 whatever the social contract names for the inaugural role
@@ -225,6 +226,11 @@ A Collective receives:
   side of the two-edge approval pattern, paired with the
   outgoing `Collective → CollectiveMember` above. See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`ChatMember / CollectiveMember / ItemOwnership → Collective`
+  (`:BEARER`)** — identity-binding edges from junction nodes the
+  Collective bears (chat memberships, sub-collective memberships,
+  item ownerships). See
+  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`ChatMessage / Post / Comment → Collective` (`:REFERENCES`)**
   when a content node mentions or embeds the Collective. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
@@ -239,8 +245,8 @@ A Collective receives:
 #### As source (outgoing)
 
 A CollectiveMember is a junction, not an actor. It carries one
-claim edge plus the Shape B vote edges its bearer casts as a
-collective-eligible voter:
+claim edge, one bearer-binding edge, plus the Shape B vote edges
+its bearer casts as a collective-eligible voter:
 
 - **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
   side of the two-edge approval pattern, closed by the
@@ -248,6 +254,13 @@ collective-eligible voter:
   (§4.1) once the collective's approval policy is satisfied
   (§7). See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+- **`CollectiveMember → User/Collective` (`:BEARER`)** —
+  identity-binding edge written at junction creation, pointing
+  at the actor (User or sub-Collective) the membership
+  represents. Never re-pointed; the Shape A self-claim that
+  activates the membership must originate from this actor (§7).
+  See
+  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`CollectiveMember → CollectiveMember` (Shape B vote)** —
   approver / removal vote on another CollectiveMember of the
   same Collective. `dim1 > 0` admits or affirms; a later
@@ -333,7 +346,11 @@ in
 1. The **would-be member** (User or Collective) writes a
    `User/Collective → new CollectiveMember` actor edge — their
    **Shape A self-claim** to the membership. The system creates
-   the `CollectiveMember → Collective` claim edge in response.
+   the `CollectiveMember → Collective` claim edge and the
+   `CollectiveMember → User/Collective` `:BEARER` identity edge
+   in response. (Approver-initiated flows mirror invite-only:
+   the approver creates the junction and `:BEARER` first; the
+   would-be member self-claims later.)
 2. **Required approvers** — existing CollectiveMembers eligible
    under the social contract for the target role — each cast a
    **Shape B vote** from their own existing CollectiveMember to
