@@ -128,6 +128,15 @@ and symmetrically to un-classification (returning content to
 Same mechanism in every direction. Mods are validators, not
 weighted-voters.
 
+The same mod-gate component reappears in **mod role changes**
+([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal)),
+paired there with a community quorum-and-threshold to form the
+multi-sig separation of powers — neither moderators alone nor
+community alone can promote or remove a moderator. "Mod weight =
+member weight = 1; mod is a gate, not a weight" is the rule both
+docs share, stated here for content classifications and there
+for role changes.
+
 ## 4. Eligibility, weights, thresholds
 
 The Network ([network.md](../primitive/network.md)) is the eligibility-and-
