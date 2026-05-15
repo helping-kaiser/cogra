@@ -1513,7 +1513,7 @@ unified; the deployment doesn't.
 
 - **Not per-item suppression.** Muting a specific post, message, or
   chat is a different mechanism (actor edges plus, for chats,
-  community moderation voting — see [chats.md §7](../instances/chats.md#7-moderation)).
+  community moderation voting — see [chats.md §10](../instances/chats.md#10-moderation)).
   Per-item mutes live on the graph as edges.
 - **Not a cache-everything strategy.** The backend can't meaningfully
   precompute ranked feeds because they're fully personalized. It can
