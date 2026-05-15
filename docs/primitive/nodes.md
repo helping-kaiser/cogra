@@ -59,7 +59,10 @@ ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,
 and so carry no `moderation_status`. **Proposal** is in the same
 position — its substance is just `target_property` +
 `proposed_value` + the `:TARGETS` edge, with no user-input field
-to redact and no Postgres-side display content either.
+to redact and no Postgres-side display content either. The
+**`:Network` singleton** is in the same position for the same
+reason: pure configuration state with no user-input fields. See
+[network.md §3](network.md#3-graph-side-properties).
 
 ---
 
