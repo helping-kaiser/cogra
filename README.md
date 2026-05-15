@@ -37,6 +37,12 @@ or overwritten. The only carve-out is in-place redaction of
 illegal content, and even that leaves a visible trace.
 Transparency and auditability over convenience.
 
+**Governance, not admin escape hatches.** Takedowns, redactions,
+and policy changes run through community votes on the graph, with
+weights and thresholds visible. There is no admin override — even
+court orders prompt a moderator to file the same proposal anyone
+else would, leaving an auditable trail rather than a silent edit.
+
 **Fair economics.** Ad revenue distributes across the economic
 landscape of the graph. Bot clusters earn nothing because real
 users never point toward them. Pull marketing, not push.
@@ -44,6 +50,22 @@ users never point toward them. Pull marketing, not push.
 **User comes first.** Users choose what they see, including ads.
 No amount of money changes that. No one forces their way into
 another user's feed.
+
+**Community choices stay local.** What a community decides —
+including cutting ties with another — affects only the
+perspectives of its own members. Severance does not cascade
+outward; the rest of the network is unaffected by another
+community's stance.
+
+**Fully public graph; no account needed to read.** Everything in
+the graph is visible without signing in. Accounts gate
+participation, not visibility — anyone can browse and evaluate
+before committing to an identity.
+
+**Privacy is per-content, not per-topology.** Chats and messages
+can be end-to-end encrypted; the social fabric — who is connected
+to whom — is intentionally public. CoGra protects what travels
+along the graph, not the graph itself.
 
 **Transparency, openness, freedom of the mind.** The system is a
 visible, auditable graph. The codebase is fully open source —
