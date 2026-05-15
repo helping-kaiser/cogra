@@ -59,7 +59,7 @@ Two paths produce a User node, both gated on email verification:
 - **First-user genesis.** A fresh instance has no accounts; the
   first User self-registers without a token and is also installed
   as the genesis moderator of the
-  [:Network singleton](network.md#5-bootstrap). All subsequent
+  [:Network singleton](network.md#2-creation). All subsequent
   Users come in via invitation.
 
 The credential and email-verification flow that wraps both paths
@@ -78,9 +78,9 @@ layer rather than overwriting.
   Layered, so name-change history is preserved.
 - **`network_role`** — `member` (default) / `moderator`. Backs
   platform-wide governance per
-  [network.md §3](network.md#3-membership-and-roles); promotion
+  [network.md §8](network.md#8-membership-and-roles); promotion
   and demotion run through the multi-sig Proposal pattern in
-  [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
+  [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
 - **`moderation_status`** — `normal` / `sensitive` / `illegal`,
   default `normal`. Universal across all nodes that carry
   user-authored content; the per-node mechanics (set by Proposal,
@@ -154,7 +154,7 @@ A User receives:
 - **`Proposal → User`** (`:TARGETS`) when a Proposal targets one
   of the User's graph-side properties — typically a
   `network_role` change per
-  [network.md §6](network.md#6-mod-role-changes-via-multi-sig-proposal).
+  [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
 
 A User's relationship to a junction node (ChatMember,
 CollectiveMember, ItemOwnership) runs through both the User's
@@ -186,11 +186,11 @@ The User node serves as the eligibility carrier for
 network-wide governance directly — this is the single relaxation
 of the Shape B junction-carrier rule, justified by the Network
 having no per-member junction. See
-[network.md §7](network.md#7-network-wide-governance).
+[network.md §10](network.md#10-network-wide-governance).
 
 Whether Collectives can carry `network_role` (i.e. participate
 in platform-wide governance as actors in their own right) is
-deferred per [network.md §3](network.md#3-membership-and-roles).
+deferred per [network.md §8](network.md#8-membership-and-roles).
 Today only Users do.
 
 ---
