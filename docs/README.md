@@ -67,6 +67,9 @@ If you find yourself defining a new mechanism inside an
 - [user](primitive/user.md) — per-node doc for the User actor
   node; on-behalf-of distinction with Collective; creation,
   edges, network membership, lifecycle.
+- [invariants](primitive/invariants.md) — thin index of the
+  load-bearing protocol invariants; each entry links into the
+  owning doc's `**Invariant:**` call-out, which is canonical.
 
 ### `instances/`
 
