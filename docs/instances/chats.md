@@ -45,11 +45,13 @@ particular is covered in §11.
 
 ### 2.1 Chat
 
-A Chat is created by a single compound gesture from a founding
-**User**. Like a Collective or Item, Chat creation is
-**compound**: it brings the Chat AND the founder's first
-ChatMember into existence in one atomic step, with the founder
-as the inaugural admin.
+A Chat is created by a single compound gesture from one actor —
+either a **User or a Collective**. Like a Collective or Item,
+Chat creation is **compound**: it brings the Chat AND the
+founder's first ChatMember into existence in one atomic step,
+with the founder as the inaugural admin. A Collective founding a
+Chat is the same gesture, initiated by an authorized member per
+[collectives.md §2](collectives.md#2-acting-through-the-collective).
 
 The gesture writes the following records atomically:
 
@@ -57,11 +59,14 @@ The gesture writes the following records atomically:
 - The Postgres `chats` row carrying `name` (nullable for 1:1
   chats), `description`, and `image_id` (see
   [data-model.md](../implementation/data-model.md)).
-- The founder's `User → Chat` actor edge — the **authorship
-  edge** (§6.1).
+- The founder's `User/Collective → Chat` actor edge — the
+  **authorship edge** (§6.1).
 - A new `:ChatMember` junction node for the founder, with
   `role = 'admin'`.
-- The founder's `User → ChatMember` actor edge.
+- The `ChatMember → User/Collective` `:BEARER` structural edge,
+  binding the junction to the founder.
+- The founder's `User/Collective → ChatMember` actor edge — the
+  Shape A self-claim.
 - The `ChatMember → Chat` claim edge.
 - The `Chat → ChatMember` approval edge with positive top layer.
 
@@ -83,8 +88,9 @@ A ChatMessage is created by a single authoring gesture from an
 active ChatMember of the chat — the same shape a Post or Comment
 uses. The gesture writes atomically:
 
-- A new `:ChatMessage` node carrying `content_privacy` (§3.2)
-  and `moderation_status` (§3.2).
+- A new `:ChatMessage` node carrying `moderation_status` (§3.2).
+  `content_privacy` is a Postgres-side property on the
+  `chat_messages` row (§4.2).
 - The Postgres `chat_messages` row carrying the message body
   (plaintext or ciphertext), the `epoch` index for encrypted
   messages, and any attached media (§4.2).
@@ -133,15 +139,6 @@ The Chat node deliberately does **not** cache an `author_id`
 
 A ChatMessage node carries:
 
-- **`content_privacy`** — `'plaintext'` / `'encrypted'`,
-  layered. Tells the frontend whether to attempt decryption.
-  Per-message, not per-chat — a single chat can mix both freely
-  (§9). Lives on the graph (rather than only in Postgres) so
-  frontends and graph-side queries can determine handling without
-  a body fetch; the Postgres `chat_messages.content_privacy`
-  column mirrors the top layer and pairs with `epoch` under the
-  schema CHECK in
-  [data-model.md](../implementation/data-model.md).
 - **`moderation_status`** — same shape as the Chat property.
 
 The cached `author_id` on the node is derived from the earliest
@@ -197,6 +194,10 @@ in [data-model.md](../implementation/data-model.md).
 A ChatMessage's body lives in Postgres on the `chat_messages`
 row, linked to the graph ChatMessage node by UUID:
 
+- **`content_privacy`** — `'plaintext'` / `'encrypted'`.
+  Per-message, not per-chat — a single chat can mix both freely
+  (§9). The frontend reads this with the body to decide whether
+  to attempt decryption.
 - **`content`** — the message body. For
   `content_privacy = 'plaintext'` this is readable text; for
   `content_privacy = 'encrypted'` this is a ciphertext blob
@@ -323,13 +324,18 @@ A ChatMessage receives:
 #### As source (outgoing)
 
 A ChatMember is a junction, not an actor. It carries one claim
-edge plus the Shape B vote edges its bearer casts as a
-chat-eligible voter:
+edge, one bearer-binding edge, plus the Shape B vote edges its
+bearer casts as a chat-eligible voter:
 
 - **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
   two-edge approval pattern, closed by the chat's
   `Chat → ChatMember` approval edge (§5.1) once `join_policy` is
   satisfied (§11).
+- **`ChatMember → User/Collective` (`:BEARER`)** — identity-
+  binding edge written at junction creation, pointing at the
+  actor the membership represents. Never re-pointed; the Shape A
+  self-claim that activates the membership must originate from
+  this actor (§11).
 - **`ChatMember → Proposal` (Shape B vote)** — chat-eligible
   vote on a Proposal targeting a chat property.
 - **`ChatMember → ChatMessage` (Shape B vote)** — direct
@@ -347,11 +353,11 @@ A ChatMember receives:
 
 - **Actor edges** from Users and Collectives per
   [edges.md §1](../primitive/edges.md#1-actor-edges). For the
-  bearer themselves, the `User → ChatMember` edge is the
-  **Shape A self-claim** that initiates the membership (§11).
-  For other actors, these edges are personal sentiment about
-  that membership — they do not drive the approval vote, which
-  uses Shape B (above).
+  bearer themselves, the `User/Collective → ChatMember` edge is
+  the **Shape A self-claim** that initiates the membership
+  (§11). For other actors, these edges are personal sentiment
+  about that membership — they do not drive the approval vote,
+  which uses Shape B (above).
 - **`ChatMember → ChatMember` (Shape B vote)** — incoming
   approval / disavowal votes from other ChatMembers of the
   same chat (§11, §10 Level 2). Same edges, layered stance
@@ -378,9 +384,9 @@ A ChatMember receives:
 A Chat is authored under the standard rule
 ([authorship.md](../primitive/authorship.md)): the founder is
 the actor whose incoming actor edge has the earliest layer-1
-timestamp. The founder's `User → Chat` actor edge is written in
-the same compound gesture as the Chat node (§2.1); by
-construction it is the earliest. **Unlike other authored nodes,
+timestamp. The founder's `User/Collective → Chat` actor edge is
+written in the same compound gesture as the Chat node (§2.1);
+by construction it is the earliest. **Unlike other authored nodes,
 the Chat does not cache its author** — no `author_id` is
 materialized on the node or on the `chats` Postgres row. This is
 a deliberate deviation from
@@ -500,10 +506,10 @@ project-wide append-only rule.
 
 The graph carries chat **topology only** — it never holds
 message bodies, encrypted or not. **Privacy is per-message, not
-per-chat:** each ChatMessage carries the `content_privacy` flag
-declared in §3.2 that tells the frontend whether to attempt
-decryption. A single chat can mix plaintext and encrypted
-messages freely.
+per-chat:** each ChatMessage's `chat_messages` row in Postgres
+carries the `content_privacy` flag declared in §4.2 that tells
+the frontend whether to attempt decryption. A single chat can
+mix plaintext and encrypted messages freely.
 
 ### Chat keys, organized in epochs
 
@@ -772,9 +778,9 @@ which combines two voting shapes
 ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)):
 
 - The **would-be member's Shape A self-claim** — their
-  `User → new ChatMember` actor edge. Necessary because they
-  have no ChatMember of this chat yet from which to cast a
-  Shape B vote.
+  `User/Collective → new ChatMember` actor edge. Necessary
+  because they have no ChatMember of this chat yet from which
+  to cast a Shape B vote.
 - **Zero or more Shape B approver votes** from existing
   ChatMembers — `ChatMember_approver → ChatMember_new` (`dim1 > 0`).
   The number required comes from the chat's `join_policy`
@@ -784,10 +790,24 @@ When the policy is satisfied the system writes the
 `Chat → ChatMember` approval edge, and the membership is
 active.
 
+A ChatMember junction is bound to its bearer at creation by a
+`ChatMember → User/Collective` `:BEARER` structural edge — see
+[edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding)
+and
+[graph-data-model.md `:ChatMember`](../implementation/graph-data-model.md#chatmember).
+The Shape A self-claim that activates the membership must come
+from the actor at the other end of `:BEARER`; mismatched claims
+are rejected. The bearer can be a User or a Collective —
+Collectives can be ChatMembers on the same footing as Users,
+acting through their authorized members per
+[collectives.md §2](collectives.md#2-acting-through-the-collective).
+"What invites are pending toward me?" is then a single inbound
+traversal from the User/Collective node along `:BEARER`.
+
 **Every member's membership has the same shape:**
-`User → ChatMember → Chat` (their own self-claim plus the
-system-created claim edge). The only difference between
-members is what's *also* pointing at their ChatMember:
+`User/Collective → ChatMember → Chat` (their own self-claim
+plus the system-created claim edge). The only difference
+between members is what's *also* pointing at their ChatMember:
 non-founder members have approver Shape B edges from existing
 ChatMembers; the founder has none, because they were the only
 required vote.
@@ -797,52 +817,48 @@ required vote.
 be re-layered to remove them — "I approved this membership,
 now I want it revoked" is one edge with a layered stance flip,
 not a different edge type (see "Leaving and removal" below).
-A Shape A approval (User → ChatMember) wouldn't compose this
-way and would persist meaninglessly if the approver later left
-the chat. Shape B from the approver's ChatMember junction ties
-the approval to their current membership state.
+A Shape A approval (User/Collective → ChatMember) wouldn't
+compose this way and would persist meaninglessly if the
+approver later left the chat. Shape B from the approver's
+ChatMember junction ties the approval to their current
+membership state.
 
 ### Open
 
-The would-be member writes their `User → ChatMember` Shape A
-self-claim. The system creates the `ChatMember → Chat` claim
-edge. Because no Shape B approver vote is required, the system
-immediately writes the `Chat → ChatMember` approval edge. The
-membership is active.
+The would-be member writes their `User/Collective → ChatMember`
+Shape A self-claim. The system creates the `ChatMember → Chat`
+claim edge. Because no Shape B approver vote is required, the
+system immediately writes the `Chat → ChatMember` approval
+edge. The membership is active.
 
 ### Invite-only
 
 The **inviter** — an existing member with invite rights —
 casts a `ChatMember_inviter → ChatMember_new` **Shape B vote**
-(`dim1 > 0`) toward a new junction node representing the
-invitee's prospective membership. The system creates the
+(`dim1 > 0`) toward a new junction node. At the same time the
+system writes the `ChatMember → invitee` `:BEARER` edge,
+binding the junction to the prospective bearer, and the
 `ChatMember → Chat` claim edge. The membership is pending: the
-junction exists with the inviter's approval but the invitee has
-not yet self-claimed.
+junction exists with the inviter's approval and a known bearer,
+but the invitee has not yet self-claimed.
 
 The **invitee** later writes their own
-`User → ChatMember` **Shape A self-claim** to that same
-junction. Both required edges (the inviter's Shape B approval
-and the invitee's Shape A self-claim) are now present; the
-system writes the `Chat → ChatMember` approval edge. The
-membership is active.
+`User/Collective → ChatMember` **Shape A self-claim** to that
+same junction; the API rejects the claim if it doesn't come
+from the actor at the other end of `:BEARER`. Both required
+edges (the inviter's Shape B approval and the invitee's
+matching Shape A self-claim) are now present; the system writes
+the `Chat → ChatMember` approval edge. The membership is active.
 
 If the invitee never self-claims, the membership persists
 pending; the junction node is never deleted.
 
-The inviter targets the *junction*, not the invitee directly.
-The junction represents "this user being a member of this
-chat," created bound to the invitee's identity by the
-authoring API. (The on-graph mechanism by which a `:ChatMember`
-binds to its bearer User is an
-[open doc gap](../open-questions.md) — graph-data-model.md
-lists no explicit `user_id` property on the junction.)
-
 ### Request-entry
 
-The **would-be member** writes their `User → ChatMember`
-Shape A self-claim. The system creates the `ChatMember → Chat`
-claim edge. The membership is pending.
+The **would-be member** writes their
+`User/Collective → ChatMember` Shape A self-claim. The system
+creates the `ChatMember → Chat` claim edge. The membership is
+pending.
 
 An **admin** (or any ChatMember that satisfies the chat's
 policy) casts a `ChatMember_admin → ChatMember_new` **Shape B
@@ -872,9 +888,9 @@ layers on the existing structural edges.
 ### Leaving and removal
 
 - **Voluntary leave** — the member writes a negative-`dim1`
-  layer on their own `User → ChatMember` Shape A self-claim.
-  The system appends a `dim1 < 0` layer on the **claim-side**
-  structural edge.
+  layer on their own `User/Collective → ChatMember` Shape A
+  self-claim. The system appends a `dim1 < 0` layer on the
+  **claim-side** structural edge.
 - **Member disavowal** — eligible voters per §10 Level 2 lay
   `dim1 < 0` layers on their existing
   `ChatMember_voter → ChatMember_target` Shape B edges (the
