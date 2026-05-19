@@ -51,6 +51,9 @@ If you find yourself defining a new mechanism inside an
   graph-side properties.
 - [edges](primitive/edges.md) — full edge catalog plus the
   relationship-label scheme at the graph layer.
+- [structural-edge-map](primitive/structural-edge-map.md) —
+  matrix + mermaid diagram of every structural edge in the
+  catalog; visual companion to [edges](primitive/edges.md).
 - [layers](primitive/layers.md) — append-only across edges, node
   properties, and Postgres-side display content; deletion policy.
 - [retention-archive](primitive/retention-archive.md) — universal
