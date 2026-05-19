@@ -142,11 +142,15 @@ system-created:
 - **`Comment → any node` (`:REFERENCES`)** — one edge per node
   the Comment embeds, quotes, or mentions: the original of a
   re-uploaded image on a parent Post, a User or Collective
-  named in the body, a Proposal it cites in debate, etc.
-  Hashtag is the one excluded target — body-tag hashtags go
-  through `:TAGGING` (above) and a single structural edge per
-  (source, target) pair is the rule. The carrier semantics,
-  target catalog, and deferred traversal rules live in
+  named in the body, a Proposal it cites in debate, etc. Two
+  targets are excluded by the single-structural-edge invariant
+  per [edges.md §2 "Reference"](../primitive/edges.md#reference):
+  **Hashtag** (the `:TAGGING` edge already encodes the pair) and
+  the Comment's own `:CONTAINMENT` parent (the `:CONTAINMENT`
+  edge already encodes the pair — a Comment that quotes the very
+  Post / Comment / Chat / ChatMessage / Item it is posted on does
+  not write a parallel `:REFERENCES` edge). The carrier
+  semantics, target catalog, and deferred traversal rules live in
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
 ### As target (incoming)
