@@ -187,12 +187,30 @@ Targets span every node category: actor (User, Collective), content
 junction (ChatMember, CollectiveMember, ItemOwnership). A carrier
 can point at anything with a graph identity.
 
-**Hashtag is the one carve-out.** Post and Comment already attach
-to Hashtag via `:TAGGING` (above); a given (source, target) pair
-carries at most one structural edge, so `Post → Hashtag` and
-`Comment → Hashtag` use `:TAGGING` only. `ChatMessage → Hashtag`
-continues to use `:REFERENCES` because ChatMessage has no
-`:TAGGING` edge type.
+**`:REFERENCES` is not written when another structural edge
+already encodes the same `(source, target)` pair.** `:REFERENCES`
+is the only structural edge with an open target set, so it is the
+only one that can structurally collide with another label on the
+same pair. The single-structural-edge invariant in §2 resolves
+the collision in favor of the more specific edge; `:REFERENCES`
+yields.
+
+Two cases follow from the rule:
+
+1. **Hashtag.** Post and Comment already attach to Hashtag via
+   `:TAGGING`. `Post → Hashtag` and `Comment → Hashtag` therefore
+   carry `:TAGGING` only — never a parallel `:REFERENCES`.
+   `ChatMessage → Hashtag` does use `:REFERENCES` because
+   ChatMessage has no `:TAGGING` edge type, so there is nothing
+   to collide with.
+2. **Own `:CONTAINMENT` parent.** A Comment whose body
+   quotes/embeds the very Post / Comment / Chat / ChatMessage /
+   Item it is posted on does not write a parallel `:REFERENCES`
+   edge to that parent — the `:CONTAINMENT` edge already encodes
+   the pair. The same applies to a ChatMessage whose body embeds
+   its own home Chat. The containment edge is the one structural
+   record of the pair; the frontend renders the embed from that
+   edge (plus the body markup) without a second graph edge.
 
 Traversal rules for `:REFERENCES` — whether reach amplifies the
 same way across all three carrier types, how mention spam is
