@@ -109,6 +109,7 @@ home Chat
 ([edges.md "Containment / belonging"](edges.md#containment--belonging)).
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart LR
     Comment[Comment]:::content
     ChatMessage[ChatMessage]:::content
@@ -138,6 +139,7 @@ Note `Collective` plays two roles — bearing actor for all three
 junctions, and parent of `CollectiveMember`.
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart LR
     User[User]:::actor
     Collective[Collective]:::actor
@@ -175,6 +177,7 @@ Three content types tag Hashtags directly; Hashtags never tag
 back ([edges.md "Tagging"](edges.md#tagging)).
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart LR
     Post[Post]:::content
     Comment[Comment]:::content
@@ -196,7 +199,8 @@ proposed change, which can be any node category — including the
 ([edges.md "Subject targeting"](edges.md#subject-targeting)).
 
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
+flowchart TD
     Proposal[Proposal]:::content
 
     User[User]:::actor
@@ -244,6 +248,7 @@ pairs that already carry another structural edge — see
 [§1](#1-matrix) for the cells where this applies.
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart LR
     ChatMessage[ChatMessage]:::content
     Post[Post]:::content
@@ -310,6 +315,7 @@ about its own subject, and `ChatMember` additionally votes on
 [edges.md "Voting (Shape B)"](edges.md#voting-shape-b).
 
 ```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart LR
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
