@@ -681,6 +681,14 @@ properties. What differs between the two levels is the cascade
 behavior on threshold-cross, which dispatches on the target's
 node type.
 
+**Invariant:** Chat-internal disavowal routes through a Proposal
+node — both Level 1 (against a `ChatMessage`) and Level 2
+(against a `ChatMember`) carry the `target_property = 'node'`,
+`proposed_value = 'disavowed'` shape; no direct vote edge from a
+`ChatMember` drives a disavowal outcome. This keeps tally
+semantics uniform with every other chat governance act and makes
+counter-Proposal reversal clean.
+
 ### Level 1 — Message disavowal
 
 A Level 1 Proposal targets the offending `ChatMessage`. The
