@@ -84,6 +84,16 @@ a path is traversable through such an edge only if its top-layer
 values do not enter the ranking math; they only decide whether the
 path exists at all.
 
+Content actor edges terminate at the content node. There is no
+`Content → Author` back-edge propagating signal to other content
+by the same author. The desired intuition — "I liked Alice's last
+three posts, so show me more Alice" — is supported by an explicit
+follow gesture, not inferred from post-affinity, per
+stances-not-events
+([graph-model.md §3](graph-model.md#3-edge-categories)).
+A frontend may surface a follow-prompt after observed repeated
+engagement, but this is a UX nudge, not a graph mechanism.
+
 ### 3.2 Zero handling — kill rule
 
 **Invariant:** A `0` in either dim of any actor edge along a path
