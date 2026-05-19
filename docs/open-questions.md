@@ -25,9 +25,8 @@ within a phase, order is flexible.
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
 | 1. Sort fallback | 1 | **Q16** | Derivation of `S(t)`, the intrinsic per-node scalar that breaks ties at the bottom of the sort cascade. Q2 settled the rest of the math but left S's inputs open. Pure ranking math; no external dependency. |
-| 2. Content back-edges | 2 | **Q17** | Should content actor edges influence ranking of other content by the same author? Five options identified (B1–B5), none evaluated. The simplest implementation — a structural `Content → Author` back-edge — has two failure modes: bot-bridge amplification and path-weight asymmetry. Mid-priority design question, not blocked. |
-| 3. Path-set audit | 3 | **Q18** | Path-uniqueness (simple-paths) and path-subsumption rules for the feed-ranking traversal. Forward-blocked on Q17 — until content back-edges are decided, the path-set's gameable shapes can't be fully enumerated, since a back-edge change would create new candidate path topologies any subsumption rule would have to cover. |
-| 4. Federation phase | 4 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol. Deferred until federation becomes concrete. |
+| 2. Path-set audit | 2 | **Q18** | Path-uniqueness (simple-paths) and path-subsumption rules for the feed-ranking traversal. With Q17 resolved (no content back-edges), the path-set's candidate topologies are knowable; question reduces to whether to add a simple-paths invariant and/or a single-transit-cap. |
+| 3. Federation phase | 3 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -49,6 +48,7 @@ questions are closed.
 - Q5 — see [feed-ranking.md §8](primitive/feed-ranking.md#8-the-already-seen-filter). The seen-list is a per-viewer set of content UUIDs treated as **another input to the feed-ranking computation**, alongside `R`, `d(R)`, `f(Δt)`, and the §5.2 friend-author-boost. Pre-rank exclusion (perf win — already-seen content never enters the math). New activity on a seen post does **not** resurface it; the new comment/reaction is independently rankable as its own node. Storage location is the viewer's choice — backend-side `user_view_log` table in Postgres is the central frontend's default ([data-model.md](implementation/data-model.md)), but self-hosted clients/miners can keep the same data locally and pass it to the calculator (the math is the same regardless of where the JSON came from). Default frontend rule for "seen": every content item that passes through the viewport during a render. Frontend batches and flushes on natural checkpoints (batch-fill, scroll pause, app close); cache-clear before flush is an accepted small loss-window. Default 1-year compaction bounds storage at ~7 MB per active-user-year; the trade-off (a resurging old post will reappear if its view-log entry has been compacted) is documented and treated as acceptable feed character. No privacy-concealment story — viewing history is no more sensitive than reaction history per the network's transparency posture; "history" becomes a UI feature using the same data.
 - Q10 — reframed as a side note rather than an open design question. See [layers.md "Side note on long-term storage"](primitive/layers.md#side-note-on-long-term-storage). Typical actor behavior bounds layer accumulation tightly — people update an edge a handful of times over its lifetime, not hundreds, and node properties change even less frequently. The corner cases that *would* accumulate substantial history (e.g., a decades-old company restructuring through CollectiveMember edges) are precisely the ones where preserving history has value. If a real instance ever runs into storage pressure, compaction-friendly approaches that respect the no-silent-deletion principle exist — but it's an implementation-time decision contingent on real data, not a design-time one to settle preemptively.
 - Q9 — see [moderation.md](instances/moderation.md) and [network.md](primitive/network.md). Authorization for redaction runs through community-driven Network governance: any User authors a Proposal classifying content as `illegal`; threshold-cross requires at least one moderator's positive vote (the gate), ≥2/3 of cast votes in favor, and a low community quorum; threshold-cross triggers the [layers.md §5](primitive/layers.md#5-deletion-policy) redaction cascade. External pressure (court orders, etc.) doesn't bypass the mechanism — it prompts a moderator to start the same Proposal, which the community completes. Pathological corner cases (all moderators compromised) fall under the federation/forking exit per Q15.
+- Q17 — see [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §3](primitive/graph-model.md#3-edge-categories) (stances-not-events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
 
 ---
 
@@ -101,119 +101,10 @@ Q2 (resolved — sets up the cascade that `S` terminates).
 
 ---
 
-## Q17 — Should content actor edges influence ranking of other content by the same author?
-
-**Where it shows up:** [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors) (only actor edges contribute factors; structural edges count toward `R` but add no factor), [feed-ranking.md §3.5–§3.6](primitive/feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge) (bot-defense math), [graph-model.md §3](primitive/graph-model.md#3-edge-categories) (stances-not-events), [graph-model.md §7](primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph) (inbound edges don't affect feeds)
-**Status:** open (mid-priority design question, not blocked)
-
-### Context
-
-Today, content actor edges — `User → Post`, `User → Comment`,
-`User → ChatMessage`, `User → Item` — contribute only to ranking
-*that specific* content node. A post has no outgoing edge back
-to its author, so paths starting at a User and passing through
-one of their own content nodes terminate at the content.
-
-That means liking a post does not, on its own, raise the weight
-the feed gives to other posts by the same author. The user wants
-content likes to shape the feed (matching the intuition that
-"I liked their last three posts" implies "show me more from
-them"), but identified two failure modes that block the
-simplest implementation — a structural `Content → Author`
-back-edge.
-
-### The question
-
-Should there be a mechanism — graph-side or frontend-side — by
-which content actor edges propagate signal to ranking of other
-content by the same author? If yes, which mechanism?
-
-Two failure modes for the simplest design (a structural back-edge):
-
-(a) **Bot bridges.** A structural `Content → Author` back-edge
-    means one accidental like on a bot's post becomes a graph-
-    amplification entry into the bot cluster, with much lower
-    friction than the existing "deliberate follow" entry path.
-    Severance + hourglass defenses
-    ([feed-ranking.md §3.5–§3.6](primitive/feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge))
-    still work at the entry edge, but the bar to *creating* an
-    entry drops significantly.
-
-(b) **Path-weight asymmetry.** Per
-    [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors),
-    only actor edges contribute factors to path products;
-    structural edges count toward `R` but add no factor. A
-    content-mediated path at `R = 3` (User → actor edge → Post
-    → structural back-edge → Author) carries only one actor-
-    edge factor, while a user-mediated path at the same `R = 3`
-    (User → friend → friend → Author) carries three. Content
-    paths are mathematically privileged at equal `R`, breaking
-    the symmetry the rest of the math is built on.
-
-### Constraints (from established principles)
-
-- **Stances-not-events**
-  ([graph-model.md §3](primitive/graph-model.md#3-edge-categories)).
-  No implicit edges. If signal flows from a like to an author,
-  the mechanism creating that signal must itself be an explicit
-  gesture by the actor.
-- **Inbound edges don't affect feeds**
-  ([graph-model.md §7](primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
-  Traversal stays outbound from the viewing user; this rules
-  out any "the author has many inbound likes" boost.
-- **Bot defense math**
-  ([feed-ranking.md §3.5–§3.6](primitive/feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge)).
-  Assumes narrow bridges that severance can close. A widely-
-  used back-edge surface that opens many parallel bridges into
-  a cluster breaks the assumption.
-
-### Options considered
-
-Five sketched in the brainstorm, none evaluated:
-
-- **B1 — Punt to frontend.** Content likes don't change the
-  graph. The UI prompts the user to explicitly follow authors
-  after N likes. Cleanest with respect to the principles; pushes
-  the intent-capture work to the frontend.
-- **B2 — Back-edge with at-most-one-per-path cap.** A
-  structural `Content → Author` back-edge exists, but each
-  path may traverse at most one. Bounds amplification but
-  introduces a new traversal rule the rest of the math doesn't
-  have.
-- **B3 — Back-edge with explicit cross-edge weight discount
-  (e.g. ×0.3).** Reintroduces a factor at the back-edge to
-  restore path-weight symmetry. Solves the asymmetry but
-  introduces a calibration constant that has to be defended.
-- **B4 — Back-edge gated on bidirectional content engagement.**
-  Back-edge only forms when the author has reciprocated some
-  engagement with the liker. Cute but adds substantial
-  complexity to edge creation and revocation.
-- **B5 — Back-edge that propagates only to the author node,
-  not to their other content.** Content likes surface a "people
-  you might like" candidate set without opening cluster
-  amplification beyond the author themselves.
-
-A related calibration question rides on the outcome: `d(R)`
-currently decays at `0.1^(R-1)`
-([feed-ranking.md §4](primitive/feed-ranking.md#4-per-target-metrics)).
-A back-edge that creates shorter content paths into authors
-might demand a flatter decay (the user noted `0.05^(R-1)` as
-the right direction in that case, to keep direct follows
-dominant). The calibration stays parked with this question.
-
-### Related
-
-Q18 (forward sub-question, blocked on this).
-[feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors)
-sets up the actor-only-factor convention this question would
-modify.
-
----
-
 ## Q18 — Path-uniqueness and path-subsumption rules for feed-ranking traversal
 
 **Where it shows up:** [feed-ranking.md §3](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (per-edge composition along a path), [feed-ranking.md §4](primitive/feed-ranking.md#4-per-target-metrics) (per-target metrics, sum across paths)
-**Status:** open (forward-blocked on Q17)
+**Status:** open
 
 ### Context
 
@@ -256,19 +147,15 @@ things about that path-set are currently unstated:
 - **No AI ranking** ([CLAUDE.md](../CLAUDE.md)). The rule must
   be a deterministic graph-traversal rule, not a learned
   weighting.
-- **Forward-blocked on Q17.** Until Q17 decides whether content
-  back-edges exist, the path-set's gameable shapes can't be
-  fully enumerated — a back-edge change would create new
-  candidate path topologies that any path-subsumption rule
-  would have to cover.
 
 ### Options considered
 
-None yet (blocked on Q17).
+None yet.
 
 ### Related
 
-Q17 (must resolve first).
+Q17 (resolved — established no content back-edges, fixing the
+path topology this question operates on).
 
 ---
 
