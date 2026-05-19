@@ -299,7 +299,14 @@ carries two outgoing structural edge types, both system-created:
   embedded/quoted/mentioned node. **Hashtag is included** —
   unlike Post and Comment, ChatMessage has no `:TAGGING` edge
   type, so body-tag hashtags also go through `:REFERENCES`. The
-  carve-out rationale and traversal rules live in
+  message's own **home Chat is excluded** by the single-
+  structural-edge invariant: the `:CONTAINMENT` edge already
+  encodes the `(this message, its home chat)` pair, so a message
+  that embeds its own home chat does not write a parallel
+  `:REFERENCES` edge — the embed renders from the existing
+  `:CONTAINMENT` edge. Embedding *other* chats from a message
+  remains a regular `:REFERENCES` edge. The carve-out rationale
+  and traversal rules live in
   [edges.md §2 "Reference"](../primitive/edges.md#reference); §8
   walks the gesture end-to-end.
 
