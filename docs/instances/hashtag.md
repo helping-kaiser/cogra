@@ -131,18 +131,30 @@ which originate at least one outgoing structural edge.)
 
 ### As target (incoming)
 
-A Hashtag receives:
+**Cosmetic-only — no actor edge to Hashtag.** A Hashtag
+receives no actor edges from anyone. The catalog has no
+`User → Hashtag` or `Collective → Hashtag` row
+([edges.md §1](../primitive/edges.md#1-actor-edges)), and the
+gesture of "liking a hashtag" simply doesn't exist as a graph
+operation. Hashtags are reachable via `:TAGGING` for
+discovery queries — the surface filters tagged content, ranks
+that content, and presents the result — but the Hashtag
+itself is never a ranking endpoint or a path participant.
+Combined with the no-outgoing-edges rule (§4 "As source"),
+any path that reaches a Hashtag terminates there without
+contributing further: there is no edge to continue the path
+through.
 
-- **Actor edges** from Users and Collectives carrying
-  `(sentiment, relevance)` per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — a
-  viewer's expressed interest in (or disinterest with) the
-  topic. These are the only edges that connect a viewer's
-  outbound graph to the topic surface and so are what
-  [feed-ranking](../primitive/feed-ranking.md) reads when
-  a hashtag is used to discover content. Inbound interest
-  from other actors does not affect the viewer's own feed
-  (per [graph-model.md §7](../primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
+**Invariant:** Hashtags do not participate in feed-ranking
+path products. `:TAGGING` is pure topology used for discovery
+filters, never traversed by the ranking math. The
+`ChatMessage → Hashtag` `:REFERENCES` edge below is on the
+same footing — a topology record that a message body
+mentioned the tag, mathematically inert because the path
+terminates at the Hashtag in exactly the same way.
+
+The structural edges that do land at a Hashtag:
+
 - **`Post → Hashtag` `:TAGGING`** when a Post is tagged
   with this hashtag.
 - **`Comment → Hashtag` `:TAGGING`** when a Comment is
@@ -158,6 +170,8 @@ A Hashtag receives:
   single structural edge per (source, target) pair is the
   rule — see the Hashtag carve-out in
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  Mathematically inert per the invariant above; recorded for
+  topology completeness only.
 - **`Proposal → Hashtag` `:TARGETS`** when a moderation
   Proposal targets a property on the Hashtag —
   `'sensitive'` against `moderation_status`, or
