@@ -50,7 +50,6 @@ in the math is uniform.
 | User → CollectiveMember | **Sentiment** (endorse to reject) | **Importance** (how important is this membership to me) |
 | User → ItemOwnership | **Sentiment** (endorse to reject) | **Importance** (how important is this transfer to me) |
 | User → Item | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
-| User → Hashtag | **Sentiment** (like to dislike) | **Relevance** (how interesting to me) |
 | User → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly I want this change) |
 
 ### Collective as actor
@@ -67,8 +66,16 @@ in the math is uniform.
 | Collective → CollectiveMember | **Sentiment** (endorse to reject) | **Importance** |
 | Collective → ItemOwnership | **Sentiment** (endorse to reject) | **Importance** |
 | Collective → Item | **Sentiment** | **Relevance** (how important is this product) |
-| Collective → Hashtag | **Sentiment** | **Relevance** |
 | Collective → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly the collective wants this change) |
+
+Actor edges to Hashtag are deliberately excluded from both tables.
+Hashtag has no outgoing edges (see
+[hashtag.md §4 "As source"](../instances/hashtag.md#as-source-outgoing))
+so any actor edge ending at a Hashtag would terminate the path
+without contributing to traversal further on. The cosmetic-only
+rule — `:TAGGING` is the only edge ranking ever needs to touch on
+the hashtag side, and it stays pure topology — lives in
+[hashtag.md §4](../instances/hashtag.md#4-edges).
 
 ---
 
