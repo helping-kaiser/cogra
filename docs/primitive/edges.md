@@ -76,7 +76,9 @@ in the math is uniform.
 
 System-created. Dimensions default to `(0, 0)` unless the edge
 participates in a state-bearing pattern (junction approval pairs —
-see [graph-model.md](graph-model.md) for the rule).
+see [graph-model.md](graph-model.md) for the rule). For a matrix
+and diagram view of every structural edge in the catalog see
+[structural-edge-map.md](structural-edge-map.md).
 
 **Invariant:** A given `(source, target)` pair carries at most one
 structural edge. When a relationship between two specific nodes is
