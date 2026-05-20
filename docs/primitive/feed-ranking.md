@@ -77,7 +77,7 @@ The walk maintains a per-path visited set to enforce the invariant.
 
 **Actor edges** and **`:REFERENCES`** contribute factors to the
 path products. `:REFERENCES` is a state-bearing structural
-edge (§3.5 rule 6): it carries a `(dim1, dim2)` tensor with the
+edge (§3.5 rule 5): it carries a `(dim1, dim2)` tensor with the
 same shape as actor edges and composes the same way. All other
 structural edges count toward `R` (path length) but do not
 contribute factors — they are pure topology.
@@ -115,8 +115,8 @@ different treatment:
   exists at all.
 - **`:REFERENCES`** carries a `(dim1, dim2)` tensor that
   contributes factors like an actor edge, subject to the
-  fanout-budget constraint (§3.5 rule 6). Traversability is
-  restricted by rules 4 and 5; once a path is traversable, the
+  fanout-budget constraint (§3.5 rule 5). Traversability is
+  restricted by rule 4; once a path is traversable, the
   edge's values compose into `s_path` and `c_path`.
 
 Content actor edges terminate at the content node. There is no
@@ -223,7 +223,7 @@ artifacts that don't reflect social reality.
 
 §3.1 establishes which edges contribute factors and which are
 state-bearing gates. The rules below restrict which edges
-**feed-ranking paths may traverse at all** — six edge-class
+**feed-ranking paths may traverse at all** — five edge-class
 restrictions on top of the gate-on-affirmation rule, closing
 specific bot-amplification gaps where structural topology
 would otherwise propagate a viewer's interest weight onto a
@@ -312,23 +312,7 @@ nothing else. The `:AUTHOR` sub-label
 ([edges.md §3](edges.md#sub-category-labels)) is what makes the
 single author-hop mechanical to enforce.
 
-#### Rule 5 — `:REFERENCES` is traversable at most once per path
-
-After traversing one `:REFERENCES` edge, no further
-`:REFERENCES` edges in the same path are traversable. Closes
-multi-hop reference chains as fanout amplifiers.
-
-Combined with rule 4 the path budget is exhaustive: either
-traverse a single `:REFERENCES` to a content node and continue
-normally, **or** traverse a single `:REFERENCES` to an actor,
-take one `:AUTHOR` hop, and terminate.
-
-The single-hop budget is enforced per path, not globally — a
-different path from `U` may traverse its own `:REFERENCES` edge
-independently. Rule 5 closes within-path chain fanout, not
-across-path multiplicity.
-
-#### Rule 6 — `:REFERENCES` carries 2D weights with a fanout-budget constraint
+#### Rule 5 — `:REFERENCES` carries 2D weights with a fanout-budget constraint
 
 `:REFERENCES` becomes a state-bearing structural edge — joining
 junction approval pairs in this category. The edge carries a 2D
@@ -380,7 +364,7 @@ attack is neutralized without a hard cap; legitimate references
 behave the same way (their budget just spreads).
 
 The fanout-budget itself is an edge-shape invariant captured in
-[edges.md §2 "Reference"](edges.md#reference); rule 6 here
+[edges.md §2 "Reference"](edges.md#reference); rule 5 here
 states the feed-ranking consequence.
 
 ---
