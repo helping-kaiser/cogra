@@ -158,7 +158,7 @@ invite their audiences without them — and the abuse case is
 self-correcting: the inviter's network
 can sever the bridge through the cascading-severance mechanism
 described in
-[feed-ranking.md §3.5–§3.6](feed-ranking.md#35-bot-resistance-via-the-0-0-severance-edge), at which point the
+[feed-ranking.md §3.6–§3.7](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge), at which point the
 entire cluster reachable through that bridge is zero-jailed from
 the network's perspective. Inviters who learn this lesson become
 more selective with where they post their links.

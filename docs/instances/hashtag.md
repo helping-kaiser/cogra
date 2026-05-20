@@ -254,7 +254,7 @@ one.
   order, with what decay — lives in
   [feed-ranking.md](../primitive/feed-ranking.md). The
   bot-defense hashtag worked example in
-  [feed-ranking.md §3.7.3](../primitive/feed-ranking.md)
+  [feed-ranking.md §3.8.3](../primitive/feed-ranking.md#383-community-bot-defense-posts--supplementary-evidence)
   is a usage convention layered on top of the primitive
   this doc describes, not part of the primitive itself.
 - **Not the moderation primitive.** The Proposal mechanism,
