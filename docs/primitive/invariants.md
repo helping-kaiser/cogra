@@ -84,10 +84,20 @@ listed under the most useful one.
 - [Kill rule: a `0` in either dim zeros the path product](feed-ranking.md#32-zero-handling--kill-rule)
   — zeros are real multiplicative factors, never skipped; once a
   dim is zeroed on a path it cannot be revived downstream.
+- [Feed-ranking traversal is forward-only](feed-ranking.md#3-per-edge-composition-along-a-path)
+  — paths follow edges in their stored direction; inbound-edges-
+  don't-affect-feeds is one consequence, [the §3.5 per-edge
+  restrictions](feed-ranking.md#35-traversal-restrictions) are the
+  rest.
 - [Feed-ranking traversal is vertex-simple](feed-ranking.md#3-per-edge-composition-along-a-path)
   — no node appears more than once on a path; the walk maintains
   a per-path visited set to block cycles through bidirectional
   topologies.
+- [`:REFERENCES` fanout-budget](edges.md#reference) — across a
+  source node's outbound `:REFERENCES` top layers,
+  `sum |dim1| ≤ 1` and `sum |dim2| ≤ 1` per dimension; default
+  uniform `(1/N, 1/N)`. Bounds reference-chain amplification at
+  the source.
 - [Hashtags do not participate in path products](../instances/hashtag.md#4-edges)
   — `:TAGGING` is pure topology for discovery, never traversed by
   feed ranking.
