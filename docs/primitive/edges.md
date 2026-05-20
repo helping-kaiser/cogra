@@ -82,10 +82,17 @@ the hashtag side, and it stays pure topology — lives in
 ## 2. Structural edges
 
 System-created. Dimensions default to `(0, 0)` unless the edge
-participates in a state-bearing pattern (junction approval pairs —
-see [graph-model.md](graph-model.md) for the rule). For a matrix
-and diagram view of every structural edge in the catalog see
-[structural-edge-map.md](structural-edge-map.md).
+participates in a **state-bearing pattern**. Two such patterns
+exist:
+
+- Junction approval pairs (claim / approval edges on `ChatMember`,
+  `CollectiveMember`, `ItemOwnership`) — see
+  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+- `:REFERENCES`, with a 2D tensor in `[-1, +1]` and a fanout-budget
+  invariant — see "Reference" below.
+
+For a matrix and diagram view of every structural edge in the
+catalog see [structural-edge-map.md](structural-edge-map.md).
 
 **Invariant:** A given `(source, target)` pair carries at most one
 structural edge. When a relationship between two specific nodes is
@@ -221,10 +228,37 @@ Two cases follow from the rule:
    record of the pair; the frontend renders the embed from that
    edge (plus the body markup) without a second graph edge.
 
-Traversal rules for `:REFERENCES` — whether reach amplifies the
-same way across all three carrier types, how mention spam is
-priced into ranking — are deferred to the next pass over the
-edge network as a whole.
+`:REFERENCES` is a **state-bearing structural edge** — the second
+member of that pattern after junction approval pairs. The edge
+carries a 2D tensor `(dim1, dim2)` in `[-1, +1]`, the same shape
+as actor edges.
+
+**Invariant: `:REFERENCES` fanout-budget.** Across all outbound
+`:REFERENCES` edges from a single content node, top-layer values
+must satisfy:
+
+```
+sum of |dim1| ≤ 1
+sum of |dim2| ≤ 1
+```
+
+independently on each dimension. Default values (when none are
+explicitly set): uniform `(1/N, 1/N)` on the top layer, where `N`
+is the source node's outbound `:REFERENCES` count. The source
+node's author may set explicit values within the budget — e.g.
+`(0.9, 0.5)` on one reference and `(0.1, 0.5)` on another, per
+dimension independent. The constraint applies to top layers only;
+historical layers contribute nothing to ranking. Updating one
+reference's weight may require re-balancing siblings to stay
+within budget. The total may be less than 1 — a single weak
+reference at `(0.2, 0.1)` is valid; the budget need not be fully
+spent. Negative weights are allowed within the magnitude budget
+for "I'm quoting this to disavow it" semantics.
+
+Feed-ranking traversal rules for `:REFERENCES` (endpoint
+restrictions, fanout-budget composition) live in
+[feed-ranking.md §3.5 "Traversal restrictions"](feed-ranking.md#35-traversal-restrictions)
+rules 4 and 5.
 
 ### Voting (Shape B)
 
