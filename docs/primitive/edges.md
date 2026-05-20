@@ -292,11 +292,13 @@ and the schema explodes every time a node type is added.
 
 ### Sub-category labels
 
-Sub-labels exist for structural edges whose query patterns differ
-enough that the endpoint-label-filter approach adds cost or noise.
+Sub-labels exist for edges whose query patterns differ enough
+that the endpoint-label-filter approach adds cost or noise. Most
+are structural; `:AUTHOR` is the one actor-edge sub-label.
 
 | Label | Applies to | Rationale |
 |---|---|---|
+| `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal) | The creator's authoring actor edge — the first outgoing actor edge from creator to created content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
 | `:BEARER` | Junction → User \| Collective (e.g. `ChatMember → User`) | Identity binding for a junction. "What junctions does this actor bear?" and "who is this junction's bearer?" run as single one-hop traversals along `:BEARER`. |
@@ -305,20 +307,27 @@ enough that the endpoint-label-filter approach adds cost or noise.
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |
 | `:REFERENCES` | ChatMessage → any node; Post / Comment → any node except Hashtag | The "this carrier embeds X" relationship. Common query: "what nodes reference this one?" — feeds embed-rendering and inbound-attention surfaces. |
 
-All sub-category labels **replace** `:STRUCTURAL`, not add to it — a
+All sub-category labels **replace** their base label (`:ACTOR`
+for `:AUTHOR`, `:STRUCTURAL` for the rest), not add to it — a
 relationship has exactly one label in Memgraph.
 
-### What about actor edges?
+### What about the rest of actor edges?
 
-Actor edges stay uniform at `:ACTOR`. The 2D tensor treats all
-actor edges the same math-wise; splitting them by tuple would
-multiply labels (User-Post, User-User, Collective-Post, ...) without
-improving ranking efficiency — the ranking algorithm iterates over
-actor edges regardless of tuple.
+Non-`:AUTHOR` actor edges stay uniform at `:ACTOR`. The 2D tensor
+treats all actor edges the same math-wise; splitting them by
+tuple would multiply labels (User-Post, User-User,
+Collective-Post, ...) without improving ranking efficiency — the
+ranking algorithm iterates over actor edges regardless of tuple.
 
 Endpoint node labels (`:User`, `:Post`, `:Chat`, etc.) already let
 queries filter by meaning: `(u:User)-[:ACTOR]->(p:Post)` binds the
 semantics without needing a `:USER_POST` label.
+
+`:AUTHOR` is the exception because authorship has *both* a
+query-shape distinct enough to merit its own scan (the
+"earliest-incoming-edge" lookup it replaces is awkward in pure
+Cypher) and a load-bearing role in feed-ranking traversal (the
+author-hop rule). Other actor edges have neither.
 
 ---
 

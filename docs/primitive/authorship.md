@@ -32,6 +32,24 @@ edge. Querying "who authored this?" returns the Collective; the
 member who initiated the gesture is not derivable from the
 authored node.
 
+## Graph-layer label — `:AUTHOR`
+
+The authoring edge is the one actor edge that carries a sub-label
+distinct from `:ACTOR` — `:AUTHOR` — per
+[edges.md §3 "Sub-category labels"](edges.md#sub-category-labels).
+The label is the system's mechanical implementation of the
+"first outgoing edge" rule above: created at the same gesture as
+the authoring edge, permanent across re-layerings, and
+queryable in a single label scan.
+
+`:AUTHOR` is also load-bearing for the feed-ranking author-hop
+traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)),
+which terminates `:REFERENCES`-to-actor paths after exactly one
+outgoing `:AUTHOR` hop.
+
+Same tensor shape, same `[-1, +1]` range, same append-only layer
+semantics as any actor edge — only the label differs.
+
 ## Caching
 
 Looking up "who authored this?" by scanning all incoming layer 1
@@ -45,4 +63,7 @@ cached:
 
 Both are derived caches. The graph (earliest incoming layer 1) is the
 source of truth; if the caches ever disagree with the graph, the graph
-wins and the caches should be rebuilt.
+wins and the caches should be rebuilt. The `:AUTHOR` label is itself
+derivable — the earliest incoming actor edge is the canonical
+authoring edge — so a label-only mismatch is also a cache-rebuild
+case.

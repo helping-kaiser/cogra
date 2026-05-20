@@ -151,6 +151,10 @@ one operation:
 
 - Authoring a node ([authorship.md](authorship.md)) — the
   author's first outgoing edge to their newly-created content.
+  Labeled `:AUTHOR` rather than `:ACTOR` at the graph layer (see
+  [edges.md §3](edges.md#sub-category-labels)); same tensor
+  shape, same range, same append-only semantics — the label is
+  purely a query-side discriminator.
 - Joining or leaving a chat or collective — the actor's edge to
   the relevant junction (§5).
 - Inviting a new actor ([invitations.md](invitations.md)).
