@@ -50,6 +50,18 @@ target). The composition uses **parallel tracks**: `dim1` and `dim2`
 flow independently through the path product and only collapse to a
 scalar at sort time.
 
+**Invariant: forward-only traversal.** Feed-ranking paths
+traverse edges in their stored direction only. Reverse-direction
+walks (following an edge from its target back to its source) are
+not part of the feed-ranking algorithm. This is what makes the
+"outbound edges from the viewing user shape that user's feed"
+guarantee from
+[graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)
+hold: propagation flows along the directionality the viewer
+established. The inbound-edges-don't-affect-feeds rule is one
+consequence of forward-only traversal; per-edge restrictions
+(below) are the rest.
+
 **Invariant: simple paths.** Every path in the traversal is
 **vertex-simple** — no node appears more than once. Bidirectional
 topologies — mutual user edges (`A → B` and `B → A`), junction
