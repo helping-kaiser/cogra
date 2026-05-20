@@ -50,6 +50,18 @@ target). The composition uses **parallel tracks**: `dim1` and `dim2`
 flow independently through the path product and only collapse to a
 scalar at sort time.
 
+**Invariant: forward-only traversal.** Feed-ranking paths
+traverse edges in their stored direction only. Reverse-direction
+walks (following an edge from its target back to its source) are
+not part of the feed-ranking algorithm. This is what makes the
+"outbound edges from the viewing user shape that user's feed"
+guarantee from
+[graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)
+hold: propagation flows along the directionality the viewer
+established. The inbound-edges-don't-affect-feeds rule is one
+consequence of forward-only traversal; the per-edge
+restrictions in §3.5 are the rest.
+
 **Invariant: simple paths.** Every path in the traversal is
 **vertex-simple** — no node appears more than once. Bidirectional
 topologies — mutual user edges (`A → B` and `B → A`), junction
@@ -63,13 +75,16 @@ The walk maintains a per-path visited set to enforce the invariant.
 
 ### 3.1 Which edges contribute factors
 
-Only **actor edges** contribute factors to the path products.
-Structural edges count toward `R` (path length) but do not contribute
-factors — they are pure topology.
+**Actor edges** and **`:REFERENCES`** contribute factors to the
+path products. `:REFERENCES` is a state-bearing structural
+edge (§3.5 rule 5): it carries a `(dim1, dim2)` tensor with the
+same shape as actor edges and composes the same way. All other
+structural edges count toward `R` (path length) but do not
+contribute factors — they are pure topology.
 
 ```
-s_path uses only dim1 of actor edges in the path
-|c_path| uses only |dim2| of actor edges in the path
+s_path uses only dim1 of actor and :REFERENCES edges in the path
+|c_path| uses only |dim2| of actor and :REFERENCES edges in the path
 R counts every edge in the path (actor + structural)
 ```
 
@@ -88,12 +103,21 @@ accumulate `R` naturally and decay via `d(R)` without needing an
 explicit depth cap. The dataminer's R-fetch limit (typically `R ≤
 5` or `6` in practice) bounds traversal at the system level.
 
-State-bearing structural edges (junction approval pairs, see
-[graph-model.md §5](graph-model.md#5-junction-node-flows)) act as **gates on traversability**:
-a path is traversable through such an edge only if its top-layer
-`dim1` is positive (the relationship is currently affirmed). Their
-values do not enter the ranking math; they only decide whether the
-path exists at all.
+State-bearing structural edges fall into two cases with
+different treatment:
+
+- **Junction approval pairs** (see
+  [graph-model.md §5](graph-model.md#5-junction-node-flows))
+  act as **gates on traversability**: a path is traversable
+  through such an edge only if its top-layer `dim1` is positive
+  (the relationship is currently affirmed). Their values do not
+  enter the ranking math; they only decide whether the path
+  exists at all.
+- **`:REFERENCES`** carries a `(dim1, dim2)` tensor that
+  contributes factors like an actor edge, subject to the
+  fanout-budget constraint (§3.5 rule 5). Traversability is
+  restricted by rule 4; once a path is traversable, the
+  edge's values compose into `s_path` and `c_path`.
 
 Content actor edges terminate at the content node. There is no
 `Content → Author` back-edge propagating signal to other content
@@ -195,7 +219,168 @@ A signed-multiplication rule (matching dim1) was also considered
 and rejected: it produces "two-avoidances → positive connection"
 artifacts that don't reflect social reality.
 
-### 3.5 Bot resistance via the `(0, 0)` severance edge
+### 3.5 Traversal restrictions
+
+§3.1 establishes which edges contribute factors and which are
+state-bearing gates. The rules below restrict which edges
+**feed-ranking paths may traverse at all** — five edge-class
+restrictions on top of the gate-on-affirmation rule, closing
+specific bot-amplification gaps where structural topology
+would otherwise propagate a viewer's interest weight onto a
+target the viewer's network never expressed interest in.
+
+Each rule closes a concrete attack on the forward-only-traversal
+foundation (§3, "Invariant: forward-only traversal"). The
+attacks share a shape: trusted-network interest signal crosses a
+structural edge that carries no opinion — junction approval,
+bearer binding, proposal target, content reference — and lands
+on a bot-controlled node from which a path continues. Each
+restriction closes one such channel.
+
+The rules apply to **feed-ranking traversal only**. Other
+queries (governance lookups, integrity audits, debugging) cross
+these edges freely; their semantics live in the edges themselves.
+
+#### Rule 1 — `:APPROVAL` is not outbound-traversable for feed ranking
+
+The `Parent → Junction` direction of the approval pair is a
+state-bearing identity edge — its job is to answer "is this
+membership active?" Querying it is the edge's purpose;
+transiting through it on a feed-ranking path is not. The edge
+carries no opinion content to compose with the rest of the
+path's signal.
+
+Closes the open-chat bot-gate: a viewer who reaches a chat /
+collective / item parent through their network would otherwise
+traverse `:APPROVAL` to every active membership — including bot
+self-claims — and onward via `:BEARER` to the bot actor.
+
+Reverse traversal is already blocked under the forward-only
+invariant; this rule pins the forward direction.
+
+#### Rule 2 — `:BEARER` is not traversable for feed ranking
+
+Same shape as rule 1: identity binding from junction to bearer,
+queryable but not transit-able. Under the forward-only
+invariant this collapses to "`:BEARER` is not traversable" for
+feed ranking purposes.
+
+Closes the same open-chat bot-gate as rule 1 at the second hop:
+even if `:APPROVAL` were somehow traversable, the path would
+still need to cross `:BEARER` to reach the bot User. Defense in
+depth.
+
+#### Rule 3 — `:TARGETS` is not outbound-traversable for feed ranking
+
+Proposal-to-target is a governance reference, not a relevance
+signal. A viewer voting on a proposal expresses a stance on the
+proposal itself, not on its target. The `:TARGETS` edge is
+`(0, 0)` — no opinion content to compose.
+
+Closes the proposal-targets-actor bot-gate: voting on a
+moderation proposal targeting a bot would otherwise propagate
+the viewer's interest weight along
+`Voter → Proposal → bot User → [bot's content]`. Chat-internal
+disavowal proposals (Level 1 against ChatMessages, Level 2
+against ChatMembers — see
+[chats.md §10](../instances/chats.md#10-moderation)) make this
+an everyday surface, not a corner case.
+
+#### Rule 4 — `:REFERENCES` traversal has restricted endpoints
+
+The endpoint of a `:REFERENCES` edge determines what the path
+may do next:
+
+- `:REFERENCES` ending at a **content node** (Post, Comment,
+  ChatMessage, Item) or a **sink** (Chat, Hashtag, Proposal,
+  junction reached as terminal target) — the path continues from
+  that node under normal traversal rules.
+- `:REFERENCES` ending at a **User or Collective** — the path
+  traverses **exactly one further hop along an outgoing
+  `:AUTHOR` edge** from that actor and **terminates** at the
+  authored content. No further traversal after the author hop —
+  neither structural (`:CONTAINMENT`, `:REFERENCES`, etc.) nor
+  non-`:AUTHOR` actor edges.
+
+Closes the REFERENCES-to-actor bot-gate: a friend's content
+mentioning a bot via `:REFERENCES` would otherwise propagate
+the friend's interest weight to the bot actor and onward to
+anything the bot's outgoing edges reach. Rule 4 reduces "friend
+mentions actor" to a bounded pull-marketing surface — the
+mention surfaces the mentioned actor's authored content, but
+nothing else. The `:AUTHOR` sub-label
+([edges.md §3](edges.md#sub-category-labels)) is what makes the
+single author-hop mechanical to enforce.
+
+#### Rule 5 — `:REFERENCES` carries 2D weights with a fanout-budget constraint
+
+`:REFERENCES` becomes a state-bearing structural edge — joining
+junction approval pairs in this category. The edge carries a 2D
+tensor `(dim1, dim2)` in `[-1, +1]`, the same shape as actor
+edges, composed into `s_path` and `c_path` per the existing §3.3
+and §3.4 rules.
+
+**Fanout-budget constraint.** Across all outbound `:REFERENCES`
+edges from a single content node, the top-layer values must
+satisfy:
+
+```
+sum of |dim1| ≤ 1
+sum of |dim2| ≤ 1
+```
+
+independently on each dimension.
+
+**Default values** (no explicit setting): uniform `(1/N, 1/N)`
+on the top layer, where `N` is the source node's outbound
+`:REFERENCES` count.
+
+**Author-tunable.** The source node's author may set top-layer
+values explicitly, subject to the constraint, to lean toward
+more important references. Per-dimension independent — e.g.
+`(0.9, 0.5)` on one reference and `(0.1, 0.5)` on another is
+valid.
+
+**Top layers only.** Historical layers contribute nothing to
+ranking ([graph-model.md §8](graph-model.md#8-append-only-history-edges)).
+Updating one reference's weight may require re-balancing its
+siblings to stay within budget. A single weak reference at
+`(0.2, 0.1)` is valid — the budget need not be fully spent.
+Negative weights are allowed within the magnitude budget —
+useful for "I'm quoting this to disavow it" semantics.
+
+**Why this works as a defense.** The river-delta-into-funnel
+attack — a content node with many outbound `:REFERENCES`
+landing on a common downstream target — has its total
+amplification capped at `friend_interest × identity` regardless
+of `N`:
+
+```
+N paths × (1/N) × friend_interest × identity = friend_interest
+```
+
+Same total amplification as a single legitimate reference. The
+attack is neutralized without a hard cap; legitimate references
+behave the same way (their budget just spreads).
+
+The fanout-budget itself is an edge-shape invariant captured in
+[edges.md §2 "Reference"](edges.md#reference); rule 5 here
+states the feed-ranking consequence.
+
+---
+
+**Sibling case: junction-to-junction Shape B chains.** Sequential
+Shape B vote chains (one `ChatMember` votes Shape B on another
+`ChatMember`; same for `CollectiveMember` and `ItemOwnership`)
+fan out at the junction level. Under rules 1–3 such a chain
+cannot exit to a content node (no `:CONTAINMENT` outbound from
+a junction) or to an actor (no `:BEARER` traversal); the only
+amplification target reachable is another junction, which is
+rarely feed-rankable in any current UI. Flagged for
+completeness; deferred until junction ranking becomes a concrete
+case. The rules above already prevent the dangerous outcomes.
+
+### 3.6 Bot resistance via the `(0, 0)` severance edge
 
 The math gives users a community-driven defense against bot clusters
 that doesn't require any algorithmic gatekeeping. The mechanism rests
@@ -205,7 +390,7 @@ full community severance.
 
 The same mechanism applies to any cluster the broader community
 wants to disengage from. The math operates on path-set properties,
-not on cluster type — see §3.6.
+not on cluster type — see §3.7.
 
 #### Why bots can dial any non-zero score
 
@@ -297,12 +482,12 @@ manufacture outgoing edges from real users into themselves, and
 cannot recover paths through severance edges.
 
 When a cluster has a live entry point holding it open — a real
-user with a non-`(0, 0)` outgoing edge into the cluster — §3.6
+user with a non-`(0, 0)` outgoing edge into the cluster — §3.7
 covers how the defense cascades to that user, how the math applies
 uniformly to clusters of any composition, and how a self-redeeming
 node returns to the graph.
 
-### 3.6 Cascading severance and redemption
+### 3.7 Cascading severance and redemption
 
 #### The transit-node problem
 
@@ -332,7 +517,7 @@ As more viewers cascade severance outward through the graph, the
 cluster's reach contracts. Full severance is achieved when, for
 every viewer, every path into the cluster passes through at least
 one severance edge — at which point `h(t) = 0` exactly for every
-target inside (§3.5), and §5's zero-jail banishes those targets
+target inside (§3.6), and §5's zero-jail banishes those targets
 from view.
 
 #### The math has no cluster-type category
@@ -400,11 +585,11 @@ trust decision is made against the visible record.
 
 Discovery of one's own zero-jail state and the specific
 gestures that invite re-edges from the community are covered
-in §3.7.
+in §3.8.
 
-### 3.7 Post-severance surfaces
+### 3.8 Post-severance surfaces
 
-§3.5 and §3.6 specify the math: severance kills paths via the
+§3.6 and §3.7 specify the math: severance kills paths via the
 kill rule, cascading severance and append-only redemption
 operate on edge values. This section specifies the
 **surfaces** built on top of that math — how a severed node
@@ -438,7 +623,7 @@ Three properties hold throughout:
   frontend-tunable defaults like `d(R)` (§4.1) — guidance
   surfaced as tooltips, not enforced rules.
 
-#### 3.7.1 Severance discovery — the inbound side
+#### 3.8.1 Severance discovery — the inbound side
 
 Inbound edges do not affect the viewer's feed
 ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), so the feed-pull
@@ -486,15 +671,15 @@ is the cause." Severance walks backward from a cluster to
 transit nodes; it does not propagate forward to sever the
 cluster endpoints (the trusted-network severers update their
 edge to `U`, not to the cluster behind `U`, because they had
-no edge there to update — see §3.6). The cause information
+no edge there to update — see §3.7). The cause information
 lives at the severers' content traversals, not in the inbound
 severance data the discovery surface sees.
 
-The cause-pointing aid lives in §3.7.2 (auto-detection via
-path patterns) and §3.7.3 (community bot-defense posts as
+The cause-pointing aid lives in §3.8.2 (auto-detection via
+path patterns) and §3.8.3 (community bot-defense posts as
 supplementary evidence).
 
-#### 3.7.2 Bot-cluster identification — auto-detection from path patterns
+#### 3.8.2 Bot-cluster identification — auto-detection from path patterns
 
 The cause-pointing gap closes via direct analysis of the
 viewer's subgraph for path patterns characteristic of bot
@@ -505,21 +690,22 @@ delegated miner) computes the analysis from the same
 subgraph it pulls for ranking; the path-set the analysis
 reads is the same path-set used to compute `h(t)` (§4).
 
-**The hourglass signal.** For viewer `U` and any node `B` in
-`U`'s outbound subgraph, examine the paths from `U` to
+**The delta-funnel signal.** For viewer `U` and any node `B`
+in `U`'s outbound subgraph, examine the paths from `U` to
 content and accounts behind `B`. Two patterns characterize:
 
-- **Fan pattern.** Content `t` behind `B` is reachable from
-  `U` via diverse paths through multiple intermediates — many
-  distinct chains, no common bottleneck. `B` is one of
-  several routes to that part of the graph. Normal
-  connectedness.
-- **Hourglass pattern.** Content `t` behind `B` is reachable
-  from `U` *only through `B`* (or with `B` on the
+- **Funnel pattern.** Content `t` behind `B` is reachable
+  from `U` via diverse paths through multiple intermediates —
+  many distinct chains converging at `t`, no common
+  bottleneck. `B` is one of several routes to that part of
+  the graph. Normal connectedness.
+- **Delta-funnel pattern.** Content `t` behind `B` is
+  reachable from `U` *only through `B`* (or with `B` on the
   overwhelming majority of paths). `B` is the sole bridge
-  into that subgraph from `U`'s perspective.
+  into that subgraph from `U`'s perspective — paths funnel
+  into `B`, then spread (delta) into the cluster.
 
-A pure hourglass is the bot-bridge signature. The cluster
+A pure delta-funnel is the bot-bridge signature. The cluster
 behind that node has no other entry into `U`'s graph — exactly
 the topology of a bot cluster a real user has bridged into.
 Bots cannot manufacture outgoing edges from real users
@@ -530,12 +716,12 @@ cascading severance has reduced the cluster's open bridges to
 one), the path pattern is unambiguous.
 
 **Differentiating from legit hubs.** Influencers, popular
-accounts, and big bridging nodes also generate hourglass-shaped
-paths — many users reach a lot of content through them. The
-differentiator is whether the content behind the suspect bridge
-has alternative paths into the broader graph. Real content
-circulates through multiple channels; bot content typically
-does not.
+accounts, and big bridging nodes also generate
+delta-funnel-shaped paths — many users reach a lot of content
+through them. The differentiator is whether the content behind
+the suspect bridge has alternative paths into the broader
+graph. Real content circulates through multiple channels; bot
+content typically does not.
 
 For each suspect bridge `B`, the analysis samples some
 downstream content and checks: is this content reachable from
@@ -553,11 +739,11 @@ first-cut detection.
 
 **Detection sharpens with severance.** In a fresh, fully
 connected graph a bot cluster may have multiple live entries
-and the hourglass pattern is weak. As soon as any user severs
-one of the entries, the cluster's reach contracts and the
-hourglass forms more clearly for everyone else. The first
-detection often comes from a manually-identified bot
-(triggering a §3.7.3 post); auto-detection then takes over for
+and the delta-funnel pattern is weak. As soon as any user
+severs one of the entries, the cluster's reach contracts and
+the delta-funnel forms more clearly for everyone else. The
+first detection often comes from a manually-identified bot
+(triggering a §3.8.3 post); auto-detection then takes over for
 the rest of the network as the cluster's bridges narrow. The
 two mechanisms reinforce each other.
 
@@ -565,8 +751,9 @@ two mechanisms reinforce each other.
 page from this analysis: a list of suspect bridge nodes
 detected in the viewer's subgraph, each with a frontend-computed
 **score** representing the likelihood of being a bot bridge.
-Inputs to the score include (at minimum) hourglass-purity of
-the path pattern and the result of the alternative-paths check.
+Inputs to the score include (at minimum) delta-funnel-purity
+of the path pattern and the result of the alternative-paths
+check.
 Frontends may add additional inputs; the doc does not specify a
 formula. The page also surfaces the viewer's path to each
 suspect — the actual chain of intermediates — so users who
@@ -584,7 +771,7 @@ as tooltips, not enforcement:
   content. Frontend can surface "this also disconnects you
   from N other accounts you reach via `C`." Alternative:
   signal `C` to act (out-of-band, or via the post mechanism in
-  §3.7.3).
+  §3.8.3).
 - **3+ hops**: graph-level severance is high-collateral and
   rarely worth the cost — the viewer is far from the bridge,
   and closer-to-bridge users are the natural fixers.
@@ -599,12 +786,13 @@ conservative (1-hop only). The doc does not enforce a number.
 
 **No automatic action.** Detection populates the page; the user
 always decides whether and how to act. The math does not
-auto-banish on hourglass detection. Severance still requires
-the user's `(0, 0)` gesture, exactly as specified in §3.5–§3.6.
+auto-banish on delta-funnel detection. Severance still
+requires the user's `(0, 0)` gesture, exactly as specified in
+§3.6–§3.7.
 
-#### 3.7.3 Community bot-defense posts — supplementary evidence
+#### 3.8.3 Community bot-defense posts — supplementary evidence
 
-Auto-detection (§3.7.2) surfaces *structural* suspicion. A
+Auto-detection (§3.8.2) surfaces *structural* suspicion. A
 **community bot-defense post** adds what structure cannot
 capture: human-evaluated context. A real user who has
 identified a suspected bot publishes a regular post on the
@@ -641,19 +829,20 @@ The post inherits the graph's existing trust mechanisms:
   on the bot-defense page also accounts for where the post's
   reach concentrates. A post reaching the viewer with high
   `h(t)` only because a bot cluster is amplifying it from
-  inside — even when there is also fan-pattern reach from
+  inside — even when there is also funnel-pattern reach from
   trusted users alongside — has its score adjusted down. The
-  signature is the same hourglass-plus-fan combination as in
-  §3.7.2: a sudden burst of cluster-internal engagement on a
-  post that otherwise has organic reach is a manipulation
-  pattern, and the score down-weights it accordingly.
+  signature is the same delta-funnel signature alongside
+  funnel-pattern reach as in §3.8.2: a sudden burst of
+  cluster-internal engagement on a post that otherwise has
+  organic reach is a manipulation pattern, and the score
+  down-weights it accordingly.
 
 **Surfacing on the bot-defense page.** Community posts appear
-alongside auto-detected suspects from §3.7.2. The page shows
+alongside auto-detected suspects from §3.8.2. The page shows
 both signal sources together — they answer the same question
 from different angles:
 
-- Auto-detection says "this node has hourglass-shaped reach
+- Auto-detection says "this node has delta-funnel-shaped reach
   into your subgraph."
 - A community post says "this node is doing X, and here is
   the evidence."
@@ -663,11 +852,11 @@ high-confidence. A node flagged by only one is worth
 investigating but less conclusive.
 
 **The natural workflow.** A viewer notices an auto-detection
-ping — "hourglass shape detected at node `B`." They check,
+ping — "delta-funnel shape detected at node `B`." They check,
 agree, and sever (`B` becomes `(0, 0)` from their outbound).
 The frontend can then offer to **scaffold a bot-defense
 post** about `B` — pre-filling the body with structural facts
-(the path the viewer just severed, hourglass score, layer-
+(the path the viewer just severed, delta-funnel score, layer-
 stack snapshot of `B`'s outbound at time of severance) and
 leaving the viewer to add free-text observations. The post
 then propagates to others' bot-defense pages, accelerating
@@ -676,28 +865,28 @@ can sever silently — but the option lowers friction for
 spreading the signal.
 
 **Path-matching for community posts.** The same path-matching
-and hop-count action guidance from §3.7.2 apply: for each
+and hop-count action guidance from §3.8.2 apply: for each
 community post, the client computes whether the viewer has
 paths to the accused account, and presents action options
 based on hop count. Posts about accounts the viewer has no
 path to are interesting context but not actionable for that
 viewer.
 
-**Generalizes beyond bots.** Per §3.6, the math operates on
+**Generalizes beyond bots.** Per §3.7, the math operates on
 path-set properties and applies uniformly to any cluster the
 broader community wants to disengage from — coordinated
 harassment groups, ideological cliques, content the broader
 graph judges as low-signal. Community posts can target any
 such cluster; the `bot-defense` tag is shorthand, not a
-type-restriction. The auto-detection mechanism in §3.7.2
+type-restriction. The auto-detection mechanism in §3.8.2
 similarly does not check for "botness" specifically — it
 checks for path patterns characteristic of *isolated clusters
 reachable through narrow bridges*, which captures all of the
 above.
 
-#### 3.7.4 Severance redemption — the outbound side
+#### 3.8.4 Severance redemption — the outbound side
 
-Per §3.6, append-only layers make severance reversible: the
+Per §3.7, append-only layers make severance reversible: the
 severed node updates their own outbound edges to the cluster
 to `(0, 0)`, and community members can append a new positive
 layer to their own outbound edge toward the redeeming node.
@@ -705,17 +894,17 @@ The math allows this; the surface for the severer makes the
 redemption signal visible.
 
 **What signals redemption.** The clean answer comes from
-applying §3.7.2's hourglass detection to `T`'s outbound
+applying §3.8.2's delta-funnel detection to `T`'s outbound
 edges. `T` is in the redeemed state when they have **no
 remaining positive outbound edges to nodes exhibiting
-hourglass-bridge patterns** — `T` no longer holds open any
+delta-funnel-bridge patterns** — `T` no longer holds open any
 isolated cluster reachable through a narrow bridge.
 
 This is graph-derivable; the severer does not need to
 remember why they severed `T`. Severance edges do not carry
 reasons (graph state does not represent intent), and the
 severer's app cannot reliably reconstruct intent from
-inbound edges weeks or months later. The hourglass check
+inbound edges weeks or months later. The delta-funnel check
 sidesteps the question by asking "does `T` *currently* bridge
 into any suspect cluster?" — a property of the graph state
 right now, not of past history.
@@ -727,7 +916,7 @@ casually, an early positive engagement that aged badly).
 Cleaning those up is a small, finite act. A user with *many*
 positive outbound edges to suspect bridges is much more
 likely a member of the cluster themselves than a transit, and
-the discovery and auto-detection surfaces (§3.7.1, §3.7.2)
+the discovery and auto-detection surfaces (§3.8.1, §3.8.2)
 should already classify them accordingly — they are the
 cluster's body, not its bridge. The redemption check is thus
 naturally binary: `T` has no remaining bridges (redeemed), or
@@ -736,10 +925,10 @@ redeemed" state worth surfacing as such.
 
 **Computing the check.** The severer's client makes an
 explicit self-query for `T`'s outbound state — analogous to
-the inbound self-query in §3.7.1, since `T` is severed and
+the inbound self-query in §3.8.1, since `T` is severed and
 not in the severer's normal feed pull. For each of `T`'s
 positive-valued outbound edges to target `V`, the client runs
-the §3.7.2 hourglass-and-alternative-paths analysis on `V`
+the §3.8.2 delta-funnel-and-alternative-paths analysis on `V`
 from `T`'s subgraph perspective. If any `V` classifies as a
 suspect bridge, `T` still has open bridges. If none do, `T`'s
 bridges are clean.
@@ -761,7 +950,7 @@ others. The severer may add a new positive layer to `S → T`
 (restoring `T` from `S`'s perspective), wait for more
 evidence, or do nothing. **No automatic restoration.**
 
-The friction is intentional. Per the §3.7 intro: a severed
+The friction is intentional. Per the §3.8 intro: a severed
 user re-attaching to a live bot bridge is a network failure.
 Per-severer individual review with full history visible is the
 design's answer.
@@ -771,15 +960,15 @@ severer's watch list. If `T` re-attaches to a suspect bridge
 after a previous clean state, the signal flips back, and the
 severer's client surfaces the change.
 
-#### 3.7.5 Self-redemption posts
+#### 3.8.5 Self-redemption posts
 
-The structural redemption signal in §3.7.4 (`T`'s outbound has
+The structural redemption signal in §3.8.4 (`T`'s outbound has
 no remaining suspect-bridge edges) is necessary but easy to
 miss — the severer has to be running the outbound-watch query
 and looking. To make redemption more discoverable and to add
 human-evaluated context, the severed user can author a
 **self-redemption post**, symmetric to the community
-bot-defense posts in §3.7.3.
+bot-defense posts in §3.8.3.
 
 The post is a regular post on the graph with a structural edge
 to the same `bot-defense` Hashtag node (or a sibling redemption
@@ -799,16 +988,16 @@ self-redemption post needs a different surface to reach the
 severers.
 
 The frontend's "review severed accounts" view (the surface
-from §3.7.4) is exactly that. The severer's client, which
+from §3.8.4) is exactly that. The severer's client, which
 already runs the outbound-watch self-query, also fetches
 recent posts from severed accounts and surfaces them in this
 view. Self-redemption posts (recognized via the tag) are
 highlighted separately within that view.
 
 **Cross-checking against graph state.** The severer can
-compare the post's claims to the §3.7.4 structural signal.
+compare the post's claims to the §3.8.4 structural signal.
 Post says "I severed my edge to V," graph confirms the
-hourglass check passes → consistent. Post claims redemption
+delta-funnel check passes → consistent. Post claims redemption
 but graph still shows positive outbound to suspect bridges →
 inconsistent (likely a false claim, or `T` misunderstands what
 they need to fix). The severer trusts the math first, then
@@ -893,9 +1082,10 @@ endorsement of `B`" and "`B`'s view of `t`" — trust propagation
 working correctly.
 
 A cap also conflicts with the existing bot-bridge defense
-(§3.5–§3.7): the principled answer to "`B` is bridging a cluster"
-is severance and the hourglass auto-detection surface (§3.7.2),
-which differentiates legitimate hubs from bot bridges structurally.
+(§3.6–§3.8): the principled answer to "`B` is bridging a cluster"
+is severance and the delta-funnel auto-detection surface
+(§3.8.2), which differentiates legitimate hubs from bot bridges
+structurally.
 A blanket transit-cap would penalize both indiscriminately and
 erode the broad-network endorsement signal that multi-path
 summation is meant to capture. `d(R)` already calibrates direct-
@@ -1025,7 +1215,7 @@ cluster with infinite internal nodes can tune its target's `h(t)`
 to any non-zero value (positive or negative) but cannot move it off
 exact zero once every path from `U` into the cluster has at least
 one severance edge `(0, 0)` along it. Zero-jail is the math-level
-realization of full community severance (see §3.5).
+realization of full community severance (see §3.6).
 
 Why exact, not an `[−ε, 0]` interval: bots facing an interval-jail
 simply tune their amplification to land at `−ε − δ` and re-enter
@@ -1195,7 +1385,7 @@ The 16-case table enumerates the ordinary `±1` vocabulary.
 remain the normal way to express affinity, distance, dislike,
 and avoidance. The **severance edge** `(0, 0)` is qualitatively
 different — a deliberate declaration that the target is outside
-the user's graph of relevance (see §3.5). One representative
+the user's graph of relevance (see §3.6). One representative
 case at R=2:
 
 | # | U→A | A→post | s_path | c_path | score | reading |
@@ -1203,7 +1393,7 @@ case at R=2:
 | 17 | (0, 0) | (anything) | 0 | 0 | **0** | Severance at U's outgoing edge. Both dim chains killed at the entry hop; nothing downstream recovers either. The path contributes 0 to `h(t)` regardless of what `A → post` is. |
 
 `(0, 0)` is not the everyday signal — it is reserved for the
-deliberate cut described in §3.5, where its consequences (transit
+deliberate cut described in §3.6, where its consequences (transit
 removal, contribution to zero-jail under full community severance)
 are spelled out.
 
