@@ -159,7 +159,7 @@ A ChatMember junction carries:
   Network-scope `User.network_role = 'moderator'`: chat
   moderators and Network moderators are different roles, with
   different scopes and different weights — see
-  [moderation.md §3](moderation.md#3-the-mod-gate-rule).
+  [governance.md §7](../primitive/governance.md#7-the-mod-gate).
   Layered. The default role weights are properties on the
   **Chat** (§3.1), not on the ChatMember — change the role to
   reassign the bearer; change the Chat's weight properties to
@@ -566,6 +566,14 @@ is the only path that runs through governance; rotation
 triggered by joins, leaves, or member-disavowal passes never
 does.
 
+This principle — *epoch advances automatically the moment the
+membership transition takes effect; only mid-epoch rotation
+runs through governance* — could conceivably generalize to any
+junction-state-bearing node that wants topology-implied
+advancement of a sibling counter. Chat is the only consumer
+today, so it stays here as **instance-specific**: not promoted
+to primitive until a second consumer surfaces.
+
 Each encrypted ChatMessage's body row in Postgres carries an
 `epoch` index pointing at the key it was encrypted under
 (§4.2). The graph never reads it; the frontend uses it to pick
@@ -678,13 +686,11 @@ mid-epoch key rotation, platform moderation in
 stance stays decoupled from personal sentiment on
 `User → ChatMessage` or `User → ChatMember`. Both levels carry
 the same Proposal shape: `target_property = 'node'`,
-`proposed_value = 'disavowed'` — the `'node'` sentinel
-parallels moderation's `'full'` shorthand
-([moderation.md §1](moderation.md#1-the-two-classification-paths)),
-naming the whole target node rather than one of its graph
-properties. What differs between the two levels is the cascade
-behavior on threshold-cross, which dispatches on the target's
-node type.
+`proposed_value = 'disavowed'` — the `'node'` value is the
+whole-node-targeting sentinel defined in
+[nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel).
+What differs between the two levels is the cascade behavior on
+threshold-cross, which dispatches on the target's node type.
 
 **Invariant:** Chat-internal disavowal routes through a Proposal
 node — both Level 1 (against a `ChatMessage`) and Level 2
@@ -721,7 +727,7 @@ won't. A counter-Proposal targeting the same ChatMessage with
 `proposed_value = 'normal'` reverses the disavowal —
 governance applies symmetrically in both directions, consistent
 with platform moderation's symmetric un-classification path
-([moderation.md §3](moderation.md#3-the-mod-gate-rule)).
+([governance.md §7](../primitive/governance.md#7-the-mod-gate)).
 
 ### Level 2 — Member disavowal
 
@@ -820,25 +826,15 @@ departed member — they just see that the chat has moved away.
 
 ### Coexistence with platform moderation
 
-Two distinct mechanisms can apply to a plaintext chat message:
-
-- **Platform moderation** — the Network-level classification
-  path in [moderation.md](moderation.md) drives the redaction
-  cascade for `'illegal'` and the soft flag for `'sensitive'`.
-  Eligibility is every Network member.
-- **Chat-internal disavowal (this section).** The chat's stance
-  toward a message or member. Eligibility is active ChatMembers
-  of that chat.
-
-Both can apply to the same content and produce different
-outcomes — a chat-disavowed message is still
-platform-`'normal'` until the Network classifies it, and a
-message with platform-redacted content stays in any chat that
-hasn't disavowed it. The platform outcome on `'illegal'` is
-destructive (per-field redaction); the chat-internal outcome is
-non-destructive (the chat moves away; the message stays). See
-[moderation.md §6](moderation.md#6-coexistence-with-chat-internal-moderation)
-for the symmetric framing.
+A `ChatMessage` can be simultaneously subject to two governance
+instances at different scopes — chat-internal disavowal
+(this section) and the Network-scope platform moderation in
+[moderation.md](moderation.md). They write to different state
+and produce independent outcomes: chat-side stance vs.
+node-property classification or per-field redaction. The
+primitive treatment of this — why no conflict arises, and how
+the pattern generalizes — lives in
+[governance.md §9](../primitive/governance.md#9-coexistence-multiple-governance-instances-on-a-shared-subject).
 
 ---
 

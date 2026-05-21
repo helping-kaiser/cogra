@@ -35,7 +35,7 @@ all run on the same primitive — they differ only in the values
 they pick for the components in §2 (subject, eligibility, weights,
 threshold) and the carrier shape in §3. If a new governance need
 arises, it gets parameters and slots in here, not its own
-mechanism. The full list of current applications is in §7.
+mechanism. The full list of current applications is in §8.
 
 ---
 
@@ -290,6 +290,52 @@ approver votes that admit and later remove a junction holder).
 A future case that doesn't fit either shape is a signal to add a
 third shape to this doc, not to hack an existing one.
 
+### Co-signed acts: threshold > 1 in either shape
+
+When a graph-state change requires more than one party to
+concur — N parties whose individual votes each contribute to the
+same tally — the structure is **uniformly governance with
+threshold > 1** in whichever vote shape fits. No additional
+mechanism is introduced; the result is what we call a
+**co-signed act**:
+
+- The would-be change is materialized as a pending subject (a
+  not-yet-active junction node, a not-yet-produced outgoing
+  edge, a Proposal) so co-signers have something to vote on.
+- Co-signers append vote layers in their respective shape until
+  the threshold is reached.
+- On threshold-cross, the outcome takes effect per §6: the
+  junction activates, the outgoing edge is produced, or the
+  Proposal's cascade fires.
+
+The pattern recognizes that "N parties concur" and "governance
+with threshold N" are the same primitive — there is no separate
+"co-signature" concept. Three current consumers:
+
+- **Multi-sig junction approval.** Shape A self-claim by the
+  would-be bearer plus N Shape B approver votes from existing
+  eligibility junctions of the same type. The junction stays
+  pending until the threshold is reached; activation produces
+  the approval edge. See
+  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+- **Chat invitations.** A specific application of multi-sig
+  junction approval: the chat's `join_policy` sets the threshold
+  on the inviter / approver Shape B votes that admit a new
+  `ChatMember`. See
+  [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
+- **Collective act-as routing.** A member's gesture to produce
+  the Collective's outgoing edge runs through the social
+  contract's per-gesture rule; when the rule's threshold is `> 1`,
+  the gesture is held in a pending state until enough authorized
+  members co-sign, identical in shape to the multi-sig junction
+  approval above. See
+  [collectives.md §2](../instances/collectives.md#2-acting-through-the-collective).
+
+A future actor that needs N-party authorization on its own
+outgoing edges (a multi-sig bot, a council acting jointly)
+parameterizes this same primitive rather than inventing a new
+one.
+
 ---
 
 ## 4. Append-only throughout
@@ -360,11 +406,92 @@ background computation.
 
 Votes stand until changed; there is no "voting ends at T". A
 specific application that genuinely needs a time window is a new
-design discussion (§9).
+design discussion (§11).
 
 ---
 
-## 7. Instances
+## 7. The mod-gate
+
+A recurring component of Network-scope governance is the
+**mod-gate**: for any Proposal in scope, at least one positive
+vote from a User with `network_role = 'moderator'` must be
+present in the tally before the outcome can take effect. The
+mod-gate is a procedural validator, not a weighting.
+
+**Invariant: mod weight = member weight = 1; mod is a gate, not
+a weight.** A moderator's vote contributes exactly one
+member's worth of weight to the tally — the same as every other
+voter. The mod-gate sits *alongside* the member-weighted tally,
+not on top of it.
+
+**A moderator's positive vote counts in BOTH the mod-gate check
+AND the member-tally arithmetic; it is not double-spent in any
+other sense.** The mod casts `+1` once; that same vote opens the
+gate *and* contributes its weight of `1` to the count tallied
+against quorum and threshold. The "mod weight = 1" rule means
+the moderator's contribution to the member arithmetic is
+exactly one member's worth — nothing more — even though the same
+vote also opened the gate.
+
+The gate applies symmetrically in both directions of any
+classification — setting `sensitive` or `illegal`, and
+un-setting back to `normal` — and across every Network-scope
+Proposal kind. Reasons each direction needs the gate:
+
+- Without a mod gate on `sensitive`, a small coordinated group
+  could flood-flag legitimate content, forcing endless
+  re-moderation.
+- Without a mod gate on `illegal`, bot networks could mass-vote
+  redactions of legitimate content.
+- Without a mod gate on un-classification, bots could strip
+  moderation flags from legitimately-classified content.
+- Without a mod gate on **moderator role changes**, the
+  community alone could strip moderators — a coordinated push
+  (bots or otherwise) removes honest mods at will.
+
+The mod-gate is the specific instance of the §2.4 multi-gate
+pattern that pairs a moderator-gate with a community-tally gate.
+Either gate alone leaves a hole:
+
+- **Mods alone** can purge each other — sitting-mod coup.
+- **Community alone** can be coordinated against honest mods —
+  flooded removal.
+
+Both gates together close both failure modes. The full list of
+Network-scope instances that share the mod-gate component is in
+§8 — content moderation classifications, moderator role
+changes, and `:Network` parameter amendments.
+
+Substantive arithmetic (quorums, supermajority thresholds, the
+exact pairs per instance) lives with each instance, not here.
+
+### External demands enter as Proposals
+
+A direct corollary of the mod-gate and the broader
+governance-only authorization model: **there is no admin
+escape-hatch.** Any external pressure on the platform —
+court orders, regulator demands, law-enforcement notices,
+next-of-kin requests, copyright takedown letters — enters the
+graph through the same Proposal mechanism any User would use.
+Typically a moderator files the Proposal (because they are the
+party that received the demand and they understand the
+classification), but the Proposal itself is an ordinary
+moderation Proposal in [moderation](../instances/moderation.md)
+or the relevant account-action path; the mod-gate and the
+community-tally gate both still apply.
+
+The platform commits to this *because* it is the property that
+makes the transparency story load-bearing: every removal is
+auditable on the graph, no party can edit silently, and a
+pathologically captured moderation corps still requires
+community participation. The federation/forking exit
+([network.md](network.md)) is the final pressure release if a
+particular instance's governance no longer reflects its
+community.
+
+---
+
+## 8. Instances
 
 ### Existing
 
@@ -377,10 +504,12 @@ design discussion (§9).
 - **Chat message disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
   Shape B `ChatMember → Proposal` vote on a Proposal targeting
   the `ChatMessage` with `target_property = 'node'`,
-  `proposed_value = 'disavowed'` (the `'node'` sentinel parallels
-  moderation's `'full'`). Quorum + weighted-majority threshold.
-  No separate outcome edge — the chat's stance is the existence
-  of the passed Proposal.
+  `proposed_value = 'disavowed'` (the whole-node-targeting
+  sentinel, see
+  [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel)).
+  Quorum + weighted-majority threshold. No separate outcome
+  edge — the chat's stance is the existence of the passed
+  Proposal.
 - **Chat member disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
   Shape B `ChatMember → Proposal` vote on a Proposal targeting
   the member's `ChatMember` junction with the same `'node'` /
@@ -420,7 +549,66 @@ Future cases get added here as they're designed.
 
 ---
 
-## 8. Multi-candidate decisions
+## 9. Coexistence: multiple governance instances on a shared subject
+
+A single node can be the subject of several governance instances
+at once — each parameterized by its own eligibility, weight
+function, threshold policy, and outcome. The instances act
+independently, write to different state, and produce different
+outcomes; they do not conflict because they aren't operating on
+the same state.
+
+The principle: **scope determines what the outcome writes.** A
+chat-scope instance writes to chat-side state (a `Chat →
+ChatMember` approval edge layer, or the existence of a passed
+disavowal Proposal that the chat treats as its stance). A
+Network-scope instance writes to node-level state (a
+`moderation_status` property layer, or per-field redaction
+markers under [layers.md §5](layers.md#5-deletion-policy)). The
+two cannot conflict because the targets are different graph
+objects even when the *node* is the same.
+
+The canonical worked example is **chat-internal disavowal
+alongside platform moderation**, both of which can apply to a
+single `ChatMessage`:
+
+- **Platform moderation** — Network-scope. Eligibility = every
+  active Network member; mod-gate (§7) required.
+  Classification-Proposal targets the message; `'illegal'`
+  triggers the redaction cascade in
+  [layers.md §5](layers.md#5-deletion-policy) (destructive in
+  the sense that the message body's top layer is replaced with
+  a redaction marker, leaving the message node and edges in
+  place). See [moderation.md](../instances/moderation.md).
+- **Chat-internal disavowal** — chat-scope. Eligibility =
+  active `ChatMember`s of the chat hosting the message; weight
+  by role; no mod-gate. Outcome is the chat's stance
+  ([chats.md §10](../instances/chats.md#10-moderation)) — the
+  chat moves away from the message; the message stays.
+
+Both can pass independently, neither overrides the other:
+
+- A chat-disavowed message is still `'normal'` at the platform
+  level until the Network classifies it — the disavowal Proposal
+  affects chat-side state only.
+- A platform-redacted message stays in any chat that hasn't
+  disavowed it — the redaction marker affects node-side state
+  only.
+- The two can also both pass; the message is then both
+  redacted at the platform level *and* disavowed at the chat
+  level. No collision; the writes go to different places.
+
+A similar pattern holds for any future instance that operates on
+a node already governed by another scope (e.g. a Collective
+governing a member's `CollectiveMember` while the Network
+classifies that member's profile — separate state, independent
+outcomes). The shape generalizes: scope decides the state
+written, so instances at different scopes never compete for the
+same write.
+
+---
+
+## 10. Multi-candidate decisions
 
 Decisions that pick from several candidates — council seats,
 multiple property values to choose between, etc. — are expressed
@@ -435,12 +623,12 @@ the same role or property to revert it. No special lifecycle
 machinery needed.
 
 This pattern loses ranked-ballot information ("B over A"). Ranked
-and multi-seat semantics aren't part of the primitive (§9). A use
+and multi-seat semantics aren't part of the primitive (§11). A use
 case that genuinely needs them deserves its own design pass.
 
 ---
 
-## 9. Out of scope
+## 11. Out of scope
 
 - **Secret ballots.** All votes are public on the graph. Privacy is
   achieved through content encryption elsewhere, not through hiding
@@ -454,7 +642,7 @@ case that genuinely needs them deserves its own design pass.
 - **Ranked, multi-seat, or budget-allocation ballots.** All votes
   are binary (support / oppose on a single subject). Ranked
   preferences ("B over A"), multi-seat allocations beyond parallel
-  binary Proposals (§8), and proportional budget splits across N
+  binary Proposals (§10), and proportional budget splits across N
   options aren't expressible in the current primitive. Use cases
   that genuinely need any of these deserve their own design pass.
 

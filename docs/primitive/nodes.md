@@ -31,11 +31,33 @@ additional `moderation_status` graph property:
 layered. The Network-wide governance instance described in
 [moderation.md](../instances/moderation.md) is what sets it.
 
+The three values are the platform's content-classification
+buckets. Their *meanings* and *behavioural consequences* are
+fixed at the primitive level; the *examples of what falls in
+each* are platform policy and live in
+[platform-guidelines.md §1](../instances/platform-guidelines.md#1-the-three-buckets):
+
+- **`'normal'`.** Default. Carries no special treatment — no
+  filter, no redaction. Not an enumerated category; the absence
+  of any other classification.
+- **`'sensitive'`.** Lawful content that warrants a viewer-side
+  filter (graphic, mature, disturbing). The content stays — no
+  redaction. Frontends respect each viewing user's
+  `content_filtering_severity_level` preference
+  ([data-model.md](../implementation/data-model.md)) when
+  rendering. Reversible via counter-Proposal back to `'normal'`.
+- **`'illegal'`.** Content the Network treats as unlawful or so
+  universally prohibited that hosting it is itself a harm.
+  Triggers the redaction cascade in
+  [layers.md §5](layers.md#5-deletion-policy) and the
+  archive-with-legal-hold disposition in
+  [retention-archive.md](retention-archive.md). Not reversible,
+  because the underlying redaction markers are append-only.
+
 The two non-default values reach the node by different paths:
 
 - `'sensitive'` — set directly by a passing `'sensitive'`
-  classification Proposal (community-flagged
-  mature/disturbing/etc.).
+  classification Proposal.
 - `'illegal'` — set automatically by the system when any field
   on the node receives a redaction marker per
   [layers.md §5](layers.md#5-deletion-policy). Illegal-content
@@ -63,6 +85,47 @@ to redact and no Postgres-side display content either. The
 **`:Network` singleton** is in the same position for the same
 reason: pure configuration state with no user-input fields. See
 [network.md §3](network.md#3-graph-side-properties).
+
+---
+
+## Whole-node targeting: the `'node'` sentinel
+
+A Proposal's `target_property` normally carries the name of one
+graph property on the target node — `'name'`, `'role'`,
+`'moderation_status'`, `'network_role'`, and so on. The sentinel
+value `'node'` reserves `target_property` for a whole-node
+operation rather than a single property: the Proposal targets the
+node itself, and the cascade interpreter dispatches on the
+target's node type instead of writing a layer on a named property.
+
+The sentinel exists because the value space of `target_property`
+is the graph-property names on the target node, and there is no
+graph-property name that means "the whole node." A reserved value
+extends that space without overloading any real property name.
+
+The cascade dispatch — what the interpreter actually writes when
+a `'node'` Proposal passes threshold — is specific to the
+mechanism that uses the sentinel. The primitive registers the
+sentinel and its meaning; the per-cascade behaviour lives with
+the instance:
+
+- **Chat-internal disavowal** — see
+  [chats.md §10](../instances/chats.md#10-moderation). The only
+  current consumer. `proposed_value` is `'disavowed'` (or
+  `'normal'` on counter-Proposal); dispatch differs for
+  `ChatMessage` and `ChatMember` targets.
+
+A future mechanism that needs whole-node operations on a
+different node type can register its own cascade against the
+same `'node'` sentinel rather than inventing parallel scaffolding.
+
+The illegal-content classification path in
+[moderation.md §1](../instances/moderation.md#1-the-two-classification-paths)
+uses a parallel shorthand `'full'`, which names every user-input
+field plus attached media on the target. `'full'` and `'node'`
+overlap in intent — both name the whole node rather than a
+property — and the relationship between the two is left for the
+moderation/redaction sweep to settle.
 
 ---
 
