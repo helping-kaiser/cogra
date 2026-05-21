@@ -22,8 +22,8 @@ rather than duplicates.
 
 An Item is created by a single compound gesture from one actor —
 either a User or a Collective. Unlike a Post, Item creation is
-**compound**: it brings the Item AND the creator's first
-ItemOwnership into existence in one atomic step, with the creator
+**compound**: it brings the Item AND the author's first
+ItemOwnership into existence in one atomic step, with the author
 as the initial owner. There is no separate "list" then "claim
 ownership" flow.
 
@@ -34,14 +34,14 @@ The gesture writes the following records atomically:
   (see [data-model.md](../implementation/data-model.md)).
 - `item_attachments` rows for each piece of attached media (zero
   or more).
-- An actor edge from the creator toward the Item — the
+- An actor edge from the author toward the Item — the
   **authorship edge** (§5). Its `(dim1, dim2)` values are the
-  creator's initial opinion of their own item, typically high
+  author's initial opinion of their own item, typically high
   positive sentiment and relevance.
-- A new `:ItemOwnership` junction node for the creator.
+- A new `:ItemOwnership` junction node for the author.
 - The `ItemOwnership → User/Collective` `:BEARER` structural
-  edge, binding the junction to the creator.
-- The creator's `User/Collective → ItemOwnership` actor edge —
+  edge, binding the junction to the author.
+- The author's `User/Collective → ItemOwnership` actor edge —
   their **Shape A self-claim** to the ownership.
 - The `ItemOwnership → Item` claim edge.
 - The `Item → ItemOwnership` approval edge with positive top
@@ -50,7 +50,7 @@ The gesture writes the following records atomically:
 Because there is no prior owner to cast a Shape B approval vote
 — the Item did not exist a moment ago — the
 [two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
-collapses to its 1-of-1 special case: the creator's Shape A
+collapses to its 1-of-1 special case: the author's Shape A
 self-claim is the only required vote, and the system writes
 both structural edges atomically alongside it. This is the same
 bootstrap pattern used for the founder's `CollectiveMember` in
@@ -180,7 +180,7 @@ An Item receives:
   [edges.md §1](../primitive/edges.md#1-actor-edges) — the
   like/dislike surface plus per-viewer relevance, used by
   [feed-ranking](../primitive/feed-ranking.md) to weight the
-  Item for each viewer. The earliest of these is the
+  Item for each viewing user. The earliest of these is the
   authorship edge (§5).
 - **`Comment → Item` (`:CONTAINMENT`)** when a Comment is
   written on the Item. See
@@ -263,7 +263,7 @@ Item node and the bootstrap ItemOwnership (§1); the author's edge
 is the earliest incoming actor edge by construction.
 
 **Authorship and ownership are distinct.** The author is the
-**creator** — the actor who minted, listed, or registered the
+**author** — the actor who minted, listed, or registered the
 Item; this is immutable and derived from the earliest actor edge.
 The **current owner** is whoever holds the active ItemOwnership
 (§7) and changes with each transfer. An Item authored by one User
@@ -296,19 +296,19 @@ ItemOwnership uses the **two-edge approval pattern** described in
    `Item → ItemOwnership` approval edge.
 4. The system also writes the supersession layer on the
    previous `Item → ItemOwnership_current` edge with
-   `dim1 < 0`, marking the old ownership inactive (§7).
+   `dim1 < 0`, marking the old ownership revoked (§7).
 5. Transfer is complete; the new ItemOwnership is now the
    active one.
 
 No one can take ownership without the current owner's explicit
 Shape B vote — there is no "take" operation in the graph. The
 bootstrap at Item creation (§1) is the one exception: the
-creator's Shape A self-claim is the only required vote because
+author's Shape A self-claim is the only required vote because
 no prior ItemOwnership exists, and the two-edge approval pattern
 collapses to its 1-of-1 special case.
 
 The current owner's Shape B vote flows from the very ownership
-record that's about to be superseded — fitting, since approving
+record that's about to be revoked — fitting, since approving
 the transfer is the same act that ends their own ownership.
 
 ---
@@ -318,7 +318,7 @@ the transfer is the same act that ends their own ownership.
 When a transfer completes and the new `Item → ItemOwnership`
 approval edge is created, the system **automatically** adds a new
 layer on the **previous** ItemOwnership's `Item → ItemOwnership`
-approval edge with `dim1 < 0` — marking it revoked/superseded.
+approval edge with `dim1 < 0` — marking it revoked.
 This uses the general state-transition mechanism on structural
 edges described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
@@ -339,7 +339,7 @@ owner remains visible, only the active one changes.
 **Invariant — append-only ownership chain:** ItemOwnership nodes
 and the layers on their approval edges are never deleted. Every
 past owner of an Item remains visible on the graph as a
-superseded ItemOwnership; only the active one changes with each
+revoked ItemOwnership; only the active one changes with each
 transfer.
 
 ---
@@ -359,7 +359,7 @@ Two redaction triggers apply to an Item today:
 - **Moderation: `'sensitive'` classification.** A passing
   `'sensitive'` Proposal flips the top layer of `moderation_status`
   to `'sensitive'`. No redaction; display content stays. Each
-  viewer's `content_filtering_severity_level` (see
+  viewing user's `content_filtering_severity_level` (see
   [data-model.md](../implementation/data-model.md) "User
   preferences") decides how aggressively the frontend filters
   the Item. Reversible by a counter-Proposal back to `'normal'`.

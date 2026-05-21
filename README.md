@@ -21,7 +21,7 @@ must resist re-centralization.
 
 ## What CoGra commits to
 
-**No AI in the feed.** Ranking is computed from each viewer's own
+**No AI in the feed.** Ranking is computed from each viewing user's own
 position in the graph and the weighted edges they create through
 explicit interactions. There are no learned models and no
 popularity amplifiers.
@@ -38,8 +38,8 @@ overwritten. The only carve-out is in-place redaction of illegal
 content, and even that leaves a visible trace. Transparency and
 auditability over convenience.
 
-**Governance, not admin escape hatches.** Takedowns, redactions,
-and policy changes run through community votes on the graph, with
+**Governance, not admin escape hatches.** Redactions and policy
+changes run through community votes on the graph, with
 weights and thresholds visible. There is no admin override — even
 court orders prompt a moderator to file
 [the same Proposal](docs/instances/moderation.md#2-reports--proposals-on-the-graph)
@@ -58,7 +58,7 @@ another user's feed.
 including severing ties — affects only the severing community's
 own outbound paths. The severed party's other neighbours are
 unaffected: the severance does not propagate forward to them.
-It does reshape the feeds of viewers whose own outbound paths
+It does reshape the feeds of viewing users whose own outbound paths
 pass through the severing community — each of them can in turn
 decide whether to sever or not. The cascade spreads by choice,
 not by propagation.

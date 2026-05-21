@@ -61,13 +61,41 @@ Nodes fall into four categories:
 - **Junction nodes** — entities that represent relationships which
   themselves can be interacted with (ChatMember, CollectiveMember,
   ItemOwnership). They have roles, need approval flows, and
-  eliminate parallel edges between the same two nodes: a user's
+  eliminate parallel edges between the same two nodes: an actor's
   *membership* in a chat and their *opinion* of that chat are
   edges to different nodes.
 - **System nodes** — singletons that carry instance-level
   configuration governed via Proposals (Network). They aren't
   actors, aren't content, and don't represent relationships;
   they exist because governance needs a node to target.
+
+**Invariant:** **Actor = User ∪ Collective.** Wherever the docs
+say "actor" without further qualification, the referent is any
+`:User` or `:Collective` node. The two node labels exist because
+the graph stores them separately (different property sets,
+different identity rules), but every actor-edge endpoint and
+every gesture in §3 applies uniformly to both. Prefer "actor" in
+prose unless the User-vs-Collective distinction is load-bearing
+for the rule being stated. There is no `:Actor` label in the
+graph — structural notations like `User/Collective → ChatMember`
+remain in use where they faithfully describe the two concrete
+endpoint labels.
+
+Two scoped subsets of "actor" recur in governance:
+
+- **Active member** — an actor with at least one timestamped
+  action within the relevant scope's recency window. Always
+  scoped: for Network-wide tallies the window is
+  `active_threshold_days` (see
+  [network.md §3 "Eligibility-definition"](network.md#eligibility-definition));
+  for Collective-internal tallies the window is set per
+  Collective (see [collectives.md](../instances/collectives.md)).
+  "Active member" is never an instance-free notion.
+- **Voter** — the eligible subset of actors *for a given vote*.
+  Eligibility is the vote's own rule (mod-gate, holders-of-junction,
+  etc.); a voter is what an active member becomes once the tally
+  attaches to a specific Proposal or junction-approval. See
+  [governance.md §2.2](governance.md#22-eligibility).
 
 **Junction nodes carry typed properties** (role, `ownership_pct`,
 etc.) as properties on the junction node itself, not encoded in
@@ -198,7 +226,7 @@ gesture in response.
   influence others' graphs have to take explicit, layer-creating
   gestures rather than feed engagement through invisible
   implicit-signal channels — every interaction is visible on the
-  graph. Combined with §7 (inbound edges don't affect a viewer's
+  graph. Combined with §7 (inbound edges don't affect a viewing user's
   feed), this leaves bot farms little leverage.
 - **Freedom of the mind** ([CLAUDE.md](../../CLAUDE.md) principle
   #8). The system doesn't reward outrage or measure involuntary
@@ -308,7 +336,7 @@ needed:
 **Invariant:** A junction relationship's state is derived from the
 two structural edges of its approval pair, not from a stored flag.
 Claim only = pending; claim + approval, both with `dim1 > 0` top
-layers = active; negative top layer on either = inactive. A status
+layers = active; negative top layer on either = revoked. A status
 property on the junction would be a second source of truth that
 could drift; the topology IS the state.
 
@@ -360,12 +388,12 @@ revoked" is a single edge with a layered stance flip, not a
 different edge type — see "Revocation and state transitions"
 below.
 
-#### Bootstrap: founder / creator self-collapse
+#### Bootstrap: author / founder self-collapse
 
 When a junction is created with no other approver required —
 the founder of a Collective
 ([collectives.md §1](../instances/collectives.md#1-creation)),
-the creator of an Item
+the author of an Item
 ([items.md §1](../instances/items.md#1-creation)), the founder
 of a Chat ([chats.md §2.1](../instances/chats.md#21-chat)) —
 the bearer's Shape A self-claim is the only required vote.
@@ -405,8 +433,9 @@ history is visible in the layer stacks.
 **Relationship state is derived from both top layers.** A junction
 relationship is **active** iff both paired edges' top layers have
 `dim1 > 0`. Any negative top layer on either edge makes the
-relationship inactive. The pending state (claim edge only, no
-approval edge yet) still applies — it's a separate case from revoked.
+relationship **revoked**. The **pending** state (claim edge only,
+no approval edge yet) still applies — it's a separate case from
+revoked.
 
 **Who triggers state transitions.** The system is still the only
 entity that writes to structural edges. It reacts to votes:
@@ -416,7 +445,10 @@ entity that writes to structural edges. It reacts to votes:
   (`User/Collective → junction` actor edge). The system appends a
   new layer on the **claim-side** structural edge with
   `dim1 < 0`. Self-determined; not a governance decision.
-- **Removal via governance instance (kick / fire / expel).**
+- **Removal via governance instance** — *disavowal* in chat
+  scope ([chats.md §10](../instances/chats.md#10-moderation)),
+  unnamed-generic in collective scope (the social contract
+  picks the wording — "remove member," "fire worker," etc.).
   Removal uses the **same Shape B vote machinery as approval**,
   with stance flipped: each eligible voter (typically other
   holders of the same junction type for the same parent) writes
@@ -527,7 +559,7 @@ The decoupling is real and important. A valid edge shape:
 This composes correctly under the existing math: the sentiment chain
 (`s_path`) carries the affection through traversal via signed
 multiplication, while the interest chain (`c_path`) is tainted negative
-so the path does not amplify the target's content into the viewer's
+so the path does not amplify the target's content into the viewing user's
 feed. Loving someone and not following their posts are independent
 positions on the graph; the dim grammar respects that.
 
@@ -602,15 +634,15 @@ restrictions (see
 [feed-ranking.md §3 "Invariant: forward-only traversal"](feed-ranking.md#3-per-edge-composition-along-a-path)
 and [feed-ranking.md §3.5 "Traversal restrictions"](feed-ranking.md#35-traversal-restrictions)).
 Inbound edges — sentiment, follows, likes from others toward the
-viewer — do not contribute to the viewer's ranking. This is the
+viewing user — do not contribute to the viewing user's ranking. This is the
 anti-bot foundation: a swarm pointing at you cannot drag your own
 graph anywhere.
 
 **"Inbound edges don't affect your feed" is one consequence, not
 the full story.** Some bot-amplification gaps work without any
-direct inbound edge at the viewer: a bot self-claims into an
+direct inbound edge at the viewing user: a bot self-claims into an
 open-membership chat, gets `:APPROVAL` (system-written from the
-chat to the bot's `ChatMember`), and rides a viewer's existing
+chat to the bot's `ChatMember`), and rides a viewing user's existing
 edge to a chat member into a delta-funnel reaching the bot.
 Closing those gaps requires the per-edge restrictions in
 [feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)
@@ -690,7 +722,7 @@ operates on in CoGra:
 - Node categories (actor, content, junction) — §2.
 - Edge categories (actor, structural) — §3.
 - The uniform 2-dimensional `[-1.0, +1.0]` tensor shape — §4.
-- Directional semantics — §7 (inbound edges don't affect the viewer's
+- Directional semantics — §7 (inbound edges don't affect the viewing user's
   feed).
 - Append-only layer stacks — §8 (the current state is the top layer).
 

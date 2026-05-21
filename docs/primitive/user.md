@@ -137,8 +137,8 @@ all system-generated as a side effect of the rules in
 
 A User receives:
 
-- **Actor edges** from other Users and Collectives — opinions
-  about them (sentiment + interest). See
+- **Actor edges** from other actors — opinions about them
+  (sentiment + interest). See
   [edges.md §1](edges.md#1-actor-edges) for both source-side
   catalogs.
 - **`ChatMember / CollectiveMember / ItemOwnership → User`**

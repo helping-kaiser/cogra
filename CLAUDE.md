@@ -47,7 +47,7 @@ these — these are the rules most often violated:
 ## Architecture (one-screen reference)
 
 Dual-database: **Memgraph** (graph topology, edges, traversal) +
-**PostgreSQL** (metadata, display content). See
+**PostgreSQL** (display content + operational metadata). See
 [docs/implementation/architecture.md](docs/implementation/architecture.md).
 
 Crates:
@@ -56,7 +56,7 @@ Crates:
 |---|---|
 | `api` | Axum HTTP server, async-graphql schema |
 | `graph-engine` | Cypher queries against Memgraph via bolt protocol |
-| `postgres-store` | SQLx queries, migrations, metadata CRUD |
+| `postgres-store` | SQLx queries, migrations, display-content CRUD |
 | `common` | Shared domain types, error types |
 
 Docs are layered:
@@ -92,8 +92,8 @@ Cross-cutting design questions live in
   in-place redaction per
   [docs/primitive/layers.md §5](docs/primitive/layers.md#5-deletion-policy). The
   same spirit applies to Postgres-side display content.
-- **Never erase silently.** Any redaction or takedown — graph-side
-  or Postgres-side — must leave a visible mark.
+- **Never erase silently.** Any redaction — graph-side or
+  Postgres-side — must leave a visible mark.
 - **Never let inbound edges affect a user's feed.** Only outgoing
   edges from the viewing user shape their feed.
 - **Never break edge tensor uniformity.** All edges (actor and
