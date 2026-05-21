@@ -156,7 +156,7 @@ governance.
 **Mod gate.** Same as moderation classifications — at least one
 moderator's positive vote is required. Same bot-defense
 reasoning as
-[moderation.md §3](moderation.md#3-the-mod-gate-rule).
+[governance.md §7](../primitive/governance.md#7-the-mod-gate).
 
 **Drafting and discussion.** The Proposal carries the new version
 number and hash. The actual text — the new version's diff against

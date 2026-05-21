@@ -294,21 +294,13 @@ mechanism
 
 The two gates implement a **separation of powers** — see
 [governance.md §2.4](governance.md#24-threshold-policy)
-"Multi-gate decisions". Each gate counters a distinct failure
-mode:
-
-- **Without the community gate**, moderators alone could purge
-  each other — a sitting-mod coup that strips honest mods with
-  no recourse.
-- **Without the moderator gate**, the community alone could
-  strip moderators — a coordinated push (bots or otherwise)
-  removes honest mods at will.
-
-Both gates required = both failure modes blocked. The
-moderator-gate side also doubles as the bot-defense rule used
-across content moderation (§10,
-[moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)):
-mods are validators, not weighted voters.
+"Multi-gate decisions". The mod-gate side of the pair —
+"≥1 mod positive vote; mod weight = member weight = 1" — is
+defined as a primitive in
+[governance.md §7](governance.md#7-the-mod-gate) and reused here
+and in §11. Each gate of the multi-gate pair counters a distinct
+failure mode (sitting-mod coup vs community coordinated removal);
+both required = both failure modes blocked.
 
 Removal is symmetric to promotion: same Proposal mechanism with
 `proposed_value = 'member'`, same dual-gate rule. There is no
@@ -348,10 +340,10 @@ consequences shared across all three:
 - **Mod weight = member weight = 1; mod is a gate, not a
   weight.** Moderators do not outvote the community; the
   "≥1 mod positive vote" rule is a procedural gate, never a
-  weighting. Stated symmetrically here and in
-  [moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)
-  — the rule applies uniformly to every Network-scope Proposal
-  (mod role changes, classifications, parameter amendments).
+  weighting. The rule is defined as a primitive in
+  [governance.md §7](governance.md#7-the-mod-gate); it applies
+  uniformly to every Network-scope Proposal (mod role changes,
+  classifications, parameter amendments).
 
 The `active_threshold_days` recency window from §3 composes
 naturally with tally-time eligibility per
@@ -397,7 +389,7 @@ buckets capture the gradient that matters in practice.
 
 The mod gate uses the same bot-defense reasoning as content
 moderation (§10,
-[moderation.md §3](../instances/moderation.md#3-the-mod-gate-rule)).
+[governance.md §7](governance.md#7-the-mod-gate)).
 Without it, a coordinated push could drag a baseline-pair
 threshold to trivially low values and weaponize the loosened
 parameter.
