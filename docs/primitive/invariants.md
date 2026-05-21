@@ -53,6 +53,9 @@ listed under the most useful one.
 - [Junction state is encoded in topology](graph-model.md#5-junction-node-flows)
   — claim only = pending; claim + approval = active; negative top
   layer on either = revoked. No status flag.
+- [No User node before verification](user.md#2-creation) — the
+  graph has no "unverified" or "pending" User state; nodes
+  either exist with full standing or they don't.
 - [Every Collective has or has had ≥1 active member](../instances/collectives.md#9-lifecycle)
   — zero active members ≡ dissolved.
 - [ItemOwnership forms an append-only chain](../instances/items.md#7-supersession-exactly-one-active-itemownership-per-item)
@@ -68,14 +71,16 @@ listed under the most useful one.
   — the `:Network` singleton creation and the genesis moderator's
   `network_role` layer are the only two writes that escape the
   actor-gesture-or-governance rule.
-- [Mod weight = member weight = 1; mod is a gate, not a weight](../instances/moderation.md#3-the-mod-gate-rule)
-  — uniform across content moderation and moderator role changes.
+- [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
+  — uniform across content moderation, moderator role changes,
+  and `:Network` parameter amendments.
 - [Chat-key rotation on membership change is automatic, not voted](../instances/chats.md#9-encryption-as-the-privacy-mechanism)
   — only mid-epoch rotation runs through governance.
 - [Chat-internal disavowal routes through a Proposal node](../instances/chats.md#10-moderation)
   — both Level 1 (message) and Level 2 (member) carry the
-  `'node'` sentinel; no direct vote edge from a `ChatMember`
-  drives the outcome.
+  whole-node `'node'` sentinel
+  ([nodes.md](nodes.md#whole-node-targeting-the-node-sentinel));
+  no direct vote edge from a `ChatMember` drives the outcome.
 - [Collective content-acts default permissive; governance-acts default deny](../instances/collectives.md#2-acting-through-the-collective)
   — asymmetry reflects reversibility.
 - [Edges attributed to a Collective carry no per-edge record of the acting member](edges.md#1-actor-edges)

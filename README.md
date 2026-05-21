@@ -40,11 +40,10 @@ auditability over convenience.
 
 **Governance, not admin escape hatches.** Redactions and policy
 changes run through community votes on the graph, with
-weights and thresholds visible. There is no admin override — even
-court orders prompt a moderator to file
-[the same Proposal](docs/instances/moderation.md#2-reports--proposals-on-the-graph)
-anyone else would, leaving an auditable trail rather than a
-silent edit.
+weights and thresholds visible. There is no admin override —
+[external demands enter as ordinary Proposals](docs/primitive/governance.md#external-demands-enter-as-proposals),
+typically filed by a moderator, leaving an auditable trail
+rather than a silent edit.
 
 **Fair economics.** Ad revenue distributes across the economic
 landscape of the graph. Bot clusters earn nothing because real

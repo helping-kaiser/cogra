@@ -123,56 +123,27 @@ transparent, fully auditable, append-only by construction.
 
 ## 3. The mod-gate rule
 
-**Invariant:** Moderator weight equals member weight equals `1`.
-The `network_role = 'moderator'` role is a procedural **gate** on
-Network-scope governance — at least one positive mod vote required
-for any classification (this section) and for any moderator role
-change ([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal))
-— not a vote weight. Mods are validators, not weighted voters; they
-cannot outvote the community, and the community cannot remove a
-moderator without a moderator's participation.
+Every moderation Proposal — content classification (`sensitive`
+or `illegal`) and un-classification back to `normal` — runs
+through the **mod-gate**: at least one positive vote from a User
+with `network_role = 'moderator'` must be present in the tally
+before the outcome can take effect.
 
-For **any** moderation Proposal to cross threshold, the tally must
-include **at least one positive vote from a User with
-`network_role = 'moderator'`**. This is not a weight — mods count
-as 1, same as everyone else — it is a gate.
+The primitive definition lives in
+[governance.md §7](../primitive/governance.md#7-the-mod-gate),
+which states the invariant "mod weight = member weight = 1; mod
+is a gate, not a weight," explains why the gate is needed in
+both directions, and names the failure modes each side of the
+multi-gate pattern closes off. The same component reappears in
+moderator role changes
+([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal))
+and `:Network` parameter amendments
+([network.md §11](../primitive/network.md#11-amending-network-parameters));
+moderation classifications are one of those instances.
 
-**A moderator's positive vote counts in BOTH the mod-gate check
-AND the member-tally arithmetic; it is not double-spent in any
-other sense.** Mod cast `+1` once; the same vote opens the gate
-*and* contributes its weight of `1` to the count tallied against
-quorum and threshold. The "mod weight = 1" rule means the
-moderator's contribution to the member arithmetic is exactly one
-member's worth — nothing more — even though that same vote also
-opened the gate. The substantive arithmetic / threshold mechanics
-that this rule shapes belong to
-[network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal)
-and the broader governance pass — this entry is the vocabulary
-pin so the rule can be cited without ambiguity.
-
-The rule applies uniformly across both `sensitive` and `illegal`,
-and symmetrically to un-classification (returning content to
-`'normal'`):
-
-- Without a mod gate on `sensitive`, a small coordinated group
-  could flood-flag legitimate content, forcing endless
-  re-moderation.
-- Without a mod gate on `illegal`, bot networks could mass-vote
-  redactions of legitimate content.
-- Without a mod gate on un-classification, bots could strip
-  moderation flags from legitimately-classified content.
-
-Same mechanism in every direction. Mods are validators, not
-weighted-voters.
-
-The same mod-gate component reappears in **mod role changes**
-([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal)),
-paired there with a community quorum-and-threshold to form the
-multi-sig separation of powers — neither moderators alone nor
-community alone can promote or remove a moderator. "Mod weight =
-member weight = 1; mod is a gate, not a weight" is the rule both
-docs share, stated here for content classifications and there
-for role changes.
+The instance-specific arithmetic — `moderation_sensitive_*` and
+`moderation_illegal_*` quorum/threshold defaults — lives in §4
+below.
 
 ## 4. Eligibility, weights, thresholds
 
@@ -296,22 +267,19 @@ disclosure exists, and the graph cannot detect it) and too strict
 
 ## 6. Coexistence with chat-internal moderation
 
-Two distinct mechanisms can apply to a plaintext chat message:
+Platform moderation (this doc) and chat-internal disavowal
+([chats.md §10](chats.md#10-moderation)) can both apply to the
+same `ChatMessage`. They sit at different scopes (Network vs
+chat), eligibility differs (every active Network member vs
+active `ChatMember`s), and outcomes write to different graph
+state — so they do not conflict.
 
-- **Platform moderation (this doc).** Network-level
-  classification. Drives the redaction cascade for `illegal`.
-  Eligibility = every User.
-- **Chat-internal disavowal** ([chats.md §10](chats.md#10-moderation)).
-  The chat's stance toward a message or member. Eligibility =
-  active ChatMembers of that chat.
-
-Both can apply to the same content and produce different outcomes
-— a chat-disavowed message is still platform-`'normal'` until the
-Network classifies it, and a message with platform-redacted
-content stays in any chat that hasn't disavowed it. The platform
-outcome on `'illegal'` is destructive (per-field redaction); the
-chat-internal outcome is non-destructive (the chat moves away;
-the message stays).
+The primitive coexistence rule — scope decides the state
+written, instances at different scopes never compete for the
+same write — lives in
+[governance.md §9](../primitive/governance.md#9-coexistence-multiple-governance-instances-on-a-shared-subject).
+The chat-vs-platform pairing is the worked example in that
+section.
 
 ## 7. Noise vs consistency — what the mod gate does and doesn't solve
 

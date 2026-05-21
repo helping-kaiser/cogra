@@ -26,18 +26,23 @@ authorization rules; the redaction action is shared.
 
 ## 1. Two redaction levels
 
-**Identity-level (default).** Removes the user's identifying
-information without touching their authored content bodies:
+Account deletion uses the two redaction levels defined in
+[layers.md §5 "Two redaction levels — identity vs content"](../primitive/layers.md#two-redaction-levels--identity-vs-content):
+identity-level by default, content-level on opt-in.
+
+**Identity-level (default).** The User-side fields touched:
 
 - The `username` layer on the graph User node is replaced with
-  the [layers.md §5](../primitive/layers.md#5-deletion-policy) redaction marker. The User node
-  itself stays; edges and layer stacks stay; counts and authorship
-  derivation continue to work.
+  the [layers.md §5](../primitive/layers.md#5-deletion-policy)
+  redaction marker. The User node itself stays; edges and layer
+  stacks stay; counts and authorship derivation continue to
+  work.
 - The Postgres `users` row is tombstoned — a new version row in
-  which `display_name`, `bio`, `avatar_id`, and `website_url` are
-  cleared (`NOT NULL` fields set to a redaction marker, nullable
-  fields nulled), and `username` is replaced with the unique
-  redacted form below. The original row is archived per §3.
+  which `display_name`, `bio`, `avatar_id`, and `website_url`
+  are cleared (`NOT NULL` fields set to a redaction marker,
+  nullable fields nulled), and `username` is replaced with the
+  unique redacted form below. The original row is archived per
+  §3.
 - The user's avatar `media_attachments` row is tombstoned and
   archived.
 - Private per-user state (preferences, bookmarks, hidden-actor
@@ -48,9 +53,8 @@ information without touching their authored content bodies:
   instead be archived per §3 because they carry their own
   retention clocks.
 
-**Content-level (opt-in).** A separate, explicit second step on
-top of identity redaction. For each Post / Comment / ChatMessage
-authored by the user:
+**Content-level (opt-in).** For each Post / Comment /
+ChatMessage authored by the user:
 
 - The Postgres body version row is tombstoned and the original
   body archived.
@@ -60,12 +64,10 @@ authored by the user:
   via authorship — only the body and its media become
   unavailable to public readers.
 
-The default is identity-only because public bodies were
-**publicly authored** — PII control happened at write time, and
-mass-redacting bodies destroys other users' record of
-conversations they participated in. Aggressive content redaction
-is offered as an explicit second step for users who later regret
-what they wrote.
+The rationale for identity-only as the default — content was
+publicly authored, mass-redacting bodies destroys other actors'
+record — is given alongside the level definition in
+[layers.md §5](../primitive/layers.md#two-redaction-levels--identity-vs-content).
 
 ### Username post-redaction
 
