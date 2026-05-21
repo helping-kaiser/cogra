@@ -711,7 +711,7 @@ changes follow the primitive — see
   (`User/Collective → CollectiveMember`). The system appends a
   `dim1 < 0` layer on the claim-side structural edge. The
   CollectiveMember junction stays on the graph; the relationship
-  is inactive.
+  is revoked.
 - **Removal.** Eligible voters per the social contract's removal
   instance lay `dim1 < 0` layers on their existing
   `CollectiveMember_voter → CollectiveMember_target` Shape B

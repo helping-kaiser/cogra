@@ -52,7 +52,7 @@ listed under the most useful one.
   traversal-level and per-viewer; the two are not interchangeable.
 - [Junction state is encoded in topology](graph-model.md#5-junction-node-flows)
   — claim only = pending; claim + approval = active; negative top
-  layer on either = inactive. No status flag.
+  layer on either = revoked. No status flag.
 - [Every Collective has or has had ≥1 active member](../instances/collectives.md#9-lifecycle)
   — zero active members ≡ dissolved.
 - [ItemOwnership forms an append-only chain](../instances/items.md#7-supersession-exactly-one-active-itemownership-per-item)
