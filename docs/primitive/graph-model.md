@@ -61,13 +61,41 @@ Nodes fall into four categories:
 - **Junction nodes** — entities that represent relationships which
   themselves can be interacted with (ChatMember, CollectiveMember,
   ItemOwnership). They have roles, need approval flows, and
-  eliminate parallel edges between the same two nodes: a user's
+  eliminate parallel edges between the same two nodes: an actor's
   *membership* in a chat and their *opinion* of that chat are
   edges to different nodes.
 - **System nodes** — singletons that carry instance-level
   configuration governed via Proposals (Network). They aren't
   actors, aren't content, and don't represent relationships;
   they exist because governance needs a node to target.
+
+**Invariant:** **Actor = User ∪ Collective.** Wherever the docs
+say "actor" without further qualification, the referent is any
+`:User` or `:Collective` node. The two node labels exist because
+the graph stores them separately (different property sets,
+different identity rules), but every actor-edge endpoint and
+every gesture in §3 applies uniformly to both. Prefer "actor" in
+prose unless the User-vs-Collective distinction is load-bearing
+for the rule being stated. There is no `:Actor` label in the
+graph — structural notations like `User/Collective → ChatMember`
+remain in use where they faithfully describe the two concrete
+endpoint labels.
+
+Two scoped subsets of "actor" recur in governance:
+
+- **Active member** — an actor with at least one timestamped
+  action within the relevant scope's recency window. Always
+  scoped: for Network-wide tallies the window is
+  `active_threshold_days` (see
+  [network.md §3 "Eligibility-definition"](network.md#eligibility-definition));
+  for Collective-internal tallies the window is set per
+  Collective (see [collectives.md](../instances/collectives.md)).
+  "Active member" is never an instance-free notion.
+- **Voter** — the eligible subset of actors *for a given vote*.
+  Eligibility is the vote's own rule (mod-gate, holders-of-junction,
+  etc.); a voter is what an active member becomes once the tally
+  attaches to a specific Proposal or junction-approval. See
+  [governance.md §2.2](governance.md#22-eligibility).
 
 **Junction nodes carry typed properties** (role, `ownership_pct`,
 etc.) as properties on the junction node itself, not encoded in

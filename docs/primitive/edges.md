@@ -11,7 +11,7 @@ directionality, the append-only rule — see
 
 ## 1. Actor edges
 
-All actor edges are created by User or Collective actors toward
+All actor edges are created by actors (User or Collective) toward
 other nodes. The 2 dimensions are set by the actor and follow the
 uniform `[-1.0, +1.0]` range described in
 [graph-model.md](graph-model.md).
@@ -182,8 +182,8 @@ not to the relationship.
 System-created when a content node embeds another node — a
 ChatMessage sharing a post into a chat, a Post quoting another
 Post, a Comment citing the original of a re-uploaded image, any
-of the three mentioning a User or Collective, pointing at a
-proposal to vote on, etc. The **carrier** is a content node —
+of the three mentioning an actor, pointing at a proposal to vote
+on, etc. The **carrier** is a content node —
 ChatMessage, Post, or Comment — with its own author, timestamp,
 and Postgres body. The referenced node is what the carrier points
 at. See [chats.md](../instances/chats.md) for the worked-out
@@ -321,7 +321,7 @@ and the schema explodes every time a node type is added.
 
 | Label | Applies to | Description |
 |---|---|---|
-| `:ACTOR` | All actor edges | Created by User or Collective actors; carries the 2-dimensional opinion tensor. Uniform across every actor-edge type — specific meaning (sentiment-toward-post vs interest-in-user, etc.) derives from endpoint node labels. |
+| `:ACTOR` | All actor edges | Created by actors (User or Collective); carries the 2-dimensional opinion tensor. Uniform across every actor-edge type — specific meaning (sentiment-toward-post vs interest-in-user, etc.) derives from endpoint node labels. |
 | `:STRUCTURAL` | All structural edges not otherwise labeled | System-created edges expressing containment or belonging. Dimensions typically `(0, 0)` unless they participate in a state-bearing pattern. |
 
 ### Sub-category labels

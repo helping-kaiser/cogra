@@ -18,6 +18,9 @@ listed under the most useful one.
 
 ## Topology and visibility
 
+- [Actor = User ∪ Collective](graph-model.md#2-node-categories) —
+  the umbrella term covering both actor node labels; "active
+  member" and "voter" are scoped subsets, never instance-free.
 - [Edges are directional](graph-model.md#1-core-principles) —
   `A → B` and `B → A` are independent edges.
 - [Edge tensor uniformity](graph-model.md#4-edge-structure) —
