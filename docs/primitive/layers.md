@@ -224,6 +224,51 @@ in cases like content that is illegal to retain at all).
 Implementation specifics belong in
 [data-model.md](../implementation/data-model.md).
 
+### Two redaction levels — identity vs content
+
+A redaction action declares its **level**, which fixes the
+*scope* of fields and rows the per-surface mechanisms above
+touch. Two levels exist:
+
+- **Identity-level.** Touches identity-bearing fields on the
+  actor node only — the actor's name layer on the graph side
+  and the actor's profile/identity fields and avatar on the
+  Postgres side. Authored content bodies are not touched.
+- **Content-level.** Identity-level *plus*, for each Post /
+  Comment / ChatMessage attributed to the actor, the body
+  version row in Postgres and any attached media rows. The
+  graph nodes, authoring edges, and layer stacks stay; only the
+  bodies and their attachments become unavailable to public
+  readers.
+
+The level is a property of the *authorization path*, not of the
+mechanism — the in-place layer marker and the Postgres-tombstone
+version row apply the same way at either level. What differs is
+the *set* of fields and rows the path elects to touch.
+
+The two paths today use the level distinction differently:
+
+- **Illegal-content** redactions per
+  [moderation](../instances/moderation.md) choose specific
+  fields (one named field, or the `'full'` shorthand). Whether
+  the result is identity-equivalent or content-equivalent
+  follows from the field set chosen.
+- **Account deletion** per
+  [account-deletion](../instances/account-deletion.md) defaults
+  to identity-level and offers content-level as an explicit
+  opt-in. The default is identity-only because content was
+  publicly authored — PII control happened at write time — and
+  mass-redacting bodies would destroy other actors' record of
+  conversations they participated in. Content-level is the
+  explicit choice for an actor who later regrets what they
+  wrote.
+
+Per-row archive holds (typically short for ordinary PII, longer
+for content with statutory retention obligations) are set by the
+authorization path's policy, not by the level itself. See
+[retention-archive.md](retention-archive.md) for the disposition
+mechanism.
+
 ### The operating principle
 
 **Invariant:** No silent deletion. Every redaction — graph-side
