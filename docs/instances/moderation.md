@@ -23,6 +23,21 @@ chat key has been disclosed, chat-internal disavowal
 ([chats.md §10](chats.md#10-moderation)) is the only meaningful
 recourse.
 
+### Vocabulary: moderation vs disavowal
+
+**Invariant — scope reservation.** "Moderation" is Network-scope:
+the act of flipping a node's `moderation_status` to `'sensitive'`
+or `'illegal'` via the governance flow in this doc. "Disavowal"
+is Chat-scope: a `dim1 < 0` layer landed (via the Level 1 / Level 2
+Proposals in [chats.md §10](chats.md#10-moderation)) on a
+ChatMessage- or ChatMember-targeting outcome. The two are
+mechanically and authorization-wise different — different
+eligibility (Network actives vs chat members), different cascade
+(redaction vs `:APPROVAL` edge layer), different reversibility.
+Older drafts used "moderation" loosely for both; sweep toward the
+scoped terms. In chat contexts, use "disavowal" — not "removal,"
+"kick," "fire," or "expel."
+
 ## 1. The two classification paths
 
 `sensitive` and `illegal` operate on different units. Both are
@@ -35,7 +50,7 @@ Every user-input-bearing node carries a `moderation_status` graph
 property (`'normal'` / `'sensitive'` / `'illegal'`, default
 `'normal'`, layered — see [nodes.md](../primitive/nodes.md)). A
 passing `'sensitive'` Proposal flips the top layer of this
-property to `'sensitive'`. Effect: frontend respects each viewer's
+property to `'sensitive'`. Effect: frontend respects each viewing user's
 `content_filtering_severity_level` (see
 [data-model.md](../implementation/data-model.md) "User
 preferences"); content stays. Reversible via a counter-Proposal
@@ -66,7 +81,7 @@ redaction cascade:
 3. The node's `moderation_status` is auto-flipped to
    `'illegal'` so frontends can distinguish a partially-or-fully
    redacted node from a merely sensitive one and hide it
-   entirely if the viewer prefers. This is a system-side
+   entirely if the viewing user prefers. This is a system-side
    derivation, not a separate Proposal. `'illegal'` is the
    strongest state and is not downgraded by a later
    `'sensitive'` Proposal while any redacted fields remain.
@@ -121,6 +136,19 @@ For **any** moderation Proposal to cross threshold, the tally must
 include **at least one positive vote from a User with
 `network_role = 'moderator'`**. This is not a weight — mods count
 as 1, same as everyone else — it is a gate.
+
+**A moderator's positive vote counts in BOTH the mod-gate check
+AND the member-tally arithmetic; it is not double-spent in any
+other sense.** Mod cast `+1` once; the same vote opens the gate
+*and* contributes its weight of `1` to the count tallied against
+quorum and threshold. The "mod weight = 1" rule means the
+moderator's contribution to the member arithmetic is exactly one
+member's worth — nothing more — even though that same vote also
+opened the gate. The substantive arithmetic / threshold mechanics
+that this rule shapes belong to
+[network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal)
+and the broader governance pass — this entry is the vocabulary
+pin so the rule can be cited without ambiguity.
 
 The rule applies uniformly across both `sensitive` and `illegal`,
 and symmetrically to un-classification (returning content to

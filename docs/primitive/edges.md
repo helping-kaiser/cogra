@@ -11,7 +11,7 @@ directionality, the append-only rule — see
 
 ## 1. Actor edges
 
-All actor edges are created by User or Collective actors toward
+All actor edges are created by actors (User or Collective) toward
 other nodes. The 2 dimensions are set by the actor and follow the
 uniform `[-1.0, +1.0]` range described in
 [graph-model.md](graph-model.md).
@@ -182,8 +182,8 @@ not to the relationship.
 System-created when a content node embeds another node — a
 ChatMessage sharing a post into a chat, a Post quoting another
 Post, a Comment citing the original of a re-uploaded image, any
-of the three mentioning a User or Collective, pointing at a
-proposal to vote on, etc. The **carrier** is a content node —
+of the three mentioning an actor, pointing at a proposal to vote
+on, etc. The **carrier** is a content node —
 ChatMessage, Post, or Comment — with its own author, timestamp,
 and Postgres body. The referenced node is what the carrier points
 at. See [chats.md](../instances/chats.md) for the worked-out
@@ -321,7 +321,7 @@ and the schema explodes every time a node type is added.
 
 | Label | Applies to | Description |
 |---|---|---|
-| `:ACTOR` | All actor edges | Created by User or Collective actors; carries the 2-dimensional opinion tensor. Uniform across every actor-edge type — specific meaning (sentiment-toward-post vs interest-in-user, etc.) derives from endpoint node labels. |
+| `:ACTOR` | All actor edges | Created by actors (User or Collective); carries the 2-dimensional opinion tensor. Uniform across every actor-edge type — specific meaning (sentiment-toward-post vs interest-in-user, etc.) derives from endpoint node labels. |
 | `:STRUCTURAL` | All structural edges not otherwise labeled | System-created edges expressing containment or belonging. Dimensions typically `(0, 0)` unless they participate in a state-bearing pattern. |
 
 ### Sub-category labels
@@ -332,7 +332,7 @@ are structural; `:AUTHOR` is the one actor-edge sub-label.
 
 | Label | Applies to | Rationale |
 |---|---|---|
-| `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal) | The creator's authoring actor edge — the first outgoing actor edge from creator to created content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
+| `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal) | The author's authoring actor edge — the first outgoing actor edge from author to authored content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
 | `:BEARER` | Junction → User \| Collective (e.g. `ChatMember → User`) | Identity binding for a junction. "What junctions does this actor bear?" and "who is this junction's bearer?" run as single one-hop traversals along `:BEARER`. |

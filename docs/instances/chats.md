@@ -82,7 +82,7 @@ collapses to its 1-of-1 special case: the founder's gesture acts
 as both the claim and the approval. This is the same bootstrap
 pattern used by Collective founders
 ([collectives.md "Creation"](collectives.md#1-creation)) and Item
-creators ([items.md §1](items.md#1-creation)). Every subsequent
+authors ([items.md §1](items.md#1-creation)). Every subsequent
 ChatMember addition follows §11, not this bootstrap.
 
 The chat opens at epoch `E₁` (`Chat.epoch = 1`); as soon as a
@@ -153,8 +153,13 @@ Concrete types and indexes live in
 
 A ChatMember junction carries:
 
-- **`role`** — `'admin'`, `'mod'`, `'member'` (or any
+- **`role`** — `'admin'`, `'chat_mod'`, `'member'` (or any
   chat-defined role string the chat's parameters recognize).
+  The `'chat_mod'` label is deliberately distinct from the
+  Network-scope `User.network_role = 'moderator'`: chat
+  moderators and Network moderators are different roles, with
+  different scopes and different weights — see
+  [moderation.md §3](moderation.md#3-the-mod-gate-rule).
   Layered. The default role weights are properties on the
   **Chat** (§3.1), not on the ChatMember — change the role to
   reassign the bearer; change the Chat's weight properties to
@@ -181,12 +186,15 @@ a new version row, no overwrite.
 - **`description`** — optional body text. The longer-form
   explanation of what the chat is for, beyond the short `name`
   routing hint (§3.1).
-- **`image`** — optional chat avatar/header, pointed at by
-  `image_id` referencing one `media_attachments` asset, owned by
-  the same author as the Chat (anti-hijack rule per
+- **Image** — optional chat avatar/header, pointed at by the
+  `image_id` column referencing one `media_attachments` asset,
+  owned by the same author as the Chat (anti-hijack rule per
   [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
+  "Image" is the *concept* in chat docs; `image_id` is the SQL
+  column — the same `concept → column` pattern as User `avatar` /
+  `avatar_id`.
 
-`description` and `image` are the two display fields an
+`description` and the image are the two display fields an
 `'illegal'` Proposal can target; together with the graph-side
 `name`, they make up the Chat's user-input field set per
 [moderation.md §5](moderation.md#5-scope). Concrete schema lives
@@ -746,7 +754,7 @@ Starting points, not fixed rules:
 | Parameter       | Message disavowal (Level 1)                                                                              | Member disavowal (Level 2)                                                                              |
 |-----------------|----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
 | Eligibility     | Active `ChatMember`s                                                                                     | Active `ChatMember`s excluding the member under review                                                  |
-| Role weights    | `admin = 5`, `mod = 3`, `member = 1`                                                                     | Same                                                                                                    |
+| Role weights    | `admin = 5`, `chat_mod = 3`, `member = 1`                                                                | Same                                                                                                    |
 | Quorum          | ≥ 20% of total eligible weight has cast a vote                                                           | ≥ 40% of total eligible weight has cast a vote                                                          |
 | Threshold       | > 50% of cast weight disavowing                                                                          | ≥ 2/3 of cast weight disavowing                                                                         |
 | Proposal target | `:Proposal → :ChatMessage`, `target_property = 'node'`, `proposed_value = 'disavowed'`                   | `:Proposal → :ChatMember`, `target_property = 'node'`, `proposed_value = 'disavowed'`                   |
@@ -762,8 +770,8 @@ rules (see
 
 ### How roles fit in
 
-Roles (admin, mod, member) are carried as the `role` property
-on the `ChatMember` junction node (§3.3). The role-weights
+Roles (`admin`, `chat_mod`, `member`) are carried as the `role`
+property on the `ChatMember` junction node (§3.3). The role-weights
 table above is the default derivation; a `ChatMember` may also
 carry an optional `voting_weight` property that sets per-member
 weight directly, overriding the role-based derivation at tally
@@ -883,7 +891,7 @@ meaninglessly if the approver later left the chat — their
 personal endorsement of someone's membership shouldn't outlive
 their own membership. Shape B from the approver's `ChatMember`
 junction ties the admission vote to their current membership
-state: if the approver's own junction goes inactive, their
+state: if the approver's own junction goes revoked, their
 admission vote drops from any future tally per
 [governance.md §2.2](../primitive/governance.md#22-eligibility).
 The same Shape B carrier supports stance flips during the open
@@ -949,7 +957,7 @@ shape, not a fourth flow.
 
 A membership is **pending** when only the claim edge exists;
 **active** when both claim and approval edges exist;
-**inactive / revoked** when a `dim1 < 0` layer has been
+**revoked** when a `dim1 < 0` layer has been
 appended to either edge. Per
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
 nothing is deleted — state transitions are encoded as new
@@ -969,7 +977,7 @@ layers on the existing structural edges.
   `Chat → ChatMember` structural edge for the target. The
   admission-time `ChatMember → ChatMember` edges remain on the
   graph in their original state — they are not re-layered by
-  disavowal. There is no admin-unilateral kick; admins
+  disavowal. There is no admin-unilateral disavowal; admins
   participate in the disavowal vote with their role-weighted
   vote alongside everyone else.
 
@@ -1029,8 +1037,8 @@ occurred.
 
 `'illegal'`-classification target fields on a Chat: `name`
 (graph-side layer redaction), `description` (Postgres tombstone
-version row), `image` (media tombstone + asset removal), or
-the `'full'` shorthand per
+version row), the chat image (media tombstone + asset removal,
+targeted via `image_id`), or the `'full'` shorthand per
 [moderation.md §5](moderation.md#5-scope). A passing Proposal
 fires the redaction cascade and auto-flips `moderation_status`
 to `'illegal'`. The cascade does **not** propagate to the
