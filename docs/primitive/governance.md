@@ -458,6 +458,30 @@ engines and are filed in
 above is sufficient under standard read-committed isolation;
 weaker conditions would need re-spec.
 
+### Eligibility-dropout cascade
+
+When an actor's voting eligibility changes mid-flight — a
+ChatMember demoted, a CollectiveMember whose junction is
+revoked, a User whose `network_role` is downgraded — the
+cascade handler appends a `(0,0)` layer on every **active vote
+that actor cast on still-open Proposals** (Proposals whose
+outcome has not yet crossed threshold).
+
+The next tally on any affected Proposal reads `(0,0)` and
+counts no contribution from this voter. The voter's prior
+positive or negative stance stays preserved in the edge layer
+history (§4) — the cascade neutralizes the live tally without
+erasing the record of intent.
+
+Scope: open Proposals only. Past outcomes already at threshold
+are not revisited (per § "Why outcomes are sticky"). Votes
+already at `(0,0)` get no redundant new layer.
+
+The cascade fires from the same service-layer transaction that
+flipped the eligibility, with the rollback semantics of §
+"Cascade dispatch": if any neutralizing layer fails, the
+eligibility flip rolls back too.
+
 ### Why outcomes are sticky, not continuously rendered
 
 Consider a member who voted on 1000 past disavowals and then leaves
