@@ -148,23 +148,25 @@ Item transfer binds the Collective externally.
 ### Routing
 
 When a member attempts to act-as a Collective C with a gesture
-that would produce edge E:
+that would produce edge E, two Collective-specific steps run
+ahead of the generic governance machinery:
 
-1. The system classifies E as a content-act or governance-act.
-2. The system looks up the act-as rule in C's social contract.
-   If an explicit rule exists for E (by class or by specific
-   edge type), eligibility, weight, and threshold come from
-   that rule; otherwise the default for the class applies
-   (allow for content-acts, deny for governance-acts).
-3. If the rule's threshold is `1`, the gesture immediately
-   produces C's actor edge.
-4. If the threshold is greater than `1`, the gesture creates a
-   pending state and waits for the required co-signatures from
-   other eligible members — the same shape as a multi-sig
-   junction approval per
-   [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
-   Only when the threshold is satisfied does the system produce
-   C's outgoing edge.
+1. **Classify** E as a content-act or governance-act (using the
+   defaults above unless overridden).
+2. **Look up the act-as rule** in C's social contract. If an
+   explicit rule exists for E (by class or by specific edge
+   type), its eligibility, weight, and threshold parameterize
+   the act-as governance instance; otherwise the class default
+   applies (allow for content-acts, deny for governance-acts).
+
+The rule's threshold then runs as a standard governance
+instance per [governance.md](../primitive/governance.md):
+threshold `1` produces C's outgoing edge immediately; threshold
+`> 1` holds the gesture in a pending state until enough
+authorized members co-sign — the **Co-signed acts** pattern in
+[governance.md §3 "Co-signed acts"](../primitive/governance.md#co-signed-acts-threshold--1-in-either-shape).
+Collective act-as routing is one of the three current consumers
+of that pattern.
 
 If the acting "member" is itself a sub-Collective, its own
 social contract is consulted recursively before the parent
