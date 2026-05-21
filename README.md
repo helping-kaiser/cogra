@@ -40,8 +40,10 @@ Transparency and auditability over convenience.
 **Governance, not admin escape hatches.** Takedowns, redactions,
 and policy changes run through community votes on the graph, with
 weights and thresholds visible. There is no admin override — even
-court orders prompt a moderator to file the same proposal anyone
-else would, leaving an auditable trail rather than a silent edit.
+court orders prompt a moderator to file
+[the same Proposal](docs/instances/moderation.md#2-reports--proposals-on-the-graph)
+anyone else would, leaving an auditable trail rather than a
+silent edit.
 
 **Fair economics.** Ad revenue distributes across the economic
 landscape of the graph. Bot clusters earn nothing because real

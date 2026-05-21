@@ -59,8 +59,10 @@ them:
 6. **Governance, not admin escape hatches.** Takedowns,
    redactions, and policy changes run through community votes on
    the graph. There is no admin override — even court orders
-   prompt a moderator to file the same Proposal anyone else
-   would, leaving an auditable trail rather than a silent edit.
+   prompt a moderator to file
+   [the same Proposal](docs/instances/moderation.md#2-reports--proposals-on-the-graph)
+   anyone else would, leaving an auditable trail rather than a
+   silent edit.
 7. **Community choices stay local.** What a community decides —
    including severing ties — affects only the severing
    community's own outbound paths. The severance does not
