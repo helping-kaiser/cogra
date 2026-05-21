@@ -296,7 +296,7 @@ ItemOwnership uses the **two-edge approval pattern** described in
    `Item → ItemOwnership` approval edge.
 4. The system also writes the supersession layer on the
    previous `Item → ItemOwnership_current` edge with
-   `dim1 < 0`, marking the old ownership inactive (§7).
+   `dim1 < 0`, marking the old ownership revoked (§7).
 5. Transfer is complete; the new ItemOwnership is now the
    active one.
 
@@ -308,7 +308,7 @@ no prior ItemOwnership exists, and the two-edge approval pattern
 collapses to its 1-of-1 special case.
 
 The current owner's Shape B vote flows from the very ownership
-record that's about to be superseded — fitting, since approving
+record that's about to be revoked — fitting, since approving
 the transfer is the same act that ends their own ownership.
 
 ---
@@ -318,7 +318,7 @@ the transfer is the same act that ends their own ownership.
 When a transfer completes and the new `Item → ItemOwnership`
 approval edge is created, the system **automatically** adds a new
 layer on the **previous** ItemOwnership's `Item → ItemOwnership`
-approval edge with `dim1 < 0` — marking it revoked/superseded.
+approval edge with `dim1 < 0` — marking it revoked.
 This uses the general state-transition mechanism on structural
 edges described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
@@ -339,7 +339,7 @@ owner remains visible, only the active one changes.
 **Invariant — append-only ownership chain:** ItemOwnership nodes
 and the layers on their approval edges are never deleted. Every
 past owner of an Item remains visible on the graph as a
-superseded ItemOwnership; only the active one changes with each
+revoked ItemOwnership; only the active one changes with each
 transfer.
 
 ---

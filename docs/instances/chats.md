@@ -883,7 +883,7 @@ meaninglessly if the approver later left the chat — their
 personal endorsement of someone's membership shouldn't outlive
 their own membership. Shape B from the approver's `ChatMember`
 junction ties the admission vote to their current membership
-state: if the approver's own junction goes inactive, their
+state: if the approver's own junction goes revoked, their
 admission vote drops from any future tally per
 [governance.md §2.2](../primitive/governance.md#22-eligibility).
 The same Shape B carrier supports stance flips during the open
@@ -949,7 +949,7 @@ shape, not a fourth flow.
 
 A membership is **pending** when only the claim edge exists;
 **active** when both claim and approval edges exist;
-**inactive / revoked** when a `dim1 < 0` layer has been
+**revoked** when a `dim1 < 0` layer has been
 appended to either edge. Per
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
 nothing is deleted — state transitions are encoded as new

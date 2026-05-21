@@ -336,7 +336,7 @@ needed:
 **Invariant:** A junction relationship's state is derived from the
 two structural edges of its approval pair, not from a stored flag.
 Claim only = pending; claim + approval, both with `dim1 > 0` top
-layers = active; negative top layer on either = inactive. A status
+layers = active; negative top layer on either = revoked. A status
 property on the junction would be a second source of truth that
 could drift; the topology IS the state.
 
@@ -433,8 +433,9 @@ history is visible in the layer stacks.
 **Relationship state is derived from both top layers.** A junction
 relationship is **active** iff both paired edges' top layers have
 `dim1 > 0`. Any negative top layer on either edge makes the
-relationship inactive. The pending state (claim edge only, no
-approval edge yet) still applies — it's a separate case from revoked.
+relationship **revoked**. The **pending** state (claim edge only,
+no approval edge yet) still applies — it's a separate case from
+revoked.
 
 **Who triggers state transitions.** The system is still the only
 entity that writes to structural edges. It reacts to votes:
