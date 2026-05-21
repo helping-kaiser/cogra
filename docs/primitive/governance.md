@@ -290,6 +290,52 @@ approver votes that admit and later remove a junction holder).
 A future case that doesn't fit either shape is a signal to add a
 third shape to this doc, not to hack an existing one.
 
+### Co-signed acts: threshold > 1 in either shape
+
+When a graph-state change requires more than one party to
+concur — N parties whose individual votes each contribute to the
+same tally — the structure is **uniformly governance with
+threshold > 1** in whichever vote shape fits. No additional
+mechanism is introduced; the result is what we call a
+**co-signed act**:
+
+- The would-be change is materialized as a pending subject (a
+  not-yet-active junction node, a not-yet-produced outgoing
+  edge, a Proposal) so co-signers have something to vote on.
+- Co-signers append vote layers in their respective shape until
+  the threshold is reached.
+- On threshold-cross, the outcome takes effect per §6: the
+  junction activates, the outgoing edge is produced, or the
+  Proposal's cascade fires.
+
+The pattern recognizes that "N parties concur" and "governance
+with threshold N" are the same primitive — there is no separate
+"co-signature" concept. Three current consumers:
+
+- **Multi-sig junction approval.** Shape A self-claim by the
+  would-be bearer plus N Shape B approver votes from existing
+  eligibility junctions of the same type. The junction stays
+  pending until the threshold is reached; activation produces
+  the approval edge. See
+  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+- **Chat invitations.** A specific application of multi-sig
+  junction approval: the chat's `join_policy` sets the threshold
+  on the inviter / approver Shape B votes that admit a new
+  `ChatMember`. See
+  [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
+- **Collective act-as routing.** A member's gesture to produce
+  the Collective's outgoing edge runs through the social
+  contract's per-gesture rule; when the rule's threshold is `> 1`,
+  the gesture is held in a pending state until enough authorized
+  members co-sign, identical in shape to the multi-sig junction
+  approval above. See
+  [collectives.md §2](../instances/collectives.md#2-acting-through-the-collective).
+
+A future actor that needs N-party authorization on its own
+outgoing edges (a multi-sig bot, a council acting jointly)
+parameterizes this same primitive rather than inventing a new
+one.
+
 ---
 
 ## 4. Append-only throughout
