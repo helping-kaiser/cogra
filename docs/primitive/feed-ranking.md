@@ -855,6 +855,19 @@ addressed (UUIDv5 of the canonical name; see
 so any user creating `bot-defense` independently lands on the
 same Hashtag node automatically.
 
+**Primitive vs frontend convention.** What this section anchors
+in primitive is narrow: the *existence* of a reserved
+`bot-defense` Hashtag the community uses for evidence-bearing
+posts about suspected bots, and the user-side intent of the
+gesture (a post with structural ties to the suspect node and
+the hashtag, authored under the same trust mechanisms as any
+other post). Everything below about scaffolding, pre-filled
+structural facts, and where the post surfaces in the UI is
+**frontend convention** — frontends pick their own defaults
+within the graph mechanisms above. A frontend that doesn't
+offer scaffolding still works; the graph's signal doesn't
+depend on any particular client behaviour.
+
 **Authorship is open.** Anyone can author a bot-defense post.
 The post inherits the graph's existing trust mechanisms:
 
@@ -895,7 +908,7 @@ The two reinforce each other. A node flagged by both is
 high-confidence. A node flagged by only one is worth
 investigating but less conclusive.
 
-**The natural workflow.** A viewing user notices an auto-detection
+**The natural workflow (frontend convention).** A viewing user notices an auto-detection
 ping — "delta-funnel shape detected at node `B`." They check,
 agree, and sever (`B` becomes `(0, 0)` from their outbound).
 The frontend can then offer to **scaffold a bot-defense
