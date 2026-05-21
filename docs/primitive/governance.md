@@ -465,6 +465,30 @@ changes, and `:Network` parameter amendments.
 Substantive arithmetic (quorums, supermajority thresholds, the
 exact pairs per instance) lives with each instance, not here.
 
+### External demands enter as Proposals
+
+A direct corollary of the mod-gate and the broader
+governance-only authorization model: **there is no admin
+escape-hatch.** Any external pressure on the platform —
+court orders, regulator demands, law-enforcement notices,
+next-of-kin requests, copyright takedown letters — enters the
+graph through the same Proposal mechanism any User would use.
+Typically a moderator files the Proposal (because they are the
+party that received the demand and they understand the
+classification), but the Proposal itself is an ordinary
+moderation Proposal in [moderation](../instances/moderation.md)
+or the relevant account-action path; the mod-gate and the
+community-tally gate both still apply.
+
+The platform commits to this *because* it is the property that
+makes the transparency story load-bearing: every removal is
+auditable on the graph, no party can edit silently, and a
+pathologically captured moderation corps still requires
+community participation. The federation/forking exit
+([network.md](network.md)) is the final pressure release if a
+particular instance's governance no longer reflects its
+community.
+
 ---
 
 ## 8. Instances

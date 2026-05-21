@@ -307,10 +307,11 @@ separate instance docs by scope. Two paths exist today:
   opt-in.
 
 External pressure (court orders, legal demands) for illegal
-content does not bypass the moderation mechanism; it prompts a
-moderator to start the same Proposal, which the community
-resolves on the graph. Court-ordered user-anonymization is a
-separate path planned in account-deletion.md.
+content does not bypass the moderation mechanism; the principle
+that all external demands enter as ordinary Proposals lives in
+[governance.md §7 "External demands enter as Proposals"](governance.md#external-demands-enter-as-proposals).
+Court-ordered user-anonymization is a separate path planned in
+account-deletion.md, also routed through Proposals.
 
 Disposition of the redacted original (preserve vs. destroy) is
 the same mechanism in both paths — the
