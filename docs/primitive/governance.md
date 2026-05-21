@@ -360,7 +360,7 @@ background computation.
 
 Votes stand until changed; there is no "voting ends at T". A
 specific application that genuinely needs a time window is a new
-design discussion (§10).
+design discussion (§11).
 
 ---
 
@@ -479,7 +479,66 @@ Future cases get added here as they're designed.
 
 ---
 
-## 9. Multi-candidate decisions
+## 9. Coexistence: multiple governance instances on a shared subject
+
+A single node can be the subject of several governance instances
+at once — each parameterized by its own eligibility, weight
+function, threshold policy, and outcome. The instances act
+independently, write to different state, and produce different
+outcomes; they do not conflict because they aren't operating on
+the same state.
+
+The principle: **scope determines what the outcome writes.** A
+chat-scope instance writes to chat-side state (a `Chat →
+ChatMember` approval edge layer, or the existence of a passed
+disavowal Proposal that the chat treats as its stance). A
+Network-scope instance writes to node-level state (a
+`moderation_status` property layer, or per-field redaction
+markers under [layers.md §5](layers.md#5-deletion-policy)). The
+two cannot conflict because the targets are different graph
+objects even when the *node* is the same.
+
+The canonical worked example is **chat-internal disavowal
+alongside platform moderation**, both of which can apply to a
+single `ChatMessage`:
+
+- **Platform moderation** — Network-scope. Eligibility = every
+  active Network member; mod-gate (§7) required.
+  Classification-Proposal targets the message; `'illegal'`
+  triggers the redaction cascade in
+  [layers.md §5](layers.md#5-deletion-policy) (destructive in
+  the sense that the message body's top layer is replaced with
+  a redaction marker, leaving the message node and edges in
+  place). See [moderation.md](../instances/moderation.md).
+- **Chat-internal disavowal** — chat-scope. Eligibility =
+  active `ChatMember`s of the chat hosting the message; weight
+  by role; no mod-gate. Outcome is the chat's stance
+  ([chats.md §10](../instances/chats.md#10-moderation)) — the
+  chat moves away from the message; the message stays.
+
+Both can pass independently, neither overrides the other:
+
+- A chat-disavowed message is still `'normal'` at the platform
+  level until the Network classifies it — the disavowal Proposal
+  affects chat-side state only.
+- A platform-redacted message stays in any chat that hasn't
+  disavowed it — the redaction marker affects node-side state
+  only.
+- The two can also both pass; the message is then both
+  redacted at the platform level *and* disavowed at the chat
+  level. No collision; the writes go to different places.
+
+A similar pattern holds for any future instance that operates on
+a node already governed by another scope (e.g. a Collective
+governing a member's `CollectiveMember` while the Network
+classifies that member's profile — separate state, independent
+outcomes). The shape generalizes: scope decides the state
+written, so instances at different scopes never compete for the
+same write.
+
+---
+
+## 10. Multi-candidate decisions
 
 Decisions that pick from several candidates — council seats,
 multiple property values to choose between, etc. — are expressed
@@ -494,12 +553,12 @@ the same role or property to revert it. No special lifecycle
 machinery needed.
 
 This pattern loses ranked-ballot information ("B over A"). Ranked
-and multi-seat semantics aren't part of the primitive (§10). A use
+and multi-seat semantics aren't part of the primitive (§11). A use
 case that genuinely needs them deserves its own design pass.
 
 ---
 
-## 10. Out of scope
+## 11. Out of scope
 
 - **Secret ballots.** All votes are public on the graph. Privacy is
   achieved through content encryption elsewhere, not through hiding
@@ -513,7 +572,7 @@ case that genuinely needs them deserves its own design pass.
 - **Ranked, multi-seat, or budget-allocation ballots.** All votes
   are binary (support / oppose on a single subject). Ranked
   preferences ("B over A"), multi-seat allocations beyond parallel
-  binary Proposals (§9), and proportional budget splits across N
+  binary Proposals (§10), and proportional budget splits across N
   options aren't expressible in the current primitive. Use cases
   that genuinely need any of these deserve their own design pass.
 

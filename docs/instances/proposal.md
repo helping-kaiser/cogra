@@ -242,7 +242,7 @@ is the node-level progression.
   can coexist against the same property, each passing or
   failing on its own votes
   ([governance.md §2.1](../primitive/governance.md#21-subject),
-  [§9](../primitive/governance.md#9-multi-candidate-decisions)).
+  [§10](../primitive/governance.md#10-multi-candidate-decisions)).
 - **No deletion** — per
   [layers.md §5](../primitive/layers.md#5-deletion-policy),
   graph structure is never removed; the Proposal node, its
