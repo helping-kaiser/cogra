@@ -35,7 +35,7 @@ all run on the same primitive — they differ only in the values
 they pick for the components in §2 (subject, eligibility, weights,
 threshold) and the carrier shape in §3. If a new governance need
 arises, it gets parameters and slots in here, not its own
-mechanism. The full list of current applications is in §7.
+mechanism. The full list of current applications is in §8.
 
 ---
 
@@ -360,11 +360,68 @@ background computation.
 
 Votes stand until changed; there is no "voting ends at T". A
 specific application that genuinely needs a time window is a new
-design discussion (§9).
+design discussion (§10).
 
 ---
 
-## 7. Instances
+## 7. The mod-gate
+
+A recurring component of Network-scope governance is the
+**mod-gate**: for any Proposal in scope, at least one positive
+vote from a User with `network_role = 'moderator'` must be
+present in the tally before the outcome can take effect. The
+mod-gate is a procedural validator, not a weighting.
+
+**Invariant: mod weight = member weight = 1; mod is a gate, not
+a weight.** A moderator's vote contributes exactly one
+member's worth of weight to the tally — the same as every other
+voter. The mod-gate sits *alongside* the member-weighted tally,
+not on top of it.
+
+**A moderator's positive vote counts in BOTH the mod-gate check
+AND the member-tally arithmetic; it is not double-spent in any
+other sense.** The mod casts `+1` once; that same vote opens the
+gate *and* contributes its weight of `1` to the count tallied
+against quorum and threshold. The "mod weight = 1" rule means
+the moderator's contribution to the member arithmetic is
+exactly one member's worth — nothing more — even though the same
+vote also opened the gate.
+
+The gate applies symmetrically in both directions of any
+classification — setting `sensitive` or `illegal`, and
+un-setting back to `normal` — and across every Network-scope
+Proposal kind. Reasons each direction needs the gate:
+
+- Without a mod gate on `sensitive`, a small coordinated group
+  could flood-flag legitimate content, forcing endless
+  re-moderation.
+- Without a mod gate on `illegal`, bot networks could mass-vote
+  redactions of legitimate content.
+- Without a mod gate on un-classification, bots could strip
+  moderation flags from legitimately-classified content.
+- Without a mod gate on **moderator role changes**, the
+  community alone could strip moderators — a coordinated push
+  (bots or otherwise) removes honest mods at will.
+
+The mod-gate is the specific instance of the §2.4 multi-gate
+pattern that pairs a moderator-gate with a community-tally gate.
+Either gate alone leaves a hole:
+
+- **Mods alone** can purge each other — sitting-mod coup.
+- **Community alone** can be coordinated against honest mods —
+  flooded removal.
+
+Both gates together close both failure modes. The full list of
+Network-scope instances that share the mod-gate component is in
+§8 — content moderation classifications, moderator role
+changes, and `:Network` parameter amendments.
+
+Substantive arithmetic (quorums, supermajority thresholds, the
+exact pairs per instance) lives with each instance, not here.
+
+---
+
+## 8. Instances
 
 ### Existing
 
@@ -422,7 +479,7 @@ Future cases get added here as they're designed.
 
 ---
 
-## 8. Multi-candidate decisions
+## 9. Multi-candidate decisions
 
 Decisions that pick from several candidates — council seats,
 multiple property values to choose between, etc. — are expressed
@@ -437,12 +494,12 @@ the same role or property to revert it. No special lifecycle
 machinery needed.
 
 This pattern loses ranked-ballot information ("B over A"). Ranked
-and multi-seat semantics aren't part of the primitive (§9). A use
+and multi-seat semantics aren't part of the primitive (§10). A use
 case that genuinely needs them deserves its own design pass.
 
 ---
 
-## 9. Out of scope
+## 10. Out of scope
 
 - **Secret ballots.** All votes are public on the graph. Privacy is
   achieved through content encryption elsewhere, not through hiding
@@ -456,7 +513,7 @@ case that genuinely needs them deserves its own design pass.
 - **Ranked, multi-seat, or budget-allocation ballots.** All votes
   are binary (support / oppose on a single subject). Ranked
   preferences ("B over A"), multi-seat allocations beyond parallel
-  binary Proposals (§8), and proportional budget splits across N
+  binary Proposals (§9), and proportional budget splits across N
   options aren't expressible in the current primitive. Use cases
   that genuinely need any of these deserve their own design pass.
 

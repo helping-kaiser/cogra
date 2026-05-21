@@ -68,8 +68,9 @@ listed under the most useful one.
   — the `:Network` singleton creation and the genesis moderator's
   `network_role` layer are the only two writes that escape the
   actor-gesture-or-governance rule.
-- [Mod weight = member weight = 1; mod is a gate, not a weight](../instances/moderation.md#3-the-mod-gate-rule)
-  — uniform across content moderation and moderator role changes.
+- [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
+  — uniform across content moderation, moderator role changes,
+  and `:Network` parameter amendments.
 - [Chat-key rotation on membership change is automatic, not voted](../instances/chats.md#9-encryption-as-the-privacy-mechanism)
   — only mid-epoch rotation runs through governance.
 - [Chat-internal disavowal routes through a Proposal node](../instances/chats.md#10-moderation)

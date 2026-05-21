@@ -159,7 +159,7 @@ A ChatMember junction carries:
   Network-scope `User.network_role = 'moderator'`: chat
   moderators and Network moderators are different roles, with
   different scopes and different weights — see
-  [moderation.md §3](moderation.md#3-the-mod-gate-rule).
+  [governance.md §7](../primitive/governance.md#7-the-mod-gate).
   Layered. The default role weights are properties on the
   **Chat** (§3.1), not on the ChatMember — change the role to
   reassign the bearer; change the Chat's weight properties to
@@ -719,7 +719,7 @@ won't. A counter-Proposal targeting the same ChatMessage with
 `proposed_value = 'normal'` reverses the disavowal —
 governance applies symmetrically in both directions, consistent
 with platform moderation's symmetric un-classification path
-([moderation.md §3](moderation.md#3-the-mod-gate-rule)).
+([governance.md §7](../primitive/governance.md#7-the-mod-gate)).
 
 ### Level 2 — Member disavowal
 
