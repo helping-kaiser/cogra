@@ -4,14 +4,15 @@ This file is loaded into every Claude Code conversation on this
 repo. **The rules below are operative, not background reading.**
 Re-read this file at the start of every task.
 
-The project's mission, core principles, hard design rules, and
-contribution workflow are mirrored in
-[CONTRIBUTING.md](CONTRIBUTING.md) for human contributors. The
-content overlaps deliberately: both audiences (Claude here,
-humans there) need the same rules in their canonical doc, and
-relying on Claude to navigate to a separate file before acting is
-unreliable. **Updates to workflow rules must be made in both
-files.**
+**Audience split.** CLAUDE.md is AI-facing;
+[CONTRIBUTING.md](CONTRIBUTING.md) is human-facing. Rules that
+apply to both audiences are kept in both files — the shared
+subset is mission, core principles, hard design rules, and
+workflow basics. Rules that apply to only one audience (e.g.
+"Never make design decisions autonomously," "Never deviate
+silently," and the Commit + Push + PR cycle below are AI-facing
+only) live in just that audience's file. Drift between the two
+is caught by author vigilance, not tooling.
 
 ---
 
