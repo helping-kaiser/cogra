@@ -27,9 +27,9 @@ these — these are the rules most often violated:
    unrelated changes.
 3. **Short commits, long PRs.** Commit body ≤ 2-3 lines. Full
    rationale goes in the PR description, never the commit body.
-4. **Re-read the relevant docs before claiming.** The docs are the
-   source of truth and grow long; recall is a worse source than
-   the file itself.
+4. **Verify claims against the docs, not recall.** Open the
+   relevant section before claiming how the system works — but
+   don't re-read what's already in conversation context.
 5. **Flag contradictions inline.** If a doc contradicts another or
    the user's framing, raise it in the same response. Don't paper
    over it.
@@ -175,25 +175,22 @@ done, the workflow runs straight through to the PR.
 
 ## Hard rules — research and session hygiene
 
-### Re-read docs before claiming
+### Verify claims against the docs, not recall
 
-The docs are the source of truth and grow long. Before making a
-claim about how the system works, open the relevant section and
-re-read it. Recall is a worse source than the file. When making
-math-shaped claims (about ranking, weights, dimensions), trace
-them back to the math in the docs — if you can't, the claim is
-suspect.
+The docs are the source of truth and grow long; recall is worse
+than the file. Before making a claim about how the system works,
+open the relevant section. The exception is files already in
+conversation context — if a doc is loaded and hasn't been
+edited, don't re-read it. Open what you need, skip what you
+have. When making math-shaped claims (about ranking, weights,
+dimensions), trace them back to the math in the docs — if you
+can't, the claim is suspect.
 
 ### Flag contradictions inline
 
 If a doc contradicts another, conflicts with the user's framing,
 or seems out of place — flag it in the same response. Don't paper
 over it; don't file it as a separate later task.
-
-### Don't re-read what's already in context
-
-If a file is already in conversation context and hasn't been
-edited, don't re-read it. Save the tokens.
 
 ### Use the Explore subagent for multi-file research
 
