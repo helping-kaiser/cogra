@@ -1,9 +1,12 @@
 # Contributing to CoGra
 
-This guide is for human contributors. AI-assistant-specific rules
-(session hygiene, what Claude must do or avoid) live in
-[CLAUDE.md](CLAUDE.md); the workflow rules below are mirrored there
-so both audiences see the same truth.
+This guide is for human contributors. [CLAUDE.md](CLAUDE.md) is
+the AI-facing equivalent. Rules that apply to both audiences are
+kept in both files — the shared subset is mission, core
+principles, hard design rules, and workflow basics. Rules that
+apply to only one audience (session hygiene, AI-specific
+guardrails) live only in CLAUDE.md. Drift between the two is
+caught by author vigilance, not tooling.
 
 ---
 
