@@ -232,6 +232,29 @@ actor-gesture-or-governance rule (per
 [graph-model.md §1](../primitive/graph-model.md#1-core-principles)),
 and that escape is confined to the migration.
 
+### Cascade handler
+
+Every governance threshold-cross — moderation classification,
+member disavowal, eligibility dropout, Chat epoch rotation, Item
+ownership transfer — fans out through the **cascade handler**: a
+single dispatch module in the API service layer that sequences
+the derived writes for each cascade type. See
+[governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)
+for the mechanism.
+
+The handler runs **synchronously** inside the same service-layer
+transaction as the triggering vote layer. Per cascade type it
+knows the fan-out order; **archive writes precede graph
+mutations** (so a failed archive never leaves a redacted layer
+without an archive copy); any step failure **rolls back the
+whole transaction**, including the triggering write.
+
+The handler lives in `api/` (orchestration). It calls into
+`graph-engine` for the Cypher writes and `postgres-store` for
+the archive rows; per the code-style rules in CLAUDE.md, the
+cascade module sequences the calls but holds no DB-specific code
+itself.
+
 ---
 
 ## Request Lifecycle: Feed Query

@@ -385,6 +385,46 @@ shifts in the background.
   eligibility only applies the next time someone actually votes on
   the subject.
 
+### Cascade dispatch
+
+When a tally crosses threshold the outcome layer is rarely the
+only write. The triggering write may fan out into derived writes:
+
+- A `dim1 < 0` layer on a `:APPROVAL` edge (a member disavowal
+  outcome).
+- Redaction markers across one or more property layers plus a
+  Postgres-side archive row (the `'illegal'`-classification
+  outcome — see [moderation.md](../instances/moderation.md)).
+- A `(0,0)` layer on every active vote of an actor whose
+  eligibility just dropped (eligibility-dropout cascade).
+- A new property layer on a chat node (mid-epoch `Chat.epoch`
+  rotation).
+- A new ownership-edge layer (Item ownership transfer).
+
+Generic to every cascade:
+
+- **Synchronous.** The cascade fires inside the same
+  service-layer transaction as the triggering write — never
+  deferred to a worker, never a background sweep.
+- **Archive-first.** When the cascade includes a Postgres-side
+  archive write (the redaction cascade is the current case),
+  the archive row is written **before** the graph mutation. A
+  failed archive prevents the graph mutation; the inverse would
+  leave the platform with a redacted layer and no archive copy,
+  which the retention story in
+  [retention-archive.md](retention-archive.md) refuses.
+- **Full rollback.** Any step failure rolls back the entire
+  transaction — including the triggering vote layer. From the
+  graph's perspective the threshold cross never happened, and
+  the voter who pushed it across sees the rollback as a write
+  failure on their vote.
+
+The dispatcher is one module in the API service layer; it
+routes by trigger type to the correct fan-out sequence and
+holds no Cypher or SQL of its own. See
+[architecture.md "Service-layer transactions"](../implementation/architecture.md#service-layer-transactions)
+for where the code lives.
+
 ### Why outcomes are sticky, not continuously rendered
 
 Consider a member who voted on 1000 past disavowals and then leaves
