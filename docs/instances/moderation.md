@@ -267,22 +267,19 @@ disclosure exists, and the graph cannot detect it) and too strict
 
 ## 6. Coexistence with chat-internal moderation
 
-Two distinct mechanisms can apply to a plaintext chat message:
+Platform moderation (this doc) and chat-internal disavowal
+([chats.md §10](chats.md#10-moderation)) can both apply to the
+same `ChatMessage`. They sit at different scopes (Network vs
+chat), eligibility differs (every active Network member vs
+active `ChatMember`s), and outcomes write to different graph
+state — so they do not conflict.
 
-- **Platform moderation (this doc).** Network-level
-  classification. Drives the redaction cascade for `illegal`.
-  Eligibility = every User.
-- **Chat-internal disavowal** ([chats.md §10](chats.md#10-moderation)).
-  The chat's stance toward a message or member. Eligibility =
-  active ChatMembers of that chat.
-
-Both can apply to the same content and produce different outcomes
-— a chat-disavowed message is still platform-`'normal'` until the
-Network classifies it, and a message with platform-redacted
-content stays in any chat that hasn't disavowed it. The platform
-outcome on `'illegal'` is destructive (per-field redaction); the
-chat-internal outcome is non-destructive (the chat moves away;
-the message stays).
+The primitive coexistence rule — scope decides the state
+written, instances at different scopes never compete for the
+same write — lives in
+[governance.md §9](../primitive/governance.md#9-coexistence-multiple-governance-instances-on-a-shared-subject).
+The chat-vs-platform pairing is the worked example in that
+section.
 
 ## 7. Noise vs consistency — what the mod gate does and doesn't solve
 

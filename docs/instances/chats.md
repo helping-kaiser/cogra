@@ -818,25 +818,15 @@ departed member — they just see that the chat has moved away.
 
 ### Coexistence with platform moderation
 
-Two distinct mechanisms can apply to a plaintext chat message:
-
-- **Platform moderation** — the Network-level classification
-  path in [moderation.md](moderation.md) drives the redaction
-  cascade for `'illegal'` and the soft flag for `'sensitive'`.
-  Eligibility is every Network member.
-- **Chat-internal disavowal (this section).** The chat's stance
-  toward a message or member. Eligibility is active ChatMembers
-  of that chat.
-
-Both can apply to the same content and produce different
-outcomes — a chat-disavowed message is still
-platform-`'normal'` until the Network classifies it, and a
-message with platform-redacted content stays in any chat that
-hasn't disavowed it. The platform outcome on `'illegal'` is
-destructive (per-field redaction); the chat-internal outcome is
-non-destructive (the chat moves away; the message stays). See
-[moderation.md §6](moderation.md#6-coexistence-with-chat-internal-moderation)
-for the symmetric framing.
+A `ChatMessage` can be simultaneously subject to two governance
+instances at different scopes — chat-internal disavowal
+(this section) and the Network-scope platform moderation in
+[moderation.md](moderation.md). They write to different state
+and produce independent outcomes: chat-side stance vs.
+node-property classification or per-field redaction. The
+primitive treatment of this — why no conflict arises, and how
+the pattern generalizes — lives in
+[governance.md §9](../primitive/governance.md#9-coexistence-multiple-governance-instances-on-a-shared-subject).
 
 ---
 
