@@ -116,11 +116,12 @@ Cross-cutting design questions live in
 - **Explain why.** This is a learning project as much as a
   building project. Explain the reasoning behind choices, not just
   the implementation.
-- **Move slowly and correctly.** Quality over speed.
+- **Move slowly and correctly.** Quality over speed. No
+  rushing, no shortcuts.
 - **Document decisions in the repo.** Any rule, principle, or
   agreement reached during discussion belongs in this file,
   [CONTRIBUTING.md](CONTRIBUTING.md), or a design doc — not in
-  memory or anyone's head.
+  private notes, assistant memory, or anyone's head.
 
 ---
 
