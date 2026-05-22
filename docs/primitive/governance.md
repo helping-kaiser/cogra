@@ -93,7 +93,8 @@ at properties. Each subject type has a natural node to address:
   [graph-model.md §5](graph-model.md#5-junction-node-flows)) writes a new layer on the
   target property with `proposed_value`. Multiple Proposals
   targeting the same property coexist; each passes or fails on its
-  own votes. Reverting a passed change requires a counter-Proposal —
+  own votes. Reverting a passed change requires a
+  **counter-Proposal** — defined in [§3 "Counter-Proposals"](#counter-proposals),
   consistent with §6.
 
 Whether the vote edge uses Shape A or Shape B (§3) is a separate,
@@ -397,10 +398,8 @@ never expire, so they hold a Proposal blocked indefinitely
 against any later turnout. Restricting tally contributions
 to positive votes removes the passive-veto vector.
 Opposition retains an explicit structural path — author a
-**counter-Proposal**, which is a normal Proposal proposing
-the inverse change (see [§8 Instances](#8-instances) for
-the existing reference, formal definition in
-[nodes.md](nodes.md)). The graph still records negative-
+**counter-Proposal** (see [§3 "Counter-Proposals"](#counter-proposals)
+for the definition). The graph still records negative-
 `dim1` actor edges as personal sentiment; the tally simply
 does not aggregate them.
 
@@ -464,9 +463,30 @@ outgoing edges (a multi-sig bot, a council acting jointly)
 parameterizes this same primitive rather than inventing a new
 one.
 
----
+### Counter-Proposals
 
-## 4. Append-only throughout
+Reversing a passed Proposal is done with a **counter-Proposal**:
+an ordinary `Proposal` node — same label, same `:TARGETS`
+edge, same eligibility/weight/threshold/outcome semantics —
+whose `target_property` matches the prior passed Proposal
+and whose `proposed_value` is the inverse (or the prior
+value, where the property is multi-valued). No new node
+label, no new edge label, no separate mechanism. Tally
+arithmetic, the petition-vs-bidirectional choice, the
+cascade dispatch, and the outcome rules apply identically.
+
+A counter-Proposal is the structural opposition path under
+petition-style tally (§3 "Petition-style tally and dual
+quorum"): voters who oppose a change have no way to register
+the opposition inside the original Proposal's tally, so they
+author or vote on a counter-Proposal that proposes the
+reverse. The same pattern is the only reversal path under
+bidirectional tally as well — an outcome is sticky (§6
+"Why outcomes are sticky"), so a previously-passed change
+does not flip back when later votes shift sentiment; a new
+Proposal must explicitly carry the reverse.
+
+
 
 - Votes are layers on their carrier edges. Never deleted.
 - Changing your vote = new layer (same edge, new dimension values).
