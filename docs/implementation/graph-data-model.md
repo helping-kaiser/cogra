@@ -227,7 +227,7 @@ and edge-labels table below.
 |---|---|---|
 | `id`            | String | UUID v4. |
 | `role`          | String | `'admin'` / `'chat_mod'` / `'member'`. Layered. Distinct from the Network-scope `User.network_role = 'moderator'`. |
-| `voting_weight` | Float  | Optional; used when the chat sets per-member weight directly rather than deriving it from `role` at tally time. Layered when present. |
+| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (per-chat defaults `weight_admin` / `weight_chat_mod` / `weight_member` on the Chat node, §`:Chat` above). When non-null, the tally reads this value directly and the role-derived default is ignored; when null (default), the role-derived rule applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMember) ASSERT m.id IS UNIQUE;
