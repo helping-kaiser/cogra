@@ -66,7 +66,7 @@ ChatMessage authored by the user:
 
 For encrypted ChatMessages, the body row holds a ciphertext blob
 in the same row shape as a plaintext message (see
-[chats.md §4.2](chats.md#42-content-privacy)); the tombstone
+[chats.md §4.2](chats.md#42-chatmessage)); the tombstone
 replaces that blob just as it replaces a plaintext body. Chat
 epoch keys are **untouched** — they live off-graph on members'
 devices, neither the graph nor Postgres ever holds them, and
