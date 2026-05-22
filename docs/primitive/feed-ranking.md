@@ -82,14 +82,17 @@ The walk maintains a per-path visited set to enforce the invariant.
 **Actor edges** and **`:REFERENCES`** contribute factors to the
 path products. `:REFERENCES` is a state-bearing structural
 edge (§3.5 rule 5): it carries a `(dim1, dim2)` tensor with the
-same shape as actor edges and composes the same way. All other
-structural edges count toward `R` (path length) but do not
-contribute factors — they are pure topology.
+same shape as actor edges and composes the same way. The other
+**traversable** structural edges count toward `R` (path length)
+but do not contribute factors — they are pure topology.
+Non-traversable structural edges (`:APPROVAL`, `:BEARER`,
+`:TARGETS` per §3.5 rules 1–3) never appear in any feed-ranking
+path; they contribute nothing to `R` because no path crosses them.
 
 ```
 s_path uses only dim1 of actor and :REFERENCES edges in the path
 |c_path| uses only |dim2| of actor and :REFERENCES edges in the path
-R counts every edge in the path (actor + structural)
+R counts every edge in the (traversable) path
 ```
 
 Why structural edges count toward `R` but not toward the products:
