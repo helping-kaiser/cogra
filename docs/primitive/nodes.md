@@ -45,7 +45,9 @@ each* are platform policy and live in
   redaction. Frontends respect each viewing user's
   `content_filtering_severity_level` preference
   ([data-model.md](../implementation/data-model.md)) when
-  rendering. Reversible via counter-Proposal back to `'normal'`.
+  rendering. Reversible via
+  [counter-Proposal](governance.md#counter-proposals) back to
+  `'normal'`.
 - **`'illegal'`.** Content the Network treats as unlawful or so
   universally prohibited that hosting it is itself a harm.
   Triggers the redaction cascade in
@@ -71,7 +73,8 @@ The two non-default values reach the node by different paths:
 
 `'illegal'` is the strongest state — it isn't downgraded by a
 later `'sensitive'` Proposal while redacted fields remain.
-`'sensitive'` is reversible via a counter-Proposal back to
+`'sensitive'` is reversible via a
+[counter-Proposal](governance.md#counter-proposals) back to
 `'normal'`; `'illegal'` is not, because the underlying redaction
 markers are append-only.
 
