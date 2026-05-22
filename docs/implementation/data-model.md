@@ -311,7 +311,7 @@ CREATE TABLE user_hidden_actors (
 -- updated_at column is needed.
 CREATE TABLE chat_read_state (
     user_id      UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    chat_id      UUID        NOT NULL,
+    chat_id      UUID        NOT NULL REFERENCES chats(id),
     last_read_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (user_id, chat_id)
 );
