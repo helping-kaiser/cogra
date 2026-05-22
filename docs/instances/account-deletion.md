@@ -213,6 +213,17 @@ trigger by mistake, by client bug, or by a compromised session.
 The window is short enough that public surfaces clear quickly,
 long enough that an affected user typically notices.
 
+**Wallet keys stay with the user.** The wallet a user used
+inside the Network is held by an off-platform seed phrase the
+user (and only the user) controls; no part of the platform
+holds those keys. Account deletion removes the in-network
+identity but does not — and cannot — touch the wallet.
+Forthcoming economics events (compensation, payouts,
+settlements) can therefore still target the wallet without
+re-instantiating the in-network account. The "no restore path"
+above is about the User node on the graph and the PII in
+Postgres, not about economic continuity off-platform.
+
 ## 5. Write ordering across stores
 
 Account deletion writes to three places: the retention archive
