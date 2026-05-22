@@ -146,13 +146,20 @@ What tally triggers the outcome. Possible shapes:
 - Supermajority for irreversible decisions.
 - Quorum + percentage (M% of eligible weight participates, N% of
   cast weight agrees).
+- **Petition with dual quorum** — positive-vote-only tally; pass
+  on the lower of (fraction × eligible) or absolute count.
+  Used at Network scope where unbounded membership and bot
+  inflation make a single percentage or single fixed count
+  insufficient. See [§4](#4-petition-style-tally-and-dual-quorum-network-scope).
 - **Multi-gate** — two or more independent eligibility groups
   voting on the same subject; each gate has its own threshold,
   and the outcome triggers only when **all** gates cross.
 
 Percentages scale with the voter pool; fixed counts don't. An
 instance that picks fixed numbers has to defend why it won't need
-re-tuning as the pool grows.
+re-tuning as the pool grows. Dual quorum bounds both ends: the
+fractional bar dominates while the network is small, the absolute
+bar dominates once membership scales past the crossover point.
 
 **Multi-gate decisions are a separation of powers.** When a single
 subject is gated by two or more distinct eligibility groups —
@@ -289,6 +296,97 @@ approver votes that admit and later remove a junction holder).
 
 A future case that doesn't fit either shape is a signal to add a
 third shape to this doc, not to hack an existing one.
+
+### Petition-style tally and dual quorum (Network-scope only)
+
+Network-scope governance — moderator role changes, content
+moderation classifications, and `:Network` parameter
+amendments (see
+[network.md §10](network.md#10-network-wide-governance)) —
+uses **petition-style tally**: only positive votes
+contribute. The mechanism applies at Network scope only.
+Chat-internal and collective-internal voting retain
+bidirectional Shape B tally (positive and negative votes
+both count); bounded membership in those contexts means
+bot-driven denominator inflation is not the dominant threat.
+
+**Per-vote arithmetic.** Each Shape A vote edge from an
+active member to a Network-scope Proposal contributes to the
+tally as:
+
+- `dim1 > 0` → contributes `+1 × voter_weight` to the
+  positive-vote total.
+- `dim1 ≤ 0` → contributes `0`. The actor edge still exists
+  as a graph object encoding the voter's sentiment; it
+  simply does not enter the tally arithmetic.
+- `dim2` is not read by the tally (it carries personal
+  stake / importance, which is informational for ranking
+  and frontends, not governance arithmetic).
+- `voter_weight` is the value defined in §2.3. For
+  Network-scope every member's weight is `1`; the
+  `voting_weight` override is reserved for chat and
+  collective contexts that define non-uniform weights.
+
+**Dual-quorum pass condition.** A Network-scope Proposal
+passes when its positive-vote total is at least the lower of
+two bars, evaluated at tally time:
+
+```
+positive_count ≥ min( P × |active_members| , K )
+```
+
+- `P` is the proposal-type's **`*_quorum_fraction`** property
+  on the `:Network` singleton.
+- `K` is the proposal-type's **`*_quorum_count`** property on
+  the `:Network` singleton.
+- `|active_members|` is the count of Users active inside
+  `Network.active_threshold_days`.
+
+In addition, the mod-gate of §7 must be satisfied — every
+Network-scope Proposal also requires at least one
+moderator's positive vote. The mod-gate and the dual-quorum
+bar are independent checks evaluated on the same set of
+vote layers.
+
+**Why two bars.** A fractional bar alone is unbounded above:
+a 50%-of-active rule becomes unreachable as membership
+scales. An absolute bar alone is unbounded below: in a small
+network, a low `K` could let a tiny faction pass things over
+a silent majority. The pair is bounded on both ends — the
+fractional bar dominates while `P × |active_members| < K`
+(at small membership a real majority is required), the
+absolute bar dominates once `P × |active_members| ≥ K` (at
+large membership a fixed real-vote count is sufficient).
+Both `P` and `K` are properties on the `:Network` singleton,
+amendable through the same primitive, so the operative bar
+self-corrects as the network grows and as conditions shift.
+
+**Why petition (positive-only).** A counted "no" vote
+operates as a perpetual veto: bot accounts that cast it
+never expire, so they hold a Proposal blocked indefinitely
+against any later turnout. Restricting tally contributions
+to positive votes removes the passive-veto vector.
+Opposition retains an explicit structural path — author a
+**counter-Proposal**, which is a normal Proposal proposing
+the inverse change (see [§8 Instances](#8-instances) for
+the existing reference, formal definition in
+[nodes.md](nodes.md)). The graph still records negative-
+`dim1` actor edges as personal sentiment; the tally simply
+does not aggregate them.
+
+**Known limitation.** Bot accounts can still inflate the
+fractional-bar denominator by existing as active members
+(any outgoing actor edge inside `active_threshold_days`).
+The absolute bar `K` is the floor that survives any
+denominator inflation, but `K` itself is a static parameter
+whose correct calibration over long horizons is unsettled.
+A fully bot-resistant, non-arbitrary quorum model remains an
+open question — see
+[open-questions.md](../open-questions.md). The dual-quorum
+mechanism is a v1 compromise: petition eliminates the
+passive-no attack; the absolute floor bounds damage from
+denominator inflation; meta-governance over `P` and `K`
+lets the network re-calibrate as conditions evolve.
 
 ### Co-signed acts: threshold > 1 in either shape
 
