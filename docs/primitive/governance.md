@@ -486,6 +486,24 @@ bidirectional tally as well — an outcome is sticky (§6
 does not flip back when later votes shift sentiment; a new
 Proposal must explicitly carry the reverse.
 
+**Re-cascade on reversal.** A counter-Proposal that passes
+fires the cascade machinery a second time, symmetrically. If
+the original outcome triggered downstream writes — a
+moderation-status property change that cascaded into
+redaction layers, a role change that cascaded into derived
+permission edges — the counter-Proposal's threshold-cross
+re-runs the same cascade dispatch with the reversed
+`proposed_value`. The mechanism is the one defined in
+[§6 "Cascade dispatch"](#cascade-dispatch); no special
+reversal path exists. The resulting graph state will
+typically mirror the pre-original state, but exact mirror is
+not guaranteed: cascades may not be idempotent across
+reversals (intervening state changes on dependent edges or
+nodes can leave residue that the reversal cascade does not
+undo). Where exact mirror matters, the application is
+responsible for designing its cascade so the forward and
+reverse sequences compose to identity.
+
 
 
 - Votes are layers on their carrier edges. Never deleted.
