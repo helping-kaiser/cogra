@@ -86,6 +86,24 @@ application proposes changes to a Proposal's own properties (per
 targeted by parameter-amendment Proposals per
 [network.md §11](network.md#11-amending-network-parameters)).
 
+`Proposal → Hashtag` is `:TARGETS` but only moderation
+classification Proposals reach Hashtag — `name` is immutable
+outside the redaction cascade
+([hashtag.md §5](../instances/hashtag.md#5-lifecycle)):
+
+- `'sensitive'` classification:
+  `target_property = 'moderation_status'`,
+  `proposed_value = 'sensitive'`. Flips the flag, no redaction.
+- `'illegal'` classification: `target_property ∈ {'name', 'node'}`
+  (the two are equivalent for hashtag because `name` is the only
+  user-input field — `'node'` is the whole-node sentinel per
+  [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel)),
+  `proposed_value = 'illegal'`. Fires the redaction cascade per
+  [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths).
+
+A property-amendment Proposal with `target_property = 'name'` and
+any other `proposed_value` is inadmissible.
+
 The three junction-to-Proposal `:STRUCTURAL` rows are Shape B
 vote edges to a Proposal whose subject the junction is eligible
 on — including the chat-internal disavowal Proposals (both Level
