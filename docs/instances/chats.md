@@ -121,6 +121,21 @@ A Chat node carries:
 - **`name`** — optional routing/display hint. Layered.
 - **`join_policy`** — one of `open`, `invite-only`,
   `request-entry` (§11). Layered.
+- **`invite_proposer_roles`** — list of `ChatMember.role`
+  values whose bearers may propose a new ChatMember under
+  `'invite-only'`. Inapplicable to `'open'` (no proposer needed)
+  and `'request-entry'` (the would-be member proposes
+  themselves). Layered.
+- **`entry_approval_required_count`** — integer N ≥ 0. Number
+  of Shape B approver votes the new ChatMember's junction must
+  collect before the system writes the `Chat → ChatMember`
+  approval edge. `0` under `'open'`; `1` for a standard
+  `'invite-only'` or `'request-entry'`; higher values produce
+  the multi-sig configuration shape per §11 "Higher N". Layered.
+- **`entry_approval_eligible_roles`** — list of
+  `ChatMember.role` values whose bearers' Shape B votes count
+  toward `entry_approval_required_count`. Inapplicable to
+  `'open'`. Layered.
 - **`epoch`** — integer chat-key-rotation counter (§9). Default
   `1`. Layered. Advances by `1` on every membership change and
   on every passing mid-epoch rotation Proposal.
@@ -153,8 +168,12 @@ Concrete types and indexes live in
 
 A ChatMember junction carries:
 
-- **`role`** — `'admin'`, `'chat_mod'`, `'member'` (or any
-  chat-defined role string the chat's parameters recognize).
+- **`role`** — closed enum: `'admin'`, `'chat_mod'`, `'member'`.
+  Closed because each value carries a fixed mechanical power set
+  (§3.4) and a default weight on the Chat (§10) — open-ended role
+  strings would require every chat to supply matching weight and
+  power properties, which the per-property property-change Proposal
+  shape cannot do without paying a uniformity cost.
   The `'chat_mod'` label is deliberately distinct from the
   Network-scope `User.network_role = 'moderator'`: chat
   moderators and Network moderators are different roles, with
@@ -171,6 +190,33 @@ A ChatMember junction carries:
 Junction nodes carry no `moderation_status` per
 [nodes.md](../primitive/nodes.md#universal-moderation_status) —
 ChatMember has no user-input fields.
+
+### 3.4 ChatMember roles and their powers
+
+The three `ChatMember.role` values carry the following
+mechanical powers. Every power is mediated by a `Chat`
+property — none is hardcoded into the role.
+
+| Power | Carrier property on `Chat` | Default for `'admin'` | Default for `'chat_mod'` | Default for `'member'` |
+|---|---|---|---|---|
+| Propose an invitation under `'invite-only'`            | `invite_proposer_roles` (§3.1)        | yes | yes | no  |
+| Cast a counting approver vote (any join policy)        | `entry_approval_eligible_roles` (§3.1) | yes | yes | no  |
+| Cast a counting vote in chat-internal disavowal (§10)  | role weight on `Chat` (§10 "How roles fit in") | weight `5` | weight `3` | weight `1` |
+| Cast a counting vote on chat property-change Proposals | role weight on `Chat`                 | weight `5` | weight `3` | weight `1` |
+| Vote-weight override on a per-bearer basis             | `ChatMember.voting_weight` (§3.3)     | nullable | nullable | nullable |
+
+The defaults are starting points, not fixed rules: every
+property above is a layered `Chat`-node property, amendable via
+a property-change Proposal (§10 "Property and role changes via
+Proposals"). A chat that wants admins to lose the unilateral
+proposer privilege simply removes `'admin'` from
+`invite_proposer_roles`; one that wants every member to count
+as an approver adds `'member'` to `entry_approval_eligible_roles`.
+
+No role grants a unilateral disavowal or a unilateral property
+change: every act runs through a Proposal vote, weighted but
+never veto-bearing. The admin's higher weight matters only at
+the margin where a tally is close.
 
 ---
 
@@ -642,6 +688,15 @@ themselves are the `Chat.rotate_key_quorum` and
 can be changed via Proposals targeting them — governance of
 governance applies all the way down.
 
+The advance commits regardless of who is online when the
+Proposal passes — graph state is the source of truth, not member
+presence. Key derivation is **lazy**: the new key is produced
+the first time a current member reads into the new epoch
+(decrypting an incoming message or composing one), not at
+threshold-cross. An epoch with no usable key is acceptable; it
+stays inert until a reader needs it, and the off-graph
+group-key-update runs whenever current members next coincide.
+
 **At most one open mid-epoch rotation Proposal per Chat.** The
 service layer rejects a new rotation Proposal if an unresolved
 one already targets this Chat's `epoch`. The new Proposal's
@@ -877,8 +932,9 @@ which combines two voting shapes
   to cast a Shape B vote.
 - **Zero or more Shape B approver votes** from existing
   ChatMembers — `ChatMember_approver → ChatMember_new` (`dim1 > 0`).
-  The number required comes from the chat's `join_policy`
-  (§3.1).
+  The number required is `entry_approval_required_count` (§3.1);
+  votes only count when the approver's `role` is listed in
+  `entry_approval_eligible_roles`.
 
 When the policy is satisfied the system writes the
 `Chat → ChatMember` approval edge, and the membership is
@@ -932,7 +988,8 @@ edge. The membership is active.
 
 ### Invite-only
 
-The **inviter** — an existing member with invite rights —
+The **inviter** — an existing member whose `role` is listed in
+`invite_proposer_roles` (§3.1) —
 casts a `ChatMember_inviter → ChatMember_new` **Shape B vote**
 (`dim1 > 0`) toward a new junction node. At the same time the
 system writes the `ChatMember → invitee` `:BEARER` edge,
@@ -959,9 +1016,11 @@ The **would-be member** writes their
 creates the `ChatMember → Chat` claim edge. The membership is
 pending.
 
-An **admin** (or any ChatMember that satisfies the chat's
-policy) casts a `ChatMember_admin → ChatMember_new` **Shape B
-vote** (`dim1 > 0`). The system writes the `Chat → ChatMember`
+An existing ChatMember whose `role` is listed in
+`entry_approval_eligible_roles` (§3.1) — typically `'admin'` or
+`'chat_mod'` by default — casts a
+`ChatMember_approver → ChatMember_new` **Shape B vote**
+(`dim1 > 0`). The system writes the `Chat → ChatMember`
 approval edge. The membership is active.
 
 ### Higher N (a.k.a. multi-sig)
@@ -969,10 +1028,12 @@ approval edge. The membership is active.
 Any of the variants above can require **multiple Shape B
 approver votes** instead of one — e.g., "two admins must
 approve before the membership activates." Same primitive, just
-a higher count read from the chat's policy. The junction stays
-pending until the Nth approver's Shape B vote crosses the
-threshold. "Multi-sig" is a label for this configuration
-shape, not a fourth flow.
+a higher `entry_approval_required_count` (§3.1) drawn from the
+chat's policy, with `entry_approval_eligible_roles` continuing
+to gate which approvers count. The junction stays pending until
+the Nth qualifying Shape B vote crosses the threshold.
+"Multi-sig" is a label for this configuration shape, not a
+fourth flow.
 
 ### State encoding
 
