@@ -525,13 +525,23 @@ reasonable bucket to push out of the default feed either way.
    without an explicit gesture. A user who simply ignores a cluster
    creates no path into it from their neighborhood.
 
-3. **`(0, 0)` severance forces zero-jail.** When the community marks
-   every entry edge into the cluster with `(0, 0)`, every path from
-   `U` to any target inside the cluster has at least one severance
-   edge along it. The kill rule forces `s_path = 0` and `c_path = 0`
-   on every such path; the aggregate `h(t) = 0` exactly. The sort
-   rule (§5) banishes targets at exact `h(t) = 0` to the bottom of
-   the feed, invisible by default.
+3. **`(0, 0)` severance forces zero-jail.** Stated as a per-target
+   predicate:
+
+   > Zero-jail applies to `t` (from `U`'s vantage) **iff every path
+   > from `U` to `t` contains at least one severance edge `(0, 0)`
+   > along it.**
+
+   When this holds, the kill rule forces `s_path = 0` and
+   `c_path = 0` on every path from `U` to `t`; the aggregate
+   `h(t) = 0` exactly. The sort rule (§5) banishes targets at
+   exact `h(t) = 0` to the bottom of the feed, invisible by
+   default. The predicate is target-by-target, not cluster-wide —
+   the math only ever reads paths from `U` to a specific `t`. The
+   community-driven "mark every entry edge into the cluster"
+   framing is the recipe for satisfying the predicate across many
+   targets at once; "cluster" itself is a viewing convention
+   (§3.7), not a graph entity.
 
 The severance is **community-driven**, not gatekeeping. The math
 gives users a tool; communities use it. The fundamental constraint
@@ -572,12 +582,14 @@ transit node itself with `(0, 0)`. Every path that reached the
 cluster through that transit node is now killed at the transit hop
 in the kill rule (§3.2).
 
-As more viewing users cascade severance outward through the graph, the
-cluster's reach contracts. Full severance is achieved when, for
-every viewing user, every path into the cluster passes through at least
-one severance edge — at which point `h(t) = 0` exactly for every
-target inside (§3.6), and §5's zero-jail banishes those targets
-from view.
+As more viewing users cascade severance outward through the graph,
+the cluster's reach contracts. Full severance against a target
+`t` is achieved when the §3.6 zero-jail predicate holds for `t`
+from every viewing user's vantage — at which point `h(t) = 0`
+exactly for every such viewer, and §5's zero-jail banishes `t`
+from view. "Cluster" extends the same idea across many targets
+at once: the cluster is fully severed when the predicate holds
+for every target inside it.
 
 #### Cluster is a viewing convention, not a math entity
 
@@ -1296,10 +1308,11 @@ is exactly zero are banished from the feed — sorted below the
 negatives, into nothingness. This is the only sort position
 **immovable under unbounded internal cluster amplification**: a
 cluster with infinite internal nodes can tune its target's `h(t)`
-to any non-zero value (positive or negative) but cannot move it off
-exact zero once every path from `U` into the cluster has at least
-one severance edge `(0, 0)` along it. Zero-jail is the math-level
-realization of full community severance (see §3.6).
+to any non-zero value (positive or negative) but cannot move it
+off exact zero once the §3.6 zero-jail predicate holds — i.e.,
+every path from `U` to `t` contains at least one severance edge
+`(0, 0)` along it. Zero-jail is the math-level realization of
+full community severance (see §3.6).
 
 Why exact, not an `[−ε, 0]` interval: bots facing an interval-jail
 simply tune their amplification to land at `−ε − δ` and re-enter
