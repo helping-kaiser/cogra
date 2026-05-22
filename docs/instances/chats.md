@@ -168,8 +168,12 @@ Concrete types and indexes live in
 
 A ChatMember junction carries:
 
-- **`role`** — `'admin'`, `'chat_mod'`, `'member'` (or any
-  chat-defined role string the chat's parameters recognize).
+- **`role`** — closed enum: `'admin'`, `'chat_mod'`, `'member'`.
+  Closed because each value carries a fixed mechanical power set
+  (§3.4) and a default weight on the Chat (§10) — open-ended role
+  strings would require every chat to supply matching weight and
+  power properties, which the per-property property-change Proposal
+  shape cannot do without paying a uniformity cost.
   The `'chat_mod'` label is deliberately distinct from the
   Network-scope `User.network_role = 'moderator'`: chat
   moderators and Network moderators are different roles, with
