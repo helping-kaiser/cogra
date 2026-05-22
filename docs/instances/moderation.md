@@ -73,11 +73,14 @@ redaction cascade:
 2. Each redacted original is written to the
    [retention archive](../primitive/retention-archive.md)
    automatically. The `legal_hold_until` value is set
-   asynchronously by `legal_admin` after case review (see
-   retention-archive.md) — the cascade itself does not block
-   on this decision. `legal_admin` chooses what happens next:
-   report to authorities, retain for prosecution evidence,
-   schedule statutory hard-delete, etc.
+   asynchronously by `legal_admin` — a member of the host's
+   operations team, not a graph role, see
+   [retention-archive.md §4](../primitive/retention-archive.md#4-access-path) —
+   after case review. The cascade itself does not block on this
+   decision. `legal_admin` chooses what happens next: report to
+   authorities, retain for prosecution evidence, schedule
+   statutory hard-delete, etc. The handoff is post-redaction;
+   `legal_admin` has no path back into the live graph.
 3. The node's `moderation_status` is auto-flipped to
    `'illegal'` so frontends can distinguish a partially-or-fully
    redacted node from a merely sensitive one and hide it
@@ -168,9 +171,19 @@ voting body for moderation Proposals.
 
   | Action | `P` (`*_quorum_fraction`) | `K` (`*_quorum_count`) | Mod gate |
   |---|---|---|---|
-  | Classify `sensitive`         | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | ≥1 mod positive |
-  | Classify `illegal`           | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | ≥1 mod positive |
-  | Un-classify back to `normal` | symmetric to the original action | symmetric | ≥1 mod positive |
+  | Classify `sensitive`                       | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | ≥1 mod positive |
+  | Classify `illegal`                         | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | ≥1 mod positive |
+  | Un-classify `sensitive` → `normal`         | symmetric to the original action (`moderation_sensitive_*`)     | symmetric                                                       | ≥1 mod positive |
+
+  `'illegal'` is **not** reversible. The redaction markers on
+  the targeted fields are append-only per
+  [layers.md §5](../primitive/layers.md#5-deletion-policy), and
+  `moderation_status = 'illegal'` is a system-derived consequence
+  of those markers existing on the node — flipping the status back
+  while markers remain would misrepresent the node's state. A
+  later `'sensitive'` Proposal also does not downgrade the status
+  while any redacted fields remain (see
+  [nodes.md](../primitive/nodes.md)).
 
 The fractional bar `P` governs while the network is small (a real
 majority of active members is required to pass). Once membership
@@ -271,6 +284,17 @@ a protocol invariant — which is the most we can offer without
 graph-level guards that would be both too weak (off-graph
 disclosure exists, and the graph cannot detect it) and too strict
 (legitimate cases like contract disputes would be blocked).
+
+**The cascade fires regardless of disclosure state.** If a
+Proposal targeting an encrypted ChatMessage crosses threshold —
+including the mod-gate `+1` — the redaction cascade in §1 runs
+whether or not any voter actually read the body. The protocol
+inspects the tally, not the readers' decryption state. This is
+**intentional**: a Network whose moderators wave through
+cascades on opaque ciphertext is already broken, and the remedy
+is the de-mod-ing path above (the Network votes the offending
+mod out), not protocol veto. The robustness guarantee rests on
+moderator judgment, not on the protocol second-guessing it.
 
 ## 6. Coexistence with chat-internal moderation
 

@@ -33,10 +33,10 @@ identity-level by default, content-level on opt-in.
 **Identity-level (default).** The User-side fields touched:
 
 - The `username` layer on the graph User node is replaced with
-  the [layers.md §5](../primitive/layers.md#5-deletion-policy)
-  redaction marker. The User node itself stays; edges and layer
-  stacks stay; counts and authorship derivation continue to
-  work.
+  the per-user-unique sentinel defined in
+  "Username post-redaction" below (the same form as the Postgres
+  tombstone). The User node itself stays; edges and layer stacks
+  stay; counts and authorship derivation continue to work.
 - The Postgres `users` row is tombstoned — a new version row in
   which `display_name`, `bio`, `avatar_id`, and `website_url`
   are cleared (`NOT NULL` fields set to a redaction marker,
@@ -64,6 +64,17 @@ ChatMessage authored by the user:
   via authorship — only the body and its media become
   unavailable to public readers.
 
+For encrypted ChatMessages, the body row holds a ciphertext blob
+in the same row shape as a plaintext message (see
+[chats.md §4.2](chats.md#42-chatmessage)); the tombstone
+replaces that blob just as it replaces a plaintext body. Chat
+epoch keys are **untouched** — they live off-graph on members'
+devices, neither the graph nor Postgres ever holds them, and
+past-epoch keys held by ex-members are not treated as redactable
+PII. See
+[chats.md §13.2 "ChatMessage"](chats.md#132-chatmessage) for the
+same point on the moderation-driven path.
+
 The rationale for identity-only as the default — content was
 publicly authored, mass-redacting bodies destroys other actors'
 record — is given alongside the level definition in
@@ -86,10 +97,15 @@ user-facing display value is rendered as `[redacted user]` (or
 similar) at the API layer; the storage form satisfies the
 uniqueness constraint.
 
-The graph-side `User.username` layer carries the standard
-[layers.md §5](../primitive/layers.md#5-deletion-policy) redaction marker, not this string —
-layer values have no uniqueness constraint, and the marker is
-the auditable absence the layer history requires.
+The graph-side `User.username` top layer uses the **same**
+`redacted-user-{user_id_uuid}` form. The graph carries a
+`:User.username IS UNIQUE` constraint (see
+[graph-data-model.md](../implementation/graph-data-model.md));
+the per-user-unique sentinel satisfies the constraint across
+any number of redactions without requiring layer-aware
+constraint logic. The `redacted-user-` prefix is the visible
+signal that the layer was redacted — the auditable absence the
+layer history requires.
 
 ## 2. What is preserved
 
@@ -197,6 +213,17 @@ trigger by mistake, by client bug, or by a compromised session.
 The window is short enough that public surfaces clear quickly,
 long enough that an affected user typically notices.
 
+**Wallet keys stay with the user.** The wallet a user used
+inside the Network is held by an off-platform seed phrase the
+user (and only the user) controls; no part of the platform
+holds those keys. Account deletion removes the in-network
+identity but does not — and cannot — touch the wallet.
+Forthcoming economics events (compensation, payouts,
+settlements) can therefore still target the wallet without
+re-instantiating the in-network account. The "no restore path"
+above is about the User node on the graph and the PII in
+Postgres, not about economic continuity off-platform.
+
 ## 5. Write ordering across stores
 
 Account deletion writes to three places: the retention archive
@@ -231,7 +258,7 @@ authorization, scope, and archive treatment:
 |----------------|-------------------------------------------------------------------|---------------------------------------------------|
 | Authorization  | Network governance + mod gate                                     | User self-service (with grace)                    |
 | Scope          | One specific field on a content node, or the whole-node `'node'` sentinel | User profile + (opt-in) all authored content |
-| Archive hold   | Set asynchronously by `legal_admin` per case                      | Per row — short for PII, longer for financial data |
+| Archive hold   | Set asynchronously by `legal_admin` per case (off-graph; see [retention-archive.md §4](../primitive/retention-archive.md#4-access-path)) | Per row — short for PII, longer for financial data |
 | Initiator      | Any active Network member                                         | The account owner                                 |
 
 The two paths run independently. A user under active moderation
@@ -253,8 +280,10 @@ ordinary retention for illegal content specifically.
   authorization path that happens to invoke the same mechanism.
 - **Not the archive schema.** Concrete column types, indexes,
   migrations, the polymorphic JSONB shape, and the
-  `legal_admin` role's auth model live in
-  [data-model.md](../implementation/data-model.md).
+  access-control shape under which `legal_admin` reaches the
+  archive — a host-operations concern, not a graph role; see
+  [retention-archive.md §4](../primitive/retention-archive.md#4-access-path) —
+  live in [data-model.md](../implementation/data-model.md).
 - **Not the future triggers.** Court order, next-of-kin
   (§ 1922 BGB), and network-admin emergency action are listed
   here as planned reusers of the redaction scope; each warrants
