@@ -1149,6 +1149,19 @@ once the relevant epoch key has been voluntarily disclosed per
 §9 and
 [moderation.md "Encrypted message classification"](moderation.md#encrypted-message-classification).
 
+**Ciphertext is body content; epoch keys are not.** The Postgres
+tombstone replaces the `body_ciphertext` blob — the same row
+shape that holds plaintext under
+`content_privacy = 'plaintext'` (§4.2). Redaction does **not**
+touch the chat's epoch keys: those live off-graph on current and
+ex-members' devices, the graph never holds them, and content
+classification operates only on body rows. Past-epoch keys held
+by ex-members are **not** treated as redactable PII —
+cryptography cannot forget what someone already saw, and the
+platform does not attempt to. What the public surface shows is
+the tombstone; whether the ciphertext remains decipherable to a
+past-key holder is a key-management fact, not a redaction one.
+
 Chat-internal disavowal (§10 Level 1) is non-destructive — the
 message body stays; the chat's stance moves away.
 

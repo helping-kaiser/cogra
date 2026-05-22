@@ -162,9 +162,9 @@ request) prior to the vote so members can review what they are
 voting on. Voters who cast `+1` without reviewing the linked
 text are operating on the same normative honor system as
 moderators voting on encrypted ChatMessages
-([moderation.md §5](moderation.md#5-scope)) — addressable through the
-same Proposal mechanism applied to that user's role or
-participation.
+([moderation.md "Encrypted message classification"](moderation.md#encrypted-message-classification)) —
+addressable through the same Proposal mechanism applied to that
+user's role or participation.
 
 ## 4. URL handling
 
