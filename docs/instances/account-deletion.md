@@ -64,6 +64,17 @@ ChatMessage authored by the user:
   via authorship — only the body and its media become
   unavailable to public readers.
 
+For encrypted ChatMessages, the body row holds a ciphertext blob
+in the same row shape as a plaintext message (see
+[chats.md §4.2](chats.md#42-content-privacy)); the tombstone
+replaces that blob just as it replaces a plaintext body. Chat
+epoch keys are **untouched** — they live off-graph on members'
+devices, neither the graph nor Postgres ever holds them, and
+past-epoch keys held by ex-members are not treated as redactable
+PII. See
+[chats.md §13.2 "ChatMessage"](chats.md#132-chatmessage) for the
+same point on the moderation-driven path.
+
 The rationale for identity-only as the default — content was
 publicly authored, mass-redacting bodies destroys other actors'
 record — is given alongside the level definition in
