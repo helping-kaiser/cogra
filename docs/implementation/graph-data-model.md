@@ -267,6 +267,23 @@ CREATE CONSTRAINT ON (o:ItemOwnership) ASSERT o.id IS UNIQUE;
 CREATE INDEX ON :ItemOwnership(id);
 ```
 
+#### Junction state lives in topology, not in a property
+
+None of the three junction tables above declares a `status`
+property — by design. Junction state (pending / active / revoked)
+is derived from the two-edge approval pair's top-layer `dim1`
+values per
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+A stored flag would be a second source of truth that could drift.
+
+The storage layer cannot directly forbid a property by absence —
+no Memgraph constraint expresses "this label MUST NOT carry
+property X." Enforcement is therefore ethos + test: the schema
+above is the canonical declaration of what junction labels carry,
+and an integration test asserts that no junction node ever
+materializes with a `status` (or equivalent) property. Service-
+layer write paths never write one.
+
 ### System nodes
 
 #### `:Network`
