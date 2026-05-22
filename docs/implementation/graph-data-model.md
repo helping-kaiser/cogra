@@ -337,7 +337,7 @@ for picking the right one live in
 | `:CONTAINMENT` | Comment → Post / Comment / Chat / ChatMessage / Item; ChatMessage → Chat | System     |
 | `:TAGGING`     | Post → Hashtag, Comment → Hashtag, Item → Hashtag                        | System     |
 | `:TARGETS`     | Proposal → Target Node                                                   | System     |
-| `:REFERENCES`  | ChatMessage → any node                                                   | System     |
+| `:REFERENCES`  | ChatMessage → any node; Post → any node (except Hashtag); Comment → any node (except Hashtag) | System     |
 | `:STRUCTURAL`  | Any structural edge not in a sub-category above                          | System     |
 
 ## Edge properties
