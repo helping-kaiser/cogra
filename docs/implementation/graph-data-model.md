@@ -109,11 +109,29 @@ CREATE INDEX ON :Comment(id);
 |---|---|---|
 | `id`                     | String  | UUID v4. |
 | `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. |
-| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'` / `'multi-sig'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. See [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat). |
+| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. Multi-sig is not a fourth value — it is the configuration shape produced when `entry_approval_required_count > 1` under either `'invite-only'` or `'request-entry'`. See [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat). |
+| `invite_proposer_roles`  | String[] | `ChatMember.role` values whose bearers may propose a new ChatMember under `'invite-only'`. Default `['chat_mod','admin']`. Inapplicable to `'open'` and `'request-entry'`. Layered. See [chats.md §3.1, §11](../instances/chats.md#31-chat). |
+| `entry_approval_required_count` | Integer | Number of qualifying Shape B approver votes the new ChatMember's junction must collect before activation. `0` under `'open'`; default `1` otherwise; higher values produce the multi-sig configuration shape. Layered. See [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat). |
+| `entry_approval_eligible_roles` | String[] | `ChatMember.role` values whose bearers' Shape B votes count toward `entry_approval_required_count`. Default `['chat_mod','admin']`. Inapplicable to `'open'`. Layered. See [chats.md §3.1, §11](../instances/chats.md#31-chat). |
 | `moderation_status`      | String  | `'normal'` / `'sensitive'` / `'illegal'`. Layered. Default `'normal'`. `'sensitive'` is set by a passing classification Proposal; `'illegal'` is auto-flipped by the system when any field on the node receives a redaction marker — see [moderation.md](../instances/moderation.md). |
 | `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing mid-epoch rotation Proposal. Concurrent transitions serialize per Chat. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
 | `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
 | `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
+| `weight_admin`           | Integer | Default voting weight for `ChatMember.role = 'admin'`. Default `5`. Layered. Overridden per-bearer by a non-null `ChatMember.voting_weight`. See [chats.md §10 "How roles fit in"](../instances/chats.md#how-roles-fit-in). |
+| `weight_chat_mod`        | Integer | Default voting weight for `ChatMember.role = 'chat_mod'`. Default `3`. Layered. |
+| `weight_member`          | Integer | Default voting weight for `ChatMember.role = 'member'`. Default `1`. Layered. |
+| `disavowal_l1_quorum`    | Float   | Quorum for Level 1 (ChatMessage) disavowal Proposals. Default `0.20`. Layered. See [chats.md §10](../instances/chats.md#10-moderation). |
+| `disavowal_l1_threshold` | Float   | Pass-threshold for Level 1 disavowal. Default `0.50`. Layered. |
+| `disavowal_l2_quorum`    | Float   | Quorum for Level 2 (ChatMember) disavowal Proposals. Default `0.40`. Layered. |
+| `disavowal_l2_threshold` | Float   | Pass-threshold for Level 2 disavowal. Default `0.667` (2/3). Layered. |
+| `role_change_quorum`     | Float   | Quorum for Proposals targeting `ChatMember.role`. Default `0.30`. Layered. The subject member is excluded from eligibility — see [chats.md §10 "Property and role changes via Proposals"](../instances/chats.md#property-and-role-changes-via-proposals). |
+| `role_change_threshold`  | Float   | Pass-threshold for role changes. Default `0.50`. Layered. |
+| `name_change_quorum`     | Float   | Quorum for Proposals targeting `Chat.name`. Default `0.10`. Layered. |
+| `name_change_threshold`  | Float   | Pass-threshold for name changes. Default `0.50`. Layered. |
+| `join_policy_change_quorum` | Float | Quorum for Proposals targeting `join_policy`, `invite_proposer_roles`, `entry_approval_required_count`, or `entry_approval_eligible_roles`. Default `0.30`. Layered. |
+| `join_policy_change_threshold` | Float | Pass-threshold for the join-policy family. Default `0.667` (2/3). Layered. |
+| `governance_amendment_quorum`  | Float | Quorum for Proposals targeting any of the governance fraction or weight properties listed above (the "governance of governance" case). Default `0.30`. Layered. |
+| `governance_amendment_threshold` | Float | Pass-threshold for governance amendments. Default `0.667` (2/3). Layered. |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
@@ -209,7 +227,7 @@ and edge-labels table below.
 |---|---|---|
 | `id`            | String | UUID v4. |
 | `role`          | String | `'admin'` / `'chat_mod'` / `'member'`. Layered. Distinct from the Network-scope `User.network_role = 'moderator'`. |
-| `voting_weight` | Float  | Optional; used when the chat sets per-member weight directly rather than deriving it from `role` at tally time. Layered when present. |
+| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (per-chat defaults `weight_admin` / `weight_chat_mod` / `weight_member` on the Chat node, §`:Chat` above). When non-null, the tally reads this value directly and the role-derived default is ignored; when null (default), the role-derived rule applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMember) ASSERT m.id IS UNIQUE;
