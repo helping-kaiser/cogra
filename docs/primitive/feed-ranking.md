@@ -1709,6 +1709,15 @@ days). One who wants strict freshness shortens it (e.g. 7 days).
 Setting `f(Δt) = 1` constant disables decay entirely — useful as
 an opt-in "no-decay" sort for users who want pure-graph signal.
 
+**Network default is tunable too.** The 30-day half-life is the
+default seeded at genesis on the `:Network` singleton's
+`time_decay_half_life_days` property (see
+[network.md §3](network.md#feed-ranking-calibration)). The
+network can recalibrate it via a baseline-bucket Proposal as the
+graph matures and freshness sensitivity needs to shift; frontend
+overrides continue to layer on top of whatever network default is
+current.
+
 ### 7.4 What this does not solve
 
 Time decay attenuates content that is **old and quiet**. It does
