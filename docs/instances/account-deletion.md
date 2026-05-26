@@ -10,19 +10,18 @@ statutory retention obligations (e.g., the German 10-year retention
 on tax and economic records, forthcoming with the economics
 primitive) before the data is permanently destroyed.
 
-The redaction *mechanism* is the one defined in
-[layers.md §5](../primitive/layers.md#5-deletion-policy); the disposition of
-redacted originals is the
+The redaction mechanism is
+[layers.md §5](../primitive/layers.md#5-deletion-policy); the
+disposition of originals is the
 [retention archive](../primitive/retention-archive.md). This doc
 adds the **user self-service authorization path** — parallel to
 [moderation.md](moderation.md)'s community-driven authorization
 for illegal content.
 
 Future triggers — court order, next-of-kin under applicable
-inheritance law (e.g., § 1922 BGB in Germany; equivalents
-elsewhere), network-admin emergency action — reuse the same
-redaction scope and archive mechanism. Each gets its own
-authorization rules; the redaction action is shared.
+inheritance law (e.g., § 1922 BGB in Germany), network-admin
+emergency action — reuse the same redaction scope and archive
+mechanism. Each gets its own authorization rules.
 
 ## 1. Two redaction levels
 
@@ -75,9 +74,9 @@ PII. See
 [chats.md §13.2 "ChatMessage"](chats.md#132-chatmessage) for the
 same point on the moderation-driven path.
 
-The rationale for identity-only as the default — content was
-publicly authored, mass-redacting bodies destroys other actors'
-record — is given alongside the level definition in
+Rationale for identity-only as the default — content was
+publicly authored; mass-redacting bodies destroys other actors'
+record — is given in
 [layers.md §5](../primitive/layers.md#two-redaction-levels--identity-vs-content).
 
 ### Username post-redaction
@@ -155,9 +154,6 @@ Account deletion does not change that:
   defined in [chats.md §11](chats.md#11-joining-and-leaving-a-chat).
   A redacted user is not auto-disjoined from chats; that is a
   member-driven action.
-
-The shape mirrors the broader "graph nodes and edges stay; PII on
-them is redacted in place" principle of §2.
 
 ## 3. Retention archive
 
