@@ -144,10 +144,6 @@ here: Postgres display content is append-only too.
 
 ## 5. Deletion policy
 
-Append-only is the norm, but not absolute on every surface.
-"Scope of the invariant" below states which surface is bound to
-which rule.
-
 ### Redaction vs severance — two different vocabularies
 
 **Invariant:** Redaction and severance describe two different
@@ -294,16 +290,11 @@ record that the change happened. A reader scanning the graph or the
 content tables can always tell that something was there and was
 removed, even when they cannot see the original content.
 
-**No silent deletion, ever.** Whether a redaction happens via
-in-place layer markers or via Postgres version tombstones, the
-fact of the deletion is recorded. You can always see that a change
-happened, even when the illegal content itself is gone.
-
-The hope is that the community's graph-level mechanisms (voting to
-move away from messages, down-weighting, social feedback) handle
-most bad content without ever needing the deletion exception. The
-exception exists because append-only alone cannot solve "this layer
-4 content is still illegal and still findable."
+Community-level mechanisms (voting to move away from messages,
+down-weighting, social feedback) handle most bad content without
+invoking the deletion exception. The exception exists because
+append-only alone cannot solve "this layer 4 content is still
+illegal and still findable."
 
 ### Authorization paths
 
@@ -337,23 +328,18 @@ values set per case.
 
 ### Side note on long-term storage
 
-Append-only means every interaction adds a layer, forever. In
-principle this is unbounded; in practice, **typical actor
-behavior bounds it tightly**. People update an edge a handful of
-times over its lifetime, not hundreds. Node properties change
-even less frequently — most don't change at all. The storage
-worst case (an actor edge or node property accumulating dozens
-or hundreds of layers) is a corner case, not a typical user.
-The plausible scenarios for genuine accumulation — e.g., a
-decades-old company restructuring constantly through its
-CollectiveMember edges — are precisely the cases where
-**preserving the full history is the value**, not a cost worth
-optimizing away.
+Append-only adds a layer per interaction — unbounded in principle,
+but **typical actor behavior bounds it tightly** in practice. Edges
+update a handful of times across their lifetime; node properties
+change even less, and most don't change at all. The worst case (an
+edge or property accumulating dozens of layers) is a corner case;
+the scenarios with genuine accumulation — e.g., a decades-old
+company restructuring constantly through its CollectiveMember edges
+— are precisely the ones where **preserving the full history is
+the value**.
 
-If a real instance ever runs into a storage problem from layer
-accumulation, compaction-friendly approaches exist that don't
-break the no-silent-deletion principle (e.g., a rollup layer
-that summarizes a window of past layers while leaving a visible
-marker that compaction occurred). That's an
-implementation-time decision contingent on real data, not a
-design-time one. We are not designing for it preemptively.
+Compaction-friendly approaches exist that don't break the
+no-silent-deletion principle (e.g., a rollup layer summarizing a
+window of past layers while leaving a visible marker that
+compaction occurred). That's an implementation-time decision
+contingent on real data, not a design-time one.
