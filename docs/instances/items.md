@@ -252,8 +252,9 @@ earliest layer-1 timestamp — the same earliest-incoming-edge rule
 that derives authorship for every node type
 ([authorship.md](../primitive/authorship.md)). At creation, the
 author's actor edge is written in the same compound gesture as the
-Item node and the bootstrap ItemOwnership (§1); the author's edge
-is the earliest incoming actor edge by construction.
+Item node and the bootstrap ItemOwnership (§1) and carries the
+`:AUTHOR` sub-label; the author's edge is the earliest incoming
+actor edge by construction.
 
 **Authorship and ownership are distinct.** The author is the
 **author** — the actor who minted, listed, or registered the
