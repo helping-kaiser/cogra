@@ -169,9 +169,10 @@ junction (identity, written at junction creation). See
 ## 6. Authorship
 
 A User is the author of any node whose earliest incoming actor
-edge originates from them. The graph is the source of truth;
-caches on the node and in Postgres are rebuildable. See
-[authorship.md](authorship.md).
+edge originates from them. On the graph that edge carries the
+`:AUTHOR` sub-label, the only representation of authorship on the
+graph side. Caches on the node and in Postgres are rebuildable
+from it. See [authorship.md](authorship.md).
 
 ---
 
