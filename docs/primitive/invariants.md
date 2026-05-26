@@ -4,15 +4,14 @@ A discoverable index of the load-bearing invariants of the CoGra
 protocol. Each entry is one line — a short statement and a link to
 the section that owns the rule. **The linked section is canonical**
 (every rule below is tagged in its owning doc as `**Invariant:**`);
-this file is a pointer, not a restatement, so it cannot drift from
-the owning doc.
+this file is a pointer, not a restatement.
 
 Grep-able: `grep -ri "Invariant:" docs/` finds every call-out the
 entries below link to.
 
-The themes are a curator's grouping, not a part of the protocol.
-Same invariant can be load-bearing under more than one theme;
-listed under the most useful one.
+Themes are a curator's grouping, not part of the protocol. An
+invariant load-bearing under multiple themes is listed under the
+most useful one.
 
 ---
 
