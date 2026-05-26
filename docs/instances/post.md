@@ -7,12 +7,6 @@ are the canonical target the [feed-ranking](../primitive/feed-ranking.md)
 algorithm orders, and they are what most opinion-bearing actor
 edges in a typical instance point at.
 
-This doc is the per-node catalog for the Post: how it is created,
-what it carries on the graph and in Postgres, what edges it can
-participate in, and how it ends. The mechanics those topics depend
-on stay in their topical docs — this doc links rather than
-duplicates.
-
 ---
 
 ## 1. Creation
@@ -152,20 +146,15 @@ A Post receives:
 A Post's author is the actor whose incoming actor edge has the
 earliest layer-1 timestamp — the same rule that derives
 authorship for every node type
-([authorship.md](../primitive/authorship.md)). Because a Post has
-no existence before its creation, the author's edge is always
-the earliest incoming edge by construction.
-
-The author's `(dim1, dim2)` on the authorship edge is just a
-normal opinion edge — not a special "author" tag — typically
-carrying high positive sentiment and relevance toward the
-content the author just created.
+([authorship.md](../primitive/authorship.md)). The author's edge
+is always the earliest incoming edge by construction. The
+author's `(dim1, dim2)` on that edge is just a normal opinion
+edge, not a special "author" tag.
 
 On the graph, the authoring edge carries the `:AUTHOR`
-sub-label — that is the only representation of authorship on the
-graph side, and it is what the §5.2 friend-authored fresh-post
-detection in
-[feed-ranking.md](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)
+sub-label — the only representation of authorship on the graph
+side, and what the friend-authored fresh-post detection in
+[feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)
 traverses. For Postgres-side display queries, `posts.author_id`
 is cached on the row. Both are rebuildable from the graph; the
 graph wins in any disagreement.
