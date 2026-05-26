@@ -5,10 +5,10 @@ An **Item** is a content node representing a physical or digital good
 are interactable content: they can be liked, disliked, commented on,
 and tagged with hashtags.
 
-Items are a **future** concern: the first iterations of CoGra focus
-on posts and chats, and marketplace-like item flows will build on
-this model once the base is running. The model below is committed
-to regardless.
+Marketplace-like Item flows aren't the focus of the first CoGra
+iterations (posts and chats are), but the Item and ItemOwnership
+model below is committed: shipping order is sequenced, the design
+is not deferred.
 
 This doc covers two related nodes — the **Item** content node and
 the **ItemOwnership** junction node — plus the convention for
