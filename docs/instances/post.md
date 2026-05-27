@@ -47,21 +47,14 @@ member consent is required, per
 A Post node carries the minimum the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
-The Post carries one per-field moderation-status property for
-each user-input field — **`content`** (the body) and
-**`attachments`** (every attached media as one status, per the
-future-refinement note in [moderation.md §5](moderation.md#5-scope)).
-Each holds `'normal'` (default) / `'sensitive'` / redaction
-marker, layered. The universal mechanics live in
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
-and §6 below. The node-level moderation state is derived from
-these per-field statuses and not stored.
-
-The Post body, attachments, and any other display content do
-**not** live on the graph — the per-field properties above
-exist purely as the moderation-targeting surface; the actual
-content lives in Postgres / object storage (§3). Concrete
-property types and indexes for the graph-side node live in
+The Post carries per-field moderation-status properties on
+**`content`** (the body) and **`attachments`** (every attached
+media under one status — see [moderation.md §5](moderation.md#5-scope)
+on per-attachment targeting), plus the node-level
+`moderation_status` cache. Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Post-specific cascade in §6. Body and attachment content live in
+Postgres / object storage (§3); concrete types and indexes in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 ---
@@ -176,35 +169,20 @@ properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change
 occurred.
 
-Two redaction triggers apply to a Post today:
+A Post can be redacted via moderation:
 
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal targets one of the Post's per-field
-  moderation-status properties (`content` or `attachments`) and
-  flips its top layer to `'sensitive'`. No redaction; display
-  content stays. Each viewing user's
-  `content_filtering_severity_level` (see
-  [data-model.md](../implementation/data-model.md) "User
-  preferences") decides how aggressively the frontend filters
-  the affected field. Reversible by a counter-Proposal back to
-  `'normal'`. See [moderation.md §1](moderation.md#1-the-two-classification-paths).
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets one of the same per-field
+- **Moderation classification.** A `'sensitive'` or `'illegal'`
+  Proposal targets one of the Post's per-field moderation-status
   properties — `content`, `attachments`, or the `'node'`
-  sentinel covering both — and fires the redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the per-field property's top layer is replaced with a
-  redaction marker, the Postgres body row is tombstoned with a
-  version marker (for `content`), affected `media_attachments`
-  rows are tombstoned and assets removed from object storage
-  (for `attachments`), and the redacted originals are written to
-  the [retention archive](../primitive/retention-archive.md)
-  under per-row legal hold. The Post node's derived moderation
-  state evaluates to `'illegal'` once any field carries a
-  redaction marker. The cascade does **not** propagate to
-  descendants — a Post classified illegal does not redact its
-  Comments or any ChatMessage that references it; each requires
-  its own classification.
+  sentinel covering both — and runs the cascade per
+  [moderation.md §1](moderation.md#1-the-two-classification-paths).
+  Post-specific writes on `'illegal'`: the affected Postgres body
+  row is tombstoned with a version marker (for `content`),
+  affected `media_attachments` rows are tombstoned and assets
+  removed from object storage (for `attachments`), and the
+  originals go to the
+  [retention archive](../primitive/retention-archive.md) under
+  per-row legal hold.
 
 Account deletion of the Post's author does **not** by default
 affect the Post's body, attachments, or graph node — identity

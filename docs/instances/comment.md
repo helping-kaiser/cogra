@@ -61,21 +61,15 @@ member consent is required, per
 A Comment node carries the minimum the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
-The Comment carries one per-field moderation-status property
-for each user-input field — **`content`** (the body) and
-**`attachments`** (every attached media as one status, per
-[moderation.md §5](moderation.md#5-scope)). Each holds
-`'normal'` (default) / `'sensitive'` / redaction marker,
-layered. The universal mechanics live in
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
-and §6 below. The node-level moderation state is derived from
-these per-field statuses and not stored.
-
-The Comment body, attachments, and any other display content do
-**not** live on the graph — the per-field properties above
-exist purely as the moderation-targeting surface; actual
-content lives in Postgres / object storage (§3). Concrete
-property types and indexes for the graph-side node live in
+The Comment carries per-field moderation-status properties on
+**`content`** (the body) and **`attachments`** (every attached
+media under one status — see
+[moderation.md §5](moderation.md#5-scope) on per-attachment
+targeting), plus the node-level `moderation_status` cache.
+Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Comment-specific cascade in §6. Body and attachment content live
+in Postgres / object storage (§3); concrete types and indexes in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 ---
@@ -205,38 +199,23 @@ properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change
 occurred.
 
-Two redaction triggers apply to a Comment today:
+A Comment can be redacted via moderation:
 
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal targets one of the Comment's per-field
-  moderation-status properties (`content` or `attachments`) and
-  flips its top layer to `'sensitive'`. No redaction; display
-  content stays. Each viewing user's
-  `content_filtering_severity_level` (see
-  [data-model.md](../implementation/data-model.md) "User
-  preferences") decides how aggressively the frontend filters
-  the affected field. Reversible by a counter-Proposal back to
-  `'normal'`. See
-  [moderation.md §1](moderation.md#1-the-two-classification-paths).
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets one of the same per-field
-  properties — `content`, `attachments`, or the `'node'`
-  sentinel covering both — and fires the redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the per-field property's top layer is replaced with a
-  redaction marker, the Postgres body row is tombstoned with a
-  version marker (for `content`), affected `media_attachments`
-  rows are tombstoned and assets removed from object storage
-  (for `attachments`), and the redacted originals are written
-  to the [retention archive](../primitive/retention-archive.md)
-  under per-row legal hold. The Comment node's derived
-  moderation state evaluates to `'illegal'` once any field
-  carries a redaction marker. The cascade does **not**
-  propagate across the `:CONTAINMENT` edge in either direction —
-  a Comment classified illegal does not redact its replies, and
-  a parent Post, Comment, Chat, ChatMessage, or Item classified
-  illegal does not redact this Comment; each node requires its
-  own classification.
+- **Moderation classification.** A `'sensitive'` or `'illegal'`
+  Proposal targets one of the Comment's per-field
+  moderation-status properties — `content`, `attachments`, or
+  the `'node'` sentinel covering both — and runs the cascade
+  per [moderation.md §1](moderation.md#1-the-two-classification-paths).
+  Comment-specific writes on `'illegal'`: the affected Postgres
+  body row is tombstoned with a version marker (for `content`),
+  affected `media_attachments` rows are tombstoned and assets
+  removed from object storage (for `attachments`), and the
+  originals go to the
+  [retention archive](../primitive/retention-archive.md) under
+  per-row legal hold. The cascade does not propagate across
+  `:CONTAINMENT` — a Comment classified illegal does not redact
+  its replies, and a parent classified illegal does not redact
+  this Comment; each node requires its own classification.
 
 Account deletion of the Comment's author does **not** by
 default affect the Comment's body, attachments, or graph node —
