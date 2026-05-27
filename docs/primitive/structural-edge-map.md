@@ -87,14 +87,18 @@ outside the redaction cascade
 ([hashtag.md §5](../instances/hashtag.md#5-lifecycle)):
 
 - `'sensitive'` classification:
-  `target_property = 'moderation_status'`,
-  `proposed_value = 'sensitive'`. Flips the flag, no redaction.
-- `'illegal'` classification: `target_property ∈ {'name', 'node'}`
-  (the two are equivalent for hashtag because `name` is the only
-  user-input field — `'node'` is the whole-node sentinel per
+  `target_property = 'name_status'`,
+  `proposed_value = 'sensitive'`. Flips the per-field status; no
+  redaction on the data sibling `name`.
+- `'illegal'` classification: `target_property ∈ {'name_status',
+  'node'}` (the two are equivalent for Hashtag because
+  `name_status` is the only per-field moderation property —
+  `'node'` is the whole-node sentinel per
   [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel)),
   `proposed_value = 'illegal'`. Fires the redaction cascade per
-  [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths).
+  [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths),
+  writing a redaction marker on both `name_status` and the
+  `name` data sibling.
 
 A property-amendment Proposal with `target_property = 'name'` and
 any other `proposed_value` is inadmissible.

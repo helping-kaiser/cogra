@@ -85,12 +85,13 @@ Every authored property on the User node is layered per
   [network.md §8](network.md#8-membership-and-roles); changes run
   through the multi-sig Proposal pattern in
   [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
-- **`moderation_status`** — `normal` / `sensitive` / `illegal`,
-  default `normal`. Universal mechanics in
-  [nodes.md "Universal: moderation_status"](nodes.md#universal-moderation_status).
 
-Additional authored properties (display-name fields, verified
-flags, etc.) can be added later, each layering independently.
+Per-field moderation-status properties cover each user-filled
+profile field — `username_status` (for the data-sibling
+`username`), `display_name`, `bio`, `avatar`, `website_url` —
+plus the node-level `moderation_status` cache. Universal mechanics
+in [nodes.md](nodes.md#universal-per-field-moderation-status).
+
 Concrete types, constraints, and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
@@ -169,9 +170,10 @@ junction (identity, written at junction creation). See
 ## 6. Authorship
 
 A User is the author of any node whose earliest incoming actor
-edge originates from them. The graph is the source of truth;
-caches on the node and in Postgres are rebuildable. See
-[authorship.md](authorship.md).
+edge originates from them. On the graph that edge carries the
+`:AUTHOR` sub-label, the only representation of authorship on the
+graph side. Caches on the node and in Postgres are rebuildable
+from it. See [authorship.md](authorship.md).
 
 ---
 
@@ -204,17 +206,13 @@ planned:
   Originals go to the [retention archive](retention-archive.md)
   under per-row legal hold. Full mechanism in
   [account-deletion.md](../instances/account-deletion.md).
-- **Moderation redaction of authored content.** Network
-  governance can classify a Post, Comment, ChatMessage, or other
-  content node authored by the User as `'illegal'`, triggering
-  per-field redaction and auto-flipping that node's
-  `moderation_status`. The User node itself is unaffected unless
-  the same Proposal targets a User-node property. See
-  [moderation.md](../instances/moderation.md).
-- **Moderation redaction of a User-node property.** The same
-  Proposal mechanism can target a User's user-input property
-  (e.g. `username`). The redaction marker is written to the
-  affected layer; surrounding layers stay.
+- **Moderation.**
+  [moderation.md](../instances/moderation.md) targets either a
+  User-node field (`bio`, `avatar`, `username_status`, …) or a
+  field of content the User authored. Either path leaves the
+  User node otherwise intact; redaction of authored content does
+  not propagate to the User node unless the same Proposal also
+  targets a User-node field.
 
 Future triggers — court order, next-of-kin under applicable
 inheritance law, network-admin emergency action — are listed in

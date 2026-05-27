@@ -15,89 +15,125 @@ Postgres-side display-content shapes, see
 [data-model.md](../implementation/data-model.md).
 
 The one cross-cutting topic that lives in this doc rather than in
-any single per-node doc is the universal `moderation_status`
-property — same shape and same mechanism across every node type
-that carries user-authored content.
+any single per-node doc is the universal per-field
+moderation-status property scheme — same shape and same mechanism
+across every node type that carries user-authored content.
 
 ---
 
-## Universal: `moderation_status`
+## Universal: per-field moderation status
 
-Every node type that carries open user-authored content — avatars,
-profile text, post bodies, comment bodies, message bodies, chat
-descriptions, item descriptions, hashtag names — carries an
-additional `moderation_status` graph property:
-`'normal'` / `'sensitive'` / `'illegal'`, default `'normal'`,
-layered. The Network-wide governance instance described in
-[moderation.md](../instances/moderation.md) is what sets it.
+Every node type that carries open user-authored content carries
+**one graph property per user-filled field**, holding that field's
+current moderation status. Vocabulary: `'normal'` (default),
+`'sensitive'`, or a redaction marker per
+[layers.md §5](layers.md#5-deletion-policy). All such properties
+are layered, so the full status history per field is preserved.
+The Network-wide governance instance in
+[moderation.md](../instances/moderation.md) is what sets them.
 
-The three values are the platform's content-classification
-buckets. Their *meanings* and *behavioural consequences* are
-fixed at the primitive level; the *examples of what falls in
-each* are platform policy and live in
-[platform-guidelines.md §1](../instances/platform-guidelines.md#1-the-three-buckets):
+### Property naming
 
-- **`'normal'`.** Default. Carries no special treatment — no
-  filter, no redaction. Not an enumerated category; the absence
-  of any other classification.
-- **`'sensitive'`.** Lawful content that warrants a viewer-side
-  filter (graphic, mature, disturbing). The content stays — no
-  redaction. Frontends respect each viewing user's
-  `content_filtering_severity_level` preference
+For a user-filled field with **no graph-side data sibling** (the
+field's content lives only in Postgres or object storage — `bio`,
+`avatar`, `display_name`, `website_url`, `content`, `attachments`,
+`description`, `image`), the moderation-status property is named
+after the field itself. Its value IS the moderation status: e.g.
+`User.bio = 'normal'`, flipped to `'sensitive'` or a redaction
+marker by the cascade. There is no separate "data slot" for the
+field on the graph — the content lives elsewhere; the graph
+property exists purely as the moderation-targeting surface.
+
+For a user-filled field that **already has a graph-side data
+property** for uniqueness, lookup, or content-addressing
+(`User.username`, `Collective.name`, `Chat.name`,
+`Hashtag.name`), the existing data property keeps its name and
+a companion `<field>_status` property carries the moderation
+status. E.g. `User.username = 'alice'` (data) and
+`User.username_status = 'normal'` (status). The two properties
+layer independently. On illegal classification the cascade
+writes to both: the data property's top layer becomes a
+redaction marker, and the status property's top layer carries
+the matching marker for consistency.
+
+The exact set of per-field properties for each node type
+follows the targetable-fields catalog in
+[moderation.md §5](../instances/moderation.md#5-scope) and is
+restated in each node's per-doc properties section.
+
+### The three values
+
+Meanings and behavioural consequences are fixed at the primitive
+level; the *examples of what falls in each* are platform policy
+and live in
+[platform-guidelines.md §1](../instances/platform-guidelines.md#1-the-three-buckets).
+
+- **`'normal'`** — default. No filter, no redaction.
+- **`'sensitive'`** — lawful content that warrants a viewer-side
+  filter (graphic, mature, disturbing). Content stays;
+  frontends respect each viewing user's
+  `content_filtering_severity_level`
   ([data-model.md](../implementation/data-model.md)) when
-  rendering. Reversible via
-  [counter-Proposal](governance.md#counter-proposals) back to
-  `'normal'`.
-- **`'illegal'`.** Content the Network treats as unlawful or so
-  universally prohibited that hosting it is itself a harm.
-  Triggers the redaction cascade in
-  [layers.md §5](layers.md#5-deletion-policy) and the
-  archive-with-legal-hold disposition in
-  [retention-archive.md](retention-archive.md). Not reversible,
-  because the underlying redaction markers are append-only.
+  rendering. Set by a passing `'sensitive'` Proposal on the
+  per-field property. Reversible via a
+  [counter-Proposal](governance.md#counter-proposals).
+- **Redaction marker** — the field's content has been ruled
+  unlawful and was redacted. The per-field property's top
+  layer holds the marker; the corresponding Postgres-side
+  content (or object-storage asset) is tombstoned in the same
+  cascade. Set by a passing `'illegal'` Proposal. Not
+  reversible — redaction markers are append-only per
+  [layers.md §5](layers.md#5-deletion-policy).
 
-The two non-default values reach the node by different paths:
+### Node-level cache: `moderation_status`
 
-- `'sensitive'` — set directly by a passing `'sensitive'`
-  classification Proposal.
-- `'illegal'` — set automatically by the system when any field
-  on the node receives a redaction marker per
-  [layers.md §5](layers.md#5-deletion-policy). Illegal-content
-  classification itself is **per-field**, not per-node — the
-  Proposal targets one specific field, or the `'node'` sentinel
-  (covering every user-input field plus every attached media on
-  the target — see "Whole-node targeting" below), and each
-  targeted field's top layer is replaced with a redaction marker.
-  The
-  auto-flip on `moderation_status` exists so frontends can
-  distinguish three filter states: normal content, soft-filterable
-  sensitive content, and partially-or-fully-redacted illegal
-  content (which a viewing user may want hidden entirely).
+Every content-bearing node also carries a single
+`moderation_status` property — `'normal'` / `'sensitive'` /
+`'illegal'` — caching the max severity across that node's
+per-field statuses. The per-field properties are the source of
+truth and what the cascade writes; the cache is what the read
+path consumes. Feed filtering ("posts that are not `'sensitive'`
+or `'illegal'`") reads one property per candidate node instead
+of all of its per-field statuses, keeping ranking traversals
+narrow.
 
-`'illegal'` is the strongest state — it isn't downgraded by a
-later `'sensitive'` Proposal while redacted fields remain.
+The cache is not layered (per
+[layers.md §3 "Derived caches"](layers.md#derived-caches-do-not-layer)):
+the per-field properties carry the layered history; the cache
+holds the current max. The cascade in
+[moderation.md §1](../instances/moderation.md#1-the-two-classification-paths)
+writes both atomically — the targeted per-field status (as a new
+layer or redaction marker) and the cache (overwritten with the
+new max).
 
-The property applies to: **User, Collective, Post, Comment,
-ChatMessage, Chat, Item, Hashtag**. Junction nodes (`ChatMember`,
-`CollectiveMember`, `ItemOwnership`) have no user-input fields
-and so carry no `moderation_status`. **Proposal** is in the same
-position — its substance is just `target_property` +
-`proposed_value` + the `:TARGETS` edge, with no user-input field
-to redact and no Postgres-side display content either. The
-**`:Network` singleton** is in the same position for the same
-reason: pure configuration state with no user-input fields. See
+Severity is monotone: once any field carries a redaction marker,
+`moderation_status = 'illegal'` and stays there — a later
+`'sensitive'` Proposal on a different field cannot downgrade it,
+and `'illegal'` is itself unreachable from `'normal'` except via
+a redaction marker that is append-only per
+[layers.md §5](layers.md#5-deletion-policy).
+
+### Scope
+
+Per-field moderation-status properties and the `moderation_status`
+cache appear on every user-input-bearing node: **User, Collective,
+Post, Comment, ChatMessage, Chat, Item, Hashtag**.
+
+Junction nodes (`ChatMember`, `CollectiveMember`, `ItemOwnership`)
+carry no user-input fields and so carry neither per-field
+properties nor the cache. **Proposal** is in the same position —
+its substance is `target_property` + `proposed_value` + the
+`:TARGETS` edge, with no user-input field to redact and no
+Postgres-side display content either. The **`:Network` singleton**
+is similarly pure configuration state. See
 [network.md §3](network.md#3-graph-side-properties).
 
-**Distinct from chat-internal disavowal.** Moderation status —
-the `'normal'` / `'sensitive'` / `'illegal'` value set described
-above — is a Network-scope graph property (or per-field redaction
-state) maintained by the moderation flow in
-[moderation.md](../instances/moderation.md). Chat-internal
-disavowal is a **separate value system**: a Chat-scope
-Proposal-mediated state with the value set `'normal'` /
-`'disavowed'`, set on `:APPROVAL` edges (Level 2) or as the
-existence of a passed disavowal Proposal targeting a
-ChatMessage (Level 1) via the `'node'` sentinel below. The two
+**Distinct from chat-internal disavowal.** Per-field moderation
+status is the Network-scope value system described above;
+chat-internal disavowal is a **separate value system** with its
+own value set (`'normal'` / `'disavowed'`), scope (Chat, not
+Network), and graph location (`:APPROVAL` edges at Level 2;
+existence of a passed disavowal Proposal at Level 1). The two
 share no values, no scope, and no graph property — see
 [moderation.md §"Vocabulary: moderation vs disavowal"](../instances/moderation.md#vocabulary-moderation-vs-disavowal)
 for the boundary.
@@ -108,7 +144,8 @@ for the boundary.
 
 A Proposal's `target_property` normally carries the name of one
 graph property on the target node — `'name'`, `'role'`,
-`'moderation_status'`, `'network_role'`, and so on. The sentinel
+`'network_role'`, a per-field moderation-status property like
+`'bio'` or `'username_status'`, and so on. The sentinel
 value `'node'` reserves `target_property` for a whole-node
 operation rather than a single property: the Proposal targets the
 node itself, and the cascade interpreter dispatches on the
@@ -167,7 +204,7 @@ Entities that are acted upon by actors.
 | **ChatMessage** | A single message within a Chat, itself a first-class node — likeable, commentable, embed-able. Carries a `content_privacy` flag (`plaintext` / `encrypted`) per message; a single chat can mix both freely. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good — ownable (via ItemOwnership), transferable, and talked about. See [items.md](../instances/items.md). |
 | **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). The only content node with no authorship — exempt from [authorship.md](authorship.md)'s earliest-incoming-edge rule. See [hashtag.md](../instances/hashtag.md). |
-| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one content node with no user-input fields: carries no `moderation_status` and has no Postgres-side display content. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
+| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one content node with no user-input fields: carries no per-field moderation properties and has no Postgres-side display content. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
 
 ---
 
