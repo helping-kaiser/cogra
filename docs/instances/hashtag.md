@@ -80,11 +80,12 @@ display content (§3).
   separately by `name_status`.
 - **`name_status`** — the per-field moderation-status
   property for `name`, the Hashtag's one and only user-input
-  field. `'normal'` (default) / `'sensitive'` / redaction
-  marker, layered. The universal mechanics live in
-  [nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
-  and §5 below. The node-level moderation state is derived
-  from `name_status` alone (a one-field aggregate).
+  field. Universal mechanics in
+  [nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+  Hashtag-specific cascade in §5 below.
+- **`moderation_status`** — node-level cache per
+  [nodes.md](../primitive/nodes.md#node-level-cache-moderation_status).
+  Mirrors `name_status` since `name` is the only user-input field.
 
 Concrete property types and indexes for these graph-side
 properties live in
@@ -192,44 +193,31 @@ Hashtag itself.
 Two redaction triggers apply to a Hashtag today, both via
 moderation:
 
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal targets `name_status` and flips its
-  top layer to `'sensitive'`. No redaction on `name` itself.
-  Reversible by a counter-Proposal back to `'normal'`. See
+- **Moderation classification.** A `'sensitive'` or `'illegal'`
+  Proposal targets `name_status` (the only user-input field) and
+  runs the cascade per
   [moderation.md §1](moderation.md#1-the-two-classification-paths).
+  On `'illegal'`, the cascade also writes a redaction marker on
+  the `name` data sibling and tombstones the
+  `hashtags.name` registry row in Postgres. The cascade does
+  **not** propagate across `:TAGGING` edges in either direction
+  — a Hashtag classified illegal does not redact the Posts and
+  Items that tag it, and vice versa; each node requires its own
+  classification.
 
-  The classification is a **passive filter on incidental
-  exposure**, not a block on intentional retrieval. A viewer
-  with their `content_filtering_severity_level` (see
+  Hashtag-specific reading of `'sensitive'`: the flag is a
+  **passive filter on incidental exposure**, not a block on
+  intentional retrieval. A viewer whose
+  `content_filtering_severity_level` (see
   [data-model.md](../implementation/data-model.md) "User
-  preferences") set to filter sensitive content sees **no
-  presence** of the hashtag on nodes that tag or reference it —
-  the frontend either drops the chip entirely or renders a
-  neutral placeholder (frontend choice; the primitive doesn't
-  specify which). The viewer's incidental exposure surfaces stay
-  clean.
-
-  **Direct retrieval is unaffected.** A viewer who types the
-  exact hashtag name into a search box still resolves to the
-  Hashtag node and can follow `:TAGGING` /
-  `:REFERENCES` edges from there to the full set of tagged
-  nodes. The sensitive flag does not block intentional lookup —
-  it only suppresses the chip on surfaces the viewer didn't ask
-  to see. This is the same logic as `'sensitive'` on any other
-  node: the content stays, the incidental surface filters.
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets `name_status` and fires the
-  redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the top layer of `name_status` is replaced with a redaction
-  marker, the cascade also writes a redaction marker on the
-  `name` data sibling, and the corresponding `hashtags.name`
-  registry row is tombstoned. The Hashtag's derived moderation
-  state evaluates to `'illegal'`. The cascade does **not**
-  propagate across `:TAGGING` edges in either direction — a
-  Hashtag classified illegal does not redact the Posts and
-  Items that tag it, and vice versa; each node requires its
-  own classification.
+  preferences") filters sensitive content sees no presence of
+  the hashtag on nodes that tag or reference it — the frontend
+  drops the chip or renders a neutral placeholder (frontend
+  choice). Direct retrieval is unaffected: typing the exact name
+  into a search box still resolves to the Hashtag node and the
+  `:TAGGING` / `:REFERENCES` edges from there. The sensitive
+  flag only suppresses the chip on surfaces the viewer didn't
+  ask to see.
 
 **Invariant:** `:Hashtag.name` is immutable except via the
 redaction cascade. No property-amendment Proposal targeting

@@ -86,14 +86,11 @@ Every authored property on the User node is layered per
   through the multi-sig Proposal pattern in
   [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
 
-The User also carries one per-field moderation-status property
-for each user-filled profile field — `username_status` (for the
-data-sibling `username`), `display_name`, `bio`, `avatar`,
-`website_url`. Each holds `'normal'` (default) / `'sensitive'` /
-redaction marker, layered. The universal mechanics live in
-[nodes.md "Universal: per-field moderation status"](nodes.md#universal-per-field-moderation-status).
-The node-level moderation state is derived from these (max
-severity) and not stored.
+Per-field moderation-status properties cover each user-filled
+profile field — `username_status` (for the data-sibling
+`username`), `display_name`, `bio`, `avatar`, `website_url` —
+plus the node-level `moderation_status` cache. Universal mechanics
+in [nodes.md](nodes.md#universal-per-field-moderation-status).
 
 Concrete types, constraints, and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).

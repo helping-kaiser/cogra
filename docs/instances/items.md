@@ -76,19 +76,18 @@ treatment of content-acts per
 An Item node carries only what the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
-The Item carries one per-field moderation-status property per
-user-input field — **`name`**, **`description`**, and
-**`attachments`** (every attached media as one status, per
-[moderation.md §5](moderation.md#5-scope)). Each holds
-`'normal'` (default) / `'sensitive'` / redaction marker,
-layered. The Item's `name` is not subject to graph-side
-uniqueness or content-addressing (unlike `User.username` or
-`Hashtag.name`), so the per-field property uses the field name
-directly with no separate data sibling — the actual name string
-lives in Postgres (§3). The universal mechanics live in
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
-and §8 below. The node-level moderation state is derived from
-these per-field statuses and not stored.
+The Item carries per-field moderation-status properties on
+**`name`**, **`description`**, and **`attachments`** (every
+attached media under one status — see
+[moderation.md §5](moderation.md#5-scope) on per-attachment
+targeting), plus the node-level `moderation_status` cache. The
+Item's `name` has no graph-side uniqueness or content-addressing
+requirement (unlike `User.username` or `Hashtag.name`), so the
+per-field property uses the field name directly with no separate
+data sibling — the actual name string lives in Postgres (§3).
+Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Item-specific cascade in §8.
 
 The current owner is **not** stored as a property on the Item;
 it is derived from the single ItemOwnership whose
@@ -358,38 +357,22 @@ permitted "removal" is in-place layer redaction on graph
 properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change occurred.
 
-Two redaction triggers apply to an Item today:
+An Item can be redacted via moderation:
 
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal targets one of the Item's per-field
-  moderation-status properties (`name`, `description`,
-  `attachments`) and flips its top layer to `'sensitive'`. No
-  redaction; display content stays. Each viewing user's
-  `content_filtering_severity_level` (see
-  [data-model.md](../implementation/data-model.md) "User
-  preferences") decides how aggressively the frontend filters
-  the affected field. Reversible by a counter-Proposal back to
-  `'normal'`. See
-  [moderation.md §1](moderation.md#1-the-two-classification-paths).
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets one of the same per-field
+- **Moderation classification.** A `'sensitive'` or `'illegal'`
+  Proposal targets one of the Item's per-field moderation-status
   properties — `name`, `description`, `attachments`, or the
-  `'node'` sentinel covering all three per
-  [moderation.md §5](moderation.md#5-scope) — and fires the
-  redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the per-field property's top layer is replaced with a
-  redaction marker, the affected Postgres rows are tombstoned
-  with version markers, affected `media_attachments` rows are
-  tombstoned and assets removed from object storage, and the
-  redacted originals are written to the
+  `'node'` sentinel covering all three — and runs the cascade
+  per [moderation.md §1](moderation.md#1-the-two-classification-paths).
+  Item-specific writes on `'illegal'`: affected Postgres rows
+  are tombstoned with version markers (for `name` and
+  `description`), affected `media_attachments` rows are
+  tombstoned and assets removed from object storage (for
+  `attachments`), and the originals go to the
   [retention archive](../primitive/retention-archive.md) under
-  per-row legal hold. The Item's derived moderation state
-  evaluates to `'illegal'` once any field carries a redaction
-  marker. The cascade does **not** propagate to descendants — an
-  Item classified illegal does not redact its Comments, any
-  ChatMessage or Post that references it, or its ItemOwnership
-  chain. Each requires its own classification.
+  per-row legal hold. The cascade does not propagate to the
+  Item's Comments, references, or ItemOwnership chain — each
+  requires its own classification.
 
 **Account deletion of the Item's author** does not affect the
 Item's name, description, attachments, or graph node. Identity-
