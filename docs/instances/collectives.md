@@ -176,14 +176,17 @@ text, avatar, website) lives in Postgres (§4).
 - **`name`** — the handle used for mentions and lookups,
   analogous to `User.username`. Layered per
   [layers.md §3](../primitive/layers.md#3-layers-on-nodes), so
-  rename history is preserved. UNIQUE per instance.
-- **`moderation_status`** — `'normal'` / `'sensitive'` /
-  `'illegal'`, default `'normal'`, layered. Universal across all
-  user-input-bearing nodes; per-node mechanics — set by a passing
-  `'sensitive'` Proposal, auto-flipped to `'illegal'` by the
-  redaction cascade — are described in
-  [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status)
-  and §9 below.
+  rename history is preserved. UNIQUE per instance. Data;
+  per-field status carried separately by `name_status`.
+
+Per-field moderation-status properties cover each user-filled
+profile field — **`name_status`** (companion to the data sibling
+`name`), **`display_name`**, **`description`**, **`avatar`**,
+**`website_url`** — plus the node-level `moderation_status`
+cache. Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Collective-specific cascade in §9.
+
 - **`governance_rules.*`** — structured properties holding the
   social contract: one entry per decision-type instance and one
   per act-as rule (e.g.
@@ -218,7 +221,9 @@ weight changes — see §8).
   `'worker'`, `'band member'`, `'subsidiary'`, `'partner'`,
   `'member'`, etc. Open-ended per the social contract; the role
   vocabulary is **Collective-specific**, not a global enum.
-  Layered.
+  Layered. *How the role catalog is introduced, scoped, and bound
+  to powers is an open design question — see
+  [open-questions.md Q21](../open-questions.md#q21--collective-role-catalog-how-role-strings-are-introduced-scoped-and-bound-to-powers).*
 - **`ownership_pct`** — when the role implies a stake (e.g.
   shareholder). Layered when present.
 - **`voting_weight`** — optional direct weight override for
@@ -320,9 +325,9 @@ A Collective receives:
   when a content node mentions or embeds the Collective. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Collective` (`:TARGETS`)** when a Proposal
-  targets a property on the Collective — `name`,
-  `moderation_status`, or any `governance_rules.*` parameter
-  (§8). See
+  targets a property on the Collective — `name`, any per-field
+  moderation-status property (§3), or any `governance_rules.*`
+  parameter (§8). See
   [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
 
 ### 5.2 CollectiveMember
@@ -398,10 +403,12 @@ A CollectiveMember receives:
 A Collective is the on-graph author of any node whose earliest
 incoming actor edge originates from it — the same
 earliest-incoming-edge rule that derives authorship for every
-node type ([authorship.md](../primitive/authorship.md)). The
-gesture is initiated off-graph by an authorized CollectiveMember
-(§§2, 8), but the acting member is not recorded — querying "who
-authored this?" returns the Collective. See
+node type ([authorship.md](../primitive/authorship.md)). On the
+graph that edge carries the `:AUTHOR` sub-label and originates at
+the Collective node itself. The gesture is initiated off-graph by
+an authorized CollectiveMember (§§2, 8), but the acting member is
+not recorded — querying "who authored this?" returns the
+Collective. See
 [authorship.md "Collective-authored content"](../primitive/authorship.md#collective-authored-content);
 the omission is the deliberate non-feature from §2.
 
@@ -634,32 +641,10 @@ and the chain of CollectiveMembers remains visible on the
 graph. A dissolved Collective node persists; only its acting
 capacity is gone.
 
-Two redaction triggers apply to a Collective today, both
-following
-[moderation.md §1](moderation.md#1-the-two-classification-paths):
-
-- **`'sensitive'` classification.** A passing `'sensitive'`
-  Proposal flips the top layer of `moderation_status` to
-  `'sensitive'`. No redaction; display content stays, and each
-  viewing user's `content_filtering_severity_level`
-  ([data-model.md](../implementation/data-model.md) "User
-  preferences") decides filtering aggressiveness. Reversible by
-  counter-Proposal.
-- **`'illegal'` classification.** A passing `'illegal'`
-  Proposal targets one of the Collective's user-input fields —
-  `name`, Postgres-side `display_name` / `description` /
-  `website_url`, `avatar`, or the `'node'` sentinel covering all
-  of those per
-  [moderation.md §5](moderation.md#5-scope) — and fires the
-  redaction cascade: the affected layer or row becomes a
-  redaction marker / tombstone, the originals land in the
-  [retention archive](../primitive/retention-archive.md) under
-  per-row legal hold, and `moderation_status` auto-flips to
-  `'illegal'`. The cascade does **not** propagate to descendants
-  (authored Posts/Comments, CollectiveMembers, owned items) —
-  each requires its own classification. `governance_rules.*` are
-  in scope in principle but rarely the target; identity fields
-  are the typical case.
+Moderation is the only redaction trigger on a Collective node
+itself ([moderation.md §1](moderation.md#1-the-two-classification-paths)) —
+typically targeting identity fields. `governance_rules.*` are
+in scope in principle but rarely the target.
 
 A redacted Collective is an anonymized but still-graph-resident
 actor, not a removed one. The Collective's UUID is stable

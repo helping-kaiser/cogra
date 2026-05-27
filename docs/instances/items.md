@@ -5,10 +5,10 @@ An **Item** is a content node representing a physical or digital good
 are interactable content: they can be liked, disliked, commented on,
 and tagged with hashtags.
 
-Items are a **future** concern: the first iterations of CoGra focus
-on posts and chats, and marketplace-like item flows will build on
-this model once the base is running. The model below is committed
-to regardless.
+Marketplace-like Item flows aren't the focus of the first CoGra
+iterations (posts and chats are), but the Item and ItemOwnership
+model below is committed: shipping order is sequenced, the design
+is not deferred.
 
 This doc covers two related nodes — the **Item** content node and
 the **ItemOwnership** junction node — plus the convention for
@@ -76,13 +76,18 @@ treatment of content-acts per
 An Item node carries only what the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
-- **`moderation_status`** — `'normal'` / `'sensitive'` /
-  `'illegal'`, default `'normal'`, layered. Universal across all
-  user-input-bearing nodes; per-node mechanics — set by a passing
-  `'sensitive'` Proposal, auto-flipped to `'illegal'` by the
-  redaction cascade — are described in
-  [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status)
-  and §8 below.
+The Item carries per-field moderation-status properties on
+**`name`**, **`description`**, and **`attachments`** (every
+attached media under one status — see
+[moderation.md §5](moderation.md#5-scope) on per-attachment
+targeting), plus the node-level `moderation_status` cache. The
+Item's `name` has no graph-side uniqueness or content-addressing
+requirement (unlike `User.username` or `Hashtag.name`), so the
+per-field property uses the field name directly with no separate
+data sibling — the actual name string lives in Postgres (§3).
+Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Item-specific cascade in §8.
 
 The current owner is **not** stored as a property on the Item;
 it is derived from the single ItemOwnership whose
@@ -187,10 +192,10 @@ An Item receives:
   pointing at it. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Item` (`:TARGETS`)** when a moderation Proposal
-  targets a property on the Item — `'sensitive'` against
-  `moderation_status`, or `'illegal'` against `name`,
-  `description`, or `attachments` (§8). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+  targets one of the Item's per-field moderation-status
+  properties (§3). See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  cascade in §8.
 
 ### 4.2 ItemOwnership
 
@@ -252,8 +257,9 @@ earliest layer-1 timestamp — the same earliest-incoming-edge rule
 that derives authorship for every node type
 ([authorship.md](../primitive/authorship.md)). At creation, the
 author's actor edge is written in the same compound gesture as the
-Item node and the bootstrap ItemOwnership (§1); the author's edge
-is the earliest incoming actor edge by construction.
+Item node and the bootstrap ItemOwnership (§1) and carries the
+`:AUTHOR` sub-label; the author's edge is the earliest incoming
+actor edge by construction.
 
 **Authorship and ownership are distinct.** The author is the
 **author** — the actor who minted, listed, or registered the
@@ -350,46 +356,13 @@ permitted "removal" is in-place layer redaction on graph
 properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change occurred.
 
-Two redaction triggers apply to an Item today:
-
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal flips the top layer of `moderation_status`
-  to `'sensitive'`. No redaction; display content stays. Each
-  viewing user's `content_filtering_severity_level` (see
-  [data-model.md](../implementation/data-model.md) "User
-  preferences") decides how aggressively the frontend filters
-  the Item. Reversible by a counter-Proposal back to `'normal'`.
-  See [moderation.md §1](moderation.md#1-the-two-classification-paths).
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets one of the Item's user-input
-  fields — `name`, `description`, `attachments` (every attached
-  media), or the `'node'` sentinel covering all of the above
-  per the per-node field list in
-  [moderation.md §5](moderation.md#5-scope) —
-  and fires the redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the affected Postgres rows are tombstoned with version markers,
-  affected `media_attachments` rows are tombstoned and assets
-  removed from object storage, the redacted originals are written
-  to the [retention archive](../primitive/retention-archive.md)
-  under per-row legal hold, and the Item node's `moderation_status`
-  is auto-flipped to `'illegal'`. The cascade does **not**
-  propagate to descendants — an Item classified illegal does not
-  redact its Comments, any ChatMessage or Post that references
-  it, or its ItemOwnership chain. Each requires its own
-  classification.
-
-**Account deletion of the Item's author** does not affect the
-Item's name, description, attachments, or graph node. Identity-
-level deletion redacts the User's PII; the User node's UUID is
-stable and the Item's authorship edge keeps pointing at it.
-Content-level deletion does **not** sweep up Items: Items are
-goods, not first-person expression, and
+Moderation is the only redaction trigger on an Item
+([moderation.md §1](moderation.md#1-the-two-classification-paths)) —
+content-level account deletion does not sweep up Items per
 [account-deletion.md §1](account-deletion.md#1-two-redaction-levels)
-scopes content-level redaction to Posts, Comments, and
-ChatMessages only.
+(Items are goods, not first-person expression).
 
-**Account deletion of an owner** is the same shape: the User node
+**Account deletion of an owner.** The User node
 persists with redacted PII, the ItemOwnership chain UUIDs remain
 valid, and ownership continues to resolve. If the deleted owner
 is the current owner, the Item continues to be owned by that

@@ -8,8 +8,8 @@ ChatMessages, and to Items, layering a discussion surface onto
 every kind of content the graph holds. Comments are full graph
 nodes, not properties of their target — so they can themselves
 be liked, disliked, replied to, embedded, and moderated, with
-their own authored opinion edges and their own
-`moderation_status`.
+their own authored opinion edges and their own per-field
+moderation-status properties.
 
 ---
 
@@ -61,17 +61,15 @@ member consent is required, per
 A Comment node carries the minimum the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
-- **`moderation_status`** — `'normal'` / `'sensitive'` /
-  `'illegal'`, default `'normal'`, layered. Universal across
-  all user-input-bearing nodes; the per-node mechanics — set
-  by a passing `'sensitive'` Proposal, auto-flipped to
-  `'illegal'` by the redaction cascade — are described in
-  [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status)
-  and §6 below.
-
-The Comment body, attachments, and any other display content do
-**not** live on the graph. Concrete property types and indexes
-for the graph-side node live in
+The Comment carries per-field moderation-status properties on
+**`content`** (the body) and **`attachments`** (every attached
+media under one status — see
+[moderation.md §5](moderation.md#5-scope) on per-attachment
+targeting), plus the node-level `moderation_status` cache.
+Universal mechanics in
+[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+Comment-specific cascade in §6. Body and attachment content live
+in Postgres / object storage (§3); concrete types and indexes in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 ---
@@ -165,11 +163,10 @@ A Comment receives:
   Comment referencing it in debate. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Comment` `:TARGETS`** when a moderation
-  Proposal targets a property on the Comment — `'sensitive'`
-  against `moderation_status`, or `'illegal'` against a
-  specific user-input field. See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting)
-  and §6.
+  Proposal targets one of the Comment's per-field
+  moderation-status properties (§3). See
+  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  cascade in §6.
 
 ---
 
@@ -178,13 +175,12 @@ A Comment receives:
 A Comment's author is the actor whose incoming actor edge has
 the earliest layer-1 timestamp — the same rule that derives
 authorship for every node type
-([authorship.md](../primitive/authorship.md)). The author's edge
-is always the earliest incoming edge by construction. The
-author's `(dim1, dim2)` on that edge is just a normal opinion
-edge, not a special "author" tag.
+([authorship.md](../primitive/authorship.md)). On the graph that
+edge carries the `:AUTHOR` sub-label; the author's `(dim1, dim2)`
+on the same edge are normal opinion values (sentiment / relevance),
+not a stand-in for the label. The two coexist.
 
-On the graph, the authoring edge carries the `:AUTHOR`
-sub-label — the only representation of authorship on the graph
+`:AUTHOR` is the only representation of authorship on the graph
 side. For Postgres-side display queries, `comments.author_id`
 is cached on the row. Both are rebuildable from the graph; the
 graph wins in any disagreement. See
@@ -201,37 +197,9 @@ properties or a tombstone version row on Postgres-side display
 content; both preserve a visible record that the change
 occurred.
 
-Two redaction triggers apply to a Comment today:
-
-- **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal flips the top layer of
-  `moderation_status` to `'sensitive'`. No redaction; display
-  content stays. Each viewing user's
-  `content_filtering_severity_level` (see
-  [data-model.md](../implementation/data-model.md) "User
-  preferences") decides how aggressively the frontend filters
-  the Comment. Reversible by a counter-Proposal back to
-  `'normal'`. See
-  [moderation.md §1](moderation.md#1-the-two-classification-paths).
-- **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets one of the Comment's user-input
-  fields — `content` (the body), `attachments` (every attached
-  media), or the `'node'` sentinel covering both — and
-  fires the redaction cascade per
-  [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the Postgres body row is tombstoned with a version marker,
-  affected `media_attachments` rows are tombstoned and assets
-  removed from object storage, the redacted originals are
-  written to the
-  [retention archive](../primitive/retention-archive.md) under
-  per-row legal hold, and the Comment node's
-  `moderation_status` is auto-flipped to `'illegal'`. The
-  cascade does **not** propagate across the
-  `:CONTAINMENT` edge in either direction — a Comment
-  classified illegal does not redact its replies, and a parent
-  Post, Comment, Chat, ChatMessage, or Item classified illegal
-  does not redact this Comment; each node requires its own
-  classification.
+Redaction triggers on a Comment are moderation
+([moderation.md §1](moderation.md#1-the-two-classification-paths))
+and — with the author's opt-in — content-level account deletion.
 
 Account deletion of the Comment's author does **not** by
 default affect the Comment's body, attachments, or graph node —
