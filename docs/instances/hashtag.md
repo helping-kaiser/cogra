@@ -76,15 +76,15 @@ display content (§3).
   redundant with the UUID by the content-addressing rule
   (§1) yet is stored explicitly so the graph can render the
   tag without a Postgres lookup and so name-redaction (§5)
-  has a field to act on.
-- **`moderation_status`** — `'normal'` / `'sensitive'` /
-  `'illegal'`, default `'normal'`, layered. Universal
-  across all user-input-bearing nodes; the per-node
-  mechanics — set by a passing `'sensitive'` Proposal,
-  auto-flipped to `'illegal'` by the redaction cascade —
-  are described in
-  [nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status)
-  and §5 below.
+  has a field to act on. Data; per-field status carried
+  separately by `name_status`.
+- **`name_status`** — the per-field moderation-status
+  property for `name`, the Hashtag's one and only user-input
+  field. `'normal'` (default) / `'sensitive'` / redaction
+  marker, layered. The universal mechanics live in
+  [nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
+  and §5 below. The node-level moderation state is derived
+  from `name_status` alone (a one-field aggregate).
 
 Concrete property types and indexes for these graph-side
 properties live in
@@ -160,9 +160,10 @@ The structural edges that do land at a Hashtag:
   Mathematically inert per the invariant above; recorded for
   topology completeness only.
 - **`Proposal → Hashtag` `:TARGETS`** when a moderation
-  Proposal targets a property on the Hashtag —
-  `'sensitive'` against `moderation_status`, or
-  `'illegal'` against `name`. See
+  Proposal targets the Hashtag's per-field
+  moderation-status property `name_status` (the only
+  user-input field), with `proposed_value ∈ {'sensitive',
+  'illegal', 'normal'}`. See
   [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting)
   and §5.
 
@@ -192,10 +193,9 @@ Two redaction triggers apply to a Hashtag today, both via
 moderation:
 
 - **Moderation: `'sensitive'` classification.** A passing
-  `'sensitive'` Proposal flips the top layer of
-  `moderation_status` to `'sensitive'`. No redaction on
-  `name`. Reversible by a counter-Proposal back to
-  `'normal'`. See
+  `'sensitive'` Proposal targets `name_status` and flips its
+  top layer to `'sensitive'`. No redaction on `name` itself.
+  Reversible by a counter-Proposal back to `'normal'`. See
   [moderation.md §1](moderation.md#1-the-two-classification-paths).
 
   The classification is a **passive filter on incidental
@@ -218,17 +218,18 @@ moderation:
   to see. This is the same logic as `'sensitive'` on any other
   node: the content stays, the incidental surface filters.
 - **Moderation: `'illegal'` classification.** A passing
-  `'illegal'` Proposal targets `name` (the only user-input
-  field on the Hashtag) and fires the redaction cascade per
+  `'illegal'` Proposal targets `name_status` and fires the
+  redaction cascade per
   [moderation.md §1](moderation.md#1-the-two-classification-paths):
-  the top layer of `name` is replaced with a redaction
-  marker, the corresponding `hashtags.name` registry row
-  is tombstoned, and `moderation_status` is auto-flipped to
-  `'illegal'`. The cascade does **not** propagate across
-  `:TAGGING` edges in either direction — a Hashtag
-  classified illegal does not redact the Posts and Items
-  that tag it, and vice versa; each node requires its own
-  classification.
+  the top layer of `name_status` is replaced with a redaction
+  marker, the cascade also writes a redaction marker on the
+  `name` data sibling, and the corresponding `hashtags.name`
+  registry row is tombstoned. The Hashtag's derived moderation
+  state evaluates to `'illegal'`. The cascade does **not**
+  propagate across `:TAGGING` edges in either direction — a
+  Hashtag classified illegal does not redact the Posts and
+  Items that tag it, and vice versa; each node requires its
+  own classification.
 
 **Invariant:** `:Hashtag.name` is immutable except via the
 redaction cascade. No property-amendment Proposal targeting
