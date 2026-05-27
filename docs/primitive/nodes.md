@@ -15,9 +15,9 @@ Postgres-side display-content shapes, see
 [data-model.md](../implementation/data-model.md).
 
 The one cross-cutting topic that lives in this doc rather than in
-any single per-node doc is the universal `moderation_status`
-property — same shape and same mechanism across every node type
-that carries user-authored content.
+any single per-node doc is the universal per-field
+moderation-status property scheme — same shape and same mechanism
+across every node type that carries user-authored content.
 
 ---
 
@@ -133,7 +133,8 @@ for the boundary.
 
 A Proposal's `target_property` normally carries the name of one
 graph property on the target node — `'name'`, `'role'`,
-`'moderation_status'`, `'network_role'`, and so on. The sentinel
+`'network_role'`, a per-field moderation-status property like
+`'bio'` or `'username_status'`, and so on. The sentinel
 value `'node'` reserves `target_property` for a whole-node
 operation rather than a single property: the Proposal targets the
 node itself, and the cascade interpreter dispatches on the

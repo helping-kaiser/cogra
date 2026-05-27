@@ -80,11 +80,11 @@ an `instances/` doc is a sign the mechanism belongs in
   (corporate, household, co-op).
 - [items](instances/items.md) — items as content; ItemOwnership
   transfer flow; single-owner invariant.
-- [moderation](instances/moderation.md) — `sensitive` (per-node
-  flag) and `illegal` (per-field redaction); reports as
-  Proposals on the graph; mod-vote-required-for-every-classification
-  gate; per-field redaction cascade with auto-flip of the parent
-  node's `moderation_status` to `'illegal'`.
+- [moderation](instances/moderation.md) — `sensitive` and
+  `illegal` both per-field on a per-field moderation-status
+  property; reports as Proposals on the graph;
+  mod-vote-required-for-every-classification gate; per-field
+  redaction cascade; node-level state derived (max severity).
 - [platform-guidelines](instances/platform-guidelines.md) — the
   normative document the Network references when classifying
   content; bucket contents; amendment procedure pinned by

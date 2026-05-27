@@ -162,10 +162,10 @@ Each pair is self-amending: a baseline-pair amendment passes
 under baseline rules, a critical-pair amendment under critical
 rules. Defaults bootstrap; they are not fixed.
 
-The singleton carries **no `moderation_status` property**. Like
-junction nodes and the Proposal node, it has no user-input fields
-to redact (see
-[nodes.md "Universal: moderation_status"](nodes.md#universal-moderation_status));
+The singleton carries **no per-field moderation properties**.
+Like junction nodes and the Proposal node, it has no user-input
+fields to redact (see
+[nodes.md "Universal: per-field moderation status"](nodes.md#universal-per-field-moderation-status));
 the lifecycle consequence is §7.
 
 The singleton exists so platform-wide governance has a graph

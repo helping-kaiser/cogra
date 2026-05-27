@@ -808,11 +808,12 @@ The principle: **scope determines what the outcome writes.** A
 chat-scope instance writes to chat-side state (a `Chat →
 ChatMember` approval edge layer, or the existence of a passed
 disavowal Proposal that the chat treats as its stance). A
-Network-scope instance writes to node-level state (a
-`moderation_status` property layer, or per-field redaction
-markers under [layers.md §5](layers.md#5-deletion-policy)). The
-targets are different graph objects even when the *node* is the
-same, so the writes never collide.
+Network-scope instance writes to a per-field moderation-status
+property (`'sensitive'` flips the property's top layer;
+`'illegal'` writes a redaction marker under
+[layers.md §5](layers.md#5-deletion-policy)). The targets are
+different graph objects even when the *node* is the same, so the
+writes never collide.
 
 The canonical worked example is **chat-internal disavowal
 alongside platform moderation**, both of which can apply to a

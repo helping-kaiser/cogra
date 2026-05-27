@@ -4,8 +4,9 @@ The **Proposal** is a content node — the **subject carrier
 for property-level governance votes**. Wherever the platform
 needs to vote on changing a graph property (a Network
 parameter, a User's `network_role`, a Chat's `name`, a
-ChatMember's `role`, a content node's `moderation_status`),
-the vote is cast on a Proposal that *targets* that node's
+ChatMember's `role`, a content node's per-field
+moderation-status property like `'bio'` or `'content'`), the
+vote is cast on a Proposal that *targets* that node's
 specific property, not on the underlying node directly. When
 the tally crosses threshold, a cascade writes a new layer on
 the target property with the Proposal's `proposed_value`.
@@ -44,10 +45,11 @@ incoming vote edge from the authoring actor (§5).
 ## 2. Graph-side properties
 
 - **`target_property`** — the name of the graph property
-  on the target node being proposed for change (e.g.
-  `'moderation_status'`, `'name'`, `'role'`,
-  `'network_role'`, `'guidelines_version'`), or the reserved
-  sentinel `'node'` for whole-node operations. The sentinel
+  on the target node being proposed for change (e.g. a
+  per-field moderation-status property like `'bio'` or
+  `'content'`, `'name'`, `'role'`, `'network_role'`,
+  `'guidelines_version'`), or the reserved sentinel `'node'`
+  for whole-node operations. The sentinel
   is defined in
   [nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel)
   and has two consumers:
@@ -68,12 +70,11 @@ specific change it proposes; mutating either mid-lifecycle
 would change what voters are voting on. A revised target or
 value requires a new Proposal.
 
-A Proposal does **not** carry the universal
-`moderation_status` graph property: there are no
-user-input fields to redact (see
-[nodes.md "Universal: moderation_status"](../primitive/nodes.md#universal-moderation_status),
-which excludes Proposal alongside the junction nodes for
-the same reason).
+A Proposal does **not** carry any per-field moderation-status
+properties: it has no user-input fields to redact (see
+[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status),
+which excludes Proposal alongside the junction nodes for the
+same reason).
 
 Concrete property types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -210,9 +211,9 @@ is the node-level progression.
   target with the Proposal's `proposed_value`
   ([graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)).
   Outcome semantics, cascade bounds, and the
-  `'illegal'`-specific cascade behavior (per-field
-  tombstoning, archive disposition, `moderation_status`
-  auto-flip on the target) live in
+  `'illegal'`-specific cascade behavior (per-field redaction
+  marker, data-sibling write where applicable, Postgres
+  tombstoning, archive disposition) live in
   [governance.md §2.5](../primitive/governance.md#25-outcome),
   [moderation.md §1](moderation.md#1-the-two-classification-paths),
   and

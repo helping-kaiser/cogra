@@ -18,7 +18,7 @@ voting on a moderation Proposal is one of `illegal`, `sensitive`,
 or `normal`. Bucket meanings and behavioural consequences
 (redaction cascade, viewer filter, reversibility) live at the
 primitive level — see
-[nodes.md "Universal: `moderation_status`"](../primitive/nodes.md#universal-moderation_status).
+[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status).
 What follows is the platform policy: which content the Network
 puts in each bucket. The Network amends these lists via §3.
 
