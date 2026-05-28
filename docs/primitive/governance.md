@@ -773,7 +773,7 @@ community.
 - **Collective governance (full social contract)** —
   [collectives.md](../instances/collectives.md). Membership
   changes (hire / fire / promote), property changes (`name`,
-  `governance_rules`, `ownership_pct`), and any other
+  `governance.<action_key>`, `ownership_pct`), and any other
   decision-type the collective defines. A Collective hosts as
   many instances as its social contract specifies; each is
   parameterized for its own decision-type. Shape B

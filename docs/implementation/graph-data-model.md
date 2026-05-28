@@ -119,6 +119,7 @@ of redactions without requiring layer-aware constraint logic.
 | `avatar`            | String | Per intro. Asset lives in object storage. |
 | `website_url`       | String | Per intro. Content lives in Postgres. |
 | `moderation_status` | String | Node-level cache (per intro). |
+| `governance`        | Map    | `Map<String, Rule>` where `Rule = { exec, amend }` and each of `exec`/`amend` is `{ eligibility, weights, threshold, exclude_subject? }`. Keys are `action_key` strings in the reserved namespaces `'decision:*'`, `'actas:*'`, `'system:*'`. Layered. Schema is fixed (one map property); the action set is data — new action keys never require a schema change. Amendments are Proposals with `value_kind = 'rule'` and `target_property = 'governance.<action_key>'`, gated by that entry's own `amend` triple. See [collectives.md §8](../instances/collectives.md#8-governance--the-social-contract). |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Collective) ASSERT c.id IS UNIQUE;
