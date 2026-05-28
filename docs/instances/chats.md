@@ -115,39 +115,26 @@ A Chat node carries:
 
 - **`name`** — optional routing/display hint. Layered. Data;
   per-field status carried separately by `name_status`.
-- **`join_policy`** — one of `open`, `invite-only`,
-  `request-entry` (§11). Layered.
-- **`invite_proposer_roles`** — list of `ChatMember.role`
-  values whose bearers may propose a new ChatMember under
-  `'invite-only'`. Inapplicable to `'open'` (no proposer needed)
-  and `'request-entry'` (the would-be member proposes
-  themselves). Layered.
-- **`entry_approval_required_count`** — integer N ≥ 0. Number
-  of Shape B approver votes the new ChatMember's junction must
-  collect before the system writes the `Chat → ChatMember`
-  approval edge. `0` under `'open'`; `1` for a standard
-  `'invite-only'` or `'request-entry'`; higher values produce
-  the multi-sig configuration shape per §11 "Higher N". Layered.
-- **`entry_approval_eligible_roles`** — list of
-  `ChatMember.role` values whose bearers' Shape B votes count
-  toward `entry_approval_required_count`. Inapplicable to
-  `'open'`. Layered.
+- **`governance`** — the chat's social contract, held in the
+  primitive `Map<String, Rule>` shape per
+  [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
+  Entries cover member admission, message disavowal, member
+  disavowal, mid-epoch key rotation, member-role changes, and
+  edits to `name`/`description`/`image`. The default map
+  installed at chat founding lives in §10; a chat can amend
+  any entry via a Proposal targeting `governance.<action_key>`,
+  gated by that entry's own `amend` triple. Layered.
 - **`epoch`** — integer chat-key-rotation counter (§9). Default
-  `1`. Layered. Advances by `1` on every membership change and
-  on every passing mid-epoch rotation Proposal.
+  `1`. Operational counter; not layered. Advances by `1` on
+  every membership change and on every passing
+  `decision:rotate_key` Proposal.
+
 Per-field moderation-status properties cover each user-input
 field — **`name_status`** (companion to the data sibling `name`),
 **`description`**, and **`image`** — plus the node-level
 `moderation_status` cache. Universal mechanics in
 [nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
 Chat-specific cascade in §13.1.
-
-A Chat also carries a set of **governance-parameter properties**
-— role weights, disavowal quorum/threshold pairs, property-change
-quorum/threshold pairs, and the mid-epoch key-rotation
-quorum/threshold — all layered and addressable as targets of
-property-change Proposals. The full list with defaults lives in
-the §10 tables.
 
 Concrete property types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -171,55 +158,35 @@ Concrete types and indexes live in
 
 A ChatMember junction carries:
 
-- **`role`** — closed enum: `'admin'`, `'chat_mod'`, `'member'`.
-  Closed because each value carries a fixed mechanical power set
-  (§3.4) and a default weight on the Chat (§10) — open-ended role
-  strings would require every chat to supply matching weight and
-  power properties, which the per-property property-change Proposal
-  shape cannot do without paying a uniformity cost.
-  The `'chat_mod'` label is deliberately distinct from the
+- **`role`** — open-vocabulary string. The default-`governance`
+  vocabulary uses `'admin'`, `'chat_mod'`, `'member'` (§10), but
+  a chat can amend `governance` entries to use any role strings
+  it wants. The vocabulary is implicit — the set of strings used
+  in `Chat.governance` eligibility predicates plus the strings
+  assigned to any active member's `role`. The `'chat_mod'` label
+  in the default vocabulary is deliberately distinct from the
   Network-scope `User.network_role = 'moderator'`: chat
   moderators and Network moderators are different roles, with
   different scopes and different weights — see
   [governance.md §7](../primitive/governance.md#7-the-mod-gate).
-  Layered. The default role weights are properties on the
-  **Chat** (§3.1), not on the ChatMember — change the role to
-  reassign the bearer; change the Chat's weight properties to
-  re-tune all bearers of that role.
-- **`voting_weight`** — optional. When present, overrides the
-  role-based weight derivation at tally time (§10 "How roles fit
-  in"). Layered.
+  Role weights live inside each `governance` entry's `weights`
+  field, so changing a `role` reassigns the bearer to those
+  entries' role-weight rows; amending an entry's `weights`
+  re-tunes all bearers of those roles for that decision. Layered.
+- **`voting_weight`** — optional per-bearer override. When
+  present, the tally reads this value directly and the
+  role-derived weight from the relevant `governance` entry is
+  ignored. Layered.
 
 Junction nodes carry no per-field moderation properties per
 [nodes.md](../primitive/nodes.md#universal-per-field-moderation-status) —
 ChatMember has no user-input fields.
 
-### 3.4 ChatMember roles and their powers
-
-The three `ChatMember.role` values carry the following
-mechanical powers. Every power is mediated by a `Chat`
-property — none is hardcoded into the role.
-
-| Power | Carrier property on `Chat` | Default for `'admin'` | Default for `'chat_mod'` | Default for `'member'` |
-|---|---|---|---|---|
-| Propose an invitation under `'invite-only'`            | `invite_proposer_roles` (§3.1)        | yes | yes | no  |
-| Cast a counting approver vote (any join policy)        | `entry_approval_eligible_roles` (§3.1) | yes | yes | no  |
-| Cast a counting vote in chat-internal disavowal (§10)  | role weight on `Chat` (§10 "How roles fit in") | weight `5` | weight `3` | weight `1` |
-| Cast a counting vote on chat property-change Proposals | role weight on `Chat`                 | weight `5` | weight `3` | weight `1` |
-| Vote-weight override on a per-bearer basis             | `ChatMember.voting_weight` (§3.3)     | nullable | nullable | nullable |
-
-The defaults are starting points, not fixed rules: every
-property above is a layered `Chat`-node property, amendable via
-a property-change Proposal (§10 "Property and role changes via
-Proposals"). A chat that wants admins to lose the unilateral
-proposer privilege simply removes `'admin'` from
-`invite_proposer_roles`; one that wants every member to count
-as an approver adds `'member'` to `entry_approval_eligible_roles`.
-
-No role grants a unilateral disavowal or a unilateral property
-change: every act runs through a Proposal vote, weighted but
-never veto-bearing. The admin's higher weight matters only at
-the margin where a tally is close.
+What each default-vocabulary role can do — admit members,
+disavow content, edit fields, change roles, rotate keys — is
+fully described by the default `governance` map's entries in §10.
+No role is veto-bearing: every act runs through a weighted vote,
+and admin weight matters only at the margin of close tallies.
 
 ---
 
@@ -303,8 +270,9 @@ one outgoing structural edge type:
 
 - **`Chat → ChatMember` (`:APPROVAL`)** — the approval side of
   the two-edge approval pattern. Created when the chat's
-  `join_policy` is satisfied for an incoming `ChatMember` claim
-  (§11). State transitions on this edge — voluntary leave (§11
+  `governance['decision:add_member']` threshold is met against
+  an incoming `ChatMember` claim (§11). State transitions on
+  this edge — voluntary leave (§11
   "Leaving and removal") and the system-written cascade from a
   passing Level 2 disavowal Proposal (§10) — append additional
   `dim1 < 0` layers per
@@ -332,9 +300,10 @@ A Chat receives:
   another content node embeds the Chat. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 - **`Proposal → Chat` (`:TARGETS`)** when a Proposal targets a
-  property on the Chat — `name`, `join_policy`, `epoch` (§9
-  mid-epoch rotation), any per-field moderation-status property
-  (§3), or any governance-parameter property (§10). See
+  property on the Chat — `name`, any per-field moderation-status
+  property (§3), `epoch` (under `decision:rotate_key`), or any
+  `governance.<action_key>` entry (executions and amendments
+  alike, §10). See
   [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
 
 ### 5.2 ChatMessage
@@ -392,8 +361,8 @@ bearer casts as a chat-eligible voter:
 
 - **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
   two-edge approval pattern, closed by the chat's
-  `Chat → ChatMember` approval edge (§5.1) once `join_policy` is
-  satisfied (§11).
+  `Chat → ChatMember` approval edge (§5.1) once the chat's
+  `decision:add_member` rule is satisfied (§11).
 - **`ChatMember → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the membership represents. Never re-pointed; the Shape A
@@ -401,7 +370,7 @@ bearer casts as a chat-eligible voter:
   this actor (§11).
 - **`ChatMember → Proposal` (Shape B vote)** — chat-eligible
   vote on any Proposal targeting a chat-internal subject: a
-  chat property (§10 "Property and role changes"), a
+  chat property or a `governance.<action_key>` entry (§10), a
   ChatMessage for Level 1 disavowal (§10), or a ChatMember
   junction for Level 2 disavowal (§10).
 - **`ChatMember → ChatMember` (Shape B vote)** — admission
@@ -672,14 +641,14 @@ not any earlier or later epoch.
 Members may also rotate the chat key **without a membership
 change** — for example, after a member's device has been
 compromised but before they have left the chat. The mechanism is
-the ordinary property-change Proposal flow (§10): a Proposal
-targets `Chat.epoch` with `proposed_value = current + 1`. On
-threshold-cross, the property advances and current members
-re-run the group-key-update procedure off-graph. The thresholds
-themselves are the `Chat.rotate_key_quorum` and
-`Chat.rotate_key_threshold` properties (§3.1, §10 tables) and
-can be changed via Proposals targeting them — governance of
-governance applies all the way down.
+the ordinary Proposal flow under `Chat.governance['decision:rotate_key']`:
+the Proposal targets `Chat.epoch` with
+`proposed_value = current + 1`. On threshold-cross, the property
+advances and current members re-run the group-key-update
+procedure off-graph. The rule's `exec` and `amend` triples are
+both data on the entry; tightening the rotation rule itself is a
+standard `value_kind = 'rule'` Proposal against the same entry —
+governance of governance applies all the way down.
 
 The advance commits regardless of who is online when the
 Proposal passes — graph state is the source of truth, not member
@@ -825,66 +794,55 @@ state remains encoded in the topology per
 `proposed_value = 'normal'` reverses the disavowal, just like
 Level 1.
 
-### Default parameters
+### Default `governance` map at chat founding
 
-Starting points, not fixed rules:
+The chat's `governance` map is installed at founding with the
+entries below. Every chat-internal decision — admitting a
+member, disavowing content, rotating keys, editing display
+fields, changing a member's role — has an entry here. Each
+entry can be amended via a `value_kind = 'rule'` Proposal
+targeting `governance.<action_key>`, gated by that entry's own
+`amend` triple.
 
-| Parameter       | Message disavowal (Level 1)                                                                              | Member disavowal (Level 2)                                                                              |
-|-----------------|----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
-| Eligibility     | Active `ChatMember`s                                                                                     | Active `ChatMember`s excluding the member under review                                                  |
-| Role weights    | `admin = 5`, `chat_mod = 3`, `member = 1`                                                                | Same                                                                                                    |
-| Quorum          | ≥ 20% of total eligible weight has cast a vote                                                           | ≥ 40% of total eligible weight has cast a vote                                                          |
-| Threshold       | > 50% of cast weight disavowing                                                                          | ≥ 2/3 of cast weight disavowing                                                                         |
-| Proposal target | `:Proposal → :ChatMessage`, `target_property = 'node'`, `proposed_value = 'disavowed'`                   | `:Proposal → :ChatMember`, `target_property = 'node'`, `proposed_value = 'disavowed'`                   |
-| Outcome         | No separate outcome edge; the chat's stance is the existence of the passed Proposal targeting the message | Cascade writes a new `dim1 < 0` layer on the `Chat → ChatMember` approval edge for the target          |
-| Takes effect at | New-vote threshold-crossing ([governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)) | Same                                                                                                    |
+| `action_key`               | `exec.eligibility`                | `exec.weights`            | `exec.threshold`           | `exec.exclude_subject` |
+|----------------------------|-----------------------------------|---------------------------|----------------------------|------------------------|
+| `decision:add_member`      | `role IN (admin, chat_mod)`       | — (count-based)           | 1 approver                 | —                      |
+| `decision:disavow_message` | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 20% quorum | —                      |
+| `decision:disavow_member`  | active members                    | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 40% quorum | yes                    |
+| `decision:rotate_key`      | active members                    | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | —                      |
+| `decision:change_role`     | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 30% quorum | yes                    |
+| `decision:set:name`        | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | —                      |
+| `decision:set:description` | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | —                      |
+| `decision:set:image`       | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | —                      |
 
-**Every number above is a node property on the `Chat`** (§3.1).
-Role weights, quorum %, threshold % — none of them are
-hardcoded. Members change any of them via a Proposal node
-targeting the chat's property, voted by the same eligibility
-rules (see
-[governance.md §2.1](../primitive/governance.md#21-subject)).
+Each entry's `amend` triple defaults to `(active members,
+admin:5/chat_mod:3/member:1, ≥ 2/3 cast, ≥ 30% quorum)` —
+uniform amendment cost; chats can re-tune any entry's `amend`
+independently for tighter or looser self-modification.
 
-### How roles fit in
+Role weights live inside each entry's `exec.weights` /
+`amend.weights` fields rather than on the Chat or ChatMember
+node, so re-tuning weights for one decision (e.g. raise
+`member` weight on disavowal only) doesn't disturb others.
+`ChatMember.voting_weight` overrides per-bearer at tally time
+(§3.3).
 
-Roles (`admin`, `chat_mod`, `member`) carry default weights via
-the table above; `ChatMember.voting_weight` overrides per-bearer
-at tally time (§3.3).
+An admin's weight is higher than a member's but it is never a
+veto — in any chat large enough that an admin's weight is a
+small fraction of the pool, an admin cannot single-handedly
+pass any decision. Multiple admins stack their weights under
+the same primitive; a community can override admins by crossing
+the threshold without their participation.
 
-An admin's disavowal weight is higher than a member's but it is
-never a veto — in any chat large enough that an admin's weight
-is a small fraction of the pool, an admin cannot single-handedly
-disavow. Multiple admins stack their weights under the same
-primitive; no separate M-of-N admin rule is needed. A community
-can override an admin by crossing the threshold without the
-admin's participation.
-
-### Property and role changes via Proposals
-
-The chat's other state changes use the same Proposal
-mechanism as disavowal. `ChatMember.role` (promote / demote),
-`Chat.name`, `Chat.join_policy`, and `Chat.epoch` (mid-epoch
-key rotation, see §9) are all node properties; each change is
-a Proposal voted on by chat members under chat-defined
-parameters.
-
-Suggested defaults (starting points, not fixed rules):
-
-| Property change                    | Quorum | Threshold | Eligibility                                    |
-|------------------------------------|--------|-----------|------------------------------------------------|
-| `ChatMember.role`                  | ≥ 30%  | > 50%     | Active members, excluding the subject member   |
-| `Chat.name`                        | ≥ 10%  | > 50%     | Active members                                 |
-| `Chat.join_policy`                 | ≥ 30%  | ≥ 2/3     | Active members                                 |
-| `Chat.epoch` (mid-epoch rotation)  | ≥ 50%  | ≥ 2/3     | Active members                                 |
-| Disavowal thresholds (above)       | ≥ 30%  | ≥ 2/3     | Active members                                 |
-
-These percentages are themselves node properties on the chat
-(§3.1) and can be changed via Proposals targeting them —
-governance of governance applies all the way down. Promoting
-and demoting exclude the subject from voting (consistent with
-the member-disavowal exclusion); cosmetic changes like the
-title don't.
+The cascade for each entry dispatches on `action_key` and target
+type per [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
+For Level 1 / Level 2 disavowal the cascade behaviors are as
+described in their subsections above; for the `decision:set:*`
+and `decision:change_role` family the cascade writes the new
+value as a layer on the target property; for
+`decision:rotate_key` it advances `Chat.epoch`; for
+`decision:add_member` it writes the `Chat → ChatMember`
+approval edge once the signer threshold is crossed (§11).
 
 ### Still no push
 
@@ -921,11 +879,12 @@ which combines two voting shapes
   to cast a Shape B vote.
 - **Zero or more Shape B approver votes** from existing
   ChatMembers — `ChatMember_approver → ChatMember_new` (`dim1 > 0`).
-  The number required is `entry_approval_required_count` (§3.1);
-  votes only count when the approver's `role` is listed in
-  `entry_approval_eligible_roles`.
+  The chat's `governance['decision:add_member']` entry sets how
+  many such votes are required (`exec.threshold`) and whose
+  votes count (`exec.eligibility`). Default at chat founding:
+  one approval from a `'chat_mod'` or `'admin'` (§10 table).
 
-When the policy is satisfied the system writes the
+When the entry's threshold is met, the system writes the
 `Chat → ChatMember` approval edge, and the membership is
 active.
 
@@ -967,7 +926,7 @@ existing edge. Once a membership is active, disavowal flows
 through a Proposal (§10 Level 2), not through a re-layering of
 this admission edge.
 
-### Open
+### Open (`exec.threshold = 0`)
 
 The would-be member writes their `User/Collective → ChatMember`
 Shape A self-claim. The system creates the `ChatMember → Chat`
@@ -975,54 +934,33 @@ claim edge. Because no Shape B approver vote is required, the
 system immediately writes the `Chat → ChatMember` approval
 edge. The membership is active.
 
-### Invite-only
+### Approval-required (`exec.threshold ≥ 1`)
 
-The **inviter** — an existing member whose `role` is listed in
-`invite_proposer_roles` (§3.1) —
-casts a `ChatMember_inviter → ChatMember_new` **Shape B vote**
-(`dim1 > 0`) toward a new junction node. At the same time the
-system writes the `ChatMember → invitee` `:BEARER` edge,
-binding the junction to the prospective bearer, and the
-`ChatMember → Chat` claim edge. The membership is pending: the
-junction exists with the inviter's approval and a known bearer,
-but the invitee has not yet self-claimed.
+Either side can move first; the system writes the
+`Chat → ChatMember` approval edge once both the Shape A
+self-claim and the required count of eligible Shape B votes are
+present.
 
-The **invitee** later writes their own
-`User/Collective → ChatMember` **Shape A self-claim** to that
-same junction; the API rejects the claim if it doesn't come
-from the actor at the other end of `:BEARER`. Both required
-edges (the inviter's Shape B approval and the invitee's
-matching Shape A self-claim) are now present; the system writes
-the `Chat → ChatMember` approval edge. The membership is active.
+**Inviter-first (invite flow).** An existing member eligible
+under `exec.eligibility` casts a
+`ChatMember_inviter → ChatMember_new` **Shape B vote**
+(`dim1 > 0`) toward a new junction node. The system writes the
+`ChatMember → invitee` `:BEARER` edge, binding the junction to
+the prospective bearer, and the `ChatMember → Chat` claim edge.
+The membership is pending until the bearer self-claims (and
+until enough additional Shape B votes are present, if
+`exec.threshold > 1`). If the invitee never self-claims, the
+membership persists pending; the junction node is never deleted.
 
-If the invitee never self-claims, the membership persists
-pending; the junction node is never deleted.
+**Claimant-first (request flow).** The would-be member writes
+their `User/Collective → ChatMember` Shape A self-claim. The
+system creates the `ChatMember → Chat` claim edge. The
+membership is pending until enough eligible Shape B votes
+arrive to meet `exec.threshold`.
 
-### Request-entry
-
-The **would-be member** writes their
-`User/Collective → ChatMember` Shape A self-claim. The system
-creates the `ChatMember → Chat` claim edge. The membership is
-pending.
-
-An existing ChatMember whose `role` is listed in
-`entry_approval_eligible_roles` (§3.1) — typically `'admin'` or
-`'chat_mod'` by default — casts a
-`ChatMember_approver → ChatMember_new` **Shape B vote**
-(`dim1 > 0`). The system writes the `Chat → ChatMember`
-approval edge. The membership is active.
-
-### Higher N (a.k.a. multi-sig)
-
-Any of the variants above can require **multiple Shape B
-approver votes** instead of one — e.g., "two admins must
-approve before the membership activates." Same primitive, just
-a higher `entry_approval_required_count` (§3.1) drawn from the
-chat's policy, with `entry_approval_eligible_roles` continuing
-to gate which approvers count. The junction stays pending until
+**Multi-sig** is simply `exec.threshold > 1` — same machinery,
+N approvers instead of one. The junction stays pending until
 the Nth qualifying Shape B vote crosses the threshold.
-"Multi-sig" is a label for this configuration shape, not a
-fourth flow.
 
 ### State encoding
 
