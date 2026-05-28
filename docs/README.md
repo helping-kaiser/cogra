@@ -105,7 +105,8 @@ an `instances/` doc is a sign the mechanism belongs in
   and federation reconciliation-free.
 - [proposal](instances/proposal.md) — per-node doc for the
   Proposal content node; subject carrier for property-level
-  governance votes (target, target_property, proposed_value).
+  governance votes (target, target_property, value_kind,
+  proposed_value, rule_anchor).
 
 ### `implementation/`
 
