@@ -51,7 +51,7 @@ What's being decided. Always a graph object whose state can change:
 - A junction relationship (e.g. a ChatMember approval).
 - A structural edge's state-bearing dimension (e.g. a chat's stance
   toward a message).
-- A node property (e.g. a chat's own `disavowal_threshold`) —
+- A node property (e.g. an entry in a chat's `governance` map) —
   governance of governance is in scope.
 
 **What governance does NOT cover — actor sovereignty.** A User's
@@ -122,7 +122,7 @@ explicit per-junction `voting_weight`.
 
 | Junction         | Default source                                                                       | Out-of-the-box roles → weights |
 |------------------|--------------------------------------------------------------------------------------|---|
-| ChatMember       | Per-Chat role-weight properties on the Chat node — see [chats.md §3.1](../instances/chats.md#31-chat)                                                  | `admin = 5`, `chat_mod = 3`, `member = 1`; per-chat amendable |
+| ChatMember       | Per-action role weights inside each `Chat.governance` entry's `exec.weights` field — see [chats.md §10](../instances/chats.md#10-moderation)           | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
 | CollectiveMember | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
 | Future junctions | Whatever properties the junction exposes                                             | Defined by the application |
 
@@ -663,7 +663,7 @@ only write. The triggering write may fan out into derived writes:
   outcome — see [moderation.md](../instances/moderation.md)).
 - A `(0,0)` layer on every active vote of an actor whose
   eligibility just dropped (eligibility-dropout cascade).
-- A new property layer on a chat node (mid-epoch `Chat.epoch`
+- An advance of `Chat.epoch` on a chat node (mid-epoch
   rotation).
 - A new ownership-edge layer (Item ownership transfer).
 
