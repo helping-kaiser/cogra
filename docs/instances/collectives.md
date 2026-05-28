@@ -492,14 +492,16 @@ string. Each entry is a `Rule` object:
 governance: Map<String, Rule>
   where Rule = {
     exec:  { eligibility, weights, threshold, exclude_subject? },
-    amend: { eligibility, weights, threshold, exclude_subject? }
+    amend: { eligibility, weights, threshold }
   }
 ```
 
 `exec` is the per-component governance instance per
 [governance.md §2](../primitive/governance.md#2-the-five-components)
-that governs executing the action. `amend` is the same shape,
-governing amendments to *this entry*. Amending a rule entry is a
+that governs executing the action. `amend` is almost the same
+shape but **without `exclude_subject`** — the subject of an
+amendment is the rule entry itself, not a CollectiveMember, so
+there is no member to exclude. Amending a rule entry is a
 standard Proposal with `value_kind = 'rule'`,
 `target_property = 'governance.<action_key>'`, and
 `proposed_value` set to the new `Rule` object; the Proposal is
