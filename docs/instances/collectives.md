@@ -484,42 +484,15 @@ all of these without any primitive changes.
 
 ### The `governance` map
 
-The entire social contract lives in **one layered map property
-on the Collective** — `governance`, keyed by `action_key`
-string. Each entry is a `Rule` object:
-
-```
-governance: Map<String, Rule>
-  where Rule = {
-    exec:  { eligibility, weights, threshold, exclude_subject? },
-    amend: { eligibility, weights, threshold }
-  }
-```
-
-`exec` is the per-component governance instance per
-[governance.md §2](../primitive/governance.md#2-the-five-components)
-that governs executing the action. `amend` is almost the same
-shape but **without `exclude_subject`** — the subject of an
-amendment is the rule entry itself, not a CollectiveMember, so
-there is no member to exclude. Amending a rule entry is a
-standard Proposal with `value_kind = 'rule'`,
-`target_property = 'governance.<action_key>'`, and
-`proposed_value` set to the new `Rule` object; the Proposal is
-gated by the entry's own `amend` triple — governance of
-governance, scoped per rule.
-
-**The `amend` triple is self-applying.** Amending the `amend`
-half of a rule uses that same `amend` triple. Tightening the
-amendment process requires using the current amendment process —
-no separate meta-meta-rule, no infinite regress, no primitive
-default.
-
-**Schema is fixed; the action set is data.** `governance` is a
-single map-typed property declared once in
-[graph-data-model.md](../implementation/graph-data-model.md);
-new action keys never require a schema change. Adding,
-amending, or tombstoning an entry all flow through the same
-`target_property = 'governance.<action_key>'` Proposal mechanism.
+The entire social contract lives in the layered
+`Collective.governance` map. The shape — `Map<String, Rule>`
+with paired `exec` / `amend` triples per entry, the self-applying
+`amend` rule, and the
+`target_property = 'governance.<action_key>'` /
+`value_kind = 'rule'` Proposal shape for amendments — is the
+primitive convention in
+[governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
+This subsection covers what's Collective-specific.
 
 ### Action keys
 

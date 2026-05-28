@@ -42,6 +42,37 @@ application relies on; rules the storage layer can't directly express
 (e.g. forbidding a property by absence) are stated as ethos invariants and
 enforced in code tests.
 
+### Shared shape: layered node-property storage
+
+Properties marked "layered" in the per-label tables below carry
+history per [layers.md §3](../primitive/layers.md#3-layers-on-nodes).
+Each such property `X` occupies two slots on the node:
+
+- **`X`** — the current top-layer value. Queries, indexes, and
+  uniqueness constraints read this slot directly.
+- **`X_layers`** — `List<Map>` of `{value, timestamp, layer}`
+  entries, ordered by `layer`. One entry per layer; the last
+  entry's `value` matches `X`.
+
+Writes append to `X_layers` and overwrite `X` atomically under
+the per-node serialization discipline from
+[governance.md "Tally serialization"](../primitive/governance.md#tally-serialization),
+which makes `timestamp` strictly monotonic per node. A single
+timestamp therefore pins the node's full state at that moment —
+"read property X as-of T" scans `X_layers` for the entry with the
+largest `timestamp ≤ T`. The first consumer is
+[proposal.md §2 `rule_anchor`](../instances/proposal.md#2-graph-side-properties).
+
+Redaction per
+[layers.md §5 "Layer contents on node properties — redactable"](../primitive/layers.md#layer-contents-on-node-properties--redactable)
+overwrites the targeted layer's `value` in place with a marker;
+the entry's `timestamp` and `layer` are preserved, and `X` is
+updated to the marker only if the redacted layer was the top.
+
+Properties without "layered" in their notes (`id`,
+`moderation_status` cache, `epoch`) are single-slot — no
+`_layers` sibling.
+
 ### Shared shape: per-field moderation-status properties
 
 Every content-bearing node carries one graph property per user-filled
@@ -119,7 +150,7 @@ of redactions without requiring layer-aware constraint logic.
 | `avatar`            | String | Per intro. Asset lives in object storage. |
 | `website_url`       | String | Per intro. Content lives in Postgres. |
 | `moderation_status` | String | Node-level cache (per intro). |
-| `governance`        | Map    | `Map<String, Rule>` where `Rule = { exec, amend }`, `exec = { eligibility, weights, threshold, exclude_subject? }`, and `amend = { eligibility, weights, threshold }` (no `exclude_subject` — amend's subject is the rule entry itself, not a CollectiveMember). Keys are `action_key` strings in the reserved namespaces `'decision:*'`, `'actas:*'`, `'system:*'`. Layered. Schema is fixed (one map property); the action set is data — new action keys never require a schema change. Amendments are Proposals with `value_kind = 'rule'` and `target_property = 'governance.<action_key>'`, gated by that entry's own `amend` triple. See [collectives.md §8](../instances/collectives.md#8-governance--the-social-contract). |
+| `governance`        | Map    | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Keys are `action_key` strings in the Collective-specific namespaces `'decision:*'`, `'actas:*'`, `'system:*'` — see [collectives.md §8 "Action keys"](../instances/collectives.md#action-keys). Layered. |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Collective) ASSERT c.id IS UNIQUE;
@@ -157,34 +188,14 @@ CREATE INDEX ON :Comment(id);
 
 | Property            | Type   | Notes |
 |---|---|---|
-| `id`                     | String  | UUID v4. |
-| `name`                   | String  | Optional; layered. The graph carries it for routing/display hints. Data; per-field status carried separately by `name_status`. |
-| `name_status`            | String  | Per intro (status for `name`). |
-| `description`            | String  | Per intro. Content lives in Postgres. |
-| `image`                  | String  | Per intro. Asset lives in object storage. |
-| `join_policy`            | String  | `'open'` / `'invite-only'` / `'request-entry'`. Layered. Read by the system when an actor's claim toward a `:ChatMember` arrives, to decide what approval is required. Multi-sig is not a fourth value — it is the configuration shape produced when `entry_approval_required_count > 1` under either `'invite-only'` or `'request-entry'`. See [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat). |
-| `invite_proposer_roles`  | String[] | `ChatMember.role` values whose bearers may propose a new ChatMember under `'invite-only'`. Default `['chat_mod','admin']`. Inapplicable to `'open'` and `'request-entry'`. Layered. See [chats.md §3.1, §11](../instances/chats.md#31-chat). |
-| `entry_approval_required_count` | Integer | Number of qualifying Shape B approver votes the new ChatMember's junction must collect before activation. `0` under `'open'`; default `1` otherwise; higher values produce the multi-sig configuration shape. Layered. See [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat). |
-| `entry_approval_eligible_roles` | String[] | `ChatMember.role` values whose bearers' Shape B votes count toward `entry_approval_required_count`. Default `['chat_mod','admin']`. Inapplicable to `'open'`. Layered. See [chats.md §3.1, §11](../instances/chats.md#31-chat). |
-| `epoch`                  | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing mid-epoch rotation Proposal. Concurrent transitions serialize per Chat. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
-| `rotate_key_quorum`      | Float   | Quorum for mid-epoch rotation Proposals targeting `epoch`. Default `0.50`. Layered, amendable via Proposal. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
-| `rotate_key_threshold`   | Float   | Pass-threshold for mid-epoch rotation Proposals. Default `0.667` (2/3). Layered, amendable via Proposal. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
-| `weight_admin`           | Integer | Default voting weight for `ChatMember.role = 'admin'`. Default `5`. Layered. Overridden per-bearer by a non-null `ChatMember.voting_weight`. See [chats.md §10 "How roles fit in"](../instances/chats.md#how-roles-fit-in). |
-| `weight_chat_mod`        | Integer | Default voting weight for `ChatMember.role = 'chat_mod'`. Default `3`. Layered. |
-| `weight_member`          | Integer | Default voting weight for `ChatMember.role = 'member'`. Default `1`. Layered. |
-| `disavowal_l1_quorum`    | Float   | Quorum for Level 1 (ChatMessage) disavowal Proposals. Default `0.20`. Layered. See [chats.md §10](../instances/chats.md#10-moderation). |
-| `disavowal_l1_threshold` | Float   | Pass-threshold for Level 1 disavowal. Default `0.50`. Layered. |
-| `disavowal_l2_quorum`    | Float   | Quorum for Level 2 (ChatMember) disavowal Proposals. Default `0.40`. Layered. |
-| `disavowal_l2_threshold` | Float   | Pass-threshold for Level 2 disavowal. Default `0.667` (2/3). Layered. |
-| `role_change_quorum`     | Float   | Quorum for Proposals targeting `ChatMember.role`. Default `0.30`. Layered. The subject member is excluded from eligibility — see [chats.md §10 "Property and role changes via Proposals"](../instances/chats.md#property-and-role-changes-via-proposals). |
-| `role_change_threshold`  | Float   | Pass-threshold for role changes. Default `0.50`. Layered. |
-| `name_change_quorum`     | Float   | Quorum for Proposals targeting `Chat.name`. Default `0.10`. Layered. |
-| `name_change_threshold`  | Float   | Pass-threshold for name changes. Default `0.50`. Layered. |
-| `join_policy_change_quorum` | Float | Quorum for Proposals targeting `join_policy`, `invite_proposer_roles`, `entry_approval_required_count`, or `entry_approval_eligible_roles`. Default `0.30`. Layered. |
-| `join_policy_change_threshold` | Float | Pass-threshold for the join-policy family. Default `0.667` (2/3). Layered. |
-| `governance_amendment_quorum`  | Float | Quorum for Proposals targeting any of the governance fraction or weight properties listed above (the "governance of governance" case). Default `0.30`. Layered. |
-| `governance_amendment_threshold` | Float | Pass-threshold for governance amendments. Default `0.667` (2/3). Layered. |
-| `moderation_status` | String | Node-level cache (per intro) for the Chat's per-field statuses (`name_status`, `description`, `image`). |
+| `id`                | String  | UUID v4. |
+| `name`              | String  | Optional; layered. The graph carries it for routing/display hints. Data; per-field status carried separately by `name_status`. |
+| `name_status`       | String  | Per intro (status for `name`). |
+| `description`       | String  | Per intro. Content lives in Postgres. |
+| `image`             | String  | Per intro. Asset lives in object storage. |
+| `governance`        | Map     | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Holds the chat's social contract: who admits members, disavows messages, disavows members, rotates keys, edits display fields, changes member roles. Keys are Chat-specific `action_key` strings; per-bearer voting overrides live on `:ChatMember.voting_weight`. Layered. A default map is installed at chat founding (Chats are the one default-having consumer flagged in [collectives.md §8 "No primitive defaults"](../instances/collectives.md#no-primitive-defaults)); the default contents live in [chats.md §10](../instances/chats.md#10-moderation). |
+| `epoch`             | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing `decision:rotate_key` Proposal. Concurrent transitions serialize per Chat. Operational counter; not layered. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
+| `moderation_status` | String  | Node-level cache (per intro) for the Chat's per-field statuses (`name_status`, `description`, `image`). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
@@ -252,8 +263,8 @@ CREATE INDEX ON :Hashtag(id);
 | `id`              | String  | UUID v4. |
 | `target_property` | String  | Name of the property on the target node, or the reserved whole-node sentinel `'node'` — see [nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel). The `'node'` sentinel covers both the moderation cascade (every user-input field plus all attachments — see [moderation.md §5](../instances/moderation.md#5-scope)) and chat-internal disavowal — see [chats.md §10](../instances/chats.md#10-moderation). |
 | `value_kind`      | String  | Shape discriminator on `proposed_value` so frontends can render the right editor / display widget without out-of-band knowledge of every `target_property`. Enumerated: `'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:<action_key>'`. Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-graph-side-properties). |
-| `rule_anchor`     | String  | **Required.** UUID of the node hosting the rule property(ies) this Proposal is governed by, per [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time). The dispatcher reads each rule property on `rule_anchor` as-of the Proposal's authorship-edge timestamp (per [authorship.md](../primitive/authorship.md)) rather than at the current top layer, so amendments committed mid-flight don't retroactively change in-flight Proposals' rule parameters. Covers every current consumer with one value — Collective Proposals point at the Collective (`Collective.governance` indexed by `action_key`), Network dual-quorum moderation Proposals point at the Network (both `_quorum_fraction` and `_quorum_count` read as-of the same timestamp). Set at creation; does not layer. Timestamp-based addressing on node-property layers is a forward dependency — see [layers.md §3](../primitive/layers.md#3-layers-on-nodes). See [proposal.md §2](../instances/proposal.md#2-graph-side-properties). |
-| `proposed_value`  | Variant | The proposed new value; shape determined by `value_kind`. Common patterns: (a) **Moderation classification** (`value_kind = 'scalar:string'`). `target_property` names the per-field moderation-status property on the target node (e.g., `'bio'`, `'content'`, `'username_status'`) or the `'node'` sentinel for whole-node coverage; `proposed_value ∈ {'sensitive', 'illegal', 'normal'}`. On pass, the cascade writes the new value as a layer (for `'sensitive'` / `'normal'`) or replaces the top layer with a redaction marker (for `'illegal'`, plus archive + Postgres tombstone). See [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths). (b) **Chat-internal disavowal** (`value_kind = 'scalar:string'`). `target_property = 'node'`, `proposed_value ∈ {'disavowed', 'normal'}`. The cascade writes a `dim1 < 0` (or `dim1 > 0` on reversal) layer on the relevant `:APPROVAL` edge per [chats.md §10](../instances/chats.md#10-moderation). (c) **Scalar property amendments** (`value_kind ∈ {'scalar:string', 'scalar:float', 'scalar:integer'}`). `proposed_value` is the new value of whatever graph property `target_property` names — a role string, a numeric threshold, etc. (d) **Governance-rule amendments** (`value_kind = 'rule'`). `proposed_value` is a `Rule` map of `{exec, amend}` triples — see [collectives.md §8](../instances/collectives.md#8-governance--the-social-contract). (e) **Composite atomic changes** (`value_kind = 'composite:<action_key>'`). `proposed_value` is a handler-specific bundle with `_from` / `_to` entries per affected property; the cascade re-validates against current state and refuses on mismatch — see [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals). |
+| `rule_anchor`     | String  | **Required.** UUID of the node hosting the rule property(ies) this Proposal is governed by, per [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time). The dispatcher reads each rule property on `rule_anchor` as-of the Proposal's authorship-edge timestamp (per [authorship.md](../primitive/authorship.md)) rather than at the current top layer, so amendments committed mid-flight don't retroactively change in-flight Proposals' rule parameters. Covers every current consumer with one value — Collective and Chat Proposals point at their host (`<host>.governance` indexed by `action_key`), Network dual-quorum moderation Proposals point at the Network (both `_quorum_fraction` and `_quorum_count` read as-of the same timestamp). Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-graph-side-properties). |
+| `proposed_value`  | Variant | The proposed new value; shape determined by `value_kind`. Common patterns: (a) **Moderation classification** (`value_kind = 'scalar:string'`). `target_property` names the per-field moderation-status property on the target node (e.g., `'bio'`, `'content'`, `'username_status'`) or the `'node'` sentinel for whole-node coverage; `proposed_value ∈ {'sensitive', 'illegal', 'normal'}`. On pass, the cascade writes the new value as a layer (for `'sensitive'` / `'normal'`) or replaces the top layer with a redaction marker (for `'illegal'`, plus archive + Postgres tombstone). See [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths). (b) **Chat-internal disavowal** (`value_kind = 'scalar:string'`). `target_property = 'node'`, `proposed_value ∈ {'disavowed', 'normal'}`. The cascade writes a `dim1 < 0` (or `dim1 > 0` on reversal) layer on the relevant `:APPROVAL` edge per [chats.md §10](../instances/chats.md#10-moderation). (c) **Scalar property amendments** (`value_kind ∈ {'scalar:string', 'scalar:float', 'scalar:integer'}`). `proposed_value` is the new value of whatever graph property `target_property` names — a role string, a numeric threshold, etc. (d) **Governance-rule amendments** (`value_kind = 'rule'`). `proposed_value` is a `Rule` map of `{exec, amend}` triples per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). (e) **Composite atomic changes** (`value_kind = 'composite:<action_key>'`). `proposed_value` is a handler-specific bundle with `_from` / `_to` entries per affected property; the cascade re-validates against current state and refuses on mismatch — see [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals). |
 
 The target node itself is reached via a `:TARGETS` structural edge
 (`Proposal → Target`), not a foreign-key property — see
@@ -288,8 +299,8 @@ and edge-labels table below.
 | Property        | Type   | Notes |
 |---|---|---|
 | `id`            | String | UUID v4. |
-| `role`          | String | `'admin'` / `'chat_mod'` / `'member'`. Layered. Distinct from the Network-scope `User.network_role = 'moderator'`. |
-| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (per-chat defaults `weight_admin` / `weight_chat_mod` / `weight_member` on the Chat node, §`:Chat` above). When non-null, the tally reads this value directly and the role-derived default is ignored; when null (default), the role-derived rule applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
+| `role`          | String | Open-ended per the chat's `governance` map. Default-vocabulary strings: `'admin'`, `'chat_mod'`, `'member'`; chats can amend `governance` entries to use any role strings. Distinct from the Network-scope `User.network_role = 'moderator'`. Layered. |
+| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (role weights live in each `Chat.governance` entry's `exec.weights` field). When non-null, the tally reads this value directly; when null (default), the entry's role-derived weight applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMember) ASSERT m.id IS UNIQUE;
