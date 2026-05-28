@@ -95,17 +95,9 @@ writes (the discipline used in
 [governance.md "Tally serialization"](governance.md#tally-serialization))
 make timestamps strictly monotonic per node, so a single
 timestamp pins the node's full state at that moment — no
-per-property index needed.
-
-> **Forward dependency.** The concrete storage representation
-> for timestamp-addressable node-property layers is added in a
-> follow-up PR; the first consumer that depends on the
-> addressing is
-> [proposal.md §2 `rule_anchor`](../instances/proposal.md#2-graph-side-properties)
-> (governance rule snapshot at Proposal author-time, required
-> on every Proposal), and the primitive principle is described
-> in
-> [governance.md §5 "Rule snapshot at author time"](governance.md#rule-snapshot-at-author-time).
+per-property index needed. Concrete storage shape (top-layer
+slot + `_layers` list) in
+[graph-data-model.md "Shared shape: layered node-property storage"](../implementation/graph-data-model.md#shared-shape-layered-node-property-storage).
 
 ### What properties belong on graph nodes
 
@@ -113,9 +105,9 @@ Only what the graph **actually needs** for traversal, ranking, or
 routing. Example authored properties that layer:
 
 - User: `username` (the handle used for mentions/lookups).
-- Chat: `name` (if needed for routing/display hints), `join_policy`
-  (read by the system when an actor's claim toward a `ChatMember`
-  arrives).
+- Chat: `name` (if needed for routing/display hints), `governance`
+  (the social-contract map read when an actor's claim toward a
+  `ChatMember` arrives, when a disavowal Proposal is tallied, etc.).
 - ChatMember / CollectiveMember: `role`, role-attached quantities
   (`ownership_pct`, `voting_weight`).
 

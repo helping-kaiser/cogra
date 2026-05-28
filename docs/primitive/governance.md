@@ -207,6 +207,67 @@ new layer on a structural edge (state-bearing) or a new layer on a
 node property. Never a deletion; always append-only. Cascades are
 allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
+### 2.6 Packaging rules on a node — the `governance` map convention
+
+A subject node may need to host **many decision-type rules**
+("who admits a new member", "who renames the entity", "who
+disavows content"). Spreading these across one
+quorum/threshold/eligibility property per decision-type fans
+out the node's schema and forces a schema change every time a
+new decision-type is added.
+
+**The pattern: one layered map property, keyed by `action_key`,
+each entry a `Rule` of paired `exec` + `amend` triples:**
+
+```
+governance: Map<String, Rule>
+  where Rule = {
+    exec:  { eligibility, weights, threshold, exclude_subject? },
+    amend: { eligibility, weights, threshold }
+  }
+```
+
+`exec` is the per-instance configuration per §§2.1–2.5 that
+governs **executing** the action. `amend` is the same shape
+without `exclude_subject` (the subject of an amendment is the
+rule entry itself, not a member junction) and governs
+**amending** that entry.
+
+**The `amend` triple is self-applying.** Amending the `amend`
+half of a rule uses that same `amend` triple. Tightening the
+amendment process requires using the current amendment process
+— no separate meta-meta-rule, no infinite regress.
+
+**Schema is fixed; the action set is data.** `governance` is a
+single map-typed property declared once per host label in
+[graph-data-model.md](../implementation/graph-data-model.md);
+new action keys never require a schema change. Adding,
+amending, or tombstoning an entry all flow through a Proposal
+with `target_property = 'governance.<action_key>'`,
+`value_kind = 'rule'`, and `proposed_value` set to the new
+`Rule` object.
+
+**Rule snapshot via `rule_anchor`.** A Proposal authored under
+a `governance[X]` entry sets `rule_anchor` to the host node's
+UUID; tally and cascade read `<host>.governance` as-of the
+Proposal's authorship-edge timestamp and index by `action_key`
+to recover the frozen Rule. See §5 "Rule snapshot at author
+time".
+
+**Per-instance specifics live in the instance docs.** The
+`action_key` vocabulary, the dispatcher's key-construction
+conventions and fallback chain, and whether a primitive default
+map is installed at host creation are per-instance choices.
+Consumers:
+
+- [Collective.governance](../instances/collectives.md#8-governance--the-social-contract)
+  — no primitive defaults; founders write the social contract
+  at creation.
+- [Chat.governance](../instances/chats.md#10-moderation) —
+  default map installed at chat founding (chats default to
+  community-vote moderation because it fits informal
+  communities).
+
 ---
 
 ## 3. The two vote shapes
@@ -438,7 +499,8 @@ with threshold N" are the same primitive — there is no separate
   the approval edge. See
   [graph-model.md §5](graph-model.md#5-junction-node-flows).
 - **Chat invitations.** A specific application of multi-sig
-  junction approval: the chat's `join_policy` sets the threshold
+  junction approval: the chat's
+  `governance['decision:add_member']` entry sets the threshold
   on the inviter / approver Shape B votes that admit a new
   `ChatMember`. See
   [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
@@ -812,10 +874,13 @@ community.
   existing `Chat → ChatMember` approval edge for the target.
 - **Chat property and role changes** — [chats.md §10](../instances/chats.md#10-moderation).
   Shape B `ChatMember → Proposal` votes on `Chat.name`,
-  `Chat.join_policy`, `Chat.epoch` (mid-epoch chat-key rotation,
-  see [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
-  and `ChatMember.role`. Defaults vary by stakes; thresholds are
-  themselves chat properties.
+  `Chat.description`, `Chat.image`, `Chat.epoch` (mid-epoch
+  chat-key rotation under `decision:rotate_key`, see
+  [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
+  `ChatMember.role`, and any `governance.<action_key>` entry
+  (governance of governance). Defaults vary by stakes; per-rule
+  thresholds live in each `Chat.governance` entry's `exec` and
+  `amend` triples.
 - **Collective governance (full social contract)** —
   [collectives.md](../instances/collectives.md). Membership
   changes (hire / fire / promote), property changes (`name`,

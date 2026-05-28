@@ -219,7 +219,7 @@ framing and §5 for the approval flow.
 
 | Node type | Connects | Description |
 |-----------|----------|-------------|
-| **ChatMember** | Chat ↔ User/Collective | Membership in a Chat with role (admin/mod/member). Entry can require multi-sig approval per the chat's `join_policy`; can itself be voted on (kick, promote). See [chats.md](../instances/chats.md). |
+| **ChatMember** | Chat ↔ User/Collective | Membership in a Chat with role (default vocabulary: admin/chat_mod/member). Entry can require multi-sig approval per the chat's `governance['decision:add_member']` entry; can itself be voted on (kick, promote). See [chats.md](../instances/chats.md). |
 | **CollectiveMember** | Collective ↔ User/Collective | Membership in a Collective with role and role-attached quantities (e.g. `ownership_pct`). Collectives can themselves be CollectiveMembers — nesting is unlimited. See [collectives.md](../instances/collectives.md). |
 | **ItemOwnership** | Item ↔ User/Collective | A specific ownership claim. Each transfer creates a new ItemOwnership; together they form the item's append-only ownership history. See [items.md](../instances/items.md). |
 
