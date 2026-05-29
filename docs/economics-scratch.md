@@ -58,7 +58,12 @@ until the design is fully settled.
    free unlimited extensions, campaign primitive lives as a graph
    node with payment edges on settlement.*
 3. **"Achieved h_gain" definition for default settlement** —
-   peak-during-window vs end-of-window vs other snapshot.
+   *fully settled. Sustained-level metric:
+   `achieved_h_gain = max { L : h ≥ L for some continuous interval
+   of length ≥ τ }` over `[start_ts, end_ts]`, τ ≈ Δt/3 (exact
+   value deferred to economics.md authoring). Continuous credit
+   for sustained reach at any level; spike attacks earn zero
+   structurally.*
 4. Attribution math concretization (Shapley specifics; conduit
    credit formula; cut-off enforcement).
 5. Action gating specifics (which actions; quota shapes; CGT
@@ -73,18 +78,20 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 2 closed. Next: Topic 3 — "achieved h_gain" definition
-for default settlement.** Campaign settlement is fully settled
-as advertiser-discretionary release within a publicly transparent
-+ reputation-enforced envelope. See *Settled decisions* and the
-*A — Token shape* / *B — Campaign primitive* sections.
+**Topic 3 closed. Next: Topic 4 — attribution math
+concretization (Shapley specifics; conduit credit formula;
+cut-off enforcement).** `achieved_h_gain` is settled as a
+sustained-level metric: `max { L : h ≥ L for some continuous
+interval of length ≥ τ }` over `[start_ts, end_ts]`, τ ≈ Δt/3.
+See *Settled decisions* and the *B — Campaign primitive* section.
 
-The settled 30-day default `P = min(1, achieved/goal) · D` needs
-a precise definition of `achieved_h_gain`. Candidates: peak-
-during-window (fair to contributors whose edges may be severed
-later), end-of-window (rewards persistence), or some other
-snapshot. Both directions have gaming surfaces; needs a careful
-pass.
+Topic 4 needs: precise Shapley formulation on the relevant
+subgraph (anchor→target paths that lifted `h`), exact conduit
+credit treatment (Billie's "large share" emerges from
+counterfactual removal), and the cut-off rule (only edges/nodes
+appearing after `campaign_start_ts` count for the "new path"
+component; conduit credit ignores cut-off). The C section has
+sketches; needs full formalization.
 
 ---
 
@@ -323,6 +330,23 @@ pass.
   for the cluster to sever. Mechanical guarantees + public-
   transparent state + graph-native reputation compound rather
   than substitute.
+- **Default-settlement metric = sustained-level.** `[settled]`
+  `achieved_h_gain = max { L : h_anchor(target) ≥ h_start + L
+  for some continuous interval of length ≥ τ }`, evaluated over
+  `[start_ts, end_ts]`. The highest gain the campaign actually
+  held for at least τ time, anywhere in the window. τ ≈ Δt/3
+  (exact value deferred to economics.md authoring). Continuous
+  credit for sustained reach at any level — a linear ramp 0→G
+  yields `achieved = 2G/3` (payout `2D/3`); a campaign that
+  reaches G in the first quarter and holds yields `achieved = G`
+  (full D); a brief mid-window spike yields `achieved = 0` (no
+  level sustained long enough to count). Rejected: peak-during-
+  window (gameable by a single instantaneous spike, dangerous
+  precisely in the absent-advertiser case the default exists
+  for); end-of-window snapshot (contributors wiped by a late
+  severance even when they did the work); time-weighted average
+  (spike-resistant but under-credits honest ramp delivery at
+  `D/2`, structurally underpaying the linear-delivery case).
 
 ---
 
@@ -519,12 +543,13 @@ pass.
   `settle(P)` at any time during the window or up to 30 days
   after `end_ts`; (b) auto-settlement at `end_ts + 30 days` with
   default
-  `P = min(1, max(0, achieved_h_gain) / declared_goal) · D`.
-  Goal-hit detection is no longer a distribution trigger — it's
-  a public signal feeding the advertiser's settlement decision
-  and the default-P computation. Topic 3 still owes us a precise
-  definition of `achieved_h_gain` (peak-during-window /
-  end-of-window / other).
+  `P = min(1, max(0, achieved_h_gain) / declared_goal) · D`,
+  where `achieved_h_gain = max { L : h_anchor(target) ≥ h_start
+  + L for some continuous interval of length ≥ τ }` evaluated
+  over `[start_ts, end_ts]`, τ ≈ Δt/3. Goal-hit detection is
+  not a distribution trigger — it's a public signal feeding
+  the advertiser's settlement decision and the default-P
+  computation.
 - **Concurrent campaigns.** `[settled]` Linear composition: each
   campaign computes attribution independently against its own
   anchor / target / window. A single edge can contribute to many.
@@ -562,7 +587,7 @@ pass.
 - **Cost.** Exact Shapley on the relevant subgraph is expensive but
   bounded — the subgraph is "nodes/edges on paths from anchor to
   target that lifted `h`", not the whole graph. `[proposal]` Compute
-  once at goal-hit, not per-impression.
+  once at settlement, not per-impression.
 
 ### D — Ledger & on-chain mechanics
 
