@@ -45,13 +45,15 @@ until the design is fully settled.
 1. **Token issuance model** — *substantially settled: decaying
    calendar mint, no fresh premine, peer-token percentage
    carry-forward, conservation equation and γ=5% bot-loss locked
-   in. Outstanding: what economic role calendar mint actually
-   plays (under the strict cap, mint feeds burn and adds nothing
-   to circulating supply unless a non-burn distribution channel
-   is added). Live candidates: POL, host-with-proof-of-resource,
-   cap-relaxation for arms-length contributors, target-supply
-   commitment. Next session resumes here.* Analysis under
-   *A — Token shape* below.
+   in. Outstanding: two parallel focused sessions on the two
+   surviving non-burn distribution candidates:*
+   - **1a. POL** (protocol-owned liquidity) — calendar mint into
+     protocol's LP position.
+   - **1b. (Z)** importance-weighted distribution from burn
+     activity — mint flows from where CGT is burned out to
+     important actors connected to that activity.
+
+   *(i)/(W)/(X)/(Y) eliminated this session — see A.*
 2. Campaign expiry behavior (refund / pro-rata / mixed).
 3. Goal-hit detection cadence (continuous / epoch-snapshot /
    claim-on-hit).
@@ -69,50 +71,36 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 1: Token issuance model — what economic role mint plays.**
-We've locked down the marketing-flow math (conservation equation +
-strict cap + γ=5% bot loss) and identified that under that math,
-calendar mint *contributes zero to circulating supply* — it just
-feeds the burn cycle. Confirmed acceptable as a design property
-*only if* a separate non-burn distribution channel exists; user
-rejected both "keep mint as cosmetic narrative" (math-guy
-principle: useless mechanisms get deleted) and "scrap calendar
-mint entirely" (would lock the ~1500 peer-network holders as
-forever-owners of all CGT, no path for late users to a meaningful
-share).
+**Topic 1: Token issuance model — two focused sessions queued.**
+Marketing-flow math fully locked (conservation equation + strict
+cap + γ=5%). Calendar mint identified as burn-buffer under that
+math — needs a non-burn distribution channel to play any economic
+role. Candidate elimination complete: (i) host/proof-of-resource,
+(W) cap-relaxation, (X) target-supply commitment, (Y) proof-of-
+personhood — all scrapped (see *A — Token shape* for reasons).
 
-So the open piece is the non-burn distribution channel. Live
-candidates with notes from this session:
+**Surviving candidates: POL and (Z).** Each is large enough to
+deserve its own focused session, with no other ideas spinning in
+the background.
 
-- **POL (protocol-owned liquidity).** Calendar mint → LP via
-  one-sided deposit + auto-balance (or swap-then-pair). Net: LP
-  deepens, total supply grows, early holders diluted
-  proportionally. User receptive. Sub-question: what's done with
-  LP fees / LP shares (α hold, β fund treasury, γ release to
-  users, δ buyback-and-burn).
-- **(i) Host/infra with verifiable proof-of-resource.** Basic
-  form gameable per user. Filecoin-style storage/retrieval proofs
-  could make it real, but heavy engineering. Open.
-- **(W) Cap-relaxation for arms-length contributors.** Loosen
-  `contributor_payout < deposit` only when graph topology proves
-  the campaign's advertiser and payout-recipients are not
-  co-clustered. Real contributors get genuine mint reward; self-
-  deal coalitions still capped. Requires graph-primitive design
-  effort to define "arms-length" robustly.
-- **(X) Target-supply commitment.** Sizing anchor (e.g. 1500
-  early holders ≤10% of eventual supply). Composes with any
-  mechanism above.
-- **(Y) Proof-of-personhood gated direct distribution.** Deferred
-  unless a specific personhood mechanism gets adopted.
-- **(Z) Global-h-weighted distribution.** Depends on h(t) having
-  a global severance-resistant form — graph-primitive question.
+- **1b. (Z) focused session — next up.** Design importance-
+  weighted distribution from burn activity. Epoch-based cadence
+  preferred. Sub-questions to chew on: connection definition,
+  importance metric form, burn-scaling, anti-gaming surface.
+  Tightly coupled to graph-primitive sybil resistance. User
+  chose Z first because it's the more likely-to-fail design —
+  resolve the harder one early, before sinking time into POL
+  details that might end up doing all the work.
+- **1a. POL focused session — after Z.** Design how calendar
+  mint deposits into protocol-owned LP — trigger cadence, one-
+  sided vs. swap-pair, LP fee/share disposition, chain coupling,
+  IL posture.
 
-Treasury direction (alone, without POL pairing) rejected as poor
-narrative. (a) cosmetic-only mint and (b) scrap calendar mint
-both rejected — see above.
+Both need to be worked through before Topic 1 closes; the order
+is just risk-first.
 
 See *A — Token shape* for the conservation equation, worked
-examples, and gaming-attack audit completed this session.
+examples, gaming-attack audit, and full elimination reasons.
 
 ---
 
@@ -304,53 +292,104 @@ examples, and gaming-attack audit completed this session.
   economic work*: it's bookkeeping. The system's supply behavior
   is identical with or without calendar mint.
 
-- **Open: non-burn distribution channel for mint.** `[open —
-  primary next-session topic]` Without a non-burn channel,
-  calendar mint serves no purpose. (a) "keep it as narrative"
-  rejected (math-guy principle). (b) "scrap calendar mint" also
-  rejected (would lock ~1500 peer-network holders as forever-
-  owners of all CGT; no path for late users to a meaningful
-  share). (c) the path: find calendar mint a real job. Live
-  candidates:
+- **Open: non-burn distribution channel for mint.** Without one,
+  calendar mint serves no purpose. (a) "cosmetic narrative"
+  rejected (useless mechanisms get deleted). (b) "scrap calendar
+  mint" rejected (would lock ~1500 peer-network holders as
+  forever-owners of all CGT). (c) the path: find calendar mint a
+  real job.
 
-  - **POL (protocol-owned liquidity).** Mint pool periodically
-    deposits CGT into LP (one-sided + auto-balance, or swap-half
-    + 50/50 pair). Net: LP deepens, total supply grows, early
-    holders diluted proportionally, late users buy from deep
-    protocol-LP at market price rather than from coordinated
-    early holders. Defensible narrative. User receptive. Sub-
-    question: what's done with LP fees / LP shares — (α) protocol
-    holds forever; (β) fees fund treasury; (γ) periodic release
-    to users (loops back to anti-sybil); (δ) buyback-and-burn
-    (further deflationary).
-  - **(i) Host / infrastructure with verifiable proof-of-resource.**
-    Basic-form host compensation is gameable (just claiming to
-    host can be botted). Could work with Filecoin-style storage
-    proofs, retrieval proofs, or compute proofs — analog of BTC
-    PoW where bot's marginal cost approaches marginal reward.
-    Real engineering line item; open whether the cost is worth
-    the channel.
-  - **(W) Cap-relaxation for arms-length contributors.** Loosen
-    `contributor_payout < deposit` only when graph topology shows
-    advertiser and payout recipients are not co-clustered (graph
-    distance, severance topology, or path diversity through real-
-    user anchors). Self-deal coalitions fail the test; real
-    arms-length contributors pass and receive genuine mint
-    reward. Depends on a robust "arms-length" definition from
-    the graph primitive — non-trivial design work.
-  - **(X) Target-supply commitment.** Sizing anchor: "early
-    holders ≤ Y% of eventual supply" (Y = 10% per user framing).
-    Lifetime calendar mint sized so total supply asymptotes to
-    a level where the carry-forward is the target fraction.
-    Composes with any of POL / host / cap-relax — answers the
-    "how much" question, leaves "where it goes" open.
-  - **(Y) Proof-of-personhood gated direct distribution.**
-    Deferred unless a specific personhood mechanism adopted.
-  - **(Z) Global-h-weighted distribution.** Each epoch, mint
-    distributed across actors by a severance-resistant global
-    metric (sum of inbound h(t) weighted by source diversity,
-    or similar). Depends on h(t) having a global form that
-    survives in-cluster manipulation — graph-primitive question.
+  **Eliminated candidates** *(this session)*:
+  - **~~(i) Host / infrastructure with proof-of-resource.~~** Scrap.
+    Big engineering overhead and off-ethos — distribution should
+    flow to *relevant users*, not infrastructure providers, even
+    if infra-providers can be proof-of-resource-verified.
+  - **~~(W) Cap-relaxation for arms-length contributors.~~** Scrap.
+    No un-gameable definition of "arms-length" exists — bots can
+    span any graph distance with sybils, controlling both h(t)
+    and hop count R between any two points in their fabricated
+    sub-graph.
+  - **~~(X) Target-supply commitment.~~** Not actionable. Best
+    case the current mint shape is preserved — the open question
+    is purely *where the mint goes*, not how much.
+  - **~~(Y) Proof-of-personhood gated direct distribution.~~** Scrap.
+    Off-ethos. Cogra's distinction is that bot/human resolution
+    is a property of the *graph itself* (severance + topology), not
+    of external differentiators (KYC, biometrics, IP scans, mouse
+    tracking — all outdated and breakable).
+
+  **Surviving candidates** — each gets its own focused session:
+
+  - **POL (Protocol-Owned Liquidity).** Calendar mint
+    periodically deposits into the protocol's DEX LP position.
+    Net: LP CGT depth grows, total supply grows, existing holders
+    diluted proportionally, late users buy from deep protocol-LP
+    at AMM market price rather than from coordinated early
+    holders. Defensible narrative.
+
+    Open sub-questions for the POL focused session:
+    - Trigger / cadence for pool → LP (per-epoch, threshold-
+      triggered, continuous?).
+    - One-sided deposit (AMM auto-balances; simpler; larger price
+      impact) vs. swap-half-then-pair (capital-efficient; smaller
+      price drop). User confirmed 50/50-by-value is the standard
+      LP shape.
+    - What's done with LP fees and LP shares:
+      - (α) protocol holds forever — slow, no direct user benefit.
+      - (β) fees fund treasury — composable with anything.
+      - (γ) periodic release of LP shares to users — recursively
+        anti-sybil-bound.
+      - (δ) fees buyback-and-burn — further deflationary.
+    - Chain / DEX choice (couples to "Chain choice" above).
+    - Initial seeding: does peer-token carry-forward also seed
+      initial LP, separately from POL's ongoing growth?
+    - Impermanent-loss posture: protocol holds long-term, accept
+      IL, or hedge?
+
+  - **(Z) Importance-weighted distribution from burn activity.**
+    Refined formulation: *only actors connected to the paying
+    parts of the graph receive a share, based on their importance
+    relative to the amount of CGT used (or burned) by connected
+    nodes.* Mint flows from where economic activity is happening
+    (campaign burns) outward to important actors near that
+    activity, weighted by both importance and connection
+    strength.
+
+    **Cadence: epoch-based.** `[preference noted]` Each epoch's
+    mint is distributed by importance × proximity to recent burn
+    activity globally, not gated on specific campaign-close
+    events. Smoother dynamics; sidesteps "single late campaign
+    grabs accumulated mint" failure mode at this level too.
+
+    Open sub-questions for the Z focused session:
+    - Connection definition: what does "connected to the paying
+      parts" mean precisely? Path from advertiser? From
+      contributors? From the campaign anchor? Distance-weighted?
+    - Importance metric: which form of h(t) — and does the
+      graph primitive give us a *global*, severance-resistant
+      aggregate, or only viewer-local h(t)?
+    - Burn-scaling: how does the epoch's mint distribution scale
+      with recent burn activity in the connected sub-graph?
+    - Anti-gaming surface (the hardest part):
+      - Self-deal capture: bot funds campaign, burns own CGT,
+        captures mint back to its own cluster. Net loss γ×D from
+        burn vs. gain from mint — must ensure burn always
+        dominates.
+      - In-cluster amplification: bot cluster has high mutual
+        h(t); central bot captures cluster's mint share.
+      - Bots-at-distance: bot creates sybil actors at various
+        graph distances to capture multiple distance-weighted
+        shares.
+    - Necessary anti-gaming properties (sketch):
+      - Mint distributed per campaign must be < burn amount of
+        that campaign (so self-deal coalitions still lose).
+      - Importance metric must verify through paths that go
+        through high-h real-user anchors (severance-resistant).
+      - Distribution must drop off sharply with co-clustering to
+        the burning advertiser (so bot can't claim mint flowing
+        to its own cluster).
+    - Tight coupling to graph-primitive sybil resistance — this
+      mechanism inherits the graph's robustness floor.
 
   Treasury-only direction (without POL pairing) rejected as poor
   distribution narrative.
