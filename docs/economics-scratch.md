@@ -50,9 +50,15 @@ until the design is fully settled.
 
    *Eliminated non-burn distribution candidates: (i), (W), (X),
    (Y), (Z), (γ) — see A.*
-2. Campaign expiry behavior (refund / pro-rata / mixed).
-3. Goal-hit detection cadence (continuous / epoch-snapshot /
-   claim-on-hit).
+2. **Campaign settlement behavior** — *fully settled.
+   Advertiser-discretionary release `P ∈ [0, D]` (D monotonically
+   non-decreasing), symmetric flat-on-D + scaling-on-P fee
+   structure preserves anti-spam cost on refund-only settlements,
+   30-day default settlement at `P = min(1, achieved/goal)·D`,
+   free unlimited extensions, campaign primitive lives as a graph
+   node with payment edges on settlement.*
+3. **"Achieved h_gain" definition for default settlement** —
+   peak-during-window vs end-of-window vs other snapshot.
 4. Attribution math concretization (Shapley specifics; conduit
    credit formula; cut-off enforcement).
 5. Action gating specifics (which actions; quota shapes; CGT
@@ -67,18 +73,18 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 1 closed. Next: Topic 2 — campaign expiry behavior.**
-Token issuance model fully settled (see *Settled decisions* and
-*A — Token shape*). POL mechanism, mint schedule, USD-flow ratio
-finding, and fee disposition (β: fees → treasury) all locked in.
+**Topic 2 closed. Next: Topic 3 — "achieved h_gain" definition
+for default settlement.** Campaign settlement is fully settled
+as advertiser-discretionary release within a publicly transparent
++ reputation-enforced envelope. See *Settled decisions* and the
+*A — Token shape* / *B — Campaign primitive* sections.
 
-Next session pickup: **Topic 2 — campaign expiry behavior.** What
-happens to a campaign's escrowed deposit when the window closes
-with the goal unmet. Options sketched in *B — Campaign primitive*:
-refund advertiser minus small treasury fee, pro-rata partial
-payout to contributors based on contribution so far, or a mixed
-scheme. Anti-honey-pot framing matters (open-ended campaigns and
-naive-refund policies each have specific gaming surfaces).
+The settled 30-day default `P = min(1, achieved/goal) · D` needs
+a precise definition of `achieved_h_gain`. Candidates: peak-
+during-window (fair to contributors whose edges may be severed
+later), end-of-window (rewards persistence), or some other
+snapshot. Both directions have gaming surfaces; needs a careful
+pass.
 
 ---
 
@@ -155,25 +161,35 @@ naive-refund policies each have specific gaming surfaces).
   routes existing CGT from advertiser to contributors. Calendar-
   mint top-up is *a* new-supply path into the system.
 - **Strict cap: `contributor_payout < deposit` always.** `[settled]`
-  Non-strict version is gameable by advertiser+contributor self-
-  deal coalitions (the 10k-campaign-target-friend-with-tiny-h-bump
-  attack). Strict version makes such collusion strictly
-  unprofitable.
-- **Conservation equation with γ=5% bot-loss rate.** `[settled]`
-  Per campaign: `contributor_payout = (1−γ)D = 0.95D`,
-  `burn = (γ−0.02)D = 0.03D`, `treasury = 0.02D`. Calendar mint
-  flows separately into POL, not through the campaign formula.
-  γ=5% gives 5% strict bot loss on self-deal; per-campaign net
-  total-supply change = −0.03D from burn.
+  Enforced structurally via advertiser-chosen release `P ∈ [0, D]`
+  and `contributor_payout = 0.95 · P ≤ 0.95 · D < D`. Self-deal
+  coalition net is strictly negative for any (D > 0, P ≥ 0) under
+  the floor structure below. Discretion adds reputation
+  enforcement on top; mechanical guarantee unchanged.
+- **Conservation equation, advertiser-discretionary `P ∈ [0, D]`.**
+  `[settled]` Per campaign (calendar mint is separate; flows into
+  POL, not through the campaign formula). Flat-on-D floor +
+  scaling-on-P share on both burn and treasury, preserving the
+  3:2 burn:treasury ratio at both extremes. Totals match
+  2% / 3% / 95% at `P = D`; floor of `0.05%·D` total fees
+  (`0.03%·D` burn + `0.02%·D` treasury) on `P = 0` refund-only
+  settlements. Strict cap holds:
+  `P ≤ D ⟹ contributor_payout ≤ 0.95·D < D`. Self-deal coalition
+  cost = `0.0005·D + 0.0495·P`, strictly positive for any
+  (D > 0, P ≥ 0). Full formula and worked example in *A — Token
+  shape*.
 - **Long-run deflationary regime.** `[settled]` Total CGT supply
   evolves as `daily_mint − daily_burn`. Mint follows the peer-
-  network decay curve (lifetime asymptote ≈ 18M CGT); burn =
-  `0.03 × Σ daily D`, persistent as long as campaigns run. After
-  the mint decay tapers, burn dominates and supply contracts.
-  Early in the curve, total-supply direction depends on campaign
-  volume vs. then-current mint, but POL's demand-coupled release
-  means *active* circulating supply tracks demand even when total
-  supply grows. Long-run holding remains structurally attractive.
+  network decay curve (lifetime asymptote ≈ 18M CGT). Per-
+  campaign burn ranges from a small floor (`0.03%·D` at refund-
+  only settlements) to the full pull-marketing tax (`3%·D` at
+  full payout); persistent as long as campaigns run regardless
+  of payout mix. After the mint decay tapers, burn dominates and
+  supply contracts. Early in the curve, total-supply direction
+  depends on campaign volume and payout-rate mix vs. then-
+  current mint, but POL's demand-coupled release means *active*
+  circulating supply tracks demand even when total supply grows.
+  Long-run holding remains structurally attractive.
 - **Concurrency: trivially independent under POL.** `[settled]`
   Per-campaign payouts use only D and γ; no shared pool state
   across campaigns. N concurrent campaigns each settle their own
@@ -249,6 +265,64 @@ naive-refund policies each have specific gaming surfaces).
   rejected: ignores a real auxiliary stream for no benefit. (δ)
   buyback-and-burn rejected: decoration on a deflation narrative
   already carried by campaign burn + the asymptotic mint curve.
+- **Campaign settlement = advertiser-discretionary release.**
+  `[settled]` Advertiser calls `settle(P)` with `P ∈ [0, D]` at
+  any point during the window or up to 30 days after `end_ts`.
+  Strict cap holds structurally via `P ≤ D`. Per-contributor
+  split follows graph-computed attribution (Shapley); advertiser
+  chooses pool size only, not who gets what fraction. Deposit D
+  is monotonically non-decreasing — advertiser can top up at any
+  time, cannot reduce (otherwise the flat-on-D floor would be
+  zeroable pre-cancellation). Failure to settle within 30 days
+  triggers default at
+  `P = min(1, max(0, achieved_h_gain) / declared_goal) · D`.
+  The `max(0, ·)` floors a negative `achieved_h_gain` (cluster
+  severed advertiser) at zero — refund-only default in that case.
+- **Fee structure = flat-on-D floor + scaling-on-P share, on
+  both burn and treasury.** `[settled, shape; exact numbers TBD]`
+  Indicative values: `treasury = 0.0002·D + 0.0198·P`,
+  `burn = 0.0003·D + 0.0297·P`. Preserves the burn:treasury 3:2
+  ratio at both extremes: sums to 2% treasury + 3% burn at
+  `P = D` (matching the original conservation), and floors at
+  `0.02%·D` treasury + `0.03%·D` burn (`0.05%·D` total) for
+  refund-only settlements. Low floor chosen because honest
+  failed campaigns shouldn't be punished heavily; `0.05%·D` is
+  enough to deter spam-creation without burning honest
+  advertisers.
+- **Adjustability of campaign parameters.** `[settled]` Mutable
+  before settlement: `end_ts` (free + unlimited extensions),
+  `declared_goal`, and D (additive-only — D can be raised, never
+  lowered, else the flat-on-D floor would be zeroable pre-
+  cancellation). Immutable after creation: `anchor` and
+  `target` — they define the campaign's identity (who it's
+  for); changing them would create a new campaign in disguise.
+  Public visibility of every adjustment is the discipline; bad-
+  faith edits surface on-chain and in graph state.
+- **Campaign object lives as a graph node.** `[settled]` A
+  `Campaign` node carries `(D, anchor, target, declared_goal,
+  start_ts, end_ts, status, achieved_h_gain_at_settlement,
+  settled_P)` as properties. Edges: advertiser → Campaign
+  (authorship); Campaign → anchor (declared target). On
+  settlement, payment edges from Campaign → each contributor
+  wallet carry the per-contributor payout amount as a property.
+  On-chain transfers carry the CGT; the graph carries the
+  public record + attribution + reputation surface. This is
+  what gives the reputation layer something concrete to react
+  to.
+- **Reputation as additive enforcement.** `[settled]` The strict
+  cap (`P ≤ D ⟹ payout ≤ 0.95·D < D`) keeps self-deal
+  mechanically loss-making at a `0.05%·D` floor regardless of
+  payout choice. Public visibility of advertiser settlement
+  decisions + contributor flip-flopping adds a reputational
+  cost on top: advertisers who refuse to pay on honest goal-met
+  collapse `h_advertiser` (cluster flips edges to (0,0) /
+  (-1,-1)); contributors who flip after payout signal a
+  hostile-cluster pattern that future advertisers avoid. Bot-
+  driven goal-hits are handled by advertiser declining
+  settlement, extending the window, and posting a public call
+  for the cluster to sever. Mechanical guarantees + public-
+  transparent state + graph-native reputation compound rather
+  than substitute.
 
 ---
 
@@ -287,29 +361,37 @@ naive-refund policies each have specific gaming surfaces).
   creating new concentration.
 - **Marketing-flow conservation equation.** `[settled]` Per
   campaign (calendar mint is separate; flows into POL, not
-  through the campaign formula):
+  through the campaign formula). Advertiser chooses release
+  `P ∈ [0, D]` at settlement; flat-on-D floor + scaling-on-P
+  share on both burn and treasury, preserving the burn:treasury
+  3:2 ratio at both extremes:
 
   ```
-  deposit = burn + treasury + contributor_payout
+  D                  = contributor_payout + treasury + burn + refund
+
+  contributor_payout = 0.95 · P                       (per Shapley)
+  treasury           = 0.0002 · D + 0.0198 · P
+  burn               = 0.0003 · D + 0.0297 · P
+  refund             = 0.9995 · (D − P)
   ```
 
-  Strict-cap design (`contributor_payout < deposit` always),
-  `γ = 5%`:
+  (Example rates; exact numbers TBD at economics.md authoring.)
+  Strict cap: `P ≤ D ⟹ contributor_payout ≤ 0.95·D < D`. At
+  `P = D` (honest full payout): collapses to the original
+  0.95 / 0.02 / 0.03 split exactly. At `P = 0` (refund-only,
+  e.g. bot-driven hit declined by advertiser): 99.95% refunded,
+  `0.02%·D` treasury and `0.03%·D` burn. Self-deal coalition
+  cost = `0.0005·D + 0.0495·P`, strictly positive for any
+  (D > 0, P ≥ 0); floor `0.05%·D`, ceiling `5%·D`. Per-campaign
+  net total-supply change = `−burn`, between `−0.03%·D` and
+  `−3%·D`. System-wide daily total-supply change =
+  `daily_mint(t) − Σ_campaigns burn`.
 
-  ```
-  contributor_payout = (1 − γ) × deposit = 0.95 D
-  treasury           = 0.02 × deposit    = 0.02 D
-  burn               = (γ − 0.02) × deposit = 0.03 D
-  ```
-
-  Per-campaign net total-supply change = `−0.03 D` from burn.
-  System-wide daily total-supply change = `daily_mint(t) −
-  0.03 × Σ daily D`.
-
-- **Worked example: one day in steady state.** Assume CGT ≈ $1,
-  daily campaign volume D = $5000, present-day calendar mint ≈
-  4500 CGT/day via hourly POL sub-deposits, V3 range
-  `[TWAP_24h, 5 × TWAP_24h]`.
+- **Worked example: one day in steady state, honest full
+  payout.** Assume CGT ≈ $1, daily campaign volume D = $5000,
+  all campaigns settle at `P = D` (advertisers satisfied with
+  reach gained), present-day calendar mint ≈ 4500 CGT/day via
+  hourly POL sub-deposits, V3 range `[TWAP_24h, 5 × TWAP_24h]`.
 
   | Flow | CGT movement | USD movement |
   |---|---|---|
@@ -336,17 +418,19 @@ naive-refund policies each have specific gaming surfaces).
   demand-coupled release means active circulating supply tracks
   demand even when total supply grows.
 
-- **Gaming-attack audit on campaigns** (all safe under strict
-  cap):
+- **Gaming-attack audit on campaigns** (mechanical floor +
+  reputation overlay):
 
-  | Attempt | Outcome |
-  |---|---|
-  | Self-deal (advertiser = contributor) | Loses γ×D always |
-  | Tiny-h-gain self-deal | Same — payout is (1−γ)D regardless of h-gain |
-  | Sybil contributors | Shapley measures structural contribution from graph |
-  | Coalition advertiser + contributors | Loses γ×D split among colluders |
-  | Off-chain side payments to fake attribution | Attribution is graph-computed on-chain |
-  | Cross-campaign coordination | Each campaign loses γ×D independently |
+  | Attempt | Mechanical outcome | Reputation outcome |
+  |---|---|---|
+  | Self-deal (advertiser ⇒ contributor) | Coalition loses `0.0005·D + 0.0495·P` always; floor `0.05%·D` at P = 0, ceiling `5%·D` at P = D | Self-deal pattern visible in graph topology + on-chain wallet linkage; future advertisers + contributors discount |
+  | Refund-everything to evade payout on honest goal-met | `0.05%·D` mechanical cost only | `h_advertiser` collapses (cluster flips edges to (0,0) / (-1,-1)); brand poisoned for future campaigns |
+  | Sybil contributors | Shapley measures structural contribution from graph; sybil-shaped subgraphs have low marginal Shapley | Severance fires on confirmed sybils; affected campaigns can re-settle post-severance |
+  | Off-chain side payments to fake attribution | Attribution is graph-computed; off-chain payments don't move Shapley scores | — |
+  | Cross-campaign coordination | Each campaign loses per formula, independently | Pattern visible across campaigns |
+  | Contributor flip after payout ("got them dirty") | None — payout already settled | Cluster's hostile pattern visible to future advertisers; future advertising avoids them |
+  | Cluster severance of advertiser (negative achieved h_gain) | None on coalition side — `max(0, achieved)` floors default-P at 0, advertiser likely refunds | Public signal: this cluster doesn't want this advertiser |
+  | Bot-driven goal-hit | Advertiser declines settlement, extends window, calls publicly for cluster to sever bots | Honest cluster severs and re-earns; advertiser is seen acting in good faith |
 
 - **POL MEV audit** (all bounded; none touch contributor USD):
 
@@ -404,33 +488,57 @@ naive-refund policies each have specific gaming surfaces).
   Treasury-only direction (mint accrues directly to treasury for
   discretionary use) rejected as poor distribution narrative.
 
-- **Treasury accrual currency.** `[proposal]` Treasury takes CGT
-  from campaigns (CGT-denominated, no conversion needed) and CGT
-  + counterparty from POL fee collection (β). Treasury free to
-  market-sell at its discretion.
+- **Treasury accrual currency.** `[settled]` Treasury takes CGT
+  from campaigns (CGT-denominated, no conversion needed: floor
+  `0.02%·D` plus `1.98%·P` per campaign) and CGT + counterparty
+  (USDC) from POL fee collection (β). Treasury free to market-
+  sell at its discretion.
 
 ### B — Campaign primitive
 
-- **Who can be an anchor?** `[proposal]` Any actor node. No consent
-  required — severance is the implicit opt-out (anchor severs
-  advertiser → paths through anchor go to 0 → campaign can't
-  succeed via that anchor).
-- **Forbidden configurations.** `[proposal]`
+- **Who can be an anchor?** `[settled]` Any actor node. No
+  consent required — severance is the implicit opt-out (anchor
+  severs advertiser → paths through anchor collapse → cluster's
+  rejection becomes a public signal that the advertiser will
+  read at settlement).
+- **Forbidden configurations.** `[settled]`
   - `anchor == target` (degenerate, `h(self)` undefined).
-  - "Goal already met at campaign start" (immediate honey-pot).
-  - Negative-h campaigns (paying to lower someone's `h(t)`) — would
-    weaponize severance and corrupt the safety primitive. Campaigns
-    are increase-only.
-- **Campaign window.** `[proposal]` Expiry required; open-ended
-  campaigns become honey-pots. On expiry with goal unmet: refund
-  advertiser minus small treasury fee, OR pro-rata partial payout
-  to contributors — **needs user call**.
-- **Goal-hit detection.** `h(t)` is sort-time; "did we hit the goal"
-  needs a defined evaluation point. `[proposal]` per-epoch snapshot
-  (daily?). First snapshot that meets goal closes the campaign.
-- **Concurrent campaigns.** `[proposal]` Linear composition: each
+  - Negative-h campaigns (paying to *lower* someone's `h(t)`) —
+    would weaponize severance and corrupt the safety primitive.
+    Declared campaigns are increase-only. Achieved h_gain *can*
+    be negative (cluster actively severs advertiser); the default
+    formula floors at zero via `max(0, achieved_h_gain)`.
+- **Campaign window and adjustability.** `[settled]` Advertiser-
+  declared `end_ts`. Mutable before settlement: `end_ts` (free +
+  unlimited extensions), `declared_goal`, and D (additive-only).
+  Immutable after creation: `anchor`, `target` — they define the
+  campaign's identity; changing them would create a new campaign
+  in disguise. Settlement window = `end_ts + 30 days`; auto-
+  settlement fires at the end if advertiser is absent.
+- **Settlement.** `[settled]` Two paths: (a) advertiser calls
+  `settle(P)` at any time during the window or up to 30 days
+  after `end_ts`; (b) auto-settlement at `end_ts + 30 days` with
+  default
+  `P = min(1, max(0, achieved_h_gain) / declared_goal) · D`.
+  Goal-hit detection is no longer a distribution trigger — it's
+  a public signal feeding the advertiser's settlement decision
+  and the default-P computation. Topic 3 still owes us a precise
+  definition of `achieved_h_gain` (peak-during-window /
+  end-of-window / other).
+- **Concurrent campaigns.** `[settled]` Linear composition: each
   campaign computes attribution independently against its own
   anchor / target / window. A single edge can contribute to many.
+  Per-campaign settlement is fully independent — no shared pool
+  state across campaigns.
+- **Graph representation.** `[settled]` `Campaign` node with
+  properties `(D, anchor, target, declared_goal, start_ts,
+  end_ts, status, achieved_h_gain_at_settlement, settled_P)`.
+  Edges: advertiser → Campaign (authorship); Campaign → anchor
+  (declared target). On settlement, payment edges from Campaign
+  → each contributor wallet carry the per-contributor payout
+  amount as a property. On-chain transfers carry the CGT; the
+  graph carries the public record + attribution + reputation
+  surface.
 
 ### C — Attribution math
 
