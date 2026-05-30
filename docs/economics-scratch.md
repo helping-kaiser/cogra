@@ -310,15 +310,17 @@ See *Settled decisions* and *C — Attribution math*.
   before settlement: `end_ts` (free + unlimited extensions),
   `declared_goal`, and D (additive-only — D can be raised, never
   lowered, else the flat-on-D floor would be zeroable pre-
-  cancellation). Immutable after creation: `anchor` and
-  `target` — they define the campaign's identity (who it's
-  for); changing them would create a new campaign in disguise.
+  cancellation). Immutable after creation: `anchor`, `target`, and
+  `g` (the reach-profile / payout base) — they define the
+  campaign's identity (who it's for, and what reach is bought);
+  changing them would create a new campaign in disguise.
   Public visibility of every adjustment is the discipline; bad-
   faith edits surface on-chain and in graph state.
 - **Campaign object lives as a graph node.** `[settled]` A
-  `Campaign` node carries `(D, anchor, target, declared_goal,
+  `Campaign` node carries `(D, anchor, target, g, declared_goal,
   start_ts, end_ts, status, achieved_h_gain_at_settlement,
-  settled_P)` as properties. Edges: advertiser → Campaign
+  settled_P)` as properties (`g` = the `d(R)` reach-profile base,
+  see *Earnings-by-distance*). Edges: advertiser → Campaign
   (authorship); Campaign → anchor (declared target). On
   settlement, payment edges from Campaign → each contributor
   wallet carry the per-contributor payout amount as a property.
@@ -433,18 +435,24 @@ See *Settled decisions* and *C — Attribution math*.
   profile is governed by `x = b·g·μ` (forward branching × `d(R)`
   base × mean per-edge magnitude); the only protocol-side lever is
   `g`, the `d(R)` decay base. The advertiser sets `g` per campaign
-  (default = the canonical feed default `0.1`, chosen at settlement
-  alongside `P`; auto-settle uses the default): steep `g`
+  (default = the canonical feed default `0.1`, set at campaign
+  creation): steep `g`
   concentrates payout on the anchor (the influencer-marketing
   outcome), soft `g` spreads it toward target-proximate
   contributors. Any fixed `g` keeps `φ_i = Σ w_π/|A_π|` exact
   Shapley — it only rescales each `w_π`, conservation `Σφ = h`
   holds. The within-path reactor-tilt is rejected: it is the sole
   option that breaks exact Shapley and is redundant, since `g`
-  already controls the same profile. Scope: `g` reshapes the split
-  only — the success metric / `achieved_h_gain` uses the canonical
-  `g`, so reach is measured on one objective ruler. `g` is public
-  on-chain; a stingy steep `g` is as visible as a stingy `P` and
+  already controls the same profile. `g` governs **both**
+  `achieved_h_gain` and the payout split: it declares what reach is
+  being bought (how far into the network counts) and pays exactly
+  the contributors who delivered it — measured and paid on one
+  ruler. `g` is immutable after creation (a broad-`g` declaration
+  that lures distant helpers, then a steep-`g` switch at settlement
+  to stiff them, would be bait-and-switch — so `g` is
+  identity-defining alongside `anchor`/`target`). Declared up front
+  and public on-chain, so contributors see the reach profile before
+  they act; a stingy steep `g` is as visible as a stingy `P` and
   carries the same reputational cost. Mechanical safety unchanged:
   `g` redistributes the fixed `0.95·P` pool, never its size, so the
   strict cap binds for any `g`. At realistic effective branching
@@ -639,9 +647,9 @@ See *Settled decisions* and *C — Attribution math*.
 - **Campaign window and adjustability.** `[settled]` Advertiser-
   declared `end_ts`. Mutable before settlement: `end_ts` (free +
   unlimited extensions), `declared_goal`, and D (additive-only).
-  Immutable after creation: `anchor`, `target` — they define the
-  campaign's identity; changing them would create a new campaign
-  in disguise. Settlement window = `end_ts + 30 days`; auto-
+  Immutable after creation: `anchor`, `target`, `g` — they define
+  the campaign's identity; changing them would create a new
+  campaign in disguise. Settlement window = `end_ts + 30 days`; auto-
   settlement fires at the end if advertiser is absent.
 - **Settlement.** `[settled]` Two paths: (a) advertiser calls
   `settle(P)` at any time during the window or up to 30 days
@@ -660,7 +668,7 @@ See *Settled decisions* and *C — Attribution math*.
   Per-campaign settlement is fully independent — no shared pool
   state across campaigns.
 - **Graph representation.** `[settled]` `Campaign` node with
-  properties `(D, anchor, target, declared_goal, start_ts,
+  properties `(D, anchor, target, g, declared_goal, start_ts,
   end_ts, status, achieved_h_gain_at_settlement, settled_P)`.
   Edges: advertiser → Campaign (authorship); Campaign → anchor
   (declared target). On settlement, payment edges from Campaign
