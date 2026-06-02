@@ -473,19 +473,27 @@ cost is a one-third cut to the per-campaign deflation sink. See
   streaming).
 - **Computation = exact, streaming, O(players) memory.**
   `[settled]` Enumerate above-dust paths anchor→target with
-  branch-and-bound (prune when best-possible completion `< ε`,
-  `ε` = smallest payable CGT); no hop cap. Distribute each path's
-  weight to its authors as it is found, then discard it — memory
-  is `O(players M)`, never `O(paths P)`; time is `O(P·L̄)`, the
-  same traversal that computes `h_anchor(target)`, so attribution
-  adds no asymptotic cost over ranking. Flat in total graph size
-  (only the anchor's dust-reachable neighborhood enters);
-  exponential only in dense-corridor connectivity (simple-path
-  counting is #P-hard), bounded in practice by decay + dust.
-  Backstops for a pathological corridor: steeper `d(R)`, a
-  per-campaign compute budget, and a logged sampling fallback
-  (never silent). Async/background; campaigns independent →
-  trivially parallel.
+  branch-and-bound (prune when best-possible completion `< ε`); no
+  hop cap — `d(R)` decay and `ε` bound the depth. `ε` is set by
+  **author-aggregate payability**: a contributor's share sums over
+  many individually sub-payable paths, so the path-level floor sits
+  *below* the smallest payable CGT by the typical paths-per-author
+  factor — else thinly-spread contributors are under-paid. The `ε`
+  used is recorded on the `Campaign` node, so the split is
+  reproducible and auditable. Distribute each path's weight to its
+  authors as found, then discard it — memory `O(players M)`, never
+  `O(paths P)`; time `O(P·L̄)`. This is the same path-sum traversal
+  that computes `h_anchor(target)`, under the same dust floor — a
+  **shared primitive feed-ranking does not yet carry** (it bounds
+  path enumeration only by the R-cap and `d(R)`; see *Cross-cutting
+  obstacles*). The cost bound is `ε` plus the per-campaign compute
+  budget, not freeness relative to ranking. Flat in total graph size
+  (only the anchor's dust-reachable neighborhood enters); exponential
+  only in dense-corridor connectivity (simple-path counting is
+  #P-hard), bounded in practice by `d(R)` + dust. Backstops for a
+  pathological corridor: steeper `d(R)`, the per-campaign compute
+  budget, a logged sampling fallback (never silent). Async/background;
+  campaigns independent → trivially parallel.
 - **Bot-cluster flagging at settlement = advisory only.**
   `[settled]` No campaign-specific bot detector and no automatic
   payout zeroing. The §3.8.2 delta-funnel auto-detection already
@@ -793,9 +801,11 @@ cost is a one-third cut to the per-campaign deflation sink. See
   credited; forced by conservation). `φ_i < 0` floored to 0, no
   clawback; positives renormalize to the pool `0.95·P`.
 - **Cost.** `[settled]` Streaming branch-and-bound enumeration;
-  `O(players)` memory, `O(P·L̄)` time, co-extensive with computing
-  `h`. Full scaling treatment and backstops in the *Computation*
-  bullet under *Settled decisions*.
+  `O(players)` memory, `O(P·L̄)` time, bounded by the per-campaign
+  dust floor `ε` (set by author-aggregate payability, recorded for
+  reproducibility) and the per-campaign compute budget. Full scaling
+  treatment and backstops in the *Computation* bullet under *Settled
+  decisions*.
 - **Bot-cluster flagging = advisory at settlement.** `[settled]`
   No campaign-specific detector; §3.8.2 delta-funnel auto-detection
   surfaces bot bridges, the settlement view shows it to the
@@ -864,6 +874,22 @@ cost is a one-third cut to the per-campaign deflation sink. See
 
 ## Cross-cutting obstacles
 
+- **Dust floor is a shared feed-ranking dependency.** Attribution and
+  `achieved_h_gain` ride the path-sum traversal that computes `h`,
+  bounded by a branch-and-bound dust floor `ε`. Feed-ranking does not
+  yet have one — it bounds enumeration only by the R-cap and `d(R)`,
+  so un-dusted `h` is `O(b^R)` and uncomputable for high-degree nodes
+  in the late graph (a ~1000-out-edge hub is only reachable at R≤2–3).
+  The cost bounds above hold once feed-ranking adopts the shared dust
+  floor: finest the compute budget allows (≈0 when the graph is sparse
+  and `b^R` is cheap anyway, rising only under dense-graph load).
+  Coarsening loses little when dense because weak-distant aggregate
+  signal is redundant — content buzzing at R3 is carried inward at full
+  weight by the R2 nodes that react to it — while sparse early graphs
+  propagate slowly and need the fine floor. Adding it is a feed-ranking
+  primitive change for a later session (own branch). The economics side
+  uses the same mechanism with the payout `ε` of the *Computation*
+  bullet (author-aggregate payability, recorded per campaign).
 - **No-AI rule applies.** Attribution math is graph-computed, not
   learned. Shapley on the graph is fine; ML "fair share" is not.
 - **Edge tensor uniformity.** `:TRANSFERS` must fit the
@@ -906,6 +932,10 @@ cost is a one-third cut to the per-campaign deflation sink. See
   mint schedule. May merge into `economics.md` if small.
 - **New** `docs/implementation/ledger.md` — chain integration,
   Merkle-claim mechanics, Postgres campaign-metadata schema.
+- **Update** [docs/primitive/feed-ranking.md](primitive/feed-ranking.md) —
+  add the dust floor `ε` (branch-and-bound path pruning); currently
+  enumeration is bounded only by the R-cap + `d(R)`. Shared with the
+  attribution cost bound (see *Cross-cutting obstacles*).
 - **Update** [docs/primitive/edges.md](primitive/edges.md) —
   `:TRANSFERS` edge + formalize the system-dimension slot; add the
   `:INVITE` edge label.
