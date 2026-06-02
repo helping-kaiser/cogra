@@ -117,40 +117,31 @@ until the design is fully settled.
    ties") surfaced as the leading contender, and the "`S` is per-viewer"
    Q16 constraint was flagged as mis-stated (a possibly-global metric
    is in scope).*
-10. Authoring plan: which canonical docs in which order; what
-    splits between `economics.md` / `token.md` / `ledger.md`.
+10. **Authoring plan** — *fully settled. Primitives-first across four
+    PRs (fine-grained commits): (1) `economics.md` + the `edges.md`
+    schema it needs + `feed-ranking.md` dust floor + `authorship.md`
+    cross-link; (2) standalone `token.md`; (3) `ledger.md` +
+    `Wallet`/`:INVITE` schema; (4) cross-cutting updates
+    (`collectives.md`, `governance.md`, README/CONTRIBUTING,
+    `open-questions.md`). Flow-vs-mechanics split between economics.md
+    (settlement as graph event + claim flow) and ledger.md (distributor,
+    escrow, onboarding, Postgres). New edge/node definitions land in the
+    PR of the doc that introduces them. Closes with an un-gated
+    repo-wide docs sweep, then deletion of this scratch. Full plan in
+    **Authoring plan** below.*
 
 ## Next session pickup
 
-**Topic 9 closed — token signals are out of `S(t)` (option A).** The
-token never feeds ranking at any depth. Balance is plutocracy; token
-*activity* (recent transfers, campaign participation) is a gameable
-economics→ranking feedback loop — the same objection that sank the Q16
-balance candidate and Topic-8 stake-gating — and is already reflected
-in `h` via the underlying reach edges, so reusing it double-counts.
-`S(t)` matters here only because it is the lone ranking channel sitting
-*outside* the settled non-traversable `(0,0)` `:TRANSFERS` tensor;
-keeping it token-independent closes that side channel and leaves the
-token a pure settlement layer with zero ranking feedback. The fire-only-
-on-rare-ties depth makes the exclusion costless.
+**Topic 10 closed — the design is fully settled.** All ten
+discussion-order items are resolved; the scratchpad PRs into main as the
+record of the settled economics design. The authoring work that migrates
+this design into the canonical docs is sequenced in **Authoring plan**
+below.
 
-The full `S` derivation is **not** decided here — it stays a Q16
-feed-ranking question. What surfaced for that session: **recency
-("freshest content wins ties") is the leading contender** — obvious,
-cheap, and not inbound-edge-gameable. An author-node in-degree
-tie-break was rejected for breaking the *never let inbound edges affect
-a feed* rule ([CLAUDE.md](../CLAUDE.md)); shortest-`R` and
-distinct-path-count were rejected as non-discriminating (two friends
-posting at the same distance tie on both). The "`S` is per-viewer" line
-in Q16's constraints was flagged as mis-stated — the user always
-intended a possibly-global metric — so the feed-ranking session should
-correct that constraint.
-
-**Next: Topic 10 — authoring plan.** Which canonical docs in which
-order, and what splits between `economics.md` / `token.md` /
-`ledger.md`. This is the last discussion-order item; once it lands the
-design is fully settled and the scratchpad PRs into main. **User
-direction needed on doc structure.**
+**Next session: execute PR 1** — the `economics.md` primitive plus the
+`edges.md` schema it references. Work the plan PR-by-PR, one session per
+PR, finishing with the un-gated repo-wide docs sweep and the deletion of
+this scratch.
 
 ---
 
@@ -1258,34 +1249,77 @@ direction needed on doc structure.**
 
 ---
 
-## Files this will eventually touch
+## Authoring plan
 
-- **New** `docs/primitive/economics.md` — pull-marketing definition,
-  campaign object, h-based goal, attribution math, treasury split,
-  settlement + claim flow. The "pull marketing" vocabulary anchor.
-- **New** `docs/primitive/token.md` — CGT semantics, on-chain model,
-  mint schedule. May merge into `economics.md` if small.
-- **New** `docs/implementation/ledger.md` — chain integration,
-  claim-distributor + non-custodial escrow mechanics, self-custody
-  account (passkey / smart-account) onboarding, Postgres
-  campaign-metadata schema.
-- **Update** [docs/primitive/feed-ranking.md](primitive/feed-ranking.md) —
-  add the dust floor `ε` (branch-and-bound path pruning); currently
-  enumeration is bounded only by the R-cap + `d(R)`. Shared with the
-  attribution cost bound (see *Cross-cutting obstacles*).
-- **Update** [docs/primitive/edges.md](primitive/edges.md) —
-  `:TRANSFERS` edge + formalize the system-dimension slot; add the
-  `:INVITE` edge label, the `Wallet` node, the `Settlement` node, and
-  the entitlement / claim edges.
-- **Update** [docs/primitive/authorship.md](primitive/authorship.md) —
-  cross-link to economics.md.
-- **Update** [docs/instances/collectives.md](instances/collectives.md) —
-  advertiser role.
-- **Update** [docs/primitive/governance.md](primitive/governance.md) —
-  Q19 note: stake-gating declined; per-action mod-quorum over active
-  mods as the destructive-action hardening direction (full design in a
-  later governance session).
-- **Update** README.md and CONTRIBUTING.md — point "pull marketing"
-  language at the new primitive.
-- **Update** [docs/open-questions.md](open-questions.md) — close
-  Q20, follow-ups on Q16 and Q19.
+Primitives-first, four PRs, fine-grained commits. New edge/node
+*definitions* land in `edges.md` inside the PR of the doc that
+introduces them, so every PR is link-clean (CI link-check) and atomic.
+The scratch PRs to main first (settling the design); the PRs below are
+the follow-up authoring work, one session per PR.
+
+### PR 1 — Economics primitive (`docs/primitive/economics.md`)
+
+The vocabulary anchor. Pull-marketing definition through settlement,
+plus the graph schema it directly references.
+
+1. Skeleton + "pull marketing" definition (the vocabulary anchor).
+2. Campaign node + h-based goal + default 30-day settlement
+   (Topics 2, 3).
+3. `achieved_h_gain` sustained-level metric (Topic 3).
+4. Attribution — per-path Shapley split `φ_i = Σ w_π/|A_π|` (Topic 4).
+5. Treasury split (β) + advertiser-discretionary release `P ∈ [0, D]`
+   + symmetric fee structure (Topics 1, 2).
+6. Settlement event + claim *flow*, graph-level (Topics 6, 7).
+7. Action-gating property note: no anti-spam quota; infra payment
+   deferred (Topic 5).
+8. `edges.md`: `:TRANSFERS` edge + formalize the system-dimension slot
+   (Topic 7).
+9. `edges.md`: `Settlement` node + entitlement / claim edges.
+10. `feed-ranking.md`: dust floor `ε` (branch-and-bound path pruning;
+    shared with the attribution cost bound — see *Cross-cutting
+    obstacles*).
+11. `authorship.md`: cross-link to economics.md.
+
+### PR 2 — Token primitive (`docs/primitive/token.md`)
+
+Standalone; references economics.md's treasury/settlement, so follows
+PR 1.
+
+1. CGT semantics + on-chain model skeleton.
+2. Decaying calendar mint — peer-network curve, no fresh premine
+   (Topic 1).
+3. POL — V3 one-sided above spot, TWAP_24h-anchored hourly
+   sub-deposits, fees → treasury (β) (Topic 1).
+4. Peer-token percentage carry-forward (Topic 1).
+5. economics.md ↔ token.md cross-links.
+
+### PR 3 — Ledger (`docs/implementation/ledger.md`)
+
+Implementation layer; the *mechanics* half of the flow-vs-mechanics
+split.
+
+1. `edges.md`: `Wallet` node + `:INVITE` edge (onboarding schema).
+2. Chain integration + claim-distributor + non-custodial escrow
+   mechanics (Topic 6).
+3. Self-custody account onboarding — passkey / smart account (Topic 6).
+4. Postgres campaign-metadata schema (Topic 7).
+5. economics.md ↔ ledger.md cross-links.
+
+### PR 4 — Cross-cutting updates + close-out
+
+1. `collectives.md`: advertiser role.
+2. `governance.md`: Q19 — stake-gating declined; per-action mod-quorum
+   over active mods as the destructive-action hardening direction
+   (Topic 8).
+3. README.md + CONTRIBUTING.md: point "pull marketing" language at the
+   new primitive.
+4. `open-questions.md`: close Q20; Q16 follow-ups (full `S(t)`
+   derivation + correct the mis-stated "per-viewer" constraint —
+   Topic 9); Q19 follow-up.
+5. **Un-gated repo-wide docs sweep** — read *every* doc in the repo, not
+   just the files named above, for places that benefit from the
+   now-authored economics. The deliberately-deferred items at the
+   bottom of this scratch may have left cross-references elsewhere that
+   are now stale or under-served. Apply what fits; log what stays out of
+   scope.
+6. Delete `economics-scratch.md` once its content is fully migrated.
