@@ -108,6 +108,16 @@ on the anchor, soft spreads to target-proximate contributors,
 exact-Shapley preserved; the within-path reactor-tilt is rejected.
 See *Settled decisions* and *C — Attribution math*.
 
+**Invite-reward addendum (settled).** The full-payout 3% burn now
+splits 2% burn + 1% to the earner's direct inviter, carved from
+burn (the earner's 95% is untouched), pure-P so the `0.05%·D`
+anti-spam floor is unchanged. The invite relationship gets an
+explicit `:INVITE` edge label for fast settlement-time inviter
+resolution. Modifies the Topic-2 conservation equation; strict cap
+(`0.96·P < D`) and self-deal floor re-audited and hold; the only
+cost is a one-third cut to the per-campaign deflation sink. See
+*Settled decisions* and *A — Token shape*.
+
 ---
 
 ## Guiding principles surfaced in discussion
@@ -182,31 +192,32 @@ See *Settled decisions* and *C — Attribution math*.
   top-up (new supply).** `[settled, direction]` Marketing flow
   routes existing CGT from advertiser to contributors. Calendar-
   mint top-up is *a* new-supply path into the system.
-- **Strict cap: `contributor_payout < deposit` always.** `[settled]`
-  Enforced structurally via advertiser-chosen release `P ∈ [0, D]`
-  and `contributor_payout = 0.95 · P ≤ 0.95 · D < D`. Self-deal
-  coalition net is strictly negative for any (D > 0, P ≥ 0) under
-  the floor structure below. Discretion adds reputation
+- **Strict cap: total-to-graph `< deposit` always.** `[settled]`
+  Enforced structurally via advertiser-chosen release `P ∈ [0, D]`:
+  contributors + inviters together take `0.96 · P ≤ 0.96 · D < D`.
+  Self-deal coalition net is strictly negative for any (D > 0,
+  P ≥ 0) under the floor structure below. Discretion adds reputation
   enforcement on top; mechanical guarantee unchanged.
 - **Conservation equation, advertiser-discretionary `P ∈ [0, D]`.**
   `[settled]` Per campaign (calendar mint is separate; flows into
-  POL, not through the campaign formula). Flat-on-D floor +
-  scaling-on-P share on both burn and treasury, preserving the
-  3:2 burn:treasury ratio at both extremes. Totals match
-  2% / 3% / 95% at `P = D`; floor of `0.05%·D` total fees
+  POL, not through the campaign formula). Flat-on-D anti-spam floor
+  on burn + treasury, scaling-on-P share split across burn,
+  treasury, and the inviter reward. Totals match 95% / 2% treasury /
+  2% burn / 1% inviter at `P = D`; floor of `0.05%·D` total fees
   (`0.03%·D` burn + `0.02%·D` treasury) on `P = 0` refund-only
   settlements. Strict cap holds:
-  `P ≤ D ⟹ contributor_payout ≤ 0.95·D < D`. Self-deal coalition
-  cost = `0.0005·D + 0.0495·P`, strictly positive for any
+  `P ≤ D ⟹ total-to-graph = 0.96·P ≤ 0.96·D < D`. Self-deal
+  coalition cost = `0.0005·D + 0.0495·P` (`0.0005·D + 0.0395·P`
+  with self-invited contributors), strictly positive for any
   (D > 0, P ≥ 0). Full formula and worked example in *A — Token
   shape*.
 - **Long-run deflationary regime.** `[settled]` Total CGT supply
   evolves as `daily_mint − daily_burn`. Mint follows the peer-
   network decay curve (lifetime asymptote ≈ 18M CGT). Per-
   campaign burn ranges from a small floor (`0.03%·D` at refund-
-  only settlements) to the full pull-marketing tax (`3%·D` at
-  full payout); persistent as long as campaigns run regardless
-  of payout mix. After the mint decay tapers, burn dominates and
+  only settlements) to `2%·D` at full payout (the pull-marketing
+  tax, net of the 1% redirected to inviters); persistent as long
+  as campaigns run regardless of payout mix. After the mint decay tapers, burn dominates and
   supply contracts. Early in the curve, total-supply direction
   depends on campaign volume and payout-rate mix vs. then-
   current mint, but POL's demand-coupled release means *active*
@@ -300,17 +311,54 @@ See *Settled decisions* and *C — Attribution math*.
   `P = min(1, max(0, achieved_h_gain) / declared_goal) · D`.
   The `max(0, ·)` floors a negative `achieved_h_gain` (cluster
   severed advertiser) at zero — refund-only default in that case.
-- **Fee structure = flat-on-D floor + scaling-on-P share, on
-  both burn and treasury.** `[settled, shape; exact numbers TBD]`
-  Indicative values: `treasury = 0.0002·D + 0.0198·P`,
-  `burn = 0.0003·D + 0.0297·P`. Preserves the burn:treasury 3:2
-  ratio at both extremes: sums to 2% treasury + 3% burn at
-  `P = D` (matching the original conservation), and floors at
-  `0.02%·D` treasury + `0.03%·D` burn (`0.05%·D` total) for
-  refund-only settlements. Low floor chosen because honest
-  failed campaigns shouldn't be punished heavily; `0.05%·D` is
-  enough to deter spam-creation without burning honest
-  advertisers.
+- **Fee structure = flat-on-D floor + scaling-on-P share.**
+  `[settled, shape; exact numbers TBD]` Indicative values:
+  `treasury = 0.0002·D + 0.0198·P`, `burn = 0.0003·D + 0.0197·P`,
+  `inviter = 0.0100·P`. The flat-on-D anti-spam floor lives on
+  burn + treasury only; the scaling-on-P share splits 2% treasury /
+  2% burn / 1% inviter at `P = D`, and floors at `0.02%·D` treasury
+  + `0.03%·D` burn (`0.05%·D` total, inviter 0) for refund-only
+  settlements. Low floor chosen because honest failed campaigns
+  shouldn't be punished heavily; `0.05%·D` is enough to deter
+  spam-creation without burning honest advertisers.
+- **Invite reward = 1% to the direct inviter, carved from burn.**
+  `[settled]` Each earner's direct inviter receives `0.01·P` sized
+  by that earner's Shapley share — 1% of the earner's payout-
+  equivalent, drawn from what would otherwise burn (the earner's
+  `0.95·P` is untouched; burn drops 3% → 2% at full payout). Pure-P,
+  no D-floor: at `P = 0` nobody earned, so no inviter is paid and
+  the `0.05%·D` anti-spam floor stays entirely with burn + treasury,
+  unchanged. Single-hop — the direct inviter only, no chain, so no
+  pyramid dynamic — and permanent: the `:INVITE` edge is never
+  deleted, so the inviter earns over the invitee's lifetime (the
+  intended bring-real-users LTV incentive). Genesis users have no
+  inviter → their 1% falls back to burn. Not the rejected per-action
+  distribution: the reward fires on the invitee *actually earning*
+  from a campaign, which is already Shapley-gated on graph structure
+  + severance, so it inherits that bot-resistance — a dead sybil
+  invitee earns nothing, so its inviter earns nothing; bringing real,
+  well-situated earners is the behavior being paid for. Mechanically
+  safe: total-to-graph = `0.95·P + 0.01·P = 0.96·P < D` (strict cap
+  holds); a self-deal that also controls the inviter slot recovers
+  only its own campaign's burn, softening the penalty to
+  `0.0005·D + 0.0395·P` (still strictly positive, ceiling `4%·D`) and
+  adding no new extraction vector; not new mint, so the `γD` cap and
+  the mint asymptote are untouched. Cost: a one-third cut to the
+  per-campaign deflation sink — growth bought with deflation, an
+  explicit trade.
+- **`:INVITE` edge label.** `[settled]` The invite relationship is a
+  normal traversable, dimension-carrying actor edge from inviter to
+  invited — the first edge into any non-genesis node, since the
+  graph grows only by invitation and no traversal can reach a node
+  before that edge exists. Labeling it `:INVITE` denormalizes an
+  already-derivable fact: it turns settlement-time inviter resolution
+  (run per earner, per settlement) into an indexable typed lookup
+  instead of a full in-edge scan with timestamp-min, and decouples
+  the invite-fee economics from the implicit "first incoming edge is
+  the invite" invariant (so a future feature that ever creates an
+  earlier incoming edge can't silently misroute the fee). Correctness
+  is unchanged under invite-only growth — the label is a performance
+  + explicitness win, not a correctness fix.
 - **Adjustability of campaign parameters.** `[settled]` Mutable
   before settlement: `end_ts` (free + unlimited extensions),
   `declared_goal`, and D (additive-only — D can be raised, never
@@ -518,30 +566,33 @@ See *Settled decisions* and *C — Attribution math*.
 - **Marketing-flow conservation equation.** `[settled]` Per
   campaign (calendar mint is separate; flows into POL, not
   through the campaign formula). Advertiser chooses release
-  `P ∈ [0, D]` at settlement; flat-on-D floor + scaling-on-P
-  share on both burn and treasury, preserving the burn:treasury
-  3:2 ratio at both extremes:
+  `P ∈ [0, D]` at settlement; flat-on-D anti-spam floor on burn +
+  treasury, scaling-on-P share split across burn, treasury, and the
+  inviter reward:
 
   ```
-  D                  = contributor_payout + treasury + burn + refund
+  D                  = contributor_payout + treasury + burn + inviter + refund
 
-  contributor_payout = 0.95 · P                       (per Shapley)
+  contributor_payout = 0.95   · P                     (per Shapley)
   treasury           = 0.0002 · D + 0.0198 · P
-  burn               = 0.0003 · D + 0.0297 · P
+  burn               = 0.0003 · D + 0.0197 · P
+  inviter            = 0.0100 · P                     (1% to direct inviter)
   refund             = 0.9995 · (D − P)
   ```
 
   (Example rates; exact numbers TBD at economics.md authoring.)
-  Strict cap: `P ≤ D ⟹ contributor_payout ≤ 0.95·D < D`. At
-  `P = D` (honest full payout): collapses to the original
-  0.95 / 0.02 / 0.03 split exactly. At `P = 0` (refund-only,
-  e.g. bot-driven hit declined by advertiser): 99.95% refunded,
-  `0.02%·D` treasury and `0.03%·D` burn. Self-deal coalition
-  cost = `0.0005·D + 0.0495·P`, strictly positive for any
-  (D > 0, P ≥ 0); floor `0.05%·D`, ceiling `5%·D`. Per-campaign
-  net total-supply change = `−burn`, between `−0.03%·D` and
-  `−3%·D`. System-wide daily total-supply change =
-  `daily_mint(t) − Σ_campaigns burn`.
+  Strict cap: `P ≤ D ⟹ total-to-graph = 0.96·P ≤ 0.96·D < D`. At
+  `P = D` (honest full payout): 0.95 / 0.02 treasury / 0.02 burn /
+  0.01 inviter. At `P = 0` (refund-only, e.g. bot-driven hit
+  declined by advertiser): 99.95% refunded, `0.02%·D` treasury and
+  `0.03%·D` burn, inviter 0 (pure-P — no earner, no inviter paid).
+  Self-deal coalition cost = `0.0005·D + 0.0495·P` (or
+  `0.0005·D + 0.0395·P` if the coalition also controls the inviter
+  slot, recovering only its own burn), strictly positive for any
+  (D > 0, P ≥ 0); floor `0.05%·D`, ceiling `5%·D` (`4%·D`
+  self-invited). Per-campaign net total-supply change = `−burn`,
+  between `−0.03%·D` and `−2%·D`. System-wide daily total-supply
+  change = `daily_mint(t) − Σ_campaigns burn`.
 
 - **Worked example: one day in steady state, honest full
   payout.** Assume CGT ≈ $1, daily campaign volume D = $5000,
@@ -554,19 +605,21 @@ See *Settled decisions* and *C — Attribution math*.
   | Calendar mint → POL | +4500 CGT to POL position | — (above spot, awaiting buyers) |
   | Advertisers buy from POL | −5000 POL → +5000 advertiser | +$5000 to POL, −$5000 advertiser |
   | Campaign deposit | 5000 advertiser → campaign | — |
-  | Burn | −150 CGT destroyed | — |
+  | Burn | −100 CGT destroyed | — |
   | Treasury accrual | +100 CGT to treasury wallet | — |
   | Contributor payout | +4750 CGT to contributors | — |
-  | Contributors sell to POL | −4750 contributors → +4750 POL | −$4750 POL → +$4750 contributors |
+  | Inviter reward | +50 CGT to inviters | — |
+  | Contributors + inviters sell to POL | −4800 → +4800 POL | −$4800 POL → +$4800 to them |
 
   End of day: advertisers spent $5000, contributors received
-  $4750 → **USD-to-contributor ratio = 95%** at stable CGT price.
-  POL position net change: `+4250 CGT` (= 4500 − 5000 + 4750) and
-  `+$250 USDC` (= 5000 − 4750). POL naturally accumulates both
-  sides — CGT from mint, USDC from the burn+treasury wedge in net
-  trading flow.
+  $4750 → **USD-to-contributor ratio = 95%** at stable CGT price
+  (inviters take a further 1% = $50, for 96% total to graph
+  wallets). POL position net change: `+4300 CGT`
+  (= 4500 − 5000 + 4800) and `+$200 USDC` (= 5000 − 4800). POL
+  naturally accumulates both sides — CGT from mint, USDC from the
+  burn + treasury wedge in net trading flow.
 
-  Long-run total-supply trajectory: `+4500 − 150 = +4350 CGT/day`
+  Long-run total-supply trajectory: `+4500 − 100 = +4400 CGT/day`
   net at present rates. Mint decays 10%/year; burn persists with
   campaign volume. After the decay arc tapers, burn dominates and
   supply contracts. Whether early-curve total-supply growth
@@ -579,7 +632,8 @@ See *Settled decisions* and *C — Attribution math*.
 
   | Attempt | Mechanical outcome | Reputation outcome |
   |---|---|---|
-  | Self-deal (advertiser ⇒ contributor) | Coalition loses `0.0005·D + 0.0495·P` always; floor `0.05%·D` at P = 0, ceiling `5%·D` at P = D | Self-deal pattern visible in graph topology + on-chain wallet linkage; future advertisers + contributors discount |
+  | Self-deal (advertiser ⇒ contributor) | Coalition loses `0.0005·D + 0.0495·P` always (`0.0005·D + 0.0395·P` if it also controls the inviter slot, recovering only its own burn); floor `0.05%·D` at P = 0, ceiling `5%·D` (`4%·D` self-invited) at P = D | Self-deal pattern visible in graph topology + on-chain wallet linkage; future advertisers + contributors discount |
+  | Invite-farm for inviter rewards | Reward fires only on the invitee actually earning (Shapley-gated on graph structure + severance); a dead sybil invitee earns 0 → its inviter earns 0; single-hop, so no pyramid leverage | Sybil invitees severable like any other; bringing real earners is the intended behavior |
   | Refund-everything to evade payout on honest goal-met | `0.05%·D` mechanical cost only | `h_advertiser` collapses (cluster flips edges to (0,0) / (-1,-1)); brand poisoned for future campaigns |
   | Sybil contributors | Shapley measures structural contribution from graph; sybil-shaped subgraphs have low marginal Shapley | Severance fires on confirmed sybils; affected campaigns can re-settle post-severance |
   | Off-chain side payments to fake attribution | Attribution is graph-computed; off-chain payments don't move Shapley scores | — |
@@ -853,7 +907,8 @@ See *Settled decisions* and *C — Attribution math*.
 - **New** `docs/implementation/ledger.md` — chain integration,
   Merkle-claim mechanics, Postgres campaign-metadata schema.
 - **Update** [docs/primitive/edges.md](primitive/edges.md) —
-  `:TRANSFERS` edge + formalize the system-dimension slot.
+  `:TRANSFERS` edge + formalize the system-dimension slot; add the
+  `:INVITE` edge label.
 - **Update** [docs/primitive/authorship.md](primitive/authorship.md) —
   cross-link to economics.md.
 - **Update** [docs/instances/collectives.md](instances/collectives.md) —
