@@ -97,38 +97,53 @@ until the design is fully settled.
    `:TRANSFERS` edge, and formalizing the `edges.md` system-dimension
    slot. Settlement is a single terminal event; money amounts live
    on-chain only, the graph carries relationships + pointers.*
-8. Q19 stake-gated quorum reopen (now that a token exists).
+8. **Q19 stake-gated quorum reopen** — *fully settled. Stake-gating
+   declined as plutocracy; the token adds nothing to Q19. It surfaced a
+   real non-economic hole — the bot-satisfiable community dual-quorum
+   means one compromised mod key plus a bot flood passes any destructive
+   action. Direction (a governance follow-up, not this PR): a per-action
+   mod-quorum over active mods,
+   `mod_yes ≥ max(k_floor, ⌈f_mod·|active_mods|⌉)`, flat 1 for low-stakes
+   and a real fraction for destructive actions; minting a mod is itself
+   destructive, so the mod set is Sybil-resistant by construction.
+   Parameters deferred to a governance session.*
 9. Q16 `S(t)` input candidates (token-related or unrelated).
 10. Authoring plan: which canonical docs in which order; what
     splits between `economics.md` / `token.md` / `ledger.md`.
 
 ## Next session pickup
 
-**Topic 7 closed — money on-chain, graph carries relationships +
-pointers.** Scope: marketplace, contracts, and infra-payment are
-standalone follow-up workstreams, out of the economics PR. In scope:
-the `Settlement` node + claim flow, the general `:TRANSFERS` edge, and
-formalizing the `edges.md` system-dimension slot. Settlement is a
-**single terminal event** — the advertiser settles once, when
-satisfied, creating the on-chain Merkle tree and the on-graph
-`Settlement` node together; the 30-day post-`end_ts` window is for
-evaluation (extend `end_ts`, inspect the trajectory, call for
-severance), not a settlement that gets rewritten — severance happens
-*before* settlement. Auto-settlement at `end_ts + 30d` is the only
-other path, equally terminal. **Money amounts never touch the graph** —
-they live on-chain (distributor Merkle root + leaves). The `Settlement`
-node holds the distributor pointer + Merkle root + public results;
-entitlement edges (`Settlement → Wallet`) and claim-back edges
-(`Wallet → Settlement`) are bare `(0,0)`, no amount. The general
-`:TRANSFERS` edge is `(0,0)` with the on-chain tx reference in the
-system-dimension slot (amount + currency read from chain) — the first
-edge to populate the spec-reserved system slot, which the economics PR
-now formalizes (typed, nullable, non-ranking; never the tensor). See
-*Settled decisions* and *Sections D/E*.
+**Topic 8 closed — stake-gating declined; the fix is a mod-quorum, not
+the token.** Stake-weighted / stake-gated Network-scope quorum is
+reachable now that CGT exists but rejected as plutocracy — the
+graph-is-truth violation Q16 rejects for ranking, and carry-forward
+would hand early holders governance control (contradicts anyone-can-fork).
+The token adds nothing to Q19. What it surfaced is a real *non-economic*
+hole: the community dual-quorum is bot-satisfiable (`min(P·|active|, K)`
+is met by `K` sybil yes-votes), so the entire mod-side defense for
+destructive actions is the flat `≥1`-mod gate — one compromised mod key
+plus a bot flood passes anything. **Direction (Q19 governance follow-up,
+out of this economics PR):** make the mod-gate a per-action count
+threshold over **active** mods,
+`mod_yes ≥ max(k_floor, ⌈f_mod·|active_mods|⌉)` — flat `1` for
+low-stakes, a real fraction for destructive / irreversible actions
+(mint a mod, remove a mod, `illegal`-redaction, critical `:Network`
+amendments). Bot cost rises from one mod key to a fraction of the mod
+set; minting a mod is itself destructive, so the mod set grows only
+under mod-% and is Sybil-resistant by construction. Small-set bootstrap
+accepted as a non-issue (early mods hand-picked and trusted, bots not a
+factor at that scale; the target is the future-scale sleepy-mod failure,
+where slow deliberate movement on high-stakes decisions is a feature).
+Parameters (`f_mod`, `k_floor`, the destructive-action set) deferred to
+a governance session. See *Settled decisions* and *Cross-cutting
+obstacles → Q19*.
 
-**Next: Topic 8 — Q19 stake-gated quorum reopen.** Now that a token
-exists, revisit whether governance quorum can be stake-gated, weighed
-against "anyone can fork" and early-holder power concentration.
+**Next: Topic 9 — Q16 `S(t)` input candidates.** Decide whether any
+token-related signal belongs in `S(t)`: token *balance* is already
+rejected on graph-is-truth grounds (the same objection that just sank
+stake-gating); token *activity* — recent transfers, campaign
+participation — is the live sub-question, alongside whether `S(t)` stays
+entirely token-independent. **User call needed.**
 
 ---
 
@@ -717,6 +732,38 @@ against "anyone can fork" and early-holder power concentration.
   invariant, untouched) and the universal `timestamp` / `layer` fields.
   The economics PR formalizes the slot in `edges.md`; exact field schema
   deferred to that authoring.
+- **Stake-gated governance = declined; the fix is a mod-quorum, not the
+  token.** `[settled]` With CGT live, stake-weighted / stake-gated
+  Network-scope quorum is reachable but rejected: stake ruling the
+  network is plutocracy — the move Q16 rejects for ranking (token
+  balance buying disproportionate say corrupts graph-is-truth) — and
+  proportional carry-forward would hand founders / alpha holders
+  governance control, contradicting anyone-can-fork. The token
+  contributes nothing to Q19. The real hole it surfaced is non-economic:
+  the community dual-quorum is bot-satisfiable (the `min(P·|active|, K)`
+  floor `K` is met by `K` sybil yes-votes), so the whole mod-side
+  defense for destructive actions is the flat `≥1`-mod gate — one
+  compromised mod key plus a bot flood passes anything. **Direction
+  (Q19 governance follow-up, not this economics PR):** make the mod-gate
+  a *per-action count threshold* over **active** mods —
+  `mod_yes ≥ max(k_floor, ⌈f_mod·|active_mods|⌉)` — flat `1` for
+  low-stakes actions, a real fraction for destructive / irreversible
+  ones (mint a mod, remove a mod, `illegal`-redaction, critical
+  `:Network` amendments). Bot cost rises from one mod key to
+  `⌈f_mod·|active_mods|⌉` keys; and since minting a mod is itself
+  destructive, the mod set grows only under mod-%, Sybil-resistant by
+  construction. Small-set bootstrap (early `⌈f·M⌉ ≈ 1`) accepted as a
+  non-issue — early mods are hand-picked and trusted, bots are not a
+  factor at that scale; the target is the future-scale failure
+  (≈1M mods, one sleepy mod admits a bot), where slow, deliberate
+  movement on high-stakes decisions is a feature, not a cost. The
+  `active`-mods denominator keeps the bar from deadlocking on quiet
+  mods. Parameters (`f_mod`, `k_floor`, the destructive-action set)
+  deferred to a dedicated governance session against
+  [governance.md §7](primitive/governance.md#7-the-mod-gate) /
+  [network.md §9](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal).
+  Q19 stays open on this direction; stake-gating drops out of its
+  candidate set.
 
 ---
 
@@ -1129,11 +1176,21 @@ against "anyone can fork" and early-holder power concentration.
   reference in the system-dimension slot. The economics PR formalizes
   that slot in `edges.md` (typed, nullable, non-ranking); the tensor is
   untouched. See *Settled decisions*.
-- **Q19 (stake-gated quorum) reopen.** Now that a real token
-  exists, stake gating is reachable again. Risks: contradicts
-  "anyone can fork" if excessive; concentrates power in early
-  holders. `[proposal]` Note in `governance.md` as a follow-up,
-  don't bundle into the first economics PR.
+- **Q19 (stake-gated quorum) reopen — declined; mod-quorum is the
+  direction.** `[settled]` Stake-gating rejected as plutocracy (the
+  graph-is-truth violation Q16 rejects for ranking; carry-forward hands
+  early holders control). The token adds nothing to Q19. The real,
+  non-economic hole it surfaced: the community dual-quorum is
+  bot-satisfiable (`K` met by `K` sybil yes-votes), so one compromised
+  mod key plus a bot flood passes any destructive action. Direction — a
+  per-action mod-quorum over **active** mods,
+  `mod_yes ≥ max(k_floor, ⌈f_mod·|active_mods|⌉)`, flat `1` for
+  low-stakes and a real fraction for destructive actions (mint / remove
+  a mod, `illegal`-redaction, critical `:Network` amendments); minting a
+  mod is itself destructive, so the mod set is Sybil-resistant by
+  construction. A `governance.md` change, **not** the economics PR;
+  parameters deferred to a dedicated governance session. See *Settled
+  decisions*.
 - **Q16 (`S(t)` derivation).** Token balance as input to `S(t)` →
   reject candidate, gives wealthy users intrinsic ranking
   advantage and corrupts the graph-is-truth principle. Token
@@ -1156,7 +1213,8 @@ against "anyone can fork" and early-holder power concentration.
 
 - Marketplace primitive (items + listings + contracts).
 - Hosted-user infra marketplace.
-- Stake-gated governance quorum (Q19 reopen).
+- Mod-quorum for destructive Network actions (Q19 follow-up;
+  stake-gating itself declined).
 - Specific chain choice and mint schedule (implementation).
 - Wallet UX / claim escrow mechanism.
 
@@ -1186,7 +1244,9 @@ against "anyone can fork" and early-holder power concentration.
 - **Update** [docs/instances/collectives.md](instances/collectives.md) —
   advertiser role.
 - **Update** [docs/primitive/governance.md](primitive/governance.md) —
-  Q19 reopen note.
+  Q19 note: stake-gating declined; per-action mod-quorum over active
+  mods as the destructive-action hardening direction (full design in a
+  later governance session).
 - **Update** README.md and CONTRIBUTING.md — point "pull marketing"
   language at the new primitive.
 - **Update** [docs/open-questions.md](open-questions.md) — close
