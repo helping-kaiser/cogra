@@ -94,6 +94,11 @@ per-path equal split among distinct authors,
 linear sum over paths. See *Settled decisions* and the
 *C — Attribution math* section.
 
+The auto-settlement attribution snapshot is now pinned: `t*` is
+the **binding-minimum instant** of the qualifying interval `I`
+(`h(t*) = h_start + L*`), so pool size and split read off one
+graph state. See the *Attribution snapshot `t*`* settled bullet.
+
 Both Topic-4 tails are now closed. Bot-cluster flagging folds
 into the existing §3.8.2 delta-funnel auto-detection — advisory
 at settlement, manual `(0,0)` severance only, no auto-cut. The
@@ -399,10 +404,25 @@ See *Settled decisions* and *C — Attribution math*.
   `[start_ts, end_ts]`, never settlement time. On active
   settlement the advertiser may select an earlier `t*` to exclude
   a late bot intrusion (defaulting toward `end_ts`). On auto-
-  settlement `t*` is the sustaining interval that realized
-  `achieved_h_gain` (Topic 3), so pool size and split derive from
-  the same graph state. Exact point within that interval deferred
-  to economics.md authoring.
+  settlement `t*` is the **binding-minimum instant** of the
+  qualifying interval `I` that realized `achieved_h_gain`
+  (Topic 3): the instant within `I` where `h_anchor(target)` is at
+  its minimum — `h(t*) = h_start + L*` exactly — first-occurrence
+  tie-break. It is the only instant whose graph state's `h` equals
+  the pool-defining level, so pool size and split are read off the
+  *same* state — measured and paid on one ruler. It credits the
+  load-bearing structure that held the sustained level at its
+  thinnest; an early spike that decayed before the level was held
+  is credited to whoever held it, not its builders — the
+  sustained-not-peak property of Topic 3 carried into attribution
+  (an accepted property). Free from the Topic-3 scan: the pass that
+  finds `I` yields its argmin, then one attribution traversal —
+  single-snapshot streaming cost unchanged. Rejected: end-of-`I`
+  (credits late churn-in, the end-of-window failure mode),
+  start-of-`I` (credits first-achievement, not who held the level),
+  peak-in-`I` (over-credits transient over-delivery beyond `L*`),
+  and time-average over `I` (breaks single-snapshot O(players)
+  streaming).
 - **Computation = exact, streaming, O(players) memory.**
   `[settled]` Enumerate above-dust paths anchor→target with
   branch-and-bound (prune when best-possible completion `< ε`,
