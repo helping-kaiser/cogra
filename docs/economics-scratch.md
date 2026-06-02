@@ -412,6 +412,15 @@ cost is a one-third cut to the per-campaign deflation sink. See
   severance even when they did the work); time-weighted average
   (spike-resistant but under-credits honest ramp delivery at
   `D/2`, structurally underpaying the linear-delivery case).
+  **Cost:** the metric needs the `h_anchor(target)` trajectory over
+  the window — ~N coarse-sampled h-evals, not one snapshot. Cheap
+  because τ ≈ Δt/3 is coarse: sampling at a fraction of τ suffices
+  (≈30–90 evals over a typical window), background and
+  per-campaign-parallel, on the absent-advertiser path only. The
+  marginal `t*` extraction and attribution then add one snapshot on
+  top (see the *Attribution snapshot `t*`* and *Computation*
+  bullets); active settlement skips the scan entirely (one snapshot
+  at the advertiser-chosen `t*`).
 - **Attribution rule = Shapley via per-path equal split.**
   `[settled]` Each contributor's payout share is the Shapley value
   of the path-sum game on `h_anchor(target)`. Because `h` is a
