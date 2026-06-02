@@ -90,8 +90,13 @@ until the design is fully settled.
    distributor and never expire; Wallet is a graph node carrying the
    address as a layered, re-linkable property, payment edges point to
    the node.*
-7. Marketplace + infrastructure primitive scoping — in this design
-   pass or deferred to a follow-up workstream?
+7. **Marketplace + infrastructure primitive scoping** — *fully
+   settled. Marketplace, contracts, and infra-payment are standalone
+   out-of-scope topics (own follow-up workstreams). In scope for the
+   economics PR: the `Settlement` node + claim flow, the general
+   `:TRANSFERS` edge, and formalizing the `edges.md` system-dimension
+   slot. Settlement is a single terminal event; money amounts live
+   on-chain only, the graph carries relationships + pointers.*
 8. Q19 stake-gated quorum reopen (now that a token exists).
 9. Q16 `S(t)` input candidates (token-related or unrelated).
 10. Authoring plan: which canonical docs in which order; what
@@ -99,33 +104,31 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 6 closed — claim + non-custodial escrow, never expires.**
-Push was rejected: the moment users pay their own gas (a given) and
-earnings accrue as a claimable buildup, the mechanism *is* claim, not
-push. The hard fact that decided the escrow design: trustless
-(non-custodial) claim is equivalent to the user holding a key from the
-moment they earn — there is no zero-key trustless claim. So every
-account gets a self-custodied signing key at signup (passkey / device
-key backing a smart account; **not** an MPC-shard provider — CoGra
-never holds any part of it). "No wallet" means no *funded / external*
-wallet; the key exists from day one, held by the user. Earnings accrue
-to the account's counterfactual (pre-computable) address in a
-permanently-claimable distributor; the on-screen buildup is the user's
-unclaimed total, claimable any time they fund / connect a wallet.
-**Never expires** — under self-custody the unclaimed pool is owned by
-user-held keys, not orphaned, so burning it would destroy *recoverable*
-user-owned value; lost-key funds are de-facto out of circulation anyway
-(locked ≈ burned, without the confiscation). Because every account has
-a counterfactual address from signup there is effectively no
-wallet-less-at-settlement payee, so no forfeiture and no escrow burn.
-The Wallet is a graph node; its address is a layered property
-(re-linkable, non-destructive per layers.md); payment edges point to
-the node. See *Settled decisions* and *Section D*.
+**Topic 7 closed — money on-chain, graph carries relationships +
+pointers.** Scope: marketplace, contracts, and infra-payment are
+standalone follow-up workstreams, out of the economics PR. In scope:
+the `Settlement` node + claim flow, the general `:TRANSFERS` edge, and
+formalizing the `edges.md` system-dimension slot. Settlement is a
+**single terminal event** — the advertiser settles once, when
+satisfied, creating the on-chain Merkle tree and the on-graph
+`Settlement` node together; the 30-day post-`end_ts` window is for
+evaluation (extend `end_ts`, inspect the trajectory, call for
+severance), not a settlement that gets rewritten — severance happens
+*before* settlement. Auto-settlement at `end_ts + 30d` is the only
+other path, equally terminal. **Money amounts never touch the graph** —
+they live on-chain (distributor Merkle root + leaves). The `Settlement`
+node holds the distributor pointer + Merkle root + public results;
+entitlement edges (`Settlement → Wallet`) and claim-back edges
+(`Wallet → Settlement`) are bare `(0,0)`, no amount. The general
+`:TRANSFERS` edge is `(0,0)` with the on-chain tx reference in the
+system-dimension slot (amount + currency read from chain) — the first
+edge to populate the spec-reserved system slot, which the economics PR
+now formalizes (typed, nullable, non-ranking; never the tensor). See
+*Settled decisions* and *Sections D/E*.
 
-**Next: Topic 7 — marketplace + infrastructure primitive scoping.**
-Decide whether the marketplace + infra-payment primitive (host edges,
-hosting prices, the `:TRANSFERS` edge and the system-dimension slot) is
-in this design pass or deferred to a follow-up workstream.
+**Next: Topic 8 — Q19 stake-gated quorum reopen.** Now that a token
+exists, revisit whether governance quorum can be stake-gated, weighed
+against "anyone can fork" and early-holder power concentration.
 
 ---
 
@@ -422,13 +425,12 @@ in this design pass or deferred to a follow-up workstream.
   start_ts, end_ts, status, achieved_h_gain_at_settlement,
   settled_P)` as properties (`g` = the `d(R)` reach-profile base,
   see *Earnings-by-distance*). Edges: advertiser → Campaign
-  (authorship); Campaign → anchor (declared target). On
-  settlement, payment edges from Campaign → each contributor
-  wallet carry the per-contributor payout amount as a property.
-  On-chain transfers carry the CGT; the graph carries the
-  public record + attribution + reputation surface. This is
-  what gives the reputation layer something concrete to react
-  to.
+  (authorship); Campaign → anchor (declared target). On settlement
+  a `Settlement` node is created (`Campaign → Settlement`); claim runs
+  off it, not off the Campaign (see *Claim flow*). On-chain transfers
+  carry the CGT; the graph
+  carries the public record + attribution + reputation surface — what
+  gives the reputation layer something concrete to react to.
 - **Reputation as additive enforcement.** `[settled]` The strict
   cap (`P ≤ D ⟹ payout ≤ 0.95·D < D`) keeps self-deal
   mechanically loss-making at a `0.05%·D` floor regardless of
@@ -646,13 +648,75 @@ in this design pass or deferred to a follow-up workstream.
   created at signup carrying the account's counterfactual self-custody
   address; the on-chain address is a property layered on it, updated
   non-destructively on re-link ([layers.md](primitive/layers.md)).
-  Payment edges (Campaign → Wallet) point at the node, so past payments
-  stay attached and still reflect the address they actually paid
-  (captured at settlement) while future payouts read the current top
+  Entitlement edges (`Settlement → Wallet`) and claim-back edges
+  (`Wallet → Settlement`) point at the node, so a wallet's earning and
+  claim history stays attached and each reflects the address in force
+  when the edge was written, while future payouts read the current top
   layer. Singular current payout address, freely re-linkable.
   Supersedes the §D `WalletAddress`-system-property sketch. The
-  Campaign → Wallet payment edge is `(0,0)` actor dims like
-  `:TRANSFERS` (§E) and shares its system-dimension-slot dependency.
+  entitlement / claim edges are bare `(0,0)` actor dims (no amount, no
+  system-slot payload — see *Claim flow*); the system-dimension slot is
+  used only by `:TRANSFERS` (§E).
+- **Scope: marketplace / contracts / infra-payment are standalone, out
+  of the economics PR.** `[settled]` Three self-contained follow-up
+  workstreams (items + listings + prices; graph-native escrow /
+  multi-step contracts; hosted-user infra payment) are deferred. In
+  scope for the economics PR: the `Settlement` node + claim flow, the
+  general `:TRANSFERS` edge, the `:INVITE` edge, the `Wallet` node, and
+  formalizing the `edges.md` system-dimension slot. Marketplace/contract
+  *prices* don't fit the `(dim1, dim2)` tensor and belong on a dedicated
+  listing/offer node, not a transfer edge — a forward note for that
+  workstream, not designed here.
+- **Settlement is a single terminal event.** `[settled]` The advertiser
+  settles once, when satisfied with the reach achieved; that act creates
+  the on-chain Merkle tree (the per-contributor split) and the on-graph
+  `Settlement` node together. The 30-day post-`end_ts` window is the
+  *evaluation* window — extend `end_ts`, inspect the trajectory, call
+  for bot severance — none of which writes a settlement; severance
+  happens *before* settlement, so the advertiser isn't paying bots when
+  he commits. Auto-settlement (absent advertiser at `end_ts + 30d`) is
+  the only other path, equally terminal and singular. No re-settlement.
+- **Money amounts live on-chain only; the graph carries relationships
+  + pointers.** `[settled]` Per-contributor payout figures and transfer
+  sizes never appear on the graph (chain is the ledger — no CoGra-side
+  balance store). The graph records the *structure* (who is entitled,
+  who claimed, who paid whom) and *pointers* to the chain. Resolves the
+  tensor concern at its root: a money quantity could only break edge
+  uniformity if forced into the graph, so it lives where it belongs —
+  the chain.
+- **Claim flow = `Settlement` node + entitlement / claim edges.**
+  `[settled]` Supersedes the Topic-6 "Campaign → Wallet payment edge
+  carries the payout amount" sketch. On settlement a `Settlement` node
+  is created carrying the distributor address, the Merkle root, and the
+  public results (`settled_P`, `achieved_h_gain`) as node properties
+  (pointers + scalars, never a tensor); `Campaign → Settlement` records
+  the settlement act. **Entitlement edges** `Settlement → Wallet`
+  (`(0,0)`, non-traversable, one per claimant) mark "this wallet may
+  claim" — no amount. On claim, the user creates a **claim-back edge**
+  `Wallet → Settlement` (`(0,0)`) marking "claimed"; entitlement-out /
+  claim-back on the same node-couple makes "entitled but unclaimed" a
+  one-hop graph query. Per-wallet figures are Merkle leaves, verifiable
+  against the root the `Settlement` node points at, surfaced in
+  frontends — never on-graph. (Dual-DB: the `Settlement` node + claim
+  edges are Memgraph topology; the distributor address + Merkle root are
+  Postgres-side operational metadata — a `ledger.md` detail.)
+- **General `:TRANSFERS` edge = `(0,0)` + system-slot tx reference.**
+  `[settled]` One wallet sending another CGT, recorded on the graph for
+  public auditability of money flows. Tensor `(0,0)` (no ranking
+  contribution, non-traversable); the on-chain tx reference rides the
+  system-dimension slot, with amount + currency read from chain via it,
+  never stored. Source = sender actor, target = receiver actor.
+- **System-dimension slot = type-specific, nullable, non-ranking edge
+  metadata.** `[settled, shape; schema TBD in edges.md]` The spec's edge
+  shape is "2 dimensions + system dimensions"; the slot has sat empty
+  (every edge field universal so far: dim1/dim2/timestamp/layer).
+  `:TRANSFERS` is the first edge to populate it (tx reference). The slot
+  holds typed, optional, per-label metadata — null on edge types that
+  don't use it, never read by ranking/traversal, and strictly distinct
+  from the `(dim1, dim2) ∈ [-1,+1]` tensor (the real uniformity
+  invariant, untouched) and the universal `timestamp` / `layer` fields.
+  The economics PR formalizes the slot in `edges.md`; exact field schema
+  deferred to that authoring.
 
 ---
 
@@ -761,12 +825,12 @@ in this design pass or deferred to a follow-up workstream.
   | Self-deal (advertiser ⇒ contributor) | Coalition loses `0.0005·D + 0.0495·P` always (`0.0005·D + 0.0395·P` if it also controls the inviter slot, recovering only its own burn); floor `0.05%·D` at P = 0, ceiling `5%·D` (`4%·D` self-invited) at P = D | Self-deal pattern visible in graph topology + on-chain wallet linkage; future advertisers + contributors discount |
   | Invite-farm for inviter rewards | Reward fires only on the invitee actually earning (Shapley-gated on graph structure + severance); a dead sybil invitee earns 0 → its inviter earns 0; single-hop, so no pyramid leverage | Sybil invitees severable like any other; bringing real earners is the intended behavior |
   | Refund-everything to evade payout on honest goal-met | `0.05%·D` mechanical cost only | `h_advertiser` collapses (cluster flips edges to (0,0) / (-1,-1)); brand poisoned for future campaigns |
-  | Sybil contributors | Shapley measures structural contribution from graph; sybil-shaped subgraphs have low marginal Shapley | Severance fires on confirmed sybils; affected campaigns can re-settle post-severance |
+  | Sybil contributors | Shapley measures structural contribution from graph; sybil-shaped subgraphs have low marginal Shapley | Severance fires on confirmed sybils; the advertiser severs during the evaluation window, before settling |
   | Off-chain side payments to fake attribution | Attribution is graph-computed; off-chain payments don't move Shapley scores | — |
   | Cross-campaign coordination | Each campaign loses per formula, independently | Pattern visible across campaigns |
   | Contributor flip after payout ("got them dirty") | None — payout already settled | Cluster's hostile pattern visible to future advertisers; future advertising avoids them |
   | Cluster severance of advertiser (negative achieved h_gain) | None on coalition side — `max(0, achieved)` floors default-P at 0, advertiser likely refunds | Public signal: this cluster doesn't want this advertiser |
-  | Bot-driven goal-hit | Advertiser declines settlement, extends window, calls publicly for cluster to sever bots | Honest cluster severs and re-earns; advertiser is seen acting in good faith |
+  | Bot-driven goal-hit | Advertiser holds off settling, extends the window, calls publicly for cluster to sever bots | Honest cluster severs the bots; the advertiser then settles on the cleaned-up state, seen acting in good faith |
 
 - **POL MEV audit** (all bounded; none touch contributor USD):
 
@@ -871,11 +935,13 @@ in this design pass or deferred to a follow-up workstream.
   properties `(D, anchor, target, g, declared_goal, start_ts,
   end_ts, status, achieved_h_gain_at_settlement, settled_P)`.
   Edges: advertiser → Campaign (authorship); Campaign → anchor
-  (declared target). On settlement, payment edges from Campaign
-  → each contributor wallet carry the per-contributor payout
-  amount as a property. On-chain transfers carry the CGT; the
-  graph carries the public record + attribution + reputation
-  surface.
+  (declared target). On settlement a `Settlement` node is created
+  (`Campaign → Settlement`) holding the distributor pointer + Merkle
+  root + public results; claim runs off it via entitlement
+  (`Settlement → Wallet`) and claim-back (`Wallet → Settlement`) edges,
+  all bare `(0,0)` with no amount (see *Claim flow*). On-chain transfers
+  carry the CGT; the graph carries the public record + attribution +
+  reputation surface.
 
 ### C — Attribution math
 
@@ -949,8 +1015,15 @@ in this design pass or deferred to a follow-up workstream.
   funds / connects a wallet. The distributor must stay permanently
   claimable (immutable / no claim-stranding upgrade). See *Settled
   decisions*.
+- **Claim flow = `Settlement` node.** `[settled]` Settlement creates a
+  `Settlement` node holding the distributor address + Merkle root (node
+  properties); entitlement edges `Settlement → Wallet` mark claimants,
+  claim-back edges `Wallet → Settlement` mark collection — both bare
+  `(0,0)`, no amount. Per-wallet figures are Merkle leaves verified
+  against the root, never on-graph. See *Settled decisions*.
 - Postgres holds campaign metadata; Memgraph holds graph including
-  transfer + Wallet nodes; chain holds balances and claim state.
+  transfer + Wallet + Settlement nodes; chain holds balances and claim
+  state.
 - `[proposal]` Campaign object lives in Postgres as
   `(id, advertiser_id, target_node_id, anchor_node_id, goal_metric,
   budget_cgt, start_ts, end_ts, status, merkle_root_at_close)`.
@@ -962,18 +1035,26 @@ in this design pass or deferred to a follow-up workstream.
 
 ### E — Transfer edges & marketplace future
 
-- **Edge type `:TRANSFERS`** (working name). Source = sender actor.
-  Target = receiver actor. Tensor `(0, 0)` actor dims (no ranking
-  contribution). System dimensions carry: amount, currency, on-chain
-  tx hash.
-- **System-dimension slot needs formalization.** CLAUDE.md mentions
-  "2 dimensions + system dimensions" but
-  [edges.md](primitive/edges.md) does not yet codify how system
-  dimensions look. Need a small primitive addition to host
-  `:TRANSFERS` cleanly.
-- **Future expansion (out of scope for first economics PR).**
+- **Edge type `:TRANSFERS`.** `[settled]` Source = sender actor,
+  target = receiver actor. Tensor `(0, 0)` actor dims (no ranking
+  contribution, non-traversable). The system-dimension slot carries the
+  **on-chain tx reference** only; amount + currency are read from chain
+  via it, never stored on-graph. Recorded for public auditability of
+  money flows.
+- **System-dimension slot = type-specific, nullable, non-ranking edge
+  metadata.** `[settled, shape; schema TBD in edges.md]` The spec's edge
+  shape is "2 dimensions + system dimensions"; the slot has sat empty
+  (every edge field universal: dim1/dim2/timestamp/layer). `:TRANSFERS`
+  is the first edge to populate it. Typed, optional, per-label, never
+  read by ranking, strictly distinct from the `(dim1, dim2) ∈ [-1,+1]`
+  tensor (the uniformity invariant, untouched). The economics PR
+  formalizes it in `edges.md`; field schema deferred.
+- **Future expansion (standalone follow-up workstreams, out of the
+  economics PR).**
   - Marketplace: extend [items.md](instances/items.md) with price
-    + listing semantics.
+    + listing semantics. Prices belong on a listing/offer **node** —
+    a price doesn't fit the `(dim1, dim2)` tensor — not on a transfer
+    edge.
   - Contracts: graph-native escrow / multi-step agreements.
   - Proof-of-fulfillment edges (or junction nodes, user's hint)
     between contract and payment.
@@ -1043,10 +1124,11 @@ in this design pass or deferred to a follow-up workstream.
   bullet (author-aggregate payability, recorded per campaign).
 - **No-AI rule applies.** Attribution math is graph-computed, not
   learned. Shapley on the graph is fine; ML "fair share" is not.
-- **Edge tensor uniformity.** `:TRANSFERS` must fit the
-  `(dim1, dim2) + system` shape. `(0, 0)` actor dims + a
-  system-dimension transfer payload is the cleanest fit, but
-  requires formalizing the system-dimension slot in `edges.md`.
+- **Edge tensor uniformity — settled.** `:TRANSFERS` fits the
+  `(dim1, dim2) + system` shape as `(0, 0)` actor dims + an on-chain tx
+  reference in the system-dimension slot. The economics PR formalizes
+  that slot in `edges.md` (typed, nullable, non-ranking); the tensor is
+  untouched. See *Settled decisions*.
 - **Q19 (stake-gated quorum) reopen.** Now that a real token
   exists, stake gating is reachable again. Risks: contradicts
   "anyone can fork" if excessive; concentrates power in early
@@ -1083,8 +1165,8 @@ in this design pass or deferred to a follow-up workstream.
 ## Files this will eventually touch
 
 - **New** `docs/primitive/economics.md` — pull-marketing definition,
-  campaign object, h-based goal, attribution math, treasury split.
-  The "pull marketing" vocabulary anchor.
+  campaign object, h-based goal, attribution math, treasury split,
+  settlement + claim flow. The "pull marketing" vocabulary anchor.
 - **New** `docs/primitive/token.md` — CGT semantics, on-chain model,
   mint schedule. May merge into `economics.md` if small.
 - **New** `docs/implementation/ledger.md` — chain integration,
@@ -1097,8 +1179,8 @@ in this design pass or deferred to a follow-up workstream.
   attribution cost bound (see *Cross-cutting obstacles*).
 - **Update** [docs/primitive/edges.md](primitive/edges.md) —
   `:TRANSFERS` edge + formalize the system-dimension slot; add the
-  `:INVITE` edge label, the `Wallet` node, and the Campaign → Wallet
-  payment edge.
+  `:INVITE` edge label, the `Wallet` node, the `Settlement` node, and
+  the entitlement / claim edges.
 - **Update** [docs/primitive/authorship.md](primitive/authorship.md) —
   cross-link to economics.md.
 - **Update** [docs/instances/collectives.md](instances/collectives.md) —
