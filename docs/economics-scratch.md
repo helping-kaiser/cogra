@@ -82,7 +82,14 @@ until the design is fully settled.
    construction. Gating reduces to infra/host payment (purpose b),
    deferred to the marketplace workstream. Residual auto-settlement
    case accepted as a property.*
-6. Wallet onboarding & claim-escrow policy.
+6. **Wallet onboarding & claim-escrow policy** — *fully settled.
+   Self-custodied key from signup (passkey / device key backing a
+   smart account; no MPC shards, CoGra never holds it); claim model
+   (users pay their own claim gas); earnings accrue non-custodially
+   to the account's counterfactual address in a permanently-claimable
+   distributor and never expire; Wallet is a graph node carrying the
+   address as a layered, re-linkable property, payment edges point to
+   the node.*
 7. Marketplace + infrastructure primitive scoping — in this design
    pass or deferred to a follow-up workstream?
 8. Q19 stake-gated quorum reopen (now that a token exists).
@@ -92,29 +99,33 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 5 closed — no anti-spam action quota.** The delta-funnel
-audit found the funnel-capable actions are `:REFERENCES`, reactions,
-and comments; bare posts and tags are dead-end sinks; memberships,
-votes, and proposals are non-traversable and harmless. But the
-delta-funnel-into-advertiser abuse a quota would target is already
-covered by the structural stack — forward-only (bots can't
-manufacture the inbound edges that give farmed content weight), the
-`:REFERENCES` fanout-budget (per-source amplification capped, and
-reference-flooding self-defeating), severance / zero-jail (farm
-cluster collapses; funneling author earns 0), Topic 3's
-sustained-level metric (bursts earn 0) — plus advertiser discretion
-(decline / extend / call-to-sever, §3.8.2 advisory, "users hate paid
-bots"). A per-day quota is also mis-targeted: the only attack that
-survives is a slow funnel held for τ ≈ Δt/3, which is sub-quota by
-construction. So no quota; gating reduces to infra/host payment
-(purpose b), already deferred to the marketplace workstream. The
-absent-advertiser auto-settlement residual is accepted as a bounded
-property. See *Settled decisions* and *Section F*.
+**Topic 6 closed — claim + non-custodial escrow, never expires.**
+Push was rejected: the moment users pay their own gas (a given) and
+earnings accrue as a claimable buildup, the mechanism *is* claim, not
+push. The hard fact that decided the escrow design: trustless
+(non-custodial) claim is equivalent to the user holding a key from the
+moment they earn — there is no zero-key trustless claim. So every
+account gets a self-custodied signing key at signup (passkey / device
+key backing a smart account; **not** an MPC-shard provider — CoGra
+never holds any part of it). "No wallet" means no *funded / external*
+wallet; the key exists from day one, held by the user. Earnings accrue
+to the account's counterfactual (pre-computable) address in a
+permanently-claimable distributor; the on-screen buildup is the user's
+unclaimed total, claimable any time they fund / connect a wallet.
+**Never expires** — under self-custody the unclaimed pool is owned by
+user-held keys, not orphaned, so burning it would destroy *recoverable*
+user-owned value; lost-key funds are de-facto out of circulation anyway
+(locked ≈ burned, without the confiscation). Because every account has
+a counterfactual address from signup there is effectively no
+wallet-less-at-settlement payee, so no forfeiture and no escrow burn.
+The Wallet is a graph node; its address is a layered property
+(re-linkable, non-destructive per layers.md); payment edges point to
+the node. See *Settled decisions* and *Section D*.
 
-**Next: Topic 6 — wallet onboarding & claim-escrow policy.** Every
-CoGra user needs a wallet to receive payouts; payouts to wallet-less
-users accumulate to a claim escrow with some expiry policy (see
-*Cross-cutting obstacles → Wallet onboarding UX*).
+**Next: Topic 7 — marketplace + infrastructure primitive scoping.**
+Decide whether the marketplace + infra-payment primitive (host edges,
+hosting prices, the `:TRANSFERS` edge and the system-dimension slot) is
+in this design pass or deferred to a follow-up workstream.
 
 ---
 
@@ -581,6 +592,67 @@ users accumulate to a claim escrow with some expiry policy (see
   `b ≈ 20–40` the anchor lands at ~15–37% of the pool as a single
   wallet under the default `g` — the influencer-as-main-benefactor
   outcome, far from the ~90% sparse-graph case.
+- **Wallet = self-custodied key from signup; no custody, no MPC
+  shards.** `[settled]` Every account is backed by a signing key the
+  *user* holds from signup — a passkey / device-stored key backing a
+  smart account, generated at sign-up so onboarding feels like a normal
+  login (no seed-phrase wall, no "you must have a wallet to earn"
+  gate). CoGra never holds any part of the key (a key-shard / MPC
+  custodial provider is excluded — that is the custody being ruled
+  out). "No wallet" means no *funded or external* wallet, not no key:
+  the cryptographic identity exists from day one, held by the user. A
+  UI hint surfaces the responsibility — the key is copy-able /
+  device-stored, and a lost key is unrecoverable by CoGra. This is what
+  makes the escrow below trustless: a claimant proves ownership with a
+  key held since they earned, so CoGra is never in the claim path. The
+  non-negotiable fact behind the design: trustless claim is equivalent
+  to the user holding a key from the moment they earn — there is no
+  zero-key trustless claim. The zero-key alternative would force CoGra
+  to attest identity→wallet at claim, a trusted gatekeeper with
+  liveness + fraud surface; rejected as ethos-breaking.
+- **Distribution = claim; users pay their own claim gas.** `[settled]`
+  Each campaign close publishes its per-contributor split (Shapley) to
+  a permanently-claimable distributor; contributors claim by proof,
+  paying their own gas. Push (campaign contract transfers CGT to each
+  wallet at settlement, CoGra paying fan-out gas) is rejected: once
+  users pay their own gas — a given — and earnings accrue as a
+  claimable buildup, the mechanism *is* claim. Users paying their own
+  gas is the intended responsibility model, not a friction to
+  subsidize. Gas / batching mechanics (one canonical distributor vs.
+  per-campaign roots) are `ledger.md` implementation.
+- **Escrow = non-custodial buildup; never expires.** `[settled]`
+  Earnings for a not-yet-funded contributor accrue to their account's
+  counterfactual (pre-computable) address in the distributor; the
+  on-screen buildup is the user's unclaimed total, claimable any time
+  they fund / connect a wallet — the test-the-network-then-cash-out UX.
+  **Never expires.** Under self-custody the unclaimed pool is owned by
+  user-held keys, not orphaned, so burning it would destroy
+  *recoverable* user-owned value; lost-key funds are de-facto removed
+  from circulation anyway (locked-forever ≈ economic burn without the
+  confiscation), so a burn-on-expiry mostly bites the recoverable case
+  while barely changing the lost-key one. No supply reason compels it —
+  deflation is already carried by campaign burn + the asymptotic mint
+  curve (the same reason (δ) buyback-and-burn was rejected). Because
+  every account has a counterfactual address from signup, there is
+  effectively no wallet-less-at-settlement payee: the push-era
+  forfeiture question dissolves — no settlement-time forfeiture, no
+  escrow burn. Two accepted consequences: (i) the distributor stays
+  permanently claimable — immutable / no upgrade path that could strand
+  a historical claim (`ledger.md` constraint); (ii) supply accounting
+  carries a growing "unclaimed / locked" bucket, surfaced for
+  transparency, not destroyed.
+- **Wallet representation = a graph node, address a layered property.**
+  `[settled]` The user's payout wallet is a `Wallet` graph node,
+  created at signup carrying the account's counterfactual self-custody
+  address; the on-chain address is a property layered on it, updated
+  non-destructively on re-link ([layers.md](primitive/layers.md)).
+  Payment edges (Campaign → Wallet) point at the node, so past payments
+  stay attached and still reflect the address they actually paid
+  (captured at settlement) while future payouts read the current top
+  layer. Singular current payout address, freely re-linkable.
+  Supersedes the §D `WalletAddress`-system-property sketch. The
+  Campaign → Wallet payment edge is `(0,0)` actor dims like
+  `:TRANSFERS` (§E) and shares its system-dimension-slot dependency.
 
 ---
 
@@ -866,15 +938,27 @@ users accumulate to a claim escrow with some expiry policy (see
 
 ### D — Ledger & on-chain mechanics
 
-- Chain is the ledger; CoGra signs payout Merkle roots after each
-  campaign closes; contributors claim from a payout contract.
+- **Distribution = claim.** `[settled]` Chain is the ledger. Each
+  campaign close publishes its per-contributor split to a
+  permanently-claimable distributor; contributors claim by proof,
+  paying their own gas. No push, no CoGra-subsidized gas. See
+  *Settled decisions*.
+- **Escrow never expires, non-custodial.** `[settled]` Unclaimed
+  earnings rest in the distributor at each account's counterfactual
+  self-custody address indefinitely; claimable whenever the user
+  funds / connects a wallet. The distributor must stay permanently
+  claimable (immutable / no claim-stranding upgrade). See *Settled
+  decisions*.
 - Postgres holds campaign metadata; Memgraph holds graph including
-  transfer edges; chain holds balances and claim state.
+  transfer + Wallet nodes; chain holds balances and claim state.
 - `[proposal]` Campaign object lives in Postgres as
   `(id, advertiser_id, target_node_id, anchor_node_id, goal_metric,
   budget_cgt, start_ts, end_ts, status, merkle_root_at_close)`.
-- `[proposal]` Per-user wallet linkage is a `WalletAddress` system
-  property on User / Collective nodes — not feed-traversable.
+- **Wallet linkage = a `Wallet` graph node** (not a system property),
+  carrying the address as a layered property; created at signup with
+  the account's counterfactual self-custody address, re-linkable
+  thereafter. Not feed-traversable. `[settled]` See *Settled
+  decisions*.
 
 ### E — Transfer edges & marketplace future
 
@@ -973,10 +1057,16 @@ users accumulate to a claim escrow with some expiry policy (see
   advantage and corrupts the graph-is-truth principle. Token
   *activity* (recent transfers, campaign participation) is a
   different question and probably also out. **User call needed.**
-- **Wallet onboarding UX.** Every CoGra user needs a wallet to
-  receive payouts. Not a primitive question, but flag early —
-  payouts to users without wallets accumulate to a claim escrow
-  with some expiry policy.
+- **Wallet onboarding UX.** `[settled]` Every account gets a
+  self-custodied key at signup (passkey / device key backing a smart
+  account; no MPC shards, CoGra never holds it), so onboarding feels
+  like a normal login and no "you must have a wallet to earn" wall is
+  needed. Earnings accrue non-custodially to the account's
+  counterfactual address and are claimable any time the user funds /
+  connects a wallet — never expiring. A UI hint surfaces self-custody
+  responsibility (the key is copy-able / device-stored; a lost key is
+  unrecoverable). Supply accounting carries a growing "unclaimed /
+  locked" bucket for transparency.
 
 ---
 
@@ -998,14 +1088,17 @@ users accumulate to a claim escrow with some expiry policy (see
 - **New** `docs/primitive/token.md` — CGT semantics, on-chain model,
   mint schedule. May merge into `economics.md` if small.
 - **New** `docs/implementation/ledger.md` — chain integration,
-  Merkle-claim mechanics, Postgres campaign-metadata schema.
+  claim-distributor + non-custodial escrow mechanics, self-custody
+  account (passkey / smart-account) onboarding, Postgres
+  campaign-metadata schema.
 - **Update** [docs/primitive/feed-ranking.md](primitive/feed-ranking.md) —
   add the dust floor `ε` (branch-and-bound path pruning); currently
   enumeration is bounded only by the R-cap + `d(R)`. Shared with the
   attribution cost bound (see *Cross-cutting obstacles*).
 - **Update** [docs/primitive/edges.md](primitive/edges.md) —
   `:TRANSFERS` edge + formalize the system-dimension slot; add the
-  `:INVITE` edge label.
+  `:INVITE` edge label, the `Wallet` node, and the Campaign → Wallet
+  payment edge.
 - **Update** [docs/primitive/authorship.md](primitive/authorship.md) —
   cross-link to economics.md.
 - **Update** [docs/instances/collectives.md](instances/collectives.md) —
