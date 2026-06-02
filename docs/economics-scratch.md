@@ -107,43 +107,50 @@ until the design is fully settled.
    and a real fraction for destructive actions; minting a mod is itself
    destructive, so the mod set is Sybil-resistant by construction.
    Parameters deferred to a governance session.*
-9. Q16 `S(t)` input candidates (token-related or unrelated).
+9. **Q16 `S(t)` token-input candidates** — *fully settled. Token
+   signals (balance and activity alike) excluded from `S(t)`: `S` is
+   the one ranking side-channel sitting outside the non-traversable
+   `(0,0)` `:TRANSFERS` tensor, and admitting token signal there is the
+   same gameable economics→ranking feedback the Q16 balance and Topic-8
+   stake-gating rejections already closed. The full `S` derivation
+   stays a Q16 feed-ranking question; recency ("freshest content wins
+   ties") surfaced as the leading contender, and the "`S` is per-viewer"
+   Q16 constraint was flagged as mis-stated (a possibly-global metric
+   is in scope).*
 10. Authoring plan: which canonical docs in which order; what
     splits between `economics.md` / `token.md` / `ledger.md`.
 
 ## Next session pickup
 
-**Topic 8 closed — stake-gating declined; the fix is a mod-quorum, not
-the token.** Stake-weighted / stake-gated Network-scope quorum is
-reachable now that CGT exists but rejected as plutocracy — the
-graph-is-truth violation Q16 rejects for ranking, and carry-forward
-would hand early holders governance control (contradicts anyone-can-fork).
-The token adds nothing to Q19. What it surfaced is a real *non-economic*
-hole: the community dual-quorum is bot-satisfiable (`min(P·|active|, K)`
-is met by `K` sybil yes-votes), so the entire mod-side defense for
-destructive actions is the flat `≥1`-mod gate — one compromised mod key
-plus a bot flood passes anything. **Direction (Q19 governance follow-up,
-out of this economics PR):** make the mod-gate a per-action count
-threshold over **active** mods,
-`mod_yes ≥ max(k_floor, ⌈f_mod·|active_mods|⌉)` — flat `1` for
-low-stakes, a real fraction for destructive / irreversible actions
-(mint a mod, remove a mod, `illegal`-redaction, critical `:Network`
-amendments). Bot cost rises from one mod key to a fraction of the mod
-set; minting a mod is itself destructive, so the mod set grows only
-under mod-% and is Sybil-resistant by construction. Small-set bootstrap
-accepted as a non-issue (early mods hand-picked and trusted, bots not a
-factor at that scale; the target is the future-scale sleepy-mod failure,
-where slow deliberate movement on high-stakes decisions is a feature).
-Parameters (`f_mod`, `k_floor`, the destructive-action set) deferred to
-a governance session. See *Settled decisions* and *Cross-cutting
-obstacles → Q19*.
+**Topic 9 closed — token signals are out of `S(t)` (option A).** The
+token never feeds ranking at any depth. Balance is plutocracy; token
+*activity* (recent transfers, campaign participation) is a gameable
+economics→ranking feedback loop — the same objection that sank the Q16
+balance candidate and Topic-8 stake-gating — and is already reflected
+in `h` via the underlying reach edges, so reusing it double-counts.
+`S(t)` matters here only because it is the lone ranking channel sitting
+*outside* the settled non-traversable `(0,0)` `:TRANSFERS` tensor;
+keeping it token-independent closes that side channel and leaves the
+token a pure settlement layer with zero ranking feedback. The fire-only-
+on-rare-ties depth makes the exclusion costless.
 
-**Next: Topic 9 — Q16 `S(t)` input candidates.** Decide whether any
-token-related signal belongs in `S(t)`: token *balance* is already
-rejected on graph-is-truth grounds (the same objection that just sank
-stake-gating); token *activity* — recent transfers, campaign
-participation — is the live sub-question, alongside whether `S(t)` stays
-entirely token-independent. **User call needed.**
+The full `S` derivation is **not** decided here — it stays a Q16
+feed-ranking question. What surfaced for that session: **recency
+("freshest content wins ties") is the leading contender** — obvious,
+cheap, and not inbound-edge-gameable. An author-node in-degree
+tie-break was rejected for breaking the *never let inbound edges affect
+a feed* rule ([CLAUDE.md](../CLAUDE.md)); shortest-`R` and
+distinct-path-count were rejected as non-discriminating (two friends
+posting at the same distance tie on both). The "`S` is per-viewer" line
+in Q16's constraints was flagged as mis-stated — the user always
+intended a possibly-global metric — so the feed-ranking session should
+correct that constraint.
+
+**Next: Topic 10 — authoring plan.** Which canonical docs in which
+order, and what splits between `economics.md` / `token.md` /
+`ledger.md`. This is the last discussion-order item; once it lands the
+design is fully settled and the scratchpad PRs into main. **User
+direction needed on doc structure.**
 
 ---
 
@@ -764,6 +771,27 @@ entirely token-independent. **User call needed.**
   [network.md §9](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal).
   Q19 stays open on this direction; stake-gating drops out of its
   candidate set.
+- **Token signals excluded from `S(t)` (Q16 tie-break).** `[settled]`
+  Neither token balance nor token activity (recent transfers, campaign
+  participation) feeds `S(t)`, the deepest feed-ranking tie-break.
+  Balance is plutocracy in ranking; activity is a gameable
+  economics→ranking feedback loop (sybil-churned transfers or
+  self-dealt campaign participation would nudge feed order) and is
+  already reflected in `h` via the underlying reach edges, so reusing
+  it double-counts. `S` is the *only* ranking channel outside the
+  settled non-traversable `(0,0)` `:TRANSFERS` tensor — the one place
+  token signal could leak back into the feed — so closing it keeps the
+  token a pure settlement layer with zero ranking feedback, consistent
+  with the Q16 balance rejection and the Topic-8 stake-gating
+  rejection. The tie-break fires only on rare exact ties, so the
+  exclusion costs nothing. The actual `S` derivation is a Q16
+  feed-ranking question, not this PR; **recency ("freshest content wins
+  ties") is the leading contender** carried to that session — author-
+  node in-degree was rejected for violating *never let inbound edges
+  affect a feed*, and shortest-`R` / distinct-path-count under-
+  discriminate (two friends posting at the same distance tie on both).
+  The "`S` is per-viewer" line in Q16's constraints was flagged as
+  mis-stated — a possibly-global metric is in scope.
 
 ---
 
@@ -1191,11 +1219,21 @@ entirely token-independent. **User call needed.**
   construction. A `governance.md` change, **not** the economics PR;
   parameters deferred to a dedicated governance session. See *Settled
   decisions*.
-- **Q16 (`S(t)` derivation).** Token balance as input to `S(t)` →
-  reject candidate, gives wealthy users intrinsic ranking
-  advantage and corrupts the graph-is-truth principle. Token
-  *activity* (recent transfers, campaign participation) is a
-  different question and probably also out. **User call needed.**
+- **Q16 (`S(t)` derivation) — token angle settled.** `[settled]`
+  Token signals are out of `S(t)`: balance is plutocracy in ranking,
+  and token *activity* (recent transfers, campaign participation) is a
+  gameable economics→ranking feedback loop already captured by `h` via
+  the underlying edges. `S` is the lone ranking channel outside the
+  non-traversable `:TRANSFERS` tensor, so keeping it token-independent
+  closes that side channel. The remaining Q16 work — what `S` actually
+  *is* — stays a feed-ranking session: **recency ("freshest content
+  wins ties") is the leading contender** (obvious, cheap, not
+  inbound-edge-gameable); author-node in-degree was rejected for
+  violating *never let inbound edges affect a feed*; shortest-`R` and
+  distinct-path-count under-discriminate. The "`S` is per-viewer" line
+  in Q16's constraints was flagged as mis-stated — a possibly-global
+  metric is in scope — and that session should correct it. See *Settled
+  decisions*.
 - **Wallet onboarding UX.** `[settled]` Every account gets a
   self-custodied key at signup (passkey / device key backing a smart
   account; no MPC shards, CoGra never holds it), so onboarding feels
