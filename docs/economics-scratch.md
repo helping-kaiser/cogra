@@ -74,8 +74,14 @@ until the design is fully settled.
    feed-ranking §3.8.2 (advisory at settlement, no auto-action);
    earnings-by-distance governed by an advertiser-chosen `d(R)`
    base, exact-Shapley preserved.*
-5. Action gating specifics (which actions; quota shapes; CGT
-   prices; how the soft-quota threshold gets set).
+5. **Action gating specifics** — *fully settled. No anti-spam
+   action quota: the structural stack (forward-only, fanout-budget,
+   severance, Topic-3 sustained-level metric, advertiser discretion)
+   covers delta-funnel-into-advertiser abuse, and a per-day quota is
+   mis-targeted — the only surviving attack is sub-quota by
+   construction. Gating reduces to infra/host payment (purpose b),
+   deferred to the marketplace workstream. Residual auto-settlement
+   case accepted as a property.*
 6. Wallet onboarding & claim-escrow policy.
 7. Marketplace + infrastructure primitive scoping — in this design
    pass or deferred to a follow-up workstream?
@@ -86,37 +92,29 @@ until the design is fully settled.
 
 ## Next session pickup
 
-**Topic 4 closed. Next: Topic 5 — action gating specifics
-(which actions; quota shapes; CGT prices; how the soft-quota
-threshold gets set).** Attribution is settled: Shapley via
-per-path equal split among distinct authors,
-`φ_i = Σ_{π∋i} w_π / |A_π|`, computed exactly because `h` is a
-linear sum over paths. See *Settled decisions* and the
-*C — Attribution math* section.
+**Topic 5 closed — no anti-spam action quota.** The delta-funnel
+audit found the funnel-capable actions are `:REFERENCES`, reactions,
+and comments; bare posts and tags are dead-end sinks; memberships,
+votes, and proposals are non-traversable and harmless. But the
+delta-funnel-into-advertiser abuse a quota would target is already
+covered by the structural stack — forward-only (bots can't
+manufacture the inbound edges that give farmed content weight), the
+`:REFERENCES` fanout-budget (per-source amplification capped, and
+reference-flooding self-defeating), severance / zero-jail (farm
+cluster collapses; funneling author earns 0), Topic 3's
+sustained-level metric (bursts earn 0) — plus advertiser discretion
+(decline / extend / call-to-sever, §3.8.2 advisory, "users hate paid
+bots"). A per-day quota is also mis-targeted: the only attack that
+survives is a slow funnel held for τ ≈ Δt/3, which is sub-quota by
+construction. So no quota; gating reduces to infra/host payment
+(purpose b), already deferred to the marketplace workstream. The
+absent-advertiser auto-settlement residual is accepted as a bounded
+property. See *Settled decisions* and *Section F*.
 
-The auto-settlement attribution snapshot is now pinned: `t*` is
-the **binding-minimum instant** of the qualifying interval `I`
-(`h(t*) = h_start + L*`), so pool size and split read off one
-graph state. See the *Attribution snapshot `t*`* settled bullet.
-
-Both Topic-4 tails are now closed. Bot-cluster flagging folds
-into the existing §3.8.2 delta-funnel auto-detection — advisory
-at settlement, manual `(0,0)` severance only, no auto-cut. The
-root-concentration dampener resolves into the `d(R)` base `g`:
-advertiser-chosen per campaign (default `0.1`), steep concentrates
-on the anchor, soft spreads to target-proximate contributors,
-exact-Shapley preserved; the within-path reactor-tilt is rejected.
-See *Settled decisions* and *C — Attribution math*.
-
-**Invite-reward addendum (settled).** The full-payout 3% burn now
-splits 2% burn + 1% to the earner's direct inviter, carved from
-burn (the earner's 95% is untouched), pure-P so the `0.05%·D`
-anti-spam floor is unchanged. The invite relationship gets an
-explicit `:INVITE` edge label for fast settlement-time inviter
-resolution. Modifies the Topic-2 conservation equation; strict cap
-(`0.96·P < D`) and self-deal floor re-audited and hold; the only
-cost is a one-third cut to the per-campaign deflation sink. See
-*Settled decisions* and *A — Token shape*.
+**Next: Topic 6 — wallet onboarding & claim-escrow policy.** Every
+CoGra user needs a wallet to receive payouts; payouts to wallet-less
+users accumulate to a claim escrow with some expiry policy (see
+*Cross-cutting obstacles → Wallet onboarding UX*).
 
 ---
 
@@ -172,10 +170,49 @@ cost is a one-third cut to the per-campaign deflation sink. See
   with flex]` Leaning non-traversable for ranking; user noted some
   merit to making them traversable. Reopen if marketplace work
   creates pressure.
-- **Action gating: reluctantly yes, scoped.** `[settled]` Used for
-  (a) anti-spam on high-fanout actions and (b) compensating
-  infrastructure providers for hosted users. Default posture:
-  maximize free actions; price only at the margins.
+- **Action gating: scoped to infra payment only.** `[settled]` The
+  only gating CoGra applies is compensating infrastructure providers
+  for hosted users — a resource-cost charge on hosted storage /
+  serving, deferred to the marketplace workstream. No anti-spam
+  action quota (see next bullet). Default posture: maximize free
+  actions; price only at the margins, and the only margin is infra
+  resource cost.
+- **Action gating: no anti-spam quota.** `[settled]` The proposed
+  soft per-day quota on high-fanout actions is dropped. The
+  funnel-capable actions — the ones that can place a spammer on an
+  `anchor → target` attribution path — are exactly `:REFERENCES`,
+  reactions, and comments (bare posts and tags are dead-end sinks;
+  memberships, votes, and proposals create only non-traversable
+  edges per [feed-ranking.md §3.5](primitive/feed-ranking.md) rules
+  1–3). The delta-funnel-into-advertiser abuse a quota would target
+  is already covered structurally: forward-only (bots cannot
+  manufacture the inbound edges that give farmed content weight,
+  [graph-model.md §7](primitive/graph-model.md)); the `:REFERENCES`
+  fanout-budget (per-source amplification capped at `friend_interest`
+  regardless of N, and reference-flooding self-defeating — weight
+  spreads to `1/N` and dust-prunes); severance / zero-jail (the
+  community collapses a farm cluster, the funneling author earns 0);
+  Topic 3's sustained-level metric (bursts earn 0); and advertiser
+  discretion (decline + extend + public call-to-sever, backed by
+  §3.8.2 delta-funnel advisory detection and the reputational fact
+  that users hate paid bots). A per-day quota is also mis-targeted:
+  the only attack that survives the stack is a *slow, sustained*
+  funnel held for `τ ≈ Δt/3`, which sits below any reasonable per-day
+  quota by construction — so the quota would stop only what is
+  already stopped. Rejected for buying no marginal defense at the
+  cost of taxing the exact behavior campaigns reward.
+- **Residual: auto-settlement on an absent advertiser.**
+  `[settled, accepted property]` A slow funnel sustained for
+  `τ ≈ Δt/3` against an advertiser absent for the full 30-day
+  settlement window AND a community that fails to sever in time will
+  auto-settle on the sustained metric — §3.8.2 detection is
+  advisory-only with no human present to act on it. Accepted, not
+  fixed: bounded by the long `τ` and the 30-day window the advertiser
+  chose to skip, capped at `0.95·P`, and consistent with the
+  structural-plus-human, no-algorithmic-gatekeeping ethos. The fix
+  would be letting auto-settlement act on the §3.8.2 signal, which
+  reopens the settled "advisory only, no auto-action" rule — rejected
+  as the heavier, ethos-breaking option.
 - **Issuance shape = decaying calendar mint, asymptotic fixed
   supply.** `[settled]` Peer-network supply curve (fixed daily
   mint with ~10%/year decay, ~18M lifetime). Exact parameters
@@ -861,23 +898,44 @@ cost is a one-third cut to the per-campaign deflation sink. See
 
 ### F — Action gating & infra payment
 
-- **The pull-marketing spam attack.** Actor spams posts with
-  `:REFERENCES` to Teufel during a Teufel campaign to harvest
-  budget. Brakes:
-  1. Existing severance — community severs spammer, paths collapse.
-  2. Fanout-budget on `:REFERENCES` ([edges.md §2](primitive/edges.md)) —
-     caps how many references one post can carry.
-  3. `[proposal]` Soft per-day quota on `:REFERENCES` creation and
-     post creation; CGT cost only above the quota. Free for normal
-     users, expensive for spammers.
+- **The pull-marketing spam attack — handled structurally, no
+  quota.** `[settled]` Actor spams posts / comments with
+  `:REFERENCES` to a campaign target to harvest budget. The
+  funnel-capable actions are exactly `:REFERENCES`, reactions, and
+  comments — bare posts and tags are dead-end sinks (a Hashtag has no
+  out-edges, [edges.md §2](primitive/edges.md)), and memberships,
+  votes, and proposals create only non-traversable edges
+  ([feed-ranking.md §3.5](primitive/feed-ranking.md) rules 1–3). No
+  action quota is applied; the stack covers it:
+  1. Forward-only — bots cannot manufacture the inbound edges that
+     give farmed content weight
+     ([graph-model.md §7](primitive/graph-model.md)).
+  2. `:REFERENCES` fanout-budget ([edges.md §2](primitive/edges.md)) —
+     per-source amplification capped at `friend_interest` regardless
+     of N; reference-flooding is self-defeating (weight spreads to
+     `1/N` and dust-prunes).
+  3. Severance / zero-jail — the community collapses the farm
+     cluster; the funneling author earns 0.
+  4. Topic 3's sustained-level metric — bursts earn 0.
+  5. Advertiser discretion — decline + extend + public
+     call-to-sever, backed by §3.8.2 delta-funnel advisory detection
+     and the reputational fact that users hate paid bots.
+  A per-day quota is also mis-targeted: the only attack that survives
+  the stack is a slow funnel held for `τ ≈ Δt/3`, sub-quota by
+  construction. **Residual accepted property:** an absent advertiser
+  + a slow community can auto-settle a sustained funnel — bounded by
+  the long `τ` and the skipped 30-day window, capped at `0.95·P`,
+  accepted rather than fixed (a fix reopens the settled §3.8.2
+  advisory-only rule).
 - **Infra payment.** Any node hosting its own data pays nothing.
   Hosted users pay their host. Host-of-record is a graph-recorded
   property.
   - `[proposal]` Hosts set their own prices; hosting marketplace
     lives downstream of the marketplace primitive above.
-- **Posture.** User-free-actions are the default. CGT cost is *only*
-  at the margins (exceeding soft limits, paying a chosen host). Keep
-  the "you are the product" surface closed.
+- **Posture.** `[settled]` User-free-actions are the default. CGT
+  cost is *only* at the margins — and the only margin is infra
+  resource cost (paying a chosen host). No behavioral action quota.
+  Keep the "you are the product" surface closed.
 
 ---
 
