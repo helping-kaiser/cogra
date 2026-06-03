@@ -10,6 +10,11 @@ chain are an implementation concern
 ([ledger.md](../implementation/ledger.md)). Design history:
 [open-questions.md Q20](../open-questions.md).
 
+> **Notation.** The deposit `D` and payout `P` in the
+> burn/treasury formulas are defined in
+> [economics.md](economics.md) and indexed in
+> [notation.md](notation.md).
+
 CGT requires a cheap settlement layer with a **V3-style
 concentrated-liquidity DEX** (for the liquidity mechanism in §4) and no
 single-operator risk — an EVM L2 with Uniswap V3 or equivalent is the
