@@ -73,7 +73,8 @@ Cross-cutting design questions live in
 ### Never
 
 - **Never introduce AI into ranking, recommendations, or
-  economics.** Feed ranking and ad-revenue distribution are
+  economics.** Feed ranking and
+  [ad-revenue distribution](docs/primitive/economics.md) are
   driven only by the graph and its weights. AI as a
   frontend/UI helper is open — that boundary is intentionally
   permissive — but it must not touch the graph's signal or the
