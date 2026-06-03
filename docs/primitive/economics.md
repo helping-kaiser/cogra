@@ -9,6 +9,10 @@ the chain is the ledger of money, and the graph carries the
 *relationships* — who ran a campaign, who delivered reach, who was paid
 — plus pointers to the on-chain record.
 
+> **Notation.** The symbols used here — `D`, `P`, `g`, `τ`, `φ_i`,
+> `w_π`, `A_π`, `d(R)`, `s_path`, … — are defined in
+> [notation.md](notation.md).
+
 This doc defines the one economic primitive: **pull marketing**. CGT
 issuance — the mint curve and protocol-owned liquidity ([token.md](token.md)) —
 and the on-chain claim/escrow mechanics are separate docs; here we define the campaign,
