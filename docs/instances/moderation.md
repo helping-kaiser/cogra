@@ -14,9 +14,11 @@ the targeted field — see
 a gate, not as weighted voters.
 
 The defense against bot-driven flooding lives in the gate: every
-classification change requires **at least one moderator's positive
-vote** in the tally. Bots can flood the community side but cannot
-cross the gate without compromising a real moderator.
+classification change requires moderator consent in the tally —
+**at least one positive vote**, and a fraction of the active
+moderators for the destructive `illegal`-redaction (§3). Bots can
+flood the community side but cannot cross the gate without
+compromising real moderators.
 
 Encrypted ChatMessages can technically be voted on at any time —
 the protocol does **not** block a Proposal against a ciphertext.
@@ -148,9 +150,14 @@ transparent, fully auditable, append-only by construction.
 
 Every moderation Proposal — content classification (`sensitive`
 or `illegal`) and un-classification back to `normal` — runs
-through the **mod-gate**: at least one positive vote from a User
-with `network_role = 'moderator'` must be present in the tally
-before the outcome can take effect.
+through the **mod-gate** before its outcome can take effect, at
+the tier its stakes warrant. `sensitive` classification and
+un-classification back to `normal` sit at the **baseline tier**:
+at least one positive vote from a User with
+`network_role = 'moderator'`. `illegal`-redaction is destructive
+and irreversible, so it sits at the **critical tier**: positive
+moderator votes `≥ ⌈Network.critical_mod_gate_fraction ·
+|active mods|⌉`.
 
 The primitive definition lives in
 [governance.md §7](../primitive/governance.md#7-the-mod-gate),
@@ -188,9 +195,9 @@ voting body for moderation Proposals.
 
   | Action | `P` (`*_quorum_fraction`) | `K` (`*_quorum_count`) | Mod gate |
   |---|---|---|---|
-  | Classify `sensitive`                       | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | ≥1 mod positive |
-  | Classify `illegal`                         | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | ≥1 mod positive |
-  | Un-classify `sensitive` → `normal`         | symmetric to the original action (`moderation_sensitive_*`)     | symmetric                                                       | ≥1 mod positive |
+  | Classify `sensitive`                       | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | baseline tier: ≥1 mod positive |
+  | Classify `illegal`                         | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | critical tier: ⌈`critical_mod_gate_fraction` · \|active mods\|⌉ |
+  | Un-classify `sensitive` → `normal`         | symmetric to the original action (`moderation_sensitive_*`)     | symmetric                                                       | baseline tier: ≥1 mod positive |
 
   `'illegal'` is **not** reversible. The redaction markers on
   the targeted fields are append-only per

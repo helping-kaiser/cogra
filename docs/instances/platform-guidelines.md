@@ -139,7 +139,7 @@ carries the vote, same as moderation Proposals
 
 | Action | `P` (`*_quorum_fraction`) | `K` (`*_quorum_count`) | Mod gate |
 |---|---|---|---|
-| Amend guidelines | `Network.guidelines_change_quorum_fraction` (default `0.50`) | `Network.guidelines_change_quorum_count` (default `10000`) | ≥1 mod positive |
+| Amend guidelines | `Network.guidelines_change_quorum_fraction` (default `0.50`) | `Network.guidelines_change_quorum_count` (default `10000`) | critical tier: ⌈`critical_mod_gate_fraction` · \|active mods\|⌉ |
 
 The defaults are tuned higher than single-content classification
 because guideline changes shift the normative frame for *all
@@ -149,9 +149,10 @@ bucket of [network.md §11](../primitive/network.md#11-amending-network-paramete
 them requires the higher fractional / absolute pair that protects
 platform-wide governance.
 
-**Mod gate.** Same as moderation classifications — at least one
-moderator's positive vote is required. Same bot-defense
-reasoning as
+**Mod gate.** Guidelines amendments shift the normative frame for
+all future moderation, so they sit at the **critical tier** of the
+mod-gate: positive moderator votes `≥ ⌈Network.critical_mod_gate_fraction
+· |active mods|⌉`, not a single vote. Same bot-defense reasoning as
 [governance.md §7](../primitive/governance.md#7-the-mod-gate).
 
 **Drafting and discussion.** The Proposal carries the new version

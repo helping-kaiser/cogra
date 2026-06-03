@@ -365,20 +365,21 @@ targeting that property name. See
 |---|---|---|
 | `id`                              | String  | UUID v4. Always set by the API at instance bootstrap. |
 | `singleton_marker`                | String  | Always `'singleton'`. Combined with the existence + uniqueness constraints below, prevents a second `:Network` node from ever being inserted. Set at bootstrap; never changes. |
-| `mod_role_change_quorum_fraction`     | Float   | Fractional bar for `User.network_role` Proposals: `positive_count ≥ P × \|active members\|`. Default `0.50`. Mod-gate applies (≥1 existing mod positive vote). |
+| `mod_role_change_quorum_fraction`     | Float   | Fractional bar for `User.network_role` Proposals: `positive_count ≥ P × \|active members\|`. Default `0.50`. Mod-gate: critical tier (fraction of active mods). |
 | `mod_role_change_quorum_count`        | Integer | Absolute bar for `User.network_role` Proposals: `positive_count ≥ K`. Default `5000`. The operative bar at tally time is `min(P × \|active\|, K)`. See [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only). |
-| `moderation_sensitive_quorum_fraction` | Float   | Fractional bar for `'sensitive'` classification Proposals. Default `0.25`. Mod-gate applies. |
+| `moderation_sensitive_quorum_fraction` | Float   | Fractional bar for `'sensitive'` classification Proposals. Default `0.25`. Mod-gate: baseline tier (≥1 mod positive). |
 | `moderation_sensitive_quorum_count`   | Integer | Absolute bar for `'sensitive'`. Default `5000`. |
-| `moderation_illegal_quorum_fraction`  | Float   | Fractional bar for `'illegal'` classification Proposals. Default `0.50`. Mod-gate applies. |
+| `moderation_illegal_quorum_fraction`  | Float   | Fractional bar for `'illegal'` classification Proposals. Default `0.50`. Mod-gate: critical tier (fraction of active mods). |
 | `moderation_illegal_quorum_count`     | Integer | Absolute bar for `'illegal'`. Default `10000`. |
 | `guidelines_version`              | Integer | Monotonic version of the [platform guidelines](../instances/platform-guidelines.md). Bumped by 1 on each amendment Proposal. Default `1` at bootstrap. |
 | `guidelines_hash`                 | String  | SHA-256 hex digest of the canonical guidelines document at the current version. 64 lowercase hex chars. Set at bootstrap to the digest of the version-1 doc; updated together with `guidelines_version` on each amendment. |
-| `guidelines_change_quorum_fraction`   | Float   | Fractional bar for guidelines amendment Proposals. Default `0.50`. Mod-gate applies. |
+| `guidelines_change_quorum_fraction`   | Float   | Fractional bar for guidelines amendment Proposals. Default `0.50`. Mod-gate: critical tier (fraction of active mods). |
 | `guidelines_change_quorum_count`      | Integer | Absolute bar for guidelines amendments. Default `10000`. |
-| `property_change_quorum_fraction`     | Float   | Fractional bar for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, `time_decay_half_life_days`, the baseline pair itself). Default `0.25`. Mod-gate applies. See [network.md §11](../primitive/network.md#11-amending-network-parameters). |
+| `property_change_quorum_fraction`     | Float   | Fractional bar for amending baseline-bucket `:Network` properties (`moderation_sensitive_*`, `active_threshold_days`, `time_decay_half_life_days`, the baseline pair itself). Default `0.25`. Mod-gate: baseline tier (≥1 mod positive). See [network.md §11](../primitive/network.md#11-amending-network-parameters). |
 | `property_change_quorum_count`        | Integer | Absolute bar for the same. Default `5000`. |
-| `critical_property_change_quorum_fraction` | Float | Fractional bar for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself). Default `0.50`. Mod-gate applies. See [network.md §11](../primitive/network.md#11-amending-network-parameters). |
+| `critical_property_change_quorum_fraction` | Float | Fractional bar for amending critical-bucket `:Network` properties (`mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, `critical_mod_gate_fraction`, the critical pair itself). Default `0.50`. Mod-gate: critical tier (fraction of active mods). See [network.md §11](../primitive/network.md#11-amending-network-parameters). |
 | `critical_property_change_quorum_count` | Integer | Absolute bar for the same. Default `10000`. |
+| `critical_mod_gate_fraction`          | Float   | Fraction of *active* moderators that must vote positive to open the critical-tier mod-gate on a destructive action: `mod_yes ≥ ⌈critical_mod_gate_fraction · \|active mods\|⌉`. `≤ 1`, so the bar never exceeds the active-mod count and needs no absolute floor. Default `0.50`. Critical-bucket amendable. See [governance.md §7](../primitive/governance.md#7-the-mod-gate). |
 | `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
 | `time_decay_half_life_days`       | Integer | Half-life of the reactor-edge time-decay factor `f(Δt)` used by feed-ranking. Default `30`. Baseline-bucket amendable. See [feed-ranking.md §7.3](../primitive/feed-ranking.md#73-shape--exponential-30-day-half-life-frontend-tunable). |
 
