@@ -124,9 +124,11 @@ carry no user-input fields and so carry neither per-field
 properties nor the cache. **Proposal** is in the same position —
 its substance is `target_property` + `proposed_value` + the
 `:TARGETS` edge, with no user-input field to redact and no
-Postgres-side display content either. The **`:Network` singleton**
-is similarly pure configuration state. See
-[network.md §3](network.md#3-graph-side-properties).
+Postgres-side display content either. **`Campaign` and `Settlement`**
+are in the same position — pure record nodes whose substance is graph
+properties plus pointers to the chain, with nothing user-authored to
+redact. The **`:Network` singleton** is similarly pure configuration
+state. See [network.md §3](network.md#3-graph-side-properties).
 
 **Distinct from chat-internal disavowal.** Per-field moderation
 status is the Network-scope value system described above;
@@ -205,6 +207,8 @@ Entities that are acted upon by actors.
 | **Item** | A physical or digital good — ownable (via ItemOwnership), transferable, and talked about. See [items.md](../instances/items.md). |
 | **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). The only content node with no authorship — exempt from [authorship.md](authorship.md)'s earliest-incoming-edge rule. See [hashtag.md](../instances/hashtag.md). |
 | **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one content node with no user-input fields: carries no per-field moderation properties and has no Postgres-side display content. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
+| **Campaign** | A pull-marketing campaign — a funded, public request to raise a target node's reach into an anchor's cluster. Authored by the advertiser; carries the campaign terms as graph properties (deposit pointer, anchor, target, `g`, goal, window). Like `Proposal`, a carrier node with no user-input fields and no Postgres-side display content. See [economics.md §2](economics.md#2-the-campaign-node). |
+| **Settlement** | The terminal record of a settled `Campaign`, created once at settlement — carries the distributor address, the payout Merkle root, and the public results (`settled_P`, `achieved_h_gain`) as properties. Claimants reach it via `:ENTITLES` / `:CLAIMS` edges. Like `Proposal`, a carrier node with no user-input fields and no Postgres-side display content. See [economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow). |
 
 ---
 
