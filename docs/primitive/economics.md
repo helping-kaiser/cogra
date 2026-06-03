@@ -10,8 +10,8 @@ the chain is the ledger of money, and the graph carries the
 — plus pointers to the on-chain record.
 
 This doc defines the one economic primitive: **pull marketing**. CGT
-issuance (the mint curve, protocol-owned liquidity) and the on-chain
-claim/escrow mechanics are separate docs; here we define the campaign,
+issuance — the mint curve and protocol-owned liquidity ([token.md](token.md)) —
+and the on-chain claim/escrow mechanics are separate docs; here we define the campaign,
 how reach is measured, how the payout pool is split among contributors,
 and how settlement is recorded on the graph. Design history:
 [open-questions.md Q20](../open-questions.md).
