@@ -361,6 +361,66 @@ tally reads `sign(sentiment)` for the binary outcome. See
 "Shape A" and
 [proposal.md §4](../instances/proposal.md#4-edges).
 
+### Campaign declarations
+
+System-created when a `Campaign` node is created (see
+[economics.md §2](economics.md#2-the-campaign-node)). Both declare what
+the campaign points at; both are `(0, 0)` and **non-traversable for feed
+ranking** ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)
+rule 6), so a campaign can never inject reach toward its target.
+
+| Edge type | Meaning |
+|-----------|---------|
+| Campaign → anchor (any actor node) | The cluster root whose reach the campaign buys. Label `:ANCHOR`. |
+| Campaign → target (any node) | The promoted node the campaign drives reach toward. Label `:PROMOTES`. |
+
+### Settlement and claim
+
+System-created at settlement (see
+[economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow)).
+All `(0, 0)`, non-traversable, and carry **no amount** — per-wallet
+payout figures are Merkle leaves verified against the root the
+`Settlement` node points at, never stored on the graph.
+
+| Edge type | Meaning |
+|-----------|---------|
+| Campaign → Settlement | This campaign settled, producing this Settlement record. |
+| Settlement → Wallet | This wallet is entitled to claim from this settlement (`:ENTITLES`). |
+| Wallet → Settlement | This wallet has claimed (`:CLAIMS`). |
+
+### Transfer
+
+A direct CGT transfer between two wallets, recorded for public
+auditability of money flows (see
+[economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow)).
+`(0, 0)`, non-traversable. The on-chain transaction reference rides the
+**system-dimension slot** (below); amount and currency are read from
+chain through it, never stored on the graph.
+
+| Edge type | Meaning |
+|-----------|---------|
+| Wallet → Wallet | Sender wallet transferred CGT to receiver wallet. Label `:TRANSFERS`. |
+
+The `Wallet` node these edges point at, and the `:INVITE` onboarding
+edge, are defined with the onboarding ledger.
+
+### System-dimension slot
+
+Every edge carries — alongside its `(dim1, dim2)` tensor and the
+universal `timestamp` / `layer` fields — a **system-dimension slot**:
+typed, optional, per-label metadata, **never read by ranking or
+traversal**. The edge shape is "2 dimensions + system dimensions"; until
+now every edge field was universal (dim1 / dim2 / timestamp / layer) and
+the slot sat empty. `:TRANSFERS` is the first edge to populate it — with
+an on-chain transaction reference.
+
+**Invariant:** the system-dimension slot is strictly distinct from the
+`(dim1, dim2) ∈ [-1, +1]` tensor — the edge-uniformity invariant is
+untouched. The slot is null on edge types that don't use it, never enters
+the ranking math, and never stores a money amount (amounts live
+on-chain, read through the reference). The exact field schema is deferred
+to the edge types that populate it.
+
 ---
 
 ## 3. Edge labels at the graph layer
@@ -397,6 +457,11 @@ are structural; `:AUTHOR` is the one actor-edge sub-label.
 | `:TAGGING` | Post → Hashtag, Comment → Hashtag, Item → Hashtag | Tag associations. Queried by hashtag-centric browsing. |
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |
 | `:REFERENCES` | ChatMessage → any node; Post / Comment → any node except Hashtag | The "this carrier embeds X" relationship. Common query: "what nodes reference this one?" — feeds embed-rendering and inbound-attention surfaces. |
+| `:ANCHOR` | Campaign → anchor (any actor node) | Declares a campaign's anchor. Query: "what campaigns target this anchor?" `(0, 0)`, non-traversable. |
+| `:PROMOTES` | Campaign → target (any node) | Declares a campaign's promoted node. `(0, 0)`, non-traversable — never injects reach. |
+| `:ENTITLES` | Settlement → Wallet | Marks a wallet entitled to claim. Paired with `:CLAIMS`, makes "entitled but unclaimed" a one-hop query. `(0, 0)`, no amount. |
+| `:CLAIMS` | Wallet → Settlement | Marks a settlement claimed by a wallet. `(0, 0)`, no amount. |
+| `:TRANSFERS` | Wallet → Wallet | A direct CGT transfer; the on-chain tx reference rides the system-dimension slot. `(0, 0)`, non-traversable. |
 
 All sub-category labels **replace** their base label (`:ACTOR`
 for `:AUTHOR`, `:STRUCTURAL` for the rest), not add to it — a
