@@ -1143,6 +1143,11 @@ who wants only direct-friend signal can steepen it (e.g.,
 `0.01^(R-1)`). The default is calibrated so that a single strong
 R=2 path roughly matches ~15 strong R=3 paths' aggregate
 contribution — balancing direct signal with friend-of-friend buzz.
+The default base `0.1` is seeded at genesis on the `:Network`
+singleton's `distance_decay_base` property and recalibrated by the
+network via a baseline-bucket Proposal (see
+[network.md §3](network.md#feed-ranking-calibration)); frontend
+overrides layer on top of whatever network default is current.
 
 A separate **time-decay** factor `f(Δt)` is applied alongside `d(R)`
 on the reactor edge of each path. `f(Δt)`'s canonical shape and
@@ -1269,13 +1274,32 @@ completion — the prune is **exact up to the floor**, not a heuristic.
 Paths below `ε` contribute only dust to the sums; dropping them shifts
 each metric by less than the floor.
 
+**Where `ε` sits.** The per-path contribution to `h` falls ~15× per
+hop — a `0.1` factor from `d(R)` and a `~0.6` factor per added edge.
+For a fresh path of moderate edges (`|dim| ≈ 0.6`, `f(Δt) = 1`) under
+the default `d(R)`, `h = H_s + H_c ≈ d(R) · 2 · 0.6^R` per path:
+
+```
+R=2: ~7×10⁻²    R=3: ~4×10⁻³    R=4: ~3×10⁻⁴    R=5: ~2×10⁻⁵
+```
+
+The prune tests the single-track bound `best_possible` (about half this
+`h`), so a floor below ~`1×10⁻³` keeps strong `R=3` friend-of-friend
+paths and removes only the individually-weak `R=4`+ tail. `1×10⁻³`
+itself is already too coarse — it kills `R=4` outright and eats the
+weaker `R=3` paths.
+
 `ε` is the **finest the compute budget allows**: ≈0 when the graph is
 sparse and `b^R` is cheap anyway, rising only under dense-graph load.
 Coarsening loses little when dense — weak distant signal is redundant
 (content buzzing at `R=3` is carried inward at full weight by the `R=2`
 nodes reacting to it) — while sparse early graphs propagate slowly and
-need the fine floor. `ε` is frontend-tunable alongside `d(R)` and
-`f(Δt)`.
+need the fine floor. Its network default is seeded at genesis on the
+`:Network` singleton's `dust_floor` property — `0` while the graph is
+sparse — and the network raises it via a baseline-bucket Proposal as
+density grows (see
+[network.md §3](network.md#feed-ranking-calibration)); `ε` is
+frontend-tunable alongside `d(R)` and `f(Δt)`.
 
 The same branch-and-bound floor bounds the economics attribution
 traversal, which walks these identical paths to split a campaign's pool
@@ -1826,8 +1850,18 @@ from a specific actor's perspective, and central realtime ranking
 of every actor's personalized feed doesn't scale. Sorting,
 ordering, and filtering therefore happen **off the hot path of
 the central backend**: the backend serves each actor their
-relevant subgraph (e.g. N hops deep); ranking runs on the
-viewing user's own device or on a chosen delegate.
+relevant subgraph; ranking runs on the viewing user's own device
+or on a chosen delegate.
+
+**The slice is weight-bounded, not hop-bounded.** A fixed hop depth
+doesn't scale for hubs: in the late graph a high-degree node has
+`b ~ 1000` out-edges, and small-world connectivity makes a 2–3 hop
+slice already most of the network (§3.6). The backend bounds the
+slice the same way the ranking traversal bounds enumeration — by the
+dust floor `ε` (§4.4), walking edges by best-possible contribution
+and stopping at the floor rather than at a hop count. This keeps the
+slice tractable for hub users and drops exactly the weak-tie tail the
+ranking would discard anyway.
 
 - **Client-side (default).** The actor's device downloads its
   relevant subgraph and runs ranking locally. It already needs the
