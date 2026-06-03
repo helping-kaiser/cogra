@@ -783,6 +783,33 @@ this scratch.
   discriminate (two friends posting at the same distance tie on both).
   The "`S` is per-viewer" line in Q16's constraints was flagged as
   mis-stated — a possibly-global metric is in scope.
+- **Campaign earning pays delivered reach, not intrinsic quality.**
+  `[settled, accepted property + framing requirement]` A contributor
+  earns only by sitting on an `anchor → target` path — i.e. by being
+  reachable from the anchor through edges others deliberately pointed
+  at them or their content. Unreached content earns nothing from a
+  campaign however good it is, because a campaign buys *reach
+  delivered to the target's cluster*, and an unreached node delivers
+  none; the graph cannot pay intrinsic quality without an AI quality
+  signal, the exact economics→AI move CLAUDE.md forbids. The earning
+  unit is the *referencing content's in-cone engagement*, not the
+  author's follower count — a single referencing post that picks up
+  reactions from within the anchor's reach cone earns (its author is a
+  path player per the attribution rule), so "no followers" ≠ "cannot
+  earn." The bridge from quality to standing reach is the **explicit
+  follow / engagement gesture** (feed-ranking §3.1), nudged by a
+  frontend after repeated engagement — never a `Content → Author`
+  back-edge, which is rejected: it would amplify one real engagement
+  across the author's unbounded, self-chosen outbound content set (a
+  bot funnel) and break the inbound-edges-don't-affect-feeds invariant
+  ([graph-model.md §7](primitive/graph-model.md)). This is the
+  deliberate-decisions network, not AI-recommended discovery — so
+  `economics.md` must **frame the property explicitly for end-users**
+  (earn by being deliberately pointed at, not by posting into the
+  void) rather than present it as a limitation to apologize for.
+  Advertiser/anchor pull-marketing discovery (surfacing good
+  referencing content for a real boost gesture) is a clean amplifier
+  but belongs to the deferred marketplace workstream, not this PR.
 
 ---
 
