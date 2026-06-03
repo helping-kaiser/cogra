@@ -45,7 +45,8 @@ them:
    [docs/primitive/layers.md](docs/primitive/layers.md).
 4. **Fair economics.** Ad revenue distributes across the economic
    landscape of the graph. Bot clusters earn nothing because real
-   users never point toward them. Pull marketing, not push
+   users never point toward them.
+   [Pull marketing](docs/primitive/economics.md), not push
    marketing.
 5. **User comes first.** No amount of money changes this. Users
    choose what they see, including ads. No one can force their way
@@ -85,7 +86,8 @@ them:
 ### Never
 
 - **Never introduce AI into ranking, recommendations, or
-  economics.** Feed ranking and ad-revenue distribution are
+  economics.** Feed ranking and
+  [ad-revenue distribution](docs/primitive/economics.md) are
   driven only by the graph and its weights. AI as a
   frontend/UI helper is open — that boundary is intentionally
   permissive — but it must not touch the graph's signal or the

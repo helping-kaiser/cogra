@@ -45,7 +45,8 @@ leaving an auditable trail rather than a silent edit.
 
 **Fair economics.** Ad revenue distributes across the economic
 landscape of the graph. Bot clusters earn nothing because real
-users never point toward them. Pull marketing, not push.
+users never point toward them.
+[Pull marketing](docs/primitive/economics.md), not push.
 
 **User comes first.** Users choose what they see, including ads.
 No amount of money changes that. No one forces their way into
