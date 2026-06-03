@@ -319,7 +319,9 @@ drops from 3% to 2% at full payout).
 
 The `:INVITE` edge is a normal traversable actor edge from inviter to
 invited — the first edge into any non-genesis node, since the graph
-grows only by invitation. Its schema lands with the onboarding ledger.
+grows only by invitation. Its schema is defined in
+[invitations.md](invitations.md#the-invite-label) and
+[edges.md §3](edges.md#3-edge-labels-at-the-graph-layer).
 
 ### 5.3 Reputation as additive enforcement
 
@@ -532,8 +534,9 @@ root the `Settlement` node points at and surfaced in frontends — never
 on-graph. Distribution is **claim, not push**: each contributor claims
 by proof and pays their own gas; earnings rest non-custodially at the
 account's counterfactual address and never expire. The distributor
-mechanics, the self-custody onboarding, and the Postgres campaign-
-metadata schema are the ledger's concern, not this primitive's.
+mechanics, the self-custody onboarding, and where campaign data lives
+across the stores are the ledger's concern, not this primitive's
+([ledger.md](../implementation/ledger.md)).
 
 A general **`:TRANSFERS` edge** records any wallet sending another CGT,
 for public auditability of money flows. It is `(0, 0)` (no ranking
