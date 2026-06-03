@@ -793,12 +793,18 @@ the graph — an influencer with massive reach, a bridging user that
 connects otherwise-disconnected communities, a niche collective in
 a dense neighborhood — receives a share proportional to that
 weight. See the fair-economics principle in
-[CLAUDE.md](../../CLAUDE.md). The graph decides — actor type does not.
+[CLAUDE.md](../../CLAUDE.md) and the
+[economics primitive](../primitive/economics.md). The graph decides —
+actor type does not.
 
 This applies symmetrically: commercial collectives that buy ads do
 not receive preferential placement, and non-commercial collectives
 (households, hobby groups, co-ops) are not penalized for not buying
-ads.
+ads. A Collective takes its economic role graph-mechanically, not by
+type: it acts as an advertiser by creating a
+[Campaign](../primitive/economics.md#2-the-campaign-node), can be the
+anchor a campaign targets, and earns as a contributor only by sitting
+on an anchor → target path — the same attribution every actor gets.
 
 ---
 
