@@ -24,9 +24,8 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Sort fallback | 1 | **Q16** | Derivation of `S(t)`, the intrinsic per-node scalar that breaks ties at the bottom of the sort cascade. Q2 settled the rest of the math but left S's inputs open. The Q20 economics pass excluded token signals from `S` and surfaced recency as the leading tie-break, leaving the full derivation as feed-ranking work. |
-| 2. Federation phase | 2 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
-| 3. Governance v1.x | 3 | **Q19** | Bot-resistant non-arbitrary quorum for Network-scope governance. PR-05 shipped dual-quorum (fractional bar + absolute floor) as the v1 compromise; the absolute floor itself is a static parameter and the fractional bar's denominator is still bot-inflatable. The Q20 pass declined stake-gating and surfaced a complementary mod-gate hardening direction; a self-calibrating community-denominator mechanism remains unsolved. |
+| 1. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 2. Governance v1.x | 2 | **Q19** | Bot-resistant non-arbitrary quorum for Network-scope governance. PR-05 shipped dual-quorum (fractional bar + absolute floor) as the v1 compromise; the absolute floor itself is a static parameter and the fractional bar's denominator is still bot-inflatable. The Q20 pass declined stake-gating and surfaced a complementary mod-gate hardening direction; a self-calibrating community-denominator mechanism remains unsolved. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -37,7 +36,7 @@ questions are closed.
 - Q7 — see [data-model.md §"author_id + author_type"](implementation/data-model.md#author_id--author_type--discriminator-not-foreign-key).
 - Q8 — see [chats.md §10](instances/chats.md#10-moderation) and [governance.md §8](primitive/governance.md#8-instances).
 - Q3 — see [graph-model.md §3](primitive/graph-model.md#3-edge-categories) "What creates an actor edge — stances-not-events".
-- Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md#6-dimension-semantics) (dim1/dim2 unification, filtering vs. graph math). S's intrinsic derivation deferred — tracked as Q16.
+- Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md#6-dimension-semantics) (dim1/dim2 unification, filtering vs. graph math). The deepest tie-break resolved separately — see Q16.
 - Q11 — see [feed-ranking.md §3.6–§3.7](primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge) (`(0, 0)` severance edge, cascading severance, redemption) and [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm) (zero-jail banishment of `h(t) = 0`). Self-discovery and return-pathway UX surfaces are tracked as forward sub-questions Q12 and Q13.
 - Q12 — see [feed-ranking.md §3.8.1](primitive/feed-ranking.md#381-severance-discovery--the-inbound-side) (severance discovery via inbound self-query, trust-weighted reading) and [feed-ranking.md §3.8.2](primitive/feed-ranking.md#382-bot-cluster-identification--auto-detection-from-path-patterns) (auto-detection of bot-bridge nodes via delta-funnel path patterns, with path-length-aware action guidance). Cause identification is the auto-detect's job, complemented by the community posts in §3.8.3.
 - Q13 — see [feed-ranking.md §3.8.4](primitive/feed-ranking.md#384-severance-redemption--the-outbound-side) (severer-side redemption surface, delta-funnel check on the redeeming node's outbound) and [feed-ranking.md §3.8.5](primitive/feed-ranking.md#385-self-redemption-posts) (self-redemption posts via the same `bot-defense` hashtag mechanism, surfaced in the severer's "review severed accounts" view).
@@ -50,80 +49,9 @@ questions are closed.
 - Q9 — see [moderation.md](instances/moderation.md) and [network.md](primitive/network.md). Authorization for redaction runs through community-driven Network governance: any User authors a Proposal classifying content as `illegal`; threshold-cross requires at least one moderator's positive vote (the gate), ≥2/3 of cast votes in favor, and a low community quorum; threshold-cross triggers the [layers.md §5](primitive/layers.md#5-deletion-policy) redaction cascade. External pressure (court orders, etc.) doesn't bypass the mechanism — it prompts a moderator to start the same Proposal, which the community completes. Pathological corner cases (all moderators compromised) fall under the federation/forking exit per Q15.
 - Q17 — see [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §3](primitive/graph-model.md#3-edge-categories) (stances-not-events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
 - Q18 — see [feed-ranking.md §3](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (simple-paths invariant — every path is vertex-simple, enforced via a per-path visited set; bidirectional topologies like mutual user edges, junction approval pairs, and `:BEARER` pairs would otherwise admit cyclic paths where the same intermediate's mediating role multiplies into the product without conveying new information) and [feed-ranking.md §4.1](primitive/feed-ranking.md#41-path-contribution-and-distance-decay) (single-transit-cap rejected — for 100 paths `U → Aᵢ → B → t` the sum factors as `d(3) · s(B → t) · Σᵢ s(U → Aᵢ) · s(Aᵢ → B)`, a clean product of "network-aggregate endorsement of `B`" times "`B`'s stance on `t`," which is trust propagation working correctly; bot-bridge amplification is already handled by severance + delta-funnel auto-detection in §3.6–§3.8, and `d(R)` already calibrates direct-vs-indirect, making 100 R=3 paths beating one R=2 path the intentional default). One-line entry added to [invariants.md "Ranking"](primitive/invariants.md#ranking) for discoverability.
-- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups stay open inside their own blocks: the token angle of Q16 (token signals excluded from `S`, recency leading) and the mod-gate hardening direction under Q19.
+- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups: Q16's token angle (token signals excluded from `S`) carried into its recency resolution; the mod-gate hardening direction stays open under Q19.
 - Q21 — see [collectives.md §8](instances/collectives.md#8-governance--the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [graph-data-model.md](implementation/graph-data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
-
----
-
-## Q16 — Derivation of `S(t)`, the intrinsic node scalar
-
-**Where it shows up:** [feed-ranking.md §2](primitive/feed-ranking.md#2-parameters) (S in the variable table) and [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm) (S as the final fallback after the h-cascade tie-breakers)
-**Status:** open (forward sub-question of Q2)
-
-### Context
-
-The feed-ranking algorithm uses `S(t)` as a per-node intrinsic
-scalar: the deepest fallback in the sort cascade. When `h`,
-`h+i`, `h+i+j`, and `h+i+j+k` all tie, `S` decides the order.
-The Q2 resolution settled the rest of the math but explicitly
-left `S`'s derivation open.
-
-### The question
-
-What inputs feed `S(t)`?
-
-The "intrinsic" framing is loose — nothing in CoGra is
-universally intrinsic; everything is derivable from graph state
-relative to a viewing user. Candidate inputs include the node's own
-authorship-edge age, the node's neighborhood density, the node
-type itself, or composite measures over the local subgraph. The
-choice affects how ties resolve in sparse graphs, on cold-start
-viewing users, and for users whose default values produce many exact
-ties (e.g. integer `+1/0/-1` interaction styles).
-
-### Constraints (from established principles)
-
-- **No AI ranking.** `S` must be derivable from graph state, not
-  from a learned model.
-- **Append-only.** `S` is a derived value; it can be recomputed
-  from the source data. It does not layer.
-- **Scope is open.** `S` need not be per-viewer.
-  [feed-ranking.md §2](primitive/feed-ranking.md#2-parameters)
-  already frames it as an intrinsic per-node scalar, so a
-  globally-intrinsic metric (e.g. recency) is in scope alongside any
-  per-viewer derivation.
-- **Rare in practice.** The cascade only triggers on strict
-  equality, so `S` is the deepest fallback. Whatever derivation
-  is chosen does not need to be cheap to compute on every node;
-  it is computed only for the small set of candidates that
-  reach this cascade depth.
-
-### Options considered
-
-The Q20 economics pass settled the token angle and surfaced a leading
-candidate:
-
-- **Token signals excluded.** Neither token balance (plutocracy in
-  ranking) nor token activity (a gameable economics→ranking feedback
-  loop, already reflected in `h` via the underlying edges) feeds `S`.
-  `S` is the lone ranking channel outside the non-traversable
-  `:TRANSFERS` tensor, so keeping it token-independent closes that
-  side channel.
-- **Recency — leading contender.** "Freshest content wins ties":
-  obvious, cheap, and not inbound-edge-gameable. A global node metric,
-  consistent with the corrected scope above.
-- **Author-node in-degree — rejected.** Violates *never let inbound
-  edges affect a feed*
-  ([graph-model.md §7](primitive/graph-model.md)).
-- **Shortest-`R` / distinct-path-count — under-discriminate.** Two
-  friends posting at the same distance tie on both, so neither breaks
-  the tie they are meant to.
-
-The full derivation stays a feed-ranking session.
-
-### Related
-
-Q2 (resolved — sets up the cascade that `S` terminates).
+- Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#7-time-and-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
 
 ---
 

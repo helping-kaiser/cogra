@@ -42,7 +42,6 @@ target nodes as seen from `U`.
 | Symbol | Name | Meaning |
 |--------|------|---------|
 | `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost parameter** capped at the system level (see §3.1); within whatever cap the system runs at, `d(R)` does the attenuation. |
-| `S` | Scalar value of a node | An intrinsic scalar assigned to each node. Used in the **sort** phase to pre-order nodes within an `R` group. (S's exact derivation is open — tracked as [Q16](../open-questions.md).) |
 
 ---
 
@@ -1316,14 +1315,14 @@ for reproducibility.
 ## 5. Algorithm
 
 The ranking is a single sort by **personal opinion `h`** descending,
-with cumulative tie-breakers and `S` as the final fallback.
+with cumulative tie-breakers and **recency** as the final fallback.
 
 ```
 sort by:   h(t)
            if equal:  h(t) + i(t)
            if equal:  h(t) + i(t) + j(t)
            if equal:  h(t) + i(t) + j(t) + k(t)
-           if equal:  S(t)
+           if equal:  recency (newest first)
 ```
 
 `d(R)` decay (§4.1) is already baked into the personal metrics
@@ -1361,8 +1360,11 @@ The cascade activates only on **strict equality** at each level.
 With float math, exact ties on `h` are rare; the cascade kicks in
 mostly for sparse graphs (where many targets have `h ≈ 0` exactly)
 and for users who default to `+1/0/-1` integer values (where ties
-are common). `S` (the intrinsic node scalar) is the deepest
-fallback — see [Q16](../open-questions.md) for its derivation.
+are common). **Recency** is the deepest fallback: on a full tie the
+newest content wins, ranked by the target's authorship-edge age
+(§7). It is a global node metric — cheap, not inbound-edge-gameable,
+and token-independent, so the lone fallback channel opens no side
+channel onto the `:TRANSFERS` tensor.
 
 ### 5.1 Filtering vs ranking
 
