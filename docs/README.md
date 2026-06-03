@@ -56,6 +56,8 @@ an `instances/` doc is a sign the mechanism belongs in
   disposition for redacted originals; per-row legal hold;
   statutory hard-delete on expiry; legal-admin access path.
 - [feed-ranking](primitive/feed-ranking.md) — ranking algorithm.
+- [notation](primitive/notation.md) — glossary of the
+  cross-cutting symbols used in the math docs.
 - [authorship](primitive/authorship.md) — how authorship is derived
   from the earliest incoming edge.
 - [economics](primitive/economics.md) — pull-marketing campaigns:
