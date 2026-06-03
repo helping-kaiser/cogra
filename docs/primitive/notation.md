@@ -29,7 +29,6 @@ Two things are deliberately left out, defined where they appear:
 | `C` | **Content carrier** — the source of a `:REFERENCES` reactor edge `C → t`. | [feed-ranking §3](feed-ranking.md#3-per-edge-composition-along-a-path) |
 | `π` | A single **path** from `U` to `t`. | [feed-ranking §3](feed-ranking.md#3-per-edge-composition-along-a-path) |
 | `R` | **Path length** — number of edges from `U` to `t` (an operational cost knob, not a math bound). | [feed-ranking §2](feed-ranking.md#2-parameters) |
-| `S` | **Scalar node value** — an intrinsic per-node scalar used to pre-order nodes within an `R` group at sort time. | [feed-ranking §2](feed-ranking.md#2-parameters) |
 | `Δt` | **Elapsed time** since a reactor edge's top layer was added. | [feed-ranking §7](feed-ranking.md#7-time-and-recency) |
 
 ## Edge dimensions
