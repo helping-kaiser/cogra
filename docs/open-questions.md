@@ -24,10 +24,9 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Economics workstream | 1 | **Q20** | Economics primitive — ad-revenue distribution mechanism, the ledger database home, and the "pull marketing" vocabulary anchor. The dedicated post-audit workstream. Settling it may also supply inputs to Q16 (S's derivation) and reopen the stake-gating option rejected for Q19. |
-| 2. Sort fallback | 2 | **Q16** | Derivation of `S(t)`, the intrinsic per-node scalar that breaks ties at the bottom of the sort cascade. Q2 settled the rest of the math but left S's inputs open. The user has flagged S's inputs as part of economics, so this phase is naturally informed by Q20. |
-| 3. Federation phase | 3 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
-| 4. Governance v1.x | 4 | **Q19** | Bot-resistant non-arbitrary quorum for Network-scope governance. PR-05 shipped dual-quorum (fractional bar + absolute floor) as the v1 compromise; the absolute floor itself is a static parameter and the fractional bar's denominator is still bot-inflatable. A self-calibrating mechanism that does not depend on identity verification or economic gating is unsolved. Defer until the network's bot-density evidence justifies replacing the parameter pair. |
+| 1. Sort fallback | 1 | **Q16** | Derivation of `S(t)`, the intrinsic per-node scalar that breaks ties at the bottom of the sort cascade. Q2 settled the rest of the math but left S's inputs open. The Q20 economics pass excluded token signals from `S` and surfaced recency as the leading tie-break, leaving the full derivation as feed-ranking work. |
+| 2. Federation phase | 2 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 3. Governance v1.x | 3 | **Q19** | Bot-resistant non-arbitrary quorum for Network-scope governance. PR-05 shipped dual-quorum (fractional bar + absolute floor) as the v1 compromise; the absolute floor itself is a static parameter and the fractional bar's denominator is still bot-inflatable. The Q20 pass declined stake-gating and surfaced a complementary mod-gate hardening direction; a self-calibrating community-denominator mechanism remains unsolved. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -51,6 +50,7 @@ questions are closed.
 - Q9 — see [moderation.md](instances/moderation.md) and [network.md](primitive/network.md). Authorization for redaction runs through community-driven Network governance: any User authors a Proposal classifying content as `illegal`; threshold-cross requires at least one moderator's positive vote (the gate), ≥2/3 of cast votes in favor, and a low community quorum; threshold-cross triggers the [layers.md §5](primitive/layers.md#5-deletion-policy) redaction cascade. External pressure (court orders, etc.) doesn't bypass the mechanism — it prompts a moderator to start the same Proposal, which the community completes. Pathological corner cases (all moderators compromised) fall under the federation/forking exit per Q15.
 - Q17 — see [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §3](primitive/graph-model.md#3-edge-categories) (stances-not-events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
 - Q18 — see [feed-ranking.md §3](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (simple-paths invariant — every path is vertex-simple, enforced via a per-path visited set; bidirectional topologies like mutual user edges, junction approval pairs, and `:BEARER` pairs would otherwise admit cyclic paths where the same intermediate's mediating role multiplies into the product without conveying new information) and [feed-ranking.md §4.1](primitive/feed-ranking.md#41-path-contribution-and-distance-decay) (single-transit-cap rejected — for 100 paths `U → Aᵢ → B → t` the sum factors as `d(3) · s(B → t) · Σᵢ s(U → Aᵢ) · s(Aᵢ → B)`, a clean product of "network-aggregate endorsement of `B`" times "`B`'s stance on `t`," which is trust propagation working correctly; bot-bridge amplification is already handled by severance + delta-funnel auto-detection in §3.6–§3.8, and `d(R)` already calibrates direct-vs-indirect, making 100 R=3 paths beating one R=2 path the intentional default). One-line entry added to [invariants.md "Ranking"](primitive/invariants.md#ranking) for discoverability.
+- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups stay open inside their own blocks: the token angle of Q16 (token signals excluded from `S`, recency leading) and the mod-gate hardening direction under Q19.
 - Q21 — see [collectives.md §8](instances/collectives.md#8-governance--the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [graph-data-model.md](implementation/graph-data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
 
 ---
@@ -87,7 +87,11 @@ ties (e.g. integer `+1/0/-1` interaction styles).
   from a learned model.
 - **Append-only.** `S` is a derived value; it can be recomputed
   from the source data. It does not layer.
-- **Per-viewer.** `S` is per-viewer, not globally intrinsic.
+- **Scope is open.** `S` need not be per-viewer.
+  [feed-ranking.md §2](primitive/feed-ranking.md#2-parameters)
+  already frames it as an intrinsic per-node scalar, so a
+  globally-intrinsic metric (e.g. recency) is in scope alongside any
+  per-viewer derivation.
 - **Rare in practice.** The cascade only triggers on strict
   equality, so `S` is the deepest fallback. Whatever derivation
   is chosen does not need to be cheap to compute on every node;
@@ -96,7 +100,26 @@ ties (e.g. integer `+1/0/-1` interaction styles).
 
 ### Options considered
 
-None worked out yet.
+The Q20 economics pass settled the token angle and surfaced a leading
+candidate:
+
+- **Token signals excluded.** Neither token balance (plutocracy in
+  ranking) nor token activity (a gameable economics→ranking feedback
+  loop, already reflected in `h` via the underlying edges) feeds `S`.
+  `S` is the lone ranking channel outside the non-traversable
+  `:TRANSFERS` tensor, so keeping it token-independent closes that
+  side channel.
+- **Recency — leading contender.** "Freshest content wins ties":
+  obvious, cheap, and not inbound-edge-gameable. A global node metric,
+  consistent with the corrected scope above.
+- **Author-node in-degree — rejected.** Violates *never let inbound
+  edges affect a feed*
+  ([graph-model.md §7](primitive/graph-model.md)).
+- **Shortest-`R` / distinct-path-count — under-discriminate.** Two
+  friends posting at the same distance tie on both, so neither breaks
+  the tie they are meant to.
+
+The full derivation stays a feed-ranking session.
 
 ### Related
 
@@ -302,8 +325,13 @@ The two-bar v1 leaves two known holes:
   introduces a recursive bootstrap question and a "voting
   class" of trusted-enough accounts that newcomers must
   earn into.
-- **Stake / token gating.** Defer to the economics layer;
-  out of scope for the governance primitive.
+- **Stake / token gating.** Declined. The economics workstream
+  ([economics](primitive/economics.md), [token](primitive/token.md))
+  settled that stake-weighted or stake-gated governance is
+  plutocracy — the graph-is-truth violation Q16 rejects for ranking —
+  and proportional token carry-forward would hand founders / alpha
+  holders network control, contradicting anyone-can-fork. The token
+  contributes nothing here; it drops out of the candidate set.
 - **Vote burn / quadratic cost.** Per-vote energy or
   cooldown cost that grows with vote frequency. Introduces
   a friction mechanism that punishes engaged real users
@@ -313,6 +341,27 @@ The two-bar v1 leaves two known holes:
   calibrates to engagement but is structurally similar to
   the vote-active variant and shares its gaming.
 
+### Direction surfaced (economics workstream)
+
+The economics pass (Q20) reframed the hole on the mod side. The
+community dual-quorum is bot-satisfiable — the floor `K` is met by
+`K` sybil yes-votes — so for destructive actions the whole mod-side
+defense reduces to the flat *one*-moderator
+[mod-gate](primitive/governance.md#7-the-mod-gate): one compromised
+mod key plus a bot flood passes anything. Direction — make the
+mod-gate a **per-action count threshold over active mods**,
+`mod_yes ≥ max(k_floor, ⌈f_mod · |active_mods|⌉)`: flat `1` for
+low-stakes actions, a real fraction for destructive / irreversible
+ones (mint or remove a mod, `illegal`-redaction, critical `:Network`
+amendments). Bot cost rises from one mod key to
+`⌈f_mod · |active_mods|⌉` keys; and since minting a mod is itself
+destructive, the mod set grows only under that fraction,
+Sybil-resistant by construction. The `active`-mods denominator keeps
+the bar from deadlocking on quiet mods. This hardens the mod side;
+the community-denominator question above stays open. Parameters
+(`f_mod`, `k_floor`, the destructive-action set) deferred to a
+dedicated governance session.
+
 ### Related
 
 [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only)
@@ -321,87 +370,3 @@ The two-bar v1 leaves two known holes:
 (severance as the existing graph-level bot defense; not
 directly applicable to governance tally but informs the
 "graph as sybil filter" candidates).
-
----
-
-## Q20 — Economics primitive: distribution, ledger home, vocabulary anchor
-
-**Where it shows up:**
-[README.md "Fair economics"](../README.md) and the equivalent
-section of [CONTRIBUTING.md](../CONTRIBUTING.md) (ad-revenue
-claim with no primitive landing),
-[CLAUDE.md](../CLAUDE.md) (dual-database never-rule with no slot
-for transactions or payouts).
-**Status:** open (post-audit dedicated workstream)
-
-### Context
-
-The meta documents promise a graph-driven economics: ad revenue
-distributes across the network according to the graph and its
-weights; bot clusters earn nothing. No primitive or
-implementation doc yet says how. This block bundles the
-sub-questions that the upcoming economics workstream will need
-to answer together; tackling them in isolation risks a design
-that satisfies one and breaks another.
-
-### The questions
-
-#### Q20.1 — Ad-revenue distribution mechanism
-
-Who computes the distribution and when (per-impression,
-per-tally, per-epoch); how revenue ingress is modeled (advertiser
-deposit, escrow, immediate pass-through); which graph quantity
-maps to payout (`h(t)` aggregated, path-products, authorship,
-some new derived quantity). The audit identifies this as the
-single largest pre-economics gap.
-
-#### Q20.2 — Economics ledger database home
-
-The dual-database rule in CLAUDE.md splits topology
-(Memgraph) from display content (Postgres). Transactions, ledger
-entries, and payout records fit neither cleanly. Options:
-co-locate in Postgres as a third schema, introduce a third store
-purpose-built for ledger semantics, or absorb into the graph as
-edges with monetary semantics. Each option has cascading
-consequences for the dual-database invariant.
-
-#### Q20.3 — "Pull marketing" vocabulary anchor
-
-"Pull marketing, not push marketing" appears only in meta docs
-([README.md](../README.md), [CONTRIBUTING.md](../CONTRIBUTING.md))
-with no anchor in a primitive or implementation doc. Either the
-phrase is canonical for the economics primitive and needs a
-landing pad once the mechanism is designed, or it is meta-only
-framing that should be tightened. Resolved together with Q20.1
-once the distribution shape is decided.
-
-### Constraints (from established principles)
-
-- **No AI in economics.** Per [CLAUDE.md](../CLAUDE.md), the
-  graph and its weights drive distribution; learned models are
-  out.
-- **No central authority.** Anyone can fork and self-host; the
-  economics mechanism must work without a privileged operator.
-- **Append-only.** Per [layers.md](primitive/layers.md), no
-  economics flow rewrites graph history. New layers, new edges,
-  and new node types may be added; old ones stay.
-- **Dual-database split.** Per [CLAUDE.md](../CLAUDE.md),
-  topology lives in Memgraph and display content in Postgres.
-  Q20.2 is the explicit question of whether the ledger extends
-  this split or breaks it.
-
-### Options considered
-
-None worked out yet — this is the workstream that will produce
-them.
-
-### Related
-
-[Q16](#q16--derivation-of-st-the-intrinsic-node-scalar) (`S(t)`
-inputs are flagged by the user as "part of economics" — Q20 may
-supply them),
-[Q19](#q19--bot-resistant-non-arbitrary-quorum-for-network-scope-governance)
-(the rejected "stake / token gating" option was deferred to the
-economics layer; once Q20 settles, that option can be
-re-evaluated).
-

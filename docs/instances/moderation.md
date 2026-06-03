@@ -283,8 +283,8 @@ Disclosure is scoped to the disclosed epoch only; leaking Kᵢ
 exposes E_i's messages and no others.
 
 This matters in practice for cases like contracts in private chats
-(forthcoming with the economics) where one party may need to
-surface the other's misbehavior.
+(forthcoming with the deferred contracts / marketplace workstream)
+where one party may need to surface the other's misbehavior.
 
 #### Why this is a norm, not a protocol gate
 

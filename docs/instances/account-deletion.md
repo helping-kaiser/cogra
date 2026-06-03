@@ -7,8 +7,8 @@ information (PII) from public surfaces while preserving the graph
 structure that depends on the user's existence. Original PII is
 moved to a **retention archive** so the platform can satisfy
 statutory retention obligations (e.g., the German 10-year retention
-on tax and economic records, forthcoming with the economics
-primitive) before the data is permanently destroyed.
+on tax and economic records) before the data is permanently
+destroyed.
 
 The redaction mechanism is
 [layers.md §5](../primitive/layers.md#5-deletion-policy); the
