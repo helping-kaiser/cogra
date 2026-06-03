@@ -1652,7 +1652,7 @@ Default decay function:
 f(Δt) = 0.5^(Δt / 30 days)         (default)
 ```
 
-So `f(0d) = 1.0`, `f(30d) = 0.5`, `f(90d) = 0.125`, `f(1y) ≈ 7×10⁻⁴`.
+So `f(0d) = 1.0`, `f(30d) = 0.5`, `f(90d) = 0.125`, `f(1y) ≈ 2×10⁻⁴`.
 
 Worked cold-start example, with and without decay:
 
