@@ -141,6 +141,23 @@ at tally time is `min(P × |active|, K)`.
   as the graph matures. Frontend overrides remain available per
   §7.3; this property sets the network default. Gating bucket:
   baseline.
+- **`distance_decay_base`** — base of the path distance-decay
+  `d(R) = base^(R−1)` used by the feed-ranking algorithm (see
+  [feed-ranking.md §4.1](feed-ranking.md#41-path-contribution-and-distance-decay)).
+  The default seeded at genesis is `0.1` (each extra hop attenuates
+  a path's contribution by 10×). Frontend overrides remain available
+  per §4.1; this property sets the network default — the community's
+  hint at a sensible direct-vs-indirect balance for new participants.
+  Gating bucket: baseline.
+- **`dust_floor`** — the dust floor `ε` bounding the branch-and-bound
+  path enumeration (see
+  [feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning)).
+  The default seeded at genesis is `0`: the early graph is sparse,
+  `b^R` is cheap, and full fidelity is kept. The property is amendable
+  so the network can raise `ε` as the graph densifies and enumeration
+  cost grows — the finest the compute budget allows. Frontend overrides
+  remain available per §4.4; this property sets the network default.
+  Gating bucket: baseline.
 
 ### Amendment-rule pairs (governance of governance)
 
@@ -151,7 +168,8 @@ dual-quorum pair:
 - **Baseline:** **`property_change_quorum_fraction`**,
   **`property_change_quorum_count`** — for low-stakes parameters
   (`moderation_sensitive_*`, `active_threshold_days`,
-  `time_decay_half_life_days`, and the baseline pair itself).
+  `time_decay_half_life_days`, `distance_decay_base`, `dust_floor`,
+  and the baseline pair itself).
 - **Critical:** **`critical_property_change_quorum_fraction`**,
   **`critical_property_change_quorum_count`** — for parameters
   whose abuse has destructive or platform-wide reach
