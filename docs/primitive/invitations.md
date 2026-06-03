@@ -19,11 +19,32 @@ Inviter   -[sentiment: +0.5, interest: +0.5]-> New Actor   (layer 1: "I invited 
 New Actor -[sentiment: +0.5, interest: +0.5]-> Inviter    (layer 1: "they invited me")
 ```
 
-Both are normal actor edges (see [edges.md](edges.md)). Neither
-is special-cased in the graph model.
+Both are normal actor edges (see [edges.md](edges.md)). Neither is
+special-cased in the ranking math; the inviter's edge does carry the
+`:INVITE` label (below), but that is a query-layer denormalization that
+leaves its tensor and traversal unchanged.
 
 The `(+0.5, +0.5)` shown here is the **default** — see "Default
 values and customization" below.
+
+## The `:INVITE` label
+
+The inviter's edge — `Inviter → New Actor` — carries the `:INVITE`
+sub-label ([edges.md §3](edges.md#3-edge-labels-at-the-graph-layer)). It
+is the **first incoming actor edge** into any non-genesis node, since the
+graph grows only by invitation, so the label denormalizes an
+already-derivable fact: "who invited X?" becomes a typed one-hop lookup
+instead of an in-edge scan with a timestamp-minimum. The edge stays a
+normal actor edge — same `(sentiment, interest)` tensor, same traversal;
+the label adds no ranking treatment.
+
+Its one consumer beyond convenience is the **inviter reward**
+([economics.md §5.2](economics.md#52-the-inviter-reward)): at settlement,
+an earner's `:INVITE` in-edge resolves the direct inviter, who receives
+`0.01·P` sized by that earner's payout share. Single-hop and permanent —
+the edge is never deleted, so the inviter earns over the invitee's
+lifetime. Genesis users have no `:INVITE` in-edge; their share falls back
+to burn.
 
 ## Why two edges
 
