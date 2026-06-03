@@ -43,9 +43,12 @@ these — these are the rules most often violated:
 
 ## Architecture (one-screen reference)
 
-Dual-database: **Memgraph** (graph topology, edges, traversal) +
-**PostgreSQL** (display content + operational metadata). See
-[docs/implementation/architecture.md](docs/implementation/architecture.md).
+Dual-database core: **Memgraph** (graph topology, edges, traversal) +
+**PostgreSQL** (display content + operational metadata). The economics
+primitive adds a third store — the **chain** (money: balances,
+transfers, payouts); the graph carries pointers, never amounts. See
+[docs/implementation/architecture.md](docs/implementation/architecture.md)
+and, for the chain, [docs/implementation/ledger.md](docs/implementation/ledger.md).
 
 Crates:
 
@@ -93,7 +96,10 @@ Cross-cutting design questions live in
   structural) have the same shape: 2 dimensions + system
   dimensions.
 - **Never store graph topology in Postgres or content in
-  Memgraph.** Each database does what it's built for.
+  Memgraph.** Each database does what it's built for. Money lives on
+  the chain — the graph carries relationships and pointers to it,
+  never amounts
+  ([docs/implementation/ledger.md](docs/implementation/ledger.md)).
 - **Never make design decisions autonomously.** Always ask.
   Suggest options, explain trade-offs, but let the human decide.
   Design reasoning often exists that isn't visible in the code.
