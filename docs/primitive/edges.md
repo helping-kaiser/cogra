@@ -79,6 +79,15 @@ rule — `:TAGGING` is the only edge ranking ever needs to touch on
 the hashtag side, and it stays pure topology — lives in
 [hashtag.md §4](../instances/hashtag.md#4-edges).
 
+The inviter's `Inviter → New Actor` edge of the two-edge invitation
+pattern ([invitations.md](invitations.md#the-two-edge-invitation-pattern))
+carries the `:INVITE` sub-label (§3) — the first incoming actor edge into
+any non-genesis node. It keeps the normal `(sentiment, interest)` tensor
+and is fully traversable; the label only denormalizes settlement-time
+inviter resolution into a typed one-hop lookup and powers the inviter
+reward. Defined in [invitations.md](invitations.md#the-invite-label)
+([economics.md §5.2](economics.md#52-the-inviter-reward) for the reward).
+
 ---
 
 ## 2. Structural edges
@@ -401,8 +410,16 @@ chain through it, never stored on the graph.
 |-----------|---------|
 | Wallet → Wallet | Sender wallet transferred CGT to receiver wallet. Label `:TRANSFERS`. |
 
-The `Wallet` node these edges point at, and the `:INVITE` onboarding
-edge, are defined with the onboarding ledger.
+### Wallet binding
+
+The `Wallet` node these edges point at ([nodes.md](nodes.md)) is bound to
+its account by a single structural edge, created at signup and re-linked
+by re-layering the wallet's address
+([ledger.md](../implementation/ledger.md#the-wallet-node-and-the-pays_to-binding)).
+
+| Edge type | Meaning |
+|-----------|---------|
+| User \| Collective → Wallet | The account's designated payout wallet. Label `:PAYS_TO`. `(0, 0)`, non-traversable, one per account. |
 
 ### System-dimension slot
 
@@ -445,11 +462,12 @@ and the schema explodes every time a node type is added.
 
 Sub-labels exist for edges whose query patterns differ enough
 that the endpoint-label-filter approach adds cost or noise. Most
-are structural; `:AUTHOR` is the one actor-edge sub-label.
+are structural; `:AUTHOR` and `:INVITE` are the actor-edge sub-labels.
 
 | Label | Applies to | Rationale |
 |---|---|---|
 | `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal) | The author's authoring actor edge — the first outgoing actor edge from author to authored content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
+| `:INVITE` | User \| Collective → invited User | The inviter's edge of the two-edge invitation pattern ([invitations.md](invitations.md#the-two-edge-invitation-pattern)) — the first incoming actor edge into any non-genesis node. Frequently queried as "who invited X?" at settlement to route the inviter reward ([economics.md §5.2](economics.md#52-the-inviter-reward)) — a single-label lookup instead of an in-edge scan with timestamp-minimum. Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers. |
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
 | `:BEARER` | Junction → User \| Collective (e.g. `ChatMember → User`) | Identity binding for a junction. "What junctions does this actor bear?" and "who is this junction's bearer?" run as single one-hop traversals along `:BEARER`. |
@@ -462,6 +480,7 @@ are structural; `:AUTHOR` is the one actor-edge sub-label.
 | `:ENTITLES` | Settlement → Wallet | Marks a wallet entitled to claim. Paired with `:CLAIMS`, makes "entitled but unclaimed" a one-hop query. `(0, 0)`, no amount. |
 | `:CLAIMS` | Wallet → Settlement | Marks a settlement claimed by a wallet. `(0, 0)`, no amount. |
 | `:TRANSFERS` | Wallet → Wallet | A direct CGT transfer; the on-chain tx reference rides the system-dimension slot. `(0, 0)`, non-traversable. |
+| `:PAYS_TO` | User \| Collective → Wallet | Binds an account to its payout wallet. Query: "what is this account's wallet?" — a one-hop lookup. `(0, 0)`, non-traversable, one per account. |
 
 All sub-category labels **replace** their base label (`:ACTOR`
 for `:AUTHOR`, `:STRUCTURAL` for the rest), not add to it — a
