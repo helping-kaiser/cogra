@@ -210,10 +210,11 @@ The window is short enough that public surfaces clear quickly,
 long enough that an affected user typically notices.
 
 **Wallet keys stay with the user.** The wallet a user used
-inside the Network is held by an off-platform seed phrase the
-user (and only the user) controls; no part of the platform
-holds those keys. Account deletion removes the in-network
-identity but does not — and cannot — touch the wallet.
+inside the Network is backed by a self-custodied key the user
+(and only the user) holds — a passkey / device key backing a
+smart account ([ledger.md](../implementation/ledger.md#self-custody-from-signup));
+no part of the platform holds it. Account deletion removes the
+in-network identity but does not — and cannot — touch the wallet.
 Forthcoming economics events (compensation, payouts,
 settlements) can therefore still target the wallet without
 re-instantiating the in-network account. The "no restore path"

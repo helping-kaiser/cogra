@@ -6,7 +6,8 @@ into existence — the **mint curve**, the **initial allocation**, and the
 **protocol-owned liquidity** that releases new supply into the market.
 The campaign and payout mechanics that *spend* CGT live in
 [economics.md](economics.md); the on-chain claim/escrow and the specific
-chain are an implementation concern (the ledger). Design history:
+chain are an implementation concern
+([ledger.md](../implementation/ledger.md)). Design history:
 [open-questions.md Q20](../open-questions.md).
 
 CGT requires a cheap settlement layer with a **V3-style

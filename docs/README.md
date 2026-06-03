@@ -129,6 +129,9 @@ an `instances/` doc is a sign the mechanism belongs in
   tokens, sessions.
 - [graph-db-options](implementation/graph-db-options.md) — why
   Memgraph; alternatives considered.
+- [ledger](implementation/ledger.md) — on-chain mechanics:
+  self-custody onboarding, the claim distributor and escrow, the
+  `Wallet` node, and where campaign data lives across the stores.
 
 ### Cross-cutting
 
