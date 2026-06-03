@@ -366,6 +366,19 @@ rarely feed-rankable in any current UI. Flagged for
 completeness; deferred until junction ranking becomes a concrete
 case. The rules above already prevent the dangerous outcomes.
 
+#### Rule 6 — economics edges are not traversable for feed ranking
+
+The edges that record CoGra's economy — `:ANCHOR` and `:PROMOTES`
+(`Campaign → anchor` / `target`), `Campaign → Settlement`, the
+`:ENTITLES` / `:CLAIMS` settlement claim edges, and `:TRANSFERS`
+(wallet-to-wallet CGT) — are all `(0, 0)` and never appear in a
+feed-ranking path. They record economic relationships for public
+auditability; admitting any of them would let a campaign inject reach
+toward its target (buying ranking) or let token flows nudge feed order —
+the economics→ranking feedback the no-AI boundary forbids
+([economics.md](economics.md)). The `:INVITE` edge is the one exception:
+it is a normal social actor edge and traverses like any other.
+
 ### 3.6 Bot resistance via the `(0, 0)` severance edge
 
 The math gives users a community-driven defense against bot clusters
@@ -1235,6 +1248,40 @@ tracks are negative: a path the graph is pushing down on both axes
 should stay pushed down. A **product** collapser was rejected for
 this reason — it would flip `(−)(−) → +` and surface paths the math
 is trying to suppress.
+
+### 4.4 Dust floor — branch-and-bound path pruning
+
+The per-target sums of §4.2 range over *all* paths from `U` to `t`. In a
+dense graph the path count grows as `b^(R−1)` (§3.6), so an unbounded
+enumeration is `O(b^R)` — uncomputable for high-degree hubs even under
+the `R`-cap. The traversal is bounded by a **dust floor** `ε`: enumerate
+paths by branch-and-bound and prune a partial path as soon as its
+best-possible completed contribution falls below `ε`.
+
+```
+best_possible(prefix) = d(R_prefix) · ∏|dim| of the prefix's contributing edges
+prune the prefix when best_possible(prefix) < ε
+```
+
+Each further hop multiplies in a `|dim| ≤ 1` factor and `d(R)` decays
+geometrically, so a prefix already below `ε` cannot recover on any
+completion — the prune is **exact up to the floor**, not a heuristic.
+Paths below `ε` contribute only dust to the sums; dropping them shifts
+each metric by less than the floor.
+
+`ε` is the **finest the compute budget allows**: ≈0 when the graph is
+sparse and `b^R` is cheap anyway, rising only under dense-graph load.
+Coarsening loses little when dense — weak distant signal is redundant
+(content buzzing at `R=3` is carried inward at full weight by the `R=2`
+nodes reacting to it) — while sparse early graphs propagate slowly and
+need the fine floor. `ε` is frontend-tunable alongside `d(R)` and
+`f(Δt)`.
+
+The same branch-and-bound floor bounds the economics attribution
+traversal, which walks these identical paths to split a campaign's pool
+([economics.md §6.5](economics.md#65-computation--exact-streaming-oplayers-memory));
+there `ε` is set per campaign by author-aggregate payability and recorded
+for reproducibility.
 
 ---
 
