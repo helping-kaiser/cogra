@@ -183,6 +183,18 @@ Each pair is self-amending: a baseline-pair amendment passes
 under baseline rules, a critical-pair amendment under critical
 rules. Defaults bootstrap; they are not fixed.
 
+### Mod-gate
+
+- **`critical_mod_gate_fraction`** — fraction of *active*
+  moderators that must vote positive to open the critical-tier
+  mod-gate on a destructive action (mod role changes,
+  `illegal`-redaction, guidelines amendments, critical `:Network`
+  amendments). The bar is `⌈critical_mod_gate_fraction ·
+  |active_mods|⌉`; baseline-tier actions need only one positive
+  moderator vote. Full mechanism in
+  [governance.md §7](governance.md#7-the-mod-gate). Gating bucket:
+  critical (§11) — loosening it is itself a critical act.
+
 The singleton carries **no per-field moderation properties**.
 Like junction nodes and the Proposal node, it has no user-input
 fields to redact (see
@@ -226,7 +238,8 @@ The `:Network` node receives:
   targets one of the singleton's parameters
   (`mod_role_change_*`, `moderation_sensitive_*`,
   `moderation_illegal_*`, `guidelines_*`,
-  `active_threshold_days`, or either amendment-rule pair). The
+  `active_threshold_days`, `critical_mod_gate_fraction`, or
+  either amendment-rule pair). The
   amendment-rule pair that gates each property is named in §3.
   See
   [edges.md §2 "Subject targeting"](edges.md#subject-targeting).
@@ -314,8 +327,11 @@ mechanism
   user being promoted or demoted, with `proposed_value` set to
   the new role.
 - **Eligibility:** all active Network members.
-- **Threshold:** multi-sig — **≥1 existing moderator's positive
-  vote** plus the dual-quorum bar from §3:
+- **Threshold:** multi-sig — the **critical-tier mod-gate**
+  (`mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active_mods|⌉`,
+  a fraction of active moderators must vote positive;
+  [governance.md §7](governance.md#7-the-mod-gate)) plus the
+  dual-quorum bar from §3:
   `positive_count ≥ min(Network.mod_role_change_quorum_fraction
   × |active|, Network.mod_role_change_quorum_count)`. Tally is
   petition-style (positive votes only) per
@@ -323,10 +339,11 @@ mechanism
 
 The two gates implement a **separation of powers**
 ([governance.md §2.4](governance.md#24-threshold-policy),
-"Multi-gate decisions"). The mod-gate side — "≥1 mod positive
-vote; mod weight = member weight = 1" — is the primitive defined
-in [governance.md §7](governance.md#7-the-mod-gate) and reused
-here and in §11. Each gate counters a distinct failure mode
+"Multi-gate decisions"). The mod-gate side — a critical-tier
+positive-vote threshold over active moderators, with mod weight =
+member weight = 1 — is the primitive defined in
+[governance.md §7](governance.md#7-the-mod-gate) and reused here
+and in §11. Each gate counters a distinct failure mode
 (sitting-mod coup vs. coordinated community removal); both
 required, both modes blocked.
 
@@ -378,9 +395,11 @@ consequences shared across all three:
   edge. The actor edge keeps its `(sentiment, importance)`
   meaning; the tally reads `sign(sentiment)`.
 - **Mod weight = member weight = 1; mod is a gate, not a
-  weight.** The "≥1 mod positive vote" rule is the primitive
-  from [governance.md §7](governance.md#7-the-mod-gate), applied
-  uniformly to every Network-scope Proposal.
+  weight.** The mod-gate is the primitive from
+  [governance.md §7](governance.md#7-the-mod-gate), applied to
+  every Network-scope Proposal — at its baseline tier (≥1 mod
+  positive) for low-stakes actions and its critical tier (a
+  fraction of active moderators) for destructive ones.
 
 The `active_threshold_days` window composes with tally-time
 eligibility per
@@ -405,8 +424,8 @@ properties, separated by stakes:
 
 | Bucket   | Dual-quorum pair                                  | `P` default | `K` default | Mod gate | Governs |
 |----------|---------------------------------------------------|-------------|-------------|----------|---------|
-| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | required | `moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself |
-| Critical | `critical_property_change_quorum_fraction`, `critical_property_change_quorum_count` | `0.50` | `10000` | required | `mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, the critical pair itself |
+| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | baseline tier (≥1 mod positive) | `moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself |
+| Critical | `critical_property_change_quorum_fraction`, `critical_property_change_quorum_count` | `0.50` | `10000` | critical tier (⌈`critical_mod_gate_fraction` · \|active mods\|⌉) | `mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, `critical_mod_gate_fraction`, the critical pair itself |
 
 Pass condition for either pair is the dual-quorum form from
 [governance.md §3](governance.md#petition-style-tally-and-dual-quorum-network-scope-only):

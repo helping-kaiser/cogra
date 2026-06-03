@@ -179,10 +179,11 @@ neither alone can pass it — the structure is intentional: each
 gate counters a failure mode the others cannot. The canonical
 instance is Network moderator role changes
 ([network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal)):
-a moderator gate (≥1 existing moderator's positive vote) prevents
-community-only purges by bot floods or coordinated targeting; a
-community gate (quorum + supermajority of active members) prevents
-mod-only coups in which sitting moderators strip honest peers.
+a moderator gate (the critical-tier mod-gate, a fraction of active
+moderators — §7) prevents community-only purges by bot floods or
+coordinated targeting; a community gate (quorum + supermajority of
+active members) prevents mod-only coups in which sitting
+moderators strip honest peers.
 Either gate alone leaves a hole; both gates together close it.
 Future decisions adopt the multi-gate shape when the trust model
 demands more than one veto-bearing group.
@@ -430,10 +431,10 @@ positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
   `Network.active_threshold_days`.
 
 In addition, the mod-gate of §7 must be satisfied — every
-Network-scope Proposal also requires at least one
-moderator's positive vote. The mod-gate and the dual-quorum
-bar are independent checks evaluated on the same set of
-vote layers.
+Network-scope Proposal also requires moderator consent in the
+tally, at the gate's baseline or critical tier depending on the
+action's stakes. The mod-gate and the dual-quorum bar are
+independent checks evaluated on the same set of vote layers.
 
 **Why two bars.** A fractional bar alone becomes unreachable
 as membership scales; an absolute bar alone could let a tiny
@@ -457,21 +458,20 @@ explicit structural path — author a **counter-Proposal** (see
 actor edges are still recorded as personal sentiment; the
 tally simply does not aggregate them.
 
-**Known limitation.** Bot accounts can still inflate the
-fractional-bar denominator by existing as active members
-(any outgoing actor edge inside `active_threshold_days`).
-The absolute bar `quorum_count` is the floor that survives any
-denominator inflation, but `quorum_count` itself is a static
-parameter
-whose correct calibration over long horizons is unsettled.
-A fully bot-resistant, non-arbitrary quorum model remains an
-open question — see
-[open-questions.md](../open-questions.md). The dual-quorum
-mechanism is a v1 compromise: petition eliminates the
-passive-no attack; the absolute floor bounds damage from
-denominator inflation; meta-governance over `quorum_fraction`
-and `quorum_count` lets the network re-calibrate as conditions
-evolve.
+**Denominator inflation is bounded, not eliminated.** Bot
+accounts can still inflate the fractional-bar denominator by
+existing as active members (any outgoing actor edge inside
+`active_threshold_days`). This is a *liveness* pressure, not a
+takeover vector: a petition tally counts only positive votes, so
+an inflated denominator can make a Proposal *harder* to pass,
+never force a bad outcome through. The absolute bar `quorum_count`
+is the floor that survives any inflation — it caps the bar at a
+fixed real-vote count once `quorum_fraction × |active_members| ≥
+quorum_count` — and meta-governance over both bars lets the
+network re-calibrate as conditions evolve. The distinct,
+catastrophic vector — a single compromised moderator passing a
+destructive action over a community bot-flood — is closed
+separately by the critical-tier mod-gate ([§7](#7-the-mod-gate)).
 
 ### Co-signed acts: threshold > 1 in either shape
 
@@ -780,18 +780,41 @@ design discussion (§11).
 ## 7. The mod-gate
 
 A recurring component of Network-scope governance is the
-**mod-gate**: for any Proposal in scope, at least one positive
-vote from a User with `network_role = 'moderator'` must be
-present in the tally before the outcome can take effect. The
+**mod-gate**: before a Proposal's outcome can take effect, a
+threshold of positive votes from Users with
+`network_role = 'moderator'` must be present in the tally. The
 mod-gate is a procedural validator, not a weighting.
+
+The threshold has **two tiers**, keyed to the same
+baseline/critical stakes split that buckets every Network-scope
+action ([network.md §11](network.md#11-amending-network-parameters)):
+
+- **Baseline tier** — low-stakes actions (`sensitive`
+  classification and un-classification, baseline `:Network`
+  amendments): **at least one** positive moderator vote.
+- **Critical tier** — destructive or irreversible actions
+  (moderator role changes, `illegal`-redaction, guidelines
+  amendments, critical `:Network` amendments): positive
+  moderator votes `≥ ⌈Network.critical_mod_gate_fraction ·
+  |active_mods|⌉`, where `|active_mods|` is the moderators with
+  an outgoing actor edge inside `Network.active_threshold_days`.
+
+`critical_mod_gate_fraction ≤ 1`, so `⌈f · |active_mods|⌉` never
+exceeds the active-mod count: the gate is always satisfiable and
+needs no absolute floor. It self-strengthens as the moderator set
+grows — with one or two active mods the bar rounds to one, a real
+majority is required once three or more are active. Because
+`critical_mod_gate_fraction` itself sits in the critical bucket
+(§11), loosening it is a critical act subject to the critical
+tier — the recursion is closed.
 
 **Invariant: mod weight = member weight = 1; mod is a gate, not
 a weight.** A moderator's positive vote contributes once to (a)
 mod-gate satisfaction and once to (b) the member-tally
 arithmetic — two independent checks on the same vote layer.
-The mod casts `+1` once; that vote opens the gate *and*
-contributes its weight of `1` to the threshold policy of the
-instance (for Network-scope Proposals, the dual-quorum bar from
+The mod casts `+1` once; that vote counts toward the gate's tier
+threshold *and* contributes its weight of `1` to the threshold
+policy of the instance (for Network-scope Proposals, the dual-quorum bar from
 [§3 "Petition-style tally and dual quorum"](#petition-style-tally-and-dual-quorum-network-scope-only)).
 The mod-gate sits *alongside* the member-weighted tally, never
 on top of it.
@@ -826,13 +849,15 @@ moderator role changes, and `:Network` parameter amendments.
 Substantive arithmetic (quorums, supermajority thresholds, the
 exact pairs per instance) lives with each instance, not here.
 
-**Known limitation (bot resistance).** The mod-gate's floor is a
-flat *one* positive moderator vote. For destructive, irreversible
-actions that bar is thin — one compromised mod key alongside a
-community bot-flood passes anything. Hardening it to a per-action
-count threshold over *active* mods is tracked as a Q19 follow-up in
-[open-questions.md](../open-questions.md); parameters are deferred to
-a dedicated governance session.
+**Bot resistance.** The critical tier is the mod-side defense
+against takeover. A single compromised moderator key cannot pass a
+destructive action; an attacker needs
+`⌈critical_mod_gate_fraction · |active_mods|⌉` distinct mod keys
+voting in concert. And because minting a moderator is itself a
+critical action, the moderator set grows only under that same
+fraction — the denominator is Sybil-resistant by construction, not
+inflatable by spinning up accounts. The `active`-mods window keeps
+the bar from deadlocking on moderators who have gone dark.
 
 ### External demands enter as Proposals
 
@@ -903,8 +928,9 @@ community.
   `CollectiveMember → CollectiveMember / Proposal` for all
   internal votes.
 - **Network moderator role changes** — [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
-  Shape A. Multi-sig: ≥1 existing moderator's positive vote
-  plus a community-quorum threshold. Two dispatch exceptions —
+  Shape A. Multi-sig: the critical-tier mod-gate (§7) — a fraction
+  of active moderators — plus a community-quorum threshold. Two
+  dispatch exceptions —
   the **moderator floor** of 1 and the **undemotable bootstrap
   mod** — refuse the outcome write even on a passed tally.
 - **Content moderation classifications** — [moderation.md](../instances/moderation.md).
@@ -915,7 +941,8 @@ community.
   Shape A. Two amendment-rule pairs on the `:Network` singleton —
   a baseline pair for low-stakes parameters and a critical pair
   for parameters with destructive or platform-wide reach.
-  Mod-gate (§7) required for both.
+  Mod-gate (§7) on both — baseline tier for the baseline pair,
+  critical tier for the critical pair.
 
 Future cases get added here as they're designed.
 

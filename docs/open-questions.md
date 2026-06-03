@@ -25,7 +25,6 @@ within a phase, order is flexible.
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
 | 1. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
-| 2. Governance v1.x | 2 | **Q19** | Bot-resistant non-arbitrary quorum for Network-scope governance. PR-05 shipped dual-quorum (fractional bar + absolute floor) as the v1 compromise; the absolute floor itself is a static parameter and the fractional bar's denominator is still bot-inflatable. The Q20 pass declined stake-gating and surfaced a complementary mod-gate hardening direction; a self-calibrating community-denominator mechanism remains unsolved. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -49,8 +48,9 @@ questions are closed.
 - Q9 — see [moderation.md](instances/moderation.md) and [network.md](primitive/network.md). Authorization for redaction runs through community-driven Network governance: any User authors a Proposal classifying content as `illegal`; threshold-cross requires at least one moderator's positive vote (the gate), ≥2/3 of cast votes in favor, and a low community quorum; threshold-cross triggers the [layers.md §5](primitive/layers.md#5-deletion-policy) redaction cascade. External pressure (court orders, etc.) doesn't bypass the mechanism — it prompts a moderator to start the same Proposal, which the community completes. Pathological corner cases (all moderators compromised) fall under the federation/forking exit per Q15.
 - Q17 — see [feed-ranking.md §3.1](primitive/feed-ranking.md#31-which-edges-contribute-factors). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §3](primitive/graph-model.md#3-edge-categories) (stances-not-events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
 - Q18 — see [feed-ranking.md §3](primitive/feed-ranking.md#3-per-edge-composition-along-a-path) (simple-paths invariant — every path is vertex-simple, enforced via a per-path visited set; bidirectional topologies like mutual user edges, junction approval pairs, and `:BEARER` pairs would otherwise admit cyclic paths where the same intermediate's mediating role multiplies into the product without conveying new information) and [feed-ranking.md §4.1](primitive/feed-ranking.md#41-path-contribution-and-distance-decay) (single-transit-cap rejected — for 100 paths `U → Aᵢ → B → t` the sum factors as `d(3) · s(B → t) · Σᵢ s(U → Aᵢ) · s(Aᵢ → B)`, a clean product of "network-aggregate endorsement of `B`" times "`B`'s stance on `t`," which is trust propagation working correctly; bot-bridge amplification is already handled by severance + delta-funnel auto-detection in §3.6–§3.8, and `d(R)` already calibrates direct-vs-indirect, making 100 R=3 paths beating one R=2 path the intentional default). One-line entry added to [invariants.md "Ranking"](primitive/invariants.md#ranking) for discoverability.
-- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups: Q16's token angle (token signals excluded from `S`) carried into its recency resolution; the mod-gate hardening direction stays open under Q19.
+- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups: Q16's token angle (token signals excluded from `S`) carried into its recency resolution; the mod-gate hardening direction it surfaced carried into the Q19 resolution.
 - Q21 — see [collectives.md §8](instances/collectives.md#8-governance--the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [graph-data-model.md](implementation/graph-data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
+- Q19 — see [governance.md §7](primitive/governance.md#7-the-mod-gate) (the mod-gate, now two-tiered) and [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only) (denominator inflation reframed). The mod-gate gains a **critical tier** keyed to the existing baseline/critical stakes split: low-stakes actions keep the flat **≥1 positive moderator vote**; destructive/irreversible ones (moderator role changes, `illegal`-redaction, guidelines amendments, critical `:Network` amendments) require `mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active mods|⌉` (new `:Network` property, default `0.50`, itself in the critical bucket so loosening it is a critical act — recursion closed). This shuts the catastrophic vector the flat-one gate left open: one compromised moderator key plus a community bot-flood could pass anything. Because the fraction is `≤ 1`, `⌈f · |active mods|⌉` never exceeds the active-mod count — the gate is always satisfiable, needs no absolute floor, self-strengthens as the moderator set grows (one or two mods round to one; a real majority at three+), and is deadlock-free; and since minting a moderator is itself critical, the denominator is Sybil-resistant by construction. Stake/wealth-gating was declined upstream (Q20) as plutocracy. The community-side denominator inflation is **not** a takeover vector — a petition tally counts only positive votes, so inflation can only make a Proposal harder to pass, never force one through — so it is reframed as a bounded *liveness* residual (the absolute bar `quorum_count` caps it), not an open question. Tier annotations propagated to [network.md §9/§11](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal), [moderation.md §3](instances/moderation.md#3-the-mod-gate-rule), [platform-guidelines.md](instances/platform-guidelines.md), and [graph-data-model.md](implementation/graph-data-model.md).
 - Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#7-time-and-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
 
 ---
@@ -182,119 +182,3 @@ question completes for the cross-instance case),
 severance — local to the severing community per principle, but
 federation could change this).
 
----
-
-## Q19 — Bot-resistant non-arbitrary quorum for Network-scope governance
-
-**Where it shows up:**
-[governance.md §3 "Petition-style tally and dual quorum"](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only)
-(the "Known limitation" paragraph),
-[network.md §3](primitive/network.md#3-graph-side-properties)
-(the dual-quorum parameter pairs).
-**Status:** open
-
-### Context
-
-Network-scope governance uses a petition-style tally
-(positive votes only) under a dual-quorum gate:
-`positive_count ≥ min(P × |active members|, K)`. Both `P` and
-`K` are amendable `:Network` properties. The mechanism
-eliminates the passive-"no" veto (a real improvement over
-bidirectional tallies that bot-cast `no`-votes can lock
-indefinitely), but the underlying sybil problem is
-unresolved.
-
-### The question
-
-What is the right denominator-and-floor mechanism for
-Network-scope governance under unbounded membership and no
-identity verification?
-
-The two-bar v1 leaves two known holes:
-
-- **Denominator inflation.** A bot account that exists as an
-  active member (any outgoing actor edge inside
-  `active_threshold_days`) inflates the fractional bar's
-  denominator without ever needing to vote. At scale the
-  fractional bar becomes unreachable independently of how
-  many real positive votes accumulate.
-- **Static floor.** The absolute bar `K` is a fixed number
-  that needs periodic re-tuning as the network grows. It
-  bounds damage from inflation but does not eliminate it,
-  and its correct calibration over long horizons is
-  unsettled.
-
-### Constraints (from established principles)
-
-- **No identity verification.** Per CLAUDE.md ethos,
-  anyone can fork and self-host; identity-gated voting is
-  off the table.
-- **No AI in governance signal.** Per CLAUDE.md, the
-  graph's signal and the governance arithmetic must be
-  derivable from graph state, not from learned models.
-- **All numeric parameters are amendable.** Per
-  [governance.md §2.4](primitive/governance.md#24-threshold-policy),
-  any value used in the tally is itself a `:Network`
-  property amendable via the same primitive.
-- **Append-only.** Per [layers.md](primitive/layers.md),
-  no mechanism may delete graph structure to "expel" bot
-  accounts.
-
-### Options considered (none chosen)
-
-- **Vote-active denominator.** Denominator = Users with ≥1
-  positive Shape A vote in a recent window. Rejected
-  because a bot pays one yes-vote to enter the window and
-  then sits silent for the window duration, inflating the
-  denominator without contributing.
-- **Web-of-trust denominator.** Denominator = Users with
-  ≥M inbound actor edges from accounts older than D days.
-  Uses graph structure as the sybil filter. Promising but
-  introduces a recursive bootstrap question and a "voting
-  class" of trusted-enough accounts that newcomers must
-  earn into.
-- **Stake / token gating.** Declined. The economics workstream
-  ([economics](primitive/economics.md), [token](primitive/token.md))
-  settled that stake-weighted or stake-gated governance is
-  plutocracy — the graph-is-truth violation Q16 rejects for ranking —
-  and proportional token carry-forward would hand founders / alpha
-  holders network control, contradicting anyone-can-fork. The token
-  contributes nothing here; it drops out of the candidate set.
-- **Vote burn / quadratic cost.** Per-vote energy or
-  cooldown cost that grows with vote frequency. Introduces
-  a friction mechanism that punishes engaged real users
-  alongside bots.
-- **Sliding-window proportional.** Denominator = average
-  unique-voter count across recent proposals. Auto-
-  calibrates to engagement but is structurally similar to
-  the vote-active variant and shares its gaming.
-
-### Direction surfaced (economics workstream)
-
-The economics pass (Q20) reframed the hole on the mod side. The
-community dual-quorum is bot-satisfiable — the floor `K` is met by
-`K` sybil yes-votes — so for destructive actions the whole mod-side
-defense reduces to the flat *one*-moderator
-[mod-gate](primitive/governance.md#7-the-mod-gate): one compromised
-mod key plus a bot flood passes anything. Direction — make the
-mod-gate a **per-action count threshold over active mods**,
-`mod_yes ≥ max(k_floor, ⌈f_mod · |active_mods|⌉)`: flat `1` for
-low-stakes actions, a real fraction for destructive / irreversible
-ones (mint or remove a mod, `illegal`-redaction, critical `:Network`
-amendments). Bot cost rises from one mod key to
-`⌈f_mod · |active_mods|⌉` keys; and since minting a mod is itself
-destructive, the mod set grows only under that fraction,
-Sybil-resistant by construction. The `active`-mods denominator keeps
-the bar from deadlocking on quiet mods. This hardens the mod side;
-the community-denominator question above stays open. Parameters
-(`f_mod`, `k_floor`, the destructive-action set) deferred to a
-dedicated governance session.
-
-### Related
-
-[governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only)
-(the petition mechanism and dual-quorum v1),
-[feed-ranking.md §3.6](primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)
-(severance as the existing graph-level bot defense; not
-directly applicable to governance tally but informs the
-"graph as sybil filter" candidates).
