@@ -419,13 +419,13 @@ passes when its positive-vote total is at least the lower of
 two bars, evaluated at tally time:
 
 ```
-positive_count ≥ min( P × |active_members| , K )
+positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
 ```
 
-- `P` is the proposal-type's **`*_quorum_fraction`** property
-  on the `:Network` singleton.
-- `K` is the proposal-type's **`*_quorum_count`** property on
-  the `:Network` singleton.
+- `quorum_fraction` is the proposal-type's
+  **`*_quorum_fraction`** property on the `:Network` singleton.
+- `quorum_count` is the proposal-type's **`*_quorum_count`**
+  property on the `:Network` singleton.
 - `|active_members|` is the count of Users active inside
   `Network.active_threshold_days`.
 
@@ -439,10 +439,11 @@ vote layers.
 as membership scales; an absolute bar alone could let a tiny
 faction pass things over a silent majority in a small network.
 The pair is bounded on both ends: the fractional bar dominates
-while `P × |active_members| < K` (small membership, real
-majority required); the absolute bar dominates once
-`P × |active_members| ≥ K` (large membership, fixed real-vote
-count sufficient). Both `P` and `K` are `:Network` properties
+while `quorum_fraction × |active_members| < quorum_count`
+(small membership, real majority required); the absolute bar
+dominates once `quorum_fraction × |active_members| ≥ quorum_count`
+(large membership, fixed real-vote count sufficient). Both
+`quorum_fraction` and `quorum_count` are `:Network` properties
 amendable through the same primitive, so the operative bar
 self-corrects as conditions shift.
 
@@ -459,16 +460,18 @@ tally simply does not aggregate them.
 **Known limitation.** Bot accounts can still inflate the
 fractional-bar denominator by existing as active members
 (any outgoing actor edge inside `active_threshold_days`).
-The absolute bar `K` is the floor that survives any
-denominator inflation, but `K` itself is a static parameter
+The absolute bar `quorum_count` is the floor that survives any
+denominator inflation, but `quorum_count` itself is a static
+parameter
 whose correct calibration over long horizons is unsettled.
 A fully bot-resistant, non-arbitrary quorum model remains an
 open question — see
 [open-questions.md](../open-questions.md). The dual-quorum
 mechanism is a v1 compromise: petition eliminates the
 passive-no attack; the absolute floor bounds damage from
-denominator inflation; meta-governance over `P` and `K`
-lets the network re-calibrate as conditions evolve.
+denominator inflation; meta-governance over `quorum_fraction`
+and `quorum_count` lets the network re-calibrate as conditions
+evolve.
 
 ### Co-signed acts: threshold > 1 in either shape
 
@@ -628,7 +631,8 @@ Consumer shapes:
 - **Multi-property rule on one node** — e.g. Network
   dual-quorum moderation Proposals; the dispatcher reads
   both `_quorum_fraction` and `_quorum_count` as-of `as_of`
-  so the `min(P × |active|, K)` rule is fully frozen with a
+  so the `min(quorum_fraction × |active|, quorum_count)` rule
+  is fully frozen with a
   single anchor.
 
 ---

@@ -86,6 +86,9 @@ of the amendment-rule pairs below. Concrete types and defaults
 live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
+> **Notation.** The decay parameters below map to the symbols
+> `d(R)`, `f(Δt)`, and `ε`; see [notation.md](notation.md).
+
 Network-scope governance uses petition-style tally under a
 dual-quorum gate
 ([governance.md §3](governance.md#petition-style-tally-and-dual-quorum-network-scope-only)).

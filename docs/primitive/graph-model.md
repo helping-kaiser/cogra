@@ -522,6 +522,10 @@ Across all actor edges, the two dimensions follow a uniform grammar:
 - **`dim2` is signed connection-weight** — interest, relevance,
   importance. The "how much does this matter to me?" axis.
 
+> **Notation.** `dim1`/`dim2` and the symbols built on them
+> across the math docs are indexed in
+> [notation.md](notation.md).
+
 The user-facing **labels** vary by edge type to surface the relevant
 aspect (interest on `User → User`, relevance on `User → Post`,
 importance on `User → ChatMember`, etc.). The **role** each dimension

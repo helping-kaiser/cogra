@@ -10,6 +10,10 @@ layer-agnostic — it applies to any graph where edges encode
 `(valence, connection-weight)` per edge and a root wants to rank some
 set of target nodes reachable through intermediate connections.
 
+> **Notation.** The symbols used here — `dim1`, `R`, `S`, `d(R)`,
+> `s_path`, `h`/`i`/`j`/`k`, `α`/`β`, `ε`, … — are defined in
+> [notation.md](notation.md).
+
 ---
 
 ## 1. Setup
