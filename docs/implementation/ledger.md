@@ -11,7 +11,7 @@ the stores. Money amounts never touch the graph; the graph carries
 relationships and pointers.
 
 Design history:
-[Q20](../open-questions.md#q20--economics-primitive-distribution-ledger-home-vocabulary-anchor).
+[Q20 (resolved)](../open-questions.md).
 The token's issuance and liquidity mechanics are a separate doc
 ([token.md](../primitive/token.md)); the named chain is an
 implementation choice deferred there.
