@@ -822,6 +822,14 @@ moderator role changes, and `:Network` parameter amendments.
 Substantive arithmetic (quorums, supermajority thresholds, the
 exact pairs per instance) lives with each instance, not here.
 
+**Known limitation (bot resistance).** The mod-gate's floor is a
+flat *one* positive moderator vote. For destructive, irreversible
+actions that bar is thin — one compromised mod key alongside a
+community bot-flood passes anything. Hardening it to a per-action
+count threshold over *active* mods is tracked as a Q19 follow-up in
+[open-questions.md](../open-questions.md); parameters are deferred to
+a dedicated governance session.
+
 ### External demands enter as Proposals
 
 A direct corollary of the mod-gate and the broader
