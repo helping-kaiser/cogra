@@ -28,6 +28,21 @@ driven only by the graph and its weights. This is the same hard boundary
 fine, but it must not touch the graph's signal or the economics
 computation.
 
+**Invariant: campaign payout and feed-default ranking use the same
+path-weight formula.** What an advertiser buys is reach into the feeds
+around the anchor, so both the success metric `h_anchor(target)` (§3) and
+the payout weight `w_π` (§6.1) are computed with the **default** feed
+formula ([feed-ranking.md §4](feed-ranking.md#42-the-four-metrics)) —
+never a separate economics-only metric. Anything that reshapes the
+default feed reshapes payout, and nothing else can.
+
+> **Carve-out.** "Default feed" is the shared, viewer-independent
+> ranking. Per-viewer personal layers — the
+> [already-seen filter](feed-ranking.md#8-the-already-seen-filter) and the
+> [friend-authored fresh-post reorder](feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts) —
+> are not part of the reach an advertiser pays for and never enter the
+> payout sum.
+
 ---
 
 ## 1. Pull marketing

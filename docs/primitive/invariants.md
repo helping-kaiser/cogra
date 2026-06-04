@@ -125,6 +125,19 @@ most useful one.
   — seeded by the bootstrap migration; its semantic role is
   platform-defined, not emergent from first use.
 
+## Economics
+
+- [No AI in the economics](economics.md#economics) — reach
+  measurement, attribution, and payout are graph-computed (Shapley
+  over the path-sum), never a learned "fair share".
+- [The token never feeds ranking](token.md#token-cgt) — neither CGT
+  balance nor token activity is an input to feed-ranking; the token is
+  a pure settlement layer.
+- [Campaign payout and feed-default ranking use the same path-weight formula](economics.md#economics)
+  — an advertiser buys reach into the feeds around the anchor, so the
+  success metric and the payout weight are the default feed formula;
+  per-viewer personal layers never enter the payout sum.
+
 ---
 
 ## How to extend this index
