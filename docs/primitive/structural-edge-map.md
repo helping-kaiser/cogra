@@ -45,9 +45,9 @@ outbound absence is explicit.
 | **Item**             | —          | —          | —          | —          | —          | —          | —          | `:TAGGING` | —          | —          | —          | `:APPROVAL`| —          | —          | —          | —          |
 | **Hashtag**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
 | **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | —          | —          |
-| **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | `:STRUCTURAL` | —      | —          | —          | —          | —          | —          |
-| **CollectiveMember** | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | `:STRUCTURAL` | —      | —          | —          | —          | —          |
-| **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | —          | —          | —          | `:STRUCTURAL` | —       | —          | —          | —          |
+| **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | —          | —      | —          | —          | —          | —          | —          |
+| **CollectiveMember** | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | —          | —      | —          | —          | —          | —          |
+| **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | `:STRUCTURAL` | —          | —          | —          | —       | —          | —          | —          |
 | **Network**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
 | **Campaign**         | `:ANCHOR` `:PROMOTES` | `:ANCHOR` `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | —          | `:PROMOTES` | —          | —          | —          | —          | —          | `:STRUCTURAL` | —          |
 | **Settlement**       | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:ENTITLES`|
@@ -116,15 +116,15 @@ any other `proposed_value` is inadmissible.
 
 The three junction-to-Proposal `:STRUCTURAL` rows are Shape B
 vote edges to a Proposal whose subject the junction is eligible
-on — including the chat-internal disavowal Proposals (both Level
-1 against a `ChatMessage` and Level 2 against another
-`ChatMember`) that flow through `ChatMember → Proposal` per
-[chats.md §10](../instances/chats.md#10-moderation). The
-junction-to-same-type-junction `:STRUCTURAL` cells are the
-admission and (for `CollectiveMember` / `ItemOwnership`)
-removal vote edges; the `ChatMember → ChatMember` row is
-admission-only since chat disavowal routes through a Proposal
-instead.
+on. Every junction lifecycle event — admission, removal, and
+role change for `ChatMember`, `CollectiveMember`, and
+`ItemOwnership` — routes through such a Proposal, alongside chat
+property changes and the chat-internal disavowal Proposals (both
+Level 1 against a `ChatMessage` and Level 2 against another
+`ChatMember`) per
+[chats.md §10](../instances/chats.md#10-moderation). No
+junction-to-same-type-junction `:STRUCTURAL` edge exists — a
+junction never votes directly on another junction.
 
 ---
 
@@ -364,13 +364,11 @@ flowchart LR
 
 ### 2.6. `:STRUCTURAL` (Shape B vote edges)
 
-Junctions cast Shape B votes: each junction type votes on
-Proposals targeting subjects it is eligible on, and
-`CollectiveMember` / `ItemOwnership` also vote directly on
-other junctions of the same type (member removal /
-co-ownership approval). `ChatMember → ChatMember` is
-admission-only — chat disavowal routes through a Proposal per
-[chats.md §10](../instances/chats.md#10-moderation). See
+Junctions cast Shape B votes on **Proposals** only: each junction
+type votes on Proposals targeting subjects it is eligible on —
+including the Proposals that drive its own lifecycle (admission,
+removal, role change). A junction never votes directly on another
+junction. See
 [edges.md "Voting (Shape B)"](edges.md#voting-shape-b).
 
 ```mermaid
@@ -381,11 +379,9 @@ flowchart LR
     ItemOwnership[ItemOwnership]:::junction
     Proposal[Proposal]:::content
 
-    ChatMember -->|STRUCTURAL Shape B| ChatMember
     ChatMember -->|STRUCTURAL Shape B| Proposal
-    CollectiveMember -->|STRUCTURAL Shape B| CollectiveMember
     CollectiveMember -->|STRUCTURAL Shape B| Proposal
-    ItemOwnership -->|STRUCTURAL Shape B| ItemOwnership
+    ItemOwnership -->|STRUCTURAL Shape B| Proposal
 
     classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;

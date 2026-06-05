@@ -318,18 +318,19 @@ message moderation, and future voting patterns all share. This
 section focuses on how the primitive specifically applies to
 junction relationships.
 
-### The two-edge approval pattern
+### The two-edge state pair
 
-A junction relationship is created in two steps:
+A junction relationship's **state** lives in two structural edges:
 
 1. **Claim edge** — when the relationship is initiated, the system creates
    a structural edge from the junction node toward its parent (e.g.
    `ChatMember → Chat`). The claim exists as long as the junction node
    exists.
-2. **Approval edge** — when the relationship's approval policy is
-   satisfied (all required actor edges toward the junction node exist), the
-   system creates the reverse structural edge (e.g. `Chat → ChatMember`).
-   The presence of this edge marks the relationship as *active*.
+2. **Approval edge** — the reverse structural edge (e.g.
+   `Chat → ChatMember`), written by the system when the relationship's
+   governing **admit-Proposal** passes (see "Lifecycle events are
+   terminal Proposals" below). Its presence marks the relationship as
+   *active*.
 
 **State is encoded in the graph topology itself** — no status flag is
 needed:
@@ -338,7 +339,7 @@ needed:
 - Both edges exist → active.
 
 **Invariant:** A junction relationship's state is derived from the
-two structural edges of its approval pair, not from a stored flag.
+two structural edges of its state pair, not from a stored flag.
 Claim only = pending; claim + approval, both with `dim1 > 0` top
 layers = active; negative top layer on either = revoked. A status
 property on the junction would be a second source of truth that
@@ -355,26 +356,51 @@ structural edge — the `:BEARER` edge from the junction to the
 state: it's set once at junction creation and never re-pointed,
 and is what lets invite-only flows bind a junction to its
 prospective bearer before that actor has self-claimed. The
-Shape A self-claim that activates the junction must originate
-from the actor at the other end of `:BEARER`. See
+Shape A self-claim that admits the junction — the bearer's vote
+authoring its admit-Proposal — must originate from the actor at
+the other end of `:BEARER`. See
 [edges.md §2 "Bearer binding"](edges.md#bearer-binding).
 
-The **approval policy** uses **two voting shapes** (per
-[governance.md §3](governance.md#3-the-two-vote-shapes)),
-combined:
+### Lifecycle events are terminal Proposals
 
-1. The would-be bearer's **Shape A self-claim** — the
-   `User/Collective → new junction` actor edge in step 1 above.
-   This is necessarily Shape A because the bearer has no
-   junction of this type yet from which to cast a Shape B vote;
-   their own junction is the very thing they're claiming.
+Every change to a junction relationship — admission, removal, role
+change, re-admission — is a **fresh terminal `Proposal`** that
+`:TARGETS` the junction. Votes are cast on the Proposal, never on
+the junction directly. When the Proposal's threshold is crossed,
+its cascade ([governance.md §6](governance.md#cascade-dispatch))
+writes the outcome onto the junction's structural edges: an
+admit-Proposal writes the approval edge with `dim1 > 0`; a
+removal-Proposal appends a `dim1 < 0` layer on the approval edge;
+a role-change Proposal writes the new role. A passed Proposal is
+terminal — to change an outcome you author a counter-Proposal,
+never re-vote the original (see
+[governance.md §6](governance.md#6-when-outcomes-take-effect),
+[proposal.md §6](../instances/proposal.md#6-lifecycle)).
+
+Routing every event through its own Proposal is what gives the
+junction lifecycle **terminality**: each event carries its own
+fresh vote set, so votes never outlive the event that gathered
+them. A later admission cannot be re-triggered by stale approval
+votes, and a removal cannot be undone by a single stale vote —
+the failure mode of any perpetual shared vote carrier.
+
+The **approval policy** uses the **two voting shapes** (per
+[governance.md §3](governance.md#3-the-two-vote-shapes)), both
+now directed at the Proposal:
+
+1. The would-be bearer's **Shape A self-claim** — the act of
+   **authoring the admit-Proposal** (`User/Collective → Proposal`).
+   This is necessarily Shape A because the bearer has no junction
+   of this type yet from which to cast a Shape B vote; their own
+   junction is the very thing they're claiming. Authorship is the
+   first vote (see [proposal.md §5](../instances/proposal.md#5-authorship)).
 2. Zero or more approver **Shape B votes** — each required
    approver writes a structural edge from their existing
-   eligibility junction toward the new junction
-   (`ChatMember_approver → ChatMember_new`,
-   `CollectiveMember_approver → CollectiveMember_new`,
-   `ItemOwnership_current → ItemOwnership_new`), `dim1 > 0`
-   carrying approval.
+   eligibility junction toward the Proposal
+   (`ChatMember_approver → Proposal`,
+   `CollectiveMember_approver → Proposal`,
+   `ItemOwnership_current → Proposal`), `dim1 > 0` carrying
+   approval.
 
 The threshold itself is one of the policy shapes from
 [governance.md §2.4](governance.md#24-threshold-policy) —
@@ -382,51 +408,45 @@ typically simple-count or weighted-count of the Shape B approver
 votes (weights derived from role properties on the approver
 junctions, per [governance.md §2.3](governance.md#23-weight-function)).
 N ranges from `0` (open / self-approving — only the bearer's
-Shape A claim is required) through `1` (a single decider) to
-multi-sig with weighted votes. Specific applications pick their
+Shape A authoring vote is required) through `1` (a single decider)
+to multi-sig with weighted votes. Specific applications pick their
 N — see [chats.md](../instances/chats.md),
 [collectives.md](../instances/collectives.md), and
 [items.md](../instances/items.md).
 
-The unification this gives: **the same `junction → junction`
-Shape B edge that admits a member can later be re-layered to
-remove them.** "I approved this membership, now I want it
-revoked" is a single edge with a layered stance flip, not a
-different edge type — see "Revocation and state transitions"
-below.
-
 #### Bootstrap: author / founder self-collapse
 
-When a junction is created with no other approver required —
-the founder of a Collective
+When a junction is created with no other approver required
+(`N = 0`) — the founder of a Collective
 ([collectives.md §1](../instances/collectives.md#1-creation)),
 the author of an Item
 ([items.md §1](../instances/items.md#1-creation)), the founder
 of a Chat ([chats.md §2.1](../instances/chats.md#21-chat)) —
-the bearer's Shape A self-claim is the only required vote.
-The two-edge approval pattern collapses to its 1-of-1 special
-case: the system writes the approval-side structural edge
-atomically alongside the claim-side, in the same compound
-gesture. No Shape B approver votes are written because no
-existing eligibility junctions yet exist.
+the bearer's Shape A self-claim is the only required vote and no
+tally is conducted. The admission collapses to its 1-of-1 special
+case: **no admit-Proposal node is materialized**; the system
+writes the approval-side structural edge atomically alongside the
+claim-side and `:BEARER`, in the same compound gesture. A Proposal
+exists only to carry a multi-party tally, and there is none here.
 
 Subsequent additions to the same parent (the next ChatMember
 of the chat, the next CollectiveMember of the collective, the
-next ItemOwnership transfer of the item) follow the regular
-pattern with one or more Shape B approver votes.
+next ItemOwnership transfer of the item) carry a tally, so they
+run the full pattern: an admit-Proposal with one or more Shape B
+approver votes.
 
 ### Revocation and state transitions
 
 Because edges are append-only, the approval edge created when a
 junction relationship becomes active cannot be removed. "No longer
 active" is therefore encoded as **new layers on the two structural
-edges of the approval pair** — not by deletion. The canonical
+edges of the state pair** — not by deletion. The canonical
 definition of "Revoked" (and the aliases "inactive" / "superseded"
 used in older drafts) lives in
 [layers.md §2](layers.md#2-layers-on-edges).
 
 **Dimension semantics on state-bearing structural edges.** For the
-claim and approval edges of a junction approval pair, `dim1` carries
+claim and approval edges of a junction state pair, `dim1` carries
 the edge's current stance; `dim2` is reserved (default `0`, available
 for future use such as reason codes):
 
@@ -435,10 +455,12 @@ for future use such as reason codes):
 - `dim1 < 0` — **revoked / withdrawn**.
 
 Layer 1 of each edge is created by the system with `(+1, 0)` — the
-edge is created because someone affirmed it. Revocation adds a new
-layer with `dim1 < 0`. Re-affirming after a revocation adds another
-new layer with `dim1 > 0`. Append-only is preserved; the full state
-history is visible in the layer stacks.
+edge is created because an admit-Proposal passed (or, for `N = 0`,
+because the bearer self-claimed). Revocation adds a new layer with
+`dim1 < 0` when a removal-Proposal passes or the bearer leaves.
+Re-admission after a revocation is a **fresh** admit-Proposal whose
+cascade adds another `dim1 > 0` layer. Append-only is preserved; the
+full state history is visible in the layer stacks.
 
 **Relationship state is derived from both top layers.** A junction
 relationship is **active** iff both paired edges' top layers have
@@ -448,54 +470,50 @@ no approval edge yet) still applies — it's a separate case from
 revoked.
 
 **Who triggers state transitions.** The system is still the only
-entity that writes to structural edges. It reacts to votes:
+entity that writes to structural edges. It reacts to a passed
+Proposal, a self-determined leave, or its own housekeeping:
 
-- **Voluntary leave / withdrawal.** The bearer adds a new
-  negative-`dim1` layer on their **own Shape A self-claim**
-  (`User/Collective → junction` actor edge). The system appends a
-  new layer on the **claim-side** structural edge with
-  `dim1 < 0`. Self-determined; not a governance decision.
+- **Voluntary leave / withdrawal.** Self-determined, not a
+  governance decision and so **not a Proposal**: at the bearer's
+  request the system appends a negative-`dim1` layer directly on
+  the **claim-side** structural edge. This is symmetric with the
+  `N = 0` bootstrap collapse — a unilateral self-act carries no
+  tally, so no Proposal node is materialized.
 - **Removal via governance instance** — *disavowal* in chat
   scope ([chats.md §10](../instances/chats.md#10-moderation)),
   unnamed-generic in collective scope (the social contract
   picks the wording — "remove member," "fire worker," etc.).
-  Removal uses the **same Shape B vote machinery as approval**,
-  with stance flipped: each eligible voter (typically other
-  holders of the same junction type for the same parent) writes
-  a `dim1 < 0` layer on their existing
-  `junction_voter → junction_target` Shape B edge — appended to
-  the same edge they previously used to approve, or as the
-  layer-1 of that edge if they hadn't voted before. Eligibility,
-  weights, and threshold are configured per parent node (see
+  Removal is a **fresh removal-Proposal** that `:TARGETS` the
+  junction (`decision:remove_member`, chat disavowal, …),
+  distinct from the admit-Proposal that admitted the bearer.
+  Each eligible voter casts a Shape B vote from their own
+  eligibility junction to the Proposal
+  (`junction_voter → Proposal`). Eligibility, weights, and
+  threshold are configured per parent node (see
   [governance.md](governance.md) and
   [chats.md §10](../instances/chats.md#10-moderation),
   [collectives.md](../instances/collectives.md)). When the
-  instance's threshold is crossed, the system appends a new
-  layer on the **approval-side** structural edge with
+  Proposal's threshold is crossed, its cascade
+  ([governance.md §6](governance.md#cascade-dispatch)) appends a
+  new layer on the **approval-side** structural edge with
   `dim1 < 0`.
 - **System-initiated** (auto-expiry, violation handling, etc.).
   The system writes the appropriate negative layer directly on
   the approval-side edge.
 
-The same `junction → junction` Shape B edge therefore serves the
-full lifecycle of one voter's stance toward one membership /
-ownership: layer-1 carries the original approval (`dim1 > 0`),
-later layers carry shifts in stance, and the eventual removal
-vote is just another `dim1 < 0` layer on the same edge. That
-layer is **one vote toward the removal instance's threshold**,
-not a unilateral removal: the approval-side structural edge
-flips to `dim1 < 0` only when the removal instance crosses its
-own (independently-configured) threshold, per "Intermediate
-states are not materialized" below. A member admitted by N
-approvers is removed only when the removal threshold's worth of
-`dim1 < 0` votes accrues — never by one defection, unless that
-threshold is itself `1`.
+Admission and removal are **separate Proposals with separately
+configured thresholds**. A member admitted by N approvers is
+removed only when the removal-Proposal crosses its own threshold —
+never by one defection, unless that threshold is itself `1`. Because
+each event is a fresh Proposal with a fresh vote set, the approvals
+that admitted a member never linger as live votes that a later
+removal (or re-admission) could mis-tally.
 
-**Intermediate states are not materialized.** For multi-vote
-governance instances, the approval-side structural edge stays at
-its top layer until the instance's threshold is crossed. Partial
-progress is visible on individual vote edges; the structural edge
-reflects only the threshold-resolved state.
+**Intermediate states are not materialized.** For a multi-vote
+Proposal, the approval-side structural edge stays at its top layer
+until the Proposal's threshold is crossed. Partial progress is
+visible on the individual `junction → Proposal` vote edges; the
+structural edge reflects only the threshold-resolved state.
 
 **Cascading updates across structural edges.** A state change on one
 structural edge can trigger the system to add a corresponding layer on
@@ -509,18 +527,18 @@ may use the same cascade shape.
 ### Chat Membership (ChatMember)
 
 Chat-specific flows (open / invite-only / request-entry) are explained
-in [docs/chats.md](../instances/chats.md). They are all variants of the two-edge
-approval pattern described above.
+in [docs/chats.md](../instances/chats.md). They are all variants of the
+junction lifecycle described above.
 
 ### Collective Membership (CollectiveMember)
 
 Collective-specific flows are explained in [docs/collectives.md](../instances/collectives.md).
-They follow the same two-edge approval pattern described above.
+They follow the same junction lifecycle described above.
 
 ### Ownership Transfer (ItemOwnership)
 
 Item-specific flows are explained in [docs/items.md](../instances/items.md). They
-follow the same two-edge approval pattern described above, with the
+follow the same junction lifecycle described above, with the
 additional property that transfers form an append-only chain of
 ItemOwnership nodes per item.
 
