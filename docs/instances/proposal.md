@@ -202,8 +202,8 @@ system-created at creation and never re-targeted:
 - **`Proposal → Target Node` (`:TARGETS`)** — identifies
   the node whose property is being changed. Targets span
   every node category: actor (User, Collective), content
-  (Post, Comment, Chat, ChatMessage, Item, Hashtag), junction
-  (`ChatMember.role`, `CollectiveMember.role`), and system
+  (Post, Comment, Chat, ChatMessage, Item), topic (Hashtag),
+  junction (`ChatMember.role`, `CollectiveMember.role`), and system
   (the `:Network` singleton — see
   [network.md §11](../primitive/network.md#11-amending-network-parameters)).
   The property name and proposed value live on the Proposal
