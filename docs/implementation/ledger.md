@@ -145,7 +145,7 @@ data splits across the other two stores:
   public state live as node properties
   ([economics.md §2](../primitive/economics.md#2-the-campaign-node)):
   `g`, `declared_goal`, `start_ts`, `end_ts`, `status`, the deposit
-  pointer, and the `ε` in force. The `:ANCHOR` / `:PROMOTES`
+  pointer, and the `dust_floor` in force. The `:ANCHOR` / `:PROMOTES`
   declarations carry the anchor and target as topology. The
   auto-settlement
   scheduler finds campaigns past `end_ts + 30d` by querying these node
