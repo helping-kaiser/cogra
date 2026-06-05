@@ -481,7 +481,15 @@ The same `junction → junction` Shape B edge therefore serves the
 full lifecycle of one voter's stance toward one membership /
 ownership: layer-1 carries the original approval (`dim1 > 0`),
 later layers carry shifts in stance, and the eventual removal
-vote is just another `dim1 < 0` layer on the same edge.
+vote is just another `dim1 < 0` layer on the same edge. That
+layer is **one vote toward the removal instance's threshold**,
+not a unilateral removal: the approval-side structural edge
+flips to `dim1 < 0` only when the removal instance crosses its
+own (independently-configured) threshold, per "Intermediate
+states are not materialized" below. A member admitted by N
+approvers is removed only when the removal threshold's worth of
+`dim1 < 0` votes accrues — never by one defection, unless that
+threshold is itself `1`.
 
 **Intermediate states are not materialized.** For multi-vote
 governance instances, the approval-side structural edge stays at
