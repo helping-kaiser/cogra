@@ -304,6 +304,7 @@ promoted node through `:ANCHOR` / `:PROMOTES` edges. See
 | `end_ts`                        | LocalDateTime | Campaign-window end. Mutable before settlement (free, unlimited extensions). Layered. |
 | `status`                        | String        | Lifecycle state: `'open'` / `'settled'` / `'auto-settled'`. Layered. |
 | `dust_floor`                    | Float         | The dust floor bounding path enumeration; public at creation, tuneable during the campaign as a compute failsafe. The value in force at settlement is the recorded one. Mutable before settlement. Layered. |
+| `achieved_h_gain`               | Float         | Public running record of the instantaneous gain `h_anchor(target) − h_start`, one layer appended per sample over the run ([economics.md §2.3](../primitive/economics.md#23-running-progress)). Approximate progress only; the settled sustained-level value is on `:Settlement`. System-written, not advertiser-adjustable. Layered. |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Campaign) ASSERT c.id IS UNIQUE;
