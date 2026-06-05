@@ -27,26 +27,29 @@ edge.
 `:STRUCTURAL` denotes Shape B vote edges
 ([edges.md §2 "Voting (Shape B)"](edges.md#voting-shape-b)) —
 the only structural-edge family that doesn't take one of the
-seven sub-category labels.
+thirteen sub-category labels.
 
 Sources and targets with no structural edges in either direction
 (`Network`) are still listed so the absence is explicit.
 
-|                      | User       | Coll.      | Post       | Comment    | Chat       | ChatMsg    | Item       | Hashtag    | Proposal   | ChatMbr    | CollMbr    | ItemOwn    | Network    |
-|----------------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|
-| **User**             | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
-| **Collective**       | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:APPROVAL`| —          | —          |
-| **Post**             | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:TAGGING` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
-| **Comment**          | `:REFERENCES` | `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:TAGGING` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
-| **Chat**             | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:APPROVAL`| —          | —          | —          |
-| **ChatMessage**      | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
-| **Item**             | —          | —          | —          | —          | —          | —          | —          | `:TAGGING` | —          | —          | —          | `:APPROVAL`| —          |
-| **Hashtag**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
-| **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` |
-| **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | `:STRUCTURAL` | —      | —          | —          |
-| **CollectiveMember** | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | `:STRUCTURAL` | —      | —          |
-| **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | —          | —          | —          | `:STRUCTURAL` | —       |
-| **Network**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
+|                      | User       | Coll.      | Post       | Comment    | Chat       | ChatMsg    | Item       | Hashtag    | Proposal   | ChatMbr    | CollMbr    | ItemOwn    | Network    | Camp.      | Settl.     | Wallet     |
+|----------------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|
+| **User**             | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:PAYS_TO` |
+| **Collective**       | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:APPROVAL`| —          | —          | —          | —          | `:PAYS_TO` |
+| **Post**             | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:TAGGING` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
+| **Comment**          | `:REFERENCES` | `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:TAGGING` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
+| **Chat**             | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:APPROVAL`| —          | —          | —          | —          | —          | —          |
+| **ChatMessage**      | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
+| **Item**             | —          | —          | —          | —          | —          | —          | —          | `:TAGGING` | —          | —          | —          | `:APPROVAL`| —          | —          | —          | —          |
+| **Hashtag**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
+| **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | —          | —          |
+| **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | `:STRUCTURAL` | —      | —          | —          | —          | —          | —          |
+| **CollectiveMember** | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | `:STRUCTURAL` | —      | —          | —          | —          | —          |
+| **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | —          | —          | —          | `:STRUCTURAL` | —       | —          | —          | —          |
+| **Network**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
+| **Campaign**         | `:ANCHOR` `:PROMOTES` | `:ANCHOR` `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | —          | `:PROMOTES` | —          | —          | —          | —          | —          | `:STRUCTURAL` | —          |
+| **Settlement**       | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:ENTITLES`|
+| **Wallet**           | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | `:CLAIMS`  | `:TRANSFERS`|
 
 **Reading cells with two labels.** Cells that list both
 `:CONTAINMENT` and `:REFERENCES` show two valid edge types **at
@@ -71,6 +74,12 @@ The two-label cells in the matrix are:
   `:REFERENCES` for embedding any *other* chat (the
   personal-newsfeed shape from
   [chats.md §8](../instances/chats.md#8-chatmessages-as-first-class-content)).
+- `Campaign → (User | Collective)` — `:ANCHOR` when the actor is the
+  campaign's anchor, `:PROMOTES` when it is the promoted target. Both
+  apply at the class level, but only one fires on any specific pair:
+  a campaign's anchor and target are distinct nodes, since
+  `anchor == target` is forbidden
+  ([economics.md §2.1](economics.md#21-success-metric-and-forbidden-configurations)).
 
 `Proposal → Proposal` is `—` because a Proposal never targets
 another Proposal — moderation can't target it and no governance
@@ -287,6 +296,9 @@ flowchart LR
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
     ItemOwnership[ItemOwnership]:::junction
+    Campaign[Campaign]:::economics
+    Settlement[Settlement]:::economics
+    Wallet[Wallet]:::economics
 
     ChatMessage -->|REFERENCES| User
     ChatMessage -->|REFERENCES| Collective
@@ -300,6 +312,9 @@ flowchart LR
     ChatMessage -->|REFERENCES| ChatMember
     ChatMessage -->|REFERENCES| CollectiveMember
     ChatMessage -->|REFERENCES| ItemOwnership
+    ChatMessage -->|REFERENCES| Campaign
+    ChatMessage -->|REFERENCES| Settlement
+    ChatMessage -->|REFERENCES| Wallet
 
     Post -->|REFERENCES| User
     Post -->|REFERENCES| Collective
@@ -312,6 +327,9 @@ flowchart LR
     Post -->|REFERENCES| ChatMember
     Post -->|REFERENCES| CollectiveMember
     Post -->|REFERENCES| ItemOwnership
+    Post -->|REFERENCES| Campaign
+    Post -->|REFERENCES| Settlement
+    Post -->|REFERENCES| Wallet
 
     Comment -->|REFERENCES| User
     Comment -->|REFERENCES| Collective
@@ -324,10 +342,14 @@ flowchart LR
     Comment -->|REFERENCES| ChatMember
     Comment -->|REFERENCES| CollectiveMember
     Comment -->|REFERENCES| ItemOwnership
+    Comment -->|REFERENCES| Campaign
+    Comment -->|REFERENCES| Settlement
+    Comment -->|REFERENCES| Wallet
 
-    classDef actor    fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
-    classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
-    classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef actor     fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef content   fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef junction  fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
 ### 2.6. `:STRUCTURAL` (Shape B vote edges)
@@ -359,6 +381,58 @@ flowchart LR
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
 ```
 
+### 2.7. Economics: `:ANCHOR`, `:PROMOTES`, `:ENTITLES`, `:CLAIMS`, `:TRANSFERS`, `:PAYS_TO`
+
+The economics subsystem's structural edges. A `Campaign` declares its
+anchor (`:ANCHOR`, an actor node) and its promoted target
+(`:PROMOTES`, any actor, content, or Proposal node except Hashtag); at settlement the
+`Settlement` node entitles wallets (`:ENTITLES`), which claim back
+(`:CLAIMS`). `:PAYS_TO` binds each account to its `Wallet`, and
+`:TRANSFERS` records wallet-to-wallet sends. All are `(0, 0)` and
+non-traversable for feed ranking (see [§3](#3-feed-ranking-traversability)).
+`Campaign → Settlement` carries no dedicated label — it falls through to
+`:STRUCTURAL`, drawn here for completeness. See
+[edges.md "Campaign declarations"](edges.md#campaign-declarations) and
+[economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow).
+
+```mermaid
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
+flowchart LR
+    User[User]:::actor
+    Collective[Collective]:::actor
+    Post[Post]:::content
+    Comment[Comment]:::content
+    Chat[Chat]:::content
+    ChatMessage[ChatMessage]:::content
+    Item[Item]:::content
+    Proposal[Proposal]:::content
+
+    Campaign[Campaign]:::economics
+    Settlement[Settlement]:::economics
+    Wallet[Wallet]:::economics
+
+    Campaign -->|ANCHOR| User
+    Campaign -->|ANCHOR| Collective
+    Campaign -->|PROMOTES| User
+    Campaign -->|PROMOTES| Collective
+    Campaign -->|PROMOTES| Post
+    Campaign -->|PROMOTES| Comment
+    Campaign -->|PROMOTES| Chat
+    Campaign -->|PROMOTES| ChatMessage
+    Campaign -->|PROMOTES| Item
+    Campaign -->|PROMOTES| Proposal
+    Campaign -->|STRUCTURAL| Settlement
+    Settlement -->|ENTITLES| Wallet
+    Wallet -->|CLAIMS| Settlement
+    Wallet -->|TRANSFERS| Wallet
+    User -->|PAYS_TO| Wallet
+    Collective -->|PAYS_TO| Wallet
+
+    classDef actor     fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef content   fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+```
+
 ---
 
 ## 3. Feed-ranking traversability
@@ -379,6 +453,7 @@ and how* the ranking walk crosses them.
 | `:TAGGING` | **No** — cosmetic discovery only | [hashtag.md §4](../instances/hashtag.md#4-edges) |
 | `:REFERENCES` | Yes — endpoint-restricted (User/Collective ⇒ terminate after one `:AUTHOR` hop) + fanout-budget composition | [feed-ranking.md §3.5 rules 4 & 5](feed-ranking.md#35-traversal-restrictions) |
 | `:STRUCTURAL` (Shape B) | Yes — sibling-case note in feed-ranking §3.5 | [feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions) |
+| `:ANCHOR` / `:PROMOTES` / `:ENTITLES` / `:CLAIMS` / `:TRANSFERS` / `:PAYS_TO` | **No** — economic records, `(0, 0)`, never inject reach | [feed-ranking.md §3.5 rule 6](feed-ranking.md#35-traversal-restrictions) (anchor/promotes); [economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow) |
 
 Forward-only traversal is the foundation
 ([feed-ranking.md §3 invariant](feed-ranking.md#3-per-edge-composition-along-a-path));
