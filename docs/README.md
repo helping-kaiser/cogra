@@ -107,7 +107,7 @@ an `instances/` doc is a sign the mechanism belongs in
   content node; universal threading primitive that attaches to
   Post, Comment, Chat, ChatMessage, or Item.
 - [hashtag](instances/hashtag.md) — per-node doc for the Hashtag
-  content node; content-addressed UUID makes creation implicit
+  topic node; content-addressed UUID makes creation implicit
   and federation reconciliation-free.
 - [proposal](instances/proposal.md) — per-node doc for the
   Proposal content node; subject carrier for property-level
