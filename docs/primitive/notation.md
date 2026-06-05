@@ -80,10 +80,12 @@ the [token](token.md) burn/treasury formulas; the rest are local to
 | `D` | Campaign **deposit** — the on-chain escrow amount funding a campaign. | [economics §2](economics.md#2-the-campaign-node) |
 | `P` | **Payout** — amount released to the contributor pool at settlement, `P ∈ [0, D]`. | [economics §4](economics.md#4-settlement-and-release) |
 | `g` | The `d(R)` **decay base** for a campaign's reach metric and payout split (default `0.1`). | [economics §6.4](economics.md#64-earnings-by-distance--the-dr-base-g) |
-| `τ` | **Sustain window** — one-third of the campaign window, `(end_ts − start_ts) / 3`; a reach level must hold for ≥ `τ` to count. | [economics §4](economics.md#4-settlement-and-release) |
+| `τ` | **Sustain window** — one-third of the campaign window, `(end_ts − start_ts) / 3`; a reach level must hold for ≥ `τ` to count. | [economics §3](economics.md#3-achieved-reach--the-sustained-level-metric) |
 | `φ_i` | **Shapley value** — player `i`'s attribution share of the contributor pool. | [economics §6.1](economics.md#61-the-closed-form) |
 | `w_π` | **Path weight** in the Shapley sum: `d(R_π) · f(Δt_π) · (s_path(π) + c_path(π))`. | [economics §6.1](economics.md#61-the-closed-form) |
 | `A_π` | Set of **distinct authors** of every edge and content node on path `π`. | [economics §6.1](economics.md#61-the-closed-form) |
+| `N_p` | **Path count** — the number of above-`ε` paths the settlement traversal enumerates (distinct from `P`, the payout). | [economics §6.5](economics.md#65-computation--exact-streaming-oplayers-memory) |
+| `L̄` | **Average path length** — mean edge count over the `N_p` enumerated paths; settlement time is `O(N_p · L̄)`. | [economics §6.5](economics.md#65-computation--exact-streaming-oplayers-memory) |
 
 ## Network-seeded parameter names
 
