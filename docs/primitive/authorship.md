@@ -7,7 +7,7 @@ the very first edge ever created toward a node identifies the author.
 
 **"Creator" is a synonym for "author"; "author" is canonical.**
 Wherever a User or Collective is described as "creating" a node
-— Item, Chat, Collective, Post, Comment, Proposal — the on-graph
+— Item, Chat, ChatMessage, Collective, Post, Comment, Proposal — the on-graph
 fact is the same: they hold the earliest-layer-1 incoming edge,
 the `:AUTHOR` label, and the rights and obligations that
 authorship carries. "Founder" is *not* a synonym — it is the
