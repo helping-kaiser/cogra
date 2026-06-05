@@ -89,6 +89,9 @@ or until the inviter explicitly revokes it (`revoked_at`).
 3. **Email verification.** The invitee clicks the verification
    link. The server atomically:
    - Creates the User node with the registered username.
+   - Creates the account's `Wallet` node and writes the
+     `:PAYS_TO` binding edge (User → Wallet) per
+     [ledger.md](ledger.md#the-wallet-node-and-the-pays_to-binding).
    - Inserts the `users` row, copying `email` and `password_hash`
      across from the pending-registration row — verified
      credentials live on `users` from this point on.
