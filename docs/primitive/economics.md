@@ -116,7 +116,7 @@ so the whole arrangement is public and auditable on the graph.
 | `D` | Pointer to the **on-chain escrow** holding the deposit. The amount is read from chain, never asserted as a bare number on the node; funded at creation and top-up only (§2.2), so the §5 floor is always backed. |
 | `g` | The `d(R)` decay base used for this campaign's reach metric and payout split (§6.4). Default `0.1`, the canonical feed default. |
 | `h_start` | `h_anchor(target)` at `start_ts` — the baseline. With `declared_goal` it makes the ask legible: from `h_start` to `h_start + declared_goal`. |
-| `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). |
+| `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). Must be `> 0` (§2.1). |
 | `start_ts`, `end_ts` | Campaign window. |
 | `status` | Lifecycle state (open / settled / auto-settled). |
 | `ε` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
@@ -162,6 +162,10 @@ Two configurations are forbidden:
   campaigns are increase-only. (Achieved gain *can* still come out
   negative when a cluster actively severs the advertiser; the default
   formula floors that at zero — §4.)
+- **Non-positive `declared_goal`** (`declared_goal ≤ 0`) — the
+  auto-settlement formula (§4) divides by `declared_goal`, so a zero or
+  negative goal leaves the default release undefined. Declared goals are
+  strictly positive: `declared_goal > 0`.
 
 ### 2.2 Adjustability
 
@@ -483,7 +487,9 @@ from anchor to target, pruning a partial path when its best-possible
 completion falls below a dust floor `ε`. There is no hop cap — `d(R)`
 decay and `ε` bound the depth. As each above-`ε` path is found, its
 weight is distributed to its authors and the path is discarded: memory is
-`O(players · M)`, never `O(paths)`; time is `O(P · L̄)`.
+`O(players)` — one running share per distinct author — never `O(paths)`;
+time is `O(N_p · L̄)`, the edges walked across all `N_p` above-`ε` paths of
+average length `L̄`.
 
 This is the **same path-sum traversal that computes `h_anchor(target)`**,
 under the same dust floor — a shared primitive that

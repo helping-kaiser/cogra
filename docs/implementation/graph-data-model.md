@@ -299,7 +299,7 @@ promoted node through `:ANCHOR` / `:PROMOTES` edges. See
 | `D`                             | String        | Pointer to the on-chain escrow holding the deposit. The amount is read from chain, never stored on the node; funded at creation, top-up only per [economics.md §2.2](../primitive/economics.md#22-adjustability). Set at creation. |
 | `g`                             | Float         | The `d(R)` decay base for this campaign's reach metric and payout split. Default `0.1`. Immutable after creation. |
 | `h_start`                       | Float         | `h_anchor(target)` at `start_ts` — the baseline the `declared_goal` is measured from. Set at creation. |
-| `declared_goal`                 | Float         | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula. Mutable before settlement. Layered. |
+| `declared_goal`                 | Float         | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula, so constrained `> 0`. Mutable before settlement. Layered. |
 | `start_ts`                      | LocalDateTime | Campaign-window start. Set at creation. |
 | `end_ts`                        | LocalDateTime | Campaign-window end. Mutable before settlement (free, unlimited extensions). Layered. |
 | `status`                        | String        | Lifecycle state: `'open'` / `'settled'` / `'auto-settled'`. Layered. |
