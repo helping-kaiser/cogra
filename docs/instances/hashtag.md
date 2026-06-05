@@ -1,8 +1,9 @@
 # Hashtag
 
-The **Hashtag** is a content node — a topic tag that other
-content nodes attach to. Among content nodes, Hashtag is the
-odd one out: its identity is **content-addressed**. The UUID
+The **Hashtag** is a topic node — a label that content nodes
+attach to via `:TAGGING`. It sits in its own category
+([nodes.md §5](../primitive/nodes.md#5-topic-nodes)) because its
+identity is **content-addressed**. The UUID
 is `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` with a fixed
 project-scoped namespace, derived from the canonical name
 rather than minted at random. That choice cascades through

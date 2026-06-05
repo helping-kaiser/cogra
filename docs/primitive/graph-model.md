@@ -53,12 +53,12 @@ Accounts gate participation (writing), not viewing.
 
 ## 2. Node Categories
 
-Nodes fall into four categories:
+Nodes fall into five categories:
 
 - **Actor nodes** — entities that take actions and create edges
   (User, Collective).
 - **Content nodes** — entities that are acted upon (Post, Comment,
-  Chat, ChatMessage, Item, Hashtag).
+  Chat, ChatMessage, Item).
 - **Junction nodes** — entities that represent relationships which
   themselves can be interacted with (ChatMember, CollectiveMember,
   ItemOwnership). They have roles, need approval flows, and
@@ -69,6 +69,13 @@ Nodes fall into four categories:
   configuration governed via Proposals (Network). They aren't
   actors, aren't content, and don't represent relationships;
   they exist because governance needs a node to target.
+- **Topic nodes** — shared, content-addressed labels that content
+  attaches to for discovery (Hashtag). Authorless and immutable
+  except redaction; brought into existence implicitly by the first
+  `:TAGGING` edge. The canonical name IS the identity, so the same
+  topic converges on one node across actors and instances. They
+  are acted upon like content but, lacking an author and a mutable
+  body, sit outside the content category.
 
 **Invariant:** **Actor = User ∪ Collective.** Wherever the docs
 say "actor" without further qualification, the referent is any

@@ -217,13 +217,14 @@ flowchart LR
     Post[Post]:::content
     Comment[Comment]:::content
     Item[Item]:::content
-    Hashtag[Hashtag]:::content
+    Hashtag[Hashtag]:::topic
 
     Post -->|TAGGING| Hashtag
     Comment -->|TAGGING| Hashtag
     Item -->|TAGGING| Hashtag
 
     classDef content fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef topic   fill:#fce4ec,stroke:#c2185b,color:#880e4f;
 ```
 
 ### 2.4. `:TARGETS`
@@ -245,7 +246,7 @@ flowchart TD
     Chat[Chat]:::content
     ChatMessage[ChatMessage]:::content
     Item[Item]:::content
-    Hashtag[Hashtag]:::content
+    Hashtag[Hashtag]:::topic
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
     ItemOwnership[ItemOwnership]:::junction
@@ -268,6 +269,7 @@ flowchart TD
     classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
     classDef system   fill:#eceff1,stroke:#455a64,color:#263238;
+    classDef topic    fill:#fce4ec,stroke:#c2185b,color:#880e4f;
 ```
 
 ### 2.5. `:REFERENCES`
@@ -293,7 +295,7 @@ flowchart LR
     Collective[Collective]:::actor
     Chat[Chat]:::content
     Item[Item]:::content
-    Hashtag[Hashtag]:::content
+    Hashtag[Hashtag]:::topic
     Proposal[Proposal]:::content
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
@@ -356,6 +358,7 @@ flowchart LR
     classDef content   fill:#fff3e0,stroke:#ef6c00,color:#e65100;
     classDef junction  fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
     classDef system    fill:#eceff1,stroke:#455a64,color:#263238;
+    classDef topic     fill:#fce4ec,stroke:#c2185b,color:#880e4f;
     classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
