@@ -120,8 +120,8 @@ The full per-target-type catalog with dimension labels lives in
 include:
 
 - Other actors: User, Collective.
-- Content: Post, Comment, Chat, ChatMessage, Item, Hashtag,
-  Proposal.
+- Content: Post, Comment, Chat, ChatMessage, Item, Proposal.
+- Topics: Hashtag.
 - Junctions: ChatMember, CollectiveMember, ItemOwnership.
 
 Some compound gestures defined in other docs reduce to creating

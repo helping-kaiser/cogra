@@ -5,8 +5,8 @@ description and links to the dedicated doc where the per-node
 mechanics live — creation flow, graph-side and Postgres-side
 properties, edges, authorship, and lifecycle.
 
-For the conceptual framing — the four categories (actor, content,
-junction, system) and why they matter — see
+For the conceptual framing — the five categories (actor, content,
+junction, system, topic) and why they matter — see
 [graph-model.md §2](graph-model.md#2-node-categories). For the
 edges that connect nodes, see [edges.md](edges.md). For concrete
 property types, constraints, and indexes, see
@@ -205,7 +205,6 @@ Entities that are acted upon by actors.
 | **Chat** | A conversation container (1:1 or group) — a first-class interactable node visible on the graph, not a private hidden space. Topology (membership, who-talks-to-whom) is public by design; only message bodies are private, and only when encrypted. See [chats.md](../instances/chats.md). |
 | **ChatMessage** | A single message within a Chat, itself a first-class node — likeable, commentable, embed-able. Carries a `content_privacy` flag (`plaintext` / `encrypted`) per message; a single chat can mix both freely. See [chats.md](../instances/chats.md). |
 | **Item** | A physical or digital good — ownable (via ItemOwnership), transferable, and talked about. See [items.md](../instances/items.md). |
-| **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). The only content node with no authorship — exempt from [authorship.md](authorship.md)'s earliest-incoming-edge rule. See [hashtag.md](../instances/hashtag.md). |
 | **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one content node with no user-input fields: carries no per-field moderation properties and has no Postgres-side display content. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
 | **Campaign** | A pull-marketing campaign — a funded, public request to raise a target node's reach into an anchor's cluster. Authored by the advertiser; carries the campaign terms as graph properties (deposit pointer, `g`, goal, window) and reaches its anchor and target through `:ANCHOR` / `:PROMOTES` edges. Like `Proposal`, a carrier node with no user-input fields and no Postgres-side display content. See [economics.md §2](economics.md#2-the-campaign-node). |
 | **Settlement** | The terminal record of a settled `Campaign`, created once at settlement — carries the distributor address, the payout Merkle root, and the public results (`settled_P`, `achieved_h_gain`) as properties. Claimants reach it via `:ENTITLES` / `:CLAIMS` edges. Like `Proposal`, a carrier node with no user-input fields and no Postgres-side display content. See [economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow). |
@@ -238,4 +237,17 @@ configuration** that doesn't fit actor / content / junction.
 | Node type | Description |
 |-----------|-------------|
 | **Network** | Singleton per instance. Carries Network-level configuration (moderation thresholds, role-change quorums, eligibility definitions). Targeted by Proposals when those parameters are changed. See [network.md](network.md). |
+
+---
+
+## 5. Topic nodes
+
+Shared, content-addressed labels that content attaches to for
+discovery. Acted upon like content, but — lacking an author and a
+mutable body — they sit in their own category. See
+[graph-model.md §2](graph-model.md#2-node-categories).
+
+| Node type | Description |
+|-----------|-------------|
+| **Hashtag** | A topic tag whose identity is content-addressed (UUIDv5 of the canonical name), brought into existence implicitly by the first `:TAGGING` edge. Also covers concepts like places (e.g. `#berlin`). Authorless — exempt from [authorship.md](authorship.md)'s earliest-incoming-edge rule. See [hashtag.md](../instances/hashtag.md). |
 

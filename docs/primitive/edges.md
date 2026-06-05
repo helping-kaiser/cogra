@@ -253,8 +253,8 @@ live in the respective [post.md](../instances/post.md) and
 | Comment → any node (except Hashtag) | This comment references this node |
 
 Targets span every node category: actor (User, Collective), content
-(Post, Comment, Chat, ChatMessage, Item, Hashtag, Proposal), and
-junction (ChatMember, CollectiveMember, ItemOwnership). A carrier
+(Post, Comment, Chat, ChatMessage, Item, Proposal), topic (Hashtag),
+and junction (ChatMember, CollectiveMember, ItemOwnership). A carrier
 can point at anything with a graph identity.
 
 **`:REFERENCES` is not written when another structural edge
