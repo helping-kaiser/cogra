@@ -509,9 +509,11 @@ entry. Three reserved top-level namespaces:
   what the cascade can produce on `:Collective` or
   `:CollectiveMember`: `add_member`, `remove_member`,
   `change_role`, `change_ownership_pct`,
-  `change_voting_weight`, `set:<property>` (for Collective
-  node properties like `name`, `description`, `avatar`,
-  `website_url`). The optional `<role>` parameter refines
+  `change_voting_weight`, `set:<property>` (setting a
+  Collective field — `name` is a graph data property;
+  `description`, `avatar`, `website_url` are Postgres display
+  content, the graph carrying only their per-field moderation
+  status). The optional `<role>` parameter refines
   member-related operations by the affected member's role.
   Composite Collective operations (`admit_shareholder`,
   `transfer_shares`, …) take their own operation key paired
