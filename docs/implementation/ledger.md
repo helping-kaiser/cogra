@@ -144,10 +144,10 @@ data splits across the other two stores:
 - **Memgraph — the `Campaign` node.** The navigable / weighting terms and
   public state live as node properties
   ([economics.md §2](../primitive/economics.md#2-the-campaign-node)):
-  `anchor`, `target`, `g`, `declared_goal`, `start_ts`, `end_ts`,
-  `status`, the deposit pointer, and at settlement
-  `achieved_h_gain_at_settlement`, `settled_P`, and the `ε` in force. The
-  `:ANCHOR` / `:PROMOTES` declarations are topology. The auto-settlement
+  `g`, `declared_goal`, `start_ts`, `end_ts`, `status`, the deposit
+  pointer, and the `ε` in force. The `:ANCHOR` / `:PROMOTES`
+  declarations carry the anchor and target as topology. The
+  auto-settlement
   scheduler finds campaigns past `end_ts + 30d` by querying these node
   properties — an operational query over graph state, not a Postgres scan.
 - **Chain — money.** The deposit, the per-settlement Merkle root, the
