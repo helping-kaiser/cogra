@@ -41,7 +41,7 @@ schema migrations. The migration is the only path that writes
 the singleton. Every subsequent change to the singleton's
 parameters or to any user's role runs through governance.
 
-The migration writes three nodes in a single atomic transaction:
+The migration writes four nodes in a single atomic transaction:
 
 1. The `:Network` singleton with the default property values
    listed in
@@ -51,16 +51,22 @@ The migration writes three nodes in a single atomic transaction:
    credentials) is supplied to the migration at run time: the
    central instance run by the project picks the project owner;
    a federated fork sets its own genesis.
-3. The `bot-defense` Hashtag node, so its content-addressed
+3. The genesis User's `Wallet` node, holding its counterfactual
+   self-custody address as a layered property and bound by a
+   `:PAYS_TO` edge. The genesis User is an economic actor — it
+   can earn from campaigns — so it gets its payout wallet at
+   creation like every account. See
+   [ledger.md](../implementation/ledger.md#the-wallet-node-and-the-pays_to-binding).
+4. The `bot-defense` Hashtag node, so its content-addressed
    UUIDv5 (per
    [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies))
    is present from network birth and every frontend can resolve
    it. See
    [feed-ranking.md](feed-ranking.md).
 
-All three writes share one transaction: an observer never sees
-the singleton without its moderator or the `bot-defense`
-Hashtag. The migration is not a runtime flow — no "first user to
+All four writes share one transaction: an observer never sees
+the singleton without its moderator, the moderator without its
+payout `Wallet`, or the `bot-defense` Hashtag. The migration is not a runtime flow — no "first user to
 register" detection, no genesis-flag column, no special branch
 in the registration endpoint. Subsequent Users register through
 invitation per [invitations.md](invitations.md).
