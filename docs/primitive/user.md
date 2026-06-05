@@ -46,13 +46,14 @@ Two paths produce a User node, both gated on email verification:
   time-gated invite link (single-use or multi-use), the invitee
   registers and verifies their email, and the system atomically
   creates the User node together with the two invitation edges
-  per [invitations.md](invitations.md). The invitee is never an
-  isolated node — they have outgoing reach from the moment they
-  exist.
+  per [invitations.md](invitations.md) and the account's payout
+  `Wallet`. The invitee is never an isolated node — they have
+  outgoing reach from the moment they exist.
 - **Genesis bootstrap.** A fresh instance has its genesis User
   created by the bootstrap migration that also writes the
-  [:Network singleton](network.md#2-creation) and the
-  `bot-defense` Hashtag — three nodes, one atomic step. The
+  [:Network singleton](network.md#2-creation), the
+  `bot-defense` Hashtag, and the genesis User's payout `Wallet`
+  (bound by `:PAYS_TO`) — four nodes, one atomic step. The
   migration runs once at instance creation; no self-registration
   path produces the first User. All subsequent Users come in via
   invitation.

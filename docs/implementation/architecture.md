@@ -238,18 +238,21 @@ account deletion (graph redactions + Postgres row clears).
 
 ### Genesis bootstrap
 
-The bootstrap migration writes three nodes — the `:Network` singleton, the
-genesis User, and the `bot-defense` Hashtag — in one transaction. See
+The bootstrap migration writes four nodes — the `:Network` singleton, the
+genesis User, the genesis User's `Wallet` (bound by `:PAYS_TO`), and the
+`bot-defense` Hashtag — in one transaction. The genesis User is an economic
+actor (it can earn from campaigns), so it gets its payout wallet at creation
+like every account. See
 [network.md §2](../primitive/network.md#2-creation) for the primitive-side
 framing.
 
 Because no graph exists until the transaction commits, no hostile Proposal
 can race it: there is no target to file against, no Network singleton to
 scope to, no eligibility set to vote from. After commit, the graph is in a
-complete state — singleton + bootstrap moderator + bot-defense Hashtag — and
-ordinary governance applies from there.
+complete state — singleton + bootstrap moderator + its payout Wallet +
+bot-defense Hashtag — and ordinary governance applies from there.
 
-The migration is the **only** writer of these three nodes and the only step
+The migration is the **only** writer of these four nodes and the only step
 that escapes the actor-gesture-or-governance rule (per
 [graph-model.md §1](../primitive/graph-model.md#1-core-principles)).
 
@@ -290,19 +293,23 @@ Inside the transaction:
    linked `auth_invitations` row (Postgres read).
 3. Create the User node in Memgraph with `network_role =
    'member'` and layered properties initialized.
-4. Write the two invitation actor edges per
+4. Create the account's `Wallet` node — its counterfactual
+   self-custody address as the initial layered property — and
+   write the `:PAYS_TO` edge binding User → Wallet per
+   [ledger.md](ledger.md#the-wallet-node-and-the-pays_to-binding).
+5. Write the two invitation actor edges per
    [invitations.md](../primitive/invitations.md) — inviter
    value outward, invitee value back.
-5. Insert the first `auth_refresh_tokens` row (Postgres).
-6. Delete the `auth_pending_registrations` row (Postgres).
+6. Insert the first `auth_refresh_tokens` row (Postgres).
+7. Delete the `auth_pending_registrations` row (Postgres).
 
 The order makes each step rollback-safe. If any step fails the
 service layer rolls back both pools' transactions; the pending
 registration row survives so the invitee can retry.
 
 There is **no observable window** in which the User node exists
-without its invitation edges or in which a session token is
-issued before the User. The
+without its invitation edges or its payout `Wallet`, or in which
+a session token is issued before the User. The
 [no-User-node-before-verification invariant in
 user.md §2](../primitive/user.md#2-creation) holds at the
 implementation level because of this ordering.
