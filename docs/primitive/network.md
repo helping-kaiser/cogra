@@ -430,7 +430,7 @@ properties, separated by stakes:
 
 | Bucket   | Dual-quorum pair                                  | `P` default | `K` default | Mod gate | Governs |
 |----------|---------------------------------------------------|-------------|-------------|----------|---------|
-| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | baseline tier (≥1 mod positive) | `moderation_sensitive_*`, `active_threshold_days`, the baseline pair itself |
+| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | baseline tier (≥1 mod positive) | `moderation_sensitive_*`, `active_threshold_days`, `time_decay_half_life_days`, `distance_decay_base`, `dust_floor`, the baseline pair itself |
 | Critical | `critical_property_change_quorum_fraction`, `critical_property_change_quorum_count` | `0.50` | `10000` | critical tier (⌈`critical_mod_gate_fraction` · \|active mods\|⌉) | `mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, `critical_mod_gate_fraction`, the critical pair itself |
 
 Pass condition for either pair is the dual-quorum form from
