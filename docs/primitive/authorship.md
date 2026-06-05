@@ -7,7 +7,7 @@ the very first edge ever created toward a node identifies the author.
 
 **"Creator" is a synonym for "author"; "author" is canonical.**
 Wherever a User or Collective is described as "creating" a node
-— Item, Chat, Collective, Post, Comment, Proposal — the on-graph
+— Item, Chat, ChatMessage, Collective, Post, Comment, Proposal — the on-graph
 fact is the same: they hold the earliest-layer-1 incoming edge,
 the `:AUTHOR` label, and the rights and obligations that
 authorship carries. "Founder" is *not* a synonym — it is the
@@ -48,7 +48,7 @@ The authoring edge is the one actor edge that carries a sub-label
 distinct from `:ACTOR` — `:AUTHOR` — per
 [edges.md §3 "Sub-category labels"](edges.md#sub-category-labels).
 The label is the system's mechanical implementation of the
-"first outgoing edge" rule above: created at the same gesture as
+"earliest incoming edge" rule above: created at the same gesture as
 the authoring edge, permanent across re-layerings, and
 queryable in a single label scan.
 

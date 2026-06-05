@@ -95,7 +95,7 @@ uses. The gesture writes atomically:
 - The Postgres `chat_messages` row carrying the message body
   (plaintext or ciphertext), the `epoch` index for encrypted
   messages, and any attached media (§4.2).
-- The author's `User → ChatMessage` actor edge — the
+- The author's `User/Collective → ChatMessage` actor edge — the
   **authorship edge** (§6.2).
 - A system-created `ChatMessage → Chat` `:CONTAINMENT` edge.
 - One system-created `ChatMessage → X` `:REFERENCES` edge per
@@ -432,7 +432,7 @@ founder, and the rare "who founded this?" query can scan the
 
 ### 6.2 ChatMessage
 
-Standard rule. The author's `User → ChatMessage` actor edge is
+Standard rule. The author's `User/Collective → ChatMessage` actor edge is
 written in the same authoring gesture as the ChatMessage node
 (§2.2) and carries the `:AUTHOR` sub-label; `author_id` is
 cached on the `chat_messages` Postgres row for display.
@@ -1062,7 +1062,7 @@ epoch key has been voluntarily disclosed per §9 and
 [moderation.md "Encrypted message classification"](moderation.md#encrypted-message-classification).
 
 **Ciphertext is body content; epoch keys are not.** The Postgres
-tombstone replaces the `body_ciphertext` blob — the same row
+tombstone replaces the `content` blob — the same row
 shape that holds plaintext under
 `content_privacy = 'plaintext'` (§4.2). Redaction does **not**
 touch the chat's epoch keys: those live off-graph on current and
