@@ -120,6 +120,7 @@ so the whole arrangement is public and auditable on the graph.
 | `start_ts`, `end_ts` | Campaign window. |
 | `status` | Lifecycle state (open / settled / auto-settled). |
 | `dust_floor` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
+| `achieved_h_gain` | Layered. A public running record of the instantaneous gain `h_anchor(target) − h_start`, one layer appended per sample over the run (§2.3). Approximate progress only; the settled sustained-level figure is on the `:Settlement` node (§7). |
 
 Money amounts never live on the node: the deposit is held in escrow
 on-chain, and per-contributor payout figures and transfer sizes are
@@ -185,6 +186,24 @@ surface on-chain and in graph state.
   steep-`g` switch at settlement to stiff them, would be a
   bait-and-switch (§6.4).
 
+### 2.3 Running progress
+
+Independently of how it settles, every campaign continuously publishes
+its progress so the advertiser and the anchor cluster can watch reach
+mid-run. At a fixed cadence — sparse in *time* (≈30–90 evals over a
+typical window) but with each `h`-eval as fine as compute allows — the
+system samples `h_anchor(target)` and appends the **instantaneous** gain
+`h_anchor(target) − h_start` as one layer on the layered
+`achieved_h_gain` property of the `Campaign` node, in the background,
+per-campaign-parallel.
+
+It is a deliberately **approximate** public progress curve — approximate
+because it is sparse in time and instantaneous, not because any eval is
+coarse — and never a payout input. The settled figure is the one-time
+sustained-level reduction of this same curve (§3), recorded on the
+`:Settlement` node at settlement (§7); auto-settlement reuses these
+stored samples for that reduction rather than scanning afresh.
+
 ---
 
 ## 3. Achieved reach — the sustained-level metric
@@ -219,12 +238,13 @@ contributors who did the work); **time-weighted average** (spike-
 resistant but under-credits an honest ramp at `D/2`, structurally
 underpaying linear delivery).
 
-**Cost.** The metric needs the `h_anchor(target)` trajectory over the
-window — coarse-sampled `h`-evals, not one snapshot. Because `τ ≈ Δt/3`
-is coarse, sampling at a fraction of `τ` suffices (≈30–90 evals over a
-typical window), run in the background, per-campaign-parallel, and only
-on the auto-settlement path. Active settlement skips the scan entirely
-(one snapshot at the advertiser-chosen `t*`, §6.3).
+**Cost.** The reduction reads the `h_anchor(target)` gain trajectory the
+campaign already records as it runs (§2.3) — no separate scan. It runs
+over those stored samples, adding `end_h` and, for an advertiser
+settling early, one eval at the chosen `t*` (§6.3). Every eval —
+`h_start`, the stored samples, `end_h`, `t*` — is computed at the same
+precision, as fine as compute allows, so subtracting them never mixes
+precisions and biases the gain.
 
 ---
 
