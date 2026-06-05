@@ -203,10 +203,19 @@ for trigger conditions and per-subject serialization.
 
 ### 2.5 Outcome
 
-What state change happens when the threshold is crossed. Always a
-new layer on a structural edge (state-bearing) or a new layer on a
-node property. Never a deletion; always append-only. Cascades are
-allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
+What state change happens when the threshold is crossed. Always
+append-only, never a deletion. The carrier is one of:
+
+- a new layer on a structural edge (state-bearing),
+- a new layer on a node property, or
+- a new Postgres display-content version row — for a
+  Proposal-mediated display-content change (`set:description`,
+  `set:avatar`, `set:website_url`), where the on-graph record
+  is the terminating Proposal's `status` rather than a
+  graph-property layer (see
+  [proposal.md §6](../instances/proposal.md#6-lifecycle)).
+
+Cascades are allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ### 2.6 Packaging rules on a node — the `governance` map convention
 
@@ -324,7 +333,13 @@ new junction casts a Shape B vote from their existing junction
 of the same type for the same parent. For `CollectiveMember`
 and `ItemOwnership`, the same edge serves the full lifecycle:
 layer-1 with `dim1 > 0` admits, later layers shift stance, an
-eventual `dim1 < 0` layer is the removal vote. See
+eventual `dim1 < 0` layer is a removal vote. A single `dim1 < 0`
+layer is **one vote toward the removal instance's own
+threshold**, not a unilateral removal — removal is a distinct
+governance instance (e.g. `decision:remove_member`, separate
+from `decision:add_member`) with its own independently-set
+threshold, so a member admitted by N approvers is not fired by
+one defection unless that removal threshold is itself `1`. See
 [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ```
@@ -670,6 +685,17 @@ only write. The triggering write may fan out into derived writes:
 - An advance of `Chat.epoch` on a chat node (mid-epoch
   rotation).
 - A new ownership-edge layer (Item ownership transfer).
+- A new Postgres display-content version row and **no graph
+  layer**, for a passing display-content field change
+  (`set:description`, `set:avatar` / `set:image`,
+  `set:website_url`). The graph property of that name is a
+  per-field moderation-status carrier (its value *is* the
+  status), with nothing meaningful to layer for a content edit,
+  so the on-graph record of the change is the triggering
+  Proposal's terminal `status` (§2.5,
+  [proposal.md §2](../instances/proposal.md#2-graph-side-properties)).
+  A `set:name` change is **not** display content — `name` is a
+  graph data property and takes the normal graph-property layer.
 
 Generic to every cascade:
 
@@ -683,11 +709,27 @@ Generic to every cascade:
   leave the platform with a redacted layer and no archive copy,
   which the retention story in
   [retention-archive.md](retention-archive.md) refuses.
-- **Full rollback.** Any step failure rolls back the entire
-  transaction — including the triggering vote layer. From the
-  graph's perspective the threshold cross never happened, and
-  the voter who pushed it across sees the rollback as a write
-  failure on their vote.
+- **Two failure modes, two rollback scopes.** A cascade can
+  end without applying its outcome in two distinct ways, and
+  they roll back differently:
+  - **Infrastructure failure** (a failed archive write, a DB
+    error, any step that errors) rolls back the **entire**
+    transaction — including the triggering vote layer. From the
+    graph's perspective the threshold cross never happened, and
+    the voter who pushed it across sees the rollback as a write
+    failure on their vote.
+  - **Deliberate invariant refusal** (a composite Proposal's
+    `_from` re-validation fails against current state — see
+    [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals))
+    is not an error: the threshold cross is real and the
+    **triggering vote stands**. Only the cascade's target
+    writes roll back; the Proposal terminates with
+    `status = 'passed_but_invariant_rejected'`
+    ([proposal.md §6](../instances/proposal.md#6-lifecycle)),
+    and a fresh Proposal with refreshed numbers is the only
+    path forward. This mode is specific to composite Proposals;
+    every other cascade has only the infrastructure-failure
+    mode.
 
 The dispatcher is one module in the API service layer; it
 routes by trigger type to the correct fan-out sequence and
@@ -762,12 +804,19 @@ from remaining members to re-cross quorum. Governance would be
 dominated by background churn, not by intent, and the graph's
 history would be swamped by silent reverts.
 
-CoGra's model instead: **once an outcome takes effect, the subject
-stays in that state until a future vote event pushes it back across
-the threshold.** To undo a decision, members actively cast new
-votes — updating their existing vote edges or creating new ones for
-members who hadn't voted before. Governance is an act, not a
-background computation.
+CoGra's model instead: **once an outcome takes effect, the
+subject stays in that state until a deliberate new act moves
+it.** Eligibility shifts and sentiment drift never revert it on
+their own. Governance is an act, not a background computation.
+
+Reversal is itself a governed act, never a side effect. For a
+Proposal-mediated outcome the Proposal is terminal once it
+crosses threshold — its `status` is final and it stops accepting
+votes ([proposal.md §6](../instances/proposal.md#6-lifecycle)) —
+so undoing it means authoring a **counter-Proposal**
+([§3 "Counter-Proposals"](#counter-proposals)) that carries the
+reverse change and must clear its own threshold, not re-voting
+the terminated original.
 
 ### No time-boxing
 

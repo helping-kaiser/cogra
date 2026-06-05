@@ -122,10 +122,37 @@ incoming vote edge from the authoring actor (§5).
   forward dependency — see
   [layers.md §3](../primitive/layers.md#3-layers-on-nodes).
 
-None of these properties layers — the Proposal's identity *is*
-the specific change it proposes; mutating any of them
-mid-lifecycle would change what voters are voting on. A revised
-target, value, kind, or anchor requires a new Proposal.
+- **`status`** — the Proposal's lifecycle state, and the **one
+  layered property** on the node. Default `'open'`; transitions
+  exactly once, at threshold-cross, to a terminal value:
+  - `'passed'` — threshold crossed, cascade applied.
+  - `'passed_but_invariant_rejected'` — threshold crossed, but a
+    composite Proposal's `_from` re-validation failed and the
+    cascade refused the target writes (§6). The crossing vote
+    still stands; only the cascade rolled back.
+
+  A Proposal **stops accepting votes once `status ≠ 'open'`**;
+  the terminal state is final. There is no `'failed'` value — a
+  Proposal that never crosses threshold stays `'open'`
+  indefinitely (no time-boxing, see
+  [governance.md §6](../primitive/governance.md#no-time-boxing)).
+  Changing a terminal outcome is done with a **counter-Proposal**
+  ([governance.md §3](../primitive/governance.md#counter-proposals)),
+  never by re-voting the terminated one. `status` is the
+  Proposal's on-graph outcome record: other nodes record a
+  governance outcome as a layer on the changed target property,
+  but a Proposal carries intent with no such target of its own
+  (§6).
+
+None of the four **identity** properties above —
+`target_property`, `proposed_value`, `value_kind`,
+`rule_anchor` — layers: the Proposal's identity *is* the
+specific change it proposes; mutating any of them mid-lifecycle
+would change what voters are voting on. A revised target,
+value, kind, or anchor requires a new Proposal. `status` is the
+sole exception, and append-only by the same discipline as
+everything else on the graph — `open` → terminal, exactly one
+transition, never destructive.
 
 ### Composite proposals
 
@@ -302,8 +329,10 @@ is the node-level progression.
   eligibility shifts
   ([governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)).
 - **Cascade** — when a new-vote tally crosses threshold,
-  the system writes a new layer on `target_property` of the
-  target with the Proposal's `proposed_value`
+  the Proposal's `status` flips to its terminal value (§2) and
+  the system fans out the outcome. The default outcome writes a
+  new layer on `target_property` of the target with the
+  Proposal's `proposed_value`
   ([graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)).
   Outcome semantics, cascade bounds, and the
   `'illegal'`-specific cascade behavior (per-field redaction
@@ -313,19 +342,37 @@ is the node-level progression.
   [moderation.md §1](moderation.md#1-the-two-classification-paths),
   and
   [layers.md §5](../primitive/layers.md#5-deletion-policy).
-  The `'node'` sentinel (§2) dispatches on the target's node
-  type — re-layering `Chat → ChatMember` for a `ChatMember`
-  target, or writing nothing on a `ChatMessage` target since
-  the Proposal's pass-state is itself the chat's stance.
-  Composite Proposals (§2 "Composite proposals") re-validate
-  against current state at this point — if any bundle entry's
-  `_from` no longer matches the affected property's current
-  value, the cascade refuses and the Proposal terminates as
-  `passed_but_invariant_rejected`. A fresh Proposal with
-  refreshed numbers is the only path forward.
+  Two outcomes write no graph-property layer — the Proposal's
+  terminal `status` is the entire on-graph record:
+  - **A `ChatMessage` disavowal** (the `'node'` sentinel
+    against a message): the chat's stance *is* the passed
+    Proposal, so nothing is written on the message;
+    `status = 'passed'` carries it.
+  - **A display-content `set:*`** (`set:description`,
+    `set:avatar` / `set:image`, `set:website_url`): the cascade
+    writes a Postgres display-content version row and no graph
+    layer, per the display-content cascade in
+    [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
+    `set:name` is unaffected — `name` is a graph data property
+    and takes the normal layer.
+
+  The `'node'` sentinel otherwise dispatches on the target's
+  node type — e.g. re-layering `Chat → ChatMember` for a
+  `ChatMember` target. Composite Proposals (§2 "Composite
+  proposals") re-validate against current state at this point —
+  if any bundle entry's `_from` no longer matches the affected
+  property's current value, the cascade **refuses**: only the
+  target writes roll back, the threshold-crossing vote stands,
+  and the Proposal terminates with
+  `status = 'passed_but_invariant_rejected'`. This is a
+  deliberate invariant refusal, distinct from an infrastructure
+  failure (which rolls back the vote too) — see
+  [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
+  A fresh Proposal with refreshed numbers is the only path
+  forward.
 - **Outcome stickiness** — after the cascade, the target
-  stays in its new state until a future vote event pushes
-  it back across a threshold
+  stays in its new state. The passed Proposal is terminal and
+  does not flip back when later votes shift sentiment
   ([governance.md §6 "Why outcomes are sticky"](../primitive/governance.md#why-outcomes-are-sticky-not-continuously-rendered)).
   Reverting requires a counter-Proposal; multiple Proposals
   can coexist against the same property, each passing or

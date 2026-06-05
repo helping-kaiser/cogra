@@ -597,7 +597,11 @@ shape:
   rule (`rule`, `target_property = 'governance.<action_key>'`);
   fire a worker (the cascade writes the
   `Collective → CollectiveMember` `:APPROVAL` state-transition
-  layer per §9).
+  layer per §9); set a display-content field
+  (`set:description` / `set:avatar` / `set:website_url`) —
+  Postgres version row, no graph layer, per the display-content
+  cascade in
+  [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
 - **Composite** — multi-property atomic change across multiple
   nodes. `value_kind = 'composite:<action_key>'`,
   `proposed_value` is a handler-specific bundle of `_from` /
