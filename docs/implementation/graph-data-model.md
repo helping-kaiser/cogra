@@ -303,7 +303,7 @@ promoted node through `:ANCHOR` / `:PROMOTES` edges. See
 | `start_ts`                      | LocalDateTime | Campaign-window start. Set at creation. |
 | `end_ts`                        | LocalDateTime | Campaign-window end. Mutable before settlement (free, unlimited extensions). Layered. |
 | `status`                        | String        | Lifecycle state: `'open'` / `'settled'` / `'auto-settled'`. Layered. |
-| `ε`                             | Float         | The dust floor bounding path enumeration; public at creation, tuneable during the campaign as a compute failsafe. The value in force at settlement is the recorded one. Mutable before settlement. Layered. |
+| `dust_floor`                    | Float         | The dust floor bounding path enumeration; public at creation, tuneable during the campaign as a compute failsafe. The value in force at settlement is the recorded one. Mutable before settlement. Layered. |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Campaign) ASSERT c.id IS UNIQUE;
