@@ -318,42 +318,45 @@ subject (e.g. `User_Alice → ChatMember_Bob_ChatY` for personal
 sentiment about Bob's membership) — these are not approval
 votes, just personal sentiment.
 
-### Shape B — structural edge from eligibility junction to subject
+### Shape B — structural edge from eligibility junction to a Proposal
 
 Used when the voter has an **existing eligibility junction** to
 vote through. The voter triggers; the system creates a
-structural edge from the voter's junction to the subject,
-`dim1` carrying vote direction.
+structural edge from the voter's junction to the **Proposal**
+being voted on, `dim1` carrying vote direction. Shape B always
+targets a Proposal — a junction never votes directly on another
+junction.
 
 This is the workhorse shape for chat-internal and
 collective-internal governance:
 
-**Junction approval and removal.** Each required approver of a
-new junction casts a Shape B vote from their existing junction
-of the same type for the same parent. For `CollectiveMember`
-and `ItemOwnership`, the same edge serves the full lifecycle:
-layer-1 with `dim1 > 0` admits, later layers shift stance, an
-eventual `dim1 < 0` layer is a removal vote. A single `dim1 < 0`
-layer is **one vote toward the removal instance's own
-threshold**, not a unilateral removal — removal is a distinct
-governance instance (e.g. `decision:remove_member`, separate
-from `decision:add_member`) with its own independently-set
-threshold, so a member admitted by N approvers is not fired by
-one defection unless that removal threshold is itself `1`. See
+**Junction lifecycle.** Admission, removal, and role changes for
+every junction type — `ChatMember`, `CollectiveMember`,
+`ItemOwnership` — route through a fresh terminal `Proposal` that
+`:TARGETS` the junction. Each required approver (admission) or
+eligible voter (removal / role change) casts a Shape B vote from
+their existing junction of the same type for the same parent to
+that Proposal (`junction_voter → Proposal`). On threshold-cross
+the Proposal's cascade writes the outcome on the junction's
+structural edges. Admission and removal are **separate
+Proposals** — distinct instances (e.g. `decision:add_member` vs.
+`decision:remove_member`) with independently-set thresholds — so a
+member admitted by N approvers is not fired by one defection
+unless the removal threshold is itself `1`. Because every event
+is its own terminal Proposal with a fresh vote set, no vote
+outlives the event that gathered it. See
 [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ```
-CollectiveMember_Alice_CollZ -[dim1: +1, dim2: 0]-> CollectiveMember_Bob_CollZ    (admit, layer 1)
-CollectiveMember_Alice_CollZ -[dim1: -1, dim2: 0]-> CollectiveMember_Bob_CollZ    (remove, layer 2)
+ChatMember_Alice_ChatZ    -[dim1: +1, dim2: 0]-> Proposal_admit_Bob     (approve admission)
+CollectiveMember_Carol_CZ -[dim1: +1, dim2: 0]-> Proposal_remove_Bob    (vote to remove)
 ```
 
-`ChatMember → ChatMember` covers admission only. Chats made the
-uniformity choice that all chat-internal disavowal routes
-through a Proposal node (see "Disavowal" below and
-[chats.md §10](../instances/chats.md#10-moderation)) — direct
-disavowal edges would reinvent tally semantics and make
-counter-Proposal reversal awkward. Collectives keep both shapes
-available per the collective's social contract.
+Routing every junction event through a Proposal — rather than a
+direct `junction → junction` vote edge — was once a chat-only
+uniformity choice, now applied to all junction types: direct vote
+edges would reinvent tally semantics, leak stale votes across
+events, and make counter-Proposal reversal awkward.
 
 **Disavowal of content or members.** Chat-internal disavowal —
 both Level 1 against a `ChatMessage` and Level 2 against a
@@ -510,17 +513,18 @@ The pattern recognizes that "N parties concur" and "governance
 with threshold N" are the same primitive — there is no separate
 "co-signature" concept. Three current consumers:
 
-- **Multi-sig junction approval.** Shape A self-claim by the
-  would-be bearer plus N Shape B approver votes from existing
-  eligibility junctions of the same type. The junction stays
-  pending until the threshold is reached; activation produces
-  the approval edge. See
+- **Multi-sig junction approval.** The would-be bearer's Shape A
+  vote authoring the admit-Proposal, plus N Shape B approver
+  votes on that Proposal from existing eligibility junctions of
+  the same type. The junction stays pending until the threshold
+  is reached; the Proposal's cascade then produces the approval
+  edge. See
   [graph-model.md §5](graph-model.md#5-junction-node-flows).
 - **Chat invitations.** A specific application of multi-sig
   junction approval: the chat's
   `governance['decision:add_member']` entry sets the threshold
-  on the inviter / approver Shape B votes that admit a new
-  `ChatMember`. See
+  on the Shape B approver votes cast on the admit-Proposal for a
+  new `ChatMember`. See
   [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
 - **Collective act-as routing.** A member's gesture to produce
   the Collective's outgoing edge runs through the social
@@ -675,8 +679,10 @@ shifts in the background.
 When a tally crosses threshold the outcome layer is rarely the
 only write. The triggering write may fan out into derived writes:
 
-- A `dim1 < 0` layer on a `:APPROVAL` edge (a member disavowal
-  outcome).
+- An `:APPROVAL` edge written `dim1 > 0` when an admit-Proposal
+  passes (junction admission), or a `dim1 < 0` layer on an
+  existing `:APPROVAL` edge when a removal-Proposal passes
+  (member removal / disavowal).
 - Redaction markers across one or more property layers plus a
   Postgres-side archive row (the `'illegal'`-classification
   outcome — see [moderation.md](../instances/moderation.md)).
@@ -974,8 +980,7 @@ community.
   decision-type the collective defines. A Collective hosts as
   many instances as its social contract specifies; each is
   parameterized for its own decision-type. Shape B
-  `CollectiveMember → CollectiveMember / Proposal` for all
-  internal votes.
+  `CollectiveMember → Proposal` for all internal votes.
 - **Network moderator role changes** — [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
   Shape A. Multi-sig: the critical-tier mod-gate (§7) — a fraction
   of active moderators — plus a community-quorum threshold. Two

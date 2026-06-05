@@ -9,7 +9,7 @@ graph stays, the better it scales. See
 [architecture.md §1](architecture.md#1-graph-db-owns-topology-postgres-owns-content) for the full split.
 
 For the conceptual model (node categories, edge dimensions, append-only
-rule, junction approval pattern), see:
+rule, junction lifecycle), see:
 
 - [graph-model.md](../primitive/graph-model.md) — foundation
 - [nodes.md](../primitive/nodes.md) — full node catalog with rationale
@@ -379,8 +379,9 @@ are pure record nodes; `Wallet` holds only an on-chain address. See
 All three junction types bind to their bearing actor via a
 `:BEARER` structural edge — `Junction → User|Collective` — set
 by the API at junction creation, never re-pointed. The Shape A
-self-claim that activates the junction must come from the actor
-this edge points at; mismatched claims are rejected. See
+self-claim — the bearer's vote authoring the junction's
+admit-Proposal — must come from the actor this edge points at;
+mismatched claims are rejected. See
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
 and edge-labels table below.
 
@@ -430,7 +431,7 @@ CREATE INDEX ON :ItemOwnership(id);
 
 None of the three junction tables declares a `status` property — by design.
 Junction state (pending / active / revoked) is derived from the two-edge
-approval pair's top-layer `dim1` values per
+state pair's top-layer `dim1` values per
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows). A
 stored flag would be a second source of truth that could drift.
 
