@@ -39,22 +39,21 @@ The gesture writes the following records atomically:
 - A new `:ItemOwnership` junction node for the author.
 - The `ItemOwnership → User/Collective` `:BEARER` structural
   edge, binding the junction to the author.
-- The author's `User/Collective → ItemOwnership` actor edge —
-  their **Shape A self-claim** to the ownership.
 - The `ItemOwnership → Item` claim edge.
 - The `Item → ItemOwnership` approval edge with positive top
   layer (`dim1 > 0`).
 
 With no prior owner to cast a Shape B vote, the
-[two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
-collapses to its 1-of-1 special case: the author's Shape A
-self-claim is the only required vote, and the system writes
-both structural edges atomically alongside it. Same bootstrap
-shape as the founder's `CollectiveMember` in
+[junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
+collapses to its `N = 0` special case: the author's Shape A
+self-claim is the only required vote, no admit-Proposal node is
+materialized, and the system writes both structural edges
+atomically alongside it. Same bootstrap shape as the founder's
+`CollectiveMember` in
 [collectives.md "Creation"](collectives.md#1-creation) and the
 founder of a Chat in
-[chats.md §2.1](chats.md#21-chat). Subsequent transfers are
-regular two-edge approvals (§6).
+[chats.md §2.1](chats.md#21-chat). Subsequent transfers run
+through a transfer-Proposal (§6).
 
 A Collective creating an Item is the same gesture: the graph
 records the Item as the Collective's, and the off-graph
@@ -152,9 +151,9 @@ An Item is not an actor and authors no actor edges. It carries
 two outgoing structural edge types, both system-created:
 
 - **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
-  of the two-edge approval pattern. Created when the current
-  owner's `(dim1 > 0)` actor edge toward a new `ItemOwnership`
-  satisfies the approval policy (§6). **State transitions on
+  of the two-edge state pair. Written by the transfer-Proposal's
+  cascade when the current owner's approval satisfies the policy
+  (§6). **State transitions on
   this edge are the supersession mechanism described in §7**:
   when a subsequent transfer completes, the previous
   `ItemOwnership`'s `Item → ItemOwnership` top layer flips to
@@ -184,7 +183,7 @@ An Item receives:
   written on the Item. See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
 - **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
-  two-edge approval pattern, paired with the outgoing
+  two-edge state pair, paired with the outgoing
   `Item → ItemOwnership` above.
 - **`ChatMessage / Post / Comment → Item` (`:REFERENCES`)** when
   another content node embeds the Item — a message sharing it
@@ -204,25 +203,22 @@ An Item receives:
 ItemOwnership is a junction, not an actor. It carries:
 
 - **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
-  two-edge approval pattern, closed by the item's
-  `Item → ItemOwnership` approval edge (§4.1) once the current
-  owner casts their Shape B vote (§6). At Item creation the
+  two-edge state pair, closed by the item's
+  `Item → ItemOwnership` approval edge (§4.1) once the
+  transfer-Proposal passes (§6). At Item creation the
   claim and approval are written in the same atomic gesture
   (§1 bootstrap). See
   [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
 - **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the ownership represents. Never re-pointed; the Shape A
-  self-claim that activates the ownership must originate from
-  this actor (§§1, 6). See
+  self-claim — the bearer's vote authoring the transfer-Proposal —
+  must originate from this actor (§§1, 6). See
   [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
-- **`ItemOwnership → ItemOwnership` (Shape B vote)** — the
-  current owner's approval vote on a transfer to the new
-  ItemOwnership for the same Item (§6). `dim1 > 0` approves the
-  transfer. Once the transfer completes, the previous owner's
-  ItemOwnership is no longer active (§7), so this edge type
-  rarely carries further layers — but the primitive permits
-  them (e.g. an ex-owner adding a stance update for audit). See
+- **`ItemOwnership → Proposal` (Shape B vote)** — the current
+  owner's approval vote on a transfer-Proposal moving the Item
+  to a new ItemOwnership (§6). `dim1 > 0` approves the transfer.
+  This is the sole vote edge an ItemOwnership casts. See
   [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b).
 
 #### As target (incoming)
@@ -230,19 +226,16 @@ ItemOwnership is a junction, not an actor. It carries:
 An ItemOwnership receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges). For the
-  acquirer themselves, the `User/Collective → ItemOwnership`
-  edge is the **Shape A self-claim** that initiates the
-  ownership (§6). For other actors, these edges are personal
-  sentiment about the ownership record — they do not drive the
-  approval vote, which uses Shape B (above).
-- **`ItemOwnership → ItemOwnership` (Shape B vote)** — incoming
-  approval vote from the current owner's existing ItemOwnership
-  (§6).
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
+  sentiment about the ownership record. The acquirer's own
+  **Shape A self-claim** is not among these: it is the
+  `User/Collective → Proposal` edge authoring the
+  transfer-Proposal (§6), not an edge on the ItemOwnership.
 - **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
-  of the two-edge pattern, paired with the outgoing
-  `ItemOwnership → Item` claim above. Supersession layers per
-  §7 ride on this edge — see §4.1 for the carve-out.
+  of the two-edge state pair, paired with the outgoing
+  `ItemOwnership → Item` claim above. Written by the
+  transfer-Proposal's cascade; supersession layers per §7 ride
+  on this edge — see §4.1 for the carve-out.
 - **`ChatMessage / Post / Comment → ItemOwnership`
   (`:REFERENCES`)** when a content node embeds an ownership
   record — e.g. a Post citing a provenance chain. See
@@ -277,26 +270,37 @@ a transfer relationship, not an authored piece of content.
 
 ## 6. Transfer flow
 
-ItemOwnership uses the **two-edge approval pattern** described in
+ItemOwnership runs the **junction lifecycle** described in
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
+a transfer is a fresh terminal **transfer-Proposal** that
+`:TARGETS` the new ItemOwnership. It needs two signatures — the
+acquirer's **Shape A self-claim** (they have no ItemOwnership for
+this item yet, so it is necessarily Shape A) and the current
+owner's **Shape B approval** (`ItemOwnership_current → Proposal`,
+`dim1 > 0`). Either party can open the Proposal:
 
-1. The **acquirer** (User or Collective) writes a
-   `User/Collective → new ItemOwnership` actor edge — their
-   **Shape A self-claim** to the ownership. The acquirer has no
-   ItemOwnership for this item yet, so the claim is necessarily
-   Shape A. The system creates the `ItemOwnership → Item` claim
-   edge in response.
-2. The **current owner** casts a **Shape B vote** from their
-   existing ItemOwnership for this item to the new ItemOwnership
-   (`ItemOwnership_current → ItemOwnership_new`, `dim1 > 0`) —
-   their approval of the transfer.
-3. Approval policy is satisfied (single-approver: just the
-   current owner); the system creates the
-   `Item → ItemOwnership` approval edge.
-4. The system also writes the supersession layer on the
-   previous `Item → ItemOwnership_current` edge with
-   `dim1 < 0`, marking the old ownership revoked (§7).
-5. The new ItemOwnership is now the active one.
+- **Owner-first (offer / sale).** The current owner opens the
+  transfer-Proposal and casts their Shape B approval. The system
+  creates the new ItemOwnership junction, binding it by `:BEARER`
+  to the named acquirer, plus the `ItemOwnership → Item` claim
+  edge. The transfer is pending until the acquirer self-claims on
+  the Proposal.
+- **Buyer-first (bid / request).** An interested acquirer authors
+  the transfer-Proposal — their `User/Collective → Proposal`
+  Shape A self-claim. The system creates the new ItemOwnership
+  junction with its claim and `:BEARER` edges. The transfer is
+  pending until the current owner signs with their Shape B
+  approval. Handy for a marketplace where buyers approach sellers.
+
+When both signatures are present the approval policy is satisfied
+(single-approver: just the current owner), and the Proposal's
+cascade:
+
+1. creates the `Item → ItemOwnership` approval edge — the new
+   ItemOwnership is now active; and
+2. writes the supersession layer on the previous
+   `Item → ItemOwnership_current` edge with `dim1 < 0`, marking
+   the old ownership revoked (§7).
 
 No one can take ownership without the current owner's Shape B
 vote — there is no "take" operation in the graph. The Item-
@@ -367,7 +371,7 @@ persists with redacted PII, the ItemOwnership chain UUIDs remain
 valid, and ownership continues to resolve. If the deleted owner
 is the current owner, the Item continues to be owned by that
 (now-anonymous) User node. A subsequent transfer follows the
-regular two-edge approval (§6) — the graph mechanics are
+regular transfer-Proposal flow (§6) — the graph mechanics are
 unchanged by PII redaction.
 
 The Item's UUID is stable across every redaction. Authorship

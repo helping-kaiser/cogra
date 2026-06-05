@@ -358,15 +358,14 @@ behave the same way (their budget just spreads).
 
 ---
 
-**Sibling case: junction-to-junction Shape B chains.** Sequential
-Shape B vote chains (one `ChatMember` votes Shape B on another
-`ChatMember`; same for `CollectiveMember` and `ItemOwnership`)
-fan out at the junction level. Under rules 1–3 such a chain
-cannot exit to a content node (no `:CONTAINMENT` outbound from
-a junction) or to an actor (no `:BEARER` traversal); the only
-amplification target reachable is another junction, which is
-rarely feed-rankable in any current UI. Flagged for
-completeness; deferred until junction ranking becomes a concrete
+**Sibling case: junction Shape B vote edges.** A junction's
+Shape B votes all target `Proposal` nodes
+(`junction → Proposal`); a junction never votes on another
+junction. Such an edge fans in to a governance node, not out to
+a content node (no `:CONTAINMENT` outbound from a junction) or to
+an actor (no `:BEARER` traversal), and Proposals are rarely
+feed-rankable in any current UI. Flagged for completeness;
+deferred until junction or Proposal ranking becomes a concrete
 case. The rules above already prevent the dangerous outcomes.
 
 #### Rule 6 — economics edges are not traversable for feed ranking
