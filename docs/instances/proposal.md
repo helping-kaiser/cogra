@@ -83,9 +83,11 @@ incoming vote edge from the authoring actor (§5).
   - `'scalar:integer'` — `proposed_value` is an Integer
     (absolute quorum counts, half-lives, …).
   - `'rule'` — `proposed_value` is a `Rule` object — the
-    (eligibility, weights, threshold) triple used for
-    governance rules. Consumer: governance-rule amendments
-    on collectives (see
+    paired `exec` + `amend` triples (each
+    `{eligibility, weights, threshold}`) keyed under a
+    `governance[action_key]` entry, per
+    [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
+    Consumer: governance-rule amendments on collectives (see
     [collectives.md §8](collectives.md#8-governance--the-social-contract)).
   - `'composite:<action_key>'` — `proposed_value` is a
     handler-specific structured bundle covering multiple
