@@ -837,12 +837,16 @@ the threshold without their participation.
 The cascade for each entry dispatches on `action_key` and target
 type per [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
 For Level 1 / Level 2 disavowal the cascade behaviors are as
-described in their subsections above; for the `decision:set:*`
-and `decision:change_role` family the cascade writes the new
-value as a layer on the target property; for
-`decision:rotate_key` it advances `Chat.epoch`; for
-`decision:add_member` it writes the `Chat → ChatMember`
-approval edge once the signer threshold is crossed (§11).
+described in their subsections above; `decision:set:name` and
+`decision:change_role` write the new value as a graph layer on
+the target property, while the display-content edits
+`decision:set:description` and `decision:set:image` follow the
+display-content cascade in
+[governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch)
+(Postgres version row, no graph layer); for `decision:rotate_key`
+it advances `Chat.epoch`; for `decision:add_member` it writes
+the `Chat → ChatMember` approval edge once the signer threshold
+is crossed (§11).
 
 ### Still no push
 
