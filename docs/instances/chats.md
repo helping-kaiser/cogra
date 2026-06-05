@@ -65,15 +65,14 @@ The gesture writes the following records atomically:
   `role = 'admin'`.
 - The `ChatMember → User/Collective` `:BEARER` structural edge,
   binding the junction to the founder.
-- The founder's `User/Collective → ChatMember` actor edge — the
-  Shape A self-claim.
 - The `ChatMember → Chat` claim edge.
 - The `Chat → ChatMember` approval edge with positive top layer.
 
 Because there is no prior member to approve the founder, the
-[two-edge approval pattern](../primitive/graph-model.md#5-junction-node-flows)
-collapses to its 1-of-1 special case: the founder's gesture acts
-as both the claim and the approval. This is the same bootstrap
+[junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
+collapses to its `N = 0` special case: no admit-Proposal node is
+materialized, and the founder's gesture writes the claim and
+approval edges atomically. This is the same bootstrap
 pattern used by Collective founders
 ([collectives.md "Creation"](collectives.md#1-creation)) and Item
 authors ([items.md §1](items.md#1-creation)). Every subsequent
@@ -250,7 +249,7 @@ and encrypted bodies (encrypted-message classification path in
 
 None. ChatMember is a pure graph-side junction node — no
 Postgres-side display content. Membership state lives entirely
-on the graph (the two-edge approval pair per §5.3) with role and
+on the graph (the two-edge state pair per §5.3) with role and
 weight on the junction itself (§3.3).
 
 ---
@@ -269,7 +268,7 @@ A Chat is not an actor and authors no actor edges. It carries
 one outgoing structural edge type:
 
 - **`Chat → ChatMember` (`:APPROVAL`)** — the approval side of
-  the two-edge approval pattern. Created when the chat's
+  the two-edge state pair. Created when the chat's
   `governance['decision:add_member']` threshold is met against
   an incoming `ChatMember` claim (§11). State transitions on
   this edge — voluntary leave (§11
@@ -292,7 +291,7 @@ A Chat receives:
 - **`ChatMessage → Chat` (`:CONTAINMENT`)** — each message
   belongs to its chat.
 - **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
-  two-edge approval pattern, paired with the outgoing
+  two-edge state pair, paired with the outgoing
   `Chat → ChatMember` (above).
 - **`Comment → Chat` (`:CONTAINMENT`)** when a Comment is on the
   chat as a whole.
@@ -360,48 +359,37 @@ edge, one bearer-binding edge, plus the Shape B vote edges its
 bearer casts as a chat-eligible voter:
 
 - **`ChatMember → Chat` (`:CLAIM`)** — the claim side of the
-  two-edge approval pattern, closed by the chat's
+  two-edge state pair, closed by the chat's
   `Chat → ChatMember` approval edge (§5.1) once the chat's
   `decision:add_member` rule is satisfied (§11).
 - **`ChatMember → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the membership represents. Never re-pointed; the Shape A
-  self-claim that activates the membership must originate from
-  this actor (§11).
-- **`ChatMember → Proposal` (Shape B vote)** — chat-eligible
-  vote on any Proposal targeting a chat-internal subject: a
-  chat property or a `governance.<action_key>` entry (§10), a
-  ChatMessage for Level 1 disavowal (§10), or a ChatMember
-  junction for Level 2 disavowal (§10).
-- **`ChatMember → ChatMember` (Shape B vote)** — admission
-  vote on another chat member's membership at join time (§11
-  Invite-only, Request-entry, multi-sig). Stance flips on this
-  edge happen only during the open admission period — once a
-  membership is active, disavowal flows through a Proposal
-  (§10 Level 2), not through a re-layering of this edge.
+  self-claim — the bearer's vote authoring the admit-Proposal —
+  must originate from this actor (§11).
+- **`ChatMember → Proposal` (Shape B vote)** — the sole vote
+  edge a ChatMember casts, on any Proposal targeting a
+  chat-internal subject: member admission / removal / role
+  change (§11, §10 Level 2), a chat property or a
+  `governance.<action_key>` entry (§10), or a ChatMessage for
+  Level 1 disavowal (§10). `dim1` carries vote direction.
 
 #### As target (incoming)
 
 A ChatMember receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges). For the
-  bearer themselves, the `User/Collective → ChatMember` edge is
-  the **Shape A self-claim** that initiates the membership
-  (§11). For other actors, these edges are personal sentiment
-  about that membership — they do not drive the approval vote,
-  which uses Shape B (above).
-- **`ChatMember → ChatMember` (Shape B vote)** — incoming
-  admission votes from other ChatMembers of the same chat
-  during the open admission period (§11). Disavowal of an
-  active member (§10 Level 2) flows through a Proposal, not
-  through this edge.
+  [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
+  sentiment about the membership. The bearer's own **Shape A
+  self-claim** is not among these: it is the
+  `User/Collective → Proposal` edge authoring the membership's
+  admit-Proposal (§11), not an edge on the ChatMember.
 - **`Chat → ChatMember` (`:APPROVAL`)** — the approval side of
-  the two-edge pattern, paired with the outgoing
-  `ChatMember → Chat` claim above. State transitions —
-  voluntary leave, and the system-written cascade from a
-  passing Level 2 disavowal Proposal (§10) — append
-  `dim1 < 0` layers per
+  the two-edge state pair, paired with the outgoing
+  `ChatMember → Chat` claim above. Written by the
+  admit-Proposal's cascade; state transitions — voluntary leave,
+  and the cascade from a passing Level 2 disavowal Proposal
+  (§10) — append `dim1 < 0` layers per
   [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
 - **`ChatMessage / Post / Comment → ChatMember`
   (`:REFERENCES`)** when a content node embeds the membership
@@ -871,100 +859,107 @@ the pattern generalizes — lives in
 
 ## 11. Joining and leaving a chat
 
-After the founder's bootstrap (§2.1), every ChatMember is
-created via the **two-edge approval pattern** from
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
-which combines two voting shapes
+After the founder's bootstrap (§2.1), every ChatMember runs the
+**junction lifecycle** from
+[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
+admission is a fresh terminal `Proposal` that `:TARGETS` the new
+ChatMember, combining two voting shapes
 ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)):
 
 - The **would-be member's Shape A self-claim** — their
-  `User/Collective → new ChatMember` actor edge. Necessary
-  because they have no ChatMember of this chat yet from which
-  to cast a Shape B vote.
+  `User/Collective → Proposal` vote authoring (or, in an invite
+  flow, joining) the admit-Proposal. Shape A because they have no
+  ChatMember of this chat yet from which to cast a Shape B vote.
 - **Zero or more Shape B approver votes** from existing
-  ChatMembers — `ChatMember_approver → ChatMember_new` (`dim1 > 0`).
+  ChatMembers — `ChatMember_approver → Proposal` (`dim1 > 0`).
   The chat's `governance['decision:add_member']` entry sets how
   many such votes are required (`exec.threshold`) and whose
   votes count (`exec.eligibility`). Default at chat founding:
   one approval from a `'chat_mod'` or `'admin'` (§10 table).
 
-When the entry's threshold is met, the system writes the
-`Chat → ChatMember` approval edge, and the membership is
-active.
+When the bearer's self-claim is present and the entry's threshold
+is met, the Proposal's cascade writes the `Chat → ChatMember`
+approval edge, and the membership is active. When
+`exec.threshold = 0` (open chats) there is no tally — admission
+collapses to the `N = 0` case with no admit-Proposal node (see
+"Open" below).
 
 A ChatMember junction is bound to its bearer at creation by a
 `ChatMember → User/Collective` `:BEARER` structural edge — see
 [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding)
 and
 [graph-data-model.md `:ChatMember`](../implementation/graph-data-model.md#chatmember).
-The Shape A self-claim that activates the membership must come
-from the actor at the other end of `:BEARER`; mismatched claims
-are rejected. The bearer can be a User or a Collective —
+The Shape A self-claim — the bearer's vote on the admit-Proposal —
+must come from the actor at the other end of `:BEARER`; mismatched
+claims are rejected. The bearer can be a User or a Collective —
 Collectives can be ChatMembers on the same footing as Users,
 acting through their authorized members per
 [collectives.md §2](collectives.md#2-acting-through-the-collective).
 "What invites are pending toward me?" is then a single inbound
 traversal from the User/Collective node along `:BEARER`.
 
-**Every member's membership has the same shape:**
-`User/Collective → ChatMember → Chat` (their own self-claim
-plus the system-created claim edge). The only difference
-between members is what's *also* pointing at their ChatMember:
-non-founder members have approver Shape B edges from existing
-ChatMembers; the founder has none, because they were the only
+**Every member's membership has the same shape:** a
+`ChatMember → Chat` claim edge plus a
+`ChatMember → User/Collective` `:BEARER` edge. The only
+difference between members is the admit-Proposal that activated
+them: non-founder members have one carrying approver Shape B
+votes from existing ChatMembers; the founder (and open-chat
+joiners) had no Proposal at all, because they were the only
 required vote.
 
 **Why approvers vote Shape B and not Shape A.** A Shape A
-approval (User/Collective → ChatMember) would persist
-meaninglessly if the approver later left the chat — their
-personal endorsement of someone's membership shouldn't outlive
-their own membership. Shape B from the approver's `ChatMember`
-junction ties the admission vote to their current membership
-state: if the approver's own junction goes revoked, their
-admission vote drops from any future tally per
+approval (an approver's actor edge to the new member) would
+persist meaninglessly if the approver later left the chat —
+their personal endorsement of someone's membership shouldn't
+outlive their own membership. Shape B from the approver's
+`ChatMember` junction ties the admission vote to their current
+membership state: if the approver's own junction goes revoked,
+their admission vote drops from any future tally per
 [governance.md §2.2](../primitive/governance.md#22-eligibility).
-The same Shape B carrier supports stance flips during the open
-admission period — an approver can change their mind before
-the threshold is crossed by appending a new layer to their
-existing edge. Once a membership is active, disavowal flows
-through a Proposal (§10 Level 2), not through a re-layering of
-this admission edge.
+While the admit-Proposal is open an approver can still change
+their mind — appending a new layer to their `ChatMember →
+Proposal` vote edge — but once the Proposal terminates the
+outcome is fixed: a later reversal is a fresh removal-Proposal
+(§10 Level 2), not a re-layering of this vote.
 
 ### Open (`exec.threshold = 0`)
 
-The would-be member writes their `User/Collective → ChatMember`
-Shape A self-claim. The system creates the `ChatMember → Chat`
-claim edge. Because no Shape B approver vote is required, the
-system immediately writes the `Chat → ChatMember` approval
-edge. The membership is active.
+No approver vote is required, so there is no tally and no
+admit-Proposal (the `N = 0` collapse, §2.1). The would-be member
+joins; the system creates the `ChatMember → Chat` claim edge, the
+`ChatMember → User/Collective` `:BEARER` edge, and immediately
+the `Chat → ChatMember` approval edge, atomically. The membership
+is active. The join gesture must come from the actor the
+`:BEARER` edge binds.
 
 ### Approval-required (`exec.threshold ≥ 1`)
 
-Either side can move first; the system writes the
-`Chat → ChatMember` approval edge once both the Shape A
-self-claim and the required count of eligible Shape B votes are
-present.
+Admission runs through an admit-Proposal that `:TARGETS` the new
+ChatMember. Either side can move first; the Proposal's cascade
+writes the `Chat → ChatMember` approval edge once both the
+bearer's Shape A self-claim and the required count of eligible
+Shape B votes are present on the Proposal.
 
 **Inviter-first (invite flow).** An existing member eligible
-under `exec.eligibility` casts a
-`ChatMember_inviter → ChatMember_new` **Shape B vote**
-(`dim1 > 0`) toward a new junction node. The system writes the
-`ChatMember → invitee` `:BEARER` edge, binding the junction to
-the prospective bearer, and the `ChatMember → Chat` claim edge.
-The membership is pending until the bearer self-claims (and
-until enough additional Shape B votes are present, if
-`exec.threshold > 1`). If the invitee never self-claims, the
-membership persists pending; the junction node is never deleted.
+under `exec.eligibility` opens the admit-Proposal and casts a
+`ChatMember_inviter → Proposal` **Shape B vote** (`dim1 > 0`).
+The system writes the new `ChatMember → invitee` `:BEARER` edge,
+binding the junction to the prospective bearer, and the
+`ChatMember → Chat` claim edge. The membership is pending until
+the bearer self-claims on the Proposal (and until enough
+additional Shape B votes are present, if `exec.threshold > 1`).
+If the invitee never self-claims, the membership persists
+pending; the junction node is never deleted.
 
-**Claimant-first (request flow).** The would-be member writes
-their `User/Collective → ChatMember` Shape A self-claim. The
-system creates the `ChatMember → Chat` claim edge. The
-membership is pending until enough eligible Shape B votes
-arrive to meet `exec.threshold`.
+**Claimant-first (request flow).** The would-be member authors
+the admit-Proposal — their `User/Collective → Proposal` Shape A
+self-claim. The system creates the `ChatMember → Chat` claim
+edge and the `:BEARER` edge. The membership is pending until
+enough eligible Shape B votes arrive to meet `exec.threshold`.
 
 **Multi-sig** is simply `exec.threshold > 1` — same machinery,
-N approvers instead of one. The junction stays pending until
-the Nth qualifying Shape B vote crosses the threshold.
+N approvers instead of one. The Proposal stays open until the
+Nth qualifying Shape B vote crosses the threshold.
 
 ### State encoding
 
@@ -978,21 +973,19 @@ layers on the existing structural edges.
 
 ### Leaving and removal
 
-- **Voluntary leave** — the member writes a negative-`dim1`
-  layer on their own `User/Collective → ChatMember` Shape A
-  self-claim. The system appends a `dim1 < 0` layer on the
-  **claim-side** structural edge.
+- **Voluntary leave** — self-determined, not a governance
+  decision: at the member's request the system appends a
+  `dim1 < 0` layer on the **claim-side** `ChatMember → Chat`
+  structural edge.
 - **Member disavowal** — eligible voters per §10 Level 2 cast
-  `ChatMember → Proposal` Shape B votes on a Proposal targeting
-  the member's `ChatMember` junction (`target_property = 'node'`,
-  `proposed_value = 'disavowed'`). When the threshold is crossed,
-  the cascade appends a `dim1 < 0` layer on the **approval-side**
-  `Chat → ChatMember` structural edge for the target. The
-  admission-time `ChatMember → ChatMember` edges remain on the
-  graph in their original state — they are not re-layered by
-  disavowal. There is no admin-unilateral disavowal; admins
-  participate in the disavowal vote with their role-weighted
-  vote alongside everyone else.
+  `ChatMember → Proposal` Shape B votes on a removal-Proposal
+  targeting the member's `ChatMember` junction
+  (`target_property = 'node'`, `proposed_value = 'disavowed'`).
+  When the threshold is crossed, the cascade appends a
+  `dim1 < 0` layer on the **approval-side** `Chat → ChatMember`
+  structural edge for the target. There is no admin-unilateral
+  disavowal; admins participate in the disavowal vote with their
+  role-weighted vote alongside everyone else.
 
 The ChatMember junction and its full edge history stay in the
 graph; only the top layers change.
@@ -1092,7 +1085,7 @@ and the message body persists.
 
 ChatMember has no user-input fields and therefore no per-field
 redaction triggers. Membership state transitions follow §11
-"Leaving and removal" — new layers on the two-edge approval
+"Leaving and removal" — new layers on the two-edge state
 pair, prior layers preserved.
 
 **Account deletion** of the underlying User or Collective does

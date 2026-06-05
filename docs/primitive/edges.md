@@ -156,7 +156,7 @@ for the Cypher.
 ### Approval completion
 
 Paired with the claim edges above — see
-[graph-model.md](graph-model.md) for the two-edge approval pattern.
+[graph-model.md](graph-model.md) for the two-edge state pair.
 
 | Edge type | Meaning |
 |-----------|---------|
@@ -186,9 +186,10 @@ this — a new bearer means a new junction node with a new `:BEARER`
 edge, not a re-pointing of the existing one. Key rotation on the
 bearing actor doesn't shift `:BEARER` either: the edge points at
 the actor's graph identity (User or Collective node), which is
-stable across key changes. The actor's Shape A self-claim that
-activates the junction must originate from the actor at the other
-end of `:BEARER`; the API rejects mismatched self-claims. This is
+stable across key changes. The actor's Shape A self-claim — the
+vote authoring the junction's admit-Proposal — must originate from
+the actor at the other end of `:BEARER`; the API rejects
+mismatched self-claims. This is
 what enables invite-only flows
 ([chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat)):
 the inviter creates the junction with a known bearer before the
@@ -331,33 +332,26 @@ never observably breached at any commit point.
 System-created when a voter casts a Shape B vote (see
 [governance.md §3](governance.md#3-the-two-vote-shapes)). The
 edge runs from the voter's **eligibility junction** to the
-subject; `dim1` carries vote direction (`+1` support, `-1`
-oppose, intermediate values allowed), `dim2` is `0`.
+**Proposal** being voted on; `dim1` carries vote direction (`+1`
+support, `-1` oppose, intermediate values allowed), `dim2` is
+`0`. A junction never votes directly on another junction.
 
 | Edge type | Meaning |
 |-----------|---------|
-| ChatMember → ChatMember | Admission (`dim1 > 0`) vote on another chat member's membership at join time. Stance flips on this edge happen only during the open admission period; disavowal of an active member routes through a Proposal — see [chats.md §10](../instances/chats.md#10-moderation) Level 2. |
-| ChatMember → Proposal | A chat-eligible vote on any Proposal targeting a chat-internal subject — chat property / role change, Level 1 message disavowal, or Level 2 member disavowal (see [chats.md §10](../instances/chats.md#10-moderation) for the concrete Proposal shapes). |
-| CollectiveMember → CollectiveMember | Approval (`dim1 > 0`) or removal (`dim1 < 0`) vote on another collective member's membership |
-| CollectiveMember → Proposal | A collective-eligible vote on a proposed property/role change |
-| ItemOwnership → ItemOwnership | Current owner's approval vote on a transfer to a new ItemOwnership for the same Item |
+| ChatMember → Proposal | A chat-eligible vote on any Proposal targeting a chat-internal subject — member admission / removal / role change, a chat property change, or Level 1 message disavowal (see [chats.md §10](../instances/chats.md#10-moderation), [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat) for the concrete Proposal shapes). |
+| CollectiveMember → Proposal | A collective-eligible vote on any Proposal targeting a collective-internal subject — member admission / removal / role change, or a property change. |
+| ItemOwnership → Proposal | The current owner's vote on a Proposal to transfer the Item to a new ItemOwnership, or other ownership governance. |
 
-**Same edge serves the membership lifecycle (CollectiveMember,
-ItemOwnership).** For `CollectiveMember → CollectiveMember`
-and `ItemOwnership → ItemOwnership`, the same edge that admits
-a junction holder can later be re-layered to remove them —
-`dim1 > 0` admits at layer-1, a later `dim1 < 0` layer is the
-removal vote. One edge, layered history of one voter's stance
-toward one membership / ownership. See
+**All junction lifecycle events route through Proposals.**
+Admission, removal, and role changes for `ChatMember`,
+`CollectiveMember`, and `ItemOwnership` each run through a fresh
+terminal Proposal that `:TARGETS` the junction; the voter edges
+above carry the votes, and the Proposal's cascade writes the
+outcome on the junction's claim / approval edges. No
+`junction → junction` vote edge exists — each event has its own
+fresh vote set, so votes never leak across events. See
 [graph-model.md §5](graph-model.md#5-junction-node-flows)
-"Revocation and state transitions".
-
-**ChatMember → ChatMember is admission-only.** The chat
-case diverges: the edge supports stance flips during the open
-admission period only. Once a membership is active, disavowal
-flows through a Proposal targeting the member's ChatMember
-junction (see [chats.md §10](../instances/chats.md#10-moderation)
-Level 2), not through a re-layering of this edge.
+"Lifecycle events are terminal Proposals".
 
 **Network-scope governance uses Shape A, not Shape B.** Votes
 on Network-wide Proposals (moderator role changes, content
@@ -468,7 +462,7 @@ are structural; `:AUTHOR` and `:INVITE` are the actor-edge sub-labels.
 |---|---|---|
 | `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal, Campaign) | The author's authoring actor edge — the first outgoing actor edge from author to authored content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
 | `:INVITE` | User \| Collective → invited User | The inviter's edge of the two-edge invitation pattern ([invitations.md](invitations.md#the-two-edge-invitation-pattern)) — the first incoming actor edge into any non-genesis node. Frequently queried as "who invited X?" at settlement to route the inviter reward ([economics.md §5.2](economics.md#52-the-inviter-reward)) — a single-label lookup instead of an in-edge scan with timestamp-minimum. Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers. |
-| `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
+| `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge state pair. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
 | `:BEARER` | Junction → User \| Collective (e.g. `ChatMember → User`) | Identity binding for a junction. "What junctions does this actor bear?" and "who is this junction's bearer?" run as single one-hop traversals along `:BEARER`. |
 | `:CONTAINMENT` | Comment → Post, Comment → Comment, ChatMessage → Chat, Comment → Chat, Comment → ChatMessage, Comment → Item | Content containment and reply structure. Queried for feed assembly and thread rendering. |
