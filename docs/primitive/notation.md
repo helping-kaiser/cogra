@@ -84,6 +84,8 @@ the [token](token.md) burn/treasury formulas; the rest are local to
 | `φ_i` | **Shapley value** — player `i`'s attribution share of the contributor pool. | [economics §6.1](economics.md#61-the-closed-form) |
 | `w_π` | **Path weight** in the Shapley sum: `d(R_π) · f(Δt_π) · (s_path(π) + c_path(π))`. | [economics §6.1](economics.md#61-the-closed-form) |
 | `A_π` | Set of **distinct authors** of every edge and content node on path `π`. | [economics §6.1](economics.md#61-the-closed-form) |
+| `N_p` | **Path count** — the number of above-`ε` paths the settlement traversal enumerates (distinct from `P`, the payout). | [economics §6.5](economics.md#65-computation--exact-streaming-oplayers-memory) |
+| `L̄` | **Average path length** — mean edge count over the `N_p` enumerated paths; settlement time is `O(N_p · L̄)`. | [economics §6.5](economics.md#65-computation--exact-streaming-oplayers-memory) |
 
 ## Network-seeded parameter names
 
