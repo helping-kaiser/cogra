@@ -29,8 +29,10 @@ edge.
 the only structural-edge family that doesn't take one of the
 thirteen sub-category labels.
 
-Sources and targets with no structural edges in either direction
-(`Network`) are still listed so the absence is explicit.
+`Network` never originates a structural edge — its row is all
+`—` — but it is targeted inbound (`:TARGETS` from a Proposal,
+`:REFERENCES` from a carrier). The all-`—` row is listed so the
+outbound absence is explicit.
 
 |                      | User       | Coll.      | Post       | Comment    | Chat       | ChatMsg    | Item       | Hashtag    | Proposal   | ChatMbr    | CollMbr    | ItemOwn    | Network    | Camp.      | Settl.     | Wallet     |
 |----------------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|
@@ -271,7 +273,7 @@ flowchart TD
 ### 2.5. `:REFERENCES`
 
 Three carriers — `Post`, `Comment`, `ChatMessage` — can reference
-any node with graph identity (everything except `Network`).
+any node with graph identity, including the `Network` singleton.
 `Post` and `Comment` use `:TAGGING` for Hashtag instead, so
 Hashtag is excluded from their fan-out;
 `ChatMessage`'s fan-out includes Hashtag
@@ -296,6 +298,7 @@ flowchart LR
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
     ItemOwnership[ItemOwnership]:::junction
+    Network[Network]:::system
     Campaign[Campaign]:::economics
     Settlement[Settlement]:::economics
     Wallet[Wallet]:::economics
@@ -312,6 +315,7 @@ flowchart LR
     ChatMessage -->|REFERENCES| ChatMember
     ChatMessage -->|REFERENCES| CollectiveMember
     ChatMessage -->|REFERENCES| ItemOwnership
+    ChatMessage -->|REFERENCES| Network
     ChatMessage -->|REFERENCES| Campaign
     ChatMessage -->|REFERENCES| Settlement
     ChatMessage -->|REFERENCES| Wallet
@@ -327,6 +331,7 @@ flowchart LR
     Post -->|REFERENCES| ChatMember
     Post -->|REFERENCES| CollectiveMember
     Post -->|REFERENCES| ItemOwnership
+    Post -->|REFERENCES| Network
     Post -->|REFERENCES| Campaign
     Post -->|REFERENCES| Settlement
     Post -->|REFERENCES| Wallet
@@ -342,6 +347,7 @@ flowchart LR
     Comment -->|REFERENCES| ChatMember
     Comment -->|REFERENCES| CollectiveMember
     Comment -->|REFERENCES| ItemOwnership
+    Comment -->|REFERENCES| Network
     Comment -->|REFERENCES| Campaign
     Comment -->|REFERENCES| Settlement
     Comment -->|REFERENCES| Wallet
@@ -349,6 +355,7 @@ flowchart LR
     classDef actor     fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
     classDef content   fill:#fff3e0,stroke:#ef6c00,color:#e65100;
     classDef junction  fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef system    fill:#eceff1,stroke:#455a64,color:#263238;
     classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
