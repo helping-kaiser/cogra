@@ -116,7 +116,7 @@ so the whole arrangement is public and auditable on the graph.
 | `D` | Pointer to the **on-chain escrow** holding the deposit. The amount is read from chain, never asserted as a bare number on the node; funded at creation and top-up only (§2.2), so the §5 floor is always backed. |
 | `g` | The `d(R)` decay base used for this campaign's reach metric and payout split (§6.4). Default `0.1`, the canonical feed default. |
 | `h_start` | `h_anchor(target)` at `start_ts` — the baseline. With `declared_goal` it makes the ask legible: from `h_start` to `h_start + declared_goal`. |
-| `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). |
+| `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). Must be `> 0` (§2.1). |
 | `start_ts`, `end_ts` | Campaign window. |
 | `status` | Lifecycle state (open / settled / auto-settled). |
 | `ε` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
@@ -162,6 +162,10 @@ Two configurations are forbidden:
   campaigns are increase-only. (Achieved gain *can* still come out
   negative when a cluster actively severs the advertiser; the default
   formula floors that at zero — §4.)
+- **Non-positive `declared_goal`** (`declared_goal ≤ 0`) — the
+  auto-settlement formula (§4) divides by `declared_goal`, so a zero or
+  negative goal leaves the default release undefined. Declared goals are
+  strictly positive: `declared_goal > 0`.
 
 ### 2.2 Adjustability
 
