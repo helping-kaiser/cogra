@@ -114,15 +114,11 @@ so the whole arrangement is public and auditable on the graph.
 | Property | Meaning |
 |---|---|
 | `D` | Pointer to the **on-chain escrow** holding the deposit. The amount is read from chain, never asserted as a bare number on the node; funded at creation and top-up only (§2.2), so the §5 floor is always backed. |
-| `anchor` | Node reference — the campaign's anchor (cluster root). |
-| `target` | Node reference — the promoted node (any node; its author excluded from payout, §6.2). |
 | `g` | The `d(R)` decay base used for this campaign's reach metric and payout split (§6.4). Default `0.1`, the canonical feed default. |
 | `h_start` | `h_anchor(target)` at `start_ts` — the baseline. With `declared_goal` it makes the ask legible: from `h_start` to `h_start + declared_goal`. |
 | `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). |
 | `start_ts`, `end_ts` | Campaign window. |
 | `status` | Lifecycle state (open / settled / auto-settled). |
-| `achieved_h_gain_at_settlement` | The reach gain recorded at settlement (§3). |
-| `settled_P` | The released amount `P` chosen at settlement (§4). |
 | `ε` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
 
 Money amounts never live on the node: the deposit is held in escrow
@@ -136,9 +132,10 @@ surface, and pointers to the chain.
   [authorship.md](authorship.md)). A normal actor edge.
 - `Campaign → anchor` (`:ANCHOR`) — declares the anchor, so the anchor's
   cluster can see the campaign and respond to it.
-- `Campaign → target` (`:PROMOTES`) — declares the promoted node, **any**
-  node the advertiser wants the anchor's cluster to reach (a Post, a
-  profile, their own node) — not smuggled through the authorship edge.
+- `Campaign → target` (`:PROMOTES`) — declares the promoted node: any
+  actor, content, or Proposal node (not Hashtag) the advertiser wants the
+  anchor's cluster to reach (a Post, a profile, their own node) — not
+  smuggled through the authorship edge.
 - `Campaign → Settlement` — created once, at settlement (§7).
 
 The three `Campaign`-outbound edges (`:ANCHOR`, `:PROMOTES`, and

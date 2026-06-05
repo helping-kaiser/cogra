@@ -284,6 +284,94 @@ CREATE INDEX ON :Proposal(id);
 See [governance.md §2.1](../primitive/governance.md#21-subject) for the role of
 Proposal nodes.
 
+#### `:Campaign`
+
+A funded, public request to raise a target node's reach into an
+anchor's cluster — the economics primitive's advertising node. Carries
+the campaign terms as scalar properties and reaches its anchor and
+promoted node through `:ANCHOR` / `:PROMOTES` edges. See
+[economics.md §2](../primitive/economics.md#2-the-campaign-node) and
+[ledger.md "Where campaign data lives"](ledger.md#where-campaign-data-lives).
+
+| Property                        | Type          | Notes |
+|---|---|---|
+| `id`                            | String        | UUID v4. |
+| `D`                             | String        | Pointer to the on-chain escrow holding the deposit. The amount is read from chain, never stored on the node; funded at creation, top-up only per [economics.md §2.2](../primitive/economics.md#22-adjustability). Set at creation. |
+| `g`                             | Float         | The `d(R)` decay base for this campaign's reach metric and payout split. Default `0.1`. Immutable after creation. |
+| `h_start`                       | Float         | `h_anchor(target)` at `start_ts` — the baseline the `declared_goal` is measured from. Set at creation. |
+| `declared_goal`                 | Float         | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula. Mutable before settlement. Layered. |
+| `start_ts`                      | LocalDateTime | Campaign-window start. Set at creation. |
+| `end_ts`                        | LocalDateTime | Campaign-window end. Mutable before settlement (free, unlimited extensions). Layered. |
+| `status`                        | String        | Lifecycle state: `'open'` / `'settled'` / `'auto-settled'`. Layered. |
+| `ε`                             | Float         | The dust floor bounding path enumeration; public at creation, tuneable during the campaign as a compute failsafe. The value in force at settlement is the recorded one. Mutable before settlement. Layered. |
+
+```cypher
+CREATE CONSTRAINT ON (c:Campaign) ASSERT c.id IS UNIQUE;
+CREATE INDEX ON :Campaign(id);
+```
+
+`anchor` and `target` are not properties: the campaign reaches both
+through structural edges (`:ANCHOR` → anchor, `:PROMOTES` → target),
+mirroring how `:Proposal` reaches its subject via `:TARGETS` rather
+than a foreign-key property. The two forbidden configurations
+(`anchor == target`, negative-`h` campaigns) are ethos invariants
+enforced in code, not storage constraints — see
+[economics.md §2.1](../primitive/economics.md#21-success-metric-and-forbidden-configurations).
+
+#### `:Settlement`
+
+The terminal record of a settled `Campaign`, created once at
+settlement. Carries pointers to the on-chain payout tree and the public
+results as properties — never a money amount. Claimants reach it via
+`:ENTITLES` / `:CLAIMS` edges. See
+[economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow).
+
+| Property              | Type   | Notes |
+|---|---|---|
+| `id`                  | String | UUID v4. |
+| `distributor_address` | String | On-chain address of the claim distributor holding the payout tree. A pointer; no money on the node. Written once at settlement. |
+| `merkle_root`         | String | Root of the payout tree. Per-wallet payout figures are Merkle leaves verified against it, never stored on-graph. Written once at settlement. |
+| `settled_P`           | Float  | The released amount `P`, recorded as a public scalar result — never a money tensor. Written once at settlement. |
+| `achieved_h_gain`     | Float  | The achieved reach gain, surfaced as a public result. Written once at settlement. |
+
+```cypher
+CREATE CONSTRAINT ON (s:Settlement) ASSERT s.id IS UNIQUE;
+CREATE INDEX ON :Settlement(id);
+```
+
+`:Settlement` is write-once: its properties are set together at
+settlement and never amended, so none layer.
+
+#### `:Wallet`
+
+An account's payout wallet — a carrier node holding the account's
+counterfactual self-custody on-chain address. Bound to its account by a
+single `:PAYS_TO` edge; `:ENTITLES` / `:CLAIMS` and `:TRANSFERS` edges
+point at it. See
+[ledger.md "The Wallet node and the :PAYS_TO binding"](ledger.md#the-wallet-node-and-the-pays_to-binding).
+
+| Property  | Type   | Notes |
+|---|---|---|
+| `id`      | String | UUID v4. |
+| `address` | String | The account's counterfactual self-custody on-chain address. Layered per [layers.md](../primitive/layers.md): re-linking writes a new top layer non-destructively, so earning and claim history stays attached across re-links. |
+
+```cypher
+CREATE CONSTRAINT ON (w:Wallet) ASSERT w.id IS UNIQUE;
+CREATE INDEX ON :Wallet(id);
+```
+
+There is exactly **one `Wallet` per account**. This is a property of
+the binding edge, not a node constraint: an account has a single
+`:PAYS_TO` edge to its wallet (see the edge-labels table below), and
+re-linking re-layers `address` on the same node rather than creating a
+second wallet.
+
+Like `:Proposal`, none of `:Campaign` / `:Settlement` / `:Wallet` carry
+per-field moderation properties or a `moderation_status` cache — they
+have no user-authored fields to moderate. `Campaign` and `Settlement`
+are pure record nodes; `Wallet` holds only an on-chain address. See
+[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status).
+
 ### Junction nodes
 
 All three junction types bind to their bearing actor via a
@@ -414,7 +502,8 @@ for picking the right one live in
 | Label          | Endpoints                                                                | Source     |
 |---|---|---|
 | `:ACTOR`       | User \| Collective → any node                                            | Actor sets |
-| `:AUTHOR`      | User \| Collective → Post \| Comment \| Chat \| ChatMessage \| Item \| Proposal | Actor sets |
+| `:AUTHOR`      | User \| Collective → Post \| Comment \| Chat \| ChatMessage \| Item \| Proposal \| Campaign | Actor sets |
+| `:INVITE`      | User \| Collective → invited User                                        | Actor sets |
 | `:CLAIM`       | Junction → Parent (e.g. `ChatMember → Chat`)                             | System     |
 | `:APPROVAL`    | Parent → Junction (e.g. `Chat → ChatMember`)                             | System     |
 | `:BEARER`      | Junction → User \| Collective (e.g. `ChatMember → User`)                 | System     |
@@ -422,7 +511,13 @@ for picking the right one live in
 | `:TAGGING`     | Post → Hashtag, Comment → Hashtag, Item → Hashtag                        | System     |
 | `:TARGETS`     | Proposal → Target Node                                                   | System     |
 | `:REFERENCES`  | ChatMessage → any node; Post → any node (except Hashtag); Comment → any node (except Hashtag) | System     |
-| `:STRUCTURAL`  | Any structural edge not in a sub-category above                          | System     |
+| `:ANCHOR`      | Campaign → anchor (any actor node)                                       | System     |
+| `:PROMOTES`    | Campaign → target (actor, content, or Proposal node, not Hashtag)        | System     |
+| `:ENTITLES`    | Settlement → Wallet                                                      | System     |
+| `:CLAIMS`      | Wallet → Settlement                                                      | System     |
+| `:TRANSFERS`   | Wallet → Wallet                                                          | System     |
+| `:PAYS_TO`     | User \| Collective → Wallet                                              | System     |
+| `:STRUCTURAL`  | Any structural edge not in a sub-category above (e.g. `Campaign → Settlement`) | System     |
 
 ### Single-edge-label enforcement
 
@@ -483,6 +578,19 @@ Every edge carries the same property shape, regardless of label:
 See [graph-model.md §4](../primitive/graph-model.md#4-edge-structure) for the edge
 structure and [graph-model.md §6](../primitive/graph-model.md#6-dimension-semantics) for the
 unified two-axis dimension grammar.
+
+### System-dimension slot
+
+Alongside the four uniform fields above, every edge carries a
+**system-dimension slot** — typed, optional, per-label metadata that
+ranking and traversal never read. It sits outside the `(dim1, dim2)`
+tensor, so it leaves the edge-uniformity invariant untouched; it is
+null on edge types that don't use it. `:TRANSFERS` is the first label
+to populate it, with an on-chain transaction reference — amounts stay
+on-chain and are read through the reference, never stored on the edge.
+The exact column schema is deferred to the edge types that populate the
+slot. See
+[edges.md "System-dimension slot"](../primitive/edges.md#system-dimension-slot).
 
 ### Tensor uniformity enforcement
 
