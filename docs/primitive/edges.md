@@ -381,7 +381,7 @@ rule 6), so a campaign can never inject reach toward its target.
 | Edge type | Meaning |
 |-----------|---------|
 | Campaign → anchor (any actor node) | The cluster root whose reach the campaign buys. Label `:ANCHOR`. |
-| Campaign → target (any node) | The promoted node the campaign drives reach toward. Label `:PROMOTES`. |
+| Campaign → target (any actor, content, or Proposal node, not Hashtag) | The promoted node the campaign drives reach toward. Label `:PROMOTES`. |
 
 ### Settlement and claim
 
@@ -466,7 +466,7 @@ are structural; `:AUTHOR` and `:INVITE` are the actor-edge sub-labels.
 
 | Label | Applies to | Rationale |
 |---|---|---|
-| `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal) | The author's authoring actor edge — the first outgoing actor edge from author to authored content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
+| `:AUTHOR` | User \| Collective → authored content node (Post, Comment, Chat, ChatMessage, Item, Proposal, Campaign) | The author's authoring actor edge — the first outgoing actor edge from author to authored content per [authorship.md](authorship.md). Frequently queried as "what did X author?" — a single-label scan instead of a scan-and-timestamp-compare across all of X's outgoing actor edges. Also used by the feed-ranking author-hop traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers (re-layering updates `(dim1, dim2)` only). |
 | `:INVITE` | User \| Collective → invited User | The inviter's edge of the two-edge invitation pattern ([invitations.md](invitations.md#the-two-edge-invitation-pattern)) — the first incoming actor edge into any non-genesis node. Frequently queried as "who invited X?" at settlement to route the inviter reward ([economics.md §5.2](economics.md#52-the-inviter-reward)) — a single-label lookup instead of an in-edge scan with timestamp-minimum. Same 2D tensor and `[-1, +1]` range as `:ACTOR`; label is permanent across layers. |
 | `:CLAIM` | Junction → Parent (e.g. `ChatMember → Chat`) | The claim side of the two-edge approval pattern. Frequently queried as "what is this actor a member of (including pending)?" |
 | `:APPROVAL` | Parent → Junction (e.g. `Chat → ChatMember`) | The approval side. "Is this relationship currently active?" queries scan only `:APPROVAL` edges with positive top-layer `dim1`. |
@@ -476,7 +476,7 @@ are structural; `:AUTHOR` and `:INVITE` are the actor-edge sub-labels.
 | `:TARGETS` | Proposal → Target Node | The proposal-to-subject relationship. Common query: "what proposals target this node?" needed by the governance cascade. |
 | `:REFERENCES` | ChatMessage → any node; Post / Comment → any node except Hashtag | The "this carrier embeds X" relationship. Common query: "what nodes reference this one?" — feeds embed-rendering and inbound-attention surfaces. |
 | `:ANCHOR` | Campaign → anchor (any actor node) | Declares a campaign's anchor. Query: "what campaigns target this anchor?" `(0, 0)`, non-traversable. |
-| `:PROMOTES` | Campaign → target (any node) | Declares a campaign's promoted node. `(0, 0)`, non-traversable — never injects reach. |
+| `:PROMOTES` | Campaign → target (any actor, content, or Proposal node, not Hashtag) | Declares a campaign's promoted node. `(0, 0)`, non-traversable — never injects reach. |
 | `:ENTITLES` | Settlement → Wallet | Marks a wallet entitled to claim. Paired with `:CLAIMS`, makes "entitled but unclaimed" a one-hop query. `(0, 0)`, no amount. |
 | `:CLAIMS` | Wallet → Settlement | Marks a settlement claimed by a wallet. `(0, 0)`, no amount. |
 | `:TRANSFERS` | Wallet → Wallet | A direct CGT transfer; the on-chain tx reference rides the system-dimension slot. `(0, 0)`, non-traversable. |
