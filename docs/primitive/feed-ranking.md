@@ -1195,7 +1195,7 @@ Each metric is a **2-tuple** (one component per dim track):
 | Symbol | Name | Sentiment component (`*_s`) | Interest component (`*_c`) |
 |---|---|---|---|
 | `h` | personal opinion | `H_s = ∑_π d(R_π) · f(Δt_π) · s_path(π)` over all paths to `t` | `H_c = ∑_π d(R_π) · f(Δt_π) · c_path(π)` over all paths to `t` |
-| `i` | personal reach | `I_s = ∑_π d(R_π) · f(Δt_π) · s_path_R−1(π)` over first R−1 edges of each path | `I_c = ∑_π d(R_π) · f(Δt_π) · c_path_R−1(π)` over first R−1 edges |
+| `i` | personal reach | `I_s = ∑_π d(R_π) · f(Δt_π) · s_path_R'−1(π)` over the first `R'−1` contributing edges of each path | `I_c = ∑_π d(R_π) · f(Δt_π) · c_path_R'−1(π)` over the first `R'−1` contributing edges |
 | `j` | absolute opinion | `J_s = ∑_B f(Δt_B→t) · dim1(B → t)` over reactors `B` (signed) | `J_c = ∑_B f(Δt_B→t) · dim2(B → t)` over reactors (signed) |
 | `k` | absolute reach | `K_s = ∑_B f(Δt_B→t) · \|dim1(B → t)\|` over reactors | `K_c = ∑_B f(Δt_B→t) · \|dim2(B → t)\|` over reactors |
 
@@ -1206,6 +1206,14 @@ rule 4); `j` and `k` sum over actor reactor edges `B → t`
 directly. **§7.3 is the canonical home for `f(Δt)`'s shape and
 parameters;** §4.2 only composes it into the metric sums.
 `Δt` is the elapsed time since the edge's top layer was added.
+
+The `_R'−1` subscript on `i` marks its one structural difference from
+`h`: `i` drops the **reactor edge's value** — its `(dim1, dim2)` factor —
+multiplying the value chain over only the first `R'−1` of the path's `R'`
+contributing edges. The dropped edge's **timestamp still governs the
+decay**: `f(Δt_π)` stays anchored on that same reactor edge. So `i`
+measures how strongly `U` reaches the reactor, timed by when the reactor
+last acted, independent of *what* the reactor expressed toward `t`.
 
 Reading:
 - `h` — personal opinion: trust- and connection-weighted opinion
