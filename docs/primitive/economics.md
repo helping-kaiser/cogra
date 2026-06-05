@@ -487,7 +487,9 @@ from anchor to target, pruning a partial path when its best-possible
 completion falls below a dust floor `ε`. There is no hop cap — `d(R)`
 decay and `ε` bound the depth. As each above-`ε` path is found, its
 weight is distributed to its authors and the path is discarded: memory is
-`O(players · M)`, never `O(paths)`; time is `O(P · L̄)`.
+`O(players)` — one running share per distinct author — never `O(paths)`;
+time is `O(N_p · L̄)`, the edges walked across all `N_p` above-`ε` paths of
+average length `L̄`.
 
 This is the **same path-sum traversal that computes `h_anchor(target)`**,
 under the same dust floor — a shared primitive that
