@@ -119,7 +119,7 @@ so the whole arrangement is public and auditable on the graph.
 | `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). Must be `> 0` (§2.1). |
 | `start_ts`, `end_ts` | Campaign window. |
 | `status` | Lifecycle state (open / settled / auto-settled). |
-| `ε` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
+| `dust_floor` | The dust floor bounding path enumeration — public at creation, tuneable during the campaign as a compute failsafe; the value in force at settlement is recorded for reproducibility (§6.5). |
 
 Money amounts never live on the node: the deposit is held in escrow
 on-chain, and per-contributor payout figures and transfer sizes are
@@ -173,7 +173,7 @@ Public visibility of every adjustment is the discipline: bad-faith edits
 surface on-chain and in graph state.
 
 - **Mutable before settlement:** `end_ts` (free, unlimited extensions),
-  `declared_goal`, `ε` (tuneable as a compute failsafe — §6.5), and the
+  `declared_goal`, `dust_floor` (tuneable as a compute failsafe — §6.5), and the
   escrowed `D` — **top-up only**: `D` can be raised, never lowered
   (otherwise the flat-on-`D` anti-spam floor in §5 would be zeroable just
   before settlement, and the locked escrow is what backs that floor).
@@ -505,7 +505,7 @@ responsibility. Tuning `ε` only ever moves the *dust* cutoff, so it can
 shift near-floor shares but nothing material — unlike `g` (§6.4), which is
 immutable because it reshapes the whole split — and every change is
 public, carrying the same reputational discipline as any other
-adjustment (§2.2). The `ε` in force at settlement is recorded on the
+adjustment (§2.2). The `dust_floor` in force at settlement is recorded on the
 `Campaign` node (§2) for a reproducible, auditable split.
 
 Cost is flat in total graph size (only the anchor's dust-reachable
