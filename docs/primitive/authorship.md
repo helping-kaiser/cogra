@@ -48,7 +48,7 @@ The authoring edge is the one actor edge that carries a sub-label
 distinct from `:ACTOR` — `:AUTHOR` — per
 [edges.md §3 "Sub-category labels"](edges.md#sub-category-labels).
 The label is the system's mechanical implementation of the
-"first outgoing edge" rule above: created at the same gesture as
+"earliest incoming edge" rule above: created at the same gesture as
 the authoring edge, permanent across re-layerings, and
 queryable in a single label scan.
 
