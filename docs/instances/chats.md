@@ -1062,7 +1062,7 @@ epoch key has been voluntarily disclosed per §9 and
 [moderation.md "Encrypted message classification"](moderation.md#encrypted-message-classification).
 
 **Ciphertext is body content; epoch keys are not.** The Postgres
-tombstone replaces the `body_ciphertext` blob — the same row
+tombstone replaces the `content` blob — the same row
 shape that holds plaintext under
 `content_privacy = 'plaintext'` (§4.2). Redaction does **not**
 touch the chat's epoch keys: those live off-graph on current and
