@@ -370,13 +370,25 @@ Shape B votes all target `Proposal` nodes
 junction. Proposals are feed-rankable (§5.3), so this edge acts
 as a reactor edge into the Proposal — it carries the vote's
 `dim1` with `dim2 = 0` ([edges.md §2](edges.md#voting-shape-b))
-and composes like any reactor. It opens no new surface: reaching
-the junction at all needs an inbound `:ACTOR` vote on the
-membership — a real edge from `U`'s network, not bot-manufacturable
-— and the junction's only feed-relevant outbound is this vote,
-which terminates at the Proposal, a governance node and not a
-content funnel. The junction itself is out of scope as a target
-(§5.3).
+and composes like any reactor. It terminates at the Proposal, a
+governance node, not a content funnel. The junction's other
+feed-relevant outbound, `:CLAIM` to its parent, is the
+membership-reach surface treated next. The junction itself is out
+of scope as a target (§5.3).
+
+**Sibling case: junction authorship edges.** A junction's bearer
+writes a traversable `bearer → junction` `:AUTHOR` edge at
+self-claim ([authorship.md](authorship.md#junction-authorship)),
+opening `V → U → junction → parent` — reaching what a connection
+belongs to. The seed is `V`'s own `V → U` edge, the same trust
+boundary as any actor connection: an edge into a bot cluster
+already grants unbounded `h(t)` (§3.6) with or without this hop.
+`Chat` and `Item` parents are near-sinks — a `Chat`'s only
+structural outbound is `:APPROVAL` (rule 1, blocked), an `Item`
+continues only to a `:TAGGING` Hashtag (a sink). A `Collective`
+parent is a full actor: reaching it opens its outgoing edges like
+reaching any actor, governed by the same community-severance
+defense (§3.6–§3.7), not a new amplifier.
 
 #### Rule 6 — economics edges are not traversable for feed ranking
 
