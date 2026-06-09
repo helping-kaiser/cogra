@@ -118,9 +118,11 @@ most useful one.
   `sum |dim1| ≤ 1` and `sum |dim2| ≤ 1` per dimension; default
   uniform `(1/N, 1/N)`. Bounds reference-chain amplification at
   the source.
-- [Hashtags do not participate in path products](../instances/hashtag.md#4-edges)
-  — `:TAGGING` is pure topology for discovery, never traversed by
-  feed ranking.
+- [`:TAGGING` is non-contributing; Hashtag is a ranking sink](../instances/hashtag.md#4-edges)
+  — `:TAGGING` is traversable but adds no `(dim1, dim2)` factor; a
+  Hashtag is a feed-ranking target reached through its tagged
+  content and, having no outgoing edges, a sink that amplifies
+  nothing downstream.
 - [The `bot-defense` Hashtag name is reserved](feed-ranking.md#383-community-bot-defense-posts--supplementary-evidence)
   — seeded by the bootstrap migration; its semantic role is
   platform-defined, not emergent from first use.

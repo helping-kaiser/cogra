@@ -124,23 +124,28 @@ A Hashtag is a pure target — no outgoing edges of any kind.
 
 ### As target (incoming)
 
-**Cosmetic-only — no actor edge to Hashtag.** A Hashtag
-receives no actor edges from anyone. The catalog has no
-`User → Hashtag` or `Collective → Hashtag` row
+**No actor edge to Hashtag.** A Hashtag receives no actor
+edges from anyone. The catalog has no `User → Hashtag` or
+`Collective → Hashtag` row
 ([edges.md §1](../primitive/edges.md#1-actor-edges)); "liking
-a hashtag" is not a graph operation. Hashtags are reachable
-via `:TAGGING` for discovery queries — the surface filters
-tagged content, ranks that content, and presents the result
-— but the Hashtag itself is never a ranking endpoint or a
-path participant.
+a hashtag" is not a graph operation. A Hashtag is nonetheless
+a feed-ranking **target** — reached through the content tagged
+to it — *and* a discovery **filter** over that content; the
+two uses are independent
+([feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable)).
 
-**Invariant:** Hashtags do not participate in feed-ranking
-path products. `:TAGGING` is pure topology used for discovery
-filters, never traversed by the ranking math. Combined with
-the no-outgoing-edges rule above, any path that reaches a
-Hashtag terminates there. The `ChatMessage → Hashtag`
-`:REFERENCES` edge below is on the same footing — recorded
-for topology, mathematically inert.
+**Feed-ranking mechanics.** `:TAGGING` is **traversable but
+non-contributing**: a ranking path reaches a Hashtag through
+it, the hop adding one step of `d(R)` decay and no
+`(dim1, dim2)` factor (pure topology). A Hashtag has no
+outgoing edges, so any path that reaches one terminates there —
+it is a sink, ranking *into* it amplifies nothing downstream,
+and it needs no traversal restriction
+([feed-ranking.md §3.1](../primitive/feed-ranking.md#31-which-edges-contribute-factors)).
+The Hashtag is then ranked by `h` like any node. The
+`ChatMessage → Hashtag` `:REFERENCES` edge below is the one
+inbound edge that *does* contribute a factor — it carries a
+`(dim1, dim2)` tensor like any reference.
 
 The structural edges that do land at a Hashtag:
 
@@ -159,8 +164,10 @@ The structural edges that do land at a Hashtag:
   single structural edge per (source, target) pair is the
   rule — see the Hashtag carve-out in
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
-  Mathematically inert per the invariant above; recorded for
-  topology completeness only.
+  Unlike `:TAGGING`, this `:REFERENCES` carries a
+  `(dim1, dim2)` tensor and contributes a factor to the
+  ranking path — the one inbound edge through which a Hashtag
+  accrues reference-borne signal.
 - **`Proposal → Hashtag` `:TARGETS`** when a moderation
   Proposal targets the Hashtag's `name_status` (§3). See
   [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
