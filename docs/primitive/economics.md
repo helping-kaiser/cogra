@@ -406,7 +406,11 @@ element authored by `i`, where
 - `A_π` is the set of **distinct authors** of every edge *and* content
   node on `π`.
 
-Conservation holds: `Σ_i φ_i = h_anchor(target)`.
+Conservation holds on these raw shares: `Σ_i φ_i = h_anchor(target)`.
+Payout (§6.2) then excludes the target's author and floors
+net-negatives, renormalizing the positive remainder onto the fixed
+`0.95·P` pool — so the amounts actually paid sum to `0.95·P`, not to
+`h`.
 
 **Why the conduit earns with no special rule.** A node many paths route
 through appears in many `A_π`, collecting a share from each. A node on a
@@ -425,8 +429,8 @@ the *bottleneck* edge, not the strongest, is the most pivotal).
   all edges and content nodes on the path, deduped by author (an author
   who owns several elements on one path counts once for that path). A
   non-actor node is never paid — its author is.
-- **The target's author is excluded entirely** — not merely the endpoint
-  node, and even when the target is a third party's content. The campaign
+- **The target's author is excluded from payout entirely** — not merely
+  for the endpoint node, and even when the target is a third party's content. The campaign
   already promotes the target and boosts its popularity, so the target
   does not also draw from the contributor pool (an advertiser who wants
   to pay a third-party target's author does so by direct transfer). The
