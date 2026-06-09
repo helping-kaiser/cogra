@@ -183,3 +183,162 @@ governance vote, opening a campaign) are standalone mutations.
 Operations are combined only where they are the same gesture —
 never merged for the sake of a smaller mutation count, and never
 split for the sake of a larger one.
+
+---
+
+## Type system — foundations
+
+The cross-cutting building blocks: scalars, the shared
+interfaces, the `Edge` tensor type, per-field moderation, and the
+pagination wrappers. The concrete node object types build on
+these in the sections that follow.
+
+### Scalars
+
+```graphql
+"A v4 UUID — the shared key across the graph (Memgraph) and
+ display-content (Postgres) stores."
+scalar UUID
+
+"An RFC 3339 / ISO 8601 timestamp."
+scalar DateTime
+
+"A signed edge-tensor dimension: a float constrained to the closed
+ range [-1.0, +1.0]. The range invariant lives in the type rather
+ than in a plain Float."
+scalar Dimension
+```
+
+### Shared enums
+
+```graphql
+"A node's moderation state. On a content node, the cached max
+ severity across that node's per-field statuses; on a single field
+ (see FieldStatus), ILLEGAL means that field is redacted."
+enum ModerationStatus { NORMAL SENSITIVE ILLEGAL }
+
+"The graph-layer label on an edge — every edge carries exactly
+ one. ACTOR / AUTHOR / INVITE are actor edges; the rest are
+ structural."
+enum EdgeLabel {
+  ACTOR AUTHOR INVITE
+  CONTAINMENT CLAIM APPROVAL BEARER TAGGING TARGETS REFERENCES
+  ANCHOR PROMOTES ENTITLES CLAIMS TRANSFERS PAYS_TO
+}
+```
+
+### Identity and actor interfaces
+
+```graphql
+"Anything with a graph identity — implemented by every node type.
+ It exists so heterogeneous endpoints (an edge's ends, a reference
+ target, a comment's parent) are typed without a sprawling union.
+ It is a type-modeling device, not a navigation mandate: typed
+ entry points are free to exist and nothing is forced through a
+ single node(id) accessor."
+interface Node {
+  id: UUID!
+}
+
+"An entity that takes actions and authors content: a User or a
+ Collective. Both expose the same outgoing-edge catalog, so the
+ graph refers to actors through this interface wherever the
+ User-vs-Collective distinction is not load-bearing."
+interface Actor implements Node {
+  id: UUID!
+  "The unique mention handle — a User's username or a Collective's
+   name."
+  handle: String!
+  displayName: String!
+  avatar: MediaAttachment
+  websiteUrl: String
+  moderationStatus: ModerationStatus!
+  createdAt: DateTime!
+}
+```
+
+### The edge tensor
+
+```graphql
+"A single directed edge: the uniform 2D tensor that carries every
+ relationship and opinion in the graph. The top layer is the
+ current state; `history` is the full append-only stack."
+type Edge {
+  "Source — the actor or system that wrote the edge."
+  from: Node!
+  "Target the edge points at."
+  to: Node!
+  label: EdgeLabel!
+  "Top-layer dimension 1 — signed valence (sentiment / approval /
+   affirmation). The user-facing label varies by edge type; the
+   math role does not."
+  dim1: Dimension!
+  "Top-layer dimension 2 — signed connection-weight (interest /
+   relevance / importance)."
+  dim2: Dimension!
+  "Index of the current (top) layer; 1 is the first interaction."
+  layer: Int!
+  "When the top layer was written."
+  timestamp: DateTime!
+  "The full append-only layer stack, oldest first; the last entry
+   equals the current (dim1, dim2). Audit and history only —
+   ranking reads the top layer."
+  history: [EdgeLayer!]!
+}
+
+"One immutable layer of an Edge."
+type EdgeLayer {
+  dim1: Dimension!
+  dim2: Dimension!
+  layer: Int!
+  timestamp: DateTime!
+}
+```
+
+The **system-dimension slot** (typed, optional, per-label edge
+metadata — e.g. the on-chain transaction reference a `:TRANSFERS`
+edge carries) is deferred to the edge contexts that populate it,
+as the docs themselves defer its schema
+([edges.md §2](../primitive/edges.md#2-structural-edges)). It
+never enters ranking.
+
+### Per-field moderation
+
+```graphql
+"One user-filled field's current moderation status. `field` is the
+ property name (\"content\", \"bio\", \"name\", …); a status of
+ ILLEGAL means the value is redacted and the field itself resolves
+ to null."
+type FieldStatus {
+  field: String!
+  status: ModerationStatus!
+}
+```
+
+Every content-bearing node exposes `moderationStatus` (the
+node-level cache) and `fieldStatuses: [FieldStatus!]!` (the
+per-field detail), per [nodes.md](../primitive/nodes.md). A
+redacted field's own value resolves to null while its
+`FieldStatus` carries ILLEGAL — the visible mark, never a silent
+disappearance.
+
+### Pagination
+
+```graphql
+"Relay cursor-pagination metadata."
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+```
+
+Every list is a Relay connection: a `<Element>Connection` with
+`edges: [<Element>Edge!]!`, `pageInfo: PageInfo!`, and an optional
+`totalCount: Int`; each `<Element>Edge` has `cursor: String!` and
+`node: <Element>!`. The wrapper keeps the bare Relay `<Element>Edge`
+spelling throughout — so the tensor `Edge` type's own connection
+wrapper is `EdgeEdge`, accepted for idiom-consistency rather than
+special-cased. Connections are materialized per element type in
+the sections that use them.
