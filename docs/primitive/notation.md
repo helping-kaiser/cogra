@@ -96,4 +96,4 @@ recalibrated by the network. The property names map to the symbols:
 |---|---|---|
 | `distance_decay_base` | base of `d(R)` (default `0.1`) | [network §3](network.md#feed-ranking-calibration) |
 | `time_decay_half_life_days` | half-life of `f(Δt)` (default `30`) | [network §3](network.md#feed-ranking-calibration) |
-| `dust_floor` | the floor `ε` | [network §3](network.md#feed-ranking-calibration) |
+| `dust_floor` | the floor `ε` (default `0`) | [network §3](network.md#feed-ranking-calibration) |
