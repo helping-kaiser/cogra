@@ -46,7 +46,7 @@ outbound absence is explicit.
 | **Hashtag**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
 | **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | —          | —          |
 | **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | —          | —      | —          | —          | —          | —          | —          |
-| **CollectiveMember** | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | —          | —      | —          | —          | —          | —          |
+| **CollectiveMember** | `:BEARER`  | `:CLAIM` `:BEARER` | —   | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | —          | —      | —          | —          | —          | —          |
 | **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | `:STRUCTURAL` | —          | —          | —          | —       | —          | —          | —          |
 | **Network**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
 | **Campaign**         | `:ANCHOR` `:PROMOTES` | `:ANCHOR` `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | `:PROMOTES` | —          | `:PROMOTES` | —          | —          | —          | —          | —          | `:STRUCTURAL` | —          |
@@ -82,6 +82,11 @@ The two-label cells in the matrix are:
   a campaign's anchor and target are distinct nodes, since
   `anchor == target` is forbidden
   ([economics.md §2.1](economics.md#21-success-metric-and-forbidden-configurations)).
+- `CollectiveMember → Collective` — `:CLAIM` for the junction's
+  parent collective (every CollectiveMember has exactly one);
+  `:BEARER` when the bearer is a Collective (a collective that is
+  itself a member). Parent and bearer are always distinct nodes,
+  so only one fires on any specific pair.
 
 `Proposal → Proposal` is `—` because a Proposal never targets
 another Proposal — moderation can't target it and no governance
@@ -205,6 +210,13 @@ flowchart LR
     classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
 ```
+
+Beyond the structural triad, a junction also receives the
+**bearer's `:AUTHOR` actor edge** (`bearer → junction`), written
+at self-claim — this is what authors the junction. It is an actor
+edge, not structural, so it is absent from the matrix above and
+governed by the actor-edge traversability row in §3; see
+[authorship.md "Junction authorship"](authorship.md#junction-authorship).
 
 ### 2.3. `:TAGGING`
 

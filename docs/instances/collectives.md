@@ -419,13 +419,13 @@ is whatever the social contract named for the inaugural role
 
 ### CollectiveMember
 
-CollectiveMember is a junction node and has no authorship in the
-[authorship.md](../primitive/authorship.md) sense — it
-represents a membership relationship, not an authored piece of
-content. Its bearer (the actor the `:BEARER` edge points at) is
-the identity it represents; the actor whose gesture produced it
-is whichever party initiated the admission, but neither
-is an "author" in the graph's authorship rule.
+A CollectiveMember is authored by its **bearer** — the actor the
+`:BEARER` edge points at, the identity it represents — via the
+bearer's `:AUTHOR` edge to the junction, written in the bearer's
+self-claim gesture (§7). Authorship is fixed by that label, not
+the earliest-incoming timestamp, since third-party `:ACTOR`
+sentiment can land on a pending junction first. See
+[authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship).
 
 ---
 
@@ -442,10 +442,13 @@ CollectiveMember.
    membership (`User/Collective → Proposal`; authorship is the
    first vote). The system creates the pending
    `CollectiveMember → Collective` claim edge and the
-   `CollectiveMember → User/Collective` `:BEARER` identity edge.
+   `CollectiveMember → User/Collective` `:BEARER` identity edge,
+   and the member writes their `bearer → CollectiveMember`
+   `:AUTHOR` edge, which authors the junction (§6).
    (Approver-initiated flows mirror invite-only: the approver
    creates the junction and `:BEARER` first; the would-be member
-   self-claims by authoring later.)
+   self-claims — authoring both the Proposal and the `:AUTHOR`
+   edge — later.)
 2. **Required approvers** — existing CollectiveMembers eligible
    under the social contract for the target role — each cast a
    **Shape B vote** from their own existing CollectiveMember to
