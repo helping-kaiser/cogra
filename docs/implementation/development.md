@@ -69,10 +69,11 @@ make up           Start Postgres + Memgraph in background
 make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
 make migrate      Run pending Postgres migrations only
-make ci           Full CI pipeline: lint then test
+make ci           Full CI pipeline: lint, test, then docs-link-check
 make lint         cargo clippy + cargo fmt --check (read-only)
 make fmt          cargo fmt --all (writes files)
 make test         cargo test --all
+make docs-link-check  Check markdown link targets + anchors (needs lychee)
 make build        cargo build --all
 make logs         Follow docker compose logs (Ctrl+C to stop)
 ```
