@@ -254,14 +254,14 @@ artifacts that don't reflect social reality.
 
 §3.1 establishes which edges contribute factors and which are
 state-bearing gates. The rules below restrict which edges
-**feed-ranking paths may traverse at all** — five edge-class
+**feed-ranking paths may traverse at all** — six edge-class
 restrictions on top of the gate-on-affirmation rule, each
 closing a concrete bot-amplification attack on the forward-only
 foundation. The attacks share a shape: trusted-network interest
 signal crosses a structural edge that carries no opinion —
 junction approval, bearer binding, proposal target, content
-reference — and lands on a bot-controlled node from which a
-path continues.
+reference, economic record — and lands on a bot-controlled node
+from which a path continues.
 
 The rules apply to **feed-ranking traversal only**. Other
 queries (governance lookups, integrity audits, debugging) cross
