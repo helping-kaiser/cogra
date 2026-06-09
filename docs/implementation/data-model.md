@@ -76,7 +76,8 @@ CREATE INDEX media_attachments_author_idx
 -- email and password_hash live here once the account is verified;
 -- before that, they sit on auth_pending_registrations and are moved
 -- across in the same transaction that creates this row
--- (see auth.md §Account lifecycle and §First-user genesis bootstrap).
+-- (see auth.md §Account lifecycle; genesis bootstrap in
+-- architecture.md §Genesis bootstrap and network.md §2).
 CREATE TABLE users (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     username      TEXT        NOT NULL UNIQUE,
@@ -425,7 +426,7 @@ CREATE INDEX auth_invitations_inviter_idx
 --
 -- invitation_id is the auth_invitations row the registrant came in
 -- through (NULL only for the first-user genesis bootstrap, see
--- auth.md §First-user genesis bootstrap).
+-- architecture.md §Genesis bootstrap and network.md §2).
 -- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
 -- edge values toward the inviter, written to the graph edge on
 -- verification per invitations.md.
