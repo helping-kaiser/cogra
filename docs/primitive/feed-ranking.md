@@ -1748,7 +1748,7 @@ Worked cold-start example, with and without decay:
 
 **With decay (default 30-day half-life):**
 - P: authorship edge fresh → `f = 1.0` → `h(P) = 0.162`.
-- Q direct: `f(1095d) ≈ 8×10⁻¹²` → contribution collapses to ~0.
+- Q direct: `f(1095d) ≈ 1×10⁻¹¹` → contribution collapses to ~0.
 - Q reactor paths: assume 10 of 100 reactor edges are recent
   (≤30d, average `f ≈ 0.7`); the remaining 90 are years old
   (`f ≈ 0`).
