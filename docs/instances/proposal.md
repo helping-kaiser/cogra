@@ -294,6 +294,12 @@ another Proposal: moderation can't target it (§2), and no
 other governance application proposes changes to a
 Proposal's own properties (neither layers, §2).
 
+**Feed-rankable.** These inbound vote and reference edges are
+reactor edges into the Proposal, making it an **opt-in**
+feed-ranking target ("show me the proposals that matter to me");
+it is never in the default feed. See
+[feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable).
+
 ---
 
 ## 5. Authorship

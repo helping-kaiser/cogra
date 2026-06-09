@@ -90,8 +90,14 @@ The walk maintains a per-path visited set to enforce the invariant.
 path products. `:REFERENCES` is a state-bearing structural
 edge (§3.5 rule 5): it carries a `(dim1, dim2)` tensor with the
 same shape as actor edges and composes the same way. The other
-**traversable** structural edges count toward `R` (path length)
-but do not contribute factors — they are pure topology.
+**traversable** structural edges — such as `:CONTAINMENT` and
+`:TAGGING` — count toward `R` (path length) but do not contribute
+factors; they are pure topology. `:TAGGING` is the one that lands
+directly on a feed target: a path reaches a Hashtag through the
+content tagged to it, the `:TAGGING` hop adding an `R`-step and no
+factor (§5.3). It needs no §3.5 restriction — a Hashtag has no
+outgoing edges, so a path crossing `:TAGGING` terminates there and
+can amplify nothing downstream.
 Non-traversable structural edges (`:APPROVAL`, `:BEARER`,
 `:TARGETS` per §3.5 rules 1–3) never appear in any feed-ranking
 path; they contribute nothing to `R` because no path crosses them.
@@ -361,12 +367,16 @@ behave the same way (their budget just spreads).
 **Sibling case: junction Shape B vote edges.** A junction's
 Shape B votes all target `Proposal` nodes
 (`junction → Proposal`); a junction never votes on another
-junction. Such an edge fans in to a governance node, not out to
-a content node (no `:CONTAINMENT` outbound from a junction) or to
-an actor (no `:BEARER` traversal), and Proposals are rarely
-feed-rankable in any current UI. Flagged for completeness;
-deferred until junction or Proposal ranking becomes a concrete
-case. The rules above already prevent the dangerous outcomes.
+junction. Proposals are feed-rankable (§5.3), so this edge acts
+as a reactor edge into the Proposal — it carries the vote's
+`dim1` with `dim2 = 0` ([edges.md §2](edges.md#voting-shape-b))
+and composes like any reactor. It opens no new surface: reaching
+the junction at all needs an inbound `:ACTOR` vote on the
+membership — a real edge from `U`'s network, not bot-manufacturable
+— and the junction's only feed-relevant outbound is this vote,
+which terminates at the Proposal, a governance node and not a
+content funnel. The junction itself is out of scope as a target
+(§5.3).
 
 #### Rule 6 — economics edges are not traversable for feed ranking
 
@@ -378,8 +388,17 @@ feed-ranking path. They record economic relationships for public
 auditability; admitting any of them would let a campaign inject reach
 toward its target (buying ranking) or let token flows nudge feed order —
 the economics→ranking feedback the no-AI boundary forbids
-([economics.md](economics.md)). The `:INVITE` edge is the one exception:
-it is a normal social actor edge and traverses like any other.
+([economics.md](economics.md)). The bar is on these edges as
+**transit** — a campaign cannot propagate signal *onward* to its
+target, a token flow cannot nudge another node's order. It does
+not exempt the **Campaign node itself** from ranking: a Campaign
+is reached through its inbound `:AUTHOR` / `:REFERENCES` and is a
+feed target like any other (§5.3); only its outbound
+`:ANCHOR` / `:PROMOTES` are barred from carrying reach. Settlement
+and Wallet stay unranked for a different reason — their ordering
+signal lives on the chain, not the graph (§5.3). The `:INVITE`
+edge is the one exception: it is a normal social actor edge and
+traverses like any other.
 
 ### 3.6 Bot resistance via the `(0, 0)` severance edge
 
@@ -1475,6 +1494,46 @@ adjustable. Same architectural position as the §5.1 filter
 layer and the §7 frontend-tunable decay function: viewer-side
 preferences over a clean ranking core.
 
+### 5.3 What is rankable
+
+Ranking is **node-type-agnostic**. The math computes `h` (and `i`,
+`j`, `k`) for any **target** a viewing user can reach by a
+forward-traversable path (§3); the type of the target never enters
+the math. A node is feed-rankable exactly when such a path can
+reach it *and* the type is in scope. *Which* in-scope types a
+viewing user actually sees is the frontend filter (§5.1, §9) — the
+set below is that filter's input domain.
+
+**A path may reach its target through any traversable edge.** The
+path's signal is carried by its factor-contributing edges — actor
+(`:ACTOR` / `:AUTHOR`) and `:REFERENCES` (§3.1). The **final hop
+into the target** may be one of those, or a traversable
+**non-contributing** structural edge that adds an `R`-step without
+contributing a factor — a `:TAGGING` edge into a Hashtag is the
+case in point: the Hashtag ranks by `h` like any node, reached
+through the content tagged to it, the `:TAGGING` hop costing one
+step of `d(R)` decay and nothing else. Non-traversable edges (§3.5
+— `:APPROVAL`, `:BEARER`, `:TARGETS`, the economics edges) can
+never be the hop that reaches a target; they carry no feed-ranking
+path.
+
+**The default feed is Posts only.** Every other rankable type is
+opt-in: the viewing user mixes them in, excludes them, or isolates
+a single type, entirely in the frontend filter.
+
+**Rankable types** — Post is the default, the rest opt-in: Post,
+Comment, Chat, ChatMessage, Item, User, Collective, Proposal,
+Hashtag, Campaign.
+
+**Out of scope.** The junctions **ChatMember**,
+**CollectiveMember**, and **ItemOwnership** are reachable but carry
+no feed worth surfacing — they exist for governance, not browsing.
+**Settlement** and **Wallet** are reachable but pointless to rank on
+the graph: the signal that would order them (a settlement by payout,
+a wallet by balance) lives on the **chain**, never the graph
+([ledger.md](../implementation/ledger.md)). The **`:Network`
+singleton** is instance configuration; there is nothing to rank.
+
 ---
 
 ## 6. Examples
@@ -1888,9 +1947,10 @@ ranking would discard anyway.
 
 ### Filtering sits alongside ranking, on the viewing user's side
 
-Every node type — Post, Comment, Chat, ChatMessage, Item, future
-additions — is independently filterable. A user who wants only posts
-gets only posts; one who wants posts and chats gets both.
+Every rankable type (§5.3) is independently filterable — the
+default is Posts only, and the viewing user mixes in, excludes, or
+isolates any of the others. A user who wants only posts gets only
+posts; one who wants posts and chats gets both.
 
 Hard "never show me content from user X" exclusions are also a
 viewer-side concern (per §5.1). The graph math taints paths through
