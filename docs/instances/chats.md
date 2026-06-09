@@ -124,9 +124,10 @@ A Chat node carries:
   any entry via a Proposal targeting `governance.<action_key>`,
   gated by that entry's own `amend` triple. Layered.
 - **`epoch`** — integer chat-key-rotation counter (§9). Default
-  `1`. Operational counter; not layered. Advances by `1` on
-  every membership change and on every passing
-  `decision:rotate_key` Proposal.
+  `1`. Operational counter; not layered. Advances by `1`
+  automatically on every membership change (no vote), and on every
+  passing `decision:rotate_key` Proposal (the only governance-routed
+  rotation — §9).
 
 Per-field moderation-status properties cover each user-input
 field — **`name_status`** (companion to the data sibling `name`),
