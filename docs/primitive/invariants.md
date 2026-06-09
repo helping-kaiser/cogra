@@ -73,9 +73,8 @@ most useful one.
 ## Authority and gates
 
 - [Out-of-graph authority is confined to instance bootstrap](graph-model.md#1-core-principles)
-  — the `:Network` singleton creation and the genesis moderator's
-  `network_role` layer are the only two writes that escape the
-  actor-gesture-or-governance rule.
+  — the instance bootstrap transaction is the only write that
+  escapes the actor-gesture-or-governance rule.
 - [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
   — uniform across content moderation, moderator role changes,
   and `:Network` parameter amendments.
