@@ -330,7 +330,7 @@ therefore mechanically loss-making for any `(D > 0, P ≥ 0)`: it spends
 ```
 
 (or `0.0005·D + 0.0395·P` if it also controls the inviter slot,
-recovering only its own burn) — strictly positive, floor `0.05%·D`,
+recovering the inviter reward) — strictly positive, floor `0.05%·D`,
 ceiling `5%·D` (`4%·D` self-invited). The cap holds for **any** `g`
 (§6.4 redistributes the fixed `0.95·P` pool, never its size) and across
 **concurrent campaigns** (each settles its own equation independently —
