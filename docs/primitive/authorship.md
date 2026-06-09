@@ -4,6 +4,9 @@ Authorship in CoGra is a **derived fact**, not a stored field. The
 author of a node is the actor whose incoming edge has the earliest
 layer 1 timestamp. A node cannot exist without someone creating it, so
 the very first edge ever created toward a node identifies the author.
+Junctions are the one exception: they are authored by their
+**bearer**, fixed by the `:AUTHOR` label rather than the timestamp —
+see [Junction authorship](#junction-authorship).
 
 **"Creator" is a synonym for "author"; "author" is canonical.**
 Wherever a User or Collective is described as "creating" a node
@@ -59,6 +62,35 @@ outgoing `:AUTHOR` hop.
 
 Same tensor shape, same `[-1, +1]` range, same append-only layer
 semantics as any actor edge — only the label differs.
+
+## Junction authorship
+
+A junction (`ChatMember`, `CollectiveMember`, `ItemOwnership`) is
+authored by its **bearer** — the actor the junction represents. The
+authoring edge is the bearer's `User/Collective → junction` actor
+edge carrying the `:AUTHOR` sub-label, written in the same gesture as
+the bearer's self-claim — the act of claiming or approving the
+relationship (see
+[graph-model.md §5](graph-model.md#5-junction-node-flows)). Its
+dimensions are the bearer's stance on holding the membership or
+ownership, like any actor edge.
+
+For junctions the author is fixed by the **`:AUTHOR` label, not the
+earliest-incoming-edge timestamp.** A junction receives third-party
+`:ACTOR` sentiment edges (others endorsing or rejecting the
+membership), and in an invite flow the junction exists — bound to its
+prospective bearer by `:BEARER` — before the bearer self-claims, so a
+third party's sentiment edge can carry an earlier timestamp than the
+bearer's authoring edge. The label resolves it: the bearer's
+`:AUTHOR` edge is the author whichever incoming edge is earliest.
+Third-party sentiment is never authorship.
+
+`:BEARER` (junction → bearer) and `:AUTHOR` (bearer → junction)
+coexist and point opposite ways: `:BEARER` is the system's
+non-traversable identity binding, written at junction creation;
+`:AUTHOR` is the bearer's own traversable opinion edge, written when
+they self-claim. See
+[edges.md "Bearer binding"](edges.md#bearer-binding).
 
 ## Caching
 

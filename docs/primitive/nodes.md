@@ -219,7 +219,10 @@ Junction nodes represent relationships that have **roles**, need
 with (liked, voted on, etc.). They eliminate the need for parallel
 edges between the same two nodes — see
 [graph-model.md §2](graph-model.md#2-node-categories) for the
-framing and §5 for the approval flow.
+framing and §5 for the approval flow. Each junction is authored by
+its bearer via the bearer's `:AUTHOR` edge to it, written at
+self-claim — see
+[authorship.md "Junction authorship"](authorship.md#junction-authorship).
 
 | Node type | Connects | Description |
 |-----------|----------|-------------|

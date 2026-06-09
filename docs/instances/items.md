@@ -42,6 +42,8 @@ The gesture writes the following records atomically:
 - The `ItemOwnership → Item` claim edge.
 - The `Item → ItemOwnership` approval edge with positive top
   layer (`dim1 > 0`).
+- The author's `bearer → ItemOwnership` `:AUTHOR` edge, which
+  authors the junction (§5).
 
 With no prior owner to cast a Shape B vote, the
 [junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
@@ -262,9 +264,16 @@ The **current owner** is whoever holds the active ItemOwnership
 and currently owned by a different User or by a Collective is the
 typical case after one or more transfers.
 
-ItemOwnership is a junction node and has no authorship in the
-[authorship.md](../primitive/authorship.md) sense — it represents
-a transfer relationship, not an authored piece of content.
+Each ItemOwnership is authored by its **bearer** — the owner it
+represents — via the bearer's `:AUTHOR` edge to the junction,
+written in the self-claim gesture that accepts the ownership (§6).
+Authorship is fixed by that label, not the earliest-incoming
+timestamp, since third-party `:ACTOR` sentiment can land on a
+pending junction first. See
+[authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship).
+This is distinct from the Item's author above: the Item is
+authored once by its minter; each successive owner authors their
+own ItemOwnership.
 
 ---
 
@@ -284,12 +293,15 @@ owner's **Shape B approval** (`ItemOwnership_current → Proposal`,
   creates the new ItemOwnership junction, binding it by `:BEARER`
   to the named acquirer, plus the `ItemOwnership → Item` claim
   edge. The transfer is pending until the acquirer self-claims on
-  the Proposal.
+  the Proposal — writing their `bearer → ItemOwnership` `:AUTHOR`
+  edge, which authors the junction (§5).
 - **Buyer-first (bid / request).** An interested acquirer authors
   the transfer-Proposal — their `User/Collective → Proposal`
   Shape A self-claim. The system creates the new ItemOwnership
-  junction with its claim and `:BEARER` edges. The transfer is
-  pending until the current owner signs with their Shape B
+  junction with its claim and `:BEARER` edges, and the acquirer
+  writes their `bearer → ItemOwnership` `:AUTHOR` edge. The
+  transfer is pending until the current owner signs with their
+  Shape B
   approval. Handy for a marketplace where buyers approach sellers.
 
 When both signatures are present the approval policy is satisfied
