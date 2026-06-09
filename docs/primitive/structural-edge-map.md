@@ -132,7 +132,7 @@ junction never votes directly on another junction.
 
 Same information as the matrix, split one diagram per edge-label
 family. A single combined diagram is dominated by `:REFERENCES`
-(~35 edges) and `:TARGETS` (12 edges) fan-outs and reads as a
+(~46 edges) and `:TARGETS` (12 edges) fan-outs and reads as a
 hairball; splitting by family makes each family's shape visible.
 The matrix above remains the canonical reference.
 
