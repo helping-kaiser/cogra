@@ -195,9 +195,6 @@ are registry concepts, not authored content; account
 deletion of any one contributor has no effect on the
 Hashtag itself.
 
-Two redaction triggers apply to a Hashtag today, both via
-moderation:
-
 Moderation
 ([moderation.md §1](moderation.md#1-the-two-classification-paths))
 is the only redaction trigger on a Hashtag. The cascade does

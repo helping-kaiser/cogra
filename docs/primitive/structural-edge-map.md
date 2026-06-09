@@ -132,7 +132,7 @@ junction never votes directly on another junction.
 
 Same information as the matrix, split one diagram per edge-label
 family. A single combined diagram is dominated by `:REFERENCES`
-(~35 edges) and `:TARGETS` (12 edges) fan-outs and reads as a
+(~46 edges) and `:TARGETS` (12 edges) fan-outs and reads as a
 hairball; splitting by family makes each family's shape visible.
 The matrix above remains the canonical reference.
 
@@ -456,7 +456,7 @@ and how* the ranking walk crosses them.
 | `:APPROVAL` | **No outbound** — state-bearing identity, not transit | [feed-ranking.md §3.5 rule 1](feed-ranking.md#35-traversal-restrictions) |
 | `:BEARER` | **No** — identity binding, not transit | [feed-ranking.md §3.5 rule 2](feed-ranking.md#35-traversal-restrictions) |
 | `:TARGETS` | **No outbound** — governance reference, not relevance | [feed-ranking.md §3.5 rule 3](feed-ranking.md#35-traversal-restrictions) |
-| `:TAGGING` | **No** — cosmetic discovery only | [hashtag.md §4](../instances/hashtag.md#4-edges) |
+| `:TAGGING` | Yes — counts toward `R`, no factor contribution; terminates at the Hashtag | [feed-ranking.md §3.1](feed-ranking.md#31-which-edges-contribute-factors) |
 | `:REFERENCES` | Yes — endpoint-restricted (User/Collective ⇒ terminate after one `:AUTHOR` hop) + fanout-budget composition | [feed-ranking.md §3.5 rules 4 & 5](feed-ranking.md#35-traversal-restrictions) |
 | `:STRUCTURAL` (Shape B) | Yes — sibling-case note in feed-ranking §3.5 | [feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions) |
 | `:ANCHOR` / `:PROMOTES` / `:ENTITLES` / `:CLAIMS` / `:TRANSFERS` / `:PAYS_TO` | **No** — economic records, `(0, 0)`, never inject reach | [feed-ranking.md §3.5 rule 6](feed-ranking.md#35-traversal-restrictions) (anchor/promotes); [economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow) |
