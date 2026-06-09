@@ -70,14 +70,14 @@ the full grammar.
 | Collective → Item | **Sentiment** | **Relevance** (how important is this product) |
 | Collective → Proposal | **Sentiment** (support to oppose) | **Importance** (how strongly the collective wants this change) |
 
-Actor edges to Hashtag are deliberately excluded from both tables.
-Hashtag has no outgoing edges (see
-[hashtag.md §4 "As source"](../instances/hashtag.md#as-source-outgoing))
-so any actor edge ending at a Hashtag would terminate the path
-without contributing to traversal further on. The cosmetic-only
-rule — `:TAGGING` is the only edge ranking ever needs to touch on
-the hashtag side, and it stays pure topology — lives in
-[hashtag.md §4](../instances/hashtag.md#4-edges).
+Actor edges to Hashtag are deliberately excluded from both tables;
+"liking a hashtag" is not a graph operation. A Hashtag is still a
+feed-ranking target — reached through the content tagged to it, the
+`:TAGGING` hop traversable but non-contributing (pure topology). It
+has no outgoing edges, so any path that reaches it terminates there.
+The mechanics live in
+[hashtag.md §4](../instances/hashtag.md#4-edges) and
+[feed-ranking.md §5.3](feed-ranking.md#53-what-is-rankable).
 
 The inviter's `Inviter → New Actor` edge of the two-edge invitation
 pattern ([invitations.md](invitations.md#the-two-edge-invitation-pattern))
