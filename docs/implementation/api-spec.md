@@ -225,6 +225,15 @@ enum EdgeLabel {
   CONTAINMENT CLAIM APPROVAL BEARER TAGGING TARGETS REFERENCES
   ANCHOR PROMOTES ENTITLES CLAIMS TRANSFERS PAYS_TO
 }
+
+"The kind of a node — used to filter edge endpoints by the type of
+ node on the far end (e.g. only a User's edges that point at Posts)."
+enum NodeKind {
+  USER COLLECTIVE
+  POST COMMENT CHAT CHAT_MESSAGE ITEM HASHTAG
+  PROPOSAL CAMPAIGN SETTLEMENT WALLET NETWORK
+  CHAT_MEMBER COLLECTIVE_MEMBER ITEM_OWNERSHIP
+}
 ```
 
 ### Identity and actor interfaces
@@ -238,6 +247,22 @@ enum EdgeLabel {
  single node(id) accessor."
 interface Node {
   id: UUID!
+  "Edges originating at this node — the generic way to read any
+   relationship before named convenience views exist. Filter by
+   graph label and/or by the kind of node on the far end."
+  outgoingEdges(
+    label: EdgeLabel
+    toKind: NodeKind
+    first: Int, after: String, last: Int, before: String
+  ): EdgeConnection!
+  "Edges pointing at this node. Exposed as public topology / an
+   inbound-attention surface only — per the feed-ranking model,
+   inbound edges never shape this node's own feed."
+  incomingEdges(
+    label: EdgeLabel
+    fromKind: NodeKind
+    first: Int, after: String, last: Int, before: String
+  ): EdgeConnection!
 }
 
 "An entity that takes actions and authors content: a User or a
@@ -292,6 +317,20 @@ type EdgeLayer {
   dim2: Dimension!
   layer: Int!
   timestamp: DateTime!
+}
+
+"A page of edges. (The wrapper is `EdgeEdge` because the element
+ type is itself named `Edge` — the accepted cost of the bare Relay
+ spelling.)"
+type EdgeConnection {
+  edges: [EdgeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type EdgeEdge {
+  cursor: String!
+  node: Edge!
 }
 ```
 
