@@ -7,8 +7,11 @@ next evolution — a social media platform where feed ranking is driven
 entirely by the social graph and explicit user interactions, not AI
 algorithms.
 
-The system uses a dual-database architecture. A social network has two
-data access patterns that map poorly to a single database:
+The system's core uses a dual-database architecture; the economics
+primitive adds a third store — the **chain** — for money (balances,
+transfers, payouts) that the graph points to but never holds (see
+[ledger.md](ledger.md)). A social network has two data access patterns
+that map poorly to a single database:
 
 1. **Traversal queries** — "what should I see next?", "how is this person
    connected to me?", "what's happening in my part of the graph?" Graph
@@ -62,8 +65,10 @@ display it next to the member's name.
 
 The shared key between both databases is the **UUID** assigned at creation
 time. Memgraph stores graph topology (nodes + tensor edges). PostgreSQL stores
-everything needed to display content. See the
-[Components](#components) section below for what each crate does.
+everything needed to display content. Money lives in a third store, the
+**chain** (not shown above — it is on-chain, not a CoGra-operated
+database); the graph holds only pointers to it ([ledger.md](ledger.md)).
+See the [Components](#components) section below for what each crate does.
 
 | Concern | Choice |
 |---|---|
@@ -71,6 +76,7 @@ everything needed to display content. See the
 | API | Axum + async-graphql |
 | Graph DB | Memgraph (openCypher, bolt protocol) |
 | Display-content DB | PostgreSQL 16 (SQLx) |
+| Money store | Chain — on-chain ledger ([ledger.md](ledger.md)) |
 | Local dev | Docker Compose |
 | CI | GitHub Actions |
 

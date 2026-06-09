@@ -64,6 +64,9 @@ an `instances/` doc is a sign the mechanism belongs in
   graph-computed reach (`h_anchor(target)`), per-path Shapley payout,
   advertiser-discretionary settlement, the claim flow; no AI, no
   economics→ranking feedback.
+- [token](primitive/token.md) — the CGT token: scheduled decaying
+  mint, burn-as-destruction, protocol-owned liquidity; never feeds
+  ranking.
 - [invitations](primitive/invitations.md) — two-edge onboarding
   pattern for new actors.
 - [network](primitive/network.md) — the global community of all
