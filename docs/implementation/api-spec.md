@@ -212,9 +212,8 @@ scalar Dimension
 ### Shared enums
 
 ```graphql
-"A node's moderation state. On a content node, the cached max
- severity across that node's per-field statuses; on a single field
- (see FieldStatus), ILLEGAL means that field is redacted."
+"A node's moderation state — the cached max severity across its
+ per-field statuses. (Per-field status uses FieldModerationStatus.)"
 enum ModerationStatus { NORMAL SENSITIVE ILLEGAL }
 
 "The graph-layer label on an edge — every edge carries exactly
@@ -247,6 +246,11 @@ enum NodeKind {
  single node(id) accessor."
 interface Node {
   id: UUID!
+  "When this node was created."
+  createdAt: DateTime!
+  "When this node last changed — its most recent layer or
+   display-content version; equals createdAt if never changed."
+  updatedAt: DateTime!
   "Edges originating at this node — the generic way to read any
    relationship before named convenience views exist. Filter by
    graph label and/or by the kind of node on the far end."
@@ -270,15 +274,15 @@ interface Node {
  graph refers to actors through this interface wherever the
  User-vs-Collective distinction is not load-bearing."
 interface Actor implements Node {
-  id: UUID!
+  # + Node fields (id, createdAt, updatedAt, outgoingEdges, incomingEdges)
   "The unique mention handle — a User's username or a Collective's
    name."
-  handle: String!
-  displayName: String!
-  avatar: MediaAttachment
-  websiteUrl: String
+  handle: ModeratedText!
+  displayName: ModeratedText!
+  avatar: ModeratedMedia!
+  websiteUrl: ModeratedText!
+  "Node-level cache: max moderation severity across this actor's fields."
   moderationStatus: ModerationStatus!
-  createdAt: DateTime!
 }
 ```
 
@@ -309,6 +313,9 @@ type Edge {
    equals the current (dim1, dim2). Audit and history only —
    ranking reads the top layer."
   history: [EdgeLayer!]!
+  "Typed, optional, per-label metadata — surfaced but never read by
+   ranking. Null on labels that don't use it."
+  systemDimension: SystemDimension
 }
 
 "One immutable layer of an Edge."
@@ -332,34 +339,55 @@ type EdgeEdge {
   cursor: String!
   node: Edge!
 }
-```
 
-The **system-dimension slot** (typed, optional, per-label edge
-metadata — e.g. the on-chain transaction reference a `:TRANSFERS`
-edge carries) is deferred to the edge contexts that populate it,
-as the docs themselves defer its schema
-([edges.md §2](../primitive/edges.md#2-structural-edges)). It
-never enters ranking.
-
-### Per-field moderation
-
-```graphql
-"One user-filled field's current moderation status. `field` is the
- property name (\"content\", \"bio\", \"name\", …); a status of
- ILLEGAL means the value is redacted and the field itself resolves
- to null."
-type FieldStatus {
-  field: String!
-  status: ModerationStatus!
+"Per-label, never-ranked edge metadata. Each populated label uses
+ its own field(s); all null on labels that don't. Today only
+ :TRANSFERS populates it."
+type SystemDimension {
+  "On-chain transaction reference for a :TRANSFERS edge; null otherwise."
+  transactionRef: String
 }
 ```
 
-Every content-bearing node exposes `moderationStatus` (the
-node-level cache) and `fieldStatuses: [FieldStatus!]!` (the
-per-field detail), per [nodes.md](../primitive/nodes.md). A
-redacted field's own value resolves to null while its
-`FieldStatus` carries ILLEGAL — the visible mark, never a silent
-disappearance.
+The **system-dimension slot** is the `systemDimension` field above:
+typed, optional, per-label edge metadata, surfaced by the API but
+never read by ranking
+([edges.md §2](../primitive/edges.md#2-structural-edges)). Today
+only `:TRANSFERS` populates it (the on-chain transaction
+reference); other labels leave it null.
+
+### Per-field moderation
+
+Each user-authored field carries its moderation status co-located
+with its value, so a redacted field is never confused with an empty
+one. Scalar fields use a wrapper type; `value` is null when unset
+or redacted, and `status` says which.
+
+```graphql
+"Text carrying its own moderation status. `value` is null when the
+ field is unset or redacted — `status` disambiguates."
+type ModeratedText {
+  value: String
+  status: FieldModerationStatus!
+}
+
+"A single media asset carrying its own moderation status."
+type ModeratedMedia {
+  value: MediaAttachment
+  status: FieldModerationStatus!
+}
+
+"Per-field moderation state. REDACTED is the field-level form of
+ the node-level ILLEGAL — the value is gone, the mark remains."
+enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
+```
+
+A media *gallery* (a list) can't wrap generically, so those fields
+keep their list and carry a sibling
+`attachmentsStatus: FieldModerationStatus!`. Every content-bearing
+node also keeps the node-level `moderationStatus: ModerationStatus!`
+cache — the cheap "is anything wrong here" check — per
+[nodes.md](../primitive/nodes.md).
 
 ### Pagination
 
@@ -381,3 +409,233 @@ spelling throughout — so the tensor `Edge` type's own connection
 wrapper is `EdgeEdge`, accepted for idiom-consistency rather than
 special-cased. Connections are materialized per element type in
 the sections that use them.
+
+---
+
+## Type system — actors and content
+
+The actor nodes and the public content nodes. To keep the listings
+readable, interface fields are **implied and omitted** from each
+body: the `Node` fields (`id`, `createdAt`, `updatedAt`,
+`outgoingEdges`, `incomingEdges`) on every type, and the `Actor`
+fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
+`moderationStatus`) on the actor types. Only fields beyond the
+implemented interfaces are shown.
+
+Two consequences of earlier principles show up throughout:
+
+- **Moderated fields co-locate value and status** — each is a
+  `ModeratedText` / `ModeratedMedia` whose `value` is null when
+  unset or redacted, with `status` telling the two apart. A gallery
+  keeps its list plus a sibling `attachmentsStatus`.
+- **Relationships stay generic** except the few fundamental
+  containment links pulled forward as named views: `author` on
+  every authored node, `target` on a Comment, and `chat` on a
+  ChatMessage. Everything else (comments, tags, members, owner) is
+  reached through `outgoingEdges` / `incomingEdges` until a named
+  view earns its place.
+
+### Supporting display type
+
+```graphql
+"A media asset (image / video / audio). Not a graph node — parents
+ point at it and it never points back — so it carries no edges."
+type MediaAttachment {
+  id: UUID!
+  url: String!
+  mimeType: String!
+  sizeBytes: Int
+  altText: String
+  "Layout hints the frontend reads to reserve space before load."
+  options: MediaOptions!
+  "The actor that uploaded the asset."
+  author: Actor!
+  createdAt: DateTime!
+}
+
+type MediaOptions {
+  "Container aspect ratio as \"W:H\", so layout reserves space pre-load."
+  aspectRatio: String
+  "Duration in milliseconds, for video / audio."
+  durationMs: Int
+}
+```
+
+### Actors
+
+```graphql
+"A person on the platform. Off-graph credentials authenticate the
+ API requests that originate its edges."
+type User implements Node & Actor {
+  "Free-text profile bio."
+  bio: ModeratedText!
+  "Network-scope role. Only Users carry one."
+  networkRole: NetworkRole!
+}
+
+"A group acting through one graph identity (household, band, co-op,
+ company, …). Same outgoing-edge catalog as a User; it acts through
+ its authorized members per its social contract."
+type Collective implements Node & Actor {
+  "Profile description."
+  description: ModeratedText!
+  "The social contract — per-action governance rules. Typed in the
+   governance section."
+  governance: Governance!
+}
+
+"Network-scope role for a User."
+enum NetworkRole { MEMBER MODERATOR }
+```
+
+### Content nodes
+
+```graphql
+"Text and/or media authored by an actor — the primary public
+ surface and the canonical feed-ranking target."
+type Post implements Node {
+  "Optional title / headline."
+  title: ModeratedText!
+  "Optional short summary or subtitle."
+  description: ModeratedText!
+  "The body."
+  content: ModeratedText!
+  author: Actor!
+  attachments: PostAttachmentConnection!
+  "Moderation status for the attachment gallery as a whole."
+  attachmentsStatus: FieldModerationStatus!
+  moderationStatus: ModerationStatus!
+}
+
+"A threaded response on a Post, Comment, Chat, ChatMessage, or Item
+ — the universal threading primitive."
+type Comment implements Node {
+  "The body."
+  content: ModeratedText!
+  author: Actor!
+  "The node this comment is on."
+  target: CommentTarget!
+  attachments: CommentAttachmentConnection!
+  "Moderation status for the attachment gallery as a whole."
+  attachmentsStatus: FieldModerationStatus!
+  moderationStatus: ModerationStatus!
+}
+
+"What a Comment can be posted on."
+union CommentTarget = Post | Comment | Chat | ChatMessage | Item
+
+"A conversation container — a first-class public node. Membership
+ and who-talks-to-whom are public; only encrypted message bodies
+ are opaque."
+type Chat implements Node {
+  "Optional display name — any chat may set one, 1:1 or group."
+  name: ModeratedText!
+  description: ModeratedText!
+  image: ModeratedMedia!
+  "Per-action governance (member admission, disavowal, key rotation,
+   role and property changes). Typed in the governance section."
+  governance: Governance!
+  "Current chat-key epoch; advances on membership change and on a
+   passed key-rotation Proposal."
+  epoch: Int!
+  moderationStatus: ModerationStatus!
+}
+
+"A single message in a Chat — itself a first-class node: likeable,
+ commentable, referenceable."
+type ChatMessage implements Node {
+  "The body. `value` is plaintext when contentPrivacy is PLAINTEXT,
+   ciphertext when ENCRYPTED — returned to everyone, decryptable
+   only by a holder of the chat key; null when redacted."
+  content: ModeratedText!
+  contentPrivacy: ContentPrivacy!
+  "The chat-key epoch the ciphertext is under; null for plaintext."
+  epoch: Int
+  author: Actor!
+  "The chat this message belongs to."
+  chat: Chat!
+  attachments: ChatMessageAttachmentConnection!
+  "Moderation status for the attachment gallery as a whole."
+  attachmentsStatus: FieldModerationStatus!
+  moderationStatus: ModerationStatus!
+}
+
+"Per-message body privacy. A single chat may mix both freely."
+enum ContentPrivacy { PLAINTEXT ENCRYPTED }
+
+"A physical or digital good — ownable via ItemOwnership,
+ transferable, and talked about."
+type Item implements Node {
+  name: ModeratedText!
+  description: ModeratedText!
+  attachments: ItemAttachmentConnection!
+  "Moderation status for the attachment gallery as a whole."
+  attachmentsStatus: FieldModerationStatus!
+  moderationStatus: ModerationStatus!
+}
+
+"A content-addressed topic tag — its identity is its canonical
+ name. Authorless and terminal: it has no outgoing edges; content
+ reaches it through incoming :TAGGING edges."
+type Hashtag implements Node {
+  "Canonical tag, lowercase and without '#'."
+  name: ModeratedText!
+  moderationStatus: ModerationStatus!
+}
+```
+
+### Attachment connections
+
+Per-parent media lists. Relationship facts (`displayOrder`,
+`isCover`) ride the connection edge, the idiomatic place for
+edge metadata.
+
+```graphql
+type PostAttachmentConnection {
+  edges: [PostAttachmentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type PostAttachmentEdge {
+  cursor: String!
+  node: MediaAttachment!
+  "Order within the gallery."
+  displayOrder: Int!
+  "Whether this asset leads the gallery."
+  isCover: Boolean!
+}
+
+type CommentAttachmentConnection {
+  edges: [CommentAttachmentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type CommentAttachmentEdge {
+  cursor: String!
+  node: MediaAttachment!
+  displayOrder: Int!
+}
+
+type ChatMessageAttachmentConnection {
+  edges: [ChatMessageAttachmentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ChatMessageAttachmentEdge {
+  cursor: String!
+  node: MediaAttachment!
+  displayOrder: Int!
+}
+
+type ItemAttachmentConnection {
+  edges: [ItemAttachmentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ItemAttachmentEdge {
+  cursor: String!
+  node: MediaAttachment!
+  displayOrder: Int!
+  isCover: Boolean!
+}
+```
