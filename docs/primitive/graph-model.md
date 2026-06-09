@@ -361,6 +361,14 @@ authoring its admit-Proposal — must originate from the actor at
 the other end of `:BEARER`. See
 [edges.md §2 "Bearer binding"](edges.md#bearer-binding).
 
+When the bearer self-claims they also write a `bearer → junction`
+actor edge carrying the `:AUTHOR` sub-label — their own opinion
+edge toward the junction, in the same gesture. This is what
+**authors** the junction (its author is its bearer) and is the
+traversable counterpart to the non-traversable `:BEARER` identity
+edge. See
+[authorship.md "Junction authorship"](authorship.md#junction-authorship).
+
 ### Lifecycle events are terminal Proposals
 
 Every change to a junction relationship — admission, removal, role
@@ -426,8 +434,9 @@ the bearer's Shape A self-claim is the only required vote and no
 tally is conducted. The admission collapses to its 1-of-1 special
 case: **no admit-Proposal node is materialized**; the system
 writes the approval-side structural edge atomically alongside the
-claim-side and `:BEARER`, in the same compound gesture. A Proposal
-exists only to carry a multi-party tally, and there is none here.
+claim-side, `:BEARER`, and the bearer's `:AUTHOR` edge, in the
+same compound gesture. A Proposal exists only to carry a
+multi-party tally, and there is none here.
 
 Subsequent additions to the same parent (the next ChatMember
 of the chat, the next CollectiveMember of the collective, the
@@ -476,9 +485,16 @@ Proposal, a self-determined leave, or its own housekeeping:
 - **Voluntary leave / withdrawal.** Self-determined, not a
   governance decision and so **not a Proposal**: at the bearer's
   request the system appends a negative-`dim1` layer directly on
-  the **claim-side** structural edge. This is symmetric with the
-  `N = 0` bootstrap collapse — a unilateral self-act carries no
-  tally, so no Proposal node is materialized.
+  the **claim-side** structural edge — which gates the
+  `junction → parent` hop closed for feed ranking
+  ([feed-ranking.md §3.1](feed-ranking.md#31-which-edges-contribute-factors)).
+  This is
+  symmetric with the `N = 0` bootstrap collapse — a unilateral
+  self-act carries no tally, so no Proposal node is materialized.
+  The bearer's own `:AUTHOR` edge is theirs to re-layer: a
+  frontend may prompt the leaver to set it toward `(0, 0)` to also
+  sever reach to the junction itself, but the system never forces
+  this — a UX nudge, not a graph mechanism.
 - **Removal via governance instance** — *disavowal* in chat
   scope ([chats.md §10](../instances/chats.md#10-moderation)),
   unnamed-generic in collective scope (the social contract

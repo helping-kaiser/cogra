@@ -428,11 +428,14 @@ cached on the `chat_messages` Postgres row for display.
 
 ### 6.3 ChatMember
 
-ChatMember is a junction node and has no authorship in the
-[authorship.md](../primitive/authorship.md) sense — it
-represents a membership relationship, not an authored piece of
-content. The same exemption applies to CollectiveMember and
-ItemOwnership.
+A ChatMember is authored by its **bearer** — the member it
+represents — via the bearer's `:AUTHOR` edge to the junction,
+written in the bearer's self-claim gesture (§11). Authorship is
+fixed by that label, not the earliest-incoming timestamp, since
+third-party `:ACTOR` sentiment can land on a pending junction
+first. See
+[authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship);
+the same holds for CollectiveMember and ItemOwnership.
 
 ---
 
@@ -928,10 +931,11 @@ outcome is fixed: a later reversal is a fresh removal-Proposal
 No approver vote is required, so there is no tally and no
 admit-Proposal (the `N = 0` collapse, §2.1). The would-be member
 joins; the system creates the `ChatMember → Chat` claim edge, the
-`ChatMember → User/Collective` `:BEARER` edge, and immediately
-the `Chat → ChatMember` approval edge, atomically. The membership
-is active. The join gesture must come from the actor the
-`:BEARER` edge binds.
+`ChatMember → User/Collective` `:BEARER` edge, the joiner's
+`bearer → ChatMember` `:AUTHOR` edge (which authors the junction,
+§6.3), and immediately the `Chat → ChatMember` approval edge,
+atomically. The membership is active. The join gesture must come
+from the actor the `:BEARER` edge binds.
 
 ### Approval-required (`exec.threshold ≥ 1`)
 
@@ -947,16 +951,20 @@ under `exec.eligibility` opens the admit-Proposal and casts a
 The system writes the new `ChatMember → invitee` `:BEARER` edge,
 binding the junction to the prospective bearer, and the
 `ChatMember → Chat` claim edge. The membership is pending until
-the bearer self-claims on the Proposal (and until enough
-additional Shape B votes are present, if `exec.threshold > 1`).
+the bearer self-claims on the Proposal — writing both their Shape
+A vote and their `bearer → ChatMember` `:AUTHOR` edge — and until
+enough additional Shape B votes are present, if
+`exec.threshold > 1`.
 If the invitee never self-claims, the membership persists
 pending; the junction node is never deleted.
 
 **Claimant-first (request flow).** The would-be member authors
 the admit-Proposal — their `User/Collective → Proposal` Shape A
 self-claim. The system creates the `ChatMember → Chat` claim
-edge and the `:BEARER` edge. The membership is pending until
-enough eligible Shape B votes arrive to meet `exec.threshold`.
+edge and the `:BEARER` edge, and the member writes their
+`bearer → ChatMember` `:AUTHOR` edge. The membership is pending
+until enough eligible Shape B votes arrive to meet
+`exec.threshold`.
 
 **Multi-sig** is simply `exec.threshold > 1` — same machinery,
 N approvers instead of one. The Proposal stays open until the

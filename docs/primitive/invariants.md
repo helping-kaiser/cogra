@@ -54,6 +54,10 @@ most useful one.
 - [Junction state is encoded in topology](graph-model.md#5-junction-node-flows)
   — claim only = pending; claim + approval = active; negative top
   layer on either = revoked. No status flag.
+- [Junction authorship is fixed by the `:AUTHOR` label, not timestamp](authorship.md#junction-authorship)
+  — a junction's author is its bearer; third-party `:ACTOR`
+  sentiment landing on a pending junction first never becomes
+  authorship.
 - [No User node before verification](user.md#2-creation) — the
   graph has no "unverified" or "pending" User state; nodes
   either exist with full standing or they don't.
