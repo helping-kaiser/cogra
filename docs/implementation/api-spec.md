@@ -889,18 +889,20 @@ type GovernanceRule {
   amend: GovernanceAmendGate!
 }
 
-"The voting gate for performing an action: who may vote, their
- weights, the passing condition, and whether the action's subject is
- barred from voting on it."
+"The voting gate for performing an action: who may vote, how their
+ votes are weighted, the passing condition, and whether the action's
+ subject is barred from voting on it."
 type GovernanceExecGate {
-  "Voter-eligibility predicate. Opaque string for now — the
-   predicate grammar is not yet specified."
+  "Who may vote — a predicate over graph state. Role-based in every
+   current instance; the role vocabulary is open per collectives.md, so
+   the schema carries it as a documented string rather than closing the
+   grammar."
   eligibility: String!
-  "Per-role voting weights (a map, modeled as key/value pairs since
-   GraphQL has no native map type)."
-  weights: [RoleWeight!]!
-  "Passing condition. Opaque string for now — the threshold grammar
-   is not yet specified."
+  "How each eligible vote is weighted."
+  weighting: VoteWeighting!
+  "Passing condition — one of the threshold shapes in governance.md §2.4
+   (count, fraction of cast, quorum, or dual-quorum petition). Carried as
+   a documented string; the exact serialization is the instance's choice."
   threshold: String!
   "Whether the subject of the action is barred from voting on it."
   excludeSubject: Boolean!
@@ -910,15 +912,30 @@ type GovernanceExecGate {
  GovernanceExecGate without `excludeSubject`, since an amendment's
  subject is the rule entry itself, not a member junction."
 type GovernanceAmendGate {
-  "Voter-eligibility predicate. Opaque string for now — the
-   predicate grammar is not yet specified."
+  "Who may vote — see GovernanceExecGate.eligibility."
   eligibility: String!
-  "Per-role voting weights, as key/value pairs."
-  weights: [RoleWeight!]!
-  "Passing condition. Opaque string for now — the threshold grammar
-   is not yet specified."
+  "How each eligible vote is weighted."
+  weighting: VoteWeighting!
+  "Passing condition — see GovernanceExecGate.threshold."
   threshold: String!
 }
+
+"How each eligible vote is weighted. EQUAL: every eligible voter counts
+ 1 (one-member-one-vote). ROLE: the flat per-role multiplier in
+ roleWeights. PROPERTY: the weight is read from the named junction
+ property (e.g. \"ownership_pct\"), so a PROPERTY gate enfranchises only
+ roles that carry that property. A per-junction voting_weight override,
+ where set, wins over the mode."
+type VoteWeighting {
+  mode: WeightMode!
+  "ROLE mode — per-role multipliers; null in other modes."
+  roleWeights: [RoleWeight!]
+  "PROPERTY mode — junction property read as the weight; null otherwise."
+  property: String
+}
+
+"How a gate weights eligible votes."
+enum WeightMode { EQUAL ROLE PROPERTY }
 
 type RoleWeight {
   role: String!
@@ -951,9 +968,10 @@ type Proposal implements Node {
    \"scalar:float\", \"scalar:integer\", \"rule\", or
    \"composite:<action_key>\"."
   valueKind: String!
-  "The proposed new value, serialized; its shape is given by
-   valueKind. Kept opaque for now — the structured rule / composite
-   shapes are not yet fully specified."
+  "The proposed new value, serialized; its shape is discriminated by
+   valueKind — a scalar for scalar:*, a Rule (the GovernanceRule
+   exec/amend pair) for 'rule', and a handler-owned from/to bundle for
+   composite:*."
   proposedValue: String!
   "The node hosting the governance rule this proposal is judged by,
    read as-of the proposal's authorship timestamp."
@@ -983,7 +1001,9 @@ type ProposalTally {
   positiveWeight: Float!
   "Count of distinct voters with a positive top-layer stance."
   positiveCount: Int!
-  "Weighted negative votes (bidirectional Shape-B scopes)."
+  "Weighted negative votes: Σ max(−sign(dim1), 0) × voterWeight. Nonzero
+   only for bidirectional Shape-B scopes; a petition-style Network tally
+   reads only the positive side."
   negativeWeight: Float!
   "Count of distinct voters with a negative top-layer stance."
   negativeCount: Int!
@@ -1110,9 +1130,8 @@ type Network implements Node {
 
 The root `Query` is deliberately small — a handful of entry points;
 everything else hangs off the returned nodes through their fields
-and the generic edge access. Reads need no authentication; the
-viewer-scoped entries (`me`, `feedSlice`) resolve to null when the
-request is anonymous rather than erroring.
+and the generic edge access. Reads need no authentication; `me`
+resolves to null when the request is anonymous rather than erroring.
 
 ```graphql
 type Query {
@@ -1146,12 +1165,16 @@ type Query {
   "The singleton network-configuration node."
   network: Network!
 
-  "The viewer's weight-bounded relevant subgraph — the raw material a
-   ranker (the viewer's own device or a delegated miner) orders into a
-   feed. Pruned by the dust floor, not hop-bounded; null when anonymous.
-   The backend never ranks (feed-ranking.md §9) — it serves this slice,
-   and separately hydrates the ordered result via `feed`."
-  feedSlice: FeedSlice
+  "Any actor's weight-bounded relevant subgraph — the raw material a
+   ranker (that actor's own device or a delegated miner) orders into a
+   feed. Parameterized by the `viewer` whose feed is ranked: a delegated
+   miner ranks on someone's behalf without holding their auth, and
+   computing any actor's view for any reader is the public-graph default
+   above. Pruned by `dustFloor` — the same ε the ranker prunes with,
+   default Network.dustFloor — not hop-bounded; null if the id resolves to
+   no rankable actor. The backend never ranks (feed-ranking.md §9) — it
+   serves this slice, and separately hydrates the ordered result via `feed`."
+  feedSlice(viewer: UUID!, dustFloor: Float): FeedSlice
 
   "Hydrate a ranked feed from an ordered list of node ids — a ranker's
    output. Returns those nodes in the given order as a cursor-paginated

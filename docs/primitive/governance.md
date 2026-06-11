@@ -114,9 +114,13 @@ by the eligibility-dropout cascade — is specified in
 
 ### 2.3 Weight function
 
-How each vote's contribution is scaled. Derived from properties on
-the voter's eligibility junction, optionally overridden by an
-explicit per-junction `voting_weight`.
+How each vote's contribution is scaled. A gate picks one of three
+**weight modes**: **equal** — every eligible voter counts `1`
+(one-member-one-vote); **role** — a flat per-role multiplier; or
+**property** — the weight is read from a property on the voter's
+junction (e.g. `ownership_pct`), so this mode enfranchises only roles
+that carry that property. An explicit per-junction `voting_weight`
+overrides the mode where set.
 
 **Role-derived defaults by junction type:**
 
