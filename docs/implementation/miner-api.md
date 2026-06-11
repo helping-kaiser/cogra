@@ -120,7 +120,9 @@ type FeedEntry {
   "The four per-target ranking metrics from the viewer's vantage."
   metrics: RankMetrics!
   "The contributing paths, with intermediates and per-path contribution.
-   A drill-down — expensive, computed only when selected."
+   A drill-down — a separate bounded enumeration for one target, distinct
+   from the message-passing that produces the order; expensive, computed
+   only when selected."
   paths: [RankPath!]!
 }
 
@@ -157,10 +159,13 @@ the ranker speaks the same type vocabulary as the backend it sits beside.
 
 ## Two runners of one traversal
 
-The path-enumeration this surface runs is the same traversal the backend
-runs to settle a campaign ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
-— but the two differ in who runs them, what they rank, and how
-authoritative the result is.
+This surface and campaign settlement ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
+share the §3 path semantics but not the algorithm at scale. Feed ranking is
+**all-targets**: in the dense regime it is computed by message-passing over
+the slice ([feed-ranking.md §4.5](../primitive/feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice)),
+not path enumeration. Campaign settlement is a **single anchor→target pair**
+computed once, where direct enumeration stays tractable. The two also differ
+in who runs them, what they rank, and how authoritative the result is.
 
 | | Feed ranking (this doc) | Campaign settlement |
 |---|---|---|

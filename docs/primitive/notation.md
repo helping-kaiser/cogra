@@ -51,8 +51,8 @@ Two things are deliberately left out, defined where they appear:
 |---|---|---|
 | `d(R)` | **Distance decay** by path length; default `0.1^(R−1)`. Frontend- and network-tunable. | [feed-ranking §4.1](feed-ranking.md#41-path-contribution-and-distance-decay) |
 | `f(Δt)` | **Time decay** on the reactor edge; default `0.5^(Δt / 30 days)`. Frontend- and network-tunable. | [feed-ranking §7.3](feed-ranking.md#73-shape--exponential-30-day-half-life-frontend-tunable) |
-| `ε` | **Dust floor** — the branch-and-bound threshold below which partial paths are pruned. | [feed-ranking §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning) |
-| `b` | **Branching factor** — graph degree; path count through a cluster grows as `b^(R−1)`, which is what `ε` bounds. | [feed-ranking §3.6](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge) |
+| `ε` | **Dust floor** — the threshold below which contributions are dropped: prunes partial paths in exact enumeration and bounds the slice node-set (§9). A compute-budget cutoff, not the cycle defense. | [feed-ranking §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning) |
+| `b` | **Branching factor** — graph degree; path count through a cluster grows as `b^(R−1)`. `ε` bounds the slice node-set, not this path count — the dense-regime metric is computed by message-passing (§4.5), not enumeration. | [feed-ranking §3.6](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge) |
 
 ## Per-target metrics
 
