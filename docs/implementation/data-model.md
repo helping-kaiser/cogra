@@ -112,6 +112,8 @@ CREATE TABLE posts (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id   UUID        NOT NULL,
     author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    title       TEXT,       -- optional headline
+    description TEXT,       -- optional short summary / subtitle
     content     TEXT        NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -140,7 +142,7 @@ CREATE TABLE comments (
 -- chats.md §9.
 CREATE TABLE chats (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        TEXT,       -- null for 1:1 chats
+    name        TEXT,       -- optional; any chat may set one
     description TEXT,
     image_id    UUID        REFERENCES media_attachments(id),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
