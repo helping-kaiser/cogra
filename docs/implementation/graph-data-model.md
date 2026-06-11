@@ -165,6 +165,8 @@ CREATE INDEX ON :Collective(id);
 | Property            | Type   | Notes |
 |---|---|---|
 | `id`                | String | UUID v4. |
+| `title`             | String | Optional. Per intro. Content lives in Postgres. |
+| `description`       | String | Optional. Per intro. Content lives in Postgres. |
 | `content`           | String | Per intro. Body lives in Postgres. |
 | `attachments`       | String | Per intro. Covers every attached media on the post as a single status (per-attachment targeting is a future refinement — see [moderation.md §5](../instances/moderation.md#5-scope)); assets live in object storage. |
 | `moderation_status` | String | Node-level cache (per intro). |
@@ -176,8 +178,8 @@ CREATE INDEX ON :Post(id);
 
 #### `:Comment`
 
-Same shape as `:Post`: `id`, `content` (per intro), `attachments`
-(per intro), `moderation_status` (per intro).
+Carries `id`, `content`, `attachments`, and `moderation_status`
+(all per intro).
 
 ```cypher
 CREATE CONSTRAINT ON (c:Comment) ASSERT c.id IS UNIQUE;
