@@ -495,6 +495,18 @@ CREATE INDEX versions_current_idx
 - **Membership / ownership state** — graph-only (junction nodes: ChatMember,
   CollectiveMember, ItemOwnership)
 
+**Side note on read-time aggregation at scale.** "Not materialized" is a
+present-scale call, not a permanent one. Most counts are one-hop
+traversals, cheap per query. The exception that could bite is a hot
+aggregate on a high-fan-in node — a Proposal's live vote tally
+([governance.md §3](../primitive/governance.md)), recomputed from every
+incoming vote edge on every read once a Proposal carries millions of
+votes. The escalation, if real load ever demands it, is a per-Proposal
+cached tally in an operational table, invalidated on each new vote — a
+materialized aggregate that reverses the rule above for that one hot case.
+Left unbuilt until the data shows it's needed, mirroring the
+layer-accumulation side note in [layers.md](../primitive/layers.md).
+
 ---
 
 ## Notes

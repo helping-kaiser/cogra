@@ -164,12 +164,13 @@ consumer fetches the first page with `first:` alone and follows
 > appear in the same position, and the Relay convention is
 > well-known enough that consumers won't conflate them.
 
-**Feed ranking and cursors.** A ranked feed paginates over a
-*frozen* ranking: the order is computed once when the viewer
-refreshes the feed, and the cursor indexes into that snapshot.
-Re-ranking happens on refresh, never per page fetch — so paging
-through a feed never reshuffles under the reader. The feed query
-section specifies the snapshot handle.
+**Feed ranking and cursors.** The backend does not rank
+([feed-ranking.md §9](../primitive/feed-ranking.md)): it serves the
+viewer's weight-bounded subgraph slice, a ranker (device or delegated
+miner) orders it off the hot path, and the resulting id list is hydrated
+back into a cursor-paginated feed. The frozen snapshot lives with the
+ranker; the cursor indexes into the order it produced, never a per-page
+re-rank. The feed surface below splits the slice from the hydration.
 
 ### The write surface is a principled hybrid
 
@@ -196,8 +197,9 @@ these in the sections that follow.
 ### Scalars
 
 ```graphql
-"A v4 UUID — the shared key across the graph (Memgraph) and
- display-content (Postgres) stores."
+"A UUID — the shared key across the graph (Memgraph) and
+ display-content (Postgres) stores. Random v4 for most node types;
+ content-addressed v5 for Hashtags."
 scalar UUID
 
 "An RFC 3339 / ISO 8601 timestamp."
@@ -236,6 +238,10 @@ enum NodeKind {
   PROPOSAL CAMPAIGN SETTLEMENT WALLET NETWORK
   CHAT_MEMBER COLLECTIVE_MEMBER ITEM_OWNERSHIP
 }
+
+"The sign of an edge's top-layer dimension, for filtering edges by valence
+ or by the neutral (0) state. POSITIVE: > 0. NEGATIVE: < 0. ZERO: exactly 0."
+enum Sign { POSITIVE NEGATIVE ZERO }
 ```
 
 ### Identity and actor interfaces
@@ -255,19 +261,31 @@ interface Node {
    display-content version; equals createdAt if never changed."
   updatedAt: DateTime!
   "Edges originating at this node — the generic way to read any
-   relationship before named convenience views exist. Filter by
-   graph label and/or by the kind of node on the far end."
+   relationship before named convenience views exist. Filter by graph
+   label, by the kind of node on the far end, by the sign of a top-layer
+   dimension (e.g. only positive :APPROVAL, or the (0,0) severance state),
+   and/or by a top-layer-timestamp window."
   outgoingEdges(
     label: EdgeLabel
     toKind: NodeKind
+    dim1Sign: Sign
+    dim2Sign: Sign
+    since: DateTime
+    until: DateTime
     first: Int, after: String, last: Int, before: String
   ): EdgeConnection!
   "Edges pointing at this node. Exposed as public topology / an
    inbound-attention surface only — per the feed-ranking model,
-   inbound edges never shape this node's own feed."
+   inbound edges never shape this node's own feed. Same dimension-sign
+   and timestamp filters as outgoingEdges; fromKind selects the near-end
+   source kind."
   incomingEdges(
     label: EdgeLabel
     fromKind: NodeKind
+    dim1Sign: Sign
+    dim2Sign: Sign
+    since: DateTime
+    until: DateTime
     first: Int, after: String, last: Int, before: String
   ): EdgeConnection!
 }
@@ -286,6 +304,10 @@ interface Actor implements Node {
   websiteUrl: ModeratedText!
   "Node-level cache: max moderation severity across this actor's fields."
   moderationStatus: ModerationStatus!
+  "Invite links this actor has issued — its outstanding onboarding
+   gestures. Field-level: resolves only for the issuing actor (or, for a
+   Collective, its authorized members); null otherwise."
+  invitations(first: Int, after: String, last: Int, before: String): InvitationConnection
 }
 ```
 
@@ -293,8 +315,8 @@ interface Actor implements Node {
 
 ```graphql
 "A single directed edge: the uniform 2D tensor that carries every
- relationship and opinion in the graph. The top layer is the
- current state; `history` is the full append-only stack."
+ relationship and opinion in the graph. The top layer is the current
+ state; the full append-only stack is read via the `edgeHistory` query."
 type Edge {
   "Source — the actor or system that wrote the edge."
   from: Node!
@@ -312,10 +334,6 @@ type Edge {
   layer: Int!
   "When the top layer was written."
   timestamp: DateTime!
-  "The full append-only layer stack, oldest first; the last entry
-   equals the current (dim1, dim2). Audit and history only —
-   ranking reads the top layer."
-  history: [EdgeLayer!]!
   "Typed, optional, per-label metadata — surfaced but never read by
    ranking. Null on labels that don't use it."
   systemDimension: SystemDimension
@@ -325,6 +343,15 @@ type Edge {
 type EdgeLayer {
   dim1: Dimension!
   dim2: Dimension!
+  layer: Int!
+  timestamp: DateTime!
+}
+
+"One immutable layer of a node property — a graph property or a Postgres
+ display-content version. `value` is serialized as a string (shaped by the
+ property); null when the layer is a redaction tombstone."
+type PropertyLayer {
+  value: String
   layer: Int!
   timestamp: DateTime!
 }
@@ -423,8 +450,8 @@ readable, interface fields are **implied and omitted** from each
 body: the `Node` fields (`id`, `createdAt`, `updatedAt`,
 `outgoingEdges`, `incomingEdges`) on every type, and the `Actor`
 fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
-`moderationStatus`) on the actor types. Only fields beyond the
-implemented interfaces are shown.
+`moderationStatus`, `invitations`) on the actor types. Only fields beyond
+the implemented interfaces are shown.
 
 Two consequences of earlier principles show up throughout:
 
@@ -476,6 +503,19 @@ type User implements Node & Actor {
   bio: ModeratedText!
   "Network-scope role. Only Users carry one."
   networkRole: NetworkRole!
+
+  # Private viewer state — each field resolves only when the authenticated
+  # viewer is this User; null otherwise (see "Private viewer state" below).
+  "Saved-for-later nodes, most recent first."
+  bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+  "Nodes this user has seen — the view history behind feed de-duplication."
+  viewHistory(first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+  "Actors this user has hidden from their own feed."
+  hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+  "Active authentication sessions, one per refresh token."
+  sessions: [Session!]
+  "Cross-device preferences."
+  preferences: UserPreferences
 }
 
 "A group acting through one graph identity (household, band, co-op,
@@ -506,7 +546,7 @@ type Post implements Node {
   "The body."
   content: ModeratedText!
   author: Actor!
-  attachments: PostAttachmentConnection!
+  attachments(first: Int, after: String, last: Int, before: String): PostAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -520,7 +560,7 @@ type Comment implements Node {
   author: Actor!
   "The node this comment is on."
   target: CommentTarget!
-  attachments: CommentAttachmentConnection!
+  attachments(first: Int, after: String, last: Int, before: String): CommentAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -543,6 +583,11 @@ type Chat implements Node {
   "Current chat-key epoch; advances on membership change and on a
    passed key-rotation Proposal."
   epoch: Int!
+  "The requesting user's last-read timestamp in this chat; null when
+   anonymous or never read. Field-level, viewer-scoped."
+  lastReadAt: DateTime
+  "Count of messages newer than the viewer's lastReadAt; null when anonymous."
+  unreadCount: Int
   moderationStatus: ModerationStatus!
 }
 
@@ -559,7 +604,7 @@ type ChatMessage implements Node {
   author: Actor!
   "The chat this message belongs to."
   chat: Chat!
-  attachments: ChatMessageAttachmentConnection!
+  attachments(first: Int, after: String, last: Int, before: String): ChatMessageAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -573,7 +618,7 @@ enum ContentPrivacy { PLAINTEXT ENCRYPTED }
 type Item implements Node {
   name: ModeratedText!
   description: ModeratedText!
-  attachments: ItemAttachmentConnection!
+  attachments(first: Int, after: String, last: Int, before: String): ItemAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
@@ -642,6 +687,94 @@ type ItemAttachmentEdge {
   node: MediaAttachment!
   displayOrder: Int!
   isCover: Boolean!
+}
+```
+
+### Private viewer state
+
+Per-viewer operational state (per [data-model.md](data-model.md)), hung
+off the ordinary `User` / `Actor` types as field-level authorization: each
+field resolves only when the authenticated viewer is the eligible owner,
+and is null otherwise. No `me`-prefixed parallel namespace.
+
+```graphql
+"An active authentication session — one per refresh token."
+type Session {
+  id: UUID!
+  "Client-supplied device label, if any."
+  deviceLabel: String
+  createdAt: DateTime!
+  "When the session was last refreshed; null if unused since issue."
+  lastUsedAt: DateTime
+  expiresAt: DateTime!
+  "Whether this is the session that issued the current request."
+  isCurrent: Boolean!
+}
+
+"A User's cross-device preferences."
+type UserPreferences {
+  "Sensitive-content filter aggressiveness: 0 (show everything) to 10
+   (strictest); null when unset, so the frontend default applies."
+  contentFilteringSeverityLevel: Int
+}
+
+"An invite link issued by an actor — a pre-committed onboarding gesture.
+ Time-gated and multi-use: many invitees may register through one link."
+type Invitation {
+  id: UUID!
+  "The issuing actor (User or Collective)."
+  inviter: Actor!
+  "Pre-committed dim1 for the inviter→invitee edge written on acceptance."
+  inviterDim1: Dimension!
+  "Pre-committed dim2 for that edge."
+  inviterDim2: Dimension!
+  createdAt: DateTime!
+  expiresAt: DateTime!
+  "When the link was revoked; null if still live."
+  revokedAt: DateTime
+}
+
+type BookmarkConnection {
+  edges: [BookmarkEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type BookmarkEdge {
+  cursor: String!
+  node: Node!
+  bookmarkedAt: DateTime!
+}
+
+type ViewHistoryConnection {
+  edges: [ViewHistoryEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ViewHistoryEdge {
+  cursor: String!
+  node: Node!
+  firstSeenAt: DateTime!
+}
+
+type HiddenActorConnection {
+  edges: [HiddenActorEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type HiddenActorEdge {
+  cursor: String!
+  node: Actor!
+  hiddenAt: DateTime!
+}
+
+type InvitationConnection {
+  edges: [InvitationEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type InvitationEdge {
+  cursor: String!
+  node: Invitation!
 }
 ```
 
@@ -800,12 +933,36 @@ type Proposal implements Node {
   "The node hosting the governance rule this proposal is judged by,
    read as-of the proposal's authorship timestamp."
   ruleAnchor: Node!
+  "The proposing actor — the authoring gesture is the author's first vote."
+  author: Actor!
+  "The live vote tally, computed at read time from current vote edges."
+  tally: ProposalTally!
+  "Every vote on this Proposal — the incoming vote edges, each from a voter
+   (an actor, or an eligibility junction for Shape-B scopes), dim1 carrying
+   the stance. Filter by stance; paginated. Public and auditable."
+  votes(stance: Sign, first: Int, after: String, last: Int, before: String): EdgeConnection!
   status: ProposalStatus!
 }
 
 "A proposal's terminal outcome — transitions exactly once at
  threshold-cross, then permanent."
 enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED }
+
+"The live vote tally for a Proposal, computed at read time from the current
+ top layer of every eligible voter's vote edge (governance.md §3) — not
+ materialized (see data-model.md, read-time aggregation at scale). Positive
+ and negative aggregates cover both vote shapes; petition-style
+ Network-scope tallies read only the positive side."
+type ProposalTally {
+  "Weighted positive votes: Σ max(sign(dim1), 0) × voterWeight."
+  positiveWeight: Float!
+  "Count of distinct voters with a positive top-layer stance."
+  positiveCount: Int!
+  "Weighted negative votes (bidirectional Shape-B scopes)."
+  negativeWeight: Float!
+  "Count of distinct voters with a negative top-layer stance."
+  negativeCount: Int!
+}
 ```
 
 ### Economics records
@@ -929,7 +1086,7 @@ type Network implements Node {
 The root `Query` is deliberately small — a handful of entry points;
 everything else hangs off the returned nodes through their fields
 and the generic edge access. Reads need no authentication; the
-viewer-scoped entries (`me`, `feed`) resolve to null when the
+viewer-scoped entries (`me`, `feedSlice`) resolve to null when the
 request is anonymous rather than erroring.
 
 ```graphql
@@ -959,25 +1116,51 @@ type Query {
   proposal(id: UUID!): Proposal
   campaign(id: UUID!): Campaign
   settlement(id: UUID!): Settlement
+  "An account's payout wallet by id."
+  wallet(id: UUID!): Wallet
   "The singleton network-configuration node."
   network: Network!
 
-  "The viewer's personalized ranked feed. Called without `after`, it
-   computes a fresh ranking snapshot and returns its first page; the
-   returned cursors index into that snapshot, so paging with `after`
-   never re-ranks. Refresh by calling again without `after`. Null
-   when unauthenticated."
-  feed(first: Int, after: String, last: Int, before: String): FeedConnection
+  "The viewer's weight-bounded relevant subgraph — the raw material a
+   ranker (the viewer's own device or a delegated miner) orders into a
+   feed. Pruned by the dust floor, not hop-bounded; null when anonymous.
+   The backend never ranks (feed-ranking.md §9) — it serves this slice,
+   and separately hydrates the ordered result via `feed`."
+  feedSlice: FeedSlice
 
-  "Generic edge lookup — filter by source, target, and/or label. The
-   public way to read any relationship not yet exposed as a named
-   view."
+  "Hydrate a ranked feed from an ordered list of node ids — a ranker's
+   output. Returns those nodes in the given order as a cursor-paginated
+   connection; the backend serves the order it is handed, it does not rank."
+  feed(
+    orderedIds: [UUID!]!
+    first: Int, after: String, last: Int, before: String
+  ): NodeConnection!
+
+  "Generic edge lookup — filter by source, target, label, top-layer
+   dimension sign, and/or a top-layer-timestamp window. The public way
+   to read any relationship not yet exposed as a named view."
   edges(
     from: UUID
     to: UUID
     label: EdgeLabel
+    dim1Sign: Sign
+    dim2Sign: Sign
+    since: DateTime
+    until: DateTime
     first: Int, after: String, last: Int, before: String
   ): EdgeConnection!
+
+  "The full append-only layer stack of the single edge between two nodes
+   — the (from, to) pair identifies it, since an edge carries at most one
+   label. Oldest first; the last entry is the current top layer. An opt-in
+   history gesture, never ranked."
+  edgeHistory(from: UUID!, to: UUID!): [EdgeLayer!]!
+
+  "The full append-only layer stack of one property on a node — a graph
+   property or a Postgres display-content field, named by `property`.
+   Oldest first; the last entry is the current value. An opt-in history
+   gesture, never ranked."
+  propertyHistory(id: UUID!, property: String!): [PropertyLayer!]!
 
   "Search across nodes; returns mixed node types. Provisional — what
    is indexed and how matches rank is not yet specified in the design
@@ -985,65 +1168,38 @@ type Query {
   search(
     query: String!
     kinds: [NodeKind!]
-    first: Int, after: String
+    first: Int, after: String, last: Int, before: String
   ): SearchConnection!
 }
 ```
 
 ### Feed
 
-A feed entry carries the ranked target plus its per-target metrics;
-the contributing paths are a drill-down resolved only when selected.
+The backend does not rank (feed-ranking.md §9). It serves the viewer's
+weight-bounded subgraph slice; a ranker — the viewer's device or a
+delegated miner — orders it and hands back an id list, which `feed`
+hydrates in order. The ranking metrics and contributing paths live with
+the ranker, specified in [miner-api.md](miner-api.md).
 
 ```graphql
-type FeedConnection {
-  edges: [FeedEntryEdge!]!
+"The viewer's relevant subgraph for ranking — nodes and the edges among
+ them, weight-bounded by the dust floor. Downloaded by the ranker; the
+ backend computes no order over it."
+type FeedSlice {
+  nodes(first: Int, after: String, last: Int, before: String): NodeConnection!
+  edges(first: Int, after: String, last: Int, before: String): EdgeConnection!
+}
+
+"A generic page of nodes — used by the hydrated feed and any mixed-type
+ node list."
+type NodeConnection {
+  edges: [NodeEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
 }
-type FeedEntryEdge {
+type NodeEdge {
   cursor: String!
-  node: FeedEntry!
-}
-
-"One ranked target in the viewer's feed."
-type FeedEntry {
-  "The ranked target node — any rankable content type."
-  target: Node!
-  "The four per-target feed-ranking metrics from the viewer's vantage
-   in this snapshot."
-  metrics: RankMetrics!
-  "The contributing paths, with intermediates and per-path
-   contribution. A drill-down — expensive, computed only when
-   selected."
-  paths: [RankPath!]!
-}
-
-"The four feed-ranking metrics (feed-ranking.md §4.2). Personal
- metrics use distance decay d(R); absolute metrics are global to the
- target. Each is the sort-time scalar collapse of its underlying
- (sentiment, interest) tuple."
-type RankMetrics {
-  "h — personal opinion."
-  h: Float!
-  "i — personal reach."
-  i: Float!
-  "j — absolute opinion."
-  j: Float!
-  "k — absolute reach."
-  k: Float!
-}
-
-"One path from the viewer to the target, with its intermediates."
-type RankPath {
-  "Ordered nodes, viewer → … → target."
-  nodes: [Node!]!
-  "Edges traversed, parallel to the node sequence."
-  edges: [Edge!]!
-  "Path length R (hop count)."
-  distance: Int!
-  "This path's distance-decayed contribution d(R)."
-  contribution: Float!
+  node: Node!
 }
 ```
 
