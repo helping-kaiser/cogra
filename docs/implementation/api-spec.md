@@ -304,10 +304,12 @@ interface Actor implements Node {
   websiteUrl: ModeratedText!
   "Node-level cache: max moderation severity across this actor's fields."
   moderationStatus: ModerationStatus!
-  "Invite links this actor has issued — its outstanding onboarding
-   gestures. Field-level: resolves only for the issuing actor (or, for a
+  "Outstanding invite links this actor has issued — pending onboarding
+   gestures, not the public who-invited-whom (that lives on the :INVITE
+   edges, read via incomingEdges). Field-level: each link's id is the link
+   capability, so this resolves only for the issuing actor (or, for a
    Collective, its authorized members); null otherwise."
-  invitations(first: Int, after: String, last: Int, before: String): InvitationConnection
+  inviteLinks(first: Int, after: String, last: Int, before: String): InviteLinkConnection
 }
 ```
 
@@ -354,6 +356,28 @@ type PropertyLayer {
   value: String
   layer: Int!
   timestamp: DateTime!
+}
+
+"A page of edge layers — the paginated edgeHistory stack."
+type EdgeLayerConnection {
+  edges: [EdgeLayerEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type EdgeLayerEdge {
+  cursor: String!
+  node: EdgeLayer!
+}
+
+"A page of property layers — the paginated propertyHistory stack."
+type PropertyLayerConnection {
+  edges: [PropertyLayerEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type PropertyLayerEdge {
+  cursor: String!
+  node: PropertyLayer!
 }
 
 "A page of edges. (The wrapper is `EdgeEdge` because the element
@@ -450,7 +474,7 @@ readable, interface fields are **implied and omitted** from each
 body: the `Node` fields (`id`, `createdAt`, `updatedAt`,
 `outgoingEdges`, `incomingEdges`) on every type, and the `Actor`
 fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
-`moderationStatus`, `invitations`) on the actor types. Only fields beyond
+`moderationStatus`, `inviteLinks`) on the actor types. Only fields beyond
 the implemented interfaces are shown.
 
 Two consequences of earlier principles show up throughout:
@@ -718,9 +742,10 @@ type UserPreferences {
   contentFilteringSeverityLevel: Int
 }
 
-"An invite link issued by an actor — a pre-committed onboarding gesture.
- Time-gated and multi-use: many invitees may register through one link."
-type Invitation {
+"An outstanding invite link issued by an actor — a pre-committed onboarding
+ gesture. Time-gated and multi-use: many invitees may register through one
+ link. Its id is the link capability, so it is issuer-visible only."
+type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
   inviter: Actor!
@@ -767,14 +792,14 @@ type HiddenActorEdge {
   hiddenAt: DateTime!
 }
 
-type InvitationConnection {
-  edges: [InvitationEdge!]!
+type InviteLinkConnection {
+  edges: [InviteLinkEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
 }
-type InvitationEdge {
+type InviteLinkEdge {
   cursor: String!
-  node: Invitation!
+  node: InviteLink!
 }
 ```
 
@@ -1152,15 +1177,23 @@ type Query {
 
   "The full append-only layer stack of the single edge between two nodes
    — the (from, to) pair identifies it, since an edge carries at most one
-   label. Oldest first; the last entry is the current top layer. An opt-in
-   history gesture, never ranked."
-  edgeHistory(from: UUID!, to: UUID!): [EdgeLayer!]!
+   label. Oldest first; the last page's last entry is the current top layer.
+   Paginated — a long-lived edge can carry many layers. An opt-in history
+   gesture, never ranked."
+  edgeHistory(
+    from: UUID!, to: UUID!
+    first: Int, after: String, last: Int, before: String
+  ): EdgeLayerConnection!
 
   "The full append-only layer stack of one property on a node — a graph
    property or a Postgres display-content field, named by `property`.
-   Oldest first; the last entry is the current value. An opt-in history
+   Oldest first; the last page's last entry is the current value. Paginated —
+   a frequently-revised property can carry many layers. An opt-in history
    gesture, never ranked."
-  propertyHistory(id: UUID!, property: String!): [PropertyLayer!]!
+  propertyHistory(
+    id: UUID!, property: String!
+    first: Int, after: String, last: Int, before: String
+  ): PropertyLayerConnection!
 
   "Search across nodes; returns mixed node types. Provisional — what
    is indexed and how matches rank is not yet specified in the design
