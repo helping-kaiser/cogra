@@ -8,9 +8,8 @@ async-graphql.
 - **Health check**: `GET /health`
 
 The schema is specified in sections: the **type system** and
-**queries** (the read surface) here, the **mutation surface**
-(the write gestures) in a following pass. The governing
-principles below bind both.
+**queries** (the read surface), then the **mutation surface**
+(the write gestures). The governing principles below bind both.
 
 ---
 
@@ -1271,4 +1270,934 @@ type SearchEdge {
   cursor: String!
   node: Node!
 }
+```
+
+---
+
+## Mutations
+
+The write surface is the **principled hybrid** fixed in the
+governing principles: one generic mutation for setting an actor
+edge, named standalone mutations for the gestures that are
+genuinely their own thing, combined only where they are the same
+gesture. The root `Mutation` is the index; the input and payload
+types follow per group.
+
+### Conventions
+
+These bind every mutation below.
+
+- **Single input, dedicated payload.** Each mutation takes one
+  `input: <Name>Input!` argument and returns a `<Name>Payload!`.
+  The payload wraps the affected node(s) so a caller selects the
+  exact post-write shape it needs and the payload can grow a field
+  without a breaking signature change.
+- **The viewer is the actor, and rides the request.** No mutation
+  takes an actor/author argument — the authenticated viewer in the
+  execution context is the source of every edge written, mirroring
+  the read surface. A Collective acts through an authorized member;
+  the service layer resolves member→Collective authority per the
+  Collective's social contract, not a schema argument.
+- **Write inputs are raw scalars; moderation is server-assigned.**
+  A field read as `ModeratedText` is *written* as a plain `String`:
+  the caller never sets a moderation status, so there is no
+  `status` on any input. The server assigns `NORMAL` on write and
+  only moderation governance moves it.
+- **Append-only, no destructive verbs.** There is no
+  `delete`/`unlike`/`unfollow`/`unset`. An `edit*` mutation appends
+  a property layer; re-`setEdge` appends an edge layer; severance
+  is the `(0,0)` layer, not a removal. The absence follows from the
+  primitive ([graph-model.md §8](../primitive/graph-model.md#8-append-only-history-edges)).
+- **Proposal-backed actions create a Proposal and the author's
+  first vote, atomically.** The governance gestures
+  (`removeChatMember`, `classifyContent`, `amendNetworkParameter`,
+  …) are convenience verbs over one mechanism: each opens a
+  `Proposal` targeting the right node and property and casts the
+  author's opening vote. They return that `Proposal` — the outcome
+  lands later, when votes cross the threshold and the service layer
+  cascades the write. The service dispatches on the target node;
+  the caller names intent, not machinery.
+- **Authentication.** Every mutation requires an authenticated
+  viewer except `register`, `logIn`, `refreshSession`,
+  `requestPasswordReset`, `confirmPasswordReset`, and the
+  token-bearing `confirmAccountDeletion` — the gestures that
+  establish or recover a session.
+
+```graphql
+type Mutation {
+  # ── Generic actor edge ───────────────────────────────────────
+  "Set the viewer's outgoing actor edge toward a node — the one
+   generic write for sentiment and connection-weight. Appends a new
+   layer if the edge already exists; the (0,0) tensor is severance,
+   not removal. Valid targets: User, Collective, Post, Comment,
+   Chat, ChatMessage, Item, and the junction nodes; never a
+   Proposal (an actor edge toward a Proposal is a vote — use
+   castVote), a Hashtag (not a graph gesture), or an
+   economics/system node."
+  setEdge(input: SetEdgeInput!): SetEdgePayload!
+
+  # ── Content authoring ────────────────────────────────────────
+  createPost(input: CreatePostInput!): CreatePostPayload!
+  "Append a new layer to one or more of a Post's authored fields."
+  editPost(input: EditPostInput!): EditPostPayload!
+  createComment(input: CreateCommentInput!): CreateCommentPayload!
+  editComment(input: EditCommentInput!): EditCommentPayload!
+  "Open a Chat and seat the viewer as its founding member in one
+   gesture (the founder's self-claim collapses to ACTIVE with no
+   approval, the N=0 bootstrap)."
+  createChat(input: CreateChatInput!): CreateChatPayload!
+  "Post a message to a Chat the viewer is an active member of.
+   contentPrivacy and epoch decide plaintext vs ciphertext."
+  createChatMessage(input: CreateChatMessageInput!): CreateChatMessagePayload!
+  editChatMessage(input: EditChatMessageInput!): EditChatMessagePayload!
+  createItem(input: CreateItemInput!): CreateItemPayload!
+  editItem(input: EditItemInput!): EditItemPayload!
+  "Append a new layer to the viewer's own profile fields (handle,
+   displayName, bio, avatar, websiteUrl). Self only — no id, the
+   viewer is the edited User."
+  editProfile(input: EditProfileInput!): EditProfilePayload!
+  "Upload a media asset and get back its MediaAttachment id, to
+   reference from a create/edit content input."
+  uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
+
+  # ── Voting ───────────────────────────────────────────────────
+  "Cast — or recast — the viewer's vote on a Proposal. The service
+   resolves the vote shape: a Network-scope Proposal takes the
+   viewer's direct User→Proposal actor edge (Shape A); a
+   chat/collective-scope Proposal takes the structural edge from the
+   viewer's eligible junction (Shape B). Recasting appends a new
+   layer — this is how a vote is changed; there is no separate
+   gesture. dim1 carries the stance; a non-positive dim1 is a valid
+   recorded edge that a petition-style tally does not count."
+  castVote(input: CastVoteInput!): CastVotePayload!
+
+  # ── Chat membership and lifecycle ────────────────────────────
+  "Request to join a Chat. Resolves to an ACTIVE membership when the
+   chat admits openly (threshold 0), or a PENDING one carrying an
+   admission Proposal otherwise."
+  joinChat(input: JoinChatInput!): JoinChatPayload!
+  "Invite an actor into a Chat (inviter-first admission). Opens the
+   membership and its admission Proposal with the inviter's approving
+   vote; the invitee's acceptance is their self-claim."
+  inviteChatMember(input: InviteChatMemberInput!): InviteChatMemberPayload!
+  "Accept a chat invitation — writes the invitee's self-claim on the
+   pending membership; resolves to ACTIVE once approvals suffice."
+  acceptChatInvite(input: AcceptChatInviteInput!): AcceptChatInvitePayload!
+  "Leave a Chat the viewer is a member of — a unilateral negative
+   layer on the membership's claim; no vote, the junction goes
+   REVOKED and the chat epoch advances."
+  leaveChat(input: LeaveChatInput!): LeaveChatPayload!
+  changeChatMemberRole(input: ChangeChatMemberRoleInput!): ProposalPayload!
+  "Disavow a member (Level 2) — proposal-backed; on passing, a
+   negative approval layer revokes the membership."
+  removeChatMember(input: RemoveChatMemberInput!): ProposalPayload!
+  "Disavow a message (Level 1) — proposal-backed; the body persists,
+   the chat's collective stance moves away from it."
+  disavowChatMessage(input: DisavowChatMessageInput!): ProposalPayload!
+  "Rotate the chat key mid-epoch — proposal-backed; on passing,
+   Chat.epoch advances."
+  rotateChatKey(input: RotateChatKeyInput!): ProposalPayload!
+  "Change a Chat's profile (name, description, image) — proposal-backed;
+   a composite proposal when more than one field is supplied."
+  editChatProfile(input: EditChatProfileInput!): ProposalPayload!
+
+  # ── Collectives ──────────────────────────────────────────────
+  "Create a Collective and seat the viewer as its founding member
+   (N=0 bootstrap), with the social contract supplied inline."
+  createCollective(input: CreateCollectiveInput!): CreateCollectivePayload!
+  joinCollective(input: JoinCollectiveInput!): JoinCollectivePayload!
+  inviteCollectiveMember(input: InviteCollectiveMemberInput!): InviteCollectiveMemberPayload!
+  "Accept a collective invitation — writes the invitee's self-claim on
+   the pending membership; resolves to ACTIVE once approvals suffice."
+  acceptCollectiveInvite(input: AcceptCollectiveInviteInput!): AcceptCollectiveInvitePayload!
+  leaveCollective(input: LeaveCollectiveInput!): LeaveCollectivePayload!
+  changeCollectiveMemberRole(input: ChangeCollectiveMemberRoleInput!): ProposalPayload!
+  removeCollectiveMember(input: RemoveCollectiveMemberInput!): ProposalPayload!
+  "Amend one governance rule on a Collective or Chat — proposal-backed,
+   judged by that rule's own amend gate."
+  amendGovernanceRule(input: AmendGovernanceRuleInput!): ProposalPayload!
+  "Change a Collective's profile (displayName, description, avatar,
+   websiteUrl) — proposal-backed; a composite proposal when more than
+   one field is supplied."
+  editCollectiveProfile(input: EditCollectiveProfileInput!): ProposalPayload!
+
+  # ── Items ────────────────────────────────────────────────────
+  "Initiate an ownership transfer — opens a transfer Proposal for the
+   next ItemOwnership; the counterparty approves with castVote. Works
+   owner-first (offer) or acquirer-first (request); the service infers
+   direction from whether the viewer is the current owner."
+  transferItem(input: TransferItemInput!): TransferItemPayload!
+
+  # ── Network-scope governance ─────────────────────────────────
+  "Report content for classification (sensitive / illegal / back to
+   normal) — proposal-backed, judged by the Network's moderation
+   gate. Targets a per-field status, or the whole node."
+  classifyContent(input: ClassifyContentInput!): ProposalPayload!
+  proposeModeratorRoleChange(input: ProposeModeratorRoleChangeInput!): ProposalPayload!
+  amendNetworkParameter(input: AmendNetworkParameterInput!): ProposalPayload!
+  amendGuidelines(input: AmendGuidelinesInput!): ProposalPayload!
+  "The generic proposal escape hatch — propose a change to any
+   targetable property for which no named verb above fits. Prefer a
+   named verb when one exists."
+  proposeChange(input: ProposeChangeInput!): ProposalPayload!
+
+  # ── Economics (the API subset; money moves on-chain) ─────────
+  "Open a pull-marketing campaign carrier node. The deposit is
+   escrowed on-chain beforehand; the node holds only the pointer."
+  createCampaign(input: CreateCampaignInput!): CreateCampaignPayload!
+  "Adjust a campaign's mutable knobs (declaredGoal, endTs, dustFloor)
+   while it is OPEN."
+  updateCampaign(input: UpdateCampaignInput!): UpdateCampaignPayload!
+  "Settle an OPEN campaign at an advertiser-chosen release amount;
+   writes the Settlement record and its on-chain pointers. The split
+   is graph-computed, never advertiser-chosen."
+  settleCampaign(input: SettleCampaignInput!): SettleCampaignPayload!
+  "Re-point the viewer's payout Wallet to a new on-chain address
+   (append a layer; the binding survives)."
+  relinkWallet(input: RelinkWalletInput!): RelinkWalletPayload!
+
+  # ── Auth and accounts (off-graph state, per auth.md) ─────────
+  register(input: RegisterInput!): AuthPayload!
+  logIn(input: LogInInput!): AuthPayload!
+  refreshSession(input: RefreshSessionInput!): AuthPayload!
+  "Revoke one session (the current one if no id is given)."
+  revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
+  "Revoke every session except the one making the request."
+  revokeOtherSessions: RevokeSessionsPayload!
+  requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
+  confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
+  "Change the password from within an authenticated session,
+   re-authenticating with the current one. A security event — revokes
+   the account's other sessions."
+  changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
+  "Begin an email change: re-authenticates, sends a confirmation code
+   to the current (original) address to prove account control, and a
+   verification link to the new address to prove it is reachable. The
+   address does not change until confirmEmailChange."
+  requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
+  "Complete an email change with the code from the current address;
+   applies only once the new address has been verified too."
+  confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
+  "Issue a multi-use, time-gated invite link carrying the inviter's
+   pre-committed edge tensor."
+  createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
+  revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
+  "Begin account deletion (identity-only, or content-inclusive);
+   sends a confirmation, opens the grace period."
+  requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
+  confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+  cancelAccountDeletion: AccountDeletionPayload!
+
+  # ── Private viewer state (Postgres; field-authorized to self) ─
+  setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
+  removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+  hideActor(input: HideActorInput!): HideActorPayload!
+  unhideActor(input: UnhideActorInput!): UnhideActorPayload!
+  "Record that the viewer has seen a node (the feed de-dup signal)."
+  markSeen(input: MarkSeenInput!): MarkSeenPayload!
+  "Advance the viewer's last-read pointer in a Chat."
+  markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!
+  setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
+}
+
+"The shared payload for every proposal-backed governance mutation:
+ the Proposal that was opened, carrying the author's first vote. The
+ outcome is read later off the Proposal's tally and status."
+type ProposalPayload {
+  proposal: Proposal!
+}
+```
+
+### The generic actor edge
+
+```graphql
+"The viewer's outgoing actor edge toward `target`. No source
+ argument — the viewer is the source; no label — it is always the
+ :ACTOR edge. Writing again appends a layer; (0,0) is severance."
+input SetEdgeInput {
+  target: UUID!
+  dim1: Dimension!
+  dim2: Dimension!
+}
+
+type SetEdgePayload {
+  "The edge's new top layer."
+  edge: Edge!
+}
+```
+
+The valid targets are exactly the node kinds the catalog defines an
+inbound actor edge for
+([edges.md §1](../primitive/edges.md#1-actor-edges)): the two actors,
+the five content kinds, and the three junction kinds. A `target`
+that resolves to a `Proposal`, `Hashtag`, `Campaign`, `Settlement`,
+`Wallet`, or `Network` is rejected — a Proposal because the actor
+edge toward it *is* a vote (one label per endpoint pair, so the two
+cannot coexist; use `castVote`), a Hashtag because liking a tag is
+not a graph operation, the rest because they carry no inbound actor
+edge. The one further guard: a Collective setting an edge toward its
+*own* `CollectiveMember` is rejected, because the `:APPROVAL` edge
+already owns that pair.
+
+### Content authoring
+
+```graphql
+"Author a Post. Body fields are plain strings — moderation status is
+ server-assigned. Tags and references are explicit structured inputs,
+ never parsed from the body, so display content and graph topology
+ stay decoupled."
+input CreatePostInput {
+  title: String
+  description: String
+  content: String!
+  "Media assets, in gallery order; mark at most one as the cover."
+  attachments: [AttachmentInput!]
+  "Hashtag names to tag (lowercase, no '#'); created implicitly if new."
+  tags: [String!]
+  "Nodes this Post references; the per-reference tensor splits the
+   reference fan-out budget."
+  references: [ReferenceInput!]
+}
+
+"One attachment placement within a gallery."
+input AttachmentInput {
+  mediaId: UUID!
+  displayOrder: Int!
+  isCover: Boolean
+}
+
+"A reference from authored content to another node, carrying its
+ share of the fan-out budget."
+input ReferenceInput {
+  target: UUID!
+  dim1: Dimension!
+  dim2: Dimension!
+}
+
+"Append a new layer to any subset of a Post's authored fields and
+ galleries. Omitted fields are untouched; there is no overwrite."
+input EditPostInput {
+  id: UUID!
+  title: String
+  description: String
+  content: String
+  attachments: [AttachmentInput!]
+  tags: [String!]
+  references: [ReferenceInput!]
+}
+
+type CreatePostPayload { post: Post! }
+type EditPostPayload { post: Post! }
+
+input CreateCommentInput {
+  "The node the comment is on (a CommentTarget)."
+  target: UUID!
+  content: String!
+  attachments: [AttachmentInput!]
+  references: [ReferenceInput!]
+}
+input EditCommentInput {
+  id: UUID!
+  content: String
+  attachments: [AttachmentInput!]
+  references: [ReferenceInput!]
+}
+type CreateCommentPayload { comment: Comment! }
+type EditCommentPayload { comment: Comment! }
+
+"Open a Chat. The viewer becomes its founding member in the same
+ gesture; the founder seat needs no approval."
+input CreateChatInput {
+  name: String
+  description: String
+  imageMediaId: UUID
+  "The social contract; defaults to the standard chat governance if
+   omitted."
+  governance: GovernanceInput
+}
+type CreateChatPayload {
+  chat: Chat!
+  "The founder's own membership, already ACTIVE."
+  membership: ChatMember!
+}
+
+"Post a message to a chat the viewer actively belongs to. For an
+ encrypted message, `content` is the ciphertext and `epoch` names the
+ key it is under; for plaintext, `epoch` is null."
+input CreateChatMessageInput {
+  chat: UUID!
+  content: String!
+  contentPrivacy: ContentPrivacy!
+  epoch: Int
+  attachments: [AttachmentInput!]
+  references: [ReferenceInput!]
+}
+input EditChatMessageInput {
+  id: UUID!
+  content: String
+  contentPrivacy: ContentPrivacy
+  epoch: Int
+  attachments: [AttachmentInput!]
+}
+type CreateChatMessagePayload { message: ChatMessage! }
+type EditChatMessagePayload { message: ChatMessage! }
+
+input CreateItemInput {
+  name: String!
+  description: String
+  attachments: [AttachmentInput!]
+  tags: [String!]
+}
+input EditItemInput {
+  id: UUID!
+  name: String
+  description: String
+  attachments: [AttachmentInput!]
+  tags: [String!]
+}
+type CreateItemPayload {
+  item: Item!
+  "The author's initial ownership, already ACTIVE."
+  ownership: ItemOwnership!
+}
+type EditItemPayload { item: Item! }
+
+"Append a new layer to the viewer's own profile. Self only — the
+ viewer is the User edited, so there is no id. Omitted fields are
+ untouched; a handle change is subject to the global handle-uniqueness
+ constraint."
+input EditProfileInput {
+  handle: String
+  displayName: String
+  bio: String
+  avatarMediaId: UUID
+  websiteUrl: String
+}
+type EditProfilePayload { user: User! }
+
+"Upload a single media asset. The binary rides the GraphQL multipart
+ request as an Upload; layout hints the server cannot infer (alt
+ text) are supplied, the rest (aspect ratio, duration) are derived."
+input UploadMediaInput {
+  file: Upload!
+  altText: String
+}
+type UploadMediaPayload { media: MediaAttachment! }
+```
+
+A media gallery on a create/edit input is the **full intended
+gallery** for that write: the new top-layer ordering, given as
+`AttachmentInput` placements that reference assets already uploaded
+via `uploadMedia`. `Upload` is the standard GraphQL multipart-request
+scalar — the one place the API ingests a binary rather than JSON.
+
+### Voting
+
+```graphql
+"A vote on a Proposal. No voter argument — the viewer is the voter,
+ and the service resolves whether the vote is the viewer's direct
+ actor edge (Network scope) or their eligible junction's structural
+ edge (chat/collective scope). `as` names the voting junction
+ explicitly when the viewer holds more than one eligible junction."
+input CastVoteInput {
+  proposal: UUID!
+  dim1: Dimension!
+  dim2: Dimension!
+  "The junction to vote from, when the viewer has several eligible
+   ones; defaults to the unique eligible junction."
+  as: UUID
+}
+
+type CastVotePayload {
+  "The vote edge's new top layer."
+  vote: Edge!
+  "The Proposal's tally and status, recomputed after the vote."
+  proposal: Proposal!
+}
+```
+
+### Chat membership and lifecycle
+
+```graphql
+input JoinChatInput {
+  chat: UUID!
+  "Requested role; defaults to the chat's member role."
+  role: String
+}
+type JoinChatPayload {
+  membership: ChatMember!
+  "The admission Proposal when approval is required; null on an open
+   (threshold-0) join that is already ACTIVE."
+  admission: Proposal
+}
+
+input InviteChatMemberInput {
+  chat: UUID!
+  invitee: UUID!
+  role: String
+}
+type InviteChatMemberPayload {
+  "The PENDING membership awaiting the invitee's self-claim."
+  membership: ChatMember!
+  admission: Proposal!
+}
+
+input LeaveChatInput {
+  "The viewer's own membership in the chat."
+  membership: UUID!
+}
+type LeaveChatPayload {
+  membership: ChatMember!
+}
+
+input ChangeChatMemberRoleInput {
+  membership: UUID!
+  role: String!
+}
+input RemoveChatMemberInput {
+  membership: UUID!
+}
+input DisavowChatMessageInput {
+  message: UUID!
+}
+input RotateChatKeyInput {
+  chat: UUID!
+}
+
+"Accept an invitation to a chat — the invitee's self-claim on the
+ already-pending membership."
+input AcceptChatInviteInput {
+  membership: UUID!
+}
+type AcceptChatInvitePayload {
+  membership: ChatMember!
+  admission: Proposal!
+}
+
+"Change a Chat's profile. Each supplied field opens a property change;
+ more than one bundles into a single composite proposal."
+input EditChatProfileInput {
+  chat: UUID!
+  name: String
+  description: String
+  imageMediaId: UUID
+}
+```
+
+### Collectives
+
+```graphql
+"Create a Collective with its social contract; the viewer becomes the
+ founding member."
+input CreateCollectiveInput {
+  handle: String!
+  displayName: String!
+  description: String
+  avatarMediaId: UUID
+  websiteUrl: String
+  governance: GovernanceInput!
+}
+type CreateCollectivePayload {
+  collective: Collective!
+  membership: CollectiveMember!
+}
+
+input JoinCollectiveInput {
+  collective: UUID!
+  role: String
+}
+type JoinCollectivePayload {
+  membership: CollectiveMember!
+  admission: Proposal
+}
+
+input InviteCollectiveMemberInput {
+  collective: UUID!
+  invitee: UUID!
+  role: String
+  "Ownership stake, where the role implies one."
+  ownershipPct: Float
+}
+type InviteCollectiveMemberPayload {
+  membership: CollectiveMember!
+  admission: Proposal!
+}
+
+input LeaveCollectiveInput {
+  membership: UUID!
+}
+type LeaveCollectivePayload {
+  membership: CollectiveMember!
+}
+
+input ChangeCollectiveMemberRoleInput {
+  membership: UUID!
+  role: String
+  ownershipPct: Float
+  votingWeight: Float
+}
+input RemoveCollectiveMemberInput {
+  membership: UUID!
+}
+
+"Accept an invitation to a collective — the invitee's self-claim on
+ the already-pending membership."
+input AcceptCollectiveInviteInput {
+  membership: UUID!
+}
+type AcceptCollectiveInvitePayload {
+  membership: CollectiveMember!
+  admission: Proposal!
+}
+
+"Change a Collective's profile. Each supplied field opens a property
+ change; more than one bundles into a single composite proposal."
+input EditCollectiveProfileInput {
+  collective: UUID!
+  displayName: String
+  description: String
+  avatarMediaId: UUID
+  websiteUrl: String
+}
+
+"Amend one rule of a node's social contract, addressed by its action
+ key. The rule's own amend gate judges the change."
+input AmendGovernanceRuleInput {
+  "The Collective or Chat whose governance is amended."
+  node: UUID!
+  actionKey: String!
+  rule: GovernanceRuleInput!
+}
+```
+
+The social-contract inputs (`GovernanceInput`, `GovernanceRuleInput`)
+mirror the read-side `Governance` types and are defined under
+[Governance inputs](#governance-inputs) below.
+
+### Items
+
+```graphql
+"Initiate an ownership transfer. Owner-first (the viewer is the
+ current owner offering to `counterparty`) and acquirer-first (the
+ viewer requests ownership from the current owner) are the same
+ gesture; the service reads the direction from the viewer's relation
+ to the item. Approval is the counterparty's castVote on the returned
+ Proposal."
+input TransferItemInput {
+  item: UUID!
+  counterparty: UUID!
+}
+type TransferItemPayload {
+  "The PENDING next ownership."
+  ownership: ItemOwnership!
+  transfer: Proposal!
+}
+```
+
+### Network-scope governance
+
+```graphql
+"Propose a moderation classification on content. `field` names the
+ per-field status to move, or 'node' for a whole-node classification;
+ `status` is the target state (back to NORMAL to un-classify)."
+input ClassifyContentInput {
+  target: UUID!
+  field: String!
+  status: ModerationStatus!
+}
+
+input ProposeModeratorRoleChangeInput {
+  user: UUID!
+  role: NetworkRole!
+}
+
+"Amend one Network configuration property. `value` is serialized per
+ the property's type."
+input AmendNetworkParameterInput {
+  parameter: String!
+  value: String!
+}
+
+"Bump the platform guidelines to a new version and content hash."
+input AmendGuidelinesInput {
+  version: Int!
+  "SHA-256 of the canonical guidelines document (64 hex chars)."
+  hash: String!
+}
+
+"The generic proposal — a change to any targetable property. Shape
+ discriminated by valueKind, exactly as the Proposal read type."
+input ProposeChangeInput {
+  target: UUID!
+  targetProperty: String!
+  valueKind: String!
+  proposedValue: String!
+}
+```
+
+### Economics
+
+Only the carrier-node gestures are GraphQL mutations; money moves
+on-chain and is never written through this API. Minting, burning,
+deposits, transfers, payout claims, and auto-settlement are on-chain
+or scheduled operations — their graph traces (`:TRANSFERS`,
+`:ENTITLES`, `:CLAIMS`, `:PAYS_TO`) are system-written, never set by
+a client mutation ([ledger.md](ledger.md)).
+
+```graphql
+"Open a campaign. The deposit is already escrowed on-chain; `escrow`
+ is the pointer, the amount is read from chain. `g` and the baseline
+ hStart are fixed at open; declaredGoal, endTs, and dustFloor remain
+ tunable while OPEN."
+input CreateCampaignInput {
+  anchor: UUID!
+  target: UUID!
+  escrow: String!
+  declaredGoal: Float!
+  g: Float
+  startTs: DateTime!
+  endTs: DateTime!
+  dustFloor: Float
+}
+type CreateCampaignPayload { campaign: Campaign! }
+
+"Adjust an OPEN campaign's mutable knobs. Omitted fields are
+ untouched; each supplied field appends a layer."
+input UpdateCampaignInput {
+  campaign: UUID!
+  declaredGoal: Float
+  endTs: DateTime
+  dustFloor: Float
+}
+type UpdateCampaignPayload { campaign: Campaign! }
+
+"Settle a campaign. `releaseAmount` is the advertiser-chosen pool P,
+ bounded by the deposit; the per-wallet split is graph-computed and
+ lands in the Settlement's Merkle root. An earlier attribution
+ snapshot may be named within the campaign window."
+input SettleCampaignInput {
+  campaign: UUID!
+  releaseAmount: Float!
+  attributionSnapshotTs: DateTime
+}
+type SettleCampaignPayload {
+  campaign: Campaign!
+  settlement: Settlement!
+}
+
+input RelinkWalletInput {
+  wallet: UUID!
+  address: String!
+}
+type RelinkWalletPayload { wallet: Wallet! }
+```
+
+### Auth and accounts
+
+The token mechanics (JWT access + rotating refresh, sessions,
+invitation registration) are specified in [auth.md](auth.md); this
+surface consumes them.
+
+```graphql
+"Register through an invite link. The link's pre-committed tensor
+ writes the inviter→invitee edge on success."
+input RegisterInput {
+  inviteLink: UUID!
+  handle: String!
+  email: String!
+  password: String!
+  deviceLabel: String
+}
+
+input LogInInput {
+  email: String!
+  password: String!
+  deviceLabel: String
+}
+
+input RefreshSessionInput {
+  refreshToken: String!
+}
+
+"A fresh access + refresh token pair, the issuing session, and the
+ viewer it authenticates."
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  session: Session!
+  user: User!
+}
+
+input RevokeSessionInput {
+  "The session to revoke; the current one if omitted."
+  session: UUID
+}
+type RevokeSessionPayload {
+  "The revoked session, in its terminal state."
+  session: Session!
+}
+type RevokeSessionsPayload {
+  revokedCount: Int!
+}
+
+input RequestPasswordResetInput { email: String! }
+"Always succeeds, to avoid revealing whether an account exists."
+type RequestPasswordResetPayload { ok: Boolean! }
+
+input ConfirmPasswordResetInput {
+  resetToken: String!
+  newPassword: String!
+}
+type ConfirmPasswordResetPayload { ok: Boolean! }
+
+"Change the password while authenticated. Re-verifies currentPassword,
+ breach-checks newPassword, and revokes the account's other sessions."
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+type ChangePasswordPayload { ok: Boolean! }
+
+"Begin an email change. Re-authenticates with currentPassword; the
+ server sends a confirmation code to the current address and a
+ verification link to newEmail."
+input RequestEmailChangeInput {
+  newEmail: String!
+  currentPassword: String!
+}
+"Always succeeds for a well-formed request, to avoid revealing whether
+ newEmail is already registered."
+type RequestEmailChangePayload { ok: Boolean! }
+
+"Complete an email change. `code` is the one mailed to the current
+ (original) address; the change applies only if newEmail's
+ verification link has also been followed."
+input ConfirmEmailChangeInput {
+  code: String!
+}
+type ConfirmEmailChangePayload { user: User! }
+
+input CreateInviteLinkInput {
+  expiresAt: DateTime!
+  "Pre-committed tensor for the inviter→invitee edge on acceptance."
+  inviterDim1: Dimension!
+  inviterDim2: Dimension!
+}
+type CreateInviteLinkPayload {
+  "The link — its id is the shareable capability."
+  inviteLink: InviteLink!
+}
+
+input RevokeInviteLinkInput { inviteLink: UUID! }
+type RevokeInviteLinkPayload { inviteLink: InviteLink! }
+
+"Begin deletion. Identity-only by default; opt into content-level
+ redaction with includeContent."
+input RequestAccountDeletionInput {
+  includeContent: Boolean
+}
+input ConfirmAccountDeletionInput {
+  deletionToken: String!
+}
+"The pending deletion's state — its scope and grace-period deadline,
+ null fields once cancelled."
+type AccountDeletionPayload {
+  scheduledFor: DateTime
+  includesContent: Boolean!
+}
+```
+
+### Private viewer state
+
+Per-viewer operational state in Postgres
+([data-model.md](data-model.md)) — each mutation writes only the
+authenticated viewer's own state, the write-side mirror of the
+field-level authorization on the read surface. None of it touches
+the graph.
+
+```graphql
+input SetBookmarkInput { node: UUID! }
+type SetBookmarkPayload { bookmark: BookmarkEdge! }
+input RemoveBookmarkInput { node: UUID! }
+type RemoveBookmarkPayload { ok: Boolean! }
+
+input HideActorInput { actor: UUID! }
+type HideActorPayload { hidden: HiddenActorEdge! }
+input UnhideActorInput { actor: UUID! }
+type UnhideActorPayload { ok: Boolean! }
+
+input MarkSeenInput {
+  "The nodes the viewer has seen."
+  nodes: [UUID!]!
+}
+type MarkSeenPayload { ok: Boolean! }
+
+input MarkChatReadInput {
+  chat: UUID!
+  "Read-pointer timestamp; defaults to now."
+  at: DateTime
+}
+type MarkChatReadPayload { chat: Chat! }
+
+input SetPreferencesInput {
+  "0 (show everything) to 10 (strictest); null restores the default."
+  contentFilteringSeverityLevel: Int
+}
+type SetPreferencesPayload { preferences: UserPreferences! }
+```
+
+Bookmarks and hidden-actors have explicit `remove*` verbs because the
+"no destructive operation" rule is a *graph* invariant — private
+operational state carries no append-only history and no public
+visibility, so a remove is a genuine delete of a row, not a redaction.
+
+### Governance inputs
+
+The write-side mirror of the `Governance` read types. A
+`GovernanceInput` is the full social contract supplied at
+`createChat` / `createCollective`; a single `GovernanceRuleInput`
+is the unit of `amendGovernanceRule`.
+
+```graphql
+input GovernanceInput {
+  rules: [GovernanceRuleInput!]!
+}
+
+input GovernanceRuleInput {
+  actionKey: String!
+  exec: GovernanceExecGateInput!
+  amend: GovernanceAmendGateInput!
+}
+
+input GovernanceExecGateInput {
+  eligibility: String!
+  weighting: VoteWeightingInput!
+  threshold: String!
+  excludeSubject: Boolean!
+}
+
+input GovernanceAmendGateInput {
+  eligibility: String!
+  weighting: VoteWeightingInput!
+  threshold: String!
+}
+
+input VoteWeightingInput {
+  mode: WeightMode!
+  roleWeights: [RoleWeightInput!]
+  property: String
+}
+
+input RoleWeightInput {
+  role: String!
+  weight: Float!
+}
+```
+
+### Scalars added by the write surface
+
+```graphql
+"The GraphQL multipart-request upload scalar — a binary body part
+ referenced from a mutation variable. Used only by uploadMedia."
+scalar Upload
 ```

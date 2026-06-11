@@ -128,7 +128,7 @@ an `instances/` doc is a sign the mechanism belongs in
 - [development](implementation/development.md) — local setup,
   tools, workflows.
 - [api-spec](implementation/api-spec.md) — backend GraphQL spec:
-  type system + queries (read surface); mutations pending.
+  type system, queries (read surface), and mutations (write surface).
 - [miner-api](implementation/miner-api.md) — the off-backend ranking
   surface: subgraph slice in, ordered feed out.
 - [auth](implementation/auth.md) — server-side credentials,
