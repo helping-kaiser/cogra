@@ -216,13 +216,16 @@ scalar Dimension
  per-field statuses. (Per-field status uses FieldModerationStatus.)"
 enum ModerationStatus { NORMAL SENSITIVE ILLEGAL }
 
-"The graph-layer label on an edge — every edge carries exactly
- one. ACTOR / AUTHOR / INVITE are actor edges; the rest are
- structural."
+"The graph-layer label on an edge — every edge carries exactly one.
+ ACTOR and STRUCTURAL are the two base labels; the rest are
+ sub-labels that replace their base where one fits (AUTHOR / INVITE
+ replace ACTOR; the others replace STRUCTURAL). A generic actor edge
+ stays ACTOR; a structural edge with no sub-label (junction Shape-B
+ votes, Campaign → Settlement) stays STRUCTURAL."
 enum EdgeLabel {
   ACTOR AUTHOR INVITE
-  CONTAINMENT CLAIM APPROVAL BEARER TAGGING TARGETS REFERENCES
-  ANCHOR PROMOTES ENTITLES CLAIMS TRANSFERS PAYS_TO
+  STRUCTURAL CONTAINMENT CLAIM APPROVAL BEARER TAGGING TARGETS
+  REFERENCES ANCHOR PROMOTES ENTITLES CLAIMS TRANSFERS PAYS_TO
 }
 
 "The kind of a node — used to filter edge endpoints by the type of
@@ -360,12 +363,13 @@ reference); other labels leave it null.
 
 Each user-authored field carries its moderation status co-located
 with its value, so a redacted field is never confused with an empty
-one. Scalar fields use a wrapper type; `value` is null when unset
-or redacted, and `status` says which.
+one. Scalar fields use a wrapper type; `value` is null when the field is
+redacted (or unset, where optional), and `status` says which.
 
 ```graphql
 "Text carrying its own moderation status. `value` is null when the
- field is unset or redacted — `status` disambiguates."
+ field is redacted, or unset where the field is optional — `status`
+ disambiguates."
 type ModeratedText {
   value: String
   status: FieldModerationStatus!
@@ -426,8 +430,9 @@ Two consequences of earlier principles show up throughout:
 
 - **Moderated fields co-locate value and status** — each is a
   `ModeratedText` / `ModeratedMedia` whose `value` is null when
-  unset or redacted, with `status` telling the two apart. A gallery
-  keeps its list plus a sibling `attachmentsStatus`.
+  redacted (or unset, where the field is optional), with `status`
+  telling the two apart. A gallery keeps its list plus a sibling
+  `attachmentsStatus`.
 - **Relationships stay generic** except the few fundamental
   containment links pulled forward as named views: `author` on
   every authored node, `target` on a Comment, and `chat` on a
@@ -722,13 +727,14 @@ type Governance {
  `amend` governs changing this rule — self-applying, no regress."
 type GovernanceRule {
   actionKey: String!
-  exec: GovernanceGate!
-  amend: GovernanceGate!
+  exec: GovernanceExecGate!
+  amend: GovernanceAmendGate!
 }
 
-"One voting gate: who may vote, their weights, and the passing
- condition."
-type GovernanceGate {
+"The voting gate for performing an action: who may vote, their
+ weights, the passing condition, and whether the action's subject is
+ barred from voting on it."
+type GovernanceExecGate {
   "Voter-eligibility predicate. Opaque string for now — the
    predicate grammar is not yet specified."
   eligibility: String!
@@ -740,6 +746,20 @@ type GovernanceGate {
   threshold: String!
   "Whether the subject of the action is barred from voting on it."
   excludeSubject: Boolean!
+}
+
+"The voting gate for amending a rule — the same shape as
+ GovernanceExecGate without `excludeSubject`, since an amendment's
+ subject is the rule entry itself, not a member junction."
+type GovernanceAmendGate {
+  "Voter-eligibility predicate. Opaque string for now — the
+   predicate grammar is not yet specified."
+  eligibility: String!
+  "Per-role voting weights, as key/value pairs."
+  weights: [RoleWeight!]!
+  "Passing condition. Opaque string for now — the threshold grammar
+   is not yet specified."
+  threshold: String!
 }
 
 type RoleWeight {
@@ -872,7 +892,7 @@ type Network implements Node {
   modRoleChangeQuorumFraction: Float!
   modRoleChangeQuorumCount: Int!
 
-  # Platform guidelines (critical bucket)
+  # Platform guidelines (critical tier)
   guidelinesVersion: Int!
   "SHA-256 of the canonical guidelines document (64 hex chars)."
   guidelinesHash: String!
