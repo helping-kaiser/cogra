@@ -1546,6 +1546,22 @@ a wallet by balance) lives on the **chain**, never the graph
 ([ledger.md](../implementation/ledger.md)). The **`:Network`
 singleton** is instance configuration; there is nothing to rank.
 
+### 5.4 The ranked order is a snapshot — rank once, then paginate
+
+Ranking is expensive: it enumerates weight-bounded paths from the
+viewing user across the whole relevant subgraph (§9). It runs **once
+per feed-open**, materializing a frozen ranked order the viewer then
+paginates through. Fetching the next batch indexes into that
+snapshot — it never re-ranks. The order is recomputed only when the
+viewer **explicitly refreshes** the feed.
+
+Freezing the order per session is also what keeps pagination correct.
+The graph is append-only — new edges and nodes arrive continuously —
+so a feed re-ranked on every batch fetch would reshuffle under the
+reader, dropping or repeating items mid-scroll. The snapshot pins the
+order for the duration of the scroll; a refresh is the explicit,
+user-initiated point at which new graph state folds in.
+
 ---
 
 ## 6. Examples
