@@ -82,7 +82,11 @@ otherwise admit cyclic paths in which the same intermediate's
 mediating role multiplies into the product more than once: a
 structural artifact, not new information about `U`'s view of `t`.
 Cycles also blow up enumeration combinatorially under the R-cap.
-The walk maintains a per-path visited set to enforce the invariant.
+The walk maintains a per-path visited set to enforce the invariant. The
+visited set enforces it exactly during enumeration; in the dense regime,
+where enumeration is intractable, §4.5 computes the metric by
+message-passing under a memory-1 (non-backtracking) relaxation of this
+invariant.
 
 ### 3.1 Which edges contribute factors
 
@@ -1315,6 +1319,12 @@ completion — the prune is **exact up to the floor**, not a heuristic.
 Paths below `ε` contribute only dust to the sums; dropping them shifts
 each metric by less than the floor.
 
+`ε` does double duty under one formula: here it prunes **paths** during
+exact enumeration, and in §9 it bounds the slice **node-set** by
+best-possible contribution per node. Exact enumeration is the sparse-regime
+method — where the above-floor path count is itself intractable, the metric
+is computed by message-passing instead (§4.5).
+
 **Where `ε` sits.** The per-path contribution to `h` falls ~15× per
 hop — a `0.1` factor from `d(R)` and a `~0.6` factor per added edge.
 For a fresh path of moderate edges (`|dim| ≈ 0.6`, `f(Δt) = 1`) under
@@ -1347,6 +1357,96 @@ traversal, which walks these identical paths to split a campaign's pool
 ([economics.md §6.5](economics.md#65-computation--exact-streaming-oplayers-memory));
 there `ε` is set per campaign by author-aggregate payability and recorded
 for reproducibility.
+
+### 4.5 Computing the metric — message-passing over the slice
+
+The §4.2 sums range over *all* paths to `t`, and §4.4's branch-and-bound
+prunes the individually-weak ones — but `ε` bounds the slice **node-set**
+(§9), not the **path count** between those nodes. In the mid-density regime —
+after small-world connectivity makes `R ≤ 3` most of the network, before `ε`
+rises enough to prune `R = 3` — the above-floor path count is still
+`~b^(R−1)`, so explicit enumeration stays `O(b^R)`. The metric needs a
+formulation that does not enumerate, and it has one.
+
+Every factor in `h` and `i` **decomposes** along the distance-layered
+forward traversal (§3), so the sums compute by **message-passing over the
+slice in `O(R · |E_slice|)`** — linear in the slice, independent of the path
+count:
+
+- **`d(R) = 0.1^(R−1)`** is geometric: fold one `0.1` into every hop past
+  the first. A per-hop factor, not a per-path one.
+- **`f(Δt)`** rides the reactor edge alone (§4.2) — applied once at
+  **readout**, on the final hop into `t`, never propagated inward.
+- **`s_path`** (§3.3) is a signed product, so the per-node decayed signed
+  mass is a plain real accumulator; summing paths is addition.
+- **`c_path`** (§3.4) needs a **two-state lift**. `|c_path| = ∏|dim2|` is a
+  product, but the taint sign is **monotone-absorbing** — once a path
+  crosses a negative `dim2` it stays tainted. Carry two accumulators per
+  node, untainted mass (all `dim2 ≥ 0` so far) and tainted mass:
+
+  ```
+  untainted + edge(dim2 ≥ 0) → untainted
+  untainted + edge(dim2 < 0) → tainted
+  tainted   + any edge       → tainted
+  ```
+
+  Still linear; the state doubles, the asymptotics do not.
+- **kill rule** (§3.2) is multiplication by `0` — it propagates through the
+  accumulators untouched.
+- **`i`** drops the reactor edge's value (§4.2): read the mass reaching each
+  reactor `B`, weight it by the final hop's `d(R)·f(Δt)` *without*
+  multiplying in `(dim1, dim2)(B → t)`.
+- **`j`, `k`** traverse nothing — a direct sum over the reactor edges into `t`.
+
+So `h` and `i` are forward sums over the layered slice — one recurrence per
+track, `m_0(U) = 1`, read out at each target by folding in its reactor edges:
+
+```
+m_ℓ(v) = Σ_{u → v}  w(u → v) · m_{ℓ−1}(u)       w carries the hop's dim factor and the 0.1 decay
+H_s(t) = Σ_B  Σ_ℓ  0.1 · f(Δt_{B→t}) · dim1(B → t) · m_ℓ(B)        (s-track; c-track is the two-state lift)
+```
+
+`O(R · |E_slice|)`, hub or not.
+
+**The one obstruction is §3's vertex-simple invariant.** Message-passing
+sums over **walks**; the metric is defined over **vertex-simple paths**.
+Summing vertex-simple paths in a graph with cycles is #P-hard, and the
+per-path visited set makes a prefix's contribution depend on its history —
+exactly what a memoryless message-pass cannot carry. The two regimes split
+on this, and the split is favorable:
+
+- **Sparse.** The above-floor path count is small (`b^R` is cheap, which is
+  why `ε ≈ 0` is affordable here). **Enumerate exactly** — §4.4's
+  branch-and-bound, visited set intact — and the invariant holds with no
+  approximation.
+- **Dense / mid-density.** Enumeration is `O(b^R)` and intractable. Compute
+  `h` and `i` by **non-backtracking message-passing**: index messages by
+  directed edge and forbid the immediate reversal `u → v → u`. Still
+  `O(R · |E_slice|)`. It is a **memory-1 relaxation** of the memory-full
+  vertex-simple constraint, and memory-1 is exactly enough to remove the
+  bidirectional **2-cycles** §3 names — mutual user edges, junction approval
+  pairs, `:BEARER` pairs — the artifact the invariant exists to remove.
+
+**Why the relaxation is sound in the dense regime.** Both reasons §3 gives
+for the invariant weaken precisely where it relaxes. "Cycles blow up
+enumeration" is moot once nothing enumerates — message-passing computes the
+walk-sum in closed form regardless of cycle count. And the
+double-counted-mediator artifact *is* the immediate reversal, which
+non-backtracking forbids. What it still admits — longer directed cycles
+(triangles and up) — is a sub-percent residual: each extra round-trip costs
+a `d(R)` factor `≥ 0.1²`, so at the default decay one loop inflates a path by
+`≤ 1%`, and a deliberately-built tight cluster is caught **structurally** by
+severance and delta-funnel auto-detection (§3.6–§3.8), the actual bot-bridge
+defense. The simple-path invariant is an artifact-remover, not that defense;
+trading its exactness for tractability where the artifact is sub-percent and
+the real defense sits elsewhere is the right call.
+
+The regimes are complementary, both driven by the same `b^(R−1)`: the regime
+that *forces* the relaxation (dense) is the one where the artifact is
+negligible, and the regime where cycles could actually move a score (sparse,
+or a softened `d(R)` over strong reciprocal edges) is the one where exact
+enumeration is cheap. `ε` is a **compute-budget cutoff**, not the cycle
+defense — `d(R)` attenuates cycles regardless of where `ε` sits.
 
 ---
 
@@ -1962,6 +2062,15 @@ dust floor `ε` (§4.4), walking edges by best-possible contribution
 and stopping at the floor rather than at a hop count. This keeps the
 slice tractable for hub users and drops exactly the weak-tie tail the
 ranking would discard anyway.
+
+This is a **max**, not a **sum**: slice membership asks only whether a node
+has *some* path above `ε` — its single best-possible path — so it is a
+best-first (Dijkstra-style) frontier in `O(|E_slice| log |E_slice|)`, and
+**cycle-immune**, since any detour through a cycle multiplies in more
+`≤ 1` factors and is strictly worse than the simple path. The expensive
+all-paths **sum** is the ranking metric itself (§4.5), deferred to the
+device or miner. Cheap max to build the slice, hard sum deferred to the
+ranker — that split is what keeps the backend off the hot path.
 
 - **Client-side (default).** The actor's device downloads its
   relevant subgraph and runs ranking locally. It already needs the
