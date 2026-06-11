@@ -639,3 +639,111 @@ type ItemAttachmentEdge {
   isCover: Boolean!
 }
 ```
+
+---
+
+## Type system — junctions and governance
+
+Junction nodes (role-bearing, approval-gated relationships) and the
+shared `Governance` types that `Collective` and `Chat` carry.
+Interface fields stay implied/omitted as before. Junctions are not
+content, so they carry no `moderationStatus`. Each junction exposes
+two fundamental named views — its `bearer` (the `:BEARER` actor) and
+its claim parent — alongside the generic edge access.
+
+### Junction state
+
+```graphql
+"A junction relationship's lifecycle state, derived from its
+ claim/approval edge pair — never a stored flag. PENDING: claim
+ only. ACTIVE: claim + approval, both top layers positive. REVOKED:
+ a negative top layer on either."
+enum JunctionState { PENDING ACTIVE REVOKED }
+```
+
+### Junction nodes
+
+```graphql
+"Membership in a Chat, with a role. Entry may require multi-sig
+ approval; the membership itself can be voted on (kick, promote)."
+type ChatMember implements Node {
+  "The actor this membership represents (the :BEARER edge)."
+  bearer: Actor!
+  "The chat this membership is in (the claim parent)."
+  chat: Chat!
+  "Role within the chat — default vocabulary admin / chat_mod /
+   member; a chat may define its own."
+  role: String!
+  "Per-bearer voting-weight override; null means use the role-derived
+   weight from the chat's governance."
+  votingWeight: Float
+  state: JunctionState!
+}
+
+"Membership in a Collective, with a role and optional role-attached
+ quantities. A Collective can itself be a member, so the bearer may
+ be a Collective."
+type CollectiveMember implements Node {
+  bearer: Actor!
+  collective: Collective!
+  "Role within the collective (founder / shareholder / worker / …;
+   collective-defined)."
+  role: String!
+  "Ownership stake, when the role implies one."
+  ownershipPct: Float
+  "Per-bearer voting-weight override; null means role-derived."
+  votingWeight: Float
+  state: JunctionState!
+}
+
+"A single ownership claim on an Item. Transfers form an append-only
+ chain of these per item; exactly one is ACTIVE at a time."
+type ItemOwnership implements Node {
+  bearer: Actor!
+  item: Item!
+  state: JunctionState!
+}
+```
+
+### Governance
+
+The social contract a Collective or Chat carries: per-action rules,
+each pairing a gate to perform the action (`exec`) with a gate to
+amend the rule itself (`amend`).
+
+```graphql
+"A node's social contract — its per-action governance rules."
+type Governance {
+  rules: [GovernanceRule!]!
+}
+
+"The rule for one action key (e.g. \"decision:add_member\",
+ \"decision:rotate_key\"). `exec` governs performing the action;
+ `amend` governs changing this rule — self-applying, no regress."
+type GovernanceRule {
+  actionKey: String!
+  exec: GovernanceGate!
+  amend: GovernanceGate!
+}
+
+"One voting gate: who may vote, their weights, and the passing
+ condition."
+type GovernanceGate {
+  "Voter-eligibility predicate. Opaque string for now — the
+   predicate grammar is not yet specified."
+  eligibility: String!
+  "Per-role voting weights (a map, modeled as key/value pairs since
+   GraphQL has no native map type)."
+  weights: [RoleWeight!]!
+  "Passing condition. Opaque string for now — the threshold grammar
+   is not yet specified."
+  threshold: String!
+  "Whether the subject of the action is barred from voting on it."
+  excludeSubject: Boolean!
+}
+
+type RoleWeight {
+  role: String!
+  weight: Float!
+}
+```
