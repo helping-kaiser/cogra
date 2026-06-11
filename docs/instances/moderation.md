@@ -242,7 +242,7 @@ the two paths.
 |---|---|---|
 | **User** | `username_status`, `display_name`, `bio`, `avatar`, `website_url` | all of the above |
 | **Collective** | `name_status`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
-| **Post** | `content`, `attachments` (all attached media on the post) | both |
+| **Post** | `title`, `description`, `content`, `attachments` (all attached media on the post) | all of the above |
 | **Comment** | `content`, `attachments` | both |
 | **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
 | **Chat** | `name_status`, `description`, `image` | all three |
