@@ -48,9 +48,10 @@ A Post node carries the minimum the graph needs to traverse,
 filter, and rank. Substance lives in Postgres (§3).
 
 The Post carries per-field moderation-status properties on
-**`content`** (the body) and **`attachments`** (every attached
-media under one status — see [moderation.md §5](moderation.md#5-scope)
-on per-attachment targeting), plus the node-level
+**`title`** and **`description`** (both optional), **`content`**
+(the body), and **`attachments`** (every attached media under one
+status — see [moderation.md §5](moderation.md#5-scope) on
+per-attachment targeting), plus the node-level
 `moderation_status` cache. Universal mechanics in
 [nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
 Post-specific cascade in §6. Body and attachment content live in
@@ -61,12 +62,15 @@ Postgres / object storage (§3); concrete types and indexes in
 
 ## 3. Postgres-side content
 
-A Post's substance is its body and attached media — both live in
-Postgres, linked to the graph node by UUID. Edits to display
+A Post's substance is its title, description, body, and attached
+media — all live in Postgres, linked to the graph node by UUID. Edits to display
 content are append-only per
 [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
 a new version row, no overwrite.
 
+- **`title`** / **`description`** — optional headline and short
+  summary. Stored on the `posts` row; see
+  [data-model.md](../implementation/data-model.md).
 - **`content`** — the body text. Stored on the `posts` row;
   see [data-model.md](../implementation/data-model.md).
 - **Attachments** — images, videos, and other media via the
