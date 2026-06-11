@@ -24,7 +24,8 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 1. Ranking-scale phase | 1 | **Q22** | The per-target metric sum enumerates all vertex-simple paths (Q18); the dust floor `ε` bounds the slice node-set, not the path count, and bites only in the dense endstate — leaving the mid-density regime potentially uncomputable. Needs a tractable formulation before feed ranking scales. |
+| 2. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -52,6 +53,63 @@ questions are closed.
 - Q21 — see [collectives.md §8](instances/collectives.md#8-governance--the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [graph-data-model.md](implementation/graph-data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
 - Q19 — see [governance.md §7](primitive/governance.md#7-the-mod-gate) (the mod-gate, now two-tiered) and [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only) (denominator inflation reframed). The mod-gate gains a **critical tier** keyed to the existing baseline/critical stakes split: low-stakes actions keep the flat **≥1 positive moderator vote**; destructive/irreversible ones (moderator role changes, `illegal`-redaction, guidelines amendments, critical `:Network` amendments) require `mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active mods|⌉` (new `:Network` property, default `0.50`, itself in the critical bucket so loosening it is a critical act — recursion closed). This shuts the catastrophic vector the flat-one gate left open: one compromised moderator key plus a community bot-flood could pass anything. Because the fraction is `≤ 1`, `⌈f · |active mods|⌉` never exceeds the active-mod count — the gate is always satisfiable, needs no absolute floor, self-strengthens as the moderator set grows (one or two mods round to one; a real majority at three+), and is deadlock-free; and since minting a moderator is itself critical, the denominator is Sybil-resistant by construction. Stake/wealth-gating was declined upstream (Q20) as plutocracy. The community-side denominator inflation is **not** a takeover vector — a petition tally counts only positive votes, so inflation can only make a Proposal harder to pass, never force one through — so it is reframed as a bounded *liveness* residual (the absolute bar `quorum_count` caps it), not an open question. Tier annotations propagated to [network.md §9/§11](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal), [moderation.md §3](instances/moderation.md#3-the-mod-gate-rule), [platform-guidelines.md](instances/platform-guidelines.md), and [graph-data-model.md](implementation/graph-data-model.md).
 - Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#7-time-and-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
+
+---
+
+## Q22 — Feed-ranking metric computation: tractability in the mid-density regime
+
+**Where it shows up:** [feed-ranking.md §4.4](primitive/feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning) (dust-floor path pruning), [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live) (the weight-bounded slice), and the `feedSlice` / `rank` surfaces in [api-spec.md](implementation/api-spec.md) / [miner-api.md](implementation/miner-api.md).
+**Status:** open
+
+### Context
+
+A per-target metric (§4.2) sums `d(R)·f(Δt)·[dim products]` over **every**
+path from the viewer `U` to the target `t`. The path count grows as
+`b^(R−1)` (§3.6), and the stated bound is the dust floor `ε` (§4.4):
+branch-and-bound enumeration, pruning a prefix once its best-possible
+completion falls below `ε`.
+
+Two facts make that bound weaker than it looks:
+
+- **`ε` bounds the slice node-set, not the path count.** Building the slice
+  (which nodes have *some* path above `ε`) is a best-first frontier — cheap.
+  But the metric sum is over *paths*, and a bounded node-set still carries an
+  exponential number of paths between its members.
+- **`ε` only bites in the dense endstate.** Per §4.4's own figures a path
+  contributes ~`4×10⁻³` at R=3; a floor low enough to keep strong R=3
+  friend-of-friend paths (`< 10⁻³`) prunes nothing at R=3. So for a hub with
+  `b ~ 1000`, R≤3 enumeration is ~`10⁹` paths in the **mid-density** regime —
+  after small-world connectivity has made R≤3 most of the network, but before
+  `ε` has risen enough to prune R=3. §4.4 accepts pruning R=3 *only* in the
+  super-connected endstate (its signal is redundant, carried inward by the
+  R=2 nodes reacting to it); the regime before that is unaddressed.
+
+### The question
+
+What is the actually-computable formulation of the per-target metric sum
+across the full density range — not just sparse (cheap anyway) and
+super-dense (where `ε` prunes R=3)?
+
+### A candidate, and what blocks it
+
+The forward-only traversal (§3) is distance-layered, which suggests
+**dynamic programming / message-passing over the slice in `O(R · |E_slice|)`**
+instead of explicit enumeration — the multiplicative dim products and the
+kill-rule (§3.2) decompose, and the taint sign (§3.4) is a product of signs,
+also decomposable. But **Q18's simple-paths invariant** — every path is
+vertex-simple, enforced via a per-path visited set, because bidirectional
+topologies (mutual user edges, junction approval pairs, `:BEARER` pairs)
+admit cycles — is exactly what breaks naive DP: summing over *vertex-simple*
+paths in a graph with cycles is #P-hard in general, and the visited-set makes
+a prefix's contribution depend on its history. So the open work is to either
+(a) show the slice is effectively acyclic at ranking depth so DP is exact,
+(b) find an approximation whose error is bounded the way `ε`'s is, or
+(c) revisit whether the simple-path constraint can relax in the dense regime
+where the offending cycles live.
+
+The same traversal settles campaigns (economics.md §6.5), but there it is a
+**single anchor→target pair** computed once at settlement — far more
+tractable — so this question is specific to the all-targets feed sum.
 
 ---
 
