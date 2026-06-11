@@ -747,3 +747,157 @@ type RoleWeight {
   weight: Float!
 }
 ```
+
+---
+
+## Type system — system, governance records, and economics
+
+The carrier and configuration nodes: `Proposal`, the economics
+records (`Campaign`, `Settlement`, `Wallet`), and the `Network`
+singleton. None carry user-authored content, so none has moderation
+fields. Money lives on the chain; these nodes hold only pointers and
+public scalar results.
+
+### Proposal
+
+```graphql
+"The subject carrier for a property-level governance vote — targets
+ one property on another node via :TARGETS."
+type Proposal implements Node {
+  "The node whose property is proposed for change (the :TARGETS edge)."
+  target: Node!
+  "Name of the targeted property, or the sentinel \"node\" for a
+   whole-node operation (e.g. illegal-content classification)."
+  targetProperty: String!
+  "Shape discriminator for proposedValue — \"scalar:string\",
+   \"scalar:float\", \"scalar:integer\", \"rule\", or
+   \"composite:<action_key>\"."
+  valueKind: String!
+  "The proposed new value, serialized; its shape is given by
+   valueKind. Kept opaque for now — the structured rule / composite
+   shapes are not yet fully specified."
+  proposedValue: String!
+  "The node hosting the governance rule this proposal is judged by,
+   read as-of the proposal's authorship timestamp."
+  ruleAnchor: Node!
+  status: ProposalStatus!
+}
+
+"A proposal's terminal outcome — transitions exactly once at
+ threshold-cross, then permanent."
+enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED }
+```
+
+### Economics records
+
+```graphql
+"A pull-marketing campaign — a funded public request to raise a
+ target node's reach into an anchor's cluster. Carrier node; the
+ deposit and payouts live on-chain, the node holds pointers."
+type Campaign implements Node {
+  "Actor whose cluster the campaign buys reach into (:ANCHOR)."
+  anchor: Actor!
+  "The promoted node the campaign drives reach toward (:PROMOTES)."
+  target: CampaignTarget!
+  "On-chain escrow pointer; the deposit amount is read from chain,
+   never stored on the node."
+  escrow: String!
+  "Decay base for the reach metric and payout split (immutable)."
+  g: Float!
+  "h_anchor(target) at the start — the baseline."
+  hStart: Float!
+  "The reach-gain goal denominator (mutable before settlement)."
+  declaredGoal: Float!
+  startTs: DateTime!
+  endTs: DateTime!
+  status: CampaignStatus!
+  "Path-enumeration dust floor in force (mutable before settlement)."
+  dustFloor: Float!
+  "Running, approximate reach-gain record; the settled figure lives
+   on the Settlement."
+  achievedHGain: Float!
+  "The settlement record once settled; null while open."
+  settlement: Settlement
+}
+
+"What a campaign can promote — any actor, content, or Proposal node
+ (never a Hashtag)."
+union CampaignTarget =
+    User | Collective | Post | Comment | Chat | ChatMessage | Item | Proposal
+
+"Campaign lifecycle state."
+enum CampaignStatus { OPEN SETTLED AUTO_SETTLED }
+
+"The terminal record of a settled Campaign — public results plus
+ on-chain pointers. Per-wallet payouts are Merkle leaves, never on
+ the graph."
+type Settlement implements Node {
+  "The campaign that produced this settlement."
+  campaign: Campaign!
+  "On-chain distributor address; a pointer, no money on the node."
+  distributorAddress: String!
+  "Payout Merkle root; per-wallet figures verify against it."
+  merkleRoot: String!
+  "Released amount (public scalar result)."
+  settledP: Float!
+  "Achieved sustained reach gain (public result)."
+  achievedHGain: Float!
+}
+
+"An account's payout wallet — holds the counterfactual self-custody
+ on-chain address. Survives account deletion."
+type Wallet implements Node {
+  "The counterfactual self-custody on-chain address (layered)."
+  address: String!
+  "The account this wallet pays out (the :PAYS_TO actor)."
+  account: Actor!
+}
+```
+
+### Network
+
+```graphql
+"The singleton instance-configuration node. Every property is public
+ config and amendable via a Proposal that :TARGETS it. Quorum
+ properties come in dual-quorum pairs (a fraction and an absolute
+ count)."
+type Network implements Node {
+  # Moderation classification quorums
+  moderationSensitiveQuorumFraction: Float!
+  moderationSensitiveQuorumCount: Int!
+  moderationIllegalQuorumFraction: Float!
+  moderationIllegalQuorumCount: Int!
+
+  # Moderator-role-change quorum (critical bucket)
+  modRoleChangeQuorumFraction: Float!
+  modRoleChangeQuorumCount: Int!
+
+  # Platform guidelines (critical bucket)
+  guidelinesVersion: Int!
+  "SHA-256 of the canonical guidelines document (64 hex chars)."
+  guidelinesHash: String!
+  guidelinesChangeQuorumFraction: Float!
+  guidelinesChangeQuorumCount: Int!
+
+  # Eligibility
+  "A User counts as active with at least one outgoing actor edge
+   inside this window."
+  activeThresholdDays: Int!
+
+  # Feed-ranking calibration (baseline bucket)
+  timeDecayHalfLifeDays: Int!
+  distanceDecayBase: Float!
+  dustFloor: Float!
+
+  # Amendment-rule quorums (governance of governance)
+  propertyChangeQuorumFraction: Float!
+  propertyChangeQuorumCount: Int!
+  criticalPropertyChangeQuorumFraction: Float!
+  criticalPropertyChangeQuorumCount: Int!
+
+  # Mod-gate
+  "Fraction of active moderators that must vote yes for critical-tier
+   destructive actions."
+  criticalModGateFraction: Float!
+}
+```
