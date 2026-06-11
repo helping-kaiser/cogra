@@ -901,3 +901,142 @@ type Network implements Node {
   criticalModGateFraction: Float!
 }
 ```
+
+---
+
+## Queries
+
+The root `Query` is deliberately small — a handful of entry points;
+everything else hangs off the returned nodes through their fields
+and the generic edge access. Reads need no authentication; the
+viewer-scoped entries (`me`, `feed`) resolve to null when the
+request is anonymous rather than erroring.
+
+```graphql
+type Query {
+  "Resolve the request's auth token to the viewer's own User node.
+   Null when the request is unauthenticated — this is the one query
+   a client cannot express generically, since it does not yet know
+   its own id."
+  me: User
+
+  "Fetch any node by id. The generic accessor for heterogeneous ids
+   — e.g. resolving a ranked feed's mixed-type UUID list."
+  node(id: UUID!): Node
+  "Batch form of `node` — fetch many nodes of any types at once,
+   order preserved; an unknown id yields null in its slot."
+  nodes(ids: [UUID!]!): [Node]!
+
+  user(id: UUID, handle: String): User
+  collective(id: UUID, handle: String): Collective
+  post(id: UUID!): Post
+  comment(id: UUID!): Comment
+  chat(id: UUID!): Chat
+  chatMessage(id: UUID!): ChatMessage
+  item(id: UUID!): Item
+  "Look up a hashtag by its canonical name (lowercase, no '#')."
+  hashtag(name: String!): Hashtag
+  proposal(id: UUID!): Proposal
+  campaign(id: UUID!): Campaign
+  settlement(id: UUID!): Settlement
+  "The singleton network-configuration node."
+  network: Network!
+
+  "The viewer's personalized ranked feed. Called without `after`, it
+   computes a fresh ranking snapshot and returns its first page; the
+   returned cursors index into that snapshot, so paging with `after`
+   never re-ranks. Refresh by calling again without `after`. Null
+   when unauthenticated."
+  feed(first: Int, after: String, last: Int, before: String): FeedConnection
+
+  "Generic edge lookup — filter by source, target, and/or label. The
+   public way to read any relationship not yet exposed as a named
+   view."
+  edges(
+    from: UUID
+    to: UUID
+    label: EdgeLabel
+    first: Int, after: String, last: Int, before: String
+  ): EdgeConnection!
+
+  "Search across nodes; returns mixed node types. Provisional — what
+   is indexed and how matches rank is not yet specified in the design
+   docs."
+  search(
+    query: String!
+    kinds: [NodeKind!]
+    first: Int, after: String
+  ): SearchConnection!
+}
+```
+
+### Feed
+
+A feed entry carries the ranked target plus its per-target metrics;
+the contributing paths are a drill-down resolved only when selected.
+
+```graphql
+type FeedConnection {
+  edges: [FeedEntryEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type FeedEntryEdge {
+  cursor: String!
+  node: FeedEntry!
+}
+
+"One ranked target in the viewer's feed."
+type FeedEntry {
+  "The ranked target node — any rankable content type."
+  target: Node!
+  "The four per-target feed-ranking metrics from the viewer's vantage
+   in this snapshot."
+  metrics: RankMetrics!
+  "The contributing paths, with intermediates and per-path
+   contribution. A drill-down — expensive, computed only when
+   selected."
+  paths: [RankPath!]!
+}
+
+"The four feed-ranking metrics (feed-ranking.md §4.2). Personal
+ metrics use distance decay d(R); absolute metrics are global to the
+ target. Each is the sort-time scalar collapse of its underlying
+ (sentiment, interest) tuple."
+type RankMetrics {
+  "h — personal opinion."
+  h: Float!
+  "i — personal reach."
+  i: Float!
+  "j — absolute opinion."
+  j: Float!
+  "k — absolute reach."
+  k: Float!
+}
+
+"One path from the viewer to the target, with its intermediates."
+type RankPath {
+  "Ordered nodes, viewer → … → target."
+  nodes: [Node!]!
+  "Edges traversed, parallel to the node sequence."
+  edges: [Edge!]!
+  "Path length R (hop count)."
+  distance: Int!
+  "This path's distance-decayed contribution d(R)."
+  contribution: Float!
+}
+```
+
+### Search
+
+```graphql
+type SearchConnection {
+  edges: [SearchEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type SearchEdge {
+  cursor: String!
+  node: Node!
+}
+```
