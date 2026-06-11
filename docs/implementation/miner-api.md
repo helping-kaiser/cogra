@@ -47,8 +47,61 @@ all viewer-tunable over the Network-seeded defaults:
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
 | `dustFloor` | `ε` path-pruning floor; default from `Network.dustFloor`. |
-| `friendAuthorBoost` | Whether the friend-author reorder is applied (default on). |
-| `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse (default: sum). |
+| `friendAuthorBoost` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the Network default (on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
+| `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
+
+These are the `rank` operation's `params`, typed below:
+
+```graphql
+"The viewer's ranking parameters — Network-seeded defaults, all
+ viewer-tunable. Every field null falls back to the Network default."
+input RankParams {
+  "Content ids to exclude before ranking (the seen-list)."
+  seenList: [UUID!]
+  "Rankable node kinds in scope; default Posts only."
+  kinds: [NodeKind!]
+  "d(R) base; default Network.distanceDecayBase."
+  distanceDecayBase: Float
+  "f(Δt) half-life; default Network.timeDecayHalfLifeDays."
+  timeDecayHalfLifeDays: Int
+  "ε path-pruning floor; default Network.dustFloor."
+  dustFloor: Float
+  "Friend-author reorder config; null uses the Network default (on)."
+  friendAuthorBoost: FriendAuthorBoost
+  "Tuple→scalar collapse weights; null = sum."
+  collapseWeights: CollapseWeights
+}
+
+"The friend-authored-fresh-post reorder (feed-ranking.md §5.2) — a
+ reordering layer over the ranked output, not a boost multiplier (a
+ pre-rank multiplier was considered and rejected there). The only knobs
+ are on/off, the authorship-edge freshness window, and where boosted
+ posts land."
+input FriendAuthorBoost {
+  enabled: Boolean!
+  "How fresh the author's :AUTHOR edge must be to qualify."
+  freshnessThresholdHours: Int
+  placement: FriendAuthorPlacement
+}
+
+"Where friend-authored fresh posts land relative to the ranked feed."
+enum FriendAuthorPlacement { INTERLEAVED ABOVE }
+
+"Per-track weights for the (sentiment, interest) tuple collapse
+ (feed-ranking.md §4.3): score = α·M_s + β·M_c. Default (1, 1) = sum;
+ product was rejected, since (−)(−)→+ would resurface suppressed paths."
+input CollapseWeights { alpha: Float!  beta: Float! }
+```
+
+## The operation
+
+```graphql
+"Rank the viewer's slice into an ordered feed: slice plus parameters in,
+ ordered FeedEntry list out. The logical contract — the runner and the
+ wire form are implementation detail (see Transport); the shape is fixed.
+ The id sequence of the result is what the backend's `feed` query hydrates."
+rank(slice: FeedSlice!, params: RankParams!): [FeedEntry!]!
+```
 
 ## Output
 
@@ -102,11 +155,35 @@ type RankPath {
 `Node`, `Edge`, and the scalars are the [api-spec.md](api-spec.md) types —
 the ranker speaks the same type vocabulary as the backend it sits beside.
 
+## Two runners of one traversal
+
+The path-enumeration this surface runs is the same traversal the backend
+runs to settle a campaign ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
+— but the two differ in who runs them, what they rank, and how
+authoritative the result is.
+
+| | Feed ranking (this doc) | Campaign settlement |
+|---|---|---|
+| Runner | the viewer's device or a miner | the central backend |
+| Authority | advisory — the viewer's device holds final say | authoritative — it moves money |
+| Targets | every rankable node in the slice | a single anchor→target pair (the reach gain `h_anchor(target)`) |
+| Dust floor `ε` | viewer-tunable, slice-bounding | set per campaign for payability, recorded for reproducibility |
+
+The single-pair, settle-once campaign computation is the tractable case;
+its result reads back through the existing `Campaign.achievedHGain` /
+`Settlement.achievedHGain` fields ([api-spec.md](api-spec.md)), not a
+separate query. Centralizing the *feed* ranking the same way is what does
+not scale (per the runner note above) — settlement runs centrally only
+because money demands one authoritative figure.
+
 ## Transport
 
-Not yet pinned. The ranker may run in-process on the device (no wire
-protocol) or as a delegated miner service; the query shape, how the slice
-is passed (re-fetched by the miner vs. forwarded by the device), and miner
-authentication are deferred until the miner path is built. The fixed part
-is the contract above — slice + parameters in, ordered `FeedEntry` list
-out.
+The contract above is fixed; where it runs is not, and is expected to
+move. The rollout path: first the `rank` operation runs on the **backend
+directly** (simplest to exercise against real slices), then in a
+**separate miner container** (a delegated service), then **on the viewer's
+own device** (the decentralized end state — proving a phone can rank its
+own slice). The open wire-level details — how the slice reaches the runner
+(re-fetched by the miner vs. forwarded by the device) and miner
+authentication — are settled when the miner path is built; none of them
+change the slice-in, ordered-list-out shape.
