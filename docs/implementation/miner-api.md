@@ -46,8 +46,8 @@ all viewer-tunable over the Network-seeded defaults:
 | `kinds` | Which rankable node kinds are in scope (default: Posts only). |
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
-| `dustFloor` | `ε` path-pruning floor; default from `Network.dustFloor`. |
-| `friendAuthorBoost` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the Network default (on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
+| `dustFloor` | `ε` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
+| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the Network default (on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
 | `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
 
 These are the `rank` operation's `params`, typed below:
@@ -64,10 +64,11 @@ input RankParams {
   distanceDecayBase: Float
   "f(Δt) half-life; default Network.timeDecayHalfLifeDays."
   timeDecayHalfLifeDays: Int
-  "ε path-pruning floor; default Network.dustFloor."
+  "ε floor — bounds the slice node-set (and prunes paths in the sparse
+   enumeration regime); default Network.dustFloor."
   dustFloor: Float
   "Friend-author reorder config; null uses the Network default (on)."
-  friendAuthorBoost: FriendAuthorBoost
+  friendAuthorReorder: FriendAuthorReorder
   "Tuple→scalar collapse weights; null = sum."
   collapseWeights: CollapseWeights
 }
@@ -75,9 +76,9 @@ input RankParams {
 "The friend-authored-fresh-post reorder (feed-ranking.md §5.2) — a
  reordering layer over the ranked output, not a boost multiplier (a
  pre-rank multiplier was considered and rejected there). The only knobs
- are on/off, the authorship-edge freshness window, and where boosted
+ are on/off, the authorship-edge freshness window, and where reordered
  posts land."
-input FriendAuthorBoost {
+input FriendAuthorReorder {
   enabled: Boolean!
   "How fresh the author's :AUTHOR edge must be to qualify."
   freshnessThresholdHours: Int
@@ -133,7 +134,7 @@ type FeedEntry {
 type RankMetrics {
   "h — personal opinion."
   h: Float!
-  "i — personal reach."
+  "i — personal reach (drops the reactor edge's own value; f(Δt) still anchors on it)."
   i: Float!
   "j — absolute opinion."
   j: Float!
@@ -171,7 +172,7 @@ in who runs them, what they rank, and how authoritative the result is.
 |---|---|---|
 | Runner | the viewer's device or a miner | the central backend |
 | Authority | advisory — the viewer's device holds final say | authoritative — it moves money |
-| Targets | every rankable node in the slice | a single anchor→target pair (the reach gain `h_anchor(target)`) |
+| Targets | every rankable node in the slice | a single anchor→target pair (per-path Shapley split toward the reach gain `h_anchor(target)`) |
 | Dust floor `ε` | viewer-tunable, slice-bounding | set per campaign for payability, recorded for reproducibility |
 
 The single-pair, settle-once campaign computation is the tractable case;
