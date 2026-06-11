@@ -983,7 +983,9 @@ type ProposalTally {
   positiveWeight: Float!
   "Count of distinct voters with a positive top-layer stance."
   positiveCount: Int!
-  "Weighted negative votes (bidirectional Shape-B scopes)."
+  "Weighted negative votes: Σ max(−sign(dim1), 0) × voterWeight. Nonzero
+   only for bidirectional Shape-B scopes; a petition-style Network tally
+   reads only the positive side."
   negativeWeight: Float!
   "Count of distinct voters with a negative top-layer stance."
   negativeCount: Int!
@@ -1110,9 +1112,8 @@ type Network implements Node {
 
 The root `Query` is deliberately small — a handful of entry points;
 everything else hangs off the returned nodes through their fields
-and the generic edge access. Reads need no authentication; the
-viewer-scoped entries (`me`, `feedSlice`) resolve to null when the
-request is anonymous rather than erroring.
+and the generic edge access. Reads need no authentication; `me`
+resolves to null when the request is anonymous rather than erroring.
 
 ```graphql
 type Query {
@@ -1146,12 +1147,16 @@ type Query {
   "The singleton network-configuration node."
   network: Network!
 
-  "The viewer's weight-bounded relevant subgraph — the raw material a
-   ranker (the viewer's own device or a delegated miner) orders into a
-   feed. Pruned by the dust floor, not hop-bounded; null when anonymous.
-   The backend never ranks (feed-ranking.md §9) — it serves this slice,
-   and separately hydrates the ordered result via `feed`."
-  feedSlice: FeedSlice
+  "Any actor's weight-bounded relevant subgraph — the raw material a
+   ranker (that actor's own device or a delegated miner) orders into a
+   feed. Parameterized by the `viewer` whose feed is ranked: a delegated
+   miner ranks on someone's behalf without holding their auth, and
+   computing any actor's view for any reader is the public-graph default
+   above. Pruned by `dustFloor` — the same ε the ranker prunes with,
+   default Network.dustFloor — not hop-bounded; null if the id resolves to
+   no rankable actor. The backend never ranks (feed-ranking.md §9) — it
+   serves this slice, and separately hydrates the ordered result via `feed`."
+  feedSlice(viewer: UUID!, dustFloor: Float): FeedSlice
 
   "Hydrate a ranked feed from an ordered list of node ids — a ranker's
    output. Returns those nodes in the given order as a cursor-paginated

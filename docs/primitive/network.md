@@ -244,8 +244,10 @@ The `:Network` node receives:
   targets one of the singleton's parameters
   (`mod_role_change_*`, `moderation_sensitive_*`,
   `moderation_illegal_*`, `guidelines_*`,
-  `active_threshold_days`, `critical_mod_gate_fraction`, or
-  either amendment-rule pair). The
+  `active_threshold_days`, `time_decay_half_life_days`,
+  `distance_decay_base`, `dust_floor`,
+  `critical_mod_gate_fraction`, or either amendment-rule
+  pair). The
   amendment-rule pair that gates each property is named in §3.
   See
   [edges.md §2 "Subject targeting"](edges.md#subject-targeting).
