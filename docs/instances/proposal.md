@@ -1,6 +1,6 @@
 # Proposal
 
-The **Proposal** is a content node — the **subject carrier
+The **Proposal** is a carrier node — the **subject carrier
 for property-level governance votes**. Wherever the platform
 needs to vote on changing a graph property (a Network
 parameter, a User's `network_role`, a Chat's `name`, a
@@ -84,7 +84,7 @@ incoming vote edge from the authoring actor (§5).
     (absolute quorum counts, half-lives, …).
   - `'rule'` — `proposed_value` is a `Rule` object — the
     paired `exec` + `amend` triples (each
-    `{eligibility, weights, threshold}`) keyed under a
+    `{eligibility, weighting, threshold}`) keyed under a
     `governance[action_key]` entry, per
     [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
     Consumer: governance-rule amendments on collectives (see

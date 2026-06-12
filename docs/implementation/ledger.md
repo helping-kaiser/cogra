@@ -110,7 +110,7 @@ claim-by-proof model and the never-expiring buildup are unaffected by it.
 
 ## The `Wallet` node and the `:PAYS_TO` binding
 
-The payout wallet is a **`Wallet` content node**
+The payout wallet is a **`Wallet` carrier node**
 ([nodes.md](../primitive/nodes.md)), created at signup carrying the
 account's counterfactual self-custody address. The on-chain address is a
 **layered property** ([layers.md](../primitive/layers.md)): re-linking

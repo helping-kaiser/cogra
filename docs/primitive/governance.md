@@ -25,7 +25,7 @@ decision reuses:
   are state transitions on structural edges. No special storage, no
   hidden logic.
 - **No per-case re-invention.** A new governance need specifies
-  the components in §2 (subject, eligibility, weights, threshold)
+  the components in §2 (subject, eligibility, weighting, threshold)
   and a carrier shape from §3, and slots in. The full list of
   current applications is in §8.
 
@@ -1085,7 +1085,7 @@ Decisions that pick from several candidates — council seats,
 multiple property values to choose between, etc. — are expressed
 as **N parallel binary Proposals**, one per candidate. Each
 Proposal is voted on independently using the same governance
-instance (same eligibility, weights, threshold). Every Proposal
+instance (same eligibility, weighting, threshold). Every Proposal
 that crosses threshold passes; that candidate takes office or
 that property value is set.
 

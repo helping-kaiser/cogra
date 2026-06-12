@@ -31,7 +31,8 @@ thirteen sub-category labels: Shape B vote edges
 
 `Network` never originates a structural edge — its row is all
 `—` — but it is targeted inbound (`:TARGETS` from a Proposal,
-`:REFERENCES` from a carrier). The all-`—` row is listed so the
+`:REFERENCES` from a Post, Comment, or ChatMessage). The all-`—`
+row is listed so the
 outbound absence is explicit.
 
 |                      | User       | Coll.      | Post       | Comment    | Chat       | ChatMsg    | Item       | Hashtag    | Proposal   | ChatMbr    | CollMbr    | ItemOwn    | Network    | Camp.      | Settl.     | Wallet     |
@@ -254,7 +255,7 @@ another Proposal
 ```mermaid
 %%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 flowchart TD
-    Proposal[Proposal]:::content
+    Proposal[Proposal]:::carrier
 
     User[User]:::actor
     Collective[Collective]:::actor
@@ -288,12 +289,14 @@ flowchart TD
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
     classDef system   fill:#eceff1,stroke:#455a64,color:#263238;
     classDef topic    fill:#fce4ec,stroke:#c2185b,color:#880e4f;
+    classDef carrier  fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
 ### 2.5. `:REFERENCES`
 
-Three carriers — `Post`, `Comment`, `ChatMessage` — can reference
-any node with graph identity, including the `Network` singleton.
+Three content types — `Post`, `Comment`, `ChatMessage` — can
+reference any node with graph identity, including the `Network`
+singleton.
 `Post` and `Comment` use `:TAGGING` for Hashtag instead, so
 Hashtag is excluded from their fan-out;
 `ChatMessage`'s fan-out includes Hashtag
@@ -314,14 +317,14 @@ flowchart LR
     Chat[Chat]:::content
     Item[Item]:::content
     Hashtag[Hashtag]:::topic
-    Proposal[Proposal]:::content
+    Proposal[Proposal]:::carrier
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
     ItemOwnership[ItemOwnership]:::junction
     Network[Network]:::system
-    Campaign[Campaign]:::economics
-    Settlement[Settlement]:::economics
-    Wallet[Wallet]:::economics
+    Campaign[Campaign]:::carrier
+    Settlement[Settlement]:::carrier
+    Wallet[Wallet]:::carrier
 
     ChatMessage -->|REFERENCES| User
     ChatMessage -->|REFERENCES| Collective
@@ -377,7 +380,7 @@ flowchart LR
     classDef junction  fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
     classDef system    fill:#eceff1,stroke:#455a64,color:#263238;
     classDef topic     fill:#fce4ec,stroke:#c2185b,color:#880e4f;
-    classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef carrier   fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
 ### 2.6. `:STRUCTURAL` (Shape B vote edges)
@@ -395,13 +398,13 @@ flowchart LR
     ChatMember[ChatMember]:::junction
     CollectiveMember[CollectiveMember]:::junction
     ItemOwnership[ItemOwnership]:::junction
-    Proposal[Proposal]:::content
+    Proposal[Proposal]:::carrier
 
     ChatMember -->|STRUCTURAL Shape B| Proposal
     CollectiveMember -->|STRUCTURAL Shape B| Proposal
     ItemOwnership -->|STRUCTURAL Shape B| Proposal
 
-    classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
+    classDef carrier  fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
     classDef junction fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
 ```
 
@@ -429,11 +432,11 @@ flowchart LR
     Chat[Chat]:::content
     ChatMessage[ChatMessage]:::content
     Item[Item]:::content
-    Proposal[Proposal]:::content
+    Proposal[Proposal]:::carrier
 
-    Campaign[Campaign]:::economics
-    Settlement[Settlement]:::economics
-    Wallet[Wallet]:::economics
+    Campaign[Campaign]:::carrier
+    Settlement[Settlement]:::carrier
+    Wallet[Wallet]:::carrier
 
     Campaign -->|ANCHOR| User
     Campaign -->|ANCHOR| Collective
@@ -454,7 +457,7 @@ flowchart LR
 
     classDef actor     fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
     classDef content   fill:#fff3e0,stroke:#ef6c00,color:#e65100;
-    classDef economics fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef carrier   fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
 ```
 
 ---
