@@ -736,6 +736,11 @@ officers.
 | `actas:vote:Proposal`                     | All active members              | —                |
 | `actas:transfer:Item`                     | All active members              | —                |
 
+Whether the household and co-op `actas:*` rows should regain
+their originally intended majority concurrence as `decision:*`
+entries is open — see
+[open-questions.md Q27](../open-questions.md#q27--household-and-co-op-act-as-examples-the-intended-majority-concurrence-is-no-longer-expressible).
+
 ---
 
 ## 9. Lifecycle
