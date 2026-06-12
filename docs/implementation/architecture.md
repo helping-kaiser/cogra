@@ -422,16 +422,20 @@ the same algorithm (feed-ranking.md §9).
 
 ```
 Local dev (Docker Compose):
-┌──────────────────────────────────────────────────────────┐
-│                                                          │
-│  ┌─────────────────┐      ┌─────────────────────────┐   │
-│  │  gnp_postgres   │      │      gnp_memgraph        │   │
-│  │  postgres:16    │      │  memgraph-platform:latest│   │
-│  │  port 5432      │      │  bolt: 7687              │   │
-│  └─────────────────┘      │  lab:  3000              │   │
-│                           └─────────────────────────┘   │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│  ┌─────────────────┐   ┌──────────────────┐   ┌─────────────┐    │
+│  │  gnp_postgres   │   │  gnp_memgraph    │   │  gnp_lab    │    │
+│  │  postgres:16    │   │  memgraph-mage   │   │  lab        │    │
+│  │  port 5432      │   │  bolt: 7687      │   │  port 3000  │    │
+│  └─────────────────┘   └──────────────────┘   └─────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
 ```
+
+Memgraph and Lab image versions are pinned in
+[docker-compose.yml](../../docker/docker-compose.yml), and CI pins
+the same Memgraph version, so dev and CI test against the same
+engine.
 
 Volumes are named (`postgres_data`, `memgraph_data`) so data persists across
 `make down` / `make up`. Use `make reset-db` to wipe everything.

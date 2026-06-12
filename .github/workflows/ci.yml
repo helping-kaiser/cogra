@@ -80,7 +80,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       memgraph:
-        image: memgraph/memgraph:latest
+        # Pinned to the same minor version as docker/docker-compose.yml so
+        # dev and CI test against the same engine.
+        image: memgraph/memgraph-mage:3.10.1
         ports:
           - 7687:7687
     env:
