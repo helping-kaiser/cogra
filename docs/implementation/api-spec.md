@@ -353,6 +353,9 @@ type EdgeLayer {
  property); null when the layer is a redaction tombstone."
 type PropertyLayer {
   value: String
+  "Why the value was redacted; non-null exactly when this layer is a
+   redaction tombstone — `timestamp` is then the removed-at instant."
+  redactionReason: String
   layer: Int!
   timestamp: DateTime!
 }
@@ -1605,8 +1608,9 @@ input ReferenceInput {
   dim2: Dimension!
 }
 
-"Append a new layer to any subset of a Post's authored fields and
- galleries. Omitted fields are untouched; there is no overwrite."
+"Append a new layer to any subset of a Post's authored fields; a
+ supplied gallery replaces the current arrangement (the assets stay
+ append-only). Omitted fields are untouched; there is no overwrite."
 input EditPostInput {
   id: UUID!
   title: String
@@ -1717,10 +1721,15 @@ type UploadMediaPayload { media: MediaAttachment! }
 ```
 
 A media gallery on a create/edit input is the **full intended
-gallery** for that write: the new top-layer ordering, given as
+gallery** for that write: the new current arrangement, given as
 `AttachmentInput` placements that reference assets already uploaded
-via `uploadMedia`. `Upload` is the standard GraphQL multipart-request
-scalar — the one place the API ingests a binary rather than JSON.
+via `uploadMedia`. Gallery arrangement is a named append-only
+carve-out ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
+an edit replaces the junction rows that order the gallery, while the
+assets themselves stay append-only (redaction tombstones them in
+place, never deletes). `Upload` is the standard GraphQL
+multipart-request scalar — the one place the API ingests a binary
+rather than JSON.
 
 ### Voting
 
