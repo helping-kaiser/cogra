@@ -243,6 +243,8 @@ CREATE CONSTRAINT ON (i:Item) ASSERT i.id IS UNIQUE;
 CREATE INDEX ON :Item(id);
 ```
 
+### Topic nodes
+
 #### `:Hashtag`
 
 | Property            | Type   | Notes |
@@ -257,6 +259,8 @@ CREATE CONSTRAINT ON (h:Hashtag) ASSERT h.id IS UNIQUE;
 CREATE CONSTRAINT ON (h:Hashtag) ASSERT h.name IS UNIQUE;
 CREATE INDEX ON :Hashtag(id);
 ```
+
+### Carrier nodes
 
 #### `:Proposal`
 
