@@ -228,7 +228,8 @@ bootstrap; they are not fixed rules.
 
 Per-field moderation-status properties exist on every
 user-input-bearing node — User, Collective, Post, Comment,
-ChatMessage, Chat, Item, Hashtag — per
+ChatMessage, Chat, Item, Hashtag, and, for its single
+user-bearing field, Proposal — per
 [nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
 and the per-label tables in
 [graph-data-model.md](../implementation/graph-data-model.md). Both
