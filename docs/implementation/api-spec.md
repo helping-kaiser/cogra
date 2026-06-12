@@ -319,7 +319,9 @@ interface Actor implements Node {
  relationship and opinion in the graph. The top layer is the current
  state; the full append-only stack is read via the `edgeHistory` query."
 type Edge {
-  "Source — the actor or system that wrote the edge."
+  "Source — the node the edge originates at. Who wrote the edge
+   follows from the label: the source actor for an actor edge, the
+   system for a structural one."
   from: Node!
   "Target the edge points at."
   to: Node!
@@ -335,8 +337,9 @@ type Edge {
   layer: Int!
   "When the top layer was written."
   timestamp: DateTime!
-  "Typed, optional, per-label metadata — surfaced but never read by
-   ranking. Null on labels that don't use it."
+  "The top layer's system-dimension slot — typed, optional, per-label
+   metadata, surfaced but never read by ranking. Null on labels that
+   don't use it."
   systemDimension: SystemDimension
 }
 
@@ -346,15 +349,23 @@ type EdgeLayer {
   dim2: Dimension!
   layer: Int!
   timestamp: DateTime!
+  "This layer's system-dimension slot — the per-label metadata the
+   layer was written with (e.g. a :TRANSFERS layer's on-chain
+   transaction reference). Null on labels that don't use it."
+  systemDimension: SystemDimension
 }
 
 "One immutable layer of a node property — a graph property or a Postgres
  display-content version. `value` is serialized as a string (shaped by the
- property); null when the layer is a redaction tombstone."
+ property); null when the layer is a redaction."
 type PropertyLayer {
   value: String
   "Why the value was redacted; non-null exactly when this layer is a
-   redaction tombstone — `timestamp` is then the removed-at instant."
+   redaction. On a Postgres display-content field the redaction is an
+   appended tombstone row and `timestamp` is the removed-at instant;
+   on a graph property the redaction is in place
+   (layers.md §5) — the layer keeps its original write `timestamp`,
+   and the removed-at instant travels here, with the reason."
   redactionReason: String
   layer: Int!
   timestamp: DateTime!
@@ -408,8 +419,13 @@ type SystemDimension {
 The **system-dimension slot** is the `systemDimension` field above:
 typed, optional, per-label edge metadata, surfaced by the API but
 never read by ranking
-([edges.md §2](../primitive/edges.md#2-structural-edges)). Today
-only `:TRANSFERS` populates it (the on-chain transaction
+([edges.md §2](../primitive/edges.md#2-structural-edges)). The slot
+is per-layer: `Edge.systemDimension` is the top layer's slot, and
+`edgeHistory` serves each past layer's own. Repeated transfers
+between one wallet pair re-layer the single `:TRANSFERS` edge (one
+label per endpoint pair), so every layer's on-chain transaction
+reference stays readable — past money flows remain auditable. Today
+only `:TRANSFERS` populates the slot (the on-chain transaction
 reference); other labels leave it null.
 
 ### Per-field moderation
@@ -916,8 +932,9 @@ type GovernanceExecGate {
   "How each eligible vote is weighted."
   weighting: VoteWeighting!
   "Passing condition — one of the threshold shapes in governance.md §2.4
-   (count, fraction of cast, quorum, or dual-quorum petition). Carried as
-   a documented string; the exact serialization is the instance's choice."
+   (count, fraction of eligible weight, supermajority, quorum +
+   cast-fraction, dual-quorum petition, or multi-gate). Carried as a
+   documented string; the exact serialization is the instance's choice."
   threshold: String!
   "Whether the subject of the action is barred from voting on it."
   excludeSubject: Boolean!
@@ -1117,10 +1134,11 @@ type Wallet implements Node {
 ### Network
 
 ```graphql
-"The singleton instance-configuration node. Every property is public
- config and amendable via a Proposal that :TARGETS it. Quorum
- properties come in dual-quorum pairs (a fraction and an absolute
- count)."
+"The singleton instance-configuration node. Every configuration
+ property is public and amendable via a Proposal that :TARGETS it;
+ the two activity aggregates at the bottom are server-maintained
+ read-only counts, not amendable properties. Quorum properties come
+ in dual-quorum pairs (a fraction and an absolute count)."
 type Network implements Node {
   # Moderation classification quorums
   moderationSensitiveQuorumFraction: Float!
@@ -1159,6 +1177,55 @@ type Network implements Node {
   "Fraction of active moderators that must vote yes for critical-tier
    destructive actions."
   criticalModGateFraction: Float!
+
+  # Maintained activity aggregates (read-only, never amendable)
+  "Count of currently active Users — at least one outgoing actor edge
+   within activeThresholdDays. The dual-quorum fraction denominator
+   (governance.md §3), exposed so a client can compute the operative
+   pass bar min(fraction × activeMemberCount, count) and verify a
+   PASSED outcome."
+  activeMemberCount: Int!
+  "Count of currently active moderators — the critical mod-gate
+   denominator (governance.md §7)."
+  activeModCount: Int!
+}
+```
+
+### Application versions
+
+The append-only release registry
+([data-model.md](data-model.md), Application registry) — what the
+current version of each platform component is, and where a given
+version's patch notes live.
+
+```graphql
+"One release of a platform component, from the append-only
+ application registry — operational metadata, never ranked."
+type AppVersion {
+  component: AppComponent!
+  "Human-readable version string; unique per component."
+  version: String!
+  patchNotesUrl: String
+  "Actor ids the release credits beyond the upstream repo's commit
+   history (designers, translators, testers) — Users and Collectives
+   in one list, resolved via `nodes`. Empty when nobody beyond the
+   commit history is credited. Display-only, never an input to
+   ranking or economics."
+  releasedBy: [UUID!]!
+  releasedAt: DateTime!
+}
+
+"A platform component with releases in the application registry."
+enum AppComponent { BACKEND IOS ANDROID WEB }
+
+type AppVersionConnection {
+  edges: [AppVersionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type AppVersionEdge {
+  cursor: String!
+  node: AppVersion!
 }
 ```
 
@@ -1202,6 +1269,14 @@ type Query {
   wallet(id: UUID!): Wallet
   "The singleton network-configuration node."
   network: Network!
+
+  "Releases from the application registry, newest first; `component`
+   narrows to one platform component. Answers \"what's the current
+   version?\" and \"where are version X's patch notes?\"."
+  appVersions(
+    component: AppComponent
+    first: Int, after: String, last: Int, before: String
+  ): AppVersionConnection!
 
   "Any actor's weight-bounded relevant subgraph — the raw material a
    ranker (that actor's own device or a delegated miner) orders into a
@@ -1361,9 +1436,15 @@ The no-AI rule applies to search ranking as much as to feeds.
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
 filters by the viewer's `content_filtering_severity_level` — the
-same visibility model as every other read. Redacted fields drop
-out of the index by construction: the redaction cascade removes
-the value, so there is nothing left to match.
+same visibility model as every other read. Redacted fields are
+excluded from the index by an explicit rule, not by construction:
+the redaction cascade replaces the value in place with a visible
+marker ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
+e.g. the `redacted-user-{uuid}` handle sentinel — so a current
+value still exists to match. The index skips redacted values (a
+version row or layer carrying a non-null redaction reason);
+without that rule, a substring query for "redacted" would surface
+every redacted handle and title.
 
 ```graphql
 type SearchConnection {
@@ -1423,7 +1504,8 @@ These bind every mutation below.
   co-signatures ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
   Where the target already pins the acting identity — editing
   authored content, accepting an invitation whose membership names a
-  Collective bearer, leaving, revoking, settling — there is no
+  Collective bearer, leaving, revoking, settling, re-linking a
+  wallet — there is no
   `actAs`; the identity is read off the target and the same
   eligibility check runs. The Network-scope governance verbs also
   take none — their gestures are per-User
@@ -1499,9 +1581,12 @@ type Mutation {
    voter's eligible junction (Shape B). Recasting appends a new
    layer — this is how a vote is changed; there is no separate
    gesture. dim1 carries the stance; a non-positive dim1 is a valid
-   recorded edge that a petition-style tally does not count and that a
-   bidirectional tally counts toward the FAILED mirror bar. Votes are
-   accepted only while the Proposal is OPEN."
+   recorded edge that a petition-style tally does not count. In a
+   bidirectional tally only a negative dim1 counts toward the FAILED
+   mirror bar; a zero dim1 counts to neither side — (0, 0) is the
+   abstain layer that vote recasting and the eligibility-dropout
+   cascade write (governance.md §6). Votes are accepted only while
+   the Proposal is OPEN."
   castVote(input: CastVoteInput!): CastVotePayload!
 
   # ── Chat membership and lifecycle ────────────────────────────
@@ -1532,8 +1617,9 @@ type Mutation {
   "Rotate the chat key mid-epoch — proposal-backed; on passing,
    Chat.epoch advances."
   rotateChatKey(input: RotateChatKeyInput!): ProposalPayload!
-  "Change a Chat's profile (name, description, image) — proposal-backed;
-   a composite proposal when more than one field is supplied."
+  "Change one of a Chat's profile fields (name, description, image) —
+   proposal-backed; each field is a simple single-property Proposal
+   under its own gate, so one field per call."
   editChatProfile(input: EditChatProfileInput!): ProposalPayload!
 
   # ── Collectives ──────────────────────────────────────────────
@@ -1552,9 +1638,10 @@ type Mutation {
   "Amend one governance rule on a Collective or Chat — proposal-backed,
    judged by that rule's own amend gate."
   amendGovernanceRule(input: AmendGovernanceRuleInput!): ProposalPayload!
-  "Change a Collective's profile (displayName, description, avatar,
-   websiteUrl) — proposal-backed; a composite proposal when more than
-   one field is supplied."
+  "Change one of a Collective's profile fields (displayName,
+   description, avatar, websiteUrl) — proposal-backed; each field is a
+   simple single-property Proposal under its own gate, so one field
+   per call."
   editCollectiveProfile(input: EditCollectiveProfileInput!): ProposalPayload!
 
   # ── Items ────────────────────────────────────────────────────
@@ -1567,7 +1654,9 @@ type Mutation {
   # ── Network-scope governance ─────────────────────────────────
   "Report content for classification (sensitive / illegal / back to
    normal) — proposal-backed, judged by the Network's moderation
-   gate. Targets a per-field status, or the whole node."
+   gate. Targets a per-field status, or the whole node. NORMAL is
+   valid only against a SENSITIVE classification — an 'illegal'
+   redaction is terminal (moderation.md §4)."
   classifyContent(input: ClassifyContentInput!): ProposalPayload!
   proposeModeratorRoleChange(input: ProposeModeratorRoleChangeInput!): ProposalPayload!
   amendNetworkParameter(input: AmendNetworkParameterInput!): ProposalPayload!
@@ -1588,8 +1677,9 @@ type Mutation {
    on-chain; writes the Settlement record pointing at it. The split
    is graph-computed, never advertiser-chosen."
   settleCampaign(input: SettleCampaignInput!): SettleCampaignPayload!
-  "Re-point the viewer's payout Wallet to a new on-chain address
-   (append a layer; the binding survives)."
+  "Re-point the acting account's payout Wallet to a new on-chain
+   address (append a layer; the binding survives). The wallet pins
+   who acts — see the input."
   relinkWallet(input: RelinkWalletInput!): RelinkWalletPayload!
 
   # ── Auth and accounts (off-graph state, per auth.md) ─────────
@@ -1677,10 +1767,11 @@ type SetEdgePayload {
 }
 ```
 
-The valid targets are exactly the node kinds the catalog defines an
+The valid targets are the node kinds the catalog defines an
 inbound actor edge for
-([edges.md §1](../primitive/edges.md#1-actor-edges)): the two actors,
-the five content kinds, and the three junction kinds. A `target`
+([edges.md §1](../primitive/edges.md#1-actor-edges)), minus
+Proposal: the two actors, the five content kinds, and the three
+junction kinds. A `target`
 that resolves to a `Proposal`, `Hashtag`, `Campaign`, `Settlement`,
 `Wallet`, or `Network` is rejected — a Proposal because the actor
 edge toward it *is* a vote (one label per endpoint pair, so the two
@@ -1891,7 +1982,11 @@ tags go through the `tags` input.
 input CastVoteInput {
   proposal: UUID!
   dim1: Dimension!
-  dim2: Dimension!
+  "Shape A only — the importance / personal-stake dimension of the
+   voter's actor edge; null defaults to 0. On a Shape B vote the
+   structural edge's dim2 is canon-fixed at 0 (edges.md §2): null or
+   0 is accepted, anything else is a validation error."
+  dim2: Dimension
   "The junction to vote from, when the voter has several eligible
    ones; defaults to the unique eligible junction."
   as: UUID
@@ -1987,8 +2082,13 @@ type AcceptChatInvitePayload {
   admission: Proposal!
 }
 
-"Change a Chat's profile. Each supplied field opens a property change;
- more than one bundles into a single composite proposal."
+"Change a Chat's profile — exactly one of name / description /
+ imageMediaId. Each profile field is a simple single-property Proposal
+ judged by its own `decision:set:*` gate
+ ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions),
+ [proposal.md §2](../instances/proposal.md#composite-proposals));
+ supplying more than one field is a validation error — there is no
+ multi-field bundle."
 input EditChatProfileInput {
   chat: UUID!
   name: String
@@ -2085,8 +2185,12 @@ type AcceptCollectiveInvitePayload {
   admission: Proposal!
 }
 
-"Change a Collective's profile. Each supplied field opens a property
- change; more than one bundles into a single composite proposal."
+"Change a Collective's profile — exactly one of displayName /
+ description / avatarMediaId / websiteUrl. Each profile field is a
+ simple single-property Proposal judged by its own `decision:set:*`
+ gate ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions));
+ supplying more than one field is a validation error — there is no
+ multi-field bundle."
 input EditCollectiveProfileInput {
   collective: UUID!
   displayName: String
@@ -2143,8 +2247,11 @@ type TransferItemPayload {
 ```graphql
 "Propose a moderation classification on content. `field` names the
  per-field status to move, or 'node' for a whole-node classification;
- `status` is the target state (back to NORMAL to un-classify). A
- Proposal is itself a valid target for exactly one field — its
+ `status` is the target state. NORMAL un-classifies a SENSITIVE field
+ only — REDACTED ('illegal') is terminal, so a NORMAL proposal
+ against a redacted field is rejected
+ ([moderation.md §4](../instances/moderation.md#4-eligibility-weights-thresholds)).
+ A Proposal is itself a valid target for exactly one field — its
  proposedValue."
 input ClassifyContentInput {
   target: UUID!
@@ -2247,6 +2354,9 @@ type SettleCampaignPayload {
   settlement: Settlement!
 }
 
+"The wallet's :PAYS_TO binding pins the acting account — the User it
+ pays out, or a Collective the viewer is eligible to act for — so
+ there is no actAs; the service runs the same eligibility check."
 input RelinkWalletInput {
   wallet: UUID!
   address: String!
