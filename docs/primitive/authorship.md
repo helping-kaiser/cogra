@@ -4,13 +4,15 @@ Authorship in CoGra is a **derived fact**, not a stored field. The
 author of a node is the actor whose incoming edge has the earliest
 layer 1 timestamp. A node cannot exist without someone creating it, so
 the very first edge ever created toward a node identifies the author.
-Junctions are the one exception: they are authored by their
+Two node kinds derive it differently: junctions are authored by their
 **bearer**, fixed by the `:AUTHOR` label rather than the timestamp —
-see [Junction authorship](#junction-authorship).
+see [Junction authorship](#junction-authorship) — and the
+Collective is authored through its founder's junction — see
+[Collective authorship](#collective-authorship).
 
 **"Creator" is a synonym for "author"; "author" is canonical.**
 Wherever a User or Collective is described as "creating" a node
-— Item, Chat, ChatMessage, Collective, Post, Comment, Proposal — the on-graph
+— Item, Chat, ChatMessage, Post, Comment, Proposal — the on-graph
 fact is the same: they hold the earliest-layer-1 incoming edge,
 the `:AUTHOR` label, and the rights and obligations that
 authorship carries. "Founder" is *not* a synonym — it is the
@@ -108,6 +110,26 @@ actor edge from its first instant, so the earliest-incoming-edge
 derivation and the rule-snapshot timestamp it anchors
 ([governance.md §5](governance.md#rule-snapshot-at-author-time))
 are always defined.
+
+## Collective authorship
+
+A Collective node receives no `User → Collective` `:AUTHOR` edge.
+Its founding gesture writes the founder's `CollectiveMember`
+junction and that junction's structural edges
+([collectives.md §1](../instances/collectives.md#1-creation)); the
+Collective's earliest incoming edge is therefore the junction's
+`:CLAIM` structural edge, not an actor edge. The **author is
+derived through it**: the earliest layer-1 `:CLAIM` edge among the
+Collective's incoming CollectiveMember claims identifies the
+founding junction, and its `:BEARER` edge identifies the
+author-User
+([collectives.md §6](../instances/collectives.md#6-authorship)).
+The founder does hold an `:AUTHOR` edge — to their own
+CollectiveMember junction, per
+[Junction authorship](#junction-authorship) — never to the
+Collective itself, and `:AUTHOR`'s target catalog in
+[edges.md §3](edges.md#sub-category-labels) accordingly omits
+Collective.
 
 ## Caching
 
