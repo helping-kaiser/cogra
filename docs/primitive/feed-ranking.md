@@ -1372,8 +1372,9 @@ forward traversal (§3), so the sums compute by **message-passing over the
 slice in `O(R · |E_slice|)`** — linear in the slice, independent of the path
 count:
 
-- **`d(R) = 0.1^(R−1)`** is geometric: fold one `0.1` into every hop past
-  the first. A per-hop factor, not a per-path one.
+- **`d(R) = 0.1^(R−1)`** is geometric: fold one `0.1` into every hop
+  before the reactor edge — `R−1` interior hops, `R−1` factors; the
+  reactor edge carries none. A per-hop factor, not a per-path one.
 - **`f(Δt)`** rides the reactor edge alone (§4.2) — applied once at
   **readout**, on the final hop into `t`, never propagated inward.
 - **`s_path`** (§3.3) is a signed product, so the per-node decayed signed
@@ -1393,8 +1394,8 @@ count:
 - **kill rule** (§3.2) is multiplication by `0` — it propagates through the
   accumulators untouched.
 - **`i`** drops the reactor edge's value (§4.2): read the mass reaching each
-  reactor `B`, weight it by the final hop's `d(R)·f(Δt)` *without*
-  multiplying in `(dim1, dim2)(B → t)`.
+  reactor `B` — `d(R)` already accumulated — and weight it by `f(Δt)`
+  *without* multiplying in `(dim1, dim2)(B → t)`.
 - **`j`, `k`** traverse nothing — a direct sum over the reactor edges into `t`.
 
 So `h` and `i` are forward sums over the layered slice — one recurrence per
@@ -1402,10 +1403,13 @@ track, `m_0(U) = 1`, read out at each target by folding in its reactor edges:
 
 ```
 m_ℓ(v) = Σ_{u → v}  w(u → v) · m_{ℓ−1}(u)       w carries the hop's dim factor and the 0.1 decay
-H_s(t) = Σ_B  Σ_ℓ  0.1 · f(Δt_{B→t}) · dim1(B → t) · m_ℓ(B)        (s-track; c-track is the two-state lift)
+H_s(t) = Σ_B  Σ_ℓ  f(Δt_{B→t}) · dim1(B → t) · m_ℓ(B)        (s-track; c-track is the two-state lift)
 ```
 
-`O(R · |E_slice|)`, hub or not.
+A reactor `B` reached over `ℓ` interior hops arrives carrying `0.1^ℓ =
+d(ℓ+1) = d(R)`, so the readout adds no further decay — in particular the
+viewer's own reactor edges (`ℓ = 0`, `B = U`) carry full `d(1) = 1`
+weight per §4.1. `O(R · |E_slice|)`, hub or not.
 
 **The one obstruction is §3's vertex-simple invariant.** Message-passing
 sums over **walks**; the metric is defined over **vertex-simple paths**.
