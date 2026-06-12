@@ -397,7 +397,8 @@ the device fetches it under its own session and forwards it as
 `params.seenList`. The forwarding cost is accepted: it keeps the miner
 credential-free, and a client that wants to avoid it can keep the
 seen-list locally — the math is the same regardless of where the JSON
-came from.
+came from. Standing delegation — a scoped credential or miner-held
+seen-list — is parked as [open-questions.md Q25](../open-questions.md).
 
 ### Result integrity — advisory, spot-checkable, not attested
 
