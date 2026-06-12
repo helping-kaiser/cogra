@@ -332,8 +332,11 @@ rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
 
 Reads are unauthenticated and `feedSlice` is viewer-parameterized
 ([api-spec.md](api-spec.md)), so the miner fetches
-`feedSlice(viewer, params.dustFloor)` itself — the same public
-subgraph any client could fetch. The device never downloads the slice;
+`feedSlice(viewer, params.dustFloor, params.distanceDecayBase)`
+itself — the same public subgraph any client could fetch. Both
+params travel because slice membership depends on both (best-possible
+contribution `d(R) · ∏|dim| ≥ ε`): a softened decay base widens the
+slice the metric is defined over. The device never downloads the slice;
 saving that transfer, alongside the ranking compute, is the point of
 delegating. The logical contract is unchanged: the miner obtains the
 slice and runs `rank(slice, params)` exactly as pinned above, which is

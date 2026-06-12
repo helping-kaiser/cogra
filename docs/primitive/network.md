@@ -165,8 +165,8 @@ at tally time is `min(P × |active|, K)`.
   ([feed-ranking.md §9](feed-ranking.md#9-where-ranking-and-filtering-live)).
   The default seeded at genesis is `0`: the early graph is sparse,
   `b^R` is cheap, and full fidelity is kept. The property is amendable
-  so the network can raise `ε` as the graph densifies and enumeration
-  cost grows — the finest the compute budget allows. Frontend overrides
+  so the network can raise `ε` as the graph densifies — the finest
+  the compute budget allows. Frontend overrides
   remain available per §4.4; this property sets the network default.
   Gating bucket: baseline.
 
