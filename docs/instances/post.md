@@ -22,7 +22,8 @@ node into the graph.
 The gesture writes three records atomically:
 
 - A new `:Post` node on the graph.
-- The Postgres `posts` row carrying the body and any attachments
+- The Postgres `posts` entity row plus the first `post_versions`
+  row carrying the body, and any attachments
   (see [data-model.md](../implementation/data-model.md)).
 - An actor edge from the authoring actor toward the new Post
   node — the **authorship edge** (§5). Its `(dim1, dim2)` values
@@ -69,9 +70,9 @@ content are append-only per
 a new version row, no overwrite.
 
 - **`title`** / **`description`** — optional headline and short
-  summary. Stored on the `posts` row; see
+  summary. Stored on `post_versions` rows; see
   [data-model.md](../implementation/data-model.md).
-- **`content`** — the body text. Stored on the `posts` row;
+- **`content`** — the body text. Stored on `post_versions` rows;
   see [data-model.md](../implementation/data-model.md).
 - **Attachments** — images, videos, and other media via the
   `post_attachments` junction table, which carries

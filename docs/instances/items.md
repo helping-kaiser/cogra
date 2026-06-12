@@ -28,7 +28,8 @@ ownership" flow.
 The gesture writes the following records atomically:
 
 - A new `:Item` node on the graph.
-- The Postgres `items` row carrying the name and description
+- The Postgres `items` entity row plus the first `item_versions`
+  row carrying the name and description
   (see [data-model.md](../implementation/data-model.md)).
 - `item_attachments` rows for each piece of attached media (zero
   or more).
@@ -119,9 +120,9 @@ node by UUID. Edits are append-only per
 a new version row, no overwrite.
 
 - **`name`** — required. The handle the Item is listed under.
-  Stored on the `items` row.
-- **`description`** — optional body text. Stored on the `items`
-  row.
+  Stored on `item_versions` rows.
+- **`description`** — optional body text. Stored on
+  `item_versions` rows.
 - **Attachments** — images and other media via the
   `item_attachments` junction table, which carries per-attachment
   `display_order` and an optional `is_cover` flag analogous to
