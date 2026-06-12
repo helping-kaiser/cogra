@@ -102,8 +102,8 @@ choices for the invitee's outbound edge:
   full strength.
 - `(+1, -1)` — high sentiment, negative interest. *"I love
   this person but their content is not what I want to see."* Once
-  the invitee adds a second edge, e.g. `(+0.5, +0.5)` to a hashtag
-  they care about, the second edge dominates the feed: the
+  the invitee adds a second edge, e.g. `(+0.5, +0.5)` to a
+  Collective they care about, the second edge dominates the feed: the
   inviter-edge path products have positive sentiment chains and
   negative interest chains, which tend to cancel under the sum
   collapser in [feed-ranking.md §4.3](feed-ranking.md#43-tuple-collapse-to-scalar).

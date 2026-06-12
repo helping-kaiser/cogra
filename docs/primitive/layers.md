@@ -197,8 +197,14 @@ under it identically. Three surfaces, three rules:
     state rather than history, compacted on a 1-year default
     per
     [feed-ranking.md §8.5](feed-ranking.md#85-compaction--drop-entries-older-than-1-year-frontend-convention).
+  - `user_bookmarks` — per-viewer bookmark list; removing a
+    bookmark is a genuine row delete.
+  - `user_hidden_actors` — per-viewer hide list; unhiding is a
+    genuine row delete.
 
-  Additions to this list require a named exception added here.
+  All three are operational filter state private to the viewer,
+  not history. Additions to this list require a named exception
+  added here.
 - **Frontends, miners, indexers, and off-graph systems: not
   governed by this invariant.** Whatever they cache, summarize,
   or discard is their concern, not the graph's. The graph is the

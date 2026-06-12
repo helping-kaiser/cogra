@@ -337,6 +337,7 @@ results as properties — never a money amount. Claimants reach it via
 | `merkle_root`         | String | Root of the payout tree. Per-wallet payout figures are Merkle leaves verified against it, never stored on-graph. Written once at settlement. |
 | `settled_P`           | Float  | The released amount `P`, recorded as a public scalar result — never a money tensor. Written once at settlement. |
 | `achieved_h_gain`     | Float  | The achieved reach gain, surfaced as a public result. Written once at settlement. |
+| `settled_t_star`      | LocalDateTime | The attribution instant `t*` — the timestamp pinning the graph state the split was computed from ([economics.md §6.3](../primitive/economics.md#63-the-attribution-snapshot-t)), recorded for reproducibility alongside the `dust_floor` in force. Written once at settlement. |
 
 ```cypher
 CREATE CONSTRAINT ON (s:Settlement) ASSERT s.id IS UNIQUE;
@@ -381,7 +382,7 @@ are pure record nodes; `Wallet` holds only an on-chain address. See
 All three junction types bind to their bearing actor via a
 `:BEARER` structural edge — `Junction → User|Collective` — set
 by the API at junction creation, never re-pointed. The Shape A
-self-claim — the bearer's vote authoring the junction's
+self-claim — the bearer's vote on the junction's
 admit-Proposal — must come from the actor this edge points at;
 mismatched claims are rejected. See
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
@@ -393,7 +394,7 @@ and edge-labels table below.
 |---|---|---|
 | `id`            | String | UUID v4. |
 | `role`          | String | Open-ended per the chat's `governance` map. Default-vocabulary strings: `'admin'`, `'chat_mod'`, `'member'`; chats can amend `governance` entries to use any role strings. Distinct from the Network-scope `User.network_role = 'moderator'`. Layered. |
-| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (role weights live in each `Chat.governance` entry's `exec.weights` field). When non-null, the tally reads this value directly; when null (default), the entry's role-derived weight applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
+| `voting_weight` | Float  | Nullable per-bearer override of the role-derived weight (role weights live in each `Chat.governance` entry's `exec.weighting` field). When non-null, the tally reads this value directly; when null (default), the entry's role-derived weight applies. Layered. See [governance.md §2.3](../primitive/governance.md#23-weight-function). |
 
 ```cypher
 CREATE CONSTRAINT ON (m:ChatMember) ASSERT m.id IS UNIQUE;
@@ -577,8 +578,8 @@ Every edge carries the same property shape, regardless of label:
 
 | Property    | Type           | Notes |
 |---|---|---|
-| `dim1`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed valence (sentiment / approval / affirmation). Structural edges: typically `0`, except state-bearing pairs (junction approval claim/approval) where `dim1` carries affirmed (`> 0`) / neutral (`0`) / revoked (`< 0`) state. |
-| `dim2`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed connection-weight (interest / relevance / importance). Structural edges: typically `0`. |
+| `dim1`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed valence (sentiment / approval / affirmation). Structural edges: typically `0`, except state-bearing pairs (junction claim/approval), where `dim1 > 0` is affirmed and `≤ 0` revoked, and `:REFERENCES` edges, which carry an author-set tensor ([edges.md §2 "Reference"](../primitive/edges.md#reference)). |
+| `dim2`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed connection-weight (interest / relevance / importance). Structural edges: `0`, except the author-set tensor on `:REFERENCES`. |
 | `timestamp` | LocalDateTime  | When this layer was created. |
 | `layer`     | Integer        | Layer number (≥ 1). |
 
