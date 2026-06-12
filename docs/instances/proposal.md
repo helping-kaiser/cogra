@@ -1,6 +1,6 @@
 # Proposal
 
-The **Proposal** is a content node — the **subject carrier
+The **Proposal** is a carrier node — the **subject carrier
 for property-level governance votes**. Wherever the platform
 needs to vote on changing a graph property (a Network
 parameter, a User's `network_role`, a Chat's `name`, a
