@@ -527,6 +527,8 @@ type MediaOptions {
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
+  "Profile cover image. User-only — Collectives carry no cover."
+  cover: ModeratedMedia!
   "Network-scope role. Only Users carry one."
   networkRole: NetworkRole!
 
@@ -655,7 +657,9 @@ type Item implements Node {
 
 "A content-addressed topic tag — its identity is its canonical
  name. Authorless and terminal: it has no outgoing edges; content
- reaches it through incoming :TAGGING edges."
+ reaches it through incoming :TAGGING edges (Post, Comment, Item)
+ and ChatMessage → Hashtag :REFERENCES — the one inbound edge that
+ carries a tensor and accrues reference-borne ranking signal."
 type Hashtag implements Node {
   "Canonical tag, lowercase and without '#'."
   name: ModeratedText!
@@ -1478,8 +1482,8 @@ type Mutation {
   createItem(input: CreateItemInput!): CreateItemPayload!
   editItem(input: EditItemInput!): EditItemPayload!
   "Append a new layer to the viewer's own profile fields (handle,
-   displayName, bio, avatar, websiteUrl). Self only — no id, the
-   viewer is the edited User."
+   displayName, bio, avatar, cover, websiteUrl). Self only — no id,
+   the viewer is the edited User."
   editProfile(input: EditProfileInput!): EditProfilePayload!
   "Upload a media asset and get back its MediaAttachment id, to
    reference from a create/edit content input."
@@ -1743,6 +1747,8 @@ input CreateCommentInput {
   target: UUID!
   content: String!
   attachments: [AttachmentInput!]
+  "Hashtag names to tag (lowercase, no '#'); created implicitly if new."
+  tags: [String!]
   references: [ReferenceInput!]
   "Act as this Collective (see conventions); null = the viewer's own
    gesture."
@@ -1752,6 +1758,7 @@ input EditCommentInput {
   id: UUID!
   content: String
   attachments: [AttachmentInput!]
+  tags: [String!]
   references: [ReferenceInput!]
 }
 type CreateCommentPayload { comment: Comment! }
@@ -1832,6 +1839,7 @@ input EditProfileInput {
   displayName: String
   bio: String
   avatarMediaId: UUID
+  coverMediaId: UUID
   websiteUrl: String
 }
 type EditProfilePayload { user: User! }
@@ -1859,6 +1867,15 @@ assets themselves stay append-only (redaction tombstones them in
 place, never deletes). `Upload` is the standard GraphQL
 multipart-request scalar — the one place the API ingests a binary
 rather than JSON.
+
+The valid `references` targets are per-source. A ChatMessage may
+reference any node — including a Hashtag, its only path to one,
+since ChatMessage has no `:TAGGING` edge type. A Post or Comment
+`references` entry naming a Hashtag is rejected: `:TAGGING`
+already owns that pair, and a (source, target) pair carries one
+structural edge
+([edges.md §2 "Reference"](../primitive/edges.md#reference));
+tags go through the `tags` input.
 
 ### Voting
 
