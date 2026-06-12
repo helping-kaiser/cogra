@@ -1134,10 +1134,11 @@ type Wallet implements Node {
 ### Network
 
 ```graphql
-"The singleton instance-configuration node. Every property is public
- config and amendable via a Proposal that :TARGETS it. Quorum
- properties come in dual-quorum pairs (a fraction and an absolute
- count)."
+"The singleton instance-configuration node. Every configuration
+ property is public and amendable via a Proposal that :TARGETS it;
+ the two activity aggregates at the bottom are server-maintained
+ read-only counts, not amendable properties. Quorum properties come
+ in dual-quorum pairs (a fraction and an absolute count)."
 type Network implements Node {
   # Moderation classification quorums
   moderationSensitiveQuorumFraction: Float!
@@ -1176,6 +1177,17 @@ type Network implements Node {
   "Fraction of active moderators that must vote yes for critical-tier
    destructive actions."
   criticalModGateFraction: Float!
+
+  # Maintained activity aggregates (read-only, never amendable)
+  "Count of currently active Users — at least one outgoing actor edge
+   within activeThresholdDays. The dual-quorum fraction denominator
+   (governance.md §3), exposed so a client can compute the operative
+   pass bar min(fraction × activeMemberCount, count) and verify a
+   PASSED outcome."
+  activeMemberCount: Int!
+  "Count of currently active moderators — the critical mod-gate
+   denominator (governance.md §7)."
+  activeModCount: Int!
 }
 ```
 
