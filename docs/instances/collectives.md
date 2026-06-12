@@ -669,10 +669,10 @@ workers.
 | `decision:admit_shareholder` *(composite)*  | `role IN (founder, shareholder)`, weighted by stake       | ≥ 75%            |
 | `decision:transfer_shares` *(composite)*    | `role = shareholder`, weighted by `ownership_pct`         | ≥ 75%            |
 | `decision:set:name`                         | All active members                                        | > 50%            |
-| `actas:author:Post`                         | `role = press_officer` *(overrides any-member default)*   | 1 signer         |
-| `actas:author:Proposal`                     | `role = CEO`                                              | 1 signer         |
-| `actas:vote:Proposal`                       | `role IN (CEO, board_member)`                             | 1 signer         |
-| `actas:transfer:Item`                       | `role IN (founder, board_member)`, weighted by stake      | ≥ 50% signers    |
+| `actas:author:Post`                         | `role = press_officer` *(overrides any-member default)*   | —                |
+| `actas:author:Proposal`                     | `role = CEO`                                              | —                |
+| `actas:vote:Proposal`                       | `role IN (CEO, board_member)`                             | —                |
+| `actas:transfer:Item`                       | `role IN (founder, board_member)`                         | —                |
 
 A worker is hired or fired by a single CEO vote; a board
 member is removed only by board supermajority; a CEO is removed
@@ -680,7 +680,9 @@ only by the rest of the board. Routine PR posting is delegated
 to a single press officer (locking down the otherwise
 any-member default for content-acts), while consequential
 moves — proposing, voting, and transferring company assets —
-are routed to leadership and the board. Shareholder admissions
+are routed to leadership and the board. `actas:*` rows carry no
+threshold — eligibility alone gates them, and any eligible
+member's gesture executes immediately (§2). Shareholder admissions
 and transfers are composite actions: the Proposal's bundle
 covers both the new/changed CollectiveMember junction and the
 redistributed `ownership_pct` values across affected members,
@@ -707,8 +709,8 @@ rule self-describes its mutability cost.
 | `decision:add_member`                     | All active members                  | 100% of cast, 100% quorum                 |
 | `decision:remove_member`                  | All members, `exclude_subject`      | ≥ 90% of cast, 100% quorum of remaining   |
 | `decision:routine_spending`               | All active members                  | > 50%, ≥ 60% quorum                       |
-| `actas:vote:Proposal`                     | All active members                  | > 50% signers                             |
-| `actas:transfer:Item`                     | All active members                  | > 50% signers                             |
+| `actas:vote:Proposal`                     | All active members                  | —                                         |
+| `actas:transfer:Item`                     | All active members                  | —                                         |
 
 Everyone has equal voice; consensus dominates. Content-acts
 (posting to the household feed, reacting on shared content)
@@ -726,8 +728,8 @@ officers.
 | `decision:routine_operations`             | `role = officer`                | > 50%            |
 | `decision:major_policy_change`            | All active members              | ≥ 2/3            |
 | `decision:change_capital_structure`       | All active members              | ≥ 75%            |
-| `actas:vote:Proposal`                     | All active members              | > 50% signers    |
-| `actas:transfer:Item`                     | All active members              | ≥ 2/3 signers    |
+| `actas:vote:Proposal`                     | All active members              | —                |
+| `actas:transfer:Item`                     | All active members              | —                |
 
 ---
 
