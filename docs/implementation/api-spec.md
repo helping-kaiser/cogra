@@ -1743,6 +1743,8 @@ input CreateCommentInput {
   target: UUID!
   content: String!
   attachments: [AttachmentInput!]
+  "Hashtag names to tag (lowercase, no '#'); created implicitly if new."
+  tags: [String!]
   references: [ReferenceInput!]
   "Act as this Collective (see conventions); null = the viewer's own
    gesture."
@@ -1752,6 +1754,7 @@ input EditCommentInput {
   id: UUID!
   content: String
   attachments: [AttachmentInput!]
+  tags: [String!]
   references: [ReferenceInput!]
 }
 type CreateCommentPayload { comment: Comment! }
