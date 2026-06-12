@@ -23,8 +23,7 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. API phase | 1 | **Q24** | Miner transport and authentication. The `rank` contract is pinned; the wire form and the viewer→miner delegation handshake are not. |
-| 2. Federation phase | 2 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 1. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -53,37 +52,8 @@ questions are closed.
 - Q19 — see [governance.md §7](primitive/governance.md#7-the-mod-gate) (the mod-gate, now two-tiered) and [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only) (denominator inflation reframed). The mod-gate gains a **critical tier** keyed to the existing baseline/critical stakes split: low-stakes actions keep the flat **≥1 positive moderator vote**; destructive/irreversible ones (moderator role changes, `illegal`-redaction, guidelines amendments, critical `:Network` amendments) require `mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active mods|⌉` (new `:Network` property, default `0.50`, itself in the critical bucket so loosening it is a critical act — recursion closed). This shuts the catastrophic vector the flat-one gate left open: one compromised moderator key plus a community bot-flood could pass anything. Because the fraction is `≤ 1`, `⌈f · |active mods|⌉` never exceeds the active-mod count — the gate is always satisfiable, needs no absolute floor, self-strengthens as the moderator set grows (one or two mods round to one; a real majority at three+), and is deadlock-free; and since minting a moderator is itself critical, the denominator is Sybil-resistant by construction. Stake/wealth-gating was declined upstream (Q20) as plutocracy. The community-side denominator inflation is **not** a takeover vector — a petition tally counts only positive votes, so inflation can only make a Proposal harder to pass, never force one through — so it is reframed as a bounded *liveness* residual (the absolute bar `quorum_count` caps it), not an open question. Tier annotations propagated to [network.md §9/§11](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal), [moderation.md §3](instances/moderation.md#3-the-mod-gate-rule), [platform-guidelines.md](instances/platform-guidelines.md), and [graph-data-model.md](implementation/graph-data-model.md).
 - Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#7-time-and-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
 - Q23 — see [api-spec.md "Search"](implementation/api-spec.md#search). The global `search` index covers name-class fields and post titles only — User/Collective handles + display names, Hashtag/Chat/Item names, Post `title`; bodies, descriptions, bios, and attachments are unindexed, and Comment (no indexed field) is not a searchable kind. Name-class fields match case-insensitively by prefix and substring, titles by word-level full-text. Backend order is exact-match tier then newest-first — both viewer-independent, honoring [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live)'s backend-never-ranks split; graph-blended ordering is the ranker's option over fetched candidates (no-AI rule applies), with recency the deepest fallback per Q16. `sensitive` fields stay indexed and return with per-field status — the standard read-surface visibility model; redacted fields leave the index by construction. Chat messages are excluded from the global index — the scoped `chatSearch` query searches one chat's plaintext bodies newest-first, and encrypted content is never searchable server-side ([chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism)).
+- Q24 — see [miner-api.md "Transport"](implementation/miner-api.md#transport), ["Delegation and trust"](implementation/miner-api.md#delegation-and-trust), and ["The §3.8 operations"](implementation/miner-api.md#the-38-operations). Wire form is **GraphQL with the pinned types verbatim** — a remote miner serves the same small schema, the on-device runner is an in-process call over the same types, and the backend-direct rollout stage hosts the operations in the backend's own schema; a second wire encoding was rejected as a hand-synced parallel serialization. The remote signature is `rank(viewer, params)`: reads are unauthenticated and `feedSlice` is viewer-parameterized, so the **miner re-fetches the slice itself** and the device never downloads it. Delegation is a **push model with no standing credential** — seen-list and rank params ride inside each request, the miner never authenticates to the backend (indistinguishable from an anonymous reader; [auth.md](implementation/auth.md) manages no delegation tokens), and revocation is the viewer ceasing to call. Output is **advisory and spot-checkable** — deterministic math means the device can re-rank any handful of targets and compare — with no mandated audit and no attestation; the remedy for a bad miner is switching. The §3.8 surfaces get **three dedicated stateless operations** (`severanceStatus`, `clusterAnalysis`, `redemptionCheck` — polled, watch lists and cadence client-side) returning structural facts; scores, thresholds, and action guidance stay frontend-computed per §3.8's frontend-latitude rule. Miner discovery and incentives are explicitly out of scope until someone wants to operate a paid miner.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge), the actual bot-bridge defense). `ε` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`ε`/`b` corrected — `ε` bounds the node-set, not the path count).
-
----
-
-## Q24 — Miner API: transport and delegation authentication
-
-**Where it shows up:** [miner-api.md "Transport"](implementation/miner-api.md#transport)
-**Status:** open
-
-The `rank` operation's contract (inputs, math, output) is pinned
-by [feed-ranking.md](primitive/feed-ranking.md) and
-[miner-api.md](implementation/miner-api.md). What remains open is
-the plumbing:
-
-- **Wire form.** Whether `rank` travels as GraphQL, a dedicated
-  RPC, or an in-process call when the runner is the client
-  itself; `FeedSlice` as written is a GraphQL output type, so a
-  non-GraphQL wire form needs a serialization.
-- **Delegation handshake.** How a viewer authorizes a remote
-  miner to rank for them: what credential the miner presents,
-  how the viewer's private inputs (seen-list, rank params) reach
-  the miner, and how the viewer revokes a delegation.
-- **Result integrity.** Whether a delegated miner's output is
-  spot-checkable / attestable by the client, or trusted outright.
-- **§3.8 operation contracts.** The severance self-query,
-  delta-funnel analysis, and redemption-watch surfaces of
-  [feed-ranking.md §3.8](primitive/feed-ranking.md#38-post-severance-surfaces)
-  are "client- or miner-computed"; their data is reachable through
-  the generic read surface, but the dedicated miner operations
-  (inputs/outputs like `rank`'s) are designed standalone together
-  with this question.
 
 ---
 
