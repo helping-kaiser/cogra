@@ -1429,10 +1429,11 @@ These bind every mutation below.
   cascades the write. The service dispatches on the target node;
   the caller names intent, not machinery.
 - **Authentication.** Every mutation requires an authenticated
-  viewer except `register`, `logIn`, `refreshSession`,
+  viewer except `register`, `verifyEmail`,
+  `resendVerificationEmail`, `logIn`, `refreshSession`,
   `requestPasswordReset`, `confirmPasswordReset`, and the
   token-bearing `confirmAccountDeletion` — the gestures that
-  establish or recover a session.
+  precede or recover a session.
 
 ```graphql
 type Mutation {
@@ -1573,7 +1574,17 @@ type Mutation {
   relinkWallet(input: RelinkWalletInput!): RelinkWalletPayload!
 
   # ── Auth and accounts (off-graph state, per auth.md) ─────────
-  register(input: RegisterInput!): AuthPayload!
+  "Submit a registration through an invite link. Writes the off-graph
+   pending-registration record and sends the verification email — no
+   User node or session exists until verifyEmail."
+  register(input: RegisterInput!): RegisterPayload!
+  "Complete registration with the emailed verification token.
+   Atomically creates the User node and its Wallet, writes the two
+   invitation edges, and issues the first session (auth.md)."
+  verifyEmail(input: VerifyEmailInput!): AuthPayload!
+  "Re-send the verification email for a live pending registration.
+   Rate-limited per pending-registration record (auth.md)."
+  resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
   logIn(input: LogInInput!): AuthPayload!
   refreshSession(input: RefreshSessionInput!): AuthPayload!
   "Revoke one session (the current one if no id is given)."
@@ -1599,7 +1610,8 @@ type Mutation {
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   "Begin account deletion (identity-only, or content-inclusive);
-   sends a confirmation, opens the grace period."
+   sends the confirmation link. The 7-day grace period opens at
+   confirmAccountDeletion, not here."
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
   cancelAccountDeletion: AccountDeletionPayload!
@@ -2207,15 +2219,38 @@ invitation registration) are specified in [auth.md](auth.md); this
 surface consumes them.
 
 ```graphql
-"Register through an invite link. The link's pre-committed tensor
- writes the inviter→invitee edge on success."
+"Register through an invite link. Verification writes both invitation
+ edges ([invitations.md](../primitive/invitations.md)): inviter→invitee
+ from the link's pre-committed tensor, invitee→inviter from dim1/dim2
+ here."
 input RegisterInput {
   inviteLink: UUID!
   handle: String!
   email: String!
   password: String!
+  "The invitee's own outgoing edge toward the inviter — initially
+   their only outbound connection, so it shapes their entire first
+   feed. Null means an explicit skip: the (+0.5, +0.5) fallback."
+  dim1: Dimension
+  dim2: Dimension
+}
+
+"The pending registration's receipt. No User node or session exists
+ yet — both arrive at verifyEmail."
+type RegisterPayload {
+  "When the pending registration expires unverified (24 h, auth.md)."
+  expiresAt: DateTime!
+}
+
+input VerifyEmailInput {
+  verificationToken: String!
   deviceLabel: String
 }
+
+input ResendVerificationEmailInput { email: String! }
+"Always succeeds, to avoid revealing whether a pending registration
+ exists."
+type ResendVerificationEmailPayload { ok: Boolean! }
 
 input LogInInput {
   email: String!
@@ -2310,11 +2345,18 @@ type RevokeInviteLinkPayload { inviteLink: InviteLink! }
 input RequestAccountDeletionInput {
   includeContent: Boolean
 }
+"Confirming opens the 7-day grace period and fixes the execution
+ deadline ([account-deletion.md §4](../instances/account-deletion.md#4-the-user-self-service-trigger))."
 input ConfirmAccountDeletionInput {
   deletionToken: String!
+  "Opt into content-level redaction at confirmation — the second of
+   the two moments canon allows. The election is opt-in only: true
+   upgrades an identity-only request; null and false leave the
+   request-time choice unchanged."
+  includeContent: Boolean
 }
-"The pending deletion's state — its scope and grace-period deadline,
- null fields once cancelled."
+"The pending deletion's state. scheduledFor is the grace-period
+ deadline — set at confirmation, null before it and once cancelled."
 type AccountDeletionPayload {
   scheduledFor: DateTime
   includesContent: Boolean!
