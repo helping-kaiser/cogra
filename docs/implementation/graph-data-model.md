@@ -384,7 +384,12 @@ All three junction types bind to their bearing actor via a
 by the API at junction creation, never re-pointed. The Shape A
 self-claim — the bearer's vote on the junction's
 admit-Proposal — must come from the actor this edge points at;
-mismatched claims are rejected. See
+mismatched claims are rejected. The self-claim gesture also
+writes the bearer's `User|Collective → Junction` actor edge
+carrying `:AUTHOR` — the label, not the earliest timestamp, is
+what fixes junction authorship
+([authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship)).
+See
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
 and edge-labels table below.
 
@@ -510,7 +515,7 @@ for picking the right one live in
 | Label          | Endpoints                                                                | Source     |
 |---|---|---|
 | `:ACTOR`       | User \| Collective → any node                                            | Actor sets |
-| `:AUTHOR`      | User \| Collective → Post \| Comment \| Chat \| ChatMessage \| Item \| Proposal \| Campaign | Actor sets |
+| `:AUTHOR`      | User \| Collective → Post \| Comment \| Chat \| ChatMessage \| Item \| Proposal \| Campaign \| ChatMember \| CollectiveMember \| ItemOwnership | Actor sets |
 | `:INVITE`      | User \| Collective → invited User                                        | Actor sets |
 | `:CLAIM`       | Junction → Parent (e.g. `ChatMember → Chat`)                             | System     |
 | `:APPROVAL`    | Parent → Junction (e.g. `Chat → ChatMember`)                             | System     |
