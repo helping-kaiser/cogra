@@ -41,7 +41,7 @@ target nodes as seen from `U`.
 
 | Symbol | Name | Meaning |
 |--------|------|---------|
-| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost parameter** capped at the system level (see §3.1); within whatever cap the system runs at, `d(R)` does the attenuation. |
+| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `ε` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
 
 ---
 
@@ -81,7 +81,7 @@ and `:BEARER` pairs between a junction and its bearer — would
 otherwise admit cyclic paths in which the same intermediate's
 mediating role multiplies into the product more than once: a
 structural artifact, not new information about `U`'s view of `t`.
-Cycles also blow up enumeration combinatorially under the R-cap.
+Cycles also blow up enumeration combinatorially.
 The walk maintains a per-path visited set to enforce the invariant. The
 visited set enforces it exactly during enumeration; in the dense regime,
 where enumeration is intractable, §4.5 computes the metric by
@@ -1302,8 +1302,8 @@ is trying to suppress.
 
 The per-target sums of §4.2 range over *all* paths from `U` to `t`. In a
 dense graph the path count grows as `b^(R−1)` (§3.6), so an unbounded
-enumeration is `O(b^R)` — uncomputable for high-degree hubs even under
-the `R`-cap. The traversal is bounded by a **dust floor** `ε`: enumerate
+enumeration is `O(b^R)` — uncomputable for high-degree hubs. The
+traversal is bounded by a **dust floor** `ε`: enumerate
 paths by branch-and-bound and prune a partial path as soon as its
 best-possible completed contribution falls below `ε`.
 
