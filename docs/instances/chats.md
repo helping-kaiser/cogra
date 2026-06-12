@@ -697,6 +697,14 @@ query the public API) can scan public chats. Cost management at
 scale is a performance concern for later, not a design flaw
 now.
 
+Chat messages are not in the global search index — casual
+conversation doesn't surface to strangers by keyword. The search
+surface is the scoped `chatSearch` query
+([api-spec.md "Search"](../implementation/api-spec.md#search)):
+word-level full-text over one chat's plaintext bodies, newest
+first. Encrypted bodies are never searchable server-side — the
+backend holds only ciphertext.
+
 ---
 
 ## 10. Moderation
