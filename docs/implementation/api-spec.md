@@ -2171,14 +2171,20 @@ a client mutation ([ledger.md](ledger.md)).
 
 ```graphql
 "Open a campaign. The deposit is already escrowed on-chain; `escrow`
- is the pointer, the amount is read from chain. `g` and the baseline
- hStart are fixed at open; declaredGoal, endTs, and dustFloor remain
- tunable while OPEN."
+ is the pointer, the amount is read from chain. `g` is fixed at
+ open and the baseline hStart is h_anchor(target) at startTs;
+ declaredGoal, endTs, and dustFloor remain tunable while OPEN."
 input CreateCampaignInput {
   anchor: UUID!
+  "Must differ from anchor — anchor == target is degenerate
+   (h(self) is undefined) and rejected."
   target: UUID!
   escrow: String!
+  "Strictly positive — the auto-settlement formula divides by it,
+   so declaredGoal ≤ 0 is rejected."
   declaredGoal: Float!
+  "Defaults to the Network's distance_decay_base in force at
+   creation."
   g: Float
   startTs: DateTime!
   endTs: DateTime!
@@ -2193,7 +2199,9 @@ type CreateCampaignPayload { campaign: Campaign! }
  untouched; each supplied field appends a layer."
 input UpdateCampaignInput {
   campaign: UUID!
+  "Strictly positive, as at creation."
   declaredGoal: Float
+  "Window extension — free and unlimited."
   endTs: DateTime
   dustFloor: Float
 }
