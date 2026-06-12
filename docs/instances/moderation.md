@@ -276,6 +276,10 @@ redacts all attachments under `target_property = 'attachments'`.
 - Junction nodes (`ChatMember`, `CollectiveMember`,
   `ItemOwnership`) — they carry no user-authored content
   fields.
+- The economics carrier nodes (`Campaign`, `Settlement`,
+  `Wallet`) and the `Network` singleton — graph properties and
+  chain pointers only, nothing user-authored
+  ([nodes.md §6](../primitive/nodes.md#6-carrier-nodes)).
 
 ### Encrypted message classification
 
