@@ -204,8 +204,7 @@ rules. Defaults bootstrap; they are not fixed.
   critical (§11) — loosening it is itself a critical act.
 
 The singleton carries **no per-field moderation properties**.
-Like junction nodes and the Proposal node, it has no user-input
-fields to redact (see
+Like junction nodes, it has no user-input fields to redact (see
 [nodes.md "Universal: per-field moderation status"](nodes.md#universal-per-field-moderation-status));
 the lifecycle consequence is §7.
 
