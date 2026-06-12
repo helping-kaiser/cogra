@@ -130,6 +130,13 @@ derived from counting active ChatMembers — if the underlying
 graph changes, rebuild the cache. Layering it would duplicate
 history that already lives in the source data.
 
+The source of truth includes history, not just current state —
+the graph is append-only, so a cache may be a fold over past
+events. `Chat.epoch` is one: `1` plus the count of effected
+membership transitions plus passed rotation Proposals, every
+input a timestamp-pinned layer or node
+([chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)).
+
 Named carve-outs to append-only exist only on the Postgres
 side and only for operational state (not history) — see
 [§5 "Scope of the invariant"](#scope-of-the-invariant). The

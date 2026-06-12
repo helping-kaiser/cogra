@@ -388,7 +388,7 @@ is the node-level progression.
   [moderation.md §1](moderation.md#1-the-two-classification-paths),
   and
   [layers.md §5](../primitive/layers.md#5-deletion-policy).
-  Two outcomes write no graph-property layer — the Proposal's
+  Three outcomes write no graph-property layer — the Proposal's
   terminal `status` is the entire on-graph record:
   - **A `ChatMessage` disavowal** (the `'node'` sentinel
     against a message): the chat's stance *is* the passed
@@ -402,6 +402,12 @@ is the node-level progression.
     [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
     `set:name` is unaffected — `name` is a graph data property
     and takes the normal layer.
+  - **A key rotation** (`decision:rotate_key` on a Chat): the
+    cascade refreshes the `Chat.epoch` derived cache in place —
+    a cache refresh is not an outcome carrier
+    ([governance.md §2.5](../primitive/governance.md#25-outcome)) —
+    and the rotation's append-only record is `status = 'passed'`
+    ([chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism)).
 
   The `'node'` sentinel otherwise dispatches on the target's
   node type — e.g. re-layering `Chat → ChatMember` for a
