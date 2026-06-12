@@ -57,15 +57,16 @@ See [graph-model.md §4](graph-model.md#4-edge-structure) for the edge structure
 [graph-model.md §8](graph-model.md#8-append-only-history-edges) for edge-specific history
 details.
 
-**"Revoked" names the negative-top-layer state.** An approval-pair
-structural edge is **revoked** when its top layer carries
-`dim1 < 0` (a removed CollectiveMember, a disavowed ChatMember,
-an ItemOwnership replaced by the next ownership). Older drafts
-used "inactive" or "superseded" for the same state; both are
-aliases for revoked. The *mechanism* producing the negative
-layer (supersession cascade, voluntary leave, governance
-threshold-cross) varies; the *state* it produces is always
-"revoked." See
+**"Revoked" names the non-positive-top-layer state.** An
+approval-pair structural edge is **revoked** when its top layer
+carries `dim1 ≤ 0` (a removed CollectiveMember, a disavowed
+ChatMember, an ItemOwnership replaced by the next ownership).
+Affirmation is strictly positive; a `0` top layer is not a
+distinct state. Older drafts used "inactive" or "superseded" for
+the same state; both are aliases for revoked. The *mechanism*
+producing the non-positive layer (supersession cascade, voluntary
+leave, governance threshold-cross) varies; the *state* it
+produces is always "revoked." See
 [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ---
