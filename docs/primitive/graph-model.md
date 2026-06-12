@@ -53,7 +53,7 @@ Accounts gate participation (writing), not viewing.
 
 ## 2. Node Categories
 
-Nodes fall into five categories:
+Nodes fall into six categories:
 
 - **Actor nodes** — entities that take actions and create edges
   (User, Collective).
@@ -76,6 +76,12 @@ Nodes fall into five categories:
   topic converges on one node across actors and instances. They
   are acted upon like content but, lacking an author and a mutable
   body, sit outside the content category.
+- **Carrier nodes** — process and record carriers with no
+  user-input fields and no Postgres-side display content
+  (Proposal, Campaign, Settlement, Wallet). They exist to carry a
+  governance or economics process and its public results, and are
+  acted upon only through the narrow edge sets their docs define
+  ([nodes.md §6](nodes.md#6-carrier-nodes)).
 
 **Invariant:** **Actor = User ∪ Collective.** Wherever the docs
 say "actor" without further qualification, the referent is any
@@ -341,7 +347,7 @@ needed:
 **Invariant:** A junction relationship's state is derived from the
 two structural edges of its state pair, not from a stored flag.
 Claim only = pending; claim + approval, both with `dim1 > 0` top
-layers = active; negative top layer on either = revoked. A status
+layers = active; top layer `≤ 0` on either = revoked. A status
 property on the junction would be a second source of truth that
 could drift; the topology IS the state. The storage layer cannot
 forbid a property by absence, so enforcement is ethos plus an
@@ -357,7 +363,7 @@ state: it's set once at junction creation and never re-pointed,
 and is what lets invite-only flows bind a junction to its
 prospective bearer before that actor has self-claimed. The
 Shape A self-claim that admits the junction — the bearer's vote
-authoring its admit-Proposal — must originate from the actor at
+on its admit-Proposal — must originate from the actor at
 the other end of `:BEARER`. See
 [edges.md §2 "Bearer binding"](edges.md#bearer-binding).
 
@@ -396,12 +402,17 @@ The **approval policy** uses the **two voting shapes** (per
 [governance.md §3](governance.md#3-the-two-vote-shapes)), both
 now directed at the Proposal:
 
-1. The would-be bearer's **Shape A self-claim** — the act of
-   **authoring the admit-Proposal** (`User/Collective → Proposal`).
+1. The would-be bearer's **Shape A self-claim** — their approving
+   vote on the admit-Proposal (`User/Collective → Proposal`).
    This is necessarily Shape A because the bearer has no junction
    of this type yet from which to cast a Shape B vote; their own
-   junction is the very thing they're claiming. Authorship is the
-   first vote (see [proposal.md §5](../instances/proposal.md#5-authorship)).
+   junction is the very thing they're claiming. The admit-Proposal
+   is created together with the junction, by whichever side moves
+   first: in the request flow the bearer authors it, so the
+   self-claim is the authoring first vote (see
+   [proposal.md §5](../instances/proposal.md#5-authorship)); in the
+   invite flow the inviter creates the junction and authors the
+   Proposal, and the bearer's self-claim is their later vote on it.
 2. Zero or more approver **Shape B votes** — each required
    approver writes a structural edge from their existing
    eligibility junction toward the Proposal
@@ -416,7 +427,7 @@ typically simple-count or weighted-count of the Shape B approver
 votes (weights derived from role properties on the approver
 junctions, per [governance.md §2.3](governance.md#23-weight-function)).
 N ranges from `0` (open / self-approving — only the bearer's
-Shape A authoring vote is required) through `1` (a single decider)
+Shape A self-claim is required) through `1` (a single decider)
 to multi-sig with weighted votes. Specific applications pick their
 N — see [chats.md](../instances/chats.md),
 [collectives.md](../instances/collectives.md), and
@@ -460,8 +471,8 @@ the edge's current stance; `dim2` is reserved (default `0`, available
 for future use such as reason codes):
 
 - `dim1 > 0` — **affirmed** (claim stands / parent accepts).
-- `dim1 = 0` — **abstained / neutral**.
-- `dim1 < 0` — **revoked / withdrawn**.
+- `dim1 ≤ 0` — **not affirmed** (revoked / withdrawn). Affirmation
+  is strictly positive; a `0` top layer is not a distinct state.
 
 Layer 1 of each edge is created by the system with `(+1, 0)` — the
 edge is created because an admit-Proposal passed (or, for `N = 0`,
@@ -473,7 +484,7 @@ full state history is visible in the layer stacks.
 
 **Relationship state is derived from both top layers.** A junction
 relationship is **active** iff both paired edges' top layers have
-`dim1 > 0`. Any negative top layer on either edge makes the
+`dim1 > 0`. A top layer at `0` or below on either edge makes the
 relationship **revoked**. The **pending** state (claim edge only,
 no approval edge yet) still applies — it's a separate case from
 revoked.
