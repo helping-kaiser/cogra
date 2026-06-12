@@ -9,8 +9,7 @@ into the relevant design doc and the entry below is removed.
 
 **Scope.** Design questions only — things we have not decided. Pure
 implementation TODOs, known-outdated docs, and tasks on a roadmap are
-out of scope. (`api-spec.md` is flagged as pending rewrite; it's not
-a design question, it's a rewriting task, so it's not listed here.)
+out of scope.
 
 ---
 
@@ -24,7 +23,9 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 1. API phase | 1 | **Q23** | Search: what is indexed and how matches rank. The read surface ships `search` as explicitly provisional; answering needs no other open question. |
+| 1. API phase | 2 | **Q24** | Miner transport and authentication. The `rank` contract is pinned; the wire form and the viewer→miner delegation handshake are not. |
+| 2. Federation phase | 3 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -53,6 +54,58 @@ questions are closed.
 - Q19 — see [governance.md §7](primitive/governance.md#7-the-mod-gate) (the mod-gate, now two-tiered) and [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only) (denominator inflation reframed). The mod-gate gains a **critical tier** keyed to the existing baseline/critical stakes split: low-stakes actions keep the flat **≥1 positive moderator vote**; destructive/irreversible ones (moderator role changes, `illegal`-redaction, guidelines amendments, critical `:Network` amendments) require `mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active mods|⌉` (new `:Network` property, default `0.50`, itself in the critical bucket so loosening it is a critical act — recursion closed). This shuts the catastrophic vector the flat-one gate left open: one compromised moderator key plus a community bot-flood could pass anything. Because the fraction is `≤ 1`, `⌈f · |active mods|⌉` never exceeds the active-mod count — the gate is always satisfiable, needs no absolute floor, self-strengthens as the moderator set grows (one or two mods round to one; a real majority at three+), and is deadlock-free; and since minting a moderator is itself critical, the denominator is Sybil-resistant by construction. Stake/wealth-gating was declined upstream (Q20) as plutocracy. The community-side denominator inflation is **not** a takeover vector — a petition tally counts only positive votes, so inflation can only make a Proposal harder to pass, never force one through — so it is reframed as a bounded *liveness* residual (the absolute bar `quorum_count` caps it), not an open question. Tier annotations propagated to [network.md §9/§11](primitive/network.md#9-mod-role-changes-via-multi-sig-proposal), [moderation.md §3](instances/moderation.md#3-the-mod-gate-rule), [platform-guidelines.md](instances/platform-guidelines.md), and [graph-data-model.md](implementation/graph-data-model.md).
 - Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#5-algorithm). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#7-time-and-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge), the actual bot-bridge defense). `ε` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`ε`/`b` corrected — `ε` bounds the node-set, not the path count).
+
+---
+
+## Q23 — Search: index scope and match ranking
+
+**Where it shows up:** [api-spec.md "Search"](implementation/api-spec.md) (the `search` query, marked provisional there)
+**Status:** open
+
+The read surface exposes `search(query, kinds)` as the global
+search / type-ahead entry point, but the design behind it is
+undecided:
+
+- **What is indexed.** Handles and display names? Post and
+  comment bodies? Hashtag names (the Postgres registry already
+  exists as an enumeration aid — [hashtag.md §3](instances/hashtag.md#3-postgres-side-content))?
+  Encrypted chat content is presumably never indexed; plaintext
+  chat content is an open call.
+- **How matches rank.** Lexical relevance only, or blended with
+  the viewer's graph (path products to the match)? Any
+  graph-blended ranking must come from the graph and its weights
+  alone — the no-AI rule applies to search ranking as much as to
+  feeds.
+- **Moderation interaction.** Whether `sensitive`-classified and
+  redacted content appears in results, and how the per-field
+  status is respected by indexing.
+
+Until this is answered, `search` stays explicitly provisional in
+the spec; clients should not build load-bearing flows on its
+semantics.
+
+---
+
+## Q24 — Miner API: transport and delegation authentication
+
+**Where it shows up:** [miner-api.md "Transport"](implementation/miner-api.md#transport)
+**Status:** open
+
+The `rank` operation's contract (inputs, math, output) is pinned
+by [feed-ranking.md](primitive/feed-ranking.md) and
+[miner-api.md](implementation/miner-api.md). What remains open is
+the plumbing:
+
+- **Wire form.** Whether `rank` travels as GraphQL, a dedicated
+  RPC, or an in-process call when the runner is the client
+  itself; `FeedSlice` as written is a GraphQL output type, so a
+  non-GraphQL wire form needs a serialization.
+- **Delegation handshake.** How a viewer authorizes a remote
+  miner to rank for them: what credential the miner presents,
+  how the viewer's private inputs (seen-list, rank params) reach
+  the miner, and how the viewer revokes a delegation.
+- **Result integrity.** Whether a delegated miner's output is
+  spot-checkable / attestable by the client, or trusted outright.
 
 ---
 
