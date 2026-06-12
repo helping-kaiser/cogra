@@ -113,9 +113,12 @@ most useful one.
   restrictions](feed-ranking.md#35-traversal-restrictions) are the
   rest.
 - [Feed-ranking traversal is vertex-simple](feed-ranking.md#3-per-edge-composition-along-a-path)
-  — no node appears more than once on a path; the walk maintains
-  a per-path visited set to block cycles through bidirectional
-  topologies.
+  — no node appears more than once on a path. Exact in the sparse
+  enumeration regime via a per-path visited set; in the dense
+  regime, [§4.5](feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice)
+  computes the metric by message-passing under a memory-1
+  (non-backtracking) relaxation that still blocks the
+  bidirectional 2-cycles the invariant exists to remove.
 - [`:REFERENCES` fanout-budget](edges.md#reference) — across a
   source node's outbound `:REFERENCES` top layers,
   `sum |dim1| ≤ 1` and `sum |dim2| ≤ 1` per dimension; default
