@@ -1971,19 +1971,23 @@ storage location is independent of the math:
   [data-model.md](../implementation/data-model.md)
   `user_view_log`. Multi-device sync for free; survives client
   cache-clears.
-- **Local on a single device.** Frontend-only storage. Lost on
-  cache-clear; that's an explicit user trade-off, not a
-  privacy concession (the network is transparent — viewing
-  history is no more sensitive than reaction history).
-- **Miner / self-hosted client.** Per §9, ranking can run on a
-  chosen delegate; the seen-list lives with the delegate.
-  Aligned with the decentralization vision.
+- **Local on a single device.** Frontend-only storage (the
+  self-hosted client's home too). Lost on cache-clear; that's
+  an explicit user trade-off, not a privacy concession (the
+  network is transparent — viewing history is no more sensitive
+  than reaction history).
 - **Nowhere at all.** A user who doesn't want filtering accepts
   seeing repeats. The math degrades gracefully: an empty
   seen-list parameter excludes nothing.
 
 The calculator doesn't care where the data came from — it gets
-a JSON list as a parameter and applies it.
+a JSON list as a parameter and applies it. Delegation adds no
+storage home: under the push model the seen-list rides inside
+each request from wherever the viewer keeps it, and the miner
+holds no standing state
+([miner-api.md "Delegation and trust"](../implementation/miner-api.md#delegation-and-trust)).
+Standing delegation — a credential or miner-held seen-list — is
+parked as [open-questions.md Q25](../open-questions.md).
 
 ### 8.3 What counts as "seen" — frontend convention
 
@@ -2028,7 +2032,7 @@ reported.
 
 By default, view-log entries older than **1 year** are dropped
 (by a periodic backend job for backend-stored lists; by the
-client/miner for self-stored lists). This bounds storage at
+client for self-stored lists). This bounds storage at
 ~7 MB per active-user-year worst case.
 
 **Trade-off acknowledged:** an old post that resurges (a "late
@@ -2042,7 +2046,7 @@ character, not a defect.
 
 Frontends and self-hosted setups can adjust the horizon
 (longer for users who want stricter filtering, shorter for
-storage-constrained miners) or disable compaction entirely.
+storage-constrained devices) or disable compaction entirely.
 
 ---
 
