@@ -932,8 +932,9 @@ type GovernanceExecGate {
   "How each eligible vote is weighted."
   weighting: VoteWeighting!
   "Passing condition — one of the threshold shapes in governance.md §2.4
-   (count, fraction of cast, quorum, or dual-quorum petition). Carried as
-   a documented string; the exact serialization is the instance's choice."
+   (count, fraction of eligible weight, supermajority, quorum +
+   cast-fraction, dual-quorum petition, or multi-gate). Carried as a
+   documented string; the exact serialization is the instance's choice."
   threshold: String!
   "Whether the subject of the action is barred from voting on it."
   excludeSubject: Boolean!
@@ -1515,9 +1516,12 @@ type Mutation {
    voter's eligible junction (Shape B). Recasting appends a new
    layer — this is how a vote is changed; there is no separate
    gesture. dim1 carries the stance; a non-positive dim1 is a valid
-   recorded edge that a petition-style tally does not count and that a
-   bidirectional tally counts toward the FAILED mirror bar. Votes are
-   accepted only while the Proposal is OPEN."
+   recorded edge that a petition-style tally does not count. In a
+   bidirectional tally only a negative dim1 counts toward the FAILED
+   mirror bar; a zero dim1 counts to neither side — (0, 0) is the
+   abstain layer that vote recasting and the eligibility-dropout
+   cascade write (governance.md §6). Votes are accepted only while
+   the Proposal is OPEN."
   castVote(input: CastVoteInput!): CastVotePayload!
 
   # ── Chat membership and lifecycle ────────────────────────────
@@ -1907,7 +1911,11 @@ tags go through the `tags` input.
 input CastVoteInput {
   proposal: UUID!
   dim1: Dimension!
-  dim2: Dimension!
+  "Shape A only — the importance / personal-stake dimension of the
+   voter's actor edge; null defaults to 0. On a Shape B vote the
+   structural edge's dim2 is canon-fixed at 0 (edges.md §2): null or
+   0 is accepted, anything else is a validation error."
+  dim2: Dimension
   "The junction to vote from, when the voter has several eligible
    ones; defaults to the unique eligible junction."
   as: UUID
