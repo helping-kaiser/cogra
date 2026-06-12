@@ -329,15 +329,30 @@ it is never in the default feed. See
 
 ## 5. Authorship
 
-The authoring gesture **is** the author's first vote on
-the Proposal — a Proposal exists to be voted on, and there
-is no separate personal-stance dimension to preserve apart
-from the vote. The same edge serves both roles, so the
-earliest-incoming-edge author derivation
-([authorship.md](../primitive/authorship.md)) and the
-first-voter identity coincide. See
-[moderation.md §2](moderation.md#2-reports--proposals-on-the-graph)
-for the worked example with reports.
+Every Proposal is authored by a `User/Collective → Proposal`
+`:AUTHOR` actor edge written in the opening gesture
+([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
+Which edge that is depends on the opening vote's shape:
+
+- **Opened by a Shape A vote.** The authoring gesture **is** the
+  author's first vote — a Proposal exists to be voted on, and
+  there is no separate personal-stance dimension to preserve
+  apart from the vote. The same edge serves both roles, so the
+  earliest-incoming-edge author derivation
+  ([authorship.md](../primitive/authorship.md)) and the
+  first-voter identity coincide. See
+  [moderation.md §2](moderation.md#2-reports--proposals-on-the-graph)
+  for the worked example with reports.
+- **Opened by a Shape B vote.** The vote is a structural edge
+  from the opener's eligibility junction, and structural edges
+  cannot carry `:AUTHOR`. The actor behind the opening junction
+  writes the `User/Collective → Proposal` `:AUTHOR` actor edge
+  in the same gesture — the paired-edge pattern of the junction
+  self-claim
+  ([graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)).
+  Vote and authorship are separate edges: the structural edge
+  enters the tally, the actor edge carries authorship and the
+  author's personal stance.
 
 ---
 
