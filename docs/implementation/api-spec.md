@@ -1552,8 +1552,9 @@ type Mutation {
   "Rotate the chat key mid-epoch — proposal-backed; on passing,
    Chat.epoch advances."
   rotateChatKey(input: RotateChatKeyInput!): ProposalPayload!
-  "Change a Chat's profile (name, description, image) — proposal-backed;
-   a composite proposal when more than one field is supplied."
+  "Change one of a Chat's profile fields (name, description, image) —
+   proposal-backed; each field is a simple single-property Proposal
+   under its own gate, so one field per call."
   editChatProfile(input: EditChatProfileInput!): ProposalPayload!
 
   # ── Collectives ──────────────────────────────────────────────
@@ -1572,9 +1573,10 @@ type Mutation {
   "Amend one governance rule on a Collective or Chat — proposal-backed,
    judged by that rule's own amend gate."
   amendGovernanceRule(input: AmendGovernanceRuleInput!): ProposalPayload!
-  "Change a Collective's profile (displayName, description, avatar,
-   websiteUrl) — proposal-backed; a composite proposal when more than
-   one field is supplied."
+  "Change one of a Collective's profile fields (displayName,
+   description, avatar, websiteUrl) — proposal-backed; each field is a
+   simple single-property Proposal under its own gate, so one field
+   per call."
   editCollectiveProfile(input: EditCollectiveProfileInput!): ProposalPayload!
 
   # ── Items ────────────────────────────────────────────────────
@@ -2011,8 +2013,13 @@ type AcceptChatInvitePayload {
   admission: Proposal!
 }
 
-"Change a Chat's profile. Each supplied field opens a property change;
- more than one bundles into a single composite proposal."
+"Change a Chat's profile — exactly one of name / description /
+ imageMediaId. Each profile field is a simple single-property Proposal
+ judged by its own `decision:set:*` gate
+ ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions),
+ [proposal.md §2](../instances/proposal.md#composite-proposals));
+ supplying more than one field is a validation error — there is no
+ multi-field bundle."
 input EditChatProfileInput {
   chat: UUID!
   name: String
@@ -2109,8 +2116,12 @@ type AcceptCollectiveInvitePayload {
   admission: Proposal!
 }
 
-"Change a Collective's profile. Each supplied field opens a property
- change; more than one bundles into a single composite proposal."
+"Change a Collective's profile — exactly one of displayName /
+ description / avatarMediaId / websiteUrl. Each profile field is a
+ simple single-property Proposal judged by its own `decision:set:*`
+ gate ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions));
+ supplying more than one field is a validation error — there is no
+ multi-field bundle."
 input EditCollectiveProfileInput {
   collective: UUID!
   displayName: String
