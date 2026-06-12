@@ -51,9 +51,10 @@ is no prior membership to vote on it — the
 collapses to its `N = 0` special case: the founder's
 **Shape A self-claim** is the only required vote, **no
 admit-Proposal node is materialized**, and the system writes both
-structural edges (claim and approval) plus the
-`CollectiveMember → User` `:BEARER` identity edge atomically
-alongside it. This is the same bootstrap pattern used for the
+structural edges (claim and approval), the
+`CollectiveMember → User` `:BEARER` identity edge, and the
+founder's `bearer → CollectiveMember` `:AUTHOR` actor edge —
+which authors the junction (§6) — atomically alongside it. This is the same bootstrap pattern used for the
 author's `ItemOwnership` in
 [items.md §1](items.md#1-creation) and for the founder of a
 Chat in [chats.md §2.1](chats.md#21-chat). See §7 for the

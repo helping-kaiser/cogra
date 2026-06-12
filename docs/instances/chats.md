@@ -65,6 +65,8 @@ The gesture writes the following records atomically:
   `role = 'admin'`.
 - The `ChatMember → User/Collective` `:BEARER` structural edge,
   binding the junction to the founder.
+- The founder's `bearer → ChatMember` `:AUTHOR` actor edge,
+  which authors the junction (§6.3).
 - The `ChatMember → Chat` claim edge.
 - The `Chat → ChatMember` approval edge with positive top layer.
 
