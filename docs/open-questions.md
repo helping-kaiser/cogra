@@ -23,8 +23,10 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
-| 2. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 1. Anytime — no external trigger | 1 | **Q26** | `Chat.epoch`'s classification in the layering and outcome-carrier taxonomy. A doc-reconciliation decision; nothing blocks it. |
+| 1. Anytime — no external trigger | 2 | **Q27** | Household/co-op act-as examples lost their intended majority concurrence. An example-design decision; nothing blocks it. |
+| 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
+| 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -241,4 +243,109 @@ question completes for the cross-instance case),
 [feed-ranking.md §3.7](primitive/feed-ranking.md#37-cascading-severance-and-redemption) (cluster
 severance — local to the severing community per principle, but
 federation could change this).
+
+---
+
+## Q26 — Chat.epoch: classification in the layering and outcome-carrier taxonomy
+
+**Where it shows up:** [chats.md §3.1](instances/chats.md#31-chat) / [§9](instances/chats.md#9-encryption-as-the-privacy-mechanism),
+[layers.md §3](primitive/layers.md#3-layers-on-nodes),
+[governance.md §2.5](primitive/governance.md#25-outcome),
+[proposal.md §6](instances/proposal.md#6-lifecycle)
+**Status:** open
+
+### Context
+
+chats.md declares `epoch` an integer counter on `:Chat` (default
+`1`, "operational counter; not layered") that advances **in
+place** — automatically on every membership transition, and on
+every passing `decision:rotate_key` Proposal. Two primitive rules
+have no slot for that:
+
+- [layers.md §3](primitive/layers.md#3-layers-on-nodes) sanctions
+  non-layered graph values only as **derived caches** rebuilt from
+  the source of truth ("the graph itself has no carve-outs"), and
+  no doc classifies `epoch` as one — chats.md's "operational
+  counter" label is the category layers.md reserves for
+  Postgres-side carve-outs.
+- [governance.md §2.5](primitive/governance.md#25-outcome)
+  enumerates the outcome carriers a passed Proposal can write — a
+  structural-edge layer, a node-property layer, or a Postgres
+  version row. The in-place `epoch` advance is none of the three;
+  it appears only in §6's cascade-dispatch list, unclassified.
+  [proposal.md §6](instances/proposal.md#6-lifecycle)'s "outcomes
+  that write no graph-property layer" list omits it too.
+
+### The question
+
+How is `epoch` classified? The natural candidate: declare it a
+**derived cache** — rebuildable from membership-transition edge
+layers plus passed rotation Proposals — which legalizes the
+in-place advance under layers.md §3, and extend governance.md
+§2.5 / proposal.md §6 with the rotation outcome (a passed
+Proposal whose effect is a cache refresh). The alternative is to
+make `epoch` an ordinary layered property and accept a layer per
+membership change.
+
+### Constraints (from established principles)
+
+- **Append-only.** Whichever classification wins, epoch history
+  must stay reconstructible from append-only sources — it already
+  is, via membership-transition layers and rotation Proposals.
+- **Not a ranking input.** `epoch` is key-selection metadata for
+  the frontend ([chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism));
+  no classification should turn it into graph signal.
+
+### Related
+
+[chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism)
+(epochs and key rotation),
+[graph-data-model.md](implementation/graph-data-model.md) (the
+`:Chat` property table already documents the advance rule).
+
+---
+
+## Q27 — Household and co-op act-as examples: the intended majority concurrence is no longer expressible
+
+**Where it shows up:** [collectives.md §8](instances/collectives.md#8-governance--the-social-contract) example tables
+**Status:** open
+
+### Context
+
+Act-as gestures execute immediately for any eligible member:
+[governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape)
+deliberately rules act-as out as a co-sign consumer, because an
+outgoing act held pending co-signatures — a not-yet-approved Post
+or edge — would already be visible. When concurrence gates were
+removed from act-as rules, the household and worker co-op example
+tables kept `actas:vote:Proposal` / `actas:transfer:Item` rows
+that originally *intended* majority concurrence. As written, any
+single member of the 5-person household can cast the household's
+votes or transfer shared Items immediately — directly under prose
+asserting "consensus dominates."
+
+### The question
+
+Should the examples regain their intended concurrence by
+reworking those rows into `decision:*` entries (materializing a
+Proposal, e.g. `decision:transfer:Item`), or is
+single-member act-as the accepted semantics for these archetypes
+— with the surrounding prose adjusted to match?
+
+### Constraints (from established principles)
+
+- **Act-as cannot be co-sign-gated.** The visibility argument in
+  governance.md "Co-signed acts" stands; concurrence requires the
+  `decision:*` route through a Proposal node, the only pending
+  subject available.
+- **Examples are teaching surfaces.** The §8 tables exist to show
+  the governance map expressing real archetypes; an example that
+  contradicts its own prose teaches the wrong lesson either way
+  it resolves.
+
+### Related
+
+[governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape),
+[collectives.md §2](instances/collectives.md#2-acting-through-the-collective)
+(acting through the Collective).
 

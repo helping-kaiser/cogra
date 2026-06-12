@@ -131,7 +131,9 @@ A Chat node carries:
   `1`. Operational counter; not layered. Advances by `1`
   automatically on every membership change (no vote), and on every
   passing `decision:rotate_key` Proposal (the only governance-routed
-  rotation — §9).
+  rotation — §9). Its classification under the layering taxonomy
+  is open — see
+  [open-questions.md Q26](../open-questions.md#q26--chatepoch-classification-in-the-layering-and-outcome-carrier-taxonomy).
 
 Per-field moderation-status properties cover each user-input
 field — **`name_status`** (companion to the data sibling `name`),
