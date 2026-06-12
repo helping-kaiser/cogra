@@ -202,13 +202,18 @@ under it identically. Three surfaces, three rules:
     bookmark is a genuine row delete.
   - `user_hidden_actors` — per-viewer hide list; unhiding is a
     genuine row delete.
+  - `chat_read_state` — per-viewer chat-read pointer; UPSERTed
+    in place as the user reads further.
+  - `user_preferences` — per-user settings row, overwritten in
+    place; a setting's current value is operational state, not
+    history.
   - content–attachment junction rows — a parent's *current*
     gallery arrangement; an edit adds and removes junction rows.
     The assets themselves remain append-only (redaction
     tombstones them in place, never deletes).
 
-  The per-viewer entries are operational filter state private to
-  the viewer; the junction entry is arrangement, not content.
+  The per-viewer entries are operational state private to the
+  viewer; the junction entry is arrangement, not content.
   Additions to this list require a named exception added here.
 - **Frontends, miners, indexers, and off-graph systems: not
   governed by this invariant.** Whatever they cache, summarize,
