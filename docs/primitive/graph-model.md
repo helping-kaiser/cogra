@@ -77,10 +77,12 @@ Nodes fall into six categories:
   are acted upon like content but, lacking an author and a mutable
   body, sit outside the content category.
 - **Carrier nodes** — process and record carriers with no
-  user-input fields and no Postgres-side display content
-  (Proposal, Campaign, Settlement, Wallet). They exist to carry a
-  governance or economics process and its public results, and are
-  acted upon only through the narrow edge sets their docs define
+  Postgres-side display content (Proposal, Campaign, Settlement,
+  Wallet). They exist to carry a governance or economics process
+  and its public results, and are acted upon only through the
+  narrow edge sets their docs define. The one user-bearing
+  carrier field is `Proposal.proposed_value`, moderatable via
+  its status companion
   ([nodes.md §6](nodes.md#6-carrier-nodes)).
 
 **Invariant:** **Actor = User ∪ Collective.** Wherever the docs
