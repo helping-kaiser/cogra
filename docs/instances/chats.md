@@ -987,9 +987,9 @@ Nth qualifying Shape B vote crosses the threshold.
 ### State encoding
 
 A membership is **pending** when only the claim edge exists;
-**active** when both claim and approval edges exist;
-**revoked** when a `dim1 < 0` layer has been
-appended to either edge. Per
+**active** when both claim and approval edges carry `dim1 > 0`
+top layers; **revoked** when the top layer on either edge is
+non-positive (`dim1 ≤ 0`). Per
 [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
 nothing is deleted — state transitions are encoded as new
 layers on the existing structural edges.
