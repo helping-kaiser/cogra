@@ -171,6 +171,16 @@ What tally triggers the outcome. Possible shapes:
   voting on the same subject; each gate has its own threshold,
   and the outcome triggers only when **all** gates cross.
 
+**Mirror failure (bidirectional tallies).** A tally that counts
+negative votes fails terminally — `status = 'failed'`
+([proposal.md §6](../instances/proposal.md#6-lifecycle)) — when
+the negative side satisfies the same threshold shape required of
+the positive side: same quorum, same fraction or count, computed
+over negative weight. While neither side crosses, the Proposal
+stays open and votes remain re-layerable. Petition-style tallies
+count no negatives, so they have no failure path — an unloved
+petition simply stays `'open'`.
+
 Percentages scale with the voter pool; fixed counts don't. An
 instance that picks fixed numbers has to defend why it won't need
 re-tuning as the pool grows. Dual quorum bounds both ends: the
@@ -517,8 +527,8 @@ mechanism is introduced; the result is what we call a
 **co-signed act**:
 
 - The would-be change is materialized as a pending subject (a
-  not-yet-active junction node, a not-yet-produced outgoing
-  edge, a Proposal) so co-signers have something to vote on.
+  not-yet-active junction node, a Proposal) so co-signers have
+  something to vote on.
 - Co-signers append vote layers in their respective shape until
   the threshold is reached.
 - On threshold-cross, the outcome takes effect per §6: the
@@ -527,7 +537,7 @@ mechanism is introduced; the result is what we call a
 
 The pattern recognizes that "N parties concur" and "governance
 with threshold N" are the same primitive — there is no separate
-"co-signature" concept. Three current consumers:
+"co-signature" concept. Two current consumers:
 
 - **Multi-sig junction approval.** The would-be bearer's Shape A
   self-claim vote on the admit-Proposal, plus N Shape B approver
@@ -542,18 +552,14 @@ with threshold N" are the same primitive — there is no separate
   on the Shape B approver votes cast on the admit-Proposal for a
   new `ChatMember`. See
   [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
-- **Collective act-as routing.** A member's gesture to produce
-  the Collective's outgoing edge runs through the social
-  contract's per-gesture rule; when the rule's threshold is `> 1`,
-  the gesture is held in a pending state until enough authorized
-  members co-sign, identical in shape to the multi-sig junction
-  approval above. See
-  [collectives.md §2](../instances/collectives.md#2-acting-through-the-collective).
-
-A future actor that needs N-party authorization on its own
-outgoing edges (a multi-sig bot, a council acting jointly)
-parameterizes this same primitive rather than inventing a new
-one.
+Collective act-as gestures are deliberately **not** a consumer:
+the graph is public, so an outgoing act held pending
+co-signatures — a not-yet-approved Post or edge — would already
+be visible. An authorized member's act-as gesture executes
+immediately; the act-as rule gates *who* may act, never how many
+must concur ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
+Multi-party Collective decisions exist only as the self-targeting
+Proposal-shaped entries of the social contract.
 
 ### Counter-Proposals
 

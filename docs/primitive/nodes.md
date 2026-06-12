@@ -117,14 +117,15 @@ a redaction marker that is append-only per
 
 Per-field moderation-status properties and the `moderation_status`
 cache appear on every user-input-bearing node: **User, Collective,
-Post, Comment, ChatMessage, Chat, Item, Hashtag**.
+Post, Comment, ChatMessage, Chat, Item, Hashtag** — and, for its
+single user-bearing field, **Proposal**: `proposed_value` may
+embed user-authored content (a proposed description or name) and
+carries a `proposed_value_status` companion
+([proposal.md §2](../instances/proposal.md#2-graph-side-properties)).
 
 Junction nodes (`ChatMember`, `CollectiveMember`, `ItemOwnership`)
 carry no user-input fields and so carry neither per-field
-properties nor the cache. **Proposal** is in the same position —
-its substance is `target_property` + `proposed_value` + the
-`:TARGETS` edge, with no user-input field to redact and no
-Postgres-side display content either. **`Campaign` and `Settlement`**
+properties nor the cache. **`Campaign` and `Settlement`**
 are in the same position — pure record nodes whose substance is graph
 properties plus pointers to the chain, with nothing user-authored to
 redact. The **`:Network` singleton** is similarly pure configuration
@@ -260,7 +261,7 @@ narrow edge sets their own docs define.
 
 | Node type | Description |
 |-----------|-------------|
-| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. Carries no per-field moderation properties. See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
+| **Proposal** | The subject carrier for property-level governance votes — targets one graph property on another node via `:TARGETS`. The one carrier with a user-bearing field: `proposed_value` may embed user-authored content and is moderatable via its status companion ([proposal.md §2](../instances/proposal.md#2-graph-side-properties)). See [proposal.md](../instances/proposal.md); the primitive itself is in [governance.md §2.1](governance.md#21-subject). |
 | **Campaign** | A pull-marketing campaign — a funded, public request to raise a target node's reach into an anchor's cluster. Authored by the advertiser; carries the campaign terms as graph properties (deposit pointer, `g`, goal, window) and reaches its anchor and target through `:ANCHOR` / `:PROMOTES` edges. See [economics.md §2](economics.md#2-the-campaign-node). |
 | **Settlement** | The terminal record of a settled `Campaign`, created once at settlement — carries the distributor address, the payout Merkle root, and the public results (`settled_P`, `achieved_h_gain`) as properties. Claimants reach it via `:ENTITLES` / `:CLAIMS` edges. See [economics.md §7](economics.md#7-settlement-on-the-graph--the-claim-flow). |
 | **Wallet** | An account's payout wallet — created at signup holding the account's counterfactual self-custody on-chain address as a layered property. Bound to its account by a single `:PAYS_TO` edge; `:ENTITLES` / `:CLAIMS` and `:TRANSFERS` edges point at it. Survives account deletion (the durable handle is the off-platform key). See [ledger.md](../implementation/ledger.md#the-wallet-node-and-the-pays_to-binding). |

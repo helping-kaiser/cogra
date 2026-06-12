@@ -248,6 +248,7 @@ the two paths.
 | **Chat** | `name_status`, `description`, `image` | all three |
 | **Item** | `name`, `description`, `attachments` | all of the above |
 | **Hashtag** | `name_status` | n/a (only field) |
+| **Proposal** | `proposed_value_status` — for Proposals whose `proposed_value` embeds user-authored content ([proposal.md §2](proposal.md#2-graph-side-properties)). The cascade writes the marker onto `proposed_value` in place (identity properties don't layer) and onto the layered status companion; a still-`'open'` target transitions terminally to `'redacted'` ([proposal.md §6](proposal.md#6-lifecycle)). | n/a (only field) |
 
 The graph-needed data fields (`User.username`, `Collective.name`,
 `Chat.name`, `Hashtag.name`) are targeted via their `_status`
@@ -273,8 +274,8 @@ redacts all attachments under `target_property = 'attachments'`.
 **Out of scope:**
 
 - Junction nodes (`ChatMember`, `CollectiveMember`,
-  `ItemOwnership`) and `Proposal` nodes — they carry no
-  user-authored content fields.
+  `ItemOwnership`) — they carry no user-authored content
+  fields.
 
 ### Encrypted message classification
 
