@@ -824,8 +824,8 @@ its claim parent — alongside the generic edge access.
 ```graphql
 "A junction relationship's lifecycle state, derived from its
  claim/approval edge pair — never a stored flag. PENDING: claim
- only. ACTIVE: claim + approval, both top layers positive. REVOKED:
- a negative top layer on either."
+ only. ACTIVE: claim + approval, both top layers dim1 > 0. REVOKED:
+ a non-positive (dim1 ≤ 0) top layer on either."
 enum JunctionState { PENDING ACTIVE REVOKED }
 ```
 
@@ -1399,8 +1399,9 @@ type Mutation {
    membership and its admission Proposal with the inviter's approving
    vote; the invitee's acceptance is their self-claim."
   inviteChatMember(input: InviteChatMemberInput!): InviteChatMemberPayload!
-  "Accept a chat invitation — writes the invitee's self-claim on the
-   pending membership; resolves to ACTIVE once approvals suffice."
+  "Accept a chat invitation — the invitee's self-claim: their Shape A
+   vote on the admission Proposal plus their :AUTHOR edge on the
+   membership; resolves to ACTIVE once approvals suffice."
   acceptChatInvite(input: AcceptChatInviteInput!): AcceptChatInvitePayload!
   "Leave a Chat the viewer is a member of — a unilateral negative
    layer on the membership's claim; no vote, the junction goes
@@ -1426,8 +1427,9 @@ type Mutation {
   createCollective(input: CreateCollectiveInput!): CreateCollectivePayload!
   joinCollective(input: JoinCollectiveInput!): JoinCollectivePayload!
   inviteCollectiveMember(input: InviteCollectiveMemberInput!): InviteCollectiveMemberPayload!
-  "Accept a collective invitation — writes the invitee's self-claim on
-   the pending membership; resolves to ACTIVE once approvals suffice."
+  "Accept a collective invitation — the invitee's self-claim: their
+   Shape A vote on the admission Proposal plus their :AUTHOR edge on
+   the membership; resolves to ACTIVE once approvals suffice."
   acceptCollectiveInvite(input: AcceptCollectiveInviteInput!): AcceptCollectiveInvitePayload!
   leaveCollective(input: LeaveCollectiveInput!): LeaveCollectivePayload!
   changeCollectiveMemberRole(input: ChangeCollectiveMemberRoleInput!): ProposalPayload!
@@ -1783,8 +1785,8 @@ input RotateChatKeyInput {
   chat: UUID!
 }
 
-"Accept an invitation to a chat — the invitee's self-claim on the
- already-pending membership."
+"Accept an invitation to a chat — the invitee's self-claim, cast as
+ their vote on the admission Proposal."
 input AcceptChatInviteInput {
   membership: UUID!
 }
@@ -1859,8 +1861,8 @@ input RemoveCollectiveMemberInput {
   membership: UUID!
 }
 
-"Accept an invitation to a collective — the invitee's self-claim on
- the already-pending membership."
+"Accept an invitation to a collective — the invitee's self-claim, cast
+ as their vote on the admission Proposal."
 input AcceptCollectiveInviteInput {
   membership: UUID!
 }
