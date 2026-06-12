@@ -450,12 +450,17 @@ positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
 - `quorum_count` is the proposal-type's **`*_quorum_count`**
   property on the `:Network` singleton.
 - `|active_members|` is the count of Users active inside
-  `Network.active_threshold_days`, read live at each evaluation.
+  `Network.active_threshold_days`, read at each evaluation.
   Activity gates the **bar**, never the votes: a cast vote counts
   in every future evaluation regardless of whether its voter has
   since fallen outside the activity window. (Eligibility per §2.2
   — a revoked junction dropping its Shape B votes — is a separate
-  mechanism and unaffected.)
+  mechanism and unaffected.) The count is a **maintained
+  aggregate** — one counter per scope, kept current on an
+  operational cadence — never a per-vote rescan of the user set;
+  the same number serves every Proposal in the scope, and the bar
+  it feeds moves slowly, so a refresh-cadence-stale read is
+  acceptable by design.
 
 In addition, the mod-gate of §7 must be satisfied — every
 Network-scope Proposal also requires moderator consent in the

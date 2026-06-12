@@ -337,7 +337,7 @@ results as properties — never a money amount. Claimants reach it via
 | `merkle_root`         | String | Root of the payout tree. Per-wallet payout figures are Merkle leaves verified against it, never stored on-graph. Written once at settlement. |
 | `settled_P`           | Float  | The released amount `P`, recorded as a public scalar result — never a money tensor. Written once at settlement. |
 | `achieved_h_gain`     | Float  | The achieved reach gain, surfaced as a public result. Written once at settlement. |
-| `settled_t_star`      | String | The attribution instant `t*` the split was computed at ([economics.md §6.3](../primitive/economics.md#63-the-attribution-snapshot-t)), recorded for reproducibility alongside the `dust_floor` in force. Written once at settlement. |
+| `settled_t_star`      | LocalDateTime | The attribution instant `t*` — the timestamp pinning the graph state the split was computed from ([economics.md §6.3](../primitive/economics.md#63-the-attribution-snapshot-t)), recorded for reproducibility alongside the `dust_floor` in force. Written once at settlement. |
 
 ```cypher
 CREATE CONSTRAINT ON (s:Settlement) ASSERT s.id IS UNIQUE;
