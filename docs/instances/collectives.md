@@ -145,18 +145,17 @@ ahead of the generic governance machinery:
    defaults above unless overridden).
 2. **Look up the act-as rule** in C's social contract. If an
    explicit rule exists for E (by class or by specific edge
-   type), its eligibility, weight, and threshold parameterize
-   the act-as governance instance; otherwise the class default
-   applies (allow for content-acts, deny for governance-acts).
+   type), its eligibility predicate decides who may perform it;
+   otherwise the class default applies (allow for content-acts,
+   deny for governance-acts).
 
-The rule's threshold then runs as a standard governance
-instance per [governance.md](../primitive/governance.md):
-threshold `1` produces C's outgoing edge immediately; threshold
-`> 1` holds the gesture pending until enough authorized members
-co-sign — the
-[Co-signed acts pattern](../primitive/governance.md#co-signed-acts-threshold--1-in-either-shape).
-Collective act-as routing is one of the three current consumers
-of that pattern.
+An eligible member's gesture produces C's outgoing edge
+immediately. Act-as rules carry **eligibility only** — there is
+no multi-signer threshold for outgoing gestures, because the
+graph is public: a gesture held pending co-signatures would
+already be visible as a half-live Post or edge. Multi-party
+Collective decisions exist only as the self-targeting
+Proposal-shaped entries of the social contract (§8).
 
 If the acting "member" is itself a sub-Collective, its own
 social contract is consulted recursively before the parent
@@ -565,13 +564,11 @@ above, then walks **most-specific to most-general** through
 A Collective only needs to declare rules where it wants to
 override the §2 in-prose defaults — the rest fall through.
 
-A single-signer entry (`exec.threshold = 1`) collapses the
-co-signed-acts pattern (see
-[governance.md §3](../primitive/governance.md#co-signed-acts-threshold--1-in-either-shape))
-to its 1-of-1 case: the gesture executes immediately when the
-acting member satisfies `exec.eligibility`. A multi-signer entry
-(`exec.threshold > 1`) holds the gesture pending in a Proposal
-until co-signers cross the threshold.
+For `actas:*` entries only `exec.eligibility` is read: the
+gesture executes immediately when the acting member satisfies
+it (§2 — no multi-signer threshold for outgoing gestures). For
+`decision:*` entries the full gate applies, the threshold
+gating the Proposal's tally as usual.
 
 ### Snapshot at author-time
 

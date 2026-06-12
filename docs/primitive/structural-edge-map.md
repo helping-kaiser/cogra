@@ -44,7 +44,7 @@ outbound absence is explicit.
 | **ChatMessage**      | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:CONTAINMENT` `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` | `:REFERENCES` |
 | **Item**             | —          | —          | —          | —          | —          | —          | —          | `:TAGGING` | —          | —          | —          | `:APPROVAL`| —          | —          | —          | —          |
 | **Hashtag**          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          | —          |
-| **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | —          | —          |
+| **Proposal**         | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | `:TARGETS` | —          | —          | —          |
 | **ChatMember**       | `:BEARER`  | `:BEARER`  | —          | —          | `:CLAIM`   | —          | —          | —          | `:STRUCTURAL` | —          | —      | —          | —          | —          | —          | —          |
 | **CollectiveMember** | `:BEARER`  | `:CLAIM` `:BEARER` | —   | —          | —          | —          | —          | —          | `:STRUCTURAL` | —      | —          | —      | —          | —          | —          | —          |
 | **ItemOwnership**    | `:BEARER`  | `:BEARER`  | —          | —          | —          | —          | `:CLAIM`   | —          | `:STRUCTURAL` | —          | —          | —          | —       | —          | —          | —          |
@@ -88,9 +88,12 @@ The two-label cells in the matrix are:
   itself a member). Parent and bearer are always distinct nodes,
   so only one fires on any specific pair.
 
-`Proposal → Proposal` is `—` because a Proposal never targets
-another Proposal — moderation can't target it and no governance
-application proposes changes to a Proposal's own properties (per
+`Proposal → Proposal` is `:TARGETS` for exactly one case: a
+moderation Proposal targeting another Proposal's
+`proposed_value_status` — the one user-bearing carrier field
+([proposal.md §2](../instances/proposal.md#2-graph-side-properties)).
+No governance application proposes changes to a Proposal's other
+properties (per
 [proposal.md §4](../instances/proposal.md#4-edges)).
 
 `Proposal → Network` is `:TARGETS` (the `:Network` singleton is
@@ -137,7 +140,7 @@ junction never votes directly on another junction.
 
 Same information as the matrix, split one diagram per edge-label
 family. A single combined diagram is dominated by `:REFERENCES`
-(~46 edges) and `:TARGETS` (12 edges) fan-outs and reads as a
+(~46 edges) and `:TARGETS` (13 edges) fan-outs and reads as a
 hairball; splitting by family makes each family's shape visible.
 The matrix above remains the canonical reference.
 
@@ -243,7 +246,9 @@ flowchart LR
 
 Single-source fan-out: a Proposal points at the subject of its
 proposed change, which can be any node category — including the
-`Network` singleton and any junction — but never another Proposal
+`Network` singleton, any junction, and (for the one moderation
+case, [proposal.md §2](../instances/proposal.md#2-graph-side-properties))
+another Proposal
 ([edges.md "Subject targeting"](edges.md#subject-targeting)).
 
 ```mermaid
@@ -276,6 +281,7 @@ flowchart TD
     Proposal -->|TARGETS| CollectiveMember
     Proposal -->|TARGETS| ItemOwnership
     Proposal -->|TARGETS| Network
+    Proposal -->|TARGETS| Proposal
 
     classDef actor    fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
     classDef content  fill:#fff3e0,stroke:#ef6c00,color:#e65100;
