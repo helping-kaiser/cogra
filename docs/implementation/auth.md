@@ -34,6 +34,10 @@ Out of scope:
   resource-server shape, which leaves room to add OIDC client
   support (e.g. "log in with Google") later but does not commit
   to issuing identity tokens for other apps.
+- **Miner delegation.** Delegating feed ranking to a miner
+  involves no server-side credential: the viewer pushes inputs
+  per request and revokes by ceasing to call
+  ([miner-api.md](miner-api.md)). Nothing for auth to manage.
 - **End-to-end content encryption.** Chat E2EE keys are managed
   client-side per [chats.md](../instances/chats.md); the server
   never holds them.
