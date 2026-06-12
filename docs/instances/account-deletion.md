@@ -114,8 +114,9 @@ Account deletion never affects:
 
 - **Graph nodes.** User, Post, Comment, ChatMessage, all authored
   content nodes stay.
-- **Edges.** Actor edges (`:LIKES`, `:FOLLOWS`, `:CONTAINMENT`,
-  `:REFERENCES`, `:AUTHOR`, etc.) stay. Outgoing edges from the
+- **Edges.** Actor edges (`:ACTOR`, `:AUTHOR`, `:INVITE`) and
+  structural edges (`:CONTAINMENT`, `:REFERENCES`, etc.) stay.
+  Outgoing edges from the
   redacted user — including their `:AUTHOR` edges — continue to
   point at the User node by UUID; the UUID does not change.
   Incoming edges from others are untouched.
