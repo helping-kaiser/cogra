@@ -957,9 +957,12 @@ type RoleWeight {
 
 The carrier and configuration nodes: `Proposal`, the economics
 records (`Campaign`, `Settlement`, `Wallet`), and the `Network`
-singleton. None carry user-authored content, so none has moderation
-fields. Money lives on the chain; these nodes hold only pointers and
-public scalar results.
+singleton. Of these, only `Proposal` carries user-authored content —
+its `proposedValue` can embed user-authored text and is moderated
+like any content field
+([nodes.md §6](../primitive/nodes.md#6-carrier-nodes)); the rest
+carry none and have no moderation fields. Money lives on the chain;
+these nodes hold only pointers and public scalar results.
 
 ### Proposal
 
