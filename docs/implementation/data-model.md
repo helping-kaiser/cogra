@@ -261,7 +261,8 @@ CREATE TABLE chat_message_versions (
                                  CHECK (content_privacy IN ('plaintext', 'encrypted')),
     epoch            INTEGER     CHECK (
                                    (content_privacy = 'plaintext' AND epoch IS NULL) OR
-                                   (content_privacy = 'encrypted' AND epoch >= 1)
+                                   (content_privacy = 'encrypted' AND epoch IS NOT NULL
+                                                                  AND epoch >= 1)
                                  ),
     redaction_reason TEXT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -298,8 +299,9 @@ CREATE TABLE hashtags (
     id         UUID        PRIMARY KEY
                            CHECK (id = uuid_generate_v5(
                                -- HASHTAG_NAMESPACE_UUID — fixed at the
-                               -- project level, committed to source.
-                               'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'::uuid,
+                               -- project level, committed to source
+                               -- (common::HASHTAG_NAMESPACE).
+                               '7c844aef-fe5c-4849-90c2-196cbd8d47c6'::uuid,
                                name)),
     name       TEXT        NOT NULL UNIQUE,  -- stored lowercase, no '#'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
