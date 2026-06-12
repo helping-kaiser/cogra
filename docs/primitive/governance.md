@@ -590,8 +590,12 @@ co-signatures — a not-yet-approved Post or edge — would already
 be visible. An authorized member's act-as gesture executes
 immediately; the act-as rule gates *who* may act, never how many
 must concur ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
-Multi-party Collective decisions exist only as the self-targeting
-Proposal-shaped entries of the social contract.
+Multi-party Collective decisions exist only as the `decision:*`
+Proposal-shaped entries of the social contract — for an outgoing
+gesture, the `decision:<gesture>:<target_type>` form whose
+cascade performs the gesture on threshold-cross, the Proposal
+being the pending subject
+([collectives.md §8 "Action keys"](../instances/collectives.md#action-keys)).
 
 ### Counter-Proposals
 
