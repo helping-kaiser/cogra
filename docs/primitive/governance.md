@@ -244,6 +244,15 @@ append-only, never a deletion. The carrier is one of:
   graph-property layer (see
   [proposal.md §6](../instances/proposal.md#6-lifecycle)).
 
+A cascade may additionally refresh a **derived cache**
+([layers.md §3](layers.md#derived-caches-do-not-layer)) — an
+in-place write that is not a carrier, since a cache holds no
+history. Where the refresh is the outcome's only effect (a
+passing `decision:rotate_key` advancing `Chat.epoch`,
+[chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
+the on-graph record is the Proposal's terminal `status`, as in
+the display-content case above.
+
 Cascades are allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ### 2.6 Packaging rules on a node — the `governance` map convention
@@ -581,8 +590,12 @@ co-signatures — a not-yet-approved Post or edge — would already
 be visible. An authorized member's act-as gesture executes
 immediately; the act-as rule gates *who* may act, never how many
 must concur ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
-Multi-party Collective decisions exist only as the self-targeting
-Proposal-shaped entries of the social contract.
+Multi-party Collective decisions exist only as the `decision:*`
+Proposal-shaped entries of the social contract — for an outgoing
+gesture, the `decision:<gesture>:<target_type>` form whose
+cascade performs the gesture on threshold-cross, the Proposal
+being the pending subject
+([collectives.md §8 "Action keys"](../instances/collectives.md#action-keys)).
 
 ### Counter-Proposals
 
@@ -734,7 +747,9 @@ only write. The triggering write may fan out into derived writes:
 - A `(0,0)` layer on every active vote of an actor whose
   eligibility just dropped (eligibility-dropout cascade).
 - An advance of `Chat.epoch` on a chat node (mid-epoch
-  rotation).
+  rotation) — a derived-cache refresh, not an outcome carrier
+  (§2.5); the Proposal's terminal `status` is the on-graph
+  record.
 - A new ownership-edge layer (Item ownership transfer).
 - A new Postgres display-content version row and **no graph
   layer**, for a passing display-content field change

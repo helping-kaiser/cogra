@@ -128,12 +128,13 @@ A Chat node carries:
   any entry via a Proposal targeting `governance.<action_key>`,
   gated by that entry's own `amend` triple. Layered.
 - **`epoch`** — integer chat-key-rotation counter (§9). Default
-  `1`. Operational counter; not layered. Advances by `1`
-  automatically on every membership change (no vote), and on every
-  passing `decision:rotate_key` Proposal (the only governance-routed
-  rotation — §9). Its classification under the layering taxonomy
-  is open — see
-  [open-questions.md Q26](../open-questions.md#q26--chatepoch-classification-in-the-layering-and-outcome-carrier-taxonomy).
+  `1`. Advances by `1` automatically on every membership change
+  (no vote), and on every passing `decision:rotate_key` Proposal
+  (the only governance-routed rotation — §9). A **derived cache**
+  per [layers.md §3](../primitive/layers.md#derived-caches-do-not-layer),
+  not layered: rebuildable as `1` plus the count of effected
+  membership transitions plus passed rotation Proposals, both
+  append-only and timestamp-pinned.
 
 Per-field moderation-status properties cover each user-input
 field — **`name_status`** (companion to the data sibling `name`),

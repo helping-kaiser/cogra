@@ -23,8 +23,6 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. Anytime — no external trigger | 1 | **Q26** | `Chat.epoch`'s classification in the layering and outcome-carrier taxonomy. A doc-reconciliation decision; nothing blocks it. |
-| 1. Anytime — no external trigger | 2 | **Q27** | Household/co-op act-as examples lost their intended majority concurrence. An example-design decision; nothing blocks it. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
@@ -57,6 +55,8 @@ questions are closed.
 - Q23 — see [api-spec.md "Search"](implementation/api-spec.md#search). The global `search` index covers name-class fields and post titles only — User/Collective handles + display names, Hashtag/Chat/Item names, Post `title`; bodies, descriptions, bios, and attachments are unindexed, and Comment (no indexed field) is not a searchable kind. Name-class fields match case-insensitively by prefix and substring, titles by word-level full-text. Backend order is exact-match tier then newest-first — both viewer-independent, honoring [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live)'s backend-never-ranks split; graph-blended ordering is the ranker's option over fetched candidates (no-AI rule applies), with recency the deepest fallback per Q16 — the delegated form is the miner's `rankSearch` operation ([miner-api.md](implementation/miner-api.md)). `sensitive` fields stay indexed and return with per-field status — the standard read-surface visibility model; redacted fields are excluded by an explicit skip-redacted index rule (redaction leaves a visible in-place marker, so a current value still exists to match). Chat messages are excluded from the global index — the scoped `chatSearch` query searches one chat's plaintext bodies newest-first, and encrypted content is never searchable server-side ([chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism)).
 - Q24 — see [miner-api.md "Transport"](implementation/miner-api.md#transport), ["Delegation and trust"](implementation/miner-api.md#delegation-and-trust), and ["The §3.8 operations"](implementation/miner-api.md#the-38-operations). Wire form is **GraphQL with the pinned types verbatim** — a remote miner serves the same small schema, the on-device runner is an in-process call over the same types, and the backend-direct rollout stage hosts the operations in the backend's own schema; a second wire encoding was rejected as a hand-synced parallel serialization. The remote signature is `rank(viewer, params)`: reads are unauthenticated and `feedSlice` is viewer-parameterized, so the **miner re-fetches the slice itself** and the device never downloads it. Delegation is a **push model with no standing credential** — seen-list and rank params ride inside each request, the miner never authenticates to the backend (indistinguishable from an anonymous reader; [auth.md](implementation/auth.md) manages no delegation tokens), and revocation is the viewer ceasing to call. Output is **advisory and spot-checkable** — deterministic math means the device can re-rank any handful of targets and compare — with no mandated audit and no attestation; the remedy for a bad miner is switching. The §3.8 surfaces get **three dedicated stateless operations** (`severanceStatus`, `clusterAnalysis`, `redemptionCheck` — polled, watch lists and cadence client-side) returning structural facts; scores, thresholds, and action guidance stay frontend-computed per §3.8's frontend-latitude rule. Miner discovery and incentives are explicitly out of scope until someone wants to operate a paid miner.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#9-where-ranking-and-filtering-live) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge), the actual bot-bridge defense). `ε` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`ε`/`b` corrected — `ε` bounds the node-set, not the path count).
+- Q26 — see [chats.md §3.1](instances/chats.md#31-chat) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
+- Q27 — see [collectives.md §8 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §6](instances/items.md#6-transfer-flow)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape).
 
 ---
 
@@ -243,109 +243,3 @@ question completes for the cross-instance case),
 [feed-ranking.md §3.7](primitive/feed-ranking.md#37-cascading-severance-and-redemption) (cluster
 severance — local to the severing community per principle, but
 federation could change this).
-
----
-
-## Q26 — Chat.epoch: classification in the layering and outcome-carrier taxonomy
-
-**Where it shows up:** [chats.md §3.1](instances/chats.md#31-chat) / [§9](instances/chats.md#9-encryption-as-the-privacy-mechanism),
-[layers.md §3](primitive/layers.md#3-layers-on-nodes),
-[governance.md §2.5](primitive/governance.md#25-outcome),
-[proposal.md §6](instances/proposal.md#6-lifecycle)
-**Status:** open
-
-### Context
-
-chats.md declares `epoch` an integer counter on `:Chat` (default
-`1`, "operational counter; not layered") that advances **in
-place** — automatically on every membership transition, and on
-every passing `decision:rotate_key` Proposal. Two primitive rules
-have no slot for that:
-
-- [layers.md §3](primitive/layers.md#3-layers-on-nodes) sanctions
-  non-layered graph values only as **derived caches** rebuilt from
-  the source of truth ("the graph itself has no carve-outs"), and
-  no doc classifies `epoch` as one — chats.md's "operational
-  counter" label is the category layers.md reserves for
-  Postgres-side carve-outs.
-- [governance.md §2.5](primitive/governance.md#25-outcome)
-  enumerates the outcome carriers a passed Proposal can write — a
-  structural-edge layer, a node-property layer, or a Postgres
-  version row. The in-place `epoch` advance is none of the three;
-  it appears only in §6's cascade-dispatch list, unclassified.
-  [proposal.md §6](instances/proposal.md#6-lifecycle)'s "outcomes
-  that write no graph-property layer" list omits it too.
-
-### The question
-
-How is `epoch` classified? The natural candidate: declare it a
-**derived cache** — rebuildable from membership-transition edge
-layers plus passed rotation Proposals — which legalizes the
-in-place advance under layers.md §3, and extend governance.md
-§2.5 / proposal.md §6 with the rotation outcome (a passed
-Proposal whose effect is a cache refresh). The alternative is to
-make `epoch` an ordinary layered property and accept a layer per
-membership change.
-
-### Constraints (from established principles)
-
-- **Append-only.** Whichever classification wins, epoch history
-  must stay reconstructible from append-only sources — it already
-  is, via membership-transition layers and rotation Proposals.
-- **Not a ranking input.** `epoch` is key-selection metadata for
-  the frontend ([chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism));
-  no classification should turn it into graph signal.
-
-### Related
-
-[chats.md §9](instances/chats.md#9-encryption-as-the-privacy-mechanism)
-(epochs and key rotation),
-[graph-data-model.md](implementation/graph-data-model.md) (the
-`:Chat` property table already documents the advance rule).
-
----
-
-## Q27 — Household and co-op act-as examples: the intended majority concurrence is no longer expressible
-
-**Where it shows up:** [collectives.md §8](instances/collectives.md#8-governance--the-social-contract) example tables
-**Status:** open
-
-### Context
-
-Act-as gestures execute immediately for any eligible member:
-[governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape)
-deliberately rules act-as out as a co-sign consumer, because an
-outgoing act held pending co-signatures — a not-yet-approved Post
-or edge — would already be visible. When concurrence gates were
-removed from act-as rules, the household and worker co-op example
-tables kept `actas:vote:Proposal` / `actas:transfer:Item` rows
-that originally *intended* majority concurrence. As written, any
-single member of the 5-person household can cast the household's
-votes or transfer shared Items immediately — directly under prose
-asserting "consensus dominates."
-
-### The question
-
-Should the examples regain their intended concurrence by
-reworking those rows into `decision:*` entries (materializing a
-Proposal, e.g. `decision:transfer:Item`), or is
-single-member act-as the accepted semantics for these archetypes
-— with the surrounding prose adjusted to match?
-
-### Constraints (from established principles)
-
-- **Act-as cannot be co-sign-gated.** The visibility argument in
-  governance.md "Co-signed acts" stands; concurrence requires the
-  `decision:*` route through a Proposal node, the only pending
-  subject available.
-- **Examples are teaching surfaces.** The §8 tables exist to show
-  the governance map expressing real archetypes; an example that
-  contradicts its own prose teaches the wrong lesson either way
-  it resolves.
-
-### Related
-
-[governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape),
-[collectives.md §2](instances/collectives.md#2-acting-through-the-collective)
-(acting through the Collective).
-
