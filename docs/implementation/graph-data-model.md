@@ -69,8 +69,8 @@ overwrites the targeted layer's `value` in place with a marker;
 the entry's `timestamp` and `layer` are preserved, and `X` is
 updated to the marker only if the redacted layer was the top.
 
-Properties without "layered" in their notes (`id`,
-`moderation_status` cache, `epoch`) are single-slot — no
+Properties without "layered" in their notes (`id`, the
+`moderation_status` and `epoch` caches) are single-slot — no
 `_layers` sibling.
 
 ### Shared shape: per-field moderation-status properties
@@ -197,7 +197,7 @@ CREATE INDEX ON :Comment(id);
 | `description`       | String  | Per intro. Content lives in Postgres. |
 | `image`             | String  | Per intro. Asset lives in object storage. |
 | `governance`        | Map     | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Holds the chat's social contract: who admits members, disavows messages, disavows members, rotates keys, edits display fields, changes member roles. Keys are Chat-specific `action_key` strings; per-bearer voting overrides live on `:ChatMember.voting_weight`. Layered. A default map is installed at chat founding (Chats are the one default-having consumer flagged in [collectives.md §8 "No primitive defaults"](../instances/collectives.md#no-primitive-defaults)); the default contents live in [chats.md §10](../instances/chats.md#10-moderation). |
-| `epoch`             | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing `decision:rotate_key` Proposal. Concurrent transitions serialize per Chat. Operational counter; not layered. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
+| `epoch`             | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing `decision:rotate_key` Proposal. Concurrent transitions serialize per Chat. Derived cache per [layers.md §3](../primitive/layers.md#derived-caches-do-not-layer); not layered — rebuildable from membership-transition layers plus passed rotation Proposals. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
 | `moderation_status` | String  | Node-level cache (per intro) for the Chat's per-field statuses (`name_status`, `description`, `image`). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
