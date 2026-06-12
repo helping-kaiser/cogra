@@ -143,7 +143,8 @@ from node types at each end and dimension values.
 ### 5. Writes are dual (content + topology)
 
 When a user creates a post:
-- Postgres: insert row into `posts` table (content + metadata)
+- Postgres: insert the immutable `posts` entity row plus the
+  first `post_versions` row (content + metadata)
 - Memgraph: create Post node + actor edge from User to Post (layer 1 =
   authorship, with dim1/dim2 values)
 

@@ -57,15 +57,16 @@ See [graph-model.md §4](graph-model.md#4-edge-structure) for the edge structure
 [graph-model.md §8](graph-model.md#8-append-only-history-edges) for edge-specific history
 details.
 
-**"Revoked" names the negative-top-layer state.** An approval-pair
-structural edge is **revoked** when its top layer carries
-`dim1 < 0` (a removed CollectiveMember, a disavowed ChatMember,
-an ItemOwnership replaced by the next ownership). Older drafts
-used "inactive" or "superseded" for the same state; both are
-aliases for revoked. The *mechanism* producing the negative
-layer (supersession cascade, voluntary leave, governance
-threshold-cross) varies; the *state* it produces is always
-"revoked." See
+**"Revoked" names the non-positive-top-layer state.** An
+approval-pair structural edge is **revoked** when its top layer
+carries `dim1 ≤ 0` (a removed CollectiveMember, a disavowed
+ChatMember, an ItemOwnership replaced by the next ownership).
+Affirmation is strictly positive; a `0` top layer is not a
+distinct state. Older drafts used "inactive" or "superseded" for
+the same state; both are aliases for revoked. The *mechanism*
+producing the non-positive layer (supersession cascade, voluntary
+leave, governance threshold-cross) varies; the *state* it
+produces is always "revoked." See
 [graph-model.md §5](graph-model.md#5-junction-node-flows).
 
 ---
@@ -201,13 +202,18 @@ under it identically. Three surfaces, three rules:
     bookmark is a genuine row delete.
   - `user_hidden_actors` — per-viewer hide list; unhiding is a
     genuine row delete.
+  - `chat_read_state` — per-viewer chat-read pointer; UPSERTed
+    in place as the user reads further.
+  - `user_preferences` — per-user settings row, overwritten in
+    place; a setting's current value is operational state, not
+    history.
   - content–attachment junction rows — a parent's *current*
     gallery arrangement; an edit adds and removes junction rows.
     The assets themselves remain append-only (redaction
     tombstones them in place, never deletes).
 
-  The per-viewer entries are operational filter state private to
-  the viewer; the junction entry is arrangement, not content.
+  The per-viewer entries are operational state private to the
+  viewer; the junction entry is arrangement, not content.
   Additions to this list require a named exception added here.
 - **Frontends, miners, indexers, and off-graph systems: not
   governed by this invariant.** Whatever they cache, summarize,
