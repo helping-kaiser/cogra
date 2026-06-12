@@ -72,13 +72,39 @@ See the [Components](#components) section below for what each crate does.
 
 | Concern | Choice |
 |---|---|
-| Language | Rust 2021 |
+| Backend language | Rust — latest stable toolchain (`rust-toolchain.toml` tracks `stable`), 2024 edition |
 | API | Axum + async-graphql |
 | Graph DB | Memgraph (openCypher, bolt protocol) |
 | Display-content DB | PostgreSQL 16 (SQLx) |
 | Money store | Chain — on-chain ledger ([ledger.md](ledger.md)) |
+| Android app | Kotlin + Jetpack Compose ([android.md](android.md)) |
+| API contract | exported `schema.graphql` → Apollo Kotlin codegen |
+| Ranking core | `ranker` crate — one implementation for backend, miner, and device |
 | Local dev | Docker Compose |
 | CI | GitHub Actions |
+
+---
+
+## Repository layout
+
+One repository holds everything: `crates/` (the Rust backend),
+`android/` (the Android app — [android.md](android.md)), `docs/`
+(the design docs), plus `migrations/` and `docker/`. The monorepo
+is deliberate:
+
+- **One docs source.** The design docs govern backend and frontend
+  alike; a second repo would mean copies that drift.
+- **The `ranker` crate is a path dependency** for all three of its
+  consumers — backend, miner container, Android bindings
+  ([miner-api.md "Transport"](miner-api.md#transport)) — with no
+  publishing step and no cross-repo versioning.
+- **Contract changes are atomic.** A spec change, its backend
+  implementation, the regenerated `schema.graphql`, and the client
+  update land in one PR.
+
+Assistant rules are nested: the root [CLAUDE.md](../../CLAUDE.md)
+holds the shared and backend rules; `android/CLAUDE.md` holds the
+Android-specific ones.
 
 ---
 
@@ -195,6 +221,23 @@ Shared types with no external dependencies. Responsibilities:
 - Domain model structs (node types, edge types)
 - Shared error types
 - No database or HTTP logic
+
+### `crates/ranker`
+
+The feed-ranking math as a pure library: `FeedSlice` +
+`RankParams` in, ordered `FeedEntry` list out — the logical
+contract pinned in [miner-api.md](miner-api.md). No IO, no
+connection pools, no GraphQL. One implementation serves all three
+transport stages ([miner-api.md "Transport"](miner-api.md#transport)):
+linked into `api` for the backend-direct stage, wrapped by the
+miner container, and bound into the Android app via UniFFI.
+
+### `android/`
+
+The reference frontend — Kotlin + Jetpack Compose, with the typed
+GraphQL client generated from `schema.graphql`. Stack reasoning,
+module layout, the UniFFI binding, and the test story live in
+[android.md](android.md).
 
 ---
 

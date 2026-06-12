@@ -134,6 +134,10 @@ an `instances/` doc is a sign the mechanism belongs in
 - [auth](implementation/auth.md) — server-side credentials,
   invitation-based registration, JWT access + Postgres refresh
   tokens, sessions.
+- [android](implementation/android.md) — the Android app: Kotlin +
+  Jetpack Compose, Apollo Kotlin codegen off the exported
+  `schema.graphql`, the `ranker` core via UniFFI, module and test
+  layout.
 - [graph-db-options](implementation/graph-db-options.md) — why
   Memgraph; alternatives considered.
 - [ledger](implementation/ledger.md) — on-chain mechanics:
