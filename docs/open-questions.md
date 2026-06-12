@@ -106,6 +106,13 @@ the plumbing:
   the miner, and how the viewer revokes a delegation.
 - **Result integrity.** Whether a delegated miner's output is
   spot-checkable / attestable by the client, or trusted outright.
+- **§3.8 operation contracts.** The severance self-query,
+  delta-funnel analysis, and redemption-watch surfaces of
+  [feed-ranking.md §3.8](primitive/feed-ranking.md#38-post-severance-surfaces)
+  are "client- or miner-computed"; their data is reachable through
+  the generic read surface, but the dedicated miner operations
+  (inputs/outputs like `rank`'s) are designed standalone together
+  with this question.
 
 ---
 
