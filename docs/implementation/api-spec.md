@@ -1063,7 +1063,10 @@ type Campaign implements Node {
 union CampaignTarget =
     User | Collective | Post | Comment | Chat | ChatMessage | Item | Proposal
 
-"Campaign lifecycle state."
+"Campaign lifecycle state. SETTLED: the advertiser released within the
+ window plus grace period; AUTO_SETTLED: the backend's settlement key —
+ which holds release authority after the grace period — fired the
+ default split without the advertiser."
 enum CampaignStatus { OPEN SETTLED AUTO_SETTLED }
 
 "The terminal record of a settled Campaign — public results plus
@@ -1080,6 +1083,10 @@ type Settlement implements Node {
   settledP: Float!
   "Achieved sustained reach gain (public result)."
   achievedHGain: Float!
+  "The attribution instant t* — pins the graph state the split was
+   computed from; recorded for reproducibility alongside the dust
+   floor in force on the Campaign."
+  settledTStar: DateTime!
 }
 
 "An account's payout wallet — holds the counterfactual self-custody
