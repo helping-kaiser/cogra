@@ -56,8 +56,9 @@ authorized member per
 The gesture writes the following records atomically:
 
 - A new `:Chat` node on the graph.
-- The Postgres `chats` row carrying `name` (nullable for 1:1
-  chats), `description`, and `image_id` (see
+- The Postgres `chats` entity row plus the first `chat_versions`
+  row carrying `name` (nullable for 1:1 chats), `description`,
+  and `image_id` (see
   [data-model.md](../implementation/data-model.md)).
 - The founder's `User/Collective → Chat` actor edge — the
   **authorship edge** (§6.1).
@@ -91,9 +92,10 @@ uses. The gesture writes atomically:
 
 - A new `:ChatMessage` node carrying its per-field moderation
   properties — `content` and `attachments` (§3.2).
-  `content_privacy` is a Postgres-side property on the
-  `chat_messages` row (§4.2).
-- The Postgres `chat_messages` row carrying the message body
+  `content_privacy` is a Postgres-side property on
+  `chat_message_versions` rows (§4.2).
+- The Postgres `chat_messages` entity row plus the first
+  `chat_message_versions` row carrying the message body
   (plaintext or ciphertext), the `epoch` index for encrypted
   messages, and any attached media (§4.2).
 - The author's `User/Collective → ChatMessage` actor edge — the
@@ -196,8 +198,8 @@ and admin weight matters only at the margin of close tallies.
 
 ### 4.1 Chat
 
-A Chat's display content lives in Postgres on the `chats` row,
-linked to the graph Chat node by UUID. Edits are append-only per
+A Chat's display content lives in Postgres on `chat_versions`
+rows, linked to the graph Chat node by UUID. Edits are append-only per
 [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
 a new version row, no overwrite.
 
@@ -205,7 +207,8 @@ a new version row, no overwrite.
   explanation of what the chat is for, beyond the short `name`
   routing hint (§3.1).
 - **Image** — optional chat avatar/header, pointed at by the
-  `image_id` column referencing one `media_attachments` asset,
+  `image_id` version-row column referencing one
+  `media_attachments` asset,
   owned by the same author as the Chat (anti-hijack rule per
   [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
 
@@ -217,8 +220,9 @@ in [data-model.md](../implementation/data-model.md).
 
 ### 4.2 ChatMessage
 
-A ChatMessage's body lives in Postgres on the `chat_messages`
-row, linked to the graph ChatMessage node by UUID:
+A ChatMessage's body lives in Postgres on
+`chat_message_versions` rows, linked to the graph ChatMessage
+node by UUID:
 
 - **`content_privacy`** — `'plaintext'` / `'encrypted'`.
   Per-message, not per-chat — a single chat can mix both freely
@@ -239,7 +243,7 @@ row, linked to the graph ChatMessage node by UUID:
 
 Edits are append-only per
 [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
-a correction writes a new version into the row; past versions
+a correction writes a new version row; past versions
 remain readable.
 
 `content` and `attachments` are the two fields an `'illegal'`
@@ -530,9 +534,10 @@ append-only — see §4.2 and [layers.md](../primitive/layers.md).
 
 The graph carries chat **topology only** — it never holds
 message bodies, encrypted or not. **Privacy is per-message, not
-per-chat:** each ChatMessage's `chat_messages` row in Postgres
-carries the `content_privacy` flag declared in §4.2 that tells
-the frontend whether to attempt decryption. A single chat can
+per-chat:** each ChatMessage version row in Postgres
+(`chat_message_versions`) carries the `content_privacy` flag
+declared in §4.2 that tells the frontend whether to attempt
+decryption. A single chat can
 mix plaintext and encrypted messages freely.
 
 ### Chat keys, organized in epochs

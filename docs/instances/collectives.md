@@ -262,7 +262,7 @@ a new version row, no overwrite.
 - **`description`** — optional body text describing what the
   Collective is and what it does.
 - **`avatar_id`** — optional 1:1 FK to `media_attachments`,
-  analogous to `users.avatar_id`. See
+  analogous to `user_profile_versions.avatar_id`. See
   [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments).
 - **`website_url`** — optional external link.
 

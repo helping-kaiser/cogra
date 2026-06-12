@@ -34,8 +34,9 @@ The gesture writes four records atomically:
 - An outgoing **`Comment → Target`** `:CONTAINMENT` structural
   edge identifying the parent. Exactly one per Comment; fixed
   at creation and not re-targeted later.
-- The Postgres `comments` row carrying the body, any
-  attachments, and the cached parent reference (see §3 and
+- The Postgres `comments` entity row carrying the cached parent
+  reference, plus the first `comment_versions` row with the body
+  and any attachments (see §3 and
   [data-model.md](../implementation/data-model.md)).
 - An actor edge from the authoring actor toward the new Comment
   node — the **authorship edge** (§5). Its `(dim1, dim2)`
@@ -82,8 +83,8 @@ display content are append-only per
 [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
 a new version row, no overwrite.
 
-- **`content`** — the body text. Stored on the `comments` row;
-  see [data-model.md](../implementation/data-model.md).
+- **`content`** — the body text. Stored on `comment_versions`
+  rows; see [data-model.md](../implementation/data-model.md).
 - **Attachments** — images, videos, and other media via the
   `comment_attachments` junction table, which carries
   per-attachment `display_order`. Each row references one
