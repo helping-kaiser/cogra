@@ -742,8 +742,8 @@ type UserPreferences {
 }
 
 "An outstanding invite link issued by an actor — a pre-committed onboarding
- gesture. Time-gated and multi-use: many invitees may register through one
- link. Its id is the link capability, so it is issuer-visible only."
+ gesture. Time-gated and, at the issuer's choice, single-use or multi-use.
+ Its id is the link capability, so it is issuer-visible only."
 type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
@@ -752,10 +752,16 @@ type InviteLink {
   inviterDim1: Dimension!
   "Pre-committed dim2 for that edge."
   inviterDim2: Dimension!
+  "Whether the link is consumed by its first accepted registration
+   (single-use) or admits many invitees (multi-use)."
+  singleUse: Boolean!
   createdAt: DateTime!
   expiresAt: DateTime!
   "When the link was revoked; null if still live."
   revokedAt: DateTime
+  "When a single-use link was consumed by its accepted registration;
+   always null on a multi-use link."
+  consumedAt: DateTime
 }
 
 type BookmarkConnection {
@@ -1478,8 +1484,8 @@ type Mutation {
   "Complete an email change with the code from the current address;
    applies only once the new address has been verified too."
   confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
-  "Issue a multi-use, time-gated invite link carrying the inviter's
-   pre-committed edge tensor."
+  "Issue a time-gated invite link — single-use or multi-use, the
+   issuer's choice — carrying the inviter's pre-committed edge tensor."
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   "Begin account deletion (identity-only, or content-inclusive);
@@ -2082,6 +2088,9 @@ input CreateInviteLinkInput {
   "Pre-committed tensor for the inviter→invitee edge on acceptance."
   inviterDim1: Dimension!
   inviterDim2: Dimension!
+  "Consumed by the first accepted registration when true; admits many
+   invitees otherwise. Defaults to multi-use."
+  singleUse: Boolean
 }
 type CreateInviteLinkPayload {
   "The link — its id is the shareable capability."
