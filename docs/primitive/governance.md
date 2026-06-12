@@ -68,26 +68,41 @@ and only for illegal material with a visible trace.
 #### How subjects are addressed
 
 A vote edge needs a node endpoint — edges can't point at edges or
-at properties. Each subject type has a natural node to address:
+at properties. Every subject is addressed the same way: a
+**Proposal** node (see [nodes.md §6](nodes.md#6-carrier-nodes)) is
+created as the subject, and votes point at the Proposal — never at
+the junction, edge, or target node whose state is being decided.
+The Proposal carries `target_property` and `proposed_value` as
+node properties, and a `:TARGETS` structural edge to the node
+whose state the outcome changes (see
+[edges.md §2](edges.md#2-structural-edges)). When the tally
+crosses threshold, a cascade (see
+[graph-model.md §5](graph-model.md#5-junction-node-flows)) writes
+the outcome; what it writes depends on the subject:
 
-- **Junction relationship** — the junction IS a node. Votes point
-  directly at it.
-- **Structural edge state** — the edge's target is a node. Votes
-  point at that target; when the tally crosses threshold, the
-  system writes a new state layer on the edge. The edge itself is
-  never the target of a vote.
-- **Node property** — a **Proposal** node (see
-  [nodes.md §6](nodes.md#6-carrier-nodes)) is created as the subject. It carries
-  `target_property` and `proposed_value` as node properties, and a
-  `:TARGETS` structural edge to the target node (see
-  [edges.md §2](edges.md#2-structural-edges)). Votes point at the Proposal; when the
-  tally crosses threshold, a cascade (see
-  [graph-model.md §5](graph-model.md#5-junction-node-flows)) writes a new layer on the
-  target property with `proposed_value`. Multiple Proposals
-  targeting the same property coexist; each passes or fails on its
-  own votes. Reverting a passed change requires a
-  **counter-Proposal** — defined in [§3 "Counter-Proposals"](#counter-proposals),
-  consistent with §6.
+- **Junction relationship** — the Proposal `:TARGETS` the
+  junction; the cascade writes the outcome onto the junction's
+  structural edges (an admit-Proposal writes the approval edge
+  with `dim1 > 0`, a removal-Proposal appends a `dim1 < 0` layer
+  on it). Every lifecycle event — admission, removal, role
+  change — is its own fresh terminal Proposal; see
+  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+- **Structural edge state** — the Proposal `:TARGETS` the edge's
+  target node with `target_property = 'node'` (the whole-node
+  sentinel, see
+  [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel));
+  the cascade writes a new state layer on the edge — or, where
+  the instance defines no outcome edge, the passed Proposal
+  itself is the recorded stance (see §8).
+- **Node property** — the Proposal `:TARGETS` the node and names
+  the property; the cascade writes a new layer on the target
+  property with `proposed_value`.
+
+Multiple Proposals targeting the same subject coexist; each
+passes or fails on its own votes. Reverting a passed change
+requires a **counter-Proposal** — defined in
+[§3 "Counter-Proposals"](#counter-proposals), consistent with §6 —
+never re-voting the original.
 
 Whether the vote edge uses Shape A or Shape B (§3) is a separate,
 per-application choice about whether personal sentiment stays
@@ -312,12 +327,21 @@ Shape A:
 **Would-be bearer's self-claim to a new junction.** The bearer
 of a new ChatMember / CollectiveMember / ItemOwnership has no
 junction of that type yet — their own junction is the very
-thing they're claiming. Their gesture is necessarily a
-`User → junction` actor edge.
+thing they're claiming — so their approving vote on the
+junction's admit-Proposal is necessarily a
+`User/Collective → Proposal` actor edge.
 
 ```
-User_Bob -[dim1: +0.9, dim2: +0.8]-> ChatMember_Bob_ChatY
+User_Bob -[dim1: +0.9, dim2: +0.8]-> Proposal_admit_Bob_ChatY
 ```
+
+When the self-claim admits the junction, the bearer also writes
+a `bearer → junction` actor edge carrying the `:AUTHOR`
+sub-label in the same gesture — the edge that authors the
+junction (see
+[authorship.md "Junction authorship"](authorship.md#junction-authorship)).
+That edge is authorship and sentiment toward the junction, not
+the vote; the vote is the edge to the Proposal.
 
 **Network-scope governance.** The Network has no per-member
 junction — every User is a member by virtue of being on the
@@ -329,8 +353,8 @@ is the voter's stance, the tally reads `sign(dim1)` for binary
 outcomes. See [proposal.md §4](../instances/proposal.md#4-edges).
 
 In both cases the vote IS the actor's own stance toward the
-subject. Other actors may also write actor edges to the same
-subject (e.g. `User_Alice → ChatMember_Bob_ChatY` for personal
+subject. Other actors may also write actor edges toward the
+junction (e.g. `User_Alice → ChatMember_Bob_ChatY` for personal
 sentiment about Bob's membership) — these are not approval
 votes, just personal sentiment.
 
@@ -967,11 +991,12 @@ community.
 ### Existing
 
 - **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
-  Shape A self-claim by the would-be bearer plus N Shape B
-  approver votes from existing eligibility junctions of the
-  same type for the same parent. Threshold: N is per-policy
-  (open = 0, single approver = 1, multi-sig = N). Same Shape B
-  edges later carry removal votes (stance flipped).
+  Shape A self-claim by the would-be bearer (their vote on the
+  admit-Proposal) plus N Shape B approver votes from existing
+  eligibility junctions of the same type for the same parent.
+  Threshold: N is per-policy (open = 0, single approver = 1,
+  multi-sig = N). Removal and role changes are separate terminal
+  Proposals, each with its own fresh vote set.
 - **Chat message disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
   Shape B `ChatMember → Proposal` vote on a Proposal targeting
   the `ChatMessage` with `target_property = 'node'`,
