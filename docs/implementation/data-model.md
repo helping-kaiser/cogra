@@ -27,6 +27,37 @@ bookkeeping). It knows nothing about the social graph, edge
 weights, or feed ranking. Each display-content table answers
 the question: "given a UUID, what do I render on screen?"
 
+### Display-content versioning
+
+Display content is append-only
+([layers.md](../primitive/layers.md)): edits never overwrite. The
+schema encodes this as a split per content kind:
+
+- An **entity table** (`posts`, `comments`, …) holds one immutable
+  row per node — the UUID shared with the graph, the immutable
+  discriminator columns (`author_id`/`author_type`, containment
+  caches), and `created_at`. This row is what foreign keys
+  reference.
+- A **versions table** (`post_versions`, …) holds the mutable
+  display fields as append-only rows keyed
+  `(entity_id, created_at)`. The **current** value is the newest
+  row; the entity's `updated_at` is derived as the newest
+  version's `created_at` — no stored column.
+
+A **redaction tombstone** is just another version row: its
+`redaction_reason` is non-null, its content fields carry the
+visible marker, and the prior values move to the retention
+archive ([retention-archive.md](../primitive/retention-archive.md),
+[account-deletion.md](../instances/account-deletion.md)). The
+tombstone's `created_at` is the removed-at instant. Per-field
+moderation *status* stays graph-side
+([nodes.md](../primitive/nodes.md)); Postgres carries only the
+content and its markers.
+
+Current-version reads are `ORDER BY created_at DESC LIMIT 1` per
+entity (or `DISTINCT ON (entity_id)` for lists), served by the
+versions PK.
+
 ### Foundation
 
 `media_attachments` is referenced by both actor tables (avatars)
@@ -72,51 +103,89 @@ CREATE INDEX media_attachments_author_idx
 ### Actors
 
 ```sql
--- Users: identity and profile display data.
--- email and password_hash live here once the account is verified;
--- before that, they sit on auth_pending_registrations and are moved
--- across in the same transaction that creates this row
+-- Users: identity and account state — one immutable-shape row per
+-- account. email and password_hash live here once the account is
+-- verified; before that, they sit on auth_pending_registrations and
+-- are moved across in the same transaction that creates this row
 -- (see auth.md §Account lifecycle; genesis bootstrap in
 -- architecture.md §Genesis bootstrap and network.md §2).
+-- username/email/password_hash are account state, not display
+-- content: they stay single-current (UNIQUE could not survive
+-- version rows). Account-deletion redacts username in place to
+-- 'redacted-user-{uuid}' per account-deletion.md — the sanctioned
+-- in-place redaction, not an edit path.
 CREATE TABLE users (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     username      TEXT        NOT NULL UNIQUE,
     email         TEXT        NOT NULL UNIQUE,
     password_hash TEXT        NOT NULL,
-    display_name  TEXT        NOT NULL,
-    bio           TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Collectives: profiles for any collective actor (households, bands, co-ops, companies, ...)
+-- User profiles: append-only versions of the profile display
+-- fields (see "Display-content versioning"). The first version is
+-- written in the same transaction as the users row.
+CREATE TABLE user_profile_versions (
+    user_id          UUID        NOT NULL REFERENCES users(id),
+    display_name     TEXT        NOT NULL,
+    bio              TEXT,
+    avatar_id        UUID        REFERENCES media_attachments(id),
+    cover_id         UUID        REFERENCES media_attachments(id),
+    website_url      TEXT,
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, created_at)
+);
+
+-- Collectives: identity row for any collective actor (households,
+-- bands, co-ops, companies, ...). name is the handle for
+-- mentions/lookups, analogous to users.username; it is a
+-- single-current cache of the layered graph property
+-- (collectives.md §4 — renames append a graph layer and update
+-- this cache).
 CREATE TABLE collectives (
-    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name          TEXT        NOT NULL UNIQUE,  -- handle for mentions/lookups, analogous to users.username
-    display_name  TEXT        NOT NULL,
-    description   TEXT,
-    avatar_id     UUID        REFERENCES media_attachments(id),
-    website_url   TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name       TEXT        NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Collective profiles: append-only versions of the profile display
+-- fields. Changes land through the governance set:* cascade
+-- (governance.md §6), each passing Proposal appending one version.
+CREATE TABLE collective_profile_versions (
+    collective_id    UUID        NOT NULL REFERENCES collectives(id),
+    display_name     TEXT        NOT NULL,
+    description      TEXT,
+    avatar_id        UUID        REFERENCES media_attachments(id),
+    website_url      TEXT,
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (collective_id, created_at)
 );
 ```
 
 ### Content nodes
 
 ```sql
--- Posts: content authored by users or collectives
+-- Posts: one immutable entity row per post; display fields live on
+-- post_versions.
 CREATE TABLE posts (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id   UUID        NOT NULL,
     author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    title       TEXT,       -- optional headline
-    description TEXT,       -- optional short summary / subtitle
-    content     TEXT        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Post versions: append-only display content. One row per edit;
+-- the newest row is the rendered post.
+CREATE TABLE post_versions (
+    post_id          UUID        NOT NULL REFERENCES posts(id),
+    title            TEXT,       -- optional headline
+    description      TEXT,       -- optional short summary / subtitle
+    content          TEXT        NOT NULL,
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (post_id, created_at)
 );
 
 -- Comments: responses to any commentable content node.
@@ -132,54 +201,86 @@ CREATE TABLE comments (
                             ('post', 'comment', 'chat', 'chat_message', 'item')),
     author_id   UUID        NOT NULL,
     author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    content     TEXT        NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE comment_versions (
+    comment_id       UUID        NOT NULL REFERENCES comments(id),
+    content          TEXT        NOT NULL,
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (comment_id, created_at)
 );
 
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
 -- a single chat can carry both plaintext and encrypted messages. See
--- chats.md §9.
+-- chats.md §9. Profile fields (name, description, image) change only
+-- through the chat's governance set:* entries; each passing Proposal
+-- appends a version.
 CREATE TABLE chats (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        TEXT,       -- optional; any chat may set one
-    description TEXT,
-    image_id    UUID        REFERENCES media_attachments(id),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE chat_versions (
+    chat_id          UUID        NOT NULL REFERENCES chats(id),
+    name             TEXT,       -- optional; any chat may set one
+    description      TEXT,
+    image_id         UUID        REFERENCES media_attachments(id),
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (chat_id, created_at)
 );
 
 -- Chat messages: individual messages within a chat.
--- content_privacy is per-message (see chats.md §4.2): 'plaintext' bodies are
--- readable text; 'encrypted' bodies are ciphertext under the chat's
--- member-derived symmetric key for the epoch the message was authored in.
--- A chat can carry both freely.
---
--- epoch records which key the ciphertext is under (see chats.md §9: chat
--- keys are organized in epochs, advanced on membership change and on
--- passing mid-epoch rotation Proposals). NULL for plaintext rows; NOT NULL
--- for encrypted rows. The frontend uses it to pick the right key.
 CREATE TABLE chat_messages (
-    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id         UUID        NOT NULL REFERENCES chats(id),
-    author_id       UUID        NOT NULL,
-    author_type     TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
-    content         TEXT        NOT NULL,
-    content_privacy TEXT        NOT NULL DEFAULT 'plaintext'
-                                CHECK (content_privacy IN ('plaintext', 'encrypted')),
-    epoch           INTEGER     CHECK (
-                                  (content_privacy = 'plaintext' AND epoch IS NULL) OR
-                                  (content_privacy = 'encrypted' AND epoch >= 1)
-                                ),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_id     UUID        NOT NULL REFERENCES chats(id),
+    author_id   UUID        NOT NULL,
+    author_type TEXT        NOT NULL CHECK (author_type IN ('user', 'collective')),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Chat-message versions. content_privacy is per-message and
+-- per-version (see chats.md §4.2): 'plaintext' bodies are readable
+-- text; 'encrypted' bodies are ciphertext under the chat's
+-- member-derived symmetric key for the epoch the version was
+-- authored in. A chat can carry both freely.
+--
+-- epoch records which key the ciphertext is under (see chats.md §9:
+-- chat keys are organized in epochs, advanced on membership change
+-- and on passing mid-epoch rotation Proposals). NULL for plaintext
+-- rows; NOT NULL for encrypted rows. The frontend uses it to pick
+-- the right key. An edit may re-encrypt under the current epoch,
+-- which is why the column is per-version.
+CREATE TABLE chat_message_versions (
+    chat_message_id  UUID        NOT NULL REFERENCES chat_messages(id),
+    content          TEXT        NOT NULL,
+    content_privacy  TEXT        NOT NULL DEFAULT 'plaintext'
+                                 CHECK (content_privacy IN ('plaintext', 'encrypted')),
+    epoch            INTEGER     CHECK (
+                                   (content_privacy = 'plaintext' AND epoch IS NULL) OR
+                                   (content_privacy = 'encrypted' AND epoch >= 1)
+                                 ),
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (chat_message_id, created_at)
 );
 
 -- Items: physical or digital goods (future)
 CREATE TABLE items (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        TEXT        NOT NULL,
-    description TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE item_versions (
+    item_id          UUID        NOT NULL REFERENCES items(id),
+    name             TEXT        NOT NULL,
+    description      TEXT,
+    redaction_reason TEXT,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (item_id, created_at)
 );
 
 -- Hashtag registry (name lookup + metadata).
@@ -208,7 +309,13 @@ CREATE TABLE hashtags (
 ### Content–attachment junctions
 
 Per-parent join tables connecting content nodes to media assets
-(see "Why parents point at attachments" below).
+(see "Why parents point at attachments" below). Junction rows
+reference the **entity** row and hold the parent's *current*
+gallery: an edit may add and remove junction rows. Gallery
+composition is arrangement state, not versioned content — a named
+carve-out in [layers.md](../primitive/layers.md); the assets
+themselves are never deleted (redaction tombstones them in place),
+so no content is lost when an arrangement changes.
 
 ```sql
 -- Junction: posts → attachments (ordered, optionally a cover).
@@ -392,11 +499,14 @@ CREATE INDEX auth_refresh_tokens_user_idx
 
 -- Invitations: one row per generated invite link. The link itself
 -- carries only the row id; the pre-committed inviter edge values,
--- inviter identity, and time-gate live here. Time-gated and
--- multi-use per invitations.md — many invitees can register
--- through the same row. Rows are append-only in spirit (no updates
--- to inviter_dim1 / inviter_dim2 / inviter_id / inviter_type after
--- creation); revocation sets revoked_at.
+-- inviter identity, and time-gate live here. Time-gated and, per
+-- invitations.md, single-use or multi-use at the inviter's choice:
+-- a multi-use row admits many invitees; a single-use row is
+-- consumed by its first accepted registration (consumed_at set in
+-- the same transaction that creates the User node). Rows are
+-- append-only in spirit (no updates to inviter_dim1 / inviter_dim2
+-- / inviter_id / inviter_type after creation); revocation sets
+-- revoked_at.
 --
 -- inviter_id + inviter_type identifies the inviting actor. Users
 -- and Collectives are symmetric actors in the primitive, so either
@@ -413,6 +523,8 @@ CREATE TABLE auth_invitations (
     inviter_type TEXT         NOT NULL CHECK (inviter_type IN ('user', 'collective')),
     inviter_dim1 REAL         NOT NULL CHECK (inviter_dim1 BETWEEN -1.0 AND 1.0),
     inviter_dim2 REAL         NOT NULL CHECK (inviter_dim2 BETWEEN -1.0 AND 1.0),
+    single_use   BOOLEAN      NOT NULL DEFAULT FALSE,
+    consumed_at  TIMESTAMPTZ,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMPTZ  NOT NULL,
     revoked_at   TIMESTAMPTZ
@@ -448,6 +560,54 @@ CREATE TABLE auth_pending_registrations (
 );
 CREATE INDEX auth_pending_registrations_email_idx
     ON auth_pending_registrations (email);
+
+-- Password resets: one row per requested reset. Single-use,
+-- short-lived; only the token hash is stored (same rationale as
+-- refresh tokens). Completion sets used_at and revokes all the
+-- account's refresh tokens per auth.md §Password reset.
+CREATE TABLE auth_password_resets (
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash      BYTEA       NOT NULL UNIQUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at      TIMESTAMPTZ NOT NULL,
+    used_at         TIMESTAMPTZ
+);
+
+-- Email changes: the two-sided proof per auth.md §Email change —
+-- a code mailed to the original address and a verification link
+-- mailed to the new one. The change applies (users.email updated)
+-- only when both sides are confirmed before expires_at.
+CREATE TABLE auth_email_changes (
+    id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id               UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    new_email             TEXT        NOT NULL,
+    original_code_hash    BYTEA       NOT NULL,
+    new_email_token_hash  BYTEA       NOT NULL UNIQUE,
+    original_confirmed_at TIMESTAMPTZ,
+    new_verified_at       TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at            TIMESTAMPTZ NOT NULL
+);
+
+-- Account deletions: the grace-period state per
+-- account-deletion.md §4 — requested, cancellable from any
+-- logged-in session until scheduled_for, executed by the worker
+-- after it. include_content records the content-level opt-in
+-- (settable at request or confirmation).
+CREATE TABLE auth_account_deletions (
+    id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    deletion_token_hash BYTEA       NOT NULL UNIQUE,
+    include_content     BOOLEAN     NOT NULL DEFAULT FALSE,
+    requested_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    scheduled_for       TIMESTAMPTZ NOT NULL,
+    cancelled_at        TIMESTAMPTZ,
+    executed_at         TIMESTAMPTZ
+);
+CREATE INDEX auth_account_deletions_due_idx
+    ON auth_account_deletions (scheduled_for)
+    WHERE cancelled_at IS NULL AND executed_at IS NULL;
 ```
 
 ---
@@ -552,10 +712,11 @@ different concern from per-asset cover.
 
 ### User-scoped FKs are defense-in-depth, not deletion mechanics
 
-Every user-scoped table (`auth_refresh_tokens`, `user_view_log`,
-`user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
-`user_preferences`) carries `user_id REFERENCES users(id) ON DELETE
-CASCADE`. Account deletion does **not** remove the `users` row — PII
+Every user-scoped table (`auth_refresh_tokens`,
+`auth_password_resets`, `auth_email_changes`,
+`auth_account_deletions`, `user_view_log`, `user_hidden_actors`,
+`chat_read_state`, `user_bookmarks`, `user_preferences`) carries
+`user_id REFERENCES users(id) ON DELETE CASCADE`. Account deletion does **not** remove the `users` row — PII
 is redacted in place per
 [account-deletion.md §1](../instances/account-deletion.md#1-two-redaction-levels)
 — so `ON DELETE CASCADE` does not fire in any normal flow. The FK
@@ -633,8 +794,10 @@ reverse. So:
   `chat_message_attachments`, `item_attachments`). One row per
   attachment-on-parent. Per-relationship facts (`display_order`,
   `is_cover`) live on the junction, not on the asset.
-- 1:1 parents reference attachments via a direct FK column
-  (`users.avatar_id`, `collectives.avatar_id`, `chats.image_id`).
+- 1:1 parents reference attachments via a direct FK column on
+  their version rows (`user_profile_versions.avatar_id` /
+  `.cover_id`, `collective_profile_versions.avatar_id`,
+  `chat_versions.image_id`).
 
 Junctions cost more rows than an array column would, but each
 junction row is FK-enforced, supports per-relationship metadata
