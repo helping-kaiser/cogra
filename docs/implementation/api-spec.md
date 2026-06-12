@@ -1429,9 +1429,10 @@ type Mutation {
    vote on the admission Proposal plus their :AUTHOR edge on the
    membership; resolves to ACTIVE once approvals suffice."
   acceptChatInvite(input: AcceptChatInviteInput!): AcceptChatInvitePayload!
-  "Leave a Chat the viewer is a member of — a unilateral negative
-   layer on the membership's claim; no vote, the junction goes
-   REVOKED and the chat epoch advances."
+  "Leave a Chat — a unilateral negative layer on the named
+   membership's claim; no vote, the junction goes REVOKED and the
+   chat epoch advances. The membership's bearer (the viewer, or a
+   Collective they act for) is who leaves."
   leaveChat(input: LeaveChatInput!): LeaveChatPayload!
   changeChatMemberRole(input: ChangeChatMemberRoleInput!): ProposalPayload!
   "Disavow a member (Level 2) — proposal-backed; on passing, a
@@ -1829,7 +1830,9 @@ type InviteChatMemberPayload {
 }
 
 input LeaveChatInput {
-  "The viewer's own membership in the chat."
+  "The membership to leave. Its :BEARER pins who leaves — the viewer's
+   own membership, or one borne by a Collective the viewer may act
+   for; the junction id disambiguates, so there is no actAs."
   membership: UUID!
 }
 type LeaveChatPayload {
@@ -1935,6 +1938,9 @@ type InviteCollectiveMemberPayload {
 }
 
 input LeaveCollectiveInput {
+  "The membership to leave. Its :BEARER pins who leaves — the viewer's
+   own membership, or one borne by a Collective the viewer may act
+   for; the junction id disambiguates, so there is no actAs."
   membership: UUID!
 }
 type LeaveCollectivePayload {
