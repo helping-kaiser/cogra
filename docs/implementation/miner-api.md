@@ -182,18 +182,198 @@ separate query. Centralizing the *feed* ranking the same way is what does
 not scale (per the runner note above) — settlement runs centrally only
 because money demands one authoritative figure.
 
+## The §3.8 operations
+
+The post-severance surfaces of
+[feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces)
+are client- or miner-computed derivations over existing graph state.
+Their data is reachable through the generic read surface; the dedicated
+contracts exist so frontends and miners code against pinned shapes
+instead of each re-deriving the math from prose. All three follow
+`rank`'s rules: reads over public state, the same transport and
+delegation model (the remote runner fetches what it needs; private
+inputs, where any exist, are pushed), stateless and polled — the runner
+holds no watch lists and sends no notifications. The operations return
+structural facts; scores, prominence, thresholds, and action guidance
+are frontend-computed
+([feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces),
+"frontend latitude").
+
+### `severanceStatus` — the inbound self-query (§3.8.1)
+
+```graphql
+"The viewer's own inbound severance state plus their outbound audit
+ material (feed-ranking.md §3.8.1). An explicit self-query — inbound
+ edges are never in the feed pull."
+severanceStatus(viewer: UUID!): SeveranceStatus!
+
+"The two §3.8.1 surfaces: the severance pattern and the audit list."
+type SeveranceStatus {
+  "Inbound edges with top-of-stack (0, 0), one entry per severer."
+  severances: [InboundSeverance!]!
+  "The viewer's outbound edges with creation metadata — the audit
+   material, reviewed with the severance pattern as context."
+  outboundAudit: [AuditedEdge!]!
+}
+
+"One inbound severance, carrying the per-edge weighting §3.8.1
+ derives from the viewer's reciprocal outbound edge."
+type InboundSeverance {
+  severer: Actor!
+  "The severance layer's timestamp."
+  severedAt: DateTime!
+  "True when the viewer's outbound edge to the severer has non-(0, 0)
+   top-of-stack — the severer is in the viewer's network, the strong
+   per-edge signal. False entries signal in volume, not individually."
+  fromTrustedNetwork: Boolean!
+}
+
+"An Edge plus its first-layer timestamp. Edge already carries the
+ top-of-stack values, layer count, and top-layer timestamp; creation
+ time is the one stack-derived fact it lacks. Full history reads via
+ edgeHistory (api-spec.md)."
+type AuditedEdge {
+  edge: Edge!
+  "The first layer's timestamp — when the relationship began."
+  createdAt: DateTime!
+}
+```
+
+### `clusterAnalysis` — delta-funnel auto-detection (§3.8.2)
+
+```graphql
+"Delta-funnel detection over the viewer's outbound subgraph
+ (feed-ranking.md §3.8.2): suspect bridges with the structural inputs
+ to the frontend's score. The score formula is frontend-computed; the
+ operation reports facts, not verdicts."
+clusterAnalysis(viewer: UUID!, dustFloor: Float): [SuspectBridge!]!
+
+"One suspect bridge with the score inputs §3.8.2 names: delta-funnel
+ purity and the alternative-paths check."
+type SuspectBridge {
+  bridge: Node!
+  "Fraction of the viewer's paths into the subgraph behind the bridge
+   that pass through it; 1.0 is the pure delta-funnel."
+  deltaFunnelPurity: Float!
+  "The alternative-paths check over sampled downstream content: how
+   many sampled targets had no path avoiding the bridge. Equal to
+   sampleSize means no alternative route was found anywhere — the
+   bot-bridge signature; even one alternative path marks a legit hub."
+  isolatedSamples: Int!
+  sampleSize: Int!
+  "The viewer's paths to the bridge — the drill-in material. Path
+   length drives the frontend's hop-count action guidance (§3.8.2)."
+  paths: [RankPath!]!
+}
+```
+
+The traversal is bounded the same way ranking is — `dustFloor` (null
+falls back to `Network.dustFloor`) bounds the analyzed subgraph, and
+the alternative-paths check is the 1–2 hop bounded probe §3.8.2
+specifies.
+
+### `redemptionCheck` — the polled outbound watch (§3.8.4)
+
+```graphql
+"The severer's redemption check over severed accounts
+ (feed-ranking.md §3.8.4). Stateless and polled: the watch list and
+ cadence live client-side, passed as `targets` per call; `since`
+ scopes the change report. The severer's identity never enters the
+ math — the analysis runs from each target's own subgraph
+ perspective. Self-redemption posts (§3.8.5) read through the
+ generic read surface, not this operation."
+redemptionCheck(targets: [UUID!]!, since: DateTime): [RedemptionStatus!]!
+
+"One severed account's redemption state — binary per §3.8.4: no
+ remaining suspect bridges (redeemed) or some (still bridging).
+ There is no halfway-redeemed state."
+type RedemptionStatus {
+  target: Actor!
+  redeemed: Boolean!
+  "The remaining suspect bridges on the target's positive outbound
+   edges, each classified by the §3.8.2 analysis run from the
+   target's perspective. Empty exactly when redeemed."
+  bridges: [SuspectBridge!]!
+  "The target's outbound edges with a new top layer since `since` —
+   the change feed the severer reviews against the full layer
+   history (edgeHistory). Null `since` returns the full outbound
+   audit; the restore decision is made against the complete record."
+  activity: [AuditedEdge!]!
+}
+```
+
 ## Transport
 
-The contract above is fixed; where it runs is not, and is expected to
-move. The rollout path: first the `rank` operation runs on the **backend
-directly** (simplest to exercise against real slices), then in a
-**separate miner container** (a delegated service), then **on the viewer's
-own device** (the decentralized end state — proving a phone can rank its
-own slice). The open wire-level details — how the slice reaches the runner
-(re-fetched by the miner vs. forwarded by the device) and miner
-authentication — are settled when the miner path is built; none of them
-change the slice-in, ordered-list-out shape. They are tracked as
-[Q24](../open-questions.md#q24--miner-api-transport-and-delegation-authentication),
-together with the dedicated operation contracts for the
-[feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces)
-surfaces, which are designed standalone with that question.
+The contract above is fixed; where it runs moves along a rollout
+path: first the `rank` operation runs on the **backend directly**
+(simplest to exercise against real slices), then in a **separate miner
+container** (a delegated service), then **on the viewer's own device**
+(the decentralized end state — proving a phone can rank its own
+slice). No stage changes the slice-in, ordered-list-out shape.
+
+### Wire form — GraphQL everywhere, in-process on-device
+
+A remote runner serves a small GraphQL schema: the operations in this
+doc and the types above, verbatim. `FeedSlice`, `RankParams`, and
+`FeedEntry` travel as written — the ranker already speaks the
+backend's type vocabulary, and a second wire encoding (JSON-RPC,
+protobuf) would be a parallel serialization of the same types, kept in
+lockstep by hand. The backend-direct rollout stage hosts the same
+operations in the backend's own schema; on the viewer's device the
+contract is an in-process call over the same types, no wire at all.
+
+### The slice path — the miner re-fetches
+
+The remote wire signature replaces the slice argument with the viewer:
+
+```graphql
+rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
+```
+
+Reads are unauthenticated and `feedSlice` is viewer-parameterized
+([api-spec.md](api-spec.md)), so the miner fetches
+`feedSlice(viewer, params.dustFloor)` itself — the same public
+subgraph any client could fetch. The device never downloads the slice;
+saving that transfer, alongside the ranking compute, is the point of
+delegating. The logical contract is unchanged: the miner obtains the
+slice and runs `rank(slice, params)` exactly as pinned above, which is
+also the form the in-process on-device call uses directly.
+
+## Delegation and trust
+
+### Push model — no standing credential
+
+The viewer's private inputs — the seen-list and the rank params — ride
+inside each request. The miner holds no credential and no standing
+state, and never authenticates to the backend: to the backend, a miner
+is indistinguishable from any anonymous reader, and
+[auth.md](auth.md) manages no delegation tokens. Revocation is
+symmetric — the viewer stops calling; there is nothing to revoke
+server-side.
+
+When the seen-list lives backend-side (`user_view_log`, the central
+frontend's default —
+[feed-ranking.md §8.2](../primitive/feed-ranking.md#82-storage--wherever-the-viewing-user-prefers)),
+the device fetches it under its own session and forwards it as
+`params.seenList`. The forwarding cost is accepted: it keeps the miner
+credential-free, and a client that wants to avoid it can keep the
+seen-list locally — the math is the same regardless of where the JSON
+came from.
+
+### Result integrity — advisory, spot-checkable, not attested
+
+The ordering is advisory — the viewer's device holds final authority
+over filters and presentation — and the math is deterministic over
+pinned inputs, so the device can re-rank any handful of targets
+locally and compare. The contract mandates no audit and carries no
+attestation: a lazy or dishonest miner produces a visibly wrong feed,
+and the remedy is switching miners. Nothing a miner returns is written
+to the graph, so a bad ranking costs the viewer one feed render, not
+state.
+
+### Out of scope — miner selection and incentives
+
+How a viewer finds a miner is an out-of-band configuration choice (a
+URL the viewer points their client at), and miner incentives are
+deliberately unaddressed — nothing in the rollout path needs them.
+Revisit if someone actually wants to operate a paid miner.
