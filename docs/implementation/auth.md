@@ -18,7 +18,7 @@ In scope:
 
 - Account lifecycle (registration via invitation, email
   verification, deletion handoff).
-- Credentials (password storage and reset).
+- Credentials (password storage, reset, and change; email change).
 - Session tokens (JWT access + Postgres-backed refresh).
 - Session listing and revocation.
 - Rate limiting on auth endpoints.
@@ -186,6 +186,43 @@ logged, and never returned by the API.
    rotates the password hash, and revokes all existing refresh
    tokens for the account — password change is a security event.
 
+**Email is the sole recovery channel in v1.** Reset and email change
+both route through the verified address, so an account whose owner has
+lost email access has no self-service recovery path until single-use
+recovery codes land with MFA (below). This is the accepted floor — the
+same trade-off that keeps MFA out of v1 — not an oversight.
+
+### Password change
+
+A logged-in user changes their password by submitting the current
+password alongside the new one. An authenticated session is not enough
+on its own — the gesture re-proves the credential: the server
+re-verifies the current hash, applies the breach check, rotates the
+hash, and revokes the account's *other* refresh tokens. The same
+security-event handling as a reset, minus the email round-trip.
+
+### Email change
+
+The email is set at registration and verified once; changing it is a
+two-sided proof, since the address is the account's sole recovery
+channel.
+
+1. The user submits the new address and re-enters the current
+   password. The server sends a single-use, short-lived code to the
+   **current (original)** address — proving control of the account as
+   it stands — and a verification link to the **new** address —
+   proving it is reachable.
+2. The change applies only once **both** are satisfied: the
+   original-address code is submitted and the new address has been
+   verified via its link. Until then the account email is unchanged.
+3. On success the new address becomes the verified email; reset and
+   notifications follow it from that point.
+
+The two-sided proof is deliberate: the original-address code blocks a
+hijacker holding only a live session from redirecting recovery, and
+the new-address verification blocks a typo from silently stranding the
+account on an address no one can reach.
+
 ---
 
 ## Tokens
@@ -321,7 +358,8 @@ require.
 - [network.md](../primitive/network.md) — bootstrap migration
   that produces the genesis User; `network_role` read at action
   time.
-- [api-spec.md](api-spec.md) — outdated; the auth-stub line in
-  §Authentication points here.
+- [api-spec.md](api-spec.md) — the GraphQL auth & account
+  mutations (register, log in, sessions, password/email change,
+  invite links, deletion) that consume the flows specified here.
 - [open-questions.md Q15](../open-questions.md) — federation
   reconciliation; may add user-owned keys later.
