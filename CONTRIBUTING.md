@@ -199,8 +199,11 @@ link-check (`make docs-link-check`, requires `lychee` —
 
 ## Where to find things
 
-- **AI-assistant rules** — [CLAUDE.md](CLAUDE.md).
+- **AI-assistant rules** — [CLAUDE.md](CLAUDE.md) (root: shared +
+  backend; `android/CLAUDE.md`: Android-specific).
 - **Design docs** — [docs/README.md](docs/README.md) (full index).
+- **Android app** —
+  [docs/implementation/android.md](docs/implementation/android.md).
 - **Open design questions** —
   [docs/open-questions.md](docs/open-questions.md).
 - **Development commands** —

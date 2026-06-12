@@ -50,6 +50,14 @@ transfers, payouts); the graph carries pointers, never amounts. See
 [docs/implementation/architecture.md](docs/implementation/architecture.md)
 and, for the chain, [docs/implementation/ledger.md](docs/implementation/ledger.md).
 
+The repo is a monorepo: `crates/` (Rust backend) + `android/`
+(Kotlin + Jetpack Compose app —
+[docs/implementation/android.md](docs/implementation/android.md))
++ `docs/`. This file holds the shared and backend rules;
+`android/CLAUDE.md` holds the Android-specific ones. The
+frontend/backend contract is the exported `schema.graphql`
+(checked in, CI-diffed, Apollo Kotlin codegen).
+
 Crates:
 
 | Crate | Role |
@@ -58,6 +66,7 @@ Crates:
 | `graph-engine` | Cypher queries against Memgraph via bolt protocol |
 | `postgres-store` | SQLx queries, migrations, display-content CRUD |
 | `common` | Shared domain types, error types |
+| `ranker` | pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
 
 Docs are layered:
 
