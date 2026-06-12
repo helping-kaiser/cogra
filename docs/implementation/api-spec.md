@@ -603,6 +603,8 @@ type Chat implements Node {
   name: ModeratedText!
   description: ModeratedText!
   image: ModeratedMedia!
+  "The founding actor (per authorship.md)."
+  author: Actor!
   "Per-action governance (member admission, disavowal, key rotation,
    role and property changes). Typed in the governance section."
   governance: Governance!
@@ -644,6 +646,7 @@ enum ContentPrivacy { PLAINTEXT ENCRYPTED }
 type Item implements Node {
   name: ModeratedText!
   description: ModeratedText!
+  author: Actor!
   attachments(first: Int, after: String, last: Int, before: String): ItemAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
@@ -1039,6 +1042,8 @@ type ProposalTally {
  target node's reach into an anchor's cluster. Carrier node; the
  deposit and payouts live on-chain, the node holds pointers."
 type Campaign implements Node {
+  "The advertiser — the campaign's authoring actor."
+  author: Actor!
   "Actor whose cluster the campaign buys reach into (:ANCHOR)."
   anchor: Actor!
   "The promoted node the campaign drives reach toward (:PROMOTES)."
