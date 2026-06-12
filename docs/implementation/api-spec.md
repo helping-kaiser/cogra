@@ -1199,11 +1199,16 @@ type Query {
    feed. Parameterized by the `viewer` whose feed is ranked: a delegated
    miner ranks on someone's behalf without holding their auth, and
    computing any actor's view for any reader is the public-graph default
-   above. Pruned by `dustFloor` — the same ε the ranker prunes with,
-   default Network.dustFloor — not hop-bounded; null if the id resolves to
-   no rankable actor. The backend never ranks (feed-ranking.md §9) — it
-   serves this slice, and separately hydrates the ordered result via `feed`."
-  feedSlice(viewer: UUID!, dustFloor: Float): FeedSlice
+   above. Pruned by `dustFloor` and `distanceDecayBase` — the same ε and
+   d(R) base the ranker runs with, defaults Network.dustFloor and
+   Network.distanceDecayBase — not hop-bounded: slice membership is
+   best-possible contribution `d(R) · ∏|dim| ≥ ε` (feed-ranking.md §4.4,
+   §9), a function of both levers, so a ranker running a softened decay
+   passes its base or the slice silently drops the distant nodes the
+   tuned d(R) keeps above ε. Null if the id resolves to no rankable
+   actor. The backend never ranks (feed-ranking.md §9) — it serves this
+   slice, and separately hydrates the ordered result via `feed`."
+  feedSlice(viewer: UUID!, dustFloor: Float, distanceDecayBase: Float): FeedSlice
 
   "Hydrate a ranked feed from an ordered list of node ids — a ranker's
    output. Returns those nodes in the given order as a cursor-paginated
@@ -1284,8 +1289,8 @@ the ranker, specified in [miner-api.md](miner-api.md).
 
 ```graphql
 "The viewer's relevant subgraph for ranking — nodes and the edges among
- them, weight-bounded by the dust floor. Downloaded by the ranker; the
- backend computes no order over it."
+ them, weight-bounded by the dust floor under the requested decay base.
+ Downloaded by the ranker; the backend computes no order over it."
 type FeedSlice {
   nodes(first: Int, after: String, last: Int, before: String): NodeConnection!
   edges(first: Int, after: String, last: Int, before: String): EdgeConnection!

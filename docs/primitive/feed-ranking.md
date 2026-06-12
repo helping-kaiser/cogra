@@ -41,7 +41,7 @@ target nodes as seen from `U`.
 
 | Symbol | Name | Meaning |
 |--------|------|---------|
-| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost parameter** capped at the system level (see §3.1); within whatever cap the system runs at, `d(R)` does the attenuation. |
+| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `ε` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
 
 ---
 
@@ -81,7 +81,7 @@ and `:BEARER` pairs between a junction and its bearer — would
 otherwise admit cyclic paths in which the same intermediate's
 mediating role multiplies into the product more than once: a
 structural artifact, not new information about `U`'s view of `t`.
-Cycles also blow up enumeration combinatorially under the R-cap.
+Cycles also blow up enumeration combinatorially.
 The walk maintains a per-path visited set to enforce the invariant. The
 visited set enforces it exactly during enumeration; in the dense regime,
 where enumeration is intractable, §4.5 computes the metric by
@@ -1302,8 +1302,8 @@ is trying to suppress.
 
 The per-target sums of §4.2 range over *all* paths from `U` to `t`. In a
 dense graph the path count grows as `b^(R−1)` (§3.6), so an unbounded
-enumeration is `O(b^R)` — uncomputable for high-degree hubs even under
-the `R`-cap. The traversal is bounded by a **dust floor** `ε`: enumerate
+enumeration is `O(b^R)` — uncomputable for high-degree hubs. The
+traversal is bounded by a **dust floor** `ε`: enumerate
 paths by branch-and-bound and prune a partial path as soon as its
 best-possible completed contribution falls below `ε`.
 
@@ -1372,8 +1372,9 @@ forward traversal (§3), so the sums compute by **message-passing over the
 slice in `O(R · |E_slice|)`** — linear in the slice, independent of the path
 count:
 
-- **`d(R) = 0.1^(R−1)`** is geometric: fold one `0.1` into every hop past
-  the first. A per-hop factor, not a per-path one.
+- **`d(R) = 0.1^(R−1)`** is geometric: fold one `0.1` into every hop
+  before the reactor edge — `R−1` interior hops, `R−1` factors; the
+  reactor edge carries none. A per-hop factor, not a per-path one.
 - **`f(Δt)`** rides the reactor edge alone (§4.2) — applied once at
   **readout**, on the final hop into `t`, never propagated inward.
 - **`s_path`** (§3.3) is a signed product, so the per-node decayed signed
@@ -1393,8 +1394,8 @@ count:
 - **kill rule** (§3.2) is multiplication by `0` — it propagates through the
   accumulators untouched.
 - **`i`** drops the reactor edge's value (§4.2): read the mass reaching each
-  reactor `B`, weight it by the final hop's `d(R)·f(Δt)` *without*
-  multiplying in `(dim1, dim2)(B → t)`.
+  reactor `B` — `d(R)` already accumulated — and weight it by `f(Δt)`
+  *without* multiplying in `(dim1, dim2)(B → t)`.
 - **`j`, `k`** traverse nothing — a direct sum over the reactor edges into `t`.
 
 So `h` and `i` are forward sums over the layered slice — one recurrence per
@@ -1402,10 +1403,13 @@ track, `m_0(U) = 1`, read out at each target by folding in its reactor edges:
 
 ```
 m_ℓ(v) = Σ_{u → v}  w(u → v) · m_{ℓ−1}(u)       w carries the hop's dim factor and the 0.1 decay
-H_s(t) = Σ_B  Σ_ℓ  0.1 · f(Δt_{B→t}) · dim1(B → t) · m_ℓ(B)        (s-track; c-track is the two-state lift)
+H_s(t) = Σ_B  Σ_ℓ  f(Δt_{B→t}) · dim1(B → t) · m_ℓ(B)        (s-track; c-track is the two-state lift)
 ```
 
-`O(R · |E_slice|)`, hub or not.
+A reactor `B` reached over `ℓ` interior hops arrives carrying `0.1^ℓ =
+d(ℓ+1) = d(R)`, so the readout adds no further decay — in particular the
+viewer's own reactor edges (`ℓ = 0`, `B = U`) carry full `d(1) = 1`
+weight per §4.1. `O(R · |E_slice|)`, hub or not.
 
 **The one obstruction is §3's vertex-simple invariant.** Message-passing
 sums over **walks**; the metric is defined over **vertex-simple paths**.
