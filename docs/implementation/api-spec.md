@@ -319,7 +319,9 @@ interface Actor implements Node {
  relationship and opinion in the graph. The top layer is the current
  state; the full append-only stack is read via the `edgeHistory` query."
 type Edge {
-  "Source — the actor or system that wrote the edge."
+  "Source — the node the edge originates at. Who wrote the edge
+   follows from the label: the source actor for an actor edge, the
+   system for a structural one."
   from: Node!
   "Target the edge points at."
   to: Node!
@@ -335,8 +337,9 @@ type Edge {
   layer: Int!
   "When the top layer was written."
   timestamp: DateTime!
-  "Typed, optional, per-label metadata — surfaced but never read by
-   ranking. Null on labels that don't use it."
+  "The top layer's system-dimension slot — typed, optional, per-label
+   metadata, surfaced but never read by ranking. Null on labels that
+   don't use it."
   systemDimension: SystemDimension
 }
 
@@ -346,15 +349,23 @@ type EdgeLayer {
   dim2: Dimension!
   layer: Int!
   timestamp: DateTime!
+  "This layer's system-dimension slot — the per-label metadata the
+   layer was written with (e.g. a :TRANSFERS layer's on-chain
+   transaction reference). Null on labels that don't use it."
+  systemDimension: SystemDimension
 }
 
 "One immutable layer of a node property — a graph property or a Postgres
  display-content version. `value` is serialized as a string (shaped by the
- property); null when the layer is a redaction tombstone."
+ property); null when the layer is a redaction."
 type PropertyLayer {
   value: String
   "Why the value was redacted; non-null exactly when this layer is a
-   redaction tombstone — `timestamp` is then the removed-at instant."
+   redaction. On a Postgres display-content field the redaction is an
+   appended tombstone row and `timestamp` is the removed-at instant;
+   on a graph property the redaction is in place
+   (layers.md §5) — the layer keeps its original write `timestamp`,
+   and the removed-at instant travels here, with the reason."
   redactionReason: String
   layer: Int!
   timestamp: DateTime!
@@ -408,8 +419,13 @@ type SystemDimension {
 The **system-dimension slot** is the `systemDimension` field above:
 typed, optional, per-label edge metadata, surfaced by the API but
 never read by ranking
-([edges.md §2](../primitive/edges.md#2-structural-edges)). Today
-only `:TRANSFERS` populates it (the on-chain transaction
+([edges.md §2](../primitive/edges.md#2-structural-edges)). The slot
+is per-layer: `Edge.systemDimension` is the top layer's slot, and
+`edgeHistory` serves each past layer's own. Repeated transfers
+between one wallet pair re-layer the single `:TRANSFERS` edge (one
+label per endpoint pair), so every layer's on-chain transaction
+reference stays readable — past money flows remain auditable. Today
+only `:TRANSFERS` populates the slot (the on-chain transaction
 reference); other labels leave it null.
 
 ### Per-field moderation
