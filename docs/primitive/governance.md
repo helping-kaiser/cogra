@@ -255,11 +255,13 @@ amendment process requires using the current amendment process
 **Schema is fixed; the action set is data.** `governance` is a
 single map-typed property declared once per host label in
 [graph-data-model.md](../implementation/graph-data-model.md);
-new action keys never require a schema change. Adding,
-amending, or tombstoning an entry all flow through a Proposal
+new action keys never require a schema change. Adding or
+amending an entry flows through a Proposal
 with `target_property = 'governance.<action_key>'`,
 `value_kind = 'rule'`, and `proposed_value` set to the new
-`Rule` object.
+`Rule` object. Entries are never removed: a rule is always
+rewritable through its own `amend` gate, so disabling an action
+is an amendment of its `exec` gate, not a deletion.
 
 **Rule snapshot via `rule_anchor`.** A Proposal authored under
 a `governance[X]` entry sets `rule_anchor` to the host node's
