@@ -1504,7 +1504,8 @@ These bind every mutation below.
   co-signatures ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
   Where the target already pins the acting identity — editing
   authored content, accepting an invitation whose membership names a
-  Collective bearer, leaving, revoking, settling — there is no
+  Collective bearer, leaving, revoking, settling, re-linking a
+  wallet — there is no
   `actAs`; the identity is read off the target and the same
   eligibility check runs. The Network-scope governance verbs also
   take none — their gestures are per-User
@@ -1676,8 +1677,9 @@ type Mutation {
    on-chain; writes the Settlement record pointing at it. The split
    is graph-computed, never advertiser-chosen."
   settleCampaign(input: SettleCampaignInput!): SettleCampaignPayload!
-  "Re-point the viewer's payout Wallet to a new on-chain address
-   (append a layer; the binding survives)."
+  "Re-point the acting account's payout Wallet to a new on-chain
+   address (append a layer; the binding survives). The wallet pins
+   who acts — see the input."
   relinkWallet(input: RelinkWalletInput!): RelinkWalletPayload!
 
   # ── Auth and accounts (off-graph state, per auth.md) ─────────
@@ -1765,10 +1767,11 @@ type SetEdgePayload {
 }
 ```
 
-The valid targets are exactly the node kinds the catalog defines an
+The valid targets are the node kinds the catalog defines an
 inbound actor edge for
-([edges.md §1](../primitive/edges.md#1-actor-edges)): the two actors,
-the five content kinds, and the three junction kinds. A `target`
+([edges.md §1](../primitive/edges.md#1-actor-edges)), minus
+Proposal: the two actors, the five content kinds, and the three
+junction kinds. A `target`
 that resolves to a `Proposal`, `Hashtag`, `Campaign`, `Settlement`,
 `Wallet`, or `Network` is rejected — a Proposal because the actor
 edge toward it *is* a vote (one label per endpoint pair, so the two
@@ -2351,6 +2354,9 @@ type SettleCampaignPayload {
   settlement: Settlement!
 }
 
+"The wallet's :PAYS_TO binding pins the acting account — the User it
+ pays out, or a Collective the viewer is eligible to act for — so
+ there is no actAs; the service runs the same eligibility check."
 input RelinkWalletInput {
   wallet: UUID!
   address: String!
