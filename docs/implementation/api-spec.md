@@ -655,7 +655,9 @@ type Item implements Node {
 
 "A content-addressed topic tag — its identity is its canonical
  name. Authorless and terminal: it has no outgoing edges; content
- reaches it through incoming :TAGGING edges."
+ reaches it through incoming :TAGGING edges (Post, Comment, Item)
+ and ChatMessage → Hashtag :REFERENCES — the one inbound edge that
+ carries a tensor and accrues reference-borne ranking signal."
 type Hashtag implements Node {
   "Canonical tag, lowercase and without '#'."
   name: ModeratedText!
@@ -1862,6 +1864,15 @@ assets themselves stay append-only (redaction tombstones them in
 place, never deletes). `Upload` is the standard GraphQL
 multipart-request scalar — the one place the API ingests a binary
 rather than JSON.
+
+The valid `references` targets are per-source. A ChatMessage may
+reference any node — including a Hashtag, its only path to one,
+since ChatMessage has no `:TAGGING` edge type. A Post or Comment
+`references` entry naming a Hashtag is rejected: `:TAGGING`
+already owns that pair, and a (source, target) pair carries one
+structural edge
+([edges.md §2 "Reference"](../primitive/edges.md#reference));
+tags go through the `tags` input.
 
 ### Voting
 
