@@ -5,8 +5,8 @@ description and links to the dedicated doc where the per-node
 mechanics live — creation flow, graph-side and Postgres-side
 properties, edges, authorship, and lifecycle.
 
-For the conceptual framing — the five categories (actor, content,
-junction, system, topic) and why they matter — see
+For the conceptual framing — the six categories (actor, content,
+junction, system, topic, carrier) and why they matter — see
 [graph-model.md §2](graph-model.md#2-node-categories). For the
 edges that connect nodes, see [edges.md](edges.md). For concrete
 property types, constraints, and indexes, see

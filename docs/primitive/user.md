@@ -122,8 +122,9 @@ labels lives in
 include:
 
 - Other actors: User, Collective.
-- Content: Post, Comment, Chat, ChatMessage, Item, Proposal.
+- Content: Post, Comment, Chat, ChatMessage, Item.
 - Junctions: ChatMember, CollectiveMember, ItemOwnership.
+- Carriers: Proposal.
 
 Some compound gestures defined in other docs reduce to creating
 or layering an outgoing actor edge: authoring a node
