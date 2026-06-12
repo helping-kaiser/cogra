@@ -541,8 +541,8 @@ CREATE INDEX auth_invitations_inviter_idx
 -- this state.
 --
 -- invitation_id is the auth_invitations row the registrant came in
--- through (NULL only for the first-user genesis bootstrap, see
--- architecture.md §Genesis bootstrap and network.md §2).
+-- through. The genesis User is written directly by the bootstrap
+-- migration and never passes through this table (see network.md §2).
 -- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
 -- edge values toward the inviter, written to the graph edge on
 -- verification per invitations.md.
@@ -553,7 +553,7 @@ CREATE TABLE auth_pending_registrations (
     username                      TEXT         NOT NULL,
     email                         TEXT         NOT NULL,
     password_hash                 TEXT         NOT NULL,
-    invitation_id                 UUID         REFERENCES auth_invitations(id),
+    invitation_id                 UUID         NOT NULL REFERENCES auth_invitations(id),
     invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
     invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
     email_verification_token_hash BYTEA        NOT NULL UNIQUE,
