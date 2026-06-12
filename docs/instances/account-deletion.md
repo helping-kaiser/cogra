@@ -36,12 +36,14 @@ identity-level by default, content-level on opt-in.
   "Username post-redaction" below (the same form as the Postgres
   tombstone). The User node itself stays; edges and layer stacks
   stay; counts and authorship derivation continue to work.
-- The Postgres `users` row is tombstoned — a new version row in
-  which `display_name`, `bio`, `avatar_id`, and `website_url`
-  are cleared (`NOT NULL` fields set to a redaction marker,
-  nullable fields nulled), and `username` is replaced with the
-  unique redacted form below. The original row is archived per
-  §3.
+- The Postgres profile is tombstoned — a new
+  `user_profile_versions` row in which `display_name`, `bio`,
+  `avatar_id`, `cover_id`, and `website_url` are cleared
+  (`NOT NULL` fields set to a redaction marker, nullable fields
+  nulled, `redaction_reason` set), and `users.username` is
+  replaced in place with the unique redacted form below (the one
+  sanctioned in-place write on the identity row). The prior
+  profile version is archived per §3.
 - The user's avatar `media_attachments` row is tombstoned and
   archived.
 - Private per-user state (preferences, bookmarks, hidden-actor
@@ -157,7 +159,7 @@ Account deletion does not change that:
 
 ## 3. Retention archive
 
-Originals — the original `users` row, content body version rows
+Originals — the prior profile version, content body version rows
 that were tombstoned, the prior values of redacted graph property
 layers, and any tombstoned media attachments — are written to the
 [retention archive](../primitive/retention-archive.md) with a
