@@ -163,6 +163,36 @@ type RankPath {
 `Node`, `Edge`, and the scalars are the [api-spec.md](api-spec.md) types —
 the ranker speaks the same type vocabulary as the backend it sits beside.
 
+## Search re-ranking
+
+Search splits the same way the feed does
+([api-spec.md "Search"](api-spec.md#search)): the backend's order is
+viewer-independent (exact-match tier, then newest first), and
+graph-blended ordering is the ranker's option. In the delegated case
+that option binds here — the device never downloads the slice (see
+Transport), so it cannot compute feed metrics for search matches
+locally. The dedicated operation:
+
+```graphql
+"Re-order search candidates by the viewer's feed metric: the fetched
+ hit ids in, the in-slice subset out, ordered. Candidates outside the
+ slice carry no metric and are not returned — the frontend keeps them
+ in the backend's order below the ranked block (recency, the sort
+ cascade's deepest fallback). Of the params only the calibration
+ fields and collapseWeights are read: the candidate set is given, so
+ kinds does not apply (kind scoping happened at the search query) and
+ seenList does not apply (the seen-filter governs feed rendering, not
+ access — feed-ranking.md §8.4); friendAuthorReorder is a feed
+ presentation layer."
+rankSearch(slice: FeedSlice!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
+```
+
+The metric is the one `rank` computes — every searchable kind is
+rankable ([feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable))
+— so `rankSearch` is `rank` with the candidate set given (the search
+hits inside the slice) instead of derived (every in-scope rankable
+node in the slice).
+
 ## Two runners of one traversal
 
 This surface and campaign settlement ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
@@ -329,10 +359,11 @@ contract is an in-process call over the same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 
-The remote wire signature replaces the slice argument with the viewer:
+The remote wire signatures replace the slice argument with the viewer:
 
 ```graphql
 rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
+rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
 ```
 
 Reads are unauthenticated and `feedSlice` is viewer-parameterized

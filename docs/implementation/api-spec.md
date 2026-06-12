@@ -1353,6 +1353,8 @@ candidates by the viewer's feed metric where the match is in the
 viewer's slice; matches outside the slice keep the recency order,
 which is the sort cascade's deepest fallback anyway
 ([feed-ranking.md §5](../primitive/feed-ranking.md#5-algorithm)).
+The delegated form is the miner's `rankSearch` operation
+([miner-api.md](miner-api.md)).
 The no-AI rule applies to search ranking as much as to feeds.
 `chatSearch` is always newest first.
 
