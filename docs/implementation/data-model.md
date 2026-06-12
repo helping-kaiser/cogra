@@ -377,7 +377,7 @@ three properties:
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §3.6](../primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)),
+content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#51-filtering-vs-ranking)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`).
 
@@ -403,7 +403,8 @@ seen-list mechanism in
 ```sql
 -- Hidden actors: per-viewer list of users/collectives the viewing user
 -- doesn't want in their feed. Applied as a post-rank exclusion
--- filter on the viewing user's side (see feed-ranking.md §3.6).
+-- filter on the viewing user's side (see feed-ranking.md §5.1; §9
+-- for where the filter computes).
 -- hidden_type disambiguates which table the hidden_id refers to,
 -- same shape as author_type / target_type elsewhere.
 CREATE TABLE user_hidden_actors (
@@ -541,8 +542,8 @@ CREATE INDEX auth_invitations_inviter_idx
 -- this state.
 --
 -- invitation_id is the auth_invitations row the registrant came in
--- through (NULL only for the first-user genesis bootstrap, see
--- architecture.md §Genesis bootstrap and network.md §2).
+-- through. The genesis User is written directly by the bootstrap
+-- migration and never passes through this table (see network.md §2).
 -- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
 -- edge values toward the inviter, written to the graph edge on
 -- verification per invitations.md.
@@ -553,7 +554,7 @@ CREATE TABLE auth_pending_registrations (
     username                      TEXT         NOT NULL,
     email                         TEXT         NOT NULL,
     password_hash                 TEXT         NOT NULL,
-    invitation_id                 UUID         REFERENCES auth_invitations(id),
+    invitation_id                 UUID         NOT NULL REFERENCES auth_invitations(id),
     invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
     invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
     email_verification_token_hash BYTEA        NOT NULL UNIQUE,

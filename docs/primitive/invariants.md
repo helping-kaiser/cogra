@@ -52,8 +52,9 @@ most useful one.
   — redaction is content-level and global; severance is
   traversal-level and per-viewer; the two are not interchangeable.
 - [Junction state is encoded in topology](graph-model.md#5-junction-node-flows)
-  — claim only = pending; claim + approval = active; negative top
-  layer on either = revoked. No status flag.
+  — claim only = pending; claim + approval, both with positive
+  top layers = active; non-positive top layer on either =
+  revoked. No status flag.
 - [Junction authorship is fixed by the `:AUTHOR` label, not timestamp](authorship.md#junction-authorship)
   — a junction's author is its bearer; third-party `:ACTOR`
   sentiment landing on a pending junction first never becomes

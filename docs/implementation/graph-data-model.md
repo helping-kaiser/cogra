@@ -612,9 +612,8 @@ The [edge-tensor-uniformity invariant](../primitive/invariants.md#topology-and-v
 — every edge carries `(dim1, dim2, timestamp, layer)` regardless of
 label — is enforced at the storage layer via per-label EXISTS
 constraints. Shown explicitly for `:ACTOR`; an identical block of
-four constraints applies to each remaining label in the table
-above (`:AUTHOR`, `:CLAIM`, `:APPROVAL`, `:BEARER`, `:CONTAINMENT`,
-`:TAGGING`, `:TARGETS`, `:REFERENCES`, `:STRUCTURAL`):
+four constraints applies to each of the 16 remaining labels in
+the table above — `:INVITE` and the economics labels included:
 
 ```cypher
 CREATE CONSTRAINT ON ()-[r:ACTOR]-() ASSERT EXISTS (r.dim1);

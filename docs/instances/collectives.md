@@ -262,7 +262,7 @@ a new version row, no overwrite.
 - **`description`** — optional body text describing what the
   Collective is and what it does.
 - **`avatar_id`** — optional 1:1 FK to `media_attachments`,
-  analogous to `users.avatar_id`. See
+  analogous to `user_profile_versions.avatar_id`. See
   [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments).
 - **`website_url`** — optional external link.
 
@@ -735,6 +735,11 @@ officers.
 | `decision:change_capital_structure`       | All active members              | ≥ 75%            |
 | `actas:vote:Proposal`                     | All active members              | —                |
 | `actas:transfer:Item`                     | All active members              | —                |
+
+Whether the household and co-op `actas:*` rows should regain
+their originally intended majority concurrence as `decision:*`
+entries is open — see
+[open-questions.md Q27](../open-questions.md#q27--household-and-co-op-act-as-examples-the-intended-majority-concurrence-is-no-longer-expressible).
 
 ---
 
