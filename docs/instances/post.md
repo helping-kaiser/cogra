@@ -105,7 +105,7 @@ two outgoing structural edge types, both system-created:
   cites (e.g. pointing at the original of a re-uploaded image),
   a User or Collective named in the body, a Proposal it
   campaigns for, etc. Hashtag is the one excluded target —
-  body-tag hashtags go through `:TAGGING` (above) and a single
+  hashtags go through `:TAGGING` (above) and a single
   structural edge per (source, target) pair is the rule. The
   carrier semantics, target catalog, and deferred traversal
   rules live in

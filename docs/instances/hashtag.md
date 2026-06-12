@@ -18,7 +18,9 @@ instances requires no reconciliation.
 A Hashtag is **brought into existence implicitly by the first
 edge that needs it**. No actor authors it, and no explicit
 "create hashtag" gesture exists. When a Post, Comment, or Item
-is created with a tag string in its body, the API:
+is created carrying a tag string — tags are explicit structured
+inputs on the authoring gesture; frontends may derive them from
+the body, the API never parses bodies — the API:
 
 1. Normalizes the tag string — currently lowercase, no `#`.
 2. Computes the UUID via

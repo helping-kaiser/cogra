@@ -121,8 +121,10 @@ canonical pointer to a guidelines version:
 - `Network.guidelines_hash` — SHA-256 hex digest of the canonical
   document bytes at that version.
 
-A guidelines amendment is a Proposal (or pair of Proposals) that
-sets these two properties to the new version's values.
+A guidelines amendment is a single Proposal that sets both
+properties to the new version's values atomically — one vote
+covers the pair, since a version without its hash (or vice versa)
+is meaningless.
 
 **Eligibility.** All active Network members
 ([network.md](../primitive/network.md)).
