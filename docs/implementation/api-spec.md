@@ -1244,14 +1244,30 @@ type Query {
     first: Int, after: String, last: Int, before: String
   ): PropertyLayerConnection!
 
-  "Search across nodes; returns mixed node types. Provisional — what
-   is indexed and how matches rank is not yet specified in the design
-   docs."
+  "Global search across nodes; returns mixed node types. Recall is
+   lexical over the indexed name-class fields and post titles; order
+   is exact-match tier first, then newest first — viewer-independent,
+   the backend never graph-ranks (feed-ranking.md §9). A ranker may
+   re-order fetched results by the viewer's feed metric. Valid kinds:
+   USER, COLLECTIVE, POST, CHAT, ITEM, HASHTAG; any other kind is a
+   validation error — comments carry no indexed field, and chat
+   messages are searchable only through chatSearch. Full semantics in
+   the Search section."
   search(
     query: String!
     kinds: [NodeKind!]
     first: Int, after: String, last: Int, before: String
   ): SearchConnection!
+
+  "Scoped message search within one chat — word-level full-text over
+   plaintext bodies, newest first. Encrypted bodies are never
+   searchable server-side: the backend holds only ciphertext
+   (chats.md §9). Null if the id resolves to no chat."
+  chatSearch(
+    chatId: UUID!
+    query: String!
+    first: Int, after: String, last: Int, before: String
+  ): ChatMessageConnection
 }
 ```
 
@@ -1287,6 +1303,49 @@ type NodeEdge {
 
 ### Search
 
+Search is two surfaces: a global `search` over names and titles,
+and a per-chat `chatSearch` over plaintext message bodies.
+
+**What is indexed.** The global index covers the current value of
+the name-class fields and post titles: User `username` +
+`displayName`, Collective `name` + `displayName`, Hashtag `name`
+(served by the Postgres registry — [hashtag.md §3](../instances/hashtag.md#3-postgres-side-content)),
+Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
+bios, and attachments are not indexed. A Comment carries no
+indexed field and is not a searchable kind — a comment is found
+through its post. Chat messages are excluded from the global
+index — casual conversation doesn't surface to strangers by
+keyword; their search surface is `chatSearch`, and only plaintext
+bodies are searchable — encrypted content never is, since the
+backend only ever holds ciphertext
+([chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)).
+
+**Match semantics.** Name-class fields match case-insensitively
+by prefix and substring; Post titles and chat-message bodies
+match by word-level full-text. The index technology behind those
+semantics is an implementation choice.
+
+**Order.** Backend order is exact-match tier first — a result
+whose indexed field equals the query case-insensitively — then
+newest first. Both keys are viewer-independent: the backend never
+ranks by graph
+([feed-ranking.md §9](../primitive/feed-ranking.md#9-where-ranking-and-filtering-live)).
+Graph-blended ordering is the ranker's option, the same split as
+the feed: the client or delegated miner re-orders the fetched
+candidates by the viewer's feed metric where the match is in the
+viewer's slice; matches outside the slice keep the recency order,
+which is the sort cascade's deepest fallback anyway
+([feed-ranking.md §5](../primitive/feed-ranking.md#5-algorithm)).
+The no-AI rule applies to search ranking as much as to feeds.
+`chatSearch` is always newest first.
+
+**Moderation.** `sensitive`-classified fields stay indexed and
+matchable; a result carries its per-field status and the frontend
+filters by the viewer's `content_filtering_severity_level` — the
+same visibility model as every other read. Redacted fields drop
+out of the index by construction: the redaction cascade removes
+the value, so there is nothing left to match.
+
 ```graphql
 type SearchConnection {
   edges: [SearchEdge!]!
@@ -1296,6 +1355,15 @@ type SearchConnection {
 type SearchEdge {
   cursor: String!
   node: Node!
+}
+type ChatMessageConnection {
+  edges: [ChatMessageEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ChatMessageEdge {
+  cursor: String!
+  node: ChatMessage!
 }
 ```
 
