@@ -130,12 +130,22 @@ incoming vote edge from the authoring actor (§5).
     composite Proposal's `_from` re-validation failed and the
     cascade refused the target writes (§6). The crossing vote
     still stands; only the cascade rolled back.
+  - `'failed'` — bidirectional tallies only: the negative side
+    satisfied the mirror bar
+    ([governance.md §2.4](../primitive/governance.md#24-threshold-policy)).
+  - `'redacted'` — a moderation Proposal targeting this
+    Proposal's `proposed_value` passed `'illegal'` while this
+    Proposal was open; with its payload redacted it can never
+    execute (§2).
 
   A Proposal **stops accepting votes once `status ≠ 'open'`**;
-  the terminal state is final. There is no `'failed'` value — a
-  Proposal that never crosses threshold stays `'open'`
-  indefinitely (no time-boxing, see
-  [governance.md §6](../primitive/governance.md#no-time-boxing)).
+  the terminal state is final. Petition-style tallies have no
+  failure path — negatives are not tallied, so a petition that
+  never crosses threshold stays `'open'` indefinitely (no
+  time-boxing, see
+  [governance.md §6](../primitive/governance.md#no-time-boxing));
+  in a bidirectional tally a Proposal neither side ever crosses
+  stays `'open'` the same way.
   Changing a terminal outcome is done with a **counter-Proposal**
   ([governance.md §3](../primitive/governance.md#counter-proposals)),
   never by re-voting the terminated one. `status` is the
@@ -192,11 +202,22 @@ Composite kinds in current use live in their application docs
 for `composite:decision:admit_shareholder` and
 `composite:decision:transfer_shares`.
 
-A Proposal does **not** carry any per-field moderation-status
-properties: it has no user-input fields to redact (see
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status),
-which excludes Proposal alongside the junction nodes for the
-same reason).
+A Proposal carries **one moderatable field**: `proposed_value`.
+Wherever the proposed value embeds user-authored content (a
+proposed description or name, a composite payload), it is
+reportable like any other user content — a moderation Proposal
+`:TARGETS` the Proposal with
+`target_property = 'proposed_value_status'` and runs the
+Network-scope flow in [moderation.md](moderation.md). On a
+passing `'illegal'` classification the cascade writes the
+visible redaction marker onto `proposed_value` in place (the
+identity properties don't layer; in-place redaction is the
+sanctioned exception per
+[layers.md §5](../primitive/layers.md#5-deletion-policy)) and
+onto the layered `proposed_value_status` companion. If the
+targeted Proposal is still `'open'` it transitions terminally
+to `'redacted'` (§6) — its payload is gone, so it can never
+execute; the votes already cast remain on record.
 
 Concrete property types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -289,10 +310,11 @@ mod-gate. See
   for support, a Comment citing it in debate. See
   [edges.md §2 "Reference"](../primitive/edges.md#reference).
 
-A Proposal **never** receives a `:TARGETS` edge from
-another Proposal: moderation can't target it (§2), and no
-other governance application proposes changes to a
-Proposal's own properties (neither layers, §2).
+A Proposal receives a `:TARGETS` edge from another Proposal in
+exactly one case: a moderation Proposal against its
+`proposed_value_status` (§2). No other governance application
+proposes changes to a Proposal's own properties (the identity
+properties don't layer, §2).
 
 **Feed-rankable.** These inbound vote and reference edges are
 reactor edges into the Proposal, making it an **opt-in**
