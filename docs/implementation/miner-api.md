@@ -172,7 +172,7 @@ in who runs them, what they rank, and how authoritative the result is.
 |---|---|---|
 | Runner | the viewer's device or a miner | the central backend |
 | Authority | advisory — the viewer's device holds final say | authoritative — it moves money |
-| Targets | every rankable node in the slice | a single anchor→target pair (per-path Shapley split toward the reach gain `h_anchor(target)`) |
+| Targets | every rankable node in the slice | a single anchor→target pair (per-path Shapley split over the metric level `h_anchor(target)`) |
 | Dust floor `ε` | viewer-tunable, slice-bounding | set per campaign for payability, recorded for reproducibility |
 
 The single-pair, settle-once campaign computation is the tractable case;
