@@ -556,8 +556,7 @@ mechanism is introduced; the result is what we call a
 - Co-signers append vote layers in their respective shape until
   the threshold is reached.
 - On threshold-cross, the outcome takes effect per §6: the
-  junction activates, the outgoing edge is produced, or the
-  Proposal's cascade fires.
+  junction activates or the Proposal's cascade fires.
 
 The pattern recognizes that "N parties concur" and "governance
 with threshold N" are the same primitive — there is no separate
