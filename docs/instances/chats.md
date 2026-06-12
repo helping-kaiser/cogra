@@ -169,9 +169,9 @@ A ChatMember junction carries:
   moderators and Network moderators are different roles, with
   different scopes and different weights — see
   [governance.md §7](../primitive/governance.md#7-the-mod-gate).
-  Role weights live inside each `governance` entry's `weights`
+  Role weights live inside each `governance` entry's `weighting`
   field, so changing a `role` reassigns the bearer to those
-  entries' role-weight rows; amending an entry's `weights`
+  entries' role-weight rows; amending an entry's `weighting`
   re-tunes all bearers of those roles for that decision. Layered.
 - **`voting_weight`** — optional per-bearer override. When
   present, the tally reads this value directly and the

@@ -84,7 +84,7 @@ incoming vote edge from the authoring actor (§5).
     (absolute quorum counts, half-lives, …).
   - `'rule'` — `proposed_value` is a `Rule` object — the
     paired `exec` + `amend` triples (each
-    `{eligibility, weights, threshold}`) keyed under a
+    `{eligibility, weighting, threshold}`) keyed under a
     `governance[action_key]` entry, per
     [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
     Consumer: governance-rule amendments on collectives (see
