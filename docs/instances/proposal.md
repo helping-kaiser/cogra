@@ -122,8 +122,10 @@ incoming vote edge from the authoring actor (§5).
   forward dependency — see
   [layers.md §3](../primitive/layers.md#3-layers-on-nodes).
 
-- **`status`** — the Proposal's lifecycle state, and the **one
-  layered property** on the node. Default `'open'`; transitions
+- **`status`** — the Proposal's lifecycle state, and one of the
+  node's **two layered properties** (the other is the
+  `proposed_value_status` moderation companion, below). Default
+  `'open'`; transitions
   exactly once, at threshold-cross, to a terminal value:
   - `'passed'` — threshold crossed, cascade applied.
   - `'passed_but_invariant_rejected'` — threshold crossed, but a
@@ -159,10 +161,11 @@ None of the four **identity** properties above —
 `rule_anchor` — layers: the Proposal's identity *is* the
 specific change it proposes; mutating any of them mid-lifecycle
 would change what voters are voting on. A revised target,
-value, kind, or anchor requires a new Proposal. `status` is the
-sole exception, and append-only by the same discipline as
-everything else on the graph — `open` → terminal, exactly one
-transition, never destructive.
+value, kind, or anchor requires a new Proposal. The two layered
+properties are `status` — `open` → terminal, exactly one
+transition, never destructive — and the `proposed_value_status`
+moderation companion (below), both append-only by the same
+discipline as everything else on the graph.
 
 ### Composite proposals
 
@@ -399,6 +402,15 @@ is the node-level progression.
   [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
   A fresh Proposal with refreshed numbers is the only path
   forward.
+- **Redaction** — the one transition not driven by the
+  Proposal's own votes: a moderation Proposal targeting this
+  Proposal's `proposed_value_status` passes `'illegal'` (§2).
+  The cascade redacts `proposed_value` in place and writes the
+  layered status companion; a still-`'open'` Proposal
+  transitions terminally to `'redacted'` — its payload is gone,
+  so it can never execute. Votes already cast remain on record.
+  A Proposal already in a terminal state keeps that state; only
+  the payload redaction applies.
 - **Outcome stickiness** — after the cascade, the target
   stays in its new state. The passed Proposal is terminal and
   does not flip back when later votes shift sentiment
@@ -412,8 +424,9 @@ is the node-level progression.
   [layers.md §5](../primitive/layers.md#5-deletion-policy),
   graph structure is never removed; the Proposal node, its
   `:TARGETS` edge, and every incoming vote and reference
-  edge stay on the graph as a permanent record. There is
-  no redaction path for the Proposal itself (§2).
+  edge stay on the graph as a permanent record. The one
+  redaction path is the in-place `proposed_value` redaction
+  (§2), which removes no structure.
 
 ---
 
