@@ -191,8 +191,8 @@ Collective-specific cascade in §9.
 - **`governance`** — a single layered map property holding the
   Collective's entire social contract, keyed by `action_key`
   string. Each entry is a `Rule` object carrying two triples —
-  `exec` (eligibility, weights, threshold for the action) and
-  `amend` (eligibility, weights, threshold for amending this
+  `exec` (eligibility, weighting, threshold for the action) and
+  `amend` (eligibility, weighting, threshold for amending this
   entry). Layered per
   [layers.md §3](../primitive/layers.md#3-layers-on-nodes);
   amending an entry is a standard Proposal targeting
@@ -352,7 +352,7 @@ its bearer casts as a collective-eligible voter:
   identity-binding edge written at junction creation, pointing
   at the actor (User or sub-Collective) the membership
   represents. Never re-pointed; the Shape A self-claim — the
-  bearer's vote authoring the admit-Proposal — must originate
+  bearer's vote on the admit-Proposal — must originate
   from this actor (§7). See
   [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`CollectiveMember → Proposal` (Shape B vote)** —
@@ -437,18 +437,21 @@ described in
 admission is a fresh terminal `Proposal` that `:TARGETS` the new
 CollectiveMember.
 
-1. The **would-be member** (User or Collective) authors the
-   **admit-Proposal** — their **Shape A self-claim** to the
+1. The junction and its **admit-Proposal** are created together,
+   by whichever side moves first. In the request flow the
+   **would-be member** (User or Collective) authors the
+   admit-Proposal — their **Shape A self-claim** to the
    membership (`User/Collective → Proposal`; authorship is the
    first vote). The system creates the pending
    `CollectiveMember → Collective` claim edge and the
    `CollectiveMember → User/Collective` `:BEARER` identity edge,
    and the member writes their `bearer → CollectiveMember`
-   `:AUTHOR` edge, which authors the junction (§6).
-   (Approver-initiated flows mirror invite-only: the approver
-   creates the junction and `:BEARER` first; the would-be member
-   self-claims — authoring both the Proposal and the `:AUTHOR`
-   edge — later.)
+   `:AUTHOR` edge, which authors the junction (§6). In the invite
+   flow the inviter creates the junction and `:BEARER`, and
+   authors the admit-Proposal with their Shape B approver vote as
+   its first vote; the would-be member's acceptance is their
+   Shape A self-claim vote on the existing Proposal plus their
+   `:AUTHOR` edge on the junction.
 2. **Required approvers** — existing CollectiveMembers eligible
    under the social contract for the target role — each cast a
    **Shape B vote** from their own existing CollectiveMember to
@@ -512,9 +515,12 @@ entry. Three reserved top-level namespaces:
   `change_role`, `change_ownership_pct`,
   `change_voting_weight`, `set:<property>` (setting a
   Collective field — `name` is a graph data property;
-  `description`, `avatar`, `website_url` are Postgres display
-  content, the graph carrying only their per-field moderation
-  status). The optional `<role>` parameter refines
+  `display_name`, `description`, `avatar`, `website_url` are
+  Postgres display content, the graph carrying only their
+  per-field moderation status). A lone `change_ownership_pct`
+  is valid only when the 100% stake total still holds; a change
+  that shifts the total rides one of the composite operations
+  below. The optional `<role>` parameter refines
   member-related operations by the affected member's role.
   Composite Collective operations (`admit_shareholder`,
   `transfer_shares`, …) take their own operation key paired
@@ -599,7 +605,8 @@ shape:
   fire a worker (the cascade writes the
   `Collective → CollectiveMember` `:APPROVAL` state-transition
   layer per §9); set a display-content field
-  (`set:description` / `set:avatar` / `set:website_url`) —
+  (`set:display_name` / `set:description` / `set:avatar` /
+  `set:website_url`) —
   Postgres version row, no graph layer, per the display-content
   cascade in
   [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).

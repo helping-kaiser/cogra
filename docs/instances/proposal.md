@@ -354,8 +354,9 @@ is the node-level progression.
     against a message): the chat's stance *is* the passed
     Proposal, so nothing is written on the message;
     `status = 'passed'` carries it.
-  - **A display-content `set:*`** (`set:description`,
-    `set:avatar` / `set:image`, `set:website_url`): the cascade
+  - **A display-content `set:*`** (`set:display_name`,
+    `set:description`, `set:avatar` / `set:image`,
+    `set:website_url`): the cascade
     writes a Postgres display-content version row and no graph
     layer, per the display-content cascade in
     [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).

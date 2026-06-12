@@ -128,16 +128,15 @@ explicit depth cap.
 
 **`R` is an operational cost knob, not a math-defining bound.**
 The path-product math (§3.3–§3.4) and per-target sums (§4) are
-well-defined for any `R`; nothing in the math caps it. What caps
-`R` in practice is system cost: enumerating paths grows with `R`,
-and traversal at the data-fetch boundary
-([architecture.md](../implementation/architecture.md), "traverse
-N hops") is bounded for performance reasons — typically `R ≤ 5`
-or `6` per fetch. If a denser graph makes higher-`R` traversal
-unaffordable, the tuning lever is `d(R)`'s decay shape, not a
-new math-side cap: a steeper `d(R)` attenuates distant paths
-enough that fetching them stops paying for itself, at which
-point the system cap is the right gate.
+well-defined for any `R`; nothing in the math caps it. What bounds
+the computation in practice is the dust floor `ε`: the data-fetch
+boundary delivers a weight-bounded slice — nodes whose best-case
+path product still clears `ε` (§4.4, §9) — rather than a
+hop-counted neighborhood, and within the slice path enumeration
+prunes on the same floor. If a denser graph makes the slice
+unaffordably large, the tuning levers are `ε` and `d(R)`'s decay
+shape, not a math-side hop cap: a steeper `d(R)` attenuates
+distant paths enough that fetching them stops paying for itself.
 
 State-bearing structural edges fall into two cases with
 different treatment:
@@ -472,9 +471,9 @@ A cluster with unbounded internal nodes and edges can amplify a
 single live entry path into an arbitrary aggregate `h(t)`. The
 number of paths through a cluster of branching factor `b` grows as
 `b^(R−1)`; path contributions decay as `d(R) = 0.1^(R−1)`. Once
-`b ≥ 10`, the path-sum series diverges; even with a hard `R ≤ 5–6`
-traversal cap, achievable amplification of a single entry edge runs
-to ~100× and beyond.
+`b ≥ 10`, the path-sum series diverges; whatever bound the fetch
+imposes (the dust floor `ε`, §9), achievable amplification of a
+single entry edge runs to ~100× and beyond.
 
 So, as long as **any** path from `U` into the cluster has
 `dim1 ≠ 0` and a non-zero `dim2` magnitude end-to-end, bots can
@@ -1948,7 +1947,7 @@ They compose orthogonally.
 
 The seen-list is a per-viewer set of content UUIDs treated as
 **another input to the feed-ranking computation**, alongside
-`R`, `d(R)`, `f(Δt)`, and the §5.2 friend-author-boost toggle.
+`d(R)`, `f(Δt)`, and the §5.2 friend-author-boost toggle.
 The calculator (client, miner, or central worker — see §9)
 accepts the seen-list as a JSON array of UUIDs and excludes
 those nodes from the candidate set **before** ranking begins.

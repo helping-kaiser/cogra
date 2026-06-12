@@ -77,7 +77,7 @@ at properties. Each subject type has a natural node to address:
   system writes a new state layer on the edge. The edge itself is
   never the target of a vote.
 - **Node property** — a **Proposal** node (see
-  [nodes.md §2](nodes.md#2-content-nodes)) is created as the subject. It carries
+  [nodes.md §6](nodes.md#6-carrier-nodes)) is created as the subject. It carries
   `target_property` and `proposed_value` as node properties, and a
   `:TARGETS` structural edge to the target node (see
   [edges.md §2](edges.md#2-structural-edges)). Votes point at the Proposal; when the
@@ -126,7 +126,7 @@ overrides the mode where set.
 
 | Junction         | Default source                                                                       | Out-of-the-box roles → weights |
 |------------------|--------------------------------------------------------------------------------------|---|
-| ChatMember       | Per-action role weights inside each `Chat.governance` entry's `exec.weights` field — see [chats.md §10](../instances/chats.md#10-moderation)           | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
+| ChatMember       | Per-action role weights inside each `Chat.governance` entry's `exec.weighting` (the `'role'` mode's table) — see [chats.md §10](../instances/chats.md#10-moderation)           | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
 | CollectiveMember | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
 | Future junctions | Whatever properties the junction exposes                                             | Defined by the application |
 
@@ -213,8 +213,8 @@ append-only, never a deletion. The carrier is one of:
 - a new layer on a structural edge (state-bearing),
 - a new layer on a node property, or
 - a new Postgres display-content version row — for a
-  Proposal-mediated display-content change (`set:description`,
-  `set:avatar`, `set:website_url`), where the on-graph record
+  Proposal-mediated display-content change (`set:display_name`,
+  `set:description`, `set:avatar`, `set:website_url`), where the on-graph record
   is the terminating Proposal's `status` rather than a
   graph-property layer (see
   [proposal.md §6](../instances/proposal.md#6-lifecycle)).
@@ -236,8 +236,8 @@ each entry a `Rule` of paired `exec` + `amend` triples:**
 ```
 governance: Map<String, Rule>
   where Rule = {
-    exec:  { eligibility, weights, threshold, exclude_subject? },
-    amend: { eligibility, weights, threshold }
+    exec:  { eligibility, weighting, threshold, exclude_subject? },
+    amend: { eligibility, weighting, threshold }
   }
 ```
 
@@ -450,7 +450,17 @@ positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
 - `quorum_count` is the proposal-type's **`*_quorum_count`**
   property on the `:Network` singleton.
 - `|active_members|` is the count of Users active inside
-  `Network.active_threshold_days`.
+  `Network.active_threshold_days`, read at each evaluation.
+  Activity gates the **bar**, never the votes: a cast vote counts
+  in every future evaluation regardless of whether its voter has
+  since fallen outside the activity window. (Eligibility per §2.2
+  — a revoked junction dropping its Shape B votes — is a separate
+  mechanism and unaffected.) The count is a **maintained
+  aggregate** — one counter per scope, kept current on an
+  operational cadence — never a per-vote rescan of the user set;
+  the same number serves every Proposal in the scope, and the bar
+  it feeds moves slowly, so a refresh-cadence-stale read is
+  acceptable by design.
 
 In addition, the mod-gate of §7 must be satisfied — every
 Network-scope Proposal also requires moderator consent in the
@@ -518,7 +528,7 @@ with threshold N" are the same primitive — there is no separate
 "co-signature" concept. Three current consumers:
 
 - **Multi-sig junction approval.** The would-be bearer's Shape A
-  vote authoring the admit-Proposal, plus N Shape B approver
+  self-claim vote on the admit-Proposal, plus N Shape B approver
   votes on that Proposal from existing eligibility junctions of
   the same type. The junction stays pending until the threshold
   is reached; the Proposal's cascade then produces the approval
@@ -697,7 +707,7 @@ only write. The triggering write may fan out into derived writes:
 - A new ownership-edge layer (Item ownership transfer).
 - A new Postgres display-content version row and **no graph
   layer**, for a passing display-content field change
-  (`set:description`, `set:avatar` / `set:image`,
+  (`set:display_name`, `set:description`, `set:avatar` / `set:image`,
   `set:website_url`). The graph property of that name is a
   per-field moderation-status carrier (its value *is* the
   status), with nothing meaningful to layer for a content edit,

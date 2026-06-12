@@ -187,13 +187,13 @@ edge, not a re-pointing of the existing one. Key rotation on the
 bearing actor doesn't shift `:BEARER` either: the edge points at
 the actor's graph identity (User or Collective node), which is
 stable across key changes. The actor's Shape A self-claim — the
-vote authoring the junction's admit-Proposal — must originate from
+bearer's vote on the junction's admit-Proposal — must originate from
 the actor at the other end of `:BEARER`; the API rejects
 mismatched self-claims. This is
 what enables invite-only flows
 ([chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat)):
-the inviter creates the junction with a known bearer before the
-invitee acts.
+the inviter creates the junction and its admit-Proposal with a
+known bearer before the invitee acts.
 
 **Invariant: bearer/self-claim validation is atomic.** The
 service-layer transaction that accepts a self-claim reads the

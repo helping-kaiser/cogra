@@ -114,14 +114,15 @@ new version rows, no overwrite. Concrete schema in
 
 ### As actor source (outgoing)
 
-A User can author actor edges toward every other node category.
-The full per-target-type catalog with dimension labels lives in
+A User can author actor edges toward the node categories below;
+Hashtag is deliberately excluded — "liking a hashtag" is not a
+graph operation. The full per-target-type catalog with dimension
+labels lives in
 [edges.md §1 "User as actor"](edges.md#user-as-actor). Targets
 include:
 
 - Other actors: User, Collective.
 - Content: Post, Comment, Chat, ChatMessage, Item, Proposal.
-- Topics: Hashtag.
 - Junctions: ChatMember, CollectiveMember, ItemOwnership.
 
 Some compound gestures defined in other docs reduce to creating

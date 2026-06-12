@@ -273,7 +273,7 @@ one outgoing structural edge type:
   `governance['decision:add_member']` threshold is met against
   an incoming `ChatMember` claim (§11). State transitions on
   this edge — voluntary leave (§11
-  "Leaving and removal") and the system-written cascade from a
+  "Leaving and disavowal") and the system-written cascade from a
   passing Level 2 disavowal Proposal (§10) — append additional
   `dim1 < 0` layers per
   [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
@@ -319,7 +319,7 @@ carries two outgoing structural edge types, both system-created:
 - **`ChatMessage → any node` (`:REFERENCES`)** — one edge per
   embedded/quoted/mentioned node. **Hashtag is included** —
   unlike Post and Comment, ChatMessage has no `:TAGGING` edge
-  type, so body-tag hashtags also go through `:REFERENCES`. The
+  type, so hashtags also go through `:REFERENCES`. The
   message's own **home Chat is excluded** by the single-
   structural-edge invariant: the `:CONTAINMENT` edge already
   encodes the `(this message, its home chat)` pair, so a message
@@ -366,11 +366,11 @@ bearer casts as a chat-eligible voter:
 - **`ChatMember → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the membership represents. Never re-pointed; the Shape A
-  self-claim — the bearer's vote authoring the admit-Proposal —
+  self-claim — the bearer's vote on the admit-Proposal —
   must originate from this actor (§11).
 - **`ChatMember → Proposal` (Shape B vote)** — the sole vote
   edge a ChatMember casts, on any Proposal targeting a
-  chat-internal subject: member admission / removal / role
+  chat-internal subject: member admission / disavowal / role
   change (§11, §10 Level 2), a chat property or a
   `governance.<action_key>` entry (§10), or a ChatMessage for
   Level 1 disavowal (§10). `dim1` carries vote direction.
@@ -796,7 +796,7 @@ entry can be amended via a `value_kind = 'rule'` Proposal
 targeting `governance.<action_key>`, gated by that entry's own
 `amend` triple.
 
-| `action_key`               | `exec.eligibility`                | `exec.weights`            | `exec.threshold`           | `exec.exclude_subject` |
+| `action_key`               | `exec.eligibility`                | `exec.weighting`          | `exec.threshold`           | `exec.exclude_subject` |
 |----------------------------|-----------------------------------|---------------------------|----------------------------|------------------------|
 | `decision:add_member`      | `role IN (admin, chat_mod)`       | — (count-based)           | 1 approver                 | —                      |
 | `decision:disavow_message` | active members                    | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 20% quorum | —                      |
@@ -812,8 +812,8 @@ admin:5/chat_mod:3/member:1, ≥ 2/3 cast, ≥ 30% quorum)` —
 uniform amendment cost; chats can re-tune any entry's `amend`
 independently for tighter or looser self-modification.
 
-Role weights live inside each entry's `exec.weights` /
-`amend.weights` fields rather than on the Chat or ChatMember
+Role weights live inside each entry's `exec.weighting` /
+`amend.weighting` fields rather than on the Chat or ChatMember
 node, so re-tuning weights for one decision (e.g. raise
 `member` weight on disavowal only) doesn't disturb others.
 `ChatMember.voting_weight` overrides per-bearer at tally time
@@ -923,7 +923,7 @@ their admission vote drops from any future tally per
 While the admit-Proposal is open an approver can still change
 their mind — appending a new layer to their `ChatMember →
 Proposal` vote edge — but once the Proposal terminates the
-outcome is fixed: a later reversal is a fresh removal-Proposal
+outcome is fixed: a later reversal is a fresh disavowal-Proposal
 (§10 Level 2), not a re-layering of this vote.
 
 ### Open (`exec.threshold = 0`)
@@ -980,14 +980,14 @@ appended to either edge. Per
 nothing is deleted — state transitions are encoded as new
 layers on the existing structural edges.
 
-### Leaving and removal
+### Leaving and disavowal
 
 - **Voluntary leave** — self-determined, not a governance
   decision: at the member's request the system appends a
   `dim1 < 0` layer on the **claim-side** `ChatMember → Chat`
   structural edge.
 - **Member disavowal** — eligible voters per §10 Level 2 cast
-  `ChatMember → Proposal` Shape B votes on a removal-Proposal
+  `ChatMember → Proposal` Shape B votes on a disavowal-Proposal
   targeting the member's `ChatMember` junction
   (`target_property = 'node'`, `proposed_value = 'disavowed'`).
   When the threshold is crossed, the cascade appends a
@@ -1094,7 +1094,7 @@ and the message body persists.
 
 ChatMember has no user-input fields and therefore no per-field
 redaction triggers. Membership state transitions follow §11
-"Leaving and removal" — new layers on the two-edge state
+"Leaving and disavowal" — new layers on the two-edge state
 pair, prior layers preserved.
 
 **Account deletion** of the underlying User or Collective does

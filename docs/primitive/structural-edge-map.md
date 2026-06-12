@@ -24,10 +24,10 @@ types. Cells list every structural edge label that can run from
 that source to that target. `—` marks pairs with no structural
 edge.
 
-`:STRUCTURAL` denotes Shape B vote edges
-([edges.md §2 "Voting (Shape B)"](edges.md#voting-shape-b)) —
-the only structural-edge family that doesn't take one of the
-thirteen sub-category labels.
+`:STRUCTURAL` denotes the edges that don't take one of the
+thirteen sub-category labels: Shape B vote edges
+([edges.md §2 "Voting (Shape B)"](edges.md#voting-shape-b)) and
+`Campaign → Settlement` (see "Economics" below).
 
 `Network` never originates a structural edge — its row is all
 `—` — but it is targeted inbound (`:TARGETS` from a Proposal,
