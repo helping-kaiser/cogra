@@ -70,16 +70,18 @@ the link's expiry. The link URL itself carries
 only the row id; the pre-committed dim values stay server-side
 so they cannot be tampered with by relaying the link. Per
 [invitations.md](../primitive/invitations.md), links are
-time-gated and multi-use — the row stays valid until `expires_at`
-or until the inviter explicitly revokes it (`revoked_at`).
+time-gated and, at the inviter's choice, single-use or multi-use —
+the row stays valid until `expires_at`, until the inviter
+explicitly revokes it (`revoked_at`), or, for a single-use link,
+until its first accepted registration consumes it.
 
 ### Invitation acceptance (the default path)
 
 1. **Invite-link click.** The invitee opens the URL. The server
    looks up the `auth_invitations` row by id, validates that it
-   is unexpired and not revoked, and renders the registration
-   form. Invite links are time-gated and multi-use; many invitees
-   can register through the same row.
+   is unexpired, not revoked, and not consumed, and renders the
+   registration form. A multi-use row admits many invitees; a
+   single-use row is consumed by its first accepted registration.
 2. **Registration submit.** The invitee submits username, email,
    password, and their outgoing-edge values toward the inviter.
    The server creates a **pending registration record** —
@@ -300,7 +302,9 @@ user can:
 
 Server-initiated revocations:
 
-- Password change or reset → revoke all.
+- Password change → revoke all others (the changing session
+  survives; see "Password change").
+- Password reset → revoke all.
 - Account-deletion completion → revoke all.
 - Refresh-token reuse detected → revoke all.
 
