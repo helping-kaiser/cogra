@@ -155,7 +155,7 @@ immediately. Act-as rules carry **eligibility only** — there is
 no multi-signer threshold for outgoing gestures, because the
 graph is public: a gesture held pending co-signatures would
 already be visible as a half-live Post or edge. Multi-party
-Collective decisions exist only as the self-targeting
+Collective decisions exist only as the `decision:*`
 Proposal-shaped entries of the social contract (§8).
 
 If the acting "member" is itself a sub-Collective, its own
@@ -512,9 +512,10 @@ dispatch builds the candidate key the same way at gesture
 time and walks the fallback chain (below) until it finds an
 entry. Three reserved top-level namespaces:
 
-- **`decision:<operation>[:<role>]`** — Proposals that change
-  Collective-internal state. The `<operation>` enumerates
-  what the cascade can produce on `:Collective` or
+- **`decision:<operation>[:<role>]`** — Proposal-routed
+  Collective decisions. Most change Collective-internal
+  state — the `<operation>` enumerates what the cascade can
+  produce on `:Collective` or
   `:CollectiveMember`: `add_member`, `remove_member`,
   `change_role`, `change_ownership_pct`,
   `change_voting_weight`, `set:<property>` (setting a
@@ -530,6 +531,17 @@ entry. Three reserved top-level namespaces:
   `transfer_shares`, …) take their own operation key paired
   with a handler that knows the composite shape per
   [proposal.md §2 "Composite proposals"](proposal.md#composite-proposals).
+  A decision entry can also gate the Collective's own outward
+  gesture: the key mirrors the `actas:` shape —
+  `decision:<gesture>:<target_type>`, e.g.
+  `decision:transfer:Item` — and the cascade performs the
+  gesture the matching `actas:` key would have executed
+  immediately (for `decision:transfer:Item`, the Collective's
+  signature in the [items.md §6](items.md#6-transfer-flow)
+  transfer flow), paired with a handler that knows the
+  gesture, mirroring the composite pattern. This form is the
+  only way to put concurrence on an outgoing gesture — act-as
+  rules carry eligibility only (§2).
 - **`actas:<gesture-identifier>`** — gating Collective
   outgoing edges through an authorized member. The
   gesture-identifier is derived from the actor edge being
@@ -714,12 +726,21 @@ rule self-describes its mutability cost.
 | `decision:add_member`                     | All active members                  | 100% of cast, 100% quorum                 |
 | `decision:remove_member`                  | All members, `exclude_subject`      | ≥ 90% of cast, 100% quorum of remaining   |
 | `decision:routine_spending`               | All active members                  | > 50%, ≥ 60% quorum                       |
+| `decision:transfer:Item`                  | All active members                  | 100% of cast, 100% quorum                 |
 | `actas:vote:Proposal`                     | All active members                  | —                                         |
-| `actas:transfer:Item`                     | All active members                  | —                                         |
 
 Everyone has equal voice; consensus dominates. Content-acts
 (posting to the household feed, reacting on shared content)
-are left at the any-member default — no override.
+are left at the any-member default — no override. The two
+outward governance-acts split on how binding one member's
+gesture is: the household's vote in someone else's tally is
+re-castable by any member while that tally is live, so
+`actas:vote:Proposal` delegates it on trust; the owner's
+signature on an Item transfer is the sole gate on the asset
+and irrevocable once the counterparty signs
+([items.md §6](items.md#6-transfer-flow)), so it routes
+through `decision:transfer:Item` — the cascade casts the
+household's signature only after unanimous agreement.
 
 #### Worker co-op
 
@@ -733,13 +754,12 @@ officers.
 | `decision:routine_operations`             | `role = officer`                | > 50%            |
 | `decision:major_policy_change`            | All active members              | ≥ 2/3            |
 | `decision:change_capital_structure`       | All active members              | ≥ 75%            |
+| `decision:transfer:Item`                  | All active members              | ≥ 2/3            |
 | `actas:vote:Proposal`                     | All active members              | —                |
-| `actas:transfer:Item`                     | All active members              | —                |
 
-Whether the household and co-op `actas:*` rows should regain
-their originally intended majority concurrence as `decision:*`
-entries is open — see
-[open-questions.md Q27](../open-questions.md#q27--household-and-co-op-act-as-examples-the-intended-majority-concurrence-is-no-longer-expressible).
+The same split as the household: voting stays delegated to
+any member, while transferring co-op assets takes the
+two-thirds concurrence the rest of the contract runs on.
 
 ---
 
