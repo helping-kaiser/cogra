@@ -192,4 +192,8 @@ own device** (the decentralized end state — proving a phone can rank its
 own slice). The open wire-level details — how the slice reaches the runner
 (re-fetched by the miner vs. forwarded by the device) and miner
 authentication — are settled when the miner path is built; none of them
-change the slice-in, ordered-list-out shape.
+change the slice-in, ordered-list-out shape. They are tracked as
+[Q24](../open-questions.md#q24--miner-api-transport-and-delegation-authentication),
+together with the dedicated operation contracts for the
+[feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces)
+surfaces, which are designed standalone with that question.
