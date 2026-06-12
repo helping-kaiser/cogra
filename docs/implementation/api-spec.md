@@ -976,8 +976,11 @@ type Proposal implements Node {
   "The proposed new value, serialized; its shape is discriminated by
    valueKind — a scalar for scalar:*, a Rule (the GovernanceRule
    exec/amend pair) for 'rule', and a handler-owned from/to bundle for
-   composite:*."
-  proposedValue: String!
+   composite:*. The one moderatable field on a Proposal — it can embed
+   user-authored text, so it is reportable like any content field;
+   `value` is null when redacted, and a still-OPEN Proposal then goes
+   REDACTED."
+  proposedValue: ModeratedText!
   "The node hosting the governance rule this proposal is judged by,
    read as-of the proposal's authorship timestamp."
   ruleAnchor: Node!
@@ -992,9 +995,16 @@ type Proposal implements Node {
   status: ProposalStatus!
 }
 
-"A proposal's terminal outcome — transitions exactly once at
- threshold-cross, then permanent."
-enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED }
+"A proposal's lifecycle state — transitions exactly once, to a terminal
+ value, then permanent; a Proposal stops accepting votes once it leaves
+ OPEN. PASSED and PASSED_BUT_INVARIANT_REJECTED land at threshold-cross.
+ FAILED is the mirror rule for tallies that count negative votes: the
+ negative side satisfied the same threshold shape required of the
+ positive side (petition-style tallies count no negatives, so they never
+ fail — an unloved petition simply stays OPEN). REDACTED lands when
+ proposedValue is redacted while still open — the payload can never
+ execute; the votes already cast stay on record."
+enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED FAILED REDACTED }
 
 "The live vote tally for a Proposal, computed at read time from the current
  top layer of every eligible voter's vote edge (governance.md §3) — not
@@ -1007,8 +1017,9 @@ type ProposalTally {
   "Count of distinct voters with a positive top-layer stance."
   positiveCount: Int!
   "Weighted negative votes: Σ max(−sign(dim1), 0) × voterWeight. Nonzero
-   only for bidirectional Shape-B scopes; a petition-style Network tally
-   reads only the positive side."
+   only for bidirectional Shape-B scopes, where it feeds the FAILED
+   mirror rule; a petition-style Network tally reads only the positive
+   side."
   negativeWeight: Float!
   "Count of distinct voters with a negative top-layer stance."
   negativeCount: Int!
@@ -1374,7 +1385,9 @@ type Mutation {
    viewer's eligible junction (Shape B). Recasting appends a new
    layer — this is how a vote is changed; there is no separate
    gesture. dim1 carries the stance; a non-positive dim1 is a valid
-   recorded edge that a petition-style tally does not count."
+   recorded edge that a petition-style tally does not count and that a
+   bidirectional tally counts toward the FAILED mirror bar. Votes are
+   accepted only while the Proposal is OPEN."
   castVote(input: CastVoteInput!): CastVotePayload!
 
   # ── Chat membership and lifecycle ────────────────────────────
@@ -1905,7 +1918,9 @@ type TransferItemPayload {
 ```graphql
 "Propose a moderation classification on content. `field` names the
  per-field status to move, or 'node' for a whole-node classification;
- `status` is the target state (back to NORMAL to un-classify)."
+ `status` is the target state (back to NORMAL to un-classify). A
+ Proposal is itself a valid target for exactly one field — its
+ proposedValue."
 input ClassifyContentInput {
   target: UUID!
   field: String!
