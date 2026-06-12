@@ -367,7 +367,8 @@ require.
   that produces the genesis User; `network_role` read at action
   time.
 - [api-spec.md](api-spec.md) — the GraphQL auth & account
-  mutations (register, log in, sessions, password/email change,
-  invite links, deletion) that consume the flows specified here.
+  mutations (register and email verification, log in, sessions,
+  password/email change, invite links, deletion) that consume the
+  flows specified here.
 - [open-questions.md Q15](../open-questions.md) — federation
   reconciliation; may add user-owned keys later.
