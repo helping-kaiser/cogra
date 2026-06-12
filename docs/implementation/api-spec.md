@@ -1191,6 +1191,44 @@ type Network implements Node {
 }
 ```
 
+### Application versions
+
+The append-only release registry
+([data-model.md](data-model.md), Application registry) — what the
+current version of each platform component is, and where a given
+version's patch notes live.
+
+```graphql
+"One release of a platform component, from the append-only
+ application registry — operational metadata, never ranked."
+type AppVersion {
+  component: AppComponent!
+  "Human-readable version string; unique per component."
+  version: String!
+  patchNotesUrl: String
+  "Actor ids the release credits beyond the upstream repo's commit
+   history (designers, translators, testers) — Users and Collectives
+   in one list, resolved via `nodes`. Empty when nobody beyond the
+   commit history is credited. Display-only, never an input to
+   ranking or economics."
+  releasedBy: [UUID!]!
+  releasedAt: DateTime!
+}
+
+"A platform component with releases in the application registry."
+enum AppComponent { BACKEND IOS ANDROID WEB }
+
+type AppVersionConnection {
+  edges: [AppVersionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type AppVersionEdge {
+  cursor: String!
+  node: AppVersion!
+}
+```
+
 ---
 
 ## Queries
@@ -1231,6 +1269,14 @@ type Query {
   wallet(id: UUID!): Wallet
   "The singleton network-configuration node."
   network: Network!
+
+  "Releases from the application registry, newest first; `component`
+   narrows to one platform component. Answers \"what's the current
+   version?\" and \"where are version X's patch notes?\"."
+  appVersions(
+    component: AppComponent
+    first: Int, after: String, last: Int, before: String
+  ): AppVersionConnection!
 
   "Any actor's weight-bounded relevant subgraph — the raw material a
    ranker (that actor's own device or a delegated miner) orders into a
