@@ -38,7 +38,10 @@ final authority over filters and presentation
 ## Inputs
 
 The ranking parameters (per [feed-ranking.md §8](../primitive/feed-ranking.md)),
-all viewer-tunable over the Network-seeded defaults:
+all viewer-tunable. Only the three calibration parameters carry
+Network-seeded defaults
+([network.md "Feed-ranking calibration"](../primitive/network.md#feed-ranking-calibration));
+the rest default per field:
 
 | Parameter | Role |
 |---|---|
@@ -47,14 +50,15 @@ all viewer-tunable over the Network-seeded defaults:
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
 | `dustFloor` | `ε` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
-| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the Network default (on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
+| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the frontend's default (the reference frontend ships it on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
 | `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
 
 These are the `rank` operation's `params`, typed below:
 
 ```graphql
-"The viewer's ranking parameters — Network-seeded defaults, all
- viewer-tunable. Every field null falls back to the Network default."
+"The viewer's ranking parameters, all viewer-tunable. The three
+ calibration fields fall back to the Network-seeded defaults; the
+ rest default per field."
 input RankParams {
   "Content ids to exclude before ranking (the seen-list)."
   seenList: [UUID!]
@@ -67,7 +71,8 @@ input RankParams {
   "ε floor — bounds the slice node-set (and prunes paths in the sparse
    enumeration regime); default Network.dustFloor."
   dustFloor: Float
-  "Friend-author reorder config; null uses the Network default (on)."
+  "Friend-author reorder config; null uses the frontend default
+   (the reference frontend ships it on — feed-ranking.md §5.2)."
   friendAuthorReorder: FriendAuthorReorder
   "Tuple→scalar collapse weights; null = sum."
   collapseWeights: CollapseWeights
