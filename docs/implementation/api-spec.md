@@ -353,6 +353,9 @@ type EdgeLayer {
  property); null when the layer is a redaction tombstone."
 type PropertyLayer {
   value: String
+  "Why the value was redacted; non-null exactly when this layer is a
+   redaction tombstone — `timestamp` is then the removed-at instant."
+  redactionReason: String
   layer: Int!
   timestamp: DateTime!
 }
@@ -742,8 +745,8 @@ type UserPreferences {
 }
 
 "An outstanding invite link issued by an actor — a pre-committed onboarding
- gesture. Time-gated and multi-use: many invitees may register through one
- link. Its id is the link capability, so it is issuer-visible only."
+ gesture. Time-gated and, at the issuer's choice, single-use or multi-use.
+ Its id is the link capability, so it is issuer-visible only."
 type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
@@ -752,10 +755,16 @@ type InviteLink {
   inviterDim1: Dimension!
   "Pre-committed dim2 for that edge."
   inviterDim2: Dimension!
+  "Whether the link is consumed by its first accepted registration
+   (single-use) or admits many invitees (multi-use)."
+  singleUse: Boolean!
   createdAt: DateTime!
   expiresAt: DateTime!
   "When the link was revoked; null if still live."
   revokedAt: DateTime
+  "When a single-use link was consumed by its accepted registration;
+   always null on a multi-use link."
+  consumedAt: DateTime
 }
 
 type BookmarkConnection {
@@ -818,8 +827,8 @@ its claim parent — alongside the generic edge access.
 ```graphql
 "A junction relationship's lifecycle state, derived from its
  claim/approval edge pair — never a stored flag. PENDING: claim
- only. ACTIVE: claim + approval, both top layers positive. REVOKED:
- a negative top layer on either."
+ only. ACTIVE: claim + approval, both top layers dim1 > 0. REVOKED:
+ a non-positive (dim1 ≤ 0) top layer on either."
 enum JunctionState { PENDING ACTIVE REVOKED }
 ```
 
@@ -970,8 +979,11 @@ type Proposal implements Node {
   "The proposed new value, serialized; its shape is discriminated by
    valueKind — a scalar for scalar:*, a Rule (the GovernanceRule
    exec/amend pair) for 'rule', and a handler-owned from/to bundle for
-   composite:*."
-  proposedValue: String!
+   composite:*. The one moderatable field on a Proposal — it can embed
+   user-authored text, so it is reportable like any content field;
+   `value` is null when redacted, and a still-OPEN Proposal then goes
+   REDACTED."
+  proposedValue: ModeratedText!
   "The node hosting the governance rule this proposal is judged by,
    read as-of the proposal's authorship timestamp."
   ruleAnchor: Node!
@@ -986,9 +998,16 @@ type Proposal implements Node {
   status: ProposalStatus!
 }
 
-"A proposal's terminal outcome — transitions exactly once at
- threshold-cross, then permanent."
-enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED }
+"A proposal's lifecycle state — transitions exactly once, to a terminal
+ value, then permanent; a Proposal stops accepting votes once it leaves
+ OPEN. PASSED and PASSED_BUT_INVARIANT_REJECTED land at threshold-cross.
+ FAILED is the mirror rule for tallies that count negative votes: the
+ negative side satisfied the same threshold shape required of the
+ positive side (petition-style tallies count no negatives, so they never
+ fail — an unloved petition simply stays OPEN). REDACTED lands when
+ proposedValue is redacted while still open — the payload can never
+ execute; the votes already cast stay on record."
+enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED FAILED REDACTED }
 
 "The live vote tally for a Proposal, computed at read time from the current
  top layer of every eligible voter's vote edge (governance.md §3) — not
@@ -1001,8 +1020,9 @@ type ProposalTally {
   "Count of distinct voters with a positive top-layer stance."
   positiveCount: Int!
   "Weighted negative votes: Σ max(−sign(dim1), 0) × voterWeight. Nonzero
-   only for bidirectional Shape-B scopes; a petition-style Network tally
-   reads only the positive side."
+   only for bidirectional Shape-B scopes, where it feeds the FAILED
+   mirror rule; a petition-style Network tally reads only the positive
+   side."
   negativeWeight: Float!
   "Count of distinct voters with a negative top-layer stance."
   negativeCount: Int!
@@ -1046,7 +1066,10 @@ type Campaign implements Node {
 union CampaignTarget =
     User | Collective | Post | Comment | Chat | ChatMessage | Item | Proposal
 
-"Campaign lifecycle state."
+"Campaign lifecycle state. SETTLED: the advertiser released within the
+ window plus grace period; AUTO_SETTLED: the backend's settlement key —
+ which holds release authority after the grace period — fired the
+ default split without the advertiser."
 enum CampaignStatus { OPEN SETTLED AUTO_SETTLED }
 
 "The terminal record of a settled Campaign — public results plus
@@ -1063,6 +1086,10 @@ type Settlement implements Node {
   settledP: Float!
   "Achieved sustained reach gain (public result)."
   achievedHGain: Float!
+  "The attribution instant t* — pins the graph state the split was
+   computed from; recorded for reproducibility alongside the dust
+   floor in force on the Campaign."
+  settledTStar: DateTime!
 }
 
 "An account's payout wallet — holds the counterfactual self-custody
@@ -1292,12 +1319,28 @@ These bind every mutation below.
   The payload wraps the affected node(s) so a caller selects the
   exact post-write shape it needs and the payload can grow a field
   without a breaking signature change.
-- **The viewer is the actor, and rides the request.** No mutation
-  takes an actor/author argument — the authenticated viewer in the
-  execution context is the source of every edge written, mirroring
-  the read surface. A Collective acts through an authorized member;
-  the service layer resolves member→Collective authority per the
-  Collective's social contract, not a schema argument.
+- **The viewer is the actor, and rides the request; `actAs` names a
+  Collective acting through them.** No mutation takes an author
+  argument — the authenticated viewer in the execution context is
+  the source of every gesture, mirroring the read surface. A
+  Collective acts through an authorized member: every mutation whose
+  gesture a Collective can produce takes an optional `actAs: UUID`
+  naming the Collective the gesture belongs to; null — the default —
+  acts as the viewer. The *acting identity* (the viewer, or the
+  Collective they act for) is what the gesture's edges originate
+  from. `actAs` carries intent only, never authority: the service
+  layer checks the viewer's eligibility under the Collective's
+  act-as rule and rejects the gesture otherwise. Act-as rules carry
+  eligibility only — an eligible member's gesture executes
+  immediately as the Collective's own, never held pending
+  co-signatures ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
+  Where the target already pins the acting identity — editing
+  authored content, accepting an invitation whose membership names a
+  Collective bearer, leaving, revoking, settling — there is no
+  `actAs`; the identity is read off the target and the same
+  eligibility check runs. The Network-scope governance verbs also
+  take none — their gestures are per-User
+  ([governance.md §3](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only)).
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
@@ -1326,8 +1369,8 @@ These bind every mutation below.
 ```graphql
 type Mutation {
   # ── Generic actor edge ───────────────────────────────────────
-  "Set the viewer's outgoing actor edge toward a node — the one
-   generic write for sentiment and connection-weight. Appends a new
+  "Set the acting identity's outgoing actor edge toward a node — the
+   one generic write for sentiment and connection-weight. Appends a new
    layer if the edge already exists; the (0,0) tensor is severance,
    not removal. Valid targets: User, Collective, Post, Comment,
    Chat, ChatMessage, Item, and the junction nodes; never a
@@ -1342,12 +1385,12 @@ type Mutation {
   editPost(input: EditPostInput!): EditPostPayload!
   createComment(input: CreateCommentInput!): CreateCommentPayload!
   editComment(input: EditCommentInput!): EditCommentPayload!
-  "Open a Chat and seat the viewer as its founding member in one
-   gesture (the founder's self-claim collapses to ACTIVE with no
+  "Open a Chat and seat the acting identity as its founding member in
+   one gesture (the founder's self-claim collapses to ACTIVE with no
    approval, the N=0 bootstrap)."
   createChat(input: CreateChatInput!): CreateChatPayload!
-  "Post a message to a Chat the viewer is an active member of.
-   contentPrivacy and epoch decide plaintext vs ciphertext."
+  "Post a message to a Chat the acting identity is an active member
+   of. contentPrivacy and epoch decide plaintext vs ciphertext."
   createChatMessage(input: CreateChatMessageInput!): CreateChatMessagePayload!
   editChatMessage(input: EditChatMessageInput!): EditChatMessagePayload!
   createItem(input: CreateItemInput!): CreateItemPayload!
@@ -1361,14 +1404,16 @@ type Mutation {
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 
   # ── Voting ───────────────────────────────────────────────────
-  "Cast — or recast — the viewer's vote on a Proposal. The service
-   resolves the vote shape: a Network-scope Proposal takes the
-   viewer's direct User→Proposal actor edge (Shape A); a
+  "Cast — or recast — the acting identity's vote on a Proposal. The
+   service resolves the vote shape: a Network-scope Proposal takes
+   the viewer's direct User→Proposal actor edge (Shape A); a
    chat/collective-scope Proposal takes the structural edge from the
-   viewer's eligible junction (Shape B). Recasting appends a new
+   voter's eligible junction (Shape B). Recasting appends a new
    layer — this is how a vote is changed; there is no separate
    gesture. dim1 carries the stance; a non-positive dim1 is a valid
-   recorded edge that a petition-style tally does not count."
+   recorded edge that a petition-style tally does not count and that a
+   bidirectional tally counts toward the FAILED mirror bar. Votes are
+   accepted only while the Proposal is OPEN."
   castVote(input: CastVoteInput!): CastVotePayload!
 
   # ── Chat membership and lifecycle ────────────────────────────
@@ -1380,12 +1425,14 @@ type Mutation {
    membership and its admission Proposal with the inviter's approving
    vote; the invitee's acceptance is their self-claim."
   inviteChatMember(input: InviteChatMemberInput!): InviteChatMemberPayload!
-  "Accept a chat invitation — writes the invitee's self-claim on the
-   pending membership; resolves to ACTIVE once approvals suffice."
+  "Accept a chat invitation — the invitee's self-claim: their Shape A
+   vote on the admission Proposal plus their :AUTHOR edge on the
+   membership; resolves to ACTIVE once approvals suffice."
   acceptChatInvite(input: AcceptChatInviteInput!): AcceptChatInvitePayload!
-  "Leave a Chat the viewer is a member of — a unilateral negative
-   layer on the membership's claim; no vote, the junction goes
-   REVOKED and the chat epoch advances."
+  "Leave a Chat — a unilateral negative layer on the named
+   membership's claim; no vote, the junction goes REVOKED and the
+   chat epoch advances. The membership's bearer (the viewer, or a
+   Collective they act for) is who leaves."
   leaveChat(input: LeaveChatInput!): LeaveChatPayload!
   changeChatMemberRole(input: ChangeChatMemberRoleInput!): ProposalPayload!
   "Disavow a member (Level 2) — proposal-backed; on passing, a
@@ -1402,13 +1449,14 @@ type Mutation {
   editChatProfile(input: EditChatProfileInput!): ProposalPayload!
 
   # ── Collectives ──────────────────────────────────────────────
-  "Create a Collective and seat the viewer as its founding member
-   (N=0 bootstrap), with the social contract supplied inline."
+  "Create a Collective and seat the acting identity as its founding
+   member (N=0 bootstrap), with the social contract supplied inline."
   createCollective(input: CreateCollectiveInput!): CreateCollectivePayload!
   joinCollective(input: JoinCollectiveInput!): JoinCollectivePayload!
   inviteCollectiveMember(input: InviteCollectiveMemberInput!): InviteCollectiveMemberPayload!
-  "Accept a collective invitation — writes the invitee's self-claim on
-   the pending membership; resolves to ACTIVE once approvals suffice."
+  "Accept a collective invitation — the invitee's self-claim: their
+   Shape A vote on the admission Proposal plus their :AUTHOR edge on
+   the membership; resolves to ACTIVE once approvals suffice."
   acceptCollectiveInvite(input: AcceptCollectiveInviteInput!): AcceptCollectiveInvitePayload!
   leaveCollective(input: LeaveCollectiveInput!): LeaveCollectivePayload!
   changeCollectiveMemberRole(input: ChangeCollectiveMemberRoleInput!): ProposalPayload!
@@ -1425,7 +1473,7 @@ type Mutation {
   "Initiate an ownership transfer — opens a transfer Proposal for the
    next ItemOwnership; the counterparty approves with castVote. Works
    owner-first (offer) or acquirer-first (request); the service infers
-   direction from whether the viewer is the current owner."
+   direction from whether the acting identity is the current owner."
   transferItem(input: TransferItemInput!): TransferItemPayload!
 
   # ── Network-scope governance ─────────────────────────────────
@@ -1478,8 +1526,8 @@ type Mutation {
   "Complete an email change with the code from the current address;
    applies only once the new address has been verified too."
   confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
-  "Issue a multi-use, time-gated invite link carrying the inviter's
-   pre-committed edge tensor."
+  "Issue a time-gated invite link — single-use or multi-use, the
+   issuer's choice — carrying the inviter's pre-committed edge tensor."
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   "Begin account deletion (identity-only, or content-inclusive);
@@ -1511,13 +1559,17 @@ type ProposalPayload {
 ### The generic actor edge
 
 ```graphql
-"The viewer's outgoing actor edge toward `target`. No source
- argument — the viewer is the source; no label — it is always the
- :ACTOR edge. Writing again appends a layer; (0,0) is severance."
+"The acting identity's outgoing actor edge toward `target`. No source
+ argument — the viewer (or the Collective named by actAs) is the
+ source; no label — it is always the :ACTOR edge. Writing again
+ appends a layer; (0,0) is severance."
 input SetEdgeInput {
   target: UUID!
   dim1: Dimension!
   dim2: Dimension!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 
 type SetEdgePayload {
@@ -1557,6 +1609,9 @@ input CreatePostInput {
   "Nodes this Post references; the per-reference tensor splits the
    reference fan-out budget."
   references: [ReferenceInput!]
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 
 "One attachment placement within a gallery."
@@ -1574,8 +1629,9 @@ input ReferenceInput {
   dim2: Dimension!
 }
 
-"Append a new layer to any subset of a Post's authored fields and
- galleries. Omitted fields are untouched; there is no overwrite."
+"Append a new layer to any subset of a Post's authored fields; a
+ supplied gallery replaces the current arrangement (the assets stay
+ append-only). Omitted fields are untouched; there is no overwrite."
 input EditPostInput {
   id: UUID!
   title: String
@@ -1595,6 +1651,9 @@ input CreateCommentInput {
   content: String!
   attachments: [AttachmentInput!]
   references: [ReferenceInput!]
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input EditCommentInput {
   id: UUID!
@@ -1605,8 +1664,8 @@ input EditCommentInput {
 type CreateCommentPayload { comment: Comment! }
 type EditCommentPayload { comment: Comment! }
 
-"Open a Chat. The viewer becomes its founding member in the same
- gesture; the founder seat needs no approval."
+"Open a Chat. The acting identity becomes its founding member in the
+ same gesture; the founder seat needs no approval."
 input CreateChatInput {
   name: String
   description: String
@@ -1614,6 +1673,9 @@ input CreateChatInput {
   "The social contract; defaults to the standard chat governance if
    omitted."
   governance: GovernanceInput
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type CreateChatPayload {
   chat: Chat!
@@ -1621,9 +1683,9 @@ type CreateChatPayload {
   membership: ChatMember!
 }
 
-"Post a message to a chat the viewer actively belongs to. For an
- encrypted message, `content` is the ciphertext and `epoch` names the
- key it is under; for plaintext, `epoch` is null."
+"Post a message to a chat the acting identity actively belongs to.
+ For an encrypted message, `content` is the ciphertext and `epoch`
+ names the key it is under; for plaintext, `epoch` is null."
 input CreateChatMessageInput {
   chat: UUID!
   content: String!
@@ -1631,6 +1693,9 @@ input CreateChatMessageInput {
   epoch: Int
   attachments: [AttachmentInput!]
   references: [ReferenceInput!]
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input EditChatMessageInput {
   id: UUID!
@@ -1647,6 +1712,9 @@ input CreateItemInput {
   description: String
   attachments: [AttachmentInput!]
   tags: [String!]
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input EditItemInput {
   id: UUID!
@@ -1681,31 +1749,44 @@ type EditProfilePayload { user: User! }
 input UploadMediaInput {
   file: Upload!
   altText: String
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture — the asset's author."
+  actAs: UUID
 }
 type UploadMediaPayload { media: MediaAttachment! }
 ```
 
 A media gallery on a create/edit input is the **full intended
-gallery** for that write: the new top-layer ordering, given as
+gallery** for that write: the new current arrangement, given as
 `AttachmentInput` placements that reference assets already uploaded
-via `uploadMedia`. `Upload` is the standard GraphQL multipart-request
-scalar — the one place the API ingests a binary rather than JSON.
+via `uploadMedia`. Gallery arrangement is a named append-only
+carve-out ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
+an edit replaces the junction rows that order the gallery, while the
+assets themselves stay append-only (redaction tombstones them in
+place, never deletes). `Upload` is the standard GraphQL
+multipart-request scalar — the one place the API ingests a binary
+rather than JSON.
 
 ### Voting
 
 ```graphql
-"A vote on a Proposal. No voter argument — the viewer is the voter,
- and the service resolves whether the vote is the viewer's direct
- actor edge (Network scope) or their eligible junction's structural
- edge (chat/collective scope). `as` names the voting junction
- explicitly when the viewer holds more than one eligible junction."
+"A vote on a Proposal. No voter argument — the acting identity is the
+ voter, and the service resolves whether the vote is the voter's
+ direct actor edge (Network scope) or their eligible junction's
+ structural edge (chat/collective scope). `as` names the voting
+ junction explicitly when the voter holds more than one eligible
+ junction."
 input CastVoteInput {
   proposal: UUID!
   dim1: Dimension!
   dim2: Dimension!
-  "The junction to vote from, when the viewer has several eligible
+  "The junction to vote from, when the voter has several eligible
    ones; defaults to the unique eligible junction."
   as: UUID
+  "Act as this Collective (see conventions); null = the viewer votes.
+   Coexists with `as`: actAs names who votes, `as` names which of
+   their junctions carries the vote."
+  actAs: UUID
 }
 
 type CastVotePayload {
@@ -1723,6 +1804,9 @@ input JoinChatInput {
   chat: UUID!
   "Requested role; defaults to the chat's member role."
   role: String
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type JoinChatPayload {
   membership: ChatMember!
@@ -1735,6 +1819,9 @@ input InviteChatMemberInput {
   chat: UUID!
   invitee: UUID!
   role: String
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type InviteChatMemberPayload {
   "The PENDING membership awaiting the invitee's self-claim."
@@ -1743,7 +1830,9 @@ type InviteChatMemberPayload {
 }
 
 input LeaveChatInput {
-  "The viewer's own membership in the chat."
+  "The membership to leave. Its :BEARER pins who leaves — the viewer's
+   own membership, or one borne by a Collective the viewer may act
+   for; the junction id disambiguates, so there is no actAs."
   membership: UUID!
 }
 type LeaveChatPayload {
@@ -1753,19 +1842,31 @@ type LeaveChatPayload {
 input ChangeChatMemberRoleInput {
   membership: UUID!
   role: String!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input RemoveChatMemberInput {
   membership: UUID!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input DisavowChatMessageInput {
   message: UUID!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input RotateChatKeyInput {
   chat: UUID!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 
-"Accept an invitation to a chat — the invitee's self-claim on the
- already-pending membership."
+"Accept an invitation to a chat — the invitee's self-claim, cast as
+ their vote on the admission Proposal."
 input AcceptChatInviteInput {
   membership: UUID!
 }
@@ -1781,14 +1882,18 @@ input EditChatProfileInput {
   name: String
   description: String
   imageMediaId: UUID
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 ```
 
 ### Collectives
 
 ```graphql
-"Create a Collective with its social contract; the viewer becomes the
- founding member."
+"Create a Collective with its social contract; the acting identity
+ becomes the founding member (a Collective founding a sub-Collective
+ acts through actAs)."
 input CreateCollectiveInput {
   handle: String!
   displayName: String!
@@ -1796,6 +1901,9 @@ input CreateCollectiveInput {
   avatarMediaId: UUID
   websiteUrl: String
   governance: GovernanceInput!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type CreateCollectivePayload {
   collective: Collective!
@@ -1805,6 +1913,9 @@ type CreateCollectivePayload {
 input JoinCollectiveInput {
   collective: UUID!
   role: String
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type JoinCollectivePayload {
   membership: CollectiveMember!
@@ -1817,6 +1928,9 @@ input InviteCollectiveMemberInput {
   role: String
   "Ownership stake, where the role implies one."
   ownershipPct: Float
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type InviteCollectiveMemberPayload {
   membership: CollectiveMember!
@@ -1824,6 +1938,9 @@ type InviteCollectiveMemberPayload {
 }
 
 input LeaveCollectiveInput {
+  "The membership to leave. Its :BEARER pins who leaves — the viewer's
+   own membership, or one borne by a Collective the viewer may act
+   for; the junction id disambiguates, so there is no actAs."
   membership: UUID!
 }
 type LeaveCollectivePayload {
@@ -1835,13 +1952,19 @@ input ChangeCollectiveMemberRoleInput {
   role: String
   ownershipPct: Float
   votingWeight: Float
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 input RemoveCollectiveMemberInput {
   membership: UUID!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 
-"Accept an invitation to a collective — the invitee's self-claim on
- the already-pending membership."
+"Accept an invitation to a collective — the invitee's self-claim, cast
+ as their vote on the admission Proposal."
 input AcceptCollectiveInviteInput {
   membership: UUID!
 }
@@ -1858,6 +1981,9 @@ input EditCollectiveProfileInput {
   description: String
   avatarMediaId: UUID
   websiteUrl: String
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 
 "Amend one rule of a node's social contract, addressed by its action
@@ -1867,6 +1993,9 @@ input AmendGovernanceRuleInput {
   node: UUID!
   actionKey: String!
   rule: GovernanceRuleInput!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 ```
 
@@ -1877,15 +2006,18 @@ mirror the read-side `Governance` types and are defined under
 ### Items
 
 ```graphql
-"Initiate an ownership transfer. Owner-first (the viewer is the
- current owner offering to `counterparty`) and acquirer-first (the
- viewer requests ownership from the current owner) are the same
- gesture; the service reads the direction from the viewer's relation
- to the item. Approval is the counterparty's castVote on the returned
- Proposal."
+"Initiate an ownership transfer. Owner-first (the acting identity is
+ the current owner offering to `counterparty`) and acquirer-first (the
+ acting identity requests ownership from the current owner) are the
+ same gesture; the service reads the direction from the acting
+ identity's relation to the item. Approval is the counterparty's
+ castVote on the returned Proposal."
 input TransferItemInput {
   item: UUID!
   counterparty: UUID!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 type TransferItemPayload {
   "The PENDING next ownership."
@@ -1899,7 +2031,9 @@ type TransferItemPayload {
 ```graphql
 "Propose a moderation classification on content. `field` names the
  per-field status to move, or 'node' for a whole-node classification;
- `status` is the target state (back to NORMAL to un-classify)."
+ `status` is the target state (back to NORMAL to un-classify). A
+ Proposal is itself a valid target for exactly one field — its
+ proposedValue."
 input ClassifyContentInput {
   target: UUID!
   field: String!
@@ -1932,6 +2066,9 @@ input ProposeChangeInput {
   targetProperty: String!
   valueKind: String!
   proposedValue: String!
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture."
+  actAs: UUID
 }
 ```
 
@@ -1958,6 +2095,9 @@ input CreateCampaignInput {
   startTs: DateTime!
   endTs: DateTime!
   dustFloor: Float
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture — the campaign's advertiser."
+  actAs: UUID
 }
 type CreateCampaignPayload { campaign: Campaign! }
 
@@ -2082,6 +2222,12 @@ input CreateInviteLinkInput {
   "Pre-committed tensor for the inviter→invitee edge on acceptance."
   inviterDim1: Dimension!
   inviterDim2: Dimension!
+  "Consumed by the first accepted registration when true; admits many
+   invitees otherwise. Defaults to multi-use."
+  singleUse: Boolean
+  "Act as this Collective (see conventions); null = the viewer's own
+   gesture — the link's issuer."
+  actAs: UUID
 }
 type CreateInviteLinkPayload {
   "The link — its id is the shareable capability."
