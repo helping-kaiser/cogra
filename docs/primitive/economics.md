@@ -114,7 +114,7 @@ so the whole arrangement is public and auditable on the graph.
 | Property | Meaning |
 |---|---|
 | `D` | Pointer to the **on-chain escrow** holding the deposit. The amount is read from chain, never asserted as a bare number on the node; funded at creation and top-up only (§2.2), so the §5 floor is always backed. |
-| `g` | The `d(R)` decay base used for this campaign's reach metric and payout split (§6.4). Default `0.1`, the canonical feed default. |
+| `g` | The `d(R)` decay base used for this campaign's reach metric and payout split (§6.4). Defaults to the Network's `distance_decay_base` in force at creation ([network.md §3](network.md#feed-ranking-calibration)). |
 | `h_start` | `h_anchor(target)` at `start_ts` — the baseline. With `declared_goal` it makes the ask legible: from `h_start` to `h_start + declared_goal`. |
 | `declared_goal` | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula (§4). Must be `> 0` (§2.1). |
 | `start_ts`, `end_ts` | Campaign window. |
@@ -482,7 +482,8 @@ peak-in-`I` (over-credits transient over-delivery), time-average over `I`
 
 The anchor-vs-periphery payout profile is governed by `g`, the `d(R)`
 decay base ([feed-ranking.md §4.1](feed-ranking.md#41-path-contribution-and-distance-decay)).
-The advertiser sets `g` per campaign (default `0.1`):
+The advertiser sets `g` per campaign (defaulting to the Network's
+`distance_decay_base`):
 
 - **Steep `g`** concentrates payout on the anchor — the influencer-
   marketing outcome.
@@ -564,13 +565,20 @@ and pointers. Settlement (§4) creates one **`Settlement` node** and the
 on-chain payout tree together:
 
 - The `Settlement` node carries the distributor address, the payout
-  tree's Merkle root, and the public results (`settled_P`,
-  `achieved_h_gain`) as node properties — pointers and scalars, never a
-  money tensor. `Campaign → Settlement` records the settlement act.
+  tree's Merkle root, the public results (`settled_P`,
+  `achieved_h_gain`), and the attribution instant `t*` the split was
+  computed at (§6.3) as node properties — pointers and scalars, never a
+  money tensor. `t*` is recorded for the same reproducibility reason
+  as the `dust_floor` in force (§6.5): the split is a function of
+  graph state at `t*`, so without it the published root could not be
+  independently recomputed. `Campaign → Settlement` records the
+  settlement act.
 - **Entitlement edges** `Settlement → Wallet` (`:ENTITLES`), one per
   claimant, mark "this wallet may claim". Bare `(0, 0)`, non-traversable,
   no amount.
-- On claim, the claimant creates a **claim-back edge** `Wallet →
+- On claim — an on-chain act; CoGra is never in the claim path
+  ([ledger.md](../implementation/ledger.md)) — the system mirrors a
+  **claim-back edge** `Wallet →
   Settlement` (`:CLAIMS`), marking "claimed". Entitlement-out and
   claim-back on the same node-couple make "entitled but unclaimed" a
   one-hop graph query.
