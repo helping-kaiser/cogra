@@ -1610,7 +1610,8 @@ type Mutation {
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   "Begin account deletion (identity-only, or content-inclusive);
-   sends a confirmation, opens the grace period."
+   sends the confirmation link. The 7-day grace period opens at
+   confirmAccountDeletion, not here."
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
   cancelAccountDeletion: AccountDeletionPayload!
@@ -2344,11 +2345,18 @@ type RevokeInviteLinkPayload { inviteLink: InviteLink! }
 input RequestAccountDeletionInput {
   includeContent: Boolean
 }
+"Confirming opens the 7-day grace period and fixes the execution
+ deadline ([account-deletion.md §4](../instances/account-deletion.md#4-the-user-self-service-trigger))."
 input ConfirmAccountDeletionInput {
   deletionToken: String!
+  "Opt into content-level redaction at confirmation — the second of
+   the two moments canon allows. The election is opt-in only: true
+   upgrades an identity-only request; null and false leave the
+   request-time choice unchanged."
+  includeContent: Boolean
 }
-"The pending deletion's state — its scope and grace-period deadline,
- null fields once cancelled."
+"The pending deletion's state. scheduledFor is the grace-period
+ deadline — set at confirmation, null before it and once cancelled."
 type AccountDeletionPayload {
   scheduledFor: DateTime
   includesContent: Boolean!
