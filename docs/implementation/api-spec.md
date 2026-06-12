@@ -1314,7 +1314,10 @@ These bind every mutation below.
   execution context is the source of every edge written, mirroring
   the read surface. A Collective acts through an authorized member;
   the service layer resolves member→Collective authority per the
-  Collective's social contract, not a schema argument.
+  Collective's social contract, not a schema argument. Act-as rules
+  carry eligibility only — an eligible member's gesture executes
+  immediately as the Collective's own, never held pending
+  co-signatures ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
