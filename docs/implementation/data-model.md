@@ -377,7 +377,7 @@ three properties:
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §3.6](../primitive/feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)),
+content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#51-filtering-vs-ranking)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`).
 
@@ -403,7 +403,8 @@ seen-list mechanism in
 ```sql
 -- Hidden actors: per-viewer list of users/collectives the viewing user
 -- doesn't want in their feed. Applied as a post-rank exclusion
--- filter on the viewing user's side (see feed-ranking.md §3.6).
+-- filter on the viewing user's side (see feed-ranking.md §5.1; §9
+-- for where the filter computes).
 -- hidden_type disambiguates which table the hidden_id refers to,
 -- same shape as author_type / target_type elsewhere.
 CREATE TABLE user_hidden_actors (
