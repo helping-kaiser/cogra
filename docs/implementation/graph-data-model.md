@@ -119,6 +119,7 @@ short "per intro" note rather than repeating the shape.
 | `display_name`      | String | Per intro. Content lives in Postgres. |
 | `bio`               | String | Per intro. Content lives in Postgres. |
 | `avatar`            | String | Per intro. Asset lives in object storage; the per-field property exists for moderation targeting. |
+| `cover`             | String | Per intro. Asset lives in object storage. User-only — Collectives carry no cover. |
 | `website_url`       | String | Per intro. Content lives in Postgres. |
 | `moderation_status` | String | Node-level cache (per intro). |
 

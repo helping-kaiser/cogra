@@ -527,6 +527,8 @@ type MediaOptions {
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
+  "Profile cover image. User-only — Collectives carry no cover."
+  cover: ModeratedMedia!
   "Network-scope role. Only Users carry one."
   networkRole: NetworkRole!
 
@@ -1480,8 +1482,8 @@ type Mutation {
   createItem(input: CreateItemInput!): CreateItemPayload!
   editItem(input: EditItemInput!): EditItemPayload!
   "Append a new layer to the viewer's own profile fields (handle,
-   displayName, bio, avatar, websiteUrl). Self only — no id, the
-   viewer is the edited User."
+   displayName, bio, avatar, cover, websiteUrl). Self only — no id,
+   the viewer is the edited User."
   editProfile(input: EditProfileInput!): EditProfilePayload!
   "Upload a media asset and get back its MediaAttachment id, to
    reference from a create/edit content input."
@@ -1837,6 +1839,7 @@ input EditProfileInput {
   displayName: String
   bio: String
   avatarMediaId: UUID
+  coverMediaId: UUID
   websiteUrl: String
 }
 type EditProfilePayload { user: User! }

@@ -36,8 +36,9 @@ The Network-wide governance instance in
 
 For a user-filled field with **no graph-side data sibling** (the
 field's content lives only in Postgres or object storage — `bio`,
-`avatar`, `display_name`, `website_url`, `content`, `attachments`,
-`description`, `image`), the moderation-status property is named
+`avatar`, `cover`, `display_name`, `website_url`, `content`,
+`attachments`, `description`, `image`), the moderation-status
+property is named
 after the field itself. Its value IS the moderation status: e.g.
 `User.bio = 'normal'`, flipped to `'sensitive'` or a redaction
 marker by the cascade. There is no separate "data slot" for the
