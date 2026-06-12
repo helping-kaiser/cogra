@@ -214,7 +214,7 @@ ItemOwnership is a junction, not an actor. It carries:
 - **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the ownership represents. Never re-pointed; the Shape A
-  self-claim — the bearer's vote authoring the transfer-Proposal —
+  self-claim — the bearer's vote on the transfer-Proposal —
   must originate from this actor (§§1, 6). See
   [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`ItemOwnership → Proposal` (Shape B vote)** — the current
@@ -230,9 +230,9 @@ An ItemOwnership receives:
 - **Actor edges** from Users and Collectives per
   [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
   sentiment about the ownership record. The acquirer's own
-  **Shape A self-claim** is not among these: it is the
-  `User/Collective → Proposal` edge authoring the
-  transfer-Proposal (§6), not an edge on the ItemOwnership.
+  **Shape A self-claim** is not among these: it is their
+  `User/Collective → Proposal` vote on the transfer-Proposal
+  (§6), not an edge on the ItemOwnership.
 - **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
   of the two-edge state pair, paired with the outgoing
   `ItemOwnership → Item` claim above. Written by the
