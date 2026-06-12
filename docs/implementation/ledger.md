@@ -144,9 +144,9 @@ data splits across the other two stores:
 - **Memgraph — the `Campaign` node.** The navigable / weighting terms and
   public state live as node properties
   ([economics.md §2](../primitive/economics.md#2-the-campaign-node)):
-  `g`, `declared_goal`, `start_ts`, `end_ts`, `status`, the deposit
-  pointer, the `dust_floor` in force, and the layered `achieved_h_gain`
-  progress trajectory. The `:ANCHOR` / `:PROMOTES`
+  `g`, `h_start`, `declared_goal`, `start_ts`, `end_ts`, `status`, the
+  deposit pointer, the `dust_floor` in force, and the layered
+  `achieved_h_gain` progress trajectory. The `:ANCHOR` / `:PROMOTES`
   declarations carry the anchor and target as topology. The
   auto-settlement
   scheduler finds campaigns past `end_ts + 30d` by querying these node
@@ -156,6 +156,11 @@ data splits across the other two stores:
   the `Campaign` node's deposit pointer and the `Settlement` node's
   root / address reference them
   ([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)).
+  The campaign escrow grants release authority to the advertiser
+  during the window and the 30-day grace period, and to the backend's
+  settlement key thereafter — which is what lets auto-settlement
+  ([economics.md §4](../primitive/economics.md#4-settlement-and-release))
+  fire without the advertiser.
 
 A Postgres `campaigns` table is deliberately absent: it would have to
 store the `anchor` / `target` node references it keys on, and those are
