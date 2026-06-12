@@ -241,7 +241,7 @@ the two paths.
 
 | Node | Targetable per-field properties | `'node'` covers |
 |---|---|---|
-| **User** | `username_status`, `display_name`, `bio`, `avatar`, `website_url` | all of the above |
+| **User** | `username_status`, `display_name`, `bio`, `avatar`, `cover`, `website_url` | all of the above |
 | **Collective** | `name_status`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
 | **Post** | `title`, `description`, `content`, `attachments` (all attached media on the post) | all of the above |
 | **Comment** | `content`, `attachments` | both |

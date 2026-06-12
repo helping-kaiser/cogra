@@ -166,8 +166,9 @@ layers, and any tombstoned media attachments — are written to the
 [retention archive](../primitive/retention-archive.md) with a
 per-row legal hold appropriate to the data:
 
-- **Ordinary profile PII** (display name, bio, avatar, website,
-  layered username history) — typically a short or zero hold,
+- **Ordinary profile PII** (display name, bio, avatar, cover
+  image, website, layered username history) — typically a short
+  or zero hold,
   expirable on user request per DSGVO storage minimization.
 - **Content tied to financial transactions** (forthcoming with
   the economics primitive) — 10-year hold under German tax-record

@@ -89,8 +89,8 @@ Every authored property on the User node is layered per
 
 Per-field moderation-status properties cover each user-filled
 profile field — `username_status` (for the data-sibling
-`username`), `display_name`, `bio`, `avatar`, `website_url` —
-plus the node-level `moderation_status` cache. Universal mechanics
+`username`), `display_name`, `bio`, `avatar`, `cover`,
+`website_url` — plus the node-level `moderation_status` cache. Universal mechanics
 in [nodes.md](nodes.md#universal-per-field-moderation-status).
 
 Concrete types, constraints, and indexes live in
