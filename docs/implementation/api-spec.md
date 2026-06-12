@@ -1378,9 +1378,15 @@ The no-AI rule applies to search ranking as much as to feeds.
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
 filters by the viewer's `content_filtering_severity_level` — the
-same visibility model as every other read. Redacted fields drop
-out of the index by construction: the redaction cascade removes
-the value, so there is nothing left to match.
+same visibility model as every other read. Redacted fields are
+excluded from the index by an explicit rule, not by construction:
+the redaction cascade replaces the value in place with a visible
+marker ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
+e.g. the `redacted-user-{uuid}` handle sentinel — so a current
+value still exists to match. The index skips redacted values (a
+version row or layer carrying a non-null redaction reason);
+without that rule, a substring query for "redacted" would surface
+every redacted handle and title.
 
 ```graphql
 type SearchConnection {
@@ -1589,7 +1595,9 @@ type Mutation {
   # ── Network-scope governance ─────────────────────────────────
   "Report content for classification (sensitive / illegal / back to
    normal) — proposal-backed, judged by the Network's moderation
-   gate. Targets a per-field status, or the whole node."
+   gate. Targets a per-field status, or the whole node. NORMAL is
+   valid only against a SENSITIVE classification — an 'illegal'
+   redaction is terminal (moderation.md §4)."
   classifyContent(input: ClassifyContentInput!): ProposalPayload!
   proposeModeratorRoleChange(input: ProposeModeratorRoleChangeInput!): ProposalPayload!
   amendNetworkParameter(input: AmendNetworkParameterInput!): ProposalPayload!
@@ -2178,8 +2186,11 @@ type TransferItemPayload {
 ```graphql
 "Propose a moderation classification on content. `field` names the
  per-field status to move, or 'node' for a whole-node classification;
- `status` is the target state (back to NORMAL to un-classify). A
- Proposal is itself a valid target for exactly one field — its
+ `status` is the target state. NORMAL un-classifies a SENSITIVE field
+ only — REDACTED ('illegal') is terminal, so a NORMAL proposal
+ against a redacted field is rejected
+ ([moderation.md §4](../instances/moderation.md#4-eligibility-weights-thresholds)).
+ A Proposal is itself a valid target for exactly one field — its
  proposedValue."
 input ClassifyContentInput {
   target: UUID!
