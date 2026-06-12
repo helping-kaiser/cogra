@@ -447,10 +447,14 @@ CollectiveMember.
    and the member writes their `bearer → CollectiveMember`
    `:AUTHOR` edge, which authors the junction (§6). In the invite
    flow the inviter creates the junction and `:BEARER`, and
-   authors the admit-Proposal with their Shape B approver vote as
-   its first vote; the would-be member's acceptance is their
-   Shape A self-claim vote on the existing Proposal plus their
-   `:AUTHOR` edge on the junction.
+   authors the admit-Proposal: their Shape B approver vote is its
+   first vote, and they write their
+   `User/Collective → Proposal` `:AUTHOR` actor edge in the same
+   gesture
+   ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
+   The would-be member's acceptance is their Shape A self-claim
+   vote on the existing Proposal plus their `:AUTHOR` edge on the
+   junction.
 2. **Required approvers** — existing CollectiveMembers eligible
    under the social contract for the target role — each cast a
    **Shape B vote** from their own existing CollectiveMember to

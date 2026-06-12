@@ -335,7 +335,12 @@ System-created when a voter casts a Shape B vote (see
 edge runs from the voter's **eligibility junction** to the
 **Proposal** being voted on; `dim1` carries vote direction (`+1`
 support, `-1` oppose, intermediate values allowed), `dim2` is
-`0`. A junction never votes directly on another junction.
+`0`. A junction never votes directly on another junction. When
+the Shape B vote is the Proposal's opening gesture, the actor
+behind the opening junction also writes a
+`User/Collective → Proposal` `:AUTHOR` actor edge in the same
+gesture — a structural edge cannot carry authorship (see
+[authorship.md "Proposal authorship"](authorship.md#proposal-authorship)).
 
 | Edge type | Meaning |
 |-----------|---------|
