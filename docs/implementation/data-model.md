@@ -364,9 +364,11 @@ three properties:
 - **Per-viewer.** Each row belongs to one user.
 - **Storage-location-flexible.** This Postgres table is the
   backend-side default for the central frontend. Self-hosted
-  clients, on-device caches, and miners can keep the same data
-  locally and pass it to the calculator as a JSON array; the
-  shape is the same regardless of where the data came from.
+  clients and on-device caches can keep the same data locally
+  and pass it to the calculator as a JSON array; a delegated
+  miner holds no copy — the data rides inside each request
+  ([miner-api.md "Delegation and trust"](miner-api.md#delegation-and-trust)).
+  The shape is the same regardless of where the data came from.
 - **Operational, not graph history.** Exempt from the append-only
   rule that governs edges, node properties, and Postgres-side
   display content (see [layers.md](../primitive/layers.md)). These

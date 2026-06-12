@@ -38,7 +38,10 @@ final authority over filters and presentation
 ## Inputs
 
 The ranking parameters (per [feed-ranking.md §8](../primitive/feed-ranking.md)),
-all viewer-tunable over the Network-seeded defaults:
+all viewer-tunable. Only the three calibration parameters carry
+Network-seeded defaults
+([network.md "Feed-ranking calibration"](../primitive/network.md#feed-ranking-calibration));
+the rest default per field:
 
 | Parameter | Role |
 |---|---|
@@ -47,14 +50,15 @@ all viewer-tunable over the Network-seeded defaults:
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
 | `dustFloor` | `ε` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
-| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the Network default (on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
+| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the frontend's default (the reference frontend ships it on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
 | `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
 
 These are the `rank` operation's `params`, typed below:
 
 ```graphql
-"The viewer's ranking parameters — Network-seeded defaults, all
- viewer-tunable. Every field null falls back to the Network default."
+"The viewer's ranking parameters, all viewer-tunable. The three
+ calibration fields fall back to the Network-seeded defaults; the
+ rest default per field."
 input RankParams {
   "Content ids to exclude before ranking (the seen-list)."
   seenList: [UUID!]
@@ -67,7 +71,8 @@ input RankParams {
   "ε floor — bounds the slice node-set (and prunes paths in the sparse
    enumeration regime); default Network.dustFloor."
   dustFloor: Float
-  "Friend-author reorder config; null uses the Network default (on)."
+  "Friend-author reorder config; null uses the frontend default
+   (the reference frontend ships it on — feed-ranking.md §5.2)."
   friendAuthorReorder: FriendAuthorReorder
   "Tuple→scalar collapse weights; null = sum."
   collapseWeights: CollapseWeights
@@ -157,6 +162,36 @@ type RankPath {
 
 `Node`, `Edge`, and the scalars are the [api-spec.md](api-spec.md) types —
 the ranker speaks the same type vocabulary as the backend it sits beside.
+
+## Search re-ranking
+
+Search splits the same way the feed does
+([api-spec.md "Search"](api-spec.md#search)): the backend's order is
+viewer-independent (exact-match tier, then newest first), and
+graph-blended ordering is the ranker's option. In the delegated case
+that option binds here — the device never downloads the slice (see
+Transport), so it cannot compute feed metrics for search matches
+locally. The dedicated operation:
+
+```graphql
+"Re-order search candidates by the viewer's feed metric: the fetched
+ hit ids in, the in-slice subset out, ordered. Candidates outside the
+ slice carry no metric and are not returned — the frontend keeps them
+ in the backend's order below the ranked block (recency, the sort
+ cascade's deepest fallback). Of the params only the calibration
+ fields and collapseWeights are read: the candidate set is given, so
+ kinds does not apply (kind scoping happened at the search query) and
+ seenList does not apply (the seen-filter governs feed rendering, not
+ access — feed-ranking.md §8.4); friendAuthorReorder is a feed
+ presentation layer."
+rankSearch(slice: FeedSlice!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
+```
+
+The metric is the one `rank` computes — every searchable kind is
+rankable ([feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable))
+— so `rankSearch` is `rank` with the candidate set given (the search
+hits inside the slice) instead of derived (every in-scope rankable
+node in the slice).
 
 ## Two runners of one traversal
 
@@ -324,10 +359,11 @@ contract is an in-process call over the same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 
-The remote wire signature replaces the slice argument with the viewer:
+The remote wire signatures replace the slice argument with the viewer:
 
 ```graphql
 rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
+rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
 ```
 
 Reads are unauthenticated and `feedSlice` is viewer-parameterized
@@ -361,7 +397,8 @@ the device fetches it under its own session and forwards it as
 `params.seenList`. The forwarding cost is accepted: it keeps the miner
 credential-free, and a client that wants to avoid it can keep the
 seen-list locally — the math is the same regardless of where the JSON
-came from.
+came from. Standing delegation — a scoped credential or miner-held
+seen-list — is parked as [open-questions.md Q25](../open-questions.md).
 
 ### Result integrity — advisory, spot-checkable, not attested
 
