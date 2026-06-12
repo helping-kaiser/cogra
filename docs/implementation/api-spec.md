@@ -1573,8 +1573,8 @@ type Mutation {
   "Adjust a campaign's mutable knobs (declaredGoal, endTs, dustFloor)
    while it is OPEN."
   updateCampaign(input: UpdateCampaignInput!): UpdateCampaignPayload!
-  "Settle an OPEN campaign at an advertiser-chosen release amount;
-   writes the Settlement record and its on-chain pointers. The split
+  "Settle an OPEN campaign. The release is already executed
+   on-chain; writes the Settlement record pointing at it. The split
    is graph-computed, never advertiser-chosen."
   settleCampaign(input: SettleCampaignInput!): SettleCampaignPayload!
   "Re-point the viewer's payout Wallet to a new on-chain address
@@ -2199,13 +2199,15 @@ input UpdateCampaignInput {
 }
 type UpdateCampaignPayload { campaign: Campaign! }
 
-"Settle a campaign. `releaseAmount` is the advertiser-chosen pool P,
- bounded by the deposit; the per-wallet split is graph-computed and
- lands in the Settlement's Merkle root. An earlier attribution
+"Settle a campaign. The release is already executed on-chain by the
+ holder of release authority; `release` is the pointer — the
+ released pool P and the payout Merkle root are read from chain,
+ never passed through this API. The per-wallet split is
+ graph-computed, never advertiser-chosen. An earlier attribution
  snapshot may be named within the campaign window."
 input SettleCampaignInput {
   campaign: UUID!
-  releaseAmount: Float!
+  release: String!
   attributionSnapshotTs: DateTime
 }
 type SettleCampaignPayload {
