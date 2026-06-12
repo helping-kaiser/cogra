@@ -289,12 +289,16 @@ owner's **Shape B approval** (`ItemOwnership_current → Proposal`,
 `dim1 > 0`). Either party can open the Proposal:
 
 - **Owner-first (offer / sale).** The current owner opens the
-  transfer-Proposal and casts their Shape B approval. The system
-  creates the new ItemOwnership junction, binding it by `:BEARER`
-  to the named acquirer, plus the `ItemOwnership → Item` claim
-  edge. The transfer is pending until the acquirer self-claims on
-  the Proposal — writing their `bearer → ItemOwnership` `:AUTHOR`
-  edge, which authors the junction (§5).
+  transfer-Proposal — casting their Shape B approval and writing
+  their `User/Collective → Proposal` `:AUTHOR` actor edge in the
+  same gesture
+  ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
+  The system creates the new ItemOwnership junction, binding it
+  by `:BEARER` to the named acquirer, plus the
+  `ItemOwnership → Item` claim edge. The transfer is pending
+  until the acquirer self-claims on the Proposal — writing their
+  `bearer → ItemOwnership` `:AUTHOR` edge, which authors the
+  junction (§5).
 - **Buyer-first (bid / request).** An interested acquirer authors
   the transfer-Proposal — their `User/Collective → Proposal`
   Shape A self-claim. The system creates the new ItemOwnership

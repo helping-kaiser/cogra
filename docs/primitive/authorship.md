@@ -92,6 +92,23 @@ non-traversable identity binding, written at junction creation;
 they self-claim. See
 [edges.md "Bearer binding"](edges.md#bearer-binding).
 
+## Proposal authorship
+
+A Proposal's opening gesture always writes a
+`User/Collective → Proposal` `:AUTHOR` actor edge, whichever vote
+shape opens it. Opened by a **Shape A** vote, that vote edge is
+itself the authoring edge — vote and authorship are one edge
+([proposal.md §5](../instances/proposal.md#5-authorship)). Opened
+by a **Shape B** vote, the vote is a structural edge from the
+opener's eligibility junction and cannot carry `:AUTHOR`, so the
+actor behind the opening junction writes the `:AUTHOR` actor edge
+in the same gesture — the same paired-edge pattern as the junction
+self-claim above. Either way the Proposal carries an incoming
+actor edge from its first instant, so the earliest-incoming-edge
+derivation and the rule-snapshot timestamp it anchors
+([governance.md §5](governance.md#rule-snapshot-at-author-time))
+are always defined.
+
 ## Caching
 
 Display queries that don't touch the graph need a fast author
