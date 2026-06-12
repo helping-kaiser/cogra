@@ -65,6 +65,8 @@ The gesture writes the following records atomically:
   `role = 'admin'`.
 - The `ChatMember → User/Collective` `:BEARER` structural edge,
   binding the junction to the founder.
+- The founder's `bearer → ChatMember` `:AUTHOR` actor edge,
+  which authors the junction (§6.3).
 - The `ChatMember → Chat` claim edge.
 - The `Chat → ChatMember` approval edge with positive top layer.
 
@@ -744,10 +746,14 @@ counter-Proposal reversal clean.
 ### Level 1 — Message disavowal
 
 A Level 1 Proposal targets the offending `ChatMessage`. The
-first reporter's authoring is their +1 vote per
-[proposal.md §5](proposal.md#5-authorship); subsequent voters
-cast `ChatMember → Proposal` Shape B votes on the existing
-Proposal rather than authoring duplicates.
+first reporter opens it with their +1 `ChatMember → Proposal`
+Shape B vote and writes their `User → Proposal` `:AUTHOR` actor
+edge in the same gesture per
+[proposal.md §5](proposal.md#5-authorship) — the actor edge
+carries authorship and personal stance, the Shape B edge is what
+the tally reads. Subsequent voters cast `ChatMember → Proposal`
+Shape B votes on the existing Proposal rather than authoring
+duplicates.
 
 A ChatMessage carries no pre-existing approval-style edge from
 the chat to layer over (unlike a ChatMember — see Level 2), so

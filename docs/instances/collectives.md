@@ -51,9 +51,10 @@ is no prior membership to vote on it — the
 collapses to its `N = 0` special case: the founder's
 **Shape A self-claim** is the only required vote, **no
 admit-Proposal node is materialized**, and the system writes both
-structural edges (claim and approval) plus the
-`CollectiveMember → User` `:BEARER` identity edge atomically
-alongside it. This is the same bootstrap pattern used for the
+structural edges (claim and approval), the
+`CollectiveMember → User` `:BEARER` identity edge, and the
+founder's `bearer → CollectiveMember` `:AUTHOR` actor edge —
+which authors the junction (§6) — atomically alongside it. This is the same bootstrap pattern used for the
 author's `ItemOwnership` in
 [items.md §1](items.md#1-creation) and for the founder of a
 Chat in [chats.md §2.1](chats.md#21-chat). See §7 for the
@@ -447,10 +448,14 @@ CollectiveMember.
    and the member writes their `bearer → CollectiveMember`
    `:AUTHOR` edge, which authors the junction (§6). In the invite
    flow the inviter creates the junction and `:BEARER`, and
-   authors the admit-Proposal with their Shape B approver vote as
-   its first vote; the would-be member's acceptance is their
-   Shape A self-claim vote on the existing Proposal plus their
-   `:AUTHOR` edge on the junction.
+   authors the admit-Proposal: their Shape B approver vote is its
+   first vote, and they write their
+   `User/Collective → Proposal` `:AUTHOR` actor edge in the same
+   gesture
+   ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
+   The would-be member's acceptance is their Shape A self-claim
+   vote on the existing Proposal plus their `:AUTHOR` edge on the
+   junction.
 2. **Required approvers** — existing CollectiveMembers eligible
    under the social contract for the target role — each cast a
    **Shape B vote** from their own existing CollectiveMember to

@@ -214,7 +214,7 @@ ItemOwnership is a junction, not an actor. It carries:
 - **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the ownership represents. Never re-pointed; the Shape A
-  self-claim — the bearer's vote authoring the transfer-Proposal —
+  self-claim — the bearer's vote on the transfer-Proposal —
   must originate from this actor (§§1, 6). See
   [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
 - **`ItemOwnership → Proposal` (Shape B vote)** — the current
@@ -230,9 +230,9 @@ An ItemOwnership receives:
 - **Actor edges** from Users and Collectives per
   [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
   sentiment about the ownership record. The acquirer's own
-  **Shape A self-claim** is not among these: it is the
-  `User/Collective → Proposal` edge authoring the
-  transfer-Proposal (§6), not an edge on the ItemOwnership.
+  **Shape A self-claim** is not among these: it is their
+  `User/Collective → Proposal` vote on the transfer-Proposal
+  (§6), not an edge on the ItemOwnership.
 - **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
   of the two-edge state pair, paired with the outgoing
   `ItemOwnership → Item` claim above. Written by the
@@ -289,12 +289,16 @@ owner's **Shape B approval** (`ItemOwnership_current → Proposal`,
 `dim1 > 0`). Either party can open the Proposal:
 
 - **Owner-first (offer / sale).** The current owner opens the
-  transfer-Proposal and casts their Shape B approval. The system
-  creates the new ItemOwnership junction, binding it by `:BEARER`
-  to the named acquirer, plus the `ItemOwnership → Item` claim
-  edge. The transfer is pending until the acquirer self-claims on
-  the Proposal — writing their `bearer → ItemOwnership` `:AUTHOR`
-  edge, which authors the junction (§5).
+  transfer-Proposal — casting their Shape B approval and writing
+  their `User/Collective → Proposal` `:AUTHOR` actor edge in the
+  same gesture
+  ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
+  The system creates the new ItemOwnership junction, binding it
+  by `:BEARER` to the named acquirer, plus the
+  `ItemOwnership → Item` claim edge. The transfer is pending
+  until the acquirer self-claims on the Proposal — writing their
+  `bearer → ItemOwnership` `:AUTHOR` edge, which authors the
+  junction (§5).
 - **Buyer-first (bid / request).** An interested acquirer authors
   the transfer-Proposal — their `User/Collective → Proposal`
   Shape A self-claim. The system creates the new ItemOwnership

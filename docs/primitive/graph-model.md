@@ -414,7 +414,11 @@ now directed at the Proposal:
    self-claim is the authoring first vote (see
    [proposal.md §5](../instances/proposal.md#5-authorship)); in the
    invite flow the inviter creates the junction and authors the
-   Proposal, and the bearer's self-claim is their later vote on it.
+   Proposal — their Shape B approver vote is its first vote, and
+   the `User/Collective → Proposal` `:AUTHOR` actor edge they
+   write in the same gesture carries the authorship
+   ([authorship.md "Proposal authorship"](authorship.md#proposal-authorship))
+   — and the bearer's self-claim is their later vote on it.
 2. Zero or more approver **Shape B votes** — each required
    approver writes a structural edge from their existing
    eligibility junction toward the Proposal
