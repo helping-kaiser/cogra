@@ -2,6 +2,10 @@
 //! (`make up`); connection comes from DATABASE_URL / MEMGRAPH_HOST /
 //! MEMGRAPH_PORT, matching CI's service containers.
 
+use std::sync::Arc;
+
+use api::auth::jwt::JwtKeys;
+use api::auth::keys::generate_signing_key;
 use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use http_body_util::BodyExt;
@@ -29,7 +33,8 @@ async fn test_app() -> axum::Router {
         .await
         .expect("graph schema applies");
 
-    api::app(api::schema::build(pool, graph))
+    let jwt = Arc::new(JwtKeys::from_pkcs8_base64(&generate_signing_key()).expect("valid key"));
+    api::app(api::schema::build(pool, graph, jwt.clone()), jwt)
 }
 
 #[tokio::test]

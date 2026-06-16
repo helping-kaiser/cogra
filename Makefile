@@ -4,7 +4,7 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api run ci lint fmt test build logs dev docs-link-check schema
+.PHONY: help init up down reset-db migrate api bootstrap run ci lint fmt test build logs dev docs-link-check schema
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -50,6 +50,11 @@ api: ## Start the API server
 
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
 	$(CARGO) run -p api --bin export-schema > schema.graphql
+
+bootstrap: up ## One-time instance setup: generate the JWT key, write genesis nodes + first invite link
+	@echo "Waiting for Postgres to be ready..."
+	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
+	$(CARGO) run -p api --bin bootstrap
 
 dev: up ## Start DBs, run migrations, then start the API
 	@echo "Waiting for Postgres to be ready..."

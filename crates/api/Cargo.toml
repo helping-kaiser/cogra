@@ -17,19 +17,41 @@ path = "src/main.rs"
 name = "export-schema"
 path = "src/bin/export-schema.rs"
 
+[[bin]]
+name = "bootstrap"
+path = "src/bin/bootstrap.rs"
+
 [dependencies]
+common           = { path = "../common" }
 graph-engine     = { path = "../graph-engine" }
 postgres-store   = { path = "../postgres-store" }
 
 tokio             = { workspace = true }
 axum              = { workspace = true }
-async-graphql     = { workspace = true }
+async-graphql     = { workspace = true, features = ["chrono", "uuid"] }
 async-graphql-axum = { workspace = true }
+serde             = { workspace = true }
 serde_json        = { workspace = true }
 anyhow            = { workspace = true }
+thiserror         = { workspace = true }
 tracing           = { workspace = true }
 tracing-subscriber = { workspace = true }
+uuid              = { workspace = true }
+chrono            = { workspace = true }
+
+# Auth (auth.md): Argon2id password hashing, Ed25519 JWT access tokens,
+# SHA-256-hashed opaque refresh tokens.
+argon2       = { version = "0.5" }
+jsonwebtoken = { version = "9" }
+ring         = { version = "0.17" }
+rand         = { version = "0.8" }
+sha2         = { version = "0.10" }
+base64       = { version = "0.22" }
 
 [dev-dependencies]
 tower         = { version = "0.5", features = ["util"] }
 http-body-util = { version = "0.1" }
+# Integration tests seed and clean up store fixtures directly.
+sqlx          = { workspace = true }
+neo4rs        = { workspace = true }
+chrono        = { workspace = true }

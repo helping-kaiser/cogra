@@ -1,3 +1,33 @@
+type AuthPayload {
+	accessToken: String!
+	refreshToken: String!
+	session: Session!
+	user: User!
+}
+
+"""
+Implement the DateTime<Utc> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
+"""
+A signed edge-tensor dimension: a float constrained to the closed range
+[-1.0, +1.0]. The range invariant lives in the type rather than in a plain
+Float.
+"""
+scalar Dimension
+
+"""
+Per-field moderation state.
+"""
+enum FieldModerationStatus {
+	NORMAL
+	SENSITIVE
+	REDACTED
+}
+
 """
 Connectivity report for the API process and its two stores.
 """
@@ -7,8 +37,8 @@ type Health {
 	"""
 	backendVersion: String!
 	"""
-	True when PostgreSQL (the display-content store) answers a
-	round-trip probe.
+	True when PostgreSQL (the display-content store) answers a round-trip
+	probe.
 	"""
 	postgresConnected: Boolean!
 	"""
@@ -17,13 +47,163 @@ type Health {
 	memgraphConnected: Boolean!
 }
 
+input LogInInput {
+	email: String!
+	password: String!
+	deviceLabel: String
+}
+
+"""
+Text carrying its own moderation status. `value` is null when the field is
+redacted, or unset where the field is optional — `status` disambiguates.
+"""
+type ModeratedText {
+	value: String
+	status: FieldModerationStatus!
+}
+
+"""
+A node's moderation state — the cached max severity across its per-field
+statuses.
+"""
+enum ModerationStatus {
+	NORMAL
+	SENSITIVE
+	ILLEGAL
+}
+
+type Mutation {
+	"""
+	Submit a registration through an invite link. Writes the off-graph
+	pending record and sends the verification email (dev: logs the token)
+	— no User node or session exists until verifyEmail.
+	"""
+	register(input: RegisterInput!): RegisterPayload!
+	"""
+	Complete registration with the emailed verification token. Atomically
+	creates the User node and its Wallet, writes the two invitation edges,
+	and issues the first session (auth.md).
+	"""
+	verifyEmail(input: VerifyEmailInput!): AuthPayload!
+	"""
+	Authenticate with email + password; issues a new session.
+	"""
+	logIn(input: LogInInput!): AuthPayload!
+	"""
+	Rotate the refresh token and mint a fresh access token.
+	"""
+	refreshSession(input: RefreshSessionInput!): AuthPayload!
+}
+
+"""
+Network-scope role for a User.
+"""
+enum NetworkRole {
+	MEMBER
+	MODERATOR
+}
+
 type Query {
 	"""
-	Reports whether the API can reach both of its stores. Reachable
-	stores answer round-trip probes; a `false` means that store is
-	down or unreachable, not that the API itself is.
+	Reports whether the API can reach both of its stores. Reachable stores
+	answer round-trip probes; a `false` means that store is down or
+	unreachable, not that the API itself is.
 	"""
 	health: Health!
+	"""
+	Resolve the request's auth token to the viewer's own User node. Null
+	when the request is unauthenticated — the one query a client cannot
+	express generically, since it does not yet know its own id.
+	"""
+	me: User
+}
+
+input RefreshSessionInput {
+	refreshToken: String!
+}
+
+"""
+Register through an invite link.
+"""
+input RegisterInput {
+	inviteLink: UUID!
+	handle: String!
+	email: String!
+	password: String!
+	"""
+	The invitee's own outgoing edge toward the inviter. Null means an
+	explicit skip: the `(+0.5, +0.5)` fallback (invitations.md).
+	"""
+	dim1: Dimension
+	dim2: Dimension
+}
+
+"""
+The pending registration's receipt. No User node or session exists yet —
+both arrive at verifyEmail.
+"""
+type RegisterPayload {
+	"""
+	When the pending registration expires unverified (24 h, auth.md).
+	"""
+	expiresAt: DateTime!
+}
+
+"""
+An active authentication session — one per refresh token.
+"""
+type Session {
+	id: UUID!
+	deviceLabel: String
+	createdAt: DateTime!
+	lastUsedAt: DateTime
+	expiresAt: DateTime!
+	"""
+	Whether this is the session that issued the current request.
+	"""
+	isCurrent: Boolean!
+}
+
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
+
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
+scalar UUID
+
+type User {
+	id: UUID!
+	"""
+	The unique mention handle — the User's username.
+	"""
+	handle: ModeratedText!
+	displayName: ModeratedText!
+	bio: ModeratedText!
+	websiteUrl: ModeratedText!
+	"""
+	Network-scope role. Only Users carry one.
+	"""
+	networkRole: NetworkRole!
+	"""
+	Node-level cache: max moderation severity across this actor's fields.
+	"""
+	moderationStatus: ModerationStatus!
+	createdAt: DateTime!
+	"""
+	When this node last changed — its most recent profile version; equals
+	createdAt if never edited.
+	"""
+	updatedAt: DateTime!
+}
+
+input VerifyEmailInput {
+	verificationToken: String!
+	deviceLabel: String
 }
 
 """
@@ -34,6 +214,11 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 Directs the executor to skip this field or fragment when the `if` argument is true.
 """
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Provides a scalar specification URL for specifying the behavior of custom scalar types.
+"""
+directive @specifiedBy(url: String!) on SCALAR
 schema {
 	query: Query
+	mutation: Mutation
 }

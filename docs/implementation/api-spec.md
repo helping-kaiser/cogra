@@ -2370,6 +2370,14 @@ The token mechanics (JWT access + rotating refresh, sessions,
 invitation registration) are specified in [auth.md](auth.md); this
 surface consumes them.
 
+Every invite link is minted by `createInviteLink` — except the
+**first**. An instance's first link is seeded by the bootstrap
+([network.md §2](../primitive/network.md#2-creation),
+[architecture.md "Genesis bootstrap"](architecture.md#genesis-bootstrap)),
+since `createInviteLink` requires an authenticated issuer and no account
+exists before the genesis User. The first real user registers through
+that seeded link; from there every link comes through this surface.
+
 ```graphql
 "Register through an invite link. Verification writes both invitation
  edges ([invitations.md](../primitive/invitations.md)): inviter→invitee
