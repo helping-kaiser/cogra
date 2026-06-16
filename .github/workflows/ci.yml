@@ -100,3 +100,9 @@ jobs:
         run: sqlx migrate run --source migrations
       - name: Run tests
         run: cargo test --all
+      # Redundant with the api schema_drift test on purpose: a named CI
+      # step makes contract drift readable from the checks list alone.
+      - name: Check schema.graphql drift
+        run: |
+          cargo run -p api --bin export-schema > schema.graphql
+          git diff --exit-code schema.graphql

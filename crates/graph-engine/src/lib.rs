@@ -4,7 +4,10 @@
 
 pub mod schema;
 
-use neo4rs::{ConfigBuilder, Graph};
+use neo4rs::ConfigBuilder;
+
+/// Re-exported so callers don't need a direct neo4rs dependency.
+pub use neo4rs::Graph;
 
 #[derive(Debug, thiserror::Error)]
 pub enum GraphError {
@@ -24,4 +27,9 @@ pub async fn connect(host: &str, port: u16) -> Result<Graph, GraphError> {
         .db("memgraph")
         .build()?;
     Ok(Graph::connect(config).await?)
+}
+
+/// Round-trip probe — true when Memgraph answers `RETURN 1`.
+pub async fn ping(graph: &Graph) -> bool {
+    graph.run(neo4rs::query("RETURN 1")).await.is_ok()
 }
