@@ -2,6 +2,10 @@
 // All SQL strings live here, nowhere else. Returns domain types from
 // `common`. Connection: sqlx::PgPool.
 
+pub mod auth;
+pub mod genesis;
+pub mod users;
+
 /// Re-exported so callers don't need a direct sqlx dependency.
 pub use sqlx::PgPool;
 use sqlx::migrate::Migrator;

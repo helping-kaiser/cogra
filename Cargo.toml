@@ -20,7 +20,9 @@ unwrap_used = "deny"
 tokio = { version = "1", features = ["full"] }
 
 # Web framework + GraphQL
-axum = { version = "0.7" }
+# axum 0.8 matches the version async-graphql-axum 7 builds against, so the
+# GraphQLRequest extractor and the router agree on one axum.
+axum = { version = "0.8" }
 async-graphql = { version = "7" }
 async-graphql-axum = { version = "7" }
 
