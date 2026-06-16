@@ -153,6 +153,21 @@ async fn bootstrap_writes_the_four_genesis_nodes() {
     };
     assert_eq!(name, input.hashtag_name);
 
+    // The singleton's genesis_user_id pointer resolves back to the genesis User
+    // — the id and handle the bootstrap reuses to complete a half-failed run.
+    // Folded into this owning test rather than a standalone one: a separate test
+    // would add another concurrent singleton creator on the shared Memgraph.
+    // Only assertable when this test owns the singleton; otherwise the pointer
+    // targets the pre-existing real genesis, not this test's input.
+    if owns_network {
+        let identity = genesis_identity(&graph)
+            .await
+            .expect("identity read")
+            .expect("genesis identity after bootstrap");
+        assert_eq!(identity.user_id, input.user_id, "pointer targets the user");
+        assert_eq!(identity.username, input.username, "handle round-trips");
+    }
+
     cleanup(&graph, &input, owns_network).await;
 }
 
