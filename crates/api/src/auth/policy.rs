@@ -8,6 +8,17 @@
 /// **deferred** to a later auth-hardening pass — slice 0 enforces length only.
 pub const MIN_PASSWORD_LEN: usize = 12;
 
+/// auth.md "Handle and email format": a handle is 3–30 characters of
+/// `[a-z0-9_]`. The charset excludes `-`, which keeps the `redacted-user-…`
+/// redaction sentinel (api-spec.md) structurally unreachable by a real account.
+pub const HANDLE_MIN_LEN: usize = 3;
+pub const HANDLE_MAX_LEN: usize = 30;
+
+/// auth.md "Handle and email format": the RFC 5321 envelope cap on an email
+/// address. The format check is lenient (shape only, not RFC 5322) — the
+/// verification email is the authoritative proof the address is real.
+pub const EMAIL_MAX_LEN: usize = 254;
+
 /// Pending-registration lifetime (auth.md): unverified records expire in 24 h.
 pub const PENDING_TTL_HOURS: i64 = 24;
 

@@ -127,7 +127,7 @@ async fn register_writes_a_pending_record() {
                 expiresAt userErrors { code message field }
             } }",
             "variables": { "i": {
-                "inviteLink": invite_link, "handle": format!("u{}", Uuid::new_v4().simple()),
+                "inviteLink": invite_link, "handle": format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
                 "email": email, "password": "a-sufficiently-long-password"
             }}
         }),
@@ -169,12 +169,66 @@ async fn register_writes_a_pending_record() {
 }
 
 #[tokio::test]
+async fn register_folds_handle_and_email_to_lowercase() {
+    // Mixed-case input is normalized before the write, so the stored pending row
+    // carries the lowercase canonical form — what makes the case-sensitive
+    // UNIQUE constraints behave case-insensitively (auth.md).
+    let h = harness().await;
+    let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
+    let suffix = Uuid::new_v4().simple().to_string()[..16].to_string();
+    let handle = format!("Mixed_{suffix}");
+    let email = format!("Reg-{suffix}@Cogra.TEST");
+
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": invite_link, "handle": handle,
+                "email": email, "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["register"]["userErrors"]
+            .as_array()
+            .map(Vec::len),
+        Some(0),
+        "register succeeds: {resp}"
+    );
+
+    let row: (String, String) =
+        sqlx::query_as("SELECT username, email FROM auth_pending_registrations WHERE email = $1")
+            .bind(email.to_lowercase())
+            .fetch_one(&h.pool)
+            .await
+            .expect("pending row stored under the folded email");
+    assert_eq!(row.0, handle.to_lowercase(), "handle folded to lowercase");
+    assert_eq!(row.1, email.to_lowercase(), "email folded to lowercase");
+
+    sqlx::query("DELETE FROM auth_pending_registrations WHERE email = $1")
+        .bind(email.to_lowercase())
+        .execute(&h.pool)
+        .await
+        .expect("cleanup pending");
+    sqlx::query("DELETE FROM auth_invitations WHERE id = $1")
+        .bind(invite_link)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup invitation");
+    cleanup_graph(&h.graph, &[inviter_id]).await;
+}
+
+#[tokio::test]
 async fn verify_login_me_refresh_round_trip() {
     let h = harness().await;
     let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
 
     let email = format!("flow-{}@cogra.test", Uuid::new_v4());
-    let handle = format!("u{}", Uuid::new_v4().simple());
+    let handle = format!("u{}", &Uuid::new_v4().simple().to_string()[..16]);
     let pw = "another-long-enough-password";
 
     // Seed a pending registration with a token we know the raw form of — the
@@ -382,7 +436,7 @@ async fn register_rejects_unknown_invite() {
         json!({
             "query": REGISTER_ARM_QUERY,
             "variables": { "i": {
-                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", Uuid::new_v4().simple()),
+                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
                 "email": format!("nv-{}@cogra.test", Uuid::new_v4()),
                 "password": "a-sufficiently-long-password"
             }}
@@ -406,7 +460,7 @@ async fn register_rejects_short_password() {
         json!({
             "query": REGISTER_ARM_QUERY,
             "variables": { "i": {
-                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", Uuid::new_v4().simple()),
+                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
                 "email": format!("wp-{}@cogra.test", Uuid::new_v4()), "password": "short"
             }}
         }),
@@ -420,13 +474,61 @@ async fn register_rejects_short_password() {
 }
 
 #[tokio::test]
+async fn register_rejects_invalid_handle() {
+    // Format checks run before any DB work, so no invite need exist. A handle
+    // with a disallowed character is pinned to the `handle` field as BAD_INPUT.
+    let h = harness().await;
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": Uuid::new_v4(), "handle": "has a space",
+                "email": format!("ih-{}@cogra.test", Uuid::new_v4()),
+                "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert!(resp["data"]["register"]["expiresAt"].is_null(), "{resp}");
+    let err = &resp["data"]["register"]["userErrors"][0];
+    assert_eq!(err["code"], "BAD_INPUT", "{resp}");
+    assert_eq!(err["field"][0], "handle", "{resp}");
+}
+
+#[tokio::test]
+async fn register_rejects_malformed_email() {
+    let h = harness().await;
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": Uuid::new_v4(),
+                "handle": format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
+                "email": "not-an-email", "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert!(resp["data"]["register"]["expiresAt"].is_null(), "{resp}");
+    let err = &resp["data"]["register"]["userErrors"][0];
+    assert_eq!(err["code"], "BAD_INPUT", "{resp}");
+    assert_eq!(err["field"][0], "email", "{resp}");
+}
+
+#[tokio::test]
 async fn register_rejects_taken_handle() {
     let h = harness().await;
     let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
 
     // A committed account already holds this handle.
     let taken_id = Uuid::new_v4();
-    let handle = format!("u{}", Uuid::new_v4().simple());
+    let handle = format!("u{}", &Uuid::new_v4().simple().to_string()[..16]);
     sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)")
         .bind(taken_id)
         .bind(&handle)
@@ -478,7 +580,7 @@ async fn register_rejects_email_with_pending_registration() {
     postgres_store::auth::upsert_pending_registration(
         &h.pool,
         postgres_store::auth::NewPendingRegistration {
-            username: &format!("u{}", Uuid::new_v4().simple()),
+            username: &format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
             email: &email,
             password_hash: &password::hash_password("another-long-enough-pw").expect("hash"),
             invitation_id: invite_link,
@@ -497,7 +599,7 @@ async fn register_rejects_email_with_pending_registration() {
         json!({
             "query": REGISTER_ARM_QUERY,
             "variables": { "i": {
-                "inviteLink": invite_link, "handle": format!("u{}", Uuid::new_v4().simple()),
+                "inviteLink": invite_link, "handle": format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
                 "email": email, "password": "a-sufficiently-long-password"
             }}
         }),
@@ -580,7 +682,7 @@ async fn verify_email_rejects_an_expired_pending_registration() {
     postgres_store::auth::upsert_pending_registration(
         &h.pool,
         postgres_store::auth::NewPendingRegistration {
-            username: &format!("u{}", Uuid::new_v4().simple()),
+            username: &format!("u{}", &Uuid::new_v4().simple().to_string()[..16]),
             email: &email,
             password_hash: &password::hash_password("a-long-enough-password").expect("hash"),
             invitation_id: invite_link,
@@ -638,7 +740,7 @@ async fn refresh_session_rejects_an_expired_token() {
     let user_id = Uuid::new_v4();
     sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, 'x')")
         .bind(user_id)
-        .bind(format!("u{}", Uuid::new_v4().simple()))
+        .bind(format!("u{}", &Uuid::new_v4().simple().to_string()[..16]))
         .bind(format!("rt-{}@cogra.test", Uuid::new_v4()))
         .execute(&h.pool)
         .await
