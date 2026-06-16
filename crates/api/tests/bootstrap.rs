@@ -121,14 +121,23 @@ async fn drop_postgres_half(pool: &PgPool, user_id: Uuid) {
         .expect("drop user");
 }
 
+/// The gate's paths in one test: a shared Memgraph hosts a single `:Network`
+/// singleton, so the owned write/repair paths must not be exercised by two
+/// tests in parallel (they would collide on the singleton's unique constraint).
+/// Both scenarios run sequentially here, each owning the singleton in turn.
 #[tokio::test]
-async fn fresh_then_complete_then_repair() {
+async fn genesis_gate_paths() {
     let h = harness().await;
     if is_bootstrapped(&h.graph).await.expect("pre-check") {
         // A real singleton already exists; the owned write/repair paths can't be
         // exercised on the shared instance without mutating it.
         return;
     }
+    fresh_then_complete_then_repair(&h).await;
+    repair_aborts_on_a_conflicting_handle(&h).await;
+}
+
+async fn fresh_then_complete_then_repair(h: &Harness) {
     let content = genesis_content();
     let hashtag_id = common::hashtag::hashtag_uuid(&content.hashtag_name);
 
@@ -194,15 +203,10 @@ async fn fresh_then_complete_then_repair() {
         "repair restored the Postgres half"
     );
 
-    cleanup(&h, network_id, user_id, hashtag_id).await;
+    cleanup(h, network_id, user_id, hashtag_id).await;
 }
 
-#[tokio::test]
-async fn repair_aborts_on_a_conflicting_handle() {
-    let h = harness().await;
-    if is_bootstrapped(&h.graph).await.expect("pre-check") {
-        return;
-    }
+async fn repair_aborts_on_a_conflicting_handle(h: &Harness) {
     let content = genesis_content();
     let hashtag_id = common::hashtag::hashtag_uuid(&content.hashtag_name);
 
@@ -238,7 +242,7 @@ async fn repair_aborts_on_a_conflicting_handle() {
         "the aborted repair wrote nothing"
     );
 
-    cleanup(&h, network_id, user_id, hashtag_id).await;
+    cleanup(h, network_id, user_id, hashtag_id).await;
 }
 
 fn variant(outcome: &BootstrapOutcome) -> &'static str {
