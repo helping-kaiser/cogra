@@ -15,6 +15,13 @@ in its own doc. Update this file as slices land or the plan shifts.
   the code, not after ([CLAUDE.md](../../CLAUDE.md) — never skip
   tests). Pure logic (notably the `ranker`) is built as I/O-free
   crates so it tests in isolation.
+- **Coverage fights the modular pieces.** Happy-path-only is not
+  acceptable. Every public function, every error branch, every
+  idempotency/retry path, every constraint and upsert arm, and every
+  invariant Memgraph cannot enforce as a schema constraint (e.g.
+  edge-tensor uniformity) carries a test that exercises it. A test
+  that only proves the success path leaves the skipped branch
+  unverified — and the skipped branches are where the bugs hide.
 - **Every slice is hand-testable.** Beyond CI, each slice leaves the
   author able to drive it by hand — GraphiQL/curl early, the Android
   app from slice 1 on. The point is to feel whether the direction is
