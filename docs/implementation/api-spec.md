@@ -184,6 +184,34 @@ Operations are combined only where they are the same gesture —
 never merged for the sake of a smaller mutation count, and never
 split for the sake of a larger one.
 
+### Errors are tiered — transport faults vs. expected outcomes
+
+A failure surfaces in one of three places, chosen by who must act on
+it, never by convenience:
+
+- **Transport faults** — unauthenticated, forbidden, not-found,
+  malformed input, rate-limited, internal — ride the GraphQL `errors`
+  array with a stable `extensions.code`. The `message` is a
+  developer-facing fallback; internal detail stays in the server log
+  and never reaches the client, which sees only the `INTERNAL` code.
+- **Expected business failures** — a bad value or a rule rejection the
+  end user should see and act on — are *data*, not transport errors:
+  every mutation payload carries `userErrors: [UserError!]!`, and its
+  result field is null when the write did not happen.
+- **Rich, mutually-exclusive failure sets** — where the client must
+  branch on the outcome and a flat code list would lose the per-case
+  payload — are a result union (a success arm plus typed error arms
+  sharing the `MutationError` interface). Available to any operation
+  whose failure set warrants it; the pre-session auth verbs
+  (`register`, `verifyEmail`, `logIn`, `refreshSession`) are the
+  current instances.
+
+A single `ErrorCode` enum is the one vocabulary across all three
+tiers, so a code means the same thing wherever it appears. This is the
+idiomatic-typed-schema principle applied to failure: an expected
+outcome belongs in the typed contract introspection exposes, not in a
+stringly-typed side channel.
+
 ---
 
 ## Type system — foundations
@@ -241,6 +269,29 @@ enum NodeKind {
 "The sign of an edge's top-layer dimension, for filtering edges by valence
  or by the neutral (0) state. POSITIVE: > 0. NEGATIVE: < 0. ZERO: exactly 0."
 enum Sign { POSITIVE NEGATIVE ZERO }
+
+"The one error vocabulary, shared across all three error tiers (governing
+ principles): the `extensions.code` on a transport fault, the `code` on a
+ `UserError`, and the `code` on a result-union error arm all draw from it.
+ Grows as gestures add expected failures."
+enum ErrorCode {
+  # Transport faults — carried in errors[].extensions.code
+  UNAUTHENTICATED              # no / invalid access token where one is required
+  FORBIDDEN                    # authenticated but not eligible (actAs, field-auth)
+  NOT_FOUND                    # an id resolved to nothing
+  BAD_INPUT                    # malformed args, or a constraint not modeled as data
+  RATE_LIMITED                 # an auth endpoint's per-IP / per-account backoff
+  INTERNAL                     # collapsed server fault; detail is logged, not surfaced
+
+  # Expected business failures — carried in UserError.code or a union arm
+  INVALID_CREDENTIALS          # email / password pair did not match
+  INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
+  HANDLE_TAKEN                 # the requested handle is already in use
+  WEAK_PASSWORD                # under the length floor or in the breach corpus
+  REGISTRATION_IN_PROGRESS     # a live pending registration already holds this email
+  VERIFICATION_TOKEN_INVALID   # registration verification token invalid or expired
+  REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
+}
 ```
 
 ### Identity and actor interfaces
@@ -482,6 +533,38 @@ spelling throughout — so the tensor `Edge` type's own connection
 wrapper is `EdgeEdge`, accepted for idiom-consistency rather than
 special-cased. Connections are materialized per element type in
 the sections that use them.
+
+### Error types
+
+Tiers 2 and 3 of the error model (governing principles). `UserError` is
+the per-payload business-failure list; `MutationError` is the interface
+every result-union error arm implements, so a client reads `message` +
+`code` uniformly and still matches a specific arm for its extra fields.
+
+```graphql
+"A recoverable, expected failure of a mutation — a bad value or a
+ business-rule rejection the end user should see and act on. A payload's
+ `userErrors` is empty exactly when the mutation succeeded; a non-empty
+ list means the result field is null."
+type UserError {
+  "Developer-facing fallback text; the client localizes off `code`."
+  message: String!
+  "The stable code the client switches on."
+  code: ErrorCode!
+  "Path to the offending input field — e.g. [\"declaredGoal\"], or
+   [\"attachments\", \"0\", \"mediaId\"] into a nested input; null for a
+   whole-operation failure."
+  field: [String!]
+}
+
+"The shared shape of a result-union error arm: every typed failure of a
+ union-returning operation implements it, so `message` and `code` read
+ uniformly across arms while each arm is free to add its own fields."
+interface MutationError {
+  message: String!
+  code: ErrorCode!
+}
+```
 
 ---
 
@@ -1535,6 +1618,19 @@ These bind every mutation below.
   `requestPasswordReset`, `confirmPasswordReset`, and the
   token-bearing `confirmAccountDeletion` — the gestures that
   precede or recover a session.
+- **Errors follow the tiered model** (governing principles). A
+  `userErrors: [UserError!]!` field is **implied on every payload type
+  below and omitted from its body**, exactly as the interface fields
+  are implied on the read types; a payload's named result field is null
+  whenever `userErrors` is non-empty, so the bodies show the populated
+  success shape. Transport faults ride the `errors` array with an
+  `extensions.code` and are never repeated per payload. Two carve-outs
+  carry no `userErrors`: the four pre-session auth verbs return a
+  **result union** (a success arm plus typed `MutationError` arms), so
+  their payloads are union members; and the three deliberately-silent
+  verbs — `resendVerificationEmail`, `requestPasswordReset`,
+  `requestEmailChange` — always report success, so surfacing a failure
+  there would reintroduce the account enumeration they exist to prevent.
 
 ```graphql
 type Mutation {
@@ -1686,16 +1782,16 @@ type Mutation {
   "Submit a registration through an invite link. Writes the off-graph
    pending-registration record and sends the verification email — no
    User node or session exists until verifyEmail."
-  register(input: RegisterInput!): RegisterPayload!
+  register(input: RegisterInput!): RegisterResult!
   "Complete registration with the emailed verification token.
    Atomically creates the User node and its Wallet, writes the two
    invitation edges, and issues the first session (auth.md)."
-  verifyEmail(input: VerifyEmailInput!): AuthPayload!
+  verifyEmail(input: VerifyEmailInput!): VerifyEmailResult!
   "Re-send the verification email for a live pending registration.
    Rate-limited per pending-registration record (auth.md)."
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
-  logIn(input: LogInInput!): AuthPayload!
-  refreshSession(input: RefreshSessionInput!): AuthPayload!
+  logIn(input: LogInInput!): LogInResult!
+  refreshSession(input: RefreshSessionInput!): RefreshResult!
   "Revoke one session (the current one if no id is given)."
   revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
   "Revoke every session except the one making the request."
@@ -2430,6 +2526,37 @@ type AuthPayload {
   session: Session!
   user: User!
 }
+
+"Result of `register` — the pending-registration receipt, or a typed
+ reason it was refused."
+union RegisterResult =
+    RegisterPayload | InviteUnusable | HandleTaken | WeakPassword | RegistrationInProgress
+
+"Result of `verifyEmail` — the first session, or a typed token failure."
+union VerifyEmailResult = AuthPayload | VerificationTokenInvalid
+
+"Result of `logIn` — a session, or rejected credentials."
+union LogInResult = AuthPayload | InvalidCredentials
+
+"Result of `refreshSession` — a rotated session, or a typed token
+ failure. A reuse-detected token revokes every session (auth.md) and
+ surfaces here as REFRESH_TOKEN_INVALID."
+union RefreshResult = AuthPayload | RefreshTokenInvalid
+
+"The invite link is invalid, expired, revoked, or already consumed."
+type InviteUnusable implements MutationError { message: String!  code: ErrorCode! }
+"The requested handle is already in use."
+type HandleTaken implements MutationError { message: String!  code: ErrorCode! }
+"The password is under the length floor or appears in the breach corpus."
+type WeakPassword implements MutationError { message: String!  code: ErrorCode! }
+"A live pending registration already holds this email (auth.md)."
+type RegistrationInProgress implements MutationError { message: String!  code: ErrorCode! }
+"The verification token is invalid, or its pending registration expired."
+type VerificationTokenInvalid implements MutationError { message: String!  code: ErrorCode! }
+"The email / password pair did not match."
+type InvalidCredentials implements MutationError { message: String!  code: ErrorCode! }
+"The refresh token is invalid, expired, or was already rotated (reuse)."
+type RefreshTokenInvalid implements MutationError { message: String!  code: ErrorCode! }
 
 input RevokeSessionInput {
   "The session to revoke; the current one if omitted."
