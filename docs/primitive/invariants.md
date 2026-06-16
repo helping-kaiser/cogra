@@ -131,7 +131,7 @@ most useful one.
   content and, having no outgoing edges, a sink that amplifies
   nothing downstream.
 - [The `bot-defense` Hashtag name is reserved](feed-ranking.md#383-community-bot-defense-posts--supplementary-evidence)
-  — seeded by the bootstrap migration; its semantic role is
+  — seeded by the bootstrap; its semantic role is
   platform-defined, not emergent from first use.
 
 ## Economics

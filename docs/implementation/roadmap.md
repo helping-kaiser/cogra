@@ -15,6 +15,13 @@ in its own doc. Update this file as slices land or the plan shifts.
   the code, not after ([CLAUDE.md](../../CLAUDE.md) — never skip
   tests). Pure logic (notably the `ranker`) is built as I/O-free
   crates so it tests in isolation.
+- **Coverage fights the modular pieces.** Happy-path-only is not
+  acceptable. Every public function, every error branch, every
+  idempotency/retry path, every constraint and upsert arm, and every
+  invariant Memgraph cannot enforce as a schema constraint (e.g.
+  edge-tensor uniformity) carries a test that exercises it. A test
+  that only proves the success path leaves the skipped branch
+  unverified — and the skipped branches are where the bugs hide.
 - **Every slice is hand-testable.** Beyond CI, each slice leaves the
   author able to drive it by hand — GraphiQL/curl early, the Android
   app from slice 1 on. The point is to feel whether the direction is
@@ -40,7 +47,7 @@ depend on surfaces that don't exist yet.
 The "hello, real user" cut. Bootstrap the instance, register and log
 in, and read yourself back.
 
-- Bootstrap migration: `:Network` singleton + genesis User + genesis
+- Bootstrap: `:Network` singleton + genesis User + genesis
   Wallet + bot-defense Hashtag.
 - `register`, `logIn`, `refreshSession` mutations.
 - Dual-write on registration: User node (Memgraph) + auth row
@@ -64,6 +71,12 @@ intent, not skipped silently: the HIBP breach-corpus password check and auth
 rate-limiting from [auth.md](auth.md), and the `Node`/`Actor` interfaces +
 avatar/cover + private-state `User` fields (they arrive with the slices that
 need a second node type / media).
+
+GraphQL query **depth and complexity** limits join that deferred API-edge
+hardening: a single nested or looping query can fetch N objects in one request
+and overload the server without tripping any per-endpoint rate limit. Capping
+selection depth and charging each request against a complexity budget closes
+the gap.
 
 ### Slice 1 — Thin Android client
 
@@ -162,7 +175,7 @@ reached — not in an upfront pass.
 | MFA schema-reservation wording in [auth.md](auth.md) ("no column today") reads ambiguously against future migrations. | Clarify when auth is revisited |
 
 Resolved in slice 0: the first-invite-link note now lives in
-[api-spec.md](api-spec.md#auth-and-accounts); the bootstrap migration is
+[api-spec.md](api-spec.md#auth-and-accounts); the bootstrap binary is
 already referenced from [architecture.md](architecture.md#genesis-bootstrap)
 (the listed gap was stale). One contradiction surfaced and was fixed in the
 same work: [auth.md](auth.md)'s re-registration collision requires

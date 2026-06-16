@@ -288,7 +288,7 @@ account deletion (graph redactions + Postgres row clears).
 
 ### Genesis bootstrap
 
-The bootstrap migration writes four nodes — the `:Network` singleton, the
+The bootstrap binary writes four nodes — the `:Network` singleton, the
 genesis User, the genesis User's `Wallet` (bound by `:PAYS_TO`), and the
 `bot-defense` Hashtag — in one transaction. The genesis User is an economic
 actor (it can earn from campaigns), so it gets its payout wallet at creation
@@ -302,7 +302,7 @@ scope to, no eligibility set to vote from. After commit, the graph is in a
 complete state — singleton + bootstrap moderator + its payout Wallet +
 bot-defense Hashtag — and ordinary governance applies from there.
 
-The migration is the **only** writer of these four nodes and the only step
+The binary is the **only** writer of these four nodes and the only step
 that escapes the actor-gesture-or-governance rule (per
 [graph-model.md §1](../primitive/graph-model.md#1-core-principles)).
 

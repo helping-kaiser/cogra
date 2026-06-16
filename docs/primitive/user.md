@@ -50,11 +50,11 @@ Two paths produce a User node, both gated on email verification:
   `Wallet`. The invitee is never an isolated node — they have
   outgoing reach from the moment they exist.
 - **Genesis bootstrap.** A fresh instance has its genesis User
-  created by the bootstrap migration that also writes the
+  created by the bootstrap that also writes the
   [:Network singleton](network.md#2-creation), the
   `bot-defense` Hashtag, and the genesis User's payout `Wallet`
   (bound by `:PAYS_TO`) — four nodes, one atomic step. The
-  migration runs once at instance creation; no self-registration
+  bootstrap runs once at instance creation; no self-registration
   path produces the first User. All subsequent Users come in via
   invitation.
 

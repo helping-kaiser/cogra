@@ -923,7 +923,7 @@ depend on any particular client behaviour.
 
 **Invariant: the `bot-defense` Hashtag name is reserved.** The
 canonical name `bot-defense` is reserved at network birth —
-the Hashtag is seeded by the bootstrap migration (see
+the Hashtag is seeded by the bootstrap (see
 [network.md §2](network.md#2-creation)) so it exists from the
 moment the graph does. No other Hashtag can take the name
 (the UUIDv5 derivation + the UNIQUE on `hashtags.name` close
