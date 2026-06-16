@@ -1,0 +1,157 @@
+# Implementation Roadmap
+
+This is the living sequencing plan for building CoGra end to end:
+backend, API, miner-api, Android, and the token/chain. It records
+*what order* we build in and *why*; the *what* of each surface lives
+in its own doc. Update this file as slices land or the plan shifts.
+
+## How we build
+
+- **Vertical slices, not horizontal layers.** Each slice is a thin
+  cut that runs end to end and produces something a human can
+  exercise — not "all the types, then all the resolvers." Auth is
+  built incrementally across slices, not as one upfront surface.
+- **Every slice ships tested.** Unit and integration tests land with
+  the code, not after ([CLAUDE.md](../../CLAUDE.md) — never skip
+  tests). Pure logic (notably the `ranker`) is built as I/O-free
+  crates so it tests in isolation.
+- **Every slice is hand-testable.** Beyond CI, each slice leaves the
+  author able to drive it by hand — GraphiQL/curl early, the Android
+  app from slice 1 on. The point is to feel whether the direction is
+  right before building on top of it.
+- **Docs are canonical; we fix, not paper over.** When a slice
+  reaches a spec that contradicts itself, can't be coded, or
+  disagrees with another doc, we fix the doc in the same work — never
+  route around it silently.
+- **The boundaries hold throughout.** No AI in ranking or economics;
+  no topology in Postgres, no content in Memgraph; money on the
+  chain, pointers on the graph. These are not phased in — they are
+  true from the first slice.
+
+## Slices
+
+Each slice is one logical step. Order is dependency-driven: auth
+first because every write needs an authenticated actor and a viewer
+on the request, and because the visible alternatives (feed, content)
+depend on surfaces that don't exist yet.
+
+### Slice 0 — A real user
+
+The "hello, real user" cut. Bootstrap the instance, register and log
+in, and read yourself back.
+
+- Bootstrap migration: `:Network` singleton + genesis User + genesis
+  Wallet + bot-defense Hashtag.
+- `register`, `logIn`, `refreshSession` mutations.
+- Dual-write on registration: User node (Memgraph) + auth row
+  (Postgres) + Wallet node (Memgraph), in one service-layer
+  transaction with idempotent ordering per
+  [architecture.md](architecture.md).
+- `me` query returns the viewer's User.
+- Email verification is built per [auth.md](auth.md) but gated behind
+  a **dev-mode bypass** (auto-verify / token-to-log) so local signup
+  needs no mail server. Real sending is wired later.
+- **Hand test:** register → log in → query `me` in GraphiQL/curl.
+- **Surfaces:** backend, API. (Token: the Wallet *node* only — no
+  chain yet.)
+
+### Slice 1 — Thin Android client
+
+Prove the API↔Android contract and on-device testing immediately.
+
+- Login + profile screens, Apollo Kotlin codegen off the exported
+  `schema.graphql` ([android.md](android.md)).
+- **Hand test:** log in on the device, see your profile.
+- **Surfaces:** Android, API contract.
+
+### Slice 2 — Content
+
+First content on the graph, read back without ranking.
+
+- Post/Comment authoring mutations (dual-write: topology in Memgraph,
+  body in Postgres).
+- Node read query (display content + topology hydrated together).
+- A chronological listing — deliberately **not** the ranked feed, so
+  this slice doesn't block on the ranker.
+- Android: compose a post, read it back.
+- **Hand test:** post from the phone, read it back.
+- **Surfaces:** backend, API, Android.
+
+### Slice 3 — The ranker and the real feed
+
+The ranking core, then the feed built on it. Ranking is deliberately
+its own surface ([miner-api.md](miner-api.md)), kept off the backend's
+hot path: the backend serves `feedSlice` and hydrates `feed`, and
+ranking sits between them. It is never centralized — it is per-viewer
+and must not route the graph's signal through one party.
+
+- Create the `ranker` crate: pure feed-ranking math, no I/O, tested
+  in isolation. One implementation reused across every runner.
+- `feedSlice` query (subgraph + seen-list) and `feed` query (hydrate
+  the ranked order) on the backend; the `rank` operation — already
+  specified in [miner-api.md](miner-api.md) — hosted **backend-direct**,
+  the first transport stage and the simplest to exercise against real
+  slices.
+- Android: the real ranked feed.
+- **Hand test:** ranked feed on the device.
+- **Surfaces:** backend, API, miner-api, Android.
+
+### Slice 4 — Miner off the backend: container, then on-device
+
+Move the same ranker out of the backend along the rollout path
+([miner-api.md "Transport"](miner-api.md)). No stage changes the
+slice-in, ordered-list-out contract.
+
+- Standalone miner Docker image: a delegated service that re-fetches
+  `feedSlice(viewer)` via the API itself and serves `rank`, taking the
+  ranking load off the central backend.
+- On-device binding: the `ranker` crate compiled to Android via
+  UniFFI — the decentralized end state, proving the phone ranks its
+  own feed. Delegated miners stay an option for devices that would
+  rather pay to offload the compute (battery) than run it locally.
+- **Hand test:** run the miner container locally; rank on-device.
+- **Surfaces:** miner-api.
+
+### Slice 5 — Economics and the token
+
+Money: campaigns, settlement, payouts.
+
+- Campaign authoring, settlement computation (graph + chain
+  dual-write), payout/claim flow, wallet relink.
+- **Decide first:** the concrete chain and the three-way write
+  ordering (graph + Postgres + chain) — see open issues below.
+- **Hand test:** fund a campaign, observe a payout.
+- **Surfaces:** token/chain, backend, API.
+
+### Slice 6 — Governance
+
+Proposals, voting, and the cascades they trigger.
+
+- Proposal authoring + voting, threshold checks, cascade handler
+  (redactions, role changes, settlement triggers).
+- **Hand test:** vote on a proposal, watch a redaction cascade.
+- **Surfaces:** backend, API.
+
+### Slice 7 — Collectives and chats
+
+Group actors and messaging.
+
+- Collective creation + internal governance; Chat creation +
+  messaging (E2EE keys client-side, never server-stored).
+- **Surfaces:** backend, API, Android.
+
+## Open doc issues to resolve
+
+Found during roadmap planning. Each is fixed when its slice is
+reached — not in an upfront pass.
+
+| Issue | Resolve by |
+|---|---|
+| Bootstrap creates the first invite link via SQL migration, not the GraphQL `register` path; [api-spec.md](api-spec.md) doesn't flag this. | Slice 0 (one-line note) |
+| Concrete chain selection is unsettled across [token.md](../primitive/token.md) / [ledger.md](ledger.md). | Slice 5 |
+| Three-way write ordering + rollback (graph + Postgres + chain) is under-specified in [architecture.md](architecture.md) / [ledger.md](ledger.md); only the two-store case is written. | Slice 5 |
+| MFA schema-reservation wording in [auth.md](auth.md) ("no column today") reads ambiguously against future migrations. | Clarify when auth is revisited |
+| Bootstrap migration is specified in [network.md](../primitive/network.md) but not referenced from [architecture.md](architecture.md). | Slice 0 |
+
+Cross-cutting design calls that outlive a single slice belong in
+[open-questions.md](../open-questions.md), not here.
