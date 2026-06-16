@@ -66,7 +66,7 @@ fn ensure_signing_key() -> anyhow::Result<()> {
         tracing::info!("JWT_SIGNING_KEY already set — leaving it untouched");
         return Ok(());
     }
-    let key = generate_signing_key();
+    let key = generate_signing_key().context("generating JWT signing key")?;
     let mut env_file = OpenOptions::new()
         .create(true)
         .append(true)

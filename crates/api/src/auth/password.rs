@@ -40,16 +40,19 @@ pub fn hash_password(plaintext: &str) -> Result<String, PasswordError> {
         .map_err(|_| PasswordError::Hash)
 }
 
+/// A precomputed Argon2id PHC hash, used only as the verification target on
+/// the "no such account" login path (see [`dummy_verify`]). Embedding it as a
+/// constant keeps `dummy_verify` infallible — there is no runtime hash to fail.
+/// Its encoded params track `Argon2::default()`; the `dummy_hash_tracks_*`
+/// tests fail if the crate's defaults drift away from it.
+const DUMMY_HASH: &str = "$argon2id$v=19$m=19456,t=2,p=1$oYy7096Insv9ozgmYftknw$+RcBmWNKSTDI1SmihS85B+5vbX/oZJqWOJY6LLk7UA4";
+
 /// Runs a verification against a fixed dummy hash and discards the result.
 /// Called on the "no such account" login path so response timing is the same
 /// whether or not the email exists — closing the account-enumeration channel
-/// that a fast no-account rejection would open. The dummy hash is computed
-/// once on first use.
+/// that a fast no-account rejection would open.
 pub fn dummy_verify(plaintext: &str) {
-    static DUMMY_HASH: std::sync::OnceLock<String> = std::sync::OnceLock::new();
-    let hash = DUMMY_HASH
-        .get_or_init(|| hash_password("timing-uniformity-dummy").expect("dummy password hashes"));
-    let _ = verify_password(hash, plaintext);
+    let _ = verify_password(DUMMY_HASH, plaintext);
 }
 
 /// Verifies a plaintext password against a stored hash. Returns `false` on
@@ -102,5 +105,25 @@ mod tests {
             "not-a-valid-phc-string",
             "anything at all"
         ));
+    }
+
+    #[test]
+    fn dummy_hash_is_a_valid_phc_string() {
+        // dummy_verify must run a real Argon2 verify for timing uniformity,
+        // which requires the embedded hash to parse.
+        assert!(PasswordHash::new(DUMMY_HASH).is_ok());
+    }
+
+    #[test]
+    fn dummy_hash_tracks_current_argon2_params() {
+        // If the argon2 crate's default params drift, the embedded constant
+        // would make dummy_verify's timing diverge from a real verify. Pin it:
+        // regenerate the constant when this fails.
+        let fresh = hash_password("timing-uniformity-dummy").expect("hashes");
+        let fresh = PasswordHash::new(&fresh).expect("fresh hash parses");
+        let dummy = PasswordHash::new(DUMMY_HASH).expect("dummy hash parses");
+        assert_eq!(dummy.algorithm, fresh.algorithm);
+        assert_eq!(dummy.version, fresh.version);
+        assert_eq!(dummy.params, fresh.params);
     }
 }
