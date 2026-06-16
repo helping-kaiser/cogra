@@ -72,6 +72,12 @@ rate-limiting from [auth.md](auth.md), and the `Node`/`Actor` interfaces +
 avatar/cover + private-state `User` fields (they arrive with the slices that
 need a second node type / media).
 
+GraphQL query **depth and complexity** limits join that deferred API-edge
+hardening: a single nested or looping query can fetch N objects in one request
+and overload the server without tripping any per-endpoint rate limit. Capping
+selection depth and charging each request against a complexity budget closes
+the gap.
+
 ### Slice 1 — Thin Android client
 
 Prove the API↔Android contract and on-device testing immediately.
@@ -169,7 +175,7 @@ reached — not in an upfront pass.
 | MFA schema-reservation wording in [auth.md](auth.md) ("no column today") reads ambiguously against future migrations. | Clarify when auth is revisited |
 
 Resolved in slice 0: the first-invite-link note now lives in
-[api-spec.md](api-spec.md#auth-and-accounts); the bootstrap migration is
+[api-spec.md](api-spec.md#auth-and-accounts); the bootstrap binary is
 already referenced from [architecture.md](architecture.md#genesis-bootstrap)
 (the listed gap was stale). One contradiction surfaced and was fixed in the
 same work: [auth.md](auth.md)'s re-registration collision requires
