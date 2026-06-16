@@ -20,12 +20,81 @@ Float.
 scalar Dimension
 
 """
+The one error vocabulary, shared across all three error tiers (governing
+principles): the `extensions.code` on a transport fault, the `code` on a
+`UserError`, and the `code` on a result-union error arm all draw from it.
+Grows as gestures add expected failures.
+"""
+enum ErrorCode {
+	"""
+	No / invalid access token where one is required.
+	"""
+	UNAUTHENTICATED
+	"""
+	Authenticated but not eligible (actAs, field-auth).
+	"""
+	FORBIDDEN
+	"""
+	An id resolved to nothing.
+	"""
+	NOT_FOUND
+	"""
+	Malformed args, or a constraint not modeled as data.
+	"""
+	BAD_INPUT
+	"""
+	An auth endpoint's per-IP / per-account backoff.
+	"""
+	RATE_LIMITED
+	"""
+	Collapsed server fault; detail is logged, not surfaced.
+	"""
+	INTERNAL
+	"""
+	Email / password pair did not match.
+	"""
+	INVALID_CREDENTIALS
+	"""
+	Invite link invalid, expired, revoked, or consumed.
+	"""
+	INVITE_UNUSABLE
+	"""
+	The requested handle is already in use.
+	"""
+	HANDLE_TAKEN
+	"""
+	Under the length floor or in the breach corpus.
+	"""
+	WEAK_PASSWORD
+	"""
+	A live pending registration already holds this email.
+	"""
+	REGISTRATION_IN_PROGRESS
+	"""
+	Registration verification token invalid or expired.
+	"""
+	VERIFICATION_TOKEN_INVALID
+	"""
+	Refresh token invalid, expired, or reuse-detected.
+	"""
+	REFRESH_TOKEN_INVALID
+}
+
+"""
 Per-field moderation state.
 """
 enum FieldModerationStatus {
 	NORMAL
 	SENSITIVE
 	REDACTED
+}
+
+"""
+The requested handle is already in use.
+"""
+type HandleTaken implements MutationError {
+	message: String!
+	code: ErrorCode!
 }
 
 """
@@ -47,11 +116,32 @@ type Health {
 	memgraphConnected: Boolean!
 }
 
+"""
+The email / password pair did not match.
+"""
+type InvalidCredentials implements MutationError {
+	message: String!
+	code: ErrorCode!
+}
+
+"""
+The invite link is invalid, expired, revoked, or already consumed.
+"""
+type InviteUnusable implements MutationError {
+	message: String!
+	code: ErrorCode!
+}
+
 input LogInInput {
 	email: String!
 	password: String!
 	deviceLabel: String
 }
+
+"""
+Result of `logIn` — a session, or rejected credentials.
+"""
+union LogInResult = AuthPayload | InvalidCredentials
 
 """
 Text carrying its own moderation status. `value` is null when the field is
@@ -78,21 +168,32 @@ type Mutation {
 	pending record and sends the verification email (dev: logs the token)
 	— no User node or session exists until verifyEmail.
 	"""
-	register(input: RegisterInput!): RegisterPayload!
+	register(input: RegisterInput!): RegisterResult!
 	"""
 	Complete registration with the emailed verification token. Atomically
 	creates the User node and its Wallet, writes the two invitation edges,
 	and issues the first session (auth.md).
 	"""
-	verifyEmail(input: VerifyEmailInput!): AuthPayload!
+	verifyEmail(input: VerifyEmailInput!): VerifyEmailResult!
 	"""
 	Authenticate with email + password; issues a new session.
 	"""
-	logIn(input: LogInInput!): AuthPayload!
+	logIn(input: LogInInput!): LogInResult!
 	"""
 	Rotate the refresh token and mint a fresh access token.
 	"""
-	refreshSession(input: RefreshSessionInput!): AuthPayload!
+	refreshSession(input: RefreshSessionInput!): RefreshResult!
+}
+
+"""
+The shared shape of a result-union error arm: every typed failure of
+a union-returning operation implements it, so `message` and `code`
+read uniformly across arms while each arm is free to add its own
+fields.
+"""
+interface MutationError {
+	message: String!
+	code: ErrorCode!
 }
 
 """
@@ -118,8 +219,23 @@ type Query {
 	me: User
 }
 
+"""
+Result of `refreshSession` — a rotated session, or a typed token failure. A
+reuse-detected token revokes every session (auth.md) and surfaces here as
+REFRESH_TOKEN_INVALID.
+"""
+union RefreshResult = AuthPayload | RefreshTokenInvalid
+
 input RefreshSessionInput {
 	refreshToken: String!
+}
+
+"""
+The refresh token is invalid, expired, or was already rotated (reuse).
+"""
+type RefreshTokenInvalid implements MutationError {
+	message: String!
+	code: ErrorCode!
 }
 
 """
@@ -147,6 +263,20 @@ type RegisterPayload {
 	When the pending registration expires unverified (24 h, auth.md).
 	"""
 	expiresAt: DateTime!
+}
+
+"""
+Result of `register` — the pending-registration receipt, or a typed reason
+it was refused.
+"""
+union RegisterResult = RegisterPayload | InviteUnusable | HandleTaken | WeakPassword | RegistrationInProgress
+
+"""
+A live pending registration already holds this email (auth.md).
+"""
+type RegistrationInProgress implements MutationError {
+	message: String!
+	code: ErrorCode!
 }
 
 """
@@ -201,9 +331,30 @@ type User {
 	updatedAt: DateTime!
 }
 
+"""
+The verification token is invalid, or its pending registration expired.
+"""
+type VerificationTokenInvalid implements MutationError {
+	message: String!
+	code: ErrorCode!
+}
+
 input VerifyEmailInput {
 	verificationToken: String!
 	deviceLabel: String
+}
+
+"""
+Result of `verifyEmail` — the first session, or a typed token failure.
+"""
+union VerifyEmailResult = AuthPayload | VerificationTokenInvalid
+
+"""
+The password is under the length floor or appears in the breach corpus.
+"""
+type WeakPassword implements MutationError {
+	message: String!
+	code: ErrorCode!
 }
 
 """

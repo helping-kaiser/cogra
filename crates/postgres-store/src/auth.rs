@@ -154,6 +154,18 @@ pub async fn find_credentials_by_email(
         .await
 }
 
+/// Whether a verified account already holds this handle. Registration checks
+/// this so a clash surfaces as the typed `HandleTaken` arm rather than a
+/// unique-violation deep in `verifyEmail`. Pending registrations are not
+/// consulted — they hold no committed handle and may expire — so a residual
+/// two-pending race still resolves at `insert_user`.
+pub async fn username_taken(pool: &PgPool, username: &str) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)")
+        .bind(username)
+        .fetch_one(pool)
+        .await
+}
+
 /// Inserts the verified `users` row — credentials copied across from the
 /// pending record (auth.md "Email verification"). Transactional.
 pub async fn insert_user(

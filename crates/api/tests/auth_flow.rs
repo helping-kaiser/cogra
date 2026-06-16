@@ -121,7 +121,9 @@ async fn register_writes_a_pending_record() {
     let resp = gql(
         &h.app,
         json!({
-            "query": "mutation($i: RegisterInput!) { register(input: $i) { expiresAt } }",
+            "query": "mutation($i: RegisterInput!) { register(input: $i) {
+                __typename ... on RegisterPayload { expiresAt }
+            } }",
             "variables": { "i": {
                 "inviteLink": invite_link, "handle": format!("u{}", Uuid::new_v4().simple()),
                 "email": email, "password": "a-sufficiently-long-password"
@@ -131,6 +133,10 @@ async fn register_writes_a_pending_record() {
     )
     .await;
 
+    assert_eq!(
+        resp["data"]["register"]["__typename"], "RegisterPayload",
+        "register succeeds: {resp}"
+    );
     assert!(
         resp["data"]["register"]["expiresAt"].is_string(),
         "register returns the pending expiry: {resp}"
@@ -190,7 +196,9 @@ async fn verify_login_me_refresh_round_trip() {
         &h.app,
         json!({
             "query": "mutation($i: VerifyEmailInput!) { verifyEmail(input: $i) {
-                accessToken refreshToken session { isCurrent } user { id networkRole handle { value } }
+                __typename ... on AuthPayload {
+                    accessToken refreshToken session { isCurrent } user { id networkRole handle { value } }
+                }
             } }",
             "variables": { "i": { "verificationToken": token.raw, "deviceLabel": "test-device" } }
         }),
@@ -198,6 +206,7 @@ async fn verify_login_me_refresh_round_trip() {
     )
     .await;
     let payload = &verified["data"]["verifyEmail"];
+    assert_eq!(payload["__typename"], "AuthPayload", "{verified}");
     assert!(
         payload["accessToken"].is_string(),
         "issues access token: {verified}"
@@ -240,35 +249,51 @@ async fn verify_login_me_refresh_round_trip() {
     let logged_in = gql(
         &h.app,
         json!({
-            "query": "mutation($i: LogInInput!) { logIn(input: $i) { accessToken user { id } } }",
+            "query": "mutation($i: LogInInput!) { logIn(input: $i) {
+                __typename ... on AuthPayload { accessToken user { id } }
+            } }",
             "variables": { "i": { "email": email, "password": pw } }
         }),
         None,
     )
     .await;
     assert_eq!(
+        logged_in["data"]["logIn"]["__typename"], "AuthPayload",
+        "{logged_in}"
+    );
+    assert_eq!(
         logged_in["data"]["logIn"]["user"]["id"],
         user_id.to_string(),
         "{logged_in}"
     );
 
-    // wrong password is rejected.
+    // Wrong password is the typed InvalidCredentials arm — data, not a
+    // transport error.
     let bad = gql(
         &h.app,
         json!({
-            "query": "mutation($i: LogInInput!) { logIn(input: $i) { accessToken } }",
+            "query": "mutation($i: LogInInput!) { logIn(input: $i) {
+                __typename ... on InvalidCredentials { code message }
+            } }",
             "variables": { "i": { "email": email, "password": "wrong-password-entirely" } }
         }),
         None,
     )
     .await;
-    assert!(bad["errors"].is_array(), "wrong password errors: {bad}");
+    assert!(bad["errors"].is_null(), "no transport error: {bad}");
+    assert_eq!(
+        bad["data"]["logIn"]["__typename"], "InvalidCredentials",
+        "{bad}"
+    );
+    assert_eq!(bad["data"]["logIn"]["code"], "INVALID_CREDENTIALS", "{bad}");
 
     // refreshSession — rotates the refresh token.
     let refreshed = gql(
         &h.app,
         json!({
-            "query": "mutation($i: RefreshSessionInput!) { refreshSession(input: $i) { accessToken refreshToken } }",
+            "query": "mutation($i: RefreshSessionInput!) { refreshSession(input: $i) {
+                __typename ... on AuthPayload { accessToken refreshToken }
+            } }",
             "variables": { "i": { "refreshToken": refresh } }
         }),
         None,
@@ -279,19 +304,23 @@ async fn verify_login_me_refresh_round_trip() {
         .expect("new refresh token");
     assert_ne!(new_refresh, refresh, "rotation issues a new token");
 
-    // Reusing the old (now-revoked) refresh token is detected and rejected.
+    // Reusing the old (now-revoked) refresh token surfaces the typed
+    // RefreshTokenInvalid arm (all sessions revoked behind it).
     let reuse = gql(
         &h.app,
         json!({
-            "query": "mutation($i: RefreshSessionInput!) { refreshSession(input: $i) { accessToken } }",
+            "query": "mutation($i: RefreshSessionInput!) { refreshSession(input: $i) {
+                __typename ... on RefreshTokenInvalid { code }
+            } }",
             "variables": { "i": { "refreshToken": refresh } }
         }),
         None,
     )
     .await;
-    assert!(
-        reuse["errors"].is_array(),
-        "reused refresh token errors: {reuse}"
+    assert!(reuse["errors"].is_null(), "no transport error: {reuse}");
+    assert_eq!(
+        reuse["data"]["refreshSession"]["code"], "REFRESH_TOKEN_INVALID",
+        "reused refresh token: {reuse}"
     );
 
     // Cleanup: drop the user's Postgres rows (profile versions have no
@@ -322,4 +351,199 @@ async fn verify_login_me_refresh_round_trip() {
         .await
         .expect("cleanup registrant + wallet");
     cleanup_graph(&h.graph, &[inviter_id]).await;
+}
+
+/// A `register` selecting the result `__typename` and an arm's `code`. The
+/// fragments cover every expected register failure; the matching one populates.
+const REGISTER_ARM_QUERY: &str = "mutation($i: RegisterInput!) { register(input: $i) {
+    __typename
+    ... on InviteUnusable { code }
+    ... on HandleTaken { code }
+    ... on WeakPassword { code }
+    ... on RegistrationInProgress { code }
+} }";
+
+#[tokio::test]
+async fn register_rejects_unknown_invite() {
+    let h = harness().await;
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", Uuid::new_v4().simple()),
+                "email": format!("nv-{}@cogra.test", Uuid::new_v4()),
+                "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["register"]["__typename"], "InviteUnusable",
+        "{resp}"
+    );
+    assert_eq!(
+        resp["data"]["register"]["code"], "INVITE_UNUSABLE",
+        "{resp}"
+    );
+}
+
+#[tokio::test]
+async fn register_rejects_short_password() {
+    // The password floor is checked before any DB work, so no invite need exist.
+    let h = harness().await;
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": Uuid::new_v4(), "handle": format!("u{}", Uuid::new_v4().simple()),
+                "email": format!("wp-{}@cogra.test", Uuid::new_v4()), "password": "short"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["register"]["__typename"], "WeakPassword",
+        "{resp}"
+    );
+    assert_eq!(resp["data"]["register"]["code"], "WEAK_PASSWORD", "{resp}");
+}
+
+#[tokio::test]
+async fn register_rejects_taken_handle() {
+    let h = harness().await;
+    let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
+
+    // A committed account already holds this handle.
+    let taken_id = Uuid::new_v4();
+    let handle = format!("u{}", Uuid::new_v4().simple());
+    sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)")
+        .bind(taken_id)
+        .bind(&handle)
+        .bind(format!("taken-{}@cogra.test", Uuid::new_v4()))
+        .bind("x")
+        .execute(&h.pool)
+        .await
+        .expect("seed taken handle");
+
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": invite_link, "handle": handle,
+                "email": format!("ht-{}@cogra.test", Uuid::new_v4()),
+                "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["register"]["__typename"], "HandleTaken",
+        "{resp}"
+    );
+    assert_eq!(resp["data"]["register"]["code"], "HANDLE_TAKEN", "{resp}");
+
+    sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(taken_id)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup user");
+    sqlx::query("DELETE FROM auth_invitations WHERE id = $1")
+        .bind(invite_link)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup invitation");
+    cleanup_graph(&h.graph, &[inviter_id]).await;
+}
+
+#[tokio::test]
+async fn register_rejects_email_with_pending_registration() {
+    let h = harness().await;
+    let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
+    let email = format!("inprog-{}@cogra.test", Uuid::new_v4());
+
+    let token = tokens::generate();
+    postgres_store::auth::upsert_pending_registration(
+        &h.pool,
+        postgres_store::auth::NewPendingRegistration {
+            username: &format!("u{}", Uuid::new_v4().simple()),
+            email: &email,
+            password_hash: &password::hash_password("another-long-enough-pw").expect("hash"),
+            invitation_id: invite_link,
+            invitee_dim1: 0.5,
+            invitee_dim2: 0.5,
+            email_verification_token_hash: &token.hash,
+            expires_at: Utc::now() + Duration::hours(24),
+        },
+    )
+    .await
+    .expect("seed pending");
+
+    // A fresh handle (so the handle check passes) but the same email.
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": REGISTER_ARM_QUERY,
+            "variables": { "i": {
+                "inviteLink": invite_link, "handle": format!("u{}", Uuid::new_v4().simple()),
+                "email": email, "password": "a-sufficiently-long-password"
+            }}
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["register"]["__typename"], "RegistrationInProgress",
+        "{resp}"
+    );
+    assert_eq!(
+        resp["data"]["register"]["code"], "REGISTRATION_IN_PROGRESS",
+        "{resp}"
+    );
+
+    sqlx::query("DELETE FROM auth_pending_registrations WHERE email = $1")
+        .bind(&email)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup pending");
+    sqlx::query("DELETE FROM auth_invitations WHERE id = $1")
+        .bind(invite_link)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup invitation");
+    cleanup_graph(&h.graph, &[inviter_id]).await;
+}
+
+#[tokio::test]
+async fn verify_email_rejects_unknown_token() {
+    let h = harness().await;
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": "mutation($i: VerifyEmailInput!) { verifyEmail(input: $i) {
+                __typename ... on VerificationTokenInvalid { code }
+            } }",
+            "variables": { "i": { "verificationToken": tokens::generate().raw } }
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert_eq!(
+        resp["data"]["verifyEmail"]["__typename"], "VerificationTokenInvalid",
+        "{resp}"
+    );
+    assert_eq!(
+        resp["data"]["verifyEmail"]["code"], "VERIFICATION_TOKEN_INVALID",
+        "{resp}"
+    );
 }
