@@ -2,7 +2,10 @@
 // Startup applies both stores' schemas (Postgres migrations, Memgraph
 // constraints + indexes) before serving.
 
+use std::sync::Arc;
+
 use anyhow::Context;
+use api::auth::jwt::JwtKeys;
 use tracing_subscriber::EnvFilter;
 
 fn env_or(key: &str, default: &str) -> String {
@@ -37,7 +40,13 @@ async fn main() -> anyhow::Result<()> {
         .context("applying graph constraints + indexes")?;
     tracing::info!("Memgraph connected, graph schema applied");
 
-    let schema = api::schema::build(pool, graph);
+    let signing_key = std::env::var("JWT_SIGNING_KEY").context(
+        "JWT_SIGNING_KEY must be set — run `make bootstrap` to generate the instance signing key",
+    )?;
+    let jwt =
+        Arc::new(JwtKeys::from_pkcs8_base64(&signing_key).context("loading JWT_SIGNING_KEY")?);
+
+    let schema = api::schema::build(pool, graph, jwt.clone());
     let addr = format!(
         "{}:{}",
         env_or("API_HOST", "0.0.0.0"),
@@ -47,6 +56,6 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {addr}"))?;
     tracing::info!("listening on http://{addr} — /graphql, /health, /playground (dev)");
-    axum::serve(listener, api::app(schema)).await?;
+    axum::serve(listener, api::app(schema, jwt)).await?;
     Ok(())
 }
