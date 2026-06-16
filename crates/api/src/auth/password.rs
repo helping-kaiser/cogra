@@ -7,10 +7,7 @@ use argon2::password_hash::{
     PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng,
 };
 
-/// auth.md "Password requirements": minimum 12 characters, no maximum, no
-/// composition rules. The breach-corpus (HIBP) check specified there is
-/// **deferred** to a later auth-hardening pass — slice 0 enforces length only.
-pub const MIN_PASSWORD_LEN: usize = 12;
+use crate::auth::policy::MIN_PASSWORD_LEN;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PasswordError {
