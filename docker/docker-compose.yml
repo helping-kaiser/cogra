@@ -18,17 +18,38 @@ services:
       retries: 5
 
   memgraph:
-    # memgraph-platform bundles Memgraph + Memgraph Lab (visual graph explorer)
-    image: memgraph/memgraph-platform:latest
+    # memgraph-mage = Memgraph + the MAGE query-module library. Pinned to
+    # the same minor version as CI (.github/workflows/ci.yml) so dev and CI
+    # test against the same engine.
+    image: memgraph/memgraph-mage:3.10.1
     container_name: gnp_memgraph
     restart: unless-stopped
     ports:
       - "${MEMGRAPH_PORT:-7687}:7687"   # Bolt protocol (used by neo4rs)
-      - "3000:3000"                      # Memgraph Lab UI
     volumes:
       - memgraph_data:/var/lib/memgraph
     # Community edition has no auth by default.
     # To enable: add --bolt-server-name-for-init and --init-data-directory flags.
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'RETURN 0;' | mgconsole || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  lab:
+    # Memgraph Lab (visual graph explorer), split out of the deprecated
+    # memgraph-platform bundle image.
+    image: memgraph/lab:3.10.2
+    container_name: gnp_lab
+    restart: unless-stopped
+    depends_on:
+      memgraph:
+        condition: service_healthy
+    ports:
+      - "3000:3000"                      # Memgraph Lab UI
+    environment:
+      QUICK_CONNECT_MG_HOST: memgraph
+      QUICK_CONNECT_MG_PORT: 7687
 
 volumes:
   postgres_data:

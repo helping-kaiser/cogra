@@ -610,24 +610,13 @@ slot. See
 
 The [edge-tensor-uniformity invariant](../primitive/invariants.md#topology-and-visibility)
 — every edge carries `(dim1, dim2, timestamp, layer)` regardless of
-label — is enforced at the storage layer via per-label EXISTS
-constraints. Shown explicitly for `:ACTOR`; an identical block of
-four constraints applies to each of the 16 remaining labels in
-the table above — `:INVITE` and the economics labels included:
-
-```cypher
-CREATE CONSTRAINT ON ()-[r:ACTOR]-() ASSERT EXISTS (r.dim1);
-CREATE CONSTRAINT ON ()-[r:ACTOR]-() ASSERT EXISTS (r.dim2);
-CREATE CONSTRAINT ON ()-[r:ACTOR]-() ASSERT EXISTS (r.timestamp);
-CREATE CONSTRAINT ON ()-[r:ACTOR]-() ASSERT EXISTS (r.layer);
-```
-
-Range checks on `dim1` and `dim2` (`[-1.0, +1.0]`) are not
-expressible as a single existence constraint; the service layer
-clamps on write and a test suite asserts the invariant
-end-to-end. Memgraph's type-constraint family (where available
-in the deployed version) takes care of `dim1` / `dim2` being
-floats and `timestamp` / `layer` being the expected types.
+label — is not expressible as a storage constraint: Memgraph's
+constraint family (uniqueness, existence, type) applies to node
+properties only, never to relationship properties. Enforcement is
+therefore service-layer + test, the same pattern as the junction
+no-`status` rule above: every edge write path supplies all four
+fields and clamps `dim1` / `dim2` to `[-1.0, +1.0]`, and an
+integration suite asserts the invariant end-to-end.
 
 ---
 

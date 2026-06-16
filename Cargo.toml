@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 config = { version = "0.14" }
 
 # Shared primitive types
-uuid = { version = "1", features = ["v4", "serde"] }
+uuid = { version = "1", features = ["v4", "v5", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 [profile.dev]
