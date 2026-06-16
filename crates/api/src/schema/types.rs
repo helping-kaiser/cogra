@@ -198,3 +198,36 @@ pub struct LogInInput {
 pub struct RefreshSessionInput {
     pub refresh_token: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use async_graphql::{ScalarType, Value};
+
+    #[test]
+    fn dimension_accepts_the_closed_range_including_bounds() {
+        for v in [-1.0, -0.5, 0.0, 0.5, 1.0] {
+            let d = Dimension::parse(Value::from(v)).expect("value in [-1, 1] parses");
+            assert_eq!(d.0, v);
+        }
+    }
+
+    #[test]
+    fn dimension_rejects_values_outside_the_range() {
+        // Just past either bound and well beyond — the type, not a resolver,
+        // enforces the tensor invariant.
+        for v in [-1.000001, 1.000001, 2.0, -5.0] {
+            assert!(
+                Dimension::parse(Value::from(v)).is_err(),
+                "{v} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn dimension_rejects_non_numeric_values() {
+        assert!(Dimension::parse(Value::String("0.5".into())).is_err());
+        assert!(Dimension::parse(Value::Boolean(true)).is_err());
+        assert!(Dimension::parse(Value::Null).is_err());
+    }
+}

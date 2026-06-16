@@ -567,3 +567,123 @@ async fn malformed_query_carries_a_transport_code() {
         "transport fault carries a stable code: {resp}"
     );
 }
+
+#[tokio::test]
+async fn verify_email_rejects_an_expired_pending_registration() {
+    let h = harness().await;
+    let (inviter_id, invite_link) = seed_inviter(&h.pool, &h.graph).await;
+    let email = format!("exp-{}@cogra.test", Uuid::new_v4());
+
+    // A pending row whose token is valid but whose window has closed: the
+    // expired arm of verifyEmail, distinct from the unknown-token arm.
+    let token = tokens::generate();
+    postgres_store::auth::upsert_pending_registration(
+        &h.pool,
+        postgres_store::auth::NewPendingRegistration {
+            username: &format!("u{}", Uuid::new_v4().simple()),
+            email: &email,
+            password_hash: &password::hash_password("a-long-enough-password").expect("hash"),
+            invitation_id: invite_link,
+            invitee_dim1: 0.5,
+            invitee_dim2: 0.5,
+            email_verification_token_hash: &token.hash,
+            expires_at: Utc::now() - Duration::hours(1),
+        },
+    )
+    .await
+    .expect("seed expired pending");
+
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": "mutation($i: VerifyEmailInput!) { verifyEmail(input: $i) {
+                auth { accessToken } userErrors { code message }
+            } }",
+            "variables": { "i": { "verificationToken": token.raw } }
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert!(resp["data"]["verifyEmail"]["auth"].is_null(), "{resp}");
+    let err = &resp["data"]["verifyEmail"]["userErrors"][0];
+    assert_eq!(err["code"], "VERIFICATION_TOKEN_INVALID", "{resp}");
+    assert!(
+        err["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("expired"),
+        "the expired arm, not the unknown-token arm: {resp}"
+    );
+
+    sqlx::query("DELETE FROM auth_pending_registrations WHERE email = $1")
+        .bind(&email)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup pending");
+    sqlx::query("DELETE FROM auth_invitations WHERE id = $1")
+        .bind(invite_link)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup invitation");
+    cleanup_graph(&h.graph, &[inviter_id]).await;
+}
+
+#[tokio::test]
+async fn refresh_session_rejects_an_expired_token() {
+    let h = harness().await;
+
+    // A committed account holding one expired-but-unrevoked session — the
+    // expired arm of refreshSession, distinct from reuse (revoked) and unknown.
+    let user_id = Uuid::new_v4();
+    sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, 'x')")
+        .bind(user_id)
+        .bind(format!("u{}", Uuid::new_v4().simple()))
+        .bind(format!("rt-{}@cogra.test", Uuid::new_v4()))
+        .execute(&h.pool)
+        .await
+        .expect("seed user");
+    let refresh = tokens::generate();
+    let mut conn = h.pool.acquire().await.expect("connection");
+    postgres_store::auth::insert_refresh_token(
+        &mut conn,
+        Uuid::new_v4(),
+        user_id,
+        &refresh.hash,
+        Utc::now() - Duration::days(1),
+        None,
+    )
+    .await
+    .expect("seed expired session");
+    drop(conn);
+
+    let resp = gql(
+        &h.app,
+        json!({
+            "query": "mutation($i: RefreshSessionInput!) { refreshSession(input: $i) {
+                auth { accessToken } userErrors { code message }
+            } }",
+            "variables": { "i": { "refreshToken": refresh.raw } }
+        }),
+        None,
+    )
+    .await;
+    assert!(resp["errors"].is_null(), "no transport error: {resp}");
+    assert!(resp["data"]["refreshSession"]["auth"].is_null(), "{resp}");
+    let err = &resp["data"]["refreshSession"]["userErrors"][0];
+    assert_eq!(err["code"], "REFRESH_TOKEN_INVALID", "{resp}");
+    assert!(
+        err["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("expired"),
+        "the expired arm, not the reuse or unknown arm: {resp}"
+    );
+
+    // Sessions cascade on user delete.
+    sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(user_id)
+        .execute(&h.pool)
+        .await
+        .expect("cleanup user");
+}
