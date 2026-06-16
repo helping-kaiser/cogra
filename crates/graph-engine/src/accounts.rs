@@ -7,7 +7,9 @@
 //! them together (architecture.md "Service-layer transactions"). Writes use
 //! `MERGE` keyed on the node UUID with `ON CREATE SET`, so a retry after a
 //! committed graph write collapses to a no-op — the idempotent-first-commit
-//! discipline from architecture.md "Partial-failure handling".
+//! discipline from architecture.md "Partial-failure handling". That no-op holds
+//! only because the caller supplies *stable* node ids across retries
+//! ([`common::registrant_ids`]); random ids would defeat the MERGE.
 
 use common::NetworkRole;
 use neo4rs::{Graph, Txn, query};
@@ -46,6 +48,12 @@ pub async fn create_registrant(
     wallet_address: &str,
     edges: &InvitationEdges,
 ) -> Result<(), GraphError> {
+    // The inviter (a `:User` or `:Collective`) is matched unlabelled by its
+    // globally-unique id and the statement `RETURN`s it. If the id matches no
+    // node — a stale or mis-copied inviter reference — the MATCH yields zero
+    // rows, every following MERGE runs zero times, and the RETURN is empty. We
+    // detect that empty result and fail, so the caller's transaction rolls back
+    // both stores rather than committing a Postgres user with no graph node.
     let cypher = format!(
         "WITH localDateTime() AS now
          MATCH (inviter {{id: $inviter_id}})
@@ -61,22 +69,30 @@ pub async fn create_registrant(
              inv.timestamp = now, inv.layer = 1
          MERGE (u)-[back:ACTOR]->(inviter)
          ON CREATE SET back.dim1 = $invitee_dim1, back.dim2 = $invitee_dim2,
-             back.timestamp = now, back.layer = 1",
+             back.timestamp = now, back.layer = 1
+         RETURN u.id AS user_id",
         user_body = user_set_body("u", "'member'"),
     );
-    txn.run(
-        query(&cypher)
-            .param("inviter_id", edges.inviter_id.to_string())
-            .param("user_id", user_id.to_string())
-            .param("username", username)
-            .param("wallet_id", wallet_id.to_string())
-            .param("wallet_address", wallet_address)
-            .param("inviter_dim1", edges.inviter_dim1)
-            .param("inviter_dim2", edges.inviter_dim2)
-            .param("invitee_dim1", edges.invitee_dim1)
-            .param("invitee_dim2", edges.invitee_dim2),
-    )
-    .await?;
+    let mut rows = txn
+        .execute(
+            query(&cypher)
+                .param("inviter_id", edges.inviter_id.to_string())
+                .param("user_id", user_id.to_string())
+                .param("username", username)
+                .param("wallet_id", wallet_id.to_string())
+                .param("wallet_address", wallet_address)
+                .param("inviter_dim1", edges.inviter_dim1)
+                .param("inviter_dim2", edges.inviter_dim2)
+                .param("invitee_dim1", edges.invitee_dim1)
+                .param("invitee_dim2", edges.invitee_dim2),
+        )
+        .await?;
+    if rows.next(txn.handle()).await?.is_none() {
+        return Err(GraphError::Invalid(format!(
+            "inviter {} not found in the graph",
+            edges.inviter_id
+        )));
+    }
     Ok(())
 }
 
