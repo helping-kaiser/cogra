@@ -13,15 +13,15 @@ mod user;
 
 use std::sync::Arc;
 
-use async_graphql::{Context, EmptySubscription, Object, Schema, SchemaBuilder, SimpleObject};
+use async_graphql::{Context, EmptySubscription, Object, Schema, SimpleObject};
 use graph_engine::Graph;
 use postgres_store::PgPool;
 
 use crate::auth::Viewer;
 use crate::auth::jwt::JwtKeys;
-use errors::{LogInResult, MutationError, RefreshResult, RegisterResult, VerifyEmailResult};
-use types::{LogInInput, RefreshSessionInput, RegisterInput, VerifyEmailInput};
-use user::User;
+use errors::ErrorCodes;
+use types::{LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, VerifyEmailInput};
+use user::{LogInPayload, RefreshPayload, User, VerifyEmailPayload};
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -80,7 +80,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: RegisterInput,
-    ) -> async_graphql::Result<RegisterResult> {
+    ) -> async_graphql::Result<RegisterPayload> {
         ops::register(ctx, input).await
     }
 
@@ -91,7 +91,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: VerifyEmailInput,
-    ) -> async_graphql::Result<VerifyEmailResult> {
+    ) -> async_graphql::Result<VerifyEmailPayload> {
         ops::verify_email(ctx, input).await
     }
 
@@ -100,7 +100,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: LogInInput,
-    ) -> async_graphql::Result<LogInResult> {
+    ) -> async_graphql::Result<LogInPayload> {
         ops::log_in(ctx, input).await
     }
 
@@ -109,25 +109,26 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: RefreshSessionInput,
-    ) -> async_graphql::Result<RefreshResult> {
+    ) -> async_graphql::Result<RefreshPayload> {
         ops::refresh_session(ctx, input).await
     }
 }
 
-/// The shared schema builder. `MutationError` is registered explicitly: no
-/// field returns the interface (the result-union arms are reached through their
-/// concrete unions), so without this it — and the `implements MutationError`
-/// marks on the arms — would be absent from the SDL.
-fn builder() -> SchemaBuilder<Query, Mutation, EmptySubscription> {
-    Schema::build(Query, Mutation, EmptySubscription).register_output_type::<MutationError>()
-}
-
 /// Builds the executable schema with live store handles and JWT keys attached.
+/// The `ErrorCodes` extension stamps a stable `extensions.code` on every
+/// top-level transport error (errors.rs).
 pub fn build(pool: PgPool, graph: Graph, jwt: Arc<JwtKeys>) -> ApiSchema {
-    builder().data(pool).data(graph).data(jwt).finish()
+    Schema::build(Query, Mutation, EmptySubscription)
+        .extension(ErrorCodes)
+        .data(pool)
+        .data(graph)
+        .data(jwt)
+        .finish()
 }
 
 /// The schema's SDL — what `schema.graphql` must contain.
 pub fn sdl() -> String {
-    builder().finish().sdl()
+    Schema::build(Query, Mutation, EmptySubscription)
+        .finish()
+        .sdl()
 }

@@ -186,8 +186,8 @@ split for the sake of a larger one.
 
 ### Errors are tiered — transport faults vs. expected outcomes
 
-A failure surfaces in one of three places, chosen by who must act on
-it, never by convenience:
+A failure surfaces in one of two places, chosen by who must act on it,
+never by convenience:
 
 - **Transport faults** — unauthenticated, forbidden, not-found,
   malformed input, rate-limited, internal — ride the GraphQL `errors`
@@ -196,19 +196,18 @@ it, never by convenience:
   and never reaches the client, which sees only the `INTERNAL` code.
 - **Expected business failures** — a bad value or a rule rejection the
   end user should see and act on — are *data*, not transport errors:
-  every mutation payload carries `userErrors: [UserError!]!`, and its
-  result field is null when the write did not happen.
-- **Rich, mutually-exclusive failure sets** — where the client must
-  branch on the outcome and a flat code list would lose the per-case
-  payload — are a result union (a success arm plus typed error arms
-  sharing the `MutationError` interface). Available to any operation
-  whose failure set warrants it; the pre-session auth verbs
-  (`register`, `verifyEmail`, `logIn`, `refreshSession`) are the
-  current instances.
+  every mutation payload carries `userErrors: [UserError!]!`, each entry
+  pairing a `code` to switch on, a developer-facing `message`, and the
+  input `field` at fault. The list is empty exactly when the mutation
+  succeeded; a non-empty list means the named result field is null. A
+  list, not a single value, because one input can fail several ways at
+  once (too long *and* disallowed characters), and the client should see
+  them together.
 
-A single `ErrorCode` enum is the one vocabulary across all three
-tiers, so a code means the same thing wherever it appears. This is the
-idiomatic-typed-schema principle applied to failure: an expected
+A single `ErrorCode` enum is the one vocabulary across both tiers — the
+`extensions.code` on a transport fault and the `code` on a `UserError`
+draw from it — so a code means the same thing wherever it appears. This
+is the idiomatic-typed-schema principle applied to failure: an expected
 outcome belongs in the typed contract introspection exposes, not in a
 stringly-typed side channel.
 
@@ -270,10 +269,9 @@ enum NodeKind {
  or by the neutral (0) state. POSITIVE: > 0. NEGATIVE: < 0. ZERO: exactly 0."
 enum Sign { POSITIVE NEGATIVE ZERO }
 
-"The one error vocabulary, shared across all three error tiers (governing
- principles): the `extensions.code` on a transport fault, the `code` on a
- `UserError`, and the `code` on a result-union error arm all draw from it.
- Grows as gestures add expected failures."
+"The one error vocabulary, shared across both error tiers (governing
+ principles): the `extensions.code` on a transport fault and the `code` on a
+ `UserError` both draw from it. Grows as gestures add expected failures."
 enum ErrorCode {
   # Transport faults — carried in errors[].extensions.code
   UNAUTHENTICATED              # no / invalid access token where one is required
@@ -536,16 +534,15 @@ the sections that use them.
 
 ### Error types
 
-Tiers 2 and 3 of the error model (governing principles). `UserError` is
-the per-payload business-failure list; `MutationError` is the interface
-every result-union error arm implements, so a client reads `message` +
-`code` uniformly and still matches a specific arm for its extra fields.
+The business-failure tier of the error model (governing principles).
+`UserError` is the per-payload list every mutation carries; transport
+faults need no type, riding the `errors` array with an `extensions.code`.
 
 ```graphql
 "A recoverable, expected failure of a mutation — a bad value or a
  business-rule rejection the end user should see and act on. A payload's
  `userErrors` is empty exactly when the mutation succeeded; a non-empty
- list means the result field is null."
+ list means the named result field is null."
 type UserError {
   "Developer-facing fallback text; the client localizes off `code`."
   message: String!
@@ -555,14 +552,6 @@ type UserError {
    [\"attachments\", \"0\", \"mediaId\"] into a nested input; null for a
    whole-operation failure."
   field: [String!]
-}
-
-"The shared shape of a result-union error arm: every typed failure of a
- union-returning operation implements it, so `message` and `code` read
- uniformly across arms while each arm is free to add its own fields."
-interface MutationError {
-  message: String!
-  code: ErrorCode!
 }
 ```
 
@@ -1624,13 +1613,11 @@ These bind every mutation below.
   are implied on the read types; a payload's named result field is null
   whenever `userErrors` is non-empty, so the bodies show the populated
   success shape. Transport faults ride the `errors` array with an
-  `extensions.code` and are never repeated per payload. Two carve-outs
-  carry no `userErrors`: the four pre-session auth verbs return a
-  **result union** (a success arm plus typed `MutationError` arms), so
-  their payloads are union members; and the three deliberately-silent
-  verbs — `resendVerificationEmail`, `requestPasswordReset`,
-  `requestEmailChange` — always report success, so surfacing a failure
-  there would reintroduce the account enumeration they exist to prevent.
+  `extensions.code` and are never repeated per payload. The one carve-out
+  carries no `userErrors`: the three deliberately-silent verbs —
+  `resendVerificationEmail`, `requestPasswordReset`, `requestEmailChange`
+  — always report success, so surfacing a failure there would reintroduce
+  the account enumeration they exist to prevent.
 
 ```graphql
 type Mutation {
@@ -1782,16 +1769,16 @@ type Mutation {
   "Submit a registration through an invite link. Writes the off-graph
    pending-registration record and sends the verification email — no
    User node or session exists until verifyEmail."
-  register(input: RegisterInput!): RegisterResult!
+  register(input: RegisterInput!): RegisterPayload!
   "Complete registration with the emailed verification token.
    Atomically creates the User node and its Wallet, writes the two
    invitation edges, and issues the first session (auth.md)."
-  verifyEmail(input: VerifyEmailInput!): VerifyEmailResult!
+  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
   "Re-send the verification email for a live pending registration.
    Rate-limited per pending-registration record (auth.md)."
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
-  logIn(input: LogInInput!): LogInResult!
-  refreshSession(input: RefreshSessionInput!): RefreshResult!
+  logIn(input: LogInInput!): LogInPayload!
+  refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."
   revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
   "Revoke every session except the one making the request."
@@ -2491,8 +2478,10 @@ input RegisterInput {
   dim2: Dimension
 }
 
-"The pending registration's receipt. No User node or session exists
- yet — both arrive at verifyEmail."
+"The pending registration's receipt; no User node or session exists yet
+ (both arrive at verifyEmail). On refusal expiresAt is null and userErrors
+ carries one of INVITE_UNUSABLE, HANDLE_TAKEN, WEAK_PASSWORD, or
+ REGISTRATION_IN_PROGRESS."
 type RegisterPayload {
   "When the pending registration expires unverified (24 h, auth.md)."
   expiresAt: DateTime!
@@ -2519,44 +2508,28 @@ input RefreshSessionInput {
 }
 
 "A fresh access + refresh token pair, the issuing session, and the
- viewer it authenticates."
-type AuthPayload {
+ viewer it authenticates — the success result shared by verifyEmail,
+ logIn, and refreshSession."
+type AuthSession {
   accessToken: String!
   refreshToken: String!
   session: Session!
   user: User!
 }
 
-"Result of `register` — the pending-registration receipt, or a typed
- reason it was refused."
-union RegisterResult =
-    RegisterPayload | InviteUnusable | HandleTaken | WeakPassword | RegistrationInProgress
+"First session from a verified registration; auth is null with a
+ VERIFICATION_TOKEN_INVALID userError when the token is invalid or its
+ pending registration expired."
+type VerifyEmailPayload { auth: AuthSession! }
 
-"Result of `verifyEmail` — the first session, or a typed token failure."
-union VerifyEmailResult = AuthPayload | VerificationTokenInvalid
+"A session from credentials; auth is null with an INVALID_CREDENTIALS
+ userError when the email / password pair did not match."
+type LogInPayload { auth: AuthSession! }
 
-"Result of `logIn` — a session, or rejected credentials."
-union LogInResult = AuthPayload | InvalidCredentials
-
-"Result of `refreshSession` — a rotated session, or a typed token
- failure. A reuse-detected token revokes every session (auth.md) and
- surfaces here as REFRESH_TOKEN_INVALID."
-union RefreshResult = AuthPayload | RefreshTokenInvalid
-
-"The invite link is invalid, expired, revoked, or already consumed."
-type InviteUnusable implements MutationError { message: String!  code: ErrorCode! }
-"The requested handle is already in use."
-type HandleTaken implements MutationError { message: String!  code: ErrorCode! }
-"The password is under the length floor or appears in the breach corpus."
-type WeakPassword implements MutationError { message: String!  code: ErrorCode! }
-"A live pending registration already holds this email (auth.md)."
-type RegistrationInProgress implements MutationError { message: String!  code: ErrorCode! }
-"The verification token is invalid, or its pending registration expired."
-type VerificationTokenInvalid implements MutationError { message: String!  code: ErrorCode! }
-"The email / password pair did not match."
-type InvalidCredentials implements MutationError { message: String!  code: ErrorCode! }
-"The refresh token is invalid, expired, or was already rotated (reuse)."
-type RefreshTokenInvalid implements MutationError { message: String!  code: ErrorCode! }
+"A rotated session; auth is null with a REFRESH_TOKEN_INVALID userError
+ when the refresh token is invalid, expired, or was already rotated
+ (reuse) — a reuse-detected token also revokes every session (auth.md)."
+type RefreshPayload { auth: AuthSession! }
 
 input RevokeSessionInput {
   "The session to revoke; the current one if omitted."
