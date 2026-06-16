@@ -7,12 +7,13 @@
 //! sessions, …) land with the slices that introduce them. The `Node`/`Actor`
 //! interfaces likewise arrive once a second node type implements them.
 
-use async_graphql::Object;
+use async_graphql::{Object, SimpleObject};
 use chrono::{DateTime, Utc};
 use graph_engine::Graph;
 use postgres_store::PgPool;
 use uuid::Uuid;
 
+use crate::schema::errors::UserError;
 use crate::schema::types::{ModeratedText, ModerationStatus, NetworkRole};
 
 /// A person on the platform. Off-graph credentials authenticate the API
@@ -109,8 +110,9 @@ impl User {
 }
 
 /// A fresh access + refresh token pair, the issuing session, and the viewer it
-/// authenticates.
-pub struct AuthPayload {
+/// authenticates — the success result shared by verifyEmail, logIn, and
+/// refreshSession.
+pub struct AuthSession {
     pub access_token: String,
     pub refresh_token: String,
     pub session: super::types::Session,
@@ -118,7 +120,7 @@ pub struct AuthPayload {
 }
 
 #[Object]
-impl AuthPayload {
+impl AuthSession {
     async fn access_token(&self) -> &str {
         &self.access_token
     }
@@ -135,3 +137,42 @@ impl AuthPayload {
         &self.user
     }
 }
+
+/// Declares an auth result payload — a nullable `auth` session plus the implied
+/// `userErrors` list — with `ok` / `err` constructors. The named result field
+/// is null exactly when `userErrors` is non-empty (api-spec.md).
+macro_rules! auth_payload {
+    ($(#[doc = $doc:literal])+ $name:ident) => {
+        $(#[doc = $doc])+
+        #[derive(SimpleObject)]
+        pub struct $name {
+            pub auth: Option<AuthSession>,
+            pub user_errors: Vec<UserError>,
+        }
+        impl $name {
+            pub fn ok(auth: AuthSession) -> Self {
+                Self { auth: Some(auth), user_errors: Vec::new() }
+            }
+            pub fn err(error: UserError) -> Self {
+                Self { auth: None, user_errors: vec![error] }
+            }
+        }
+    };
+}
+
+auth_payload!(
+    /// First session from a verified registration; `auth` is null with a
+    /// VERIFICATION_TOKEN_INVALID userError when the token is invalid or its
+    /// pending registration expired.
+    VerifyEmailPayload
+);
+auth_payload!(
+    /// A session from credentials; `auth` is null with an INVALID_CREDENTIALS
+    /// userError when the email / password pair did not match.
+    LogInPayload
+);
+auth_payload!(
+    /// A rotated session; `auth` is null with a REFRESH_TOKEN_INVALID userError
+    /// when the refresh token is invalid, expired, or was already rotated.
+    RefreshPayload
+);

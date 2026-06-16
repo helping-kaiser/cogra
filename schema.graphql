@@ -1,4 +1,4 @@
-type AuthPayload {
+type AuthSession {
 	accessToken: String!
 	refreshToken: String!
 	session: Session!
@@ -18,6 +18,66 @@ A signed edge-tensor dimension: a float constrained to the closed range
 Float.
 """
 scalar Dimension
+
+"""
+The one error vocabulary, shared across both error tiers (governing
+principles): the `extensions.code` on a transport fault and the `code` on a
+`UserError` both draw from it. Grows as gestures add expected failures.
+"""
+enum ErrorCode {
+	"""
+	No / invalid access token where one is required.
+	"""
+	UNAUTHENTICATED
+	"""
+	Authenticated but not eligible (actAs, field-auth).
+	"""
+	FORBIDDEN
+	"""
+	An id resolved to nothing.
+	"""
+	NOT_FOUND
+	"""
+	Malformed args, or a constraint not modeled as data.
+	"""
+	BAD_INPUT
+	"""
+	An auth endpoint's per-IP / per-account backoff.
+	"""
+	RATE_LIMITED
+	"""
+	Collapsed server fault; detail is logged, not surfaced.
+	"""
+	INTERNAL
+	"""
+	Email / password pair did not match.
+	"""
+	INVALID_CREDENTIALS
+	"""
+	Invite link invalid, expired, revoked, or consumed.
+	"""
+	INVITE_UNUSABLE
+	"""
+	The requested handle is already in use.
+	"""
+	HANDLE_TAKEN
+	"""
+	Under the length floor or in the breach corpus.
+	"""
+	WEAK_PASSWORD
+	"""
+	A live pending registration already holds this email.
+	"""
+	REGISTRATION_IN_PROGRESS
+	"""
+	Registration verification token invalid or expired.
+	"""
+	VERIFICATION_TOKEN_INVALID
+	"""
+	Refresh token invalid, expired, or reuse-detected.
+	"""
+	REFRESH_TOKEN_INVALID
+}
 
 """
 Per-field moderation state.
@@ -54,6 +114,15 @@ input LogInInput {
 }
 
 """
+A session from credentials; `auth` is null with an INVALID_CREDENTIALS
+userError when the email / password pair did not match.
+"""
+type LogInPayload {
+	auth: AuthSession
+	userErrors: [UserError!]!
+}
+
+"""
 Text carrying its own moderation status. `value` is null when the field is
 redacted, or unset where the field is optional — `status` disambiguates.
 """
@@ -84,15 +153,15 @@ type Mutation {
 	creates the User node and its Wallet, writes the two invitation edges,
 	and issues the first session (auth.md).
 	"""
-	verifyEmail(input: VerifyEmailInput!): AuthPayload!
+	verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
 	"""
 	Authenticate with email + password; issues a new session.
 	"""
-	logIn(input: LogInInput!): AuthPayload!
+	logIn(input: LogInInput!): LogInPayload!
 	"""
 	Rotate the refresh token and mint a fresh access token.
 	"""
-	refreshSession(input: RefreshSessionInput!): AuthPayload!
+	refreshSession(input: RefreshSessionInput!): RefreshPayload!
 }
 
 """
@@ -118,6 +187,15 @@ type Query {
 	me: User
 }
 
+"""
+A rotated session; `auth` is null with a REFRESH_TOKEN_INVALID userError
+when the refresh token is invalid, expired, or was already rotated.
+"""
+type RefreshPayload {
+	auth: AuthSession
+	userErrors: [UserError!]!
+}
+
 input RefreshSessionInput {
 	refreshToken: String!
 }
@@ -139,14 +217,17 @@ input RegisterInput {
 }
 
 """
-The pending registration's receipt. No User node or session exists yet —
-both arrive at verifyEmail.
+The pending registration's receipt; no User node or session exists yet
+(both arrive at verifyEmail). On refusal `expires_at` is null and
+`user_errors` carries the reason.
 """
 type RegisterPayload {
 	"""
-	When the pending registration expires unverified (24 h, auth.md).
+	When the pending registration expires unverified (24 h, auth.md); null
+	when the registration was refused.
 	"""
-	expiresAt: DateTime!
+	expiresAt: DateTime
+	userErrors: [UserError!]!
 }
 
 """
@@ -201,9 +282,41 @@ type User {
 	updatedAt: DateTime!
 }
 
+"""
+A recoverable, expected failure of a mutation — a bad value or a
+business-rule rejection the end user should see and act on. A payload's
+`userErrors` is empty exactly when the mutation succeeded; a non-empty list
+means the named result field is null.
+"""
+type UserError {
+	"""
+	Developer-facing fallback text; the client localizes off `code`.
+	"""
+	message: String!
+	"""
+	The stable code the client switches on.
+	"""
+	code: ErrorCode!
+	"""
+	Path to the offending input field — e.g. `["declaredGoal"]`; null for a
+	whole-operation failure.
+	"""
+	field: [String!]
+}
+
 input VerifyEmailInput {
 	verificationToken: String!
 	deviceLabel: String
+}
+
+"""
+First session from a verified registration; `auth` is null with a
+VERIFICATION_TOKEN_INVALID userError when the token is invalid or its
+pending registration expired.
+"""
+type VerifyEmailPayload {
+	auth: AuthSession
+	userErrors: [UserError!]!
 }
 
 """
