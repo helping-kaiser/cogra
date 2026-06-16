@@ -551,10 +551,15 @@ CREATE INDEX auth_invitations_inviter_idx
 -- verification per invitations.md.
 -- email_verification_token_hash stores SHA-256 of the single-use
 -- verification token, same hashing rationale as refresh tokens.
+-- email is UNIQUE: the re-registration collision path (auth.md
+-- §Re-registration collision) resolves a duplicate submit with
+-- ON CONFLICT (email) DO UPDATE ... WHERE expires_at < NOW(), so a
+-- live pending row is never displaced and an expired one is overwritten.
+-- The unique constraint also serves the by-email lookup.
 CREATE TABLE auth_pending_registrations (
     id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     username                      TEXT         NOT NULL,
-    email                         TEXT         NOT NULL,
+    email                         TEXT         NOT NULL UNIQUE,
     password_hash                 TEXT         NOT NULL,
     invitation_id                 UUID         NOT NULL REFERENCES auth_invitations(id),
     invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
@@ -563,8 +568,6 @@ CREATE TABLE auth_pending_registrations (
     created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at                    TIMESTAMPTZ  NOT NULL
 );
-CREATE INDEX auth_pending_registrations_email_idx
-    ON auth_pending_registrations (email);
 
 -- Password resets: one row per requested reset. Single-use,
 -- short-lived; only the token hash is stored (same rationale as
