@@ -1,0 +1,39 @@
+"""
+Connectivity report for the API process and its two stores.
+"""
+type Health {
+	"""
+	Version of the backend serving this schema.
+	"""
+	backendVersion: String!
+	"""
+	True when PostgreSQL (the display-content store) answers a
+	round-trip probe.
+	"""
+	postgresConnected: Boolean!
+	"""
+	True when Memgraph (the graph store) answers a round-trip probe.
+	"""
+	memgraphConnected: Boolean!
+}
+
+type Query {
+	"""
+	Reports whether the API can reach both of its stores. Reachable
+	stores answer round-trip probes; a `false` means that store is
+	down or unreachable, not that the API itself is.
+	"""
+	health: Health!
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+schema {
+	query: Query
+}
