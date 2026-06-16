@@ -33,7 +33,9 @@ async fn test_app() -> axum::Router {
         .await
         .expect("graph schema applies");
 
-    let jwt = Arc::new(JwtKeys::from_pkcs8_base64(&generate_signing_key()).expect("valid key"));
+    let jwt = Arc::new(
+        JwtKeys::from_pkcs8_base64(&generate_signing_key().expect("keygen")).expect("valid key"),
+    );
     api::app(api::schema::build(pool, graph, jwt.clone()), jwt)
 }
 

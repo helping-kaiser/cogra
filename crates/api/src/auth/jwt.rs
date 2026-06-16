@@ -86,7 +86,8 @@ mod tests {
     use crate::auth::keys::generate_signing_key;
 
     fn keys() -> JwtKeys {
-        JwtKeys::from_pkcs8_base64(&generate_signing_key()).expect("valid generated key")
+        JwtKeys::from_pkcs8_base64(&generate_signing_key().expect("keygen"))
+            .expect("valid generated key")
     }
 
     #[test]
