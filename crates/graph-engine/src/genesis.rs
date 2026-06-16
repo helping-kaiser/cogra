@@ -31,6 +31,51 @@ pub async fn is_bootstrapped(graph: &Graph) -> Result<bool, GraphError> {
     }
 }
 
+/// The committed genesis identity, read back via the `:Network` singleton's
+/// `genesis_user_id` pointer. The bootstrap reuses these to complete a
+/// half-failed run without minting a second genesis User (the graph node and
+/// the Postgres `users` row share this id — it is the cross-store join key).
+pub struct GenesisIdentity {
+    pub user_id: Uuid,
+    pub username: String,
+}
+
+/// Resolves the genesis User through the `:Network` singleton's
+/// `genesis_user_id` pointer. `None` when no singleton exists (the instance is
+/// unbootstrapped). Errors if the singleton is present but its pointer is
+/// absent (a `:Network` predating the pointer) or dangles (no such User) —
+/// both are corrupt states a re-run can't safely auto-repair.
+pub async fn genesis_identity(graph: &Graph) -> Result<Option<GenesisIdentity>, GraphError> {
+    let mut rows = graph
+        .execute(query(
+            "MATCH (n:Network {singleton_marker: 'singleton'})
+             OPTIONAL MATCH (u:User {id: n.genesis_user_id})
+             RETURN n.genesis_user_id AS gid, u.username AS username",
+        ))
+        .await?;
+    let Some(row) = rows.next().await? else {
+        return Ok(None);
+    };
+    let gid: Option<String> = row.get("gid")?;
+    let username: Option<String> = row.get("username")?;
+    match (gid, username) {
+        (Some(gid), Some(username)) => {
+            let user_id = gid.parse().map_err(|_| {
+                GraphError::Invalid(format!("genesis_user_id is not a UUID: {gid}"))
+            })?;
+            Ok(Some(GenesisIdentity { user_id, username }))
+        }
+        (None, _) => Err(GraphError::Invalid(
+            "the :Network singleton predates the genesis_user_id pointer; manual recovery needed"
+                .into(),
+        )),
+        (Some(gid), None) => Err(GraphError::Invalid(format!(
+            "the :Network singleton points at genesis User {gid}, which does not exist; \
+             manual recovery needed"
+        ))),
+    }
+}
+
 /// Identity and content supplied to the bootstrap at run time — the genesis
 /// User's handle and the version-1 platform-guidelines digest. Everything
 /// else is a fixed default from
@@ -55,6 +100,10 @@ fn network_set_body() -> String {
     let mut clauses = vec![
         plain("n", "id", "$network_id"),
         plain("n", "singleton_marker", "'singleton'"),
+        // The pointer back to the genesis User. The singleton is the one
+        // unambiguous anchor for "which User is genesis" — role alone isn't,
+        // once quorum role-changes can mint a second moderator.
+        plain("n", "genesis_user_id", "$user_id"),
     ];
     let layered_defaults = [
         ("mod_role_change_quorum_fraction", "0.5"),
