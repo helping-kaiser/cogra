@@ -21,6 +21,7 @@ use std::io::Write as _;
 use anyhow::Context;
 use api::auth::keys::generate_signing_key;
 use api::auth::password::hash_password;
+use api::auth::policy::INVITE_EDGE_DEFAULT;
 use chrono::{Duration, Utc};
 use common::hashtag::hashtag_uuid;
 use common::wallet::placeholder_address;
@@ -33,8 +34,6 @@ const BOT_DEFENSE_HASHTAG: &str = "bot-defense";
 /// The genesis invite link's lifetime — long-lived and multi-use, so the
 /// instance owner can onboard the first cohort.
 const GENESIS_INVITE_TTL_DAYS: i64 = 365;
-/// Invitation-edge default when a party skips the choice (invitations.md).
-const INVITE_EDGE_DEFAULT: f32 = 0.5;
 
 fn env_or(key: &str, default: &str) -> String {
     std::env::var(key).unwrap_or_else(|_| default.to_string())

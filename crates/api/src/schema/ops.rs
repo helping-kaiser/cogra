@@ -15,20 +15,13 @@ use postgres_store::auth::{self, NewPendingRegistration};
 use uuid::Uuid;
 
 use crate::auth::jwt::JwtKeys;
+use crate::auth::policy::{INVITE_EDGE_DEFAULT, PENDING_TTL_HOURS, REFRESH_TTL_DAYS};
 use crate::auth::{password, tokens};
 use crate::schema::errors::{ErrorCode, UserError};
 use crate::schema::types::{
     LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, Session, VerifyEmailInput,
 };
 use crate::schema::user::{AuthSession, LogInPayload, RefreshPayload, User, VerifyEmailPayload};
-
-/// Pending-registration lifetime (auth.md): unverified records expire in 24 h.
-const PENDING_TTL_HOURS: i64 = 24;
-/// Refresh-token lifetime (auth.md): 30 days, slid forward on each use.
-const REFRESH_TTL_DAYS: i64 = 30;
-/// The default invitation-edge value when a party skips the choice
-/// (invitations.md "Default values").
-const INVITE_EDGE_DEFAULT: f32 = 0.5;
 
 /// Logs an internal failure with detail and returns a generic transport fault —
 /// the detail never leaks to the client, which sees only the `INTERNAL` code on

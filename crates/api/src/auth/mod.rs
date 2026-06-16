@@ -5,6 +5,7 @@
 pub mod jwt;
 pub mod keys;
 pub mod password;
+pub mod policy;
 pub mod tokens;
 
 use uuid::Uuid;
