@@ -168,6 +168,13 @@ pub async fn username_taken(pool: &PgPool, username: &str) -> Result<bool, sqlx:
 
 /// Inserts the verified `users` row — credentials copied across from the
 /// pending record (auth.md "Email verification"). Transactional.
+///
+/// `ON CONFLICT (id) DO NOTHING` pairs with the graph-side MERGE so a retried
+/// registration is idempotent on both stores (architecture.md "Partial-failure
+/// handling"). In practice the conflict never fires — a committed prior attempt
+/// deletes the pending row in the same transaction, so a retry stops at the
+/// pending lookup — but the guard makes the write safe by construction rather
+/// than by argument.
 pub async fn insert_user(
     conn: &mut PgConnection,
     id: Uuid,
@@ -175,14 +182,17 @@ pub async fn insert_user(
     email: &str,
     password_hash: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)")
-        .bind(id)
-        .bind(username)
-        .bind(email)
-        .bind(password_hash)
-        .execute(conn)
-        .await
-        .map(|_| ())
+    sqlx::query(
+        "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO NOTHING",
+    )
+    .bind(id)
+    .bind(username)
+    .bind(email)
+    .bind(password_hash)
+    .execute(conn)
+    .await
+    .map(|_| ())
 }
 
 /// Inserts the first display-content profile version. `display_name` seeds

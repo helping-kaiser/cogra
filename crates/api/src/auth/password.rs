@@ -17,12 +17,22 @@ pub enum PasswordError {
     Hash,
 }
 
+/// Checks a plaintext password against the length floor without hashing it.
+/// Callers run this before the expensive Argon2 hash so an over-short — or
+/// otherwise unacceptable — submission is rejected without paying the hash
+/// cost. Counts Unicode scalar values, not bytes, so the floor is a true
+/// character count.
+pub fn validate_length(plaintext: &str) -> Result<(), PasswordError> {
+    if plaintext.chars().count() < MIN_PASSWORD_LEN {
+        return Err(PasswordError::TooShort);
+    }
+    Ok(())
+}
+
 /// Hashes a plaintext password for storage. Rejects passwords below the
 /// length floor before hashing.
 pub fn hash_password(plaintext: &str) -> Result<String, PasswordError> {
-    if plaintext.len() < MIN_PASSWORD_LEN {
-        return Err(PasswordError::TooShort);
-    }
+    validate_length(plaintext)?;
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
         .hash_password(plaintext.as_bytes(), &salt)
@@ -69,6 +79,19 @@ mod tests {
     fn rejects_short_passwords() {
         assert!(matches!(
             hash_password("short"),
+            Err(PasswordError::TooShort)
+        ));
+    }
+
+    #[test]
+    fn length_floor_counts_characters_not_bytes() {
+        // 11 accented characters: 22 bytes, but only 11 scalar values — under
+        // the 12-char floor, so a byte-length check would wrongly accept it.
+        let eleven_chars = "ééééééééééé";
+        assert_eq!(eleven_chars.chars().count(), 11);
+        assert!(eleven_chars.len() > MIN_PASSWORD_LEN);
+        assert!(matches!(
+            validate_length(eleven_chars),
             Err(PasswordError::TooShort)
         ));
     }
