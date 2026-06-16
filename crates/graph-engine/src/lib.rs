@@ -2,17 +2,32 @@
 // All Cypher queries live here. Returns domain types from `common`.
 // Connection: neo4rs::Graph (bolt-compatible with Memgraph).
 
+pub mod accounts;
+pub mod genesis;
+mod props;
 pub mod schema;
 
 use neo4rs::ConfigBuilder;
 
 /// Re-exported so callers don't need a direct neo4rs dependency.
-pub use neo4rs::Graph;
+pub use neo4rs::{Graph, Txn};
 
 #[derive(Debug, thiserror::Error)]
 pub enum GraphError {
     #[error("graph database error: {0}")]
     Db(#[from] neo4rs::Error),
+    #[error("deserializing a graph row: {0}")]
+    Deserialize(#[from] neo4rs::DeError),
+    #[error("graph carried an invalid value: {0}")]
+    Invalid(String),
+}
+
+impl GraphError {
+    /// Wraps a domain parse failure on a value read back from the graph —
+    /// e.g. a `network_role` string that is neither `member` nor `moderator`.
+    pub(crate) fn role(err: common::UnknownNetworkRole) -> Self {
+        GraphError::Invalid(err.to_string())
+    }
 }
 
 /// Opens the Memgraph connection pool. No auth — Memgraph community
