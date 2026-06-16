@@ -9,7 +9,7 @@
 //! never destroying a real one (see graph-engine/tests/schema.rs, PR 2 item 3).
 
 use graph_engine::Graph;
-use graph_engine::genesis::{GenesisInput, bootstrap, is_bootstrapped};
+use graph_engine::genesis::{GenesisInput, bootstrap, genesis_identity, is_bootstrapped};
 use graph_engine::schema::apply_schema;
 use neo4rs::query;
 use uuid::Uuid;
@@ -209,6 +209,40 @@ async fn rerunning_bootstrap_is_a_no_op() {
     );
 
     cleanup(&graph, &input, owns_network).await;
+}
+
+#[tokio::test]
+async fn genesis_identity_resolves_the_committed_user() {
+    let graph = test_graph().await;
+
+    if is_bootstrapped(&graph).await.expect("pre-check") {
+        // A real singleton's `genesis_user_id` points at the real genesis User,
+        // which this test must neither assert against nor mutate.
+        return;
+    }
+
+    // No singleton yet: the pointer-backed read has nothing to resolve.
+    assert!(
+        genesis_identity(&graph)
+            .await
+            .expect("identity read")
+            .is_none(),
+        "no singleton means no genesis identity"
+    );
+
+    let input = fresh_input();
+    run_bootstrap(&graph, &input).await;
+
+    // The singleton's pointer resolves back to the committed genesis User — the
+    // id and handle the bootstrap reuses to complete a half-failed run.
+    let identity = genesis_identity(&graph)
+        .await
+        .expect("identity read")
+        .expect("genesis identity after bootstrap");
+    assert_eq!(identity.user_id, input.user_id, "pointer targets the user");
+    assert_eq!(identity.username, input.username, "handle round-trips");
+
+    cleanup(&graph, &input, true).await;
 }
 
 #[tokio::test]
