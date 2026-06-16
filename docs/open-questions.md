@@ -183,7 +183,7 @@ Specifically:
   [network.md §2](primitive/network.md#2-creation) and
   [graph-data-model.md](implementation/graph-data-model.md).
 - **First-user serialization across instances.** Within one
-  instance, the bootstrap migration is the only path that
+  instance, the bootstrap is the only path that
   writes the genesis User, so concurrent registration cannot
   race ([network.md §2](primitive/network.md#2-creation),
   [auth.md](implementation/auth.md)). Two separately-running

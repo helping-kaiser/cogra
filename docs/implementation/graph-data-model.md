@@ -499,7 +499,7 @@ Singleton enforcement combines two mechanisms:
   (`'singleton'`); the existence + uniqueness constraints together refuse
   any second insert. A second `:Network` either omits the property (fails
   existence) or carries the only legal value (fails uniqueness).
-- **Application discipline.** The bootstrap migration
+- **Application discipline.** The bootstrap binary
   ([network.md §2](../primitive/network.md#2-creation)) is the only writer;
   ordinary code paths never attempt a second `:Network`.
 
