@@ -55,3 +55,81 @@ pub(crate) fn user_set_body(target: &str, role_expr: &str) -> String {
     clauses.push(plain(target, "moderation_status", "'normal'"));
     clauses.join(", ")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn layered_writes_top_slot_and_single_entry_history() {
+        // Both slots reference the same `value_expr`, and the seed history is a
+        // one-entry list stamped with the statement-shared `now` at layer 1.
+        assert_eq!(
+            layered("u", "username", "$username"),
+            "u.username = $username, \
+             u.username_layers = [{value: $username, timestamp: now, layer: 1}]"
+        );
+    }
+
+    #[test]
+    fn layered_accepts_a_literal_value_expr() {
+        assert_eq!(
+            layered("n", "guidelines_version", "1"),
+            "n.guidelines_version = 1, \
+             n.guidelines_version_layers = [{value: 1, timestamp: now, layer: 1}]"
+        );
+    }
+
+    #[test]
+    fn plain_writes_a_single_slot_with_no_history() {
+        assert_eq!(
+            plain("u", "moderation_status", "'normal'"),
+            "u.moderation_status = 'normal'"
+        );
+    }
+
+    #[test]
+    fn user_set_body_renders_every_field_with_the_role_expr() {
+        // The full :User SET body, less the id (set by the MERGE key). Pins the
+        // field set, their order, the per-field layered shape, and the
+        // single-slot moderation cache at the tail.
+        let body = user_set_body("u", "'moderator'");
+        assert_eq!(
+            body,
+            "u.username = $username, \
+             u.username_layers = [{value: $username, timestamp: now, layer: 1}], \
+             u.network_role = 'moderator', \
+             u.network_role_layers = [{value: 'moderator', timestamp: now, layer: 1}], \
+             u.username_status = 'normal', \
+             u.username_status_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.display_name = 'normal', \
+             u.display_name_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.bio = 'normal', \
+             u.bio_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.avatar = 'normal', \
+             u.avatar_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.cover = 'normal', \
+             u.cover_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.website_url = 'normal', \
+             u.website_url_layers = [{value: 'normal', timestamp: now, layer: 1}], \
+             u.moderation_status = 'normal'"
+        );
+    }
+
+    #[test]
+    fn user_set_body_threads_the_member_role_expr() {
+        // The genesis User is 'moderator'; every registrant is 'member'. Only
+        // the network_role slots change with the role expr.
+        let body = user_set_body("u", "'member'");
+        assert!(body.contains("u.network_role = 'member'"));
+        assert!(
+            body.contains("u.network_role_layers = [{value: 'member', timestamp: now, layer: 1}]")
+        );
+    }
+
+    #[test]
+    fn helpers_honor_the_target_binding() {
+        assert!(layered("h", "name", "$hashtag_name").starts_with("h.name = $hashtag_name"));
+        assert_eq!(plain("n", "id", "$network_id"), "n.id = $network_id");
+    }
+}
