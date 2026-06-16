@@ -3,6 +3,7 @@
 // running server.
 
 pub mod auth;
+pub mod bootstrap;
 pub mod schema;
 
 use std::sync::Arc;
