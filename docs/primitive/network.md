@@ -35,20 +35,20 @@ its own Network until then.
 ## 2. Creation
 
 The `:Network` singleton is brought into existence by the
-**instance bootstrap migration** — a one-shot setup step that
+**instance bootstrap** — a one-shot setup step that
 runs once when an instance is created, alongside the database
-schema migrations. The migration is the only path that writes
+schema migrations. The bootstrap is the only path that writes
 the singleton. Every subsequent change to the singleton's
 parameters or to any user's role runs through governance.
 
-The migration writes four nodes in a single atomic transaction:
+The bootstrap writes four nodes in a single atomic transaction:
 
 1. The `:Network` singleton with the default property values
    listed in
    [graph-data-model.md](../implementation/graph-data-model.md).
 2. The genesis User node, with `network_role = 'moderator'` —
    the bootstrap moderator (see §9). Identity (username,
-   credentials) is supplied to the migration at run time: the
+   credentials) is supplied to the bootstrap at run time: the
    central instance run by the project picks the project owner;
    a federated fork sets its own genesis.
 3. The genesis User's `Wallet` node, holding its counterfactual
@@ -66,12 +66,12 @@ The migration writes four nodes in a single atomic transaction:
 
 All four writes share one transaction: an observer never sees
 the singleton without its moderator, the moderator without its
-payout `Wallet`, or the `bot-defense` Hashtag. The migration is not a runtime flow — no "first user to
+payout `Wallet`, or the `bot-defense` Hashtag. The bootstrap is not a runtime flow — no "first user to
 register" detection, no genesis-flag column, no special branch
 in the registration endpoint. Subsequent Users register through
 invitation per [invitations.md](invitations.md).
 
-The migration is the only step that depends on out-of-graph
+The bootstrap is the only step that depends on out-of-graph
 authority (per the global invariant in
 [graph-model.md §1](graph-model.md#1-core-principles)); the
 authority is confined to it.
@@ -369,7 +369,7 @@ rule. Two structural constraints sit on top of the mechanism:
   cannot be opened, and every Network-scope Proposal would
   silently stall.
 - **Bootstrap mod undemotable.** The genesis User installed by
-  the bootstrap migration (§2) carries an undemotable
+  the bootstrap (§2) carries an undemotable
   `'moderator'` status: no Proposal can move them off
   `network_role = 'moderator'`. The dispatch check rejects the
   outcome write even on a passed tally. The exception exists

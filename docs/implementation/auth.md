@@ -58,7 +58,7 @@ may eventually hold identity key pairs client-side) is preserved.
 ## Account lifecycle
 
 Every User node this doc governs arrives by invitation acceptance. The
-genesis User is the exception: it is created by the bootstrap migration that
+genesis User is the exception: it is created by the bootstrap binary that
 also writes the `:Network` singleton (see
 [network.md §2](../primitive/network.md#2-creation)) and never passes
 through any of the flows below.
@@ -363,7 +363,7 @@ require.
   primitive that registration consumes.
 - [account-deletion.md](../instances/account-deletion.md) —
   consumes session listing and email verification.
-- [network.md](../primitive/network.md) — bootstrap migration
+- [network.md](../primitive/network.md) — bootstrap binary
   that produces the genesis User; `network_role` read at action
   time.
 - [api-spec.md](api-spec.md) — the GraphQL auth & account

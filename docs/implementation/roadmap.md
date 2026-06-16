@@ -40,7 +40,7 @@ depend on surfaces that don't exist yet.
 The "hello, real user" cut. Bootstrap the instance, register and log
 in, and read yourself back.
 
-- Bootstrap migration: `:Network` singleton + genesis User + genesis
+- Bootstrap: `:Network` singleton + genesis User + genesis
   Wallet + bot-defense Hashtag.
 - `register`, `logIn`, `refreshSession` mutations.
 - Dual-write on registration: User node (Memgraph) + auth row
