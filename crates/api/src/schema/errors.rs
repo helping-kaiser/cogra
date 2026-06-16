@@ -1,26 +1,28 @@
-//! The tiered error model's typed surface
+//! The two-tier error model
 //! ([api-spec.md](../../../docs/implementation/api-spec.md), "Errors are
-//! tiered"). `ErrorCode` is the one vocabulary shared across all three tiers;
-//! `MutationError` is the interface every result-union error arm implements;
-//! the four pre-session auth verbs return the result unions below — a success
-//! arm plus typed error arms.
+//! tiered"). `ErrorCode` is the one vocabulary shared across both tiers;
+//! `UserError` is the per-payload business-failure list every mutation carries.
 //!
 //! Transport faults (tier 1) ride the GraphQL `errors` array with an
-//! `extensions.code` instead and so have no type here — see
-//! [`ops::internal`](super::ops::internal). Tier 2's per-payload
-//! `userErrors: [UserError!]!` has no instance in slice 0 (all four auth verbs
-//! are tier-3 unions), so `UserError` lands with the first mutation that needs
-//! it.
+//! `extensions.code` rather than a payload type: resolver faults are tagged
+//! `INTERNAL` by [`ops::internal`](super::ops::internal), and the
+//! [`ErrorCodes`] extension tags pre-execution parse / validation errors
+//! `BAD_INPUT`, so every top-level error carries a code.
 
-use async_graphql::{Enum, Interface, SimpleObject, Union};
+use std::sync::Arc;
 
-use super::types::RegisterPayload;
-use super::user::AuthPayload;
+use async_graphql::async_trait::async_trait;
+use async_graphql::extensions::{
+    Extension, ExtensionContext, ExtensionFactory, NextParseQuery, NextRequest, NextValidation,
+};
+use async_graphql::parser::types::ExecutableDocument;
+use async_graphql::{
+    Enum, Response, ServerError, ServerResult, SimpleObject, ValidationResult, Variables,
+};
 
-/// The one error vocabulary, shared across all three error tiers (governing
-/// principles): the `extensions.code` on a transport fault, the `code` on a
-/// `UserError`, and the `code` on a result-union error arm all draw from it.
-/// Grows as gestures add expected failures.
+/// The one error vocabulary, shared across both error tiers (governing
+/// principles): the `extensions.code` on a transport fault and the `code` on a
+/// `UserError` both draw from it. Grows as gestures add expected failures.
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ErrorCode {
     /// No / invalid access token where one is required.
@@ -51,89 +53,101 @@ pub enum ErrorCode {
     RefreshTokenInvalid,
 }
 
-/// Declares the result-union error arms — each a distinct GraphQL type carrying
-/// the same `message` + `code` shape, with `code` fixed by the arm — and the
-/// `MutationError` interface that unifies them.
-macro_rules! mutation_errors {
-    ($($name:ident = $code:ident: $doc:literal;)+) => {
-        $(
-            #[doc = $doc]
-            #[derive(SimpleObject)]
-            pub struct $name {
-                pub message: String,
-                pub code: ErrorCode,
-            }
-            impl $name {
-                /// `code` is fixed by the arm type, so callers supply only the
-                /// developer-facing message.
-                pub fn new(message: impl Into<String>) -> Self {
-                    Self { message: message.into(), code: ErrorCode::$code }
-                }
-            }
-        )+
+/// A recoverable, expected failure of a mutation — a bad value or a
+/// business-rule rejection the end user should see and act on. A payload's
+/// `userErrors` is empty exactly when the mutation succeeded; a non-empty list
+/// means the named result field is null.
+#[derive(SimpleObject, Clone, Debug)]
+pub struct UserError {
+    /// Developer-facing fallback text; the client localizes off `code`.
+    pub message: String,
+    /// The stable code the client switches on.
+    pub code: ErrorCode,
+    /// Path to the offending input field — e.g. `["declaredGoal"]`; null for a
+    /// whole-operation failure.
+    pub field: Option<Vec<String>>,
+}
 
-        /// The shared shape of a result-union error arm: every typed failure of
-        /// a union-returning operation implements it, so `message` and `code`
-        /// read uniformly across arms while each arm is free to add its own
-        /// fields.
-        #[derive(Interface)]
-        #[graphql(
-            field(name = "message", ty = "&String"),
-            field(name = "code", ty = "&ErrorCode"),
-        )]
-        pub enum MutationError {
-            $($name($name),)+
+impl UserError {
+    /// A failure on a single named input field (the GraphQL field name).
+    pub fn input(code: ErrorCode, field: &str, message: impl Into<String>) -> Self {
+        UserError {
+            message: message.into(),
+            code,
+            field: Some(vec![field.to_string()]),
         }
-    };
+    }
+
+    /// A whole-operation failure not pinned to one input field.
+    pub fn whole(code: ErrorCode, message: impl Into<String>) -> Self {
+        UserError {
+            message: message.into(),
+            code,
+            field: None,
+        }
+    }
 }
 
-mutation_errors! {
-    InviteUnusable = InviteUnusable: "The invite link is invalid, expired, revoked, or already consumed.";
-    HandleTaken = HandleTaken: "The requested handle is already in use.";
-    WeakPassword = WeakPassword: "The password is under the length floor or appears in the breach corpus.";
-    RegistrationInProgress = RegistrationInProgress: "A live pending registration already holds this email (auth.md).";
-    VerificationTokenInvalid = VerificationTokenInvalid: "The verification token is invalid, or its pending registration expired.";
-    InvalidCredentials = InvalidCredentials: "The email / password pair did not match.";
-    RefreshTokenInvalid = RefreshTokenInvalid: "The refresh token is invalid, expired, or was already rotated (reuse).";
+/// Schema extension that gives every top-level transport error a stable
+/// `extensions.code` (governing principles, tier 1). Parse and validation
+/// errors fire before any resolver runs, so this tags them `BAD_INPUT`; any
+/// other error that reaches the response without a code defaults to `INTERNAL`
+/// (resolver faults already set theirs via
+/// [`ops::internal`](super::ops::internal), which this leaves untouched).
+pub struct ErrorCodes;
+
+impl ExtensionFactory for ErrorCodes {
+    fn create(&self) -> Arc<dyn Extension> {
+        Arc::new(ErrorCodesExt)
+    }
 }
 
-/// Result of `register` — the pending-registration receipt, or a typed reason
-/// it was refused.
-#[derive(Union)]
-pub enum RegisterResult {
-    Receipt(RegisterPayload),
-    InviteUnusable(InviteUnusable),
-    HandleTaken(HandleTaken),
-    WeakPassword(WeakPassword),
-    RegistrationInProgress(RegistrationInProgress),
+struct ErrorCodesExt;
+
+/// Sets `extensions.code` to `default` unless the error already carries one.
+fn ensure_code(mut err: ServerError, default: &str) -> ServerError {
+    let mut extensions = err.extensions.take().unwrap_or_default();
+    if extensions.get("code").is_none() {
+        extensions.set("code", default);
+    }
+    err.extensions = Some(extensions);
+    err
 }
 
-// The success arm (`AuthPayload`) dwarfs the error arms, but the shape is the
-// schema's; these are short-lived per-request values, so boxing to even the
-// variants out would only obscure the union derive.
+#[async_trait]
+impl Extension for ErrorCodesExt {
+    async fn request(&self, ctx: &ExtensionContext<'_>, next: NextRequest<'_>) -> Response {
+        let mut response = next.run(ctx).await;
+        response.errors = response
+            .errors
+            .into_iter()
+            .map(|err| ensure_code(err, "INTERNAL"))
+            .collect();
+        response
+    }
 
-/// Result of `verifyEmail` — the first session, or a typed token failure.
-#[derive(Union)]
-#[allow(clippy::large_enum_variant)]
-pub enum VerifyEmailResult {
-    Session(AuthPayload),
-    VerificationTokenInvalid(VerificationTokenInvalid),
-}
+    async fn parse_query(
+        &self,
+        ctx: &ExtensionContext<'_>,
+        query: &str,
+        variables: &Variables,
+        next: NextParseQuery<'_>,
+    ) -> ServerResult<ExecutableDocument> {
+        next.run(ctx, query, variables)
+            .await
+            .map_err(|err| ensure_code(err, "BAD_INPUT"))
+    }
 
-/// Result of `logIn` — a session, or rejected credentials.
-#[derive(Union)]
-#[allow(clippy::large_enum_variant)]
-pub enum LogInResult {
-    Session(AuthPayload),
-    InvalidCredentials(InvalidCredentials),
-}
-
-/// Result of `refreshSession` — a rotated session, or a typed token failure. A
-/// reuse-detected token revokes every session (auth.md) and surfaces here as
-/// REFRESH_TOKEN_INVALID.
-#[derive(Union)]
-#[allow(clippy::large_enum_variant)]
-pub enum RefreshResult {
-    Session(AuthPayload),
-    RefreshTokenInvalid(RefreshTokenInvalid),
+    async fn validation(
+        &self,
+        ctx: &ExtensionContext<'_>,
+        next: NextValidation<'_>,
+    ) -> Result<ValidationResult, Vec<ServerError>> {
+        next.run(ctx).await.map_err(|errors| {
+            errors
+                .into_iter()
+                .map(|err| ensure_code(err, "BAD_INPUT"))
+                .collect()
+        })
+    }
 }
