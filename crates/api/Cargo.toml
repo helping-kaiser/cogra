@@ -2,6 +2,9 @@
 name    = "api"
 version.workspace = true
 edition.workspace = true
+# Two binaries live here (the server + the schema exporter); name the
+# server as default so `cargo run -p api` and `make api` stay unambiguous.
+default-run = "api"
 
 [lints]
 workspace = true
@@ -10,8 +13,11 @@ workspace = true
 name = "api"
 path = "src/main.rs"
 
+[[bin]]
+name = "export-schema"
+path = "src/bin/export-schema.rs"
+
 [dependencies]
-common           = { path = "../common" }
 graph-engine     = { path = "../graph-engine" }
 postgres-store   = { path = "../postgres-store" }
 
@@ -19,9 +25,11 @@ tokio             = { workspace = true }
 axum              = { workspace = true }
 async-graphql     = { workspace = true }
 async-graphql-axum = { workspace = true }
-serde             = { workspace = true }
 serde_json        = { workspace = true }
 anyhow            = { workspace = true }
 tracing           = { workspace = true }
 tracing-subscriber = { workspace = true }
-config            = { workspace = true }
+
+[dev-dependencies]
+tower         = { version = "0.5", features = ["util"] }
+http-body-util = { version = "0.1" }

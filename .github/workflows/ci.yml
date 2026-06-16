@@ -80,7 +80,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       memgraph:
-        image: memgraph/memgraph:latest
+        # Pinned to the same minor version as docker/docker-compose.yml so
+        # dev and CI test against the same engine.
+        image: memgraph/memgraph-mage:3.10.1
         ports:
           - 7687:7687
     env:
@@ -98,3 +100,9 @@ jobs:
         run: sqlx migrate run --source migrations
       - name: Run tests
         run: cargo test --all
+      # Redundant with the api schema_drift test on purpose: a named CI
+      # step makes contract drift readable from the checks list alone.
+      - name: Check schema.graphql drift
+        run: |
+          cargo run -p api --bin export-schema > schema.graphql
+          git diff --exit-code schema.graphql

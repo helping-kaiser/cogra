@@ -4,7 +4,7 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api run ci lint fmt test build logs dev docs-link-check
+.PHONY: help init up down reset-db migrate api run ci lint fmt test build logs dev docs-link-check schema
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -47,6 +47,9 @@ migrate: ## Run pending Postgres migrations
 
 api: ## Start the API server
 	$(CARGO) run -p api
+
+schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
+	$(CARGO) run -p api --bin export-schema > schema.graphql
 
 dev: up ## Start DBs, run migrations, then start the API
 	@echo "Waiting for Postgres to be ready..."
