@@ -12,8 +12,10 @@
 //! 4. prints the first invite link — the capability the first real user
 //!    registers through.
 //!
-//! Re-running against an already-bootstrapped instance is a no-op (it detects
-//! the `:Network` singleton and exits).
+//! Re-running is safe: a fully-bootstrapped instance re-surfaces its invite
+//! link and writes nothing; a half-failed instance (graph committed, Postgres
+//! empty) completes its Postgres half. The both-stores gate and its branches
+//! live in [`api::bootstrap`].
 
 use std::fs::OpenOptions;
 use std::io::Write as _;
@@ -21,13 +23,8 @@ use std::io::Write as _;
 use anyhow::Context;
 use api::auth::keys::generate_signing_key;
 use api::auth::password::hash_password;
-use api::auth::policy::INVITE_EDGE_DEFAULT;
-use chrono::{Duration, Utc};
-use common::hashtag::hashtag_uuid;
-use common::wallet::placeholder_address;
-use graph_engine::genesis::{GenesisInput, bootstrap, is_bootstrapped};
+use api::bootstrap::{BootstrapOutcome, GenesisContent, run};
 use sha2::{Digest, Sha256};
-use uuid::Uuid;
 
 /// The canonical bot-defense hashtag seeded at network birth (network.md §2).
 const BOT_DEFENSE_HASHTAG: &str = "bot-defense";
@@ -133,92 +130,64 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("applying graph constraints + indexes")?;
 
-    if is_bootstrapped(&graph)
-        .await
-        .context("checking bootstrap state")?
-    {
-        tracing::info!("instance already bootstrapped (:Network singleton exists) — nothing to do");
-        return Ok(());
-    }
-
-    // After the bootstrapped guard so a re-run of a live instance never
-    // touches .env; the genesis writes below don't depend on the key.
+    // Idempotent — leaves an existing key untouched, so a re-run of a live
+    // instance never appends a second one (the genesis writes don't need it).
     ensure_signing_key()?;
 
-    let username = env_or("GENESIS_USERNAME", "genesis");
-    let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
-    let password = std::env::var("GENESIS_PASSWORD")
-        .context("GENESIS_PASSWORD must be set to bootstrap the genesis User (see .env.example)")?;
-    let password_hash =
-        hash_password(&password).map_err(|e| anyhow::anyhow!("genesis password rejected: {e}"))?;
+    let content = GenesisContent {
+        username: env_or("GENESIS_USERNAME", "genesis"),
+        email: env_or("GENESIS_EMAIL", "genesis@cogra.local"),
+        hashtag_name: BOT_DEFENSE_HASHTAG.to_string(),
+        guidelines_hash: guidelines_hash(),
+        invite_ttl_days: GENESIS_INVITE_TTL_DAYS,
+    };
 
-    let network_id = Uuid::new_v4();
-    let user_id = Uuid::new_v4();
-    let wallet_id = Uuid::new_v4();
-    let wallet_address = placeholder_address(wallet_id);
-    let hashtag_id = hashtag_uuid(BOT_DEFENSE_HASHTAG);
-    let invite_expires = Utc::now() + Duration::days(GENESIS_INVITE_TTL_DAYS);
+    // Lazy: only the fresh and repair paths need the password, so a re-run of a
+    // healthy instance never demands it.
+    let password_hash = || -> anyhow::Result<String> {
+        let password = std::env::var("GENESIS_PASSWORD").context(
+            "GENESIS_PASSWORD must be set to bootstrap the genesis User (see .env.example)",
+        )?;
+        if password == "change-me-genesis" {
+            tracing::warn!(
+                "genesis password is the .env.example default — change it before any real use"
+            );
+        }
+        hash_password(&password).map_err(|e| anyhow::anyhow!("genesis password rejected: {e}"))
+    };
 
-    // One dual-store transaction: graph genesis nodes + Postgres genesis rows.
-    // Graph commits first (idempotent via MERGE), Postgres second — the same
-    // ordering as the registration write.
-    let mut gtx = graph
-        .start_txn()
-        .await
-        .context("opening graph transaction")?;
-    bootstrap(
-        &mut gtx,
-        &GenesisInput {
+    match run(&pool, &graph, &content, password_hash).await? {
+        BootstrapOutcome::Fresh {
             network_id,
             user_id,
-            username: username.clone(),
-            wallet_id,
-            wallet_address,
-            hashtag_id,
-            hashtag_name: BOT_DEFENSE_HASHTAG.to_string(),
-            guidelines_hash: guidelines_hash(),
-        },
-    )
-    .await
-    .context("writing genesis graph nodes")?;
-
-    let mut ptx = pool.begin().await.context("opening Postgres transaction")?;
-    postgres_store::genesis::insert_genesis_user(
-        &mut ptx,
-        user_id,
-        &username,
-        &email,
-        &password_hash,
-    )
-    .await
-    .context("inserting genesis user")?;
-    postgres_store::genesis::insert_genesis_profile(&mut ptx, user_id, &username)
-        .await
-        .context("inserting genesis profile")?;
-    let invite_link = postgres_store::genesis::insert_genesis_invitation(
-        &mut ptx,
-        user_id,
-        INVITE_EDGE_DEFAULT,
-        INVITE_EDGE_DEFAULT,
-        invite_expires,
-    )
-    .await
-    .context("inserting first invite link")?;
-
-    gtx.commit().await.context("committing graph transaction")?;
-    ptx.commit()
-        .await
-        .context("committing Postgres transaction")?;
-
-    if std::env::var("GENESIS_PASSWORD").as_deref() == Ok("change-me-genesis") {
-        tracing::warn!(
-            "genesis password is the .env.example default — change it before any real use"
-        );
+            username,
+            invite_link,
+        } => {
+            println!("Bootstrap complete.");
+            println!("  Network singleton : {network_id}");
+            println!("  Genesis User      : {user_id} (@{username}, moderator)");
+            println!("  First invite link : {invite_link}");
+            println!(
+                "Register the first real user with this invite link via the `register` mutation."
+            );
+        }
+        BootstrapOutcome::Repaired {
+            user_id,
+            username,
+            invite_link,
+        } => {
+            println!("Bootstrap repaired the Postgres half of a partially-failed run.");
+            println!("  Genesis User      : {user_id} (@{username}, moderator)");
+            println!("  First invite link : {invite_link}");
+        }
+        BootstrapOutcome::AlreadyComplete {
+            user_id,
+            invite_link,
+        } => {
+            println!("Instance already bootstrapped — nothing to do.");
+            println!("  Genesis User      : {user_id}");
+            println!("  First invite link : {invite_link}");
+        }
     }
-    println!("Bootstrap complete.");
-    println!("  Network singleton : {network_id}");
-    println!("  Genesis User      : {user_id} (@{username}, moderator)");
-    println!("  First invite link : {invite_link}");
-    println!("Register the first real user with this invite link via the `register` mutation.");
     Ok(())
 }

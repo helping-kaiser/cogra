@@ -306,6 +306,20 @@ The binary is the **only** writer of these four nodes and the only step
 that escapes the actor-gesture-or-governance rule (per
 [graph-model.md §1](../primitive/graph-model.md#1-core-principles)).
 
+Alongside the graph nodes the bootstrap writes the Postgres genesis rows —
+the genesis User's credential + profile rows and the first invite link —
+following the dual-store ordering above (graph commits first). It is gated on
+**both** stores, not just the graph: an instance counts as bootstrapped only
+when the `:Network` singleton *and* the genesis `users` row both exist. The
+singleton's `genesis_user_id` pointer names the genesis User, so a re-run that
+finds the graph committed but Postgres empty completes the Postgres half
+against the already-committed identity — reusing its UUID (the cross-store
+join key) rather than minting a second genesis User — and re-mints the lost
+invite link. A fully-bootstrapped re-run writes nothing and re-surfaces the
+existing link; a conflicting genesis handle aborts the repair rather than
+desync the stores. Without the Postgres half of the gate, a half-committed
+bootstrap would read as done and wedge the instance.
+
 ### Cascade handler
 
 Every governance threshold-cross — moderation classification,

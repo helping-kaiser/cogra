@@ -8,8 +8,38 @@
 //! writes take `&mut PgConnection` so they share the bootstrap transaction.
 
 use chrono::{DateTime, Utc};
-use sqlx::PgConnection;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
+
+/// True once the genesis `users` row exists. The bootstrap pairs this with the
+/// graph `:Network` singleton: an instance is fully bootstrapped only when
+/// *both* stores carry their genesis writes, so a half-failed run (graph
+/// committed, Postgres not) re-runs instead of no-opping. Keyed on the genesis
+/// User id read back from the graph — the cross-store join key.
+pub async fn genesis_present(pool: &PgPool, user_id: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+}
+
+/// The id of the genesis User's first invite link — the earliest invitation
+/// they own. Lets a re-run re-print the existing capability rather than mint a
+/// second one. `None` if the genesis User has no invitation yet.
+pub async fn genesis_invitation_id(
+    pool: &PgPool,
+    inviter_id: Uuid,
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT id FROM auth_invitations
+         WHERE inviter_id = $1
+         ORDER BY created_at ASC, id ASC
+         LIMIT 1",
+    )
+    .bind(inviter_id)
+    .fetch_optional(pool)
+    .await
+}
 
 /// Inserts the genesis `users` row. Credentials are supplied to the bootstrap
 /// at run time (auth.md "Account lifecycle" — the genesis User is the one
@@ -21,14 +51,19 @@ pub async fn insert_genesis_user(
     email: &str,
     password_hash: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)")
-        .bind(id)
-        .bind(username)
-        .bind(email)
-        .bind(password_hash)
-        .execute(conn)
-        .await
-        .map(|_| ())
+    // `ON CONFLICT (id) DO NOTHING` is defense-in-depth — the both-stores gate
+    // already prevents re-running the genesis writes against a present row.
+    sqlx::query(
+        "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO NOTHING",
+    )
+    .bind(id)
+    .bind(username)
+    .bind(email)
+    .bind(password_hash)
+    .execute(conn)
+    .await
+    .map(|_| ())
 }
 
 /// Inserts the genesis User's first profile version (`display_name` seeded to

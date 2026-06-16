@@ -465,6 +465,7 @@ targeting that property name. See
 |---|---|---|
 | `id`                              | String  | UUID v4. Always set by the API at instance bootstrap. |
 | `singleton_marker`                | String  | Always `'singleton'`. Combined with the existence + uniqueness constraints below, prevents a second `:Network` node from ever being inserted. Set at bootstrap; never changes. |
+| `genesis_user_id`                 | String  | UUID of the genesis `:User`. The singleton is the one unambiguous anchor for which User is genesis — `network_role = 'moderator'` is not, once a quorum role-change mints a second moderator. The bootstrap reads it back to complete a half-failed run (graph committed, Postgres not) against the already-committed identity. Set at bootstrap; never changes. Not layered. |
 | `mod_role_change_quorum_fraction`     | Float   | Fractional bar for `User.network_role` Proposals: `positive_count ≥ P × \|active members\|`. Default `0.50`. Mod-gate: critical tier (fraction of active mods). |
 | `mod_role_change_quorum_count`        | Integer | Absolute bar for `User.network_role` Proposals: `positive_count ≥ K`. Default `5000`. The operative bar at tally time is `min(P × \|active\|, K)`. See [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only). |
 | `moderation_sensitive_quorum_fraction` | Float   | Fractional bar for `'sensitive'` classification Proposals. Default `0.25`. Mod-gate: baseline tier (≥1 mod positive). |
