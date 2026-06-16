@@ -40,6 +40,15 @@ mod tests {
     }
 
     #[test]
+    fn derivation_is_case_sensitive() {
+        // The caller must pass the canonical (lowercase) form: the v5 hash is
+        // over the raw bytes, so a non-canonical casing derives a *different*
+        // id. This is why normalization is load-bearing schema, not cosmetics —
+        // `Bot-Defense` and `bot-defense` would otherwise be distinct hashtags.
+        assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
+    }
+
+    #[test]
     fn derivation_is_pinned() {
         // Golden value: locks both the namespace constant and the v5
         // derivation. If this test ever fails, previously minted hashtag
