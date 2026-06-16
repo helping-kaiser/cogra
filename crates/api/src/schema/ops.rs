@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use async_graphql::{Context, Error, ErrorExtensions, Result};
 use chrono::{Duration, Utc};
+use common::registrant_ids;
 use common::wallet::placeholder_address;
 use graph_engine::Graph;
 use graph_engine::accounts::{InvitationEdges, create_registrant};
@@ -50,18 +51,16 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
     // Precedence among the expected failures: password floor first (no DB work),
     // then the invite capability, then handle availability, then the in-progress
     // email clash the upsert reports. userErrors carries one reason at a time
-    // here, so the order is the contract.
-    let password_hash = match password::hash_password(&input.password) {
-        Ok(hash) => hash,
-        Err(e @ password::PasswordError::TooShort) => {
-            return Ok(RegisterPayload::err(UserError::input(
-                ErrorCode::WeakPassword,
-                "password",
-                e.to_string(),
-            )));
-        }
-        Err(e @ password::PasswordError::Hash) => return Err(internal("hashing password", e)),
-    };
+    // here, so the order is the contract. The length floor is checked up front
+    // but the password is hashed only *after* the invite and handle pass — an
+    // invalid invite must never cost an Argon2 hash (a cheap DoS lever otherwise).
+    if let Err(e @ password::PasswordError::TooShort) = password::validate_length(&input.password) {
+        return Ok(RegisterPayload::err(UserError::input(
+            ErrorCode::WeakPassword,
+            "password",
+            e.to_string(),
+        )));
+    }
 
     let now = Utc::now();
     let Some(invitation) = auth::find_invitation(pool, input.invite_link)
@@ -93,6 +92,9 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
             "that handle is already in use",
         )));
     }
+
+    let password_hash =
+        password::hash_password(&input.password).map_err(|e| internal("hashing password", e))?;
 
     let dim1 = input
         .dim1
@@ -182,16 +184,22 @@ pub async fn verify_email(
         return Err(internal("invitation row vanished", "no row"));
     };
 
-    let user_id = Uuid::new_v4();
-    let wallet_id = Uuid::new_v4();
+    // Derive the account's node ids from the pending row so a retried
+    // verifyEmail reuses them (common::registrant_ids). The session, by
+    // contrast, is fresh on every attempt: a prior attempt's session insert was
+    // rolled back with its Postgres transaction, so there is no orphan to adopt.
+    let registrant = registrant_ids(pending.id);
+    let user_id = registrant.user_id;
+    let wallet_id = registrant.wallet_id;
     let wallet_address = placeholder_address(wallet_id);
     let session_id = Uuid::new_v4();
     let refresh = tokens::generate();
     let refresh_expires = now + Duration::days(REFRESH_TTL_DAYS);
 
     // Held-open dual transaction: any failure before the commits drops both
-    // handles, rolling each back. The graph write uses MERGE on the node
-    // UUIDs, so a retry after a committed graph write is a no-op.
+    // handles, rolling each back. The graph write MERGEs on the derived node
+    // ids, so a retry after a committed graph write adopts the orphaned nodes
+    // rather than duplicating them — the retry is a true no-op on the graph.
     let mut gtx = graph
         .start_txn()
         .await
