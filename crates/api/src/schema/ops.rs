@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use async_graphql::{Context, Error, Result};
+use async_graphql::{Context, Error, ErrorExtensions, Result};
 use chrono::{Duration, Utc};
 use common::wallet::placeholder_address;
 use graph_engine::Graph;
@@ -16,10 +16,11 @@ use uuid::Uuid;
 
 use crate::auth::jwt::JwtKeys;
 use crate::auth::{password, tokens};
+use crate::schema::errors::{ErrorCode, UserError};
 use crate::schema::types::{
     LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, Session, VerifyEmailInput,
 };
-use crate::schema::user::{AuthPayload, User};
+use crate::schema::user::{AuthSession, LogInPayload, RefreshPayload, User, VerifyEmailPayload};
 
 /// Pending-registration lifetime (auth.md): unverified records expire in 24 h.
 const PENDING_TTL_HOURS: i64 = 24;
@@ -29,11 +30,12 @@ const REFRESH_TTL_DAYS: i64 = 30;
 /// (invitations.md "Default values").
 const INVITE_EDGE_DEFAULT: f32 = 0.5;
 
-/// Logs an internal failure with detail and returns a generic message — the
-/// detail never leaks to the client.
+/// Logs an internal failure with detail and returns a generic transport fault —
+/// the detail never leaks to the client, which sees only the `INTERNAL` code on
+/// the `errors` array (api-spec.md, tier 1).
 pub(crate) fn internal(context: &str, err: impl std::fmt::Display) -> Error {
     tracing::error!(error = %err, context, "auth internal error");
-    Error::new(format!("internal error: {context}"))
+    Error::new(format!("internal error: {context}")).extend_with(|_, e| e.set("code", "INTERNAL"))
 }
 
 fn pool<'c>(ctx: &Context<'c>) -> Result<&'c PgPool> {
@@ -52,20 +54,51 @@ fn keys<'c>(ctx: &Context<'c>) -> Result<&'c Arc<JwtKeys>> {
 pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<RegisterPayload> {
     let pool = pool(ctx)?;
 
-    // Hash first so a too-short password is rejected before any DB work.
-    let password_hash =
-        password::hash_password(&input.password).map_err(|e| Error::new(e.to_string()))?;
+    // Precedence among the expected failures: password floor first (no DB work),
+    // then the invite capability, then handle availability, then the in-progress
+    // email clash the upsert reports. userErrors carries one reason at a time
+    // here, so the order is the contract.
+    let password_hash = match password::hash_password(&input.password) {
+        Ok(hash) => hash,
+        Err(e @ password::PasswordError::TooShort) => {
+            return Ok(RegisterPayload::err(UserError::input(
+                ErrorCode::WeakPassword,
+                "password",
+                e.to_string(),
+            )));
+        }
+        Err(e @ password::PasswordError::Hash) => return Err(internal("hashing password", e)),
+    };
 
     let now = Utc::now();
     let Some(invitation) = auth::find_invitation(pool, input.invite_link)
         .await
         .map_err(|e| internal("looking up invitation", e))?
     else {
-        return Err(Error::new("invalid or unknown invite link"));
+        return Ok(RegisterPayload::err(UserError::input(
+            ErrorCode::InviteUnusable,
+            "inviteLink",
+            "invalid or unknown invite link",
+        )));
     };
     let consumed = invitation.single_use && invitation.consumed_at.is_some();
     if invitation.revoked_at.is_some() || invitation.expires_at < now || consumed {
-        return Err(Error::new("this invite link is no longer valid"));
+        return Ok(RegisterPayload::err(UserError::input(
+            ErrorCode::InviteUnusable,
+            "inviteLink",
+            "this invite link is no longer valid",
+        )));
+    }
+
+    if auth::username_taken(pool, &input.handle)
+        .await
+        .map_err(|e| internal("checking handle availability", e))?
+    {
+        return Ok(RegisterPayload::err(UserError::input(
+            ErrorCode::HandleTaken,
+            "handle",
+            "that handle is already in use",
+        )));
     }
 
     let dim1 = input
@@ -96,9 +129,11 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
     .map_err(|e| internal("writing pending registration", e))?;
 
     match written {
-        None => Err(Error::new(
+        None => Ok(RegisterPayload::err(UserError::input(
+            ErrorCode::RegistrationInProgress,
+            "email",
             "a registration for this email is already in progress — check your email",
-        )),
+        ))),
         Some(expires_at) => {
             // DEV-mode email-verification bypass (roadmap slice 0): no mail
             // server is wired yet, so the verification token is surfaced to
@@ -109,7 +144,7 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
                 email = %input.email,
                 "DEV bypass — pass this verification token to verifyEmail (no mailer yet; auth.md)",
             );
-            Ok(RegisterPayload { expires_at })
+            Ok(RegisterPayload::ok(expires_at))
         }
     }
 }
@@ -120,7 +155,10 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
 /// `users` row, the first profile version, and the first session; then
 /// deletes the pending record. The graph commits first (idempotent on retry
 /// via `MERGE`), Postgres second.
-pub async fn verify_email(ctx: &Context<'_>, input: VerifyEmailInput) -> Result<AuthPayload> {
+pub async fn verify_email(
+    ctx: &Context<'_>,
+    input: VerifyEmailInput,
+) -> Result<VerifyEmailPayload> {
     let pool = pool(ctx)?;
     let graph = graph(ctx)?;
     let keys = keys(ctx)?;
@@ -130,13 +168,19 @@ pub async fn verify_email(ctx: &Context<'_>, input: VerifyEmailInput) -> Result<
         .await
         .map_err(|e| internal("looking up pending registration", e))?
     else {
-        return Err(Error::new("invalid or expired verification token"));
+        return Ok(VerifyEmailPayload::err(UserError::input(
+            ErrorCode::VerificationTokenInvalid,
+            "verificationToken",
+            "invalid or expired verification token",
+        )));
     };
     let now = Utc::now();
     if pending.expires_at < now {
-        return Err(Error::new(
+        return Ok(VerifyEmailPayload::err(UserError::input(
+            ErrorCode::VerificationTokenInvalid,
+            "verificationToken",
             "this verification link has expired — please register again",
-        ));
+        )));
     }
     let Some(invitation) = auth::find_invitation(pool, pending.invitation_id)
         .await
@@ -227,18 +271,18 @@ pub async fn verify_email(ctx: &Context<'_>, input: VerifyEmailInput) -> Result<
         .await?
         .ok_or_else(|| internal("user not readable after creation", "load returned none"))?;
 
-    Ok(AuthPayload {
+    Ok(VerifyEmailPayload::ok(AuthSession {
         access_token: access,
         refresh_token: refresh.raw,
         session: Session::issued(session_row),
         user,
-    })
+    }))
 }
 
 /// `logIn` — verify credentials, issue a new session. A non-existent account
 /// still runs a verification against a dummy hash so response timing does not
 /// reveal which emails exist.
-pub async fn log_in(ctx: &Context<'_>, input: LogInInput) -> Result<AuthPayload> {
+pub async fn log_in(ctx: &Context<'_>, input: LogInInput) -> Result<LogInPayload> {
     let pool = pool(ctx)?;
     let graph = graph(ctx)?;
     let keys = keys(ctx)?;
@@ -246,12 +290,18 @@ pub async fn log_in(ctx: &Context<'_>, input: LogInInput) -> Result<AuthPayload>
     let creds = auth::find_credentials_by_email(pool, &input.email)
         .await
         .map_err(|e| internal("looking up credentials", e))?;
+    let invalid = || {
+        LogInPayload::err(UserError::whole(
+            ErrorCode::InvalidCredentials,
+            "invalid email or password",
+        ))
+    };
     let user_id = match creds {
         Some(c) if password::verify_password(&c.password_hash, &input.password) => c.id,
-        Some(_) => return Err(Error::new("invalid email or password")),
+        Some(_) => return Ok(invalid()),
         None => {
             password::dummy_verify(&input.password);
-            return Err(Error::new("invalid email or password"));
+            return Ok(invalid());
         }
     };
 
@@ -280,18 +330,21 @@ pub async fn log_in(ctx: &Context<'_>, input: LogInInput) -> Result<AuthPayload>
         .await?
         .ok_or_else(|| internal("user not readable after login", "load returned none"))?;
 
-    Ok(AuthPayload {
+    Ok(LogInPayload::ok(AuthSession {
         access_token: access,
         refresh_token: refresh.raw,
         session: Session::issued(session_row),
         user,
-    })
+    }))
 }
 
 /// `refreshSession` — rotate the refresh token, mint a fresh access token.
 /// Presenting an already-revoked token is treated as theft: every session is
 /// revoked (auth.md "Reuse detection").
-pub async fn refresh_session(ctx: &Context<'_>, input: RefreshSessionInput) -> Result<AuthPayload> {
+pub async fn refresh_session(
+    ctx: &Context<'_>,
+    input: RefreshSessionInput,
+) -> Result<RefreshPayload> {
     let pool = pool(ctx)?;
     let graph = graph(ctx)?;
     let keys = keys(ctx)?;
@@ -301,7 +354,11 @@ pub async fn refresh_session(ctx: &Context<'_>, input: RefreshSessionInput) -> R
         .await
         .map_err(|e| internal("looking up refresh token", e))?
     else {
-        return Err(Error::new("invalid refresh token"));
+        return Ok(RefreshPayload::err(UserError::input(
+            ErrorCode::RefreshTokenInvalid,
+            "refreshToken",
+            "invalid refresh token",
+        )));
     };
 
     if token.revoked_at.is_some() {
@@ -309,13 +366,19 @@ pub async fn refresh_session(ctx: &Context<'_>, input: RefreshSessionInput) -> R
             .await
             .map_err(|e| internal("revoking sessions on reuse", e))?;
         tracing::warn!(user_id = %token.user_id, "refresh-token reuse detected — all sessions revoked");
-        return Err(Error::new(
+        return Ok(RefreshPayload::err(UserError::input(
+            ErrorCode::RefreshTokenInvalid,
+            "refreshToken",
             "refresh token reuse detected — all sessions revoked, please log in again",
-        ));
+        )));
     }
     let now = Utc::now();
     if token.expires_at < now {
-        return Err(Error::new("refresh token expired — please log in again"));
+        return Ok(RefreshPayload::err(UserError::input(
+            ErrorCode::RefreshTokenInvalid,
+            "refreshToken",
+            "refresh token expired — please log in again",
+        )));
     }
 
     let new_id = Uuid::new_v4();
@@ -340,10 +403,10 @@ pub async fn refresh_session(ctx: &Context<'_>, input: RefreshSessionInput) -> R
         .await?
         .ok_or_else(|| internal("user not readable after refresh", "load returned none"))?;
 
-    Ok(AuthPayload {
+    Ok(RefreshPayload::ok(AuthSession {
         access_token: access,
         refresh_token: new_refresh.raw,
         session: Session::issued(session_row),
         user,
-    })
+    }))
 }

@@ -6,6 +6,7 @@
 //! read by resolvers at request time. The per-request `Viewer` is injected by
 //! the GraphQL HTTP handler (see `crate::app`).
 
+mod errors;
 mod ops;
 mod types;
 mod user;
@@ -18,8 +19,9 @@ use postgres_store::PgPool;
 
 use crate::auth::Viewer;
 use crate::auth::jwt::JwtKeys;
+use errors::ErrorCodes;
 use types::{LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, VerifyEmailInput};
-use user::{AuthPayload, User};
+use user::{LogInPayload, RefreshPayload, User, VerifyEmailPayload};
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -89,7 +91,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: VerifyEmailInput,
-    ) -> async_graphql::Result<AuthPayload> {
+    ) -> async_graphql::Result<VerifyEmailPayload> {
         ops::verify_email(ctx, input).await
     }
 
@@ -98,7 +100,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: LogInInput,
-    ) -> async_graphql::Result<AuthPayload> {
+    ) -> async_graphql::Result<LogInPayload> {
         ops::log_in(ctx, input).await
     }
 
@@ -107,14 +109,17 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: RefreshSessionInput,
-    ) -> async_graphql::Result<AuthPayload> {
+    ) -> async_graphql::Result<RefreshPayload> {
         ops::refresh_session(ctx, input).await
     }
 }
 
 /// Builds the executable schema with live store handles and JWT keys attached.
+/// The `ErrorCodes` extension stamps a stable `extensions.code` on every
+/// top-level transport error (errors.rs).
 pub fn build(pool: PgPool, graph: Graph, jwt: Arc<JwtKeys>) -> ApiSchema {
     Schema::build(Query, Mutation, EmptySubscription)
+        .extension(ErrorCodes)
         .data(pool)
         .data(graph)
         .data(jwt)

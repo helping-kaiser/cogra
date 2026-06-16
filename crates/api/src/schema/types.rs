@@ -10,6 +10,8 @@ use async_graphql::{
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
+use super::errors::UserError;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Dimension(pub f64);
 
@@ -140,12 +142,30 @@ impl Session {
     }
 }
 
-/// The pending registration's receipt. No User node or session exists yet —
-/// both arrive at verifyEmail.
+/// The pending registration's receipt; no User node or session exists yet
+/// (both arrive at verifyEmail). On refusal `expires_at` is null and
+/// `user_errors` carries the reason.
 #[derive(SimpleObject, Clone, Debug)]
 pub struct RegisterPayload {
-    /// When the pending registration expires unverified (24 h, auth.md).
-    pub expires_at: DateTime<Utc>,
+    /// When the pending registration expires unverified (24 h, auth.md); null
+    /// when the registration was refused.
+    pub expires_at: Option<DateTime<Utc>>,
+    pub user_errors: Vec<UserError>,
+}
+
+impl RegisterPayload {
+    pub fn ok(expires_at: DateTime<Utc>) -> Self {
+        RegisterPayload {
+            expires_at: Some(expires_at),
+            user_errors: Vec::new(),
+        }
+    }
+    pub fn err(error: UserError) -> Self {
+        RegisterPayload {
+            expires_at: None,
+            user_errors: vec![error],
+        }
+    }
 }
 
 /// Register through an invite link.
