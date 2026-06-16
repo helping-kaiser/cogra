@@ -7,6 +7,7 @@ pub mod keys;
 pub mod password;
 pub mod policy;
 pub mod tokens;
+pub mod validate;
 
 use uuid::Uuid;
 

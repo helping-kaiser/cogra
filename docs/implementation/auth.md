@@ -179,6 +179,29 @@ logged, and never returned by the API.
   hash-prefix lookup) at registration and password change.
   Breached passwords are rejected with a message indicating why.
 
+### Handle and email format
+
+Both are validated and normalized at registration before any
+store write; a failure surfaces as a `BAD_INPUT` userError pinned
+to the offending field (`handle` / `email`).
+
+- **Handle.** 3–30 characters, `[a-z0-9_]` (lowercase letters,
+  digits, underscore). The handle is **case-folded to lowercase**
+  on registration: `users.username` is UNIQUE case-sensitively in
+  Postgres, but mentions and search resolve handles
+  case-insensitively, so folding is what keeps `@alice` a single
+  account rather than admitting a distinct `Alice`. The charset
+  excludes `-`, which leaves the `redacted-user-{uuid}` redaction
+  sentinel ([api-spec.md](api-spec.md)) unreachable by any real
+  registration.
+- **Email.** Trimmed and **lowercased** to a canonical form used
+  for both the stored `users.email` and the login lookup, so the
+  case-sensitive UNIQUE constraint behaves case-insensitively. The
+  shape check is lenient (one `@`, a non-empty local part, a
+  dotted domain, ≤254 chars) — not full RFC 5322; the
+  verification email is the authoritative proof the address is
+  deliverable.
+
 ### Password reset
 
 1. User submits their email at the reset endpoint. The server

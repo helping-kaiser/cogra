@@ -17,7 +17,7 @@ use uuid::Uuid;
 
 use crate::auth::jwt::JwtKeys;
 use crate::auth::policy::{INVITE_EDGE_DEFAULT, PENDING_TTL_HOURS, REFRESH_TTL_DAYS};
-use crate::auth::{password, tokens};
+use crate::auth::{password, tokens, validate};
 use crate::schema::errors::{ErrorCode, UserError};
 use crate::schema::types::{
     LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, Session, VerifyEmailInput,
@@ -48,12 +48,13 @@ fn keys<'c>(ctx: &Context<'c>) -> Result<&'c Arc<JwtKeys>> {
 pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<RegisterPayload> {
     let pool = pool(ctx)?;
 
-    // Precedence among the expected failures: password floor first (no DB work),
-    // then the invite capability, then handle availability, then the in-progress
-    // email clash the upsert reports. userErrors carries one reason at a time
-    // here, so the order is the contract. The length floor is checked up front
-    // but the password is hashed only *after* the invite and handle pass — an
-    // invalid invite must never cost an Argon2 hash (a cheap DoS lever otherwise).
+    // Precedence among the expected failures: the no-DB input-shape checks
+    // first (password floor, then handle and email format), then the invite
+    // capability, then handle availability, then the in-progress email clash the
+    // upsert reports. userErrors carries one reason at a time here, so the order
+    // is the contract. The password is hashed only *after* the invite and handle
+    // pass — an invalid invite must never cost an Argon2 hash (a cheap DoS lever
+    // otherwise).
     if let Err(e @ password::PasswordError::TooShort) = password::validate_length(&input.password) {
         return Ok(RegisterPayload::err(UserError::input(
             ErrorCode::WeakPassword,
@@ -61,6 +62,26 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
             e.to_string(),
         )));
     }
+    let handle = match validate::normalize_handle(&input.handle) {
+        Ok(handle) => handle,
+        Err(e) => {
+            return Ok(RegisterPayload::err(UserError::input(
+                ErrorCode::BadInput,
+                "handle",
+                e.to_string(),
+            )));
+        }
+    };
+    let email = match validate::normalize_email(&input.email) {
+        Ok(email) => email,
+        Err(e) => {
+            return Ok(RegisterPayload::err(UserError::input(
+                ErrorCode::BadInput,
+                "email",
+                e.to_string(),
+            )));
+        }
+    };
 
     let now = Utc::now();
     let Some(invitation) = auth::find_invitation(pool, input.invite_link)
@@ -82,7 +103,7 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
         )));
     }
 
-    if auth::username_taken(pool, &input.handle)
+    if auth::username_taken(pool, &handle)
         .await
         .map_err(|e| internal("checking handle availability", e))?
     {
@@ -110,8 +131,8 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
     let written = auth::upsert_pending_registration(
         pool,
         NewPendingRegistration {
-            username: &input.handle,
-            email: &input.email,
+            username: &handle,
+            email: &email,
             password_hash: &password_hash,
             invitation_id: invitation.id,
             invitee_dim1: dim1,
@@ -136,7 +157,7 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
             tracing::warn!(
                 target: "cogra::auth::dev",
                 verification_token = %token.raw,
-                email = %input.email,
+                email = %email,
                 "DEV bypass — pass this verification token to verifyEmail (no mailer yet; auth.md)",
             );
             Ok(RegisterPayload::ok(expires_at))
@@ -288,7 +309,11 @@ pub async fn log_in(ctx: &Context<'_>, input: LogInInput) -> Result<LogInPayload
     let graph = graph(ctx)?;
     let keys = keys(ctx)?;
 
-    let creds = auth::find_credentials_by_email(pool, &input.email)
+    // Fold the email the same way registration stored it, so the case-sensitive
+    // users.email UNIQUE constraint matches case-insensitively. No format check
+    // here: a malformed email just misses the lookup and still runs dummy_verify.
+    let email = validate::fold_email(&input.email);
+    let creds = auth::find_credentials_by_email(pool, &email)
         .await
         .map_err(|e| internal("looking up credentials", e))?;
     let invalid = || {
