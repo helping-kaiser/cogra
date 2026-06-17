@@ -31,6 +31,14 @@ android {
     }
 }
 
+// The Compose UI tests rely on the debug-only ui-test-manifest (it supplies the
+// host ComponentActivity), so unit tests run on the debug variant only.
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) { variantBuilder ->
+        variantBuilder.enableUnitTest = false
+    }
+}
+
 kotlin {
     jvmToolchain(17)
 }

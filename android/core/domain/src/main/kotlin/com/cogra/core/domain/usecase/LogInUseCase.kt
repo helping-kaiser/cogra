@@ -33,7 +33,7 @@ class LogInUseCase @Inject constructor(
     suspend operator fun invoke(
         email: String,
         password: String,
-        deviceLabel: String?,
+        deviceLabel: String? = null,
     ): LoginResult {
         val validationErrors = validate(email, password)
         if (validationErrors.isNotEmpty()) return LoginResult.Rejected(validationErrors)

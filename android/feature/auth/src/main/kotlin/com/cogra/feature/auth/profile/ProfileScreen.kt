@@ -123,11 +123,8 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
 
 /** Renders moderated text, marking a redaction rather than dropping it
  *  silently (layers.md — redactions always leave a visible mark). */
-private fun ModeratedText.render(): String = when {
-    value != null -> value
-    status == FieldModerationStatus.REDACTED -> "[redacted]"
-    else -> ""
-}
+private fun ModeratedText.render(): String =
+    value ?: if (status == FieldModerationStatus.REDACTED) "[redacted]" else ""
 
 object ProfileTestTags {
     const val PROGRESS = "profile_progress"
