@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug-only host for the Robolectric Compose test of the root composable.
+     HiltTestActivity is an @AndroidEntryPoint ComponentActivity so the test can
+     drive the real Hilt graph; it is not exported and never ships to release. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name="com.cogra.app.HiltTestActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CoGra" />
+    </application>
+
+</manifest>
