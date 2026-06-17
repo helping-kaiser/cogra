@@ -128,10 +128,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
-    # The Gradle wrapper JAR is binary and is not committed, so CI drives the
-    # build with a pinned system Gradle (same version the wrapper would fetch)
-    # rather than ./gradlew. Apollo codegen, Hilt/KSP processing, and the unit
-    # tests all run as part of these tasks.
+    # Driven by the committed Gradle wrapper so CI and local builds resolve the
+    # same Gradle. Apollo codegen, Hilt/KSP processing, and the unit tests all
+    # run as part of these tasks.
     defaults:
       run:
         working-directory: android
@@ -143,9 +142,7 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
       - name: Unit tests
-        run: gradle test
+        run: ./gradlew test
       - name: Assemble debug APK
-        run: gradle :app:assembleDebug
+        run: ./gradlew :app:assembleDebug

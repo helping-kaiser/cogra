@@ -17,19 +17,8 @@ need them.
 
 ## First-time setup
 
-The Gradle wrapper JAR is binary and is **not** committed by the assistant.
-Generate it once before the first build:
-
-```bash
-# from android/, with a system Gradle 8.11+ installed
-gradle wrapper --gradle-version 8.11.1
-```
-
-Or just open `android/` in Android Studio — it offers to create the wrapper
-on first sync.
-
-Point the build at your Android SDK with `android/local.properties`
-(gitignored):
+The Gradle wrapper is committed, so `./gradlew` works out of the box. Point
+the build at your Android SDK with `android/local.properties` (gitignored):
 
 ```properties
 sdk.dir=/path/to/Android/Sdk

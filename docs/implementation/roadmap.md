@@ -96,10 +96,8 @@ Keystore master key — EncryptedSharedPreferences is deprecated. The access
 token rides as a Bearer header and an `UNAUTHENTICATED` response triggers a
 single-flight refresh-and-replay, honoring the rotate-on-every-use rule from
 [auth.md](auth.md). CI gains a `gradle test` + `:app:assembleDebug` job
-path-filtered to `android/**` and `schema.graphql`. The Gradle wrapper JAR is
-binary and not committed — generated locally / by Android Studio, and CI drives
-a pinned system Gradle. `android/CLAUDE.md` (referenced by [android.md](android.md)
-but previously absent) is added.
+path-filtered to `android/**` and `schema.graphql`. `android/CLAUDE.md`
+(referenced by [android.md](android.md) but previously absent) is added.
 
 ### Slice 2 — Content
 

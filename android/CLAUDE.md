@@ -81,12 +81,5 @@ pieces").
   real Keystore-backed path carries only a thin smoke test (it needs a
   device).
 
-CI runs `gradle test` and `gradle :app:assembleDebug`, path-filtered to
+CI runs `./gradlew test` and `./gradlew :app:assembleDebug`, path-filtered to
 `android/**` and `schema.graphql`.
-
-## Build note
-
-The Gradle wrapper JAR is binary and is not committed by the assistant.
-Generate it with `gradle wrapper` or by opening `android/` in Android Studio
-(see [README.md](README.md)). CI drives the build with a pinned system Gradle
-for the same reason.
