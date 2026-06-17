@@ -1,3 +1,6 @@
+import com.android.build.api.variant.HasHostTestsBuilder
+import com.android.build.api.variant.HostTestBuilder
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -35,7 +38,9 @@ android {
 // host ComponentActivity), so unit tests run on the debug variant only.
 androidComponents {
     beforeVariants(selector().withBuildType("release")) { variantBuilder ->
-        variantBuilder.enableUnitTest = false
+        (variantBuilder as HasHostTestsBuilder).hostTests
+            .getValue(HostTestBuilder.UNIT_TEST_TYPE)
+            .enable = false
     }
 }
 
