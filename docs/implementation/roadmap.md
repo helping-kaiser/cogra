@@ -87,6 +87,20 @@ Prove the API↔Android contract and on-device testing immediately.
 - **Hand test:** log in on the device, see your profile.
 - **Surfaces:** Android, API contract.
 
+**Decisions.** The greenfield Android project is stood up with the minimal
+module set the login→profile cut needs (`app`, `core:network`, `core:domain`,
+`feature:auth`); `core:ranker` and `feature:feed` wait for their slices. DI is
+Hilt; use-cases carry `@Inject` constructors so `core:domain` stays Android-free
+(`javax.inject` only). Tokens persist in DataStore encrypted with Tink under a
+Keystore master key — EncryptedSharedPreferences is deprecated. The access
+token rides as a Bearer header and an `UNAUTHENTICATED` response triggers a
+single-flight refresh-and-replay, honoring the rotate-on-every-use rule from
+[auth.md](auth.md). CI gains a `gradle test` + `:app:assembleDebug` job
+path-filtered to `android/**` and `schema.graphql`. The Gradle wrapper JAR is
+binary and not committed — generated locally / by Android Studio, and CI drives
+a pinned system Gradle. `android/CLAUDE.md` (referenced by [android.md](android.md)
+but previously absent) is added.
+
 ### Slice 2 — Content
 
 First content on the graph, read back without ranking.
