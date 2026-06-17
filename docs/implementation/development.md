@@ -65,6 +65,7 @@ make init         First-time setup: copy .env, check/install dependencies
 make run          Full start: init + dev (first-time friendly)
 make dev          Start DBs + migrate + start API
 make api          Start the API server only
+make api-release   Start the API server in release mode (realistic auth/crypto latency)
 make up           Start Postgres + Memgraph in background
 make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
