@@ -1,0 +1,25 @@
+# Shared selection for a User profile. Every moderated text field keeps its
+# per-field status so the client can mark redactions instead of dropping them.
+fragment UserFields on User {
+  id
+  handle {
+    value
+    status
+  }
+  displayName {
+    value
+    status
+  }
+  bio {
+    value
+    status
+  }
+  websiteUrl {
+    value
+    status
+  }
+  networkRole
+  moderationStatus
+  createdAt
+  updatedAt
+}

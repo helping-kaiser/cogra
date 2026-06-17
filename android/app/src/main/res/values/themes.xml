@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A bare no-action-bar base; all real theming is done in Compose
+     (CograTheme). Uses a framework parent so the app needs no XML theming
+     dependency. -->
+<resources>
+    <style name="Theme.CoGra" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
