@@ -1,0 +1,13 @@
+mutation RefreshSession($input: RefreshSessionInput!) {
+  refreshSession(input: $input) {
+    auth {
+      accessToken
+      refreshToken
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
