@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    CograApp()
+                    CograRoot()
                 }
             }
         }
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
  * NavHost arrives when more surfaces do.
  */
 @Composable
-fun CograApp(viewModel: RootViewModel = hiltViewModel()) {
+fun CograRoot(viewModel: RootViewModel = hiltViewModel()) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     when (authState) {
         AuthUiState.Loading -> Box(
