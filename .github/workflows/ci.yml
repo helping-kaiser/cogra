@@ -32,8 +32,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      android: ${{ steps.android.outputs.android }}
     steps:
       - uses: actions/checkout@v4
+      # The Rust gate. `android/**` is subtracted alongside docs so an
+      # Android-only PR skips the Rust lint/test jobs; a schema.graphql change
+      # is NOT excluded, so it still trips the Rust jobs (and, below, the
+      # Android one) since both sides of the contract depend on it.
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -43,6 +48,17 @@ jobs:
               - '**'
               - '!docs/**'
               - '!**/*.md'
+              - '!android/**'
+      # The Android gate. Default (OR) quantifier: any of these paths fires it.
+      # Kept in its own step because the OR semantics are incompatible with the
+      # `every` quantifier the Rust gate above depends on.
+      - uses: dorny/paths-filter@v3
+        id: android
+        with:
+          filters: |
+            android:
+              - 'android/**'
+              - 'schema.graphql'
 
   lint:
     name: Lint
@@ -106,3 +122,27 @@ jobs:
         run: |
           cargo run -p api --bin export-schema > schema.graphql
           git diff --exit-code schema.graphql
+
+  android:
+    name: Android
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    # Driven by the committed Gradle wrapper so CI and local builds resolve the
+    # same Gradle. Apollo codegen, Hilt/KSP processing, and the unit tests all
+    # run as part of these tasks.
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests
+        run: ./gradlew test
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug
