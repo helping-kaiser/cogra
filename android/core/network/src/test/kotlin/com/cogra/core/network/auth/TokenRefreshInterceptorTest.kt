@@ -15,6 +15,7 @@ import org.junit.Test
 
 private const val ME_SUCCESS = """
   {"data":{"me":{
+    "__typename":"User",
     "id":"u1",
     "handle":{"value":"alice","status":"NORMAL"},
     "displayName":{"value":"Alice","status":"NORMAL"},

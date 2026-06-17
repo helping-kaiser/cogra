@@ -15,6 +15,7 @@ import org.junit.Test
 
 private const val USER_JSON = """
   {
+    "__typename": "User",
     "id": "u1",
     "handle": { "value": "alice", "status": "NORMAL" },
     "displayName": { "value": "Alice", "status": "NORMAL" },
