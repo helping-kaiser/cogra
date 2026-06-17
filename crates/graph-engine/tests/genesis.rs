@@ -12,7 +12,17 @@ use graph_engine::Graph;
 use graph_engine::genesis::{GenesisInput, bootstrap, genesis_identity, is_bootstrapped};
 use graph_engine::schema::apply_schema;
 use neo4rs::query;
+use tokio::sync::Mutex;
 use uuid::Uuid;
+
+/// The `:Network` singleton is one global node on the shared Memgraph, so the
+/// fresh-path tests below each create it, assert against it, and tear it down.
+/// Their check-singleton-then-bootstrap sequence isn't atomic: run in parallel,
+/// one adopts the other's singleton and its pointer assertions resolve to the
+/// wrong genesis User, or a cleanup deletes the node mid-read. This lock
+/// serializes those critical sections. Cross-binary test runs are already
+/// sequential under cargo; within-binary parallelism is the only race to guard.
+static SINGLETON_LOCK: Mutex<()> = Mutex::const_new(());
 
 async fn test_graph() -> Graph {
     let host = std::env::var("MEMGRAPH_HOST").unwrap_or_else(|_| "localhost".into());
@@ -82,6 +92,7 @@ async fn count(graph: &Graph, cypher: &str, id: Uuid) -> i64 {
 
 #[tokio::test]
 async fn bootstrap_writes_the_four_genesis_nodes() {
+    let _guard = SINGLETON_LOCK.lock().await;
     let graph = test_graph().await;
     let owns_network = !is_bootstrapped(&graph).await.expect("pre-check");
     let input = fresh_input();
@@ -153,26 +164,12 @@ async fn bootstrap_writes_the_four_genesis_nodes() {
     };
     assert_eq!(name, input.hashtag_name);
 
-    // The singleton's genesis_user_id pointer resolves back to the genesis User
-    // — the id and handle the bootstrap reuses to complete a half-failed run.
-    // Folded into this owning test rather than a standalone one: a separate test
-    // would add another concurrent singleton creator on the shared Memgraph.
-    // Only assertable when this test owns the singleton; otherwise the pointer
-    // targets the pre-existing real genesis, not this test's input.
-    if owns_network {
-        let identity = genesis_identity(&graph)
-            .await
-            .expect("identity read")
-            .expect("genesis identity after bootstrap");
-        assert_eq!(identity.user_id, input.user_id, "pointer targets the user");
-        assert_eq!(identity.username, input.username, "handle round-trips");
-    }
-
     cleanup(&graph, &input, owns_network).await;
 }
 
 #[tokio::test]
 async fn rerunning_bootstrap_is_a_no_op() {
+    let _guard = SINGLETON_LOCK.lock().await;
     let graph = test_graph().await;
     let owns_network = !is_bootstrapped(&graph).await.expect("pre-check");
     let input = fresh_input();
@@ -228,6 +225,7 @@ async fn rerunning_bootstrap_is_a_no_op() {
 
 #[tokio::test]
 async fn genesis_identity_resolves_the_committed_user() {
+    let _guard = SINGLETON_LOCK.lock().await;
     let graph = test_graph().await;
 
     if is_bootstrapped(&graph).await.expect("pre-check") {
@@ -262,6 +260,7 @@ async fn genesis_identity_resolves_the_committed_user() {
 
 #[tokio::test]
 async fn is_bootstrapped_reflects_the_singleton() {
+    let _guard = SINGLETON_LOCK.lock().await;
     let graph = test_graph().await;
 
     if is_bootstrapped(&graph).await.expect("check") {
