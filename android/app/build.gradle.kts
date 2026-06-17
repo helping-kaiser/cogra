@@ -1,5 +1,6 @@
 import com.android.build.api.variant.HasHostTestsBuilder
 import com.android.build.api.variant.HostTestBuilder
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +8,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+// Resolve the dev GraphQL endpoint: `cogra.graphqlUrl` from local.properties
+// (gitignored, per-machine) or a Gradle property, else the emulator default.
+val graphqlUrl: String = run {
+    val localProperties = Properties().apply {
+        rootProject.file("local.properties")
+            .takeIf { it.exists() }
+            ?.inputStream()
+            ?.use(::load)
+    }
+    localProperties.getProperty("cogra.graphqlUrl")
+        ?: project.findProperty("cogra.graphqlUrl") as String?
+        ?: "http://10.0.2.2:8080/graphql"
 }
 
 android {
@@ -21,9 +36,12 @@ android {
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // The GraphQL endpoint. 10.0.2.2 is the host loopback as seen from the
-        // Android emulator, so `make dev` on the host is reachable by default.
-        buildConfigField("String", "GRAPHQL_URL", "\"http://10.0.2.2:8080/graphql\"")
+        // The GraphQL endpoint, overridable per machine via `cogra.graphqlUrl`
+        // (local.properties or a Gradle property) so the same build serves the
+        // emulator, a physical device, and CI. The default is the emulator's
+        // host loopback. For a physical device, `adb reverse tcp:8080 tcp:8080`
+        // and set the value to http://localhost:8080/graphql.
+        buildConfigField("String", "GRAPHQL_URL", "\"$graphqlUrl\"")
     }
 
     buildTypes {
