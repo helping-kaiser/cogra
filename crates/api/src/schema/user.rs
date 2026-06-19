@@ -112,30 +112,12 @@ impl User {
 /// A fresh access + refresh token pair, the issuing session, and the viewer it
 /// authenticates — the success result shared by verifyEmail, logIn, and
 /// refreshSession.
+#[derive(SimpleObject)]
 pub struct AuthSession {
     pub access_token: String,
     pub refresh_token: String,
     pub session: super::types::Session,
     pub user: User,
-}
-
-#[Object]
-impl AuthSession {
-    async fn access_token(&self) -> &str {
-        &self.access_token
-    }
-
-    async fn refresh_token(&self) -> &str {
-        &self.refresh_token
-    }
-
-    async fn session(&self) -> &super::types::Session {
-        &self.session
-    }
-
-    async fn user(&self) -> &User {
-        &self.user
-    }
 }
 
 /// Declares an auth result payload — a nullable `auth` session plus the implied
