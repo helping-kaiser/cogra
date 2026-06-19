@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id,\n                  u.username,\n                  pv.display_name AS \"display_name!\",\n                  pv.bio,\n                  pv.website_url,\n                  u.created_at,\n                  pv.created_at AS \"updated_at!\"\n           FROM users u\n           JOIN LATERAL (\n               SELECT display_name, bio, website_url, created_at\n               FROM user_profile_versions\n               WHERE user_id = u.id\n               ORDER BY created_at DESC\n               LIMIT 1\n           ) pv ON TRUE\n           WHERE u.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "website_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "16a9017e8d107dd314aada05a928318cbdc96ad1c60c4cc6500423da61967344"
+}

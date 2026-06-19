@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_refresh_tokens SET revoked_at = NOW()\n         WHERE user_id = $1 AND revoked_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5627877c49e5a0b0979bdc2310dc78e25d34bfa94106f9c910ec3f71c14484eb"
+}

@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, inviter_id, inviter_type, inviter_dim1, inviter_dim2,\n                single_use, consumed_at, expires_at, revoked_at\n         FROM auth_invitations WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "inviter_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "inviter_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "inviter_dim1",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 4,
+        "name": "inviter_dim2",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 5,
+        "name": "single_use",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "consumed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "5414a901ec3d29d89e3d6ff0f66a2b795091f21a00918e0dfb49c05903120077"
+}

@@ -17,10 +17,13 @@ use uuid::Uuid;
 /// committed, Postgres not) re-runs instead of no-opping. Keyed on the genesis
 /// User id read back from the graph — the cross-store join key.
 pub async fn genesis_present(pool: &PgPool, user_id: Uuid) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)")
-        .bind(user_id)
-        .fetch_one(pool)
-        .await
+    // `EXISTS` is non-null, but sqlx infers it nullable; `!` fixes it to `bool`.
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS (SELECT 1 FROM users WHERE id = $1) AS "exists!""#,
+        user_id
+    )
+    .fetch_one(pool)
+    .await
 }
 
 /// The id of the genesis User's first invite link — the earliest invitation
@@ -30,13 +33,13 @@ pub async fn genesis_invitation_id(
     pool: &PgPool,
     inviter_id: Uuid,
 ) -> Result<Option<Uuid>, sqlx::Error> {
-    sqlx::query_scalar(
+    sqlx::query_scalar!(
         "SELECT id FROM auth_invitations
          WHERE inviter_id = $1
          ORDER BY created_at ASC, id ASC
          LIMIT 1",
+        inviter_id
     )
-    .bind(inviter_id)
     .fetch_optional(pool)
     .await
 }
@@ -53,14 +56,14 @@ pub async fn insert_genesis_user(
 ) -> Result<(), sqlx::Error> {
     // `ON CONFLICT (id) DO NOTHING` is defense-in-depth — the both-stores gate
     // already prevents re-running the genesis writes against a present row.
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)
          ON CONFLICT (id) DO NOTHING",
+        id,
+        username,
+        email,
+        password_hash
     )
-    .bind(id)
-    .bind(username)
-    .bind(email)
-    .bind(password_hash)
     .execute(conn)
     .await
     .map(|_| ())
@@ -73,12 +76,14 @@ pub async fn insert_genesis_profile(
     user_id: Uuid,
     display_name: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO user_profile_versions (user_id, display_name) VALUES ($1, $2)")
-        .bind(user_id)
-        .bind(display_name)
-        .execute(conn)
-        .await
-        .map(|_| ())
+    sqlx::query!(
+        "INSERT INTO user_profile_versions (user_id, display_name) VALUES ($1, $2)",
+        user_id,
+        display_name
+    )
+    .execute(conn)
+    .await
+    .map(|_| ())
 }
 
 /// Seeds the first invite link — a multi-use, long-lived link owned by the
@@ -91,16 +96,16 @@ pub async fn insert_genesis_invitation(
     inviter_dim2: f32,
     expires_at: DateTime<Utc>,
 ) -> Result<Uuid, sqlx::Error> {
-    sqlx::query_scalar(
+    sqlx::query_scalar!(
         "INSERT INTO auth_invitations
              (inviter_id, inviter_type, inviter_dim1, inviter_dim2, single_use, expires_at)
          VALUES ($1, 'user', $2, $3, FALSE, $4)
          RETURNING id",
+        inviter_id,
+        inviter_dim1,
+        inviter_dim2,
+        expires_at
     )
-    .bind(inviter_id)
-    .bind(inviter_dim1)
-    .bind(inviter_dim2)
-    .bind(expires_at)
     .fetch_one(conn)
     .await
 }
