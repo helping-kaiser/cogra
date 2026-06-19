@@ -70,10 +70,12 @@ make up           Start Postgres + Memgraph in background
 make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
 make migrate      Run pending Postgres migrations only
-make ci           Full CI pipeline: lint, test, then docs-link-check
-make lint         cargo clippy + cargo fmt --check (read-only)
+make ci           Full CI pipeline: lint, sqlx-check, test, then docs-link-check
+make lint         cargo clippy (offline) + cargo fmt --check (read-only)
 make fmt          cargo fmt --all (writes files)
 make test         cargo test --all
+make sqlx-prepare Regenerate .sqlx/ offline metadata (needs a live, migrated DB)
+make sqlx-check   Verify .sqlx/ matches the queries (needs a live, migrated DB)
 make docs-link-check  Check markdown link targets + anchors (needs lychee)
 make build        cargo build --all
 make logs         Follow docker compose logs (Ctrl+C to stop)
@@ -136,7 +138,36 @@ make migrate
 
 Migration files are numbered and named, e.g. `20240101000000_create_users.sql`.
 
-SQLx compile-time query checking (`sqlx::query!` macros) requires a live database or a `.sqlx/` cache directory. During development, keep `make up` running. In CI, the database service is started before the build step.
+## Compile-time-checked queries
+
+`postgres-store` uses the `sqlx::query!` / `query_as!` / `query_scalar!`
+macros: SQL is parsed, columns and types are matched against the Rust side,
+and bind counts are verified **at compile time**. A column rename or a
+struct/schema mismatch is a build error, not a runtime surprise.
+
+The macros need the schema at compile time, from one of two sources:
+
+- a **live database** (`DATABASE_URL` set, migrations applied), or
+- the committed **`.sqlx/` offline cache** at the repo root.
+
+So the build works without a database — CI's lint job and any DB-less
+`cargo build` read from `.sqlx/`. The cost is that `.sqlx/` must be kept in
+sync with the queries:
+
+```bash
+make sqlx-prepare   # after changing any query or migration; commit the result
+make sqlx-check     # verify .sqlx/ is current (what CI's test job runs)
+```
+
+Two CI jobs enforce this from both directions: the **lint** job builds with
+`SQLX_OFFLINE=true` (no database), so a query changed without re-running
+`sqlx-prepare` fails with "no cached data for this query"; the **test** job
+runs `cargo sqlx prepare --check` against the freshly-migrated live schema,
+catching a migration that shifted a column under an unchanged query string.
+
+When iterating with a live DB up (`make up`), the macros check against it
+directly, so transient mismatches surface immediately — regenerate `.sqlx/`
+before committing.
 
 ---
 
