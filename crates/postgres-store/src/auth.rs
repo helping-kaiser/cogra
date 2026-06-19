@@ -214,8 +214,7 @@ pub async fn insert_user_profile(
 /// handle another account already holds — `editProfile` pre-checks
 /// availability for a typed userError, so this fires only on a residual race,
 /// where the violation aborts the whole service-layer transaction. Paired with
-/// the graph-side [`relabel_user_handle`](../../graph_engine/accounts/fn.relabel_user_handle.html)
-/// in one dual-store write. Transactional.
+/// the graph-side `relabel_user_handle` in one dual-store write. Transactional.
 pub async fn update_username(
     conn: &mut PgConnection,
     user_id: Uuid,
