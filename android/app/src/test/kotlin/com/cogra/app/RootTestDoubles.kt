@@ -5,9 +5,11 @@ import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.ModeratedText
 import com.cogra.core.domain.model.ModerationStatus
 import com.cogra.core.domain.model.NetworkRole
+import com.cogra.core.domain.model.ProfileEdits
 import com.cogra.core.domain.model.User
 import com.cogra.core.domain.repository.AuthOutcome
 import com.cogra.core.domain.repository.AuthRepository
+import com.cogra.core.domain.repository.EditProfileOutcome
 import com.cogra.core.domain.repository.TokenStore
 import com.cogra.core.network.di.NetworkModule
 import dagger.Binds
@@ -47,6 +49,9 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
         error("login is not exercised by the root test")
 
     override suspend fun me(): User? = viewer
+
+    override suspend fun editProfile(edits: ProfileEdits): EditProfileOutcome =
+        error("editProfile is not exercised by the root test")
 }
 
 /** Replaces the Apollo/Keystore-backed network graph with in-memory fakes so the

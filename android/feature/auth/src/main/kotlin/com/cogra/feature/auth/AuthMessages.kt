@@ -12,9 +12,14 @@ import com.cogra.core.domain.model.UserError
 internal fun UserError.toDisplayMessage(): String =
     when (code) {
         ErrorCode.INVALID_CREDENTIALS -> "Email or password is incorrect."
+        ErrorCode.HANDLE_TAKEN -> "That handle is already taken."
         ErrorCode.BAD_INPUT -> when (field.firstOrNull()) {
             "email" -> "Enter your email."
             "password" -> "Enter your password."
+            "handle" -> "Handles use 3–30 letters, digits, or underscores."
+            "displayName" -> "Enter a display name (up to 50 characters)."
+            "bio" -> "Your bio is too long (up to 300 characters)."
+            "websiteUrl" -> "Enter a valid web address (http:// or https://)."
             else -> "Check the details you entered."
         }
         ErrorCode.RATE_LIMITED -> "Too many attempts. Try again in a little while."

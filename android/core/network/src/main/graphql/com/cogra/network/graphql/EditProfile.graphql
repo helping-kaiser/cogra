@@ -1,0 +1,12 @@
+mutation EditProfile($input: EditProfileInput!) {
+  editProfile(input: $input) {
+    user {
+      ...UserFields
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
