@@ -1,3 +1,8 @@
+"""
+A fresh access + refresh token pair, the issuing session, and the viewer it
+authenticates — the success result shared by verifyEmail, logIn, and
+refreshSession.
+"""
 type AuthSession {
 	accessToken: String!
 	refreshToken: String!
