@@ -20,8 +20,11 @@ use postgres_store::PgPool;
 use crate::auth::Viewer;
 use crate::auth::jwt::JwtKeys;
 use errors::ErrorCodes;
-use types::{LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, VerifyEmailInput};
-use user::{LogInPayload, RefreshPayload, User, VerifyEmailPayload};
+use types::{
+    EditProfileInput, LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload,
+    VerifyEmailInput,
+};
+use user::{EditProfilePayload, LogInPayload, RefreshPayload, User, VerifyEmailPayload};
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -111,6 +114,17 @@ impl Mutation {
         input: RefreshSessionInput,
     ) -> async_graphql::Result<RefreshPayload> {
         ops::refresh_session(ctx, input).await
+    }
+
+    /// Append a new layer to the viewer's own profile (handle, displayName,
+    /// bio, websiteUrl). Self only — the viewer is the edited User. Requires a
+    /// session; an anonymous caller gets an UNAUTHENTICATED transport fault.
+    async fn edit_profile(
+        &self,
+        ctx: &Context<'_>,
+        input: EditProfileInput,
+    ) -> async_graphql::Result<EditProfilePayload> {
+        ops::edit_profile(ctx, input).await
     }
 }
 
