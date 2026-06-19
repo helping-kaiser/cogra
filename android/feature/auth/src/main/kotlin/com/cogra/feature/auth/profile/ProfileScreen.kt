@@ -13,6 +13,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,12 +32,27 @@ fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ProfileScreen(
-        state = state,
-        onRetry = viewModel::load,
-        onLogout = viewModel::onLogout,
-        modifier = modifier,
-    )
+    // Slice 1 has no NavHost yet, so the edit screen is a local sub-state of the
+    // profile. Owning it here keeps the profile ViewModel in scope, so a saved
+    // edit can trigger a reload to show the new values.
+    var editing by rememberSaveable { mutableStateOf(false) }
+    if (editing) {
+        EditProfileRoute(
+            onDone = { changed ->
+                editing = false
+                if (changed) viewModel.load()
+            },
+            modifier = modifier,
+        )
+    } else {
+        ProfileScreen(
+            state = state,
+            onRetry = viewModel::load,
+            onLogout = viewModel::onLogout,
+            onEditProfile = { editing = true },
+            modifier = modifier,
+        )
+    }
 }
 
 @Composable
@@ -42,6 +60,7 @@ fun ProfileScreen(
     state: ProfileUiState,
     onRetry: () -> Unit,
     onLogout: () -> Unit,
+    onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -52,6 +71,7 @@ fun ProfileScreen(
 
             state.user != null -> ProfileContent(
                 user = state.user,
+                onEditProfile = onEditProfile,
                 onLogout = onLogout,
             )
 
@@ -64,7 +84,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(user: User, onLogout: () -> Unit) {
+private fun ProfileContent(user: User, onEditProfile: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,6 +112,14 @@ private fun ProfileContent(user: User, onLogout: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
         )
 
+        Button(
+            onClick = onEditProfile,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(ProfileTestTags.EDIT),
+        ) {
+            Text("Edit profile")
+        }
         OutlinedButton(
             onClick = onLogout,
             modifier = Modifier
@@ -130,6 +158,7 @@ object ProfileTestTags {
     const val PROGRESS = "profile_progress"
     const val DISPLAY_NAME = "profile_display_name"
     const val HANDLE = "profile_handle"
+    const val EDIT = "profile_edit"
     const val LOGOUT = "profile_logout"
     const val ERROR = "profile_error"
     const val RETRY = "profile_retry"
