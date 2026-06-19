@@ -3,8 +3,12 @@ package com.cogra.app
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import com.cogra.core.domain.model.AuthTokens
 import com.cogra.feature.auth.login.LoginTestTags
+import com.cogra.feature.auth.profile.EditProfileTestTags
 import com.cogra.feature.auth.profile.ProfileTestTags
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -61,5 +65,43 @@ class CograRootTest {
         composeRule.setContent { CograRoot() }
 
         composeRule.onNodeWithTag(ProfileTestTags.DISPLAY_NAME).assertIsDisplayed()
+    }
+
+    /** Regression: with the old activity-scoped edit ViewModel, re-opening the
+     *  edit screen bounced straight back (a stale `saved` flag). Per-destination
+     *  scoping under the NavHost gives a fresh ViewModel each visit. */
+    @Test
+    fun editProfileCanBeReopenedAfterCancel() {
+        authRepository.viewer = testUser()
+        runBlocking { tokenStore.save(AuthTokens(accessToken = "access", refreshToken = "refresh")) }
+        composeRule.setContent { CograRoot() }
+
+        composeRule.onNodeWithTag(ProfileTestTags.EDIT).performClick()
+        composeRule.onNodeWithTag(EditProfileTestTags.DISPLAY_NAME).assertIsDisplayed()
+
+        composeRule.onNodeWithTag(EditProfileTestTags.CANCEL).performScrollTo().performClick()
+        composeRule.onNodeWithTag(ProfileTestTags.DISPLAY_NAME).assertIsDisplayed()
+
+        // Reopen — must show the form again, not bounce shut.
+        composeRule.onNodeWithTag(ProfileTestTags.EDIT).performClick()
+        composeRule.onNodeWithTag(EditProfileTestTags.DISPLAY_NAME).assertIsDisplayed()
+    }
+
+    /** A saved edit navigates back to the profile. (The transient confirmation
+     *  snackbar shown there is verified by hand — Robolectric's auto-advancing
+     *  clock races past a snackbar's lifetime, so asserting it is flaky.) */
+    @Test
+    fun savingAnEditReturnsToTheProfile() {
+        authRepository.viewer = testUser()
+        runBlocking { tokenStore.save(AuthTokens(accessToken = "access", refreshToken = "refresh")) }
+        composeRule.setContent { CograRoot() }
+
+        composeRule.onNodeWithTag(ProfileTestTags.EDIT).performClick()
+        composeRule.onNodeWithTag(EditProfileTestTags.DISPLAY_NAME).performTextReplacement("Alice B.")
+        composeRule.onNodeWithTag(EditProfileTestTags.SAVE).performScrollTo().performClick()
+
+        // The Edit button exists only on the profile, so seeing it means the
+        // save popped us back off the edit screen.
+        composeRule.onNodeWithTag(ProfileTestTags.EDIT).assertIsDisplayed()
     }
 }

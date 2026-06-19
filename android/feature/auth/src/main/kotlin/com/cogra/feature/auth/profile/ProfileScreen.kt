@@ -10,12 +10,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -25,34 +26,40 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.ModeratedText
 import com.cogra.core.domain.model.User
+import kotlinx.coroutines.flow.filter
 
 @Composable
 fun ProfileRoute(
+    onEditProfile: () -> Unit,
+    profileUpdated: Boolean,
+    onProfileUpdatedShown: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // Slice 1 has no NavHost yet, so the edit screen is a local sub-state of the
-    // profile. Owning it here keeps the profile ViewModel in scope, so a saved
-    // edit can trigger a reload to show the new values.
-    var editing by rememberSaveable { mutableStateOf(false) }
-    if (editing) {
-        EditProfileRoute(
-            onDone = { changed ->
-                editing = false
-                if (changed) viewModel.load()
-            },
-            modifier = modifier,
-        )
-    } else {
-        ProfileScreen(
-            state = state,
-            onRetry = viewModel::load,
-            onLogout = viewModel::onLogout,
-            onEditProfile = { editing = true },
-            modifier = modifier,
-        )
+    // Returning from a saved edit: refresh the profile and confirm with a
+    // snackbar (android/CLAUDE.md "User feedback"). The effect is keyed on Unit
+    // and observes the result via snapshotFlow, so consuming the flag (which
+    // flips it back) can't re-key and cancel the in-flight snackbar — keying
+    // directly on the flag would.
+    val updated by rememberUpdatedState(profileUpdated)
+    LaunchedEffect(Unit) {
+        snapshotFlow { updated }
+            .filter { it }
+            .collect {
+                onProfileUpdatedShown()
+                viewModel.load()
+                snackbarHostState.showSnackbar("Profile updated")
+            }
     }
+    ProfileScreen(
+        state = state,
+        onRetry = viewModel::load,
+        onLogout = viewModel::onLogout,
+        onEditProfile = onEditProfile,
+        modifier = modifier,
+    )
 }
 
 @Composable
