@@ -19,6 +19,17 @@ pub const HANDLE_MAX_LEN: usize = 30;
 /// verification email is the authoritative proof the address is real.
 pub const EMAIL_MAX_LEN: usize = 254;
 
+/// Profile-field bounds for `editProfile` (api-spec.md "EditProfileInput").
+/// The docs leave these open; these are the chosen values, gathered here with
+/// the other tunables. `display_name` is required and non-empty once trimmed;
+/// `bio` and `website_url` are optional, and an empty value clears them. The
+/// `website_url` cap pairs with the http(s)-scheme check in
+/// [`validate`](super::validate) — the field is rendered as a link, so a
+/// `javascript:` / `data:` value must never reach storage.
+pub const DISPLAY_NAME_MAX_LEN: usize = 50;
+pub const BIO_MAX_LEN: usize = 300;
+pub const WEBSITE_URL_MAX_LEN: usize = 200;
+
 /// Pending-registration lifetime (auth.md): unverified records expire in 24 h.
 pub const PENDING_TTL_HOURS: i64 = 24;
 

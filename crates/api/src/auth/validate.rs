@@ -8,7 +8,10 @@
 //! field, not a tier-1 transport fault — consistent with the tiered error model
 //! ([errors.rs](crate::schema::errors)).
 
-use crate::auth::policy::{EMAIL_MAX_LEN, HANDLE_MAX_LEN, HANDLE_MIN_LEN};
+use crate::auth::policy::{
+    BIO_MAX_LEN, DISPLAY_NAME_MAX_LEN, EMAIL_MAX_LEN, HANDLE_MAX_LEN, HANDLE_MIN_LEN,
+    WEBSITE_URL_MAX_LEN,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum HandleError {
@@ -16,6 +19,22 @@ pub enum HandleError {
     Length,
     #[error("handle may contain only lowercase letters, digits, and underscores")]
     Charset,
+}
+
+/// Validation failures for the free-text `editProfile` fields. Each maps to a
+/// per-field `BAD_INPUT` userError in the resolver.
+#[derive(Debug, thiserror::Error)]
+pub enum ProfileError {
+    #[error("display name cannot be empty")]
+    DisplayNameEmpty,
+    #[error("display name must be at most {DISPLAY_NAME_MAX_LEN} characters")]
+    DisplayNameTooLong,
+    #[error("bio must be at most {BIO_MAX_LEN} characters")]
+    BioTooLong,
+    #[error("website URL must be at most {WEBSITE_URL_MAX_LEN} characters")]
+    WebsiteTooLong,
+    #[error("website URL must be a valid http(s) address")]
+    WebsiteInvalid,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -76,6 +95,78 @@ pub fn normalize_email(raw: &str) -> Result<String, EmailError> {
         return Err(EmailError::Malformed);
     }
     Ok(email)
+}
+
+/// Validates a required display name: trimmed, non-empty, within the length
+/// cap. Unlike a handle it keeps its case and full Unicode — it is display
+/// content, not a lookup key — so only the length is bounded.
+pub fn normalize_display_name(raw: &str) -> Result<String, ProfileError> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err(ProfileError::DisplayNameEmpty);
+    }
+    if trimmed.chars().count() > DISPLAY_NAME_MAX_LEN {
+        return Err(ProfileError::DisplayNameTooLong);
+    }
+    Ok(trimmed.to_string())
+}
+
+/// Validates an optional bio. A blank value (empty or whitespace) is the
+/// "clear it" signal, returning `None`; otherwise the trimmed text under the
+/// length cap.
+pub fn normalize_bio(raw: &str) -> Result<Option<String>, ProfileError> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    if trimmed.chars().count() > BIO_MAX_LEN {
+        return Err(ProfileError::BioTooLong);
+    }
+    Ok(Some(trimmed.to_string()))
+}
+
+/// Validates an optional website URL. A blank value clears the field
+/// (`None`); otherwise the URL must be under the length cap and parse as an
+/// `http`/`https` address with a non-empty host. The scheme allowlist is a
+/// safety boundary, not a nicety: the value is rendered as a clickable link,
+/// so a `javascript:` / `data:` URL must never reach storage.
+pub fn normalize_website_url(raw: &str) -> Result<Option<String>, ProfileError> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    if trimmed.chars().count() > WEBSITE_URL_MAX_LEN {
+        return Err(ProfileError::WebsiteTooLong);
+    }
+    if !is_http_url(trimmed) {
+        return Err(ProfileError::WebsiteInvalid);
+    }
+    Ok(Some(trimmed.to_string()))
+}
+
+/// True when `s` is an `http://` or `https://` URL with a non-empty host. A
+/// deliberately small parser — enough to enforce the scheme allowlist and
+/// reject host-less junk, without pulling in a URL crate. The host is the run
+/// up to the first `/`, `?`, or `#`, minus any `userinfo@` prefix and `:port`
+/// suffix.
+fn is_http_url(s: &str) -> bool {
+    let lower = s.to_ascii_lowercase();
+    let after_scheme = match lower
+        .strip_prefix("https://")
+        .or_else(|| lower.strip_prefix("http://"))
+    {
+        Some(rest) => rest,
+        None => return false,
+    };
+    // Map the lowercased offset back onto the original isn't needed: we only
+    // test the host for emptiness, and case doesn't change that.
+    let authority = after_scheme
+        .split(['/', '?', '#'])
+        .next()
+        .unwrap_or(after_scheme);
+    let host = authority.rsplit('@').next().unwrap_or(authority);
+    let host = host.split(':').next().unwrap_or(host);
+    !host.is_empty()
 }
 
 #[cfg(test)]
@@ -172,5 +263,112 @@ mod tests {
     fn email_rejects_over_the_length_cap() {
         let long = format!("{}@example.com", "a".repeat(EMAIL_MAX_LEN));
         assert!(matches!(normalize_email(&long), Err(EmailError::TooLong)));
+    }
+
+    #[test]
+    fn display_name_trims_and_keeps_case_and_unicode() {
+        // Display content, not a lookup key: case and non-ASCII survive, only
+        // surrounding whitespace is stripped.
+        assert_eq!(
+            normalize_display_name("  Ada Łovelace ").expect("valid"),
+            "Ada Łovelace"
+        );
+    }
+
+    #[test]
+    fn display_name_rejects_blank() {
+        for blank in ["", "   ", "\t\n"] {
+            assert!(matches!(
+                normalize_display_name(blank),
+                Err(ProfileError::DisplayNameEmpty)
+            ));
+        }
+    }
+
+    #[test]
+    fn display_name_enforces_the_length_cap_in_characters() {
+        assert!(normalize_display_name(&"a".repeat(DISPLAY_NAME_MAX_LEN)).is_ok());
+        let over = "a".repeat(DISPLAY_NAME_MAX_LEN + 1);
+        assert!(matches!(
+            normalize_display_name(&over),
+            Err(ProfileError::DisplayNameTooLong)
+        ));
+        // Multibyte characters count as one each, not by byte length.
+        assert!(normalize_display_name(&"é".repeat(DISPLAY_NAME_MAX_LEN)).is_ok());
+    }
+
+    #[test]
+    fn bio_blank_clears_to_none() {
+        for blank in ["", "   ", "\n"] {
+            assert_eq!(normalize_bio(blank).expect("blank clears"), None);
+        }
+    }
+
+    #[test]
+    fn bio_trims_and_caps_length() {
+        assert_eq!(
+            normalize_bio("  hi  ").expect("valid"),
+            Some("hi".to_string())
+        );
+        assert!(normalize_bio(&"a".repeat(BIO_MAX_LEN)).is_ok());
+        assert!(matches!(
+            normalize_bio(&"a".repeat(BIO_MAX_LEN + 1)),
+            Err(ProfileError::BioTooLong)
+        ));
+    }
+
+    #[test]
+    fn website_blank_clears_to_none() {
+        for blank in ["", "   "] {
+            assert_eq!(normalize_website_url(blank).expect("blank clears"), None);
+        }
+    }
+
+    #[test]
+    fn website_accepts_http_and_https() {
+        for ok in [
+            "http://example.com",
+            "https://example.com",
+            "HTTPS://Example.com/Path?q=1#frag",
+            "https://user@host.example:8443/path",
+            "https://192.168.0.1/status",
+        ] {
+            assert_eq!(
+                normalize_website_url(ok).expect("valid url"),
+                Some(ok.trim().to_string()),
+                "{ok} must be accepted and stored verbatim"
+            );
+        }
+    }
+
+    #[test]
+    fn website_rejects_non_http_schemes_and_junk() {
+        // The scheme allowlist is the security boundary — javascript:/data:
+        // and bare/host-less strings must never reach storage.
+        for bad in [
+            "javascript:alert(1)",
+            "data:text/html,<script>",
+            "ftp://example.com",
+            "example.com",
+            "https://",
+            "http:///path",
+        ] {
+            assert!(
+                matches!(
+                    normalize_website_url(bad),
+                    Err(ProfileError::WebsiteInvalid)
+                ),
+                "{bad} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn website_enforces_the_length_cap() {
+        let long = format!("https://example.com/{}", "a".repeat(WEBSITE_URL_MAX_LEN));
+        assert!(matches!(
+            normalize_website_url(&long),
+            Err(ProfileError::WebsiteTooLong)
+        ));
     }
 }
