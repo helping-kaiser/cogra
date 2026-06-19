@@ -65,6 +65,12 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    # No database here: the sqlx `query!` macros compile against the committed
+    # `.sqlx/` metadata. A query changed without re-running `cargo sqlx prepare`
+    # fails the build with "no cached data for this query" — the staleness
+    # tripwire for query-vs-cache drift.
+    env:
+      SQLX_OFFLINE: true
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -114,6 +120,12 @@ jobs:
         run: cargo install sqlx-cli --no-default-features --features rustls,postgres
       - name: Run migrations
         run: sqlx migrate run --source migrations
+      # Recompiles every query! against the freshly-migrated live schema and
+      # asserts the committed .sqlx/ matches. Catches the drift the offline
+      # lint job can't: a migration that changed a column under an unchanged
+      # query string.
+      - name: Check .sqlx metadata is current
+        run: cargo sqlx prepare --workspace --check
       - name: Run tests
         run: cargo test --all
       # Redundant with the api schema_drift test on purpose: a named CI
