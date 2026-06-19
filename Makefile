@@ -4,10 +4,10 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema android-ci android-lint android-test android-build
 
 help: ## Show available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 init: ## First-time setup: copy .env, check & install dependencies
@@ -85,6 +85,17 @@ docs-link-check: ## Check markdown link targets + anchors (mirrors docs-ci.yml; 
 
 build: ## Build all crates
 	$(CARGO) build --all
+
+android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + Android SDK)
+
+android-test: ## Run Android unit tests (./gradlew test)
+	cd android && ./gradlew test
+
+android-build: ## Assemble the debug APK (./gradlew :app:assembleDebug)
+	cd android && ./gradlew :app:assembleDebug
+
+android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience only)
+	cd android && ./gradlew lint
 
 logs: ## Follow docker compose logs
 	$(DOCKER_COMPOSE) logs -f
