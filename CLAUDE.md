@@ -126,6 +126,14 @@ Cross-cutting design questions live in
   the implementation.
 - **Move slowly and correctly.** Quality over speed. No
   rushing, no shortcuts.
+- **Build from official sources.** Implement the way the
+  language, framework, or tool officially documents it — verify
+  against the current official docs before building, not by
+  recall or improvisation. When the official sources don't cover
+  a problem, research it properly before settling on an approach.
+  If a prior decision or request would have us do something other
+  than the documented, idiomatic way, name it and get agreement —
+  don't silently ship the non-standard thing.
 - **Document decisions in the repo.** Any rule, principle, or
   agreement reached during discussion belongs in this file,
   [CONTRIBUTING.md](CONTRIBUTING.md), or a design doc — not in
@@ -265,6 +273,22 @@ make ci     # lint + test + docs link check (run before pushing)
 
 Full make-target list, env vars, and other dev guidance:
 [docs/implementation/development.md](docs/implementation/development.md).
+
+### Follow Rust's official guidance
+
+The backend is built the way Rust officially documents, not by
+improvisation. The canonical sources for idiom: the
+[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
+for API design (naming, trait impls, error types, ergonomics),
+[The Book](https://doc.rust-lang.org/book/) and the
+[Reference](https://doc.rust-lang.org/reference/) for language
+semantics, and the [`std` docs](https://doc.rust-lang.org/std/).
+For a dependency, its own [docs.rs](https://docs.rs) page is the
+source of truth — async-graphql, axum, sqlx, and tokio each
+document the intended pattern; follow it rather than inferring one
+from a stray example. `clippy` encodes much of this guidance: a
+lint is a documented opinion, so fix the code rather than `allow`
+it without a named reason.
 
 ### Code style
 
