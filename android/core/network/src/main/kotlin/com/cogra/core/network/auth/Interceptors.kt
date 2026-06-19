@@ -8,8 +8,8 @@ import com.apollographql.apollo.interceptor.ApolloInterceptorChain
 import com.cogra.core.domain.repository.TokenStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -54,18 +54,20 @@ class TokenRefreshInterceptor(
     override fun <D : Operation.Data> intercept(
         request: ApolloRequest<D>,
         chain: ApolloInterceptorChain,
-    ): Flow<ApolloResponse<D>> = flow {
-        val response = chain.proceed(request).first()
+    ): Flow<ApolloResponse<D>> = chain.proceed(request).transform { response ->
         if (!response.isUnauthenticated()) {
             emit(response)
-            return@flow
+            return@transform
         }
 
         val tokenBeforeRefresh = tokenStore.current()?.accessToken
         val refreshed = refreshMutex.withLock {
             val tokenNow = tokenStore.current()?.accessToken
             // A concurrent call may have already rotated the token while we
-            // waited for the lock; if so, don't refresh again.
+            // waited for the lock; if so, don't refresh again. The check is on
+            // the access token, but the store writes access + refresh together
+            // atomically (EncryptedTokenStore), so a changed access token means
+            // the refresh token rotated too — the replay re-reads both.
             if (tokenNow != null && tokenNow != tokenBeforeRefresh) true else refresher.refresh()
         }
 
