@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_invitations SET consumed_at = NOW()\n         WHERE id = $1 AND single_use = TRUE AND consumed_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ca733d40af22063a8e6f1b3c545a8e83689ce8ff83226ff2f4df66ce2aacf88"
+}

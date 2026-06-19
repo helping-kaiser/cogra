@@ -8,12 +8,12 @@
 //! reads and single-statement writes take `&PgPool`.
 
 use chrono::{DateTime, Utc};
-use sqlx::{FromRow, PgConnection, PgPool};
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
 /// A live or expired pending registration — the off-graph record that exists
 /// between `register` and `verifyEmail`. No `:User` node exists yet.
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct PendingRegistration {
     pub id: Uuid,
     pub username: String,
@@ -28,7 +28,7 @@ pub struct PendingRegistration {
 /// An invite link's server-side row. The link URL carries only `id`; the
 /// pre-committed inviter tensor stays here so relaying the link cannot tamper
 /// with it (auth.md "Invitation generation").
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct Invitation {
     pub id: Uuid,
     pub inviter_id: Uuid,
@@ -43,7 +43,7 @@ pub struct Invitation {
 
 /// The credentials needed to authenticate a login — never the whole row, and
 /// never returned beyond the auth layer.
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct UserCredentials {
     pub id: Uuid,
     pub password_hash: String,
@@ -51,7 +51,7 @@ pub struct UserCredentials {
 
 /// A session row in `auth_refresh_tokens` — the `token_hash` itself never
 /// leaves the database (auth.md "Refresh token").
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct RefreshToken {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -83,7 +83,7 @@ pub async fn upsert_pending_registration(
     pool: &PgPool,
     reg: NewPendingRegistration<'_>,
 ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
-    sqlx::query_scalar(
+    sqlx::query_scalar!(
         "INSERT INTO auth_pending_registrations
              (username, email, password_hash, invitation_id, invitee_dim1,
               invitee_dim2, email_verification_token_hash, expires_at)
@@ -99,15 +99,15 @@ pub async fn upsert_pending_registration(
              expires_at = EXCLUDED.expires_at
          WHERE auth_pending_registrations.expires_at < NOW()
          RETURNING expires_at",
+        reg.username,
+        reg.email,
+        reg.password_hash,
+        reg.invitation_id,
+        reg.invitee_dim1,
+        reg.invitee_dim2,
+        reg.email_verification_token_hash,
+        reg.expires_at
     )
-    .bind(reg.username)
-    .bind(reg.email)
-    .bind(reg.password_hash)
-    .bind(reg.invitation_id)
-    .bind(reg.invitee_dim1)
-    .bind(reg.invitee_dim2)
-    .bind(reg.email_verification_token_hash)
-    .bind(reg.expires_at)
     .fetch_optional(pool)
     .await
 }
@@ -118,13 +118,14 @@ pub async fn find_pending_by_token_hash(
     pool: &PgPool,
     token_hash: &[u8],
 ) -> Result<Option<PendingRegistration>, sqlx::Error> {
-    sqlx::query_as(
+    sqlx::query_as!(
+        PendingRegistration,
         "SELECT id, username, email, password_hash, invitation_id,
                 invitee_dim1, invitee_dim2, expires_at
          FROM auth_pending_registrations
          WHERE email_verification_token_hash = $1",
+        token_hash
     )
-    .bind(token_hash)
     .fetch_optional(pool)
     .await
 }
@@ -132,12 +133,13 @@ pub async fn find_pending_by_token_hash(
 /// Reads an invitation row by id. Validity (unexpired / unrevoked /
 /// unconsumed) is judged by the caller.
 pub async fn find_invitation(pool: &PgPool, id: Uuid) -> Result<Option<Invitation>, sqlx::Error> {
-    sqlx::query_as(
+    sqlx::query_as!(
+        Invitation,
         "SELECT id, inviter_id, inviter_type, inviter_dim1, inviter_dim2,
                 single_use, consumed_at, expires_at, revoked_at
          FROM auth_invitations WHERE id = $1",
+        id
     )
-    .bind(id)
     .fetch_optional(pool)
     .await
 }
@@ -148,10 +150,13 @@ pub async fn find_credentials_by_email(
     pool: &PgPool,
     email: &str,
 ) -> Result<Option<UserCredentials>, sqlx::Error> {
-    sqlx::query_as("SELECT id, password_hash FROM users WHERE email = $1")
-        .bind(email)
-        .fetch_optional(pool)
-        .await
+    sqlx::query_as!(
+        UserCredentials,
+        "SELECT id, password_hash FROM users WHERE email = $1",
+        email
+    )
+    .fetch_optional(pool)
+    .await
 }
 
 /// Whether a verified account already holds this handle. Registration checks
@@ -160,10 +165,12 @@ pub async fn find_credentials_by_email(
 /// consulted — they hold no committed handle and may expire — so a residual
 /// two-pending race still resolves at `insert_user`.
 pub async fn username_taken(pool: &PgPool, username: &str) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)")
-        .bind(username)
-        .fetch_one(pool)
-        .await
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM users WHERE username = $1) AS "exists!""#,
+        username
+    )
+    .fetch_one(pool)
+    .await
 }
 
 /// Inserts the verified `users` row — credentials copied across from the
@@ -182,14 +189,14 @@ pub async fn insert_user(
     email: &str,
     password_hash: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)
          ON CONFLICT (id) DO NOTHING",
+        id,
+        username,
+        email,
+        password_hash
     )
-    .bind(id)
-    .bind(username)
-    .bind(email)
-    .bind(password_hash)
     .execute(conn)
     .await
     .map(|_| ())
@@ -202,12 +209,14 @@ pub async fn insert_user_profile(
     user_id: Uuid,
     display_name: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO user_profile_versions (user_id, display_name) VALUES ($1, $2)")
-        .bind(user_id)
-        .bind(display_name)
-        .execute(conn)
-        .await
-        .map(|_| ())
+    sqlx::query!(
+        "INSERT INTO user_profile_versions (user_id, display_name) VALUES ($1, $2)",
+        user_id,
+        display_name
+    )
+    .execute(conn)
+    .await
+    .map(|_| ())
 }
 
 /// Changes a user's handle (`users.username`). The UNIQUE constraint rejects a
@@ -220,12 +229,14 @@ pub async fn update_username(
     user_id: Uuid,
     new_username: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE users SET username = $2 WHERE id = $1")
-        .bind(user_id)
-        .bind(new_username)
-        .execute(conn)
-        .await
-        .map(|_| ())
+    sqlx::query!(
+        "UPDATE users SET username = $2 WHERE id = $1",
+        user_id,
+        new_username
+    )
+    .execute(conn)
+    .await
+    .map(|_| ())
 }
 
 /// Appends a new display-content profile version for `editProfile`, carrying
@@ -242,7 +253,7 @@ pub async fn append_user_profile_version(
     bio: Option<&str>,
     website_url: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO user_profile_versions
              (user_id, display_name, bio, avatar_id, cover_id, website_url)
          SELECT $1, $2, $3, avatar_id, cover_id, $4
@@ -250,11 +261,11 @@ pub async fn append_user_profile_version(
          WHERE user_id = $1
          ORDER BY created_at DESC
          LIMIT 1",
+        user_id,
+        display_name,
+        bio,
+        website_url
     )
-    .bind(user_id)
-    .bind(display_name)
-    .bind(bio)
-    .bind(website_url)
     .execute(conn)
     .await
     .map(|_| ())
@@ -270,16 +281,17 @@ pub async fn insert_refresh_token(
     expires_at: DateTime<Utc>,
     device_label: Option<&str>,
 ) -> Result<RefreshToken, sqlx::Error> {
-    sqlx::query_as(
+    sqlx::query_as!(
+        RefreshToken,
         "INSERT INTO auth_refresh_tokens (id, user_id, token_hash, expires_at, device_label)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, user_id, created_at, last_used_at, expires_at, device_label, revoked_at",
+        id,
+        user_id,
+        token_hash,
+        expires_at,
+        device_label
     )
-    .bind(id)
-    .bind(user_id)
-    .bind(token_hash)
-    .bind(expires_at)
-    .bind(device_label)
     .fetch_one(conn)
     .await
 }
@@ -290,11 +302,11 @@ pub async fn consume_invitation_if_single_use(
     conn: &mut PgConnection,
     invitation_id: Uuid,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
+    sqlx::query!(
         "UPDATE auth_invitations SET consumed_at = NOW()
          WHERE id = $1 AND single_use = TRUE AND consumed_at IS NULL",
+        invitation_id
     )
-    .bind(invitation_id)
     .execute(conn)
     .await
     .map(|_| ())
@@ -306,8 +318,7 @@ pub async fn delete_pending_registration(
     conn: &mut PgConnection,
     id: Uuid,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("DELETE FROM auth_pending_registrations WHERE id = $1")
-        .bind(id)
+    sqlx::query!("DELETE FROM auth_pending_registrations WHERE id = $1", id)
         .execute(conn)
         .await
         .map(|_| ())
@@ -318,11 +329,12 @@ pub async fn find_refresh_token_by_hash(
     pool: &PgPool,
     token_hash: &[u8],
 ) -> Result<Option<RefreshToken>, sqlx::Error> {
-    sqlx::query_as(
+    sqlx::query_as!(
+        RefreshToken,
         "SELECT id, user_id, created_at, last_used_at, expires_at, device_label, revoked_at
          FROM auth_refresh_tokens WHERE token_hash = $1",
+        token_hash
     )
-    .bind(token_hash)
     .fetch_optional(pool)
     .await
 }
@@ -342,10 +354,10 @@ pub async fn rotate_refresh_token(
     device_label: Option<&str>,
 ) -> Result<RefreshToken, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    sqlx::query(
+    sqlx::query!(
         "UPDATE auth_refresh_tokens SET revoked_at = NOW(), last_used_at = NOW() WHERE id = $1",
+        old_id
     )
-    .bind(old_id)
     .execute(&mut *tx)
     .await?;
     let row = insert_refresh_token(
@@ -364,11 +376,11 @@ pub async fn rotate_refresh_token(
 /// Revokes every still-live session for a user — the response to refresh-token
 /// reuse (auth.md "Reuse detection") and to security events.
 pub async fn revoke_all_sessions(pool: &PgPool, user_id: Uuid) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "UPDATE auth_refresh_tokens SET revoked_at = NOW()
          WHERE user_id = $1 AND revoked_at IS NULL",
+        user_id
     )
-    .bind(user_id)
     .execute(pool)
     .await?;
     Ok(result.rows_affected())

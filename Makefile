@@ -4,7 +4,7 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema android-ci android-lint android-test android-build
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema sqlx-prepare sqlx-check android-ci android-lint android-test android-build
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -54,6 +54,12 @@ api-release: ## Start the API server (optimized build; realistic auth/crypto lat
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
 	$(CARGO) run -p api --bin export-schema > schema.graphql
 
+sqlx-prepare: ## Regenerate the committed .sqlx/ offline metadata (needs a live, migrated DB)
+	$(CARGO) sqlx prepare --workspace --database-url $(DATABASE_URL)
+
+sqlx-check: ## Verify .sqlx/ matches the queries against the live schema (needs a live, migrated DB)
+	$(CARGO) sqlx prepare --workspace --check --database-url $(DATABASE_URL)
+
 bootstrap: up ## One-time instance setup: generate the JWT key, write genesis nodes + first invite link
 	@echo "Waiting for Postgres to be ready..."
 	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
@@ -67,11 +73,11 @@ dev: up ## Start DBs, run migrations, then start the API
 
 run: init dev ## Full start: init + dev (first-time friendly)
 
-ci: lint test docs-link-check ## Run full CI pipeline locally (lint + test + docs)
+ci: lint sqlx-check test docs-link-check ## Run full CI pipeline locally (lint + sqlx metadata check + test + docs)
 
 lint: ## Run clippy and fmt check (read-only, matches CI)
 	$(CARGO) fmt --all -- --check
-	$(CARGO) clippy --all-targets --all-features -- -D warnings
+	SQLX_OFFLINE=true $(CARGO) clippy --all-targets --all-features -- -D warnings
 
 fmt: ## Format all code
 	$(CARGO) fmt --all
