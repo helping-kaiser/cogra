@@ -117,6 +117,14 @@ them:
   implementation.
 - **Move slowly and correctly.** Quality over speed. No rushing, no
   shortcuts.
+- **Build from official sources.** Implement the way the language,
+  framework, or tool officially documents it — verify against the
+  current official docs before building, not by recall or
+  improvisation. When the official sources don't cover a problem,
+  research it properly before settling on an approach. If a prior
+  decision or request would have us do something other than the
+  documented, idiomatic way, name it and get agreement — don't
+  silently ship the non-standard thing.
 - **Document decisions in the repo.** Any rule, principle, or
   agreement reached during discussion belongs in this file,
   [CLAUDE.md](CLAUDE.md), or a design doc — not in private notes,
