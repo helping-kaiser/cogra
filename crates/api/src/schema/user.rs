@@ -176,3 +176,29 @@ auth_payload!(
     /// when the refresh token is invalid, expired, or was already rotated.
     RefreshPayload
 );
+
+/// The viewer's `User` after an `editProfile`. `user` is null with a userError
+/// when the edit was rejected — `BAD_INPUT` for a bad field value,
+/// `HANDLE_TAKEN` for a handle already in use (api-spec.md). An anonymous
+/// caller gets a tier-1 `UNAUTHENTICATED` transport fault instead, not a
+/// userError.
+#[derive(SimpleObject)]
+pub struct EditProfilePayload {
+    pub user: Option<User>,
+    pub user_errors: Vec<UserError>,
+}
+
+impl EditProfilePayload {
+    pub fn ok(user: User) -> Self {
+        Self {
+            user: Some(user),
+            user_errors: Vec::new(),
+        }
+    }
+    pub fn err(error: UserError) -> Self {
+        Self {
+            user: None,
+            user_errors: vec![error],
+        }
+    }
+}

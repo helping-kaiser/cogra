@@ -10,9 +10,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -22,17 +26,38 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.ModeratedText
 import com.cogra.core.domain.model.User
+import kotlinx.coroutines.flow.filter
 
 @Composable
 fun ProfileRoute(
+    onEditProfile: () -> Unit,
+    profileUpdated: Boolean,
+    onProfileUpdatedShown: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Returning from a saved edit: refresh the profile and confirm with a
+    // snackbar (android/CLAUDE.md "User feedback"). The effect is keyed on Unit
+    // and observes the result via snapshotFlow, so consuming the flag (which
+    // flips it back) can't re-key and cancel the in-flight snackbar — keying
+    // directly on the flag would.
+    val updated by rememberUpdatedState(profileUpdated)
+    LaunchedEffect(Unit) {
+        snapshotFlow { updated }
+            .filter { it }
+            .collect {
+                onProfileUpdatedShown()
+                viewModel.load()
+                snackbarHostState.showSnackbar("Profile updated")
+            }
+    }
     ProfileScreen(
         state = state,
         onRetry = viewModel::load,
         onLogout = viewModel::onLogout,
+        onEditProfile = onEditProfile,
         modifier = modifier,
     )
 }
@@ -42,6 +67,7 @@ fun ProfileScreen(
     state: ProfileUiState,
     onRetry: () -> Unit,
     onLogout: () -> Unit,
+    onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -52,6 +78,7 @@ fun ProfileScreen(
 
             state.user != null -> ProfileContent(
                 user = state.user,
+                onEditProfile = onEditProfile,
                 onLogout = onLogout,
             )
 
@@ -64,7 +91,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(user: User, onLogout: () -> Unit) {
+private fun ProfileContent(user: User, onEditProfile: () -> Unit, onLogout: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,6 +119,14 @@ private fun ProfileContent(user: User, onLogout: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
         )
 
+        Button(
+            onClick = onEditProfile,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(ProfileTestTags.EDIT),
+        ) {
+            Text("Edit profile")
+        }
         OutlinedButton(
             onClick = onLogout,
             modifier = Modifier
@@ -130,6 +165,7 @@ object ProfileTestTags {
     const val PROGRESS = "profile_progress"
     const val DISPLAY_NAME = "profile_display_name"
     const val HANDLE = "profile_handle"
+    const val EDIT = "profile_edit"
     const val LOGOUT = "profile_logout"
     const val ERROR = "profile_error"
     const val RETRY = "profile_retry"

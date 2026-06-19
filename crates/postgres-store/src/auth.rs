@@ -210,6 +210,57 @@ pub async fn insert_user_profile(
         .map(|_| ())
 }
 
+/// Changes a user's handle (`users.username`). The UNIQUE constraint rejects a
+/// handle another account already holds — `editProfile` pre-checks
+/// availability for a typed userError, so this fires only on a residual race,
+/// where the violation aborts the whole service-layer transaction. Paired with
+/// the graph-side [`relabel_user_handle`](../../graph_engine/accounts/fn.relabel_user_handle.html)
+/// in one dual-store write. Transactional.
+pub async fn update_username(
+    conn: &mut PgConnection,
+    user_id: Uuid,
+    new_username: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE users SET username = $2 WHERE id = $1")
+        .bind(user_id)
+        .bind(new_username)
+        .execute(conn)
+        .await
+        .map(|_| ())
+}
+
+/// Appends a new display-content profile version for `editProfile`, carrying
+/// the current version's `avatar_id` / `cover_id` forward untouched — this
+/// slice edits only the text fields, and an edit must not silently drop a
+/// future avatar. `display_name` / `bio` / `website_url` are the already-merged
+/// target values: the resolver folds each omitted input field against the
+/// current version before calling. The new row's `created_at` defaults to
+/// `NOW()`, making it the top version `find_user_by_id` reads. Transactional.
+pub async fn append_user_profile_version(
+    conn: &mut PgConnection,
+    user_id: Uuid,
+    display_name: &str,
+    bio: Option<&str>,
+    website_url: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO user_profile_versions
+             (user_id, display_name, bio, avatar_id, cover_id, website_url)
+         SELECT $1, $2, $3, avatar_id, cover_id, $4
+         FROM user_profile_versions
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1",
+    )
+    .bind(user_id)
+    .bind(display_name)
+    .bind(bio)
+    .bind(website_url)
+    .execute(conn)
+    .await
+    .map(|_| ())
+}
+
 /// Issues a session row. The raw token never touches the database — only its
 /// SHA-256 hash. Returns the row for the `Session` payload. Transactional.
 pub async fn insert_refresh_token(

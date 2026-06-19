@@ -20,6 +20,32 @@ Float.
 scalar Dimension
 
 """
+Append a new layer to the viewer's own profile (api-spec.md
+"EditProfileInput"). Self only — the viewer is the edited User, so there is
+no id. Omitted fields carry forward from the current version; a blank `bio`
+/ `websiteUrl` clears that field. The media fields (avatar / cover) arrive
+with the media slice.
+"""
+input EditProfileInput {
+	handle: String
+	displayName: String
+	bio: String
+	websiteUrl: String
+}
+
+"""
+The viewer's `User` after an `editProfile`. `user` is null with a userError
+when the edit was rejected — `BAD_INPUT` for a bad field value,
+`HANDLE_TAKEN` for a handle already in use (api-spec.md). An anonymous
+caller gets a tier-1 `UNAUTHENTICATED` transport fault instead, not a
+userError.
+"""
+type EditProfilePayload {
+	user: User
+	userErrors: [UserError!]!
+}
+
+"""
 The one error vocabulary, shared across both error tiers (governing
 principles): the `extensions.code` on a transport fault and the `code` on a
 `UserError` both draw from it. Grows as gestures add expected failures.
@@ -162,6 +188,12 @@ type Mutation {
 	Rotate the refresh token and mint a fresh access token.
 	"""
 	refreshSession(input: RefreshSessionInput!): RefreshPayload!
+	"""
+	Append a new layer to the viewer's own profile (handle, displayName,
+	bio, websiteUrl). Self only — the viewer is the edited User. Requires a
+	session; an anonymous caller gets an UNAUTHENTICATED transport fault.
+	"""
+	editProfile(input: EditProfileInput!): EditProfilePayload!
 }
 
 """

@@ -96,6 +96,48 @@ pub async fn create_registrant(
     Ok(())
 }
 
+/// Appends a new top layer to a `:User`'s `username` — the only profile field
+/// whose value lives on the graph (it is the mention/lookup key, so it is a
+/// real data property, not just a moderation-status slot). The text fields
+/// (`display_name`, `bio`, `website_url`) are versioned in Postgres and never
+/// reach here.
+///
+/// The append fires **only when the value actually changes**, so a retried
+/// service-layer transaction — one whose graph half committed but whose
+/// Postgres half failed — collapses to a no-op instead of stacking a duplicate
+/// layer (architecture.md "Partial-failure handling": the first-committed side
+/// must be idempotent on retry). The node's `username` UNIQUE constraint
+/// rejects a handle another account holds; the resolver pre-checks availability
+/// for a typed userError, and this is the backstop. `RETURN` yields a row
+/// whenever the node exists, so an empty result is "no such user" — distinct
+/// from "value unchanged", which still returns the row.
+pub async fn relabel_user_handle(
+    txn: &mut Txn,
+    user_id: Uuid,
+    new_handle: &str,
+) -> Result<(), GraphError> {
+    let cypher = "MATCH (u:User {id: $id})
+         WITH u, localDateTime() AS now
+         FOREACH (_ IN CASE WHEN u.username <> $new_handle THEN [1] ELSE [] END |
+           SET u.username = $new_handle,
+               u.username_layers = u.username_layers +
+                 [{value: $new_handle, timestamp: now, layer: size(u.username_layers) + 1}])
+         RETURN u.id AS id";
+    let mut rows = txn
+        .execute(
+            query(cypher)
+                .param("id", user_id.to_string())
+                .param("new_handle", new_handle),
+        )
+        .await?;
+    if rows.next(txn.handle()).await?.is_none() {
+        return Err(GraphError::Invalid(format!(
+            "user {user_id} not found in the graph"
+        )));
+    }
+    Ok(())
+}
+
 /// The graph-side state behind a `:User`: the role and moderation cache that
 /// live only on the node. Display fields come from Postgres; this is what the
 /// `User` resolver reads from the graph.

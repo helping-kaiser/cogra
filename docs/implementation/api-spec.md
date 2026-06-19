@@ -2008,8 +2008,11 @@ type EditItemPayload { item: Item! }
 
 "Append a new layer to the viewer's own profile. Self only — the
  viewer is the User edited, so there is no id. Omitted fields are
- untouched; a handle change is subject to the global handle-uniqueness
- constraint."
+ untouched; for the optional text fields a blank value clears them. A
+ handle change is subject to the global handle-uniqueness constraint.
+ Bounds: `displayName` 1–50 characters, `bio` ≤300, `websiteUrl` ≤200
+ and an `http`/`https` URL — the scheme allowlist keeps a `javascript:`
+ value off a rendered profile link."
 input EditProfileInput {
   handle: String
   displayName: String

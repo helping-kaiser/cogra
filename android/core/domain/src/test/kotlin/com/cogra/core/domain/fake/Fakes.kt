@@ -5,9 +5,11 @@ import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.ModeratedText
 import com.cogra.core.domain.model.ModerationStatus
 import com.cogra.core.domain.model.NetworkRole
+import com.cogra.core.domain.model.ProfileEdits
 import com.cogra.core.domain.model.User
 import com.cogra.core.domain.repository.AuthOutcome
 import com.cogra.core.domain.repository.AuthRepository
+import com.cogra.core.domain.repository.EditProfileOutcome
 import com.cogra.core.domain.repository.TokenStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +37,8 @@ internal open class FakeAuthRepository(
     var logInThrows: Throwable? = null,
     var meUser: User? = null,
     var meThrows: Throwable? = null,
+    var editProfileOutcome: EditProfileOutcome? = null,
+    var editProfileThrows: Throwable? = null,
 ) : AuthRepository {
     var logInCalls = 0
         private set
@@ -48,6 +52,11 @@ internal open class FakeAuthRepository(
     override suspend fun me(): User? {
         meThrows?.let { throw it }
         return meUser
+    }
+
+    override suspend fun editProfile(edits: ProfileEdits): EditProfileOutcome {
+        editProfileThrows?.let { throw it }
+        return editProfileOutcome ?: error("no editProfileOutcome configured")
     }
 }
 

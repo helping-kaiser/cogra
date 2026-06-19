@@ -33,11 +33,17 @@ impl Viewer {
         Viewer(id)
     }
 
-    /// The authenticated user id, or a "must be authenticated" error for the
-    /// mutations that require a session.
+    /// The authenticated user id, or an `UNAUTHENTICATED` transport fault for
+    /// the mutations that require a session. The code rides `extensions.code`
+    /// (tier 1, not a `userError`) so the client's refresh-and-replay
+    /// interceptor recognizes it and rotates the access token — an expired
+    /// token reads here exactly as an absent one.
     pub fn require(&self) -> async_graphql::Result<Uuid> {
-        self.0
-            .ok_or_else(|| async_graphql::Error::new("authentication required"))
+        use async_graphql::ErrorExtensions;
+        self.0.ok_or_else(|| {
+            async_graphql::Error::new("authentication required")
+                .extend_with(|_, e| e.set("code", "UNAUTHENTICATED"))
+        })
     }
 }
 

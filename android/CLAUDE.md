@@ -11,6 +11,21 @@ Re-read the root CLAUDE.md and this file at the start of every Android task.
 
 ---
 
+## Follow the platform guidelines
+
+Build the way the platform documents, not by improvisation. Before
+implementing a pattern — navigation, state holding, user feedback,
+theming, lists, permissions — follow the current
+[Android](https://developer.android.com/develop/ui/compose) /
+[Material 3](https://m3.material.io) guidance, and confirm it rather than
+guessing. If the roadmap, a prior decision, or a request would have us do
+something **other** than the idiomatic, documented way, say so and get
+agreement before building it — don't silently ship the non-standard thing.
+The rules below capture decisions already grounded this way; extend them as
+new surfaces raise new questions.
+
+---
+
 ## Module discipline
 
 Gradle modules mirror the backend's crate discipline; each unit-tests in
@@ -56,6 +71,42 @@ is the point.
   implementation.
 - **Versions live in `gradle/libs.versions.toml`.** Add or bump dependencies
   there, never inline in a module's `build.gradle.kts`.
+
+## Navigation
+
+Screen-to-screen navigation uses a single
+[Navigation Compose](https://developer.android.com/develop/ui/compose/navigation)
+`NavHost` + `NavController`, with **type-safe routes** (`@Serializable` route
+types, Navigation 2.8+). One `NavHost` for the whole app — never reach a
+screen by toggling conditional composition.
+
+- **One ViewModel per destination, scoped to its `NavBackStackEntry`.**
+  `hiltViewModel()` inside a `composable<Route> {}` block is scoped to that
+  back-stack entry, so each destination's ViewModel is created on navigation
+  and cleared on pop. Never drive a screen through a retained,
+  activity-scoped ViewModel — it leaks stale state across visits (the bug we
+  hit: an edit screen bounced shut because a prior `saved` flag survived, and
+  a login form stayed pre-filled after logout).
+- **Navigation is hoisted.** Screens receive `onX: () -> Unit` lambdas and
+  never hold the `NavController`; the `NavHost` owns routing.
+- **Auth drives navigation.** Signed-out vs. signed-in is a
+  [conditional-navigation](https://developer.android.com/guide/navigation/use-graph/conditional)
+  concern: observe auth state in a shared (activity-scoped) holder and
+  navigate, clearing the back stack with `popUpTo(..., inclusive = true)` on
+  both login and logout.
+- **Return a result to the previous destination** via
+  `previousBackStackEntry.savedStateHandle`, read where the destination
+  resumes — e.g. a saved edit signals the profile to refresh and confirm.
+
+## User feedback
+
+Transient confirmation of a completed action (a saved edit, a submitted
+form) is a **Snackbar**, shown via a `SnackbarHostState` on a `Scaffold`
+([Compose Snackbar guidance](https://developer.android.com/develop/ui/compose/components/snackbar)).
+Not `Toast` — Toast is a legacy system surface with no Material styling or
+in-app placement. A Snackbar fires once per event, so it rides a consumed
+one-shot (a `savedStateHandle` result or a collected event), never a sticky
+state flag that re-fires on recomposition.
 
 ## Auth / tokens
 
