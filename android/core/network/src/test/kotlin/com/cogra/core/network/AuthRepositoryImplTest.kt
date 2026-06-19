@@ -4,7 +4,9 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.core.domain.model.ErrorCode
 import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.NetworkRole
+import com.cogra.core.domain.model.ProfileEdits
 import com.cogra.core.domain.repository.AuthOutcome
+import com.cogra.core.domain.repository.EditProfileOutcome
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
@@ -108,5 +110,29 @@ class AuthRepositoryImplTest {
         enqueueJson("""{"errors":[{"message":"boom","extensions":{"code":"INTERNAL"}}],"data":null}""")
 
         repository.me()
+    }
+
+    @Test
+    fun `editProfile maps an updated payload to Updated`() = runTest {
+        enqueueJson("""{"data":{"editProfile":{"user":$USER_JSON,"userErrors":[]}}}""")
+
+        val outcome = repository.editProfile(ProfileEdits(displayName = "Alice"))
+
+        assertThat(outcome).isInstanceOf(EditProfileOutcome.Updated::class.java)
+        assertThat((outcome as EditProfileOutcome.Updated).user.id).isEqualTo("u1")
+    }
+
+    @Test
+    fun `editProfile maps userErrors to Rejected`() = runTest {
+        enqueueJson(
+            """{"data":{"editProfile":{"user":null,"userErrors":[{"message":"taken","code":"HANDLE_TAKEN","field":["handle"]}]}}}""",
+        )
+
+        val outcome = repository.editProfile(ProfileEdits(handle = "taken"))
+
+        assertThat(outcome).isInstanceOf(EditProfileOutcome.Rejected::class.java)
+        val error = (outcome as EditProfileOutcome.Rejected).errors.single()
+        assertThat(error.code).isEqualTo(ErrorCode.HANDLE_TAKEN)
+        assertThat(error.field).containsExactly("handle")
     }
 }

@@ -10,19 +10,22 @@ use chrono::{Duration, Utc};
 use common::registrant_ids;
 use common::wallet::placeholder_address;
 use graph_engine::Graph;
-use graph_engine::accounts::{InvitationEdges, create_registrant};
+use graph_engine::accounts::{InvitationEdges, create_registrant, relabel_user_handle};
 use postgres_store::PgPool;
 use postgres_store::auth::{self, NewPendingRegistration};
 use uuid::Uuid;
 
 use crate::auth::jwt::JwtKeys;
 use crate::auth::policy::{INVITE_EDGE_DEFAULT, PENDING_TTL_HOURS, REFRESH_TTL_DAYS};
-use crate::auth::{password, tokens, validate};
+use crate::auth::{Viewer, password, tokens, validate};
 use crate::schema::errors::{ErrorCode, UserError};
 use crate::schema::types::{
-    LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, Session, VerifyEmailInput,
+    EditProfileInput, LogInInput, RefreshSessionInput, RegisterInput, RegisterPayload, Session,
+    VerifyEmailInput,
 };
-use crate::schema::user::{AuthSession, LogInPayload, RefreshPayload, User, VerifyEmailPayload};
+use crate::schema::user::{
+    AuthSession, EditProfilePayload, LogInPayload, RefreshPayload, User, VerifyEmailPayload,
+};
 
 /// Logs an internal failure with detail and returns a generic transport fault —
 /// the detail never leaks to the client, which sees only the `INTERNAL` code on
@@ -435,4 +438,171 @@ pub async fn refresh_session(
         session: Session::issued(session_row),
         user,
     }))
+}
+
+/// `editProfile` — append a new layer to the viewer's own profile (api-spec.md
+/// "editProfile"). Self only: the edited User is the viewer, so there is no id.
+/// Omitted fields carry forward from the current version; a blank `bio` /
+/// `websiteUrl` clears it.
+///
+/// The text fields version in Postgres alone — the graph node holds only their
+/// moderation status, unchanged by a normal edit. A handle change is the lone
+/// field that touches the graph: it updates `users.username` and appends the
+/// node's `username` layer, so it runs as a dual-store transaction with the
+/// graph committing first (its relabel is idempotent on retry —
+/// architecture.md "Partial-failure handling"). Either way exactly one new
+/// profile version lands, so `updatedAt` advances on every successful edit.
+pub async fn edit_profile(
+    ctx: &Context<'_>,
+    input: EditProfileInput,
+) -> Result<EditProfilePayload> {
+    let pool = pool(ctx)?;
+    let graph = graph(ctx)?;
+    let viewer = ctx.data_opt::<Viewer>().copied().unwrap_or(Viewer(None));
+    let user_id = viewer.require()?;
+
+    // At least one field must be set: an all-omitted edit has nothing to layer.
+    if input.handle.is_none()
+        && input.display_name.is_none()
+        && input.bio.is_none()
+        && input.website_url.is_none()
+    {
+        return Ok(EditProfilePayload::err(UserError::whole(
+            ErrorCode::BadInput,
+            "provide at least one field to update",
+        )));
+    }
+
+    // The current version is the carry-forward source for omitted fields and
+    // the comparison point for a handle change. Missing here means a torn
+    // dual-write or a vanished account — neither is a user-facing failure.
+    let Some(current) = postgres_store::users::find_user_by_id(pool, user_id)
+        .await
+        .map_err(|e| internal("loading current profile", e))?
+    else {
+        return Err(internal("viewer profile missing", "no current version"));
+    };
+
+    // Validate then merge each provided field; an omitted field carries the
+    // current value forward. A bad value is a per-field BAD_INPUT userError.
+    let display_name = match input.display_name {
+        Some(raw) => match validate::normalize_display_name(&raw) {
+            Ok(name) => name,
+            Err(e) => return Ok(field_error("displayName", e)),
+        },
+        None => current.display_name.clone(),
+    };
+    let bio = match input.bio {
+        Some(raw) => match validate::normalize_bio(&raw) {
+            Ok(value) => value,
+            Err(e) => return Ok(field_error("bio", e)),
+        },
+        None => current.bio.clone(),
+    };
+    let website_url = match input.website_url {
+        Some(raw) => match validate::normalize_website_url(&raw) {
+            Ok(value) => value,
+            Err(e) => return Ok(field_error("websiteUrl", e)),
+        },
+        None => current.website_url.clone(),
+    };
+
+    // A provided handle equal to the current one is not a change — no graph
+    // write, and no self-collision in the availability check below.
+    let new_handle = match input.handle {
+        Some(raw) => match validate::normalize_handle(&raw) {
+            Ok(handle) if handle == current.username => None,
+            Ok(handle) => Some(handle),
+            Err(e) => {
+                return Ok(EditProfilePayload::err(UserError::input(
+                    ErrorCode::BadInput,
+                    "handle",
+                    e.to_string(),
+                )));
+            }
+        },
+        None => None,
+    };
+
+    if let Some(handle) = &new_handle
+        && auth::username_taken(pool, handle)
+            .await
+            .map_err(|e| internal("checking handle availability", e))?
+    {
+        return Ok(EditProfilePayload::err(UserError::input(
+            ErrorCode::HandleTaken,
+            "handle",
+            "that handle is already in use",
+        )));
+    }
+
+    match &new_handle {
+        Some(handle) => {
+            // Dual-store: graph relabel, then the Postgres username update and
+            // new profile version, in one held-open pair. The graph commits
+            // first; both writes execute before either commit, so a residual
+            // handle-uniqueness race aborts both stores cleanly.
+            let mut gtx = graph
+                .start_txn()
+                .await
+                .map_err(|e| internal("opening graph transaction", e))?;
+            relabel_user_handle(&mut gtx, user_id, handle)
+                .await
+                .map_err(|e| internal("relabeling handle", e))?;
+
+            let mut ptx = pool
+                .begin()
+                .await
+                .map_err(|e| internal("opening Postgres transaction", e))?;
+            auth::update_username(&mut ptx, user_id, handle)
+                .await
+                .map_err(|e| internal("updating username", e))?;
+            auth::append_user_profile_version(
+                &mut ptx,
+                user_id,
+                &display_name,
+                bio.as_deref(),
+                website_url.as_deref(),
+            )
+            .await
+            .map_err(|e| internal("appending profile version", e))?;
+
+            gtx.commit()
+                .await
+                .map_err(|e| internal("committing graph transaction", e))?;
+            ptx.commit()
+                .await
+                .map_err(|e| internal("committing Postgres transaction", e))?;
+        }
+        None => {
+            // Text-only: Postgres alone. The graph node carries no text.
+            let mut conn = pool
+                .acquire()
+                .await
+                .map_err(|e| internal("acquiring connection", e))?;
+            auth::append_user_profile_version(
+                &mut conn,
+                user_id,
+                &display_name,
+                bio.as_deref(),
+                website_url.as_deref(),
+            )
+            .await
+            .map_err(|e| internal("appending profile version", e))?;
+        }
+    }
+
+    let user = User::load(pool, graph, user_id)
+        .await?
+        .ok_or_else(|| internal("user not readable after edit", "load returned none"))?;
+    Ok(EditProfilePayload::ok(user))
+}
+
+/// A rejected `editProfile` field value as a per-field `BAD_INPUT` userError.
+fn field_error(field: &str, err: validate::ProfileError) -> EditProfilePayload {
+    EditProfilePayload::err(UserError::input(
+        ErrorCode::BadInput,
+        field,
+        err.to_string(),
+    ))
 }

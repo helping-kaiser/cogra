@@ -199,6 +199,19 @@ pub struct RefreshSessionInput {
     pub refresh_token: String,
 }
 
+/// Append a new layer to the viewer's own profile (api-spec.md
+/// "EditProfileInput"). Self only — the viewer is the edited User, so there is
+/// no id. Omitted fields carry forward from the current version; a blank `bio`
+/// / `websiteUrl` clears that field. The media fields (avatar / cover) arrive
+/// with the media slice.
+#[derive(InputObject)]
+pub struct EditProfileInput {
+    pub handle: Option<String>,
+    pub display_name: Option<String>,
+    pub bio: Option<String>,
+    pub website_url: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

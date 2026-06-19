@@ -9,7 +9,9 @@
 
 use common::NetworkRole;
 use graph_engine::Graph;
-use graph_engine::accounts::{InvitationEdges, create_registrant, fetch_user_graph_state};
+use graph_engine::accounts::{
+    InvitationEdges, create_registrant, fetch_user_graph_state, relabel_user_handle,
+};
 use graph_engine::schema::apply_schema;
 use neo4rs::query;
 use uuid::Uuid;
@@ -250,6 +252,139 @@ async fn missing_inviter_aborts_and_writes_nothing() {
         .get("c")
         .expect("count");
     assert_eq!(c, 0, "no node persists after the aborted write");
+}
+
+/// Commits a handle relabel via the service-layer transaction shape, rolling
+/// back (so nothing persists) on error — mirroring the resolver.
+async fn relabel(
+    graph: &Graph,
+    user_id: Uuid,
+    new_handle: &str,
+) -> Result<(), graph_engine::GraphError> {
+    let mut txn = graph.start_txn().await.expect("open txn");
+    match relabel_user_handle(&mut txn, user_id, new_handle).await {
+        // Memgraph enforces the `username` UNIQUE constraint at COMMIT, not at
+        // the SET, so a taken-handle violation surfaces here — mapped to a
+        // GraphError exactly as the resolver's `gtx.commit()?` would.
+        Ok(()) => txn.commit().await.map_err(graph_engine::GraphError::from),
+        Err(e) => {
+            txn.rollback().await.expect("rollback");
+            Err(e)
+        }
+    }
+}
+
+/// Reads `(username, username_layer_count)` off a `:User`.
+async fn handle_state(graph: &Graph, user_id: Uuid) -> (String, i64) {
+    let mut rows = graph
+        .execute(
+            query(
+                "MATCH (u:User {id: $id})
+                 RETURN u.username AS username, size(u.username_layers) AS layers",
+            )
+            .param("id", user_id.to_string()),
+        )
+        .await
+        .expect("read handle state");
+    let row = rows.next().await.expect("row").expect("user exists");
+    (
+        row.get("username").expect("username"),
+        row.get("layers").expect("layers"),
+    )
+}
+
+#[tokio::test]
+async fn relabel_changes_the_username_and_appends_a_layer() {
+    let graph = test_graph().await;
+    let inviter_id = seed_inviter(&graph).await;
+    let user_id = Uuid::new_v4();
+    let wallet_id = Uuid::new_v4();
+    write_registrant(&graph, user_id, wallet_id, &default_edges(inviter_id))
+        .await
+        .expect("write registrant");
+
+    let new_handle = format!("r{}", Uuid::new_v4().simple());
+    relabel(&graph, user_id, &new_handle)
+        .await
+        .expect("relabel");
+
+    let (username, layers) = handle_state(&graph, user_id).await;
+    assert_eq!(username, new_handle, "top username is the new handle");
+    assert_eq!(layers, 2, "the seed layer plus the relabel");
+
+    cleanup(&graph, &[inviter_id, user_id, wallet_id]).await;
+}
+
+#[tokio::test]
+async fn relabel_to_the_same_value_appends_no_layer() {
+    let graph = test_graph().await;
+    let inviter_id = seed_inviter(&graph).await;
+    let user_id = Uuid::new_v4();
+    let wallet_id = Uuid::new_v4();
+    write_registrant(&graph, user_id, wallet_id, &default_edges(inviter_id))
+        .await
+        .expect("write registrant");
+
+    let (current, _) = handle_state(&graph, user_id).await;
+    // Idempotent on the value: a retry after a partial failure must not stack a
+    // duplicate layer (architecture.md "Partial-failure handling").
+    relabel(&graph, user_id, &current)
+        .await
+        .expect("relabel no-op");
+
+    let (username, layers) = handle_state(&graph, user_id).await;
+    assert_eq!(username, current);
+    assert_eq!(layers, 1, "an unchanged value appends nothing");
+
+    cleanup(&graph, &[inviter_id, user_id, wallet_id]).await;
+}
+
+#[tokio::test]
+async fn relabel_missing_user_errors() {
+    let graph = test_graph().await;
+    let result = relabel(&graph, Uuid::new_v4(), "ghost").await;
+    assert!(
+        matches!(result, Err(graph_engine::GraphError::Invalid(_))),
+        "relabeling an absent user aborts"
+    );
+}
+
+#[tokio::test]
+async fn relabel_to_a_taken_handle_is_rejected() {
+    let graph = test_graph().await;
+    let inviter_id = seed_inviter(&graph).await;
+    let holder = Uuid::new_v4();
+    let editor = Uuid::new_v4();
+    let holder_wallet = Uuid::new_v4();
+    let editor_wallet = Uuid::new_v4();
+    write_registrant(&graph, holder, holder_wallet, &default_edges(inviter_id))
+        .await
+        .expect("write holder");
+    write_registrant(&graph, editor, editor_wallet, &default_edges(inviter_id))
+        .await
+        .expect("write editor");
+
+    let (holder_handle, _) = handle_state(&graph, holder).await;
+    let (editor_before, _) = handle_state(&graph, editor).await;
+
+    // The node `username` UNIQUE constraint is the backstop behind the
+    // resolver's availability pre-check.
+    assert!(
+        relabel(&graph, editor, &holder_handle).await.is_err(),
+        "relabeling onto a taken handle must fail"
+    );
+    let (editor_after, layers) = handle_state(&graph, editor).await;
+    assert_eq!(
+        editor_after, editor_before,
+        "the rejected relabel rolled back"
+    );
+    assert_eq!(layers, 1, "no layer appended on the rejected relabel");
+
+    cleanup(
+        &graph,
+        &[inviter_id, holder, editor, holder_wallet, editor_wallet],
+    )
+    .await;
 }
 
 #[tokio::test]

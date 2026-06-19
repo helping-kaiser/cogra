@@ -5,9 +5,11 @@ import com.cogra.core.domain.model.FieldModerationStatus
 import com.cogra.core.domain.model.ModeratedText
 import com.cogra.core.domain.model.ModerationStatus
 import com.cogra.core.domain.model.NetworkRole
+import com.cogra.core.domain.model.ProfileEdits
 import com.cogra.core.domain.model.User
 import com.cogra.core.domain.repository.AuthOutcome
 import com.cogra.core.domain.repository.AuthRepository
+import com.cogra.core.domain.repository.EditProfileOutcome
 import com.cogra.core.domain.repository.TokenStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,13 @@ class FakeAuthRepository(
     var logInThrows: Throwable? = null,
     var meUser: User? = testUser(),
     var meThrows: Throwable? = null,
+    var editProfileOutcome: EditProfileOutcome = EditProfileOutcome.Updated(testUser()),
+    var editProfileThrows: Throwable? = null,
 ) : AuthRepository {
+    /** The change set passed to the most recent [editProfile] call. */
+    var lastEdits: ProfileEdits? = null
+        private set
+
     override suspend fun logIn(email: String, password: String, deviceLabel: String?): AuthOutcome {
         logInThrows?.let { throw it }
         return logInOutcome
@@ -43,6 +51,12 @@ class FakeAuthRepository(
     override suspend fun me(): User? {
         meThrows?.let { throw it }
         return meUser
+    }
+
+    override suspend fun editProfile(edits: ProfileEdits): EditProfileOutcome {
+        lastEdits = edits
+        editProfileThrows?.let { throw it }
+        return editProfileOutcome
     }
 }
 
