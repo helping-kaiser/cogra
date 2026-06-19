@@ -51,7 +51,7 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
     override suspend fun me(): User? = viewer
 
     override suspend fun editProfile(edits: ProfileEdits): EditProfileOutcome =
-        error("editProfile is not exercised by the root test")
+        EditProfileOutcome.Updated(viewer ?: testUser())
 }
 
 /** Replaces the Apollo/Keystore-backed network graph with in-memory fakes so the

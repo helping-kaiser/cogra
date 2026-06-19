@@ -26,14 +26,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun EditProfileRoute(
-    onDone: (changed: Boolean) -> Unit,
+    onSaved: () -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // A successful save pops back and signals the profile to reload.
+    // A successful save navigates back; the profile destination reads the
+    // result and confirms. This VM is NavBackStackEntry-scoped, so `saved`
+    // starts false on every visit and can't re-fire a stale pop.
     LaunchedEffect(state.saved) {
-        if (state.saved) onDone(true)
+        if (state.saved) onSaved()
     }
     EditProfileScreen(
         state = state,
@@ -42,7 +45,7 @@ fun EditProfileRoute(
         onBioChange = viewModel::onBioChange,
         onWebsiteUrlChange = viewModel::onWebsiteUrlChange,
         onSave = viewModel::onSave,
-        onCancel = { onDone(false) },
+        onCancel = onCancel,
         onRetry = viewModel::load,
         modifier = modifier,
     )
