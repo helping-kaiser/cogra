@@ -78,7 +78,7 @@ edges are written atomically. See
 ## 3. Graph-side properties
 
 Every authored property on the User node is layered per
-[layers.md §3](layers.md#3-layers-on-nodes).
+[layers.md §3](layers.md#3-layers-on-overlay-nodes).
 
 - **`username`** — the handle used for mentions and lookups.
 - **`network_role`** — `member` (default) / `moderator`. Backs
