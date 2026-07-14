@@ -1,5 +1,12 @@
 # CoGra Docs
 
+CoGra is a Layer 2 on the **PeerNetworks Layer 1** substrate;
+[`primitive/layer1-interface.md`](primitive/layer1-interface.md) is
+the binding L1 → L2 contract. *Docs rebase in progress: docs not yet
+rewritten against it may still describe the pre-L1 design — where
+they conflict, the interface wins. This note is removed once the
+rebase completes.*
+
 ## Layers
 
 - **[`primitive/`](primitive/)** — what the graph IS and how it
@@ -38,6 +45,10 @@ an `instances/` doc is a sign the mechanism belongs in
 
 ### `primitive/`
 
+- [layer1-interface](primitive/layer1-interface.md) — the binding
+  PeerNetworks Layer 1 → Layer 2 contract (derived reference, hard
+  facts only): boundary predicate, admission rules, kernel data
+  model, published constants.
 - [graph-model](primitive/graph-model.md) — node categories, edge
   categories, dimensions, append-only, junction approval pattern.
 - [governance](primitive/governance.md) — weighted role-based voting
