@@ -38,6 +38,10 @@ an `instances/` doc is a sign the mechanism belongs in
 
 ### `primitive/`
 
+- [layer1-interface](primitive/layer1-interface.md) — the binding
+  PeerNetworks Layer 1 → Layer 2 contract (derived reference, hard
+  facts only): boundary predicate, admission rules, kernel data
+  model, published constants.
 - [graph-model](primitive/graph-model.md) — node categories, edge
   categories, dimensions, append-only, junction approval pattern.
 - [governance](primitive/governance.md) — weighted role-based voting
