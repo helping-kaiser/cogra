@@ -395,7 +395,7 @@ Phase 1 — central backend serves subgraph + seen-list
 1. Client → POST /graphql to fetch the viewing user's relevant graph
    slice.
 2. API calls graph-engine: traverse outward from the viewing
-   user, bounded by the dust floor ε — weight-bounded, not
+   user, bounded by the dust floor χ — weight-bounded, not
    hop-bounded (feed-ranking.md §9); return the relevant subgraph
    (nodes + their incident actor and structural edges, with
    top-layer tensor values intact).

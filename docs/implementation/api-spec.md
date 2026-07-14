@@ -1355,13 +1355,13 @@ type Query {
    feed. Parameterized by the `viewer` whose feed is ranked: a delegated
    miner ranks on someone's behalf without holding their auth, and
    computing any actor's view for any reader is the public-graph default
-   above. Pruned by `dustFloor` and `distanceDecayBase` — the same ε and
+   above. Pruned by `dustFloor` and `distanceDecayBase` — the same χ and
    d(R) base the ranker runs with, defaults Network.dustFloor and
    Network.distanceDecayBase — not hop-bounded: slice membership is
-   best-possible contribution `d(R) · ∏|dim| ≥ ε` (feed-ranking.md §4.4,
+   best-possible contribution `d(R) · ∏|dim| ≥ χ` (feed-ranking.md §4.4,
    §9), a function of both levers, so a ranker running a softened decay
    passes its base or the slice silently drops the distant nodes the
-   tuned d(R) keeps above ε. Null if the id resolves to no rankable
+   tuned d(R) keeps above χ. Null if the id resolves to no rankable
    actor. The backend never ranks (feed-ranking.md §9) — it serves this
    slice, and separately hydrates the ordered result via `feed`."
   feedSlice(viewer: UUID!, dustFloor: Float, distanceDecayBase: Float): FeedSlice

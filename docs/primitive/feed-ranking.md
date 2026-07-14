@@ -11,7 +11,7 @@ layer-agnostic — it applies to any graph where edges encode
 set of target nodes reachable through intermediate connections.
 
 > **Notation.** The symbols used here — `dim1`, `R`, `S`, `d(R)`,
-> `s_path`, `h`/`i`/`j`/`k`, `α`/`β`, `ε`, … — are defined in
+> `s_path`, `h`/`i`/`j`/`k`, `α`/`β`, `χ`, … — are defined in
 > [notation.md](notation.md).
 
 ---
@@ -41,7 +41,7 @@ target nodes as seen from `U`.
 
 | Symbol | Name | Meaning |
 |--------|------|---------|
-| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `ε` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
+| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `χ` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
 
 ---
 
@@ -129,12 +129,12 @@ explicit depth cap.
 **`R` is an operational cost knob, not a math-defining bound.**
 The path-product math (§3.3–§3.4) and per-target sums (§4) are
 well-defined for any `R`; nothing in the math caps it. What bounds
-the computation in practice is the dust floor `ε`: the data-fetch
+the computation in practice is the dust floor `χ`: the data-fetch
 boundary delivers a weight-bounded slice — nodes whose best-case
-path product still clears `ε` (§4.4, §9) — rather than a
+path product still clears `χ` (§4.4, §9) — rather than a
 hop-counted neighborhood, and within the slice path enumeration
 prunes on the same floor. If a denser graph makes the slice
-unaffordably large, the tuning levers are `ε` and `d(R)`'s decay
+unaffordably large, the tuning levers are `χ` and `d(R)`'s decay
 shape, not a math-side hop cap: a steeper `d(R)` attenuates
 distant paths enough that fetching them stops paying for itself.
 
@@ -472,7 +472,7 @@ single live entry path into an arbitrary aggregate `h(t)`. The
 number of paths through a cluster of branching factor `b` grows as
 `b^(R−1)`; path contributions decay as `d(R) = 0.1^(R−1)`. Once
 `b ≥ 10`, the path-sum series diverges; whatever bound the fetch
-imposes (the dust floor `ε`, §9), achievable amplification of a
+imposes (the dust floor `χ`, §9), achievable amplification of a
 single entry edge runs to ~100× and beyond.
 
 So, as long as **any** path from `U` into the cluster has
@@ -481,7 +481,7 @@ dial `h(t)` to any value they choose — strongly positive, slightly
 positive, slightly negative, deeply negative, anywhere.
 
 This rules out any "near-zero jail" defined as an interval
-`[−ε, 0]`: bots tune their amplification to land at `−ε − δ` and
+`[−χ, 0]`: bots tune their amplification to land at `−χ − δ` and
 re-enter the visible feed directly below the positive section.
 
 #### Why exact `h(t) = 0` is special
@@ -1303,28 +1303,28 @@ is trying to suppress.
 The per-target sums of §4.2 range over *all* paths from `U` to `t`. In a
 dense graph the path count grows as `b^(R−1)` (§3.6), so an unbounded
 enumeration is `O(b^R)` — uncomputable for high-degree hubs. The
-traversal is bounded by a **dust floor** `ε`: enumerate
+traversal is bounded by a **dust floor** `χ`: enumerate
 paths by branch-and-bound and prune a partial path as soon as its
-best-possible completed contribution falls below `ε`.
+best-possible completed contribution falls below `χ`.
 
 ```
 best_possible(prefix) = d(R_prefix) · ∏|dim| of the prefix's contributing edges
-prune the prefix when best_possible(prefix) < ε
+prune the prefix when best_possible(prefix) < χ
 ```
 
 Each further hop multiplies in a `|dim| ≤ 1` factor and `d(R)` decays
-geometrically, so a prefix already below `ε` cannot recover on any
+geometrically, so a prefix already below `χ` cannot recover on any
 completion — the prune is **exact up to the floor**, not a heuristic.
-Paths below `ε` contribute only dust to the sums; dropping them shifts
+Paths below `χ` contribute only dust to the sums; dropping them shifts
 each metric by less than the floor.
 
-`ε` does double duty under one formula: here it prunes **paths** during
+`χ` does double duty under one formula: here it prunes **paths** during
 exact enumeration, and in §9 it bounds the slice **node-set** by
 best-possible contribution per node. Exact enumeration is the sparse-regime
 method — where the above-floor path count is itself intractable, the metric
 is computed by message-passing instead (§4.5).
 
-**Where `ε` sits.** The per-path contribution to `h` falls ~15× per
+**Where `χ` sits.** The per-path contribution to `h` falls ~15× per
 hop — a `0.1` factor from `d(R)` and a `~0.6` factor per added edge.
 For a fresh path of moderate edges (`|dim| ≈ 0.6`, `f(Δt) = 1`) under
 the default `d(R)`, `h = H_s + H_c ≈ d(R) · 2 · 0.6^R` per path:
@@ -1339,7 +1339,7 @@ paths and removes only the individually-weak `R=4`+ tail. `1×10⁻³`
 itself is already too coarse — it kills `R=4` outright and eats the
 weaker `R=3` paths.
 
-`ε` is the **finest the compute budget allows**: ≈0 when the graph is
+`χ` is the **finest the compute budget allows**: ≈0 when the graph is
 sparse and `b^R` is cheap anyway, rising only under dense-graph load.
 Coarsening loses little when dense — weak distant signal is redundant
 (content buzzing at `R=3` is carried inward at full weight by the `R=2`
@@ -1348,21 +1348,21 @@ need the fine floor. Its network default is seeded at genesis on the
 `:Network` singleton's `dust_floor` property — `0` while the graph is
 sparse — and the network raises it via a baseline-bucket Proposal as
 density grows (see
-[network.md §3](network.md#feed-ranking-calibration)); `ε` is
+[network.md §3](network.md#feed-ranking-calibration)); `χ` is
 frontend-tunable alongside `d(R)` and `f(Δt)`.
 
 The same branch-and-bound floor bounds the economics attribution
 traversal, which walks these identical paths to split a campaign's pool
 ([economics.md §6.5](economics.md#65-computation--exact-streaming-oplayers-memory));
-there `ε` is set per campaign by author-aggregate payability and recorded
+there `χ` is set per campaign by author-aggregate payability and recorded
 for reproducibility.
 
 ### 4.5 Computing the metric — message-passing over the slice
 
 The §4.2 sums range over *all* paths to `t`, and §4.4's branch-and-bound
-prunes the individually-weak ones — but `ε` bounds the slice **node-set**
+prunes the individually-weak ones — but `χ` bounds the slice **node-set**
 (§9), not the **path count** between those nodes. In the mid-density regime —
-after small-world connectivity makes `R ≤ 3` most of the network, before `ε`
+after small-world connectivity makes `R ≤ 3` most of the network, before `χ`
 rises enough to prune `R = 3` — the above-floor path count is still
 `~b^(R−1)`, so explicit enumeration stays `O(b^R)`. The metric needs a
 formulation that does not enumerate, and it has one.
@@ -1419,7 +1419,7 @@ exactly what a memoryless message-pass cannot carry. The two regimes split
 on this, and the split is favorable:
 
 - **Sparse.** The above-floor path count is small (`b^R` is cheap, which is
-  why `ε ≈ 0` is affordable here). **Enumerate exactly** — §4.4's
+  why `χ ≈ 0` is affordable here). **Enumerate exactly** — §4.4's
   branch-and-bound, visited set intact — and the invariant holds with no
   approximation.
 - **Dense / mid-density.** Enumeration is `O(b^R)` and intractable. Compute
@@ -1448,8 +1448,8 @@ The regimes are complementary, both driven by the same `b^(R−1)`: the regime
 that *forces* the relaxation (dense) is the one where the artifact is
 negligible, and the regime where cycles could actually move a score (sparse,
 or a softened `d(R)` over strong reciprocal edges) is the one where exact
-enumeration is cheap. `ε` is a **compute-budget cutoff**, not the cycle
-defense — `d(R)` attenuates cycles regardless of where `ε` sits.
+enumeration is cheap. `χ` is a **compute-budget cutoff**, not the cycle
+defense — `d(R)` attenuates cycles regardless of where `χ` sits.
 
 ---
 
@@ -1489,7 +1489,7 @@ the score itself is negative; that's it.
 `h(t)` is exactly zero sort below the negatives, into
 nothingness. Exact zero is the only sort position immovable under
 unbounded internal cluster amplification — see §3.6 for the
-predicate and why an `[−ε, 0]` interval would not be defensible.
+predicate and why an `[−χ, 0]` interval would not be defensible.
 
 Cancellation-induced zeros (positive and negative path
 contributions summing to zero, no severance involved) land in
@@ -2065,13 +2065,13 @@ doesn't scale for hubs: in the late graph a high-degree node has
 `b ~ 1000` out-edges, and small-world connectivity makes a 2–3 hop
 slice already most of the network (§3.6). The backend bounds the
 slice the same way the ranking traversal bounds enumeration — by the
-dust floor `ε` (§4.4), walking edges by best-possible contribution
+dust floor `χ` (§4.4), walking edges by best-possible contribution
 and stopping at the floor rather than at a hop count. This keeps the
 slice tractable for hub users and drops exactly the weak-tie tail the
 ranking would discard anyway.
 
 This is a **max**, not a **sum**: slice membership asks only whether a node
-has *some* path above `ε` — its single best-possible path — so it is a
+has *some* path above `χ` — its single best-possible path — so it is a
 best-first (Dijkstra-style) frontier in `O(|E_slice| log |E_slice|)`, and
 **cycle-immune**, since any detour through a cycle multiplies in more
 `≤ 1` factors and is strictly worse than the simple path. The expensive
