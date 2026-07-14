@@ -1493,13 +1493,13 @@ semantics is an implementation choice.
 whose indexed field equals the query case-insensitively — then
 newest first. Both keys are viewer-independent: the backend never
 ranks by graph
-([feed-ranking.md §9](../primitive/feed-ranking.md#9-where-ranking-and-filtering-live)).
+([feed-ranking.md §9](../primitive/feed-ranking.md#11-where-ranking-runs)).
 Graph-blended ordering is the ranker's option, the same split as
 the feed: the client or delegated miner re-orders the fetched
 candidates by the viewer's feed metric where the match is in the
 viewer's slice; matches outside the slice keep the recency order,
 which is the sort cascade's deepest fallback anyway
-([feed-ranking.md §5](../primitive/feed-ranking.md#5-algorithm)).
+([feed-ranking.md §5](../primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum)).
 The delegated form is the miner's `rankSearch` operation
 ([miner-api.md](miner-api.md)).
 The no-AI rule applies to search ranking as much as to feeds.

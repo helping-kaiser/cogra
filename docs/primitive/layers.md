@@ -137,7 +137,7 @@ and only for operational state, not history:
 
 - `user_view_log` — per-viewer seen-list, operational filter
   state rather than history, compacted on a 1-year default per
-  [feed-ranking.md §8.5](feed-ranking.md#85-compaction--drop-entries-older-than-1-year-frontend-convention).
+  [feed-ranking.md §8.5](feed-ranking.md#94-the-already-seen-filter).
 - `user_bookmarks` — per-viewer bookmark list; removing a
   bookmark is a genuine row delete.
 - `user_hidden_actors` — per-viewer hide list; unhiding is a

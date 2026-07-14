@@ -32,14 +32,14 @@ computation.
 path-weight formula.** What an advertiser buys is reach into the feeds
 around the anchor, so both the success metric `h_anchor(target)` (§3) and
 the payout weight `w_π` (§6.1) are computed with the **default** feed
-formula ([feed-ranking.md §4](feed-ranking.md#42-the-four-metrics)) —
+formula ([feed-ranking.md §4](feed-ranking.md#6-the-score--greedy-disjoint-sum)) —
 never a separate economics-only metric. Anything that reshapes the
 default feed reshapes payout, and nothing else can.
 
 > **Carve-out.** "Default feed" is the shared, viewer-independent
 > ranking. Per-viewer personal layers — the
-> [already-seen filter](feed-ranking.md#8-the-already-seen-filter) and the
-> [friend-authored fresh-post reorder](feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts) —
+> [already-seen filter](feed-ranking.md#94-the-already-seen-filter) and the
+> [friend-authored fresh-post reorder](feed-ranking.md#92-friend-fresh-reordering) —
 > are not part of the reach an advertiser pays for and never enter the
 > payout sum.
 
@@ -71,7 +71,7 @@ deliberately pointed at.
   (`(0, 0)`) every one of their own edges toward those actors — isolating
   themselves. Severance is local — it only moves the severing actor away,
   never forces anyone else
-  ([feed-ranking.md §3.7](feed-ranking.md#37-cascading-severance-and-redemption)).
+  ([feed-ranking.md §3.7](feed-ranking.md#83-cascading-severance--and-its-locality)).
   The advertiser reads whatever rejection surfaces as a public signal at
   settlement.
 - **Contributors** — every author on an `anchor → target` path. They are
@@ -96,7 +96,7 @@ limitation to apologize for:
   reactions from within the anchor's reach cone earns — its author is a
   path player per §6 — so "no followers" does not mean "cannot earn".
 - **The bridge from quality to standing reach is the explicit
-  follow / engagement gesture** ([feed-ranking.md §3.1](feed-ranking.md#31-which-edges-contribute-factors)),
+  follow / engagement gesture** ([feed-ranking.md §3.1](feed-ranking.md#4-the-path-set)),
   which a frontend may nudge after repeated engagement. It is never a
   `Content → Author` back-edge: that would amplify one real engagement
   across the author's unbounded, self-chosen outbound content set (a bot
@@ -141,7 +141,7 @@ surface, and pointers to the chain.
 
 The three `Campaign`-outbound edges (`:ANCHOR`, `:PROMOTES`, and
 `Campaign → Settlement`) are `(0, 0)` and **non-traversable for feed
-ranking** ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)).
+ranking** ([feed-ranking.md §3.5](feed-ranking.md#4-the-path-set)).
 A campaign records an economic relationship; it must never inject reach
 toward the target. The reach is delivered by real contributor edges, and
 letting `Campaign → target` carry signal would be buying ranking
@@ -150,7 +150,7 @@ directly — the economics→ranking feedback the no-AI invariant forbids.
 ### 2.1 Success metric and forbidden configurations
 
 The campaign's success metric is `h_anchor(target)` — the personal
-opinion metric of [feed-ranking.md §4.2](feed-ranking.md#42-the-four-metrics)
+opinion metric of [feed-ranking.md §4.2](feed-ranking.md#6-the-score--greedy-disjoint-sum)
 computed with the **anchor** as root node and the **target** as the
 ranked node. The anchor's `h` toward the target already aggregates the
 anchor cluster's paths, so raising it *is* reaching the cluster.
@@ -385,9 +385,9 @@ fraction of it is the Shapley value of the **path-sum game** on
 ### 6.1 The closed form
 
 Because `h` is a **linear sum over paths**
-([feed-ranking.md §4.2–4.3](feed-ranking.md#42-the-four-metrics)), each
+([feed-ranking.md §4.2–4.3](feed-ranking.md#6-the-score--greedy-disjoint-sum)), each
 path is a unanimity requirement of its authors — the kill rule
-([feed-ranking.md §3.2](feed-ranking.md#32-zero-handling--kill-rule))
+([feed-ranking.md §3.2](feed-ranking.md#31-the-damped-weight))
 makes every author on a path equally necessary, since dropping any one
 kills the path. Shapley splits a unanimity game equally, and linearity
 sums those splits. The `2ⁿ` coalition blow-up never appears; the Shapley
@@ -401,7 +401,7 @@ summed over every path `π` from anchor to target that contains an
 element authored by `i`, where
 
 - `w_π = d(R_π) · f(Δt_π) · (s_path(π) + c_path(π))` is the **same path
-  weight** feed-ranking sums into `h` ([§4.2](feed-ranking.md#42-the-four-metrics)),
+  weight** feed-ranking sums into `h` ([§4.2](feed-ranking.md#6-the-score--greedy-disjoint-sum)),
   and
 - `A_π` is the set of **distinct authors** of every edge *and* content
   node on `π`.
@@ -437,7 +437,7 @@ the *bottleneck* edge, not the strongest, is the most pivotal).
   **anchor is a full player**, typically the largest single share (the
   influencer-marketing outcome).
 - **Sign carries through.** Signed multiplication rides through `w_π`
-  unchanged ([feed-ranking.md §3.3](feed-ranking.md#33-dim1-chain--signed-multiplication)):
+  unchanged ([feed-ranking.md §3.3](feed-ranking.md#52-sign--balance-and-taint)):
   an even count of negative `dim1` yields a positive contribution, so an
   "enemy of my enemy" path surfaces the advertiser and is credited.
   Forced by conservation — shares must sum to `h`.
@@ -481,7 +481,7 @@ peak-in-`I` (over-credits transient over-delivery), time-average over `I`
 ### 6.4 Earnings by distance — the `d(R)` base `g`
 
 The anchor-vs-periphery payout profile is governed by `g`, the `d(R)`
-decay base ([feed-ranking.md §4.1](feed-ranking.md#41-path-contribution-and-distance-decay)).
+decay base ([feed-ranking.md §4.1](feed-ranking.md#5-per-path-quantities)).
 The advertiser sets `g` per campaign (defaulting to the Network's
 `distance_decay_base`):
 
@@ -518,7 +518,7 @@ average length `L̄`.
 
 This is the **same path-sum traversal that computes `h_anchor(target)`**,
 under the same dust floor — a shared primitive that
-[feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning)
+[feed-ranking.md §4.4](feed-ranking.md#63-the-dust-floor)
 defines. The economics side sets `χ` by **author-aggregate payability**:
 a contributor's share sums over many individually sub-payable paths, so
 the path-level floor sits *below* the smallest payable CGT amount by the
@@ -545,13 +545,13 @@ async in the background.
 
 There is no campaign-specific bot detector and no automatic payout
 zeroing. The delta-funnel auto-detection of
-[feed-ranking.md §3.8.2](feed-ranking.md#382-bot-cluster-identification--auto-detection-from-path-patterns)
+[feed-ranking.md §3.8.2](feed-ranking.md#85-bridge-auto-detection)
 already surfaces bot bridges from path structure; the settlement
 traversal enumerates the same paths, so the advertiser's settlement view
 shows that signal as **evidence** for the discretionary `settle(P)`
 decision. Action stays manual — the actors closest to a bot bridge mark
 their own edges into it `(0, 0)`, and every path through it dies at that
-hop ([feed-ranking.md §3.6–3.7](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)) —
+hop ([feed-ranking.md §3.6–3.7](feed-ranking.md#8-severance-discovery-redemption)) —
 never an auto-cut at settlement. Bots are already handled structurally:
 content reached only through severed bridges contributes `0`, and the
 advertiser can decline, extend, or post a public call to sever.
@@ -612,7 +612,7 @@ would buy no marginal defense while taxing the exact behavior campaigns
 reward. The funnel-capable actions are exactly `:REFERENCES`, reactions,
 and comments (bare posts and tags are dead-end sinks; memberships, votes,
 and proposals create only non-traversable edges per
-[feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)). The
+[feed-ranking.md §3.5](feed-ranking.md#4-the-path-set)). The
 stack that covers them:
 
 1. **Forward-only traversal** — bots cannot manufacture the inbound
@@ -626,7 +626,7 @@ stack that covers them:
    cascade `(0, 0)` onto the bridges feeding it; once every path to the
    funneled target carries a severance edge, its `h` is forced to exact
    zero and the funneling author earns `0`
-   ([feed-ranking.md §3.6–3.7](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)).
+   ([feed-ranking.md §3.6–3.7](feed-ranking.md#8-severance-discovery-redemption)).
 4. **The sustained-level metric** (§3) — bursts earn `0`.
 5. **Advertiser discretion** (§4) — decline, extend, public call to
    sever, backed by the §6.6 advisory detection.

@@ -144,7 +144,7 @@ at tally time is `min(P × |active|, K)`.
 
 - **`time_decay_half_life_days`** — half-life of the reactor-edge
   time-decay factor `f(Δt)` used by the feed-ranking algorithm
-  (see [feed-ranking.md §7.3](feed-ranking.md#73-shape--exponential-30-day-half-life-frontend-tunable)).
+  (see [feed-ranking.md §7.3](feed-ranking.md#53-recency)).
   The default seeded at genesis is 30 days; the property is
   amendable so the network can recalibrate freshness sensitivity
   as the graph matures. Frontend overrides remain available per
@@ -152,7 +152,7 @@ at tally time is `min(P × |active|, K)`.
   baseline.
 - **`distance_decay_base`** — base of the path distance-decay
   `d(R) = base^(R−1)` used by the feed-ranking algorithm (see
-  [feed-ranking.md §4.1](feed-ranking.md#41-path-contribution-and-distance-decay)).
+  [feed-ranking.md §4.1](feed-ranking.md#5-per-path-quantities)).
   The default seeded at genesis is `0.1` (each extra hop attenuates
   a path's contribution by 10×). Frontend overrides remain available
   per §4.1; this property sets the network default — the community's
@@ -160,9 +160,9 @@ at tally time is `min(P × |active|, K)`.
   Gating bucket: baseline.
 - **`dust_floor`** — the dust floor `χ` bounding both the
   branch-and-bound path enumeration (see
-  [feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning))
+  [feed-ranking.md §4.4](feed-ranking.md#63-the-dust-floor))
   and the data-fetch slice node-set
-  ([feed-ranking.md §9](feed-ranking.md#9-where-ranking-and-filtering-live)).
+  ([feed-ranking.md §9](feed-ranking.md#11-where-ranking-runs)).
   The default seeded at genesis is `0`: the early graph is sparse,
   `b^R` is cheap, and full fidelity is kept. The property is amendable
   so the network can raise `χ` as the graph densifies — the finest

@@ -323,7 +323,7 @@ properties don't layer, §2).
 reactor edges into the Proposal, making it an **opt-in**
 feed-ranking target ("show me the proposals that matter to me");
 it is never in the default feed. See
-[feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable).
+[feed-ranking.md §5.3](../primitive/feed-ranking.md#93-what-is-rankable).
 
 ---
 

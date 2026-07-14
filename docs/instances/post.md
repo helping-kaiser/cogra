@@ -156,7 +156,7 @@ own work.
 
 `:AUTHOR` is the only representation of authorship on the graph
 side, and what the friend-authored fresh-post detection in
-[feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)
+[feed-ranking.md §5.2](../primitive/feed-ranking.md#92-friend-fresh-reordering)
 traverses. For Postgres-side display queries, `posts.author_id`
 is cached on the row. Both are rebuildable from the graph; the
 graph wins in any disagreement.

@@ -50,8 +50,8 @@ the rest default per field:
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
 | `dustFloor` | `χ` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
-| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the frontend's default (the reference frontend ships it on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
-| `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
+| `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the frontend's default (the reference frontend ships it on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#92-friend-fresh-reordering)). |
+| `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#5-per-path-quantities)); default `(1, 1)` = sum. |
 
 These are the `rank` operation's `params`, typed below:
 
@@ -188,7 +188,7 @@ rankSearch(slice: FeedSlice!, candidates: [UUID!]!, params: RankParams!): [FeedE
 ```
 
 The metric is the one `rank` computes — every searchable kind is
-rankable ([feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable))
+rankable ([feed-ranking.md §5.3](../primitive/feed-ranking.md#93-what-is-rankable))
 — so `rankSearch` is `rank` with the candidate set given (the search
 hits inside the slice) instead of derived (every in-scope rankable
 node in the slice).
@@ -198,7 +198,7 @@ node in the slice).
 This surface and campaign settlement ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
 share the §3 path semantics but not the algorithm at scale. Feed ranking is
 **all-targets**: in the dense regime it is computed by message-passing over
-the slice ([feed-ranking.md §4.5](../primitive/feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice)),
+the slice ([feed-ranking.md §4.5](../primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum)),
 not path enumeration. Campaign settlement is a **single anchor→target pair**
 computed once, where direct enumeration stays tractable. The two also differ
 in who runs them, what they rank, and how authoritative the result is.
@@ -220,7 +220,7 @@ because money demands one authoritative figure.
 ## The §3.8 operations
 
 The post-severance surfaces of
-[feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces)
+[feed-ranking.md §3.8](../primitive/feed-ranking.md#8-severance-discovery-redemption)
 are client- or miner-computed derivations over existing graph state.
 Their data is reachable through the generic read surface; the dedicated
 contracts exist so frontends and miners code against pinned shapes
@@ -231,7 +231,7 @@ inputs, where any exist, are pushed), stateless and polled — the runner
 holds no watch lists and sends no notifications. The operations return
 structural facts; scores, prominence, thresholds, and action guidance
 are frontend-computed
-([feed-ranking.md §3.8](../primitive/feed-ranking.md#38-post-severance-surfaces),
+([feed-ranking.md §3.8](../primitive/feed-ranking.md#8-severance-discovery-redemption),
 "frontend latitude").
 
 ### `severanceStatus` — the inbound self-query (§3.8.1)
@@ -392,7 +392,7 @@ server-side.
 
 When the seen-list lives backend-side (`user_view_log`, the central
 frontend's default —
-[feed-ranking.md §8.2](../primitive/feed-ranking.md#82-storage--wherever-the-viewing-user-prefers)),
+[feed-ranking.md §8.2](../primitive/feed-ranking.md#94-the-already-seen-filter)),
 the device fetches it under its own session and forwards it as
 `params.seenList`. The forwarding cost is accepted: it keeps the miner
 credential-free, and a client that wants to avoid it can keep the
