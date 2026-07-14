@@ -1,805 +1,167 @@
 # Graph Model
 
-How edges, nodes, and their properties work in the Peer Network graph.
-This is the foundation that the [feed ranking algorithm](feed-ranking.md)
-operates on.
+How graph state behaves across the substrate: the record model,
+time and causality, revision, what "current state" means,
+directionality, and the dynamics between the shared graph and
+CoGra's own stores. The node and edge catalogs live in
+[nodes.md](nodes.md) and [edges.md](edges.md); the L2-on-L1 flow in
+[substrate.md](substrate.md); the binding mechanics in
+[layer1-interface.md](layer1-interface.md).
 
 ---
 
-## 1. Core Principles
+## 1. Core principles
 
-Every edge in the graph is:
-- **Directional** — `A → B` and `B → A` are separate edges; one does
-  not imply the other. A friendship is two edges; an unreciprocated
-  follow is one.
-- **Multi-dimensional** — every edge carries exactly **2 dimensions**
-  plus **system dimensions**. The meaning of the 2 dimensions depends
-  on the edge type (see [edges.md](edges.md) for the full catalog).
-- **Append-only** — interactions add layers; they never overwrite.
-  The current state is the top layer; the full history is preserved.
-  Append-only extends beyond edges to node properties and
-  Postgres-side display content — see [layers.md](layers.md) for the
-  project-wide principle.
-
-And the graph itself is:
-- **Fully transparent** — every node and every edge is visible
-  without an account, so a frontend can compute any actor's view for
-  any reader. Accounts gate **participation** (creating actor edges,
-  authoring nodes, voting in governance, joining junctions), not
-  viewing. The only way to be invisible is to not be on the graph (a
-  disconnected, self-hosted instance is possible but unreachable from
-  anywhere else). Privacy of *content* is achieved through end-to-end
-  encryption; topology itself is always public.
-
-**Invariant:** Edges are directional. `A → B` and `B → A` are
-independent edges; one does not imply the other.
-
-**Invariant:** Every change to graph state, after instance
-bootstrap, originates either in an actor gesture (creating or
-layering an actor edge — see §3) or in a governance threshold-cross
-(the system writing or re-layering a structural edge in response
-to votes — see §5). The instance-bootstrap transaction itself
-sits outside this rule by construction — see
-[network.md §2 "Creation"](network.md#2-creation) for what
-bootstrap installs and why it cannot run under the same rule it
-establishes.
-
-**Invariant:** Topology is always public — every node and every
-edge is visible without an account. Privacy of content is achieved
-through end-to-end encryption, never through hiding nodes or edges.
-Accounts gate participation (writing), not viewing.
+- **Directional.** Every record runs from its author toward a
+  target; `A → B` and `B → A` are independent records, and one
+  never implies the other. A friendship is two records; an
+  unreciprocated stance is one. Directedness is what prevents
+  unilateral influence fabrication — nobody can create an edge
+  *from* you.
+- **Append-only chronicles.** The record set only grows. No record
+  is ever deleted, merged, superseded, or rewritten; the only
+  one-way transition is payload reduction
+  ([substrate.md §7](substrate.md#7-payload-carriage)). The store
+  holds chronicles, never state — every notion of "current" is a
+  declared read rule over the records (§3).
+- **Public.** The shared graph is continuously readable by anyone,
+  without an account — an L1 substrate guarantee, not a CoGra
+  choice. Accounts gate participation in CoGra's service, never
+  viewing. Privacy of content is payload custody and E2EE;
+  topology is always public.
+- **Priced.** Every record debits its author's balance by θ at
+  write time — capacity *is* the balance. There is no free write:
+  spam has a floor price, and authoring is always attributable
+  ([substrate.md §6](substrate.md#6-authoring-path-and-admission)).
 
 ---
 
-## 2. Node Categories
+## 2. Time, causality, maturity
 
-Nodes fall into six categories:
+Records carry **causal time, not wall-clock time**. Each record's
+local time `T_e` is a Lamport clock over shared endpoints and
+asserted parents; the causal order `≺` is its transitive closure,
+and records it doesn't relate are concurrent. Two participants
+holding the same record set derive the same order — there is no
+server clock to trust.
 
-- **Actor nodes** — entities that take actions and create edges
-  (User, Collective).
-- **Content nodes** — entities that are acted upon (Post, Comment,
-  Chat, ChatMessage, Item).
-- **Junction nodes** — entities that represent relationships which
-  themselves can be interacted with (ChatMember, CollectiveMember,
-  ItemOwnership). They have roles, need approval flows, and
-  eliminate parallel edges between the same two nodes: an actor's
-  *membership* in a chat and their *opinion* of that chat are
-  edges to different nodes.
-- **System nodes** — singletons that carry instance-level
-  configuration governed via Proposals (Network). They aren't
-  actors, aren't content, and don't represent relationships;
-  they exist because governance needs a node to target.
-- **Topic nodes** — shared, content-addressed labels that content
-  attaches to for discovery (Hashtag). Authorless and immutable
-  except redaction; brought into existence implicitly by the first
-  `:TAGGING` edge. The canonical name IS the identity, so the same
-  topic converges on one node across actors and instances. They
-  are acted upon like content but, lacking an author and a mutable
-  body, sit outside the content category.
-- **Carrier nodes** — process and record carriers with no
-  Postgres-side display content (Proposal, Campaign, Settlement,
-  Wallet). They exist to carry a governance or economics process
-  and its public results, and are acted upon only through the
-  narrow edge sets their docs define. The one user-bearing
-  carrier field is `Proposal.proposed_value`, moderatable via
-  its status companion
-  ([nodes.md §6](nodes.md#6-carrier-nodes)).
+Each record also carries a **maturity** scalar `τ_e` — how
+established the endpoints already were when the record landed —
+which feeds the damped weight `w̃(e)` together with the boundary
+factor. Fresh corners of the graph weigh differently than
+established ones, by published formula
+([layer1-interface.md §8.2](layer1-interface.md#82-temporal-structure)).
 
-**Invariant:** **Actor = User ∪ Collective.** Wherever the docs
-say "actor" without further qualification, the referent is any
-`:User` or `:Collective` node. The two node labels exist because
-the graph stores them separately (different property sets,
-different identity rules), but every actor-edge endpoint and
-every gesture in §3 applies uniformly to both. Prefer "actor" in
-prose unless the User-vs-Collective distinction is load-bearing
-for the rule being stated. There is no `:Actor` label in the
-graph — structural notations like `User/Collective → ChatMember`
-remain in use where they faithfully describe the two concrete
-endpoint labels.
-
-Two scoped subsets of "actor" recur in governance:
-
-- **Active member** — an actor with at least one timestamped
-  action within the relevant scope's recency window. Always
-  scoped: for Network-wide tallies the window is
-  `active_threshold_days` (see
-  [network.md §3 "Eligibility-definition"](network.md#eligibility-definition));
-  for Collective-internal tallies the window is set per
-  Collective (see [collectives.md](../instances/collectives.md)).
-  "Active member" is never an instance-free notion.
-- **Voter** — the eligible subset of actors *for a given vote*.
-  Eligibility is the vote's own rule (mod-gate, holders-of-junction,
-  etc.); a voter is what an active member becomes once the tally
-  attaches to a specific Proposal or junction-approval. See
-  [governance.md §2.2](governance.md#22-eligibility).
-
-**Junction nodes carry typed properties** (role, `ownership_pct`,
-etc.) as properties on the junction node itself, not encoded in
-edge dimensions. Categorical data belongs in categorical fields;
-quantities need more range than the bipolar `[-1, +1]` edge
-dimensions provide.
-
-See [nodes.md](nodes.md) for the full catalog — what each node
-type is, its graph-side properties, and where its display content
-lives in Postgres.
+Wall-clock time exists only on CoGra's side of the seam — Postgres
+operational timestamps for display ("posted 2h ago") and service
+logic. It never orders the shared record set.
 
 ---
 
-## 3. Edge Categories
+## 3. Revision and current state
 
-There are two categories of edges. Both use the same tensor shape (2
-dimensions + system dimensions) to keep graph calculations uniform — the
-algorithm never needs to branch on edge category.
+Revising a stance never edits anything: it **appends a parallel
+record** to the author's bundle toward the same target — the
+bundle is a `≺`-chain, the full history public by construction.
 
-### Actor edges
+What "current" means is always a declared fold:
 
-Created by actor nodes (User, Collective) toward any other node. Express
-**opinion and interaction**. The 2 dimensions carry subjective meaning
-(sentiment, interest, relevance — varies by edge type, see [edges.md](edges.md)).
+- **L1 reads bundles in exactly two places.** The standing
+  projection nets each same-author bundle by sum-then-clip before
+  endorsement flow, and the title fold reads settlement records
+  epoch-quantized. Nothing else on L1 consumes a bundle.
+- **Every other current-state read is its consumer's declared
+  rule.** CoGra declares its folds per surface: the current
+  profile is the newest Registration payload; chat membership is
+  the membership fold
+  ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership));
+  the effective network parameters are the newest finalization per
+  parameter on the network charter anchor. What the feed reads is
+  declared in the published ranking spec
+  ([feed-ranking.md](feed-ranking.md)).
 
-### Structural edges
-
-Express **containment or belonging** between nodes. Created by the system,
-not by actors. By default the 2 dimensions are `(0, 0)` — neutral
-structural links.
-
-Why give structural edges the same shape instead of making them different:
-- The ranking algorithm traverses paths that cross both edge types (e.g.
-  `User → User → Comment → Post`). Uniform shape means no branching logic
-  at each hop.
-- Structural edges can carry meaningful weight where the shape calls for
-  it. The concrete case today is state-bearing approval-pattern edges on
-  junction nodes — see §5 for how revocation and state transitions are
-  encoded in structural edge layers. A pinned comment's `Comment → Post`
-  weight could work similarly.
-
-### Structural edge pairs
-
-Structural edges are **not paired for query convenience**. Memgraph (and
-openCypher generally) indexes relationships at both endpoints, so a single
-one-directional edge is traversable in either direction with equal
-efficiency. Adding a reverse edge just so a query reads more naturally
-would double storage for no gain.
-
-Structural edge pairs **are valid when each direction encodes a distinct
-fact**. The canonical example is approval-required junctions:
-
-- `ChatMember → Chat` — "this membership claims to be about this chat"
-  (exists from the moment the request is made).
-- `Chat → ChatMember` — "this chat has accepted this member" (only exists
-  after the approval policy is satisfied).
-
-These are two different facts, so two edges is correct. In contrast,
-`Comment → Post` does not need a `Post → Comment` companion: the reverse
-would carry the same fact and just duplicate storage. See §5 for the full
-junction approval pattern.
-
-### What creates an actor edge — stances-not-events
-
-Actor edges are created or updated only when an **actor** (User
-or Collective) takes an **explicit, deliberate gesture** that
-expresses a position toward a node. The graph encodes actor
-**stances** — relationships, opinions, intents — not session
-**events** like scrolling, hovering, or briefly opening content.
-
-The basic operation is: an actor sets the dimensions on an actor
-edge from themselves to a target node — either creating a new
-edge or adding a new layer to an existing one. Expressing
-sentiment toward another node, calibrating interest or
-relevance, taking any other position the dimensions can encode
-— all reduce to this.
-
-Compound gestures defined elsewhere also reduce to setting
-dimensions on actor edges, sometimes creating multiple edges in
-one operation:
-
-- Authoring a node ([authorship.md](authorship.md)) — the
-  author's first outgoing edge to their newly-created content.
-  Labeled `:AUTHOR` rather than `:ACTOR` at the graph layer (see
-  [edges.md §3](edges.md#sub-category-labels)); same tensor
-  shape, same range, same append-only semantics — the label is
-  purely a query-side discriminator.
-- Joining or leaving a chat or collective — the actor's edge to
-  the relevant junction (§5).
-- Inviting a new actor ([invitations.md](invitations.md)).
-- Casting a vote in a governance instance
-  ([governance.md](governance.md)).
-
-What does NOT create or update an actor edge:
-
-- Scrolling past content.
-- Dwell time, read time, hover.
-- Brief preview / peek.
-- Viewing a post or opening a chat without further action — even
-  repeated opens.
-- Search queries.
-- Sharing content externally (link copy, share-to-another-app,
-  export). The act of sharing is a frontend event — not a stance
-  the actor took toward the content.
-- Bookmarking content. Bookmarks are private per-user state (see
-  `user_bookmarks` in [data-model.md](../implementation/data-model.md)),
-  not a public stance — they say "I want to find this later," not
-  "I want this to reach my network."
-- Tagging an own post with a hashtag. The `Post → Hashtag`
-  structural edge already encodes the association; the actor
-  reaches the hashtag via the `Actor → Post → Hashtag` path.
-  No `Actor → Hashtag` actor edge is created — autogenerated
-  or otherwise — because the catalog has no such edge type to
-  write: see
-  [hashtag.md §4](../instances/hashtag.md#4-edges).
-
-The frontend can keep session data **locally** (already-seen,
-recently-viewed, prompts based on observed behavior). That data
-never becomes graph state unless the actor makes an explicit
-gesture in response.
-
-#### Why
-
-- **Transparency** ([CLAUDE.md](../../CLAUDE.md) principle #6).
-  Every edge corresponds to something the actor consciously did.
-  The graph is not a surveillance log.
-- **Auditability of bot activity.** Bot accounts trying to
-  influence others' graphs have to take explicit, layer-creating
-  gestures rather than feed engagement through invisible
-  implicit-signal channels — every interaction is visible on the
-  graph. Combined with §7 (inbound edges don't affect a viewing user's
-  feed), this leaves bot farms little leverage.
-- **Freedom of the mind** ([CLAUDE.md](../../CLAUDE.md) principle
-  #8). The system doesn't reward outrage or measure involuntary
-  attention. It knows only what actors chose to tell it.
-
-#### Acceptable cost
-
-An actor who lurks chats without ever taking a position on them
-won't have those chats reinforce their feed — even if they look
-at them every day. This is deliberate. The system doesn't infer
-preference from behavior; if an actor wants signal, they make a
-gesture.
-
-#### Frontend latitude
-
-The graph layer doesn't enforce this — it accepts whatever edges
-actors create. CoGra's reference frontend follows the rule
-above, and any frontend aligned with the project's principles
-should too. A frontend that creates `(0, 0)` view-edges or
-silently translates dwell time into edge layers is technically
-possible but contradicts the transparency principle and pollutes
-the graph for everyone reading it.
-
-#### Structural edges follow topology
-
-Structural edges (containment like `ChatMessage → Chat`,
-approval pairs, tagging like `Post → Hashtag`) are
-system-created when graph topology demands them — typically as a
-side effect of an actor's stance gesture. The rule above governs
-actor edges directly; structural edges are governed by the
-topology rules in §5 and the per-instance flows in
-[chats.md](../instances/chats.md),
-[collectives.md](../instances/collectives.md), and
-[items.md](../instances/items.md).
+Sum-then-clip gives revision real weight: walking back accumulated
+conviction costs counter-records in proportion to it — flip-flops
+are expensive, stance is sticky. Severance is the limit case:
+counter-records netting a bundle to `(0,0)` make it routing-inert
+for every consumer of the projection, and each counter-record is
+itself a priced act.
 
 ---
 
-## 4. Edge Structure
+## 4. Stances, not events
 
-**Invariant:** Every edge — actor or structural — carries exactly
-**2 dimensions plus system dimensions**. The shape is uniform across
-every edge type so the ranking algorithm never branches on edge
-category. Enforced at the storage layer via per-label EXISTS
-constraints — see
-[graph-data-model.md "Tensor uniformity enforcement"](../implementation/graph-data-model.md#tensor-uniformity-enforcement).
+Records originate only in **explicit, deliberate gestures** — an
+actor taking a position toward a node. The graph encodes stances:
+relationships, opinions, commitments. It never encodes session
+events:
 
-```
-Edge {
-    // --- 2 dimensions (meaning varies by edge type) ---
-    dimension_1: f64,   // actor edges: e.g. sentiment, range [-1.0, +1.0]
-                        // structural edges: 0
-    dimension_2: f64,   // actor edges: e.g. relevance, range [-1.0, +1.0]
-                        // structural edges: 0
+- scrolling, dwell time, hover, read time;
+- opening a post or a chat, however often;
+- search queries;
+- sharing content externally (a frontend event, not a stance);
+- bookmarking — private per-user state, off-graph by design.
 
-    // --- System dimensions (same for all edge types) ---
-    timestamp:   DateTime,  // when this layer was created
-    layer:       u32,       // which layer this is (1 = first interaction)
-}
-```
+The frontend keeps session data local; nothing becomes graph state
+unless the actor gestures in response. What was once enforced by
+ethos alone is now also enforced by structure: authoring is
+backend-mediated and every record costs its author θ — CoGra's
+backend has no write path for implicit signals, and a frontend
+that converted views into records would drain its users' capacity
+for noise.
 
-Both dimensions are `f64` in `[-1.0, +1.0]` on every actor edge,
-regardless of what the dimension represents. Range uniformity lets the
-ranking math stay single-shape — see §6 for how negative values are
-read when a dimension wouldn't obviously have a negative meaning, and
-§8 for the layer stack that makes an edge a sequence of values rather
-than a single one.
+Why this matters is unchanged: the graph is not a surveillance
+log; every record corresponds to something its author consciously
+did; bots get no invisible channel — influence requires visible,
+priced, attributable records.
 
 ---
 
-## 5. Junction Node Flows
+## 5. Directionality and influence
 
-Junction nodes enable approval-required relationships and role management
-without parallel edges. All three junction types — ChatMember,
-CollectiveMember, ItemOwnership — share a common shape.
+Two influence channels exist, and they must never be conflated:
 
-Junction approval is one application of CoGra's broader governance
-primitive (weighted role-based voting) — see
-[governance.md](governance.md) for the full shape (five components,
-two vote shapes, weight-at-tally-time rule) that junction approval,
-message moderation, and future voting patterns all share. This
-section focuses on how the primitive specifically applies to
-junction relationships.
+- **The feed is outbound-only.** Only outgoing records from the
+  viewing user, walked forward, shape that user's feed — inbound
+  records toward the user contribute nothing. A swarm pointing ten
+  thousand stances at you appears in *their* feeds, never in
+  yours. This is CoGra feed policy, stated in the published
+  ranking spec ([feed-ranking.md](feed-ranking.md)).
+- **Standing is inbound — and gates writing, never ranking.**
+  Vouch-positive stances toward a person *do* lift that person's
+  standing `α_i` through L1's endorsement flow; standing feeds the
+  write gate and nothing else. It is a write-admission scalar:
+  who may act, never what anyone sees.
 
-### The two-edge state pair
-
-A junction relationship's **state** lives in two structural edges:
-
-1. **Claim edge** — when the relationship is initiated, the system creates
-   a structural edge from the junction node toward its parent (e.g.
-   `ChatMember → Chat`). The claim exists as long as the junction node
-   exists.
-2. **Approval edge** — the reverse structural edge (e.g.
-   `Chat → ChatMember`), written by the system when the relationship's
-   governing **admit-Proposal** passes (see "Lifecycle events are
-   terminal Proposals" below). Its presence marks the relationship as
-   *active*.
-
-**State is encoded in the graph topology itself** — no status flag is
-needed:
-
-- Only the claim edge exists → pending.
-- Both edges exist → active.
-
-**Invariant:** A junction relationship's state is derived from the
-two structural edges of its state pair, not from a stored flag.
-Claim only = pending; claim + approval, both with `dim1 > 0` top
-layers = active; top layer `≤ 0` on either = revoked. A status
-property on the junction would be a second source of truth that
-could drift; the topology IS the state. The storage layer cannot
-forbid a property by absence, so enforcement is ethos plus an
-integration test — see
-[graph-data-model.md "Junction state lives in topology"](../implementation/graph-data-model.md#junction-state-lives-in-topology-not-in-a-property).
-
-Alongside the claim edge, the system also writes a third
-structural edge — the `:BEARER` edge from the junction to the
-**bearing actor** it represents (`ChatMember → User|Collective`,
-`CollectiveMember → User|Collective`,
-`ItemOwnership → User|Collective`). This edge is identity, not
-state: it's set once at junction creation and never re-pointed,
-and is what lets invite-only flows bind a junction to its
-prospective bearer before that actor has self-claimed. The
-Shape A self-claim that admits the junction — the bearer's vote
-on its admit-Proposal — must originate from the actor at
-the other end of `:BEARER`. See
-[edges.md §2 "Bearer binding"](edges.md#bearer-binding).
-
-When the bearer self-claims they also write a `bearer → junction`
-actor edge carrying the `:AUTHOR` sub-label — their own opinion
-edge toward the junction, in the same gesture. This is what
-**authors** the junction (its author is its bearer) and is the
-traversable counterpart to the non-traversable `:BEARER` identity
-edge. See
-[authorship.md "Junction authorship"](authorship.md#junction-authorship).
-
-### Lifecycle events are terminal Proposals
-
-Every change to a junction relationship — admission, removal, role
-change, re-admission — is a **fresh terminal `Proposal`** that
-`:TARGETS` the junction. Votes are cast on the Proposal, never on
-the junction directly. When the Proposal's threshold is crossed,
-its cascade ([governance.md §6](governance.md#cascade-dispatch))
-writes the outcome onto the junction's structural edges: an
-admit-Proposal writes the approval edge with `dim1 > 0`; a
-removal-Proposal appends a `dim1 < 0` layer on the approval edge;
-a role-change Proposal writes the new role. A passed Proposal is
-terminal — to change an outcome you author a counter-Proposal,
-never re-vote the original (see
-[governance.md §6](governance.md#6-when-outcomes-take-effect),
-[proposal.md §6](../instances/proposal.md#6-lifecycle)).
-
-Routing every event through its own Proposal is what gives the
-junction lifecycle **terminality**: each event carries its own
-fresh vote set, so votes never outlive the event that gathered
-them. A later admission cannot be re-triggered by stale approval
-votes, and a removal cannot be undone by a single stale vote —
-the failure mode of any perpetual shared vote carrier.
-
-The **approval policy** uses the **two voting shapes** (per
-[governance.md §3](governance.md#3-the-two-vote-shapes)), both
-now directed at the Proposal:
-
-1. The would-be bearer's **Shape A self-claim** — their approving
-   vote on the admit-Proposal (`User/Collective → Proposal`).
-   This is necessarily Shape A because the bearer has no junction
-   of this type yet from which to cast a Shape B vote; their own
-   junction is the very thing they're claiming. The admit-Proposal
-   is created together with the junction, by whichever side moves
-   first: in the request flow the bearer authors it, so the
-   self-claim is the authoring first vote (see
-   [proposal.md §5](../instances/proposal.md#5-authorship)); in the
-   invite flow the inviter creates the junction and authors the
-   Proposal — their Shape B approver vote is its first vote, and
-   the `User/Collective → Proposal` `:AUTHOR` actor edge they
-   write in the same gesture carries the authorship
-   ([authorship.md "Proposal authorship"](authorship.md#proposal-authorship))
-   — and the bearer's self-claim is their later vote on it.
-2. Zero or more approver **Shape B votes** — each required
-   approver writes a structural edge from their existing
-   eligibility junction toward the Proposal
-   (`ChatMember_approver → Proposal`,
-   `CollectiveMember_approver → Proposal`,
-   `ItemOwnership_current → Proposal`), `dim1 > 0` carrying
-   approval.
-
-The threshold itself is one of the policy shapes from
-[governance.md §2.4](governance.md#24-threshold-policy) —
-typically simple-count or weighted-count of the Shape B approver
-votes (weights derived from role properties on the approver
-junctions, per [governance.md §2.3](governance.md#23-weight-function)).
-N ranges from `0` (open / self-approving — only the bearer's
-Shape A self-claim is required) through `1` (a single decider)
-to multi-sig with weighted votes. Specific applications pick their
-N — see [chats.md](../instances/chats.md),
-[collectives.md](../instances/collectives.md), and
-[items.md](../instances/items.md).
-
-#### Bootstrap: author / founder self-collapse
-
-When a junction is created with no other approver required
-(`N = 0`) — the founder of a Collective
-([collectives.md §1](../instances/collectives.md#1-creation)),
-the author of an Item
-([items.md §1](../instances/items.md#1-creation)), the founder
-of a Chat ([chats.md §2.1](../instances/chats.md#21-chat)) —
-the bearer's Shape A self-claim is the only required vote and no
-tally is conducted. The admission collapses to its 1-of-1 special
-case: **no admit-Proposal node is materialized**; the system
-writes the approval-side structural edge atomically alongside the
-claim-side, `:BEARER`, and the bearer's `:AUTHOR` edge, in the
-same compound gesture. A Proposal exists only to carry a
-multi-party tally, and there is none here.
-
-Subsequent additions to the same parent (the next ChatMember
-of the chat, the next CollectiveMember of the collective, the
-next ItemOwnership transfer of the item) carry a tally, so they
-run the full pattern: an admit-Proposal with one or more Shape B
-approver votes.
-
-### Revocation and state transitions
-
-Because edges are append-only, the approval edge created when a
-junction relationship becomes active cannot be removed. "No longer
-active" is therefore encoded as **new layers on the two structural
-edges of the state pair** — not by deletion. The canonical
-definition of "Revoked" (and the aliases "inactive" / "superseded"
-used in older drafts) lives in
-[layers.md §2](layers.md#2-layers-on-edges).
-
-**Dimension semantics on state-bearing structural edges.** For the
-claim and approval edges of a junction state pair, `dim1` carries
-the edge's current stance; `dim2` is reserved (default `0`, available
-for future use such as reason codes):
-
-- `dim1 > 0` — **affirmed** (claim stands / parent accepts).
-- `dim1 ≤ 0` — **not affirmed** (revoked / withdrawn). Affirmation
-  is strictly positive; a `0` top layer is not a distinct state.
-
-Layer 1 of each edge is created by the system with `(+1, 0)` — the
-edge is created because an admit-Proposal passed (or, for `N = 0`,
-because the bearer self-claimed). Revocation adds a new layer with
-`dim1 < 0` when a removal-Proposal passes or the bearer leaves.
-Re-admission after a revocation is a **fresh** admit-Proposal whose
-cascade adds another `dim1 > 0` layer. Append-only is preserved; the
-full state history is visible in the layer stacks.
-
-**Relationship state is derived from both top layers.** A junction
-relationship is **active** iff both paired edges' top layers have
-`dim1 > 0`. A top layer at `0` or below on either edge makes the
-relationship **revoked**. The **pending** state (claim edge only,
-no approval edge yet) still applies — it's a separate case from
-revoked.
-
-**Who triggers state transitions.** The system is still the only
-entity that writes to structural edges. It reacts to a passed
-Proposal, a self-determined leave, or its own housekeeping:
-
-- **Voluntary leave / withdrawal.** Self-determined, not a
-  governance decision and so **not a Proposal**: at the bearer's
-  request the system appends a negative-`dim1` layer directly on
-  the **claim-side** structural edge — which gates the
-  `junction → parent` hop closed for feed ranking
-  ([feed-ranking.md §3.1](feed-ranking.md#31-which-edges-contribute-factors)).
-  This is
-  symmetric with the `N = 0` bootstrap collapse — a unilateral
-  self-act carries no tally, so no Proposal node is materialized.
-  The bearer's own `:AUTHOR` edge is theirs to re-layer: a
-  frontend may prompt the leaver to set it toward `(0, 0)` to also
-  sever reach to the junction itself, but the system never forces
-  this — a UX nudge, not a graph mechanism.
-- **Removal via governance instance** — *disavowal* in chat
-  scope ([chats.md §10](../instances/chats.md#10-moderation)),
-  unnamed-generic in collective scope (the social contract
-  picks the wording — "remove member," "fire worker," etc.).
-  Removal is a **fresh removal-Proposal** that `:TARGETS` the
-  junction (`decision:remove_member`, chat disavowal, …),
-  distinct from the admit-Proposal that admitted the bearer.
-  Each eligible voter casts a Shape B vote from their own
-  eligibility junction to the Proposal
-  (`junction_voter → Proposal`). Eligibility, weights, and
-  threshold are configured per parent node (see
-  [governance.md](governance.md) and
-  [chats.md §10](../instances/chats.md#10-moderation),
-  [collectives.md](../instances/collectives.md)). When the
-  Proposal's threshold is crossed, its cascade
-  ([governance.md §6](governance.md#cascade-dispatch)) appends a
-  new layer on the **approval-side** structural edge with
-  `dim1 < 0`.
-- **System-initiated** (auto-expiry, violation handling, etc.).
-  The system writes the appropriate negative layer directly on
-  the approval-side edge.
-
-Admission and removal are **separate Proposals with separately
-configured thresholds**. A member admitted by N approvers is
-removed only when the removal-Proposal crosses its own threshold —
-never by one defection, unless that threshold is itself `1`. Because
-each event is a fresh Proposal with a fresh vote set, the approvals
-that admitted a member never linger as live votes that a later
-removal (or re-admission) could mis-tally.
-
-**Intermediate states are not materialized.** For a multi-vote
-Proposal, the approval-side structural edge stays at its top layer
-until the Proposal's threshold is crossed. Partial progress is
-visible on the individual `junction → Proposal` vote edges; the
-structural edge reflects only the threshold-resolved state.
-
-**Cascading updates across structural edges.** A state change on one
-structural edge can trigger the system to add a corresponding layer on
-another structural edge when consistency requires it. This is a
-general mechanism — the canonical case today is ItemOwnership
-supersession (see [items.md](../instances/items.md)), where creating a new approval
-edge causes the previous one to be marked revoked so that exactly one
-ownership is active at a time. Future junction or content patterns
-may use the same cascade shape.
-
-### Chat Membership (ChatMember)
-
-Chat-specific flows (open / invite-only / request-entry) are explained
-in [docs/chats.md](../instances/chats.md). They are all variants of the
-junction lifecycle described above.
-
-### Collective Membership (CollectiveMember)
-
-Collective-specific flows are explained in [docs/collectives.md](../instances/collectives.md).
-They follow the same junction lifecycle described above.
-
-### Ownership Transfer (ItemOwnership)
-
-Item-specific flows are explained in [docs/items.md](../instances/items.md). They
-follow the same junction lifecycle described above, with the
-additional property that transfers form an append-only chain of
-ItemOwnership nodes per item.
+The old one-liner survives with its scope made precise: inbound
+records never shape your feed; they can vouch you through the
+gate.
 
 ---
 
-## 6. Dimension Semantics
+## 6. The mirror and the overlay
 
-### A unified two-axis grammar
+CoGra's Memgraph holds two kinds of state with two different
+truth relationships
+([substrate.md §3](substrate.md#3-cogras-stores)):
 
-Across all actor edges, the two dimensions follow a uniform grammar:
+- **The mirror** caches L1 records for traversal. It may lag the
+  shared record; it must never diverge from it. Truth is the L1
+  record and the epoch certificate — every binding value the
+  mirror holds is recomputable from published records, so a
+  distrusting participant can audit CoGra's reads without CoGra's
+  help.
+- **The overlay** is CoGra's own truth: Proposal machinery, the
+  `:Network` operational singleton, collective-membership
+  junctions, the reference mirror. Overlay nodes carry **layered
+  properties** — the append-only history pattern, applied where
+  CoGra owns the store. Overlay state never enters any L1
+  quantity.
 
-- **`dim1` is signed valence** — sentiment, approval, affirmation. The
-  "do I feel positively or negatively about this?" axis.
-- **`dim2` is signed connection-weight** — interest, relevance,
-  importance. The "how much does this matter to me?" axis.
-
-> **Notation.** `dim1`/`dim2` and the symbols built on them
-> across the math docs are indexed in
-> [notation.md](notation.md).
-
-The user-facing **labels** vary by edge type to surface the relevant
-aspect (interest on `User → User`, relevance on `User → Post`,
-importance on `User → ChatMember`, etc.). The **role** each dimension
-plays in the math is uniform: dim1 carries direction; dim2 carries
-weight. See [edges.md](edges.md) for the per-edge-type label catalog.
-
-This unification keeps the ranking math single-shape — the algorithm
-reads `(dim1, dim2)` from any actor edge without branching on edge
-type. The interpretation (sentiment vs. interest, sentiment vs.
-relevance) lives at the user-presentation layer; the math sees a
-uniform 2D tensor. See [feed-ranking.md §3](feed-ranking.md#3-per-edge-composition-along-a-path) for how
-the two axes compose along a path under different rules — `dim1` via
-signed multiplication (signed-graph balance), `dim2` via taint sign ×
-magnitude product (no transitivity for connection).
-
-### Interest is not personal closeness
-
-The `dim2` label on `User → User` edges is **interest**, not personal
-closeness. The two are easy to conflate but the math depends on keeping
-them distinct.
-
-- **Personal closeness** (proximity in the social sense — frequency of
-  interaction, how well you know someone) is *not* what `dim2` measures.
-  Two users can know each other for decades and see each other every
-  day; this does not by itself imply high `dim2`.
-- **Interest** is how much you want the target's content/output flowing
-  through your feed — their posts, comments, items, hashtags. It is
-  a viewer-side judgment about *content relevance*, not a
-  relationship-depth statement.
-
-A valid edge shape:
-
-```
-+1 sentiment, -0.5 interest  →  "I love this person, but their
-                                   content isn't for me"
-```
-
-This composes correctly under the existing math: the sentiment chain
-(`s_path`) carries the affection through traversal via signed
-multiplication, while the interest chain (`c_path`) is tainted negative
-so the path does not amplify the target's content into the viewing
-user's feed. The same independence applies on `User → Collective` and
-elsewhere — `dim2` always asks "how much do I want this in my feed,"
-not "how close are we."
-
-### Range and polarity
-
-Every actor-edge dimension is bipolar in `[-1.0, +1.0]`:
-
-- `0` = no opinion / no interest / neutral.
-- Positive = the "forward" meaning (like, approve, want-to-see, relevant).
-- Negative = the **active opposite**, not merely the absence.
-
-The polarity matters most where the forward meaning sounds like a one-sided
-scale — most notably **interest**. An interest of `0` means "I don't
-engage with this target's content"; a negative interest means "I am actively
-avoiding this content / output" (muted, blocked, ghosted). The two are
-distinct signals, and collapsing negative interest into `0` would discard
-real information. The same reading extends to relevance (negative = "I
-actively don't want this in my feed") and to approval dimensions on junction
-nodes (negative = active rejection, not abstention).
-
-Holding the full `[-1.0, +1.0]` range for every dimension also keeps the
-ranking math uniform and avoids per-dimension clamping or branching logic.
-
-### Negative `dim2` in the graph math vs. as a frontend filter
-
-The graph math uses negative `dim2` as a **continuous taint signal**
-(see [feed-ranking.md §3.4](feed-ranking.md#34-dim2-chain--taint-sign--magnitude-product)): a path that crosses an
-avoided connection has its interest signal flipped negative, but its
-magnitude is the natural product of `|dim2|` along the path —
-proportional to the rest of the path's strength. Negative `dim2` is
-*not* snapped to zero in the math.
-
-Hard "never show me X" exclusion is a separate, **frontend concern**
-— applied as a post-ranking filter, not encoded in the math. The math
-stays smooth and the frontend layers exclusions on top. This
-separation lets users tune their feed in two distinct ways: by
-expressing graduated stances (which the math reads continuously) and
-by enforcing absolute exclusions (which the UI applies after the
-fact).
-
-### Independence of dimensions
-
-The two dimensions are independent. Examples:
-
-- **High sentiment, low relevance**: I'm glad a foreign dictator was removed
-  from power (+0.75 sentiment), but I have no ties to that country and I'm not
-  into politics (-0.5 relevance).
-- **Low sentiment, high relevance**: I don't have strong feelings about a new
-  tax law (0 sentiment), but it directly affects my business (+0.9
-  relevance).
-- **User → User**: I love my childhood best friend (+0.9 sentiment), but our
-  hobbies have diverged completely; their posts are not what I want in my
-  feed (-0.5 interest). Personal closeness is real; interest in their
-  content is not.
-
----
-
-## 7. Directionality: Inbound Edges Don't Affect Your Graph
-
-This is a critical design decision for anti-spam and anti-manipulation:
-
-**Edges created toward you by others do not change your feed.**
-
-**Invariant:** Only outgoing edges from the viewing user shape that
-user's feed, walked in their stored direction. Feed-ranking
-traversal is forward-only and obeys per-edge traversal
-restrictions (see
-[feed-ranking.md §3 "Invariant: forward-only traversal"](feed-ranking.md#3-per-edge-composition-along-a-path)
-and [feed-ranking.md §3.5 "Traversal restrictions"](feed-ranking.md#35-traversal-restrictions)).
-Inbound edges — sentiment, follows, likes from others toward the
-viewing user — do not contribute to the viewing user's ranking. This is the
-anti-bot foundation: a swarm pointing at you cannot drag your own
-graph anywhere.
-
-**"Inbound edges don't affect your feed" is one consequence, not
-the full story.** Some bot-amplification gaps work without any
-direct inbound edge at the viewing user: a bot self-claims into an
-open-membership chat, gets `:APPROVAL` (system-written from the
-chat to the bot's `ChatMember`), and rides a viewing user's existing
-edge to a chat member into a delta-funnel reaching the bot.
-Closing those gaps requires the per-edge restrictions in
-[feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)
-(`:APPROVAL`, `:BEARER`, `:TARGETS` not transit-able for ranking;
-`:REFERENCES` restricted endpoints and fanout-budget), of which
-inbound-blockage is the simplest case.
-
-If a cluster of bots likes Jakob's posts 10,000 times:
-- The bots now have strong edges toward Jakob — so Jakob appears high in
-  *their* feeds.
-- Jakob has zero edges toward the bots — they don't appear in *his* feed at
-  all.
-- The bot cluster gains nothing economically because the economically
-  important nodes (real users and advertisers) never point toward them.
-
-This is only possible because all edges are directional. There is no concept
-of an undirected "connection." A friendship is explicitly:
-```
-Jakob -[sentiment: +0.8, interest: +0.9]-> Alice
-Alice -[sentiment: +0.7, interest: +0.9]-> Jakob
-```
-
-Two independent edges. Removing one does not remove the other.
-
----
-
-## 8. Append-Only History (edges)
-
-This section covers the edge-specific shape of append-only history.
-For the project-wide principle — including node properties and
-Postgres-side display content — see [layers.md](layers.md).
-
-Each edge is not a single value but a stack of layers:
-
-```
-Jakob → Post_X:
-  Layer 1 (2025-01-15): sentiment: +0.3, relevance: +0.1   # mild like
-  Layer 2 (2025-06-20): sentiment: +0.8, relevance: +0.6   # revisited, loved it
-  Layer 3 (2026-02-01): sentiment: +0.2, relevance: -0.3   # feelings faded
-```
-
-**Rules:**
-- New interactions always append a new layer.
-- No layer can be deleted or modified after creation.
-- The "current" edge state = the most recent layer.
-- The full history is available for algorithms that need it (e.g., detecting
-  opinion shifts, weighting by interaction frequency).
-
-**Layers are metadata for audit, history, and UI** — not a ranking
-input. Ranking sees only the **top layer** of each edge: the user's
-current expressed stance. Layer count, layer timestamps, and the
-sequence of past values are available to UI surfaces (e.g., a "this
-edge has been revised N times" indicator, or a stale-edge prompt
-suggesting review) and to anyone auditing the graph's history, but
-they do not amplify or attenuate the ranking math.
-
-This follows from **stances-not-events** (§3): the graph trusts
-the user's last-expressed stance until they change it. Most users
-update reactively — when they notice their feed reflecting
-connections they no longer care about — rather than actively
-maintaining edges, similar to pruning a stale subscription list.
-The system does not infer intent from interaction frequency; it
-reflects what the user last said.
-
----
-
-## 9. Relationship to feed ranking
-
-The [feed ranking algorithm](feed-ranking.md) is a general rule for
-ordering target nodes in any graph with 2D-tensor edges from a root
-node's perspective. It is deliberately layer-agnostic — the math
-applies regardless of what the dimensions represent.
-
-This document defines the **concrete inputs** the ranking algorithm
-operates on in CoGra:
-
-- Node categories (actor, content, junction) — §2.
-- Edge categories (actor, structural) — §3.
-- The uniform 2-dimensional `[-1.0, +1.0]` tensor shape — §4.
-- Directional semantics — §7 (inbound edges don't affect the viewing user's
-  feed).
-- Append-only layer stacks — §8 (the current state is the top layer).
-
-The ranker composes these inputs along each path via **parallel
-tracks**: `dim1` chain via signed multiplication (signed-graph
-balance), `dim2` chain via taint sign × magnitude product (no
-transitivity for connection-weight). Each metric (`h`, `i`, `j`,
-`k`) is itself a 2-tuple `(sentiment-component, interest-component)`,
-collapsed to a scalar (default: sum) only at sort time. See
-[feed-ranking.md §3-§4](feed-ranking.md#3-per-edge-composition-along-a-path) for the full rule.
+One CoGra flow typically writes all three stores: the L1 gesture
+is submitted through the backend, the mirror converges on the
+accepted record, and the overlay and Postgres carry the flow's
+CoGra-side state
+([substrate.md §4](substrate.md#4-the-gesture-pattern)). The
+gesture is the part that binds; everything else is CoGra's to
+rebuild from the record if it is ever lost.
