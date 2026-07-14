@@ -6,19 +6,22 @@ buckets — `illegal`, `sensitive`, `normal` — backed by the same
 Proposal mechanism that powers the rest of the platform: the
 guidelines themselves are amendable by the Network at any time.
 
-This doc is the **canonical text**. The graph stores only the
-current version number and a content hash on the
-[`:Network`](../implementation/graph-data-model.md) singleton —
-the document itself lives here, in the repo.
+This doc is the **canonical text**. Its current version is pinned
+by two governed `:Network` properties (version number + content
+hash), and each ratified version's text is anchored on L1 as a
+platform document — a publisher-authored Content node carrying
+the document as witnessed payload
+([substrate.md §8](../primitive/substrate.md#8-system-actors)).
+The working copy lives here, in the repo.
 
 ## 1. The three buckets
 
 The classification a Network member assigns when authoring or
 voting on a moderation Proposal is one of `illegal`, `sensitive`,
 or `normal`. Bucket meanings and behavioural consequences
-(redaction cascade, viewer filter, reversibility) live at the
-primitive level — see
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md).
+(redaction cascade, viewer filter, reversibility) live with the
+moderation machinery — see
+[moderation.md §1](moderation.md#1-the-two-classification-paths).
 What follows is the platform policy: which content the Network
 puts in each bucket. The Network amends these lists via §3.
 
@@ -105,16 +108,16 @@ classified it.
 The legal-hold disposition for `illegal` content
 ([retention-archive.md](../primitive/retention-archive.md))
 *does* track jurisdictional law — that is a per-row decision
-made by the moderator and legal admin at redaction time, separate
-from the classification decision.
+made by `legal_admin` at case review, separate from the
+classification decision.
 
 ## 3. Amendment procedure
 
 The guidelines are amendable via the same Proposal primitive that
 governs everything else on the platform.
 
-**Subject.** Two `:Network` properties move together as the
-canonical pointer to a guidelines version:
+**Subject.** Two governed `:Network` properties move together as
+the canonical pointer to a guidelines version:
 
 - `Network.guidelines_version` — monotonic integer, incremented
   by 1 on each amendment.
@@ -124,14 +127,18 @@ canonical pointer to a guidelines version:
 A guidelines amendment is a single Proposal that sets both
 properties to the new version's values atomically — one vote
 covers the pair, since a version without its hash (or vice versa)
-is meaningless.
+is meaningless. Like every `:Network` parameter change, the passed
+amendment is finalized onto the network charter's L1 anchor, so
+the version schedule is replayable from public records
+([network.md](../primitive/network.md)); the ratified text itself
+is anchored as a platform document (witnessed payload).
 
 **Eligibility.** All active Network members
 ([network.md](../primitive/network.md)).
 
-**Vote shape.** Shape A — the `User → Proposal` actor edge
-carries the vote, same as moderation Proposals
-([moderation.md §4](moderation.md#4-eligibility-weights-thresholds)).
+**Vote shape.** Overlay vote edges on the Proposal, same as
+moderation Proposals
+([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)).
 
 **Tally.** Petition-style — only positive votes contribute. See
 [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
@@ -147,9 +154,10 @@ The defaults are tuned higher than single-content classification
 because guideline changes shift the normative frame for *all
 future* moderation, not a single piece of content. The
 `guidelines_change_*` parameters themselves fall in the critical
-bucket of [network.md §11](../primitive/network.md#11-amending-network-parameters) — amending
-them requires the higher fractional / absolute pair that protects
-platform-wide governance.
+bucket of
+[network.md §11](../primitive/network.md#11-amending-network-parameters)
+— amending them requires the higher fractional / absolute pair
+that protects platform-wide governance.
 
 **Mod gate.** Guidelines amendments shift the normative frame for
 all future moderation, so they sit at the **critical tier** of the
@@ -159,27 +167,58 @@ mod-gate: positive moderator votes `≥ ⌈Network.critical_mod_gate_fraction
 
 **Drafting and discussion.** The Proposal carries the new version
 number and hash. The actual text — the diff against the previous
-version — is published off-graph (e.g. the repo's pull request)
-prior to the vote so members can review what they are voting on.
-Voters who cast `+1` without reviewing operate on the same
-normative honor system as moderators voting on encrypted
-ChatMessages
+version — is published (e.g. the repo's pull request) prior to
+the vote so members can review what they are voting on. Voters
+who cast `+1` without reviewing operate on the same normative
+honor system as moderators voting on encrypted Messages
 ([moderation.md "Encrypted message classification"](moderation.md#encrypted-message-classification)),
 addressable through the same Proposal mechanism applied to that
 user's role.
 
 ## 4. URL handling
 
-The graph deliberately does **not** store a URL pointing at this
-document. Different instances serve under different domains; the
-graph stores only `guidelines_version` + `guidelines_hash`, and
-each instance's frontend constructs the canonical URL from its
-own domain configuration (`https://<instance-domain>/guidelines`
-or whatever the instance's deployment chooses).
+The platform deliberately does **not** pin a URL pointing at this
+document. Different instances serve under different domains; each
+instance's frontend constructs the canonical URL from its own
+domain configuration
+(`https://<instance-domain>/guidelines` or whatever the
+instance's deployment chooses).
 
 The hash is the integrity anchor: a client can verify the served
 document matches the version the Network ratified, regardless of
-how the URL is composed.
+how the URL is composed — and the ratified bytes themselves are
+witnessed on the shared graph via the platform-document anchor.
+
+## 5. License and provenance obligations
+
+Every content node carries license qualifiers, set by the
+creating actor when the node enters the graph and immutable
+thereafter: **attribution** `a ∈ {0, 1}` (credit requirement) and
+**oversight** `o ∈ {0, 0.5, 1}` (AI provenance). They are
+structural metadata of the Publish record; no L1 formula consumes
+them — enforcement is explicitly CoGra's responsibility
+([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
+CoGra enforces them through four planks:
+
+1. **Declaration is mandatory at authoring time.** Every
+   content-creation flow requires the qualifiers before the
+   record is submitted — an L2 write-validation rule, same class
+   as envelope conformance
+   ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+2. **Render obligations.** `a = 1` ⇒ the creator is credited on
+   every display, quote, and reference surface. `o ≥ 0.5` ⇒ an
+   AI-involvement badge on every render; `o = 0.5` ⇒ generation
+   details are disclosed on query; `o = 1` ⇒ the full provenance
+   chain is published alongside the record.
+3. **Violations are a guidelines category.** Uncredited reuse of
+   `a = 1` content and undisclosed AI generation ride the
+   ordinary report → Proposal → moderation path (§1,
+   [moderation.md §2](moderation.md#2-reports--proposals-on-the-graph))
+   — classified and marked like any other guidelines violation.
+4. **The provenance-chain format is a versioned, reserved field**
+   in CoGra's published payload-format spec. The full chain
+   format is deferred until the AI-provenance workstream needs
+   it; the reservation keeps old records forward-readable.
 
 ## What this doc is not
 
@@ -190,7 +229,7 @@ how the URL is composed.
   `illegal` originals is in
   [retention-archive.md](../primitive/retention-archive.md).
 - **Not a substitute for jurisdictional legal review.** The
-  Network's classification is a community standard; a legal
-  admin still reviews legal-hold disposition per row.
+  Network's classification is a community standard; `legal_admin`
+  still reviews legal-hold disposition per row.
 - **Not exhaustive.** The starter lists in §1 are seed text. The
   Network amends them via §3 as the platform evolves.

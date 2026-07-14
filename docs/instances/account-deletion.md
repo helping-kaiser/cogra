@@ -1,85 +1,91 @@
 # Account deletion
 
-A User can request that their account be removed from public view.
-Account deletion **does not delete the User node, edges, or layer
-stacks** — it triggers a redaction of personally-identifying
-information (PII) from public surfaces while preserving the graph
-structure that depends on the user's existence. Original PII is
-moved to a **retention archive** so the platform can satisfy
-statutory retention obligations (e.g., the German 10-year retention
-on tax and economic records) before the data is permanently
-destroyed.
+A User can request that their account be removed from public
+view. Account deletion is **pure L2 policy — no L1 gesture
+exists for it**, and nothing on the shared graph is authored,
+severed, or deleted. What it does: the identity association is
+forgotten, personally-identifying content is redacted from public
+surfaces via payload removal
+([layers.md §5](../primitive/layers.md#5-deletion-policy)) and
+Postgres tombstones, and the originals move to the
+[retention archive](../primitive/retention-archive.md) so the
+platform can satisfy statutory retention obligations before the
+data is permanently destroyed.
 
-The redaction mechanism is
-[layers.md §5](../primitive/layers.md#5-deletion-policy); the
-disposition of originals is the
-[retention archive](../primitive/retention-archive.md). This doc
-adds the **user self-service authorization path** — parallel to
-[moderation.md](moderation.md)'s community-driven authorization
-for illegal content.
+What remains is exactly the **L1 husk**: an actor whose records,
+standing, title, and trust edges all persist — with the names and
+words gone
+([substrate-map.md §1](../primitive/substrate-map.md#1-actors-and-identity)).
 
-Future triggers — court order, next-of-kin under applicable
-inheritance law (e.g., § 1922 BGB in Germany), network-admin
-emergency action — reuse the same redaction scope and archive
-mechanism. Each gets its own authorization rules.
+This doc adds the **user self-service authorization path** —
+parallel to [moderation.md](moderation.md)'s community-driven
+authorization for illegal content. Future triggers — court order,
+next-of-kin under applicable inheritance law (e.g., § 1922 BGB in
+Germany), network-admin emergency action — reuse the same
+redaction scope and archive mechanism; each gets its own
+authorization rules.
 
 ## 1. Two redaction levels
 
-Account deletion uses the two redaction levels defined in
-[layers.md §5 "Two redaction levels — identity vs content"](../primitive/layers.md#two-redaction-levels--identity-vs-content):
-identity-level by default, content-level on opt-in.
+Identity-level by default, content-level on opt-in. The level
+fixes *which records* the payload-removal mechanism touches; the
+mechanism itself is the same one-way transition either way.
 
-**Identity-level (default).** The User-side fields touched:
+**Identity-level (default).** What is touched:
 
-- The `username` layer on the graph User node is replaced with
-  the per-user-unique sentinel defined in
-  "Username post-redaction" below (the same form as the Postgres
-  tombstone). The User node itself stays; edges and layer stacks
-  stay; counts and authorship derivation continue to work.
-- The Postgres profile is tombstoned — a new
-  `user_profile_versions` row in which `display_name`, `bio`,
-  `avatar_id`, `cover_id`, and `website_url` are cleared
-  (`NOT NULL` fields set to a redaction marker, nullable fields
-  nulled, `redaction_reason` set), and `users.username` is
-  replaced in place with the unique redacted form below (the one
-  sanctioned in-place write on the identity row). The prior
-  profile version is archived per §3.
-- The user's avatar `media_attachments` row is tombstoned and
-  archived.
-- Private per-user state (preferences, bookmarks, hidden-actor
-  lists, read state) is **deleted outright**. These tables hold
-  no preservation value once the user is anonymized and carry no
-  statutory retention obligation; archive bypass is appropriate.
-  Forthcoming economic records (transactions, payouts) will
-  instead be archived per §3 because they carry their own
-  retention clocks.
+- **The identity association is forgotten.** The person ↔ actor
+  map is CoGra service state, never graph state; deleting it is a
+  genuine deletion of operational data. No credential CoGra holds
+  links the person to the actor afterward.
+- **The Registration bundle's payloads are removed.** Profile
+  content — bio, display name, avatar and cover digests — rides
+  the actor's Registration payloads
+  ([nodes.md §1](../primitive/nodes.md#1-l1-node-types-the-shared-graph));
+  removal drops every record in the bundle to its reduced
+  projection, current version and prior revisions alike.
+- **The Postgres profile is tombstoned** — a new profile version
+  row with the identity fields cleared and `redaction_reason`
+  set; `users.username` is replaced in place with the unique
+  redacted form below (the one sanctioned in-place write on the
+  identity row). The prior version is archived per §3.
+- **The avatar and cover assets** in blob storage are removed and
+  archived; their digests remain committed in the (now removed)
+  witnessed payloads.
+- **Private per-user state** (preferences, bookmarks,
+  hidden-actor lists, read state) is **deleted outright** — the
+  named operational carve-outs of
+  [layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content).
+  These hold no preservation value once the user is anonymized
+  and carry no statutory retention obligation. Forthcoming
+  economic records (transactions, payouts) will instead be
+  archived per §3 because they carry their own retention clocks.
 
-**Content-level (opt-in).** For each Post / Comment /
-ChatMessage authored by the user:
+**Content-level (opt-in).** Identity-level *plus*, for each
+content-carrying record the user authored — Publish (posts),
+Review (comments), Send (messages):
 
-- The Postgres body version row is tombstoned and the original
-  body archived.
-- Attached `media_attachments` rows are tombstoned and archived.
-- The graph node, authoring edges, and layer stacks are
-  untouched. The post still exists, still ranks, still resolves
-  via authorship — only the body and its media become
-  unavailable to public readers.
+- The record's payload is removed — body, media manifest, all of
+  it, whole-record per the commitment
+  ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
+  and archived.
+- The Postgres body version rows are tombstoned and attached
+  media assets removed and archived.
+- The structural records, the nodes they minted, and everything
+  they do on the graph are untouched. The post still exists,
+  still routes, still credits its author — only the content
+  becomes unavailable.
 
-For encrypted ChatMessages, the body row holds a ciphertext blob
-in the same row shape as a plaintext message (see
-[chats.md §4.2](chats.md#42-chatmessage)); the tombstone
-replaces that blob just as it replaces a plaintext body. Chat
+For encrypted Messages, the payload is a ciphertext blob; the
+removal is the same one-way transition as for plaintext. Chat
 epoch keys are **untouched** — they live off-graph on members'
-devices, neither the graph nor Postgres ever holds them, and
-past-epoch keys held by ex-members are not treated as redactable
-PII. See
-[chats.md §13.2 "ChatMessage"](chats.md#132-chatmessage) for the
-same point on the moderation-driven path.
+devices, and past-epoch keys held by ex-members are not treated
+as redactable PII (see [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism)).
 
-Rationale for identity-only as the default — content was
-publicly authored; mass-redacting bodies destroys other actors'
-record — is given in
-[layers.md §5](../primitive/layers.md#two-redaction-levels--identity-vs-content).
+**Why identity-only is the default:** content was publicly
+authored — PII control happened at write time — and mass-removing
+bodies destroys other actors' record of conversations they
+participated in. Content-level is the explicit choice for an
+actor who later regrets what they wrote.
 
 ### Username post-redaction
 
@@ -96,90 +102,62 @@ This preserves the column invariant, never collides, and remains
 traceable to the archive row via the embedded UUID. The
 user-facing display value is rendered as `[redacted user]` (or
 similar) at the API layer; the storage form satisfies the
-uniqueness constraint.
+uniqueness constraint. The shared graph needs no counterpart —
+no name lives on it; the actor's identifier is its address, and
+what the actor *showed* was payload, now reduced.
 
-The graph-side `User.username` top layer uses the **same**
-`redacted-user-{user_id_uuid}` form. The graph carries a
-`:User.username IS UNIQUE` constraint (see
-[graph-data-model.md](../implementation/graph-data-model.md));
-the per-user-unique sentinel satisfies the constraint across
-any number of redactions without requiring layer-aware
-constraint logic. The `redacted-user-` prefix is the visible
-signal that the layer was redacted — the auditable absence the
-layer history requires.
-
-## 2. What is preserved
+## 2. What is preserved — the husk
 
 Account deletion never affects:
 
-- **Graph nodes.** User, Post, Comment, ChatMessage, all authored
-  content nodes stay.
-- **Edges.** Actor edges (`:ACTOR`, `:AUTHOR`, `:INVITE`) and
-  structural edges (`:CONTAINMENT`, `:REFERENCES`, etc.) stay.
-  Outgoing edges from the
-  redacted user — including their `:AUTHOR` edges — continue to
-  point at the User node by UUID; the UUID does not change.
-  Incoming edges from others are untouched.
-- **Layer stacks.** Timestamps, layer numbers, and positions are
-  preserved everywhere. Only specific layer *values* are replaced
-  with markers.
-- **Counts and ranking inputs.** Like-counts, member-counts,
-  feed inputs continue to include the redacted user's
-  contributions. Removing them would alter other users' record
-  retroactively.
-- **Authorship derivation.** Author = earliest incoming edge by
-  timestamp ([authorship.md](../primitive/authorship.md)). The
-  `:AUTHOR` edge from the redacted user still points to the
-  same User UUID, and `posts.author_id` / `comments.author_id` /
-  `chat_messages.author_id` in Postgres still hold that UUID;
-  redaction touches neither.
+- **Records.** Every record the user authored — stances,
+  memberships, publications — is permanent on the shared graph;
+  so is every record others authored toward the user. Deletion
+  authors nothing and removes nothing structural.
+- **Standing and title.** The husk's standing persists — the
+  vouches feeding it are *other* actors' records, and only they
+  can revise them. Any title the actor holds remains in the epoch
+  certificate; `owner^(k)` is untouched.
+- **Counts and ranking inputs.** The user's records keep doing
+  whatever they do — their stances still route, their content
+  nodes still rank in others' feeds. Removing their effect would
+  alter other users' record retroactively.
+- **Authorship.** Author binding is intrinsic to every L1 record
+  ([authorship.md](../primitive/authorship.md)); the husk is
+  permanently the author of everything it wrote.
+- **Chat membership.** Membership is a fold over the member's own
+  Participant / Leave records
+  ([substrate-map.md §4](../primitive/substrate-map.md#4-conversations-and-membership));
+  deletion authors no Leave, so the fold is unchanged. A husk
+  that should no longer be in a chat is the chat's call — the
+  ordinary kick flow.
 
-Mentions inside *other* users' posts are not edited — those posts
-belong to their authors. The `@username` token in such posts now
-resolves to the redaction marker on display. This is intentional:
-editing other users' content to scrub a redacted user's name
-would itself be a deletion of someone else's record.
-
-### ChatMember junctions
-
-`ChatMember` junctions are never removed. They are graph topology
-(append-only per [layers.md](../primitive/layers.md)) and the
-historical record of who participated in which chat across time.
-Account deletion does not change that:
-
-- The junction node stays, and its `:BEARER` and approval edges
-  continue to point at the redacted User by UUID.
-- Any user-input fields on the junction (e.g., a chat-local
-  display-name override) follow the standard PII-redaction
-  rules.
-- Membership transitions — voluntary leave, member-disavowal pass,
-  re-add — continue to use the same approval-pair layer mechanic
-  defined in [chats.md §11](chats.md#11-joining-and-leaving-a-chat).
-  A redacted user is not auto-disjoined from chats; that is a
-  member-driven action.
+Mentions inside *other* users' content are not edited — those
+belong to their authors. A mention of a redacted user resolves to
+the redaction marker on display. This is intentional: editing
+other users' content to scrub a redacted user's name would itself
+be a deletion of someone else's record.
 
 ## 3. Retention archive
 
-Originals — the prior profile version, content body version rows
-that were tombstoned, the prior values of redacted graph property
-layers, and any tombstoned media attachments — are written to the
+Originals — the removed payloads with their private values, the
+prior profile version rows, tombstoned body version rows, and
+media assets — are written to the
 [retention archive](../primitive/retention-archive.md) with a
 per-row legal hold appropriate to the data:
 
-- **Ordinary profile PII** (display name, bio, avatar, cover
-  image, website, layered username history) — typically a short
-  or zero hold,
-  expirable on user request per DSGVO storage minimization.
+- **Ordinary profile PII** (display name, bio, avatar, cover,
+  website, prior profile revisions) — typically a short or zero
+  hold, expirable on user request per DSGVO storage minimization.
 - **Content tied to financial transactions** (forthcoming with
-  the economics primitive) — 10-year hold under German tax-record
-  retention law.
+  the economics workstream) — statutory retention, e.g. the
+  ~10-year German tax-record hold.
 
-Hold values are set at redaction time. The archive itself defines
-the polymorphic schema, the per-row legal-hold-then-hard-delete
-mechanism, and the `legal_admin` access path that makes archived
-content available to legal authorities under compulsion. See
-[retention-archive.md](../primitive/retention-archive.md) for the
-mechanism.
+Hold values are set at redaction time. The archive defines the
+polymorphic schema, the per-row legal-hold-then-hard-delete
+mechanism, and the `legal_admin` access path; archived payloads
+stay verifiable against their records' public witnesses
+([retention-archive.md §1](../primitive/retention-archive.md#1-polymorphic-shape)).
 
 ## 4. The user self-service trigger
 
@@ -195,17 +173,16 @@ only their authorization differs.
    API records the confirmed request with a 7-day deadline.
 3. **Grace period.** For 7 days, the request is reversible — the
    user can cancel from any logged-in session, restoring full
-   account state. Nothing on the graph or in Postgres is
-   redacted yet; the request is a pending intent.
-4. **Execution.** At deadline, the redaction action runs (§5).
-   Identity-level redaction is automatic. Content-level redaction
-   is included only if the user opted in during request or
-   confirmation.
+   account state. Nothing is redacted yet; the request is a
+   pending intent.
+4. **Execution.** At deadline, the redaction runs (§5).
+   Identity-level is automatic; content-level is included only if
+   the user opted in during request or confirmation.
 5. **Irreversibility.** After execution, the user's PII is in the
    archive and inaccessible to public surfaces. The archive's
    hold expiry will eventually destroy it. There is **no restore
-   path** post-execution — the platform commits to the redaction
-   once executed.
+   path** post-execution — payload removal is one-way, and the
+   platform commits to the redaction once executed.
 
 The grace period exists for the same reason GDPR confirmation
 patterns exist: account deletion is destructive and easy to
@@ -213,66 +190,64 @@ trigger by mistake, by client bug, or by a compromised session.
 The window is short enough that public surfaces clear quickly,
 long enough that an affected user typically notices.
 
-**Wallet keys stay with the user.** The wallet a user used
-inside the Network is backed by a self-custodied key the user
-(and only the user) holds — a passkey / device key backing a
-smart account ([ledger.md](../implementation/ledger.md#self-custody-from-signup));
-no part of the platform holds it. Account deletion removes the
-in-network identity but does not — and cannot — touch the wallet.
-Forthcoming economics events (compensation, payouts,
-settlements) can therefore still target the wallet without
-re-instantiating the in-network account. The "no restore path"
-above is about the User node on the graph and the PII in
-Postgres, not about economic continuity off-platform.
+**The L0 address stays with the person.** One account = one L0
+address, self-custodied — no part of the platform holds the key
+([ledger.md](../implementation/ledger.md)). Account deletion
+removes CoGra's identity association but does not — and cannot —
+touch the address or anything resting on it. The "no restore
+path" above is about the association and the PII, not about the
+person's off-platform continuity.
 
 ## 5. Write ordering across stores
 
 Account deletion writes to three places: the retention archive
-(Postgres), the graph (Memgraph), and the public Postgres display
+(Postgres), the payload carriage, and the public Postgres display
 tables. The order matters for crash safety:
 
-1. **Archive first.** Write the original PII to the retention
-   archive. Idempotent — the same request can be retried without
-   producing duplicates (key on
-   `(original_id, original_type, redacted_by)`).
-2. **Graph redaction.** Apply the [layers.md §5](../primitive/layers.md#5-deletion-policy)
-   redaction markers to the relevant property layers on the User
-   node (and, for content-level redaction, on any node-property
-   layers that carry user-input strings).
+1. **Archive first.** Write the original PII — payloads, private
+   values, prior rows — to the retention archive. Idempotent: the
+   same request can be retried without producing duplicates (key
+   on `(original_id, original_type, redacted_by)`).
+2. **Payload removal.** Remove payload and private value from
+   carriage for every record in scope; each record drops to its
+   reduced projection.
 3. **Postgres tombstone.** Write the tombstone version rows for
-   the user profile and (if content-level was opted into) the
-   content bodies and their media attachments.
+   the profile and (if content-level was opted into) the content
+   bodies and their media attachments; delete the operational
+   per-user state; forget the identity association.
 
-Each step is retryable independently. A crash mid-flow leaves
-the system in a safe state: PII is already preserved in the
-archive; the graph and public Postgres state may be partially
-or fully redacted, but never lose data. A reconciler re-runs any
-incomplete redaction from the request record.
+Each step is retryable independently. A crash mid-flow leaves the
+system in a safe state: PII is already preserved in the archive;
+carriage and Postgres may be partially redacted, but never lose
+data. A reconciler re-runs any incomplete redaction from the
+request record.
 
 ## 6. Interaction with moderation
 
 [Moderation](moderation.md) and account deletion both invoke the
-[layers.md §5](../primitive/layers.md#5-deletion-policy) redaction mechanism but differ in
-authorization, scope, and archive treatment:
+payload-removal mechanism
+([layers.md §5](../primitive/layers.md#5-deletion-policy)) but
+differ in authorization, scope, and archive treatment:
 
 |                | Moderation (illegal)                                              | Account deletion                                  |
 |----------------|-------------------------------------------------------------------|---------------------------------------------------|
 | Authorization  | Network governance + mod gate                                     | User self-service (with grace)                    |
-| Scope          | One specific field on a content node, or the whole-node `'node'` sentinel | User profile + (opt-in) all authored content |
-| Archive hold   | Set asynchronously by `legal_admin` per case (off-graph; see [retention-archive.md §4](../primitive/retention-archive.md#4-access-path)) | Per row — short for PII, longer for financial data |
+| Scope          | The specific record(s) a Proposal targets                         | Registration bundle + (opt-in) all authored content |
+| Archive hold   | Set asynchronously by `legal_admin` per case ([retention-archive.md §4](../primitive/retention-archive.md#4-access-path)) | Per row — short for PII, longer for financial data |
 | Initiator      | Any active Network member                                         | The account owner                                 |
+| Public mark    | Reduced projection + tombstone + Tag verdict                      | Reduced projection + tombstone                    |
 
 The two paths run independently. A user under active moderation
 can still request account deletion. Conversely, illegal-content
-redactions on a redacted user's content proceed normally — the
-content body is in the retention archive, and a moderator acting
-on a court order can request removal of the archive copy as
-well, satisfying the destruction obligation that overrides
-ordinary retention for illegal content specifically.
+classification on a redacted user's content proceeds normally —
+the content is in the retention archive, and a moderator acting
+on a court order can request removal of the archive copy as well,
+satisfying the destruction obligation that overrides ordinary
+retention for illegal content specifically.
 
 ## What this doc is not
 
-- **Not the redaction mechanism.** In-place layer-marker and
+- **Not the redaction mechanism.** Payload removal and
   Postgres-tombstone semantics live in
   [layers.md §5](../primitive/layers.md#5-deletion-policy).
 - **Not the moderation authorization.** Community-driven
@@ -280,11 +255,10 @@ ordinary retention for illegal content specifically.
   [moderation.md](moderation.md). This doc is a separate
   authorization path that happens to invoke the same mechanism.
 - **Not the archive schema.** Concrete column types, indexes,
-  migrations, the polymorphic JSONB shape, and the
-  access-control shape under which `legal_admin` reaches the
-  archive — a host-operations concern, not a graph role; see
-  [retention-archive.md §4](../primitive/retention-archive.md#4-access-path) —
-  live in [data-model.md](../implementation/data-model.md).
+  migrations, the polymorphic shape, and the access-control shape
+  under which `legal_admin` reaches the archive live in
+  [data-model.md](../implementation/data-model.md) and
+  [retention-archive.md](../primitive/retention-archive.md).
 - **Not the future triggers.** Court order, next-of-kin
   (§ 1922 BGB), and network-admin emergency action are listed
   here as planned reusers of the redaction scope; each warrants

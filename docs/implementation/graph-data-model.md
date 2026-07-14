@@ -45,7 +45,7 @@ enforced in code tests.
 ### Shared shape: layered node-property storage
 
 Properties marked "layered" in the per-label tables below carry
-history per [layers.md §3](../primitive/layers.md#3-layers-on-nodes).
+history per [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes).
 Each such property `X` occupies two slots on the node:
 
 - **`X`** — the current top-layer value. Queries, indexes, and
@@ -64,7 +64,7 @@ largest `timestamp ≤ T`. The first consumer is
 [proposal.md §2 `rule_anchor`](../instances/proposal.md#2-graph-side-properties).
 
 Redaction per
-[layers.md §5 "Layer contents on node properties — redactable"](../primitive/layers.md#layer-contents-on-node-properties--redactable)
+[layers.md §5 "Payload removal — the redaction mechanism"](../primitive/layers.md#payload-removal--the-redaction-mechanism)
 overwrites the targeted layer's `value` in place with a marker;
 the entry's `timestamp` and `layer` are preserved, and `X` is
 updated to the marker only if the redacted layer was the top.

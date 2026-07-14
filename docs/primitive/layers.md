@@ -1,21 +1,27 @@
 # Layers
 
 CoGra is **append-only everywhere that matters**. Every piece of
-authored or expressed state is layered rather than overwritten —
-edges, node properties, and display content in Postgres all follow
-the same rule. The current state is the top layer; the full history
-is always available.
+authored or expressed state is layered rather than overwritten,
+and the current state is always an interpretation — the top
+layer, a declared fold — over a fully preserved history. That is
+one principle, uniform across the substrate; the stores differ
+only in **what they write down per change**: the shared graph
+appends a whole record, CoGra's overlay appends just the changed
+property value, Postgres appends a version row. Appending a
+parallel record and adding a layer on a property are the same
+act at different storage granularity — same result, same
+intention.
 
 ---
 
 ## Append-only vocabulary
 
-"Append-only" in CoGra covers three distinct mechanisms, all
-sharing the principle that history is preserved rather than
-overwritten:
+"Append-only" in CoGra names one principle in three
+representations:
 
-1. **Append-only edges** — see [§2](#2-layers-on-edges).
-2. **Append-only node properties** — see [§3](#3-layers-on-nodes).
+1. **Whole-record layers** — the shared graph's parallel records
+   (§2).
+2. **Per-property layers** — CoGra's overlay nodes (§3).
 3. **Versioned-row Postgres display content** — see
    [§4](#4-layers-on-postgres-side-display-content).
 
@@ -26,121 +32,93 @@ shared alias.
 
 ## 1. Why layers everywhere
 
-The append-only principle isn't about edges specifically — it's
-about never erasing what was. Transparency and auditability matter
-more than the convenience of being able to "delete" something.
+The append-only principle isn't about any one store — it's about
+never erasing what was. Transparency and auditability matter more
+than the convenience of being able to "delete" something.
 
 Concrete consequences:
 
-- You cannot hide that you disliked a post in the past; you can only
-  add a newer layer that changes your current opinion.
-- You cannot hide that you used to be a member of a chat; you can
-  leave, but the record of having been a member stays.
-- You cannot hide that your username used to be something else; name
-  changes add a new layer.
-- You cannot delete a message you sent; you can add a new version
-  (correction, edit) but past versions are preserved.
-
-This applies equally to edges, node properties, and display content.
-
----
-
-## 2. Layers on edges
-
-Every edge is a stack of layers. Each interaction adds a new layer
-with its own dimension values, timestamp, and layer number. The top
-layer is the current state; the full history is available for any
-algorithm that needs it (e.g. detecting opinion shifts or weighting
-by interaction frequency).
-
-See [graph-model.md §4](graph-model.md) for the edge structure and
-[graph-model.md §8](graph-model.md) for edge-specific history
-details.
-
-**"Revoked" names the non-positive-top-layer state.** An
-approval-pair structural edge is **revoked** when its top layer
-carries `dim1 ≤ 0` (a removed CollectiveMember, a disavowed
-ChatMember, an ItemOwnership replaced by the next ownership).
-Affirmation is strictly positive; a `0` top layer is not a
-distinct state. Older drafts used "inactive" or "superseded" for
-the same state; both are aliases for revoked. The *mechanism*
-producing the non-positive layer (supersession cascade, voluntary
-leave, governance threshold-cross) varies; the *state* it
-produces is always "revoked." See
-[graph-model.md §5](graph-model.md).
+- You cannot hide that you disliked a post in the past; you can
+  only append counter-records that change your current net stance,
+  and the whole bundle stays public.
+- You cannot hide that you used to be in a chat; your Participant
+  and Leave records are permanent, and the membership fold reads
+  them all.
+- You cannot hide that your profile used to say something else; a
+  profile edit is a parallel Registration record, and the prior
+  payloads remain published.
+- You cannot delete a message you sent; its record and witness are
+  permanent. Content can leave through the authorized redaction
+  paths (§5) — but only whole-record, only one-way, and never
+  silently.
 
 ---
 
-## 3. Layers on nodes
+## 2. Layers on the shared graph
 
-Nodes can change over time — a user's username, a chat's name, a
-ChatMember's role, a CollectiveMember's ownership percentage. These
-changes add layers to the **specific property** that changed, not to
-the whole node.
+On L1 a layer takes the form of a **parallel record**: revising a
+stance appends a new record to the author's bundle toward the
+same target, and the bundle *is* that stance's layer stack — a
+public `≺`-chain, no record ever deleted, merged, superseded, or
+rewritten. The store appends the whole record rather than a delta,
+but the read is identical to any other layer stack: the full
+history is preserved, and "current" is a declared interpretation
+over it — L1's own two bundle reads, or CoGra's per-surface read
+rules
+([graph-model.md §3](graph-model.md#3-revision-and-current-state)).
+How history is *presented* — edit timelines, current-vs-past
+views — is CoGra display logic derived from the bundle, never
+separately stored state.
+
+The one one-way transition a record supports is **payload
+reduction** — the deletion mechanism (§5). The structural record
+is invariant across it.
+
+---
+
+## 3. Layers on overlay nodes
+
+Overlay nodes — CoGra's own graph state
+([nodes.md §3](nodes.md#3-overlay-node-types-cogras-graph)) — can
+change over time: a Proposal's tally state, a `:Network`
+parameter, a CollectiveMember's role. These changes add layers to
+the **specific property** that changed: instead of appending a
+copy of the node with one value different, the store appends just
+the changed value — a storage economy, not a different history
+model.
 
 ### Per-property layering
 
-If Alice changes her username from `alice` to `alice_the_dev`, that's
-a new layer on the `username` property of her User node. Her other
-properties are untouched — only fields that actually change
-accumulate layers. Her edges are separate records and are not node
-properties; they have their own independent layer stacks.
-
-A node's current properties are the top layer of each property.
-History is preserved per field, independent of other fields.
-Each layer carries `(value, timestamp)` parallel to edge layers
-(§2), so consumers can address a specific past layer
-**by timestamp** — "read property X as-of T" returns the layer
-on X with the largest timestamp ≤ T. Per-node serialized
+Each layer carries `(value, timestamp)`; a property's current
+value is its top layer, and history is preserved per field,
+independent of other fields. Consumers can address a specific past
+layer **by timestamp** — "read property X as-of T" returns the
+layer on X with the largest timestamp ≤ T. Per-node serialized
 writes (the discipline used in
 [governance.md "Tally serialization"](governance.md#tally-serialization))
-make timestamps strictly monotonic per node, so a single
-timestamp pins the node's full state at that moment — no
-per-property index needed. Concrete storage shape (top-layer
-slot + `_layers` list) in
+make timestamps strictly monotonic per node, so a single timestamp
+pins the node's full state at that moment — no per-property index
+needed. Concrete storage shape (top-layer slot + `_layers` list)
+in
 [graph-data-model.md "Shared shape: layered node-property storage"](../implementation/graph-data-model.md#shared-shape-layered-node-property-storage).
 
-### What properties belong on graph nodes
+### What properties belong on overlay nodes
 
-Only what the graph **actually needs** for traversal, ranking, or
-routing. Example authored properties that layer:
-
-- User: `username` (the handle used for mentions/lookups).
-- Chat: `name` (if needed for routing/display hints), `governance`
-  (the social-contract map read when an actor's claim toward a
-  `ChatMember` arrives, when a disavowal Proposal is tallied, etc.).
-- ChatMember / CollectiveMember: `role`, role-attached quantities
-  (`ownership_pct`, `voting_weight`).
-
-If the graph doesn't need a field to compute anything, it doesn't
-belong on the graph.
-
-### What does NOT belong on the graph
-
-Display content — bios, profile text, post bodies, message bodies,
-image and video URLs — lives in Postgres, not on graph nodes. The
-layering rule still applies to those, but it applies to Postgres
-rows (see §4).
+Only what CoGra's machinery **actually reads** — governed
+parameters the ranker and backend consume, role state a tally
+weighs, membership properties a traversal follows. Display content
+(names, descriptions, bodies) lives in Postgres, not on overlay
+nodes; the layering rule still applies there, as version rows
+(§4).
 
 ### Derived caches do not layer
 
-Values derived from graph state are rebuilt from the source of
-truth, never layered. For example, `member_count` on a Chat is
-derived from counting active ChatMembers — if the underlying
-graph changes, rebuild the cache. Layering it would duplicate
-history that already lives in the source data.
-
-The source of truth includes history, not just current state —
-the graph is append-only, so a cache may be a fold over past
-events. `Chat.epoch` is one: `1` plus the count of effected
-membership transitions plus passed rotation Proposals, every
-input a timestamp-pinned layer or node
-([chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)).
-
-Named carve-outs to append-only exist only on the Postgres
-side and only for operational state (not history) — see
-[§5 "Scope of the invariant"](#scope-of-the-invariant). The
-graph itself has no carve-outs.
+Values derived from other state are rebuilt from the source of
+truth, never layered. The source of truth includes history, not
+just current state — a cache may be a fold over past events
+(`Chat.epoch` is one; see
+[chats.md](../instances/chats.md)). Layering a cache would
+duplicate history that already lives in the source data.
 
 ---
 
@@ -148,16 +126,39 @@ graph itself has no carve-outs.
 
 Display content — message bodies, post text, profile text,
 attachment metadata — lives in Postgres (see
-[data-model.md](../implementation/data-model.md)). The append-only rule still applies:
-an edit writes a **new version row**, not an overwrite. The graph
-node stays the same; the Postgres row for that content gets a new
-version with the edited text, the old version preserved. Readers see
-the current version by default; past versions stay accessible to
-anyone who wants the history.
+[data-model.md](../implementation/data-model.md)). The same
+principle in relational form: an edit writes a **new version
+row**, not an overwrite. Readers see the current version by
+default; past versions stay accessible to anyone who wants the
+history.
 
-Implementation specifics (schema, version columns, how queries pick
-the current version) belong in `data-model.md`. The **rule** lives
-here: Postgres display content is append-only too.
+Named carve-outs to append-only exist only on the Postgres side
+and only for operational state, not history:
+
+- `user_view_log` — per-viewer seen-list, operational filter
+  state rather than history, compacted on a 1-year default per
+  [feed-ranking.md §8.5](feed-ranking.md#85-compaction--drop-entries-older-than-1-year-frontend-convention).
+- `user_bookmarks` — per-viewer bookmark list; removing a
+  bookmark is a genuine row delete.
+- `user_hidden_actors` — per-viewer hide list; unhiding is a
+  genuine row delete.
+- `chat_read_state` — per-viewer chat-read pointer; UPSERTed in
+  place as the user reads further.
+- `user_preferences` — per-user settings row, overwritten in
+  place; a setting's current value is operational state, not
+  history.
+- content–attachment junction rows — a parent's *current* gallery
+  arrangement; an edit adds and removes junction rows. The assets
+  themselves remain append-only.
+
+The per-viewer entries are operational state private to the
+viewer; the junction entry is arrangement, not content. Additions
+to this list require a named exception added here.
+
+Implementation specifics (schema, version columns, how queries
+pick the current version) belong in
+[data-model.md](../implementation/data-model.md). The **rule**
+lives here: Postgres display content is append-only too.
 
 ---
 
@@ -168,189 +169,139 @@ here: Postgres display content is append-only too.
 **Invariant:** Redaction and severance describe two different
 mechanisms with two different scopes; they are not interchangeable.
 
-- **Redaction** — a content-level mark on a graph layer or a
-  Postgres row, applied in place under the authorization paths
-  below. Layered, leaves the topology intact, leaves a visible
-  marker. The three tiers below describe how it works per surface.
-- **Severance** — a `(0, 0)` actor-edge layer one actor writes
-  toward another node. Affects path traversal *for that viewing
-  user* per
-  [feed-ranking.md §3.6](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge),
-  touches no content, and is per-viewer rather than global.
+- **Redaction** — removal of *content* from a record under the
+  authorization paths below. Whole-record, one-way, leaves the
+  visible mark described in this section.
+- **Severance** — an author netting their own stance bundle toward
+  a target to `(0, 0)` by appending counter-records — routing-inert
+  in the endorsement-flow projection and the write-side act every
+  consumer respects
+  ([graph-model.md §3](graph-model.md#3-revision-and-current-state),
+  [feed-ranking.md](feed-ranking.md)). Touches no content; each
+  counter-record is itself a priced act.
 
 This section covers redaction only. "Takedown" is not a CoGra
 term — older drafts used it as a synonym for redaction; sweep it
 in favor of "redaction" wherever encountered.
 
-### Scope of the invariant
+### Payload removal — the redaction mechanism
 
-Append-only is the rule, but not every system in the stack falls
-under it identically. Three surfaces, three rules:
+Every L1 record carries a payload projection — the content bytes —
+and presents in two projections, **full** and **reduced**
+([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
+Redaction is **payload removal**: the payload and the private
+value beside it are removed from carriage, and the record drops to
+its reduced projection. Three L1 facts fix the mechanism's shape:
 
-- **The graph (Memgraph): nothing is removed.** No node, no
-  edge, no layer, ever. There is no API path, no admin escape
-  hatch, no court-order path that deletes graph topology. State
-  transitions (revocation, departure, supersession) are encoded
-  as new layers on existing edges, not as deletions. The graph's
-  job is to be the transparent auditable record; erasing from it
-  would defeat the whole point.
-- **Postgres: almost nothing is removed.** Display content (post
-  bodies, message bodies, profile text, media metadata) is
-  append-only; edits write new version rows. Redaction
-  tombstones the row (see "Postgres / media display content —
-  tombstonable" below), and the tombstone itself stays. The
-  named carve-outs to append-only are limited and listed
-  explicitly here:
-  - `user_view_log` — per-viewer seen-list, operational filter
-    state rather than history, compacted on a 1-year default
-    per
-    [feed-ranking.md §8.5](feed-ranking.md#85-compaction--drop-entries-older-than-1-year-frontend-convention).
-  - `user_bookmarks` — per-viewer bookmark list; removing a
-    bookmark is a genuine row delete.
-  - `user_hidden_actors` — per-viewer hide list; unhiding is a
-    genuine row delete.
-  - `chat_read_state` — per-viewer chat-read pointer; UPSERTed
-    in place as the user reads further.
-  - `user_preferences` — per-user settings row, overwritten in
-    place; a setting's current value is operational state, not
-    history.
-  - content–attachment junction rows — a parent's *current*
-    gallery arrangement; an edit adds and removes junction rows.
-    The assets themselves remain append-only (redaction
-    tombstones them in place, never deletes).
+- **Removal erases, never rewrites.** The content commitment is
+  binding — no second payload is consistent with it — so a record
+  can lose its content but never carry substituted content
+  (`post:graph:separable-edge-commitment`). Redaction granularity
+  is therefore **the record**: there is no partial rewrite, no
+  per-field marker, no edited-down version.
+- **The transition is monotone.** Payload state moves full →
+  reduced only (`def:graph:payload-state`). Redaction is
+  irreversible by construction; restoring content means authoring
+  a new record.
+- **Removal is scoring-neutral.** The reduced projection carries
+  the entire L1 closure surface — standing, title, weights, and
+  epoch replay are bit-identical across full and reduced
+  (`prop:graph:payload-state-invariance`). Redaction never
+  changes what a record *does*; it changes what it *shows*.
 
-  The per-viewer entries are operational state private to the
-  viewer; the junction entry is arrangement, not content.
-  Additions to this list require a named exception added here.
-- **Frontends, miners, indexers, and off-graph systems: not
-  governed by this invariant.** Whatever they cache, summarize,
-  or discard is their concern, not the graph's. The graph is the
-  canonical record; downstream consumers may keep, project, or
-  drop their copies on their own contracts.
+**Who removes.** L1 places removal authority with the record's
+author (for hyper-edge terminal legs, the initiating actor —
+`def:graph:payload-controller`). In the centralized phase the
+payload and private value live in CoGra's carriage
+(`rem:graph:payload-custody-phases`), and CoGra as the carriage
+service also executes removals under its published policy — the
+authorization paths below. CoGra exposes no other removal path.
 
-"Deletion" in CoGra always means in-place layer redaction
-(graph layer) or a Postgres tombstone version row — see the
-mechanism subsections below.
+**The visible mark.** The invariant "never erase silently" is
+carried by the pair the substrate leaves behind: the **immutable
+structural record** — author, endpoints, time, witness, all
+permanent and public — plus the **monotone reduced-only payload
+state**. Anyone can see that a record existed, who authored it,
+and that its content was removed and can never be quietly
+replaced.
 
-### Layer contents on node properties — redactable
+### Postgres and media surfaces
 
-The contents of a specific layer on a node property can be redacted
-**in place** when an authorized redaction applies (illegal-content
-classification or user-requested account deletion — see
-"Authorization paths" below). Redaction replaces the stored value
-with a marker like `[redacted — <reason>, removed at T=X]`; the
-layer's timestamp, layer number, and position in the stack are
-preserved. The fact that a layer existed at that time, and that
-something there was redacted, stays visible.
+Redaction touches every surface the content lives on, in the same
+action:
 
-Example — Alice's username history after Layer 2 is taken down
-for illegal content:
+- The Postgres display row is **tombstoned** — a new version row
+  marking the removal, `redaction_reason` set. The tombstone
+  itself stays.
+- Media assets in blob storage are removed. Their digests remain
+  committed in the witnessed envelope, so the removal is publicly
+  evident — a digest that no longer resolves — rather than silent.
+- Each redacted original is moved to the
+  [retention archive](retention-archive.md) with a per-row legal
+  hold; archive content is hard-deleted at hold expiry
+  (immediately in cases like content that is illegal to retain at
+  all).
 
-```
-User_Alice.username:
-  Layer 1 (T=0):  "alice"
-  Layer 2 (T=5):  "[redacted — illegal content, removed at T=11]"
-  Layer 3 (T=10): "alice_the_dev"
-```
-
-The node itself is untouched. Other property layer stacks are
-untouched. Only the offending layer's content is replaced.
-
-### Postgres / media display content — tombstonable
-
-Display content (message bodies, post text, profile text, images,
-videos) can be removed from public Postgres or media-server
-surfaces under the same two authorization paths (see "Authorization
-paths" below). The public surface shows a tombstone version row or
-equivalent marker in either case, so the history reflects that
-content existed and was removed. The original is moved to the
-[retention archive](retention-archive.md) with a per-row legal
-hold; archive content is hard-deleted at hold expiry (immediately
-in cases like content that is illegal to retain at all).
 Implementation specifics belong in
 [data-model.md](../implementation/data-model.md).
 
-### Two redaction levels — identity vs content
+### Scope of the invariant
 
-A redaction action declares its **level**, which fixes the
-*scope* of fields and rows the per-surface mechanisms above
-touch. Two levels exist:
+Three surfaces, three rules:
 
-- **Identity-level.** Touches identity-bearing fields on the
-  actor node only — the actor's name layer on the graph side
-  and the actor's profile/identity fields and avatar on the
-  Postgres side. Authored content bodies are not touched.
-- **Content-level.** Identity-level *plus*, for each Post /
-  Comment / ChatMessage attributed to the actor, the body
-  version row in Postgres and any attached media rows. The
-  graph nodes, authoring edges, and layer stacks stay; only the
-  bodies and their attachments become unavailable to public
-  readers.
+- **The shared graph: no record is ever removed.** There is no
+  API path, no admin escape hatch, no court-order path that
+  deletes a record. The only permitted transition is the payload
+  reduction above, and it leaves the structural record intact.
+- **CoGra's stores: almost nothing is removed.** The overlay is
+  append-only layered (§3); the mirror is a rebuildable cache of
+  L1 records; Postgres display content is append-only versioned,
+  with redaction tombstones that themselves stay. The named
+  carve-outs (§4) are limited to per-viewer operational state and
+  arrangement rows.
+- **Frontends, miners, indexers, and off-graph systems: not
+  governed by this invariant.** Whatever they cache, summarize,
+  or discard is their concern. The shared graph is the canonical
+  record; downstream consumers keep or drop their copies on their
+  own contracts.
 
-The level is a property of the *authorization path*, not of the
-mechanism — the in-place layer marker and the Postgres-tombstone
-version row apply the same way at either level. What differs is
-the *set* of fields and rows the path elects to touch.
-
-The two paths today use the level distinction differently:
-
-- **Illegal-content** redactions per
-  [moderation](../instances/moderation.md) choose specific
-  fields (one named field, or the `'node'` sentinel covering
-  every user-input field plus attached media). Whether the
-  result is identity-equivalent or content-equivalent follows
-  from the field set chosen.
-- **Account deletion** per
-  [account-deletion](../instances/account-deletion.md) defaults
-  to identity-level and offers content-level as an explicit
-  opt-in. The default is identity-only because content was
-  publicly authored — PII control happened at write time — and
-  mass-redacting bodies would destroy other actors' record of
-  conversations they participated in. Content-level is the
-  explicit choice for an actor who later regrets what they
-  wrote.
-
-Per-row archive holds (typically short for ordinary PII, longer
-for content with statutory retention obligations) are set by the
-authorization path's policy, not by the level itself. See
-[retention-archive.md](retention-archive.md) for the disposition
-mechanism.
+"Deletion" in CoGra always means payload removal to the reduced
+projection plus the Postgres tombstone — nothing else.
 
 ### The operating principle
 
-**Invariant:** No silent deletion. Every redaction — graph-side
-layer marker or Postgres tombstone version row — leaves a visible
-record that the change happened. A reader scanning the graph or the
-content tables can always tell that something was there and was
+**Invariant:** No silent deletion. Every redaction leaves a
+visible record that the change happened — the reduced projection
+on the graph side, the tombstone version row on the Postgres
+side. A reader can always tell that something was there and was
 removed, even when they cannot see the original content.
 
-Community-level mechanisms (voting to move away from messages,
-down-weighting, social feedback) handle most bad content without
-invoking the deletion exception. The exception exists because
-append-only alone cannot solve "this layer 4 content is still
-illegal and still findable."
+Community-level mechanisms (severance, down-ranking, social
+feedback) handle most bad content without invoking redaction. The
+exception exists because append-only alone cannot solve "this
+content is still illegal and still findable."
 
 ### Authorization paths
 
-Layers.md defines the redaction *mechanism*; the *authorization* —
-who decides what gets redacted, by what process — runs through
-separate instance docs by scope. Two paths exist today:
+This section defines the redaction *mechanism*; the
+*authorization* — who decides what gets redacted, by what process
+— runs through separate instance docs by scope. Two paths exist
+today:
 
 - **Illegal content.** Network-level governance per
-  [moderation](../instances/moderation.md). Any User can author
-  a Proposal classifying content as `'illegal'`; threshold-cross
-  requires at least one moderator's positive vote, a community
-  quorum, and a supermajority. The cascade then triggers the
-  redaction defined above.
+  [moderation](../instances/moderation.md): any User can author a
+  Proposal classifying a record as `'illegal'`; threshold-cross
+  requires the critical-tier mod gate and a community quorum, and
+  the verdict is materialized by the moderation system actor. The
+  cascade then executes the redaction defined above.
 - **Personal data on user request.** A User can request that
-  their own account's PII be redacted from public surfaces, per
-  [account-deletion](../instances/account-deletion.md). The
-  redaction is identity-level by default and content-level on
-  opt-in.
+  their own account be removed from public view, per
+  [account-deletion](../instances/account-deletion.md) —
+  identity-level by default, content-level on opt-in.
 
-External pressure (court orders, legal demands) for illegal
-content does not bypass the moderation mechanism; the principle
-that all external demands enter as ordinary Proposals lives in
+External pressure (court orders, legal demands) does not bypass
+the moderation mechanism; the principle that all external demands
+enter as ordinary Proposals lives in
 [governance.md §7 "External demands enter as Proposals"](governance.md#external-demands-enter-as-proposals).
 Court-ordered user-anonymization is a separate path planned in
 account-deletion.md, also routed through Proposals.
@@ -362,18 +313,14 @@ values set per case.
 
 ### Side note on long-term storage
 
-Append-only adds a layer per interaction — unbounded in principle,
-but **typical actor behavior bounds it tightly** in practice. Edges
-update a handful of times across their lifetime; node properties
-change even less, and most don't change at all. The worst case (an
-edge or property accumulating dozens of layers) is a corner case;
-the scenarios with genuine accumulation — e.g., a decades-old
-company restructuring constantly through its CollectiveMember edges
-— are precisely the ones where **preserving the full history is
-the value**.
-
-Compaction-friendly approaches exist that don't break the
-no-silent-deletion principle (e.g., a rollup layer summarizing a
-window of past layers while leaving a visible marker that
-compaction occurred). That's an implementation-time decision
-contingent on real data, not a design-time one.
+Growth concerns live per store. The shared graph's record growth
+is L1's own concern — every record is priced, so volume has a
+floor cost. CoGra's overlay layers and Postgres version rows grow
+with use, but typical behavior bounds them tightly: properties
+change rarely, and the cases with genuine accumulation are
+precisely the ones where preserving the full history is the
+value. Compaction-friendly approaches that don't break the
+no-silent-deletion principle (e.g., a rollup summarizing a window
+of past versions while leaving a visible marker) are an
+implementation-time decision contingent on real data, not a
+design-time one.

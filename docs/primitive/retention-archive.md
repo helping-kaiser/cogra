@@ -34,21 +34,30 @@ entry's existence and destruction are both private.
 
 ## 1. Polymorphic shape
 
-One Postgres table, one row per redacted entity (user profile
-snapshot, post body, comment body, chat-message body, media
-attachment, etc.):
+One Postgres table, one row per redacted entity (a removed
+payload envelope with its private value, a profile snapshot, a
+post body, a media attachment, etc.):
 
 - `original_id` + `original_type` identify what was redacted.
-- `original_data` is a JSONB blob of the original row's contents
-  — schema-on-read, so the archive does not migrate when source
-  schemas evolve.
+- `original_data` holds the original content — the removed
+  payload bytes and private value for graph-side redactions, the
+  prior row contents for Postgres-side ones — schema-on-read, so
+  the archive does not migrate when source formats evolve.
 - `redaction_reason` records the trigger
   (`'illegal-content-cascade'`, `'user-self-service'`,
   `'court-order'`, etc.).
-- `redacted_by` is the User UUID of the actor who initiated the
-  redaction.
+- `redacted_by` identifies the initiator — the requesting User
+  for self-service, the authorizing Proposal for moderation
+  cascades.
 - `redacted_at` is the timestamp.
 - `legal_hold_until` is the per-row deadline.
+
+An archived payload stays **verifiable against the public
+record**: the redacted record's structural part and witness are
+permanent on the shared graph, and the archived payload and
+private value reproduce that commitment — so an archive row can
+be proven to hold exactly the content that was removed, and
+nothing can be substituted into it after the fact.
 
 Concrete column types, indexes, and migration mechanics belong in
 [data-model.md](../implementation/data-model.md). This doc fixes
@@ -93,9 +102,10 @@ deletion, ever".
 
 The exception is honest because:
 
-- The redaction leaves a public mark (in-place layer marker,
-  Postgres tombstone version row) that does not change at
-  hard-delete time.
+- The redaction leaves a public mark (the immutable structural
+  record with its reduced-only payload state, the Postgres
+  tombstone version row) that does not change at hard-delete
+  time.
 - The archive entry's existence is private — its destruction
   erases no public-facing history.
 - DSGVO Art. 5(1)(e) (storage minimization) and similar
@@ -104,7 +114,7 @@ The exception is honest because:
   violation.
 
 The graph and public Postgres surfaces never see the deletion —
-they have shown the redaction marker since the redaction.
+they have shown the redaction mark since the redaction.
 
 ## 4. Access path
 
@@ -122,13 +132,13 @@ tax-audit subpoena), and scheduling statutory hard-delete.
 
 The work is **post-redaction**. By the time `legal_admin`
 touches a case, the cascade has already removed the content from
-the live graph and public Postgres surfaces; `legal_admin` has
-no path back in and no role in deciding what gets redacted.
+carriage and the public Postgres surfaces; `legal_admin` has no
+path back in and no role in deciding what gets redacted.
 
 The invariants are deliberately narrow:
 
 - **No graph reach.** Cannot author Proposals, classify content,
-  or otherwise act on the live graph.
+  or otherwise act on the shared graph or the overlay.
 - **No moderation authority.** Illegal-content classification
   runs through the [moderation](../instances/moderation.md) flow
   before `legal_admin` ever sees the case; the "no admin
@@ -149,9 +159,8 @@ app), the graph and public Postgres surfaces never see it.
 ## What this doc is not
 
 - **Not the redaction mechanism.** [layers.md §5](layers.md#5-deletion-policy)
-  defines in-place layer markers and Postgres tombstone
-  semantics. The archive is what happens to the original *after*
-  redaction.
+  defines payload removal and Postgres tombstone semantics. The
+  archive is what happens to the original *after* redaction.
 - **Not the authorization paths.** Who decides to redact — and
   what hold value to set — runs through the relevant instance
   docs ([moderation](../instances/moderation.md),
