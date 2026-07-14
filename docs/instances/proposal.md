@@ -120,7 +120,7 @@ incoming vote edge from the authoring actor (§5).
 
   Timestamp-based addressing on node-property layers is a
   forward dependency — see
-  [layers.md §3](../primitive/layers.md#3-layers-on-nodes).
+  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes).
 
 - **`status`** — the Proposal's lifecycle state, and one of the
   node's **two layered properties** (the other is the

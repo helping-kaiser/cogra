@@ -176,7 +176,7 @@ text, avatar, website) lives in Postgres (§4).
 
 - **`name`** — the handle used for mentions and lookups,
   analogous to `User.username`. Layered per
-  [layers.md §3](../primitive/layers.md#3-layers-on-nodes), so
+  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes), so
   rename history is preserved. UNIQUE per instance. Data;
   per-field status carried separately by `name_status`.
 
@@ -194,7 +194,7 @@ Collective-specific cascade in §9.
   `exec` (eligibility, weighting, threshold for the action) and
   `amend` (eligibility, weighting, threshold for amending this
   entry). Layered per
-  [layers.md §3](../primitive/layers.md#3-layers-on-nodes);
+  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes);
   amending an entry is a standard Proposal targeting
   `governance.<action_key>`, gated by that entry's own `amend`
   triple — governance of governance, scoped per rule. See §8.
