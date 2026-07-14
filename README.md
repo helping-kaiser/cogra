@@ -11,6 +11,16 @@ branches off from main Peer Network development to design and
 prototype the graph network that will succeed it; it is a multi-
 year effort, not a short throwaway exploration.
 
+CoGra is built as a **Layer 2** on the **PeerNetworks Layer 1**
+substrate: Layer 1 owns the public graph and its admission rules;
+CoGra owns the terminal complement — feed, rewards, display, and
+community policy. The binding contract is
+[docs/primitive/layer1-interface.md](docs/primitive/layer1-interface.md).
+*The docs are currently being rebased onto this substrate — docs not
+yet rewritten may still describe the pre-L1 design; where they
+conflict, the interface wins. This note is removed once the rebase
+completes.*
+
 ## Mission
 
 Decentralize the power of social media. The goal is not to become

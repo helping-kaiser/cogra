@@ -1,5 +1,12 @@
 # CoGra Docs
 
+CoGra is a Layer 2 on the **PeerNetworks Layer 1** substrate;
+[`primitive/layer1-interface.md`](primitive/layer1-interface.md) is
+the binding L1 → L2 contract. *Docs rebase in progress: docs not yet
+rewritten against it may still describe the pre-L1 design — where
+they conflict, the interface wins. This note is removed once the
+rebase completes.*
+
 ## Layers
 
 - **[`primitive/`](primitive/)** — what the graph IS and how it
