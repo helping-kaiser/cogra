@@ -17,15 +17,15 @@ most useful one.
 
 ## Topology and visibility
 
-- [Actor = User ∪ Collective](graph-model.md#2-node-categories) —
+- [Actor = User ∪ Collective](graph-model.md) —
   the umbrella term covering both actor node labels; "active
   member" and "voter" are scoped subsets, never instance-free.
 - [Edges are directional](graph-model.md#1-core-principles) —
   `A → B` and `B → A` are independent edges.
-- [Edge tensor uniformity](graph-model.md#4-edge-structure) —
+- [Edge tensor uniformity](graph-model.md) —
   every edge carries 2 dimensions + system dimensions; shape is
   the same across all edge types.
-- [At most one edge label per `(source, target)` pair](edges.md#2-structural-edges)
+- [At most one edge label per `(source, target)` pair](edges.md)
   — actor or structural; layers within one label are the only way
   the pair grows. Drives the `:TAGGING` / `:REFERENCES` carve-out
   and the parent-Collective `:APPROVAL` / `:ACTOR` exclusion.
@@ -33,7 +33,7 @@ most useful one.
   — only message **bodies** are private, and only when encrypted.
 - [No structural 1:1 chat uniqueness](../instances/chats.md#12-11-vs-group-chats)
   — two users may have multiple parallel 1:1 chats.
-- [Inbound edges don't affect the receiver's feed](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)
+- [Inbound edges don't affect the receiver's feed](graph-model.md)
   — anti-bot foundation.
 - [Topology is always public](graph-model.md#1-core-principles) —
   privacy of content is achieved via end-to-end encryption, never
@@ -51,7 +51,7 @@ most useful one.
 - [Redaction ≠ severance](layers.md#redaction-vs-severance--two-different-vocabularies)
   — redaction is content-level and global; severance is
   traversal-level and per-viewer; the two are not interchangeable.
-- [Junction state is encoded in topology](graph-model.md#5-junction-node-flows)
+- [Junction state is encoded in topology](graph-model.md)
   — claim only = pending; claim + approval, both with positive
   top layers = active; non-positive top layer on either =
   revoked. No status flag.
@@ -88,14 +88,14 @@ most useful one.
 - [Chat-internal disavowal routes through a Proposal node](../instances/chats.md#10-moderation)
   — both Level 1 (message) and Level 2 (member) carry the
   whole-node `'node'` sentinel
-  ([nodes.md](nodes.md#whole-node-targeting-the-node-sentinel));
+  ([nodes.md](nodes.md));
   no direct vote edge from a `ChatMember` drives the outcome.
 - [Collective content-acts default permissive; governance-acts default deny](../instances/collectives.md#2-acting-through-the-collective)
   — asymmetry reflects reversibility.
-- [Edges attributed to a Collective carry no per-edge record of the acting member](edges.md#1-actor-edges)
+- [Edges attributed to a Collective carry no per-edge record of the acting member](edges.md)
   — accountability lives in the social contract, not in edge
   attribution. Deliberate non-feature.
-- [Bearer/self-claim validation is atomic](edges.md#bearer-binding)
+- [Bearer/self-claim validation is atomic](edges.md)
   — the check against the existing `:BEARER` edge and the
   self-claim's commit ride one service-layer transaction;
   mismatches never partially land.
@@ -120,7 +120,7 @@ most useful one.
   computes the metric by message-passing under a memory-1
   (non-backtracking) relaxation that still blocks the
   bidirectional 2-cycles the invariant exists to remove.
-- [`:REFERENCES` fanout-budget](edges.md#reference) — across a
+- [`:REFERENCES` fanout-budget](edges.md) — across a
   source node's outbound `:REFERENCES` top layers,
   `sum |dim1| ≤ 1` and `sum |dim2| ≤ 1` per dimension; default
   uniform `(1/N, 1/N)`. Bounds reference-chain amplification at

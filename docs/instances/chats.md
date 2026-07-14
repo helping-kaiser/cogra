@@ -72,7 +72,7 @@ The gesture writes the following records atomically:
 - The `Chat → ChatMember` approval edge with positive top layer.
 
 Because there is no prior member to approve the founder, the
-[junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
+[junction lifecycle](../primitive/graph-model.md)
 collapses to its `N = 0` special case: no admit-Proposal node is
 materialized, and the founder's gesture writes the claim and
 approval edges atomically. This is the same bootstrap
@@ -140,7 +140,7 @@ Per-field moderation-status properties cover each user-input
 field — **`name_status`** (companion to the data sibling `name`),
 **`description`**, and **`image`** — plus the node-level
 `moderation_status` cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+[nodes.md](../primitive/nodes.md);
 Chat-specific cascade in §13.1.
 
 Concrete property types and indexes live in
@@ -153,7 +153,7 @@ properties on **`content`** (the body) and **`attachments`**
 (every attached media under one status — see
 [moderation.md §5](moderation.md#5-scope)), plus the node-level
 `moderation_status` cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status).
+[nodes.md](../primitive/nodes.md).
 The message body itself (plaintext or ciphertext) lives in
 Postgres (§4.2); the per-field properties exist purely as the
 moderation-targeting surface.
@@ -186,7 +186,7 @@ A ChatMember junction carries:
   ignored. Layered.
 
 Junction nodes carry no per-field moderation properties per
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status) —
+[nodes.md](../primitive/nodes.md) —
 ChatMember has no user-input fields.
 
 What each default-vocabulary role can do — admit members,
@@ -285,16 +285,16 @@ one outgoing structural edge type:
   "Leaving and disavowal") and the system-written cascade from a
   passing Level 2 disavowal Proposal (§10) — append additional
   `dim1 < 0` layers per
-  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](../primitive/graph-model.md).
   See
-  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+  [edges.md §2 "Approval completion"](../primitive/edges.md).
 
 #### As target (incoming)
 
 A Chat receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — sentiment
+  [edges.md §1](../primitive/edges.md) — sentiment
   and relevance toward the chat itself, used by
   [feed-ranking](../primitive/feed-ranking.md). The earliest of
   these is the authorship edge (§6.1).
@@ -307,13 +307,13 @@ A Chat receives:
   chat as a whole.
 - **`ChatMessage / Post / Comment → Chat` (`:REFERENCES`)** when
   another content node embeds the Chat. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 - **`Proposal → Chat` (`:TARGETS`)** when a Proposal targets a
   property on the Chat — `name`, any per-field moderation-status
   property (§3), `epoch` (under `decision:rotate_key`), or any
   `governance.<action_key>` entry (executions and amendments
   alike, §10). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+  [edges.md §2 "Subject targeting"](../primitive/edges.md).
 
 ### 5.2 ChatMessage
 
@@ -337,7 +337,7 @@ carries two outgoing structural edge types, both system-created:
   `:CONTAINMENT` edge. Embedding *other* chats from a message
   remains a regular `:REFERENCES` edge. The carve-out rationale
   and traversal rules live in
-  [edges.md §2 "Reference"](../primitive/edges.md#reference); §8
+  [edges.md §2 "Reference"](../primitive/edges.md); §8
   walks the gesture end-to-end.
 
 #### As target (incoming)
@@ -345,7 +345,7 @@ carries two outgoing structural edge types, both system-created:
 A ChatMessage receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  [edges.md §1](../primitive/edges.md) — the
   like/dislike surface plus per-viewer relevance. The earliest
   is the authorship edge (§6.2).
 - **`Comment → ChatMessage` (`:CONTAINMENT`)** when a Comment is
@@ -389,7 +389,7 @@ bearer casts as a chat-eligible voter:
 A ChatMember receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
+  [edges.md §1](../primitive/edges.md) — personal
   sentiment about the membership. The bearer's own **Shape A
   self-claim** is not among these: it is the
   `User/Collective → Proposal` edge authoring the membership's
@@ -400,7 +400,7 @@ A ChatMember receives:
   admit-Proposal's cascade; state transitions — voluntary leave,
   and the cascade from a passing Level 2 disavowal Proposal
   (§10) — append `dim1 < 0` layers per
-  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](../primitive/graph-model.md).
 - **`ChatMessage / Post / Comment → ChatMember`
   (`:REFERENCES`)** when a content node embeds the membership
   — e.g. a message highlighting a moderator.
@@ -501,7 +501,7 @@ ChatMessage --[:REFERENCES]--> X
 ```
 
 See
-[edges.md §2 "Reference"](../primitive/edges.md#reference) for
+[edges.md §2 "Reference"](../primitive/edges.md) for
 the full catalog. Hashtag is included on this carrier because
 ChatMessage has no `:TAGGING` edge type — the per-source
 carve-out explanation lives in the same Reference subsection of
@@ -522,7 +522,7 @@ graph state (a ChatMessage with `:REFERENCES`), so the
 referenced node propagates through the actor's network. External
 sharing (link copy, share-to-another-app, export) creates no
 graph state — see
-[graph-model.md §3](../primitive/graph-model.md#3-edge-categories)
+[graph-model.md §3](../primitive/graph-model.md)
 — and so does not amplify reach within CoGra.
 
 ### Message edits
@@ -721,7 +721,7 @@ backend holds only ciphertext.
 
 Without an admin, who stops a bad message from dominating?
 CoGra's answer reuses the no-push principle from
-[graph-model.md §7](../primitive/graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph):
+[graph-model.md §7](../primitive/graph-model.md):
 
 **The chat moves away from a message (or a member). It never
 moves the message or the member away.**
@@ -739,7 +739,7 @@ stance stays decoupled from personal sentiment on
 the same Proposal shape: `target_property = 'node'`,
 `proposed_value = 'disavowed'` — the `'node'` value is the
 whole-node-targeting sentinel defined in
-[nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel).
+[nodes.md "Whole-node targeting"](../primitive/nodes.md).
 What differs between the two levels is the cascade behavior on
 threshold-cross, which dispatches on the target's node type.
 
@@ -803,7 +803,7 @@ on the existing `Chat → ChatMember` approval edge for the
 target. The junction's full edge history stays in the graph;
 only the top layer of the approval edge changes. Membership
 state remains encoded in the topology per
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
+[graph-model.md §5](../primitive/graph-model.md)
 — no new property is introduced. A counter-Proposal with
 `proposed_value = 'normal'` reverses the disavowal, just like
 Level 1.
@@ -887,7 +887,7 @@ the pattern generalizes — lives in
 
 After the founder's bootstrap (§2.1), every ChatMember runs the
 **junction lifecycle** from
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
+[graph-model.md §5](../primitive/graph-model.md):
 admission is a fresh terminal `Proposal` that `:TARGETS` the new
 ChatMember, combining two voting shapes
 ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)):
@@ -912,7 +912,7 @@ collapses to the `N = 0` case with no admit-Proposal node (see
 
 A ChatMember junction is bound to its bearer at creation by a
 `ChatMember → User/Collective` `:BEARER` structural edge — see
-[edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding)
+[edges.md §2 "Bearer binding"](../primitive/edges.md)
 and
 [graph-data-model.md `:ChatMember`](../implementation/graph-data-model.md#chatmember).
 The Shape A self-claim — the bearer's vote on the admit-Proposal —
@@ -998,7 +998,7 @@ A membership is **pending** when only the claim edge exists;
 **active** when both claim and approval edges carry `dim1 > 0`
 top layers; **revoked** when the top layer on either edge is
 non-positive (`dim1 ≤ 0`). Per
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
+[graph-model.md §5](../primitive/graph-model.md),
 nothing is deleted — state transitions are encoded as new
 layers on the existing structural edges.
 

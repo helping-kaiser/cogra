@@ -56,7 +56,7 @@ incoming vote edge from the authoring actor (§5).
   `'guidelines_version'`), or the reserved sentinel `'node'`
   for whole-node operations. The sentinel
   is defined in
-  [nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel)
+  [nodes.md "Whole-node targeting"](../primitive/nodes.md)
   and has two consumers:
   - **Illegal-content classification** — every user-input
     field plus every attached media on the node (see
@@ -260,7 +260,7 @@ system-created at creation and never re-targeted:
   The property name and proposed value live on the Proposal
   node (§2), not on the edge — the change is intrinsic to
   the Proposal, not to the relationship. See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+  [edges.md §2 "Subject targeting"](../primitive/edges.md).
 
 ### As target (incoming)
 
@@ -268,7 +268,7 @@ A Proposal receives vote edges and (optionally) reference
 edges. It does **not** receive `:CONTAINMENT` edges —
 Comments attach only to Post, Comment, Chat, ChatMessage,
 and Item, per
-[edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+[edges.md §2 "Containment / belonging"](../primitive/edges.md).
 
 **Vote edges**, two shapes per
 [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes);
@@ -276,14 +276,14 @@ choice is per-application:
 
 - **Shape A — actor edges** from Users and Collectives,
   `(sentiment, importance)` per
-  [edges.md §1](../primitive/edges.md#1-actor-edges).
+  [edges.md §1](../primitive/edges.md).
   `dim1` carries vote direction; `dim2` carries the
   voter's personal stake. Used for relationship-shaped
   subjects (junction approvals).
 - **Shape B — structural vote edges** from the voter's
   eligibility junction. `dim1` carries vote direction,
   `dim2` is `0`. Per
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b):
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md):
   `ChatMember → Proposal` and
   `CollectiveMember → Proposal`.
 
@@ -291,7 +291,7 @@ For Network-scope governance (moderation, mod role changes,
 `:Network` parameter amendments — see
 [network.md §10](../primitive/network.md#10-network-wide-governance)),
 the vote is Shape A: the `User → Proposal` actor edge from
-[edges.md §1](../primitive/edges.md#1-actor-edges) carries
+[edges.md §1](../primitive/edges.md) carries
 the vote. Network membership has no per-member junction, so
 the User node is itself the eligibility carrier. The actor
 edge keeps its normal meaning: `dim1` is the voter's
@@ -311,7 +311,7 @@ mod-gate. See
   when a content node embeds the Proposal — a chat message
   surfacing it for chat members to vote on, a Post campaigning
   for support, a Comment citing it in debate. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 
 A Proposal receives a `:TARGETS` edge from another Proposal in
 exactly one case: a moderation Proposal against its
@@ -349,7 +349,7 @@ Which edge that is depends on the opening vote's shape:
   writes the `User/Collective → Proposal` `:AUTHOR` actor edge
   in the same gesture — the paired-edge pattern of the junction
   self-claim
-  ([graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)).
+  ([graph-model.md §5](../primitive/graph-model.md)).
   Vote and authorship are separate edges: the structural edge
   enters the tally, the actor edge carries authorship and the
   author's personal stance.
@@ -379,7 +379,7 @@ is the node-level progression.
   the system fans out the outcome. The default outcome writes a
   new layer on `target_property` of the target with the
   Proposal's `proposed_value`
-  ([graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)).
+  ([graph-model.md §5](../primitive/graph-model.md)).
   Outcome semantics, cascade bounds, and the
   `'illegal'`-specific cascade behavior (per-field redaction
   marker, data-sibling write where applicable, Postgres
@@ -468,7 +468,7 @@ is the node-level progression.
   [collectives.md](collectives.md).
 - **Not the cascade mechanism.** The cascade and the
   redaction-cascade specifics live in
-  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
+  [graph-model.md §5](../primitive/graph-model.md),
   [layers.md §5](../primitive/layers.md#5-deletion-policy),
   and [moderation.md](moderation.md).
 - **Not the edge catalog.** Per-source vote-edge types and

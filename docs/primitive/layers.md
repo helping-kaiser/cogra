@@ -53,8 +53,8 @@ layer is the current state; the full history is available for any
 algorithm that needs it (e.g. detecting opinion shifts or weighting
 by interaction frequency).
 
-See [graph-model.md §4](graph-model.md#4-edge-structure) for the edge structure and
-[graph-model.md §8](graph-model.md#8-append-only-history-edges) for edge-specific history
+See [graph-model.md §4](graph-model.md) for the edge structure and
+[graph-model.md §8](graph-model.md) for edge-specific history
 details.
 
 **"Revoked" names the non-positive-top-layer state.** An
@@ -67,7 +67,7 @@ the same state; both are aliases for revoked. The *mechanism*
 producing the non-positive layer (supersession cascade, voluntary
 leave, governance threshold-cross) varies; the *state* it
 produces is always "revoked." See
-[graph-model.md §5](graph-model.md#5-junction-node-flows).
+[graph-model.md §5](graph-model.md).
 
 ---
 

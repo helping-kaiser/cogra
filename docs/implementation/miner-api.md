@@ -49,7 +49,7 @@ the rest default per field:
 | `kinds` | Which rankable node kinds are in scope (default: Posts only). |
 | `distanceDecayBase` | `d(R)` base; default from `Network.distanceDecayBase`. |
 | `timeDecayHalfLifeDays` | `f(Δt)` half-life; default from `Network.timeDecayHalfLifeDays`. |
-| `dustFloor` | `ε` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
+| `dustFloor` | `χ` floor — bounds the slice node-set (and prunes paths in the sparse enumeration regime); default from `Network.dustFloor`. |
 | `friendAuthorReorder` | Friend-author reorder config — enabled flag, freshness window, placement; null uses the frontend's default (the reference frontend ships it on). A reordering layer, not a boost multiplier ([feed-ranking.md §5.2](../primitive/feed-ranking.md#52-frontend-reordering-friend-authored-fresh-posts)). |
 | `collapseWeights` | Optional `(α, β)` for the tuple→scalar collapse, `score = α·M_s + β·M_c` ([feed-ranking.md §4.3](../primitive/feed-ranking.md#43-tuple-collapse-to-scalar)); default `(1, 1)` = sum. |
 
@@ -68,7 +68,7 @@ input RankParams {
   distanceDecayBase: Float
   "f(Δt) half-life; default Network.timeDecayHalfLifeDays."
   timeDecayHalfLifeDays: Int
-  "ε floor — bounds the slice node-set (and prunes paths in the sparse
+  "χ floor — bounds the slice node-set (and prunes paths in the sparse
    enumeration regime); default Network.dustFloor."
   dustFloor: Float
   "Friend-author reorder config; null uses the frontend default
@@ -208,7 +208,7 @@ in who runs them, what they rank, and how authoritative the result is.
 | Runner | the viewer's device or a miner | the central backend |
 | Authority | advisory — the viewer's device holds final say | authoritative — it moves money |
 | Targets | every rankable node in the slice | a single anchor→target pair (per-path Shapley split over the metric level `h_anchor(target)`) |
-| Dust floor `ε` | viewer-tunable, slice-bounding | set per campaign for payability, recorded for reproducibility |
+| Dust floor `χ` | viewer-tunable, slice-bounding | set per campaign for payability, recorded for reproducibility |
 
 The single-pair, settle-once campaign computation is the tractable case;
 its result reads back through the existing `Campaign.achievedHGain` /
@@ -371,7 +371,7 @@ Reads are unauthenticated and `feedSlice` is viewer-parameterized
 `feedSlice(viewer, params.dustFloor, params.distanceDecayBase)`
 itself — the same public subgraph any client could fetch. Both
 params travel because slice membership depends on both (best-possible
-contribution `d(R) · ∏|dim| ≥ ε`): a softened decay base widens the
+contribution `d(R) · ∏|dim| ≥ χ`): a softened decay base widens the
 slice the metric is defined over. The device never downloads the slice;
 saving that transfer, alongside the ranking compute, is the point of
 delegating. The logical contract is unchanged: the miner obtains the

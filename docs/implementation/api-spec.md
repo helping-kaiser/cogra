@@ -122,7 +122,7 @@ it is an entry point, not a parallel tree.
 ### State is append-only; reads expose current-and-history
 
 The graph never overwrites and never deletes
-([graph-model.md §8](../primitive/graph-model.md#8-append-only-history-edges),
+([graph-model.md §8](../primitive/graph-model.md),
 [layers.md](../primitive/layers.md)). Edges and node properties
 are layer stacks; the current state is the top layer. A field
 returns its current (top-layer) value by default, with the full
@@ -468,7 +468,7 @@ type SystemDimension {
 The **system-dimension slot** is the `systemDimension` field above:
 typed, optional, per-label edge metadata, surfaced by the API but
 never read by ranking
-([edges.md §2](../primitive/edges.md#2-structural-edges)). The slot
+([edges.md §2](../primitive/edges.md)). The slot
 is per-layer: `Edge.systemDimension` is the top layer's slot, and
 `edgeHistory` serves each past layer's own. Repeated transfers
 between one wallet pair re-layer the single `:TRANSFERS` edge (one
@@ -1056,7 +1056,7 @@ records (`Campaign`, `Settlement`, `Wallet`), and the `Network`
 singleton. Of these, only `Proposal` carries user-authored content —
 its `proposedValue` can embed user-authored text and is moderated
 like any content field
-([nodes.md §6](../primitive/nodes.md#6-carrier-nodes)); the rest
+([nodes.md §6](../primitive/nodes.md)); the rest
 carry none and have no moderation fields. Money lives on the chain;
 these nodes hold only pointers and public scalar results.
 
@@ -1355,13 +1355,13 @@ type Query {
    feed. Parameterized by the `viewer` whose feed is ranked: a delegated
    miner ranks on someone's behalf without holding their auth, and
    computing any actor's view for any reader is the public-graph default
-   above. Pruned by `dustFloor` and `distanceDecayBase` — the same ε and
+   above. Pruned by `dustFloor` and `distanceDecayBase` — the same χ and
    d(R) base the ranker runs with, defaults Network.dustFloor and
    Network.distanceDecayBase — not hop-bounded: slice membership is
-   best-possible contribution `d(R) · ∏|dim| ≥ ε` (feed-ranking.md §4.4,
+   best-possible contribution `d(R) · ∏|dim| ≥ χ` (feed-ranking.md §4.4,
    §9), a function of both levers, so a ranker running a softened decay
    passes its base or the slice silently drops the distant nodes the
-   tuned d(R) keeps above ε. Null if the id resolves to no rankable
+   tuned d(R) keeps above χ. Null if the id resolves to no rankable
    actor. The backend never ranks (feed-ranking.md §9) — it serves this
    slice, and separately hydrates the ordered result via `feed`."
   feedSlice(viewer: UUID!, dustFloor: Float, distanceDecayBase: Float): FeedSlice
@@ -1591,7 +1591,7 @@ These bind every mutation below.
   `delete`/`unlike`/`unfollow`/`unset`. An `edit*` mutation appends
   a property layer; re-`setEdge` appends an edge layer; severance
   is the `(0,0)` layer, not a removal. The absence follows from the
-  primitive ([graph-model.md §8](../primitive/graph-model.md#8-append-only-history-edges)).
+  primitive ([graph-model.md §8](../primitive/graph-model.md)).
 - **Proposal-backed actions create a Proposal and the author's
   first vote, atomically.** The governance gestures
   (`removeChatMember`, `classifyContent`, `amendNetworkParameter`,
@@ -1852,7 +1852,7 @@ type SetEdgePayload {
 
 The valid targets are the node kinds the catalog defines an
 inbound actor edge for
-([edges.md §1](../primitive/edges.md#1-actor-edges)), minus
+([edges.md §1](../primitive/edges.md)), minus
 Proposal: the two actors, the five content kinds, and the three
 junction kinds. A `target`
 that resolves to a `Proposal`, `Hashtag`, `Campaign`, `Settlement`,
@@ -2053,7 +2053,7 @@ since ChatMessage has no `:TAGGING` edge type. A Post or Comment
 `references` entry naming a Hashtag is rejected: `:TAGGING`
 already owns that pair, and a (source, target) pair carries one
 structural edge
-([edges.md §2 "Reference"](../primitive/edges.md#reference));
+([edges.md §2 "Reference"](../primitive/edges.md));
 tags go through the `tags` input.
 
 ### Voting

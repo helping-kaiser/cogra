@@ -93,7 +93,7 @@ live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 > **Notation.** The decay parameters below map to the symbols
-> `d(R)`, `f(Δt)`, and `ε`; see [notation.md](notation.md).
+> `d(R)`, `f(Δt)`, and `χ`; see [notation.md](notation.md).
 
 Network-scope governance uses petition-style tally under a
 dual-quorum gate
@@ -158,14 +158,14 @@ at tally time is `min(P × |active|, K)`.
   per §4.1; this property sets the network default — the community's
   hint at a sensible direct-vs-indirect balance for new participants.
   Gating bucket: baseline.
-- **`dust_floor`** — the dust floor `ε` bounding both the
+- **`dust_floor`** — the dust floor `χ` bounding both the
   branch-and-bound path enumeration (see
   [feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning))
   and the data-fetch slice node-set
   ([feed-ranking.md §9](feed-ranking.md#9-where-ranking-and-filtering-live)).
   The default seeded at genesis is `0`: the early graph is sparse,
   `b^R` is cheap, and full fidelity is kept. The property is amendable
-  so the network can raise `ε` as the graph densifies — the finest
+  so the network can raise `χ` as the graph densifies — the finest
   the compute budget allows. Frontend overrides
   remain available per §4.4; this property sets the network default.
   Gating bucket: baseline.
@@ -205,7 +205,7 @@ rules. Defaults bootstrap; they are not fixed.
 
 The singleton carries **no per-field moderation properties**.
 Like junction nodes, it has no user-input fields to redact (see
-[nodes.md "Universal: per-field moderation status"](nodes.md#universal-per-field-moderation-status));
+[nodes.md "Universal: per-field moderation status"](nodes.md));
 the lifecycle consequence is §7.
 
 The singleton exists so platform-wide governance has a graph
@@ -251,11 +251,11 @@ The `:Network` node receives:
   pair). The
   amendment-rule pair that gates each property is named in §3.
   See
-  [edges.md §2 "Subject targeting"](edges.md#subject-targeting).
+  [edges.md §2 "Subject targeting"](edges.md).
 - **`ChatMessage / Post / Comment → Network` (`:REFERENCES`)**
   when a content node mentions or embeds the singleton (e.g. a
   Post discussing platform governance). See
-  [edges.md §2 "Reference"](edges.md#reference).
+  [edges.md §2 "Reference"](edges.md).
 
 Network-scope governance instances do **not** create new
 structural edges to the `:Network` node. Votes on Network-scope
@@ -263,7 +263,7 @@ Proposals — moderator role changes (§9), content moderation
 classifications, and singleton parameter amendments (§11) — use
 the existing `User → Proposal` **actor edge** as the Shape A
 vote (see
-[edges.md §1](edges.md#1-actor-edges) and
+[edges.md §1](edges.md) and
 [governance.md §3](governance.md#3-the-two-vote-shapes)). The
 Proposal itself targets the relevant subject (a User for role
 changes, the `:Network` singleton for parameter amendments);
@@ -400,7 +400,7 @@ consequences shared across all three:
   junction. Network membership has no separate gesture (§8), so
   this is the natural Shape A case: the vote IS the existing
   `User → Proposal` actor edge
-  ([edges.md §1](edges.md#1-actor-edges)) — no new structural
+  ([edges.md §1](edges.md)) — no new structural
   edge. The actor edge keeps its `(sentiment, importance)`
   meaning; the tally reads `sign(sentiment)`.
 - **Mod weight = member weight = 1; mod is a gate, not a

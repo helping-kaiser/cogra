@@ -19,14 +19,14 @@ A Comment is created by a single authoring gesture from one
 actor — either a User or a Collective — toward exactly one
 **target content node**. There is **no approval flow**: like a
 Post (see [post.md §1](post.md#1-creation)) and unlike junction
-nodes (see [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)),
+nodes (see [graph-model.md §5](../primitive/graph-model.md)),
 a Comment requires no second-party affirmation.
 
 The valid target set — **Post, Comment, Chat, ChatMessage, or
 Item** — is the most distinctive thing about Comments: they are
 the platform's universal threading primitive, not a Post-only
 concept. The canonical per-target list with edge meanings lives
-in [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+in [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 
 The gesture writes four records atomically:
 
@@ -68,7 +68,7 @@ media under one status — see
 [moderation.md §5](moderation.md#5-scope) on per-attachment
 targeting), plus the node-level `moderation_status` cache.
 Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+[nodes.md](../primitive/nodes.md);
 Comment-specific cascade in §6. Body and attachment content live
 in Postgres / object storage (§3); concrete types and indexes in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -117,11 +117,11 @@ system-created:
   `:CONTAINMENT`** — identifies the Comment's parent. Exactly
   one per Comment, written at creation and never re-targeted.
   The per-target catalog with row-level meanings lives in
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging);
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md);
   this doc deliberately does not mirror that list (§1).
 - **`Comment → Hashtag` (`:TAGGING`)** — one edge per hashtag
   the Comment is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md#tagging). The
+  [edges.md §2 "Tagging"](../primitive/edges.md). The
   Hashtag node is content-addressed by canonical name (per
   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
   so the same hashtag across instances resolves to the same
@@ -131,14 +131,14 @@ system-created:
   re-uploaded image on a parent Post, a User or Collective
   named in the body, a Proposal it cites in debate, etc. Two
   targets are excluded by the single-structural-edge invariant
-  per [edges.md §2 "Reference"](../primitive/edges.md#reference):
+  per [edges.md §2 "Reference"](../primitive/edges.md):
   **Hashtag** (the `:TAGGING` edge already encodes the pair) and
   the Comment's own `:CONTAINMENT` parent (the `:CONTAINMENT`
   edge already encodes the pair — a Comment that quotes the very
   Post / Comment / Chat / ChatMessage / Item it is posted on does
   not write a parallel `:REFERENCES` edge). The carrier
   semantics, target catalog, and deferred traversal rules live in
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 
 ### As target (incoming)
 
@@ -146,7 +146,7 @@ A Comment receives:
 
 - **Actor edges** from Users and Collectives carrying
   `(sentiment, relevance)` per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  [edges.md §1](../primitive/edges.md) — the
   like/dislike surface plus per-viewer relevance, used by
   [feed-ranking](../primitive/feed-ranking.md) to weight the
   Comment for each viewing user. The earliest of these is the
@@ -162,11 +162,11 @@ A Comment receives:
   when another content node embeds the Comment — a chat
   message sharing it into a chat, a Post citing it, another
   Comment referencing it in debate. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 - **`Proposal → Comment` `:TARGETS`** when a moderation
   Proposal targets one of the Comment's per-field
   moderation-status properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  [edges.md §2 "Subject targeting"](../primitive/edges.md);
   cascade in §6.
 
 ---
