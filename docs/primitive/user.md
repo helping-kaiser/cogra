@@ -14,9 +14,9 @@ graph-side and Postgres-side state, edges, lifecycle.
 ## 1. User vs Collective
 
 Both User and Collective are actor nodes
-([nodes.md §1](nodes.md#1-actor-nodes)) and the graph treats them
+([nodes.md §1](nodes.md)) and the graph treats them
 identically: same outgoing actor-edge catalog
-([edges.md §1](edges.md#1-actor-edges)), same authorship rule
+([edges.md §1](edges.md)), same authorship rule
 ([authorship.md](authorship.md)), same ability to author content
 and participate in junctions. The distinction is what stands
 behind each on the off-graph side.
@@ -91,7 +91,7 @@ Per-field moderation-status properties cover each user-filled
 profile field — `username_status` (for the data-sibling
 `username`), `display_name`, `bio`, `avatar`, `cover`,
 `website_url` — plus the node-level `moderation_status` cache. Universal mechanics
-in [nodes.md](nodes.md#universal-per-field-moderation-status).
+in [nodes.md](nodes.md).
 
 Concrete types, constraints, and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -118,7 +118,7 @@ A User can author actor edges toward the node categories below;
 Hashtag is deliberately excluded — "liking a hashtag" is not a
 graph operation. The full per-target-type catalog with dimension
 labels lives in
-[edges.md §1 "User as actor"](edges.md#user-as-actor). Targets
+[edges.md §1 "User as actor"](edges.md). Targets
 include:
 
 - Other actors: User, Collective.
@@ -129,14 +129,14 @@ include:
 Some compound gestures defined in other docs reduce to creating
 or layering an outgoing actor edge: authoring a node
 ([authorship.md](authorship.md)), joining or leaving a junction
-([graph-model.md §5](graph-model.md#5-junction-node-flows)),
+([graph-model.md §5](graph-model.md)),
 inviting a new actor ([invitations.md](invitations.md)), and
 casting a governance vote
 ([governance.md](governance.md)).
 
 The User does not create structural edges directly — those are
 all system-generated as a side effect of the rules in
-[graph-model.md §3](graph-model.md#3-edge-categories).
+[graph-model.md §3](graph-model.md).
 
 ### As target (incoming)
 
@@ -144,18 +144,18 @@ A User receives:
 
 - **Actor edges** from other actors — opinions about them
   (sentiment + interest). See
-  [edges.md §1](edges.md#1-actor-edges) for both source-side
+  [edges.md §1](edges.md) for both source-side
   catalogs.
 - **`ChatMember / CollectiveMember / ItemOwnership → User`**
   (`:BEARER`) — identity-binding edges from junction nodes the
   User bears (active or pending). One inbound traversal lists
   every membership and ownership the User holds, including
   invitations not yet accepted. See
-  [edges.md §2 "Bearer binding"](edges.md#bearer-binding).
+  [edges.md §2 "Bearer binding"](edges.md).
 - **`ChatMessage / Post / Comment → User`** (`:REFERENCES`)
   when a content node embeds or mentions the User — a chat
   message sharing them, a Post or Comment naming them in the
-  body. See [edges.md §2 "Reference"](edges.md#reference).
+  body. See [edges.md §2 "Reference"](edges.md).
 - **`Proposal → User`** (`:TARGETS`) when a Proposal targets one
   of the User's graph-side properties — typically a
   `network_role` change per
@@ -166,7 +166,7 @@ CollectiveMember, ItemOwnership) runs through both the User's
 *outgoing* actor edge to the junction (the Shape A self-claim,
 once authored) and the *incoming* `:BEARER` edge from the
 junction (identity, written at junction creation). See
-[graph-model.md §5](graph-model.md#5-junction-node-flows).
+[graph-model.md §5](graph-model.md).
 
 ---
 
