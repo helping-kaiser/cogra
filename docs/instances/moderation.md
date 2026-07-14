@@ -1,160 +1,153 @@
 # Moderation
 
-CoGra moderates publicly-visible content via the same governance
-primitive everything else uses: any User can create a Proposal
-classifying a specific field of a content node as `sensitive`
-(soft filter) or `illegal` (redaction); the Network votes Shape A;
-threshold-cross applies the classification via cascade. Both
-classifications operate **per-field**; a node-level
-`moderation_status` cache reflects the max severity across the
-node's per-field statuses and is written by the cascade alongside
-the targeted field — see
-[nodes.md "Node-level cache"](../primitive/nodes.md).
-**No privileged moderator role with extra weight** — mods exist as
-a gate, not as weighted voters.
+Moderation is **CoGra's responsibility, exercised on CoGra's own
+authority**. L1 carries every record regardless of content — no
+admission rule reads a classification, and content governance is
+terminal by contract
+([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
+What CoGra does about bad content is therefore L2 policy, and this
+doc is its published spec.
 
-The defense against bot-driven flooding lives in the gate: every
-classification change requires moderator consent in the tally —
+The machinery is the same governance primitive everything else
+uses: any User can create a Proposal classifying content as
+`sensitive` (soft filter) or `illegal` (redaction); the Network
+votes; threshold-cross applies the classification. The outcome is
+materialized on the shared graph by the **moderation system
+actor** — an ordinary L1 actor CoGra regards as special
+([substrate.md §8](../primitive/substrate.md#8-system-actors)) —
+so every verdict is a public, priced, attributable record. **No
+privileged moderator role with extra weight** — mods exist as a
+gate, not as weighted voters.
+
+The defense against bot-driven flooding lives in two places.
+Every classification requires moderator consent in the tally —
 **at least one positive vote**, and a fraction of the active
-moderators for the destructive `illegal`-redaction (§3). Bots can
-flood the community side but cannot cross the gate without
-compromising real moderators.
+moderators for the destructive `illegal` redaction (§3) — so bots
+can flood the community side but cannot cross the gate without
+compromising real moderators. And reporting itself is priced: a
+report authors the Proposal's L1 anchor, which debits the
+reporter's capacity like any other act (§2).
 
-Encrypted ChatMessages can technically be voted on at any time —
-the protocol does **not** block a Proposal against a ciphertext.
-"Moderate only after disclosure" is a normative requirement on
-moderators, not a protocol invariant; voting blind is a
-mod-conduct violation, addressable through the same primitive
-that handles any mod misconduct (see §5). Until the relevant
-chat key has been disclosed, chat-internal disavowal
-([chats.md §10](chats.md#10-moderation)) is the only meaningful
-recourse.
-
-### Vocabulary: moderation vs disavowal
+### Vocabulary: moderation vs chat-scope kick
 
 **Invariant — scope reservation.** "Moderation" is Network-scope:
-the act of flipping a node's per-field moderation-status property
-to `'sensitive'` or writing a redaction marker for `'illegal'`,
-via the governance flow in this doc. "Disavowal" is Chat-scope: a
-`dim1 < 0` layer landed (via the Level 1 / Level 2 Proposals in
-[chats.md §10](chats.md#10-moderation)) on a ChatMessage- or
-ChatMember-targeting outcome. The two differ in eligibility
-(Network actives vs chat members), cascade (per-field
-status / redaction vs `:APPROVAL` edge layer), and reversibility.
-In chat contexts, use "disavowal" — not "removal," "kick,"
-"fire," or "expel."
+classifying content as `sensitive` or `illegal` via the
+governance flow in this doc. Removing a *member from a chat* is
+the chat-scope **kick** flow — a passed `decision:disavow_member`
+Proposal executed as an L1 De-invite
+([substrate-map.md §4](../primitive/substrate-map.md#4-conversations-and-membership),
+[chats.md §10](chats.md#10-moderation)) — with its own
+eligibility (chat roles, not the Network), its own state
+(the membership fold, not a classification), and its own
+reversibility (non-sticky). The two never share a gesture or a
+vocabulary.
 
 ## 1. The two classification paths
 
-`sensitive` and `illegal` operate on the same per-field
-moderation-status property
-([nodes.md](../primitive/nodes.md))
-and differ only in what the cascade writes. Both are authorized
-by the same governance instance below.
+Both classifications target **a record and the node it carries**
+— the Post, Comment, Message, Chat, Item, or Profile a viewer
+actually sees (§5). They differ in what the verdict does.
 
-A Proposal targets either (a) one specific user-input field of
-the content node — naming the per-field moderation-status
-property by its field name (e.g., `Post.content`, `User.bio`,
-`Hashtag.name_status`) — or (b) the whole-node `'node'` sentinel,
-which covers every user-input field plus every attached media on
-that node.
+### `sensitive` — read-side filter plus a public mark
 
-### `sensitive` — per-field soft filter
+A passing `'sensitive'` Proposal changes how CoGra *renders* the
+content; the content stays everywhere.
 
-A passing `'sensitive'` Proposal flips the top layer of the
-targeted field's moderation-status property to `'sensitive'` and
-updates the node-level `moderation_status` cache to the new max
-severity. Effect: frontends respect each viewing user's
-`content_filtering_severity_level` (see
-[data-model.md](../implementation/data-model.md) "User
-preferences") when rendering that field; the field's content
-stays. The flag is per-field — `User.bio` can be `'sensitive'`
-while `User.display_name` stays `'normal'`. Reversible via a
-counter-Proposal back to `'normal'`; the cache is recomputed.
+- **Read-side flag.** Postgres metadata records the verdict and
+  its category; frontends respect each viewing user's
+  `content_filtering_severity_level`
+  ([data-model.md](../implementation/data-model.md)) when
+  rendering. The flag can name specific fields or attachments —
+  filter granularity is a Postgres-side, read-side freedom.
+- **Substrate-visible mark.** The moderation system actor authors
+  a **Tag `(0,0)` + payload** toward the named moderation Type
+  for the category
+  ([edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)).
+  The `(0,0)` parameters are routing-inert — the Tag is a pure,
+  machine-readable mark any L2 can consume, and its payload
+  carries the verdict and the authorizing Proposal's anchor.
 
-### `illegal` — per-field redaction
+**Reversal.** The newest Tag per (target, Type) wins: a later
+passed Proposal clears the mark with a newer Tag whose payload
+records the un-classification, and the Postgres flag is lifted.
+Symmetric bars apply (§4).
 
-A passing `'illegal'` Proposal fires the redaction cascade on the
-targeted field:
+### `illegal` — whole-record redaction
 
-1. The field's moderation-status property top layer is replaced
-   with a redaction marker per
-   [layers.md §5](../primitive/layers.md#5-deletion-policy). The
-   field's substance is tombstoned in the same write, wherever
-   it lives: the graph-side data property's top layer for the
-   data-sibling case (`User.username`, `Collective.name`,
-   `Chat.name`, `Hashtag.name`); the Postgres version row for
-   fields whose text content lives in Postgres; the
-   `media_attachments` row plus the object-storage asset for
-   media targets.
-2. Each redacted original is written to the
+A passing `'illegal'` Proposal fires the redaction cascade
+defined in
+[layers.md §5](../primitive/layers.md#5-deletion-policy):
+
+1. **Payload removal.** The payload and private value of the
+   record carrying the content are removed from carriage; the
+   record drops to its reduced projection. Granularity is **the
+   record, whole** — the binding content commitment forbids
+   partial rewrite, so there is no per-field redaction. The
+   structural record, its witness, and everything the record does
+   on L1 (standing, routing, title) are untouched.
+2. **Postgres and media.** The display rows are tombstoned and
+   the blob-storage assets removed; the committed digests remain
+   in the witnessed envelope, so the removal is publicly evident.
+3. **Archive.** Each redacted original is written to the
    [retention archive](../primitive/retention-archive.md)
    automatically. The `legal_hold_until` value is set
    asynchronously by `legal_admin` — a member of the host's
-   operations team, not a graph role, see
-   [retention-archive.md §4](../primitive/retention-archive.md#4-access-path) —
-   after case review. The cascade itself does not block on this
-   decision. `legal_admin` chooses what happens next: report to
-   authorities, retain for prosecution evidence, schedule
-   statutory hard-delete, etc. The handoff is post-redaction;
-   `legal_admin` has no path back into the live graph.
+   operations team, not a graph role
+   ([retention-archive.md §4](../primitive/retention-archive.md#4-access-path))
+   — after case review; the cascade does not block on it.
+4. **Verdict mark.** The moderation system actor authors the Tag
+   `(0,0)` + payload toward the `illegal` moderation Type, same
+   shape as above.
 
-The cascade also writes the node-level `moderation_status`
-cache to `'illegal'` in the same transaction. `'illegal'` is the
-strongest state and is not downgraded by a later `'sensitive'`
-Proposal while any redacted fields remain — redaction markers
-are append-only per
-[layers.md §5](../primitive/layers.md#5-deletion-policy), so the
-cache stays pinned at `'illegal'` once any field is redacted.
+`'illegal'` is **not** reversible — payload state moves one way.
+Where both classifications have been applied, `illegal` takes
+precedence; the precedence is CoGra read-side policy, since the
+Tags themselves are independent marks.
 
 The cascade is bounded to what the Proposal targeted and does
 **not** propagate to descendants. Classifying a Post's body
-illegal does not redact the Post's Comments; each requires its
-own classification.
+illegal does not redact its Comments; each requires its own
+classification.
 
 ## 2. Reports = Proposals on the graph
 
-A user reporting content **is** the act of creating a Proposal:
+A user reporting content **is** the act of creating a Proposal
+([substrate-map.md §5](../primitive/substrate-map.md#5-governance-and-moderation)):
 
-- **Subject:** a Proposal node
-  ([nodes.md](../primitive/nodes.md)) with target = the content
-  node (via `:TARGETS` edge). `target_property` and
-  `proposed_value` depend on the path:
-  - `'sensitive'` Proposal: `target_property` names a specific
-    per-field moderation-status property on the target node
-    (e.g., `'bio'`, `'content'`, `'description'`, or
-    `'username_status'` for the data-sibling case) — or the
-    whole-node `'node'` sentinel to flag every user-input field
-    at once. `proposed_value = 'sensitive'`.
-  - `'illegal'` Proposal: same `target_property` shape; the
-    cascade replaces the field's top layer with a redaction
-    marker (plus the data sibling, where one exists, plus
-    Postgres / object-storage tombstoning). `proposed_value =
-    'illegal'`.
+- **Subject.** An overlay Proposal node with `:TARGETS` the
+  reported record's mirror, `proposed_value` = `'sensitive'` or
+  `'illegal'` plus the guidelines category. Its public trace is
+  the proposer's **L1 Content anchor** — the report's
+  justification rides that anchor as witnessed payload, and the
+  act debits the reporter's capacity like any other record. A
+  report is a priced, attributable, public act.
 - **First reporter** authors the Proposal — the system reads the
   authoring as their +1 vote.
-- **Subsequent reporters** cast Shape A votes
-  ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)) on the existing
-  Proposal rather than authoring duplicates. A reporter who
-  wants a different target field on the same content node (e.g.,
-  one Proposal already targets `content`, they want `'node'`)
-  authors a separate Proposal — these are independent
+- **Subsequent reporters** cast votes on the existing Proposal
+  rather than authoring duplicates — overlay vote edges, no
+  further L1 act
+  ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)).
+  A reporter who wants the *other* classification on the same
+  content authors a separate Proposal — independent
   classifications, not duplicates.
-- **Threshold-cross** triggers the cascade described in §1.
+- **Threshold-cross** triggers the finalization gesture (a system
+  actor's Opinion `(0,0)` + outcome payload toward the anchor)
+  and the verdict cascade in §1. The verdict costs the moderation
+  system actor capacity **per passed proposal, not per report**.
 
-There is **no separate Postgres reports table**. Reports live on
-the graph as Proposal authoring + Shape A vote layers — fully
-transparent, fully auditable, append-only by construction.
+There is **no separate Postgres reports table**. Reports live as
+Proposal machinery — the anchor and finalization on L1, the tally
+in the overlay — fully transparent, fully auditable, append-only
+by construction.
 
 ## 3. The mod-gate rule
 
-Every moderation Proposal — content classification (`sensitive`
-or `illegal`) and un-classification back to `normal` — runs
-through the **mod-gate** before its outcome can take effect, at
-the tier its stakes warrant. `sensitive` classification and
-un-classification back to `normal` sit at the **baseline tier**:
-at least one positive vote from a User with
-`network_role = 'moderator'`. `illegal`-redaction is destructive
+Every moderation Proposal — classification and un-classification
+— runs through the **mod-gate** before its outcome can take
+effect, at the tier its stakes warrant. `sensitive`
+classification and its reversal sit at the **baseline tier**: at
+least one positive vote from a User with
+`network_role = 'moderator'`. `illegal` redaction is destructive
 and irreversible, so it sits at the **critical tier**: positive
 moderator votes `≥ ⌈Network.critical_mod_gate_fraction ·
 |active mods|⌉`.
@@ -163,8 +156,8 @@ The primitive definition lives in
 [governance.md §7](../primitive/governance.md#7-the-mod-gate),
 which states the invariant "mod weight = member weight = 1; mod
 is a gate, not a weight," and names the failure modes each side
-of the multi-gate pattern closes off. The same component reappears
-in moderator role changes
+of the multi-gate pattern closes off. The same component
+reappears in moderator role changes
 ([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal))
 and `:Network` parameter amendments
 ([network.md §11](../primitive/network.md#11-amending-network-parameters)).
@@ -174,39 +167,30 @@ Instance-specific arithmetic — `moderation_sensitive_*` and
 
 ## 4. Eligibility, weights, thresholds
 
-The Network ([network.md](../primitive/network.md)) is the eligibility-and-
-voting body for moderation Proposals.
+The Network ([network.md](../primitive/network.md)) is the
+eligibility-and-voting body for moderation Proposals.
 
-- **Eligibility:** all active Network members (every User with at
-  least one outgoing actor edge inside the
-  `Network.active_threshold_days` window).
+- **Eligibility:** all active Network members, per the governed
+  activity definition
+  ([network.md §8](../primitive/network.md#8-membership-and-roles)).
 - **Vote weight:** 1 per voter — mod or member.
-- **Vote shape:** Shape A — the `User → Proposal` actor edge
-  carries the vote. Network membership has no per-member
-  junction (see [network.md §8](../primitive/network.md#8-membership-and-roles)),
-  so the User node is itself the eligibility carrier. See
+- **Vote shape:** overlay vote edges on the Proposal; see
   [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
 - **Tally:** petition-style — only positive votes contribute. See
   [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
-- **Dual-quorum bars (read from the `:Network` singleton — see
-  [graph-data-model.md](../implementation/graph-data-model.md)).**
-  A Proposal passes when
+- **Dual-quorum bars** (governed properties of the `:Network`
+  overlay singleton, replayable from its charter anchor —
+  [network.md](../primitive/network.md)). A Proposal passes when
   `positive_count ≥ min(P × |active members|, K)`:
 
   | Action | `P` (`*_quorum_fraction`) | `K` (`*_quorum_count`) | Mod gate |
   |---|---|---|---|
-  | Classify `sensitive`                       | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | baseline tier: ≥1 mod positive |
-  | Classify `illegal`                         | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | critical tier: ⌈`critical_mod_gate_fraction` · \|active mods\|⌉ |
-  | Un-classify `sensitive` → `normal`         | symmetric to the original action (`moderation_sensitive_*`)     | symmetric                                                       | baseline tier: ≥1 mod positive |
+  | Classify `sensitive`               | `Network.moderation_sensitive_quorum_fraction` (default `0.25`) | `Network.moderation_sensitive_quorum_count` (default `5000`) | baseline tier: ≥1 mod positive |
+  | Classify `illegal`                 | `Network.moderation_illegal_quorum_fraction` (default `0.50`) | `Network.moderation_illegal_quorum_count` (default `10000`) | critical tier: ⌈`critical_mod_gate_fraction` · \|active mods\|⌉ |
+  | Un-classify `sensitive` → `normal` | symmetric to the original action (`moderation_sensitive_*`)     | symmetric                                                     | baseline tier: ≥1 mod positive |
 
-  `'illegal'` is **not** reversible. The redaction markers on
-  the targeted fields are append-only per
-  [layers.md §5](../primitive/layers.md#5-deletion-policy), and
-  the node-level `moderation_status` cache, pinned to `'illegal'`
-  by the cascade, recomputes from those markers — a later
-  `'sensitive'` Proposal on a different field cannot downgrade it
-  while any redacted fields remain (see
-  [nodes.md](../primitive/nodes.md)).
+  `'illegal'` has no un-classify row — payload removal is
+  monotone ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
 
 The fractional bar `P` governs while the network is small (a real
 majority of active members is required to pass). Once membership
@@ -215,97 +199,76 @@ over (a fixed engagement-level positive-vote count is sufficient).
 The mod gate carries the integrity guarantee independently of
 either bar.
 
-Every number above is a property of the `:Network` singleton,
-amendable via the rules in
-[network.md §11](../primitive/network.md#11-amending-network-parameters) — the
-`moderation_illegal_*` parameters fall in the critical bucket
-(higher fractional bar, larger absolute count) because their
-abuse drives the redaction cascade; the `moderation_sensitive_*`
-parameters fall in the baseline bucket. Defaults exist to
-bootstrap; they are not fixed rules.
+Every number above is a governed `:Network` parameter, amendable
+via the rules in
+[network.md §11](../primitive/network.md#11-amending-network-parameters)
+— the `moderation_illegal_*` parameters fall in the critical
+bucket (higher fractional bar, larger absolute count) because
+their abuse drives the redaction cascade; the
+`moderation_sensitive_*` parameters fall in the baseline bucket.
+Defaults exist to bootstrap; they are not fixed rules.
 
 ## 5. Scope
 
-Per-field moderation-status properties exist on every
-user-input-bearing node — User, Collective, Post, Comment,
-ChatMessage, Chat, Item, Hashtag, and, for its single
-user-bearing field, Proposal — per
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md)
-and the per-label tables in
-[graph-data-model.md](../implementation/graph-data-model.md). Both
-`'sensitive'` and `'illegal'` Proposals target one of these
-properties; the value the cascade writes is what distinguishes
-the two paths.
+A classification targets what a viewer sees — a Post, Comment,
+Message, Profile, Chat, Item, or topic — and resolves to the L1
+record(s) carrying that content:
 
-**Valid `target_property` values:**
+| Surface | Carrying record(s) |
+|---|---|
+| Post body + media | the Publish record's payload envelope |
+| Comment | the Review record's payload |
+| Chat message | the Send record's payload (plaintext or ciphertext, [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism); see "Encrypted message classification" below) |
+| Profile content (bio, avatar, display name) | the Registration bundle's payloads |
+| Chat name / description / image | the chat-creating record's payload (and later parallel records revising it) |
+| Item name / description / media | the genesis Owner record's payload (and revisions) |
+| Topic name | a Type is a bare name with no payload; an offensive topic is a naming-service and read-side concern ([hashtag.md](hashtag.md)), plus classification of the content tagged with it |
+| Proposal text / report justification | the proposal's Content anchor payload — anchors are ordinary records, moderatable like any content |
+| Stance rationale | the payload of the Opinion (or other stance record) carrying it |
 
-| Node | Targetable per-field properties | `'node'` covers |
-|---|---|---|
-| **User** | `username_status`, `display_name`, `bio`, `avatar`, `cover`, `website_url` | all of the above |
-| **Collective** | `name_status`, `display_name`, `description`, `avatar`, `website_url` | all of the above |
-| **Post** | `title`, `description`, `content`, `attachments` (all attached media on the post) | all of the above |
-| **Comment** | `content`, `attachments` | both |
-| **ChatMessage** | `content`, `attachments`. Both `plaintext` and `encrypted` per [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism); encrypted messages are classifiable once readable (see "encrypted message classification" below) | both |
-| **Chat** | `name_status`, `description`, `image` | all three |
-| **Item** | `name`, `description`, `attachments` | all of the above |
-| **Hashtag** | `name_status` | n/a (only field) |
-| **Proposal** | `proposed_value_status` — for Proposals whose `proposed_value` embeds user-authored content ([proposal.md §2](proposal.md#2-graph-side-properties)). The cascade writes the marker onto `proposed_value` in place (identity properties don't layer) and onto the layered status companion; a still-`'open'` target transitions terminally to `'redacted'` ([proposal.md §6](proposal.md#6-lifecycle)). | n/a (only field) |
-
-The graph-needed data fields (`User.username`, `Collective.name`,
-`Chat.name`, `Hashtag.name`) are targeted via their `_status`
-companion property rather than the data property itself — the
-cascade writes to both on `'illegal'` so the redaction marker
-lands on the data the graph actually reads, but the Proposal
-names the status property because that is the moderation surface.
-
-The field set per node type tracks the user-input fields
-enumerated in [nodes.md](../primitive/nodes.md) and
-[data-model.md](../implementation/data-model.md). Adding a new
-user-input field to any of these node types automatically adds it
-to the valid `target_property` set; the cascade handler must
-know how to redact it (graph-side per-field layer marker, plus
-the data-property layer marker for graph-needed fields, plus
-Postgres tombstone version row or media tombstone + asset
-removal as applicable).
-
-Per-attachment targeting (redacting one specific attachment on a
-Post that has several) is a future refinement — the current shape
-redacts all attachments under `target_property = 'attachments'`.
+For `illegal`, the cascade removes each targeted record's payload
+whole (§1) — where content spans parallel records (profile
+revisions, edited bodies), the Proposal names the records it
+covers, and each is removed whole. For `sensitive`, the Postgres
+flag can be narrower — one field, one attachment — because
+filtering is read-side and free of the commitment's granularity.
 
 **Out of scope:**
 
-- Junction nodes (`ChatMember`, `CollectiveMember`,
-  `ItemOwnership`) — they carry no user-authored content
-  fields.
-- The economics carrier nodes (`Campaign`, `Settlement`,
-  `Wallet`) and the `Network` singleton — graph properties and
-  chain pointers only, nothing user-authored
-  ([nodes.md §6](../primitive/nodes.md)).
+- Overlay structure (Proposal tally state, `:Network` parameters,
+  CollectiveMember junctions) — no user-authored content;
+  governed by their own machinery.
+- The reward economy's records (campaigns, settlements, payouts)
+  — they live on CoGra's own rail
+  ([economics.md](../primitive/economics.md)), nothing
+  user-authored on a graph.
 
 ### Encrypted message classification
 
-For a moderation Proposal targeting an encrypted ChatMessage to be
+For a moderation Proposal targeting an encrypted Message to be
 useful, voters need to be able to read the body. The disclosure
 path is **independent of the moderation primitive** — any chat
 member can release the relevant epoch's chat key (per
-[chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism)) through any normal authoring
-gesture: a Comment on the chat, a public Post, a plaintext
-ChatMessage in the same chat, an off-graph channel, anything. The
-system permits voluntary disclosure by participants by design.
-Disclosure is scoped to the disclosed epoch only; leaking Kᵢ
-exposes E_i's messages and no others.
+[chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism))
+through any normal authoring gesture: a Comment on the chat, a
+public Post, a plaintext Message in the same chat, an off-graph
+channel, anything. The system permits voluntary disclosure by
+participants by design. Disclosure is scoped to the disclosed
+epoch only; leaking one epoch key exposes that epoch's messages
+and no others.
 
-This matters in practice for cases like contracts in private chats
-(forthcoming with the deferred contracts / marketplace workstream)
-where one party may need to surface the other's misbehavior.
+This matters in practice for cases like contracts in private
+chats (forthcoming with the deferred contracts / marketplace
+workstream) where one party may need to surface the other's
+misbehavior.
 
 #### Why this is a norm, not a protocol gate
 
-The protocol does not block a Proposal authored against an opaque
-ciphertext, nor votes cast on it. A bot swarm can `+1` encrypted
-bodies all day, and a malicious moderator can cross the gate (§3)
-without reading anything. What prevents this is the role
-definition, not the code:
+Nothing blocks a Proposal authored against an opaque ciphertext,
+nor votes cast on it. A bot swarm can `+1` encrypted bodies all
+day, and a malicious moderator can cross the gate (§3) without
+reading anything. What prevents this is the role definition, not
+the code:
 
 - **Bot voting on ciphertext** is the same noise-vs-consistency
   problem as any other bot voting (§7) — the mod gate guarantees
@@ -321,71 +284,74 @@ The integrity guarantee is a **two-part claim**: the mod gate (§3)
 blocks the consistency attack; the de-mod-ing path addresses
 moderator misconduct. Together they make "moderate only after
 disclosure" a load-bearing norm rather than a protocol invariant
-— the most we can offer without graph-level guards that would be
-both too weak (off-graph disclosure exists, and the graph cannot
-detect it) and too strict (legitimate cases like contract disputes
+— the most we can offer without protocol-level guards that would
+be both too weak (off-graph disclosure exists and cannot be
+detected) and too strict (legitimate cases like contract disputes
 would be blocked).
 
 **The cascade fires regardless of disclosure state.** If a
-Proposal targeting an encrypted ChatMessage crosses threshold —
+Proposal targeting an encrypted Message crosses threshold —
 including the mod-gate `+1` — the redaction cascade in §1 runs
-whether or not any voter actually read the body. The protocol
-inspects the tally, not decryption state. A Network whose
-moderators wave through cascades on opaque ciphertext is already
-broken; the remedy is the de-mod-ing path above, not a protocol
-veto. The robustness guarantee rests on moderator judgment, not
-on the protocol second-guessing it.
+whether or not any voter actually read the body; removing a
+ciphertext payload is the same one-way transition as removing a
+plaintext one. The tally is inspected, not decryption state. A
+Network whose moderators wave through cascades on opaque
+ciphertext is already broken; the remedy is the de-mod-ing path
+above, not a protocol veto.
 
 ## 6. Coexistence with chat-internal moderation
 
-Platform moderation (this doc) and chat-internal disavowal
-([chats.md §10](chats.md#10-moderation)) can both apply to the
-same `ChatMessage`. They sit at different scopes (Network vs
-chat), eligibility differs (every active Network member vs
-active `ChatMember`s), and outcomes write to different graph
-state — so they do not conflict.
+Platform moderation (this doc) and the chat-scope kick flow
+([chats.md §10](chats.md#10-moderation)) can both bear on the
+same situation — an abusive message can be classified by the
+Network while its author is kicked by the chat. They sit at
+different scopes, eligibility differs (active Network members vs
+per-chat roles), and outcomes write different state
+(classification verdicts vs the membership fold via a De-invite)
+— so they never compete for the same write.
 
-The primitive coexistence rule — scope decides the state
-written, instances at different scopes never compete for the
-same write — lives in
+The primitive coexistence rule — scope decides the state written,
+instances at different scopes never compete for the same write —
+lives in
 [governance.md §9](../primitive/governance.md#9-coexistence-multiple-governance-instances-on-a-shared-subject).
-The chat-vs-platform pairing is the worked example in that
-section.
 
 ## 7. Noise vs consistency — what the mod gate does and doesn't solve
 
 A bot net could try to flood the system by **mass-creating**
-moderation Proposals against legitimate content and **mass-voting**
-on each other's Proposals. Two distinct concerns, only one of
-which the mod gate addresses:
+moderation Proposals against legitimate content and
+**mass-voting** on each other's Proposals. Two distinct concerns,
+only one of which the mod gate addresses:
 
 - **Consistency.** No spam Proposal can apply without a real
   moderator's positive vote (§3). A million bot-authored
   Proposals against legitimate content cannot cross threshold.
-  The classification cannot drift from `'normal'` without mod
-  consent. The mod gate fully covers this.
+  The mod gate fully covers this.
 - **Noise (operational).** Mods reviewing the queue could be
   drowned in bot-authored Proposals, with real reports buried in
   the noise. The mod gate doesn't address this directly.
 
-Noise is handled out-of-graph by the same mechanisms used for the
-rest of the platform:
+Noise is bounded and handled by the same mechanisms as the rest
+of the platform:
 
+- **Reports are priced.** Every report authors an L1 anchor and
+  debits the reporter's capacity (§2) — mass report creation has
+  a floor cost per Proposal, unlike free-form flagging.
 - **Feed-ranking.** Moderator UIs surface Proposals through the
-  same per-viewer ranking ([feed-ranking.md](../primitive/feed-ranking.md))
-  used for content. Bot-authored Proposals from severed clusters
-  land at zero `h(t)` and never surface to honest mods. Real
-  reports surface because they originate from non-severed users
-  with real reach into the moderator's network.
+  same per-viewer ranking
+  ([feed-ranking.md](../primitive/feed-ranking.md)) used for
+  content. Bot-authored Proposals from severed clusters rank
+  nowhere for honest mods; real reports surface because they
+  originate from users with real reach into the moderator's
+  network.
 - **API rate limits.** Per-author throttling on Proposal creation
   is an operational concern, same as login rate limits — it lives
-  in the API layer, not the graph primitive.
+  in the API layer.
 
-Premature graph-level defenses (e.g. a `vote-restricted` role)
+Premature protocol-level defenses (e.g. a `vote-restricted` role)
 are deliberately not added. If real-world experience proves the
-operational mechanisms insufficient, a graph-level role can be
-added later — but adding it speculatively would risk being wrong
-about the real attack shape.
+operational mechanisms insufficient, a role can be added later —
+but adding it speculatively would risk being wrong about the real
+attack shape.
 
 ## 8. Platform guidelines
 
@@ -396,28 +362,30 @@ on a moderation Proposal.
 
 The guidelines live in
 [platform-guidelines.md](platform-guidelines.md). They are
-amendable via the same Proposal primitive (eligibility = Network
-members; dual-quorum bars in
+amendable via the same Proposal primitive (dual-quorum bars in
 `Network.guidelines_change_quorum_fraction` /
 `Network.guidelines_change_quorum_count`, tuned higher than
 single-content classification because an amendment shifts the
 normative frame for *all future* moderation). The current version
-is pinned on the graph by
-`Network.guidelines_version` + `Network.guidelines_hash` (SHA-256
-of the canonical document bytes).
+is pinned by the governed `:Network` properties
+`guidelines_version` + `guidelines_hash`, and each ratified
+version's text is anchored on L1 as a platform document — a
+publisher-authored Content node whose payload is the witnessed
+document ([substrate.md §8](../primitive/substrate.md#8-system-actors)).
 
 ## What this doc is not
 
 - **Not the Network primitive.** Membership, the moderator role,
-  and how mods come and go are in [network.md](../primitive/network.md).
-- **Not the redaction mechanism.** The redaction cascade is
-  defined in [layers.md §5](../primitive/layers.md#5-deletion-policy) and the
-  archive disposition in
+  and how mods come and go are in
+  [network.md](../primitive/network.md).
+- **Not the redaction mechanism.** Payload removal and the
+  Postgres tombstone are defined in
+  [layers.md §5](../primitive/layers.md#5-deletion-policy) and
+  the archive disposition in
   [retention-archive.md](../primitive/retention-archive.md); this
   doc provides the community-driven authorization for
-  illegal-content classification (resolving
-  [open-questions.md Q9](../open-questions.md); account-deletion
-  is a separate user-initiated authorization path).
+  illegal-content classification (account-deletion is a separate
+  user-initiated authorization path).
 - **Not the platform guidelines themselves.** The bucket contents
   and amendment procedure are in
   [platform-guidelines.md](platform-guidelines.md).
