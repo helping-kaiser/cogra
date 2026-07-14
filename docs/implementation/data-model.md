@@ -379,7 +379,7 @@ three properties:
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#51-filtering-vs-ranking)),
+content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`).
 
@@ -400,7 +400,7 @@ CREATE INDEX user_view_log_recency_idx
 The seen-list's compaction policy (1-year default, ~7 MB/active-
 user-year bound, trade-off, frontend tunability) lives with the
 seen-list mechanism in
-[feed-ranking.md §8.5](../primitive/feed-ranking.md#85-compaction--drop-entries-older-than-1-year-frontend-convention).
+[feed-ranking.md §8.5](../primitive/feed-ranking.md#94-the-already-seen-filter).
 
 ```sql
 -- Hidden actors: per-viewer list of users/collectives the viewing user
