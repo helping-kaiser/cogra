@@ -47,7 +47,7 @@ The gesture writes the following records atomically:
   authors the junction (§5).
 
 With no prior owner to cast a Shape B vote, the
-[junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
+[junction lifecycle](../primitive/graph-model.md)
 collapses to its `N = 0` special case: the author's Shape A
 self-claim is the only required vote, no admit-Proposal node is
 materialized, and the system writes both structural edges
@@ -88,7 +88,7 @@ requirement (unlike `User.username` or `Hashtag.name`), so the
 per-field property uses the field name directly with no separate
 data sibling — the actual name string lives in Postgres (§3).
 Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+[nodes.md](../primitive/nodes.md);
 Item-specific cascade in §8.
 
 The current owner is **not** stored as a property on the Item;
@@ -104,7 +104,7 @@ ItemOwnership carries no per-instance properties beyond its
 (claim, approval, and supersession layers per §§6-7). Bearer
 identity rides on the `ItemOwnership → User/Collective`
 `:BEARER` edge written at creation; see §1 and
-[edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
+[edges.md §2 "Bearer binding"](../primitive/edges.md).
 Concrete types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
@@ -163,10 +163,10 @@ two outgoing structural edge types, both system-created:
   `dim1 < 0` automatically. This Edges section catalogues only
   the edge type and direction; the layer mechanics live in §7.
   See
-  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+  [edges.md §2 "Approval completion"](../primitive/edges.md).
 - **`Item → Hashtag` (`:TAGGING`)** — one edge per hashtag the
   Item is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md#tagging). The
+  [edges.md §2 "Tagging"](../primitive/edges.md). The
   Hashtag node is content-addressed by canonical name (per
   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
   so the same hashtag across instances resolves to the same
@@ -177,14 +177,14 @@ two outgoing structural edge types, both system-created:
 An Item receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  [edges.md §1](../primitive/edges.md) — the
   like/dislike surface plus per-viewer relevance, used by
   [feed-ranking](../primitive/feed-ranking.md) to weight the
   Item for each viewing user. The earliest of these is the
   authorship edge (§5).
 - **`Comment → Item` (`:CONTAINMENT`)** when a Comment is
   written on the Item. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 - **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
   two-edge state pair, paired with the outgoing
   `Item → ItemOwnership` above.
@@ -192,11 +192,11 @@ An Item receives:
   another content node embeds the Item — a message sharing it
   into a chat, a Post recommending or citing it, a Comment
   pointing at it. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 - **`Proposal → Item` (`:TARGETS`)** when a moderation Proposal
   targets one of the Item's per-field moderation-status
   properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  [edges.md §2 "Subject targeting"](../primitive/edges.md);
   cascade in §8.
 
 ### 4.2 ItemOwnership
@@ -211,25 +211,25 @@ ItemOwnership is a junction, not an actor. It carries:
   transfer-Proposal passes (§6). At Item creation the
   claim and approval are written in the same atomic gesture
   (§1 bootstrap). See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 - **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
   binding edge written at junction creation, pointing at the
   actor the ownership represents. Never re-pointed; the Shape A
   self-claim — the bearer's vote on the transfer-Proposal —
   must originate from this actor (§§1, 6). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
+  [edges.md §2 "Bearer binding"](../primitive/edges.md).
 - **`ItemOwnership → Proposal` (Shape B vote)** — the current
   owner's approval vote on a transfer-Proposal moving the Item
   to a new ItemOwnership (§6). `dim1 > 0` approves the transfer.
   This is the sole vote edge an ItemOwnership casts. See
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b).
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md).
 
 #### As target (incoming)
 
 An ItemOwnership receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
+  [edges.md §1](../primitive/edges.md) — personal
   sentiment about the ownership record. The acquirer's own
   **Shape A self-claim** is not among these: it is their
   `User/Collective → Proposal` vote on the transfer-Proposal
@@ -242,7 +242,7 @@ An ItemOwnership receives:
 - **`ChatMessage / Post / Comment → ItemOwnership`
   (`:REFERENCES`)** when a content node embeds an ownership
   record — e.g. a Post citing a provenance chain. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 
 ---
 
@@ -281,7 +281,7 @@ own ItemOwnership.
 ## 6. Transfer flow
 
 ItemOwnership runs the **junction lifecycle** described in
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
+[graph-model.md §5](../primitive/graph-model.md):
 a transfer is a fresh terminal **transfer-Proposal** that
 `:TARGETS` the new ItemOwnership. It needs two signatures — the
 acquirer's **Shape A self-claim** (they have no ItemOwnership for
@@ -336,7 +336,7 @@ layer on the **previous** ItemOwnership's `Item → ItemOwnership`
 approval edge with `dim1 < 0` — marking it revoked.
 This uses the general state-transition mechanism on structural
 edges described in
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+[graph-model.md §5](../primitive/graph-model.md).
 
 **Invariant — single active ownership:** At most one
 ItemOwnership per Item has a positive top layer on its

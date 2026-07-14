@@ -178,7 +178,7 @@ the on-chain Merkle root and the on-graph `Settlement` node (plus its
 graph record pointing at it. A claim writes the on-chain claim and the
 `:CLAIMS` graph edge together, keeping "entitled but unclaimed" a faithful
 one-hop graph query
-([edges.md §2](../primitive/edges.md#2-structural-edges)). Cross-store
+([edges.md §2](../primitive/edges.md)). Cross-store
 write ordering and the failure modes around a partial write follow the
 same discipline as the Memgraph ↔ Postgres pairing documented in
 [account-deletion.md "Write ordering across stores"](../instances/account-deletion.md)

@@ -98,10 +98,10 @@ default `'normal'`, values `'normal'` / `'sensitive'` /
 `'illegal'` — caching the max severity across that node's
 per-field statuses. The cascade writes both the targeted per-field
 property and the cache atomically per
-[nodes.md "Node-level cache"](../primitive/nodes.md#node-level-cache-moderation_status).
+[nodes.md "Node-level cache"](../primitive/nodes.md).
 The cache is what feed-ranking and filter queries read.
 
-See [nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
+See [nodes.md "Universal: per-field moderation status"](../primitive/nodes.md)
 and [moderation.md](../instances/moderation.md). Each node-label
 table below lists the per-field properties and the cache with a
 short "per intro" note rather than repeating the shape.
@@ -268,7 +268,7 @@ CREATE INDEX ON :Hashtag(id);
 | Property          | Type    | Notes |
 |---|---|---|
 | `id`              | String  | UUID v4. |
-| `target_property` | String  | Name of the property on the target node, or the reserved whole-node sentinel `'node'` — see [nodes.md "Whole-node targeting"](../primitive/nodes.md#whole-node-targeting-the-node-sentinel). The `'node'` sentinel covers both the moderation cascade (every user-input field plus all attachments — see [moderation.md §5](../instances/moderation.md#5-scope)) and chat-internal disavowal — see [chats.md §10](../instances/chats.md#10-moderation). |
+| `target_property` | String  | Name of the property on the target node, or the reserved whole-node sentinel `'node'` — see [nodes.md "Whole-node targeting"](../primitive/nodes.md). The `'node'` sentinel covers both the moderation cascade (every user-input field plus all attachments — see [moderation.md §5](../instances/moderation.md#5-scope)) and chat-internal disavowal — see [chats.md §10](../instances/chats.md#10-moderation). |
 | `value_kind`      | String  | Shape discriminator on `proposed_value` so frontends can render the right editor / display widget without out-of-band knowledge of every `target_property`. Enumerated: `'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:<action_key>'`. Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-graph-side-properties). |
 | `rule_anchor`     | String  | **Required.** UUID of the node hosting the rule property(ies) this Proposal is governed by, per [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time). The dispatcher reads each rule property on `rule_anchor` as-of the Proposal's authorship-edge timestamp (per [authorship.md](../primitive/authorship.md)) rather than at the current top layer, so amendments committed mid-flight don't retroactively change in-flight Proposals' rule parameters. Covers every current consumer with one value — Collective and Chat Proposals point at their host (`<host>.governance` indexed by `action_key`), Network dual-quorum moderation Proposals point at the Network (both `_quorum_fraction` and `_quorum_count` read as-of the same timestamp). Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-graph-side-properties). |
 | `status`          | String  | Lifecycle state; layered, as is the `proposed_value_status` companion below (the identity properties above do not layer). Default `'open'` at creation; transitions exactly once, at threshold-cross, to a terminal value — `'passed'` (cascade applied), `'passed_but_invariant_rejected'` (threshold crossed but a composite `_from` re-validation failed, so the target writes rolled back while the crossing vote stands), `'failed'` (bidirectional tallies only — the negative side satisfied the mirror bar, [governance.md §2.4](../primitive/governance.md#24-threshold-policy)), or `'redacted'` (`proposed_value` redacted while open, [proposal.md §2](../instances/proposal.md#2-graph-side-properties)). A Proposal stops accepting votes once `status ≠ 'open'`; one neither side ever crosses stays `'open'` indefinitely. Doubles as the on-graph outcome record where the Proposal has no target-property layer of its own — `ChatMessage` disavowal and display-content `set:*`. See [proposal.md §2](../instances/proposal.md#2-graph-side-properties), [§6](../instances/proposal.md#6-lifecycle). |
@@ -278,7 +278,7 @@ CREATE INDEX ON :Hashtag(id);
 
 The target node itself is reached via a `:TARGETS` structural edge
 (`Proposal → Target`), not a foreign-key property — see
-[edges.md §2](../primitive/edges.md#2-structural-edges).
+[edges.md §2](../primitive/edges.md).
 
 ```cypher
 CREATE CONSTRAINT ON (p:Proposal) ASSERT p.id IS UNIQUE;
@@ -376,7 +376,7 @@ Like `:Proposal`, none of `:Campaign` / `:Settlement` / `:Wallet` carry
 per-field moderation properties or a `moderation_status` cache — they
 have no user-authored fields to moderate. `Campaign` and `Settlement`
 are pure record nodes; `Wallet` holds only an on-chain address. See
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status).
+[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md).
 
 ### Junction nodes
 
@@ -391,7 +391,7 @@ carrying `:AUTHOR` — the label, not the earliest timestamp, is
 what fixes junction authorship
 ([authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship)).
 See
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
+[graph-model.md §5](../primitive/graph-model.md)
 and edge-labels table below.
 
 #### `:ChatMember`
@@ -441,7 +441,7 @@ CREATE INDEX ON :ItemOwnership(id);
 None of the three junction tables declares a `status` property — by design.
 Junction state (pending / active / revoked) is derived from the two-edge
 state pair's top-layer `dim1` values per
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows). A
+[graph-model.md §5](../primitive/graph-model.md). A
 stored flag would be a second source of truth that could drift.
 
 Memgraph can't directly forbid a property by absence, so enforcement is
@@ -484,7 +484,7 @@ targeting that property name. See
 | `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
 | `time_decay_half_life_days`       | Integer | Half-life of the reactor-edge time-decay factor `f(Δt)` used by feed-ranking. Default `30`. Baseline-bucket amendable. See [feed-ranking.md §7.3](../primitive/feed-ranking.md#73-shape--exponential-30-day-half-life-frontend-tunable). |
 | `distance_decay_base`             | Float   | Base of the path distance-decay `d(R) = base^(R−1)` used by feed-ranking. Default `0.1` (each extra hop attenuates a path's contribution by 10×). Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.1](../primitive/feed-ranking.md#41-path-contribution-and-distance-decay). |
-| `dust_floor`                      | Float   | Dust floor `ε` bounding the branch-and-bound path enumeration in feed-ranking. Default `0` (full fidelity while the graph is sparse); raised as the graph densifies. Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.4](../primitive/feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning). |
+| `dust_floor`                      | Float   | Dust floor `χ` bounding the branch-and-bound path enumeration in feed-ranking. Default `0` (full fidelity while the graph is sparse); raised as the graph densifies. Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.4](../primitive/feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning). |
 
 ```cypher
 CREATE CONSTRAINT ON (n:Network) ASSERT n.id IS UNIQUE;
@@ -512,7 +512,7 @@ The instance configuration knows the singleton's `id`.
 
 Memgraph relationships carry exactly one label. The catalog and the rules
 for picking the right one live in
-[edges.md §3](../primitive/edges.md#3-edge-labels-at-the-graph-layer). Per-label assignment:
+[edges.md §3](../primitive/edges.md). Per-label assignment:
 
 | Label          | Endpoints                                                                | Source     |
 |---|---|---|
@@ -540,7 +540,7 @@ A `(source, target)` pair carries **at most one edge label** —
 actor or structural. Layers within that single label are how the
 pair accumulates history; a second label between the same
 endpoints is forbidden. See
-[edges.md §2](../primitive/edges.md#2-structural-edges) for the
+[edges.md §2](../primitive/edges.md) for the
 invariant, the rationale, and the cases this rule rules out
 (notably the `Post → Hashtag` `:TAGGING` / `:REFERENCES` carve-out
 and the parent-Collective `:APPROVAL` / `:ACTOR` collision).
@@ -585,13 +585,13 @@ Every edge carries the same property shape, regardless of label:
 
 | Property    | Type           | Notes |
 |---|---|---|
-| `dim1`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed valence (sentiment / approval / affirmation). Structural edges: typically `0`, except state-bearing pairs (junction claim/approval), where `dim1 > 0` is affirmed and `≤ 0` revoked, and `:REFERENCES` edges, which carry an author-set tensor ([edges.md §2 "Reference"](../primitive/edges.md#reference)). |
+| `dim1`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed valence (sentiment / approval / affirmation). Structural edges: typically `0`, except state-bearing pairs (junction claim/approval), where `dim1 > 0` is affirmed and `≤ 0` revoked, and `:REFERENCES` edges, which carry an author-set tensor ([edges.md §2 "Reference"](../primitive/edges.md)). |
 | `dim2`      | Float          | Range `[-1.0, +1.0]`. Actor edges: signed connection-weight (interest / relevance / importance). Structural edges: `0`, except the author-set tensor on `:REFERENCES`. |
 | `timestamp` | LocalDateTime  | When this layer was created. |
 | `layer`     | Integer        | Layer number (≥ 1). |
 
-See [graph-model.md §4](../primitive/graph-model.md#4-edge-structure) for the edge
-structure and [graph-model.md §6](../primitive/graph-model.md#6-dimension-semantics) for the
+See [graph-model.md §4](../primitive/graph-model.md) for the edge
+structure and [graph-model.md §6](../primitive/graph-model.md) for the
 unified two-axis dimension grammar.
 
 ### System-dimension slot
@@ -605,7 +605,7 @@ to populate it, with an on-chain transaction reference — amounts stay
 on-chain and are read through the reference, never stored on the edge.
 The exact column schema is deferred to the edge types that populate the
 slot. See
-[edges.md "System-dimension slot"](../primitive/edges.md#system-dimension-slot).
+[edges.md "System-dimension slot"](../primitive/edges.md).
 
 ### Tensor uniformity enforcement
 

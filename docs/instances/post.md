@@ -14,7 +14,7 @@ edges in a typical instance point at.
 A Post is created by a single authoring gesture from one actor —
 either a User or a Collective. There is **no approval flow**:
 unlike junction nodes (see
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)),
+[graph-model.md §5](../primitive/graph-model.md)),
 a Post requires no second-party affirmation to come into existence.
 The author's outgoing edge is the only edge needed to bring the
 node into the graph.
@@ -54,7 +54,7 @@ The Post carries per-field moderation-status properties on
 status — see [moderation.md §5](moderation.md#5-scope) on
 per-attachment targeting), plus the node-level
 `moderation_status` cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+[nodes.md](../primitive/nodes.md);
 Post-specific cascade in §6. Body and attachment content live in
 Postgres / object storage (§3); concrete types and indexes in
 [graph-data-model.md](../implementation/graph-data-model.md).
@@ -96,7 +96,7 @@ two outgoing structural edge types, both system-created:
 
 - **`Post → Hashtag` (`:TAGGING`)** — one edge per hashtag the
   post is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md#tagging). The
+  [edges.md §2 "Tagging"](../primitive/edges.md). The
   Hashtag node is content-addressed by canonical name (per
   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
   so the same hashtag across instances resolves to the same
@@ -110,7 +110,7 @@ two outgoing structural edge types, both system-created:
   structural edge per (source, target) pair is the rule. The
   carrier semantics, target catalog, and deferred traversal
   rules live in
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 
 ### As target (incoming)
 
@@ -118,26 +118,26 @@ A Post receives:
 
 - **Actor edges** from Users and Collectives carrying
   `(sentiment, relevance)` per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — the
+  [edges.md §1](../primitive/edges.md) — the
   like/dislike surface plus per-viewer relevance, used by
   [feed-ranking](../primitive/feed-ranking.md) to weight the
   Post for each viewing user. The earliest of these is the authorship
   edge (§5).
 - **`Comment → Post` (`:CONTAINMENT`)** when a Comment is
   written on the Post. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 - **`ChatMessage / Post / Comment → Post` (`:REFERENCES`)** when
   another content node embeds the Post — a chat message sharing
   the Post into a chat, another Post quoting or citing it (e.g.
   pointing at the original of a re-uploaded image), a Comment
   citing it. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference) and
+  [edges.md §2 "Reference"](../primitive/edges.md) and
   [chats.md](chats.md) for the worked-out ChatMessage patterns
   (sharing a post into a chat, the personal-newsfeed shape).
 - **`Proposal → Post` (`:TARGETS`)** when a moderation Proposal
   targets one of the Post's per-field moderation-status
   properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  [edges.md §2 "Subject targeting"](../primitive/edges.md);
   cascade in §6.
 
 ---

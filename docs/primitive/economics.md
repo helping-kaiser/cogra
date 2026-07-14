@@ -101,7 +101,7 @@ limitation to apologize for:
   `Content → Author` back-edge: that would amplify one real engagement
   across the author's unbounded, self-chosen outbound content set (a bot
   funnel) and break the inbound-edges-don't-affect-feeds invariant
-  ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
+  ([graph-model.md §7](graph-model.md)).
 
 ---
 
@@ -361,7 +361,7 @@ The `:INVITE` edge is a normal traversable actor edge from inviter to
 invited — the first edge into any non-genesis node, since the graph
 grows only by invitation. Its schema is defined in
 [invitations.md](invitations.md#the-invite-label) and
-[edges.md §3](edges.md#3-edge-labels-at-the-graph-layer).
+[edges.md §3](edges.md).
 
 ### 5.3 Reputation as additive enforcement
 
@@ -509,24 +509,24 @@ default `g` — the influencer-as-main-benefactor outcome, far from the
 
 The split is computed exactly by **branch-and-bound path enumeration**
 from anchor to target, pruning a partial path when its best-possible
-completion falls below a dust floor `ε`. There is no hop cap — `d(R)`
-decay and `ε` bound the depth. As each above-`ε` path is found, its
+completion falls below a dust floor `χ`. There is no hop cap — `d(R)`
+decay and `χ` bound the depth. As each above-`χ` path is found, its
 weight is distributed to its authors and the path is discarded: memory is
 `O(players)` — one running share per distinct author — never `O(paths)`;
-time is `O(N_p · L̄)`, the edges walked across all `N_p` above-`ε` paths of
+time is `O(N_p · L̄)`, the edges walked across all `N_p` above-`χ` paths of
 average length `L̄`.
 
 This is the **same path-sum traversal that computes `h_anchor(target)`**,
 under the same dust floor — a shared primitive that
 [feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning)
-defines. The economics side sets `ε` by **author-aggregate payability**:
+defines. The economics side sets `χ` by **author-aggregate payability**:
 a contributor's share sums over many individually sub-payable paths, so
 the path-level floor sits *below* the smallest payable CGT amount by the
 typical paths-per-author factor — otherwise thinly-spread contributors
-are underpaid. `ε` is **public at creation and tuneable during the
+are underpaid. `χ` is **public at creation and tuneable during the
 campaign**: if the graph grows rapidly inside the window, the advertiser
-raises `ε` to keep enumeration tractable — the advertiser's
-responsibility. Tuning `ε` only ever moves the *dust* cutoff, so it can
+raises `χ` to keep enumeration tractable — the advertiser's
+responsibility. Tuning `χ` only ever moves the *dust* cutoff, so it can
 shift near-floor shares but nothing material — unlike `g` (§6.4), which is
 immutable because it reshapes the whole split — and every change is
 public, carrying the same reputational discipline as any other
@@ -535,7 +535,7 @@ adjustment (§2.2). The `dust_floor` in force at settlement is recorded on the
 
 Cost is flat in total graph size (only the anchor's dust-reachable
 neighborhood enters) and exponential only in dense-corridor connectivity
-(simple-path counting is #P-hard), bounded in practice by `d(R)` + `ε`.
+(simple-path counting is #P-hard), bounded in practice by `d(R)` + `χ`.
 Backstops for a pathological corridor: a steeper `g`, the per-campaign
 compute budget, and a **logged** sampling fallback (never silent).
 Campaigns are independent, so the work is trivially parallel and runs
@@ -617,11 +617,11 @@ stack that covers them:
 
 1. **Forward-only traversal** — bots cannot manufacture the inbound
    edges that would give farmed content weight
-   ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
+   ([graph-model.md §7](graph-model.md)).
 2. **The `:REFERENCES` fanout-budget** — per-source amplification is
    capped at the source's budget regardless of `N`, and reference-
    flooding is self-defeating (weight spreads to `1/N` and dust-prunes)
-   ([edges.md §2 "Reference"](edges.md#reference)).
+   ([edges.md §2 "Reference"](edges.md)).
 3. **Severance / zero-jail** — the actors closest to a farm cluster
    cascade `(0, 0)` onto the bridges feeding it; once every path to the
    funneled target carries a severance edge, its `h` is forced to exact

@@ -30,7 +30,7 @@ values and customization" below.
 ## The `:INVITE` label
 
 The inviter's edge — `Inviter → New Actor` — carries the `:INVITE`
-sub-label ([edges.md §3](edges.md#3-edge-labels-at-the-graph-layer)). It
+sub-label ([edges.md §3](edges.md)). It
 is the **first incoming actor edge** into any non-genesis node, since the
 graph grows only by invitation, so the label denormalizes an
 already-derivable fact: "who invited X?" becomes a typed one-hop lookup

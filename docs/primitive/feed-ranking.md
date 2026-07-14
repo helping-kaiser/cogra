@@ -11,7 +11,7 @@ layer-agnostic — it applies to any graph where edges encode
 set of target nodes reachable through intermediate connections.
 
 > **Notation.** The symbols used here — `dim1`, `R`, `S`, `d(R)`,
-> `s_path`, `h`/`i`/`j`/`k`, `α`/`β`, `ε`, … — are defined in
+> `s_path`, `h`/`i`/`j`/`k`, `α`/`β`, `χ`, … — are defined in
 > [notation.md](notation.md).
 
 ---
@@ -22,7 +22,7 @@ A graph with:
 - a **root node** `U` — the perspective we rank from,
 - one or more layers of **intermediate nodes**,
 - a set of **target nodes** — what we're ranking,
-- two edge categories (per [graph-model.md §3](graph-model.md#3-edge-categories)):
+- two edge categories (per [graph-model.md §3](graph-model.md)):
   - **Actor edges**: created by actors. Carry a 2D tensor
     `(dim1, dim2)`, each in `[-1.0, +1.0]`.
     - `dim1` is **signed valence** (sentiment / approval / affirmation).
@@ -41,7 +41,7 @@ target nodes as seen from `U`.
 
 | Symbol | Name | Meaning |
 |--------|------|---------|
-| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `ε` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
+| `R` | Real number of graph hops | Path length (number of edges) from `U` to the target. Counts every edge in the traversable path (actor edges plus the traversable structural edges admitted by §3.5). `R` has no math-imposed upper bound — it is an **operational cost knob**: what bounds traversal in practice is the dust floor `χ` over path weight, not a hop cap (see §3.1); `d(R)` does the attenuation. |
 
 ---
 
@@ -67,7 +67,7 @@ walks (following an edge from its target back to its source) are
 not part of the feed-ranking algorithm. This is what makes the
 "outbound edges from the viewing user shape that user's feed"
 guarantee from
-[graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)
+[graph-model.md §7](graph-model.md)
 hold: propagation flows along the directionality the viewing
 user established. The inbound-edges-don't-affect-feeds rule is one
 consequence of forward-only traversal; the per-edge
@@ -129,12 +129,12 @@ explicit depth cap.
 **`R` is an operational cost knob, not a math-defining bound.**
 The path-product math (§3.3–§3.4) and per-target sums (§4) are
 well-defined for any `R`; nothing in the math caps it. What bounds
-the computation in practice is the dust floor `ε`: the data-fetch
+the computation in practice is the dust floor `χ`: the data-fetch
 boundary delivers a weight-bounded slice — nodes whose best-case
-path product still clears `ε` (§4.4, §9) — rather than a
+path product still clears `χ` (§4.4, §9) — rather than a
 hop-counted neighborhood, and within the slice path enumeration
 prunes on the same floor. If a denser graph makes the slice
-unaffordably large, the tuning levers are `ε` and `d(R)`'s decay
+unaffordably large, the tuning levers are `χ` and `d(R)`'s decay
 shape, not a math-side hop cap: a steeper `d(R)` attenuates
 distant paths enough that fetching them stops paying for itself.
 
@@ -142,7 +142,7 @@ State-bearing structural edges fall into two cases with
 different treatment:
 
 - **Junction approval pairs** (see
-  [graph-model.md §5](graph-model.md#5-junction-node-flows))
+  [graph-model.md §5](graph-model.md))
   act as **gates on traversability**: a path is traversable
   through such an edge only if its top-layer `dim1` is positive
   (the relationship is currently affirmed). Their values do not
@@ -160,7 +160,7 @@ by the same author. The desired intuition — "I liked Alice's last
 three posts, so show me more Alice" — is supported by an explicit
 follow gesture, not inferred from post-affinity, per
 stances-not-events
-([graph-model.md §3](graph-model.md#3-edge-categories)).
+([graph-model.md §3](graph-model.md)).
 A frontend may surface a follow-prompt after observed repeated
 engagement, but this is a UX nudge, not a graph mechanism.
 
@@ -338,7 +338,7 @@ anything the bot's outgoing edges reach. Rule 4 reduces "friend
 mentions actor" to a bounded pull-marketing surface — the
 mention surfaces the mentioned actor's authored content, but
 nothing else. The `:AUTHOR` sub-label
-([edges.md §3](edges.md#sub-category-labels)) is what makes the
+([edges.md §3](edges.md)) is what makes the
 single author-hop mechanical to enforce.
 
 #### Rule 5 — `:REFERENCES` carries 2D weights with a fanout-budget constraint
@@ -348,7 +348,7 @@ single author-hop mechanical to enforce.
 constraint (sum of `|dim1|` and sum of `|dim2|` each `≤ 1`
 across outbound `:REFERENCES` from a single content node,
 including defaults and author tuning) is defined in
-[edges.md §2 "Reference"](edges.md#reference); rule 5 here
+[edges.md §2 "Reference"](edges.md); rule 5 here
 states the feed-ranking consequence.
 
 **Why this works as a defense.** The river-delta-into-funnel
@@ -372,7 +372,7 @@ Shape B votes all target `Proposal` nodes
 (`junction → Proposal`); a junction never votes on another
 junction. Proposals are feed-rankable (§5.3), so this edge acts
 as a reactor edge into the Proposal — it carries the vote's
-`dim1` with `dim2 = 0` ([edges.md §2](edges.md#voting-shape-b))
+`dim1` with `dim2 = 0` ([edges.md §2](edges.md))
 and composes like any reactor. It terminates at the Proposal, a
 governance node, not a content funnel. The junction's other
 feed-relevant outbound, `:CLAIM` to its parent, is the
@@ -472,7 +472,7 @@ single live entry path into an arbitrary aggregate `h(t)`. The
 number of paths through a cluster of branching factor `b` grows as
 `b^(R−1)`; path contributions decay as `d(R) = 0.1^(R−1)`. Once
 `b ≥ 10`, the path-sum series diverges; whatever bound the fetch
-imposes (the dust floor `ε`, §9), achievable amplification of a
+imposes (the dust floor `χ`, §9), achievable amplification of a
 single entry edge runs to ~100× and beyond.
 
 So, as long as **any** path from `U` into the cluster has
@@ -481,7 +481,7 @@ dial `h(t)` to any value they choose — strongly positive, slightly
 positive, slightly negative, deeply negative, anywhere.
 
 This rules out any "near-zero jail" defined as an interval
-`[−ε, 0]`: bots tune their amplification to land at `−ε − δ` and
+`[−χ, 0]`: bots tune their amplification to land at `−χ − δ` and
 re-enter the visible feed directly below the positive section.
 
 #### Why exact `h(t) = 0` is special
@@ -538,14 +538,14 @@ reasonable bucket to push out of the default feed either way.
 #### Three layered defenses
 
 1. **Inbound edges don't affect feeds**
-   ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)). A cluster cannot insert
+   ([graph-model.md §7](graph-model.md)). A cluster cannot insert
    itself into `U`'s feed by creating outgoing edges *toward* `U`.
    Influence requires `U` (or a transitive contact) to have an
    outgoing edge *into* the cluster.
 
 2. **Non-engagement keeps clusters isolated.** Per the
    action-creates-edges rule
-   ([graph-model.md §3](graph-model.md#3-edge-categories)), no actor edge is created
+   ([graph-model.md §3](graph-model.md)), no actor edge is created
    without an explicit gesture. A user who simply ignores a cluster
    creates no path into it from their neighborhood.
 
@@ -635,7 +635,7 @@ edges. The mental model is that the severing community is
 **moving infinitely far away** from the severed node or cluster —
 not that the cluster is being "banned" from anywhere else. This
 follows directly from the no-push principle
-([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)): a community can only ever
+([graph-model.md §7](graph-model.md)): a community can only ever
 reduce its *own* paths.
 
 - **Internal interactions within the severed cluster continue
@@ -723,7 +723,7 @@ Three properties hold throughout:
 #### 3.8.1 Severance discovery — the inbound side
 
 Inbound edges do not affect the viewing user's feed
-([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), so the feed-pull
+([graph-model.md §7](graph-model.md)), so the feed-pull
 traversal does not include them. Discovering one's own
 severance state therefore requires an **explicit
 self-query** — the client (or a delegated miner) requests
@@ -806,7 +806,7 @@ A pure delta-funnel is the bot-bridge signature. The cluster
 behind that node has no other entry into `U`'s graph — exactly
 the topology of a bot cluster a real user has bridged into.
 Bots cannot manufacture outgoing edges from real users
-([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), so the cluster's only
+([graph-model.md §7](graph-model.md)), so the cluster's only
 entry points are the legitimate user-created edges. If only
 one such edge exists from `U`'s reachable subgraph (or
 cascading severance has reduced the cluster's open bridges to
@@ -936,7 +936,7 @@ The post inherits the graph's existing trust mechanisms:
 
 - **Bot-authored posts don't reach trusted feeds.** Per the
   inbound-edges-don't-affect-feeds rule
-  ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)), a bot's post reaches
+  ([graph-model.md §7](graph-model.md)), a bot's post reaches
   viewing user `V` only if `V` (or a transitive contact) has an
   outgoing edge into the bot's neighborhood. False accusations
   by bot accounts about innocent targets mostly stay in the
@@ -1303,28 +1303,28 @@ is trying to suppress.
 The per-target sums of §4.2 range over *all* paths from `U` to `t`. In a
 dense graph the path count grows as `b^(R−1)` (§3.6), so an unbounded
 enumeration is `O(b^R)` — uncomputable for high-degree hubs. The
-traversal is bounded by a **dust floor** `ε`: enumerate
+traversal is bounded by a **dust floor** `χ`: enumerate
 paths by branch-and-bound and prune a partial path as soon as its
-best-possible completed contribution falls below `ε`.
+best-possible completed contribution falls below `χ`.
 
 ```
 best_possible(prefix) = d(R_prefix) · ∏|dim| of the prefix's contributing edges
-prune the prefix when best_possible(prefix) < ε
+prune the prefix when best_possible(prefix) < χ
 ```
 
 Each further hop multiplies in a `|dim| ≤ 1` factor and `d(R)` decays
-geometrically, so a prefix already below `ε` cannot recover on any
+geometrically, so a prefix already below `χ` cannot recover on any
 completion — the prune is **exact up to the floor**, not a heuristic.
-Paths below `ε` contribute only dust to the sums; dropping them shifts
+Paths below `χ` contribute only dust to the sums; dropping them shifts
 each metric by less than the floor.
 
-`ε` does double duty under one formula: here it prunes **paths** during
+`χ` does double duty under one formula: here it prunes **paths** during
 exact enumeration, and in §9 it bounds the slice **node-set** by
 best-possible contribution per node. Exact enumeration is the sparse-regime
 method — where the above-floor path count is itself intractable, the metric
 is computed by message-passing instead (§4.5).
 
-**Where `ε` sits.** The per-path contribution to `h` falls ~15× per
+**Where `χ` sits.** The per-path contribution to `h` falls ~15× per
 hop — a `0.1` factor from `d(R)` and a `~0.6` factor per added edge.
 For a fresh path of moderate edges (`|dim| ≈ 0.6`, `f(Δt) = 1`) under
 the default `d(R)`, `h = H_s + H_c ≈ d(R) · 2 · 0.6^R` per path:
@@ -1339,7 +1339,7 @@ paths and removes only the individually-weak `R=4`+ tail. `1×10⁻³`
 itself is already too coarse — it kills `R=4` outright and eats the
 weaker `R=3` paths.
 
-`ε` is the **finest the compute budget allows**: ≈0 when the graph is
+`χ` is the **finest the compute budget allows**: ≈0 when the graph is
 sparse and `b^R` is cheap anyway, rising only under dense-graph load.
 Coarsening loses little when dense — weak distant signal is redundant
 (content buzzing at `R=3` is carried inward at full weight by the `R=2`
@@ -1348,21 +1348,21 @@ need the fine floor. Its network default is seeded at genesis on the
 `:Network` singleton's `dust_floor` property — `0` while the graph is
 sparse — and the network raises it via a baseline-bucket Proposal as
 density grows (see
-[network.md §3](network.md#feed-ranking-calibration)); `ε` is
+[network.md §3](network.md#feed-ranking-calibration)); `χ` is
 frontend-tunable alongside `d(R)` and `f(Δt)`.
 
 The same branch-and-bound floor bounds the economics attribution
 traversal, which walks these identical paths to split a campaign's pool
 ([economics.md §6.5](economics.md#65-computation--exact-streaming-oplayers-memory));
-there `ε` is set per campaign by author-aggregate payability and recorded
+there `χ` is set per campaign by author-aggregate payability and recorded
 for reproducibility.
 
 ### 4.5 Computing the metric — message-passing over the slice
 
 The §4.2 sums range over *all* paths to `t`, and §4.4's branch-and-bound
-prunes the individually-weak ones — but `ε` bounds the slice **node-set**
+prunes the individually-weak ones — but `χ` bounds the slice **node-set**
 (§9), not the **path count** between those nodes. In the mid-density regime —
-after small-world connectivity makes `R ≤ 3` most of the network, before `ε`
+after small-world connectivity makes `R ≤ 3` most of the network, before `χ`
 rises enough to prune `R = 3` — the above-floor path count is still
 `~b^(R−1)`, so explicit enumeration stays `O(b^R)`. The metric needs a
 formulation that does not enumerate, and it has one.
@@ -1419,7 +1419,7 @@ exactly what a memoryless message-pass cannot carry. The two regimes split
 on this, and the split is favorable:
 
 - **Sparse.** The above-floor path count is small (`b^R` is cheap, which is
-  why `ε ≈ 0` is affordable here). **Enumerate exactly** — §4.4's
+  why `χ ≈ 0` is affordable here). **Enumerate exactly** — §4.4's
   branch-and-bound, visited set intact — and the invariant holds with no
   approximation.
 - **Dense / mid-density.** Enumeration is `O(b^R)` and intractable. Compute
@@ -1448,8 +1448,8 @@ The regimes are complementary, both driven by the same `b^(R−1)`: the regime
 that *forces* the relaxation (dense) is the one where the artifact is
 negligible, and the regime where cycles could actually move a score (sparse,
 or a softened `d(R)` over strong reciprocal edges) is the one where exact
-enumeration is cheap. `ε` is a **compute-budget cutoff**, not the cycle
-defense — `d(R)` attenuates cycles regardless of where `ε` sits.
+enumeration is cheap. `χ` is a **compute-budget cutoff**, not the cycle
+defense — `d(R)` attenuates cycles regardless of where `χ` sits.
 
 ---
 
@@ -1489,7 +1489,7 @@ the score itself is negative; that's it.
 `h(t)` is exactly zero sort below the negatives, into
 nothingness. Exact zero is the only sort position immovable under
 unbounded internal cluster amplification — see §3.6 for the
-predicate and why an `[−ε, 0]` interval would not be defensible.
+predicate and why an `[−χ, 0]` interval would not be defensible.
 
 Cancellation-induced zeros (positive and negative path
 contributions summing to zero, no severance involved) land in
@@ -1813,13 +1813,13 @@ mechanism.
 the time-decay factor is applied only on the `B → t` hop. The
 `U → A` and `A → B` edges are full-weight regardless of when
 their top layer was added. This carries the **stances-not-events**
-rule ([graph-model.md §3](graph-model.md#3-edge-categories)) through to time:
+rule ([graph-model.md §3](graph-model.md)) through to time:
 silence on a relationship edge is not a partial revocation of the
 stance — the stance still holds until the actor changes it. A user
 who wants their feed to reflect a closer or more distant
 relationship updates the edge's top-layer dim values; the layer
 count itself does not amplify the contribution (see
-[graph-model.md §8](graph-model.md#8-append-only-history-edges)).
+[graph-model.md §8](graph-model.md)).
 
 **Post-node age has no separate decay.** It falls out
 automatically: the **authorship edge** is itself a normal actor
@@ -2065,13 +2065,13 @@ doesn't scale for hubs: in the late graph a high-degree node has
 `b ~ 1000` out-edges, and small-world connectivity makes a 2–3 hop
 slice already most of the network (§3.6). The backend bounds the
 slice the same way the ranking traversal bounds enumeration — by the
-dust floor `ε` (§4.4), walking edges by best-possible contribution
+dust floor `χ` (§4.4), walking edges by best-possible contribution
 and stopping at the floor rather than at a hop count. This keeps the
 slice tractable for hub users and drops exactly the weak-tie tail the
 ranking would discard anyway.
 
 This is a **max**, not a **sum**: slice membership asks only whether a node
-has *some* path above `ε` — its single best-possible path — so it is a
+has *some* path above `χ` — its single best-possible path — so it is a
 best-first (Dijkstra-style) frontier in `O(|E_slice| log |E_slice|)`, and
 **cycle-immune**, since any detour through a cycle multiplies in more
 `≤ 1` factors and is strictly worse than the simple path. The expensive

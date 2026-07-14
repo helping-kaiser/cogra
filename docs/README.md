@@ -24,7 +24,8 @@ span all three layers.
 
 ## Suggested reading order
 
-1. [`primitive/graph-model.md`](primitive/graph-model.md) for the
+1. [`primitive/substrate.md`](primitive/substrate.md) — then
+   [`primitive/graph-model.md`](primitive/graph-model.md) — for the
    foundation.
 2. Any [`instances/`](instances/) doc to see the primitive applied
    (chats and collectives are the most worked-out examples).
@@ -49,26 +50,29 @@ an `instances/` doc is a sign the mechanism belongs in
   PeerNetworks Layer 1 → Layer 2 contract (derived reference, hard
   facts only): boundary predicate, admission rules, kernel data
   model, published constants.
-- [graph-model](primitive/graph-model.md) — node categories, edge
-  categories, dimensions, append-only, junction approval pattern.
+- [substrate](primitive/substrate.md) — the L2-on-L1 flow: the
+  layer stack, the boundary, CoGra's stores, the gesture pattern,
+  the mechanism menu, system actors.
+- [substrate-map](primitive/substrate-map.md) — per-concept routing
+  table: where every CoGra concept lives on the substrate.
+- [graph-model](primitive/graph-model.md) — how graph state
+  behaves: record model, causal time, revision and folds,
+  directionality, mirror + overlay.
 - [governance](primitive/governance.md) — weighted role-based voting
   primitive: five components, two vote shapes, sticky outcomes,
   Proposal nodes, multi-candidate decisions.
-- [nodes](primitive/nodes.md) — full node catalog with per-type
-  graph-side properties.
-- [edges](primitive/edges.md) — full edge catalog plus the
-  relationship-label scheme at the graph layer.
-- [structural-edge-map](primitive/structural-edge-map.md) —
-  matrix + mermaid diagram of every structural edge in the
-  catalog; visual companion to [edges](primitive/edges.md).
+- [nodes](primitive/nodes.md) — node catalog: the L1 node types
+  CoGra's concepts resolve to, plus CoGra's overlay node types.
+- [edges](primitive/edges.md) — edge catalog: the L1 families
+  CoGra authors as gestures, plus the overlay edges.
 - [layers](primitive/layers.md) — append-only across edges, node
   properties, and Postgres-side display content; deletion policy.
 - [retention-archive](primitive/retention-archive.md) — universal
   disposition for redacted originals; per-row legal hold;
   statutory hard-delete on expiry; legal-admin access path.
 - [feed-ranking](primitive/feed-ranking.md) — ranking algorithm.
-- [notation](primitive/notation.md) — glossary of the
-  cross-cutting symbols used in the math docs.
+- [notation](primitive/notation.md) — the L1 / CoGra symbol split:
+  which ledger owns which glyph, plus the CoGra symbol index.
 - [authorship](primitive/authorship.md) — how authorship is derived
   from the earliest incoming edge.
 - [economics](primitive/economics.md) — pull-marketing campaigns:
