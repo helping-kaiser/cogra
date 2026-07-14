@@ -159,11 +159,11 @@ All graph state lives in edges. Edges are:
   dimensions are signed valence and connection-weight expressed
   toward a target; structural-edge dimensions are typically `0`
   or carry approval-pair state. See
-  [graph-model.md §3](../primitive/graph-model.md#3-edge-categories).
+  [graph-model.md §3](../primitive/graph-model.md).
 
 There are no per-action relationship types like FOLLOWS, LIKED, or CREATED.
 Actor edges share one `:ACTOR` label and structural edges have a small fixed
-sub-label set (see [edges.md §3](../primitive/edges.md#3-edge-labels-at-the-graph-layer)). Meaning derives
+sub-label set (see [edges.md §3](../primitive/edges.md)). Meaning derives
 from node types at each end and dimension values.
 
 ### 5. Writes are dual (content + topology)

@@ -10,7 +10,7 @@ On the outbound side a Collective looks like a
 edges toward other nodes, owns items (via ItemOwnership), is
 followed / liked / disliked, and appears in feeds and is ranked
 like any other actor. The full outgoing-edge catalog is in
-[edges.md §1 "Collective as actor"](../primitive/edges.md#collective-as-actor).
+[edges.md §1 "Collective as actor"](../primitive/edges.md).
 A Collective having sentiment toward another Collective, or
 toward a User, or vice versa, is perfectly normal — there is no
 asymmetry between Collective and User as edge endpoints.
@@ -47,7 +47,7 @@ gesture from exactly one **User**:
 
 Because the founder's CollectiveMember is the bootstrap — there
 is no prior membership to vote on it — the
-[junction lifecycle](../primitive/graph-model.md#5-junction-node-flows)
+[junction lifecycle](../primitive/graph-model.md)
 collapses to its `N = 0` special case: the founder's
 **Shape A self-claim** is the only required vote, **no
 admit-Proposal node is materialized**, and the system writes both
@@ -185,7 +185,7 @@ profile field — **`name_status`** (companion to the data sibling
 `name`), **`display_name`**, **`description`**, **`avatar`**,
 **`website_url`** — plus the node-level `moderation_status`
 cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+[nodes.md](../primitive/nodes.md);
 Collective-specific cascade in §9.
 
 - **`governance`** — a single layered map property holding the
@@ -205,7 +205,7 @@ Concrete property types and indexes live in
 ### CollectiveMember
 
 A `CollectiveMember` is a junction node (see
-[graph-model.md §2](../primitive/graph-model.md#2-node-categories))
+[graph-model.md §2](../primitive/graph-model.md))
 connecting **Collective to User or Collective**. A Collective
 can be a member of another Collective — subsidiaries, holdings,
 partner firms, coalitions of bands under a label, households as
@@ -238,7 +238,7 @@ weight changes — see §8).
 
 Role properties stay on the junction node rather than being
 encoded in edge dimensions — see
-[graph-model.md §2](../primitive/graph-model.md#2-node-categories)
+[graph-model.md §2](../primitive/graph-model.md)
 for the reasoning. Concrete property types and indexes live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
@@ -291,7 +291,7 @@ authorized member (§2).
 
 A Collective is an actor. Its outgoing **actor edges** are the
 full row in
-[edges.md §1 "Collective as actor"](../primitive/edges.md#collective-as-actor)
+[edges.md §1 "Collective as actor"](../primitive/edges.md)
 — Collective → User, Collective → Post, Collective → Item,
 Collective → Proposal, etc. The `(dim1, dim2)` values are set by
 the acting member under the act-as rule routed by §2.
@@ -303,36 +303,36 @@ It carries one outgoing **structural** edge type, system-created:
   the collective's approval policy for the new member's role is
   satisfied (§7). State transitions — member removal per §9 —
   append additional `dim1 < 0` layers per
-  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](../primitive/graph-model.md).
   See
-  [edges.md §2 "Approval completion"](../primitive/edges.md#approval-completion).
+  [edges.md §2 "Approval completion"](../primitive/edges.md).
 
 #### As target (incoming)
 
 A Collective receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — sentiment
+  [edges.md §1](../primitive/edges.md) — sentiment
   toward the collective and interest in its output, used by
   [feed-ranking](../primitive/feed-ranking.md) and the follow /
   interest surface.
 - **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
   side of the two-edge state pair, paired with the
   outgoing `Collective → CollectiveMember` above. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 - **`ChatMember / CollectiveMember / ItemOwnership → Collective`
   (`:BEARER`)** — identity-binding edges from junction nodes the
   Collective bears (chat memberships, sub-collective memberships,
   item ownerships). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
+  [edges.md §2 "Bearer binding"](../primitive/edges.md).
 - **`ChatMessage / Post / Comment → Collective` (`:REFERENCES`)**
   when a content node mentions or embeds the Collective. See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 - **`Proposal → Collective` (`:TARGETS`)** when a Proposal
   targets a property on the Collective — `name`, any per-field
   moderation-status property (§3), or any `governance.<action_key>`
   entry (§8). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting).
+  [edges.md §2 "Subject targeting"](../primitive/edges.md).
 
 ### 5.2 CollectiveMember
 
@@ -347,14 +347,14 @@ its bearer casts as a collective-eligible voter:
   collective's `Collective → CollectiveMember` approval edge
   (§5.1) once the collective's approval policy is satisfied
   (§7). See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md#containment--belonging).
+  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
 - **`CollectiveMember → User/Collective` (`:BEARER`)** —
   identity-binding edge written at junction creation, pointing
   at the actor (User or sub-Collective) the membership
   represents. Never re-pointed; the Shape A self-claim — the
   bearer's vote on the admit-Proposal — must originate
   from this actor (§7). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md#bearer-binding).
+  [edges.md §2 "Bearer binding"](../primitive/edges.md).
 - **`CollectiveMember → Proposal` (Shape B vote)** —
   collective-eligible vote on a Proposal. This is the sole vote
   edge a CollectiveMember casts: admission, removal, and role
@@ -362,7 +362,7 @@ its bearer casts as a collective-eligible voter:
   (§7, §9), alongside collective property changes and any other
   decision-type instance in the social contract (§8). `dim1`
   carries vote direction. See
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md#voting-shape-b)
+  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md)
   and
   [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
 
@@ -371,7 +371,7 @@ its bearer casts as a collective-eligible voter:
 A CollectiveMember receives:
 
 - **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md#1-actor-edges) — personal
+  [edges.md §1](../primitive/edges.md) — personal
   sentiment about the membership. The bearer's own **Shape A
   self-claim** is not among these: it is the
   `User/Collective → Proposal` edge authoring the membership's
@@ -381,11 +381,11 @@ A CollectiveMember receives:
   outgoing `CollectiveMember → Collective` claim above. Written
   by the admit-Proposal's cascade; state transitions — removal
   per §9 — append `dim1 < 0` layers on this edge per
-  [graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](../primitive/graph-model.md).
 - **`ChatMessage / Post / Comment → CollectiveMember`
   (`:REFERENCES`)** when a content node embeds the membership
   (e.g. spotlighting a co-op steward). See
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
 - **`Proposal → CollectiveMember` (`:TARGETS`)** when a
   Proposal targets a property on the CollectiveMember — `role`
   changes (hire / fire / promote per the social contract),
@@ -433,7 +433,7 @@ sentiment can land on a pending junction first. See
 
 CollectiveMember admission runs the **junction lifecycle**
 described in
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows):
+[graph-model.md §5](../primitive/graph-model.md):
 admission is a fresh terminal `Proposal` that `:TARGETS` the new
 CollectiveMember.
 
@@ -782,7 +782,7 @@ members** is one that has **dissolved** — every member has left
 or been removed and no one currently acts on the Collective's
 behalf. The history is preserved: past members come and go via
 state transitions on the structural edges per
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows),
+[graph-model.md §5](../primitive/graph-model.md),
 and the chain of CollectiveMembers remains visible on the
 graph. A dissolved Collective node persists; only its acting
 capacity is gone.
@@ -802,7 +802,7 @@ and incoming references all remain valid pointers.
 
 CollectiveMember nodes are also **never deleted**. Membership
 changes follow the primitive — see
-[graph-model.md §5](../primitive/graph-model.md#5-junction-node-flows)
+[graph-model.md §5](../primitive/graph-model.md)
 ("Revocation and state transitions"):
 
 - **Voluntary leave.** Self-determined, not a governance

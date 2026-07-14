@@ -769,7 +769,7 @@ LEFT JOIN collectives c ON p.author_type = 'collective' AND c.id = p.author_id;
 
 `comments.target_id` references either `posts.id`, `comments.id`,
 `chats.id`, `chat_messages.id`, or `items.id` — see
-[edges.md §2 Containment](../primitive/edges.md#2-structural-edges). A standard SQL
+[edges.md §2 Containment](../primitive/edges.md). A standard SQL
 foreign key can't point to five tables, so the table carries a
 `target_type` discriminator with a `CHECK` on the same five values
 the graph uses.

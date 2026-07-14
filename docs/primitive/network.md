@@ -205,7 +205,7 @@ rules. Defaults bootstrap; they are not fixed.
 
 The singleton carries **no per-field moderation properties**.
 Like junction nodes, it has no user-input fields to redact (see
-[nodes.md "Universal: per-field moderation status"](nodes.md#universal-per-field-moderation-status));
+[nodes.md "Universal: per-field moderation status"](nodes.md));
 the lifecycle consequence is §7.
 
 The singleton exists so platform-wide governance has a graph
@@ -251,11 +251,11 @@ The `:Network` node receives:
   pair). The
   amendment-rule pair that gates each property is named in §3.
   See
-  [edges.md §2 "Subject targeting"](edges.md#subject-targeting).
+  [edges.md §2 "Subject targeting"](edges.md).
 - **`ChatMessage / Post / Comment → Network` (`:REFERENCES`)**
   when a content node mentions or embeds the singleton (e.g. a
   Post discussing platform governance). See
-  [edges.md §2 "Reference"](edges.md#reference).
+  [edges.md §2 "Reference"](edges.md).
 
 Network-scope governance instances do **not** create new
 structural edges to the `:Network` node. Votes on Network-scope
@@ -263,7 +263,7 @@ Proposals — moderator role changes (§9), content moderation
 classifications, and singleton parameter amendments (§11) — use
 the existing `User → Proposal` **actor edge** as the Shape A
 vote (see
-[edges.md §1](edges.md#1-actor-edges) and
+[edges.md §1](edges.md) and
 [governance.md §3](governance.md#3-the-two-vote-shapes)). The
 Proposal itself targets the relevant subject (a User for role
 changes, the `:Network` singleton for parameter amendments);
@@ -400,7 +400,7 @@ consequences shared across all three:
   junction. Network membership has no separate gesture (§8), so
   this is the natural Shape A case: the vote IS the existing
   `User → Proposal` actor edge
-  ([edges.md §1](edges.md#1-actor-edges)) — no new structural
+  ([edges.md §1](edges.md)) — no new structural
   edge. The actor edge keeps its `(sentiment, importance)`
   meaning; the tally reads `sign(sentiment)`.
 - **Mod weight = member weight = 1; mod is a gate, not a

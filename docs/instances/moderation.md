@@ -9,7 +9,7 @@ classifications operate **per-field**; a node-level
 `moderation_status` cache reflects the max severity across the
 node's per-field statuses and is written by the cascade alongside
 the targeted field — see
-[nodes.md "Node-level cache"](../primitive/nodes.md#node-level-cache-moderation_status).
+[nodes.md "Node-level cache"](../primitive/nodes.md).
 **No privileged moderator role with extra weight** — mods exist as
 a gate, not as weighted voters.
 
@@ -48,7 +48,7 @@ In chat contexts, use "disavowal" — not "removal," "kick,"
 
 `sensitive` and `illegal` operate on the same per-field
 moderation-status property
-([nodes.md](../primitive/nodes.md#universal-per-field-moderation-status))
+([nodes.md](../primitive/nodes.md))
 and differ only in what the cascade writes. Both are authorized
 by the same governance instance below.
 
@@ -206,7 +206,7 @@ voting body for moderation Proposals.
   by the cascade, recomputes from those markers — a later
   `'sensitive'` Proposal on a different field cannot downgrade it
   while any redacted fields remain (see
-  [nodes.md](../primitive/nodes.md#node-level-cache-moderation_status)).
+  [nodes.md](../primitive/nodes.md)).
 
 The fractional bar `P` governs while the network is small (a real
 majority of active members is required to pass). Once membership
@@ -230,7 +230,7 @@ Per-field moderation-status properties exist on every
 user-input-bearing node — User, Collective, Post, Comment,
 ChatMessage, Chat, Item, Hashtag, and, for its single
 user-bearing field, Proposal — per
-[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md#universal-per-field-moderation-status)
+[nodes.md "Universal: per-field moderation status"](../primitive/nodes.md)
 and the per-label tables in
 [graph-data-model.md](../implementation/graph-data-model.md). Both
 `'sensitive'` and `'illegal'` Proposals target one of these
@@ -280,7 +280,7 @@ redacts all attachments under `target_property = 'attachments'`.
 - The economics carrier nodes (`Campaign`, `Settlement`,
   `Wallet`) and the `Network` singleton — graph properties and
   chain pointers only, nothing user-authored
-  ([nodes.md §6](../primitive/nodes.md#6-carrier-nodes)).
+  ([nodes.md §6](../primitive/nodes.md)).
 
 ### Encrypted message classification
 

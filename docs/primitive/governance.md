@@ -69,15 +69,15 @@ and only for illegal material with a visible trace.
 
 A vote edge needs a node endpoint — edges can't point at edges or
 at properties. Every subject is addressed the same way: a
-**Proposal** node (see [nodes.md §6](nodes.md#6-carrier-nodes)) is
+**Proposal** node (see [nodes.md §6](nodes.md)) is
 created as the subject, and votes point at the Proposal — never at
 the junction, edge, or target node whose state is being decided.
 The Proposal carries `target_property` and `proposed_value` as
 node properties, and a `:TARGETS` structural edge to the node
 whose state the outcome changes (see
-[edges.md §2](edges.md#2-structural-edges)). When the tally
+[edges.md §2](edges.md)). When the tally
 crosses threshold, a cascade (see
-[graph-model.md §5](graph-model.md#5-junction-node-flows)) writes
+[graph-model.md §5](graph-model.md)) writes
 the outcome; what it writes depends on the subject:
 
 - **Junction relationship** — the Proposal `:TARGETS` the
@@ -86,11 +86,11 @@ the outcome; what it writes depends on the subject:
   with `dim1 > 0`, a removal-Proposal appends a `dim1 < 0` layer
   on it). Every lifecycle event — admission, removal, role
   change — is its own fresh terminal Proposal; see
-  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](graph-model.md).
 - **Structural edge state** — the Proposal `:TARGETS` the edge's
   target node with `target_property = 'node'` (the whole-node
   sentinel, see
-  [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel));
+  [nodes.md "Whole-node targeting"](nodes.md));
   the cascade writes a new state layer on the edge — or, where
   the instance defines no outcome edge, the passed Proposal
   itself is the recorded stance (see §8).
@@ -159,7 +159,7 @@ naturally from role + ownership — e.g. a small collective with
 per-member negotiated weights, or a chat that wants to deviate
 from the role-weight table for a specific bearer. Declared
 nullable on each junction node — see
-[nodes.md §3](nodes.md#3-junction-nodes) for the cross-junction
+[nodes.md §3](nodes.md) for the cross-junction
 declaration, [chats.md §3.3](../instances/chats.md#33-chatmember)
 and [collectives.md](../instances/collectives.md) for the
 per-junction specs.
@@ -253,7 +253,7 @@ passing `decision:rotate_key` advancing `Chat.epoch`,
 the on-graph record is the Proposal's terminal `status`, as in
 the display-content case above.
 
-Cascades are allowed — see [graph-model.md §5](graph-model.md#5-junction-node-flows).
+Cascades are allowed — see [graph-model.md §5](graph-model.md).
 
 ### 2.6 Packaging rules on a node — the `governance` map convention
 
@@ -357,7 +357,7 @@ junction — every User is a member by virtue of being on the
 graph (see [network.md](network.md)) — so every member votes on
 Network-wide Proposals from their User node directly. The
 `User → Proposal` actor edge from
-[edges.md §1](edges.md#1-actor-edges) carries the vote: `dim1`
+[edges.md §1](edges.md) carries the vote: `dim1`
 is the voter's stance, the tally reads `sign(dim1)` for binary
 outcomes. See [proposal.md §4](../instances/proposal.md#4-edges).
 
@@ -394,7 +394,7 @@ member admitted by N approvers is not fired by one defection
 unless the removal threshold is itself `1`. Because every event
 is its own terminal Proposal with a fresh vote set, no vote
 outlives the event that gathered it. See
-[graph-model.md §5](graph-model.md#5-junction-node-flows).
+[graph-model.md §5](graph-model.md).
 
 ```
 ChatMember_Alice_ChatZ    -[dim1: +1, dim2: 0]-> Proposal_admit_Bob     (approve admission)
@@ -429,7 +429,7 @@ In all cases:
   personally dislike this content / person."
 - Eligibility loss handled naturally: if the junction goes
   inactive, the vote drops from the tally (edge stays in
-  history per §5 / [graph-model.md §8](graph-model.md#8-append-only-history-edges)).
+  history per §5 / [graph-model.md §8](graph-model.md)).
 
 ### Choosing between A and B
 
@@ -577,7 +577,7 @@ with threshold N" are the same primitive — there is no separate
   the same type. The junction stays pending until the threshold
   is reached; the Proposal's cascade then produces the approval
   edge. See
-  [graph-model.md §5](graph-model.md#5-junction-node-flows).
+  [graph-model.md §5](graph-model.md).
 - **Chat invitations.** A specific application of multi-sig
   junction approval: the chat's
   `governance['decision:add_member']` entry sets the threshold
@@ -1004,7 +1004,7 @@ community.
 
 ### Existing
 
-- **Junction approvals** — [graph-model.md §5](graph-model.md#5-junction-node-flows).
+- **Junction approvals** — [graph-model.md §5](graph-model.md).
   Shape A self-claim by the would-be bearer (their vote on the
   admit-Proposal) plus N Shape B approver votes from existing
   eligibility junctions of the same type for the same parent.
@@ -1016,7 +1016,7 @@ community.
   the `ChatMessage` with `target_property = 'node'`,
   `proposed_value = 'disavowed'` (the whole-node-targeting
   sentinel, see
-  [nodes.md "Whole-node targeting"](nodes.md#whole-node-targeting-the-node-sentinel)).
+  [nodes.md "Whole-node targeting"](nodes.md)).
   Quorum + weighted-majority threshold. No separate outcome
   edge — the chat's stance is the existence of the passed
   Proposal.

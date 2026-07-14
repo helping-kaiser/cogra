@@ -17,7 +17,7 @@ fact is the same: they hold the earliest-layer-1 incoming edge,
 the `:AUTHOR` label, and the rights and obligations that
 authorship carries. "Founder" is *not* a synonym — it is the
 CollectiveMember **role string** used inside a Collective (see
-[graph-model.md §5 "Bootstrap"](graph-model.md#5-junction-node-flows)
+[graph-model.md §5 "Bootstrap"](graph-model.md)
 and [collectives.md §1](../instances/collectives.md#1-creation)).
 
 The dimension values on the author's edge are just normal opinion
@@ -51,7 +51,7 @@ authored node.
 
 The authoring edge is the one actor edge that carries a sub-label
 distinct from `:ACTOR` — `:AUTHOR` — per
-[edges.md §3 "Sub-category labels"](edges.md#sub-category-labels).
+[edges.md §3 "Sub-category labels"](edges.md).
 The label is the system's mechanical implementation of the
 "earliest incoming edge" rule above: created at the same gesture as
 the authoring edge, permanent across re-layerings, and
@@ -73,7 +73,7 @@ authoring edge is the bearer's `User/Collective → junction` actor
 edge carrying the `:AUTHOR` sub-label, written in the same gesture as
 the bearer's self-claim — the act of claiming or approving the
 relationship (see
-[graph-model.md §5](graph-model.md#5-junction-node-flows)). Its
+[graph-model.md §5](graph-model.md)). Its
 dimensions are the bearer's stance on holding the membership or
 ownership, like any actor edge.
 
@@ -92,7 +92,7 @@ coexist and point opposite ways: `:BEARER` is the system's
 non-traversable identity binding, written at junction creation;
 `:AUTHOR` is the bearer's own traversable opinion edge, written when
 they self-claim. See
-[edges.md "Bearer binding"](edges.md#bearer-binding).
+[edges.md "Bearer binding"](edges.md).
 
 ## Proposal authorship
 
@@ -128,7 +128,7 @@ The founder does hold an `:AUTHOR` edge — to their own
 CollectiveMember junction, per
 [Junction authorship](#junction-authorship) — never to the
 Collective itself, and `:AUTHOR`'s target catalog in
-[edges.md §3](edges.md#sub-category-labels) accordingly omits
+[edges.md §3](edges.md) accordingly omits
 Collective.
 
 ## Caching

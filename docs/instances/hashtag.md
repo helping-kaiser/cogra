@@ -2,7 +2,7 @@
 
 The **Hashtag** is a topic node — a label that content nodes
 attach to via `:TAGGING`. It sits in its own category
-([nodes.md §5](../primitive/nodes.md#5-topic-nodes)) because its
+([nodes.md §5](../primitive/nodes.md)) because its
 identity is **content-addressed**. The UUID
 is `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` with a fixed
 project-scoped namespace, derived from the canonical name
@@ -84,10 +84,10 @@ display content (§3).
 - **`name_status`** — the per-field moderation-status
   property for `name`, the Hashtag's one and only user-input
   field. Universal mechanics in
-  [nodes.md](../primitive/nodes.md#universal-per-field-moderation-status);
+  [nodes.md](../primitive/nodes.md);
   Hashtag-specific cascade in §5 below.
 - **`moderation_status`** — node-level cache per
-  [nodes.md](../primitive/nodes.md#node-level-cache-moderation_status).
+  [nodes.md](../primitive/nodes.md).
   Mirrors `name_status` since `name` is the only user-input field.
 
 Concrete property types and indexes for these graph-side
@@ -129,7 +129,7 @@ A Hashtag is a pure target — no outgoing edges of any kind.
 **No actor edge to Hashtag.** A Hashtag receives no actor
 edges from anyone. The catalog has no `User → Hashtag` or
 `Collective → Hashtag` row
-([edges.md §1](../primitive/edges.md#1-actor-edges)); "liking
+([edges.md §1](../primitive/edges.md)); "liking
 a hashtag" is not a graph operation. A Hashtag is nonetheless
 a feed-ranking **target** — reached through the content tagged
 to it — *and* a discovery **filter** over that content; the
@@ -157,7 +157,7 @@ The structural edges that do land at a Hashtag:
   tagged with this hashtag.
 - **`Item → Hashtag` `:TAGGING`** when an Item is tagged
   with this hashtag. See
-  [edges.md §2 "Tagging"](../primitive/edges.md#tagging)
+  [edges.md §2 "Tagging"](../primitive/edges.md)
   for the full source catalog.
 - **`ChatMessage → Hashtag` `:REFERENCES`** when a chat
   message embeds the hashtag (e.g. surfacing a topic feed
@@ -165,14 +165,14 @@ The structural edges that do land at a Hashtag:
   edge: Post and Comment reach Hashtag via `:TAGGING`, and a
   single structural edge per (source, target) pair is the
   rule — see the Hashtag carve-out in
-  [edges.md §2 "Reference"](../primitive/edges.md#reference).
+  [edges.md §2 "Reference"](../primitive/edges.md).
   Unlike `:TAGGING`, this `:REFERENCES` carries a
   `(dim1, dim2)` tensor and contributes a factor to the
   ranking path — the one inbound edge through which a Hashtag
   accrues reference-borne signal.
 - **`Proposal → Hashtag` `:TARGETS`** when a moderation
   Proposal targets the Hashtag's `name_status` (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md#subject-targeting);
+  [edges.md §2 "Subject targeting"](../primitive/edges.md);
   cascade in §5.
 
 ---

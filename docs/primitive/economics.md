@@ -101,7 +101,7 @@ limitation to apologize for:
   `Content → Author` back-edge: that would amplify one real engagement
   across the author's unbounded, self-chosen outbound content set (a bot
   funnel) and break the inbound-edges-don't-affect-feeds invariant
-  ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
+  ([graph-model.md §7](graph-model.md)).
 
 ---
 
@@ -361,7 +361,7 @@ The `:INVITE` edge is a normal traversable actor edge from inviter to
 invited — the first edge into any non-genesis node, since the graph
 grows only by invitation. Its schema is defined in
 [invitations.md](invitations.md#the-invite-label) and
-[edges.md §3](edges.md#3-edge-labels-at-the-graph-layer).
+[edges.md §3](edges.md).
 
 ### 5.3 Reputation as additive enforcement
 
@@ -617,11 +617,11 @@ stack that covers them:
 
 1. **Forward-only traversal** — bots cannot manufacture the inbound
    edges that would give farmed content weight
-   ([graph-model.md §7](graph-model.md#7-directionality-inbound-edges-dont-affect-your-graph)).
+   ([graph-model.md §7](graph-model.md)).
 2. **The `:REFERENCES` fanout-budget** — per-source amplification is
    capped at the source's budget regardless of `N`, and reference-
    flooding is self-defeating (weight spreads to `1/N` and dust-prunes)
-   ([edges.md §2 "Reference"](edges.md#reference)).
+   ([edges.md §2 "Reference"](edges.md)).
 3. **Severance / zero-jail** — the actors closest to a farm cluster
    cascade `(0, 0)` onto the bridges feeding it; once every path to the
    funneled target carries a severance edge, its `h` is forced to exact
