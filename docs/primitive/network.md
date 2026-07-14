@@ -93,7 +93,7 @@ live in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
 > **Notation.** The decay parameters below map to the symbols
-> `d(R)`, `f(Δt)`, and `ε`; see [notation.md](notation.md).
+> `d(R)`, `f(Δt)`, and `χ`; see [notation.md](notation.md).
 
 Network-scope governance uses petition-style tally under a
 dual-quorum gate
@@ -158,14 +158,14 @@ at tally time is `min(P × |active|, K)`.
   per §4.1; this property sets the network default — the community's
   hint at a sensible direct-vs-indirect balance for new participants.
   Gating bucket: baseline.
-- **`dust_floor`** — the dust floor `ε` bounding both the
+- **`dust_floor`** — the dust floor `χ` bounding both the
   branch-and-bound path enumeration (see
   [feed-ranking.md §4.4](feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning))
   and the data-fetch slice node-set
   ([feed-ranking.md §9](feed-ranking.md#9-where-ranking-and-filtering-live)).
   The default seeded at genesis is `0`: the early graph is sparse,
   `b^R` is cheap, and full fidelity is kept. The property is amendable
-  so the network can raise `ε` as the graph densifies — the finest
+  so the network can raise `χ` as the graph densifies — the finest
   the compute budget allows. Frontend overrides
   remain available per §4.4; this property sets the network default.
   Gating bucket: baseline.

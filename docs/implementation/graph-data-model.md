@@ -484,7 +484,7 @@ targeting that property name. See
 | `active_threshold_days`           | Integer | A User counts as an "active member" if they have at least one outgoing actor edge with timestamp within the last N days. Default `30`. |
 | `time_decay_half_life_days`       | Integer | Half-life of the reactor-edge time-decay factor `f(Δt)` used by feed-ranking. Default `30`. Baseline-bucket amendable. See [feed-ranking.md §7.3](../primitive/feed-ranking.md#73-shape--exponential-30-day-half-life-frontend-tunable). |
 | `distance_decay_base`             | Float   | Base of the path distance-decay `d(R) = base^(R−1)` used by feed-ranking. Default `0.1` (each extra hop attenuates a path's contribution by 10×). Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.1](../primitive/feed-ranking.md#41-path-contribution-and-distance-decay). |
-| `dust_floor`                      | Float   | Dust floor `ε` bounding the branch-and-bound path enumeration in feed-ranking. Default `0` (full fidelity while the graph is sparse); raised as the graph densifies. Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.4](../primitive/feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning). |
+| `dust_floor`                      | Float   | Dust floor `χ` bounding the branch-and-bound path enumeration in feed-ranking. Default `0` (full fidelity while the graph is sparse); raised as the graph densifies. Baseline-bucket amendable; sets the network default, frontend overrides per [feed-ranking.md §4.4](../primitive/feed-ranking.md#44-dust-floor--branch-and-bound-path-pruning). |
 
 ```cypher
 CREATE CONSTRAINT ON (n:Network) ASSERT n.id IS UNIQUE;
