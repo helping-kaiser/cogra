@@ -96,10 +96,9 @@ CoGra runs a dual-database core, partitioned around the L1 seam:
   It may lag the L1 record; it must never diverge from it. Nothing
   in the mirror is authoritative.
 - **Memgraph — overlay.** CoGra's own graph: nodes and edges L1 has
-  no home for. Proposal machinery and vote edges, the `:Network`
-  singleton, collective-membership junctions, the reference
-  mirror. Overlay structure is CoGra's truth, governed by CoGra's
-  own rules.
+  no home for. Proposal tally state, the `:Network` singleton,
+  collective-membership junctions. Overlay structure is CoGra's
+  truth, governed by CoGra's own rules.
 - **Postgres.** Display content and operational metadata — what a
   record *shows*, never what it *is*. Graph topology never lives
   here.

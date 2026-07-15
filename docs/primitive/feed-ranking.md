@@ -14,7 +14,7 @@ certificates can reproduce every ranking claim it makes.
 > **Notation.** L1 symbols (`p_d`, `p_i`, `w̃(e)`, `ε`, `τ_e`,
 > `𝕋_e`, `≺`, `E_k`, `α_i`) are the interface's
 > ([layer1-interface.md §14](layer1-interface.md#14-symbol-ledger-layer-1-tagged-objects));
-> CoGra's own symbols (`S(u,c)`, `k`, `γ`, `χ`, `f(Δt)`, `ω`) are
+> CoGra's own symbols (`S(u,c)`, `k`, `γ`, `χ`, `f(Δt)`) are
 > indexed in [notation.md](notation.md).
 
 ---
@@ -45,19 +45,17 @@ certificates can reproduce every ranking claim it makes.
 The computation reads exactly:
 
 1. **Raw L1 edge records** — the `χ`-bounded slice (§11). The
-   ranker folds bundles and derives every weight itself.
+   ranker folds bundles and derives every weight itself; Reference
+   records are ordinary members of the slice.
 2. **Epoch certificates** — for each record's epoch age (§5.3).
-3. **Committed reference weights** — witnessed fields of carriers'
-   payload envelopes, traversed via the overlay reference mirror
-   (§4).
-4. **The viewer's read-side state** — seen-list, filters, frontend
+3. **The viewer's read-side state** — seen-list, filters, frontend
    overrides (§9).
-5. **The governed calibration parameters** (§12).
+4. **The governed calibration parameters** (§12).
 
 It never reads: standing `α_i`; the honor ledger (structurally
 unreachable — a membership-gated Postgres store outside every
-slice); CGT or Layer 0 state; payload bodies beyond the committed
-reference weights; or any session event — the graph carries
+slice); CGT or Layer 0 state; payload bodies; or any session
+event — the graph carries
 stances, not behavior
 ([graph-model.md §4](graph-model.md#4-stances-not-events)).
 
@@ -169,13 +167,18 @@ epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Participant, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Tag, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
+| Hyper-edges: Review, Send, Tag, Bid, Invitation, Reference | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
-| Overlay: reference mirror | Traversable at the committed weight `ω` (below). |
-| Overlay: Vote | Traversable as a **terminal hop** into a Proposal, when the viewer's scope includes Proposals (§9.3) — a friend's vote is how an important proposal surfaces at all. Never in the default feed (Proposals are opt-in) and never onward transit. Weighting mechanics pending the 0.22.0-dev interface revision. |
-| Overlay: `:TARGETS` | **Never traversed.** A vote is a stance on the proposal, never on its subject — signal stops at the Proposal node. |
 | Overlay: membership bindings | **Never traversed.** Junction structure, not stance. |
+
+Ballots need no row of their own: a vote is a payload-marked
+Opinion toward the proposal's anchor
+([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)),
+so a friend's vote surfaces a proposal exactly the way any stance
+surfaces content. A vote stays a stance on the proposal, never on
+its subject — the anchor's `(0,0)` subject Reference has `w̃ = 0`,
+so the stop is enforced by the math, not by a traversal rule.
 
 **Types are sinks.** A Type has no outgoing records, so every path
 reaching one ends there. Types rank as targets — topic pages —
@@ -184,24 +187,30 @@ and never transit; following a topic cannot amplify anything
 is a named feed (§10), with **Affinity** (Actor → Type) as the
 follow gesture.
 
-**References.** A carrier's quotes, embeds, and mentions live in
-its committed payload with an author-declared weight
-`ω ∈ [0, 1]` per reference; write validation enforces the fanout
-budget `Σω ≤ 1` per carrier
-([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
-The overlay mirror makes them traversable; a reference hop
-contributes the factor `ω` — magnitude only, no sign, no taint.
-The budget keeps a many-references carrier at the amplification of
-a single full reference; the disjoint extraction (§6) additionally
-forces every path through the same carrier to share it. A
-reference landing on a **person** continues exactly one hop into
-that person's own authored content and terminates — a mention is
-bounded pull marketing: it surfaces the mentioned person's work,
-never their whole outbound graph.
+**References.** A quote, embed, or mention is an L1 Reference —
+two ordinary legs
+([substrate-map.md §3](substrate-map.md#3-stances-and-revision)):
+the Marginal authorship leg into the citing artifact, and the
+**Full-tier citation leg** from artifact to target. Reference hops
+carry their real `w̃` and their real signs — balance and taint
+(§5.2) read them like any stance hop, so a hostile citation ranks
+its target down. Two census facts keep post-borne endorsement
+strong: the citation leg is Full tier (the transposed-Review
+design puts the strength on the citation itself), and a path
+entering the carrier from its author rides **Publish** (promoted,
+Full) rather than the Marginal authorship leg — at census ceilings
+a stance-bearing post about a thing ranks it at roughly half a
+direct stance. A mention is a Reference targeting the person's
+**Profile**: the path lands in the grounded-pair person fold and
+continues like any person transit, no special rule. The carrier
+and the mentioned person are each one node, so within one viewer's
+score at most one extracted path passes through either toward any
+target (§6) — per-viewer, virality never multiplies; a genuinely
+liked carrier counts once in each viewer who reaches it, and reach
+is paid where reach belongs, in the campaign sum (§6.4).
 
 **Simple by construction.** Every hop factor is below one
-(`γ ≤ 1`, `w̃ < 1`, and cost-free reference hops cannot form
-gaining cycles), so a strongest path never revisits a node — a
+(`γ ≤ 1`, `w̃ < 1`), so a strongest path never revisits a node — a
 detour only multiplies in more sub-unit factors. No separate
 simple-path invariant is needed, and nothing in this spec
 enumerates or samples walks (§6.1).
@@ -215,7 +224,7 @@ Each extracted path `π` (§6) contributes one signed, decayed term.
 ### 5.1 Magnitude
 
 ```
-m(π) = ∏ over hops of  γ · w̃(ē)        (reference hops: γ · ω)
+m(π) = ∏ over hops of  γ · w̃(ē)
 ```
 
 `γ ∈ (0, 1]` is CoGra's per-hop attenuation — a pure sorting
@@ -236,7 +245,7 @@ tainted(π) = true iff any hop has p̄_i < 0
              −1  otherwise
 ```
 
-Reference hops are sign-neutral. Live hops always have both signs
+Live hops always have both signs
 defined (a zero parameter is already inert, §3.1).
 
 - **Balance** is signed-graph transitivity of the directional
@@ -273,8 +282,7 @@ and `𝕋_e` is pure order. A three-year-old record carries the
 accumulated signal beats a friend's brand-new post forever. So the
 feed applies its own factor on each path's **terminal stance
 record** — the last hop into the candidate; for a folded bundle,
-its `≺`-newest member; for a reference hop, the carrier's
-committing record:
+its `≺`-newest member:
 
 ```
 f(Δt) = 0.5^(Δt / half-life)            (default shape)
@@ -375,13 +383,20 @@ density grows.
 ### 6.4 One computation, two consumers
 
 Feed ranking and campaign attribution are the **same extraction**:
-the feed sums the `k` signed path terms into `S(u,c)`; attribution
-splits each path's term among that path's distinct authors and
-pays from the campaign pool
-([economics.md §6](economics.md#6-attribution--per-path-shapley)).
+the feed sums the `k` signed path terms into `S(u,c)`; a campaign
+runs that identical per-viewer computation over its target crowd
+and integrates it — `V = Σ over eligible members u of
+w(u) · S(u, campaign)`, where the targeting weight `w(u)` is the
+viewer's own score of the campaign's named anchor(s). Each
+viewer's path terms split among that path's distinct authors
+(never the viewer, never the target author) and pay from the
+campaign pool ([economics.md](economics.md), which owns the
+metric: anchor sets, eligibility, settlement window, pricing).
 Because the path set is shared, the delta-funnel earnings ceiling
 and "netting to `(0,0)` kills earnings" hold for money exactly as
-they hold for visibility. The three CAN invariants
+they hold for visibility — per viewer a carrier earns once, and
+reach pays through the crowd sum, not through per-viewer
+multiplicity. The three CAN invariants
 ([layer1-interface.md §4.1](layer1-interface.md#41-mandatory-can-invariants-full-paper-only))
 bind the attribution side.
 
@@ -590,10 +605,10 @@ path can carry a score. Scope is a read-side filter:
 - **Opt-in:** Comments, Chats, Messages, Items, Offers, persons
   (Profiles), collectives, Types (topic pages), document anchor
   Content, and **Proposals** — reached through their L1 anchor
-  Content and terminally through Vote edges (§4); discoverability
-  of important proposals is a ranking concern like any other. Full
-  weighting mechanics are pending the 0.22.0-dev interface
-  revision.
+  Content; ballots are ordinary stance records toward the anchor
+  (§4), so proposal discoverability is the same math as everything
+  else, and the anchor's `(0,0)` subject Reference keeps proposal
+  traffic off the subject.
 - **Out of scope:** membership junctions (junction structure, not
   content); the network charter (instance configuration, nothing
   to rank); money has no graph presence to rank at all.

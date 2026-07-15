@@ -114,19 +114,20 @@ classification.
 A user reporting content **is** the act of creating a Proposal
 ([substrate-map.md §5](../primitive/substrate-map.md#5-governance-and-moderation)):
 
-- **Subject.** An overlay Proposal node with `:TARGETS` the
-  reported record's mirror, `proposed_value` = `'sensitive'` or
-  `'illegal'` plus the guidelines category. Its public trace is
-  the proposer's **L1 Content anchor** — the report's
-  justification rides that anchor as witnessed payload, and the
-  act debits the reporter's capacity like any other record. A
-  report is a priced, attributable, public act.
+- **Subject.** An overlay Proposal node carrying `proposed_value`
+  = `'sensitive'` or `'illegal'` plus the guidelines category. Its
+  public structure is L1: the proposer's **Content anchor** — the
+  report's justification rides it as witnessed payload — and the
+  anchor's `(0,0)` Reference to the reported node, which names the
+  subject on the shared graph. The act debits the reporter's
+  capacity like any other record. A report is a priced,
+  attributable, public act.
 - **First reporter** authors the Proposal — the system reads the
   authoring as their +1 vote.
-- **Subsequent reporters** cast votes on the existing Proposal
-  rather than authoring duplicates — overlay vote edges, no
-  further L1 act
-  ([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)).
+- **Subsequent reporters** cast ballots on the existing Proposal
+  rather than authoring duplicates — payload-marked Opinions
+  toward its anchor, each a priced act
+  ([governance.md](../primitive/governance.md)).
   A reporter who wants the *other* classification on the same
   content authors a separate Proposal — independent
   classifications, not duplicates.
@@ -174,8 +175,9 @@ eligibility-and-voting body for moderation Proposals.
   activity definition
   ([network.md §8](../primitive/network.md#8-membership-and-roles)).
 - **Vote weight:** 1 per voter — mod or member.
-- **Vote shape:** overlay vote edges on the Proposal; see
-  [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
+- **Vote shape:** L1 ballots — payload-marked Opinions toward the
+  Proposal's anchor; see
+  [governance.md](../primitive/governance.md).
 - **Tally:** petition-style — only positive votes contribute. See
   [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
 - **Dual-quorum bars** (governed properties of the `:Network`
