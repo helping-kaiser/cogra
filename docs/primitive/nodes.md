@@ -79,13 +79,14 @@ never sees them.
 
 | Overlay node | Role |
 |---|---|
-| **Proposal** | The governance carrier: proposed change, tally state, and role snapshot as layered properties; vote edges and `:TARGETS` attach to it. Its public trace on L1 is the anchor-and-finalization gesture pair ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). See [proposal.md](../instances/proposal.md). |
-| **Network** | Singleton per instance: the governed parameter home — feed-calibration parameters, subsidy knobs, eligibility definitions — as layered properties, `:TARGETS`-targetable. Anchored on L1 by a publisher-authored Content node (the network charter): every passed parameter change is finalized onto that anchor as a witnessed payload, so the parameter schedule is replayable from public records. The overlay singleton is the operational carrier the ranker and backend read. See [network.md](network.md). |
+| **Proposal** | The governance carrier: proposed change, tally state, and role snapshot as layered properties. The public relations all live on L1 via the proposal's Content anchor: the subject (the anchor's `(0,0)` Reference), the ballots (payload-marked Opinions toward the anchor), and the finalization edge ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). See [proposal.md](../instances/proposal.md). |
+| **Network** | Singleton per instance: the governed parameter home — feed-calibration parameters, subsidy knobs, eligibility definitions — as layered properties. Anchored on L1 by a publisher-authored Content node (the network charter): proposals about the Network target that anchor, and every passed parameter change is finalized onto it as a witnessed payload, so the parameter schedule is replayable from public records. The overlay singleton is the operational carrier the ranker and backend read. See [network.md](network.md). |
 | **CollectiveMember** | The membership junction of a Collective: role, `ownership_pct`, voting weight, and governance map as layered properties, plus Postgres display content. See [collectives.md](../instances/collectives.md). |
 
-A Proposal can target overlay nodes and L1-mirrored records alike —
-the uniform anchor shape is specified with the governance machinery
-([governance.md](governance.md)).
+Every proposal subject is an L1 node, named by the anchor's `(0,0)`
+Reference. Proposals about a member within a chat or collective
+point at the member's **Profile**; the scope and meaning are L2,
+carried in the anchor payload ([governance.md](governance.md)).
 
 The reward economy's records — campaigns, settlements, payout
 state — are not graph nodes on either side of the seam; they live

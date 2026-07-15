@@ -153,7 +153,7 @@ truth relationships
   help.
 - **The overlay** is CoGra's own truth: Proposal machinery, the
   `:Network` operational singleton, collective-membership
-  junctions, the reference mirror. Overlay nodes carry **layered
+  junctions. Overlay nodes carry **layered
   properties** — the append-only history pattern, applied where
   CoGra owns the store. Overlay state never enters any L1
   quantity.

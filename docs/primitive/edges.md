@@ -54,7 +54,7 @@ gesture.
 |---|---|---|
 | **Registration** | Actor → Profile | Account creation — the self-introduction anchoring the grounded pair. Parameters fixed at `(1, 1)`. Profile content (bio, avatar digests, …) rides the payload; profile edits are parallel Registrations updating payload only, never identity. |
 | **Publish** | Actor → Content | Creating a Post (and, for the publisher system actor, anchoring platform documents, proposal texts, and the network charter). `p_d` = the author's attachment; license qualifiers are structural metadata of this record. |
-| **Opinion** | Actor → any passive node | The universal stance gesture — sentiment toward a Post, Comment, Chat, Message, Item, Type, or Profile. Toward a Profile it is actor-directed: it enters endorsement flow only when vouch-positive (`p_d > 0 ∧ p_i > 0`). Also the system-actor finalization gesture at `(0,0)` + payload. |
+| **Opinion** | Actor → any passive node | The universal stance gesture — sentiment toward a Post, Comment, Chat, Message, Item, Type, or Profile. Toward a Profile it is actor-directed: it enters endorsement flow only when vouch-positive (`p_d > 0 ∧ p_i > 0`). Also the **ballot**: a payload-marked Opinion toward a proposal anchor, direction = stance sign ([governance.md](governance.md)); and the system-actor finalization gesture at `(0,0)` + payload. |
 | **Affinity** | Actor → Type | Following a topic — relevance, not verdict; never a standing vouch. |
 | **Participant** | Actor → Chat | The record the membership fold reads: member iff the actor's own ≺-latest {Participant, Leave} record toward the Chat is a Participant. In gated chats CoGra's fold policy recognizes a Participant only when backed by an approved Join Request or an Invitation. |
 | **Owner** | Actor → Item | Item genesis — listing a good mints the Item and roots its ownership thread. Title is sentiment-blind: an `(0, …)` Owner still anchors the thread. |
@@ -82,6 +82,7 @@ leg indices name leg *position*, never Layer 1 / Layer 2.)
 | **Bid** | Actor → Item → Offer | Transfer step 1: a buyer's offer, minting the Offer node. Signed generosity is stance-visible per leg. |
 | **Invitation** | Actor → Chat → Profile | Inviting someone to a chat — a public, priced vouch that the invitee fits. A proposal, not participation; the terminal leg targets the invitee's **Profile**, so its influence is zero at zero invitee standing. Revocable per author by a later De-invite. |
 | **De-invite** | Actor → Chat → Profile | The expulsion mark, and the withdrawal of one's own prior Invitation. As a kick it is authored by the executing chat authority with the authorizing Proposal's anchor cited in the payload — the membership fold recognizes only proposal-backed De-invites ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)). A control record: never vouches, in any quadrant. |
+| **Reference** | Actor → artifact → target | Quoting, embedding, or mentioning: the citing artifact (any passive node — usually the quoting Post or Comment) points at the cited target; nothing is minted, both endpoints pre-exist. A mention is a Reference whose target is the person's Profile — for positive, effortful stances that is a weak, priced vouch. Also the proposal-targeting gesture: the proposer authors a `(0,0)` Reference from the proposal anchor to its L1 target — routing-inert, never vouches, and makes the target relation replayable ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). |
 
 ---
 
@@ -109,10 +110,14 @@ L1 records; their semantics are CoGra's alone.
 
 | Overlay edge | Endpoints | Role |
 |---|---|---|
-| **Vote** | voter → Proposal | A cast vote, weighted per the voter's role state at tally time. Votes never touch L1. Shapes and eligibility: [governance.md](governance.md). |
-| **`:TARGETS`** | Proposal → target | Binds a Proposal to its subject — an overlay node or a mirrored L1 record. |
-| **Reference mirror** | carrier mirror → target mirror | Traversable mirror of the references committed in a carrier's payload (quote, embed, mention). The fanout budget is an L2 write-validation rule enforced when the mirror is written. |
 | **Membership binding** | CollectiveMember ↔ member / Collective mirrors | The edges seating a CollectiveMember junction between its member and its Collective. Shapes: [collectives.md](../instances/collectives.md). |
+
+Votes, references, and proposal targets are **not** overlay edges —
+all three live on L1 and reach Memgraph through the mirror like
+every other L1 record: a vote is a payload-marked ballot Opinion
+toward the proposal anchor (§2), a reference is a Reference record
+(§3), and a proposal's subject is the anchor's `(0,0)` Reference
+toward the subject node ([governance.md](governance.md)).
 
 Whether and how CoGra's feed traversal crosses overlay edges is
 feed policy, declared per edge type in
