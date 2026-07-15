@@ -2,12 +2,12 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.21.1-dev, July 2026), reproducing its binding surface for the purpose
+> v0.22.0-dev, July 2026), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.21.1-dev ships as two artifacts:
+**Derived file — hard facts only.** v0.22.0-dev ships as two artifacts:
 
 - **The Closure Scope Edition** (*Peer Network — Closure Scope Markdown
   Edition*) — the binding surface only: kernel record, the admission rules,
@@ -16,7 +16,7 @@
   (`tbl:symbols:boundary`) but their mechanisms are not specified there.
   Cited below by anchor label (`def:…`, `post:…`, `lem:…`, `rem:…`, `ax:…`,
   `subsec:…`); Layer 0 objects are cited through `PA-` labels.
-- **The full source** (`PeerNetwork_PeerNetwork_v0.21.1-dev_flat.tex`) — a
+- **The full source** (`PeerNetwork_PeerNetwork_v0.22.0-dev_flat.tex`) — a
   superset: additionally specifies the terminal defaults (Content Sorting,
   Advertiser Transport, Content Governance, the Compositional Attribution
   Calculus, bilateral bridge transport) with numbered theorems. Cited below
@@ -24,6 +24,14 @@
   material (§4.1–4.2, §10, §14.5 below).
 
 Proofs, motivation prose, and Layer 0 internals are omitted.
+
+**Pinned anchor set.** This file's citation set is pinned under the spec's
+anchor-stability contract: 261 distinct anchor names,
+`anchor_set_hash = 8357aa61a668e5a5dafba107d2b4f5740c544423382cc3a685e5ee20a34bef38`
+(sha256 over the sorted distinct anchor names joined by `\n`). Once
+registered with the Peer Team, renaming any pinned label is a breaking
+change on their side. Recompute and re-register the hash whenever a
+citation is added or removed.
 
 Purpose: the normative reference for rebasing CoGra as a Layer 2 on this
 substrate. Everything in this file is binding on a Layer 2 exactly as stated;
@@ -215,7 +223,8 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
 | parallel bundles, all other folds | — | the guild / user | L2 | reimplement freely |
 | membership fold $\mathrm{member}^{(k)}(a,C)$ | — | guild / chat policy | L2 | reimplement freely; policy defaults L1·by-product |
-| payload projection / witness | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per phase |
+| payload projection / bytes | — (terminal by postulate) | user / L2 service | L2 | reimplement freely; carriage custody per phase |
+| content witness | — (evidence; authenticates carriage) | any verifier | L1·verify | consume only; retained by Layer 1 across phases (`rem:graph:payload-custody-phases`) |
 | feed $S(u,c)$ | — | the user | L2 | **reimplement freely** |
 | reward $R_C$ | — | the guild | L2 | **reimplement freely** |
 | CAN $V(n)$, aggregation fn | — | the guild | L2 | **reimplement freely** (subject to the three invariants, §4.1) |
@@ -229,10 +238,13 @@ where they feed back, and read terminally by guilds downstream. The only
 straddlers are $\alpha_i$ and $\mathrm{owner}^{(k)}$; a third is a design
 error. (`subsec:symbols:boundary`)
 
-Note: the payload **projection / witness** is terminal by postulate — no
-closure quantity reads it (payload-state invariance), so it is **L2**, a
-carriage-custody concern per phase. Only the structural record it accompanies
-is L1·closure.
+Note: the payload **projection / bytes** are terminal by postulate — no
+closure quantity reads them (payload-state invariance), so they are **L2**, a
+carriage-custody concern per phase. The **content witness** is not: it is
+**L1·verify** evidence — no formula consumes it, but it authenticates carriage
+and is retained by Layer 1 across both deployment phases
+(`rem:graph:payload-custody-phases`); withholding it breaks auditability. Only
+the structural record is L1·closure.
 
 ---
 
@@ -316,9 +328,9 @@ $t(n) < 1$ is preserved.
 
 CAN composition-graph rules (PN full Def B.4): four rules; the
 Layer-1-issued Declaration component enters as a leaf
-keyed on source class; hyper-edge legs now include **Invitation L1/L2** (the
-Request legs are gone); the control-edge exclusion covers settlement
-(Withdraw, Rescind) **and conversational (Leave, De-invite L1/L2)** control
+keyed on source class; the Rule-2 hyper-edge families are Tag, Review, Send,
+Bid, Invitation, and Reference; the control-edge exclusion covers settlement
+(Withdraw, Rescind) and conversational (Leave, De-invite L1/L2) control
 records, with Rule 4 taking precedence over Rule 2 for De-invite legs.
 
 ### 4.2 Layer 1 obligations and guild obligations
@@ -757,10 +769,13 @@ determined at creation by the authoring actor (or, for the derived bond, by
 the certificate) and thereafter immutable.
 
 Passive out-degree (`lem:graph:passive-out-degree`): Content, Type, Comment,
-and Message source Tag and Review terminal legs; **Offer sources a Review leg
-only (no Tag)**; **Item additionally sources a Bid leg**; **Chat additionally
-sources Send, Invitation, and De-invite legs**; **Profile additionally sources
-the derived Reputation component**. Edges between actors may be asymmetric; each
+and Message source Tag and Review terminal legs; Offer sources Review legs but
+no Tag; Item additionally sources a Bid leg; Chat additionally sources Send,
+Invitation, and De-invite legs; Profile additionally sources the derived
+Reputation component; and every passive type sources Reference terminal legs —
+Reference's A-leg may source from any passive node (the universal citing
+artifact), contributing author-fixed Reference T-legs to every passive type.
+Edges between actors may be asymmetric; each
 edge carries independent sentiment parameters set unilaterally by its
 originating actor. Directedness is the condition that prevents unilateral
 influence fabrication (`rem:graph:asymmetry`,
@@ -1023,9 +1038,9 @@ Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`):
 
 | Tier | $\sqrt{\lvert\det(\boldsymbol{\Psi}^{[P]})\rvert}$ | Edge types |
 |---|---|---|
-| Full | $\approx 0.27$–$0.36$ | Opinion, Review L1, Self, Owner, Participant, Send L1 |
+| Full | $\approx 0.27$–$0.36$ | Opinion, Review L1, Reference L2, Self, Owner, Participant, Send L1 |
 | Half | $\approx 0.20$–$0.22$ | Bid, Accept, Ratify, Join Request, Invitation L1 |
-| Marginal | $\approx 0.07$–$0.08$ | Tag, Affinity, Review L2, Send L2, Invitation L2, control legs |
+| Marginal | $\approx 0.07$–$0.08$ | Tag, Affinity, Review L2, Reference L1, Send L2, Invitation L2, control legs |
 
 Self/Reputation is Full but standing-dependent
 ($\lvert\det\rvert^{1/2} \to 0$ as $\alpha \to 0$); supremum tracked by
@@ -1159,7 +1174,10 @@ belong in the semantic taxonomy. Target validity: Opinion → any passive;
 Affinity → Type; Tag → Taggable; Review → Reviewable; Owner/Bid → Ownable;
 Join Request, Invitation L1, Send L1, Leave, De-invite L1, Participant →
 Chat; Withdraw/Rescind → Offer; Invitation L2 → invitee's Profile;
-De-invite L2 → de-invitee's Profile.
+De-invite L2 → de-invitee's Profile. Reference is trait-independent on both
+ends: its A-leg sources from any passive citing artifact, and its T-leg
+targets any existing passive node, including a Profile, never an Actor
+(`rem:nodes:reference-target-class`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
@@ -1194,6 +1212,12 @@ Accept/Ratify → Actor; Withdraw/Rescind → Offer. A new actor with $B_i = 0$
 has $r_i = 0$, $\alpha_i = 0$, and a degenerate (inert) Self-edge bond;
 standing is ignition-then-amplification — endorsement cannot reach a
 zero-burn actor as standing (`rem:nodes:commitment-ignition`, §7.1).
+
+Reference incidence is universal and omitted from the per-node lists below:
+every passive node admits Reference L1 (from an Actor, when the node serves as
+the citing artifact) and Reference L2 (as the target of any passive artifact)
+in-edges, and sources an author-fixed Reference L2 leg toward any passive
+target (§9.6, `lem:graph:passive-out-degree`).
 
 Passive leaf nodes (`subsec:nodes:leaf-passive-nodes`):
 
@@ -1330,6 +1354,7 @@ leg position, never Layer 1 / Layer 2.
 | **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; L1: $p_d = u, p_i = f$; L2: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent Reputation component (zero at zero standing). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
 | **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the endorsement-flow projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; L1: $p_d = i, p_i = 1$; L2: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is now the protocol act (§8.1); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`) |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; L1: $p_d = f, p_i = e$; L2: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the semantics: a non-grounded target makes it parity-only and standing-inert, exactly like Tag; a Profile target makes the T-leg actor-directed and subject to the Vouch Predicate by type — a positive, effortful citation of a person is a weak, priced, authored vouch (§11.4); withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-target-class`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
@@ -1361,6 +1386,8 @@ where prose and the tables disagree, the tables govern**
 | Tag L2 | Epistemic | — | ∘ | • | ∘ | • | M | $\pm 1$ |
 | Review L1 | Tribal | — | • | • | • | • | F | $\pm 1$ |
 | Review L2 | Epistemic | — | ∘ | • | ∘ | • | M | $\pm 1$ |
+| Reference L1 | Epistemic | — | ∘ | • | ∘ | • | M | $\pm 1$ |
+| Reference L2 | Tribal | — | • | • | • | • | F | $\pm 1$ |
 | Bid L1/L2 | Economic | ↑ | • | • | • | • | H | $\pm 1$ |
 | Send L1 | Relational | ↑ | • | • | • | • | F | $\pm 1$ |
 | Send L2 | Minimal | — | ∘ | ∘ | ∘ | • | M | $\pm 1$ |
@@ -1382,6 +1409,11 @@ parity only; vouching is decided by the Vouch Predicate reading stance
 marginals — a $(-,-)$ Profile Opinion has $\epsilon = +1$ but does not enter
 endorsement flow.
 
+**Dispatch rule.** Leg identity is (family, leg-role), never tensor geometry:
+Reference L1 and Review L2, and Reference L2 and Review L1, are geometric
+twins by construction (the transpose); the normative census determines family
+and role (`rem:nodes:edge-census-normative`).
+
 **Payload census (`tbl:nodes:payload-census`):** every edge family has a
 payload controller and a canonical payload (e.g. Opinion/Affinity: author /
 rationale; Participant: author / participation note; Join Request: author /
@@ -1389,6 +1421,7 @@ request message; Invitation L1/L2: initiating actor / invitation message +
 canonical empty; Accept/Ratify: author / terms, receipt; Leave: author /
 parting reason; De-invite L1/L2: initiating actor / reason + canonical
 empty; Review L1/L2: initiating actor / reviewer metadata + comment body;
+Reference L1/L2: initiating actor / reference note + canonical empty;
 Bid L1/L2: initiating actor / bid terms + offer body; Send L1/L2:
 initiating actor / metadata + message body; Self Dec/Rep: **— / no payload
 projection** — the derived components are excluded from the census).
@@ -1635,7 +1668,15 @@ $W_{\mathrm{end}}(j \to i)^{(k)} = \tilde{w}(e_{\mathrm{Op}}) \cdot \tilde{w}(e_
 A relevance-positive Invitation creates a weak conversational conduit
 $j \to \text{Chat} \to \text{Profile}_b \to \text{Actor}_b$ — triply damped,
 zero at zero invitee standing, suppressed by same-author De-invite
-(`rem:epoch:invitation-conduit`).
+(`rem:epoch:invitation-conduit`). A relevance-positive Reference whose T-leg
+targets a Profile opens the same class of weak, priced conduit
+($\text{Actor}_j \to \text{Artifact} \to \text{Profile}_i \to \text{Actor}_i$)
+through the target's Reputation bond, under identical damping — the Marginal
+A-leg throttles it below a direct Opinion, the terminal Reputation hop is zero
+at zero standing, and the path is hull-bounded. Its withdrawal channel is
+per-leg net stance rather than revocation; multiple References to one Profile
+do not stack (max-product), and self-reference is inert because the standing
+sum excludes $j = i$ (`rem:nodes:reference-target-class`).
 
 **Double Cover BFS State (`def:epoch:double-cover-bfs-state`).** Each node
 $v$ carries $W^+(v)$ (max product over positive-parity paths from source
@@ -1977,7 +2018,7 @@ effective floor is derived by the safety clamp (`rem:epoch:dial-scope`).
 | `settles`-pointer | recognition clauses (i)–(ii) | identity-key resolution |
 | ownership thread | title certificate; recognition clause (iii) | title as straddler |
 | $\mathrm{owner}^{(k)}$ | recognition clause (iii) | terminal routing/display read it downstream |
-| payload structural witness | edge integrity; payload-state invariance | bytes never read by Layer 1 |
+| payload structural witness | edge integrity; payload-state invariance | (L1·verify) — retained by Layer 1 across phases; bytes never read by Layer 1 |
 | terminal complement | — | feed, reward, attribution, bridge transport, identity association, payload rendering, licensing, membership policy: named only in `tbl:symbols:boundary` |
 
 ---
@@ -1998,8 +2039,11 @@ time-locked supply auditability) reproduced by their own owners.
   author, parameters, domain, temporal attributes, **payload witness**, and
   the fields needed to recompute determinant magnitude, determinant sign,
   and damped weight — is available to any participant at any time without
-  access control. Full payload bytes are available only while in full
-  projection; Layer-1 verification never requires them.
+  access control. Availability applies to the structural record and the
+  retained payload residue — the witness
+  (`rem:graph:payload-custody-phases`); full payload bytes are available
+  only while in full projection, and Layer-1 verification never requires
+  them.
 - **Epoch Edge-Set Agreement
   (`subsec:deployment:epoch-edge-set-agreement`).** At each boundary the
   operator publishes a causally closed, monotone edge set $E_k$; any
@@ -2205,6 +2249,11 @@ Word register (`subsec:symbols:word-collisions`):
   maturity is a cycle/lead concept, cited only through `PA-` labels.
 - **cycle vs. epoch** — Layer 0 has cycles; Layer 1 has epochs. Never swap
   the words.
+- **Reference vs. referenced** — the edge family (capitalized; Review
+  transposed, mints nothing, `edge:nodes:hyper-reference`) vs. the identifier
+  status "referenced" ($v \in V$, `def:graph:anchoring`) vs. "reference
+  band/parameters" in calibration prose. Capitalization and context
+  distinguish; never merge.
 - **payload bytes vs. content meaning** — magnitude is Layer 1's; meaning is
   terminal. Layer 1 bounds the byte length and carries the bytes unread;
   payload bytes and rendering are terminal.
