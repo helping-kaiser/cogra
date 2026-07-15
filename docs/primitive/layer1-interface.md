@@ -25,6 +25,14 @@
 
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
+**Pinned anchor set.** This file's citation set is pinned under the spec's
+anchor-stability contract: 261 distinct anchor names,
+`anchor_set_hash = 8357aa61a668e5a5dafba107d2b4f5740c544423382cc3a685e5ee20a34bef38`
+(sha256 over the sorted distinct anchor names joined by `\n`). Once
+registered with the Peer Team, renaming any pinned label is a breaking
+change on their side. Recompute and re-register the hash whenever a
+citation is added or removed.
+
 Purpose: the normative reference for rebasing CoGra as a Layer 2 on this
 substrate. Everything in this file is binding on a Layer 2 exactly as stated;
 anything not in the feedback closure below is a Layer 2's to reimplement
