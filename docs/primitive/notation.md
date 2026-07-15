@@ -49,7 +49,6 @@ Feed-calibration parameters are governed properties of the
 | `γ` | Per-hop attenuation on path products (default `1`). | [feed-ranking.md](feed-ranking.md) |
 | `χ` | The dust floor — the contribution floor bounding feed traversal; a compute cutoff. | [feed-ranking.md](feed-ranking.md) |
 | `f(Δt)` | Recency factor on a path's terminal stance record; `Δt` is epoch age. | [feed-ranking.md](feed-ranking.md) |
-| `ω` | Author-declared weight of one payload-committed reference, in `[0, 1]`; fanout budget `Σω ≤ 1` per carrier. | [feed-ranking.md](feed-ranking.md) |
 | `S(u,c)` | CoGra's feed score — viewer `u`, candidate `c` (CoGra's published reimplementation of the terminal default). | [feed-ranking.md](feed-ranking.md) |
 | `R_C` | CoGra's campaign reward share. | [economics.md](economics.md) |
 

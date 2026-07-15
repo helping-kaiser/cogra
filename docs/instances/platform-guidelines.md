@@ -136,9 +136,9 @@ is anchored as a platform document (witnessed payload).
 **Eligibility.** All active Network members
 ([network.md](../primitive/network.md)).
 
-**Vote shape.** Overlay vote edges on the Proposal, same as
-moderation Proposals
-([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)).
+**Vote shape.** L1 ballots — payload-marked Opinions toward the
+Proposal's anchor — same as moderation Proposals
+([governance.md](../primitive/governance.md)).
 
 **Tally.** Petition-style — only positive votes contribute. See
 [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
