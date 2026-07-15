@@ -77,7 +77,7 @@ The inviter's edge `Inviter → New Actor` controls how the new
 actor's eventual content traverses the inviter's network. Positive
 values let their posts surface in the inviter's friends' feeds via
 the path mechanics in
-[feed-ranking.md §3](feed-ranking.md#3-per-edge-composition-along-a-path); weaker values are a softer
+[feed-ranking.md §3](feed-ranking.md#3-the-per-edge-primitive-and-the-fold); weaker values are a softer
 introduction. The inviter is signaling to their network how
 strongly to weight this new person's voice. This influences the new
 actor's **early popularity** in the graph.
@@ -106,7 +106,7 @@ choices for the invitee's outbound edge:
   Collective they care about, the second edge dominates the feed: the
   inviter-edge path products have positive sentiment chains and
   negative interest chains, which tend to cancel under the sum
-  collapser in [feed-ranking.md §4.3](feed-ranking.md#43-tuple-collapse-to-scalar).
+  collapser in [feed-ranking.md §4.3](feed-ranking.md#5-per-path-quantities).
 
 The broader lesson: invitation-edge values encode a relationship
 stance the math respects until the edge gets a new layer. Picking
@@ -168,7 +168,7 @@ multi-use links are necessary for high-reach onboarding —
 communities and influencers can't onboard their audiences
 otherwise — and the abuse is self-correcting: the inviter's
 network can sever the bridge through cascading severance
-([feed-ranking.md §3.6–§3.7](feed-ranking.md#36-bot-resistance-via-the-0-0-severance-edge)),
+([feed-ranking.md §3.6–§3.7](feed-ranking.md#8-severance-discovery-redemption)),
 at which point the entire cluster reachable through that bridge
 is zero-jailed. Inviters learn to be more selective with where
 they post their links.
