@@ -173,7 +173,8 @@ epoch age.
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
 | Overlay: reference mirror | Traversable at the committed weight `ω` (below). |
-| Overlay: Vote, `:TARGETS` | **Never traversed.** Governance reference, not relevance — a vote is a stance on the proposal, not on its subject. |
+| Overlay: Vote | Traversable as a **terminal hop** into a Proposal, when the viewer's scope includes Proposals (§9.3) — a friend's vote is how an important proposal surfaces at all. Never in the default feed (Proposals are opt-in) and never onward transit. Weighting mechanics pending the 0.22.0-dev interface revision. |
+| Overlay: `:TARGETS` | **Never traversed.** A vote is a stance on the proposal, never on its subject — signal stops at the Proposal node. |
 | Overlay: membership bindings | **Never traversed.** Junction structure, not stance. |
 
 **Types are sinks.** A Type has no outgoing records, so every path
@@ -406,9 +407,14 @@ the final fallback is recency — newest terminal record first.
 Global statistics enter here and only here, never the primary
 rank.
 
-**Zero-jail.** The predicate: every path from `u` to `t` crosses a
-`(0,0)`-netted bundle. Then no live path exists and `t` is absent
-from `u`'s feed entirely — and the same absence propagates through
+**Zero-jail.** The predicate: **every path from `u` to `t`
+crosses a `(0,0)`-netted bundle** — not one traversable path
+remains. You put a target there by zeroing: authoring
+counter-records until your own bundle toward them nets to `(0,0)`
+(§8.1). Each viewer's zeroing kills the paths through their own
+records; the jail closes when the last live entry is netted — a
+lone unsevered bridge is the midway state §8.3's cascade
+finishes. Jailed means absent, and the absence propagates through
 every consumer of the shared computation:
 
 - no feed presence, for every viewer whose paths all cross netted
@@ -582,12 +588,15 @@ path can carry a score. Scope is a read-side filter:
 
 - **Default feed: Posts only.**
 - **Opt-in:** Comments, Chats, Messages, Items, Offers, persons
-  (Profiles), collectives, Types (topic pages), and
-  document/proposal anchor Content.
-- **Out of scope:** overlay objects — Proposal nodes, the
-  `:Network` singleton, membership junctions — are governance
-  surfaces, not feed candidates; money has no graph presence to
-  rank at all.
+  (Profiles), collectives, Types (topic pages), document anchor
+  Content, and **Proposals** — reached through their L1 anchor
+  Content and terminally through Vote edges (§4); discoverability
+  of important proposals is a ranking concern like any other. Full
+  weighting mechanics are pending the 0.22.0-dev interface
+  revision.
+- **Out of scope:** membership junctions (junction structure, not
+  content); the network charter (instance configuration, nothing
+  to rank); money has no graph presence to rank at all.
 
 ### 9.4 The already-seen filter
 
@@ -672,9 +681,12 @@ centrally nor deserves central trust. The split:
 
 ## 12. Calibration parameters
 
-Network-level defaults are governed properties of the `:Network`
-overlay singleton
-([network.md](network.md#feed-ranking-calibration)) — set by the
+Network-level defaults are governed parameters of the network
+charter — an L1 Content node anchored by the publisher system
+actor, with passed changes finalized onto it as witnessed payloads
+(newest finalization per parameter wins) and mirrored into the
+`:Network` carrier node the ranker reads
+([network.md](network.md#feed-ranking-calibration)). Set by the
 genesis operator, migrating to community governance; numbers live
 there, not here. Frontend overrides layer view-side on top: they
 change one viewer's sort, never the published computation.
