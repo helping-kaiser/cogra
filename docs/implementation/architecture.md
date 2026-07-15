@@ -386,7 +386,7 @@ A personalized feed splits across two locations: the central backend
 serves the **data**; the viewing user's device computes the **ranking**.
 This split is structural, not an optimization — per-actor ranking
 cannot run on the central hot path at any real user count. See
-[feed-ranking.md §9](../primitive/feed-ranking.md#9-where-ranking-and-filtering-live) for the full
+[feed-ranking.md §9](../primitive/feed-ranking.md#11-where-ranking-runs) for the full
 reasoning and the math/deployment separation.
 
 ```

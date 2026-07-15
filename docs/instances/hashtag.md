@@ -134,7 +134,7 @@ a hashtag" is not a graph operation. A Hashtag is nonetheless
 a feed-ranking **target** — reached through the content tagged
 to it — *and* a discovery **filter** over that content; the
 two uses are independent
-([feed-ranking.md §5.3](../primitive/feed-ranking.md#53-what-is-rankable)).
+([feed-ranking.md §5.3](../primitive/feed-ranking.md#93-what-is-rankable)).
 
 **Feed-ranking mechanics.** `:TAGGING` is **traversable but
 non-contributing**: a ranking path reaches a Hashtag through
@@ -143,7 +143,7 @@ it, the hop adding one step of `d(R)` decay and no
 outgoing edges, so any path that reaches one terminates there —
 it is a sink, ranking *into* it amplifies nothing downstream,
 and it needs no traversal restriction
-([feed-ranking.md §3.1](../primitive/feed-ranking.md#31-which-edges-contribute-factors)).
+([feed-ranking.md §3.1](../primitive/feed-ranking.md#4-the-path-set)).
 The Hashtag is then ranked by `h` like any node. The
 `ChatMessage → Hashtag` `:REFERENCES` edge below is the one
 inbound edge that *does* contribute a factor — it carries a
@@ -246,7 +246,7 @@ content node with its `name` field gutted, not a removed one.
   order, with what decay — lives in
   [feed-ranking.md](../primitive/feed-ranking.md). The
   bot-defense hashtag worked example in
-  [feed-ranking.md §3.8.3](../primitive/feed-ranking.md#383-community-bot-defense-posts--supplementary-evidence)
+  [feed-ranking.md §3.8.3](../primitive/feed-ranking.md#86-community-evidence)
   is a usage convention layered on top of the primitive
   this doc describes, not part of the primitive itself.
 - **Not the moderation primitive.** The Proposal mechanism,

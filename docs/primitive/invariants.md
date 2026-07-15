@@ -105,18 +105,18 @@ most useful one.
 - [Ranking comes only from the graph](../implementation/architecture.md#3-all-ranking-comes-from-the-graph)
   — no materialized counters, popularity scores, or ML signals;
   ranking is computed at query time from the edge tensor.
-- [Kill rule: a `0` in either dim zeros the path product](feed-ranking.md#32-zero-handling--kill-rule)
+- [Kill rule: a `0` in either dim zeros the path product](feed-ranking.md#31-the-damped-weight)
   — zeros are real multiplicative factors, never skipped; once a
   dim is zeroed on a path it cannot be revived downstream.
-- [Feed-ranking traversal is forward-only](feed-ranking.md#3-per-edge-composition-along-a-path)
+- [Feed-ranking traversal is forward-only](feed-ranking.md#3-the-per-edge-primitive-and-the-fold)
   — paths follow edges in their stored direction; inbound-edges-
   don't-affect-feeds is one consequence, [the §3.5 per-edge
-  restrictions](feed-ranking.md#35-traversal-restrictions) are the
+  restrictions](feed-ranking.md#4-the-path-set) are the
   rest.
-- [Feed-ranking traversal is vertex-simple](feed-ranking.md#3-per-edge-composition-along-a-path)
+- [Feed-ranking traversal is vertex-simple](feed-ranking.md#3-the-per-edge-primitive-and-the-fold)
   — no node appears more than once on a path. Exact in the sparse
   enumeration regime via a per-path visited set; in the dense
-  regime, [§4.5](feed-ranking.md#45-computing-the-metric--message-passing-over-the-slice)
+  regime, [§4.5](feed-ranking.md#6-the-score--greedy-disjoint-sum)
   computes the metric by message-passing under a memory-1
   (non-backtracking) relaxation that still blocks the
   bidirectional 2-cycles the invariant exists to remove.
@@ -130,7 +130,7 @@ most useful one.
   Hashtag is a feed-ranking target reached through its tagged
   content and, having no outgoing edges, a sink that amplifies
   nothing downstream.
-- [The `bot-defense` Hashtag name is reserved](feed-ranking.md#383-community-bot-defense-posts--supplementary-evidence)
+- [The `bot-defense` Hashtag name is reserved](feed-ranking.md#86-community-evidence)
   — seeded by the bootstrap; its semantic role is
   platform-defined, not emergent from first use.
 

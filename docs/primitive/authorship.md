@@ -58,7 +58,7 @@ the authoring edge, permanent across re-layerings, and
 queryable in a single label scan.
 
 `:AUTHOR` is also load-bearing for the feed-ranking author-hop
-traversal rule ([feed-ranking.md §3.5](feed-ranking.md#35-traversal-restrictions)),
+traversal rule ([feed-ranking.md §3.5](feed-ranking.md#4-the-path-set)),
 which terminates `:REFERENCES`-to-actor paths after exactly one
 outgoing `:AUTHOR` hop.
 
