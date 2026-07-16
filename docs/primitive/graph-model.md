@@ -105,17 +105,16 @@ events:
 - bookmarking — private per-user state, off-graph by design.
 
 The frontend keeps session data local; nothing becomes graph state
-unless the actor gestures in response. What was once enforced by
-ethos alone is now also enforced by structure: authoring is
-backend-mediated and every act costs its author θ — CoGra's
-backend has no write path for implicit signals, and a frontend
-that converted views into records would drain its users' capacity
-for noise.
+unless the actor gestures in response. The rule is enforced by
+structure, not ethos alone: authoring is backend-mediated and
+every act costs its author θ — CoGra's backend has no write path
+for implicit signals, and a frontend that converted views into
+records would drain its users' capacity for noise.
 
-Why this matters is unchanged: the graph is not a surveillance
-log; every record corresponds to something its author consciously
-did; bots get no invisible channel — influence requires visible,
-priced, attributable records.
+The stakes: the graph is not a surveillance log; every record
+corresponds to something its author consciously did; bots get no
+invisible channel — influence requires visible, priced,
+attributable records.
 
 ---
 
@@ -135,9 +134,8 @@ Two influence channels exist, and they must never be conflated:
   write gate and nothing else. It is a write-admission scalar:
   who may act, never what anyone sees.
 
-The old one-liner survives with its scope made precise: inbound
-records never shape your feed; they can vouch you through the
-gate.
+In one line: inbound records never shape your feed; they can
+vouch you through the gate.
 
 ---
 
