@@ -44,10 +44,14 @@ mechanism itself is the same one-way transition either way.
   removal drops every record in the bundle to its reduced
   projection, current version and prior revisions alike.
 - **The Postgres profile is tombstoned** — a new profile version
-  row with the identity fields cleared and `redaction_reason`
-  set; `users.username` is replaced in place with the unique
-  redacted form below (the one sanctioned in-place write on the
-  identity row). The prior version is archived per §3.
+  row with the identity fields cleared, `redaction_reason` set,
+  and the unique redacted form below as its username value.
+  Nothing is overwritten in place: the redaction is one more
+  version layer marking when it happened, and the prior versions'
+  values are removed and archived per §3. `users.username` is a
+  derived projection of the current version
+  ([layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes):
+  derived caches do not layer).
 - **The avatar and cover assets** in blob storage are removed and
   archived; their digests remain committed in the (now removed)
   witnessed payloads.
@@ -240,9 +244,11 @@ differ in authorization, scope, and archive treatment:
 The two paths run independently. A user under active moderation
 can still request account deletion. Conversely, illegal-content
 classification on a redacted user's content proceeds normally —
-the content is in the retention archive, and a moderator acting
-on a court order can request removal of the archive copy as well,
-satisfying the destruction obligation that overrides ordinary
+the content is in the retention archive, and destroying the
+archive copy under a court order is `legal_admin`'s job, never a
+moderator's — moderation has no authority over the archive
+([retention-archive.md §4](../primitive/retention-archive.md#4-access-path)).
+That destruction satisfies the obligation that overrides ordinary
 retention for illegal content specifically.
 
 ## What this doc is not

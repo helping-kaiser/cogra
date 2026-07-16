@@ -137,7 +137,7 @@ and only for operational state, not history:
 
 - `user_view_log` — per-viewer seen-list, operational filter
   state rather than history, compacted on a 1-year default per
-  [feed-ranking.md §8.5](feed-ranking.md#94-the-already-seen-filter).
+  [feed-ranking.md §9.4](feed-ranking.md#94-the-already-seen-filter).
 - `user_bookmarks` — per-viewer bookmark list; removing a
   bookmark is a genuine row delete.
 - `user_hidden_actors` — per-viewer hide list; unhiding is a
@@ -236,8 +236,10 @@ action:
   marking the removal, `redaction_reason` set. The tombstone
   itself stays.
 - Media assets in blob storage are removed. Their digests remain
-  committed in the witnessed envelope, so the removal is publicly
-  evident — a digest that no longer resolves — rather than silent.
+  committed in the (now removed) witnessed payload — the envelope
+  goes with the whole-record removal, and the surviving witness
+  reveals nothing. The public evidence is the reduced payload
+  state itself.
 - Each redacted original is moved to the
   [retention archive](retention-archive.md) with a per-row legal
   hold; archive content is hard-deleted at hold expiry

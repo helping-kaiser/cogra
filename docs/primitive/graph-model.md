@@ -29,9 +29,11 @@ CoGra's own stores. The node and edge catalogs live in
   choice. Accounts gate participation in CoGra's service, never
   viewing. Privacy of content is payload custody and E2EE;
   topology is always public.
-- **Priced.** Every record debits its author's balance by θ at
-  write time — capacity *is* the balance. There is no free write:
-  spam has a floor price, and authoring is always attributable
+- **Priced.** Every act debits its author's balance by θ at
+  write time — one θ, one stamp per act, however many leg records
+  a hyper-edge decomposes into — and capacity *is* the balance.
+  There is no free write: spam has a floor price, and authoring
+  is always attributable
   ([substrate.md §6](substrate.md#6-authoring-path-and-admission)).
 
 ---
@@ -105,7 +107,7 @@ events:
 The frontend keeps session data local; nothing becomes graph state
 unless the actor gestures in response. What was once enforced by
 ethos alone is now also enforced by structure: authoring is
-backend-mediated and every record costs its author θ — CoGra's
+backend-mediated and every act costs its author θ — CoGra's
 backend has no write path for implicit signals, and a frontend
 that converted views into records would drain its users' capacity
 for noise.
