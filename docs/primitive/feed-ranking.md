@@ -457,6 +457,11 @@ reachable through it, at the 1× bridge ceiling (§6.2).
 A cancellation `S = 0` (opposing live paths summing to zero) is
 not jail — it sorts as the neutral score it is; jail is absence.
 
+One reachability gap is open: hyper-edge T-legs landing on a
+Profile source from passive artifacts, so no viewer's netting can
+remove another author's leg — parked as
+[open-questions.md Q28](../open-questions.md).
+
 ---
 
 ## 8. Severance, discovery, redemption
