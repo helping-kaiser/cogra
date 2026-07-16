@@ -196,10 +196,12 @@ its reduced projection. Three L1 facts fix the mechanism's shape:
   (`post:graph:separable-edge-commitment`). Redaction granularity
   is therefore **the record**: there is no partial rewrite, no
   per-field marker, no edited-down version.
-- **The transition is monotone.** Payload state moves full →
-  reduced only (`def:graph:payload-state`). Redaction is
-  irreversible by construction; restoring content means authoring
-  a new record.
+- **The transition is monotone.** Payload state moves toward
+  reduced only: a record enters carriage **full** or **full-empty**
+  (the canonical zero-length payload, private value present) and
+  can only drop to **reduced** (`def:graph:payload-state`).
+  Redaction is irreversible by construction; restoring content
+  means authoring a new record.
 - **Removal is scoring-neutral.** The reduced projection carries
   the entire L1 closure surface — standing, title, weights, and
   epoch replay are bit-identical across full and reduced
