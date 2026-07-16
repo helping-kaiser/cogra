@@ -179,9 +179,7 @@ mechanisms with two different scopes; they are not interchangeable.
   [feed-ranking.md](feed-ranking.md)). Touches no content; each
   counter-record is itself a priced act.
 
-This section covers redaction only. "Takedown" is not a CoGra
-term — older drafts used it as a synonym for redaction; sweep it
-in favor of "redaction" wherever encountered.
+This section covers redaction only.
 
 ### Payload removal — the redaction mechanism
 
