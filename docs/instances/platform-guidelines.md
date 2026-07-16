@@ -31,9 +31,10 @@ Starter list — adapted from the conventions of established
 public platforms:
 
 - **Child sexual abuse material (CSAM).** Always, everywhere.
-  Reported to authorities and scheduled for hard-delete on
-  archive entry — the legal hold is "report and destroy", not
-  "retain for prosecution" (per
+  The archive copy enters on the standard placeholder hold;
+  `legal_admin` reports to authorities and schedules immediate
+  hard-delete at case review — the legal hold is "report and
+  destroy", not "retain for prosecution" (per
   [retention-archive.md](../primitive/retention-archive.md)).
 - **Credible threats of violence** against a person, group, or
   identifiable target.
