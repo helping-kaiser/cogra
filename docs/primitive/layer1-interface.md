@@ -1036,7 +1036,9 @@ coherence bit, never a favor bit; (2) indifference is zero magnitude, not a
 sign; (3) stance survives in the stored slice's marginal row and terminal
 stance read-sites; it is never substituted for path parity.
 
-Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`):
+Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`,
+extended to the census twins the source's table omits — same
+construction):
 
 | Tier | $\sqrt{\lvert\det(\boldsymbol{\Psi}^{[P]})\rvert}$ | Edge types |
 |---|---|---|
