@@ -180,12 +180,15 @@ surfaces content. A vote stays a stance on the proposal, never on
 its subject — the anchor's `(0,0)` subject Reference has `w̃ = 0`,
 so the stop is enforced by the math, not by a traversal rule.
 
-**Types are sinks.** A Type has no outgoing records, so every path
-reaching one ends there. Types rank as targets — topic pages —
-and never transit; following a topic cannot amplify anything
-"behind" it, because nothing is behind it. Topic-scoped browsing
-is a named feed (§10), with **Affinity** (Actor → Type) as the
-follow gesture.
+**Types are sinks.** Every path reaching a Type ends there:
+Types rank as targets — topic pages — and never transit, so
+following a topic cannot amplify anything "behind" it. The stop
+is CoGra's declared traversal policy, not an L1 census fact — a
+Type sources Tag and Review terminal legs and author-fixed
+Reference legs like any passive node
+(`lem:graph:passive-out-degree`); the ranker simply never walks
+them. Topic-scoped browsing is a named feed (§10), with
+**Affinity** (Actor → Type) as the follow gesture.
 
 **References.** A quote, embed, or mention is an L1 Reference —
 two ordinary legs
