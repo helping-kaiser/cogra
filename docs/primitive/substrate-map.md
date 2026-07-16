@@ -63,7 +63,7 @@ mechanics live in each concept's own doc.
 | Tagging content | gesture | The **Tag** hyper-edge (Actor → content → Type), authored by the content's author. |
 | Reference / quote / embed / mention | gesture | An L1 **Reference** hyper-edge (Actor → citing artifact → target): the quoting Post or Comment points at the cited node; nothing is minted. A mention targets the person's **Profile** — positive, effortful mentions are weak, priced vouches. Reference legs are ordinary graph fabric: the feed traverses them at their real `w̃` ([feed-ranking.md](feed-ranking.md)) and attribution reads them natively, so quoted authors are credited by the shared path math ([economics.md](economics.md)). |
 | Stance revision | gesture | A new L1 record in the author's same-target bundle — records are chronicles, never overwritten. The endorsement-flow projection nets same-author bundles (sum-then-clip); presentation of "current vs. history" is L2. |
-| Severance | gesture | Authoring counter-edges that net the bundle to `(0,0)` — routing-inert in the projection, and the write-side act every consumer respects. A viewer-side blocklist is separate read-side comfort: [feed-ranking.md](feed-ranking.md). |
+| Severance | gesture | Authoring counter-edges that net the bundle to `(0,0)` — routing-inert for every consumer of the projection. A viewer-side blocklist is separate read-side comfort: [feed-ranking.md](feed-ranking.md). |
 
 ---
 
