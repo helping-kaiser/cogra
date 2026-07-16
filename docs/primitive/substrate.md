@@ -268,8 +268,12 @@ CoGra-level outcomes as shared-graph records:
   Content node**.
 
 Three genesis system actors exist — **moderation, publisher,
-inviter** — endorsed at bootstrap to clear the wall like any other
-actor. Their gestures are priced like anyone's: a verdict costs
+inviter** — burn-funded from the community treasury
+([economics.md](economics.md)) and endorsed at bootstrap to clear
+the wall like any other actor. The burn is not optional: standing
+is ignition-then-amplification — endorsement alone cannot reach a
+zero-burn actor
+([layer1-interface.md §7.1](layer1-interface.md#71-the-two-gate-write-rule)). Their gestures are priced like anyone's: a verdict costs
 capacity per passed proposal. Bootstrap, key handling, and the full
 gesture vocabulary: [network.md](network.md),
 [governance.md](governance.md),
