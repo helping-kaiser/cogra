@@ -21,14 +21,16 @@
   Advertiser Transport, Content Governance, the Compositional Attribution
   Calculus, bilateral bridge transport) with numbered theorems. Cited below
   as *PN full §N / Theorem N.M*, and used **only** for terminal-default
-  material (§4.1–4.2, §10, §14.5 below).
+  material (§4.1–4.2, §10, §14.5 below), the grant's verbatim text (§4),
+  and one definition in §9.4.
 
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
 anchor-stability contract: 261 distinct anchor names,
 `anchor_set_hash = 8357aa61a668e5a5dafba107d2b4f5740c544423382cc3a685e5ee20a34bef38`
-(sha256 over the sorted distinct anchor names joined by `\n`). Once
+(sha256 over the sorted distinct anchor names joined by `\n`, no trailing
+newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
 change on their side. Recompute and re-register the hash whenever a
 citation is added or removed.
@@ -252,26 +254,26 @@ the structural record is L1·closure.
 
 **Guild Reimplementation Grant (`post:transport:guild-grant`):**
 
-> A terminal service MAY redefine, replace, or independently recompute any
-> published value every read-site of which is terminal — consumed only by an
-> agent and never read back into the decision of what may append to $G$ (the
-> write rule $W1/W2a/W2b$, the closure rule, the formation rule, or
-> settlement recognition).
+> A guild MAY redefine, replace, or independently recompute any published
+> value every read-site of which is *terminal* — consumed only by an agent
+> and never read back into the decision of what may append to $G$ (the
+> write rule $W1/W2a/W2b$, the formation rule, or settlement recognition).
+> Equivalently: a guild owns the entire *terminal complement* of the
+> admission closure — the feed $S(u,c)$, the reward $R_C$, the CAN and its
+> aggregation function, and the bridge transport and its composition rule.
 >
-> Equivalently: a guild owns the entire terminal complement of the admission
-> closure — the feed $S(u,c)$, the reward $R_C$, the CAN and its aggregation
-> function, and the bridge transport and its composition rule.
+> A guild MAY NOT override any value with a feedback read-site: the kernel
+> inputs (accepted edge set, declared constants, burn snapshot), the
+> admission rules, and the two derived straddlers — the relative-standing
+> field $\alpha_i$ *as gate input* and the title certificate $T^{(k)}$ —
+> which it must consume as published. A guild MAY still *recompute* any
+> such value to audit it; recomputation is an audit right, never an
+> override right.
 >
-> It MAY NOT override any value with a feedback read-site: the kernel inputs
-> (accepted edge set, declared constants, burn snapshot), the admission
-> rules, standing as gate input, and title as read by recognition — which it
-> must consume as published. It MAY recompute any such value to audit it.
-> Recomputing to audit is not overriding.
->
-> Deviating from a terminal default forks only the deviating service (loss
+> Deviating from a terminal default forks only the deviating guild (loss
 > of composability); attempting to deviate from a binding value forks the
 > shared graph and is rejected. The binding surface is
-> {kernel, rules, $\alpha$-as-gate, title} — and no larger.
+> {kernel, admission rules, $\alpha$-as-gate, $T^{(k)}$} — and no larger.
 
 On the four admission rules: the write rule ($W1/W2a/W2b$), formation, and
 recognition are value-facing predicates a guild might try to recompute — the
