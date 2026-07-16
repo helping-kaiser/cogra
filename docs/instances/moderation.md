@@ -141,9 +141,9 @@ A user reporting content **is** the act of creating a Proposal
   system actor capacity **per passed proposal, not per report**.
 
 There is **no separate Postgres reports table**. Reports live as
-Proposal machinery — the anchor and finalization on L1, the tally
-in the overlay — fully transparent, fully auditable, append-only
-by construction.
+Proposal machinery — the anchor, the ballots, and the
+finalization on L1, the tally in the overlay — fully transparent,
+fully auditable, append-only by construction.
 
 ## 3. The mod-gate rule
 
