@@ -296,8 +296,9 @@ f(Δt) = 0.5^(Δt / half-life)            (default shape)
 `Δt` is **epoch age**: the count of epoch certificates issued
 since the record's first inclusion in the committed edge set
 (`0` for records newer than the newest certificate). The
-half-life is a governed parameter measured in epochs (§12);
-frontends may retune or disable (`f ≡ 1`) view-side.
+half-life and the shape of `f(Δt)` are both governed parameters
+(§12), the half-life measured in epochs; frontends may retune the
+half-life or disable recency (`f ≡ 1`) view-side.
 
 - **Only the terminal hop decays.** Silence on a relationship
   record is not a partial revocation — stances hold until revised
@@ -719,4 +720,5 @@ change one viewer's sort, never the published computation.
 | `γ` | Per-hop attenuation, default `1` (§5.1) | yes |
 | `χ` | Dust floor — compute cutoff on path product (§6.3) | yes (finer only) |
 | half-life | `f(Δt)` decay, in epochs (§5.3) | yes (incl. off) |
+| `f(Δt)` shape | Functional form of the recency factor; the exponential is the genesis default (§5.3) | no |
 | tie-breaker composition | Order and weights of §7's cascade | no |
