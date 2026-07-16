@@ -27,8 +27,8 @@
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 261 distinct anchor names,
-`anchor_set_hash = 8357aa61a668e5a5dafba107d2b4f5740c544423382cc3a685e5ee20a34bef38`
+anchor-stability contract: 260 distinct anchor names,
+`anchor_set_hash = b868e2b3cb174139e23587a3c91fa26eeb5c37e262182f9d4634d85e60d92db4`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
