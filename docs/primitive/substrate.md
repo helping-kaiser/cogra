@@ -207,9 +207,10 @@ only if its author clears the two-gate write rule
 The backend checks eligibility against this surface before
 submitting, and drives the restoration flows when a check fails: an
 insolvent actor (W1) restores capacity immediately by committing
-burns; re-crossing the wall (W2a) takes new burns plus admissible
-vouch-positive connections from actors with source rates above the
-current standing. Who funds these debits — genesis, pooled
+burns; re-crossing the wall (W2a) takes some combination of new
+burns and admissible vouch-positive connections from actors with
+source rates above the current standing — burns alone can
+suffice. Who funds these debits — genesis, pooled
 subsidies, treasury — is economics:
 [economics.md](economics.md).
 
@@ -267,8 +268,12 @@ CoGra-level outcomes as shared-graph records:
   Content node**.
 
 Three genesis system actors exist — **moderation, publisher,
-inviter** — endorsed at bootstrap to clear the wall like any other
-actor. Their gestures are priced like anyone's: a verdict costs
+inviter** — burn-funded from the community treasury
+([economics.md](economics.md)) and endorsed at bootstrap to clear
+the wall like any other actor. The burn is not optional: standing
+is ignition-then-amplification — endorsement alone cannot reach a
+zero-burn actor
+([layer1-interface.md §7.1](layer1-interface.md#71-the-two-gate-write-rule)). Their gestures are priced like anyone's: a verdict costs
 capacity per passed proposal. Bootstrap, key handling, and the full
 gesture vocabulary: [network.md](network.md),
 [governance.md](governance.md),

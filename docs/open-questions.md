@@ -23,6 +23,7 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
+| 1. L1-author discussion | 1 | **Q28** | Zero-jail person-landing — the hyper-edge T-leg escape. Parked pending discussion with the L1 author; an L2 policy fallback exists if L1 declines, so nothing downstream blocks on it. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
@@ -57,6 +58,73 @@ questions are closed.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#11-where-ranking-runs) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#8-severance-discovery-redemption), the actual bot-bridge defense). `χ` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`χ`/`b` corrected — `χ` bounds the node-set, not the path count).
 - Q26 — see [chats.md §3.1](instances/chats.md#31-chat) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
 - Q27 — see [collectives.md §8 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §6](instances/items.md#6-transfer-flow)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1-in-either-shape).
+
+---
+
+## Q28 — Zero-jail person-landing: the hyper-edge T-leg escape
+
+**Where it shows up:** [feed-ranking.md §7](primitive/feed-ranking.md#7-sort-order-tie-breakers-zero-jail)
+(zero-jail as unreachability),
+[layer1-interface.md §9.6](primitive/layer1-interface.md#96-hyper-edge-types-subsecnodeshyper-edges)
+(the hyper-edge census)
+**Status:** open (parked — pending discussion with the L1 author)
+
+### Context
+
+Zero-jail's predicate is unreachability: every path from viewer
+to target crosses a `(0,0)`-netted bundle, and a viewer's zeroing
+kills exactly the paths through their own records. A census-wide
+sweep confirms the binary families are safe — a binary edge's
+source is always its author, so netting the author's bundles
+removes it from the path set. The escape lives in **hyper-edge
+T-legs**, whose carrier legs source from passive artifacts rather
+than from the author:
+
+- **Reference is a confirmed escape.** Its A-leg sources from any
+  passive artifact — no ownership constraint — and its Full-tier
+  T-leg lands on any Profile. Netting is per-author, so neither
+  the viewer nor any third party can remove another author's
+  Reference legs: a jailed actor's Profile stays reachable
+  through a Reference authored from an artifact the viewer still
+  reaches.
+- **Chat Invitation is a Marginal-tier twin** iff self-invitation
+  is formation-legal — the census doesn't say. Moot as a fix
+  either way: a confederate account reproduces both geometries
+  legally, so self-guards and artifact-ownership constraints
+  don't close the escape.
+- **The standing-side `j = i` exclusion has no feed
+  counterpart.** L1's endorsement flow excludes self-reach; the
+  feed's path math has no analogous exclusion on person-landing
+  legs.
+- **Review, Send, and Bid mint author-owned nodes reachable from
+  non-owned carriers** (Send is explicitly not membership-gated).
+  The earnings side is closed by reward-eligibility path
+  filtering (lands with economics.md's rebase rewrite); **feed
+  visibility of a jailed author's minted content stays open**.
+
+### The question
+
+For the L1 author: (1) is the unconstrained Reference A-leg
+intended? (2) is self-invitation formation-legal, and should the
+census say so? (3) is the standing-vs-feed `j = i` asymmetry
+intended — is there room for an L1-side lever, such as the leg
+author's standing gating person-landing T-leg traversability?
+
+### Constraints (from established principles)
+
+- **Netting is per-author by L1 math.** No viewer-side removal of
+  third-party records exists, so any real fix is either L1-side
+  or feed-scope policy — never a new removal mechanism.
+- **Feed policy is CoGra's to declare.** The published ranking
+  spec can exclude person-landing hops from feed scope by policy —
+  the L2 fallback if L1 declines all three levers.
+
+### Related
+
+Severance, discovery, and redemption
+([feed-ranking.md §8](primitive/feed-ranking.md#8-severance-discovery-redemption));
+the reward-side closure of the same geometry (economics.md, with
+its rebase rewrite).
 
 ---
 

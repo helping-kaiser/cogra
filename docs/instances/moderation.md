@@ -123,8 +123,11 @@ A user reporting content **is** the act of creating a Proposal
   subject on the shared graph. The act debits the reporter's
   capacity like any other record. A report is a priced,
   attributable, public act.
-- **First reporter** authors the Proposal — the system reads the
-  authoring as their +1 vote.
+- **First reporter** authors the Proposal, and the client flow
+  bakes their explicit `+1` ballot immediately after creation —
+  one more priced act. The anchor's genesis is a Publish record;
+  authoring is never read as a vote
+  ([governance.md](../primitive/governance.md)).
 - **Subsequent reporters** cast ballots on the existing Proposal
   rather than authoring duplicates — payload-marked Opinions
   toward its anchor, each a priced act
@@ -138,9 +141,9 @@ A user reporting content **is** the act of creating a Proposal
   system actor capacity **per passed proposal, not per report**.
 
 There is **no separate Postgres reports table**. Reports live as
-Proposal machinery — the anchor and finalization on L1, the tally
-in the overlay — fully transparent, fully auditable, append-only
-by construction.
+Proposal machinery — the anchor, the ballots, and the
+finalization on L1, the tally in the overlay — fully transparent,
+fully auditable, append-only by construction.
 
 ## 3. The mod-gate rule
 
@@ -373,8 +376,9 @@ normative frame for *all future* moderation). The current version
 is pinned by the governed `:Network` properties
 `guidelines_version` + `guidelines_hash`, and each ratified
 version's text is anchored on L1 as a platform document — a
-publisher-authored Content node whose payload is the witnessed
-document ([substrate.md §8](../primitive/substrate.md#8-system-actors)).
+publisher-authored Content node whose anchoring Publish record
+carries the document as witnessed payload
+([substrate.md §8](../primitive/substrate.md#8-system-actors)).
 
 ## What this doc is not
 
