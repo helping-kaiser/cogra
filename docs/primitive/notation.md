@@ -54,7 +54,9 @@ Feed-calibration parameters are governed properties of the
 
 ## 3. Glyph discipline
 
-CoGra-local symbols never reuse a glyph from the L1 ledger — the
-two vocabularies stay disjoint. When a new CoGra doc needs a
-symbol, it checks the interface ledger first and picks a free
-glyph; a collision is a review error, not a style choice.
+When a new CoGra doc needs a symbol, it checks the interface
+ledger first and picks a free glyph. Two collisions are
+sanctioned, each disambiguated by context: CoGra's path count `k`
+beside L1's epoch index `k` (as in `E_k`), and the recency factor
+`f(Δt)` beside the L0 fee `f` in `(1−f)ζ`. Any other collision is
+a review error, not a style choice.
