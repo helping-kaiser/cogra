@@ -54,9 +54,9 @@ factor. Fresh corners of the graph weigh differently than
 established ones, by published formula
 ([layer1-interface.md §8.2](layer1-interface.md#82-temporal-structure)).
 
-Wall-clock time exists only on CoGra's side of the seam — Postgres
-operational timestamps for display ("posted 2h ago") and service
-logic. It never orders the shared record set.
+Wall-clock time never orders the shared record set. CoGra keeps
+it as Postgres operational timestamps for display ("posted 2h
+ago") and service logic.
 
 ---
 
@@ -130,9 +130,9 @@ Two influence channels exist, and they must never be conflated:
   ranking spec ([feed-ranking.md](feed-ranking.md)).
 - **Standing is inbound — and gates writing, never ranking.**
   Vouch-positive stances toward a person *do* lift that person's
-  standing `α_i` through L1's endorsement flow; standing feeds the
-  write gate and nothing else. It is a write-admission scalar:
-  who may act, never what anyone sees.
+  standing `α_i` through L1's endorsement flow; standing feeds
+  the write gate and is freely readable downstream — but it never
+  enters the feed: who may act, never what the feed shows.
 
 In one line: inbound records never shape your feed; they can
 vouch you through the gate.
