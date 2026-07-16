@@ -376,8 +376,9 @@ normative frame for *all future* moderation). The current version
 is pinned by the governed `:Network` properties
 `guidelines_version` + `guidelines_hash`, and each ratified
 version's text is anchored on L1 as a platform document — a
-publisher-authored Content node whose payload is the witnessed
-document ([substrate.md §8](../primitive/substrate.md#8-system-actors)).
+publisher-authored Content node whose anchoring Publish record
+carries the document as witnessed payload
+([substrate.md §8](../primitive/substrate.md#8-system-actors)).
 
 ## What this doc is not
 

@@ -9,8 +9,9 @@ guidelines themselves are amendable by the Network at any time.
 This doc is the **canonical text**. Its current version is pinned
 by two governed `:Network` properties (version number + content
 hash), and each ratified version's text is anchored on L1 as a
-platform document — a publisher-authored Content node carrying
-the document as witnessed payload
+platform document — a publisher-authored Content node whose
+anchoring Publish record carries the document as witnessed
+payload
 ([substrate.md §8](../primitive/substrate.md#8-system-actors)).
 The working copy lives here, in the repo.
 
