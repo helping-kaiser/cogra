@@ -86,8 +86,9 @@ defined in
    structural record, its witness, and everything the record does
    on L1 (standing, routing, title) are untouched.
 2. **Postgres and media.** The display rows are tombstoned and
-   the blob-storage assets removed; the committed digests remain
-   in the witnessed envelope, so the removal is publicly evident.
+   the blob-storage assets removed; their digests remain
+   committed in the (now removed) witnessed payload. The public
+   evidence of removal is the reduced payload state.
 3. **Archive.** Each redacted original is written to the
    [retention archive](../primitive/retention-archive.md)
    automatically. The `legal_hold_until` value is set

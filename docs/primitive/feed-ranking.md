@@ -105,11 +105,13 @@ sum-then-clip into one effective edge with parameters
 `(p̄_d, p̄_i)`, hyper-edge legs netted per-leg, temporal attributes
 taken from the bundle's `≺`-newest member. Excluded from folding,
 read per-record: the settlement handshake (Bid, Accept, Ratify).
-Control records never enter feed traversal at all (§4). A
-same-author De-invite toward a `(Chat, Profile)` pair suppresses
-that author's Invitation legs toward the same pair — the
-conduit rule of L1's endorsement projection
-(`rem:epoch:invitation-conduit`), adopted as the fold's rule here.
+Control records never enter feed traversal at all (§4). An
+author's Invitation legs toward a `(Chat, Profile)` pair are
+suppressed iff the `≺`-maximal element of that author's own
+{Invitation, De-invite} records with that incidence is a
+De-invite — a later Invitation re-establishes them — L1's
+inviter-revocation rule (`def:epoch:inviter-revocation`),
+adopted as the fold's rule here.
 
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
 [layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-vouch-predicate))
@@ -358,7 +360,8 @@ would silently reintroduce it.
   (`w̃ ≈ 0.3–0.5`), path count grows like `b^depth`; branching
   `b ≥ 2–3` lets a cluster amplify one entry edge without bound.
   The L1 spec rejects sum-scoring for exactly this
-  redundancy-amplification failure (PN full §H.5).
+  redundancy-amplification failure
+  (`subsec:necessity:max-product-path-scoring`).
 - **Disjoint-sum is the principled middle.** By Menger's theorem
   the number of internally disjoint `u→c` paths is capped by the
   minimum node cut, so breadth counts exactly when it is realized

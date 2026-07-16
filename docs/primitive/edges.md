@@ -30,11 +30,17 @@ attachment, urgency, …) are L1's census vocabulary for the same two
 slots; CoGra's frontend labels surface whichever aspect fits the
 gesture.
 
-- **The full range is the user's.** Both parameters anywhere in
+- **The full range is the user's — in the stance vocabulary.**
+  Stance-authoring families take both parameters anywhere in
   `[−1, +1]`, all four quadrants — coherent dislike `(−, −)` is a
   legitimate stance, not a filtered input. There is no frontend
   authoring bar; what the graph *does* with a stance is the
-  consumers' published business (ranking, endorsement).
+  consumers' published business (ranking, endorsement). Outside
+  that vocabulary the census restricts ranges per family — Tag
+  confidence, Bid urgency, and Invitation relevance in `[0, 1]`,
+  control records type-fixed — and where prose and the census
+  tables disagree, the tables govern
+  (`rem:nodes:edge-census-normative`).
 - **Domain, mask, and tier are family properties**, fixed by the
   census — never per-edge choices. CoGra picks the family; the
   family fixes the math.
