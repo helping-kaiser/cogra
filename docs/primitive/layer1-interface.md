@@ -21,14 +21,16 @@
   Advertiser Transport, Content Governance, the Compositional Attribution
   Calculus, bilateral bridge transport) with numbered theorems. Cited below
   as *PN full §N / Theorem N.M*, and used **only** for terminal-default
-  material (§4.1–4.2, §10, §14.5 below).
+  material (§4.1–4.2, §10, §14.5 below), the grant's verbatim text (§4),
+  and one definition in §9.4.
 
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 261 distinct anchor names,
-`anchor_set_hash = 8357aa61a668e5a5dafba107d2b4f5740c544423382cc3a685e5ee20a34bef38`
-(sha256 over the sorted distinct anchor names joined by `\n`). Once
+anchor-stability contract: 260 distinct anchor names,
+`anchor_set_hash = b868e2b3cb174139e23587a3c91fa26eeb5c37e262182f9d4634d85e60d92db4`
+(sha256 over the sorted distinct anchor names joined by `\n`, no trailing
+newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
 change on their side. Recompute and re-register the hash whenever a
 citation is added or removed.
@@ -76,7 +78,7 @@ no $\alpha_i$, no $W_{\text{end}}(j \to i)$, no title, and no gate.
 ## 2 The boundary predicate (feedback closure)
 
 The boundary is not a list; it is a closure, and a Layer 2 can decide
-membership itself. (`subsec:introduction:boundary-closure`)
+membership itself. (`subsec:network:admission-closure`)
 
 **Admission Closure and the Binding Boundary
 (`def:network:admission-closure`).** Work on the *consumption graph*,
@@ -165,7 +167,7 @@ into themselves — standing as gate input, and title. Everything else the
 network publishes is terminal. Permission is decided per read-site by a
 single question — *does this re-enter $E$?* The grant states it as: **the
 binding surface is {kernel, rules, α-as-gate, title} — and no larger.**
-(`rem:introduction:boundary-one-sentence`, `post:transport:guild-grant`)
+(`rem:network:boundary-one-sentence`, `post:transport:guild-grant`)
 
 ---
 
@@ -252,26 +254,26 @@ the structural record is L1·closure.
 
 **Guild Reimplementation Grant (`post:transport:guild-grant`):**
 
-> A terminal service MAY redefine, replace, or independently recompute any
-> published value every read-site of which is terminal — consumed only by an
-> agent and never read back into the decision of what may append to $G$ (the
-> write rule $W1/W2a/W2b$, the closure rule, the formation rule, or
-> settlement recognition).
+> A guild MAY redefine, replace, or independently recompute any published
+> value every read-site of which is *terminal* — consumed only by an agent
+> and never read back into the decision of what may append to $G$ (the
+> write rule $W1/W2a/W2b$, the formation rule, or settlement recognition).
+> Equivalently: a guild owns the entire *terminal complement* of the
+> admission closure — the feed $S(u,c)$, the reward $R_C$, the CAN and its
+> aggregation function, and the bridge transport and its composition rule.
 >
-> Equivalently: a guild owns the entire terminal complement of the admission
-> closure — the feed $S(u,c)$, the reward $R_C$, the CAN and its aggregation
-> function, and the bridge transport and its composition rule.
+> A guild MAY NOT override any value with a feedback read-site: the kernel
+> inputs (accepted edge set, declared constants, burn snapshot), the
+> admission rules, and the two derived straddlers — the relative-standing
+> field $\alpha_i$ *as gate input* and the title certificate $T^{(k)}$ —
+> which it must consume as published. A guild MAY still *recompute* any
+> such value to audit it; recomputation is an audit right, never an
+> override right.
 >
-> It MAY NOT override any value with a feedback read-site: the kernel inputs
-> (accepted edge set, declared constants, burn snapshot), the admission
-> rules, standing as gate input, and title as read by recognition — which it
-> must consume as published. It MAY recompute any such value to audit it.
-> Recomputing to audit is not overriding.
->
-> Deviating from a terminal default forks only the deviating service (loss
+> Deviating from a terminal default forks only the deviating guild (loss
 > of composability); attempting to deviate from a binding value forks the
 > shared graph and is rejected. The binding surface is
-> {kernel, rules, $\alpha$-as-gate, title} — and no larger.
+> {kernel, admission rules, $\alpha$-as-gate, $T^{(k)}$} — and no larger.
 
 On the four admission rules: the write rule ($W1/W2a/W2b$), formation, and
 recognition are value-facing predicates a guild might try to recompute — the
@@ -481,7 +483,7 @@ $\theta \le \nu$, $\rho = 1$ and every value coincides with a single-floor
 edition.
 
 No netting-clip constant exists: the stance-aggregation clip is the fixed
-$\mathrm{clip}_{[-1,1]}$ in `eq:epoch:net-stance`, not a calibrated value.
+$\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
 *Layer 0 surface constants* are owned by the Peer Attestation paper and
 surfaced through `PA-` citations; they enter no Layer-1 closure formula
@@ -990,7 +992,7 @@ permission.
 ### 8.6 Path view, tiers, parity, and the damped weight
 
 **Path-View Extraction (`def:graph:path-view-extraction`,
-`eq:graph:path-view-extraction`, `eq:graph:softened-mask`):**
+`eq:graph:path-view-extraction`, `subsec:necessity:eta-softening`):**
 
 $$\boldsymbol{\Psi}_e^{[P]} = \begin{pmatrix} \tilde{a}_{00}\,\psi_\pm(p_i p_d) & \tilde{a}_{01}\,\psi_\pm(p_i \lvert p_d\rvert) \\ \tilde{a}_{10}\,\psi_\pm(\lvert p_i\rvert p_d) & \tilde{a}_{11}\,\psi_+(\lvert p_i\rvert \lvert p_d\rvert) \end{pmatrix}$$
 
@@ -1056,7 +1058,8 @@ $\tilde{w}(e) > 0$;
 $\tilde{w}(e) \le |\det \boldsymbol{\Psi}^{[P]}_e|^{1/2} \cdot \sqrt{2}$;
 non-monotone in $\tau$ with minimum near $\tau \approx 0.5$. Maturity
 crossover: $g(\tau) = \sqrt{1+\tau^2}\, e^{-\beta H_\tau} > 1$ iff
-$\tau > \tau^* \approx 0.94$ (`prop:epoch:novelty-crossover`).
+$\tau > \tau^* \approx 0.94$ (`def:epoch:maturity-crossover`,
+`prop:epoch:crossover-location`).
 
 ### 8.7 Interaction domains and masks
 
@@ -1268,7 +1271,7 @@ Hyper-leaf passive nodes (`subsec:nodes:hyper-leaf-passive-nodes`):
   Review L2 → Comment — its sole out-edges. Settlement Accept and Ratify
   reference the Offer via settles-pointers but are **not incident** to it.
 
-### 9.4 The Self-edge bond (`subsec:nodes:self-edge-bond`)
+### 9.4 The Self-edge bond (`subsec:nodes:self-edge-bond-properties`)
 
 Both components share intensity $p = \alpha_j/(\nu + \alpha_j)$,
 $p_d = 1$; Identity domain, mask $(1,0,0,1)$, Full tier. Stored tensor and
@@ -1566,9 +1569,22 @@ without graph traversal. The frame is verified by
 recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
+**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
+the sustaining frontier assumes who funds an actor's burn-value: a Layer-0
+burn is funder-unconstrained at the surface, and the resulting $B_i$
+accrues to the actor's address whoever paid for it
+(`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
+under its own policy, to supply a member's sustaining burn — Layer 1
+neither prescribes nor prices that choice (`post:transport:guild-grant`).
+This relocates **who bears the source cost** without faking it: the frame
+is non-transferable across addresses (`def:comparator:frame-binding`), and
+funding a member's own burns raises only that member's own source. The
+comparator sees a funded member exactly as it sees a self-funded one — the
+burn is real either way.
+
 ### 11.3 Stance aggregation and the Vouch Predicate
 
-**Net Stance (`def:epoch:net-stance`, `eq:epoch:net-stance`).** For author
+**Net Stance (`def:epoch:net-stance`).** For author
 $j$, target node $v$, and edge type $t$, the **bundle** is the parallel
 bundle $\Pi(j, v, t)$ (`def:graph:parallel-bundle`) — full-incidence keys,
 hyper-edge legs netted per-leg. The bundle's net stance is
@@ -1600,7 +1616,7 @@ $(0.5, 0.5)$ edge is cancelled by authoring $(-0.5, -0.5)$ toward the same
 target: the bundle nets to $(0,0)$, $\epsilon$ undefined, $\tilde{w} = 0$ —
 routing-inert in the projection — and the counter-edge consumed an action
 (one $\theta$ debit off $b_j$): severance is burn-priced
-(`ver:stance:counter-edge-withdrawal`).
+(walkthrough under `subsec:verification:stance-aggregation`).
 
 The aggregation key is per-author — cross-author netting is a rejected design
 ("one author's revision could erase another's vouch",
@@ -1608,8 +1624,8 @@ The aggregation key is per-author — cross-author netting is a rejected design
 attributes are the newest member's (above) — the newest-record rule is fixed
 in the spec, closing the last item that was open with the Peer Team.
 
-**Vouch Predicate (`def:epoch:vouch-predicate`,
-`eq:epoch:vouch-predicate`).** An edge record or effective net bundle is
+**Vouch Predicate (`def:epoch:vouch-predicate`).** An edge record or
+effective net bundle is
 **actor-directed** when its target is a **grounded** node — outermost
 identifier constructor $\mathsf{addr}$ or $\mathsf{prof}$
 (`rem:graph:vouch-taxonomy`), a syntactic test so any future census row
@@ -2122,7 +2138,7 @@ index — terminal objects live only in the boundary ledger** (§3).
 | Symbol | Definition | Ref |
 |---|---|---|
 | $B_i$ | The imported frame, fiber-wise: $B_i := A_{\mathrm{key}(i)}$, the network's reading of the Layer 0 attestation map. Non-decreasing at sampling depth, publicly auditable, irrevocable. | `def:comparator:imported-frame` |
-| $B_{\max}$ | Bootstrap capacity bound $B_{\max} := A_{\max}$. | `def:comparator:capacity` |
+| $B_{\max}$ | Bootstrap capacity bound $B_{\max} := A_{\max}$. | `def:comparator:bootstrap-capacity` |
 | $E_k$ | Epoch snapshot edge set; substrate of all of $\mathcal{A}$. | `post:introduction:epoch-edge-set` |
 | $\prec$ (L1·closure), $\prec^*$ **(L1·verify)** | Structural causal order $\prec_{\text{inc}}$; canonical identity-key refinement $\prec_{\text{id}}$ (replay tie-break, consumed by no formula). | `def:graph:causal-order`, `def:epoch:log-position` |
 | $\nu$ | Numéraire: the sole reserve→action unit and reserve-economy↔action-economy join (applied per act by the θ-debit); bond-kernel denominator. Every reserve input is $\nu$-reduced before meeting a count. Structural; moving it is a migration event. | `def:comparator:numeraire` |
@@ -2187,7 +2203,7 @@ straddler is a design error."
 | `settles`-pointer | Identity-key reference Accept/Ratify → Bid; metadata, not incidence. | `def:graph:settlement-recognition` |
 | Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; actor-directed for the Vouch Predicate. | `edge:nodes:accept`, `edge:nodes:ratify` |
 | Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; endorsement-inert. | §9 |
-| $\tau^*$ | Maturity crossover $\approx 0.94$. | `prop:epoch:novelty-crossover` |
+| $\tau^*$ | Maturity crossover $\approx 0.94$. | `prop:epoch:crossover-location` |
 | Stability machinery **(not (L1·closure): (—) shared dynamics, plus fence objects $\lambda(\alpha^*)\hat{\Delta}$, $\mathcal{K}_{\text{row}}$, $W_{\text{loc}}$ tagged (L1·verify))** | $g(\alpha)$, $\tilde{g}(p)$, $\lambda(\alpha)$, $L_w$, $K(p)$, $\hat{\Delta}$; deployed safety gate = norm certificate $L_w\hat{\Delta} < 1$ (`thm:dynamics:coupled-contraction`); operative product $\lambda(\alpha^*)\hat{\Delta}$; $\lambda(1) = 0.32825$ (danger-band peak, App B); rate caps $\sup\Phi(\alpha) \approx 0.507$ unconditional, $\le 0.328$ gate-cleared; $\kappa_{\max} = \tfrac14\lambda(\alpha^*)\hat{\Delta}$; union-acyclic bound $L_w\hat{\Delta} < 4$; $\mathcal{E}$ endorsement/coupling graph; $C_\tau = \sqrt{1+\tau^2}e^{-\beta H_\tau}$; $\Pi$ excursion budget. The live relay set is vouch-filtered: non-vouching legs, control legs, and revocation-suppressed Invitation bundles have weight zero, so every contraction certificate weakly improves (`rem:dynamics:vouch-filtered-relays`). | `app:dynamics` |
 
 ### 14.5 Terminal objects (full paper only)
@@ -2224,7 +2240,7 @@ the BFS depth bound $L = 4$; likewise $\tilde{w}(e)$ is closure, not shared
 
 ### 14.7 Vocabulary disambiguation (from the collision registers)
 
-Word register (`subsec:symbols:word-collisions`):
+Word register (closure edition symbol index, *Word Collisions*):
 
 - **floor** — several distinct objects, one word: the Layer 0 redemption-rate
   floor | the numéraire $\nu$ (Layer 1 reserve→action unit) | the policy floor
@@ -2263,7 +2279,8 @@ Word register (`subsec:symbols:word-collisions`):
   content-erasure: standing, title, and trust-edges remain, names and words
   gone; no glyph.
 
-Glyph register highlights (`subsec:symbols:glyph-collisions`):
+Glyph register highlights (closure edition symbol index, *Glyph
+Collisions*):
 $\epsilon \in \{+1,-1\}$ vs $\epsilon_{\text{clip}} \in \mathbb{R}^+$ ·
 $N_i$ vs $N_{\text{epoch}}$ · $\mathbb{T}_e$ (causal computations) vs
 $\mathrm{pos}(e)$ (epoch-boundary placement) · $W_{\text{end}}$ vs
