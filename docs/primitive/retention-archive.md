@@ -100,8 +100,8 @@ destroyed depends on the per-row deadline.
 A scheduled job hard-deletes rows where
 `legal_hold_until < now()` and no other statute extends the hold.
 This is the explicit, statutorily required exception to
-[layers.md §5](layers.md#5-deletion-policy)'s "no silent
-deletion, ever".
+[layers.md §5](layers.md#5-deletion-policy)'s "No silent
+deletion." invariant.
 
 The exception is honest because:
 
