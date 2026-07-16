@@ -704,7 +704,8 @@ centrally nor deserves central trust. The split:
 
 Network-level defaults are governed parameters of the network
 charter — an L1 Content node anchored by the publisher system
-actor, with passed changes finalized onto it as witnessed payloads
+actor, with passed changes landing as witnessed payloads on their
+finalization Opinions toward it
 (newest finalization per parameter wins) and mirrored into the
 `:Network` carrier node the ranker reads
 ([network.md](network.md#feed-ranking-calibration)). Set by the
