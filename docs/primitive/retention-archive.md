@@ -24,7 +24,10 @@ Both current authorization paths use it:
   pinned to any one country.
 
 The archive's hard-delete-on-hold-expiry is the **only point in
-the system where data is genuinely removed**. The redaction
+the system where content is genuinely removed** — the named
+Postgres carve-outs
+([layers.md §4](layers.md#4-layers-on-postgres-side-display-content))
+delete operational state, never content. The redaction
 itself is the mechanism (see
 [layers.md §5](layers.md#5-deletion-policy)); the archive
 entry's eventual hard-delete is its statutory end state. The
