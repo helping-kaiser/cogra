@@ -211,11 +211,13 @@ its reduced projection. Three L1 facts fix the mechanism's shape:
 
 **Who removes.** L1 places removal authority with the record's
 author (for hyper-edge terminal legs, the initiating actor —
-`def:graph:payload-controller`). In the centralized phase the
-payload and private value live in CoGra's carriage
-(`rem:graph:payload-custody-phases`), and CoGra as the carriage
-service also executes removals under its published policy — the
-authorization paths below. CoGra exposes no other removal path.
+`def:graph:payload-controller`). CoGra runs the
+carriage-obligation shape of `rem:graph:payload-custody-phases`
+ahead of decentralization: Layer 1 tracks only the witness, while
+payload and private value live in CoGra's carriage, and CoGra as
+the carriage service also executes removals under its published
+policy — the authorization paths below. CoGra exposes no other
+removal path.
 
 **The visible mark.** The invariant "never erase silently" is
 carried by the pair the substrate leaves behind: the **immutable
