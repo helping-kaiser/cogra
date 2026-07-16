@@ -6,7 +6,9 @@ closed menu in [substrate.md §5](substrate.md#5-the-mechanism-menu-closed)
 — `gesture` (an L1 edge from the fixed inventory), `payload` (state
 riding an L1 record), `overlay` (CoGra's own Memgraph graph),
 `off-graph` (Postgres / blob / service state) — plus `consume` for
-concepts that are read-only views of published L1 values.
+concepts that are read-side constructions over L1 records:
+published-value views, adopted folds, and reimplemented terminal
+defaults.
 Combinations are the norm; the primary mechanism is the one that
 carries the concept's identity.
 
