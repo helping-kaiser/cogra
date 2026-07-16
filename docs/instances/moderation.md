@@ -123,8 +123,11 @@ A user reporting content **is** the act of creating a Proposal
   subject on the shared graph. The act debits the reporter's
   capacity like any other record. A report is a priced,
   attributable, public act.
-- **First reporter** authors the Proposal — the system reads the
-  authoring as their +1 vote.
+- **First reporter** authors the Proposal, and the client flow
+  bakes their explicit `+1` ballot immediately after creation —
+  one more priced act. The anchor's genesis is a Publish record;
+  authoring is never read as a vote
+  ([governance.md](../primitive/governance.md)).
 - **Subsequent reporters** cast ballots on the existing Proposal
   rather than authoring duplicates — payload-marked Opinions
   toward its anchor, each a priced act
