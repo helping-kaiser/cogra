@@ -105,11 +105,13 @@ sum-then-clip into one effective edge with parameters
 `(p̄_d, p̄_i)`, hyper-edge legs netted per-leg, temporal attributes
 taken from the bundle's `≺`-newest member. Excluded from folding,
 read per-record: the settlement handshake (Bid, Accept, Ratify).
-Control records never enter feed traversal at all (§4). A
-same-author De-invite toward a `(Chat, Profile)` pair suppresses
-that author's Invitation legs toward the same pair — the
-conduit rule of L1's endorsement projection
-(`rem:epoch:invitation-conduit`), adopted as the fold's rule here.
+Control records never enter feed traversal at all (§4). An
+author's Invitation legs toward a `(Chat, Profile)` pair are
+suppressed iff the `≺`-maximal element of that author's own
+{Invitation, De-invite} records with that incidence is a
+De-invite — a later Invitation re-establishes them — L1's
+inviter-revocation rule (`def:epoch:inviter-revocation`),
+adopted as the fold's rule here.
 
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
 [layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-vouch-predicate))
