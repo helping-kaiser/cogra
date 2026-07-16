@@ -174,8 +174,7 @@ mechanisms with two different scopes; they are not interchangeable.
   visible mark described in this section.
 - **Severance** — an author netting their own stance bundle toward
   a target to `(0, 0)` by appending counter-records — routing-inert
-  in the endorsement-flow projection and the write-side act every
-  consumer respects
+  for every consumer of the endorsement-flow projection
   ([graph-model.md §3](graph-model.md#3-revision-and-current-state),
   [feed-ranking.md](feed-ranking.md)). Touches no content; each
   counter-record is itself a priced act.
