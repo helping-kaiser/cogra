@@ -296,8 +296,9 @@ f(Δt) = 0.5^(Δt / half-life)            (default shape)
 `Δt` is **epoch age**: the count of epoch certificates issued
 since the record's first inclusion in the committed edge set
 (`0` for records newer than the newest certificate). The
-half-life is a governed parameter measured in epochs (§12);
-frontends may retune or disable (`f ≡ 1`) view-side.
+half-life and the shape of `f(Δt)` are both governed parameters
+(§12), the half-life measured in epochs; frontends may retune the
+half-life or disable recency (`f ≡ 1`) view-side.
 
 - **Only the terminal hop decays.** Silence on a relationship
   record is not a partial revocation — stances hold until revised
@@ -455,6 +456,11 @@ category (§8.3). While any live entry path remains, `t` is
 reachable through it, at the 1× bridge ceiling (§6.2).
 A cancellation `S = 0` (opposing live paths summing to zero) is
 not jail — it sorts as the neutral score it is; jail is absence.
+
+One reachability gap is open: hyper-edge T-legs landing on a
+Profile source from passive artifacts, so no viewer's netting can
+remove another author's leg — parked as
+[open-questions.md Q28](../open-questions.md).
 
 ---
 
@@ -704,7 +710,8 @@ centrally nor deserves central trust. The split:
 
 Network-level defaults are governed parameters of the network
 charter — an L1 Content node anchored by the publisher system
-actor, with passed changes finalized onto it as witnessed payloads
+actor, with passed changes landing as witnessed payloads on their
+finalization Opinions toward it
 (newest finalization per parameter wins) and mirrored into the
 `:Network` carrier node the ranker reads
 ([network.md](network.md#feed-ranking-calibration)). Set by the
@@ -718,4 +725,5 @@ change one viewer's sort, never the published computation.
 | `γ` | Per-hop attenuation, default `1` (§5.1) | yes |
 | `χ` | Dust floor — compute cutoff on path product (§6.3) | yes (finer only) |
 | half-life | `f(Δt)` decay, in epochs (§5.3) | yes (incl. off) |
+| `f(Δt)` shape | Functional form of the recency factor; the exponential is the genesis default (§5.3) | no |
 | tie-breaker composition | Order and weights of §7's cascade | no |

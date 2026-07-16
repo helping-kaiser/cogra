@@ -9,8 +9,9 @@ guidelines themselves are amendable by the Network at any time.
 This doc is the **canonical text**. Its current version is pinned
 by two governed `:Network` properties (version number + content
 hash), and each ratified version's text is anchored on L1 as a
-platform document — a publisher-authored Content node carrying
-the document as witnessed payload
+platform document — a publisher-authored Content node whose
+anchoring Publish record carries the document as witnessed
+payload
 ([substrate.md §8](../primitive/substrate.md#8-system-actors)).
 The working copy lives here, in the repo.
 
@@ -31,9 +32,10 @@ Starter list — adapted from the conventions of established
 public platforms:
 
 - **Child sexual abuse material (CSAM).** Always, everywhere.
-  Reported to authorities and scheduled for hard-delete on
-  archive entry — the legal hold is "report and destroy", not
-  "retain for prosecution" (per
+  The archive copy enters on the standard placeholder hold;
+  `legal_admin` reports to authorities and schedules immediate
+  hard-delete at case review — the legal hold is "report and
+  destroy", not "retain for prosecution" (per
   [retention-archive.md](../primitive/retention-archive.md)).
 - **Credible threats of violence** against a person, group, or
   identifiable target.
@@ -195,7 +197,8 @@ Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
 thereafter: **attribution** `a ∈ {0, 1}` (credit requirement) and
 **oversight** `o ∈ {0, 0.5, 1}` (AI provenance). They are
-structural metadata of the Publish record; no L1 formula consumes
+content-governance metadata of the Publish record
+(`def:content:license-qualifiers`); no L1 formula consumes
 them — enforcement is explicitly CoGra's responsibility
 ([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
 CoGra enforces them through four planks:
