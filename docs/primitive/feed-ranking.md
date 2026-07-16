@@ -360,7 +360,8 @@ would silently reintroduce it.
   (`w̃ ≈ 0.3–0.5`), path count grows like `b^depth`; branching
   `b ≥ 2–3` lets a cluster amplify one entry edge without bound.
   The L1 spec rejects sum-scoring for exactly this
-  redundancy-amplification failure (PN full §H.5).
+  redundancy-amplification failure
+  (`subsec:necessity:max-product-path-scoring`).
 - **Disjoint-sum is the principled middle.** By Menger's theorem
   the number of internally disjoint `u→c` paths is capped by the
   minimum node cut, so breadth counts exactly when it is realized
