@@ -1567,6 +1567,19 @@ without graph traversal. The frame is verified by
 recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
+**Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
+the sustaining frontier assumes who funds an actor's burn-value: a Layer-0
+burn is funder-unconstrained at the surface, and the resulting $B_i$
+accrues to the actor's address whoever paid for it
+(`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
+under its own policy, to supply a member's sustaining burn — Layer 1
+neither prescribes nor prices that choice (`post:transport:guild-grant`).
+This relocates **who bears the source cost** without faking it: the frame
+is non-transferable across addresses (`def:comparator:frame-binding`), and
+funding a member's own burns raises only that member's own source. The
+comparator sees a funded member exactly as it sees a self-funded one — the
+burn is real either way.
+
 ### 11.3 Stance aggregation and the Vouch Predicate
 
 **Net Stance (`def:epoch:net-stance`).** For author
