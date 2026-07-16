@@ -114,7 +114,7 @@ where each concept sits relative to the seam.
 |---|---|---|
 | Admission money | consume | Layer 0's reserve behind `B_i` and the θ-debit — consume-only; CoGra reads `B_i` and the entry cost through L1's interface and never authors L0 records. |
 | CGT (reward economy) | off-graph | CoGra's own token — the campaign-pool currency, fully disconnected from the L0 reserve. "Burn" means CGT supply destruction, never the θ-debit. |
-| Subsidised θ-debits | consume | Ordinary members ride L1's pooled-action / set-price mechanism; generosity and caps are governed `:Network` parameters. System actors and Collectives draw on the CoGra community treasury. |
+| Subsidised θ-debits | off-graph | Only the actor's own balance ever pays the actor's θ (W1). Community funding is Layer-0 burns to the member's own address (`rem:gates:guild-funding`) — funder-unconstrained, the comparator sees a funded member exactly as a self-funded one; generosity and caps are governed `:Network` parameters. System actors and Collectives draw on the CoGra community treasury. |
 | Campaigns, settlement, payouts | off-graph | The advertiser rail and payout plumbing are CoGra's; the attribution they pay against is computed over L1 records (below). |
 | Inviter reward | off-graph | Single-hop 1% CGT to the accepted mutual-pair inviter (§1) — permanent, no chain of referrals. |
 | Feed ranking | consume | Terminal — CoGra's own published computation over L1's per-edge primitive `w̃(e)` and viewer-rooted paths. |
