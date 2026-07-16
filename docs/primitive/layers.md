@@ -236,8 +236,10 @@ action:
   marking the removal, `redaction_reason` set. The tombstone
   itself stays.
 - Media assets in blob storage are removed. Their digests remain
-  committed in the witnessed envelope, so the removal is publicly
-  evident — a digest that no longer resolves — rather than silent.
+  committed in the (now removed) witnessed payload — the envelope
+  goes with the whole-record removal, and the surviving witness
+  reveals nothing. The public evidence is the reduced payload
+  state itself.
 - Each redacted original is moved to the
   [retention archive](retention-archive.md) with a per-row legal
   hold; archive content is hard-deleted at hold expiry
