@@ -240,9 +240,11 @@ differ in authorization, scope, and archive treatment:
 The two paths run independently. A user under active moderation
 can still request account deletion. Conversely, illegal-content
 classification on a redacted user's content proceeds normally —
-the content is in the retention archive, and a moderator acting
-on a court order can request removal of the archive copy as well,
-satisfying the destruction obligation that overrides ordinary
+the content is in the retention archive, and destroying the
+archive copy under a court order is `legal_admin`'s job, never a
+moderator's — moderation has no authority over the archive
+([retention-archive.md §4](../primitive/retention-archive.md#4-access-path)).
+That destruction satisfies the obligation that overrides ordinary
 retention for illegal content specifically.
 
 ## What this doc is not
