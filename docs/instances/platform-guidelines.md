@@ -196,7 +196,8 @@ Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
 thereafter: **attribution** `a ∈ {0, 1}` (credit requirement) and
 **oversight** `o ∈ {0, 0.5, 1}` (AI provenance). They are
-structural metadata of the Publish record; no L1 formula consumes
+content-governance metadata of the Publish record
+(`def:content:license-qualifiers`); no L1 formula consumes
 them — enforcement is explicitly CoGra's responsibility
 ([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
 CoGra enforces them through four planks:
