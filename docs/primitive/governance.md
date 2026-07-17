@@ -1,15 +1,29 @@
 # Governance
 
 CoGra uses **weighted role-based voting** as a recurring primitive.
-Every governance decision — approving a new member, disavowing a
-message, eventually electing a collective council — follows the same
-shape: eligible actors cast weighted votes; a threshold policy
-decides the outcome; the outcome is recorded as a state transition
-on the graph.
+Every governance decision — admitting a collective member,
+disavowing a message, classifying content, amending a network
+parameter — follows the same shape: eligible actors cast weighted
+ballots; a threshold policy decides the outcome; the outcome is
+recorded and, where it must bind, materialized on the shared graph.
 
-This doc defines the primitive. Specific applications (junction
-approval, chat moderation, future patterns) parameterize it for
-their context.
+Governance is CoGra's own machinery. PeerNetworks Layer 1 knows
+nothing of votes, quorums, or roles — it prices and records the
+acts. Under the guild reimplementation grant
+([layer1-interface.md §4](layer1-interface.md#4-the-reimplementation-grant)),
+the eligibility rules, weight functions, thresholds, and tally
+formulas below are CoGra policy, and CoGra publishes them in full
+(the formula-completeness obligation,
+[substrate.md §2](substrate.md#2-the-boundary-consume-vs-reimplement)).
+What rides Layer 1 is the public structure every decision leaves
+behind: the proposal anchor, the ballots, and the finalization —
+priced, witnessed, replayable acts
+([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
+
+This doc defines the primitive. The Proposal carrier is specified
+in [proposal.md](../instances/proposal.md); specific applications
+(chat moderation, collective contracts, Network-scope governance)
+parameterize the primitive for their context.
 
 ---
 
@@ -21,13 +35,13 @@ decision reuses:
 
 - **One mental model.** Every governance flow is an instance of
   the same primitive.
-- **Consistent append-only semantics.** Votes are layers; outcomes
-  are state transitions on structural edges. No special storage, no
-  hidden logic.
+- **One public structure.** Every decision, at every scope, is a
+  Proposal on the same L1-anchored pattern (§2.1). An auditor
+  replays any decision from public records plus CoGra's published
+  tally formula.
 - **No per-case re-invention.** A new governance need specifies
-  the components in §2 (subject, eligibility, weighting, threshold)
-  and a carrier shape from §3, and slots in. The full list of
-  current applications is in §8.
+  the components in §2 and slots in. The full list of current
+  applications is in §8.
 
 ---
 
@@ -35,164 +49,146 @@ decision reuses:
 
 Every vote-based decision specifies the components below.
 
-A single subject node can host **multiple coexisting governance
+A single subject can host **multiple coexisting governance
 instances**, each scoped to a specific decision-type and
 parameterized independently. A Collective may have one instance
 for "fire worker" (1-of-1 from CEO) and a different one for
-"remove board member" (2/3 of the board) — same node, different
-instances, routed by the subject's role. See
-[collectives.md](../instances/collectives.md) for the worked-out social-contract
-patterns.
+"remove board member" (2/3 of the board) — same subject, different
+instances, routed by the action key. See
+[collectives.md](../instances/collectives.md) for the worked-out
+social-contract patterns.
 
 ### 2.1 Subject
 
-What's being decided. Always a graph object whose state can change:
+What's being decided. Every subject is addressed the same way: a
+**Proposal** ([proposal.md](../instances/proposal.md)) whose
+public face is a proposer-authored **Content anchor** — the
+proposal text and machine-readable terms ride it as witnessed
+payload — plus a **`(0,0)` Reference from the anchor to the
+subject node**. The zero-parameter Reference is routing-inert and
+never vouches (`rem:graph:zero-parameter-degeneracy`); its only
+job is to name the subject as replayable public structure. Ballots
+point at the anchor — never at the subject itself.
 
-- A junction relationship (e.g. a ChatMember approval).
-- A structural edge's state-bearing dimension (e.g. a chat's stance
-  toward a message).
-- A node property (e.g. an entry in a chat's `governance` map) —
-  governance of governance is in scope.
+The subject named by the Reference is always an L1 node:
 
-**What governance does NOT cover — actor sovereignty.** A User's
-own node properties (`username`, profile fields) and their
-outgoing actor edges are sovereign: the User changes them
-themselves, with no vote and no eligibility check. Governance
-applies to **shared** state (junctions, structural edges, and
-properties on nodes that represent more than one actor — Chats,
-Collectives, Items, Proposals). The
-[redaction exception in layers.md §5](layers.md#5-deletion-policy) is the only path
-by which someone outside the actor can alter sovereign content,
-and only for illegal material with a visible trace.
+- **A node's governed state** — a Chat whose rule entry is being
+  amended, the network charter anchor for a parameter change, a
+  content node being classified. The Reference points at that
+  node; the action key and proposed value ride the anchor payload.
+- **A person within a scope** — membership and role decisions
+  (a chat kick, a collective hire, a `network_role` change) point
+  the Reference at the member's **Profile**; the scope and meaning
+  are L2, carried in the anchor payload
+  ([nodes.md §3](nodes.md#3-overlay-node-types-cogras-graph)).
+- **Overlay-only state** — where the governed object has no L1
+  home (a collective's internal rule entry), the Reference points
+  at the owning entity's L1 node (the collective's Profile) and
+  the payload names the overlay target.
 
-#### How subjects are addressed
+**What governance does NOT cover — actor sovereignty.** An
+actor's own records and their own profile payload are sovereign:
+the actor authors them themselves, with no vote and no
+eligibility check. Governance applies to **shared** state — scoped
+memberships and roles, governed rule entries, moderation
+classifications, network parameters. The illegal-content path in
+[moderation.md](../instances/moderation.md) is the only route by
+which anyone but the author reduces the author's own content, and
+it leaves the visible mark
+([layers.md §5](layers.md#5-deletion-policy)).
 
-A vote edge needs a node endpoint — edges can't point at edges or
-at properties. Every subject is addressed the same way: a
-**Proposal** node (see [nodes.md §6](nodes.md)) is
-created as the subject, and votes point at the Proposal — never at
-the junction, edge, or target node whose state is being decided.
-The Proposal carries `target_property` and `proposed_value` as
-node properties, and a `:TARGETS` structural edge to the node
-whose state the outcome changes (see
-[edges.md §2](edges.md)). When the tally
-crosses threshold, a cascade (see
-[graph-model.md §5](graph-model.md)) writes
-the outcome; what it writes depends on the subject:
-
-- **Junction relationship** — the Proposal `:TARGETS` the
-  junction; the cascade writes the outcome onto the junction's
-  structural edges (an admit-Proposal writes the approval edge
-  with `dim1 > 0`, a removal-Proposal appends a `dim1 < 0` layer
-  on it). Every lifecycle event — admission, removal, role
-  change — is its own fresh terminal Proposal; see
-  [graph-model.md §5](graph-model.md).
-- **Structural edge state** — the Proposal `:TARGETS` the edge's
-  target node with `target_property = 'node'` (the whole-node
-  sentinel, see
-  [nodes.md "Whole-node targeting"](nodes.md));
-  the cascade writes a new state layer on the edge — or, where
-  the instance defines no outcome edge, the passed Proposal
-  itself is the recorded stance (see §8).
-- **Node property** — the Proposal `:TARGETS` the node and names
-  the property; the cascade writes a new layer on the target
-  property with `proposed_value`.
-
-Multiple Proposals targeting the same subject coexist; each
-passes or fails on its own votes. Reverting a passed change
-requires a **counter-Proposal** — defined in
-[§3 "Counter-Proposals"](#counter-proposals), consistent with §6 —
-never re-voting the original.
-
-Whether the vote edge uses Shape A or Shape B (§3) is a separate,
-per-application choice about whether personal sentiment stays
-coupled to the vote. It is not determined by the subject type.
+Multiple Proposals naming the same subject coexist; each passes or
+fails on its own ballots. Reverting a passed change requires a
+**counter-Proposal** — defined in
+[§3 "Counter-Proposals"](#counter-proposals) — never re-voting the
+original.
 
 ### 2.2 Eligibility
 
-Who can vote. Always expressed as a condition on existing graph
-state:
+Who can vote. Always expressed as a condition on existing state —
+L1 records, overlay junctions, or both:
 
-- "Active ChatMembers of Chat Y" — membership + approval pair
-  active.
-- "CollectiveMembers of Collective Z with role `shareholder`."
-- "Any actor with an outgoing edge to X" — permissive.
+- "Members of Chat Y" — the canonical membership fold over the
+  member's own Participant / Leave chain
+  ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
+- "CollectiveMembers of Collective Z with role `shareholder`" —
+  overlay junction state
+  ([collectives.md](../instances/collectives.md)).
+- "Active Network members" — every account, filtered by the
+  governed activity window
+  ([network.md §8](network.md#8-membership-and-roles)).
 
-Eligibility is evaluated at **tally time**, not vote time. A vote
-from someone who becomes ineligible afterward drops out; a vote
-from someone who becomes eligible later (e.g. a newly-approved
-member) counts once their status flips. The mechanism that
-neutralizes an in-flight vote when its caster loses eligibility
-mid-flight — a `(0,0)` layer written on the affected vote edges
-by the eligibility-dropout cascade — is specified in
-[§6 "Eligibility-dropout cascade"](#eligibility-dropout-cascade).
+Eligibility is evaluated at **tally time**, not ballot time. A
+ballot from someone who becomes ineligible afterward drops out of
+every later tally; a ballot from someone who becomes eligible
+later counts once their status flips. No neutralizing write is
+needed — the ballot record stands on L1 as history, and the tally
+formula simply excludes it while its caster is ineligible. This
+replaces any notion of revoking or blanking votes: L1 records are
+never unwritten, and the tally is a read-side computation.
 
 ### 2.3 Weight function
 
-How each vote's contribution is scaled. A gate picks one of three
-**weight modes**: **equal** — every eligible voter counts `1`
-(one-member-one-vote); **role** — a flat per-role multiplier; or
-**property** — the weight is read from a property on the voter's
-junction (e.g. `ownership_pct`), so this mode enfranchises only roles
-that carry that property. An explicit per-junction `voting_weight`
-overrides the mode where set.
+How each ballot's contribution is scaled. An instance picks one of
+three **weight modes**: **equal** — every eligible voter counts
+`1` (one-member-one-vote); **role** — a flat per-role multiplier;
+or **property** — the weight is read from a property on the
+voter's overlay junction (e.g. `ownership_pct`), so this mode
+enfranchises only roles that carry that property. An explicit
+per-junction `voting_weight` overrides the mode where set.
 
-**Role-derived defaults by junction type:**
+**Role-derived defaults by scope:**
 
-| Junction         | Default source                                                                       | Out-of-the-box roles → weights |
-|------------------|--------------------------------------------------------------------------------------|---|
-| ChatMember       | Per-action role weights inside each `Chat.governance` entry's `exec.weighting` (the `'role'` mode's table) — see [chats.md §10](../instances/chats.md#10-moderation)           | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
-| CollectiveMember | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
-| Future junctions | Whatever properties the junction exposes                                             | Defined by the application |
+| Scope | Default source | Out-of-the-box roles → weights |
+|---|---|---|
+| Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §10](../instances/chats.md#10-moderation) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
+| Collective | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
+| Network | none — every active member's weight is `1` | no `voting_weight` override; Network membership has no junction to carry one |
 
 The chat-scope `chat_mod` role is deliberately distinct from the
-Network-scope `User.network_role = 'moderator'`; do not confuse
-them (see [§7](#7-the-mod-gate)).
+Network-scope `network_role = 'moderator'`; do not confuse them
+([§7](#7-the-mod-gate)).
 
-**`voting_weight` override.** Any junction node may carry an
+**`voting_weight` override.** Any overlay junction may carry an
 optional, **nullable** `voting_weight` property. When set
 (non-null), it is read directly as the voter's weight and the
 role-derived default is ignored. When null (the default), the
-role-derived rule above applies. The override is the escape
-hatch for instances whose intended weight does not fall out
-naturally from role + ownership — e.g. a small collective with
-per-member negotiated weights, or a chat that wants to deviate
-from the role-weight table for a specific bearer. Declared
-nullable on each junction node — see
-[nodes.md §3](nodes.md) for the cross-junction
-declaration, [chats.md §3.3](../instances/chats.md#33-chatmember)
-and [collectives.md](../instances/collectives.md) for the
-per-junction specs.
+role-derived rule applies. The override is the escape hatch for
+instances whose intended weight does not fall out naturally from
+role + ownership — e.g. a small collective with per-member
+negotiated weights.
 
-For Network-scope every active member's weight is `1`; no
-`voting_weight` override applies because Network membership has
-no junction to carry the property.
+Roles, junction properties, and the governed rule entries all
+live in CoGra's overlay and Postgres — never on L1
+([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
+The ballots are public; the weighting applied to them is CoGra's
+published policy over CoGra's own state.
 
 ### 2.4 Threshold policy
 
 What tally triggers the outcome. Possible shapes:
 
-- Simple count (N or more affirmative votes).
+- Simple count (N or more affirmative ballots).
 - Percentage of eligible voting weight.
 - Supermajority for irreversible decisions.
 - Quorum + percentage (M% of eligible weight participates, N% of
   cast weight agrees).
-- **Petition with dual quorum** — positive-vote-only tally; pass
-  on the lower of (fraction × eligible) or absolute count.
-  Used at Network scope where unbounded membership and bot
-  inflation make a single percentage or single fixed count
-  insufficient. See [§3 "Petition-style tally and dual quorum"](#petition-style-tally-and-dual-quorum-network-scope-only).
+- **Petition with dual quorum** — positive-ballot-only tally; pass
+  on the lower of (fraction × eligible) or absolute count. Used at
+  Network scope where unbounded membership and bot inflation make
+  a single percentage or single fixed count insufficient. See
+  [§3 "Petition-style tally and dual quorum"](#petition-style-tally-and-dual-quorum-network-scope-only).
 - **Multi-gate** — two or more independent eligibility groups
-  voting on the same subject; each gate has its own threshold,
-  and the outcome triggers only when **all** gates cross.
+  voting on the same subject; each gate has its own threshold, and
+  the outcome triggers only when **all** gates cross.
 
 **Mirror failure (bidirectional tallies).** A tally that counts
-negative votes fails terminally — `status = 'failed'`
+negative ballots fails terminally — `status = 'failed'`
 ([proposal.md §6](../instances/proposal.md#6-lifecycle)) — when
 the negative side satisfies the same threshold shape required of
 the positive side: same quorum, same fraction or count, computed
 over negative weight. While neither side crosses, the Proposal
-stays open and votes remain re-layerable. Petition-style tallies
+stays open and members may ballot again. Petition-style tallies
 count no negatives, so they have no failure path — an unloved
 petition simply stays `'open'`.
 
@@ -207,65 +203,72 @@ subject is gated by two or more distinct eligibility groups —
 neither alone can pass it — the structure is intentional: each
 gate counters a failure mode the others cannot. The canonical
 instance is Network moderator role changes
-([network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal)):
-a moderator gate (the critical-tier mod-gate, a fraction of active
-moderators — §7) prevents community-only purges by bot floods or
-coordinated targeting; a community gate (quorum + supermajority of
-active members) prevents mod-only coups in which sitting
-moderators strip honest peers.
-Either gate alone leaves a hole; both gates together close it.
-Future decisions adopt the multi-gate shape when the trust model
-demands more than one veto-bearing group.
+([network.md §9](network.md#9-mod-role-changes)): a moderator gate
+(the critical-tier mod-gate, a fraction of active moderators — §7)
+prevents community-only purges by bot floods or coordinated
+targeting; a community gate (quorum + supermajority of active
+members) prevents mod-only coups in which sitting moderators strip
+honest peers. Either gate alone leaves a hole; both gates together
+close it. Future decisions adopt the multi-gate shape when the
+trust model demands more than one veto-bearing group.
 
 **All numeric parameters are tunable via this same primitive.**
-Role weights, quorum %, threshold % — every number is a node
-property on the subject, not a hardcoded constant. Changing any of
-them is done via a Proposal (see §2.1), voted on by the same
-eligibility rules. Defaults exist to bootstrap; they are not fixed
-rules.
-
-**Tally evaluation.** A tally is computed only when a new or
-updated vote layer is written on the subject — never on a
-clock, never as a background sweep. See
-[§6 "When outcomes take effect"](#6-when-outcomes-take-effect)
-for trigger conditions and per-subject serialization.
+Role weights, quorum fractions, threshold counts — every number is
+governed state (a `:Network` parameter or a rule entry), amendable
+through a Proposal under its own amendment rule. Defaults exist to
+bootstrap; they are not fixed rules.
 
 ### 2.5 Outcome
 
-What state change happens when the threshold is crossed. Always
-append-only, never a deletion. The carrier is one of:
+What happens when the threshold is crossed. The outcome has one
+**public record** and zero or more **materializations**:
 
-- a new layer on a structural edge (state-bearing),
-- a new layer on a node property, or
-- a new Postgres display-content version row — for a
-  Proposal-mediated display-content change (`set:display_name`,
-  `set:description`, `set:avatar`, `set:website_url`), where the on-graph record
-  is the terminating Proposal's `status` rather than a
-  graph-property layer (see
-  [proposal.md §6](../instances/proposal.md#6-lifecycle)).
+- **The finalization record** — the scope's executing authority
+  authors an **Opinion `(0,0)` + payload (outcome, tally digest)
+  toward the proposal anchor**. At Network scope the executor is a
+  system actor ([substrate.md §8](substrate.md#8-system-actors));
+  at chat scope it is the chat-authority member whose per-chat
+  role authorizes execution
+  ([chats.md §10](../instances/chats.md#10-moderation)); at
+  collective scope it is the collective actor itself. The
+  finalization is the on-graph outcome record of every Proposal —
+  the tally digest makes the pass auditable against the published
+  formula and the public ballots.
+- **Materializations**, per outcome type:
+  - an **L1 gesture** where the outcome must bind or be readable
+    on the shared graph — the De-invite executing a chat kick
+    ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)),
+    The Moderator's Tag verdict, an illegal classification's
+    payload removal
+    ([moderation.md](../instances/moderation.md)), The Publisher's
+    role Tag on a passed `network_role` change
+    ([network.md §9](network.md#9-mod-role-changes));
+  - a **payload on the finalization itself** where the outcome is
+    a governed value — a network parameter change rides the
+    finalization Opinion toward the charter anchor, making the
+    parameter schedule replayable
+    ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule));
+  - **overlay and Postgres writes** — junction admissions,
+    display-content versions, rule-entry amendments, mirror
+    updates of L1-materialized state — CoGra-side state following
+    CoGra's own append-only discipline ([layers.md](layers.md)).
 
-A cascade may additionally refresh a **derived cache**
-([layers.md §3](layers.md#derived-caches-do-not-layer)) — an
-in-place write that is not a carrier, since a cache holds no
-history. Where the refresh is the outcome's only effect (a
-passing `decision:rotate_key` advancing `Chat.epoch`,
-[chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
-the on-graph record is the Proposal's terminal `status`, as in
-the display-content case above.
-
-Cascades are allowed — see [graph-model.md §5](graph-model.md).
+Nothing is ever deleted: L1 records are permanent by construction,
+and every CoGra-side carrier is append-only. The only reduction
+anywhere is the moderation payload-removal path with its visible
+mark ([layers.md §5](layers.md#5-deletion-policy)).
 
 ### 2.6 Packaging rules on a node — the `governance` map convention
 
-A subject node may need to host **many decision-type rules**
+A governed entity may need to host **many decision-type rules**
 ("who admits a new member", "who renames the entity", "who
 disavows content"). Spreading these across one
-quorum/threshold/eligibility property per decision-type fans
-out the node's schema and forces a schema change every time a
-new decision-type is added.
+quorum/threshold/eligibility property per decision-type fans out
+the schema and forces a change every time a new decision-type is
+added.
 
-**The pattern: one layered map property, keyed by `action_key`,
-each entry a `Rule` of paired `exec` + `amend` triples:**
+**The pattern: one layered map, keyed by `action_key`, each entry
+a `Rule` of paired `exec` + `amend` triples:**
 
 ```
 governance: Map<String, Rule>
@@ -277,618 +280,374 @@ governance: Map<String, Rule>
 
 `exec` is the per-instance configuration per §§2.1–2.5 that
 governs **executing** the action. `amend` is the same shape
-without `exclude_subject` (the subject of an amendment is the
-rule entry itself, not a member junction) and governs
-**amending** that entry.
+without `exclude_subject` (the subject of an amendment is the rule
+entry itself, not a member) and governs **amending** that entry.
 
-**The `amend` triple is self-applying.** Amending the `amend`
-half of a rule uses that same `amend` triple. Tightening the
-amendment process requires using the current amendment process
-— no separate meta-meta-rule, no infinite regress.
+**The `amend` triple is self-applying.** Amending the `amend` half
+of a rule uses that same `amend` triple. Tightening the amendment
+process requires using the current amendment process — no separate
+meta-meta-rule, no infinite regress.
 
-**Schema is fixed; the action set is data.** `governance` is a
-single map-typed property declared once per host label in
-[graph-data-model.md](../implementation/graph-data-model.md);
-new action keys never require a schema change. Adding or
-amending an entry flows through a Proposal
-with `target_property = 'governance.<action_key>'`,
-`value_kind = 'rule'`, and `proposed_value` set to the new
-`Rule` object. Entries are never removed: a rule is always
-rewritable through its own `amend` gate, so disabling an action
-is an amendment of its `exec` gate, not a deletion.
+**The map is overlay state; its host is an L1 node.** The
+`governance` map lives as a layered overlay property keyed to the
+governed entity ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
+A Proposal amending an entry names the host with its anchor's
+Reference and carries `action_key` and the new `Rule` in the
+anchor payload ([proposal.md §2](../instances/proposal.md#2-terms)).
+Entries are never removed: a rule is always rewritable through its
+own `amend` gate, so disabling an action is an amendment of its
+`exec` gate, not a deletion.
 
-**Rule snapshot via `rule_anchor`.** A Proposal authored under
-a `governance[X]` entry sets `rule_anchor` to the host node's
-UUID; tally and cascade read `<host>.governance` as-of the
-Proposal's authorship-edge timestamp and index by `action_key`
-to recover the frozen Rule. See §5 "Rule snapshot at author
-time".
+**Rule snapshot.** Tally and execution read the host's rule state
+**as-of the Proposal anchor's landing epoch** and index by
+`action_key` to recover the frozen Rule. See
+[§5 "Rule snapshot at author time"](#rule-snapshot-at-author-time).
 
 **Per-instance specifics live in the instance docs.** The
-`action_key` vocabulary, the dispatcher's key-construction
-conventions and fallback chain, and whether a primitive default
-map is installed at host creation are per-instance choices.
-Consumers:
+`action_key` vocabulary, dispatch conventions, and whether a
+default map is installed at host creation are per-instance
+choices. Consumers:
 
-- [Collective.governance](../instances/collectives.md#8-governance--the-social-contract)
-  — no primitive defaults; founders write the social contract
-  at creation.
-- [Chat.governance](../instances/chats.md#10-moderation) —
-  default map installed at chat founding (chats default to
-  community-vote moderation because it fits informal
-  communities).
+- [Collective governance](../instances/collectives.md#8-governance--the-social-contract)
+  — no primitive defaults; founders write the social contract at
+  creation.
+- [Chat governance](../instances/chats.md#10-moderation) — default
+  map installed at chat founding (chats default to community-vote
+  moderation because it fits informal communities).
 
 ---
 
-## 3. The two vote shapes
+## 3. The ballot
 
-Two edge shapes carry votes. Both are append-only; they differ only
-in carrier.
+A vote is an **L1 ballot**: a **payload-marked Opinion toward the
+proposal anchor**, direction carried by the stance sign. One shape
+at every scope — chat, collective, Network — replacing any notion
+of scope-specific vote carriers.
 
-### Shape A — actor edge from voter to subject
+- **Carrier.** An ordinary Opinion record
+  ([layer1-interface.md §9](layer1-interface.md#9-node-and-edge-type-inventory))
+  from the voter's own actor toward the anchor. The **ballot
+  marker** — a guild-key field in the payload envelope — is what
+  makes it a ballot; an unmarked Opinion toward the same anchor is
+  organic sentiment and never enters any tally. The two share one
+  `(author, target, type)` bundle on L1; the tally reads the
+  **individual payload-marked records, never the netted bundle**,
+  so organic stance and ballot cannot contaminate each other.
+- **Direction.** The sign of the ballot's valence: positive =
+  support, negative = oppose, zero = withdrawal. The tally reads
+  only the sign; magnitude and the connection axis are the voter's
+  free stance vocabulary, informational for ranking and frontends,
+  never governance arithmetic.
+- **Changing a vote** = authoring a new marked ballot; the tally
+  reads each eligible voter's **latest** ballot record. Every
+  prior ballot stays on the graph as history.
+- **Public, priced, permanent.** Ballots are ordinary L1 acts:
+  write-rule-gated (an insolvent or below-wall member cannot vote
+  — accepted; funding flows per
+  [economics.md](economics.md)), epoch-quantized in their landing,
+  and visible to everyone forever. There is no secret ballot
+  (§12).
+- **Weighting is read-side.** Role weights, junction properties,
+  and eligibility conditions are applied by CoGra's published
+  tally formula over its overlay state (§2.2–2.3); the ballot
+  record itself carries no weight.
+- **Authoring is never a vote.** The proposal anchor's genesis is
+  a **Publish** record, and Publish and Opinion never share a
+  bundle — so creating a Proposal contains no ballot. The client
+  flow bakes the proposer's explicit `+1` ballot immediately after
+  creation: one more priced act, consistent with proposer-pays
+  ([proposal.md §1](../instances/proposal.md#1-creation)).
 
-Used when the voter has **no eligibility junction** to vote
-through. The voter creates an actor edge from their `User` (or
-`Collective`) node directly to the subject; `dim1` carries the
-position (positive = support, negative = oppose). Two cases use
-Shape A:
-
-**Would-be bearer's self-claim to a new junction.** The bearer
-of a new ChatMember / CollectiveMember / ItemOwnership has no
-junction of that type yet — their own junction is the very
-thing they're claiming — so their approving vote on the
-junction's admit-Proposal is necessarily a
-`User/Collective → Proposal` actor edge.
-
-```
-User_Bob -[dim1: +0.9, dim2: +0.8]-> Proposal_admit_Bob_ChatY
-```
-
-When the self-claim admits the junction, the bearer also writes
-a `bearer → junction` actor edge carrying the `:AUTHOR`
-sub-label in the same gesture — the edge that authors the
-junction (see
-[authorship.md "Junction authorship"](authorship.md#junction-authorship)).
-That edge is authorship and sentiment toward the junction, not
-the vote; the vote is the edge to the Proposal.
-
-**Network-scope governance.** The Network has no per-member
-junction — every User is a member by virtue of being on the
-graph (see [network.md](network.md)) — so every member votes on
-Network-wide Proposals from their User node directly. The
-`User → Proposal` actor edge from
-[edges.md §1](edges.md) carries the vote: `dim1`
-is the voter's stance, the tally reads `sign(dim1)` for binary
-outcomes. See [proposal.md §4](../instances/proposal.md#4-edges).
-
-In both cases the vote IS the actor's own stance toward the
-subject. Other actors may also write actor edges toward the
-junction (e.g. `User_Alice → ChatMember_Bob_ChatY` for personal
-sentiment about Bob's membership) — these are not approval
-votes, just personal sentiment.
-
-### Shape B — structural edge from eligibility junction to a Proposal
-
-Used when the voter has an **existing eligibility junction** to
-vote through. The voter triggers; the system creates a
-structural edge from the voter's junction to the **Proposal**
-being voted on, `dim1` carrying vote direction. Shape B always
-targets a Proposal — a junction never votes directly on another
-junction.
-
-This is the workhorse shape for chat-internal and
-collective-internal governance:
-
-**Junction lifecycle.** Admission, removal, and role changes for
-every junction type — `ChatMember`, `CollectiveMember`,
-`ItemOwnership` — route through a fresh terminal `Proposal` that
-`:TARGETS` the junction. Each required approver (admission) or
-eligible voter (removal / role change) casts a Shape B vote from
-their existing junction of the same type for the same parent to
-that Proposal (`junction_voter → Proposal`). On threshold-cross
-the Proposal's cascade writes the outcome on the junction's
-structural edges. Admission and removal are **separate
-Proposals** — distinct instances (e.g. `decision:add_member` vs.
-`decision:remove_member`) with independently-set thresholds — so a
-member admitted by N approvers is not fired by one defection
-unless the removal threshold is itself `1`. Because every event
-is its own terminal Proposal with a fresh vote set, no vote
-outlives the event that gathered it. See
-[graph-model.md §5](graph-model.md).
-
-```
-ChatMember_Alice_ChatZ    -[dim1: +1, dim2: 0]-> Proposal_admit_Bob     (approve admission)
-CollectiveMember_Carol_CZ -[dim1: +1, dim2: 0]-> Proposal_remove_Bob    (vote to remove)
-```
-
-Routing every junction event through a Proposal — rather than a
-direct `junction → junction` vote edge — was once a chat-only
-uniformity choice, now applied to all junction types: direct vote
-edges would reinvent tally semantics, leak stale votes across
-events, and make counter-Proposal reversal awkward.
-
-**Disavowal of content or members.** Chat-internal disavowal —
-both Level 1 against a `ChatMessage` and Level 2 against a
-`ChatMember` — routes through a Proposal. Votes flow from each
-voter's `ChatMember` to the Proposal node as `ChatMember →
-Proposal` Shape B edges. See
-[chats.md §10](../instances/chats.md#10-moderation).
-
-**Votes on Proposals targeting chat / collective properties.**
-`ChatMember → Proposal`, `CollectiveMember → Proposal` — the
-member casts their vote as an eligible chat / collective
-member, not as a personal stance.
-
-In all cases:
-
-- Decouples the vote from the voter's personal sentiment. Their
-  `User → User`, `User → ChatMessage`, or `User → ChatMember`
-  edges are untouched.
-- Voter identity is the eligibility junction, expressing "I
-  vote as a member of this chat / collective," not "I
-  personally dislike this content / person."
-- Eligibility loss handled naturally: if the junction goes
-  inactive, the vote drops from the tally (edge stays in
-  history per §5 / [graph-model.md §8](graph-model.md)).
-
-### Choosing between A and B
-
-The voter's junction situation decides: **Shape A** when no
-junction exists yet (bearer self-claim, Network-scope governance),
-**Shape B** when an existing eligibility junction carries the
-vote. A future case that fits neither is a signal to add a third
-shape here, not to hack an existing one.
+Because ballots are ordinary stance records, proposals **rank
+natively** as stance-carrying content in the feed — no special
+hop, no vote-specific ranking rule
+([feed-ranking.md](feed-ranking.md)).
 
 ### Petition-style tally and dual quorum (Network-scope only)
 
 Network-scope governance — moderator role changes, content
-moderation classifications, and `:Network` parameter
-amendments (see
-[network.md §10](network.md#10-network-wide-governance)) —
-uses **petition-style tally**: only positive votes
-contribute. The mechanism applies at Network scope only.
-Chat-internal and collective-internal voting retain
-bidirectional Shape B tally (positive and negative votes
-both count); bounded membership in those contexts means
-bot-driven denominator inflation is not the dominant threat.
+moderation classifications, and `:Network` parameter amendments
+([network.md §10](network.md#10-network-wide-governance)) — uses
+**petition-style tally**: only positive ballots contribute. The
+mechanism applies at Network scope only. Chat-internal and
+collective-internal voting retain bidirectional tally (positive
+and negative ballots both count); bounded membership in those
+contexts means bot-driven denominator inflation is not the
+dominant threat.
 
-**Per-vote arithmetic.** Each Shape A vote edge from an
-active member to a Network-scope Proposal carries `dim1` as a
-continuous value in `[-1, +1]` and `dim2` as the voter's
-personal stake (also continuous). Its contribution to the
-petition tally is:
+**Per-ballot arithmetic.** Each marked ballot from an active
+member contributes:
 
-- `contribution = max(sign(dim1), 0) × voter_weight` — that
-  is, `+1 × voter_weight` when `dim1 > 0`, `0` when
-  `dim1 ≤ 0`. The petition tally reads only the sign of
-  `dim1`; the magnitude does not scale the contribution.
-- `dim2` is not read by the tally. It carries personal
-  stake / importance, which is informational for ranking
-  and frontends, not governance arithmetic.
-- The actor edges with `dim1 ≤ 0` are valid graph objects
-  encoding the voter's sentiment; they simply do not enter
-  the tally.
-- `voter_weight` is the value defined in §2.3. For
-  Network-scope every member's weight is `1`; the
-  `voting_weight` override is reserved for chat and
-  collective contexts that define non-uniform weights.
+- `contribution = max(sign(direction), 0) × voter_weight` — that
+  is, `+1 × voter_weight` for a positive ballot, `0` otherwise.
+- Negative and zero ballots are valid public records encoding the
+  voter's position; they simply do not enter the petition tally.
+- `voter_weight` is the §2.3 value; at Network scope every
+  member's weight is `1`.
 
-The Network-scope positive-vote total is the sum of these
-contributions across all active members' top-layer vote
-edges to the Proposal:
+The Network-scope positive total is the sum of these contributions
+over each active member's latest ballot:
 
 ```
-positive_count = Σᵥ  max(sign(v.dim1), 0) × voter_weight(v)
-                (over the top vote-edge layer of each active member)
+positive_count = Σᵥ  max(sign(direction(v)), 0) × voter_weight(v)
+                (over the latest marked ballot of each active member)
 ```
 
-**Dual-quorum pass condition.** A Network-scope Proposal
-passes when its positive-vote total is at least the lower of
-two bars, evaluated at tally time:
+**Dual-quorum pass condition.** A Network-scope Proposal passes
+when its positive total is at least the lower of two bars,
+evaluated at tally time:
 
 ```
 positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
 ```
 
-- `quorum_fraction` is the proposal-type's
-  **`*_quorum_fraction`** property on the `:Network` singleton.
-- `quorum_count` is the proposal-type's **`*_quorum_count`**
-  property on the `:Network` singleton.
-- `|active_members|` is the count of Users active inside
-  `Network.active_threshold_days`, read at each evaluation.
-  Activity gates the **bar**, never the votes: a cast vote counts
-  in every future evaluation regardless of whether its voter has
-  since fallen outside the activity window. (Eligibility per §2.2
-  — a revoked junction dropping its Shape B votes — is a separate
-  mechanism and unaffected.) The count is a **maintained
-  aggregate** — one counter per scope, kept current on an
-  operational cadence — never a per-vote rescan of the user set;
-  the same number serves every Proposal in the scope, and the bar
-  it feeds moves slowly, so a refresh-cadence-stale read is
-  acceptable by design.
+- `quorum_fraction` and `quorum_count` are the proposal-type's
+  governed pair on the `:Network` singleton
+  ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule)).
+- `|active_members|` is the count of members active inside the
+  governed activity window (`active_threshold_epochs`), read at
+  each evaluation. Activity gates the **bar**, never the ballots:
+  a cast ballot counts in every future evaluation regardless of
+  whether its voter has since fallen outside the activity window.
+  (Eligibility per §2.2 — a revoked membership dropping its
+  ballots — is a separate mechanism and unaffected.) The count is
+  a **maintained aggregate** — one counter per scope, kept current
+  on an operational cadence — never a per-ballot rescan of the
+  member set; the bar it feeds moves slowly, so a
+  refresh-cadence-stale read is acceptable by design.
 
 In addition, the mod-gate of §7 must be satisfied — every
 Network-scope Proposal also requires moderator consent in the
 tally, at the gate's baseline or critical tier depending on the
 action's stakes. The mod-gate and the dual-quorum bar are
-independent checks evaluated on the same set of vote layers.
+independent checks evaluated on the same ballot set.
 
-**Why two bars.** A fractional bar alone becomes unreachable
-as membership scales; an absolute bar alone could let a tiny
-faction pass things over a silent majority in a small network.
-The pair is bounded on both ends: the fractional bar dominates
-while `quorum_fraction × |active_members| < quorum_count`
-(small membership, real majority required); the absolute bar
-dominates once `quorum_fraction × |active_members| ≥ quorum_count`
-(large membership, fixed real-vote count sufficient). Both
-`quorum_fraction` and `quorum_count` are `:Network` properties
-amendable through the same primitive, so the operative bar
+**Why two bars.** A fractional bar alone becomes unreachable as
+membership scales; an absolute bar alone could let a tiny faction
+pass things over a silent majority in a small network. The pair is
+bounded on both ends: the fractional bar dominates while
+`quorum_fraction × |active_members| < quorum_count` (small
+membership, real majority required); the absolute bar dominates
+once the product crosses `quorum_count` (large membership, fixed
+real-ballot count sufficient). Both parameters are governed and
+amendable through this same primitive, so the operative bar
 self-corrects as conditions shift.
 
-**Why petition (positive-only).** A counted "no" vote operates
+**Why petition (positive-only).** A counted "no" ballot operates
 as a perpetual veto: bot accounts that cast it never expire,
-holding a Proposal blocked indefinitely against any later
-turnout. Restricting tally contributions to positive votes
-removes the passive-veto vector. Opposition retains an
-explicit structural path — author a **counter-Proposal** (see
-[§3 "Counter-Proposals"](#counter-proposals)). Negative-`dim1`
-actor edges are still recorded as personal sentiment; the
-tally simply does not aggregate them.
+holding a Proposal blocked indefinitely against any later turnout.
+Restricting tally contributions to positive ballots removes the
+passive-veto vector. Opposition retains an explicit structural
+path — author a **counter-Proposal** (below). Negative ballots are
+still recorded as the voter's position; the tally simply does not
+aggregate them.
 
-**Denominator inflation is bounded, not eliminated.** Bot
-accounts can still inflate the fractional-bar denominator by
-existing as active members (any outgoing actor edge inside
-`active_threshold_days`). This is a *liveness* pressure, not a
-takeover vector: a petition tally counts only positive votes, so
-an inflated denominator can make a Proposal *harder* to pass,
-never force a bad outcome through. The absolute bar `quorum_count`
-is the floor that survives any inflation — it caps the bar at a
-fixed real-vote count once `quorum_fraction × |active_members| ≥
-quorum_count` — and meta-governance over both bars lets the
-network re-calibrate as conditions evolve. The distinct,
-catastrophic vector — a single compromised moderator passing a
-destructive action over a community bot-flood — is closed
-separately by the critical-tier mod-gate ([§7](#7-the-mod-gate)).
+**Denominator inflation is bounded, not eliminated.** Accounts can
+still inflate the fractional-bar denominator by existing as active
+members — though at L1 every act that sustains "active" is a
+priced, θ-debited record, so inflation now carries a standing
+cost. It remains a *liveness* pressure, not a takeover vector: a
+petition tally counts only positive ballots, so an inflated
+denominator can make a Proposal *harder* to pass, never force a
+bad outcome through. The absolute bar `quorum_count` is the floor
+that survives any inflation, and meta-governance over both bars
+lets the network re-calibrate. The distinct, catastrophic vector —
+a single compromised moderator passing a destructive action over a
+community bot-flood — is closed separately by the critical-tier
+mod-gate ([§7](#7-the-mod-gate)).
 
-### Co-signed acts: threshold > 1 in either shape
+### Co-signed acts: threshold > 1
 
-When a graph-state change requires more than one party to
-concur — N parties whose individual votes each contribute to the
-same tally — the structure is **uniformly governance with
-threshold > 1** in whichever vote shape fits. No additional
-mechanism is introduced; the result is what we call a
-**co-signed act**:
+When a change requires more than one party to concur — N parties
+whose ballots each contribute to the same tally — the structure is
+**uniformly governance with threshold > 1**. No additional
+mechanism is introduced; the result is a **co-signed act**:
 
 - The would-be change is materialized as a pending subject (a
-  not-yet-active junction node, a Proposal) so co-signers have
-  something to vote on.
-- Co-signers append vote layers in their respective shape until
-  the threshold is reached.
-- On threshold-cross, the outcome takes effect per §6: the
-  junction activates or the Proposal's cascade fires.
+  Proposal, a pending collective junction) so co-signers have
+  something to ballot on.
+- Co-signers cast ballots until the threshold is reached.
+- On threshold-cross, the outcome takes effect per §6.
 
-The pattern recognizes that "N parties concur" and "governance
-with threshold N" are the same primitive — there is no separate
-"co-signature" concept. Two current consumers:
+"N parties concur" and "governance with threshold N" are the same
+primitive — there is no separate "co-signature" concept. The
+current consumer is **collective membership admission**: the
+candidate junction stays pending until the required approver
+ballots arrive; the finalization then activates it
+([collectives.md](../instances/collectives.md)).
 
-- **Multi-sig junction approval.** The would-be bearer's Shape A
-  self-claim vote on the admit-Proposal, plus N Shape B approver
-  votes on that Proposal from existing eligibility junctions of
-  the same type. The junction stays pending until the threshold
-  is reached; the Proposal's cascade then produces the approval
-  edge. See
-  [graph-model.md §5](graph-model.md).
-- **Chat invitations.** A specific application of multi-sig
-  junction approval: the chat's
-  `governance['decision:add_member']` entry sets the threshold
-  on the Shape B approver votes cast on the admit-Proposal for a
-  new `ChatMember`. See
-  [chats.md §11](../instances/chats.md#11-joining-and-leaving-a-chat).
-Collective act-as gestures are deliberately **not** a consumer:
-the graph is public, so an outgoing act held pending
-co-signatures — a not-yet-approved Post or edge — would already
-be visible. An authorized member's act-as gesture executes
+Chat membership is deliberately **not** a consumer: the landed L1
+flow makes joining unilateral — an Invitation or Join Request is a
+proposal-shaped gesture, and membership materializes only from the
+invitee's own Participant edge
+([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
+Collective act-as gestures are not a consumer either: the graph is
+public, so an outgoing act held pending co-signatures would
+already be visible. An authorized member's act-as gesture executes
 immediately; the act-as rule gates *who* may act, never how many
-must concur ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
-Multi-party Collective decisions exist only as the `decision:*`
-Proposal-shaped entries of the social contract — for an outgoing
-gesture, the `decision:<gesture>:<target_type>` form whose
-cascade performs the gesture on threshold-cross, the Proposal
-being the pending subject
-([collectives.md §8 "Action keys"](../instances/collectives.md#action-keys)).
+must concur
+([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
+Multi-party collective decisions exist only as `decision:*`
+entries of the social contract, the Proposal being the pending
+subject.
 
 ### Counter-Proposals
 
 Reversing a passed Proposal is done with a **counter-Proposal**:
-an ordinary `Proposal` node — same label, same `:TARGETS`
-edge, same eligibility/weight/threshold/outcome semantics —
-whose `target_property` matches the prior passed Proposal
-and whose `proposed_value` is the inverse (or the prior
-value, where the property is multi-valued). No new node
-label, no new edge label, no separate mechanism. Tally
-arithmetic, the petition-vs-bidirectional choice, the
-cascade dispatch, and the outcome rules apply identically.
+an ordinary Proposal — its own anchor, its own `(0,0)` Reference
+to the same subject, its own ballots — whose terms carry the
+inverse change (or the prior value, where the governed state is
+multi-valued). No new node type, no new mechanism. Tally
+arithmetic, the petition-vs-bidirectional choice, and the outcome
+rules apply identically.
 
 A counter-Proposal is the structural opposition path under
-petition-style tally (§3 "Petition-style tally and dual
-quorum"), where opposition cannot register inside the original
-Proposal's tally. It is also the only reversal path under
-bidirectional tally: outcomes are sticky (§6 "Why outcomes are
-sticky"), so a passed change does not flip back when later
-votes shift sentiment; a new Proposal must explicitly carry
-the reverse.
+petition-style tally, where opposition cannot register inside the
+original Proposal's tally. It is also the only reversal path under
+bidirectional tally: outcomes are sticky (§6), so a passed change
+does not flip back when later ballots shift sentiment; a new
+Proposal must explicitly carry the reverse.
 
-**Re-cascade on reversal.** A counter-Proposal that passes
-fires the cascade machinery a second time, symmetrically. If
-the original outcome triggered downstream writes — a
-moderation-status property change that cascaded into
-redaction layers, a role change that cascaded into derived
-permission edges — the counter-Proposal's threshold-cross
-re-runs the same cascade dispatch with the reversed
-`proposed_value`. The mechanism is the one defined in
-[§6 "Cascade dispatch"](#cascade-dispatch); no special
-reversal path exists. The resulting graph state will
-typically mirror the pre-original state, but exact mirror is
-not guaranteed: cascades may not be idempotent across
-reversals (intervening state changes on dependent edges or
-nodes can leave residue that the reversal cascade does not
-undo). Where exact mirror matters, the application is
-responsible for designing its cascade so the forward and
-reverse sequences compose to identity.
+**Reversal re-materializes, symmetrically.** A counter-Proposal
+that passes runs the same finalization-and-materialization
+machinery with the reversed value. The resulting state will
+typically mirror the pre-original state, but exact mirror is not
+guaranteed — and one class of outcomes is structurally one-way:
+an illegal classification's payload removal is monotone
+([layers.md §5](layers.md#5-deletion-policy)), so no
+counter-Proposal restores removed content. Where exact mirror
+matters, the application designs its materialization so forward
+and reverse compose to identity.
 
 ---
 
 ## 4. Append-only throughout
 
-- Votes are layers on their carrier edges. Never deleted.
-- Changing your vote = new layer (same edge, new dimension values).
-- Revoking = new layer with opposing `dim1`.
-- History is always visible. An observer can see how vote
-  distribution evolved over time.
+- Ballots are L1 records. Never deleted, never rewritten.
+- Changing your vote = a new ballot record; the latest governs.
+- Withdrawing = a new ballot with direction zero.
+- History is always visible. An observer can replay how the ballot
+  distribution evolved, epoch by epoch, from public records alone.
 
 ---
 
 ## 5. Weight at tally time
 
-When weights come from mutable junction properties (e.g. an admin
-demoted to member), the question arises: does a past vote retain
-its old weight or take the current one?
+When weights come from mutable state (e.g. an admin demoted to
+member), the question arises: does a past ballot retain its old
+weight or take the current one?
 
 **CoGra's default: current weight at tally time.** Reasons:
 
-- Consistent with "current state = top layer of underlying data"
-  everywhere else.
-- An ex-admin's past admin-weighted votes shouldn't retain leverage
-  after demotion.
-- Avoids snapshotting weights into each vote edge (duplicates data).
+- Consistent with "current state is the latest record" everywhere
+  else.
+- An ex-admin's past admin-weighted ballots shouldn't retain
+  leverage after demotion.
+- Avoids snapshotting weights into each ballot (duplicates data).
 
-Specific applications can override this if they need vote-time
+Specific applications can override this if they need ballot-time
 snapshot weights, but they carry the burden of explaining why.
 
 ### Rule snapshot at author time
 
 The "current at tally time" default above governs **per-voter
-data** — a voter's role, `ownership_pct`, junction properties.
-It does **not** extend to **the rule itself** — the
-eligibility predicate, weight function, and threshold the
-tally evaluates against. When an application makes its rule
-parameters amendable via the same Proposal primitive
-(governance of governance), in-flight Proposals would
+data** — a voter's role, `ownership_pct`, junction properties. It
+does **not** extend to **the rule itself** — the eligibility
+predicate, weight function, and threshold the tally evaluates
+against. When rule parameters are amendable via this same
+primitive (governance of governance), in-flight Proposals would
 otherwise face an ambiguity: do amendments retro-apply to
 already-open Proposals or only to the next Proposal authored?
 
-**The pattern: snapshot at author-time, on every Proposal.**
-Every Proposal is grounded in a rule; the rule lives in one
-or more layered node properties on a single node; the
-Proposal identifies that node via the required
-[`rule_anchor`](../instances/proposal.md#2-graph-side-properties)
-(scalar — the node's UUID). Tally and cascade read each rule
-property on `rule_anchor` as-of the Proposal's authorship-edge
-timestamp (per
-[authorship.md](../primitive/authorship.md)) rather than at
-the current top layer. Rules-of-the-game stable through a
-vote. Per-voter applicability stays live per §2.2 and the
-rest of §5 — the rule is frozen, but who currently satisfies
-it (and with what current weight) is not.
+**The pattern: snapshot at author time, on every Proposal.** The
+ruler is the **proposal anchor's landing epoch** — a public,
+replayable timestamp no clock can dispute. Tally and execution
+read every rule input as of that epoch:
 
-Per-node serialized writes (see "Tally serialization" below —
-the same lock discipline applies to property writes) make
-layer timestamps strictly monotonic per node, so one
-timestamp pins the node's full state at that moment, even for
-rules that span several properties on the same node.
+- **Rule-entry rules** — the host's `governance` map state as-of
+  the anchor's landing epoch, indexed by `action_key` (§2.6).
+- **Network rules** — the charter parameter schedule as-of the
+  anchor's landing epoch: the newest finalization payload per
+  parameter at or before that epoch
+  ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule)).
 
-Consumer shapes:
-
-- **Single-property rule on one node** — e.g. Collective
-  Proposals (executions or amendments under
-  `governance.<action_key>`); the dispatcher reads
-  `Collective.governance` as-of `as_of` and indexes by
-  `action_key`. See
-  [collectives.md §8 "Snapshot at author-time"](../instances/collectives.md#snapshot-at-author-time).
-- **Multi-property rule on one node** — e.g. Network
-  dual-quorum moderation Proposals; the dispatcher reads
-  both `_quorum_fraction` and `_quorum_count` as-of `as_of`
-  so the `min(quorum_fraction × |active|, quorum_count)` rule
-  is fully frozen with a
-  single anchor.
+Rules-of-the-game stable through a vote; one anchor, one epoch,
+the whole rule frozen. Per-voter applicability stays live per §2.2
+and the rest of §5 — the rule is frozen, but who currently
+satisfies it (and with what current weight) is not.
 
 ---
 
 ## 6. When outcomes take effect
 
-Outcomes are **triggered by new-vote threshold-crossings**. A tally
-is computed only when a new or updated vote layer arrives on the
-subject — not on any schedule, and not when the eligibility set
-shifts in the background.
+Tallies are **epoch-quantized**. Ballots land on Layer 1 in
+epochs; the tally is a deterministic function of the accepted
+ballot set at each epoch boundary — CoGra's published formula over
+public records and published overlay state. Nothing tallies on a
+clock or mid-epoch, and no per-Proposal locking discipline exists:
+epoch order serializes every race by construction. Two ballots in
+the same epoch land as one accepted set; the tally is computed
+over the set, not the arrival order.
 
-- Raw vote layers are written whenever any eligible actor casts or
-  changes a vote.
-- On each new vote event, the tally is computed over currently
-  eligible voters' current top vote layers (§§2.2, 5). If the tally
-  has crossed the threshold since the last outcome on this subject,
-  a new state layer is written on the subject.
-- Eligibility changes alone (members leaving, roles changing) do
-  **not** trigger re-tallying. Past outcomes stand. Current
-  eligibility only applies the next time someone actually votes on
-  the subject.
+- Members cast ballots at any time; the records land at the next
+  epoch boundary.
+- At each epoch, the tally over currently-eligible voters' latest
+  ballots either crosses the threshold or doesn't. The first epoch
+  at which it crosses is the Proposal's **crossing epoch**.
+- The executing authority then submits the finalization (§2.5) and
+  the materializations follow. Composite terms are re-validated
+  against the crossing epoch's state before execution
+  ([proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals));
+  a mismatch refuses execution and terminates the Proposal as
+  `passed_but_invariant_rejected` — the crossing is real and the
+  ballots stand; only the materialization is refused.
+- Eligibility changes alone (members leaving, roles changing)
+  never trigger re-tallying. Past outcomes stand. Current
+  eligibility applies at the next epoch's tally.
 
-### Cascade dispatch
+Frontends may show live provisional counts as ballots are
+submitted; the provisional view is a courtesy, never the tally.
+The authoritative sequence is: landed ballots → epoch tally →
+finalization record. An auditor recomputes every step from the
+epoch certificates and CoGra's published formulas.
 
-When a tally crosses threshold the outcome layer is rarely the
-only write. The triggering write may fan out into derived writes:
-
-- An `:APPROVAL` edge written `dim1 > 0` when an admit-Proposal
-  passes (junction admission), or a `dim1 < 0` layer on an
-  existing `:APPROVAL` edge when a removal-Proposal passes
-  (member removal / disavowal).
-- Redaction markers across one or more property layers plus a
-  Postgres-side archive row (the `'illegal'`-classification
-  outcome — see [moderation.md](../instances/moderation.md)).
-- A `(0,0)` layer on every active vote of an actor whose
-  eligibility just dropped (eligibility-dropout cascade).
-- An advance of `Chat.epoch` on a chat node (mid-epoch
-  rotation) — a derived-cache refresh, not an outcome carrier
-  (§2.5); the Proposal's terminal `status` is the on-graph
-  record.
-- A new ownership-edge layer (Item ownership transfer).
-- A new Postgres display-content version row and **no graph
-  layer**, for a passing display-content field change
-  (`set:display_name`, `set:description`, `set:avatar` / `set:image`,
-  `set:website_url`). The graph property of that name is a
-  per-field moderation-status carrier (its value *is* the
-  status), with nothing meaningful to layer for a content edit,
-  so the on-graph record of the change is the triggering
-  Proposal's terminal `status` (§2.5,
-  [proposal.md §2](../instances/proposal.md#2-graph-side-properties)).
-  A `set:name` change is **not** display content — `name` is a
-  graph data property and takes the normal graph-property layer.
-
-Generic to every cascade:
-
-- **Synchronous.** The cascade fires inside the same
-  service-layer transaction as the triggering write — never
-  deferred to a worker, never a background sweep.
-- **Archive-first.** When the cascade includes a Postgres-side
-  archive write (the redaction cascade is the current case),
-  the archive row is written **before** the graph mutation. A
-  failed archive prevents the graph mutation; the inverse would
-  leave the platform with a redacted layer and no archive copy,
-  which the retention story in
-  [retention-archive.md](retention-archive.md) refuses.
-- **Two failure modes, two rollback scopes.** A cascade can
-  end without applying its outcome in two distinct ways, and
-  they roll back differently:
-  - **Infrastructure failure** (a failed archive write, a DB
-    error, any step that errors) rolls back the **entire**
-    transaction — including the triggering vote layer. From the
-    graph's perspective the threshold cross never happened, and
-    the voter who pushed it across sees the rollback as a write
-    failure on their vote.
-  - **Deliberate invariant refusal** (a composite Proposal's
-    `_from` re-validation fails against current state — see
-    [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals))
-    is not an error: the threshold cross is real and the
-    **triggering vote stands**. Only the cascade's target
-    writes roll back; the Proposal terminates with
-    `status = 'passed_but_invariant_rejected'`
-    ([proposal.md §6](../instances/proposal.md#6-lifecycle)),
-    and a fresh Proposal with refreshed numbers is the only
-    path forward. This mode is specific to composite Proposals;
-    every other cascade has only the infrastructure-failure
-    mode.
-
-The dispatcher is one module in the API service layer; it
-routes by trigger type to the correct fan-out sequence and
-holds no Cypher or SQL of its own. See
-[architecture.md "Service-layer transactions"](../implementation/architecture.md#service-layer-transactions)
-for where the code lives.
-
-### Tally serialization
-
-A tally runs inside the same service-layer transaction as the
-vote-layer write that triggers it, so the tally observes the
-new layer and the cascade fan-out commits or rolls back as one
-unit.
-
-Two writers can target the same Proposal concurrently — two
-voters pressing send at the same moment. **Tallies are
-serialized per Proposal:** two tallies on the same Proposal
-never run in parallel. The first acquires a per-Proposal lock,
-runs to completion, observes the threshold (or not), and
-commits; the second runs against the post-commit state. If the
-first crossed threshold, the second sees the outcome layer
-already written and does not fire the cascade twice.
-
-The serialization primitive is Memgraph's per-node lock taken
-on the Proposal node at the start of the tally transaction. If
-a chosen Memgraph build turns out to lack the needed primitive,
-a Postgres advisory lock keyed on the Proposal UUID is a valid
-fallback — the service layer holds both pools and can take the
-lock on either side. The doctrine (*tallies serialized per
-Proposal*) fixes the requirement; the exact mechanism is an
-implementation choice settled in
-[architecture.md](../implementation/architecture.md).
-
-True-simultaneous writes — two commits the chosen DB isolation
-cannot serialize — are an open question for the storage
-engines and are filed in
-[open-questions.md](../open-questions.md). The lock primitive
-above is sufficient under standard read-committed isolation;
-weaker conditions would need re-spec.
-
-### Eligibility-dropout cascade
-
-When an actor's voting eligibility changes mid-flight — a
-ChatMember demoted, a CollectiveMember whose junction is
-revoked, a User whose `network_role` is downgraded — the
-cascade handler appends a `(0,0)` layer on every **active vote
-that actor cast on still-open Proposals** (Proposals whose
-outcome has not yet crossed threshold).
-
-The next tally on any affected Proposal reads `(0,0)` and
-counts no contribution from this voter. The voter's prior
-positive or negative stance stays preserved in the edge layer
-history (§4) — the cascade neutralizes the live tally without
-erasing the record of intent.
-
-Scope: open Proposals only. Past outcomes already at threshold
-are not revisited (per § "Why outcomes are sticky"). Votes
-already at `(0,0)` get no redundant new layer.
-
-The cascade fires from the same service-layer transaction that
-flipped the eligibility, with the rollback semantics of §
-"Cascade dispatch": if any neutralizing layer fails, the
-eligibility flip rolls back too.
+CoGra-side materializations (overlay, Postgres) run inside one
+service-layer transaction per Proposal outcome, with the
+archive-first ordering where redaction is involved
+([retention-archive.md](retention-archive.md)); an infrastructure
+failure rolls the CoGra-side writes back and retries — the
+crossing itself is a fact about public records and cannot be
+rolled back. L1 gestures (a De-invite, a Tag verdict) are
+submitted by their executing authority and land in a later epoch;
+the finalization payload is what makes the pending outcome
+publicly legible in the meantime.
 
 ### Why outcomes are sticky, not continuously rendered
 
-Consider a member who voted on 1000 past disavowals and then leaves
-the chat. Under a naive "always match the current tally" model,
-their exit could flip every past decision they were pivotal to —
-and each of those thousand subjects would then need fresh votes
-from remaining members to re-cross quorum. Governance would be
-dominated by background churn, not by intent, and the graph's
-history would be swamped by silent reverts.
+Consider a member who balloted on 1000 past disavowals and then
+leaves the chat. Under a naive "always match the current tally"
+model, their exit could flip every past decision they were pivotal
+to — and each of those thousand subjects would then need fresh
+ballots from remaining members to re-cross quorum. Governance
+would be dominated by background churn, not by intent.
 
-CoGra's model instead: **once an outcome takes effect, the
-subject stays in that state until a deliberate new act moves
-it.** Eligibility shifts and sentiment drift never revert it on
-their own. Governance is an act, not a background computation.
+CoGra's model instead: **once an outcome takes effect, the subject
+stays in that state until a deliberate new act moves it.**
+Eligibility shifts and sentiment drift never revert it on their
+own. Governance is an act, not a background computation.
 
-Reversal is itself a governed act, never a side effect. For a
-Proposal-mediated outcome the Proposal is terminal once it
-crosses threshold — its `status` is final and it stops accepting
-votes ([proposal.md §6](../instances/proposal.md#6-lifecycle)) —
-so undoing it means authoring a **counter-Proposal**
-([§3 "Counter-Proposals"](#counter-proposals)) that carries the
-reverse change and must clear its own threshold, not re-voting
-the terminated original.
+Reversal is itself a governed act, never a side effect. A Proposal
+is terminal once it crosses — its finalization is final and later
+ballots change nothing
+([proposal.md §6](../instances/proposal.md#6-lifecycle)) — so
+undoing it means authoring a **counter-Proposal**
+([§3](#counter-proposals)) that must clear its own threshold.
 
 ### No time-boxing
 
-Votes stand until changed; there is no "voting ends at T". A
+Ballots stand until changed; there is no "voting ends at T". A
 specific application that genuinely needs a time window is a new
-design discussion (§11).
+design discussion (§12).
 
 ---
 
@@ -896,7 +655,7 @@ design discussion (§11).
 
 A recurring component of Network-scope governance is the
 **mod-gate**: before a Proposal's outcome can take effect, a
-threshold of positive votes from Users with
+threshold of positive ballots from members with
 `network_role = 'moderator'` must be present in the tally. The
 mod-gate is a procedural validator, not a weighting.
 
@@ -906,97 +665,86 @@ action ([network.md §11](network.md#11-amending-network-parameters)):
 
 - **Baseline tier** — low-stakes actions (`sensitive`
   classification and un-classification, baseline `:Network`
-  amendments): **at least one** positive moderator vote.
+  amendments): **at least one** positive moderator ballot.
 - **Critical tier** — destructive or irreversible actions
-  (moderator role changes, `illegal`-redaction, guidelines
-  amendments, critical `:Network` amendments): positive
-  moderator votes `≥ ⌈Network.critical_mod_gate_fraction ·
-  |active_mods|⌉`, where `|active_mods|` is the moderators with
-  an outgoing actor edge inside `Network.active_threshold_days`.
+  (moderator role changes, `illegal` classification, guidelines
+  amendments, critical `:Network` amendments): positive moderator
+  ballots `≥ ⌈critical_mod_gate_fraction · |active_mods|⌉`, where
+  `|active_mods|` is the moderators active inside the governed
+  activity window.
 
-`critical_mod_gate_fraction ≤ 1`, so `⌈f · |active_mods|⌉` never
-exceeds the active-mod count: the gate is always satisfiable and
-needs no absolute floor. It self-strengthens as the moderator set
-grows — with one or two active mods the bar rounds to one, a real
-majority is required once three or more are active. Because
-`critical_mod_gate_fraction` itself sits in the critical bucket
-(§11), loosening it is a critical act subject to the critical
-tier — the recursion is closed.
+`critical_mod_gate_fraction ≤ 1`, so the bar never exceeds the
+active-mod count: the gate is always satisfiable and needs no
+absolute floor. It self-strengthens as the moderator set grows —
+with one or two active mods the bar rounds to one, a real majority
+is required once three or more are active. Because
+`critical_mod_gate_fraction` itself sits in the critical bucket,
+loosening it is a critical act subject to the critical tier — the
+recursion is closed.
 
-**Invariant: mod weight = member weight = 1; mod is a gate, not
-a weight.** A moderator's positive vote contributes once to (a)
-mod-gate satisfaction and once to (b) the member-tally
-arithmetic — two independent checks on the same vote layer.
-The mod casts `+1` once; that vote counts toward the gate's tier
-threshold *and* contributes its weight of `1` to the threshold
-policy of the instance (for Network-scope Proposals, the dual-quorum bar from
-[§3 "Petition-style tally and dual quorum"](#petition-style-tally-and-dual-quorum-network-scope-only)).
-The mod-gate sits *alongside* the member-weighted tally, never
-on top of it.
+**Invariant: mod weight = member weight = 1; mod is a gate, not a
+weight.** A moderator's positive ballot contributes once to (a)
+mod-gate satisfaction and once to (b) the member-tally arithmetic
+— two independent checks on the same ballot record. The mod-gate
+sits *alongside* the member-weighted tally, never on top of it.
 
 The gate applies symmetrically in both directions of any
-classification — setting `sensitive` or `illegal`, and
-un-setting back to `normal` — and across every Network-scope
-Proposal kind. Reasons each direction needs the gate:
+classification — setting `sensitive` and un-setting back to
+`normal`, and the one-way `illegal` — and across every
+Network-scope Proposal kind. Reasons each direction needs the
+gate:
 
 - Without a mod gate on `sensitive`, a small coordinated group
   could flood-flag legitimate content, forcing endless
   re-moderation.
-- Without a mod gate on `illegal`, bot networks could mass-vote
-  redactions of legitimate content.
+- Without a mod gate on `illegal`, bot networks could mass-ballot
+  removal of legitimate content.
 - Without a mod gate on un-classification, bots could strip
   moderation flags from legitimately-classified content.
-- Without a mod gate on **moderator role changes**, the
-  community alone could strip moderators — a coordinated push
-  (bots or otherwise) removes honest mods at will.
+- Without a mod gate on **moderator role changes**, the community
+  alone could strip moderators — a coordinated push removes honest
+  mods at will.
 
 The mod-gate is the specific instance of the §2.4 multi-gate
-pattern that pairs a moderator-gate with a community-tally gate.
-Either gate alone leaves a hole:
-
-- **Mods alone** can purge each other — sitting-mod coup.
-- **Community alone** can be coordinated against honest mods —
-  flooded removal.
+pattern that pairs a moderator gate with a community-tally gate.
+Either gate alone leaves a hole: **mods alone** can purge each
+other — sitting-mod coup; **community alone** can be coordinated
+against honest mods — flooded removal.
 
 The full list of Network-scope instances that share the mod-gate
-component is in §8 — content moderation classifications,
-moderator role changes, and `:Network` parameter amendments.
-Substantive arithmetic (quorums, supermajority thresholds, the
-exact pairs per instance) lives with each instance, not here.
+component is in §8. Substantive arithmetic (quorums, the exact
+pairs per instance) lives with each instance, not here.
 
 **Bot resistance.** The critical tier is the mod-side defense
 against takeover. A single compromised moderator key cannot pass a
 destructive action; an attacker needs
-`⌈critical_mod_gate_fraction · |active_mods|⌉` distinct mod keys
-voting in concert. And because minting a moderator is itself a
-critical action, the moderator set grows only under that same
-fraction — the denominator is Sybil-resistant by construction, not
-inflatable by spinning up accounts. The `active`-mods window keeps
-the bar from deadlocking on moderators who have gone dark.
+`⌈critical_mod_gate_fraction · |active_mods|⌉` distinct moderator
+keys balloting in concert. And because minting a moderator is
+itself a critical action, the moderator set grows only under that
+same fraction — the denominator is Sybil-resistant by
+construction. The activity window keeps the bar from deadlocking
+on moderators who have gone dark.
 
 ### External demands enter as Proposals
 
-A direct corollary of the mod-gate and the broader
-governance-only authorization model: **there is no admin
-escape-hatch.** Any external pressure on the platform —
-court orders, regulator demands, law-enforcement notices,
-next-of-kin requests, copyright takedown letters — enters the
-graph through the same Proposal mechanism any User would use.
-Typically a moderator files the Proposal (because they are the
-party that received the demand and they understand the
-classification), but the Proposal itself is an ordinary
-moderation Proposal in [moderation](../instances/moderation.md)
-or the relevant account-action path; the mod-gate and the
-community-tally gate both still apply.
+A direct corollary of the mod-gate and the broader governance-only
+authorization model: **there is no admin escape-hatch.** Any
+external pressure on the platform — court orders, regulator
+demands, law-enforcement notices, next-of-kin requests, copyright
+takedown letters — enters through the same Proposal mechanism any
+member would use. Typically a moderator files the Proposal
+(because they received the demand and understand the
+classification), but the Proposal itself is an ordinary moderation
+Proposal ([moderation.md](../instances/moderation.md)); the
+mod-gate and the community-tally gate both still apply.
 
 The platform commits to this *because* it is the property that
 makes the transparency story load-bearing: every removal is
-auditable on the graph, no party can edit silently, and a
-pathologically captured moderation corps still requires
-community participation. The federation/forking exit
-([network.md](network.md)) is the final pressure release if a
-particular instance's governance no longer reflects its
-community.
+auditable from public records, no party can edit silently, and a
+pathologically captured moderation corps still requires community
+participation. On the L1 substrate the commitment is structural,
+not just procedural: the anchor, the ballots, and the finalization
+are records CoGra cannot forge or erase.
 
 ---
 
@@ -1004,60 +752,42 @@ community.
 
 ### Existing
 
-- **Junction approvals** — [graph-model.md §5](graph-model.md).
-  Shape A self-claim by the would-be bearer (their vote on the
-  admit-Proposal) plus N Shape B approver votes from existing
-  eligibility junctions of the same type for the same parent.
-  Threshold: N is per-policy (open = 0, single approver = 1,
-  multi-sig = N). Removal and role changes are separate terminal
-  Proposals, each with its own fresh vote set.
-- **Chat message disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
-  Shape B `ChatMember → Proposal` vote on a Proposal targeting
-  the `ChatMessage` with `target_property = 'node'`,
-  `proposed_value = 'disavowed'` (the whole-node-targeting
-  sentinel, see
-  [nodes.md "Whole-node targeting"](nodes.md)).
-  Quorum + weighted-majority threshold. No separate outcome
-  edge — the chat's stance is the existence of the passed
-  Proposal.
-- **Chat member disavowal** — [chats.md §10](../instances/chats.md#10-moderation).
-  Shape B `ChatMember → Proposal` vote on a Proposal targeting
-  the member's `ChatMember` junction with the same `'node'` /
-  `'disavowed'` shape. Cascade writes a `dim1 < 0` layer on the
-  existing `Chat → ChatMember` approval edge for the target.
-- **Chat property and role changes** — [chats.md §10](../instances/chats.md#10-moderation).
-  Shape B `ChatMember → Proposal` votes on `Chat.name`,
-  `Chat.description`, `Chat.image`, `Chat.epoch` (mid-epoch
-  chat-key rotation under `decision:rotate_key`, see
-  [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)),
-  `ChatMember.role`, and any `governance.<action_key>` entry
-  (governance of governance). Defaults vary by stakes; per-rule
-  thresholds live in each `Chat.governance` entry's `exec` and
-  `amend` triples.
 - **Collective governance (full social contract)** —
   [collectives.md](../instances/collectives.md). Membership
-  changes (hire / fire / promote), property changes (`name`,
-  `governance.<action_key>`, `ownership_pct`), and any other
-  decision-type the collective defines. A Collective hosts as
-  many instances as its social contract specifies; each is
-  parameterized for its own decision-type. Shape B
-  `CollectiveMember → Proposal` for all internal votes.
-- **Network moderator role changes** — [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
-  Shape A. Multi-sig: the critical-tier mod-gate (§7) — a fraction
-  of active moderators — plus a community-quorum threshold. Two
-  dispatch exceptions —
-  the **moderator floor** of 1 and the **undemotable bootstrap
-  mod** — refuse the outcome write even on a passed tally.
-- **Content moderation classifications** — [moderation.md](../instances/moderation.md).
-  Shape A. Mod-gate (§7) on every classification change
-  (`sensitive` / `illegal` and un-classification back to
-  `normal`).
-- **`:Network` parameter amendments** — [network.md §11](network.md#11-amending-network-parameters).
-  Shape A. Two amendment-rule pairs on the `:Network` singleton —
-  a baseline pair for low-stakes parameters and a critical pair
-  for parameters with destructive or platform-wide reach.
-  Mod-gate (§7) on both — baseline tier for the baseline pair,
-  critical tier for the critical pair.
+  changes (hire / fire / promote), rule and property changes, and
+  any other decision-type the collective defines. A Collective
+  hosts as many instances as its social contract specifies;
+  admission is the co-signed-act consumer (§3).
+- **Chat moderation and kick** —
+  [chats.md §10](../instances/chats.md#10-moderation). Message
+  disavowal (Level 1) and member disavowal (Level 2) as
+  bidirectional-tally Proposals under the chat's `governance`
+  entries; a passed `decision:disavow_member` is executed by the
+  chat-authority actor authoring the L1 De-invite whose payload
+  cites the authorizing anchor
+  ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
+- **Chat property and rule changes** —
+  [chats.md §10](../instances/chats.md#10-moderation). Name,
+  description, key-rotation, role changes, and `governance` map
+  amendments (governance of governance), each under its entry's
+  `exec` / `amend` triples.
+- **Network moderator role changes** —
+  [network.md §9](network.md#9-mod-role-changes). Multi-gate: the
+  critical-tier mod-gate plus the community dual-quorum bar. Two
+  dispatch exceptions — the **moderator floor** of 1 and the
+  **undemotable bootstrap moderator** — refuse the outcome even on
+  a passed tally.
+- **Content moderation classifications** —
+  [moderation.md](../instances/moderation.md). Mod-gate on every
+  classification change (`sensitive` / `illegal` and
+  un-classification back to `normal`); reports *are* Proposals.
+- **Platform-guidelines amendments** —
+  [platform-guidelines.md](../instances/platform-guidelines.md).
+  Critical-tier mod-gate plus the `guidelines_change_*` pair.
+- **`:Network` parameter amendments** —
+  [network.md §11](network.md#11-amending-network-parameters).
+  Baseline and critical amendment-rule pairs on the charter;
+  mod-gate at the matching tier.
 
 Future cases get added here as they're designed.
 
@@ -1070,91 +800,118 @@ at once — each with its own eligibility, weight function,
 threshold policy, and outcome.
 
 The principle: **scope determines what the outcome writes.** A
-chat-scope instance writes to chat-side state (a `Chat →
-ChatMember` approval edge layer, or the existence of a passed
-disavowal Proposal that the chat treats as its stance). A
-Network-scope instance writes to a per-field moderation-status
-property (`'sensitive'` flips the property's top layer;
-`'illegal'` writes a redaction marker under
-[layers.md §5](layers.md#5-deletion-policy)). The targets are
-different graph objects even when the *node* is the same, so the
-writes never collide.
+chat-scope instance writes chat-side state (the chat's stance is
+the passed disavowal Proposal; a kick materializes as a
+De-invite). A Network-scope instance writes the platform verdict
+(the Tag mark; for `illegal`, the payload removal). The outcomes
+land on different carriers even when the *subject* is the same
+node, so the writes never collide.
 
 The canonical worked example is **chat-internal disavowal
-alongside platform moderation**, both of which can apply to a
-single `ChatMessage`:
+alongside platform moderation**, both applicable to a single
+Message:
 
 - **Platform moderation** — Network-scope. Eligibility = every
-  active Network member; mod-gate (§7) required.
-  Classification-Proposal targets the message; `'illegal'`
-  triggers the redaction cascade in
-  [layers.md §5](layers.md#5-deletion-policy) (destructive in
-  the sense that the message body's top layer is replaced with
-  a redaction marker, leaving the message node and edges in
-  place). See [moderation.md](../instances/moderation.md).
-- **Chat-internal disavowal** — chat-scope. Eligibility =
-  active `ChatMember`s of the chat hosting the message; weight
-  by role; no mod-gate. Outcome is the chat's stance
-  ([chats.md §10](../instances/chats.md#10-moderation)) — the
-  chat moves away from the message; the message stays.
+  active member; mod-gate (§7) required. An `illegal` outcome
+  removes the Message's payload with the visible mark
+  ([layers.md §5](layers.md#5-deletion-policy)); the structural
+  record stays. See [moderation.md](../instances/moderation.md).
+- **Chat-internal disavowal** — chat-scope. Eligibility = members
+  of the hosting chat by the membership fold; weight by role; no
+  mod-gate. Outcome is the chat's stance — the chat moves away
+  from the message; the message stays.
 
-Both can pass independently, neither overrides the other:
+Both can pass independently, neither overrides the other; the two
+can also both pass — the message is then reduced at the platform
+level *and* disavowed at the chat level. No collision; the writes
+go to different places.
 
-- A chat-disavowed message is still `'normal'` at the platform
-  level until the Network classifies it — the disavowal Proposal
-  affects chat-side state only.
-- A platform-redacted message stays in any chat that hasn't
-  disavowed it — the redaction marker affects node-side state
-  only.
-- The two can also both pass; the message is then both
-  redacted at the platform level *and* disavowed at the chat
-  level. No collision; the writes go to different places.
-
-The shape generalizes: any future instance operating on a node
-already governed by another scope (e.g. a Collective governing a
-member's `CollectiveMember` while the Network classifies that
-member's profile) writes to its own scope's state, so instances
-at different scopes never compete for the same write.
+The shape generalizes: any future instance operating on a subject
+already governed by another scope writes to its own scope's
+carriers, so instances at different scopes never compete for the
+same write.
 
 ---
 
 ## 10. Multi-candidate decisions
 
 Decisions that pick from several candidates — council seats,
-multiple property values to choose between, etc. — are expressed
-as **N parallel binary Proposals**, one per candidate. Each
-Proposal is voted on independently using the same governance
-instance (same eligibility, weighting, threshold). Every Proposal
-that crosses threshold passes; that candidate takes office or
-that property value is set.
+multiple values to choose between — are expressed as **N parallel
+binary Proposals**, one per candidate. Each is balloted
+independently under the same governance instance (same
+eligibility, weighting, threshold). Every Proposal that crosses
+threshold passes; that candidate takes office or that value is
+set.
 
-Removal later (recall, term-end) is another Proposal targeting
-the same role or property to revert it. No special lifecycle
-machinery needed.
+Removal later (recall, term-end) is another Proposal targeting the
+same role or value to revert it. No special lifecycle machinery.
 
 This pattern loses ranked-ballot information ("B over A"). Ranked
-and multi-seat semantics aren't part of the primitive (§11). A use
+and multi-seat semantics aren't part of the primitive (§12). A use
 case that genuinely needs them deserves its own design pass.
 
 ---
 
-## 11. Out of scope
+## 11. Honor
 
-- **Secret ballots.** All votes are public on the graph. Privacy is
-  achieved through content encryption elsewhere, not through hiding
-  vote topology. A future case that genuinely needs secret voting
-  is a new design discussion.
-- **Time-boxed voting periods.** Votes today are open-ended; once
-  cast they stand until changed. "Voting ends at T" is a new
+Alongside the ballot machinery, CoGra runs an **honor system**: a
+non-monetary integrity signal, adopted from the L1 ecosystem's
+honor-ledger semantics and operated per community.
+
+- **What it measures.** Honor is a disinterest-and-judgment
+  measure — earned through acts a community deems honorable,
+  spent by nothing. It is off the token rail entirely: CGT is the
+  harvest, honor the pantry. Complements, not substitutes.
+- **Community-scoped from day one.** Every honor ledger is keyed
+  by its issuing community; CoGra itself is guild #1, architected
+  for many. Balances are incomparable across issuers. Guild and
+  Collective are conceptually distinct but structurally the same
+  construct — one L1 actor, own L2 social contract.
+- **Home: a per-community append-only Postgres ledger with
+  membership-gated reads.** Never on a chain (public
+  verifiability would contradict its unverifiable-private-state
+  semantics), never in Memgraph — keeping honor out of the graph
+  store means the ranker and the miner slice **structurally
+  cannot** consume it. The single sanctioned read into any feed is
+  a community's own named opt-in feed
+  ([feed-ranking.md §10](feed-ranking.md#10-the-default-feed-and-named-feeds)).
+- **Honor never confers vote weight.** The ballot machinery above
+  is the voice channel. Honor is a pure gate input: adjudicator
+  eligibility uses the **dual-signal gate** — standing as the
+  coarse objective filter, honor as the fine integrity test — with
+  sortition and rotation against conflicts of interest
+  ([moderation.md](../instances/moderation.md)).
+- **Revocation: uniform freeze.** Expulsion from the community
+  freezes the ledger — no void, not even for-cause. Honor is
+  membership-contingent, so a frozen ledger is functionally inert;
+  voiding would add only symbolic erasure. The expulsion record is
+  the visible integrity mark.
+- **Knobs are governed.** Issuance rules, adjudicator gate
+  parameters, and the rest are ordinary governed parameters —
+  operator-set at genesis, migrating to community governance
+  ([roadmap.md](../implementation/roadmap.md)). The fiat-backed
+  goods program is a staged roadmap item starting near-zero-fiat.
+
+---
+
+## 12. Out of scope
+
+- **Secret ballots.** All ballots are public L1 records — public
+  and permanent is the accepted cost of replayable governance.
+  Privacy is achieved through content encryption elsewhere, never
+  through hiding vote topology. A future case that genuinely needs
+  secret voting is a new design discussion.
+- **Time-boxed voting periods.** Ballots today are open-ended;
+  once cast they stand until changed. "Voting ends at T" is a new
   design.
 - **Delegation / proxies.** No "proxy voter" mechanism. Adds a
   layer to eligibility rules and needs its own design.
-- **Ranked, multi-seat, or budget-allocation ballots.** All votes
-  are binary (support / oppose on a single subject). Ranked
-  preferences ("B over A"), multi-seat allocations beyond parallel
-  binary Proposals (§10), and proportional budget splits across N
-  options aren't expressible in the current primitive. Use cases
-  that genuinely need any of these deserve their own design pass.
+- **Ranked, multi-seat, or budget-allocation ballots.** All
+  ballots are binary (support / oppose on a single subject).
+  Ranked preferences, multi-seat allocations beyond parallel
+  binary Proposals (§10), and proportional budget splits aren't
+  expressible in the current primitive. Use cases that genuinely
+  need any of these deserve their own design pass.
 
 These aren't refused — they're just not addressed by the current
 primitive. Any of them would extend governance.md rather than
@@ -1165,6 +922,9 @@ replace it.
 ## What this doc is not
 
 - **Not a list of specific thresholds or weights.** Per-application.
-- **Not an aggregation / caching spec.** How the system efficiently
-  evaluates tallies is an implementation concern.
-- **Not a roadmap.** When each governance feature ships is separate.
+- **Not the Proposal carrier spec.** Anchor, terms, ballots,
+  statuses, lifecycle — [proposal.md](../instances/proposal.md).
+- **Not an aggregation / caching spec.** How the system
+  efficiently evaluates tallies is an implementation concern.
+- **Not a roadmap.** When each governance feature ships is
+  separate.
