@@ -195,7 +195,7 @@ node in the slice).
 
 ## Two runners of one traversal
 
-This surface and campaign settlement ([economics.md §6.5](../primitive/economics.md#65-computation--exact-streaming-oplayers-memory))
+This surface and campaign settlement ([economics.md §6.5](../primitive/economics.md#84-computation--exact-streaming-crowd-linear))
 share the §3 path semantics but not the algorithm at scale. Feed ranking is
 **all-targets**: in the dense regime it is computed by message-passing over
 the slice ([feed-ranking.md §4.5](../primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum)),

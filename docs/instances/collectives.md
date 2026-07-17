@@ -846,7 +846,7 @@ not receive preferential placement, and non-commercial collectives
 (households, hobby groups, co-ops) are not penalized for not buying
 ads. A Collective takes its economic role graph-mechanically, not by
 type: it acts as an advertiser by creating a
-[Campaign](../primitive/economics.md#2-the-campaign-node), can be the
+[Campaign](../primitive/economics.md#3-the-campaign-record), can be the
 anchor a campaign targets, and earns as a contributor only by sitting
 on an anchor → target path — the same attribution every actor gets.
 
