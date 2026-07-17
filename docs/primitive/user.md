@@ -1,252 +1,254 @@
 # User
 
-The **User** is the actor node representing a person on the
-platform. It is one of two actor node types — the other is
-[Collective](../instances/collectives.md). Both share the same
-outgoing-edge catalog and the same authorship mechanics; the
-distinction lives in what stands behind each (§1).
+The **User** is a person's account: one PeerNetworks Layer 1
+**Actor + Profile** grounded pair, anchored by the actor's own
+Registration record, plus one Layer 0 address
+([substrate-map.md §1](substrate-map.md#1-actors-and-identity)).
+The map from the pair to the person behind it — credentials,
+email, sessions — is CoGra service state, never graph state:
+identity association is terminal by the L1 contract.
 
-This doc is the per-node catalog for the User: creation,
-graph-side and Postgres-side state, edges, lifecycle.
+This doc is the account catalog: creation, L1-side and
+CoGra-side state, records, lifecycle. In prose, "actor" means the
+L1 Actor node; "account" means the CoGra service identity behind
+it ([nodes.md §2](nodes.md#2-accounts-user-and-collective)).
 
 ---
 
 ## 1. User vs Collective
 
-Both User and Collective are actor nodes
-([nodes.md §1](nodes.md)) and the graph treats them
-identically: same outgoing actor-edge catalog
-([edges.md §1](edges.md)), same authorship rule
-([authorship.md](authorship.md)), same ability to author content
-and participate in junctions. The distinction is what stands
-behind each on the off-graph side.
+Both account kinds resolve to the same L1 shape — one Actor +
+Profile pair, one L0 address — and Layer 1 treats them
+identically: same record inventory, same intrinsic authorship,
+same pricing. The distinction is what stands behind each on the
+CoGra side.
 
 - A **User** is a person. They hold off-graph credentials
   (password hash, verified email, refresh-token sessions — see
   [auth.md](../implementation/auth.md)) that authenticate the API
-  requests originating their edges.
+  requests from which the backend, as their authoring agent
+  ([substrate.md §6](substrate.md#6-authoring-path-and-admission)),
+  submits their records.
 - A **Collective** is a group acting through a single graph
-  identity. It has no credentials of its own; its actions
-  originate from one or more authenticated Users, mediated by
-  [CollectiveMember](../instances/collectives.md#3-graph-side-properties).
-  Collectives can nest as CollectiveMembers of other Collectives,
-  so the chain may be deep.
+  identity. Its keypair and L0 address sit in backend custody; its
+  actions originate from authenticated Users authorized by the
+  collective's social contract
+  ([collectives.md](../instances/collectives.md)). Collectives can
+  nest, so the chain may be deep.
 
-Every Collective ultimately acts on behalf of one or more Users:
-the graph records the action as the Collective's own; the
+Every Collective act ultimately traces to one or more Users: the
+graph records the action as the Collective's own; the
 authentication that produced it belongs to a User.
 
 ---
 
 ## 2. Creation
 
-Two paths produce a User node, both gated on email verification:
+Two paths produce an account:
 
-- **Invitation (default).** An existing actor generates a
-  time-gated invite link (single-use or multi-use), the invitee
-  registers and verifies their email, and the system atomically
-  creates the User node together with the two invitation edges
-  per [invitations.md](invitations.md) and the account's payout
-  `Wallet`. The invitee is never an isolated node — they have
-  outgoing reach from the moment they exist.
-- **Genesis bootstrap.** A fresh instance has its genesis User
-  created by the bootstrap that also writes the
-  [:Network singleton](network.md#2-creation), the
-  `bot-defense` Hashtag, and the genesis User's payout `Wallet`
-  (bound by `:PAYS_TO`) — four nodes, one atomic step. The
-  bootstrap runs once at instance creation; no self-registration
-  path produces the first User. All subsequent Users come in via
-  invitation.
+- **Admission (default).** CoGra admission is an **AND gate**
+  ([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
+  the person clears L1's write rule — a funded L0 burn to their
+  own address, community- or self-funded
+  ([economics.md](economics.md)) — **and** holds an accepted CoGra
+  invitation, the mutual stance pair of
+  [invitations.md](invitations.md). Registration is the L1 act:
+  the actor's Registration record grounds the Actor + Profile
+  pair; the inviter's Opinion toward the new Profile and the
+  joiner's reciprocal Opinion connect them to the graph. Email is
+  authentication and recovery only — never the gate.
+- **Genesis bootstrap.** A fresh instance's genesis member is
+  established by the bootstrap that also creates the system
+  actors and the network charter
+  ([network.md §2](network.md#2-creation)). No self-registration
+  path produces the first account; all subsequent accounts come in
+  via invitation.
 
-The credential and email-verification flow that wraps both paths
-lives in [auth.md](../implementation/auth.md). The graph-side
-edge-creation pattern is in [invitations.md](invitations.md).
-
-**Invariant: no User node before verification.** A User node
-either exists with full standing or does not exist — no
-"unverified" or "pending" partial actorhood. An interim state
-would add semantics no other primitive uses, and the ranking
-math ([feed-ranking.md](feed-ranking.md)) is not designed for
-actor-edges with provisional weight. Pre-verification state is
-held off-graph (a pending-registration record in auth's
-storage); on verification, the User node and its invitation
-edges are written atomically. See
-[auth.md "Account lifecycle"](../implementation/auth.md#account-lifecycle).
+**Invariant: no User before verification.** An account either
+exists with full standing or does not exist — no "unverified" or
+"pending" partial actorhood. Pre-verification state is held
+off-graph (a pending-registration record in auth's storage); on
+verification, the backend performs the registration flow as one
+service-level step. The invariant is an L2 registration rule — L1
+sees only the records once CoGra submits them
+([auth.md "Account lifecycle"](../implementation/auth.md#account-lifecycle)).
 
 ---
 
 ## 3. Graph-side properties
 
-Every authored property on the User node is layered per
-[layers.md §3](layers.md#3-layers-on-overlay-nodes).
+The account's graph-side state splits across the seam
+([substrate.md §3](substrate.md#3-cogras-stores)):
 
-- **`username`** — the handle used for mentions and lookups.
-- **`network_role`** — `member` (default) / `moderator`. Backs
-  platform-wide governance per
-  [network.md §8](network.md#8-membership-and-roles); changes run
-  through the multi-sig Proposal pattern in
-  [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
+**On L1 — the Registration payload.** Profile content rides the
+actor's Registration records as witnessed payload in the guild
+keyspace ([nodes.md §1](nodes.md#1-l1-node-types-the-shared-graph)):
+the profile field set and media digests, and the account's **CGT
+payout address** — the reward-rail destination
+([economics.md](economics.md), [token.md](token.md)). The payout
+address is a pointer, never money: balances and payout state live
+on CoGra's rail, off-graph
+([ledger.md](../implementation/ledger.md)). Updating profile
+content or the payout address is a **parallel Registration** —
+same grounded pair, fresh payload, newest-wins per field
+(`edge:nodes:registration`); every prior state stays witnessed.
+The payout destination is thereby a public, actor-attributed
+record: it cannot be silently swapped.
 
-Per-field moderation-status properties cover each user-filled
-profile field — `username_status` (for the data-sibling
-`username`), `display_name`, `bio`, `avatar`, `cover`,
-`website_url` — plus the node-level `moderation_status` cache. Universal mechanics
-in [nodes.md](nodes.md).
+The L0 address is not graph state at all — it is the Layer 0
+identity the actor burns to, read by L1 only as the scalar `B_i`.
+One account = one L0 address, self-custodied.
 
-Concrete types, constraints, and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+**In the overlay.**
+
+- **`network_role`** — `member` (default) / `moderator`, a layered
+  overlay property backing platform-wide governance
+  ([network.md §8](network.md#8-membership-and-roles)); changes
+  run through the multi-gate Proposal in
+  [network.md §9](network.md#9-mod-role-changes). Users only —
+  Collectives carry none.
+- Operational per-account state (moderation flags, service
+  bookkeeping) per
+  [graph-data-model.md](../implementation/graph-data-model.md).
+
+Cold start: a fresh account has standing `α = 0` — endorsement
+has nothing to amplify until real vouches arrive; the write rule
+is cleared by the funded burn, not by standing
+([substrate.md §6](substrate.md#6-authoring-path-and-admission)).
 
 ---
 
 ## 4. Postgres-side content
 
-The User's display material — `display_name`, `bio`, `avatar`,
-cover image, `website_url`, and any other profile content — lives
-in Postgres, linked to the graph User node by UUID. Edits are
-append-only per
-[layers.md §4](layers.md#4-layers-on-postgres-side-display-content):
-new version rows, no overwrite. Concrete schema in
-[data-model.md](../implementation/data-model.md).
+The account's display material — display name, bio, avatar, cover
+image, website URL — lives in Postgres, keyed by the Profile's
+identifier: what a record *shows*, never what it *is*. Edits are
+append-only version rows written in the same flow as the parallel
+Registration that witnesses them
+([layers.md §4](layers.md#4-layers-on-postgres-side-display-content)).
+Concrete schema in [data-model.md](../implementation/data-model.md).
 
 ---
 
-## 5. Edges
+## 5. Records
 
-### As actor source (outgoing)
+### As author (outgoing)
 
-A User can author actor edges toward the node categories below;
-Hashtag is deliberately excluded — "liking a hashtag" is not a
-graph operation. The full per-target-type catalog with dimension
-labels lives in
-[edges.md §1 "User as actor"](edges.md). Targets
-include:
+The User authors records from L1's fixed inventory through the
+backend: Opinions, Affinities, Publishes, Sends, Reviews,
+References, Tags, Participants, Leaves, Join Requests,
+Invitations, De-invites, and the settlement family. The
+per-family catalog with CoGra's authoring semantics lives in
+[edges.md](edges.md).
 
-- Other actors: User, Collective.
-- Content: Post, Comment, Chat, ChatMessage, Item.
-- Junctions: ChatMember, CollectiveMember, ItemOwnership.
-- Carriers: Proposal.
-
-Some compound gestures defined in other docs reduce to creating
-or layering an outgoing actor edge: authoring a node
-([authorship.md](authorship.md)), joining or leaving a junction
-([graph-model.md §5](graph-model.md)),
-inviting a new actor ([invitations.md](invitations.md)), and
-casting a governance vote
-([governance.md](governance.md)).
-
-The User does not create structural edges directly — those are
-all system-generated as a side effect of the rules in
-[graph-model.md §3](graph-model.md).
+Compound gestures defined in other docs reduce to authoring
+records: publishing content ([post.md](../instances/post.md)),
+joining or leaving a chat
+([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)),
+inviting a new member ([invitations.md](invitations.md)), casting
+a ballot ([governance.md §3](governance.md#3-the-ballot)).
 
 ### As target (incoming)
 
-A User receives:
+Inbound records land on the **Profile** — the person-facing
+anchor:
 
-- **Actor edges** from other actors — opinions about them
-  (sentiment + interest). See
-  [edges.md §1](edges.md) for both source-side
-  catalogs.
-- **`ChatMember / CollectiveMember / ItemOwnership → User`**
-  (`:BEARER`) — identity-binding edges from junction nodes the
-  User bears (active or pending). One inbound traversal lists
-  every membership and ownership the User holds, including
-  invitations not yet accepted. See
-  [edges.md §2 "Bearer binding"](edges.md).
-- **`ChatMessage / Post / Comment → User`** (`:REFERENCES`)
-  when a content node embeds or mentions the User — a chat
-  message sharing them, a Post or Comment naming them in the
-  body. See [edges.md §2 "Reference"](edges.md).
-- **`Proposal → User`** (`:TARGETS`) when a Proposal targets one
-  of the User's graph-side properties — typically a
-  `network_role` change per
-  [network.md §9](network.md#9-mod-role-changes-via-multi-sig-proposal).
+- **Opinions** — the interpersonal stance carrier; vouch-positive
+  stances feed the target's standing through endorsement flow
+  ([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
+- **References** — mentions: a positive, effortful mention is a
+  weak, priced vouch
+  ([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
+- **Invitation T-legs** — chat invitations naming the invitee
+  ([chats.md](../instances/chats.md)).
+- **`(0,0)` References from proposal anchors** — Proposals about
+  this person within a scope (a role change, a kick) name the
+  Profile publicly
+  ([governance.md §2.1](governance.md#21-subject)).
 
-A User's relationship to a junction node (ChatMember,
-CollectiveMember, ItemOwnership) runs through both the User's
-*outgoing* actor edge to the junction (the Shape A self-claim,
-once authored) and the *incoming* `:BEARER` edge from the
-junction (identity, written at junction creation). See
-[graph-model.md §5](graph-model.md).
+For traversal, Actor and Profile are one logical node — the
+grounded-pair person fold; the pair's internal records are never a
+feed input ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)).
 
 ---
 
 ## 6. Authorship
 
-A User is the author of any node whose earliest incoming actor
-edge originates from them. On the graph that edge carries the
-`:AUTHOR` sub-label, the only representation of authorship on the
-graph side. Caches on the node and in Postgres are rebuildable
-from it. See [authorship.md](authorship.md).
+Author binding is intrinsic to every L1 record — the authoring
+actor is part of the record itself, not a separate edge or
+derivation. Caches follow it; nothing can reassign it. See
+[authorship.md](authorship.md).
 
 ---
 
 ## 7. Network membership
 
-Every registered User is automatically a member of the
-[Network](network.md) — no approval gate, no junction. The
-`network_role` property carries the role; the User node itself
-is the eligibility carrier for Network-scope votes (Shape A,
-see [network.md §10](network.md#10-network-wide-governance)).
+Every admitted account is automatically a member of the
+[Network](network.md) — membership is the admission AND gate
+itself, with no separate gesture and no junction. The
+`network_role` overlay property carries the role; ballots on
+Network-scope Proposals are the member's own payload-marked
+Opinions ([network.md §10](network.md#10-network-wide-governance)).
 
-Whether Collectives can carry `network_role` is deferred per
-[network.md §8](network.md#8-membership-and-roles). Today only
-Users do.
+Collectives are not Network members and carry no `network_role`:
+verdicts and governance eligibility are person-accountability
+surfaces ([network.md §8](network.md#8-membership-and-roles)).
 
 ---
 
 ## 8. Lifecycle
 
-User nodes are **never deleted**. The only permitted "removal"
-is in-place layer redaction per
-[layers.md §5](layers.md#5-deletion-policy).
+L1 records are permanent; an account is never deleted from the
+shared graph. CoGra's removal paths are **pure L2 policy with the
+payload-removal mark** — no L1 deletion gesture exists
+([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
 
-Three triggers can produce a redaction on a User today; more are
-planned:
-
-- **Account deletion (user-initiated).** The User requests
-  redaction of their own PII. Two levels — identity-only by
-  default, content-level on opt-in — with a 7-day grace period.
-  Originals go to the [retention archive](retention-archive.md)
-  under per-row legal hold. Full mechanism in
+- **Account deletion (user-initiated) — the husk.** Identity-level
+  (default): the person ↔ actor association is forgotten, Postgres
+  display content is tombstoned, and payloads on identity-bearing
+  records are removed to their reduced projection.
+  Content-level (opt-in) adds payload removal on authored
+  records. What remains is exactly the L1 husk: standing, title,
+  and trust edges persist — names and words are gone. The L0
+  address is self-custodied and untouched. Grace period, email
+  confirmation, archive-first write ordering, and
+  mention-to-marker resolution live in
   [account-deletion.md](../instances/account-deletion.md).
-- **Moderation.**
-  [moderation.md](../instances/moderation.md) targets either a
-  User-node field (`bio`, `avatar`, `username_status`, …) or a
-  field of content the User authored. Either path leaves the
-  User node otherwise intact; redaction of authored content does
-  not propagate to the User node unless the same Proposal also
-  targets a User-node field.
+- **Moderation.** A passed classification against profile content
+  or authored content runs the standard verdict flow
+  ([moderation.md](../instances/moderation.md)); an `illegal`
+  outcome removes the targeted record's payload with the visible
+  mark. Redaction of authored content never propagates to the
+  profile unless a Proposal targets it separately.
 
 Future triggers — court order, next-of-kin under applicable
-inheritance law, network-admin emergency action — are listed in
-[account-deletion.md](../instances/account-deletion.md) as
-planned reusers of the same mechanism with their own
-authorization rules.
+inheritance law — are listed in
+[account-deletion.md](../instances/account-deletion.md) as planned
+reusers of the same mechanism with their own authorization rules.
 
-The User's UUID is stable across every redaction; authorship
-caches and edges keep pointing at the same node. A redacted User
-is anonymized but still graph-resident, not removed.
+The grounded pair is stable through every reduction: records keep
+pointing at the same Actor and Profile; a husked account is
+anonymized, not removed.
 
 ---
 
 ## What this doc is not
 
-- **Not the invitation mechanic.** The two-edge invitation
-  pattern, link modes, and the bot-cluster trade-off live in
+- **Not the invitation mechanic.** The mutual-pair join relation
+  and the inviter reward live in
   [invitations.md](invitations.md).
-- **Not the network spec.** The `:Network` singleton, mod role
-  changes, and platform-wide governance live in
-  [network.md](network.md).
+- **Not the network spec.** The charter, mod role changes, and
+  platform-wide governance live in [network.md](network.md).
 - **Not the authentication spec.** Credentials, sessions,
   registration flow, and password reset live in
   [auth.md](../implementation/auth.md).
-- **Not the deletion mechanism.** The redaction primitive lives
-  in [layers.md §5](layers.md#5-deletion-policy); the
-  user-initiated authorization path lives in
+- **Not the deletion mechanism.** The payload-removal primitive
+  lives in [layers.md §5](layers.md#5-deletion-policy); the
+  user-initiated path lives in
   [account-deletion.md](../instances/account-deletion.md).
-- **Not the edge catalog.** Per-target-type edges with dimension
-  labels live in [edges.md](edges.md).
-- **Not the Memgraph or Postgres schema.** Concrete property
-  types, columns, and indexes live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
+- **Not the record catalog.** Per-family authoring semantics live
+  in [edges.md](edges.md).
+- **Not the storage schema.** Concrete overlay properties,
+  columns, and indexes live in
+  [graph-data-model.md](../implementation/graph-data-model.md) and
+  [data-model.md](../implementation/data-model.md).
