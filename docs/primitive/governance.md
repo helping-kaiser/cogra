@@ -235,21 +235,23 @@ What happens when the threshold is crossed. The outcome has one
   the tally digest makes the pass auditable against the published
   formula and the public ballots.
 - **Materializations**, per outcome type:
-  - an **L1 gesture** where the outcome must bind on the shared
-    graph — the De-invite executing a chat kick
+  - an **L1 gesture** where the outcome must bind or be readable
+    on the shared graph — the De-invite executing a chat kick
     ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)),
-    the moderation system actor's Tag verdict, an illegal
-    classification's payload removal
-    ([moderation.md](../instances/moderation.md));
+    The Moderator's Tag verdict, an illegal classification's
+    payload removal
+    ([moderation.md](../instances/moderation.md)), The Publisher's
+    role Tag on a passed `network_role` change
+    ([network.md §9](network.md#9-mod-role-changes));
   - a **payload on the finalization itself** where the outcome is
     a governed value — a network parameter change rides the
     finalization Opinion toward the charter anchor, making the
     parameter schedule replayable
     ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule));
-  - **overlay and Postgres writes** — role changes, junction
-    admissions, display-content versions, rule-entry amendments —
-    CoGra-side state following CoGra's own append-only discipline
-    ([layers.md](layers.md)).
+  - **overlay and Postgres writes** — junction admissions,
+    display-content versions, rule-entry amendments, mirror
+    updates of L1-materialized state — CoGra-side state following
+    CoGra's own append-only discipline ([layers.md](layers.md)).
 
 Nothing is ever deleted: L1 records are permanent by construction,
 and every CoGra-side carrier is append-only. The only reduction

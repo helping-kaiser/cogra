@@ -31,7 +31,7 @@ mechanics live in each concept's own doc.
 | CoGra admission | gesture | An AND gate: the actor clears L1's write rule (θ-debit surface) **and** holds an accepted CoGra invitation (the mutual pair above). Funding for the debit side: [economics.md](economics.md). |
 | Collective | gesture | **One L1 Actor + Profile**, keypair and L0 address held in backend custody. Founding: backend creates the pair, the θ-debit is treasury-funded, founder Opinions toward the collective Profile lift its standing. See [collectives.md](../instances/collectives.md). |
 | Collective membership | overlay | Pure L2: an overlay junction node per member plus Postgres display content; role, `ownership_pct`, voting weight, and governance map as layered overlay properties. No L1 membership edge exists. Mutual member ↔ collective-Profile Opinions remain ordinary stance fabric. |
-| network_role | overlay | A layered overlay property on Users only — Collectives carry none; verdict and governance eligibility are person-accountability surfaces. |
+| network_role | overlay | A layered overlay property: `member` / `moderator` / `collective` (a class label conferring nothing). Moderator status is materialized on L1 as The Publisher's role Tag toward the Profile (newest wins); the overlay mirrors it. Verdict and governance eligibility are person-accountability surfaces. See [network.md](network.md). |
 | Account deletion | off-graph | The husk: identity association forgotten, Postgres tombstoned, payloads removed to reduced projection. Standing, title, and trust edges persist on L1; names and words go. No L1 gesture exists for deletion. See [account-deletion.md](../instances/account-deletion.md). |
 
 ---

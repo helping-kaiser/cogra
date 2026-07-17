@@ -101,12 +101,13 @@ One account = one L0 address, self-custodied.
 
 **In the overlay.**
 
-- **`network_role`** — `member` (default) / `moderator`, a layered
-  overlay property backing platform-wide governance
-  ([network.md §8](network.md#8-membership-and-roles)); changes
-  run through the multi-gate Proposal in
-  [network.md §9](network.md#9-mod-role-changes). Users only —
-  Collectives carry none.
+- **`network_role`** — `member` (default) / `moderator` /
+  `collective`, a layered overlay property backing platform-wide
+  governance ([network.md §8](network.md#8-membership-and-roles)).
+  Moderator changes run through the multi-gate Proposal and are
+  materialized as The Publisher's role Tag toward the Profile —
+  the overlay property mirrors that public record
+  ([network.md §9](network.md#9-mod-role-changes)).
 - Operational per-account state (moderation flags, service
   bookkeeping) per
   [graph-data-model.md](../implementation/graph-data-model.md).
@@ -190,9 +191,11 @@ itself, with no separate gesture and no junction. The
 Network-scope Proposals are the member's own payload-marked
 Opinions ([network.md §10](network.md#10-network-wide-governance)).
 
-Collectives are not Network members and carry no `network_role`:
-verdicts and governance eligibility are person-accountability
-surfaces ([network.md §8](network.md#8-membership-and-roles)).
+Collectives carry `network_role = 'collective'` — a class label,
+not a power: no ballots, no activity-count entry, no moderator
+eligibility. Verdicts and governance eligibility remain
+person-accountability surfaces
+([network.md §8](network.md#8-membership-and-roles)).
 
 ---
 
