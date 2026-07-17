@@ -267,10 +267,14 @@ CoGra-level outcomes as shared-graph records:
 - platform documents are anchored by a **publisher-authored
   Content node**.
 
-Three genesis system actors exist — **moderation, publisher,
-inviter** — burn-funded from the community treasury
-([economics.md](economics.md)) and endorsed at bootstrap to clear
-the wall like any other actor. The burn is not optional: standing
+Two genesis system actors exist — **The Moderator** (verdict
+gestures) and **The Publisher** (charter, platform documents,
+finalizations, role Tags) — burn-funded from the community
+treasury ([economics.md](economics.md)) and endorsed at bootstrap
+to clear the wall like any other actor. The full bootstrap cast —
+including **The Treasury**, an L1-registered account that
+materializes no outcomes — is
+[network.md §2](network.md#2-creation). The burn is not optional: standing
 is ignition-then-amplification — endorsement alone cannot reach a
 zero-burn actor
 ([layer1-interface.md §7.1](layer1-interface.md#71-the-two-gate-write-rule)). Their gestures are priced like anyone's: a verdict costs

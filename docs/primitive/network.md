@@ -50,42 +50,75 @@ depends on out-of-graph authority
 authority is confined to it. Every subsequent change runs through
 governance.
 
-Genesis begins with money: the operator burns LBTC into Layer 0,
-funding the addresses the genesis actors act from
-([economics.md §7.2](economics.md#72-the-l0-reserve-pool)). On that
-footing the bootstrap establishes:
+### The cast
 
-1. **The genesis member** — an ordinary account (Actor + Profile,
-   own L0 address) carrying `network_role = 'moderator'` with the
-   **undemotable** exception (§9). Identity is supplied to the
-   bootstrap at run time: the central instance run by the project
-   picks the project owner; a fork sets its own genesis.
-2. **The three system actors** — moderation, publisher, inviter:
-   ordinary L1 actors in backend custody, burn-funded from the
-   community treasury and endorsed by the genesis member to clear
-   the wall — the burn is not optional; endorsement alone cannot
-   reach a zero-burn actor
-   ([substrate.md §8](substrate.md#8-system-actors)).
-3. **The network charter** — the publisher system actor publishes
-   the charter anchor; its witnessed payload carries the charter
-   text and the genesis value of every governed parameter (§3).
-4. **The seeded Types** — the moderation verdict Types
-   (`illegal`, `sensitive`) the verdict gestures target
-   ([moderation.md](../instances/moderation.md)), and the reserved
-   `bot-defense` Type
-   ([feed-ranking.md §8.6](feed-ranking.md#86-community-evidence)),
-   present from network birth so every frontend can resolve them
-   through the naming service
-   ([hashtag.md](../instances/hashtag.md)).
-5. **The CoGra-side state** — the `:Network` overlay carrier
-   seeded with the genesis parameter values, and the service-side
-   bootstrap records.
+Each bootstrap-created thing has one canonical, capitalized name,
+used across all docs:
+
+| Name | What it is | What it authors |
+|---|---|---|
+| **The Genesis Moderator** | the operator's own account — the first member; an ordinary Actor + Profile with a self-custodied L0 address, undemotably `moderator` (§9) | the first Registration; the endorsement Opinions that ignite the system actors; ordinarily, the first invitations |
+| **The Publisher** | the system actor acting on the Network's behalf, in backend custody ([substrate.md §8](substrate.md#8-system-actors)) | The Charter, platform documents, Network-scope finalizations, role Tags (§9), auto-settlement payloads ([economics.md](economics.md)) |
+| **The Moderator** | the system actor for verdict gestures, in backend custody | Tag verdicts and payload removals ([moderation.md](../instances/moderation.md)) |
+| **The Treasury** | the team's account — destination of the campaign treasury share and funder of system-actor and Collective burns ([economics.md §7](economics.md#7-the-conservation-equation)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |
+| **The Charter** | not an actor — the Publisher-authored Content anchor of §3 | — |
+
+The Treasury is registered on Layer 1 deliberately, although it
+authors no governance records: its Registration's profile payload
+carries the team's CGT wallet address like any account's
+([user.md §3](user.md#3-graph-side-properties)), so "this is the
+team that takes the treasury share, and this is where it goes" is
+a public, witnessed fact — not a row in CoGra's database.
+
+Identity for The Genesis Moderator is supplied to the bootstrap at
+run time: the central instance run by the project picks the
+project owner; a fork sets its own genesis.
+
+### The order
+
+Genesis begins with money and proceeds so that every record's
+preconditions already stand:
+
+1. **The L0 genesis burn.** The operator burns LBTC into Layer 0,
+   funding the addresses of everything in the cast
+   ([economics.md §7.2](economics.md#72-the-l0-reserve-pool)).
+2. **The Genesis Moderator registers** — the instance's first
+   accepted record.
+3. **The Publisher, The Moderator, and The Treasury register** —
+   each Registration signed by its own backend-custodied key.
+4. **The Genesis Moderator endorses The Publisher and The
+   Moderator** — vouch Opinions clearing their wall; the burn is
+   not optional, endorsement alone cannot reach a zero-burn actor
+   ([substrate.md §8](substrate.md#8-system-actors)). The Treasury
+   needs no endorsement: it never writes again.
+5. **The Publisher publishes The Charter** — its witnessed payload
+   carries the charter text and the genesis value of every
+   governed parameter (§3).
+6. **The Publisher authors the genesis role Tag** — Tag `(0,0)` +
+   payload toward The Genesis Moderator's Profile at the
+   `moderator` role Type (§9) — the first record referencing that
+   Type. At L1 a Type is anchored vacuously — its identity *is*
+   its name, so it appears with its first referencing record and
+   no creation act exists
+   ([nodes.md §1](nodes.md#1-l1-node-types-the-shared-graph)).
+7. **The reserved Types are seeded CoGra-side** — `moderator`,
+   `illegal`, `sensitive`
+   ([moderation.md](../instances/moderation.md)), and
+   `bot-defense`
+   ([feed-ranking.md §8.6](feed-ranking.md#86-community-evidence))
+   enter the naming service and mirror with their
+   content-addressed UUIDv5 keys
+   ([data-model.md](../implementation/data-model.md)), stable from
+   network birth regardless of when each name first lands on L1
+   ([hashtag.md](../instances/hashtag.md)). The `:Network` overlay
+   carrier is seeded with the genesis parameter values alongside.
 
 The CoGra-side bootstrap is one step; the L1 genesis records land
 as the instance's first accepted acts. There is no runtime genesis
 flow — no "first user to register" detection, no genesis-flag
 column, no special branch in registration. Subsequent members join
-through invitation per [invitations.md](invitations.md).
+through invitation per [invitations.md](invitations.md) — with The
+Genesis Moderator, in practice, the first inviting actor.
 
 Bitcoin analogy: someone has to mine the genesis block. From there
 it is community-driven.
@@ -270,14 +303,14 @@ It receives:
 - **`(0,0)` References from proposal anchors** — Proposals
   targeting a governed parameter
   ([proposal.md §1](../instances/proposal.md#1-creation)).
-- **Finalization Opinions** from the executing system actor,
-  carrying the parameter-change payloads that form the schedule
-  (§3).
-- **Ballots** — payload-marked Opinions toward *proposal* anchors,
-  not the charter; the charter itself receives only organic
-  stances.
+- **Finalization Opinions** from The Publisher, carrying the
+  parameter-change payloads that form the schedule (§3).
 - **Ordinary fabric** — References from content discussing
   platform governance, organic Opinions.
+
+Ballots never land here: a ballot targets the *proposal's* anchor,
+not the charter
+([governance.md §3](governance.md#3-the-ballot)).
 
 The overlay carrier is not an L1 node and participates in no L1
 records; it is read-side state
@@ -306,19 +339,24 @@ admission AND gate itself (L1 write eligibility plus an accepted
 CoGra invitation, [invitations.md](invitations.md)); there is no
 separate membership gesture and no junction.
 
-Every member has a `network_role` — a layered **overlay** property
-on the account ([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
+Every account has a `network_role` — a layered **overlay** property
+([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
 
-- **`member`** — every admitted account, automatically. Default.
+- **`member`** — every admitted User account, automatically.
+  Default.
 - **`moderator`** — a small set who gate platform-wide governance
   actions ([moderation.md](../instances/moderation.md) for
-  content-moderation gating; §9 for mod-role-change gating).
+  content-moderation gating; §9 for mod-role-change gating). The
+  public truth of this role is the Profile's role Tag (§9); the
+  overlay property mirrors it.
+- **`collective`** — every Collective, automatically and
+  permanently. A class label, not a power: it confers no ballot,
+  no activity-count entry, no moderator eligibility — verdicts and
+  governance stay person-accountability surfaces
+  ([user.md §7](user.md#7-network-membership)).
 
 Promotion and demotion preserve full history per the overlay's
-append-only discipline ([layers.md](layers.md)). **Users only —
-Collectives carry no `network_role`**: moderation verdicts and
-governance eligibility are person-accountability surfaces
-([user.md §7](user.md#7-network-membership)).
+append-only discipline ([layers.md](layers.md)).
 
 An **active** member is one with at least one accepted L1 record
 inside the last `active_threshold_epochs` epochs (§3).
@@ -342,10 +380,16 @@ mechanism ([governance.md §2.1](governance.md#21-subject)):
   |active|, mod_role_change_quorum_count)`. Tally is
   petition-style (positive ballots only) per
   [governance.md §3](governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
-- **Outcome:** the finalization records it; the `network_role`
-  overlay property takes the new layer. No L1 gesture is needed —
-  the role is CoGra state, and the finalization is its replayable
-  public record.
+- **Outcome:** the finalization records the pass, and **The
+  Publisher materializes the role on the shared graph**: a Tag
+  `(0,0)` + payload toward the member's Profile at the
+  `moderator` role Type — the same verdict-gesture shape as
+  content classifications, **newest tag wins** per
+  (Profile, Type). Promotion and demotion are payloads on
+  successive role Tags; anyone watching the Profile — including
+  other L2s — reads the current role off the newest Tag, with no
+  need to trace proposal anchors. The `network_role` overlay
+  property mirrors the Tag for CoGra's own reads (§8).
 
 The two gates implement a **separation of powers**
 ([governance.md §2.4](governance.md#24-threshold-policy)): each
