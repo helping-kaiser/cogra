@@ -364,7 +364,7 @@ its bearer casts as a collective-eligible voter:
   carries vote direction. See
   [edges.md §2 "Voting (Shape B)"](../primitive/edges.md)
   and
-  [governance.md §3](../primitive/governance.md#3-the-two-vote-shapes).
+  [governance.md §3](../primitive/governance.md#3-the-ballot).
 
 #### As target (incoming)
 
@@ -592,7 +592,7 @@ gating the Proposal's tally as usual.
 Collective Proposals apply the snapshot pattern from
 [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time)
 via the
-[`rule_anchor`](proposal.md#2-graph-side-properties) field —
+[`rule_anchor`](proposal.md#2-terms) field —
 required on every Proposal. A Proposal authored under a
 `governance[X]` entry sets `rule_anchor = <Collective.id>`.
 Tally and cascade read `Collective.governance` as-of the
@@ -623,7 +623,7 @@ shape:
   `set:website_url`) —
   Postgres version row, no graph layer, per the display-content
   cascade in
-  [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
+  [governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect).
 - **Composite** — multi-property atomic change across multiple
   nodes. `value_kind = 'composite:<action_key>'`,
   `proposed_value` is a handler-specific bundle of `_from` /

@@ -163,7 +163,7 @@ which states the invariant "mod weight = member weight = 1; mod
 is a gate, not a weight," and names the failure modes each side
 of the multi-gate pattern closes off. The same component
 reappears in moderator role changes
-([network.md §9](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal))
+([network.md §9](../primitive/network.md#9-mod-role-changes))
 and `:Network` parameter amendments
 ([network.md §11](../primitive/network.md#11-amending-network-parameters)).
 

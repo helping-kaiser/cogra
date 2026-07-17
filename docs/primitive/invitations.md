@@ -1,178 +1,244 @@
 # Invitations
 
-How a new User joins the graph and gets their first edges.
-Invitations are the User onboarding mechanism that prevents new
-Users from starting as isolated nodes with no path to the rest
-of the graph.
+How a person joins CoGra and gets their first edges. The
+invitation is one half of the admission AND gate
+([substrate-map.md §1](substrate-map.md#1-actors-and-identity)),
+and it is what prevents a new member from starting as an isolated
+node with no path to or from the rest of the graph.
 
-Collectives are not invited — they come into existence through a
-different mechanism. See
-[collectives.md](../instances/collectives.md).
+Two relations that must never be confused
+([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)):
+the L1 **chat Invitation** hyper-edge is a proposal to join a
+*chat*; the **CoGra-join relation** below is admission to the
+*platform* and never uses that family. Collectives are not
+invited — they come into existence through a different mechanism
+([collectives.md](../instances/collectives.md)).
 
-## The two-edge invitation pattern
+---
 
-When an existing actor invites a new actor to the platform, **two
-actor edges** are created:
+## 1. The admission AND gate
 
-```
-Inviter   -[sentiment: +0.5, interest: +0.5]-> New Actor   (layer 1: "I invited them")
-New Actor -[sentiment: +0.5, interest: +0.5]-> Inviter    (layer 1: "they invited me")
-```
+A person becomes a CoGra member when **both** halves hold:
 
-Both are normal actor edges (see [edges.md](edges.md)). Neither is
-special-cased in the ranking math; the inviter's edge does carry the
-`:INVITE` label (below), but that is a query-layer denormalization that
-leaves its tensor and traversal unchanged.
+- **L1 write eligibility** — a funded Layer 0 burn to the
+  person's own address clears the write rule
+  ([substrate.md §6](substrate.md#6-authoring-path-and-admission)).
+  Who funds it — the community, the inviter, the person — is
+  economics ([economics.md](economics.md)); the comparator sees a
+  funded member exactly as a self-funded one.
+- **An accepted CoGra invitation** — the mutual stance pair of §2.
 
-The `(+0.5, +0.5)` shown here is the **default** — see "Default
-values and customization" below.
+Neither half alone admits. Burn without invitation buys write
+capacity on the shared graph but no CoGra membership; invitation
+without burn leaves the person unable to act. Email is
+authentication and recovery only — never a gate
+([user.md §2](user.md#2-creation)).
 
-## The `:INVITE` label
+An actor may pre-exist CoGra on the shared graph: joining is then
+just the connecting stance pair plus service registration — the
+L1 side already stands.
 
-The inviter's edge — `Inviter → New Actor` — carries the `:INVITE`
-sub-label ([edges.md §3](edges.md)). It
-is the **first incoming actor edge** into any non-genesis node, since the
-graph grows only by invitation, so the label denormalizes an
-already-derivable fact: "who invited X?" becomes a typed one-hop lookup
-instead of an in-edge scan with a timestamp-minimum. The edge stays a
-normal actor edge — same `(sentiment, interest)` tensor, same traversal;
-the label adds no ranking treatment.
+---
 
-Its one consumer beyond convenience is the **inviter reward**
-([economics.md §5.2](economics.md#73-the-inviter-reward)): at settlement,
-an earner's `:INVITE` in-edge resolves the direct inviter, who receives
-`0.01·P` sized by that earner's payout share. Single-hop and permanent —
-the edge is never deleted, so the inviter earns over the invitee's
-lifetime. Genesis users have no `:INVITE` in-edge; their share falls back
-to burn.
+## 2. The mutual-pair relation
 
-## Why two edges
+The CoGra-join relation is **mutual-pair-and-accept-gated**, and
+Layer 1 is its truth home:
 
-The new actor must have **at least one outgoing edge** from the moment
-they join. Without it, their node is an island — zero hops to anywhere
-in the graph, no feed to calculate. The inviter edge gives them a
-starting position.
+- Any number of members may point an **Opinion toward the
+  joiner's Profile** — the interpersonal stance carrier
+  ([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
+  Each is an ordinary, priced, public stance; none of them is yet
+  an invitation.
+- The joiner **accepts by pointing back**: their own Opinion
+  toward a would-be inviter's Profile completes a mutual pair.
+- **The inviter is the single actor the joiner reciprocates
+  first** — the ≺-earliest accepted back-edge. One inviter per
+  member, fixed by public record order, permanent.
 
-Both directions are needed because edges are strictly directional (see
-[graph-model.md §1](graph-model.md#1-core-principles)):
+A unilateral edge never constitutes an invitation: otherwise
+actors could be linked, unconsented, to reap inviter benefits.
+Acceptance is the joiner's own authored act — the same
+consent shape as chat membership materializing only from the
+invitee's own Participant edge
+([substrate.md §4](substrate.md#4-the-gesture-pattern)).
 
-- The inviter's edge toward the new actor expresses the inviter's
-  opinion (they liked this person enough to bring them in).
-- The new actor's edge toward the inviter gives the new actor their
-  first outbound connection, which the ranking algorithm can walk.
+The pair does double duty by construction:
 
-## Default values and customization
+- **The joiner's first outbound edge.** Their reciprocal Opinion
+  is their first walkable connection — the seed of their feed
+  ([feed-ranking.md](feed-ranking.md)).
+- **The joiner's first inbound person edge.** The inviter's
+  Opinion is a Full-tier stance toward the new Profile — the
+  grounding that makes the new member reachable for eligibility
+  cones and, when positive, the first vouch feeding their
+  standing ([economics.md §4.1](economics.md#41-eligibility--both-sides)).
 
-Both edges carry an initial `(dim1, dim2)` tensor — layer 1,
-written when the invite is accepted. Defaults are `(+0.5, +0.5)`
-on each direction.
+---
 
-**Both parties choose their own edge** during the invitation
-flow. The defaults are a fallback for users who skip the choice,
-*not* the recommended values. The two sides matter differently.
+## 3. Default values and customization
 
-### Inviter side: shaping the new actor's reach
+Both Opinions carry the authored stance parameters — valence and
+connection, `(p_d, p_i)` ([edges.md](edges.md)). Each side
+chooses their own values during the flow; the defaults are a
+fallback for those who skip the choice, **not** the recommended
+values.
 
-The inviter's edge `Inviter → New Actor` controls how the new
-actor's eventual content traverses the inviter's network. Positive
-values let their posts surface in the inviter's friends' feeds via
-the path mechanics in
-[feed-ranking.md §3](feed-ranking.md#3-the-per-edge-primitive-and-the-fold); weaker values are a softer
-introduction. The inviter is signaling to their network how
-strongly to weight this new person's voice. This influences the new
-actor's **early popularity** in the graph.
+**Defaults are `(+0.1, +0.1)` on each direction** — and this is
+CoGra's standing policy for every normal action, not an
+invitation quirk: **defaults sit low so that stronger stances
+stay expressible.** A vocabulary whose default is already strong
+leaves no headroom for the deliberate super-like; a low default
+keeps the full magnitude range meaningful. An uncustomized
+invitation is a real but modest endorsement — walkable, vouching,
+easily outweighed the moment either party authors something
+deliberate.
+
+### Inviter side: shaping the new member's reach
+
+The inviter's Opinion controls how the new member's content
+traverses the inviter's network — paths from the inviter's
+neighborhood reach the joiner through it at its real `w̃` — and,
+being a vouch-positive person stance, it feeds the joiner's
+standing through endorsement flow. The inviter is signaling to
+their network how strongly to weight this new voice. Strong
+values are a real commitment: severance later means authoring the
+counter-stance that nets the pair to `(0, 0)`
+([feed-ranking.md §8.1](feed-ranking.md#81-the-act)).
 
 ### Invitee side: shaping their own first feed
 
-The invitee's edge `New Actor → Inviter` is initially their *only*
-outbound edge, so their entire first feed runs on traversal through
-this single connection. Picking values deliberately matters more
-once the invitee forms a **second** outbound edge — the two edges'
-relative path products decide which neighborhood dominates the
-feed.
+The invitee's reciprocal Opinion is initially their *only*
+outbound edge, so their entire first feed runs through it. Its
+values matter most once the invitee forms a **second** outbound
+edge — the relative path products decide which neighborhood
+dominates.
 
 **Worked example: invited by a friend with different interests.**
-The invitee values the inviter as a person but does not share their
-content tastes — different hobbies, different topics. Two natural
-choices for the invitee's outbound edge:
+The invitee values the inviter as a person but does not share
+their content tastes. The instinct to author negative connection
+— "love them, don't want their content" — is a trap under the
+sign rule: a pair with `p_i < 0` **taints** every path through it
+(taint is absorbing,
+[feed-ranking.md §5.2](feed-ranking.md#52-sign--balance-and-taint)),
+so the inviter's whole neighborhood would enter the feed as
+*negative* contributions — active suppression, not neutrality.
+The stance that matches the intent is a **modest positive pair**,
+e.g. `(+0.5, +0.1)`: warm valence, weak connection. Weak positive
+path products fade naturally once the invitee's second edge —
+say `(+0.5, +0.5)` toward a Collective they care about — starts
+sourcing stronger paths; the inviter's neighborhood recedes
+without ever being punished. Actually not wanting to see someone's
+content is the read-side blocklist's job
+([feed-ranking.md §8.2](feed-ranking.md#82-the-read-side-blocklist));
+negative stances are for genuine disendorsement.
 
-- `(+1, +1)` — full strength on both axes. The inviter's
-  neighborhood dominates the invitee's feed even after additional
-  edges are formed, because the inviter-edge path products stay at
-  full strength.
-- `(+1, -1)` — high sentiment, negative interest. *"I love
-  this person but their content is not what I want to see."* Once
-  the invitee adds a second edge, e.g. `(+0.5, +0.5)` to a
-  Collective they care about, the second edge dominates the feed: the
-  inviter-edge path products have positive sentiment chains and
-  negative interest chains, which tend to cancel under the sum
-  collapser in [feed-ranking.md §4.3](feed-ranking.md#5-per-path-quantities).
+The broader lesson survives the rebase: stance values encode a
+relationship the math respects until a new record moves the
+bundle. Picking deliberately at invitation time avoids "I left
+the default and now my feed is dominated by my inviter's
+network" — though the low defaults make that trap shallow.
 
-The broader lesson: invitation-edge values encode a relationship
-stance the math respects until the edge gets a new layer. Picking
-deliberately at invitation time avoids the trap of "I left it as
-the default and now my feed is dominated by my inviter's network."
+---
 
-### About the defaults
+## 4. Invite links: staged applicants, explicit approval
 
-`(+0.5, +0.5)` is moderate on both axes — enough to give the
-invitee a walkable starting edge, enough that the inviter is making
-a real endorsement, not so strong that uncustomized edges dominate
-indefinitely. Frontends should make customization the primary path
-during the invitation flow; the defaults only kick in if the user
-explicitly skips the choice.
+The inviter's Opinion is a priced act toward a specific Profile —
+one that does not exist when a link is generated. So a link never
+authors anything: it is **pure service-side UX that stages
+applicants**, and the inviter's **approval is the priced act**.
+There is no fire-and-forget invitation.
 
-## Link modes: single-use and multi-use
+The flow:
 
-When generating an invite link, the inviter picks **single-use or
-multi-use**. Both modes are time-gated.
+1. **The link stages.** A person following the link registers as
+   an **applicant** — off-graph service state only. An abandoned
+   or unapproved application leaves no record beyond itself:
+   no account, no records, nothing on the graph.
+2. **The inviter approves** — per applicant, or in batches for
+   high-reach onboarding. Approval is the deliberate act that
+   commits the inviter's stance: the backend then runs the
+   admission sequence — the funded burn, the Registration
+   grounding the new Actor + Profile, and the inviter's Opinion
+   toward the new Profile. The link's stance values are
+   **pre-filled, not pre-committed** — the inviter can adjust
+   them at approval.
+3. **The joiner accepts by reciprocating** (§2) — their own
+   Opinion toward the inviter's Profile completes the pair and
+   the membership.
 
-- **Single-use.** Consumed on the first accepted registration.
-  Best for targeted invites — sending a specific link to a
-  specific person. Even if the link leaks, the worst case is one
-  accidental join, with no broader bot-cluster exposure.
-- **Multi-use.** Many invitees can register through the same link
-  until its timer expires. Different invitees produce different
-  User nodes. Influencers and public communities need this mode
-  to onboard their audience through a single shared link —
-  typically posted over messenger or social channels, where the
-  inviter does **not know in advance who will accept**.
+While waiting for approval, an applicant can already **read** —
+the shared graph is public — they just cannot act. Approval
+latency (an inviter who doesn't check their phone for hours) is
+a UX cost, not a correctness problem.
 
-### Pre-committed inviter values
+**Link modes.** When generating a link, the inviter picks
+**single-use or multi-use**; both are time-gated and revocable at
+any time.
 
-The inviter's outgoing edge values are **pre-committed when the
-link is generated**, not per invitee — same mechanic for both
-modes. Whoever accepts inherits those values. The invitee still
-chooses their own outgoing edge at registration.
+- **Single-use.** One applicant slot. Best for targeted invites —
+  a specific link to a specific person; a leaked link stages at
+  most one stranger, and approval still gates the join.
+- **Multi-use.** Many applicants can stage through the same link
+  until its timer expires — the shared-funnel mode influencers
+  and public communities need, where the inviter does not know in
+  advance who will apply. What scales is the *queue*, never the
+  vouching: each join still costs the inviter one explicit,
+  priced approval.
 
-### Revocation and abandonment
+Registration mechanics — email verification, applicant handling,
+the service-level admission step — live in
+[auth.md](../implementation/auth.md).
 
-The inviter can revoke a link explicitly at any time; otherwise it
-expires when its timer runs out. A link that no one accepts simply
-expires — no User node, no edges, no record beyond the link itself.
-Implementation specifics — email verification, pending-registration
-handling, and the atomic edge-creation step on verification — live
-in [auth.md](../implementation/auth.md).
+---
 
-### The bot-cluster trade-off
+## 5. The inviter reward
+
+The accepted inviter earns the **single-hop 1% CGT reward**: at
+each campaign settlement, an earner's inviter receives `0.01·P`
+sized by that earner's payout share
+([economics.md §7.3](economics.md#73-the-inviter-reward)). Direct
+inviter only — no chain, no pyramid dynamic; permanent — the
+relation never expires, so the inviter earns over the member's
+lifetime; paid in CGT, the reward economy, never the L0 reserve.
+It fires only on the accepted mutual pair — never on a one-way
+edge. Genesis members have no inviter; their share falls back to
+burn.
+
+---
+
+## 6. The bot-cluster trade-off
 
 Multi-use links shared publicly create an attack surface: a bot
-cluster joining through an influencer's link turns the
-influencer into a **bridge node into the cluster**. The same
-mechanic that gives the inviter reach concentrates the cost of
-mis-vouching onto them. (Single-use links sidestep this by
-construction — at most one accidental join.)
+cluster staging through an influencer's funnel and getting
+batch-approved makes the influencer a **bridge node into the
+cluster**. The approval gate (§4) doesn't remove the hazard —
+carelessly batch-approving unknown applicants *is* mis-vouching —
+it makes the mis-vouch an explicit, priced act. The same mechanic
+that gives the inviter reach — and lifetime referral earnings —
+concentrates the cost onto them. Single-use links sidestep this
+by construction.
 
-The system tolerates this for the multi-use case because public
-multi-use links are necessary for high-reach onboarding —
-communities and influencers can't onboard their audiences
-otherwise — and the abuse is self-correcting: the inviter's
-network can sever the bridge through cascading severance
-([feed-ranking.md §3.6–§3.7](feed-ranking.md#8-severance-discovery-redemption)),
-at which point the entire cluster reachable through that bridge
-is zero-jailed. Inviters learn to be more selective with where
-they post their links.
+The system tolerates the multi-use case because public links are
+necessary for high-reach onboarding, and the abuse is
+self-correcting — with teeth the pre-L1 design lacked:
 
+- **Severance is the counter.** The inviter's network — or the
+  inviter — reverses stances toward the bridge to a `(0,0)` net
+  ([feed-ranking.md §8.3](feed-ranking.md#83-cascading-severance--and-its-locality)).
+  A cluster reachable only through the bridge loses every live
+  path: absent from feeds, from attribution earnings, from vouch
+  propagation, from subsidy — the zero-jail
+  ([feed-ranking.md §7](feed-ranking.md#7-sort-order-tie-breakers-zero-jail)).
+- **Severance and defunding are the same act.** The reversed
+  stances stop propagating standing, dropping the cluster below
+  the wall — the community stops paying for actors it has severed
+  ([economics.md](economics.md)).
+- **Every bot join was priced.** Each cluster account consumed a
+  funded burn and priced acts; a severed cluster is sunk cost,
+  not recyclable infrastructure.
+
+Inviters learn to be selective with where they post their links.
 The trade-off is intentional: restricting the mechanism would
 deprive legitimate high-reach actors of a critical onboarding
 tool; pushing the consequence onto the inviter aligns the

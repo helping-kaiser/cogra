@@ -94,9 +94,7 @@ value is its top layer, and history is preserved per field,
 independent of other fields. Consumers can address a specific past
 layer **by timestamp** — "read property X as-of T" returns the
 layer on X with the largest timestamp ≤ T. Per-node serialized
-writes (the discipline used in
-[governance.md "Tally serialization"](governance.md#tally-serialization))
-make timestamps strictly monotonic per node, so a single timestamp
+writes make timestamps strictly monotonic per node, so a single timestamp
 pins the node's full state at that moment — no per-property index
 needed. Concrete storage shape (top-layer slot + `_layers` list)
 in

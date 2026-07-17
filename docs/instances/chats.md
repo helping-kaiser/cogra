@@ -849,14 +849,14 @@ the same primitive; a community can override admins by crossing
 the threshold without their participation.
 
 The cascade for each entry dispatches on `action_key` and target
-type per [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
+type per [governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect).
 For Level 1 / Level 2 disavowal the cascade behaviors are as
 described in their subsections above; `decision:set:name` and
 `decision:change_role` write the new value as a graph layer on
 the target property, while the display-content edits
 `decision:set:description` and `decision:set:image` follow the
 display-content cascade in
-[governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch)
+[governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)
 (Postgres version row, no graph layer); for `decision:rotate_key`
 it advances `Chat.epoch`; for `decision:add_member` it writes
 the `Chat → ChatMember` approval edge once the signer threshold
@@ -890,7 +890,7 @@ After the founder's bootstrap (§2.1), every ChatMember runs the
 [graph-model.md §5](../primitive/graph-model.md):
 admission is a fresh terminal `Proposal` that `:TARGETS` the new
 ChatMember, combining two voting shapes
-([governance.md §3](../primitive/governance.md#3-the-two-vote-shapes)):
+([governance.md §3](../primitive/governance.md#3-the-ballot)):
 
 - The **would-be member's Shape A self-claim** — their
   `User/Collective → Proposal` vote authoring (or, in an invite
