@@ -1,480 +1,277 @@
 # Proposal
 
-The **Proposal** is a carrier node — the **subject carrier
-for property-level governance votes**. Wherever the platform
-needs to vote on changing a graph property (a Network
-parameter, a User's `network_role`, a Chat's `name`, a
-ChatMember's `role`, a content node's per-field
-moderation-status property like `'bio'` or `'content'`), the
-vote is cast on a Proposal that *targets* that node's
-specific property, not on the underlying node directly. When
-the tally crosses threshold, a cascade writes a new layer on
-the target property with the Proposal's `proposed_value`.
-Multi-property atomic changes — admitting a shareholder with
-re-distribution, for instance — use **composite proposals**
-(§2) which carry a structured bundle in place of a scalar
-value and cascade atomically across all affected properties.
+The **Proposal** is the carrier of a governance decision. Its
+public face lives on PeerNetworks Layer 1 as three kinds of
+records — the **anchor**, the **ballots**, and the
+**finalization** — and its operational state lives in CoGra's
+overlay
+([substrate-map.md §5](../primitive/substrate-map.md#5-governance-and-moderation)):
 
-This doc describes the node; the **governance mechanics** it
-hosts — eligibility, weight function, threshold policy, outcome
-semantics, multi-candidate decisions — live in
-[governance.md](../primitive/governance.md).
+- **Anchor** — a proposer-authored Content node whose witnessed
+  payload carries the proposal text and machine-readable terms,
+  plus a `(0,0)` Reference from the anchor to the subject node.
+- **Ballots** — payload-marked Opinions toward the anchor
+  ([governance.md §3](../primitive/governance.md#3-the-ballot)).
+- **Finalization** — the executing authority's Opinion `(0,0)` +
+  payload (outcome, tally digest) toward the anchor.
+
+Everything a decision binds is therefore replayable from public
+records plus CoGra's published tally formula. The **governance
+mechanics** — eligibility, weight functions, threshold policies,
+outcome semantics — live in
+[governance.md](../primitive/governance.md); this doc describes
+the carrier.
 
 ---
 
 ## 1. Creation
 
-Any actor eligible for the governance instance the Proposal
-serves can author one (see
-[governance.md §2.2](../primitive/governance.md#22-eligibility)).
-There is no second-party approval flow: like a Post (see
-[post.md §1](post.md#1-creation)), the author's outgoing
-vote edge is the only edge needed to bring the node into
-the graph.
+Any actor eligible for the governance instance the Proposal serves
+can author one
+([governance.md §2.2](../primitive/governance.md#22-eligibility)).
+There is no second-party approval flow: the proposer's own acts
+bring the Proposal into being, priced like every L1 act
+(proposer-pays).
 
-What the author specifies at creation:
+The opening gesture comprises:
 
-- **The target node** — recorded as the system-created
-  outgoing `:TARGETS` structural edge (§4). Fixed at
-  creation; a Proposal cannot be re-targeted.
-- **`target_property`**, **`proposed_value`**, **`value_kind`**,
-  and **`rule_anchor`** — graph properties on the new Proposal
-  (§2).
+- **The anchor** — the proposer publishes a Content node; the
+  Publish record's genesis fixes the proposer as `creator`
+  ([nodes.md](../primitive/nodes.md)). The proposal text and terms
+  (§2) ride the anchor as witnessed payload in the Peer Content
+  Envelope ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+- **The subject Reference** — a `(0,0)` Reference from the anchor
+  to the subject node. Undefined parity, `w̃ = 0`, never vouches
+  (`rem:graph:zero-parameter-degeneracy`) — pure public naming.
+  Subjects within a scope (a chat member, a collective member)
+  are named by the member's **Profile**, with the scope in the
+  payload; overlay-only targets are named through their owning
+  entity's L1 node
+  ([governance.md §2.1](../primitive/governance.md#21-subject)).
+- **The proposer's ballot** — the anchor's genesis is a Publish
+  record, and Publish and Opinion never share a bundle, so
+  **authoring is never read as a vote**. The client flow bakes the
+  proposer's explicit `+1` ballot immediately after creation — one
+  more priced act.
+- **The overlay Proposal node** — written by the backend in the
+  same flow: CoGra's operational carrier for tally state and
+  dispatch (§3).
 
-The system writes three records atomically: the
-`:Proposal` node, the outgoing `:TARGETS` edge, and an
-incoming vote edge from the authoring actor (§5).
+A Proposal cannot be re-targeted and its terms cannot be revised:
+the payload witness fixes both at landing (§2). A revised change
+is a new Proposal.
 
 ---
 
-## 2. Graph-side properties
+## 2. Terms
 
-- **`target_property`** — the name of the graph property
-  on the target node being proposed for change (e.g. a
-  per-field moderation-status property like `'bio'` or
-  `'content'`, `'name'`, `'role'`, `'network_role'`,
-  `'guidelines_version'`), or the reserved sentinel `'node'`
-  for whole-node operations. The sentinel
-  is defined in
-  [nodes.md "Whole-node targeting"](../primitive/nodes.md)
-  and has two consumers:
-  - **Illegal-content classification** — every user-input
-    field plus every attached media on the node (see
-    [moderation.md §1](moderation.md#1-the-two-classification-paths)).
-    `proposed_value = 'illegal'`.
-  - **Chat-internal disavowal** — Level 1 against a
-    `ChatMessage` or Level 2 against a `ChatMember` (see
-    [chats.md §10](chats.md#10-moderation)).
-    `proposed_value ∈ {'disavowed', 'normal'}`.
-- **`proposed_value`** — the value to set on
-  `target_property` if the Proposal passes. Shape depends on
-  `value_kind` (below); values used with the `'node'` sentinel
-  are listed in the two bullets above.
-- **`value_kind`** — string discriminator on the shape of
-  `proposed_value`, set at Proposal creation and consumed by
-  frontends to render the right editor / display widget
-  without needing out-of-band knowledge of every
-  `target_property`. Enumerated:
-  - `'scalar:string'` — `proposed_value` is a string
-    (moderation classifications, role strings, `name`
-    changes, …).
-  - `'scalar:float'` — `proposed_value` is a Float
-    (quorum fractions, `ownership_pct`, …).
-  - `'scalar:integer'` — `proposed_value` is an Integer
-    (absolute quorum counts, half-lives, …).
-  - `'rule'` — `proposed_value` is a `Rule` object — the
-    paired `exec` + `amend` triples (each
-    `{eligibility, weighting, threshold}`) keyed under a
-    `governance[action_key]` entry, per
-    [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
-    Consumer: governance-rule amendments on collectives (see
-    [collectives.md §8](collectives.md#8-governance--the-social-contract)).
-  - `'composite:<action_key>'` — `proposed_value` is a
-    handler-specific structured bundle covering multiple
-    properties across multiple nodes, applied atomically by
-    the cascade. See "Composite proposals" below.
-- **`rule_anchor`** — **required.** Every Proposal is grounded
-  in a rule that lives in one or more layered properties on
-  some node; this field identifies that node, per
-  [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time).
-  The dispatcher reads each rule property on `rule_anchor`
-  **as-of the Proposal's authorship-edge timestamp** per
-  [authorship.md](../primitive/authorship.md) (the earliest
-  incoming actor edge) at tally and cascade, so amendments
-  committed mid-flight don't retroactively change in-flight
-  Proposals' rule parameters.
+The anchor payload carries the proposal's full substance —
+human-readable text plus the machine-readable terms CoGra's
+dispatcher executes. The term fields, in the envelope's guild
+keyspace:
 
-  ```
-  rule_anchor: String   // node ID hosting the rule property(ies)
-  ```
+- **`action_key`** — which governance instance this Proposal runs
+  under; selects the frozen Rule at the rule host
+  ([governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention)).
+- **Target designation** — the subject is named publicly by the
+  anchor's Reference; where the governed state is finer than a
+  node (a named parameter, a rule entry, an overlay property), the
+  payload names it.
+- **`proposed_value`** — the value to set if the Proposal passes.
+- **`value_kind`** — discriminator on the shape of
+  `proposed_value`, consumed by frontends to render the right
+  editor without out-of-band knowledge:
+  - `'scalar:string'` — role strings, classifications, names.
+  - `'scalar:float'` — quorum fractions, `ownership_pct`, shares.
+  - `'scalar:integer'` — absolute counts, epoch windows.
+  - `'rule'` — a `Rule` object (paired `exec` + `amend` triples)
+    for a `governance[action_key]` entry.
+  - `'composite:<action_key>'` — a handler-specific structured
+    bundle covering multiple values, applied atomically
+    (below).
 
-  Covers every current consumer with a single value:
-  - Collective Proposals (executions or amendments under
-    `governance.<action_key>`) — `rule_anchor = <Collective.id>`;
-    dispatcher reads `Collective.governance` as-of authorship
-    and indexes by action_key.
-  - Network dual-quorum moderation Proposals —
-    `rule_anchor = <Network.id>`; dispatcher reads both
-    `_quorum_fraction` and `_quorum_count` as-of authorship so
-    the `min(P × |active|, K)` rule is fully frozen.
-
-  Timestamp-based addressing on node-property layers is a
-  forward dependency — see
-  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes).
-
-- **`status`** — the Proposal's lifecycle state, and one of the
-  node's **two layered properties** (the other is the
-  `proposed_value_status` moderation companion, below). Default
-  `'open'`; transitions
-  exactly once, at threshold-cross, to a terminal value:
-  - `'passed'` — threshold crossed, cascade applied.
-  - `'passed_but_invariant_rejected'` — threshold crossed, but a
-    composite Proposal's `_from` re-validation failed and the
-    cascade refused the target writes (§6). The crossing vote
-    still stands; only the cascade rolled back.
-  - `'failed'` — bidirectional tallies only: the negative side
-    satisfied the mirror bar
-    ([governance.md §2.4](../primitive/governance.md#24-threshold-policy)).
-  - `'redacted'` — a moderation Proposal targeting this
-    Proposal's `proposed_value` passed `'illegal'` while this
-    Proposal was open; with its payload redacted it can never
-    execute (§2).
-
-  A Proposal **stops accepting votes once `status ≠ 'open'`**;
-  the terminal state is final. Petition-style tallies have no
-  failure path — negatives are not tallied, so a petition that
-  never crosses threshold stays `'open'` indefinitely (no
-  time-boxing, see
-  [governance.md §6](../primitive/governance.md#no-time-boxing));
-  in a bidirectional tally a Proposal neither side ever crosses
-  stays `'open'` the same way.
-  Changing a terminal outcome is done with a **counter-Proposal**
-  ([governance.md §3](../primitive/governance.md#counter-proposals)),
-  never by re-voting the terminated one. `status` is the
-  Proposal's on-graph outcome record: other nodes record a
-  governance outcome as a layer on the changed target property,
-  but a Proposal carries intent with no such target of its own
-  (§6).
-
-None of the four **identity** properties above —
-`target_property`, `proposed_value`, `value_kind`,
-`rule_anchor` — layers: the Proposal's identity *is* the
-specific change it proposes; mutating any of them mid-lifecycle
-would change what voters are voting on. A revised target,
-value, kind, or anchor requires a new Proposal. The two layered
-properties are `status` — `open` → terminal, exactly one
-transition, never destructive — and the `proposed_value_status`
-moderation companion (below), both append-only by the same
-discipline as everything else on the graph.
+**The terms are immutable by the witness.** The payload is
+committed at the anchor's landing; nothing can rewrite what
+voters are voting on. This is stronger than any layering rule: a
+changed anchor payload is publicly detectable evidence, not a
+possible state. The **rule snapshot** shares the same ruler —
+tally and execution read the governing Rule as-of the anchor's
+landing epoch
+([governance.md §5](../primitive/governance.md#rule-snapshot-at-author-time)).
 
 ### Composite proposals
 
-A composite Proposal carries a structured `proposed_value`
-bundle that atomically writes layers on several properties —
-usually across several nodes that together encode one
-invariant. The canonical case is shareholder admission:
-creating the new `:CollectiveMember` junction with N% stake
-and reducing existing shareholders' `ownership_pct` so the
-100% total holds; either change passing alone would break the
-invariant.
+A composite Proposal carries a structured `proposed_value` bundle
+that atomically changes several values — usually across several
+carriers that together encode one invariant. The canonical case is
+shareholder admission: creating the new collective-membership
+junction with N% stake and reducing existing shareholders'
+`ownership_pct` so the 100% total holds; either change passing
+alone would break the invariant.
 
 Three conventions hold across every composite kind:
 
-1. **`:TARGETS` points at the owning entity.** For
-   Collective-internal composites, the Collective node — not
-   any one affected junction; the bundle inside
-   `proposed_value` carries the per-node specifics.
-2. **Bundle entries carry `_from` and `_to` for every
-   property being changed.** At threshold-cross the cascade
-   re-validates by checking each affected property's current
-   value equals the entry's `_from`. Any mismatch — typically
-   state drift between author-time and tally-time — causes
-   the cascade to refuse; the Proposal records a terminal
-   `passed_but_invariant_rejected` outcome and a fresh
-   Proposal with refreshed numbers is needed. Straightforward
-   compare-and-swap; voters see exactly what's being asserted
-   about current state.
+1. **The anchor's Reference points at the owning entity** — for
+   collective-internal composites, the collective's Profile; the
+   bundle inside `proposed_value` carries the per-target
+   specifics.
+2. **Bundle entries carry `_from` and `_to` for every value being
+   changed.** At the crossing epoch the dispatcher re-validates by
+   checking each affected value's state as-of that epoch equals
+   the entry's `_from`. Any mismatch — typically drift between
+   author time and crossing — refuses execution; the Proposal
+   records a terminal `passed_but_invariant_rejected` outcome and
+   a fresh Proposal with refreshed numbers is needed.
+   Straightforward compare-and-swap; voters see exactly what's
+   being asserted about current state.
 3. **Per-`action_key` handlers own bundle shape, author-time
-   invariant validation, and the cascade transaction.** The
-   primitive doesn't enumerate composite shapes — each
-   application doc declares its own action keys.
+   validation, and the execution transaction.** The primitive
+   doesn't enumerate composite shapes — each application doc
+   declares its own action keys
+   ([collectives.md §8](collectives.md#8-governance--the-social-contract)).
 
-Composite kinds in current use live in their application docs
-— see
-[collectives.md §8](collectives.md#8-governance--the-social-contract)
-for `composite:decision:admit_shareholder` and
-`composite:decision:transfer_shares`.
+### Moderation of proposal content
 
-A Proposal carries **one moderatable field**: `proposed_value`.
-Wherever the proposed value embeds user-authored content (a
-proposed description or name, a composite payload), it is
-reportable like any other user content — a moderation Proposal
-`:TARGETS` the Proposal with
-`target_property = 'proposed_value_status'` and runs the
-Network-scope flow in [moderation.md](moderation.md). On a
-passing `'illegal'` classification the cascade writes the
-visible redaction marker onto `proposed_value` in place (the
-identity properties don't layer; in-place redaction is the
-sanctioned exception per
-[layers.md §5](../primitive/layers.md#5-deletion-policy)) and
-onto the layered `proposed_value_status` companion. If the
-targeted Proposal is still `'open'` it transitions terminally
-to `'redacted'` (§6) — its payload is gone, so it can never
-execute; the votes already cast remain on record.
-
-Concrete property types and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+The proposal text is user-authored content and reportable like any
+other: a moderation Proposal names this Proposal's **anchor** as
+its subject and runs the Network-scope flow in
+[moderation.md](moderation.md). A passing `'illegal'`
+classification removes the anchor's payload — the standard
+whole-record reduction with its visible mark
+([layers.md §5](../primitive/layers.md#5-deletion-policy)). A
+still-`'open'` Proposal thereby transitions terminally to
+`'redacted'` (§6): its terms are gone, so it can never execute.
+The ballots already cast remain on record.
 
 ---
 
-## 3. Postgres-side content
+## 3. Overlay and Postgres state
 
-None. The Proposal's full substance is `target_property` +
-`proposed_value` + the `:TARGETS` edge — anything
-human-readable a viewing user might want about the Proposal is
-derivable from those plus the target node's current state.
+The overlay Proposal node is CoGra's operational carrier: the
+`status` cache, per-epoch tally state, and dispatch bookkeeping
+the backend and frontends read without recomputing from the
+mirror. It is a cache over public records plus published policy —
+nothing on it is authoritative
+([substrate.md §3](../primitive/substrate.md#3-cogras-stores)).
 
-The platform-guidelines amendment Proposal (see
-[platform-guidelines.md §3](platform-guidelines.md#3-amendment-procedure))
-is the one application where understanding the change
-requires off-graph text (the new guidelines version,
-published in the repo); even there, only the version number
-and SHA-256 hash ride on the Proposal.
+There is **no Postgres display content**. The Proposal's full
+substance is the witnessed anchor payload; anything human-readable
+a viewer wants is derivable from it plus the subject's current
+state. The platform-guidelines amendment
+([platform-guidelines.md §3](platform-guidelines.md#3-amendment-procedure))
+is the one application where understanding the change requires
+off-graph text (the new guidelines version, published in the
+repo); even there, only the version number and SHA-256 hash ride
+in the terms.
 
 ---
 
-## 4. Edges
+## 4. Ballots and references
 
-### As source (outgoing)
+**Ballots** are payload-marked Opinions toward the anchor —
+mechanics, direction semantics, latest-ballot rule, and the
+petition arithmetic all in
+[governance.md §3](../primitive/governance.md#3-the-ballot). The
+ballot marker keeps them distinct from **organic stances**: an
+unmarked Opinion toward the anchor is ordinary sentiment about the
+proposal and never enters any tally, even though both live in the
+same author bundle on L1.
 
-A Proposal carries exactly one outgoing structural edge,
-system-created at creation and never re-targeted:
+**References** to the anchor are ordinary graph fabric: a Post
+campaigning for support, a Comment citing the proposal in debate,
+a Message surfacing it for a chat — each an L1 Reference whose
+legs traverse at their real `w̃`
+([feed-ranking.md](../primitive/feed-ranking.md)).
 
-- **`Proposal → Target Node` (`:TARGETS`)** — identifies
-  the node whose property is being changed. Targets span
-  every node category: actor (User, Collective), content
-  (Post, Comment, Chat, ChatMessage, Item), topic (Hashtag),
-  junction (`ChatMember.role`, `CollectiveMember.role`), and system
-  (the `:Network` singleton — see
-  [network.md §11](../primitive/network.md#11-amending-network-parameters)).
-  The property name and proposed value live on the Proposal
-  node (§2), not on the edge — the change is intrinsic to
-  the Proposal, not to the relationship. See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md).
-
-### As target (incoming)
-
-A Proposal receives vote edges and (optionally) reference
-edges. It does **not** receive `:CONTAINMENT` edges —
-Comments attach only to Post, Comment, Chat, ChatMessage,
-and Item, per
-[edges.md §2 "Containment / belonging"](../primitive/edges.md).
-
-**Vote edges**, two shapes per
-[governance.md §3](../primitive/governance.md#3-the-two-vote-shapes);
-choice is per-application:
-
-- **Shape A — actor edges** from Users and Collectives,
-  `(sentiment, importance)` per
-  [edges.md §1](../primitive/edges.md).
-  `dim1` carries vote direction; `dim2` carries the
-  voter's personal stake. Used for relationship-shaped
-  subjects (junction approvals).
-- **Shape B — structural vote edges** from the voter's
-  eligibility junction. `dim1` carries vote direction,
-  `dim2` is `0`. Per
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md):
-  `ChatMember → Proposal` and
-  `CollectiveMember → Proposal`.
-
-For Network-scope governance (moderation, mod role changes,
-`:Network` parameter amendments — see
-[network.md §10](../primitive/network.md#10-network-wide-governance)),
-the vote is Shape A: the `User → Proposal` actor edge from
-[edges.md §1](../primitive/edges.md) carries
-the vote. Network membership has no per-member junction, so
-the User node is itself the eligibility carrier. The actor
-edge keeps its normal meaning: `dim1` is the voter's
-sentiment toward the change (positive = support, negative =
-oppose), `dim2` is importance / personal stake. Network-scope
-tally is petition-style: only `dim1 > 0` edges contribute
-(`+1 × voter_weight` each); `dim1 ≤ 0` edges are valid
-graph objects but contribute `0` to the tally. The pass
-condition is dual-quorum:
-`positive_count ≥ min(P × |active members|, K)` plus the
-mod-gate. See
-[governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
-
-**Reference edges:**
-
-- **`ChatMessage / Post / Comment → Proposal` (`:REFERENCES`)**
-  when a content node embeds the Proposal — a chat message
-  surfacing it for chat members to vote on, a Post campaigning
-  for support, a Comment citing it in debate. See
-  [edges.md §2 "Reference"](../primitive/edges.md).
-
-A Proposal receives a `:TARGETS` edge from another Proposal in
-exactly one case: a moderation Proposal against its
-`proposed_value_status` (§2). No other governance application
-proposes changes to a Proposal's own properties (the identity
-properties don't layer, §2).
-
-**Feed-rankable.** These inbound vote and reference edges are
-reactor edges into the Proposal, making it an **opt-in**
-feed-ranking target ("show me the proposals that matter to me");
-it is never in the default feed. See
-[feed-ranking.md §5.3](../primitive/feed-ranking.md#93-what-is-rankable).
+**Feed-rankable, natively.** Ballots and organic stances are
+stance-carrying records, so proposals rank like any other content
+in viewer-rooted traversal — no special hop, no vote-specific
+rule. A member's feed surfaces the proposals their outgoing paths
+actually reach.
 
 ---
 
 ## 5. Authorship
 
-Every Proposal is authored by a `User/Collective → Proposal`
-`:AUTHOR` actor edge written in the opening gesture
-([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
-Which edge that is depends on the opening vote's shape:
-
-- **Opened by a Shape A vote.** The authoring gesture **is** the
-  author's first vote — a Proposal exists to be voted on, and
-  there is no separate personal-stance dimension to preserve
-  apart from the vote. The same edge serves both roles, so the
-  earliest-incoming-edge author derivation
-  ([authorship.md](../primitive/authorship.md)) and the
-  first-voter identity coincide. See
-  [moderation.md §2](moderation.md#2-reports--proposals-on-the-graph)
-  for the worked example with reports.
-- **Opened by a Shape B vote.** The vote is a structural edge
-  from the opener's eligibility junction, and structural edges
-  cannot carry `:AUTHOR`. The actor behind the opening junction
-  writes the `User/Collective → Proposal` `:AUTHOR` actor edge
-  in the same gesture — the paired-edge pattern of the junction
-  self-claim
-  ([graph-model.md §5](../primitive/graph-model.md)).
-  Vote and authorship are separate edges: the structural edge
-  enters the tally, the actor edge carries authorship and the
-  author's personal stance.
+The proposer authors the anchor: author binding is intrinsic to
+the Publish record that mints it
+([authorship.md](../primitive/authorship.md)), publicly fixing who
+brought the Proposal and who paid for it. Authorship carries no
+governance arithmetic — the proposer's voice in the tally is their
+explicit ballot like everyone else's (§1), and the finalization is
+authored by the executing authority, never the proposer
+([governance.md §2.5](../primitive/governance.md#25-outcome)).
 
 ---
 
 ## 6. Lifecycle
 
 The governance mechanics that drive each transition stay in
-[governance.md](../primitive/governance.md); what follows
-is the node-level progression.
+[governance.md](../primitive/governance.md); what follows is the
+carrier-level progression. `status` on the overlay node caches it;
+the public records carry it.
 
-- **Open** — default state from creation. New eligible
-  actors may cast vote edges at any time; existing voters
-  change their position by appending a new layer to their
-  existing vote edge
-  ([governance.md §4](../primitive/governance.md#4-append-only-throughout)).
-  **No time-boxing**: votes stand until changed and the
-  Proposal stays open indefinitely
-  ([governance.md §6 "No time-boxing"](../primitive/governance.md#no-time-boxing)).
-- **Tally** — triggered only by a new or updated vote
-  layer on the Proposal, not on a schedule or by background
-  eligibility shifts
+- **Open** — default from creation. Eligible members ballot at any
+  time; a member's latest ballot governs; ballots land
+  epoch-quantized. **No time-boxing**: the Proposal stays open
+  indefinitely
+  ([governance.md §6](../primitive/governance.md#no-time-boxing)).
+- **Tally** — a deterministic function of each epoch's accepted
+  ballot set; nothing tallies mid-epoch or on a clock
   ([governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)).
-- **Cascade** — when a new-vote tally crosses threshold,
-  the Proposal's `status` flips to its terminal value (§2) and
-  the system fans out the outcome. The default outcome writes a
-  new layer on `target_property` of the target with the
-  Proposal's `proposed_value`
-  ([graph-model.md §5](../primitive/graph-model.md)).
-  Outcome semantics, cascade bounds, and the
-  `'illegal'`-specific cascade behavior (per-field redaction
-  marker, data-sibling write where applicable, Postgres
-  tombstoning, archive disposition) live in
-  [governance.md §2.5](../primitive/governance.md#25-outcome),
-  [moderation.md §1](moderation.md#1-the-two-classification-paths),
-  and
-  [layers.md §5](../primitive/layers.md#5-deletion-policy).
-  Three outcomes write no graph-property layer — the Proposal's
-  terminal `status` is the entire on-graph record:
-  - **A `ChatMessage` disavowal** (the `'node'` sentinel
-    against a message): the chat's stance *is* the passed
-    Proposal, so nothing is written on the message;
-    `status = 'passed'` carries it.
-  - **A display-content `set:*`** (`set:display_name`,
-    `set:description`, `set:avatar` / `set:image`,
-    `set:website_url`): the cascade
-    writes a Postgres display-content version row and no graph
-    layer, per the display-content cascade in
-    [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
-    `set:name` is unaffected — `name` is a graph data property
-    and takes the normal layer.
-  - **A key rotation** (`decision:rotate_key` on a Chat): the
-    cascade refreshes the `Chat.epoch` derived cache in place —
-    a cache refresh is not an outcome carrier
-    ([governance.md §2.5](../primitive/governance.md#25-outcome)) —
-    and the rotation's append-only record is `status = 'passed'`
-    ([chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism)).
-
-  The `'node'` sentinel otherwise dispatches on the target's
-  node type — e.g. re-layering `Chat → ChatMember` for a
-  `ChatMember` target. Composite Proposals (§2 "Composite
-  proposals") re-validate against current state at this point —
-  if any bundle entry's `_from` no longer matches the affected
-  property's current value, the cascade **refuses**: only the
-  target writes roll back, the threshold-crossing vote stands,
-  and the Proposal terminates with
-  `status = 'passed_but_invariant_rejected'`. This is a
-  deliberate invariant refusal, distinct from an infrastructure
-  failure (which rolls back the vote too) — see
-  [governance.md §6 "Cascade dispatch"](../primitive/governance.md#cascade-dispatch).
-  A fresh Proposal with refreshed numbers is the only path
-  forward.
-- **Redaction** — the one transition not driven by the
-  Proposal's own votes: a moderation Proposal targeting this
-  Proposal's `proposed_value_status` passes `'illegal'` (§2).
-  The cascade redacts `proposed_value` in place and writes the
-  layered status companion; a still-`'open'` Proposal
-  transitions terminally to `'redacted'` — its payload is gone,
-  so it can never execute. Votes already cast remain on record.
-  A Proposal already in a terminal state keeps that state; only
-  the payload redaction applies.
-- **Outcome stickiness** — after the cascade, the target
-  stays in its new state. The passed Proposal is terminal and
-  does not flip back when later votes shift sentiment
-  ([governance.md §6 "Why outcomes are sticky"](../primitive/governance.md#why-outcomes-are-sticky-not-continuously-rendered)).
-  Reverting requires a counter-Proposal; multiple Proposals
-  can coexist against the same property, each passing or
-  failing on its own votes
-  ([governance.md §2.1](../primitive/governance.md#21-subject),
-  [§10](../primitive/governance.md#10-multi-candidate-decisions)).
-- **No deletion** — per
-  [layers.md §5](../primitive/layers.md#5-deletion-policy),
-  graph structure is never removed; the Proposal node, its
-  `:TARGETS` edge, and every incoming vote and reference
-  edge stay on the graph as a permanent record. The one
-  redaction path is the in-place `proposed_value` redaction
-  (§2), which removes no structure.
+- **Crossing and finalization** — the first epoch whose tally
+  crosses the threshold is the crossing epoch. The executing
+  authority submits the finalization Opinion `(0,0)` with the
+  outcome and tally digest; materializations follow
+  ([governance.md §2.5](../primitive/governance.md#25-outcome)).
+  Terminal statuses:
+  - `'passed'` — crossed, executed.
+  - `'passed_but_invariant_rejected'` — crossed, but a composite's
+    `_from` re-validation failed against the crossing epoch's
+    state (§2); the ballots stand, only execution was refused.
+  - `'failed'` — bidirectional tallies only: the negative side
+    satisfied the mirror bar
+    ([governance.md §2.4](../primitive/governance.md#24-threshold-policy)).
+  - `'redacted'` — the anchor's payload was removed by a passing
+    `'illegal'` classification while the Proposal was open (§2);
+    with its terms gone it can never execute.
+- **Terminal is final.** A Proposal stops tallying once terminal;
+  later ballots toward its anchor are recorded but change nothing.
+  Petition-style tallies have no failure path — a petition that
+  never crosses simply stays `'open'`; a bidirectional Proposal
+  neither side crosses stays `'open'` the same way. Changing a
+  terminal outcome is done with a **counter-Proposal**
+  ([governance.md §3](../primitive/governance.md#counter-proposals)),
+  never by re-voting the terminated one.
+- **Outcome stickiness** — after execution, the subject stays in
+  its new state until a deliberate new act moves it
+  ([governance.md §6](../primitive/governance.md#why-outcomes-are-sticky-not-continuously-rendered)).
+  Multiple Proposals can coexist against the same subject, each
+  passing or failing on its own ballots.
+- **No deletion** — the anchor, the Reference, every ballot, and
+  the finalization are permanent L1 records. The one reduction
+  path is the anchor-payload removal above, which removes no
+  structure and leaves the visible mark.
 
 ---
 
 ## What this doc is not
 
-- **Not the governance primitive.** Eligibility, weight
-  functions, threshold policies, outcome semantics, the
-  two vote shapes, sticky outcomes, multi-candidate
-  decisions — [governance.md](../primitive/governance.md)
-  is canonical.
+- **Not the governance primitive.** Eligibility, weights,
+  thresholds, tallies, the mod-gate, sticky outcomes —
+  [governance.md](../primitive/governance.md) is canonical.
 - **Not an enumeration of applications.** Application-side
-  parameters (which property, which eligibility set, which
-  threshold) live in each application doc:
+  parameters live in each application doc:
   [moderation.md](moderation.md),
   [platform-guidelines.md](platform-guidelines.md),
-  [network.md §§9, 11](../primitive/network.md#9-mod-role-changes-via-multi-sig-proposal),
+  [network.md §§9, 11](../primitive/network.md#9-mod-role-changes),
   [chats.md §10](chats.md#10-moderation),
   [collectives.md](collectives.md).
-- **Not the cascade mechanism.** The cascade and the
-  redaction-cascade specifics live in
-  [graph-model.md §5](../primitive/graph-model.md),
-  [layers.md §5](../primitive/layers.md#5-deletion-policy),
-  and [moderation.md](moderation.md).
-- **Not the edge catalog.** Per-source vote-edge types and
-  the per-target `:TARGETS` enumeration live in
+- **Not the L1 record spec.** Publish, Opinion, and Reference
+  semantics live in
+  [layer1-interface.md](../primitive/layer1-interface.md) and
   [edges.md](../primitive/edges.md).
-- **Not the Memgraph or Postgres schema.** Concrete
-  property types and indexes live in
+- **Not the storage schema.** The overlay Proposal node's concrete
+  shape lives in
   [graph-data-model.md](../implementation/graph-data-model.md);
   Postgres has no Proposal shape.
