@@ -2,7 +2,7 @@
 
 The chain is the ledger of money. The economics primitive defines
 settlement as a graph event and the claim relationship at the
-topology level ([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow));
+topology level ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow));
 this doc is the mechanics half of that split — how an account gets a
 self-custody key at signup, how the canonical claim distributor and its
 non-custodial escrow work on-chain, how the `Wallet` node and the
@@ -69,10 +69,10 @@ in-network identity ([account-deletion.md](../instances/account-deletion.md)).
 
 One **canonical, permanently-claimable distributor** contract holds every
 account's claimable CGT. Each settlement publishes the per-contributor
-split (Shapley, [economics.md §6](../primitive/economics.md#6-attribution--per-path-shapley))
+split (Shapley, [economics.md §6](../primitive/economics.md#8-attribution--the-reward-share-r_c))
 as a **Merkle root** added to the distributor; the `Settlement` node
 records that root and the canonical distributor address
-([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)).
+([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
 
 - **Claim, not push.** Each contributor claims by Merkle proof and pays
   their own gas. Push — the contract fanning CGT to every wallet at
@@ -99,7 +99,7 @@ Two consequences follow:
    surfaced for transparency, never destroyed.
 
 **Gas batching.** Per-settlement roots are fixed by
-[economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)
+[economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)
 (each `Settlement` carries its own root). A contributor entitled by
 several settlements claims them in one transaction by submitting their
 proofs together against the canonical distributor — the gas amortization
@@ -123,7 +123,7 @@ writes a new top layer, non-destructively.
   so the binding edge is permanent.
 - The economic edges point at the **node**, not the address:
   `Settlement → Wallet` (`:ENTITLES`) and `Wallet → Settlement`
-  (`:CLAIMS`) ([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)).
+  (`:CLAIMS`) ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
   Each reflects the address **in force when it was written** (the layer at
   that timestamp); future payouts read the current top layer. A wallet's
   earning and claim history stays attached across re-links.
@@ -143,7 +143,7 @@ data splits across the other two stores:
 
 - **Memgraph — the `Campaign` node.** The navigable / weighting terms and
   public state live as node properties
-  ([economics.md §2](../primitive/economics.md#2-the-campaign-node)):
+  ([economics.md §2](../primitive/economics.md#3-the-campaign-record)):
   `g`, `h_start`, `declared_goal`, `start_ts`, `end_ts`, `status`, the
   deposit pointer, the `dust_floor` in force, and the layered
   `achieved_h_gain` progress trajectory. The `:ANCHOR` / `:PROMOTES`
@@ -155,11 +155,11 @@ data splits across the other two stores:
   distributor escrow, and claim state. Amounts never appear on the graph;
   the `Campaign` node's deposit pointer and the `Settlement` node's
   root / address reference them
-  ([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)).
+  ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
   The campaign escrow grants release authority to the advertiser
   during the window and the 30-day grace period, and to the backend's
   settlement key thereafter — which is what lets auto-settlement
-  ([economics.md §4](../primitive/economics.md#4-settlement-and-release))
+  ([economics.md §4](../primitive/economics.md#6-settlement-and-release))
   fire without the advertiser.
 
 A Postgres `campaigns` table is deliberately absent: it would have to
@@ -172,7 +172,7 @@ database stores the other's fields").
 ## Write coupling: chain and graph
 
 Settlement is a single terminal event
-([economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow)):
+([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)):
 the on-chain Merkle root and the on-graph `Settlement` node (plus its
 `:ENTITLES` edges) are written together, so a published root always has a
 graph record pointing at it. A claim writes the on-chain claim and the
