@@ -154,10 +154,16 @@ mirror. It is a cache over public records plus published policy —
 nothing on it is authoritative
 ([substrate.md §3](../primitive/substrate.md#3-cogras-stores)).
 
-There is **no Postgres display content**. The Proposal's full
-substance is the witnessed anchor payload; anything human-readable
-a viewer wants is derivable from it plus the subject's current
-state. The platform-guidelines amendment
+Postgres holds what CoGra **carries**, not a second substance:
+the anchor payload's bytes — proposal text and terms — live in
+CoGra's stores under the carriage model (payload + salt,
+[substrate.md §7](../primitive/substrate.md#7-payload-carriage)),
+and where a proposed value concerns display content (a chat
+description, a profile field), the value is Postgres-side data
+with no graph home at all. Layer 1 holds only the **witness**;
+where the bytes sit — Postgres, blob, overlay — is invisible to
+it, and nothing CoGra-side is authoritative over the witnessed
+bytes. The platform-guidelines amendment
 ([platform-guidelines.md §3](platform-guidelines.md#3-amendment-procedure))
 is the one application where understanding the change requires
 off-graph text (the new guidelines version, published in the
