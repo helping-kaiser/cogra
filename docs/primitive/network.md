@@ -1,16 +1,25 @@
 # Network
 
-The **Network** is the global community of every User on a CoGra
+The **Network** is the global community of every member on a CoGra
 instance — the body that backs platform-wide governance: content
-moderation, dispute resolution, and anything that affects the
-whole instance rather than a specific chat or collective.
+moderation, moderator roles, and anything that affects the whole
+instance rather than a specific chat or collective.
 
-This doc is the per-node catalog for the `:Network` singleton:
-creation, graph-side state, edges, lifecycle. The governance
-applications the singleton hosts — membership and roles, mod
-role changes, Network-wide governance, parameter amendments —
-follow as topical appendices in §§8-11. The governance primitive
-itself stays in [governance.md](governance.md).
+Its durable object is the **network charter**: a
+publisher-authored Content node on PeerNetworks Layer 1 that
+anchors the instance — proposals about the Network name it, and
+every passed parameter change lands as a witnessed payload on a
+finalization Opinion toward it, so the parameter schedule is
+replayable from public records. The `:Network` **overlay carrier**
+in Memgraph is the operational mirror of that schedule — the node
+the ranker, miner slice, and backend actually read
+([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
+
+This doc covers the charter and carrier (creation, parameter
+schedule, catalog, lifecycle) and the Network-scope governance
+instances (membership and roles, mod role changes, parameter
+amendments). The governance primitive itself stays in
+[governance.md](governance.md).
 
 ---
 
@@ -20,9 +29,9 @@ A [Collective](../instances/collectives.md) is a small group with
 a defined membership: a household, band, co-op, company.
 Membership is explicit and approval-gated.
 
-The Network is the opposite — the set of every User on the graph.
-Membership is **automatic on registration** (see
-[invitations.md](invitations.md)); there is no approval gate;
+The Network is the opposite — the set of every member on the
+instance. Membership is automatic on admission (the AND gate of
+[invitations.md](invitations.md)); there is no approval vote, and
 there is no "this band vs that band." It is one Network per
 instance.
 
@@ -34,350 +43,333 @@ its own Network until then.
 
 ## 2. Creation
 
-The `:Network` singleton is brought into existence by the
-**instance bootstrap** — a one-shot setup step that
-runs once when an instance is created, alongside the database
-schema migrations. The bootstrap is the only path that writes
-the singleton. Every subsequent change to the singleton's
-parameters or to any user's role runs through governance.
+The Network is brought into existence by the **instance
+bootstrap** — the one-shot genesis step, and the only step that
+depends on out-of-graph authority
+([graph-model.md §1](graph-model.md#1-core-principles)); the
+authority is confined to it. Every subsequent change runs through
+governance.
 
-The bootstrap writes four nodes in a single atomic transaction:
+Genesis begins with money: the operator burns LBTC into Layer 0,
+funding the addresses the genesis actors act from
+([economics.md §7.2](economics.md#72-the-l0-reserve-pool)). On that
+footing the bootstrap establishes:
 
-1. The `:Network` singleton with the default property values
-   listed in
-   [graph-data-model.md](../implementation/graph-data-model.md).
-2. The genesis User node, with `network_role = 'moderator'` —
-   the bootstrap moderator (see §9). Identity (username,
-   credentials) is supplied to the bootstrap at run time: the
-   central instance run by the project picks the project owner;
-   a federated fork sets its own genesis.
-3. The genesis User's `Wallet` node, holding its counterfactual
-   self-custody address as a layered property and bound by a
-   `:PAYS_TO` edge. The genesis User is an economic actor — it
-   can earn from campaigns — so it gets its payout wallet at
-   creation like every account. See
-   [ledger.md](../implementation/ledger.md#the-wallet-node-and-the-pays_to-binding).
-4. The `bot-defense` Hashtag node, so its content-addressed
-   UUIDv5 (per
-   [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies))
-   is present from network birth and every frontend can resolve
-   it. See
-   [feed-ranking.md](feed-ranking.md).
+1. **The genesis member** — an ordinary account (Actor + Profile,
+   own L0 address) carrying `network_role = 'moderator'` with the
+   **undemotable** exception (§9). Identity is supplied to the
+   bootstrap at run time: the central instance run by the project
+   picks the project owner; a fork sets its own genesis.
+2. **The three system actors** — moderation, publisher, inviter:
+   ordinary L1 actors in backend custody, burn-funded from the
+   community treasury and endorsed by the genesis member to clear
+   the wall — the burn is not optional; endorsement alone cannot
+   reach a zero-burn actor
+   ([substrate.md §8](substrate.md#8-system-actors)).
+3. **The network charter** — the publisher system actor publishes
+   the charter anchor; its witnessed payload carries the charter
+   text and the genesis value of every governed parameter (§3).
+4. **The seeded Types** — the moderation verdict Types
+   (`illegal`, `sensitive`) the verdict gestures target
+   ([moderation.md](../instances/moderation.md)), and the reserved
+   `bot-defense` Type
+   ([feed-ranking.md §8.6](feed-ranking.md#86-community-evidence)),
+   present from network birth so every frontend can resolve them
+   through the naming service
+   ([hashtag.md](../instances/hashtag.md)).
+5. **The CoGra-side state** — the `:Network` overlay carrier
+   seeded with the genesis parameter values, and the service-side
+   bootstrap records.
 
-All four writes share one transaction: an observer never sees
-the singleton without its moderator, the moderator without its
-payout `Wallet`, or the `bot-defense` Hashtag. The bootstrap is not a runtime flow — no "first user to
-register" detection, no genesis-flag column, no special branch
-in the registration endpoint. Subsequent Users register through
-invitation per [invitations.md](invitations.md).
+The CoGra-side bootstrap is one step; the L1 genesis records land
+as the instance's first accepted acts. There is no runtime genesis
+flow — no "first user to register" detection, no genesis-flag
+column, no special branch in registration. Subsequent members join
+through invitation per [invitations.md](invitations.md).
 
-The bootstrap is the only step that depends on out-of-graph
-authority (per the global invariant in
-[graph-model.md §1](graph-model.md#1-core-principles)); the
-authority is confined to it.
-
-Bitcoin analogy: someone has to mine the genesis block. From
-there it is community-driven.
+Bitcoin analogy: someone has to mine the genesis block. From there
+it is community-driven.
 
 ---
 
-## 3. Graph-side properties
+## 3. The charter anchor and the parameter schedule
 
-The `:Network` node carries the instance's configuration
-parameters. Properties are layered per [layers.md](layers.md),
-and each is amendable via a standard Proposal targeting the
-property name
-([governance.md §2.1](governance.md#21-subject)), gated by one
-of the amendment-rule pairs below. Concrete types and defaults
-live in
+The charter is an L1 Content node — node bodies are always an L2
+concern, so what makes it *the charter* is CoGra's published spec
+naming it, not anything L1 reads. It gives Network-scope
+governance a public, priced, replayable record chain:
+
+- **Proposals about the Network name the charter** with their
+  anchor's `(0,0)` Reference
+  ([proposal.md §1](../instances/proposal.md#1-creation)).
+- **Passed parameter changes ride finalizations.** The executing
+  system actor's finalization Opinion toward the charter carries
+  the outcome payload — parameter, new value, tally digest.
+  Payloads ride records, never nodes, so the schedule is exactly
+  the chain of finalization payloads: **the newest finalization
+  per parameter wins**, and reading the schedule as-of any epoch
+  is a pure fold over public records.
+- **Genesis values live in the charter's own payload** (§2) — the
+  fold's base case.
+- **Rule snapshots read the same schedule**: a Proposal's tally
+  reads every governed parameter as-of its own anchor's landing
+  epoch
+  ([governance.md §5](governance.md#rule-snapshot-at-author-time)).
+
+The catalog below names every governed parameter, its role, and
+its **gating bucket** — baseline or critical — under the
+amendment-rule pairs of §11. Concrete storage shape lives in
 [graph-data-model.md](../implementation/graph-data-model.md).
 
-> **Notation.** The decay parameters below map to the symbols
-> `d(R)`, `f(Δt)`, and `χ`; see [notation.md](notation.md).
+> **Notation.** The feed parameters map to the symbols `k`, `γ`,
+> `χ`, and `f(Δt)`; see [notation.md](notation.md).
 
-Network-scope governance uses petition-style tally under a
-dual-quorum gate
-([governance.md §3](governance.md#petition-style-tally-and-dual-quorum-network-scope-only)).
-Each pair below carries a fractional bar (`P`, `*_quorum_fraction`)
-and an absolute bar (`K`, `*_quorum_count`); the operative bar
-at tally time is `min(P × |active|, K)`.
+### Eligibility definition
 
-### Eligibility-definition
+- **`active_threshold_epochs`** — the activity window that makes
+  a member count as "active" for governance tallies: at least one
+  accepted L1 record authored inside the last N epochs. Epochs,
+  not wall-clock — fully derivable from the epoch certificates,
+  no trusted clock ([feed-ranking.md §5.3](feed-ranking.md#53-recency)
+  uses the same ruler). Composes with tally-time eligibility per
+  §10. Bucket: baseline.
 
-- **`active_threshold_days`** — recency window that makes a User
-  count as an "active member" for governance tallies (a User
-  with at least one outgoing actor edge within the last N days).
-  Composes with tally-time eligibility per §10. Gating bucket:
-  baseline (§11).
-
-### Mod-role-change governance
+### Governance quorums
 
 - **`mod_role_change_quorum_fraction`**,
   **`mod_role_change_quorum_count`** — dual-quorum pair for
-  the multi-sig Proposal that adds or removes a moderator
-  (§9). Gating bucket: critical (§11).
-
-### Content-moderation governance
-
+  moderator role changes (§9). Bucket: critical.
 - **`moderation_sensitive_quorum_fraction`**,
-  **`moderation_sensitive_quorum_count`** — dual-quorum pair
-  for `'sensitive'` classification Proposals. Gating bucket:
-  baseline.
+  **`moderation_sensitive_quorum_count`** — pair for `'sensitive'`
+  classification Proposals. Bucket: baseline.
 - **`moderation_illegal_quorum_fraction`**,
-  **`moderation_illegal_quorum_count`** — dual-quorum pair
-  for `'illegal'` classification Proposals. Gating bucket:
-  critical.
+  **`moderation_illegal_quorum_count`** — pair for `'illegal'`
+  classification Proposals. Bucket: critical.
+- **`guidelines_change_quorum_fraction`**,
+  **`guidelines_change_quorum_count`** — pair for the
+  guidelines-amendment instance. Bucket: critical.
 
-### Platform-guidelines governance
+### Platform guidelines
 
 - **`guidelines_version`**, **`guidelines_hash`** — the pinned
-  version and SHA-256 of the current platform guidelines (see
-  [platform-guidelines.md](../instances/platform-guidelines.md)).
-  Amended together by the guidelines-amendment instance below,
-  not by either property-change bucket.
-- **`guidelines_change_quorum_fraction`**,
-  **`guidelines_change_quorum_count`** — dual-quorum pair for
-  the guidelines-amendment instance itself. Gating bucket:
-  critical.
+  version and SHA-256 of the current platform guidelines
+  ([platform-guidelines.md](../instances/platform-guidelines.md)).
+  Amended together by the guidelines-amendment instance, not by
+  either property-change bucket.
 
 ### Feed-ranking calibration
 
-- **`time_decay_half_life_days`** — half-life of the reactor-edge
-  time-decay factor `f(Δt)` used by the feed-ranking algorithm
-  (see [feed-ranking.md §7.3](feed-ranking.md#53-recency)).
-  The default seeded at genesis is 30 days; the property is
-  amendable so the network can recalibrate freshness sensitivity
-  as the graph matures. Frontend overrides remain available per
-  §7.3; this property sets the network default. Gating bucket:
-  baseline.
-- **`distance_decay_base`** — base of the path distance-decay
-  `d(R) = base^(R−1)` used by the feed-ranking algorithm (see
-  [feed-ranking.md §4.1](feed-ranking.md#5-per-path-quantities)).
-  The default seeded at genesis is `0.1` (each extra hop attenuates
-  a path's contribution by 10×). Frontend overrides remain available
-  per §4.1; this property sets the network default — the community's
-  hint at a sensible direct-vs-indirect balance for new participants.
-  Gating bucket: baseline.
-- **`dust_floor`** — the dust floor `χ` bounding both the
-  branch-and-bound path enumeration (see
-  [feed-ranking.md §4.4](feed-ranking.md#63-the-dust-floor))
-  and the data-fetch slice node-set
-  ([feed-ranking.md §9](feed-ranking.md#11-where-ranking-runs)).
-  The default seeded at genesis is `0`: the early graph is sparse,
-  `b^R` is cheap, and full fidelity is kept. The property is amendable
-  so the network can raise `χ` as the graph densifies — the finest
-  the compute budget allows. Frontend overrides
-  remain available per §4.4; this property sets the network default.
-  Gating bucket: baseline.
+The network defaults of the published feed computation
+([feed-ranking.md §12](feed-ranking.md#12-calibration-parameters)); frontend
+overrides layer view-side on top and never change the published
+computation. All bucket: baseline.
 
-### Amendment-rule pairs (governance of governance)
+- **`k`** — disjoint paths extracted per (viewer, target).
+- **`gamma`** — per-hop attenuation `γ`, genesis default `1`.
+- **`dust_floor`** — the dust floor `χ` bounding path extraction
+  and the data-fetch slice; genesis default `0` (the early graph
+  is sparse; raise as it densifies).
+- **`recency_half_life_epochs`** — half-life of `f(Δt)`, in
+  epochs.
+- **`recency_shape`** — functional form of `f(Δt)`; the
+  exponential is the genesis default.
+- **`tie_breaker_composition`** — order and weights of the
+  tie-breaker cascade.
 
-The pairs that govern changes to the singleton's own parameters,
-split by stakes (§11). Each amendment-rule pair is itself a
-dual-quorum pair:
+### Economics
 
-- **Baseline:** **`property_change_quorum_fraction`**,
-  **`property_change_quorum_count`** — for low-stakes parameters
-  (`moderation_sensitive_*`, `active_threshold_days`,
-  `time_decay_half_life_days`, `distance_decay_base`, `dust_floor`,
-  and the baseline pair itself).
-- **Critical:** **`critical_property_change_quorum_fraction`**,
-  **`critical_property_change_quorum_count`** — for parameters
-  whose abuse has destructive or platform-wide reach
-  (`mod_role_change_*`, `moderation_illegal_*`,
-  `guidelines_change_*`, and the critical pair itself).
+The governed knobs of the reward economy
+([economics.md](economics.md)); the formulas they feed are
+CoGra's published spec. All bucket: baseline — each is
+loss-limited by a pinned bound or by construction, per D4.4's
+"mundane knobs" framing.
 
-Each pair is self-amending: a baseline-pair amendment passes
-under baseline rules, a critical-pair amendment under critical
-rules. Defaults bootstrap; they are not fixed.
+- **`reserve_share`** — the campaign-pool fraction carved for the
+  L0 reserve, genesis default `1%`. Hard-capped by a **pinned
+  ceiling in the published spec** — the ceiling itself is not a
+  parameter, so governance can never gut the contributor pool
+  ([economics.md §7](economics.md#7-the-conservation-equation)).
+- **`n_eval_epochs`** — the post-window evaluation delay `N_eval`
+  before campaign settlement
+  ([economics.md §6](economics.md#6-settlement-and-release)).
+- **`subsidy_generosity`**, **`subsidy_cap_per_member`** — the two
+  admission-funding knobs: how readily the community funds
+  member θ-debit restoration, and the per-member subsidized-action
+  cap. Caps sit fairly high — normal behavior never hits them —
+  but present as loss-limiters. Numbers deliberately not pinned in
+  docs (calibration phase); the values in force are always
+  readable from the schedule.
+- **`support_transform`** — the reserved transform slot on
+  campaign support `w(u)` (targeting sharpness); identity at
+  genesis ([economics.md §4](economics.md#4-the-campaign-value-v)).
 
 ### Mod-gate
 
-- **`critical_mod_gate_fraction`** — fraction of *active*
-  moderators that must vote positive to open the critical-tier
-  mod-gate on a destructive action (mod role changes,
-  `illegal`-redaction, guidelines amendments, critical `:Network`
-  amendments). The bar is `⌈critical_mod_gate_fraction ·
-  |active_mods|⌉`; baseline-tier actions need only one positive
-  moderator vote. Full mechanism in
-  [governance.md §7](governance.md#7-the-mod-gate). Gating bucket:
-  critical (§11) — loosening it is itself a critical act.
+- **`critical_mod_gate_fraction`** — fraction of active moderators
+  whose positive ballots open the critical-tier mod-gate on a
+  destructive action; the bar is
+  `⌈critical_mod_gate_fraction · |active_mods|⌉`; baseline-tier
+  actions need one positive moderator ballot. Full mechanism in
+  [governance.md §7](governance.md#7-the-mod-gate). Bucket:
+  critical — loosening it is itself a critical act.
 
-The singleton carries **no per-field moderation properties**.
-Like junction nodes, it has no user-input fields to redact (see
-[nodes.md "Universal: per-field moderation status"](nodes.md));
-the lifecycle consequence is §7.
+### Amendment-rule pairs (governance of governance)
 
-The singleton exists so platform-wide governance has a graph
-node to target. Proposals need a node.
+The pairs that govern changes to the parameters themselves, split
+by stakes (§11). Each is itself a dual-quorum pair:
 
----
+- **Baseline:** **`property_change_quorum_fraction`**,
+  **`property_change_quorum_count`** — for every parameter marked
+  baseline above, and the baseline pair itself.
+- **Critical:** **`critical_property_change_quorum_fraction`**,
+  **`critical_property_change_quorum_count`** — for every
+  parameter marked critical above, and the critical pair itself.
 
-## 4. Postgres-side content
-
-None. The `:Network` singleton is pure graph state. Every
-parameter lives as a layered graph property on the node itself;
-there is no `network` row, no display-content table, no
-per-singleton data keyed by its UUID. The platform-guidelines
-document that the singleton pins via `guidelines_version` and
-`guidelines_hash` lives in the project repo, not in Postgres —
-see
-[platform-guidelines.md](../instances/platform-guidelines.md).
+Each pair is self-amending: a baseline-pair amendment passes under
+baseline rules, a critical-pair amendment under critical rules.
+Defaults bootstrap; they are not fixed.
 
 ---
 
-## 5. Edges
+## 4. The overlay carrier
 
-The `:Network` is a singleton parameter container. It is not an
-actor; it has no Postgres-side display content; and it
-participates in only a narrow set of edges.
+The `:Network` node in the Memgraph overlay is the **operational
+mirror** of the charter's parameter schedule: layered governed
+properties, one per catalog entry, updated when a finalization
+lands. The ranker, the miner slice, and the backend read the
+carrier, never the charter directly — but the carrier is a cache
+over public records; where the two could disagree, the schedule
+folded from the charter governs, and any consumer can audit the
+carrier against it.
 
-### As source (outgoing)
-
-The `:Network` authors no edges of any type. It is purely a
-target that other parts of the graph point at.
-
-### As target (incoming)
-
-The `:Network` node receives:
-
-- **`Proposal → Network` (`:TARGETS`)** when a Proposal
-  targets one of the singleton's parameters
-  (`mod_role_change_*`, `moderation_sensitive_*`,
-  `moderation_illegal_*`, `guidelines_*`,
-  `active_threshold_days`, `time_decay_half_life_days`,
-  `distance_decay_base`, `dust_floor`,
-  `critical_mod_gate_fraction`, or either amendment-rule
-  pair). The
-  amendment-rule pair that gates each property is named in §3.
-  See
-  [edges.md §2 "Subject targeting"](edges.md).
-- **`ChatMessage / Post / Comment → Network` (`:REFERENCES`)**
-  when a content node mentions or embeds the singleton (e.g. a
-  Post discussing platform governance). See
-  [edges.md §2 "Reference"](edges.md).
-
-Network-scope governance instances do **not** create new
-structural edges to the `:Network` node. Votes on Network-scope
-Proposals — moderator role changes (§9), content moderation
-classifications, and singleton parameter amendments (§11) — use
-the existing `User → Proposal` **actor edge** as the Shape A
-vote (see
-[edges.md §1](edges.md) and
-[governance.md §3](governance.md#3-the-two-vote-shapes)). The
-Proposal itself targets the relevant subject (a User for role
-changes, the `:Network` singleton for parameter amendments);
-the votes themselves never carry an edge to or from the Network
-node.
+Consumers pin the parameter set they computed under
+(param-version pinning,
+[feed-ranking.md §12](feed-ranking.md#12-calibration-parameters)); the value
+in force at a Proposal's anchor epoch or a campaign's attribution
+epoch is always recoverable from the schedule, so no consumer
+depends on the carrier's refresh cadence for correctness.
 
 ---
 
-## 6. Authorship
+## 5. Postgres-side content
 
-The `:Network` is system-created at bootstrap (§2) and has no
-author in the [authorship.md](authorship.md) sense. The
-earliest-incoming-edge rule does not apply: that edge's author
-authors the proposing or referencing node, not the singleton.
-Same shape (different reason) as the Hashtag exemption in
-[hashtag.md §5](../instances/hashtag.md#5-lifecycle).
+None. The Network's state is the charter schedule and its overlay
+mirror; there is no `network` row and no display-content table.
+The platform-guidelines document pinned by
+`guidelines_version` / `guidelines_hash` lives in the project
+repo, not in Postgres
+([platform-guidelines.md](../instances/platform-guidelines.md)).
+
+---
+
+## 6. Records
+
+The charter anchor is a passive Content node. It authors nothing.
+It receives:
+
+- **`(0,0)` References from proposal anchors** — Proposals
+  targeting a governed parameter
+  ([proposal.md §1](../instances/proposal.md#1-creation)).
+- **Finalization Opinions** from the executing system actor,
+  carrying the parameter-change payloads that form the schedule
+  (§3).
+- **Ballots** — payload-marked Opinions toward *proposal* anchors,
+  not the charter; the charter itself receives only organic
+  stances.
+- **Ordinary fabric** — References from content discussing
+  platform governance, organic Opinions.
+
+The overlay carrier is not an L1 node and participates in no L1
+records; it is read-side state
+([substrate.md §3](substrate.md#3-cogras-stores)).
 
 ---
 
 ## 7. Lifecycle
 
-The `:Network` singleton is **never deleted**. It carries no
-user-input fields, so neither
-[layers.md §5](layers.md#5-deletion-policy)'s in-place redaction
-nor [retention-archive.md](retention-archive.md)'s archive
-disposition has anything to act on. The UUID is stable for the
-lifetime of the instance.
+The charter is permanent — an L1 record like any other, and the
+overlay carrier is never deleted. Its only state changes are
+parameter amendments: passed Proposals whose finalizations extend
+the schedule (§3). No other lifecycle events apply: no membership
+changes on the node (eligibility lives with accounts, §8), no
+transfer, merge, or archive.
 
-Its only state changes are parameter amendments — passing
-Proposals targeting one of the layered properties from §3,
-gated by that property's amendment-rule pair. Full mechanism,
-defaults, and rationale in §11. No other lifecycle events apply:
-no membership changes (its eligibility set lives on User nodes,
-§8), no transfer, merge, or archive.
-
-Federation across instances is the forward question flagged in
-§1, deferred to
-[open-questions.md Q15](../open-questions.md).
+Federation across instances is the forward question flagged in §1,
+deferred to [open-questions.md Q15](../open-questions.md).
 
 ---
 
 ## 8. Membership and roles
 
-Every User has a `network_role` graph property:
+Every admitted account is a Network member — membership is the
+admission AND gate itself (L1 write eligibility plus an accepted
+CoGra invitation, [invitations.md](invitations.md)); there is no
+separate membership gesture and no junction.
 
-- **`member`** — every registered user, automatically. Default.
+Every member has a `network_role` — a layered **overlay** property
+on the account ([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
+
+- **`member`** — every admitted account, automatically. Default.
 - **`moderator`** — a small set who gate platform-wide governance
-  actions (see [moderation.md](../instances/moderation.md) for
-  content-moderation gating; §9 below for mod-role-change gating).
+  actions ([moderation.md](../instances/moderation.md) for
+  content-moderation gating; §9 for mod-role-change gating).
 
-`network_role` is layered per [layers.md](layers.md) — promotion
-and demotion preserve full history. It lives on the User, not on
-the singleton: Network membership has no separate gesture, so
-there is no `ChatMember`-/`CollectiveMember`-style junction. The
-eligibility set is "every User on the graph," filtered by
-`active_threshold_days` (§3).
+Promotion and demotion preserve full history per the overlay's
+append-only discipline ([layers.md](layers.md)). **Users only —
+Collectives carry no `network_role`**: moderation verdicts and
+governance eligibility are person-accountability surfaces
+([user.md §7](user.md#7-network-membership)).
 
-Whether Collectives can be Network members or moderators is
-deferred. For now, only Users carry `network_role`.
+An **active** member is one with at least one accepted L1 record
+inside the last `active_threshold_epochs` epochs (§3).
 
 ---
 
-## 9. Mod role changes via multi-sig Proposal
+## 9. Mod role changes
 
 Adding or removing a moderator uses the standard Proposal
-mechanism
-([governance.md §2.1](governance.md#21-subject)):
+mechanism ([governance.md §2.1](governance.md#21-subject)):
 
-- **Subject:** A Proposal targeting `User.network_role` of the
-  user being promoted or demoted, with `proposed_value` set to
-  the new role.
-- **Eligibility:** all active Network members.
-- **Threshold:** multi-sig — the **critical-tier mod-gate**
-  (`mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active_mods|⌉`,
-  a fraction of active moderators must vote positive;
+- **Subject:** the member's **Profile**, named by the proposal
+  anchor's `(0,0)` Reference; the payload carries the scope
+  (`network_role`) and the proposed role.
+- **Eligibility:** all active members.
+- **Threshold:** multi-gate — the **critical-tier mod-gate**
+  (`mod_yes ≥ ⌈critical_mod_gate_fraction · |active_mods|⌉`,
   [governance.md §7](governance.md#7-the-mod-gate)) plus the
-  dual-quorum bar from §3:
-  `positive_count ≥ min(Network.mod_role_change_quorum_fraction
-  × |active|, Network.mod_role_change_quorum_count)`. Tally is
-  petition-style (positive votes only) per
+  dual-quorum bar
+  `positive_count ≥ min(mod_role_change_quorum_fraction ×
+  |active|, mod_role_change_quorum_count)`. Tally is
+  petition-style (positive ballots only) per
   [governance.md §3](governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
+- **Outcome:** the finalization records it; the `network_role`
+  overlay property takes the new layer. No L1 gesture is needed —
+  the role is CoGra state, and the finalization is its replayable
+  public record.
 
 The two gates implement a **separation of powers**
-([governance.md §2.4](governance.md#24-threshold-policy),
-"Multi-gate decisions"). The mod-gate side — a critical-tier
-positive-vote threshold over active moderators, with mod weight =
-member weight = 1 — is the primitive defined in
-[governance.md §7](governance.md#7-the-mod-gate) and reused here
-and in §11. Each gate counters a distinct failure mode
-(sitting-mod coup vs. coordinated community removal); both
-required, both modes blocked.
+([governance.md §2.4](governance.md#24-threshold-policy)): each
+counters a distinct failure mode — sitting-mod coup vs.
+coordinated community removal. Both required, both modes blocked.
 
-Removal mirrors promotion mechanically: same Proposal
-mechanism with `proposed_value = 'member'`, same dual-gate
-rule. Two structural constraints sit on top of the mechanism:
+Removal mirrors promotion mechanically: same Proposal shape with
+`proposed_value = 'member'`, same dual-gate rule. Two structural
+constraints sit on top, enforced as **execution refusals** — the
+dispatcher declines the outcome even on a passed tally, the same
+shape as a composite invariant refusal
+([proposal.md §6](../instances/proposal.md#6-lifecycle)):
 
 - **Moderator floor.** The active moderator count cannot drop
-  below **1**. A removal Proposal that would push the count
-  below the floor is rejected at the dispatch check, regardless
-  of vote tally. Without at least one moderator the mod-gate
-  (§7,
-  [governance.md §7](governance.md#7-the-mod-gate))
-  cannot be opened, and every Network-scope Proposal would
-  silently stall.
-- **Bootstrap mod undemotable.** The genesis User installed by
-  the bootstrap (§2) carries an undemotable
-  `'moderator'` status: no Proposal can move them off
-  `network_role = 'moderator'`. The dispatch check rejects the
-  outcome write even on a passed tally. The exception exists
-  for bot-defense — if every other moderator is compromised or
-  removed, the bootstrap mod remains as the immovable floor of
-  the mod-gate, blocking a coordinated full-takeover. The
-  asymmetry is deliberate; this is the only mechanism in the
-  system that exempts a graph object from governance reach.
+  below **1**. Without at least one moderator the mod-gate cannot
+  open, and every Network-scope Proposal would silently stall.
+- **Bootstrap mod undemotable.** The genesis member (§2) carries
+  an undemotable `'moderator'` status: no Proposal can move them
+  off it. The exception exists for bot-defense — if every other
+  moderator is compromised or removed, the bootstrap mod remains
+  as the immovable floor of the mod-gate, blocking a coordinated
+  full takeover. The asymmetry is deliberate; this is the only
+  mechanism in the system that exempts anything from governance
+  reach.
 
 ---
 
@@ -386,54 +378,41 @@ rule. Two structural constraints sit on top of the mechanism:
 The Network is the eligibility-and-voting body for any
 platform-scoped governance instance:
 
-- Adding and removing moderators (§9 above).
-- Content moderation classifications — see
-  [moderation.md](../instances/moderation.md).
-- Tuning the `:Network` singleton's parameters themselves
-  (governance of governance) — see §11.
+- Adding and removing moderators (§9).
+- Content moderation classifications
+  ([moderation.md](../instances/moderation.md)).
+- Platform-guidelines amendments
+  ([platform-guidelines.md](../instances/platform-guidelines.md)).
+- Tuning the governed parameters themselves (§11).
 
-Each runs as a Network-scope governance instance
-([governance.md §3](governance.md#3-the-two-vote-shapes)). Two
-consequences shared across all three:
+Each runs as a Network-scope governance instance. Three
+consequences shared across all of them:
 
-- **Eligibility carrier is the User node itself**, not a
-  junction. Network membership has no separate gesture (§8), so
-  this is the natural Shape A case: the vote IS the existing
-  `User → Proposal` actor edge
-  ([edges.md §1](edges.md)) — no new structural
-  edge. The actor edge keeps its `(sentiment, importance)`
-  meaning; the tally reads `sign(sentiment)`.
+- **The voter is the account itself** — Network membership has no
+  junction, so every ballot is the member's own payload-marked
+  Opinion toward the proposal anchor
+  ([governance.md §3](governance.md#3-the-ballot)); no junction
+  state enters the weighting.
 - **Mod weight = member weight = 1; mod is a gate, not a
-  weight.** The mod-gate is the primitive from
-  [governance.md §7](governance.md#7-the-mod-gate), applied to
-  every Network-scope Proposal — at its baseline tier (≥1 mod
-  positive) for low-stakes actions and its critical tier (a
-  fraction of active moderators) for destructive ones.
-
-The `active_threshold_days` window composes with tally-time
-eligibility per
-[governance.md §2.2](governance.md#22-eligibility): at each
-tally, the eligible set is Users with at least one outgoing
-actor edge inside the last `Network.active_threshold_days` days
-*as of that tally*. The window slides; eligibility is evaluated
-per tally, not snapshotted at vote time.
-
-No carve-out is needed for first-time voters or long-inactive
-moderators. The Shape A vote is itself an outgoing actor edge,
-so casting it places the user inside the window for the tally
-that vote triggers. Eligibility tracks participation directly:
-the only way to be excluded is to not participate.
+  weight** — the mod-gate applies to every Network-scope Proposal
+  at its baseline or critical tier
+  ([governance.md §7](governance.md#7-the-mod-gate)).
+- **Activity is self-placing.** The eligible set at each tally is
+  members active inside `active_threshold_epochs` as of that
+  epoch. A ballot is itself an accepted record, so casting it
+  places the voter inside the window for the epoch that tallies
+  it: the only way to be excluded is to not participate.
 
 ---
 
 ## 11. Amending `:Network` parameters
 
-Two amendment-rule pairs gate changes to the singleton's own
-properties, separated by stakes:
+Two amendment-rule pairs gate changes to the governed parameters,
+separated by stakes:
 
-| Bucket   | Dual-quorum pair                                  | `P` default | `K` default | Mod gate | Governs |
-|----------|---------------------------------------------------|-------------|-------------|----------|---------|
-| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | baseline tier (≥1 mod positive) | `moderation_sensitive_*`, `active_threshold_days`, `time_decay_half_life_days`, `distance_decay_base`, `dust_floor`, the baseline pair itself |
+| Bucket   | Dual-quorum pair | `P` default | `K` default | Mod gate | Governs |
+|----------|------------------|-------------|-------------|----------|---------|
+| Baseline | `property_change_quorum_fraction`, `property_change_quorum_count` | `0.25` | `5000` | baseline tier (≥1 mod positive) | `moderation_sensitive_*`, `active_threshold_epochs`, the feed-ranking calibration set, the economics set, the baseline pair itself |
 | Critical | `critical_property_change_quorum_fraction`, `critical_property_change_quorum_count` | `0.50` | `10000` | critical tier (⌈`critical_mod_gate_fraction` · \|active mods\|⌉) | `mod_role_change_*`, `moderation_illegal_*`, `guidelines_change_*`, `critical_mod_gate_fraction`, the critical pair itself |
 
 Pass condition for either pair is the dual-quorum form from
@@ -442,25 +421,22 @@ Pass condition for either pair is the dual-quorum form from
 
 `guidelines_version` and `guidelines_hash` are not in either
 bucket — they are amended together by the guidelines-amendment
-instance (`guidelines_change_*`, see
-[platform-guidelines.md](../instances/platform-guidelines.md)).
+instance (`guidelines_change_*`).
 
 The critical bucket holds parameters whose abuse has destructive
-or platform-wide reach: stripping moderators, triggering the
-redaction cascade, or shifting the normative frame for *all
-future* moderation. Those earn a supermajority. Soft flags and
-eligibility windows move under the lighter baseline pair so
-routine tuning isn't paralyzed.
+or platform-wide reach: stripping moderators, triggering payload
+removal, or shifting the normative frame for *all future*
+moderation. Those earn a supermajority. Soft flags, eligibility
+windows, and loss-limited economic knobs move under the lighter
+baseline pair so routine tuning isn't paralyzed.
 
-A single uniform pair would lose the stakes split; a per-property
-pair would double the singleton's property count without adding
-meaningful differentiation. Two buckets capture the gradient
-that matters.
+A single uniform pair would lose the stakes split; a per-parameter
+pair would double the catalog without adding meaningful
+differentiation. Two buckets capture the gradient that matters.
 
 The mod gate uses the same bot-defense reasoning as content
-moderation (§10,
-[governance.md §7](governance.md#7-the-mod-gate)): without it, a
-coordinated push could drag a baseline-pair threshold to
+moderation ([governance.md §7](governance.md#7-the-mod-gate)):
+without it, a coordinated push could drag a baseline threshold to
 trivially low values and weaponize the loosened parameter.
 
 Both pairs are **self-amending**: each bucket's thresholds are
@@ -471,20 +447,17 @@ fixed.
 
 ## What this doc is not
 
-- **Not the governance primitive.** Eligibility, weight
-  functions, threshold policies, outcome semantics, the two
-  vote shapes, and multi-gate decisions live in
-  [governance.md](governance.md).
-- **Not the moderation primitive.** Mechanics of moderation
-  Proposals, the cascade outcomes, the content-side mod-gate
-  rule, and the platform-guidelines reference live in
-  [moderation.md](../instances/moderation.md).
-- **Not the Proposal node spec.** Proposal creation, properties,
-  edges, authorship, and lifecycle live in
-  [proposal.md](../instances/proposal.md).
-- **Not federation.** Cross-instance Network reconciliation is
+- **Not the governance primitive.** Eligibility, weights,
+  thresholds, tallies, the ballot, and multi-gate decisions live
+  in [governance.md](governance.md).
+- **Not the moderation instance.** Mechanics of moderation
+  Proposals, verdict gestures, and the guidelines reference live
+  in [moderation.md](../instances/moderation.md).
+- **Not the Proposal carrier spec.** Anchor, terms, ballots, and
+  lifecycle live in [proposal.md](../instances/proposal.md).
+- **Not federation.** Cross-instance reconciliation is
   Q15-deferred ([open-questions.md](../open-questions.md)).
-- **Not the User node spec.** See [user.md](user.md).
-- **Not the Memgraph schema.** Concrete property types, defaults,
-  and indexes live in
+- **Not the account spec.** See [user.md](user.md).
+- **Not the storage schema.** Concrete overlay property types,
+  defaults, and indexes live in
   [graph-data-model.md](../implementation/graph-data-model.md).
