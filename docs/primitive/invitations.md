@@ -141,35 +141,54 @@ network" — though the low defaults make that trap shallow.
 
 ---
 
-## 4. Link modes: single-use and multi-use
+## 4. Invite links: staged applicants, explicit approval
 
-Invite links are **pure service-side UX** — off-graph state that
-stages the flow; the graph truth is only ever the mutual pair.
-When generating a link, the inviter picks **single-use or
-multi-use**; both modes are time-gated.
+The inviter's Opinion is a priced act toward a specific Profile —
+one that does not exist when a link is generated. So a link never
+authors anything: it is **pure service-side UX that stages
+applicants**, and the inviter's **approval is the priced act**.
+There is no fire-and-forget invitation.
 
-- **Single-use.** Consumed on the first accepted registration.
-  Best for targeted invites — a specific link to a specific
-  person. Even if the link leaks, the worst case is one
-  accidental join.
-- **Multi-use.** Many joiners can register through the same link
-  until its timer expires; each produces a distinct account.
-  Influencers and public communities need this mode to onboard an
-  audience through a single shared link, where the inviter does
-  not know in advance who will accept.
+The flow:
 
-**Pre-committed inviter values.** The inviter's Opinion parameters
-are committed when the link is generated, not per joiner — same
-mechanic for both modes. Whoever accepts receives that Opinion;
-the joiner still chooses their own reciprocal stance at
-registration.
+1. **The link stages.** A person following the link registers as
+   an **applicant** — off-graph service state only. An abandoned
+   or unapproved application leaves no record beyond itself:
+   no account, no records, nothing on the graph.
+2. **The inviter approves** — per applicant, or in batches for
+   high-reach onboarding. Approval is the deliberate act that
+   commits the inviter's stance: the backend then runs the
+   admission sequence — the funded burn, the Registration
+   grounding the new Actor + Profile, and the inviter's Opinion
+   toward the new Profile. The link's stance values are
+   **pre-filled, not pre-committed** — the inviter can adjust
+   them at approval.
+3. **The joiner accepts by reciprocating** (§2) — their own
+   Opinion toward the inviter's Profile completes the pair and
+   the membership.
 
-**Revocation and abandonment.** The inviter can revoke a link at
-any time; otherwise it expires with its timer. A link no one
-accepts leaves no record beyond the link itself — no account, no
-records, nothing on the graph. Registration mechanics — email
-verification, pending-registration handling, the service-level
-admission step — live in [auth.md](../implementation/auth.md).
+While waiting for approval, an applicant can already **read** —
+the shared graph is public — they just cannot act. Approval
+latency (an inviter who doesn't check their phone for hours) is
+a UX cost, not a correctness problem.
+
+**Link modes.** When generating a link, the inviter picks
+**single-use or multi-use**; both are time-gated and revocable at
+any time.
+
+- **Single-use.** One applicant slot. Best for targeted invites —
+  a specific link to a specific person; a leaked link stages at
+  most one stranger, and approval still gates the join.
+- **Multi-use.** Many applicants can stage through the same link
+  until its timer expires — the shared-funnel mode influencers
+  and public communities need, where the inviter does not know in
+  advance who will apply. What scales is the *queue*, never the
+  vouching: each join still costs the inviter one explicit,
+  priced approval.
+
+Registration mechanics — email verification, applicant handling,
+the service-level admission step — live in
+[auth.md](../implementation/auth.md).
 
 ---
 
@@ -191,11 +210,14 @@ burn.
 ## 6. The bot-cluster trade-off
 
 Multi-use links shared publicly create an attack surface: a bot
-cluster joining through an influencer's link makes the influencer
-a **bridge node into the cluster**. The same mechanic that gives
-the inviter reach — and lifetime referral earnings — concentrates
-the cost of mis-vouching onto them. Single-use links sidestep
-this by construction.
+cluster staging through an influencer's funnel and getting
+batch-approved makes the influencer a **bridge node into the
+cluster**. The approval gate (§4) doesn't remove the hazard —
+carelessly batch-approving unknown applicants *is* mis-vouching —
+it makes the mis-vouch an explicit, priced act. The same mechanic
+that gives the inviter reach — and lifetime referral earnings —
+concentrates the cost onto them. Single-use links sidestep this
+by construction.
 
 The system tolerates the multi-use case because public links are
 necessary for high-reach onboarding, and the abuse is
