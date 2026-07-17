@@ -39,7 +39,7 @@ normal actor edge — same `(sentiment, interest)` tensor, same traversal;
 the label adds no ranking treatment.
 
 Its one consumer beyond convenience is the **inviter reward**
-([economics.md §5.2](economics.md#52-the-inviter-reward)): at settlement,
+([economics.md §5.2](economics.md#73-the-inviter-reward)): at settlement,
 an earner's `:INVITE` in-edge resolves the direct inviter, who receives
 `0.01·P` sized by that earner's payout share. Single-hop and permanent —
 the edge is never deleted, so the inviter earns over the invitee's

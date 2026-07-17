@@ -294,13 +294,13 @@ A funded, public request to raise a target node's reach into an
 anchor's cluster — the economics primitive's advertising node. Carries
 the campaign terms as scalar properties and reaches its anchor and
 promoted node through `:ANCHOR` / `:PROMOTES` edges. See
-[economics.md §2](../primitive/economics.md#2-the-campaign-node) and
+[economics.md §2](../primitive/economics.md#3-the-campaign-record) and
 [ledger.md "Where campaign data lives"](ledger.md#where-campaign-data-lives).
 
 | Property                        | Type          | Notes |
 |---|---|---|
 | `id`                            | String        | UUID v4. |
-| `D`                             | String        | Pointer to the on-chain escrow holding the deposit. The amount is read from chain, never stored on the node; funded at creation, top-up only per [economics.md §2.2](../primitive/economics.md#22-adjustability). Set at creation. |
+| `D`                             | String        | Pointer to the on-chain escrow holding the deposit. The amount is read from chain, never stored on the node; funded at creation, top-up only per [economics.md §2.2](../primitive/economics.md#32-adjustability). Set at creation. |
 | `g`                             | Float         | The `d(R)` decay base for this campaign's reach metric and payout split. Defaults to the Network's `distance_decay_base` in force at creation. Immutable after creation. |
 | `h_start`                       | Float         | `h_anchor(target)` at `start_ts` — the baseline the `declared_goal` is measured from. Set at creation. |
 | `declared_goal`                 | Float         | The `h_anchor(target)` gain the advertiser is aiming for; denominator of the default-settlement formula, so constrained `> 0`. Mutable before settlement. Layered. |
@@ -308,7 +308,7 @@ promoted node through `:ANCHOR` / `:PROMOTES` edges. See
 | `end_ts`                        | LocalDateTime | Campaign-window end. Mutable before settlement (free, unlimited extensions). Layered. |
 | `status`                        | String        | Lifecycle state: `'open'` / `'settled'` / `'auto-settled'`. Layered. |
 | `dust_floor`                    | Float         | The dust floor bounding path enumeration; public at creation, tuneable during the campaign as a compute failsafe. The value in force at settlement is the recorded one. Mutable before settlement. Layered. |
-| `achieved_h_gain`               | Float         | Public running record of the instantaneous gain `h_anchor(target) − h_start`, one layer appended per sample over the run ([economics.md §2.3](../primitive/economics.md#23-running-progress)). Approximate progress only; the settled sustained-level value is on `:Settlement`. System-written, not advertiser-adjustable. Layered. |
+| `achieved_h_gain`               | Float         | Public running record of the instantaneous gain `h_anchor(target) − h_start`, one layer appended per sample over the run ([economics.md §2.3](../primitive/economics.md#9-progress-in-public)). Approximate progress only; the settled sustained-level value is on `:Settlement`. System-written, not advertiser-adjustable. Layered. |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Campaign) ASSERT c.id IS UNIQUE;
@@ -321,7 +321,7 @@ mirroring how `:Proposal` reaches its subject via `:TARGETS` rather
 than a foreign-key property. The two forbidden configurations
 (`anchor == target`, negative-`h` campaigns) are ethos invariants
 enforced in code, not storage constraints — see
-[economics.md §2.1](../primitive/economics.md#21-success-metric-and-forbidden-configurations).
+[economics.md §2.1](../primitive/economics.md#31-forbidden-configurations).
 
 #### `:Settlement`
 
@@ -329,7 +329,7 @@ The terminal record of a settled `Campaign`, created once at
 settlement. Carries pointers to the on-chain payout tree and the public
 results as properties — never a money amount. Claimants reach it via
 `:ENTITLES` / `:CLAIMS` edges. See
-[economics.md §7](../primitive/economics.md#7-settlement-on-the-graph--the-claim-flow).
+[economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow).
 
 | Property              | Type   | Notes |
 |---|---|---|
@@ -338,7 +338,7 @@ results as properties — never a money amount. Claimants reach it via
 | `merkle_root`         | String | Root of the payout tree. Per-wallet payout figures are Merkle leaves verified against it, never stored on-graph. Written once at settlement. |
 | `settled_P`           | Float  | The released amount `P`, recorded as a public scalar result — never a money tensor. Written once at settlement. |
 | `achieved_h_gain`     | Float  | The achieved reach gain, surfaced as a public result. Written once at settlement. |
-| `settled_t_star`      | LocalDateTime | The attribution instant `t*` — the timestamp pinning the graph state the split was computed from ([economics.md §6.3](../primitive/economics.md#63-the-attribution-snapshot-t)), recorded for reproducibility alongside the `dust_floor` in force. Written once at settlement. |
+| `settled_t_star`      | LocalDateTime | The attribution instant `t*` — the timestamp pinning the graph state the split was computed from ([economics.md §6.3](../primitive/economics.md#6-settlement-and-release)), recorded for reproducibility alongside the `dust_floor` in force. Written once at settlement. |
 
 ```cypher
 CREATE CONSTRAINT ON (s:Settlement) ASSERT s.id IS UNIQUE;

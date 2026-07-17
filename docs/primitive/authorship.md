@@ -149,7 +149,7 @@ the graph directly. A stale `author_id` affects display ordering
 at most; it never changes what the author is paid. The cache may
 drift briefly without correctness risk. Campaign attribution
 resolves each contributor from the `:AUTHOR` edges on the paths it
-walks — see [economics.md §6](economics.md#6-attribution--per-path-shapley).
+walks — see [economics.md §6](economics.md#8-attribution--the-reward-share-r_c).
 
 **Rebuild trigger.** Stale cache entries self-heal
 opportunistically: when a viewing user's feed-ranking pass
