@@ -169,12 +169,14 @@ concept table in [substrate-map.md](substrate-map.md)):
 4. **Postgres / off-graph** — display content, operational
    metadata, private per-user state.
 
-Plus one recurring composition: **system-actor materialization** —
+Plus two recurring compositions. **System-actor materialization** —
 a passed L2 decision (a Proposal) is materialized on L1 by a
 designated CoGra system actor authoring an inventory edge toward
 the target (§8). This is mechanism 1 executed by a special author,
 and it is the standard bridge from CoGra governance to the shared
-record.
+record. And **node-value updates** — mechanisms 1 + 2 plus a
+declared read fold, the single pattern behind every "edit" in
+CoGra (§9).
 
 The menu is closed: a design that needs a fifth mechanism is a
 design question for this doc, not a per-instance improvisation.
@@ -285,7 +287,74 @@ gesture vocabulary: [network.md](network.md),
 
 ---
 
-## 9. Reading order
+## 9. Node values and updates
+
+An L1 node has no property store — every "node property" is a
+declared fold over the records referencing the node's identifier
+([layer1-interface.md §8](layer1-interface.md#8-kernel-data-model-the-graph-and-the-edge-record)).
+A node is never re-minted and a payload is never rewritten;
+updating a minted node means authoring *about* it. CoGra's single
+rule for every updatable node value follows:
+
+**A node's updatable values are a newest-wins fold over witnessed
+payloads on update records toward the node.** An update is an
+ordinary gesture (§4): a new inventory edge toward the existing
+node, the new values in its payload envelope (§7), read back by
+the declared fold. Each concept declares three slots (the
+per-concept table: [substrate-map.md](substrate-map.md)):
+
+- **Carrier family.** Three instantiations cover CoGra: **parallel
+  Registration** for Profile content — L1's own profile-update
+  idiom; **Tag `(0,0)` + payload at a named Type** for system-actor
+  materializations (verdicts, roles; newest per (target, Type));
+  and **Opinion `(0,0)` + payload toward the node** — the default
+  edit carrier — for everything else: Post and Comment bodies, chat
+  name/description/image, item name/description/media, campaign
+  terms.
+- **Eligible authors** — declared per (node, field): the creator,
+  the current owner, the chat's authorized members (admin-only or
+  every member — a per-chat governed choice), or the designated
+  system actor. Eligibility is a CoGra read rule, never an L1
+  restriction: L1 accepts anyone's update-shaped records, and an
+  ineligible one is written but never wins the fold — the same
+  shape as freelance De-invites, which the membership fold
+  ignores. Eligibility is per fold, so folds coexist on one node:
+  a member updates their own bio while The Moderator's verdict
+  Tag marks the same records — different folds, both live. Where
+  one field has a single eligible author, "newest" is exact (one
+  author's records toward a node form a strict `≺`-chain); where
+  several authors are eligible, "newest" is epoch-granular — L1
+  binds no finer cross-author order — and co-epochal updates
+  resolve by the public canonical replay order, so the fold stays
+  deterministic.
+- **Fold granularity** — newest per field, per parameter, or per
+  (target, Type), declared with the concept.
+
+Discipline for update records:
+
+- **`(0,0)` parameters, payload-marked.** An update is not a
+  stance: zero parameters make the record routing-inert and
+  vouch-inert, and the payload mark lets folds read update records
+  **individually** — never the author's netted bundle — the same
+  discipline ballots use ([governance.md](governance.md)).
+- **Priced like any act.** Every update record debits `θ` and
+  permanently increments the author's record count. Editing is
+  cheap, never free.
+- **History is public.** Superseded payloads remain published;
+  removal (§7) is the only erasure and sweeps per record — full
+  deletion removes payload and salt across the whole revision
+  chain while every structural record stays.
+
+Not everything updates. A node's **identity** never does: proposal
+terms, campaign anchors and target, Type names, and anchored
+platform documents are immutable — a revision is a new node, by
+design ([proposal.md](../instances/proposal.md)). License
+qualifiers are structural metadata of the Publish record, fixed at
+creation, out of reach of any update.
+
+---
+
+## 10. Reading order
 
 For the primitive layer, the docs build in this order:
 [layer1-interface.md](layer1-interface.md) (the contract) → this

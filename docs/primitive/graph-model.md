@@ -78,7 +78,9 @@ What "current" means is always a declared fold:
   the membership fold
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership));
   the effective network parameters are the newest finalization per
-  parameter on the network charter anchor. What the feed reads is
+  parameter on the network charter anchor; a node's updatable
+  values are the newest eligible update record's payload
+  ([substrate.md §9](substrate.md#9-node-values-and-updates)). What the feed reads is
   declared in the published ranking spec
   ([feed-ranking.md](feed-ranking.md)).
 
