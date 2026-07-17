@@ -50,13 +50,18 @@ Feed-calibration parameters are governed properties of the
 | `χ` | The dust floor — the contribution floor bounding feed traversal; a compute cutoff. | [feed-ranking.md](feed-ranking.md) |
 | `f(Δt)` | Recency factor on a path's terminal stance record; `Δt` is epoch age. | [feed-ranking.md](feed-ranking.md) |
 | `S(u,c)` | CoGra's feed score — viewer `u`, candidate `c` (CoGra's published reimplementation of the terminal default). | [feed-ranking.md](feed-ranking.md) |
-| `R_C` | CoGra's campaign reward share. | [economics.md](economics.md) |
+| `R_C` | CoGra's normalized campaign reward share. | [economics.md](economics.md) |
+| `V` | The campaign value — the crowd sum `Σ w(u)·S(u,C)` over eligible viewers. | [economics.md](economics.md) |
+| `w(u)` | Campaign targeting weight — viewer `u`'s own score of the named anchors. | [economics.md](economics.md) |
 
 ## 3. Glyph discipline
 
 When a new CoGra doc needs a symbol, it checks the interface
-ledger first and picks a free glyph. Two collisions are
+ledger first and picks a free glyph. Three collisions are
 sanctioned, each disambiguated by context: CoGra's path count `k`
-beside L1's epoch index `k` (as in `E_k`), and the recency factor
-`f(Δt)` beside the L0 fee `f` in `(1−f)ζ`. Any other collision is
-a review error, not a style choice.
+beside L1's epoch index `k` (as in `E_k`), the recency factor
+`f(Δt)` beside the L0 fee `f` in `(1−f)ζ`, and the campaign value
+`V` beside L1's CAN value `V(n)` — CoGra's crowd-sum
+reimplementation of the same terminal object, told apart by
+argument. Any other collision is a review error, not a style
+choice.

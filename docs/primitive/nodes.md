@@ -88,9 +88,13 @@ Reference. Proposals about a member within a chat or collective
 point at the member's **Profile**; the scope and meaning are L2,
 carried in the anchor payload ([governance.md](governance.md)).
 
-The reward economy's records — campaigns, settlements, payout
-state — are not graph nodes on either side of the seam; they live
-on CoGra's own rail ([economics.md](economics.md),
+The reward economy's public record rides L1: a campaign is an
+advertiser-authored Content anchor whose witnessed payloads carry
+the terms and the settlement
+([economics.md §3](economics.md#3-the-campaign-record)). The money
+itself — escrow, payout state, balances — is never a graph object
+on either side of the seam; it lives on CoGra's own rail
+([economics.md §10](economics.md#10-the-settlement-record-and-the-claim-flow),
 [ledger.md](../implementation/ledger.md)).
 
 ---
