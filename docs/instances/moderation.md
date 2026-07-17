@@ -222,18 +222,18 @@ record(s) carrying that content:
 
 | Surface | Carrying record(s) |
 |---|---|
-| Post body + media | the Publish record's payload envelope |
-| Comment | the Review record's payload |
+| Post body + media | the Publish record's payload envelope and the creator's edit records revising it ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)) |
+| Comment | the Review record's payload (and the creator's edit records) |
 | Chat message | the Send record's payload (plaintext or ciphertext, [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism); see "Encrypted message classification" below) |
 | Profile content (bio, avatar, display name) | the Registration bundle's payloads |
-| Chat name / description / image | the chat-creating record's payload (and later parallel records revising it) |
-| Item name / description / media | the genesis Owner record's payload (and revisions) |
+| Chat name / description / image | the founding Participant record's payload and the eligible members' edit records revising it (who is eligible is the chat's own governed choice) |
+| Item name / description / media | the genesis Owner record's payload and the owner's edit records revising it |
 | Topic name | a Type is a bare name with no payload; an offensive topic is a naming-service and read-side concern ([hashtag.md](hashtag.md)), plus classification of the content tagged with it |
 | Proposal text / report justification | the proposal's Content anchor payload — anchors are ordinary records, moderatable like any content |
 | Stance rationale | the payload of the Opinion (or other stance record) carrying it |
 
 For `illegal`, the cascade removes each targeted record's payload
-whole (§1) — where content spans parallel records (profile
+whole (§1) — where content spans a revision chain (profile
 revisions, edited bodies), the Proposal names the records it
 covers, and each is removed whole. For `sensitive`, the Postgres
 flag can be narrower — one field, one attachment — because
