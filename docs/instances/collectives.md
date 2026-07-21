@@ -78,7 +78,7 @@ publicly attributed acts of the Collective — not database rows
 anyone can fix.
 
 **Custody is an open question, not a settled answer**
-([open-questions.md Q29](../open-questions.md#q29--collective-key-custody-member-held-keys-over-backend-custody)):
+([open-questions.md Q29](../open-questions.md#q29--key-custody-user-recovery-and-collective-member-held-keys)):
 backend custody is the stopgap, and the direction under design is
 member-held keys — creator-held at founding, shares distributed
 to act-as-eligible members, threshold signatures as the
