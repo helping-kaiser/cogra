@@ -169,7 +169,8 @@ epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Participant, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Tag, Bid, Invitation, Reference | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
+| Hyper-edges: Review, Send, Tag, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
+| Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
 | Overlay: membership bindings | **Never traversed.** Junction structure, not stance. |
@@ -192,27 +193,46 @@ Reference legs like any passive node
 them. Topic-scoped browsing is a named feed (§10), with
 **Affinity** (Actor → Type) as the follow gesture.
 
-**References.** A quote, embed, or mention is an L1 Reference —
-two ordinary legs
-([substrate-map.md §3](substrate-map.md#3-stances-and-revision)):
-the Marginal authorship leg into the citing artifact, and the
-**Full-tier citation leg** from artifact to target. Reference hops
-carry their real `w̃` and their real signs — balance and taint
-(§5.2) read them like any stance hop, so a hostile citation ranks
-its target down. Two census facts keep post-borne endorsement
-strong: the citation leg is Full tier (the transposed-Review
-design puts the strength on the citation itself), and a path
-entering the carrier from its author rides **Publish** (promoted,
-Full) rather than the Marginal authorship leg — at census ceilings
-a stance-bearing post about a thing ranks it at roughly half a
-direct stance. A mention is a Reference targeting the person's
-**Profile**: the path lands in the grounded-pair person fold and
-continues like any person transit, no special rule. The carrier
-and the mentioned person are each one node, so within one viewer's
-score at most one extracted path passes through either toward any
-target (§6) — per-viewer, virality never multiplies; a genuinely
-liked carrier counts once in each viewer who reaches it, and reach
-is paid where reach belongs, in the campaign sum (§6.4).
+**References.** A quote, embed, or mention is an L1 Reference: an
+authorship **A-leg** (Marginal) from the author into the citing
+artifact, and a **Full-tier citation T-leg** from that artifact to
+the target
+([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
+The A-leg is an ordinary hop — reaching a reference's author
+surfaces the artifact it cites. The **citation T-leg is not a free
+out-edge of the artifact.** Both its endpoints are pre-existing
+passive nodes, so anyone can hang a citation off anyone's content;
+a passive node must never become a switchboard that carries a
+stranger's reference onward to every viewer who reaches it. Exactly
+two channels cross the T-leg:
+
+- **Content-intrinsic** — the reference author *is* the carrier's
+  author. The citation is part of the content, so any path reaching
+  the carrier continues along the T-leg: endorsing a post endorses
+  the references its author built into it.
+- **Initiator-owned** — otherwise, the T-leg is traversable only as
+  the continuation of *this* reference's own A-leg. The target is
+  reached only *through* the reference's **author**, at the
+  viewer's forward-path weight to that author (indirect connections
+  count, decayed). A carrier with no single author — a Type, a
+  Chat — has only this channel.
+
+A `(0,0)` citation carries `w̃ = 0` and crosses neither channel.
+
+Within a channel, signs read normally: balance and taint (§5.2)
+take the reference's parameters like any stance hop, so a hostile
+citation ranks its target down. Strength stays at census ceilings —
+the T-leg is Full tier, and a path entering the carrier from its
+own author rides **Publish** (promoted, Full) rather than the
+Marginal A-leg — so a stance-bearing post about a thing ranks it at
+roughly half a direct stance. A mention is a Reference whose target
+is the person's **Profile**: the path lands in the grounded-pair
+person fold and continues like any person transit. Carrier and
+mentioned person are each one node, so within one viewer's score at
+most one extracted path passes through either toward any target
+(§6) — per-viewer, virality never multiplies; a genuinely endorsed
+carrier counts once per viewer who reaches it, and reach is paid in
+the campaign sum (§6.4).
 
 **Simple by construction.** Every hop factor is below one
 (`γ ≤ 1`, `w̃ < 1`), so a strongest path never revisits a node — a
