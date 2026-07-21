@@ -23,6 +23,7 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
+| 0. Near-term design session | 1 | **Q29** | Collective key custody — member-held keys over backend custody. Nothing blocks on it mechanically, but custody of permanent signing power is the kind of debt to retire early; design it before collectives carry real value. |
 | 1. L1-author discussion | 1 | **Q28** | Zero-jail person-landing — the hyper-edge T-leg escape. Parked pending discussion with the L1 author; an L2 policy fallback exists if L1 declines, so nothing downstream blocks on it. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
@@ -58,6 +59,44 @@ questions are closed.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#11-where-ranking-runs) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#8-severance-discovery-redemption), the actual bot-bridge defense). `χ` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`χ`/`b` corrected — `χ` bounds the node-set, not the path count).
 - Q26 — see [chats.md §3.1](instances/chats.md#8-chat-metadata-and-updates) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
 - Q27 — see [collectives.md §8 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §6](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
+
+---
+
+## Q29 — Collective key custody: member-held keys over backend custody
+
+**Where it shows up:**
+[collectives.md §2](instances/collectives.md#2-custody) (custody),
+[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
+(backend-mediated authoring)
+**Status:** open (design early — before collectives carry real value)
+
+### Context
+
+A Collective's records are signed by one keypair. Today that key
+lives in **backend custody**: members authenticate to CoGra and the
+backend signs. On an append-only shared graph this is graver than
+in a rewritable system — a compromised or misused key means
+permanent, publicly attributed L1 records in the Collective's name,
+not database rows anyone can fix. Backend custody also concentrates
+every collective's signing power in one operator.
+
+### The question
+
+Design the member-held custody model. The working direction:
+
+- the **creator holds the key** at founding;
+- **shares are distributed to the members eligible to act** on the
+  Collective's behalf (the act-as set), so signing power tracks the
+  social contract rather than the operator;
+- **threshold signatures** as the endpoint, so no single member —
+  and no backend — can sign alone where the contract demands
+  concurrence.
+
+Sub-questions: share redistribution on membership/role change
+(every kick or role edit potentially re-keys); recovery when
+share-holders go dark; how the L0 address custody follows the same
+model; and what the backend still signs during the transition.
+Backend custody stays the documented stopgap until this lands.
 
 ---
 

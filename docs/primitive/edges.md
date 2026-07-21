@@ -84,7 +84,7 @@ leg indices name leg *position*, never Layer 1 / Layer 2.)
 |---|---|---|
 | **Review** | Actor → parent → Comment | Commenting. The Review targets whatever the reply responds to — a Post, Item, Profile, Chat, Message, or another Comment — and the terminal leg mints the new Comment. Threading is direct-parent: a reply to a comment Reviews that comment, so thread structure is graph-native, a causal chain of records. Weight concentrates on the targeted node, and each nesting level compounds the terminal leg's Marginal damping — depth attenuates naturally. |
 | **Send** | Actor → Chat → Message | Posting a chat message; the terminal leg mints the Message. Not membership-gated at L1 — CoGra's membership fold is a read-side rule. E2EE chats commit over ciphertext. |
-| **Tag** | Actor → content → Type | Tagging own content with a topic (authored by the content's author). Also the moderation verdict gesture: the moderation system actor tags the target toward a named moderation Type at `(0,0)` + payload, newest tag winning per (target, Type). |
+| **Tag** | Actor → content → Type | Declaring a topic on content — authorship is unconstrained (the census has no ownership clause): the content author's tag is the content's own topic declaration; anyone else's is a third-party topic claim the feed reads through its author, under the same two channels as citations ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)). Also the moderation verdict gesture: the moderation system actor tags the target toward a named moderation Type at `(0,0)` + payload, newest tag winning per (target, Type). |
 | **Bid** | Actor → Item → Offer | Transfer step 1: a buyer's offer, minting the Offer node. Signed generosity is stance-visible per leg. |
 | **Invitation** | Actor → Chat → Profile | Inviting someone to a chat — a public, priced vouch that the invitee fits. A proposal, not participation; the terminal leg targets the invitee's **Profile**, so its influence is zero at zero invitee standing. Revocable per author by a later De-invite. |
 | **De-invite** | Actor → Chat → Profile | The expulsion mark, and the withdrawal of one's own prior Invitation. As a kick it is authored by the executing chat authority with the authorizing Proposal's anchor cited in the payload — the membership fold recognizes only proposal-backed De-invites ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)). A control record: never vouches, in any quadrant. |
@@ -112,18 +112,19 @@ leg indices name leg *position*, never Layer 1 / Layer 2.)
 
 Overlay edges live in CoGra's Memgraph and never enter any L1
 quantity. They connect overlay nodes to each other and to mirrored
-L1 records; their semantics are CoGra's alone.
+L1 records; their semantics are CoGra's alone. **No overlay edge
+type is currently declared** — the overlay's structure today is
+its nodes ([nodes.md §3](nodes.md#3-overlay-node-types-cogras-graph)).
 
-| Overlay edge | Endpoints | Role |
-|---|---|---|
-| **Membership binding** | CollectiveMember ↔ member / Collective mirrors | The edges seating a CollectiveMember junction between its member and its Collective. Shapes: [collectives.md](../instances/collectives.md). |
-
-Votes, references, and proposal targets are **not** overlay edges —
-all three live on L1 and reach Memgraph through the mirror like
-every other L1 record: a vote is a payload-marked ballot Opinion
-toward the proposal anchor (§2), a reference is a Reference record
-(§3), and a proposal's subject is the anchor's `(0,0)` Reference
-toward the subject node ([governance.md](governance.md)).
+Votes, references, proposal targets, and collective membership are
+**not** overlay structure — all live on L1 and reach Memgraph
+through the mirror like every other L1 record: a vote is a
+payload-marked ballot Opinion toward the proposal anchor (§2), a
+reference is a Reference record (§3), a proposal's subject is the
+anchor's `(0,0)` Reference toward the subject node
+([governance.md](governance.md)), and membership is a fold over
+payload-marked records
+([collectives.md §5](../instances/collectives.md#5-membership--a-public-fold)).
 
 Whether and how CoGra's feed traversal crosses overlay edges is
 feed policy, declared per edge type in

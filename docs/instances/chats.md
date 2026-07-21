@@ -77,12 +77,13 @@ A Collective founds a chat the same way, through its own actor.
 
 **Posting a Message** is one **Send** act: the terminal leg mints
 the Message node; the importance parameter rides the A-leg; the
-body — plaintext or ciphertext (§7) — rides the payload envelope,
-with Postgres rows and the mirror written in the same flow as
-derived surfaces. Quoting, embedding, and mentioning from a
-message are **Reference** hyper-edges with the Message as citing
-artifact; topics are **Tag** hyper-edges authored by the message's
-author ([hashtag.md](hashtag.md)). License qualifiers and the
+body — plaintext or ciphertext (§7) — rides the payload envelope;
+the witness lands on L1 while the bytes and salt stay in CoGra
+carriage, and the mirror caches the structural record. Quoting,
+embedding, and mentioning from a message are **Reference**
+hyper-edges with the Message as citing artifact; topics are
+**Tag** hyper-edges — the author's own or third-party
+([hashtag.md](hashtag.md)). License qualifiers and the
 low-default stance values follow the same rules as every content
 flow ([post.md §1](post.md#1-creation)).
 
@@ -210,10 +211,8 @@ all the way down. Role weight is never a veto: every act runs
 through the weighted tally, and a community can pass any decision
 without its admins.
 
-The old machinery this replaces is gone whole: no admit-proposal
-per member, no vote-carrying junction, no approval edge — gated
-admission approves a *Join Request*, and the approval's record is
-the proposal thread itself.
+Gated admission approves a *Join Request*; the approval's public
+record is the proposal thread itself.
 
 ---
 
@@ -285,9 +284,12 @@ under the old key stay readable to anyone who holds it.
 
 Any member can disclose any key they hold — the system permits
 this by design, and disclosure is scoped to the disclosed epoch.
-Once disclosed, never un-disclosed. An encrypted message becomes
-moderatable once the relevant key has been voluntarily disclosed
-([moderation.md](moderation.md)).
+Once disclosed, never un-disclosed. Disclosure changes no record
+state: an encrypted message is exactly as moderatable as any
+record — removal never needs plaintext — but a verdict
+presupposes readers, and voting a verdict on a body one cannot
+read is bad practice the community should refuse, not a rule the
+system enforces ([moderation.md](moderation.md)).
 
 ### What encryption does not hide
 

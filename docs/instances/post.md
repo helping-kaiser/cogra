@@ -50,9 +50,12 @@ The Publish record carries:
   digests of attached media; media bytes live in blob storage,
   witnessed transitively through the digests.
 
-In the same flow the backend writes CoGra's own state: the
-Postgres display rows and the mirror record. Both are derived
-surfaces — the L1 record wins any disagreement.
+One act, two homes. L1 accepts the structural record with the
+payload witness; CoGra — the carriage service — holds the payload
+bytes and the salt (Postgres rows; media bytes in blob storage).
+The bytes are no copy of anything: carriage is their only home,
+verifiable against the witness. The Memgraph mirror caches the
+structural record for traversal — it may lag L1, never diverge.
 
 A Collective authoring a Post is the same gesture performed by
 the Collective's own actor (keypair in backend custody). Whether
@@ -85,8 +88,8 @@ The rule behind the split: the shared graph holds what the Post
 **By the author, with the Post:**
 
 - **Topic tagging** — a **Tag** hyper-edge (Actor → Post → Type),
-  authored by the Post's author, at creation or later; each tag is
-  its own priced act. See [hashtag.md](hashtag.md).
+  at creation or later; each tag is its own priced act. See
+  [hashtag.md](hashtag.md).
 - **Quoting, embedding, mentioning** — a **Reference** hyper-edge
   (Actor → Post → target) per cited node, authored alongside the
   Publish or later; nothing is minted, both endpoints pre-exist. A
@@ -105,6 +108,9 @@ The rule behind the split: the shared graph holds what the Post
   reference's citation leg — the content-intrinsic and
   initiator-owned channels — is
   [feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set).
+- **Tag** — third-party topic claims: anyone may tag the Post;
+  the feed reads a stranger's tag only through its author, under
+  the same two channels ([hashtag.md](hashtag.md)).
 - **The verdict Tag** — The Moderator's `(0,0)` + payload mark
   toward a named moderation Type ([moderation.md](moderation.md)).
 

@@ -3,12 +3,16 @@
 A **Collective** is any group of people that needs a single graph
 identity to act through — a household, a band, a co-op, a studio,
 a partnership, an NGO, a company. On the substrate a Collective is
-**one L1 Actor + Profile** — an ordinary grounded pair, with its
-keypair and L0 address in backend custody
-([substrate-map.md §1](../primitive/substrate-map.md#1-actors-and-identity)).
-**L1 sees one ordinary actor.** Its members, roles, stakes, and
-internal governance are CoGra state; no membership edge, junction,
-or mark of any kind exists on the shared graph.
+**one L1 Actor + Profile** — an ordinary grounded pair
+([substrate-map.md §1](../primitive/substrate-map.md#1-actors-and-identity);
+key custody: §2). **L1's math reads nothing about its internals —
+but the internals are public.** Membership, roles, stakes, and the
+social contract all ride payload-marked records with published
+folds (§5, §6), replayable by anyone from the shared record set.
+Nothing about a collective is graph-private by design: a group
+that wants its structure secret keeps it off the graph entirely —
+a bare collective actor — rather than trusting a half-open scheme
+that publishes flows while hiding values.
 
 Outbound, a Collective looks exactly like a User: it publishes,
 comments, holds stances, owns items (title in its own actor's
@@ -37,11 +41,17 @@ founding User:
    ([economics.md](../primitive/economics.md)).
 4. The Collective's own **Registration** record anchors its
    Actor + Profile pair; profile content (name, description,
-   avatar digests) rides the Registration payload, display rows
-   in Postgres.
-5. The **founder's Opinions toward the collective's Profile**
-   lift its standing — ordinary vouch-positive person stances.
-   The burn is the ignition; endorsement amplifies it.
+   avatar digests) — and the social contract itself (§6) — ride
+   the Registration payload, display rows in Postgres.
+5. The **connectivity pair** completes founding: the founder's
+   real-stance Opinion toward the collective's Profile and the
+   collective's Opinion back toward the founder's Profile — the
+   same mutual-pair geometry an invited person gets, so the new
+   collective is reachable in viewers' feeds and its own forward
+   cone is non-empty. The founder's side is a vouch-positive
+   person stance: the burn is the ignition, endorsement
+   amplifies it. This pair is stance fabric, **not** the
+   CoGra-join relation — no referral fires (§9).
 
 **Collectives are never invited.** The CoGra-join mutual-pair
 relation ([invitations.md](../primitive/invitations.md)) is a
@@ -65,10 +75,14 @@ records ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admis
 What custody protects is graver here than in a rewritable
 system: a compromise means **signed L1 records** — permanent,
 publicly attributed acts of the Collective — not database rows
-anyone can fix. Threshold signatures and member-held key shares
-are the decentralized-phase roadmap answer
-([roadmap.md](../implementation/roadmap.md)); until then, custody
-discipline is the control.
+anyone can fix.
+
+**Custody is an open question, not a settled answer**
+([open-questions.md Q29](../open-questions.md#q29--collective-key-custody-member-held-keys-over-backend-custody)):
+backend custody is the stopgap, and the direction under design is
+member-held keys — creator-held at founding, shares distributed
+to act-as-eligible members, threshold signatures as the
+endpoint. Until that lands, custody discipline is the control.
 
 ---
 
@@ -81,7 +95,7 @@ design error:
 | Authority | Question | Home |
 |---|---|---|
 | **Protocol standing** | May its actor write to the shared graph at all? | L1's alone — the write rule over its balance and stamps, its standing from real endorsement. Membership never enters it. |
-| **Membership** | Who is in the Collective, with what role and stake? | CoGra's alone — overlay + Postgres (§5). L1 never sees it. |
+| **Membership** | Who is in the Collective, with what role and stake? | CoGra's to define — a published fold over payload-marked records (§5); public on the shared graph, read by no L1 rule. |
 | **Subsidy** | Who pays its θ-debits? | Governed policy — Collectives draw on the community treasury, within the governed generosity and caps ([economics.md](../primitive/economics.md)). |
 | **Self-funding** | Can it stand on its own? | Always open — an L0 burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
@@ -128,39 +142,60 @@ its end first, recursively.
 
 ---
 
-## 5. Membership — pure L2
+## 5. Membership — a public fold
 
-Membership is a CoGra-side object with **no shared-graph
-counterpart**: a **CollectiveMember overlay junction** per member
-in CoGra's Memgraph overlay, plus Postgres display content
-([nodes.md §3](../primitive/nodes.md#3-overlay-node-types-cogras-graph)).
-Its layered overlay properties carry the internal structure:
+Membership is **computed from public records, stored nowhere**.
+The mechanism is the payload-fold pattern that ballots and edits
+already use ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
+payload-marked `(0,0)` Opinion records, read individually by a
+published fold — routing-inert, vouch-inert, replayable by
+anyone.
 
-- **`role`** — open vocabulary, collective-specific (`founder`,
-  `shareholder`, `worker`, `subsidiary`, …); the vocabulary is
-  implicit — the strings used in the governance map plus those
-  assigned to active members.
-- **`ownership_pct`** — where a role implies a stake; changes
-  that move the 100% total ride composite decisions (§6).
-- **`voting_weight`** — optional per-member override read
-  directly at tally time.
+- **The member's side** — a payload-marked `(0,0)` Opinion toward
+  the collective's **Profile**: join, and later leave, as
+  newest-wins states on the member's own `≺`-chain. Leave is
+  unilateral — no approval, no vote.
+- **The collective's side** — a payload-marked `(0,0)` Opinion
+  toward the member's Profile: acceptance, and later revocation.
+  Both are **decision-backed**: the payload cites the anchor of
+  the passed internal decision that authorized the record
+  (`decision:add_member`, `decision:remove_member` — in whatever
+  shape the contract gives those entries, from CEO-unilateral
+  threshold-1 to full consensus), and **the fold recognizes only
+  decision-backed records** — the same recognition discipline the
+  chat fold applies to De-invites
+  ([chats.md §4](chats.md#4-membership)).
+- **The fold:** member iff both sides' newest membership-marked
+  records agree — the member's newest is a join and the
+  collective's newest is an acceptance. Order-free: either side
+  may move first (application vs. invitation); membership
+  materializes when the chains agree. A kick is the collective's
+  decision-backed revocation; re-joining afterward requires a
+  fresh agreement of both chains.
 
-Members can be Users or Collectives — sub-collective membership
-is the same junction shape.
+**Roles and stakes ride the collective's records.** The
+acceptance and later update payloads carry the member's **role
+set**, `ownership_pct`, and any `voting_weight` override —
+newest-wins per member per field — so the collective's entire
+internal structure is public and replayable, tallies included.
 
-**Joining, leaving, removal** are internal decisions under the
-social contract, executed as overlay/Postgres state changes:
-admission per the contract's `decision:add_member` rule, leave at
-the member's own request (never a vote), removal by the
-contract's removal rule. History is preserved — junctions are
-never deleted, state transitions are layered.
+- **Multiple roles are the norm** — one member's role set can be
+  `{founder, board_member, CEO}`. Eligibility predicates test
+  set membership; where several of a member's roles appear in
+  one entry's weighting, the **highest applicable weight**
+  applies — summing would double-count the person.
+- **Sub-collectives:** a member may itself be a Collective; its
+  membership records are authored by its own actor, recursively.
+- **Costs:** both sides' records are `θ`-priced acts — the
+  member's community-funded, the collective's treasury-funded
+  ([economics.md](../primitive/economics.md)).
 
-**What does reach the shared graph** is stance, not membership:
-mutual member ↔ collective-Profile **Opinions** are ordinary
-interpersonal fabric — they route in the feed and, when
-vouch-positive, lift the collective's (or member's) standing.
-They are organic signals with real weights, never membership
-markers, and their absence breaks nothing.
+**What is *not* membership:** real-stance Opinions between
+members and the collective's Profile — including the founding
+mutual pair (§1) — are ordinary stance fabric: they route, they
+vouch, they lift standing. The membership records are `(0,0)` and
+do none of that. Same family, distinguished by the payload mark —
+read individually, never through the netted bundle.
 
 ---
 
@@ -168,10 +203,14 @@ markers, and their absence breaks nothing.
 
 The contract is the Collective's `governance` map — per-decision
 eligibility, weighting, threshold, and a per-entry `amend` triple
-(governance of governance, scoped per rule). It lives as layered
-overlay state on the Collective's CoGra-side carrier; the
-machinery it parameterizes is the house governance pattern
-([governance.md](../primitive/governance.md),
+(governance of governance, scoped per rule). The contract itself
+is **public, payload-borne state**: it rides the collective's
+**Registration payload** — the profile-content idiom — with
+amendments as parallel Registrations whose payloads cite the
+authorizing `amend` decision anchor, newest-wins per entry.
+Overlay and Postgres hold only operational mirrors and display.
+The machinery the map parameterizes is the house governance
+pattern ([governance.md](../primitive/governance.md),
 [proposal.md](proposal.md)).
 
 **Decisions run at collective scope on L1**: the proposer authors
@@ -184,8 +223,10 @@ anchor; the tally is the contract's formula (role weights,
 records, snapshot at the anchor's landing epoch; the
 **finalization is authored by the Collective's own actor** —
 Opinion `(0,0)` + payload (outcome, tally digest) toward the
-anchor. Every internal vote is a priced public act; what the
-overlay adds is the role and weight state the tally reads.
+anchor. Every internal vote is a priced public act, and the role
+and weight state the tally reads is itself public — the
+membership fold (§5) — so a collective-scope tally is
+world-verifiable end to end.
 
 ### Action keys and dispatch
 
@@ -280,8 +321,8 @@ Internal disputes resolve by the contract, never on the thread.
   Collective whose last member leaves has no one who can trigger
   its key — acting capacity is gone; the actor, its standing,
   its titles, and its history persist. Members can never *not*
-  have existed: founding creates the founder's junction with the
-  Collective, and the overlay history is append-only.
+  have existed: the membership record chains (§5) are permanent
+  public history.
 - **Deletion is the husk**, same as any account
   ([account-deletion.md](account-deletion.md)): identity
   association forgotten, Postgres tombstoned, payloads removed
@@ -306,6 +347,15 @@ gets, under the same eligibility filter
 collectives buy no placement; non-commercial ones lose nothing
 by not buying.
 
+A collective has **no inviter**: the 1% inviter share tied to its
+earnings falls back to burn
+([economics.md §7.3](../primitive/economics.md#73-the-inviter-reward)) —
+deliberately. A collective's makeup can drift arbitrarily far
+from its founding cast, so no one holds a permanent claim on its
+earnings; and since the share is carved from burn rather than
+from the earner's payout, earning through a collective gains
+nobody anything either way.
+
 ---
 
 ## What this doc is not
@@ -319,8 +369,8 @@ by not buying.
   [user.md](../primitive/user.md) and
   [account-deletion.md](account-deletion.md).
 - **Not the settlement flow.** [items.md](items.md).
-- **Not the store schemas.** Overlay junction shapes and
-  Postgres rows live in
+- **Not the store schemas.** Mirror shapes and Postgres display
+  rows live in
   [graph-data-model.md](../implementation/graph-data-model.md)
   and [data-model.md](../implementation/data-model.md).
 - **Not the auth path.** How a member's session authenticates a

@@ -65,11 +65,13 @@ author for account deletion to touch.
 ## 3. Acts around a Type
 
 - **Tagging content** — the **Tag** hyper-edge
-  (Actor → content → Type), authored by the content's author,
-  at creation or later; relevance and confidence ride the act
+  (Actor → content → Type), at creation or later; relevance and
+  confidence ride the act
   ([edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)).
-  This is how a Post, Comment, Message, or Item declares its
-  topics.
+  Authorship is unconstrained: the content author's tag declares
+  the content's own topics, and anyone else's tag is a
+  third-party topic claim the feed reads through its author,
+  mirroring the reference channels (§4).
 - **Following a topic** — an **Affinity** record (Actor → Type):
   relevance, not verdict — its sign is coherence, never a
   standing vouch. Affinity is the follow gesture the topic feed
@@ -102,8 +104,12 @@ somebody's content.
 The **topic feed** is a named opt-in read-side feed: content
 surfaced over Tag records toward the viewer's followed
 (Affinity) Types, ranked by the same primitive as everything
-else. The default feed stays untouched by follows
-([feed-ranking.md](../primitive/feed-ranking.md)).
+else. Which tags count is channel-gated like citations: the
+content author's own declarations, plus third-party tags whose
+authors the viewer actually reaches at forward weight — never
+every stranger's
+([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+The default feed stays untouched by follows.
 
 ---
 
