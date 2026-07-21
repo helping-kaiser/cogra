@@ -1,246 +1,161 @@
 # Comment
 
-The **Comment** is a content node — a response authored by a
-User or Collective on another content node. Comments are the
-platform's universal threading primitive: they attach to Posts,
-to other Comments (replies), to Chats and individual
-ChatMessages, and to Items, layering a discussion surface onto
-every kind of content the graph holds. Comments are full graph
-nodes, not properties of their target — so they can themselves
-be liked, disliked, replied to, embedded, and moderated, with
-their own authored opinion edges and their own per-field
-moderation-status properties.
+The **Comment** is CoGra's universal response surface — a reply
+or annotation authored by a User or Collective on another node.
+On the substrate a Comment *is* an L1 **Comment** node, minted by
+the terminal leg of its author's **Review** hyper-edge
+([substrate-map.md §2](../primitive/substrate-map.md#2-content)).
+Universal Reviewability makes the threading primitive native:
+anything that exists in the graph admits attributed public
+commentary, and a Comment is itself a full node — stance-able,
+taggable, reviewable, quotable, moderatable.
 
 ---
 
 ## 1. Creation
 
-A Comment is created by a single authoring gesture from one
-actor — either a User or a Collective — toward exactly one
-**target content node**. There is **no approval flow**: like a
-Post (see [post.md §1](post.md#1-creation)) and unlike junction
-nodes (see [graph-model.md §5](../primitive/graph-model.md)),
-a Comment requires no second-party affirmation.
+Commenting is one act: the author's **Review** hyper-edge
+(Actor → parent → Comment,
+[edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)) —
+one `θ`-debit, one stamp, two legs. The A-leg targets the parent;
+the terminal leg mints the new Comment node, whose identity key
+is the Review record's. No approval flow, no second-party
+affirmation.
 
-The valid target set — **Post, Comment, Chat, ChatMessage, or
-Item** — is the most distinctive thing about Comments: they are
-the platform's universal threading primitive, not a Post-only
-concept. The canonical per-target list with edge meanings lives
-in [edges.md §2 "Containment / belonging"](../primitive/edges.md).
+**The parent is whatever the response responds to.** Threading is
+direct-parent: a reply to a Post reviews the Post; a reply to a
+comment reviews *that Comment*; an annotation on a chat utterance
+reviews the Message (a Send responds inside the channel; a Review
+annotates it from outside). Every passive node type is Reviewable
+at L1 — Content, Comment, Message, Chat, Item, Type, Profile,
+Offer — so which parents CoGra's UI offers a comment box on is
+product policy, never a substrate limit.
 
-The gesture writes four records atomically:
+The record carries:
 
-- A new `:Comment` node on the graph.
-- An outgoing **`Comment → Target`** `:CONTAINMENT` structural
-  edge identifying the parent. Exactly one per Comment; fixed
-  at creation and not re-targeted later.
-- The Postgres `comments` entity row carrying the cached parent
-  reference, plus the first `comment_versions` row with the body
-  and any attachments (see §3 and
-  [data-model.md](../implementation/data-model.md)).
-- An actor edge from the authoring actor toward the new Comment
-  node — the **authorship edge** (§5). Its `(dim1, dim2)`
-  values are the author's initial opinion of their own
-  response, typically high positive sentiment and relevance.
+- **The stance parameters** — enthusiasm `e` and effort `f`, the
+  author's stance toward the parent riding the same act that
+  responds to it (A-leg `p_d = e, p_i = f`; Tribal, Full tier).
+  Defaults sit low (`+0.1, +0.1`) per the repo-wide policy
+  ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)).
+- **License qualifiers** — declared at authoring time, immutable,
+  same rule as every content-creation flow
+  ([platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations)).
+- **The payload envelope** — body text and media digests in the
+  Peer Content Envelope
+  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage));
+  Postgres display rows and the mirror record are written in the
+  same flow as derived surfaces.
 
-A Collective authoring a Comment is the same gesture: the graph
-records the Comment as the Collective's, and the off-graph
-authentication that produced it traces — possibly through
-nested CollectiveMember chains — back to one or more Users with
-active sessions per
-[user.md §1](../primitive/user.md#1-user-vs-collective) and
-[auth.md](../implementation/auth.md). Members of the Collective
-do not individually sign or approve the Comment; the
-Collective's social-contract governance defines whether and how
-member consent is required, per
-[collectives.md](collectives.md).
+A Collective commenting is the same gesture by the Collective's
+own actor ([collectives.md](collectives.md)).
 
 ---
 
-## 2. Graph-side properties
+## 2. Threading
 
-A Comment node carries the minimum the graph needs to traverse,
-filter, and rank. Substance lives in Postgres (§3).
+Reply chains are **causal chains of Review records** — thread
+structure is graph-native, with no parent pointer stored anywhere
+else. What the old flatten-to-root design stored in payload, the
+record set now *is*.
 
-The Comment carries per-field moderation-status properties on
-**`content`** (the body) and **`attachments`** (every attached
-media under one status — see
-[moderation.md §5](moderation.md#5-scope) on per-attachment
-targeting), plus the node-level `moderation_status` cache.
-Universal mechanics in
-[nodes.md](../primitive/nodes.md);
-Comment-specific cascade in §6. Body and attachment content live
-in Postgres / object storage (§3); concrete types and indexes in
-[graph-data-model.md](../implementation/graph-data-model.md).
+The geometry does the moderation of depth by itself:
 
----
+- **Weight concentrates on the targeted node.** A reply lifts its
+  direct parent, not the thread root; a viewer's stance lands on
+  exactly the utterance it judges.
+- **Depth attenuates naturally.** Each nesting level compounds the
+  terminal leg's Marginal damping, so deep chains fade without any
+  explicit depth cap (`rem:nodes:nested-comment-review`).
 
-## 3. Postgres-side content
-
-A Comment's substance is its body and attached media — both
-live in Postgres, linked to the graph node by UUID. Edits to
-display content are append-only per
-[layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
-a new version row, no overwrite.
-
-- **`content`** — the body text. Stored on `comment_versions`
-  rows; see [data-model.md](../implementation/data-model.md).
-- **Attachments** — images, videos, and other media via the
-  `comment_attachments` junction table, which carries
-  per-attachment `display_order`. Each row references one
-  `media_attachments` asset, owned by the same author as the
-  Comment (anti-hijack rule per
-  [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
-
-The `comments` row also caches `target_id` + `target_type` as
-a discriminator pointer to the parent — Post, Comment, Chat,
-ChatMessage, or Item. The graph
-(`Comment → Target :CONTAINMENT`) is the source of truth; the
-Postgres columns are caches rebuildable from the graph. See
-[data-model.md "target_id + target_type"](../implementation/data-model.md#target_id--target_type--same-shape-different-reason).
-
-The cached `comments.author_id` column is a derivation of the
-graph authorship rule — see §5 and
-[authorship.md "Caching"](../primitive/authorship.md#caching).
+Reviews are **commentary, never state**: the family is
+standing-inert, transitions no settlement, moves no title, binds
+no tag, creates no membership
+([layer1-interface.md §9.2](../primitive/layer1-interface.md#92-affordance-traits-tblnodesaffordance-traits)).
+Commentary stays fully available to the feed and attribution —
+Review legs traverse as ordinary edges with real `w̃` and real
+signs ([feed-ranking.md](../primitive/feed-ranking.md)).
 
 ---
 
-## 4. Edges
+## 3. Acts around a Comment
 
-### As source (outgoing)
+**By the author, with the Comment:**
 
-A Comment is not an actor and authors no actor edges. It
-carries three outgoing structural edge types, all
-system-created:
+- **Topic tagging** — a Tag hyper-edge (Actor → Comment → Type),
+  authored by the Comment's author ([hashtag.md](hashtag.md)).
+- **Quoting and mentioning** — Reference hyper-edges with the
+  Comment as citing artifact: the original of an image it
+  re-posts, a person named in its body (a Profile-targeting
+  mention), a proposal anchor cited in debate. Nothing is minted;
+  each reference is its own priced act.
 
-- **`Comment → (Post | Comment | Chat | ChatMessage | Item)`
-  `:CONTAINMENT`** — identifies the Comment's parent. Exactly
-  one per Comment, written at creation and never re-targeted.
-  The per-target catalog with row-level meanings lives in
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md);
-  this doc deliberately does not mirror that list (§1).
-- **`Comment → Hashtag` (`:TAGGING`)** — one edge per hashtag
-  the Comment is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md). The
-  Hashtag node is content-addressed by canonical name (per
-  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
-  so the same hashtag across instances resolves to the same
-  node.
-- **`Comment → any node` (`:REFERENCES`)** — one edge per node
-  the Comment embeds, quotes, or mentions: the original of a
-  re-uploaded image on a parent Post, a User or Collective
-  named in the body, a Proposal it cites in debate, etc. Two
-  targets are excluded by the single-structural-edge invariant
-  per [edges.md §2 "Reference"](../primitive/edges.md):
-  **Hashtag** (the `:TAGGING` edge already encodes the pair) and
-  the Comment's own `:CONTAINMENT` parent (the `:CONTAINMENT`
-  edge already encodes the pair — a Comment that quotes the very
-  Post / Comment / Chat / ChatMessage / Item it is posted on does
-  not write a parallel `:REFERENCES` edge). The carrier
-  semantics, target catalog, and deferred traversal rules live in
-  [edges.md §2 "Reference"](../primitive/edges.md).
+**By anyone, toward the Comment:**
 
-### As target (incoming)
-
-A Comment receives:
-
-- **Actor edges** from Users and Collectives carrying
-  `(sentiment, relevance)` per
-  [edges.md §1](../primitive/edges.md) — the
-  like/dislike surface plus per-viewer relevance, used by
-  [feed-ranking](../primitive/feed-ranking.md) to weight the
-  Comment for each viewing user. The earliest of these is the
-  authorship edge (§5).
-- **`Comment → Comment` `:CONTAINMENT`** when another Comment
-  replies to this one. A reply is itself a Comment whose
-  target is the parent Comment; from the parent's perspective
-  this is an incoming `:CONTAINMENT` edge. Reply chains
-  accumulate `R` (path length) naturally and decay via `d(R)`
-  in [feed-ranking](../primitive/feed-ranking.md) — there is
-  no explicit depth cap.
-- **`ChatMessage / Post / Comment → Comment` `:REFERENCES`**
-  when another content node embeds the Comment — a chat
-  message sharing it into a chat, a Post citing it, another
-  Comment referencing it in debate. See
-  [edges.md §2 "Reference"](../primitive/edges.md).
-- **`Proposal → Comment` `:TARGETS`** when a moderation
-  Proposal targets one of the Comment's per-field
-  moderation-status properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md);
-  cascade in §6.
+- **Opinion** — likes and dislikes on comments are native stance
+  records, full four-quadrant vocabulary.
+- **Review** — a reply: the next link of the causal chain.
+- **Reference** — being quoted by other artifacts; the feed
+  crosses citation legs per the two-channel rule
+  ([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+- **The verdict Tag** — The Moderator's `(0,0)` + payload mark
+  ([moderation.md](moderation.md)).
 
 ---
 
-## 5. Authorship
+## 4. Editing
 
-A Comment's author is the actor whose incoming actor edge has
-the earliest layer-1 timestamp — the same rule that derives
-authorship for every node type
-([authorship.md](../primitive/authorship.md)). On the graph that
-edge carries the `:AUTHOR` sub-label; the author's `(dim1, dim2)`
-on the same edge are normal opinion values (sentiment / relevance),
-not a stand-in for the label. The two coexist.
+The node-value update rule
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)),
+instantiated for Comments exactly as for Posts
+([post.md §4](post.md#4-editing)):
 
-`:AUTHOR` is the only representation of authorship on the graph
-side. For Postgres-side display queries, `comments.author_id`
-is cached on the row. Both are rebuildable from the graph; the
-graph wins in any disagreement. See
-[authorship.md "Caching"](../primitive/authorship.md#caching).
+- **Carrier:** the author's **Opinion `(0,0)` + payload** toward
+  the Comment.
+- **Eligible author:** the creator alone — exact `≺`-newest.
+- **Granularity:** per field — body and media manifest fold
+  independently.
+
+Every edit is priced; history is public; the `(0,0)` records
+refresh the author's bundle without summing into any stance. The
+Comment's identity, its `creator`, its parent (the minting
+record's A-leg target), and its license qualifiers never edit —
+responding to something else is a new Comment.
 
 ---
 
-## 6. Lifecycle
+## 5. Lifecycle
 
-Comment nodes are **never deleted**. Per
-[layers.md §5](../primitive/layers.md#5-deletion-policy), the
-only permitted "removal" is in-place layer redaction on graph
-properties or a tombstone version row on Postgres-side display
-content; both preserve a visible record that the change
-occurred.
+Comment nodes are **never deleted**; removal is payload removal
+to the reduced projection, whole-record, one-way, with the
+immutable structural record as the visible mark
+([layers.md](../primitive/layers.md)). Triggering flows and
+Postgres-side tombstone/archive mechanics:
+[moderation.md](moderation.md),
+[account-deletion.md](account-deletion.md),
+[retention-archive.md](../primitive/retention-archive.md).
 
-Redaction triggers on a Comment are moderation
-([moderation.md §1](moderation.md#1-the-two-classification-paths))
-and — with the author's opt-in — content-level account deletion.
-
-Account deletion of the Comment's author does **not** by
-default affect the Comment's body, attachments, or graph node —
-identity redaction targets the User node's PII only. The
-Comment is content-redacted only if the author opts in to the
-content-level scope of
-[account-deletion.md](account-deletion.md).
-
-The Comment's UUID is stable across every redaction. Authorship
-caches keyed on the UUID stay valid; the outgoing `:CONTAINMENT`,
-`:TAGGING`, and `:REFERENCES` edges and every incoming actor /
-reply / reference / targeting edge keep pointing at the same
-node. A redacted Comment is a partially-or-fully gutted but
-still-graph-resident content node, not a removed one.
+Removal never breaks a thread: the chain is structural, so
+replies below a reduced Comment keep their parent and stay
+readable. The identity key is stable; every incident record keeps
+pointing at the same node.
 
 ---
 
 ## What this doc is not
 
-- **Not the feed-ranking spec.** Where a Comment surfaces in
-  any given viewing user's feed — including how reply chains
-  accumulate `R`, how reactor-edge time decay attenuates stale
-  threads, and the seen-list behavior for threads that gain
-  fresh activity — lives in
+- **Not the feed-ranking spec.** How Review legs weigh, how depth
+  damping composes, and every read-side layer live in
   [feed-ranking.md](../primitive/feed-ranking.md).
-- **Not the authorship rule.** The earliest-incoming-edge
-  derivation, the cache rebuild semantics, and the worked
-  example live in [authorship.md](../primitive/authorship.md).
-- **Not the moderation primitive.** The Proposal mechanism, the
-  mod gate, eligibility, thresholds, and the redaction cascade
-  live in [moderation.md](moderation.md).
-- **Not the deletion mechanism.** The redaction primitive lives
-  in [layers.md §5](../primitive/layers.md#5-deletion-policy);
-  the per-row legal hold and archive disposition live in
-  [retention-archive.md](../primitive/retention-archive.md).
-- **Not the edge catalog.** The full per-target containment
-  list, all other edge types Comments participate in, and the
-  label scheme live in [edges.md](../primitive/edges.md).
-- **Not the Memgraph or Postgres schema.** Concrete property
-  types, columns, indexes, and the
-  `comment_attachments` / `media_attachments` shapes live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
+- **Not the update rule.** The fold semantics live in
+  [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates).
+- **Not the authorship rule.** Intrinsic author binding lives in
+  [authorship.md](../primitive/authorship.md).
+- **Not the moderation mechanism.** Reports, verdicts, and the
+  removal cascade live in [moderation.md](moderation.md).
+- **Not the edge catalog.** Family semantics and census pointers
+  live in [edges.md](../primitive/edges.md).
+- **Not the store schemas.** Columns, envelope keys, and mirror
+  shapes live in
+  [data-model.md](../implementation/data-model.md) and
+  [graph-data-model.md](../implementation/graph-data-model.md).
