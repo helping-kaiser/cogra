@@ -1,878 +1,378 @@
 # Collectives
 
-A **Collective** is an actor node on the graph — any group of
-people that needs a single graph identity to act through. The
-term spans the full range from informal to formal: a household,
-a band, a co-op, a studio, a partnership, an NGO, a company.
+A **Collective** is any group of people that needs a single graph
+identity to act through — a household, a band, a co-op, a studio,
+a partnership, an NGO, a company. On the substrate a Collective is
+**one L1 Actor + Profile** — an ordinary grounded pair
+([substrate-map.md §1](../primitive/substrate-map.md#1-actors-and-identity);
+key custody: §2). **L1's math reads nothing about its internals —
+but the internals are public.** Membership, roles, stakes, and the
+social contract all ride payload-marked records with published
+folds (§5, §6), replayable by anyone from the shared record set.
+Nothing about a collective is graph-private by design: a group
+that wants its structure secret keeps it off the graph entirely —
+a bare collective actor — rather than trusting a half-open scheme
+that publishes flows while hiding values.
 
-On the outbound side a Collective looks like a
-[User](../primitive/user.md): it authors content, creates actor
-edges toward other nodes, owns items (via ItemOwnership), is
-followed / liked / disliked, and appears in feeds and is ranked
-like any other actor. The full outgoing-edge catalog is in
-[edges.md §1 "Collective as actor"](../primitive/edges.md).
-A Collective having sentiment toward another Collective, or
-toward a User, or vice versa, is perfectly normal — there is no
-asymmetry between Collective and User as edge endpoints.
+Outbound, a Collective looks exactly like a User: it publishes,
+comments, holds stances, owns items (title in its own actor's
+name), and is ranked like any other actor. There is no asymmetry
+between Collective and User as record endpoints, and no
+preferential treatment anywhere (§9).
 
-What makes a Collective different from a User is the off-graph
-side: a Collective has **no credentials of its own** and takes
-no gestures by itself. Every action attributed to a Collective
-is initiated by an authorized member — a User, or a sub-Collective
-acting recursively through its own authorized members — per the
-Collective's social contract. The graph records the action as the
-Collective's; **no per-edge record of the acting member is kept**
-(§2).
-
-Collectives are **user-created nodes**: each begins with one
-founding User and a written social contract (§1).
-
-This doc is the per-node catalog for two related nodes — the
-**Collective** actor node and the **CollectiveMember** junction
-node. Topical mechanics live in their topical docs; this doc
-links rather than duplicates.
+**Guilds are the same construct.** A community running its own
+social contract — CoGra itself is guild #1 — is structurally a
+Collective: one L1 actor, own L2 rules
+([governance.md](../primitive/governance.md)).
 
 ---
 
-## 1. Creation
+## 1. Founding
 
-A Collective is brought into existence by a single founding
-gesture from exactly one **User**:
+Founding is a backend-mediated bootstrap, initiated by one
+founding User:
 
-1. The founding User writes the Collective's social contract
-   (§8) — at minimum its initial decision-type rules and its
-   act-as rules (§2).
-2. The system atomically creates the `:Collective` node and the
-   founder's `CollectiveMember` junction.
+1. The founder writes the social contract (§6) — at minimum the
+   act-as rules and the initial decision rules.
+2. The backend creates the Collective's **keypair and L0
+   address** (custody: §2).
+3. The admission debit is **treasury-funded** — Collectives draw
+   on the CoGra community treasury for their L0 burns
+   ([economics.md](../primitive/economics.md)).
+4. The Collective's own **Registration** record anchors its
+   Actor + Profile pair; profile content (name, description,
+   avatar digests) — and the social contract itself (§6) — ride
+   the Registration payload, display rows in Postgres.
+5. The **connectivity pair** completes founding: the founder's
+   real-stance Opinion toward the collective's Profile and the
+   collective's Opinion back toward the founder's Profile — the
+   same mutual-pair geometry an invited person gets, so the new
+   collective is reachable in viewers' feeds and its own forward
+   cone is non-empty. The founder's side is a vouch-positive
+   person stance: the burn is the ignition, endorsement
+   amplifies it. This pair is stance fabric, **not** the
+   CoGra-join relation — no referral fires (§9).
 
-Because the founder's CollectiveMember is the bootstrap — there
-is no prior membership to vote on it — the
-[junction lifecycle](../primitive/graph-model.md)
-collapses to its `N = 0` special case: the founder's
-**Shape A self-claim** is the only required vote, **no
-admit-Proposal node is materialized**, and the system writes both
-structural edges (claim and approval), the
-`CollectiveMember → User` `:BEARER` identity edge, and the
-founder's `bearer → CollectiveMember` `:AUTHOR` actor edge —
-which authors the junction (§6) — atomically alongside it. This is the same bootstrap pattern used for the
-author's `ItemOwnership` in
-[items.md §1](items.md#1-creation) and for the founder of a
-Chat in [chats.md §2.1](chats.md#21-chat). See §7 for the
-regular case where existing CollectiveMembers cast Shape B
-approver votes on the admit-Proposal.
+**Collectives are never invited.** The CoGra-join mutual-pair
+relation ([invitations.md](../primitive/invitations.md)) is a
+person relation; a Collective enters by founding, and its
+`network_role` is `'collective'` — automatically, permanently, a
+class label conferring nothing: no ballots at Network scope, no
+activity count, no moderator eligibility
+([network.md](../primitive/network.md)).
 
-The founder's role on their CollectiveMember junction is
-whatever the social contract names for the inaugural role
-(`founder`, `owner`, `partner`, …). There is no separate
-"author" role and no uniqueness constraint on the inaugural
-role: **additional founders are added afterward through the
-regular CollectiveMember addition flow**, and their `founder`
-(or equivalent) role carries the same weight as the bootstrap
-founder's. The author-User is graph-derivable — see §6.
-
-### Sub-Collectives
-
-A Collective creating another Collective follows the same
-pattern: the founding Collective acts through one of its
-authorized members (a governance-act per §2), producing the
-bootstrap gesture, and the new sub-Collective's first
-CollectiveMember junction is `parent Collective → new sub-Collective`.
-The User who originated the gesture remains identifiable through
-the parent Collective's own CollectiveMember chain, but is not
-directly recorded on the sub-Collective's graph structure.
+A Collective founding another Collective (a subsidiary, a label's
+imprint) is the same flow, initiated through the parent's own
+act-as machinery (§4).
 
 ---
 
-## 2. Acting through the Collective
+## 2. Custody
 
-A Collective produces actor edges but has no credentials and
-takes no gestures by itself. Every edge attributed to a
-Collective is **initiated by an authorized member** — a User, or
-a sub-Collective acting through its own authorized members. At
-the graph layer the Collective is the source of the edge: no
-`acting_user` dimension, no separate junction recording the
-member, no on-graph trace back to the initiator.
+The Collective's key lives in **backend custody** — members
+authenticate to CoGra, and the backend signs the Collective's
+records ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+What custody protects is graver here than in a rewritable
+system: a compromise means **signed L1 records** — permanent,
+publicly attributed acts of the Collective — not database rows
+anyone can fix.
 
-**The lack of per-edge acting-member attribution is
-deliberate.** Once a member is authorized to act for the
-Collective, the Collective IS the actor for the graph's
-purposes — accountability lives in the social contract (which
-decides who can authorize what), not in per-edge attribution.
-Whether and how the Collective then holds individual members
-accountable internally is itself a matter for its social
-contract.
-
-### Content-acts vs governance-acts
-
-Two coarse classes of gestures, with different defaults:
-
-**Content-acts** — authoring [Posts](post.md) and
-[Comments](comment.md), and creating sentiment/relevance actor
-edges toward other nodes (likes, dislikes, follows, interest).
-**Default: any active CollectiveMember may produce a content-act
-on behalf of the Collective.** A Collective that wants to lock
-content-acts down (e.g. "only the press officer posts") declares
-an explicit act-as rule that overrides the default; otherwise
-the any-active-member default applies.
-
-**Governance-acts** — authoring [Proposals](proposal.md) on
-behalf of the Collective, casting votes in governance instances
-the Collective is eligible in, creating or approving
-[ItemOwnership](items.md) junctions, and creating or approving
-[CollectiveMember](#3-graph-side-properties) junctions on
-other Collectives. **Default: no member can produce a
-governance-act on behalf of the Collective.** An explicit act-as
-rule in the social contract is required. Governance-acts have
-external consequences (they bind the Collective to votes, to
-owned items, to memberships in other Collectives); defaulting
-them off forces the Collective to declare in writing who can
-carry them out.
-
-**Invariant:** content-acts default permissive, governance-acts
-default deny. The asymmetry reflects reversibility — a stray
-Post is reversible by a counter-post, but a stray Proposal vote
-or Item transfer binds the Collective externally — and mirrors
-the broader governance primitive's stance that routine
-gestures can be permissive while binding ones require explicit
-eligibility ([governance.md](../primitive/governance.md)).
-
-### Routing
-
-When a member attempts to act-as a Collective C with a gesture
-that would produce edge E, two Collective-specific steps run
-ahead of the generic governance machinery:
-
-1. **Classify** E as a content-act or governance-act (using the
-   defaults above unless overridden).
-2. **Look up the act-as rule** in C's social contract. If an
-   explicit rule exists for E (by class or by specific edge
-   type), its eligibility predicate decides who may perform it;
-   otherwise the class default applies (allow for content-acts,
-   deny for governance-acts).
-
-An eligible member's gesture produces C's outgoing edge
-immediately. Act-as rules carry **eligibility only** — there is
-no multi-signer threshold for outgoing gestures, because the
-graph is public: a gesture held pending co-signatures would
-already be visible as a half-live Post or edge. Multi-party
-Collective decisions exist only as the `decision:*`
-Proposal-shaped entries of the social contract (§8).
-
-If the acting "member" is itself a sub-Collective, its own
-social contract is consulted recursively before the parent
-Collective's edge is produced — the sub-Collective must
-authorize the gesture on its end before the parent Collective's
-on-behalf-of step is reached.
+**Custody is an open question, not a settled answer**
+([open-questions.md Q29](../open-questions.md#q29--collective-key-custody-member-held-keys-over-backend-custody)):
+backend custody is the stopgap, and the direction under design is
+member-held keys — creator-held at founding, shares distributed
+to act-as-eligible members, threshold signatures as the
+endpoint. Until that lands, custody discipline is the control.
 
 ---
 
-## 3. Graph-side properties
+## 3. Four authorities, kept apart
 
-### Collective
+Four independent questions govern what a Collective can do. They
+have four different homes, and conflating them is the classic
+design error:
 
-A Collective node carries only what the graph needs to traverse,
-filter, rank, and route governance. Display content (profile
-text, avatar, website) lives in Postgres (§4).
+| Authority | Question | Home |
+|---|---|---|
+| **Protocol standing** | May its actor write to the shared graph at all? | L1's alone — the write rule over its balance and stamps, its standing from real endorsement. Membership never enters it. |
+| **Membership** | Who is in the Collective, with what role and stake? | CoGra's to define — a published fold over payload-marked records (§5); public on the shared graph, read by no L1 rule. |
+| **Subsidy** | Who pays its θ-debits? | Governed policy — Collectives draw on the community treasury, within the governed generosity and caps ([economics.md](../primitive/economics.md)). |
+| **Self-funding** | Can it stand on its own? | Always open — an L0 burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
-- **`name`** — the handle used for mentions and lookups,
-  analogous to `User.username`. Layered per
-  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes), so
-  rename history is preserved. UNIQUE per instance. Data;
-  per-field status carried separately by `name_status`.
-
-Per-field moderation-status properties cover each user-filled
-profile field — **`name_status`** (companion to the data sibling
-`name`), **`display_name`**, **`description`**, **`avatar`**,
-**`website_url`** — plus the node-level `moderation_status`
-cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md);
-Collective-specific cascade in §9.
-
-- **`governance`** — a single layered map property holding the
-  Collective's entire social contract, keyed by `action_key`
-  string. Each entry is a `Rule` object carrying two triples —
-  `exec` (eligibility, weighting, threshold for the action) and
-  `amend` (eligibility, weighting, threshold for amending this
-  entry). Layered per
-  [layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes);
-  amending an entry is a standard Proposal targeting
-  `governance.<action_key>`, gated by that entry's own `amend`
-  triple — governance of governance, scoped per rule. See §8.
-
-Concrete property types and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
-
-### CollectiveMember
-
-A `CollectiveMember` is a junction node (see
-[graph-model.md §2](../primitive/graph-model.md))
-connecting **Collective to User or Collective**. A Collective
-can be a member of another Collective — subsidiaries, holdings,
-partner firms, coalitions of bands under a label, households as
-members of a co-op. CollectiveMember is not restricted to human
-members.
-
-Per [user.md §3](../primitive/user.md#3-graph-side-properties),
-**every authored property is layered**. CollectiveMember
-properties accordingly accumulate layers on change; the
-appropriate decision-type instance in the Collective's social
-contract governs each change (promotions, equity adjustments,
-weight changes — see §8).
-
-- **`role`** — categorical: `'founder'`, `'shareholder'`,
-  `'worker'`, `'band member'`, `'subsidiary'`, `'partner'`,
-  `'member'`, etc. Open-ended per the social contract; the role
-  vocabulary is **Collective-specific**, not a global enum.
-  Layered. The vocabulary is **implicit** — it is the set of
-  strings used anywhere in the Collective's `governance` map
-  (§8) eligibility predicates plus the strings assigned to any
-  active member's `role`. Typos are amendable like any other
-  `role` change via a Proposal targeting `CollectiveMember.role`.
-- **`ownership_pct`** — when the role implies a stake (e.g.
-  shareholder). Layered when present.
-- **`voting_weight`** — optional direct weight override for
-  Collectives whose weight is not tied to equity (one-member-one-vote
-  with role-based multipliers, per-member negotiated weight,
-  etc.). Layered when present. See
-  [governance.md §2.3](../primitive/governance.md#23-weight-function).
-
-Role properties stay on the junction node rather than being
-encoded in edge dimensions — see
-[graph-model.md §2](../primitive/graph-model.md)
-for the reasoning. Concrete property types and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+A Collective the community defunds (severance netting its
+inbound stances to `(0,0)`) loses standing regardless of its
+internal health; a thriving internal membership buys no protocol
+standing by itself. Each authority is earned and lost on its own
+terms.
 
 ---
 
-## 4. Postgres-side content
+## 4. Acting through the Collective
 
-### Collective
+A Collective takes no gestures by itself: every record attributed
+to it is initiated by an authorized member — a User, or a
+sub-Collective acting recursively through its own authorized
+members. On the shared graph the Collective's actor signs; **no
+per-edge record of the acting member exists, deliberately.**
+Accountability for who may trigger the key lives in the social
+contract, not in per-record attribution — and internally holding
+members accountable is likewise the contract's business.
 
-A Collective's display content lives in Postgres, linked to the
-graph node by UUID. Edits are append-only per
-[layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
-a new version row, no overwrite.
+Two coarse gesture classes, with opposite defaults:
 
-- **`name`** — required; the handle used for mentions and
-  lookups, analogous to `users.username`. UNIQUE per instance.
-  Stored on the `collectives` row alongside the graph-side
-  `name` of the same value.
-- **`display_name`** — required; the human-readable label
-  surfaced in feeds and profile views.
-- **`description`** — optional body text describing what the
-  Collective is and what it does.
-- **`avatar_id`** — optional 1:1 FK to `media_attachments`,
-  analogous to `user_profile_versions.avatar_id`. See
-  [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments).
-- **`website_url`** — optional external link.
+- **Content-acts** — publishing, commenting, stances, tags.
+  **Default: any active member** may produce one. A Collective
+  that wants "only the press officer posts" declares an act-as
+  override.
+- **Governance-acts** — proposing or voting anywhere as the
+  Collective, settlement signatures (Accept/Ratify), founding
+  sub-Collectives, joining other Collectives. **Default: deny** —
+  an explicit act-as rule is required. A stray post is answerable
+  with another post; a stray Ratify binds the Collective
+  externally and permanently.
 
-Concrete schema lives in
-[data-model.md](../implementation/data-model.md).
-
-### CollectiveMember
-
-None. CollectiveMember is a pure graph-side junction node — no
-Postgres-side display content, no author-bearing row.
-
----
-
-## 5. Edges
-
-Per node — Collective in §5.1, CollectiveMember in §5.2.
-Dimension labels, sub-category labels, and traversal semantics
-are not duplicated here; see [edges.md](../primitive/edges.md).
-
-Every outgoing edge from a Collective is initiated through an
-authorized member (§2).
-
-### 5.1 Collective
-
-#### As source (outgoing)
-
-A Collective is an actor. Its outgoing **actor edges** are the
-full row in
-[edges.md §1 "Collective as actor"](../primitive/edges.md)
-— Collective → User, Collective → Post, Collective → Item,
-Collective → Proposal, etc. The `(dim1, dim2)` values are set by
-the acting member under the act-as rule routed by §2.
-
-It carries one outgoing **structural** edge type, system-created:
-
-- **`Collective → CollectiveMember` (`:APPROVAL`)** — the
-  approval side of the two-edge state pair. Created once
-  the collective's approval policy for the new member's role is
-  satisfied (§7). State transitions — member removal per §9 —
-  append additional `dim1 < 0` layers per
-  [graph-model.md §5](../primitive/graph-model.md).
-  See
-  [edges.md §2 "Approval completion"](../primitive/edges.md).
-
-#### As target (incoming)
-
-A Collective receives:
-
-- **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md) — sentiment
-  toward the collective and interest in its output, used by
-  [feed-ranking](../primitive/feed-ranking.md) and the follow /
-  interest surface.
-- **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
-  side of the two-edge state pair, paired with the
-  outgoing `Collective → CollectiveMember` above. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
-- **`ChatMember / CollectiveMember / ItemOwnership → Collective`
-  (`:BEARER`)** — identity-binding edges from junction nodes the
-  Collective bears (chat memberships, sub-collective memberships,
-  item ownerships). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md).
-- **`ChatMessage / Post / Comment → Collective` (`:REFERENCES`)**
-  when a content node mentions or embeds the Collective. See
-  [edges.md §2 "Reference"](../primitive/edges.md).
-- **`Proposal → Collective` (`:TARGETS`)** when a Proposal
-  targets a property on the Collective — `name`, any per-field
-  moderation-status property (§3), or any `governance.<action_key>`
-  entry (§8). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md).
-
-### 5.2 CollectiveMember
-
-#### As source (outgoing)
-
-A CollectiveMember is a junction, not an actor. It carries one
-claim edge, one bearer-binding edge, plus the Shape B vote edges
-its bearer casts as a collective-eligible voter:
-
-- **`CollectiveMember → Collective` (`:CLAIM`)** — the claim
-  side of the two-edge state pair, closed by the
-  collective's `Collective → CollectiveMember` approval edge
-  (§5.1) once the collective's approval policy is satisfied
-  (§7). See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
-- **`CollectiveMember → User/Collective` (`:BEARER`)** —
-  identity-binding edge written at junction creation, pointing
-  at the actor (User or sub-Collective) the membership
-  represents. Never re-pointed; the Shape A self-claim — the
-  bearer's vote on the admit-Proposal — must originate
-  from this actor (§7). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md).
-- **`CollectiveMember → Proposal` (Shape B vote)** —
-  collective-eligible vote on a Proposal. This is the sole vote
-  edge a CollectiveMember casts: admission, removal, and role
-  changes of a CollectiveMember each run through a Proposal
-  (§7, §9), alongside collective property changes and any other
-  decision-type instance in the social contract (§8). `dim1`
-  carries vote direction. See
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md)
-  and
-  [governance.md §3](../primitive/governance.md#3-the-ballot).
-
-#### As target (incoming)
-
-A CollectiveMember receives:
-
-- **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md) — personal
-  sentiment about the membership. The bearer's own **Shape A
-  self-claim** is not among these: it is the
-  `User/Collective → Proposal` edge authoring the membership's
-  admit-Proposal (§7), not an edge on the CollectiveMember.
-- **`Collective → CollectiveMember` (`:APPROVAL`)** — the
-  approval side of the two-edge state pair, paired with the
-  outgoing `CollectiveMember → Collective` claim above. Written
-  by the admit-Proposal's cascade; state transitions — removal
-  per §9 — append `dim1 < 0` layers on this edge per
-  [graph-model.md §5](../primitive/graph-model.md).
-- **`ChatMessage / Post / Comment → CollectiveMember`
-  (`:REFERENCES`)** when a content node embeds the membership
-  (e.g. spotlighting a co-op steward). See
-  [edges.md §2 "Reference"](../primitive/edges.md).
-- **`Proposal → CollectiveMember` (`:TARGETS`)** when a
-  Proposal targets a property on the CollectiveMember — `role`
-  changes (hire / fire / promote per the social contract),
-  `ownership_pct`, etc.
+**Act-as rules carry eligibility only** — an eligible member's
+gesture executes immediately. There is no multi-signer threshold
+on an outgoing gesture; where the Collective wants concurrence
+before acting outward (e.g. selling an item), it routes the
+gesture through a `decision:*` rule, and the cascade performs the
+gesture only after the internal vote passes (§6). When the acting
+member is itself a sub-Collective, its own contract authorizes
+its end first, recursively.
 
 ---
 
-## 6. Authorship
+## 5. Membership — a public fold
 
-### Collective
+Membership is **computed from public records, stored nowhere**.
+The mechanism is the payload-fold pattern that ballots and edits
+already use ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
+payload-marked `(0,0)` Opinion records, read individually by a
+published fold — routing-inert, vouch-inert, replayable by
+anyone.
 
-A Collective is the on-graph author of any node whose earliest
-incoming actor edge originates from it — the same
-earliest-incoming-edge rule that derives authorship for every
-node type ([authorship.md](../primitive/authorship.md)). On the
-graph that edge carries the `:AUTHOR` sub-label and originates at
-the Collective node itself. The gesture is initiated off-graph by
-an authorized CollectiveMember (§§2, 8), but the acting member is
-not recorded — querying "who authored this?" returns the
-Collective. See
-[authorship.md "Collective-authored content"](../primitive/authorship.md#collective-authored-content);
-the omission is the deliberate non-feature from §2.
+- **The member's side** — a payload-marked `(0,0)` Opinion toward
+  the collective's **Profile**: join, and later leave, as
+  newest-wins states on the member's own `≺`-chain. Leave is
+  unilateral — no approval, no vote.
+- **The collective's side** — a payload-marked `(0,0)` Opinion
+  toward the member's Profile: acceptance, and later revocation.
+  Both are **decision-backed**: the payload cites the anchor of
+  the passed internal decision that authorized the record
+  (`decision:add_member`, `decision:remove_member` — in whatever
+  shape the contract gives those entries, from CEO-unilateral
+  threshold-1 to full consensus), and **the fold recognizes only
+  decision-backed records** — the same recognition discipline the
+  chat fold applies to De-invites
+  ([chats.md §4](chats.md#4-membership)).
+- **The fold:** member iff both sides' newest membership-marked
+  records agree — the member's newest is a join and the
+  collective's newest is an acceptance. Order-free: either side
+  may move first (application vs. invitation); membership
+  materializes when the chains agree. A kick is the collective's
+  decision-backed revocation; re-joining afterward requires a
+  fresh agreement of both chains.
 
-A Collective is itself authored — its **author** is the User
-identifiable as the earliest layer-1 timestamp among the
-Collective's incoming CollectiveMember-claim edges (§1). The
-author-User is a graph-derivable identity, not a stored
-pointer; the role they hold on their CollectiveMember junction
-is whatever the social contract named for the inaugural role
-(commonly `founder`).
+**Roles and stakes ride the collective's records.** The
+acceptance and later update payloads carry the member's **role
+set**, `ownership_pct`, and any `voting_weight` override —
+newest-wins per member per field — so the collective's entire
+internal structure is public and replayable, tallies included.
 
-### CollectiveMember
+- **Multiple roles are the norm** — one member's role set can be
+  `{founder, board_member, CEO}`. Eligibility predicates test
+  set membership; where several of a member's roles appear in
+  one entry's weighting, the **highest applicable weight**
+  applies — summing would double-count the person.
+- **Sub-collectives:** a member may itself be a Collective; its
+  membership records are authored by its own actor, recursively.
+- **Costs:** both sides' records are `θ`-priced acts — the
+  member's community-funded, the collective's treasury-funded
+  ([economics.md](../primitive/economics.md)).
 
-A CollectiveMember is authored by its **bearer** — the actor the
-`:BEARER` edge points at, the identity it represents — via the
-bearer's `:AUTHOR` edge to the junction, written in the bearer's
-self-claim gesture (§7). Authorship is fixed by that label, not
-the earliest-incoming timestamp, since third-party `:ACTOR`
-sentiment can land on a pending junction first. See
-[authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship).
-
----
-
-## 7. Approval flow
-
-CollectiveMember admission runs the **junction lifecycle**
-described in
-[graph-model.md §5](../primitive/graph-model.md):
-admission is a fresh terminal `Proposal` that `:TARGETS` the new
-CollectiveMember.
-
-1. The junction and its **admit-Proposal** are created together,
-   by whichever side moves first. In the request flow the
-   **would-be member** (User or Collective) authors the
-   admit-Proposal — their **Shape A self-claim** to the
-   membership (`User/Collective → Proposal`; authorship is the
-   first vote). The system creates the pending
-   `CollectiveMember → Collective` claim edge and the
-   `CollectiveMember → User/Collective` `:BEARER` identity edge,
-   and the member writes their `bearer → CollectiveMember`
-   `:AUTHOR` edge, which authors the junction (§6). In the invite
-   flow the inviter creates the junction and `:BEARER`, and
-   authors the admit-Proposal: their Shape B approver vote is its
-   first vote, and they write their
-   `User/Collective → Proposal` `:AUTHOR` actor edge in the same
-   gesture
-   ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
-   The would-be member's acceptance is their Shape A self-claim
-   vote on the existing Proposal plus their `:AUTHOR` edge on the
-   junction.
-2. **Required approvers** — existing CollectiveMembers eligible
-   under the social contract for the target role — each cast a
-   **Shape B vote** from their own existing CollectiveMember to
-   the admit-Proposal (`CollectiveMember_approver → Proposal`,
-   `dim1 > 0`).
-3. Once the social contract's threshold is crossed, the Proposal's
-   cascade creates the `Collective → CollectiveMember` approval
-   edge. The membership is active.
-
-Approval policy depends on the target role — a new shareholder
-may require approval from existing founders and/or a threshold
-of current shareholders; adding a worker may be at founder
-discretion; adding a household member may need consensus.
-Multi-sig thresholds are expressed as "N Shape B votes from
-specific roles required," with role-weighted voting derived from
-the properties on the approving CollectiveMembers (per
-[governance.md §2.3](../primitive/governance.md#23-weight-function)).
-
-For the bootstrap case (founder's CollectiveMember at creation),
-this collapses to its `N = 0` form — no admit-Proposal node is
-materialized; see §1.
+**What is *not* membership:** real-stance Opinions between
+members and the collective's Profile — including the founding
+mutual pair (§1) — are ordinary stance fabric: they route, they
+vouch, they lift standing. The membership records are `(0,0)` and
+do none of that. Same family, distinguished by the payload mark —
+read individually, never through the netted bundle.
 
 ---
 
-## 8. Governance — the social contract
+## 6. The social contract
 
-A collective's **social contract** is its set of governance rules:
-which decisions need votes, who can vote on each, with what
-weights, and at what threshold. Different collectives have very
-different rules — a corporation's CEO can fire workers
-unilaterally; a household requires consensus for everything; a
-co-op uses 2/3 majorities for major decisions. The graph supports
-all of these without any primitive changes.
+The contract is the Collective's `governance` map — per-decision
+eligibility, weighting, threshold, and a per-entry `amend` triple
+(governance of governance, scoped per rule). The contract itself
+is **public, payload-borne state**: it rides the collective's
+**Registration payload** — the profile-content idiom — with
+amendments as parallel Registrations whose payloads cite the
+authorizing `amend` decision anchor, newest-wins per entry.
+Overlay and Postgres hold only operational mirrors and display.
+The machinery the map parameterizes is the house governance
+pattern ([governance.md](../primitive/governance.md),
+[proposal.md](proposal.md)).
 
-### The `governance` map
+**Decisions run at collective scope on L1**: the proposer authors
+a Content anchor plus a `(0,0)` Reference to the subject (a
+member decision points at the member's Profile, scope in the
+anchor payload); voters — the members themselves, each with their
+**own** actor — cast payload-marked ballot Opinions toward the
+anchor; the tally is the contract's formula (role weights,
+`ownership_pct` weighting, overrides) over the individual ballot
+records, snapshot at the anchor's landing epoch; the
+**finalization is authored by the Collective's own actor** —
+Opinion `(0,0)` + payload (outcome, tally digest) toward the
+anchor. Every internal vote is a priced public act, and the role
+and weight state the tally reads is itself public — the
+membership fold (§5) — so a collective-scope tally is
+world-verifiable end to end.
 
-The entire social contract lives in the layered
-`Collective.governance` map. The shape — `Map<String, Rule>`
-with paired `exec` / `amend` triples per entry, the self-applying
-`amend` rule, and the
-`target_property = 'governance.<action_key>'` /
-`value_kind = 'rule'` Proposal shape for amendments — is the
-primitive convention in
-[governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention).
-This subsection covers what's Collective-specific.
+### Action keys and dispatch
 
-### Action keys
-
-`action_key` strings follow conventions the dispatch layer
-**constructs from a member's gesture** — they are not
-arbitrary strings the Collective invents. The Collective
-writes rules under keys matching those conventions; the
-dispatch builds the candidate key the same way at gesture
-time and walks the fallback chain (below) until it finds an
-entry. Three reserved top-level namespaces:
-
-- **`decision:<operation>[:<role>]`** — Proposal-routed
-  Collective decisions. Most change Collective-internal
-  state — the `<operation>` enumerates what the cascade can
-  produce on `:Collective` or
-  `:CollectiveMember`: `add_member`, `remove_member`,
-  `change_role`, `change_ownership_pct`,
-  `change_voting_weight`, `set:<property>` (setting a
-  Collective field — `name` is a graph data property;
-  `display_name`, `description`, `avatar`, `website_url` are
-  Postgres display content, the graph carrying only their
-  per-field moderation status). A lone `change_ownership_pct`
-  is valid only when the 100% stake total still holds; a change
-  that shifts the total rides one of the composite operations
-  below. The optional `<role>` parameter refines
-  member-related operations by the affected member's role.
-  Composite Collective operations (`admit_shareholder`,
-  `transfer_shares`, …) take their own operation key paired
-  with a handler that knows the composite shape per
-  [proposal.md §2 "Composite proposals"](proposal.md#composite-proposals).
-  A decision entry can also gate the Collective's own outward
-  gesture: the key mirrors the `actas:` shape —
-  `decision:<gesture>:<target_type>`, e.g.
-  `decision:transfer:Item` — and the cascade performs the
-  gesture the matching `actas:` key would have executed
-  immediately (for `decision:transfer:Item`, the Collective's
-  signature in the [items.md §6](items.md#6-transfer-flow)
-  transfer flow), paired with a handler that knows the
-  gesture, mirroring the composite pattern. This form is the
-  only way to put concurrence on an outgoing gesture — act-as
-  rules carry eligibility only (§2).
-- **`actas:<gesture-identifier>`** — gating Collective
-  outgoing edges through an authorized member. The
-  gesture-identifier is derived from the actor edge being
-  produced — by convention `<gesture>:<target_type>`
-  (e.g. `actas:author:Post`, `actas:vote:Proposal`,
-  `actas:transfer:Item`) so the dispatch builds the key
-  deterministically from the would-be edge. **Two fixed
-  class fallback keys** are recognized:
-  `actas:content_default` and `actas:governance_default` —
-  so a Collective can override the §2 in-prose defaults at
-  class granularity without enumerating every gesture.
-- **`system:<key>`** — Collective-level meta keys when needed
-  (rare; the per-rule `amend` triple covers most cases).
-
-Within each namespace the Collective declares only the keys
-it wants to govern explicitly — the fallback chain (below)
-handles the rest.
-
-### Fallback chain at dispatch
-
-The dispatch layer constructs the most-specific applicable
-`action_key` from the gesture per the construction conventions
-above, then walks **most-specific to most-general** through
-`governance` until it finds a matching entry:
-
-1. Most-specific (with parameter): e.g. `actas:author:Post`
-   for "author a Post as the Collective", or
-   `decision:add_member:worker` for "admit a worker".
-2. Class-general (parameter dropped): e.g.
-   `actas:content_default` for any content-act, or
-   `decision:add_member` for any member admission regardless
-   of role.
-3. **In-prose default from §2:** allow any active member for
-   content-acts; deny for governance-acts and for
-   `decision:*` gestures without a matching key.
-
-A Collective only needs to declare rules where it wants to
-override the §2 in-prose defaults — the rest fall through.
-
-For `actas:*` entries only `exec.eligibility` is read: the
-gesture executes immediately when the acting member satisfies
-it (§2 — no multi-signer threshold for outgoing gestures). For
-`decision:*` entries the full gate applies, the threshold
-gating the Proposal's tally as usual.
-
-### Snapshot at author-time
-
-Collective Proposals apply the snapshot pattern from
-[governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time)
-via the
-[`rule_anchor`](proposal.md#2-terms) field —
-required on every Proposal. A Proposal authored under a
-`governance[X]` entry sets `rule_anchor = <Collective.id>`.
-Tally and cascade read `Collective.governance` as-of the
-Proposal's authorship-edge timestamp and index by `action_key`
-to recover the frozen Rule. Amendments committed mid-flight do
-not retroactively change in-flight Proposals' threshold,
-eligibility predicate, or weights. Voter applicability against
-the frozen predicate is still evaluated live at tally time —
-a voter who acquires the right role mid-flight counts; one
-who loses it drops via the eligibility-dropout cascade.
-
-### Simple and composite actions
-
-The `Rule` shape is uniform across all action keys. What
-differs is the Proposal's `value_kind` and `proposed_value`
-shape:
-
-- **Simple** — single property change.
-  `value_kind ∈ {'scalar:string', 'scalar:float',
-  'scalar:integer', 'rule'}`, `target_property` names the
-  property being changed. Examples: rename the Collective
-  (`scalar:string`, `target_property = 'name'`); tighten a
-  rule (`rule`, `target_property = 'governance.<action_key>'`);
-  fire a worker (the cascade writes the
-  `Collective → CollectiveMember` `:APPROVAL` state-transition
-  layer per §9); set a display-content field
-  (`set:display_name` / `set:description` / `set:avatar` /
-  `set:website_url`) —
-  Postgres version row, no graph layer, per the display-content
-  cascade in
-  [governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect).
-- **Composite** — multi-property atomic change across multiple
-  nodes. `value_kind = 'composite:<action_key>'`,
-  `proposed_value` is a handler-specific bundle of `_from` /
-  `_to` entries, `:TARGETS` points at the Collective node (the
-  owning entity). See
-  [proposal.md §2 "Composite proposals"](proposal.md#composite-proposals).
-  Examples: `composite:decision:admit_shareholder` (new member
-  + redistribute existing percentages so the total stays at
-  100%); `composite:decision:transfer_shares` (move N% from
-  one shareholder to another).
-
-The author-time invariant (e.g. "post-change percentages sum
-to 100%") and the cascade re-validation against current state
-are handler responsibilities per `action_key`, not primitive
-machinery.
+Keys are constructed from the gesture, never invented ad hoc:
+`decision:<operation>[:<role>]` for proposal-routed decisions
+(member operations, `set:<field>` property changes, composite
+operations like `admit_shareholder` / `transfer_shares` with
+handler-validated `_from`/`_to` bundles, and gated outward
+gestures like `decision:transfer:Item`); `actas:<gesture>` for
+outgoing-gesture eligibility, with `actas:content_default` and
+`actas:governance_default` as class-level fallbacks. Dispatch
+walks most-specific → class-general → the in-prose defaults of
+§4. A Collective declares only what it wants to override.
 
 ### No primitive defaults
 
-Unlike Chats — which default to community-vote moderation
-because that fits informal communities — Collectives must
-explicitly define their rules at creation. Creating a
-Collective is the act of writing its social contract. The
-example configurations below are starting templates, not
-enforced defaults.
-
-### Hierarchical authority is just a parameter choice
-
-The "no admin veto" stance from chat governance is a
-chat-specific default, not a primitive principle. A collective
-whose social contract gives the CEO `weight = ∞` (or just
-`exec.threshold = 1` with `exec.eligibility = role = CEO`) for
-the "fire worker" decision IS expressing CEO-unilateral
-authority — and the graph supports it. The primitive doesn't
-pick a power structure; the collective does.
+Unlike chats, Collectives ship with no default map: creating a
+Collective *is* writing its social contract. And hierarchy is
+just a parameter choice — a contract giving the CEO sole
+eligibility and threshold 1 on `decision:remove_member:worker`
+expresses CEO-unilateral authority; the substrate doesn't pick a
+power structure, the Collective does.
 
 ### Example configurations
 
-The roles below (`CEO`, `founder`, `board_member`,
-`shareholder`, `worker`, etc.) are **collective-specific** per
-§3 — each social contract defines its own role vocabulary; the
-primitive only requires it to be used consistently for that
-collective's eligibility and weight rules. Each table shows
-`exec` only; the `amend` triple for each entry is the
-Collective's choice (typically tighter than its `exec` — see
-the corporate example below).
+Role vocabularies below are collective-specific; tables show
+`exec` only.
 
-#### Corporate hierarchy
+**Corporate hierarchy** — founders, CEO, board, workers:
 
-A small company with founders, a CEO, board members, and
-workers.
+| `action_key` | `exec.eligibility` | `exec.threshold` |
+|---|---|---|
+| `decision:add_member:worker` | `role = CEO` | 1 vote |
+| `decision:remove_member:worker` | `role = CEO` | 1 vote |
+| `decision:add_member:board_member` | `role = founder`, weighted by `ownership_pct` | > 50% |
+| `decision:remove_member:board_member` | `role IN (founder, board_member)`, `exclude_subject` | ≥ 2/3 |
+| `decision:remove_member:CEO` | `role = board_member` | ≥ 2/3 |
+| `decision:admit_shareholder` *(composite)* | `role IN (founder, shareholder)`, weighted by stake | ≥ 75% |
+| `decision:transfer_shares` *(composite)* | `role = shareholder`, weighted by `ownership_pct` | ≥ 75% |
+| `actas:author:Post` | `role = press_officer` *(overrides any-member default)* | — |
+| `actas:vote:Proposal` | `role IN (CEO, board_member)` | — |
+| `decision:transfer:Item` | `role IN (founder, board_member)` | ≥ 2/3 |
 
-| `action_key`                                | `exec.eligibility`                                        | `exec.threshold` |
-|---------------------------------------------|-----------------------------------------------------------|------------------|
-| `decision:add_member:worker`                | `role = CEO`                                              | 1 vote           |
-| `decision:remove_member:worker`             | `role = CEO`                                              | 1 vote           |
-| `decision:change_role:worker`               | `role = CEO`                                              | 1 vote           |
-| `decision:add_member:board_member`          | `role = founder`, weighted by `ownership_pct`             | > 50%            |
-| `decision:remove_member:board_member`       | `role IN (founder, board_member)`, `exclude_subject`      | ≥ 2/3            |
-| `decision:remove_member:CEO`                | `role = board_member`                                     | ≥ 2/3            |
-| `decision:admit_shareholder` *(composite)*  | `role IN (founder, shareholder)`, weighted by stake       | ≥ 75%            |
-| `decision:transfer_shares` *(composite)*    | `role = shareholder`, weighted by `ownership_pct`         | ≥ 75%            |
-| `decision:set:name`                         | All active members                                        | > 50%            |
-| `actas:author:Post`                         | `role = press_officer` *(overrides any-member default)*   | —                |
-| `actas:author:Proposal`                     | `role = CEO`                                              | —                |
-| `actas:vote:Proposal`                       | `role IN (CEO, board_member)`                             | —                |
-| `actas:transfer:Item`                       | `role IN (founder, board_member)`                         | —                |
+Amendment cost calibrates per rule: the CEO-can-hire entry might
+amend at board majority while `transfer_shares` amends at ≥ 90%
+of shareholders — each rule self-describes its mutability.
 
-A worker is hired or fired by a single CEO vote; a board
-member is removed only by board supermajority; a CEO is removed
-only by the rest of the board. Routine PR posting is delegated
-to a single press officer (locking down the otherwise
-any-member default for content-acts), while consequential
-moves — proposing, voting, and transferring company assets —
-are routed to leadership and the board. `actas:*` rows carry no
-threshold — eligibility alone gates them, and any eligible
-member's gesture executes immediately (§2). Shareholder admissions
-and transfers are composite actions: the Proposal's bundle
-covers both the new/changed CollectiveMember junction and the
-redistributed `ownership_pct` values across affected members,
-atomic at cascade.
+**Household (5 people)** — equal voice, consensus dominates:
 
-Sample `amend` triples for the same Collective, showing how
-amendment cost is calibrated per rule:
+| `action_key` | `exec.eligibility` | `exec.threshold` |
+|---|---|---|
+| `decision:add_member` | all active members | 100% cast, 100% quorum |
+| `decision:remove_member` | all members, `exclude_subject` | ≥ 90% cast, 100% remaining quorum |
+| `decision:transfer:Item` | all active members | 100% cast, 100% quorum |
+| `actas:vote:Proposal` | all active members | — |
 
-| `action_key`                              | `amend.eligibility`                                       | `amend.threshold` |
-|-------------------------------------------|-----------------------------------------------------------|-------------------|
-| `decision:add_member:worker`              | `role IN (founder, board_member)`                         | > 50%             |
-| `decision:transfer_shares`                | `role = shareholder`, weighted by `ownership_pct`         | ≥ 90%             |
-| `decision:set:name`                       | `role IN (founder, board_member)`                         | ≥ 2/3             |
+The two outward governance-acts split on how binding one
+member's gesture is: a ballot the household casts in someone
+else's tally is revisable while that tally is live, so voting is
+delegated on trust; a settlement signature is consumed by the
+transfer it enables ([items.md §4](items.md#4-transfer-the-settlement-handshake)),
+so it routes through a unanimous decision.
 
-The CEO-can-hire rule is cheap to amend (board majority);
-share-transfer rules are expensive to amend (near-unanimous
-shareholders); the Collective's name is moderately gated. Each
-rule self-describes its mutability cost.
+**Worker co-op** — equal stake, officers for routine business:
 
-#### Household (5 people)
-
-| `action_key`                              | `exec.eligibility`                  | `exec.threshold`                          |
-|-------------------------------------------|-------------------------------------|-------------------------------------------|
-| `decision:add_member`                     | All active members                  | 100% of cast, 100% quorum                 |
-| `decision:remove_member`                  | All members, `exclude_subject`      | ≥ 90% of cast, 100% quorum of remaining   |
-| `decision:routine_spending`               | All active members                  | > 50%, ≥ 60% quorum                       |
-| `decision:transfer:Item`                  | All active members                  | 100% of cast, 100% quorum                 |
-| `actas:vote:Proposal`                     | All active members                  | —                                         |
-
-Everyone has equal voice; consensus dominates. Content-acts
-(posting to the household feed, reacting on shared content)
-are left at the any-member default — no override. The two
-outward governance-acts split on how binding one member's
-gesture is: the household's vote in someone else's tally is
-re-castable by any member while that tally is live, so
-`actas:vote:Proposal` delegates it on trust; the owner's
-signature on an Item transfer is the sole gate on the asset
-and irrevocable once the counterparty signs
-([items.md §6](items.md#6-transfer-flow)), so it routes
-through `decision:transfer:Item` — the cascade casts the
-household's signature only after unanimous agreement.
-
-#### Worker co-op
-
-All members equal stake; some routine decisions delegated to
-officers.
-
-| `action_key`                              | `exec.eligibility`              | `exec.threshold` |
-|-------------------------------------------|---------------------------------|------------------|
-| `decision:add_member`                     | All active members              | ≥ 2/3            |
-| `decision:remove_member`                  | All members, `exclude_subject`  | ≥ 2/3            |
-| `decision:routine_operations`             | `role = officer`                | > 50%            |
-| `decision:major_policy_change`            | All active members              | ≥ 2/3            |
-| `decision:change_capital_structure`       | All active members              | ≥ 75%            |
-| `decision:transfer:Item`                  | All active members              | ≥ 2/3            |
-| `actas:vote:Proposal`                     | All active members              | —                |
-
-The same split as the household: voting stays delegated to
-any member, while transferring co-op assets takes the
-two-thirds concurrence the rest of the contract runs on.
+| `action_key` | `exec.eligibility` | `exec.threshold` |
+|---|---|---|
+| `decision:add_member` | all active members | ≥ 2/3 |
+| `decision:remove_member` | all members, `exclude_subject` | ≥ 2/3 |
+| `decision:routine_operations` | `role = officer` | > 50% |
+| `decision:change_capital_structure` | all active members | ≥ 75% |
+| `decision:transfer:Item` | all active members | ≥ 2/3 |
+| `actas:vote:Proposal` | all active members | — |
 
 ---
 
-## 9. Lifecycle
+## 7. Items and shared ownership
 
-### Collective
-
-Collective nodes are **never deleted**. Per
-[layers.md §5](../primitive/layers.md#5-deletion-policy), the
-only permitted "removal" is in-place layer redaction on graph
-properties or a tombstone version row on Postgres-side display
-content; both preserve a visible record that the change occurred.
-
-**Invariant — always had a member:** Every Collective has, or at
-some point had, at least one active CollectiveMember. The
-founding gesture (§1) creates the founder's CollectiveMember
-atomically with the Collective node, so a Collective cannot
-come into existence empty. A Collective with **zero active
-members** is one that has **dissolved** — every member has left
-or been removed and no one currently acts on the Collective's
-behalf. The history is preserved: past members come and go via
-state transitions on the structural edges per
-[graph-model.md §5](../primitive/graph-model.md),
-and the chain of CollectiveMembers remains visible on the
-graph. A dissolved Collective node persists; only its acting
-capacity is gone.
-
-Moderation is the only redaction trigger on a Collective node
-itself ([moderation.md §1](moderation.md#1-the-two-classification-paths)) —
-typically targeting identity fields. Entries inside `governance`
-are in scope in principle but rarely the target.
-
-A redacted Collective is an anonymized but still-graph-resident
-actor, not a removed one. The Collective's UUID is stable
-across every redaction. CollectiveMember chains, authored
-content's authorship edges, owned items' ItemOwnership chains,
-and incoming references all remain valid pointers.
-
-### CollectiveMember
-
-CollectiveMember nodes are also **never deleted**. Membership
-changes follow the primitive — see
-[graph-model.md §5](../primitive/graph-model.md)
-("Revocation and state transitions"):
-
-- **Voluntary leave.** Self-determined, not a governance
-  decision: at the bearer's request the system appends a
-  `dim1 < 0` layer on the claim-side
-  `CollectiveMember → Collective` structural edge. The
-  CollectiveMember junction stays on the graph; the relationship
-  is revoked.
-- **Removal.** A fresh **removal-Proposal** (the social
-  contract's removal instance, e.g. `decision:remove_member`)
-  that `:TARGETS` the member's CollectiveMember. Eligible voters
-  cast Shape B votes from their own CollectiveMember to the
-  Proposal (`CollectiveMember_voter → Proposal`). When the
-  threshold is crossed the Proposal's cascade appends a
-  `dim1 < 0` layer on the approval-side
-  `Collective → CollectiveMember` edge.
-
-The shape of "removal" varies enormously across collectives — a
-1-of-1 CEO firing instance and a 2/3-of-board expulsion instance
-are both valid configurations parameterized in the social
-contract (§8). The Proposal mechanics are uniform; only the
-threshold differs.
+The Collective's actor holds title like any actor —
+`owner^(k)` names it, and its Accept/Ratify signatures run the
+ordinary settlement flow ([items.md](items.md)). This is how
+**shared ownership** works at all: the substrate has no
+co-ownership, so the couple's car and the co-op's tools are
+titled to a Collective, and the sharing *is* the membership.
+Internal disputes resolve by the contract, never on the thread.
 
 ---
 
-## 10. Economic role — no preferential treatment
+## 8. Lifecycle
 
-No actor type receives preferential treatment in ad-revenue
-distribution. Revenue follows graph topology, not actor type:
-whichever nodes have the most economic weight in a "rich" part of
-the graph — an influencer with massive reach, a bridging user that
-connects otherwise-disconnected communities, a niche collective in
-a dense neighborhood — receives a share proportional to that
-weight. See the fair-economics principle in
-[CLAUDE.md](../../CLAUDE.md) and the
-[economics primitive](../primitive/economics.md). The graph decides —
-actor type does not.
+- **Dissolution is a membership fact, not a graph one.** A
+  Collective whose last member leaves has no one who can trigger
+  its key — acting capacity is gone; the actor, its standing,
+  its titles, and its history persist. Members can never *not*
+  have existed: the membership record chains (§5) are permanent
+  public history.
+- **Deletion is the husk**, same as any account
+  ([account-deletion.md](account-deletion.md)): identity
+  association forgotten, Postgres tombstoned, payloads removed
+  to the reduced projection; standing, title, and trust edges
+  persist on L1.
+- **Moderation** on a collective's profile content is payload
+  removal + the verdict Tag, per
+  [moderation.md](moderation.md); profile fields update via
+  parallel Registration like any account
+  ([user.md](../primitive/user.md)).
 
-This applies symmetrically: commercial collectives that buy ads do
-not receive preferential placement, and non-commercial collectives
-(households, hobby groups, co-ops) are not penalized for not buying
-ads. A Collective takes its economic role graph-mechanically, not by
-type: it acts as an advertiser by creating a
-[Campaign](../primitive/economics.md#3-the-campaign-record), can be the
-anchor a campaign targets, and earns as a contributor only by sitting
-on an anchor → target path — the same attribution every actor gets.
+---
+
+## 9. Economic role — no preferential treatment
+
+Revenue follows graph topology, not actor type. A Collective
+acts as an advertiser by authoring a campaign anchor, can be the
+anchor a campaign targets, and earns as a contributor only
+through records on live paths — the same attribution every actor
+gets, under the same eligibility filter
+([economics.md](../primitive/economics.md)). Commercial
+collectives buy no placement; non-commercial ones lose nothing
+by not buying.
+
+A collective has **no inviter**: the 1% inviter share tied to its
+earnings falls back to burn
+([economics.md §7.3](../primitive/economics.md#73-the-inviter-reward)) —
+deliberately. A collective's makeup can drift arbitrarily far
+from its founding cast, so no one holds a permanent claim on its
+earnings; and since the share is carved from burn rather than
+from the earner's payout, earning through a collective gains
+nobody anything either way.
 
 ---
 
 ## What this doc is not
 
-- **Not the edge catalog.** Per-target-type edges with dimension
-  labels live in [edges.md](../primitive/edges.md).
-- **Not the governance primitive.** The five components, two
-  vote shapes, tally-time eligibility rule, and weight-at-tally-time
-  rule live in [governance.md](../primitive/governance.md).
-- **Not the moderation primitive.** The Proposal mechanism, the
-  mod gate, eligibility, thresholds, and the redaction cascade
-  live in [moderation.md](moderation.md).
-- **Not the deletion mechanism.** The redaction primitive lives
-  in [layers.md §5](../primitive/layers.md#5-deletion-policy);
-  the per-row legal hold and archive disposition live in
-  [retention-archive.md](../primitive/retention-archive.md).
-- **Not the Memgraph or Postgres schema.** Concrete property
-  types, columns, indexes, and the `collectives` row shape live
-  in
+- **Not the governance machinery.** Anchors, ballots, tallies,
+  snapshots, and composite handlers live in
+  [governance.md](../primitive/governance.md) and
+  [proposal.md](proposal.md).
+- **Not the account model.** The Actor + Profile pair, identity
+  association, and the husk live in
+  [user.md](../primitive/user.md) and
+  [account-deletion.md](account-deletion.md).
+- **Not the settlement flow.** [items.md](items.md).
+- **Not the store schemas.** Mirror shapes and Postgres display
+  rows live in
   [graph-data-model.md](../implementation/graph-data-model.md)
   and [data-model.md](../implementation/data-model.md).
-- **Not the auth path for member gestures.** How a User's session
-  authenticates a request that produces a Collective edge lives
-  in [auth.md](../implementation/auth.md);
-  [user.md §1](../primitive/user.md#1-user-vs-collective) is the
-  short version.
+- **Not the auth path.** How a member's session authenticates a
+  gesture that the Collective's key signs lives in
+  [auth.md](../implementation/auth.md).

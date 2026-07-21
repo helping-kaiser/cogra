@@ -1,268 +1,159 @@
 # Hashtag
 
-The **Hashtag** is a topic node — a label that content nodes
-attach to via `:TAGGING`. It sits in its own category
-([nodes.md §5](../primitive/nodes.md)) because its
-identity is **content-addressed**. The UUID
-is `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` with a fixed
-project-scoped namespace, derived from the canonical name
-rather than minted at random. That choice cascades through
-everything else this doc describes — creation is implicit on
-first use, idempotent across actors, and federation across
-instances requires no reconciliation.
+The **Hashtag** is CoGra's topic surface. On the substrate a
+hashtag *is* an L1 **Type** node — a named semantic anchor
+([substrate-map.md §2](../primitive/substrate-map.md#2-content)).
+Type identity is **named**: the node is `name(s)`, compared by
+byte equality, anchored vacuously
+([layer1-interface.md §9.3](../primitive/layer1-interface.md#93-node-types)).
+A Type is a **commons** — nobody authors it, nobody owns it, and
+every L2 that references the same byte string touches the same
+node. That one fact drives everything else in this doc.
+
+Types are not only hashtags: moderation verdict categories and
+role names ride the same node type
+([moderation.md](moderation.md),
+[network.md](../primitive/network.md)). This doc covers the
+mechanism once, from the topic angle.
 
 ---
 
-## 1. Creation
+## 1. Identity and the naming service
 
-A Hashtag is **brought into existence implicitly by the first
-edge that needs it**. No actor authors it, and no explicit
-"create hashtag" gesture exists. When a Post, Comment, or Item
-is created carrying a tag string — tags are explicit structured
-inputs on the authoring gesture; frontends may derive them from
-the body, the API never parses bodies — the API:
+L1 compares names by **byte equality** and nothing else —
+`#BotDefense` and `#botdefense` would be two unrelated Types.
+Canonicalization is therefore CoGra's job, the **L2 naming
+service**:
 
-1. Normalizes the tag string — currently lowercase, no `#`.
-2. Computes the UUID via
-   `UUIDv5(HASHTAG_NAMESPACE, canonical_name)`.
-3. Upserts the `:Hashtag` node (the graph node, the registry
-   row in Postgres — see §3 — and the `name` graph property
-   are written together, idempotently).
-4. Writes the `Post → Hashtag`, `Comment → Hashtag`, or
-   `Item → Hashtag` `:TAGGING` edge.
+- **Normalization.** Tag strings are normalized (lowercase, no
+  `#`) before any record is submitted, so every CoGra-authored
+  reference to a topic lands on the canonical Type.
+- **The registry.** CoGra keys its own stores by
+  `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` — a deterministic
+  function of the name, so the Postgres registry row and every
+  cache agree with the L1 identity by construction. The
+  namespace UUID and the normalization rule are load-bearing
+  schema: changing either strands every previously derived key
+  ([data-model.md](../implementation/data-model.md)).
+- **Reserved names.** The bootstrap names (`moderator`,
+  `illegal`, `sensitive`, `bot-defense`) are seeded CoGra-side
+  in the registry with the same content-addressed keys — stable
+  regardless of when each name first lands on L1
+  ([network.md](../primitive/network.md)).
 
-Because the UUID is a pure function of the canonical name,
-step 3 is **idempotent**: a second post tagging the same
-name in the same instance, or in any other instance running
-the same namespace UUID, computes the same UUID and lands on
-the same node. The "first" use is only first relative to a
-given instance's storage — semantically, every reference to
-`bot-defense` is to *the* `bot-defense` Hashtag, by
-construction.
-
-The canonical-name normalization and the namespace UUID are
-**load-bearing schema**, not UI affordances — changing
-either invalidates every previously-derived Hashtag UUID.
-The full mechanism, the namespace-fixity rule, and the
-federation implication live in
-[data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies).
-
-### Federation implication
-
-The content-addressed UUID is what makes Hashtag the only
-node type for which federation across separated instances is
-free of reconciliation. Two instances that have never
-communicated, each holding a `:Hashtag` with `name =
-"bot-defense"`, hold *the same node* — the UUIDs are equal
-by construction. When their graphs are later joined,
-federated, or synchronized, no merge layer or alias table is
-needed for hashtags. Every other node type — User,
-Collective, Post, Comment, etc. — requires a federation
-protocol to decide whether two same-named or independently-
-created records refer to the same identity (per
-[data-model.md](../implementation/data-model.md#node-identity-strategies),
-deferred to [open-questions.md](../open-questions.md) Q15).
-Hashtag side-steps that question entirely.
+Cross-instance identity needs no reconciliation at all: the Type
+is a commons on the shared graph itself. Two L2s that have never
+communicated and tag `bot-defense` are already tagging *the*
+`bot-defense` node — by L1's identity algebra, not by any
+federation protocol.
 
 ---
 
-## 2. Graph-side properties
+## 2. Creation
 
-A Hashtag node carries the minimum the graph needs to
-traverse, filter, and rank. There is no Postgres-side
-display content (§3).
-
-- **`name`** — the canonical tag string (lowercase, no
-  `#`). Immutable except via the redaction cascade (§5).
-  The tag *is* the identifier in the everyday sense, but
-  the graph key is still the UUID; `name` is mathematically
-  redundant with the UUID by the content-addressing rule
-  (§1) yet is stored explicitly so the graph can render the
-  tag without a Postgres lookup and so name-redaction (§5)
-  has a field to act on. Data; per-field status carried
-  separately by `name_status`.
-- **`name_status`** — the per-field moderation-status
-  property for `name`, the Hashtag's one and only user-input
-  field. Universal mechanics in
-  [nodes.md](../primitive/nodes.md);
-  Hashtag-specific cascade in §5 below.
-- **`moderation_status`** — node-level cache per
-  [nodes.md](../primitive/nodes.md).
-  Mirrors `name_status` since `name` is the only user-input field.
-
-Concrete property types and indexes for these graph-side
-properties live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+There is no creation gesture. A Type is anchored **vacuously**:
+it exists as soon as some accepted record references its name in
+an endpoint field, and semantically every reference to a name is
+a reference to the same node regardless of which record came
+first. No actor authors a Type, no `θ` is paid for the Type
+itself — the referencing act (a Tag, an Affinity) is the priced
+record. There is nothing to approve, nothing to own, and no
+author for account deletion to touch.
 
 ---
 
-## 3. Postgres-side content
+## 3. Acts around a Type
 
-Hashtag has **no Postgres-side display content** — no body,
-no description, no media, no profile material. The reason
-flows from §1: a Hashtag is a topic identifier, not authored
-content. There is nothing to display beyond the tag string
-itself, which already lives on the graph.
-
-A small `hashtags` registry row does exist in Postgres
-(`id`, `name`, `created_at`) per
-[data-model.md](../implementation/data-model.md), but it is
-a name-lookup and enumeration aid (autocomplete, alphabetical
-indexing) rather than display content. The `id` column has
-no `DEFAULT` — the API must always supply the deterministic
-UUIDv5; falling back to a random UUID would silently break
-content-addressing for any row that hit the fallback. This
-is the only Postgres table where the rule "the API always
-supplies the UUID" is enforced by *removing* the default
-rather than just by convention.
-
----
-
-## 4. Edges
-
-### As source (outgoing)
-
-A Hashtag is a pure target — no outgoing edges of any kind.
-
-### As target (incoming)
-
-**No actor edge to Hashtag.** A Hashtag receives no actor
-edges from anyone. The catalog has no `User → Hashtag` or
-`Collective → Hashtag` row
-([edges.md §1](../primitive/edges.md)); "liking
-a hashtag" is not a graph operation. A Hashtag is nonetheless
-a feed-ranking **target** — reached through the content tagged
-to it — *and* a discovery **filter** over that content; the
-two uses are independent
-([feed-ranking.md §5.3](../primitive/feed-ranking.md#93-what-is-rankable)).
-
-**Feed-ranking mechanics.** `:TAGGING` is **traversable but
-non-contributing**: a ranking path reaches a Hashtag through
-it, the hop adding one step of `d(R)` decay and no
-`(dim1, dim2)` factor (pure topology). A Hashtag has no
-outgoing edges, so any path that reaches one terminates there —
-it is a sink, ranking *into* it amplifies nothing downstream,
-and it needs no traversal restriction
-([feed-ranking.md §3.1](../primitive/feed-ranking.md#4-the-path-set)).
-The Hashtag is then ranked by `h` like any node. The
-`ChatMessage → Hashtag` `:REFERENCES` edge below is the one
-inbound edge that *does* contribute a factor — it carries a
-`(dim1, dim2)` tensor like any reference.
-
-The structural edges that do land at a Hashtag:
-
-- **`Post → Hashtag` `:TAGGING`** when a Post is tagged
-  with this hashtag.
-- **`Comment → Hashtag` `:TAGGING`** when a Comment is
-  tagged with this hashtag.
-- **`Item → Hashtag` `:TAGGING`** when an Item is tagged
-  with this hashtag. See
-  [edges.md §2 "Tagging"](../primitive/edges.md)
-  for the full source catalog.
-- **`ChatMessage → Hashtag` `:REFERENCES`** when a chat
-  message embeds the hashtag (e.g. surfacing a topic feed
-  into a chat). ChatMessage is the only carrier for this
-  edge: Post and Comment reach Hashtag via `:TAGGING`, and a
-  single structural edge per (source, target) pair is the
-  rule — see the Hashtag carve-out in
-  [edges.md §2 "Reference"](../primitive/edges.md).
-  Unlike `:TAGGING`, this `:REFERENCES` carries a
-  `(dim1, dim2)` tensor and contributes a factor to the
-  ranking path — the one inbound edge through which a Hashtag
-  accrues reference-borne signal.
-- **`Proposal → Hashtag` `:TARGETS`** when a moderation
-  Proposal targets the Hashtag's `name_status` (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md);
-  cascade in §5.
+- **Tagging content** — the **Tag** hyper-edge
+  (Actor → content → Type), at creation or later; relevance and
+  confidence ride the act
+  ([edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)).
+  Authorship is unconstrained: the content author's tag declares
+  the content's own topics, and anyone else's tag is a
+  third-party topic claim the feed reads through its author,
+  mirroring the reference channels (§4).
+- **Following a topic** — an **Affinity** record (Actor → Type):
+  relevance, not verdict — its sign is coherence, never a
+  standing vouch. Affinity is the follow gesture the topic feed
+  reads (§4).
+- **Stances** — Opinion → Type is native: liking or rejecting a
+  topic is an ordinary graph act, full vocabulary. The old
+  no-actor-edges-to-Hashtag prohibition is gone — what it
+  protected against is handled as feed policy, not topology
+  (§4).
+- **Commentary** — Reviews of a Type mint Comments like
+  anywhere else and change nothing about the Type: no semantics,
+  no tags, no standing, no gates
+  ([comment.md](comment.md)).
+- **References** — a Message or any other artifact citing a
+  topic does so with a Reference targeting the Type.
 
 ---
 
-## 5. Lifecycle
+## 4. Feed role
 
-Hashtag nodes are **never deleted**. Per
-[layers.md §5](../primitive/layers.md#5-deletion-policy),
-the only permitted "removal" is in-place layer redaction on
-graph properties; both preserve a visible record that the
-change occurred.
+**Types are forward-traversal sinks — CoGra's declared traversal
+policy.** A ranking path may end *at* a Type (topics are rankable
+targets) but never continues *through* one — even though the L1
+census gives Types outgoing legs, CoGra's path set excludes them
+as transit ([feed-ranking.md](../primitive/feed-ranking.md)).
+That policy is what killed the old hashtag-amplifier fear: a
+popular topic aggregates reach for itself, never relays it into
+somebody's content.
 
-There is no authorship section for the Hashtag — by §1 a
-hashtag has no author. The "earliest incoming layer-1 edge"
-rule from
-[authorship.md](../primitive/authorship.md) does not
-meaningfully apply: the first edge a Hashtag receives is
-typically a `:TAGGING` edge from whichever Post, Comment,
-or Item happened to be created first, but that actor is the
-author of the *tagging node*, not of the topic. Hashtags
-are registry concepts, not authored content; account
-deletion of any one contributor has no effect on the
-Hashtag itself.
+The **topic feed** is a named opt-in read-side feed: content
+surfaced over Tag records toward the viewer's followed
+(Affinity) Types, ranked by the same primitive as everything
+else. Which tags count is channel-gated like citations: the
+content author's own declarations, plus third-party tags whose
+authors the viewer actually reaches at forward weight — never
+every stranger's
+([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+The default feed stays untouched by follows.
 
-Moderation
-([moderation.md §1](moderation.md#1-the-two-classification-paths))
-is the only redaction trigger on a Hashtag. The cascade does
-**not** propagate across `:TAGGING` edges in either direction —
-classifying a Hashtag illegal does not redact the Posts and
-Items that tag it, and vice versa.
+---
 
-Hashtag-specific reading of `'sensitive'`: the flag is a
-**passive filter on incidental exposure**, not a block on
-intentional retrieval. A viewer whose
-`content_filtering_severity_level` (see
-[data-model.md](../implementation/data-model.md) "User
-preferences") filters sensitive content sees no presence of the
-hashtag on nodes that tag or reference it — the frontend drops
-the chip or renders a neutral placeholder (frontend choice).
-Direct retrieval is unaffected: typing the exact name into a
-search box still resolves to the Hashtag node and the
-`:TAGGING` / `:REFERENCES` edges from there.
+## 5. Moderation and lifecycle
 
-**Invariant:** `:Hashtag.name` is immutable except via the
-redaction cascade. No property-amendment Proposal targeting
-`name` is admissible; the only mechanism that can write a
-new layer on `name` is the `'illegal'` moderation cascade
-above. Both moderation paths leave the UUID untouched.
+A Type has no records of its own — nothing mints it, no payload
+rides it — so there is **nothing to remove**. Its name is not
+payload either: the byte string is a structural endpoint
+identifier inside every referencing accepted record, and
+accepted records are immutable. An offensive tag name therefore
+**cannot be erased from the shared graph** — suppression is
+read-side, CoGra's own:
 
-The Hashtag's UUID is stable across redaction. Because the
-UUID was derived from the *original* canonical name, a
-future post that tags the same name computes the same UUID
-and resolves to the same — now-redacted — node. Content-
-addressed identity holds even after the public name is
-gone; the UUID is permanently bound to the original string
-by construction. A redacted Hashtag is a graph-resident
-content node with its `name` field gutted, not a removed one.
+- **The verdict mark** is The Moderator's **Tag `(0,0)` +
+  payload** toward a named moderation Type — substrate-visible,
+  newest per (target, Type)
+  ([moderation.md](moderation.md)).
+- **Rendering** follows the verdict: an `illegal`-marked topic
+  name is not rendered on CoGra surfaces (chips, autocomplete,
+  search suggestions); the registry row is tombstoned per
+  [moderation.md](moderation.md).
+- **`sensitive` is a passive filter on incidental exposure, not
+  a block on intentional retrieval.** A viewer whose filtering
+  level screens sensitive content sees no topic chip on tagged
+  content; typing the exact name still resolves — direct
+  retrieval is a deliberate act.
+
+The redaction cascade does not propagate across Tag records in
+either direction: marking a topic does not touch the content
+tagged with it, and vice versa.
 
 ---
 
 ## What this doc is not
 
-- **Not the node identity primitive.** The three identity
-  strategies (canonical-string / chosen-handle /
-  per-creation), the UUIDv5 mechanism, the namespace-fixity
-  rule, and the federation implications across all node
-  types live in
-  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies).
-- **Not the feed-ranking spec.** How a hashtag-driven
-  discovery surface is composed — which posts, in what
-  order, with what decay — lives in
-  [feed-ranking.md](../primitive/feed-ranking.md). The
-  bot-defense hashtag worked example in
-  [feed-ranking.md §3.8.3](../primitive/feed-ranking.md#86-community-evidence)
-  is a usage convention layered on top of the primitive
-  this doc describes, not part of the primitive itself.
-- **Not the moderation primitive.** The Proposal mechanism,
-  the mod gate, eligibility, thresholds, and the redaction
-  cascade live in [moderation.md](moderation.md).
-- **Not the deletion mechanism.** The redaction primitive
-  lives in
-  [layers.md §5](../primitive/layers.md#5-deletion-policy);
-  the per-row legal hold and archive disposition live in
-  [retention-archive.md](../primitive/retention-archive.md).
-- **Not the edge catalog.** The full set of edges
-  Hashtag participates in, with row-level meanings and
-  label assignments, lives in
+- **Not the naming-service schema.** The registry-row shape,
+  namespace fixity, and key derivation live in
+  [data-model.md](../implementation/data-model.md).
+- **Not the feed-ranking spec.** How the topic feed composes,
+  what "sink" means for the path set, and the opt-in feed
+  taxonomy live in
+  [feed-ranking.md](../primitive/feed-ranking.md).
+- **Not the moderation mechanism.** Verdict flow and tombstone
+  mechanics live in [moderation.md](moderation.md).
+- **Not the edge catalog.** Tag, Affinity, and Reference
+  semantics with census pointers live in
   [edges.md](../primitive/edges.md).
-- **Not the Memgraph or Postgres schema.** Concrete
-  property types, columns, indexes, and the registry-row
-  shape live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).

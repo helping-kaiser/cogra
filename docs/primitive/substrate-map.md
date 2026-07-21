@@ -29,8 +29,8 @@ mechanics live in each concept's own doc.
 | Email | off-graph | Authentication and recovery only. Admission is the θ-debit plus invitation (below), never an email check. |
 | CoGra-join / inviter referral | gesture | A separate relation from chat invitations: mutual-pair-and-accept-gated. Any number of members may point an edge at a joiner's Profile; the inviter is the single actor the joiner reciprocates first. The referral reward fires only on that mutual pair. L1 is the truth home for the relation. See [invitations.md](invitations.md). |
 | CoGra admission | gesture | An AND gate: the actor clears L1's write rule (θ-debit surface) **and** holds an accepted CoGra invitation (the mutual pair above). Funding for the debit side: [economics.md](economics.md). |
-| Collective | gesture | **One L1 Actor + Profile**, keypair and L0 address held in backend custody. Founding: backend creates the pair, the θ-debit is treasury-funded, founder Opinions toward the collective Profile lift its standing. See [collectives.md](../instances/collectives.md). |
-| Collective membership | overlay | Pure L2: an overlay junction node per member plus Postgres display content; role, `ownership_pct`, voting weight, and governance map as layered overlay properties. No L1 membership edge exists. Mutual member ↔ collective-Profile Opinions remain ordinary stance fabric. |
+| Collective | gesture | **One L1 Actor + Profile**, keypair and L0 address held in backend custody (stopgap — custody design is open, Q29). Founding: backend creates the pair, the θ-debit is treasury-funded, the founder ↔ collective mutual Opinion pair connects it to the graph, and the social contract rides the Registration payload. See [collectives.md](../instances/collectives.md). |
+| Collective membership | gesture | A public payload fold: the member's payload-marked `(0,0)` Opinion toward the collective's Profile (join/leave) paired with the collective's decision-backed acceptance/revocation toward the member's Profile — member iff both newest records agree. Role sets, `ownership_pct`, and weight overrides ride the collective-side payloads, newest-wins per member per field. Real-stance member ↔ collective-Profile Opinions remain ordinary stance fabric. See [collectives.md §5](../instances/collectives.md#5-membership--a-public-fold). |
 | network_role | overlay | A layered overlay property: `member` / `moderator` / `collective` (a class label conferring nothing). Moderator status is materialized on L1 as The Publisher's role Tag toward the Profile (newest wins); the overlay mirrors it. Verdict and governance eligibility are person-accountability surfaces. See [network.md](network.md). |
 | Account deletion | off-graph | The husk: identity association forgotten, Postgres tombstoned, payloads removed to reduced projection. Standing, title, and trust edges persist on L1; names and words go. No L1 gesture exists for deletion. See [account-deletion.md](../instances/account-deletion.md). |
 
@@ -60,7 +60,7 @@ mechanics live in each concept's own doc.
 | Stance toward a person | gesture | **Opinion → Profile** — the interpersonal stance carrier. Vouch-positive stances (`p_d > 0 ∧ p_i > 0`) feed the target's standing through endorsement flow; everything else is routing/stance signal only. |
 | Stance toward a collective | gesture | Opinion → the collective's Profile — same carrier, same vouch semantics. |
 | Follow a topic | gesture | **Affinity** (Actor → Type) — relevance, not verdict. Its feed effect is feed policy, not topology: [feed-ranking.md](feed-ranking.md). |
-| Tagging content | gesture | The **Tag** hyper-edge (Actor → content → Type), authored by the content's author. |
+| Tagging content | gesture | The **Tag** hyper-edge (Actor → content → Type) — authored by anyone. The content author's tag is the content's own topic declaration (content-intrinsic); a third party's tag reaches the Type only through its own author, mirroring the reference channels ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)). |
 | Reference / quote / embed / mention | gesture | An L1 **Reference** hyper-edge (Actor → citing artifact → target): the quoting Post or Comment points at the cited node; nothing is minted. A mention targets the person's **Profile** — positive, effortful mentions are weak, priced vouches. The feed crosses a reference's **citation leg** only through its two channels — content-intrinsic (the reference's author owns the carrier) or initiator-owned (reached through the reference's author) ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)); attribution reads the same shared paths, so quoted authors are credited by the path math ([economics.md](economics.md)). |
 | Stance revision | gesture | A new L1 record in the author's same-target bundle — records are chronicles, never overwritten. The endorsement-flow projection nets same-author bundles (sum-then-clip); presentation of "current vs. history" is L2. |
 | Severance | gesture | Authoring counter-edges that net the bundle to `(0,0)` — routing-inert for every consumer of the projection. A viewer-side blocklist is separate read-side comfort: [feed-ranking.md](feed-ranking.md). |
@@ -134,9 +134,10 @@ show the full range:
 - **Chat membership** has no object on either side of the seam: it
   is a derived fold over the member's own Participant and Leave
   records (§4). Nothing is stored; everything is computed.
-- **Collective membership** is an object, but a purely CoGra-side
-  one — the overlay junction node with its layered role properties
-  (§1). L1 never sees it.
+- **Collective membership** is also computed, but from *payload
+  semantics*: a published fold over payload-marked `(0,0)` records
+  on both sides (§1) — public and replayable, yet read by no L1
+  rule.
 - **Item ownership** is purely L1-side: the settlement thread and
   the title certificate (§6). CoGra holds no ownership state of its
   own.

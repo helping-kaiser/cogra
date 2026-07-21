@@ -56,8 +56,10 @@ both kinds resolve to the same grounded pair.
   an L2 registration rule. See [user.md](user.md).
 - **Collective** — a group acting through a single graph identity:
   one L1 **Actor + Profile**, keypair and L0 address in backend
-  custody. Its members, roles, and internal governance are CoGra
-  overlay and Postgres state (§3); L1 sees one ordinary actor. See
+  custody (custody model open — Q29). Its membership, roles, and
+  social contract are public payload-borne records with
+  CoGra-published folds; L1's math reads none of it — it sees one
+  ordinary actor. See
   [collectives.md](../instances/collectives.md).
 
 In prose, "actor" means an L1 Actor node — the referent of every
@@ -81,7 +83,12 @@ never sees them.
 |---|---|
 | **Proposal** | The governance carrier: proposed change, tally state, and role snapshot as layered properties. The public relations all live on L1 via the proposal's Content anchor: the subject (the anchor's `(0,0)` Reference), the ballots (payload-marked Opinions toward the anchor), and the finalization edge ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). See [proposal.md](../instances/proposal.md). |
 | **Network** | Singleton per instance: the governed parameter home — feed-calibration parameters, subsidy knobs, eligibility definitions — as layered properties. Anchored on L1 by a publisher-authored Content node (the network charter): proposals about the Network target that anchor, and every passed parameter change lands as a witnessed payload on its finalization Opinion toward the anchor, so the parameter schedule is replayable from public records. The overlay singleton is the operational carrier the ranker and backend read. See [network.md](network.md). |
-| **CollectiveMember** | The membership junction of a Collective: role, `ownership_pct`, voting weight, and governance map as layered properties, plus Postgres display content. See [collectives.md](../instances/collectives.md). |
+
+Collective membership needs no overlay node: it is a public fold
+over payload-marked records on both sides, with roles and stakes
+riding the collective-side payloads — any membership state in the
+stores is mirror cache, never truth
+([collectives.md §5](../instances/collectives.md#5-membership--a-public-fold)).
 
 Every proposal subject is an L1 node, named by the anchor's `(0,0)`
 Reference. Proposals about a member within a chat or collective

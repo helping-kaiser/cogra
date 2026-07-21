@@ -1,455 +1,232 @@
 # Items
 
-An **Item** is a content node representing a physical or digital good
-— something that can be owned, transferred, and talked about. Items
-are interactable content: they can be liked, disliked, commented on,
-and tagged with hashtags.
+An **Item** is a physical or digital good — something that can be
+owned, transferred, and talked about. On the substrate an Item
+*is* an L1 **Item** node, and ownership is **L1's settlement
+machinery adopted wholesale**
+([substrate-map.md §6](../primitive/substrate-map.md#6-items-and-ownership)):
+the ownership thread of Owner / Bid / Accept / Ratify records,
+folded at every epoch boundary into the published title
+certificate `owner^(k)`. **CoGra never authors title — it reads
+it.** No ownership junction, no transfer proposal, no CoGra-side
+ownership state exists.
 
-Marketplace-like Item flows aren't the focus of the first CoGra
-iterations (posts and chats are), but the Item and ItemOwnership
-model below is committed: shipping order is sequenced, the design
-is not deferred.
-
-This doc covers two related nodes — the **Item** content node and
-the **ItemOwnership** junction node — plus the convention for
-shared ownership through a Collective.
-
----
-
-## 1. Creation
-
-An Item is created by a single compound gesture from one actor —
-either a User or a Collective. Unlike a Post, Item creation is
-**compound**: it brings the Item AND the author's first
-ItemOwnership into existence in one atomic step, with the author
-as the initial owner. There is no separate "list" then "claim
-ownership" flow.
-
-The gesture writes the following records atomically:
-
-- A new `:Item` node on the graph.
-- The Postgres `items` entity row plus the first `item_versions`
-  row carrying the name and description
-  (see [data-model.md](../implementation/data-model.md)).
-- `item_attachments` rows for each piece of attached media (zero
-  or more).
-- An actor edge from the author toward the Item — the
-  **authorship edge** (§5). Its `(dim1, dim2)` values are the
-  author's initial opinion of their own item, typically high
-  positive sentiment and relevance.
-- A new `:ItemOwnership` junction node for the author.
-- The `ItemOwnership → User/Collective` `:BEARER` structural
-  edge, binding the junction to the author.
-- The `ItemOwnership → Item` claim edge.
-- The `Item → ItemOwnership` approval edge with positive top
-  layer (`dim1 > 0`).
-- The author's `bearer → ItemOwnership` `:AUTHOR` edge, which
-  authors the junction (§5).
-
-With no prior owner to cast a Shape B vote, the
-[junction lifecycle](../primitive/graph-model.md)
-collapses to its `N = 0` special case: the author's Shape A
-self-claim is the only required vote, no admit-Proposal node is
-materialized, and the system writes both structural edges
-atomically alongside it. Same bootstrap shape as the founder's
-`CollectiveMember` in
-[collectives.md "Creation"](collectives.md#1-creation) and the
-founder of a Chat in
-[chats.md §2.1](chats.md#21-chat). Subsequent transfers run
-through a transfer-Proposal (§6).
-
-A Collective creating an Item is the same gesture: the graph
-records the Item as the Collective's, and the off-graph
-authentication that produced it traces — possibly through nested
-CollectiveMember chains — back to one or more Users with active
-sessions per
-[user.md §1](../primitive/user.md#1-user-vs-collective) and
-[auth.md](../implementation/auth.md). Whether member consent is
-required is determined by the Collective's social-contract
-treatment of content-acts per
-[collectives.md "Acting through the Collective"](collectives.md#2-acting-through-the-collective).
+Marketplace flows aren't the focus of the first CoGra iterations
+(posts and chats are), but the ownership model below is
+committed; only the money rail is deferred (§6).
 
 ---
 
-## 2. Graph-side properties
+## 1. Creation (listing)
 
-### Item
+Listing a good is the author's **genesis Owner** record
+(Actor → Item): its identity key mints the Item and roots the
+ownership thread
+(`def:graph:item-genesis`,
+[layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)).
+Like Publish, Owner is a single-parameter family — `p_d` = the
+attachment `a`, `p_i` fixed at `1` — and **title is
+sentiment-blind**: an `a = 0` Owner still anchors the thread,
+routing-inert but title-bearing.
 
-An Item node carries only what the graph needs to traverse,
-filter, and rank. Substance lives in Postgres (§3).
+Item **identity is declarative**: the Item *is* its genesis
+record. Two actors listing "the same" real-world good create two
+Items with two independent threads — title at L1 is title over a
+**registered claim**, never custody of a referent; the mapping
+from claim to physical object is a social fact, deterred from
+abuse by accountability cost.
 
-The Item carries per-field moderation-status properties on
-**`name`**, **`description`**, and **`attachments`** (every
-attached media under one status — see
-[moderation.md §5](moderation.md#5-scope) on per-attachment
-targeting), plus the node-level `moderation_status` cache. The
-Item's `name` has no graph-side uniqueness or content-addressing
-requirement (unlike `User.username` or `Hashtag.name`), so the
-per-field property uses the field name directly with no separate
-data sibling — the actual name string lives in Postgres (§3).
-Universal mechanics in
-[nodes.md](../primitive/nodes.md);
-Item-specific cascade in §8.
-
-The current owner is **not** stored as a property on the Item;
-it is derived from the single ItemOwnership whose
-`Item → ItemOwnership` approval edge has a positive top layer
-(§7). Concrete property types and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
-
-### ItemOwnership
-
-ItemOwnership carries no per-instance properties beyond its
-`id` — transfer state lives entirely in the surrounding edges
-(claim, approval, and supersession layers per §§6-7). Bearer
-identity rides on the `ItemOwnership → User/Collective`
-`:BEARER` edge written at creation; see §1 and
-[edges.md §2 "Bearer binding"](../primitive/edges.md).
-Concrete types and indexes live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+Name, description, and media digests ride the payload envelope;
+license qualifiers are declared at authoring time; Postgres
+display rows and the mirror are derived surfaces — all exactly as
+for a Post ([post.md §1](post.md#1-creation)). A Collective lists
+through its own actor ([collectives.md](collectives.md)).
 
 ---
 
-## 3. Postgres-side content
+## 2. Items as content
 
-### Item
-
-An Item's display content lives in Postgres, linked to the graph
-node by UUID. Edits are append-only per
-[layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
-a new version row, no overwrite.
-
-- **`name`** — required. The handle the Item is listed under.
-  Stored on `item_versions` rows.
-- **`description`** — optional body text. Stored on
-  `item_versions` rows.
-- **Attachments** — images and other media via the
-  `item_attachments` junction table, which carries per-attachment
-  `display_order` and an optional `is_cover` flag analogous to
-  `post_attachments`. Each row references one `media_attachments`
-  asset, owned by the same author as the Item (anti-hijack rule
-  per
-  [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
-
-Concrete schema lives in
-[data-model.md](../implementation/data-model.md).
-
-### ItemOwnership
-
-None. ItemOwnership is a pure graph-side junction node — no
-Postgres-side display content, no author-bearing row.
+An Item is a full content surface, independent of its
+marketplace role: **Opinion** stances (like/dislike, full
+vocabulary), **Review** commentary
+([comment.md](comment.md)), **Tag** topics — the lister's own or
+third-party ([hashtag.md](hashtag.md)), and **Reference** quotes/embeds from
+other artifacts — all native, all feed-visible
+([feed-ranking.md](../primitive/feed-ranking.md)).
 
 ---
 
-## 4. Edges
+## 3. Ownership and title
 
-Dimension labels, sub-category labels, and traversal semantics
-live in [edges.md](../primitive/edges.md).
+The **ownership thread** is the boundary-indexed chain rooted at
+the genesis Owner record, extended at each epoch boundary by the
+title fold; the **title certificate** `owner^(k)` maps each Item
+to the thread's terminal actor and is published by L1 alongside
+the epoch certificate.
 
-### 4.1 Item
+CoGra's posture toward it is strictly **consume-only**:
 
-#### As source (outgoing)
-
-An Item is not an actor and authors no actor edges. It carries
-two outgoing structural edge types, both system-created:
-
-- **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
-  of the two-edge state pair. Written by the transfer-Proposal's
-  cascade when the current owner's approval satisfies the policy
-  (§6). **State transitions on
-  this edge are the supersession mechanism described in §7**:
-  when a subsequent transfer completes, the previous
-  `ItemOwnership`'s `Item → ItemOwnership` top layer flips to
-  `dim1 < 0` automatically. This Edges section catalogues only
-  the edge type and direction; the layer mechanics live in §7.
-  See
-  [edges.md §2 "Approval completion"](../primitive/edges.md).
-- **`Item → Hashtag` (`:TAGGING`)** — one edge per hashtag the
-  Item is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md). The
-  Hashtag node is content-addressed by canonical name (per
-  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
-  so the same hashtag across instances resolves to the same
-  node.
-
-#### As target (incoming)
-
-An Item receives:
-
-- **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md) — the
-  like/dislike surface plus per-viewer relevance, used by
-  [feed-ranking](../primitive/feed-ranking.md) to weight the
-  Item for each viewing user. The earliest of these is the
-  authorship edge (§5).
-- **`Comment → Item` (`:CONTAINMENT`)** when a Comment is
-  written on the Item. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
-- **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
-  two-edge state pair, paired with the outgoing
-  `Item → ItemOwnership` above.
-- **`ChatMessage / Post / Comment → Item` (`:REFERENCES`)** when
-  another content node embeds the Item — a message sharing it
-  into a chat, a Post recommending or citing it, a Comment
-  pointing at it. See
-  [edges.md §2 "Reference"](../primitive/edges.md).
-- **`Proposal → Item` (`:TARGETS`)** when a moderation Proposal
-  targets one of the Item's per-field moderation-status
-  properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md);
-  cascade in §8.
-
-### 4.2 ItemOwnership
-
-#### As source (outgoing)
-
-ItemOwnership is a junction, not an actor. It carries:
-
-- **`ItemOwnership → Item` (`:CLAIM`)** — the claim side of the
-  two-edge state pair, closed by the item's
-  `Item → ItemOwnership` approval edge (§4.1) once the
-  transfer-Proposal passes (§6). At Item creation the
-  claim and approval are written in the same atomic gesture
-  (§1 bootstrap). See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
-- **`ItemOwnership → User/Collective` (`:BEARER`)** — identity-
-  binding edge written at junction creation, pointing at the
-  actor the ownership represents. Never re-pointed; the Shape A
-  self-claim — the bearer's vote on the transfer-Proposal —
-  must originate from this actor (§§1, 6). See
-  [edges.md §2 "Bearer binding"](../primitive/edges.md).
-- **`ItemOwnership → Proposal` (Shape B vote)** — the current
-  owner's approval vote on a transfer-Proposal moving the Item
-  to a new ItemOwnership (§6). `dim1 > 0` approves the transfer.
-  This is the sole vote edge an ItemOwnership casts. See
-  [edges.md §2 "Voting (Shape B)"](../primitive/edges.md).
-
-#### As target (incoming)
-
-An ItemOwnership receives:
-
-- **Actor edges** from Users and Collectives per
-  [edges.md §1](../primitive/edges.md) — personal
-  sentiment about the ownership record. The acquirer's own
-  **Shape A self-claim** is not among these: it is their
-  `User/Collective → Proposal` vote on the transfer-Proposal
-  (§6), not an edge on the ItemOwnership.
-- **`Item → ItemOwnership` (`:APPROVAL`)** — the approval side
-  of the two-edge state pair, paired with the outgoing
-  `ItemOwnership → Item` claim above. Written by the
-  transfer-Proposal's cascade; supersession layers per §7 ride
-  on this edge — see §4.1 for the carve-out.
-- **`ChatMessage / Post / Comment → ItemOwnership`
-  (`:REFERENCES`)** when a content node embeds an ownership
-  record — e.g. a Post citing a provenance chain. See
-  [edges.md §2 "Reference"](../primitive/edges.md).
+- The current owner of any Item is a certificate lookup, never a
+  graph traversal and never a CoGra-stored fact.
+- Authorship and ownership are distinct: the lister (`creator`
+  of the genesis record) is immutable; `owner^(k)` changes with
+  each settled transfer.
+- An Owner record not reachable from genesis through boundary
+  transfers is *orphaned* — it persists (append-only) but
+  carries no title force. Nobody can write themselves into a
+  thread.
+- Title never lapses. A deleted account's husk still holds its
+  titles ([account-deletion.md](account-deletion.md)); transfer
+  out of a husk follows the same settlement flow as any other,
+  requiring the key holder's records.
 
 ---
 
-## 5. Authorship
+## 4. Transfer: the settlement handshake
 
-An Item's author is the actor whose incoming actor edge has the
-earliest layer-1 timestamp — the same earliest-incoming-edge rule
-that derives authorship for every node type
-([authorship.md](../primitive/authorship.md)). At creation, the
-author's actor edge is written in the same compound gesture as the
-Item node and the bootstrap ItemOwnership (§1) and carries the
-`:AUTHOR` sub-label; the author's edge is the earliest incoming
-actor edge by construction.
+The `Bid → Accept → Ratify` sequence **is** the transfer flow —
+three authored, priced records, plus two cancel families. No
+state changes through inaction, counting, or timeout; cleanup is
+an authored choice.
 
-**Authorship and ownership are distinct.** The author is the
-**author** — the actor who minted, listed, or registered the
-Item; this is immutable and derived from the earliest actor edge.
-The **current owner** is whoever holds the active ItemOwnership
-(§7) and changes with each transfer. An Item authored by one User
-and currently owned by a different User or by a Collective is the
-typical case after one or more transfers.
+1. **Bid** (Actor → Item → Offer) — the buyer's offer; the
+   terminal leg mints the **Offer** node. Signed generosity and
+   urgency ride the act; a predatory Bid is stance-visible per
+   leg.
+2. **Accept** (seller → buyer) — the owner's consent, carrying a
+   settles-pointer to the Bid's identity key. Not binding alone.
+3. **Ratify** (buyer → seller) — the buyer's commit, its
+   settles-pointer matching the Accept's.
+4. **Withdraw** (buyer → Offer) / **Rescind** (seller → Offer) —
+   the cancel records; control records, no sentiment.
 
-Each ItemOwnership is authored by its **bearer** — the owner it
-represents — via the bearer's `:AUTHOR` edge to the junction,
-written in the self-claim gesture that accepts the ownership (§6).
-Authorship is fixed by that label, not the earliest-incoming
-timestamp, since third-party `:ACTOR` sentiment can land on a
-pending junction first. See
-[authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship).
-This is distinct from the Item's author above: the Item is
-authored once by its minter; each successive owner authors their
-own ItemOwnership.
+**Title moves at the epoch certificate, not at the Ratify.** At
+each boundary, a candidate triple is recognized iff the six
+clauses of settlement recognition hold — completeness, pointer
+binding, authorization (the Accept's author is the certified
+owner at the prior boundary — the straddler that reads title back
+into admission), buyer consent, seller consent, well-formedness
+([layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)).
+The consequences CoGra's UX must surface honestly:
 
----
+- **The regret window.** Consent is epoch-quantized: a Withdraw
+  or Rescind co-epochal with (or earlier than) the Ratify defeats
+  the sale; one in a strictly later epoch is inert. Until the
+  boundary certificate, either side can still walk.
+- **Ties consume.** Conflicting co-epochal commits from one owner
+  consume *all* candidates without transfer — the incumbent
+  retains title, and the Item stays fully transferable at later
+  boundaries. Mutual invalidation, not permanence.
+- **Consumption is permanent.** A consumed candidate can never
+  found recognition again; retrying a failed purchase requires
+  fresh records, each a priced act.
+- **First epoch wins.** A Ratify landing one boundary after a
+  competitor's transfer fails the authorization clause — the
+  owner changed under it.
 
-## 6. Transfer flow
-
-ItemOwnership runs the **junction lifecycle** described in
-[graph-model.md §5](../primitive/graph-model.md):
-a transfer is a fresh terminal **transfer-Proposal** that
-`:TARGETS` the new ItemOwnership. It needs two signatures — the
-acquirer's **Shape A self-claim** (they have no ItemOwnership for
-this item yet, so it is necessarily Shape A) and the current
-owner's **Shape B approval** (`ItemOwnership_current → Proposal`,
-`dim1 > 0`). Either party can open the Proposal:
-
-- **Owner-first (offer / sale).** The current owner opens the
-  transfer-Proposal — casting their Shape B approval and writing
-  their `User/Collective → Proposal` `:AUTHOR` actor edge in the
-  same gesture
-  ([authorship.md "Proposal authorship"](../primitive/authorship.md#proposal-authorship)).
-  The system creates the new ItemOwnership junction, binding it
-  by `:BEARER` to the named acquirer, plus the
-  `ItemOwnership → Item` claim edge. The transfer is pending
-  until the acquirer self-claims on the Proposal — writing their
-  `bearer → ItemOwnership` `:AUTHOR` edge, which authors the
-  junction (§5).
-- **Buyer-first (bid / request).** An interested acquirer authors
-  the transfer-Proposal — their `User/Collective → Proposal`
-  Shape A self-claim. The system creates the new ItemOwnership
-  junction with its claim and `:BEARER` edges, and the acquirer
-  writes their `bearer → ItemOwnership` `:AUTHOR` edge. The
-  transfer is pending until the current owner signs with their
-  Shape B
-  approval. Handy for a marketplace where buyers approach sellers.
-
-When both signatures are present the approval policy is satisfied
-(single-approver: just the current owner), and the Proposal's
-cascade:
-
-1. creates the `Item → ItemOwnership` approval edge — the new
-   ItemOwnership is now active; and
-2. writes the supersession layer on the previous
-   `Item → ItemOwnership_current` edge with `dim1 < 0`, marking
-   the old ownership revoked (§7).
-
-No one can take ownership without the current owner's Shape B
-vote — there is no "take" operation in the graph. The Item-
-creation bootstrap (§1) is the one exception. The Shape B vote
-flows from the very ownership record that's about to be revoked
-— fitting, since approving the transfer is the same act that
-ends the voter's own ownership.
+There is no "take" operation anywhere: every transfer runs
+through the owner's own Accept.
 
 ---
 
-## 7. Supersession: exactly one active ItemOwnership per item
+## 5. Commercial reputation
 
-When a transfer completes and the new `Item → ItemOwnership`
-approval edge is created, the system **automatically** adds a new
-layer on the **previous** ItemOwnership's `Item → ItemOwnership`
-approval edge with `dim1 < 0` — marking it revoked.
-This uses the general state-transition mechanism on structural
-edges described in
-[graph-model.md §5](../primitive/graph-model.md).
+CoGra **adopts L1's terminal default** as its published read
+rule: positive commercial reputation on a settled trade holds iff
+all three stance marginals are positive — buyer generosity
+(Bid), seller comfort (Accept), buyer confirmation (Ratify) — a
+conjunction over stances, never the parity product (which would
+reward predatory-meets-coerced)
+(`rem:graph:settlement-reputation`).
 
-**Invariant — single active ownership:** At most one
-ItemOwnership per Item has a positive top layer on its
-`Item → ItemOwnership` approval edge at any time. Identifying the
-current owner is therefore a single-edge query — "find the
-ItemOwnership whose `Item → ItemOwnership` top layer has
-`dim1 > 0`" — with no timestamp comparisons required.
-
-Concurrent transfer attempts are prevented at the transaction
-level rather than by a separate lock. Only the current owner can
-cast the Shape B approval vote (§6); the same service-layer
-transaction that writes that vote also writes the new
-`Item → ItemOwnership` approval edge and the supersession layer
-on the previous one. Once the transaction commits, the casting
-ItemOwnership is no longer the active one and so can no longer
-cast a second Shape B vote — the authority required to initiate
-a transfer is consumed by the transfer it initiates. A
-concurrent second transfer attempt by the same owner is
-serialized behind the first by the transaction and fails the
-current-owner check when it runs.
-
-**Invariant — append-only ownership chain:** ItemOwnership nodes
-and the layers on their approval edges are never deleted. The
-old approval edge isn't removed on transfer, just superseded by
-a newer layer that flips its state to revoked. Every past owner
-of an Item remains visible on the graph as a revoked
-ItemOwnership; only the active one changes.
+Commerce also leaves ordinary interpersonal fabric: Accept and
+Ratify are actor-directed records, and stance-positive ones are
+person-vouch acts like any other — good-faith trade is part of
+how standing grows
+([layer1-interface.md §11.3](../primitive/layer1-interface.md#113-stance-aggregation-and-the-person-vouch-act)).
 
 ---
 
-## 8. Lifecycle
+## 6. The money seam
 
-### Item
+L1 holds no value, locks nothing, adjudicates nothing — it
+records Offers and ownership changes. The money side is CoGra's,
+and the seam is fixed even though the rail is deferred:
 
-Item nodes are **never deleted**. Per
-[layers.md §5](../primitive/layers.md#5-deletion-policy), the only
-permitted "removal" is in-place layer redaction on graph
-properties or a tombstone version row on Postgres-side display
-content; both preserve a visible record that the change occurred.
-
-Moderation is the only redaction trigger on an Item
-([moderation.md §1](moderation.md#1-the-two-classification-paths)) —
-content-level account deletion does not sweep up Items per
-[account-deletion.md §1](account-deletion.md#1-two-redaction-levels)
-(Items are goods, not first-person expression).
-
-**Account deletion of an owner.** The User node
-persists with redacted PII, the ItemOwnership chain UUIDs remain
-valid, and ownership continues to resolve. If the deleted owner
-is the current owner, the Item continues to be owned by that
-(now-anonymous) User node. A subsequent transfer follows the
-regular transfer-Proposal flow (§6) — the graph mechanics are
-unchanged by PII redaction.
-
-The Item's UUID is stable across every redaction. Authorship
-caches, the ItemOwnership chain, comments, references, and
-tagging edges all remain valid pointers.
-
-### ItemOwnership
-
-ItemOwnership nodes are also **never deleted**. A transfer
-supersedes the previous ItemOwnership via the supersession layer
-(§7); the old node and its edges remain in the graph as part of
-the item's ownership history.
-
-An item with **no** active ItemOwnership — no positive top layer
-on any `Item → ItemOwnership` edge — is considered **abandoned**.
-The history of all previous owners remains visible in the layer
-stacks. Whether and how an abandoned item can be re-acquired is
-a marketplace-layer concern not yet specified by the graph
-model.
+- **Price is a term on the Bid payload** — witnessed, public,
+  part of the offer the seller accepts.
+- **Money settles on CoGra's token rail**: a CGT `:TRANSFERS`
+  with CoGra escrow, released against the **epoch certificate**
+  in which the settlement is recognized and title-transferring —
+  the deterministic commit anchor the escrow observes. Never
+  against the Ratify, which is inside the regret window.
+- **Listing, pricing UX, and escrow mechanics** are the deferred
+  marketplace workstream; the rail design lives with
+  [ledger.md](../implementation/ledger.md) and
+  [economics.md](../primitive/economics.md). Ownership rides L1
+  settlement regardless — a barter or gift transfer needs no
+  rail at all.
 
 ---
 
-## 9. Shared ownership routes through a Collective
+## 7. Editing
 
-**Invariant — no parallel co-ownership:** An Item has at most one
-active ItemOwnership at any time (§7); the graph does not support
-parallel ItemOwnership junctions for the same Item by different
-actors. Shared ownership must route through a Collective: the
-Collective holds the single ItemOwnership, and internal sharing
-is the Collective's social contract, not a graph-level mechanism.
+The node-value update rule
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)),
+instantiated for Items:
 
-A married couple co-owning a car, three roommates sharing a coffee
-machine, a band co-owning equipment, a co-op holding tools — all
-of these are modeled as: a Collective node, the sharing actors as
-its CollectiveMembers (see [collectives.md](collectives.md)), the
-Collective as the holder of the ItemOwnership. Internal disputes
-are resolved by the Collective's own governance, not by
-parallel-ItemOwnership voting on the graph.
+- **Carrier:** Opinion `(0,0)` + payload toward the Item.
+- **Eligible author:** the **current certified owner** —
+  `owner^(k)` as of the edit record's landing epoch (the lister,
+  initially). Ownership changes hands; the editing right follows
+  the certificate, and a superseded owner's later edit records
+  are written but never win the fold.
+- **Granularity:** per field — name, description, media manifest.
+
+The genesis record, the thread, and the license qualifiers never
+edit; every edit is a priced act with public history.
+
+---
+
+## 8. Shared ownership routes through a Collective
+
+`owner^(k)` maps each Item to **one** actor — the substrate has
+no co-ownership. Sharing routes through a **Collective**: the
+collective's single actor holds title, and the sharing — a
+couple's car, a co-op's tools, a band's equipment — is the
+collective's own membership and social contract
+([collectives.md](collectives.md)). Internal disputes are
+resolved by collective governance, never by parallel claims on
+the thread.
+
+---
+
+## 9. Lifecycle
+
+Item nodes and every settlement record are permanent. Content
+removal is payload removal to the reduced projection — triggered
+by moderation verdicts; goods are not first-person expression,
+so content-level account deletion never sweeps Items
+([moderation.md](moderation.md),
+[account-deletion.md](account-deletion.md)). Identity, pointer
+resolution, and **title survive every payload state** — a
+fully-reduced Item still has an owner, a thread, and a
+tradeable claim.
 
 ---
 
 ## What this doc is not
 
-- **Not the edge catalog.** Per-target-type edges with dimension
-  labels live in [edges.md](../primitive/edges.md).
-- **Not the moderation primitive.** The Proposal mechanism, the
-  mod gate, eligibility, thresholds, and the redaction cascade
-  live in [moderation.md](moderation.md).
-- **Not the deletion mechanism.** The redaction primitive lives
-  in [layers.md §5](../primitive/layers.md#5-deletion-policy);
-  the per-row legal hold and archive disposition live in
-  [retention-archive.md](../primitive/retention-archive.md);
-  the account-deletion flow lives in
-  [account-deletion.md](account-deletion.md).
-- **Not the Memgraph or Postgres schema.** Concrete property
-  types, columns, indexes, and the `item_attachments` /
-  `media_attachments` shapes live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
-- **Not the marketplace UX or transaction shape.** Listing,
-  pricing, escrow, transfer-confirmation UX, and any economic
-  records that accrue around ownership transfers are future
-  work. The graph model committed to above is the substrate they
-  will build on.
+- **Not the settlement spec.** The recognition predicate, the
+  title fold, order-freeness, and the frontier caveats live in
+  [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition).
+- **Not the marketplace.** Listing surfaces, price discovery,
+  escrow flows, and the CGT rail are the deferred workstream
+  ([ledger.md](../implementation/ledger.md)).
+- **Not the update rule.** Fold semantics live in
+  [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates).
+- **Not the edge catalog.** Family semantics and census pointers
+  live in [edges.md](../primitive/edges.md).
+- **Not the store schemas.**
+  [data-model.md](../implementation/data-model.md) and
+  [graph-data-model.md](../implementation/graph-data-model.md).

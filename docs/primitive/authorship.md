@@ -1,166 +1,115 @@
 # Authorship
 
-Authorship in CoGra is a **derived fact**, not a stored field. The
-author of a node is the actor whose incoming edge has the earliest
-layer 1 timestamp. A node cannot exist without someone creating it, so
-the very first edge ever created toward a node identifies the author.
-Two node kinds derive it differently: junctions are authored by their
-**bearer**, fixed by the `:AUTHOR` label rather than the timestamp —
-see [Junction authorship](#junction-authorship) — and the
-Collective is authored through its founder's junction — see
-[Collective authorship](#collective-authorship).
+Authorship in CoGra is **intrinsic to every L1 record** — never
+derived, never stored as an edge, never inferred from timestamps.
+Each accepted record carries its author as part of its identity:
+`author(e)` is a field of the record and a component of the
+identity key
+([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
+There is no authoring edge, no author label, and no
+earliest-incoming-edge rule — the question "who authored this?"
+is answered by reading the record, not by traversing anything.
 
-**"Creator" is a synonym for "author"; "author" is canonical.**
-Wherever a User or Collective is described as "creating" a node
-— Item, Chat, ChatMessage, Post, Comment, Proposal — the on-graph
-fact is the same: they hold the earliest-layer-1 incoming edge,
-the `:AUTHOR` label, and the rights and obligations that
-authorship carries. "Founder" is *not* a synonym — it is the
-CollectiveMember **role string** used inside a Collective (see
-[graph-model.md §5 "Bootstrap"](graph-model.md)
-and [collectives.md §1](../instances/collectives.md#1-creation)).
+**"Creator" and "author" are the same fact; "author" is
+canonical.** The stance parameters on an authoring record are the
+author's real stance riding the same act — attachment on a
+Publish, enthusiasm and effort on a Review — separate from the
+author binding itself, and defaulted low like every stance
+([invitations.md §3](invitations.md#3-default-values-and-customization)).
 
-The dimension values on the author's edge are just normal opinion
-values — the author's initial feelings about their own content
-(typically high positive sentiment and relevance).
+---
 
-## Example
+## Node creators
 
-Jakob creates a post. His actor edge `Jakob → Post_X` is layer 1, with
-the earliest timestamp of any incoming edge on Post_X. That makes Jakob
-the author. Later, Alice likes the same post — her edge
-`Alice → Post_X` also has a layer 1, but its timestamp is later than
-Jakob's. The author is always the earliest.
+A minted node's creator is fixed at genesis by its minting
+record's author — declarative, immutable, part of the node's
+identity forever:
 
-## Collective-authored content
+| Node | Creator = author of |
+|---|---|
+| Content (Post) | its Publish record |
+| Item | its genesis Owner record |
+| Chat | its founding Participant record |
+| Comment | its minting Review hyper-edge |
+| Message | its minting Send hyper-edge |
+| Offer | its minting Bid hyper-edge |
 
-When a Collective is the author, the rule is unchanged: the
-on-graph author is the actor whose incoming edge has the
-earliest layer-1 timestamp, and that actor is the Collective
-itself. The gesture that produced the edge is initiated
-off-graph by an authorized CollectiveMember per the Collective's
-social contract (see
-[user.md §1](user.md#1-user-vs-collective) and
-[collectives.md "Acting through the Collective"](../instances/collectives.md#2-acting-through-the-collective)),
-but no acting-member identity is recorded on the authorship
-edge. Querying "who authored this?" returns the Collective; the
-member who initiated the gesture is not derivable from the
-authored node.
+The grounded pair (Actor, Profile) is anchored by the actor's own
+self-signed Registration. A **Type has no author** — it is a
+named commons, anchored vacuously
+([hashtag.md](../instances/hashtag.md)).
 
-## Graph-layer label — `:AUTHOR`
+---
 
-The authoring edge is the one actor edge that carries a sub-label
-distinct from `:ACTOR` — `:AUTHOR` — per
-[edges.md §3 "Sub-category labels"](edges.md).
-The label is the system's mechanical implementation of the
-"earliest incoming edge" rule above: created at the same gesture as
-the authoring edge, permanent across re-layerings, and
-queryable in a single label scan.
+## Author is not owner, and not founder
 
-`:AUTHOR` is also load-bearing for the feed-ranking author-hop
-traversal rule ([feed-ranking.md §3.5](feed-ranking.md#4-the-path-set)),
-which terminates `:REFERENCES`-to-actor paths after exactly one
-outgoing `:AUTHOR` hop.
+- **Author ≠ owner.** An Item's creator is the actor who listed
+  it, immutable; its **owner** is `owner^(k)` — the published
+  title certificate, changing with each settled transfer.
+  **Title is consume-only: CoGra reads the certificate and never
+  authors ownership** ([items.md](../instances/items.md)).
+- **Author ≠ founder.** "Founder" is a role string inside a
+  Collective's social contract — CoGra-side membership state.
+  The shared graph does not record who founded a Collective; the
+  Collective's own records are authored by the Collective's
+  actor, full stop.
 
-Same tensor shape, same `[-1, +1]` range, same append-only layer
-semantics as any actor edge — only the label differs.
+---
 
-## Junction authorship
+## Collective-authored records
 
-A junction (`ChatMember`, `CollectiveMember`, `ItemOwnership`) is
-authored by its **bearer** — the actor the junction represents. The
-authoring edge is the bearer's `User/Collective → junction` actor
-edge carrying the `:AUTHOR` sub-label, written in the same gesture as
-the bearer's self-claim — the act of claiming or approving the
-relationship (see
-[graph-model.md §5](graph-model.md)). Its
-dimensions are the bearer's stance on holding the membership or
-ownership, like any actor edge.
+When a Collective authors, `author(e)` is the Collective's actor.
+The gesture was initiated by some authorized member under the
+act-as rules, but **no acting-member identity exists on the
+record, deliberately** — accountability lives in the social
+contract
+([collectives.md §4](../instances/collectives.md#4-acting-through-the-collective)).
+Querying authorship returns the Collective; the initiating member
+is not derivable from the shared graph.
 
-For junctions the author is fixed by the **`:AUTHOR` label, not the
-earliest-incoming-edge timestamp.** A junction receives third-party
-`:ACTOR` sentiment edges (others endorsing or rejecting the
-membership), and in an invite flow the junction exists — bound to its
-prospective bearer by `:BEARER` — before the bearer self-claims, so a
-third party's sentiment edge can carry an earlier timestamp than the
-bearer's authoring edge. The label resolves it: the bearer's
-`:AUTHOR` edge is the author whichever incoming edge is earliest.
-Third-party sentiment is never authorship.
+---
 
-`:BEARER` (junction → bearer) and `:AUTHOR` (bearer → junction)
-coexist and point opposite ways: `:BEARER` is the system's
-non-traversable identity binding, written at junction creation;
-`:AUTHOR` is the bearer's own traversable opinion edge, written when
-they self-claim. See
-[edges.md "Bearer binding"](edges.md).
+## What consumes authorship
 
-## Proposal authorship
+- **The feed's person fold.** The ranker treats Actor + Profile
+  as one logical node, and record authorship is what folds an
+  author-side path onto the person
+  ([feed-ranking.md](feed-ranking.md)).
+- **The reference channels.** A Reference's citation leg crosses
+  content-intrinsically only when the reference's author owns the
+  carrier, and otherwise only through the reference's author —
+  authorship is the gate on both channels
+  ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)).
+- **Attribution.** Reward splits resolve each path's distinct
+  authors from the records on it; eligibility excludes paths
+  carrying an ineligible author's records
+  ([economics.md](economics.md)).
+- **Edit folds.** Every node-value fold reads eligibility against
+  record authors — creator-only for content bodies, the certified
+  owner for items, declared sets for chats
+  ([substrate.md §9](substrate.md#9-node-values-and-updates)).
+- **The credit obligation.** `a = 1` license qualifiers oblige
+  CoGra to credit the author on every display, quote, and
+  reference surface
+  ([platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations)).
 
-A Proposal's opening gesture always writes a
-`User/Collective → Proposal` `:AUTHOR` actor edge, whichever vote
-shape opens it. Opened by a **Shape A** vote, that vote edge is
-itself the authoring edge — vote and authorship are one edge
-([proposal.md §5](../instances/proposal.md#5-authorship)). Opened
-by a **Shape B** vote, the vote is a structural edge from the
-opener's eligibility junction and cannot carry `:AUTHOR`, so the
-actor behind the opening junction writes the `:AUTHOR` actor edge
-in the same gesture — the same paired-edge pattern as the junction
-self-claim above. Either way the Proposal carries an incoming
-actor edge from its first instant, so the earliest-incoming-edge
-derivation and the rule-snapshot timestamp it anchors
-([governance.md §5](governance.md#rule-snapshot-at-author-time))
-are always defined.
+Authorship survives everything: payload removal and account
+deletion erase names and words, never the author binding — the
+husk's records remain its records
+([account-deletion.md](../instances/account-deletion.md)).
 
-## Collective authorship
+---
 
-A Collective node receives no `User → Collective` `:AUTHOR` edge.
-Its founding gesture writes the founder's `CollectiveMember`
-junction and that junction's structural edges
-([collectives.md §1](../instances/collectives.md#1-creation)); the
-Collective's earliest incoming edge is therefore the junction's
-`:CLAIM` structural edge, not an actor edge. The **author is
-derived through it**: the earliest layer-1 `:CLAIM` edge among the
-Collective's incoming CollectiveMember claims identifies the
-founding junction, and its `:BEARER` edge identifies the
-author-User
-([collectives.md §6](../instances/collectives.md#6-authorship)).
-The founder does hold an `:AUTHOR` edge — to their own
-CollectiveMember junction, per
-[Junction authorship](#junction-authorship) — never to the
-Collective itself, and `:AUTHOR`'s target catalog in
-[edges.md §3](edges.md) accordingly omits
-Collective.
+## The Postgres author column
 
-## Caching
+`author_id` on Postgres rows (`posts`, `comments`,
+`chat_messages`) is ordinary denormalized display data, written
+in the same flow as the record — authorship is intrinsic and
+known at submission, so there is nothing to derive and no rebuild
+machinery; the record remains the truth in any disagreement
+([data-model.md](../implementation/data-model.md)).
 
-Display queries that don't touch the graph need a fast author
-lookup, so `author_id` is cached on the Postgres `posts`,
-`comments`, and `chat_messages` rows — see
-[data-model.md](../implementation/data-model.md).
-
-The graph is the source of truth. The `:AUTHOR` label is
-derivable from the earliest-layer-1 rule; the Postgres
-`author_id` is derivable from the graph. If either disagrees,
-rebuild from the graph.
-
-**Economics does not read the Postgres cache.** Ad-revenue
-distribution, payouts, and any value-bearing computation walk
-the graph directly. A stale `author_id` affects display ordering
-at most; it never changes what the author is paid. The cache may
-drift briefly without correctness risk. Campaign attribution
-resolves each contributor from the `:AUTHOR` edges on the paths it
-walks — see [economics.md §6](economics.md#8-attribution--the-reward-share-r_c).
-
-**Rebuild trigger.** Stale cache entries self-heal
-opportunistically: when a viewing user's feed-ranking pass
-touches a post via a path that traverses its `:AUTHOR` edge, the
-ranking step has the authoritative author UUID. If it disagrees
-with `posts.author_id` (or the equivalent column), the API
-enqueues a rebuild for that row. Rebuilds run out-of-band — the
-read that detected the drift never blocks.
-
-A user with no path to the post never triggers a rebuild, but
-also has no display query depending on the column — so the
-drift is invisible until someone with a path looks. Any
-disagreement that matters to display gets corrected by someone
-who would have seen the wrong value.
+**Economics never reads Postgres.** Attribution and payouts
+resolve authors from the records on the paths they walk; a wrong
+`author_id` could affect display ordering at most, never what
+anyone is paid.

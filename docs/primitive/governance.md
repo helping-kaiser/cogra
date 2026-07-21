@@ -141,7 +141,7 @@ per-junction `voting_weight` overrides the mode where set.
 
 | Scope | Default source | Out-of-the-box roles → weights |
 |---|---|---|
-| Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §10](../instances/chats.md#10-moderation) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
+| Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
 | Collective | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
 | Network | none — every active member's weight is `1` | no `voting_weight` override; Network membership has no junction to carry one |
 
@@ -229,7 +229,7 @@ What happens when the threshold is crossed. The outcome has one
   system actor ([substrate.md §8](substrate.md#8-system-actors));
   at chat scope it is the chat-authority member whose per-chat
   role authorizes execution
-  ([chats.md §10](../instances/chats.md#10-moderation)); at
+  ([chats.md §10](../instances/chats.md#6-moderation-inside-the-chat)); at
   collective scope it is the collective actor itself. The
   finalization is the on-graph outcome record of every Proposal —
   the tally digest makes the pass auditable against the published
@@ -308,10 +308,10 @@ own `amend` gate, so disabling an action is an amendment of its
 default map is installed at host creation are per-instance
 choices. Consumers:
 
-- [Collective governance](../instances/collectives.md#8-governance--the-social-contract)
+- [Collective governance](../instances/collectives.md#6-the-social-contract)
   — no primitive defaults; founders write the social contract at
   creation.
-- [Chat governance](../instances/chats.md#10-moderation) — default
+- [Chat governance](../instances/chats.md#6-moderation-inside-the-chat) — default
   map installed at chat founding (chats default to community-vote
   moderation because it fits informal communities).
 
@@ -486,7 +486,7 @@ public, so an outgoing act held pending co-signatures would
 already be visible. An authorized member's act-as gesture executes
 immediately; the act-as rule gates *who* may act, never how many
 must concur
-([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
+([collectives.md §2](../instances/collectives.md#4-acting-through-the-collective)).
 Multi-party collective decisions exist only as `decision:*`
 entries of the social contract, the Proposal being the pending
 subject.
@@ -759,7 +759,7 @@ are records CoGra cannot forge or erase.
   hosts as many instances as its social contract specifies;
   admission is the co-signed-act consumer (§3).
 - **Chat moderation and kick** —
-  [chats.md §10](../instances/chats.md#10-moderation). Message
+  [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). Message
   disavowal (Level 1) and member disavowal (Level 2) as
   bidirectional-tally Proposals under the chat's `governance`
   entries; a passed `decision:disavow_member` is executed by the
@@ -767,7 +767,7 @@ are records CoGra cannot forge or erase.
   cites the authorizing anchor
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
 - **Chat property and rule changes** —
-  [chats.md §10](../instances/chats.md#10-moderation). Name,
+  [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). Name,
   description, key-rotation, role changes, and `governance` map
   amendments (governance of governance), each under its entry's
   `exec` / `amend` triples.

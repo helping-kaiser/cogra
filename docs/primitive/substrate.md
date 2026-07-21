@@ -96,9 +96,9 @@ CoGra runs a dual-database core, partitioned around the L1 seam:
   It may lag the L1 record; it must never diverge from it. Nothing
   in the mirror is authoritative.
 - **Memgraph — overlay.** CoGra's own graph: nodes and edges L1 has
-  no home for. Proposal tally state, the `:Network` singleton,
-  collective-membership junctions. Overlay structure is CoGra's
-  truth, governed by CoGra's own rules.
+  no home for. Proposal tally state and the `:Network` singleton.
+  Overlay structure is CoGra's truth, governed by CoGra's own
+  rules.
 - **Postgres.** Display content and operational metadata — what a
   record *shows*, never what it *is*. Graph topology never lives
   here.
@@ -142,9 +142,13 @@ overlay and Postgres state around those two records.
 
 The pattern generalizes: the state machine of a flow lives in L2;
 L1 holds the acts that must bind or be publicly attributable. What
-never works: encoding CoGra state in L1 records beyond the fixed
-inventory's semantics, or letting an L2 fold silently contradict
-what the L1 records show.
+never works: repurposing a family's L1 semantics — a record must
+mean to every other L2 what the census says it means — or letting
+a CoGra fold silently contradict L1's own folds. Payload-borne
+semantics with a published fold — ballots, edits, collective
+membership — are the house pattern, not a violation: the payload
+is exactly where guild meaning belongs
+([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
 
 ---
 
