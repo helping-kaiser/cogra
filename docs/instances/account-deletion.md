@@ -83,7 +83,7 @@ For encrypted Messages, the payload is a ciphertext blob; the
 removal is the same one-way transition as for plaintext. Chat
 epoch keys are **untouched** — they live off-graph on members'
 devices, and past-epoch keys held by ex-members are not treated
-as redactable PII (see [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism)).
+as redactable PII (see [chats.md §9](chats.md#7-encryption-as-the-privacy-mechanism)).
 
 **Why identity-only is the default:** content was publicly
 authored — PII control happened at write time — and mass-removing

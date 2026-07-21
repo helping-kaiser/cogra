@@ -1473,7 +1473,7 @@ and a per-chat `chatSearch` over plaintext message bodies.
 **What is indexed.** The global index covers the current value of
 the name-class fields and post titles: User `username` +
 `displayName`, Collective `name` + `displayName`, Hashtag `name`
-(served by the Postgres registry — [hashtag.md §3](../instances/hashtag.md#3-postgres-side-content)),
+(served by the Postgres registry — [hashtag.md §3](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
 bios, and attachments are not indexed. A Comment carries no
 indexed field and is not a searchable kind — a comment is found
@@ -1482,7 +1482,7 @@ index — casual conversation doesn't surface to strangers by
 keyword; their search surface is `chatSearch`, and only plaintext
 bodies are searchable — encrypted content never is, since the
 backend only ever holds ciphertext
-([chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)).
+([chats.md §9](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies
@@ -1573,7 +1573,7 @@ These bind every mutation below.
   act-as rule and rejects the gesture otherwise. Act-as rules carry
   eligibility only — an eligible member's gesture executes
   immediately as the Collective's own, never held pending
-  co-signatures ([collectives.md §2](../instances/collectives.md#2-acting-through-the-collective)).
+  co-signatures ([collectives.md §2](../instances/collectives.md#4-acting-through-the-collective)).
   Where the target already pins the acting identity — editing
   authored content, accepting an invitation whose membership names a
   Collective bearer, leaving, revoking, settling, re-linking a
