@@ -1195,11 +1195,14 @@ targets any existing passive node, including a Profile, never an Actor
 Every passive node type implements Reviewable: anything that exists in the
 graph admits attributed public commentary. A Review transitions no
 settlement state, moves no title, binds no tag, creates no membership, and
-enters no admission quantity. Universal Reviewability is **standing-inert**:
-Review legs terminate at Comments, and every onward exit targets a Type or
-Comment, never a Profile or Actor — no Review path terminates at an Actor
-through the unique Reputation funnel, so $W_{\text{end}}$ and $\alpha_i$ are
-unchanged by the mere existence of commentary.
+enters no admission quantity. Universal Reviewability is **standing-inert**,
+and the inertness is semantic rather than topological: Review is not a
+standing-designated person-vouch family, and no raw Review leg or
+Review-created Comment can lend upstream standing to a third party's later
+Reference — a later Reference is evaluated as its own complete act, through
+its own author (`def:graph:complete-act`). Commentary thus stays available
+to feed, CAN, and terminal guild policies without becoming a standing
+conduit.
 
 ### 9.3 Node types
 
