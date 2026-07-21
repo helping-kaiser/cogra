@@ -100,15 +100,16 @@ husk's records remain its records
 
 ---
 
-## Caching
+## The Postgres author column
 
-Display queries need a fast author lookup, so `author_id` is
-cached on Postgres rows (`posts`, `comments`, `chat_messages` —
-[data-model.md](../implementation/data-model.md)). The record is
-the source of truth; the cache is derivable and rebuilds from the
-mirror on any disagreement.
+`author_id` on Postgres rows (`posts`, `comments`,
+`chat_messages`) is ordinary denormalized display data, written
+in the same flow as the record — authorship is intrinsic and
+known at submission, so there is nothing to derive and no rebuild
+machinery; the record remains the truth in any disagreement
+([data-model.md](../implementation/data-model.md)).
 
-**Economics never reads the cache.** Attribution and payouts
-resolve authors from the records on the paths they walk; a stale
-`author_id` affects display ordering at most and never changes
-what anyone is paid.
+**Economics never reads Postgres.** Attribution and payouts
+resolve authors from the records on the paths they walk; a wrong
+`author_id` could affect display ordering at most, never what
+anyone is paid.

@@ -49,8 +49,8 @@ through its own actor ([collectives.md](collectives.md)).
 An Item is a full content surface, independent of its
 marketplace role: **Opinion** stances (like/dislike, full
 vocabulary), **Review** commentary
-([comment.md](comment.md)), **Tag** topics authored by the lister
-([hashtag.md](hashtag.md)), and **Reference** quotes/embeds from
+([comment.md](comment.md)), **Tag** topics — the lister's own or
+third-party ([hashtag.md](hashtag.md)), and **Reference** quotes/embeds from
 other artifacts — all native, all feed-visible
 ([feed-ranking.md](../primitive/feed-ranking.md)).
 

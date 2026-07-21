@@ -43,9 +43,10 @@ The record carries:
   ([platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations)).
 - **The payload envelope** — body text and media digests in the
   Peer Content Envelope
-  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage));
-  Postgres display rows and the mirror record are written in the
-  same flow as derived surfaces.
+  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+  The witness lands on L1; the bytes and salt live in CoGra
+  carriage — their only home, verifiable against the witness —
+  and the mirror caches the structural record.
 
 A Collective commenting is the same gesture by the Collective's
 own actor ([collectives.md](collectives.md)).
@@ -56,8 +57,7 @@ own actor ([collectives.md](collectives.md)).
 
 Reply chains are **causal chains of Review records** — thread
 structure is graph-native, with no parent pointer stored anywhere
-else. What the old flatten-to-root design stored in payload, the
-record set now *is*.
+else.
 
 The geometry does the moderation of depth by itself:
 
@@ -82,8 +82,9 @@ signs ([feed-ranking.md](../primitive/feed-ranking.md)).
 
 **By the author, with the Comment:**
 
-- **Topic tagging** — a Tag hyper-edge (Actor → Comment → Type),
-  authored by the Comment's author ([hashtag.md](hashtag.md)).
+- **Topic tagging** — a Tag hyper-edge (Actor → Comment → Type).
+  Anyone may tag; the feed reads a third party's tag through its
+  author ([hashtag.md](hashtag.md)).
 - **Quoting and mentioning** — Reference hyper-edges with the
   Comment as citing artifact: the original of an image it
   re-posts, a person named in its body (a Profile-targeting
