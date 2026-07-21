@@ -128,7 +128,7 @@ Three conventions hold across every composite kind:
    validation, and the execution transaction.** The primitive
    doesn't enumerate composite shapes — each application doc
    declares its own action keys
-   ([collectives.md §8](collectives.md#8-governance--the-social-contract)).
+   ([collectives.md §8](collectives.md#6-the-social-contract)).
 
 ### Moderation of proposal content
 
@@ -271,7 +271,7 @@ the public records carry it.
   [moderation.md](moderation.md),
   [platform-guidelines.md](platform-guidelines.md),
   [network.md §§9, 11](../primitive/network.md#9-mod-role-changes),
-  [chats.md §10](chats.md#10-moderation),
+  [chats.md §10](chats.md#6-moderation-inside-the-chat),
   [collectives.md](collectives.md).
 - **Not the L1 record spec.** Publish, Opinion, and Reference
   semantics live in

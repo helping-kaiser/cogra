@@ -477,7 +477,13 @@ untouched).
   so no pyramid dynamic. The relation is permanent, so the inviter
   earns over the invitee's lifetime — the bring-real-users
   incentive. Genesis members have no inviter; their 1% falls back
-  to burn.
+  to burn. **Collectives likewise have no inviter** — their 1%
+  falls back to burn, deliberately: a collective's makeup drifts
+  over years, so neither its founder's inviter nor anyone else
+  holds a permanent claim on its earnings; and since the share is
+  carved from burn rather than the earner's payout, earning
+  through a collective gains nobody anything
+  ([collectives.md §9](../instances/collectives.md#9-economic-role--no-preferential-treatment)).
 - **Not per-action distribution.** The reward fires on the invitee
   *actually earning*, which is already attribution-gated on real
   reach and severance — a dead sybil invitee earns nothing, so its

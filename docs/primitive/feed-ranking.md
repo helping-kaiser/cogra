@@ -169,11 +169,11 @@ epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Participant, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Tag, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
+| Hyper-edges: Review, Send, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
+| Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
-| Overlay: membership bindings | **Never traversed.** Junction structure, not stance. |
 
 Ballots need no row of their own: a vote is a payload-marked
 Opinion toward the proposal's anchor
@@ -233,6 +233,21 @@ most one extracted path passes through either toward any target
 (§6) — per-viewer, virality never multiplies; a genuinely endorsed
 carrier counts once per viewer who reaches it, and reach is paid in
 the campaign sum (§6.4).
+
+**Tags.** Tag authorship is census-unconstrained — anyone may tag
+anyone's content — so the topic T-leg gets the citation's
+discipline. The A-leg is an ordinary hop: reaching a tagger
+surfaces what they tagged, at the tag's real parameters. The
+**topic T-leg crosses by the same two channels**:
+content-intrinsic when the tag's author is the content's author
+(the topic declaration is part of the content), initiator-owned
+otherwise — a stranger's tag reaches the Type only through the
+tagger, at the viewer's forward weight to them. Types are sinks,
+so a crossed T-leg lands and stops; the same channel test decides
+which Tag records the topic feed (§10) surfaces for a viewer —
+the author's own declarations plus those of taggers the viewer
+actually reaches, never every stranger's. The `(0,0)` verdict Tag
+carries `w̃ = 0` and crosses neither channel.
 
 **Simple by construction.** Every hop factor is below one
 (`γ ≤ 1`, `w̃ < 1`), so a strongest path never revisits a node — a
