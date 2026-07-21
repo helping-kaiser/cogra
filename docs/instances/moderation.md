@@ -36,7 +36,7 @@ governance flow in this doc. Removing a *member from a chat* is
 the chat-scope **kick** flow — a passed `decision:disavow_member`
 Proposal executed as an L1 De-invite
 ([substrate-map.md §4](../primitive/substrate-map.md#4-conversations-and-membership),
-[chats.md §10](chats.md#10-moderation)) — with its own
+[chats.md §10](chats.md#6-moderation-inside-the-chat)) — with its own
 eligibility (chat roles, not the Network), its own state
 (the membership fold, not a classification), and its own
 reversibility (non-sticky). The two never share a gesture or a
@@ -224,7 +224,7 @@ record(s) carrying that content:
 |---|---|
 | Post body + media | the Publish record's payload envelope and the creator's edit records revising it ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)) |
 | Comment | the Review record's payload (and the creator's edit records) |
-| Chat message | the Send record's payload (plaintext or ciphertext, [chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism); see "Encrypted message classification" below) |
+| Chat message | the Send record's payload (plaintext or ciphertext, [chats.md §9](chats.md#7-encryption-as-the-privacy-mechanism); see "Encrypted message classification" below) |
 | Profile content (bio, avatar, display name) | the Registration bundle's payloads |
 | Chat name / description / image | the founding Participant record's payload and the eligible members' edit records revising it (who is eligible is the chat's own governed choice) |
 | Item name / description / media | the genesis Owner record's payload and the owner's edit records revising it |
@@ -255,7 +255,7 @@ For a moderation Proposal targeting an encrypted Message to be
 useful, voters need to be able to read the body. The disclosure
 path is **independent of the moderation primitive** — any chat
 member can release the relevant epoch's chat key (per
-[chats.md §9](chats.md#9-encryption-as-the-privacy-mechanism))
+[chats.md §9](chats.md#7-encryption-as-the-privacy-mechanism))
 through any normal authoring gesture: a Comment on the chat, a
 public Post, a plaintext Message in the same chat, an off-graph
 channel, anything. The system permits voluntary disclosure by
@@ -308,7 +308,7 @@ above, not a protocol veto.
 ## 6. Coexistence with chat-internal moderation
 
 Platform moderation (this doc) and the chat-scope kick flow
-([chats.md §10](chats.md#10-moderation)) can both bear on the
+([chats.md §10](chats.md#6-moderation-inside-the-chat)) can both bear on the
 same situation — an abusive message can be classified by the
 Network while its author is kicked by the chat. They sit at
 different scopes, eligibility differs (active Network members vs

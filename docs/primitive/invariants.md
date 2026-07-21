@@ -31,7 +31,7 @@ most useful one.
   and the parent-Collective `:APPROVAL` / `:ACTOR` exclusion.
 - [Chat topology is always public](../instances/chats.md#1-mental-model-reset)
   — only message **bodies** are private, and only when encrypted.
-- [No structural 1:1 chat uniqueness](../instances/chats.md#12-11-vs-group-chats)
+- [No structural 1:1 chat uniqueness](../instances/chats.md#9-11-vs-group-chats)
   — two users may have multiple parallel 1:1 chats.
 - [Inbound edges don't affect the receiver's feed](graph-model.md)
   — anti-bot foundation.
@@ -55,24 +55,24 @@ most useful one.
   — claim only = pending; claim + approval, both with positive
   top layers = active; non-positive top layer on either =
   revoked. No status flag.
-- [Junction authorship is fixed by the `:AUTHOR` label, not timestamp](authorship.md#junction-authorship)
+- [Junction authorship is fixed by the `:AUTHOR` label, not timestamp](authorship.md)
   — a junction's author is its bearer; third-party `:ACTOR`
   sentiment landing on a pending junction first never becomes
   authorship.
 - [No User node before verification](user.md#2-creation) — the
   graph has no "unverified" or "pending" User state; nodes
   either exist with full standing or they don't.
-- [Every Collective has or has had ≥1 active member](../instances/collectives.md#9-lifecycle)
+- [Every Collective has or has had ≥1 active member](../instances/collectives.md#8-lifecycle)
   — zero active members ≡ dissolved.
-- [`:Hashtag.name` is immutable except via redaction cascade](../instances/hashtag.md#5-lifecycle)
+- [`:Hashtag.name` is immutable except via redaction cascade](../instances/hashtag.md#5-moderation-and-lifecycle)
   — no property-amendment Proposal path; only the `'illegal'`
   moderation cascade can rewrite the top layer. UUIDv5 derived
   from `(namespace, name)` stays stable across redaction.
-- [ItemOwnership forms an append-only chain](../instances/items.md#7-supersession-exactly-one-active-itemownership-per-item)
+- [ItemOwnership forms an append-only chain](../instances/items.md#3-ownership-and-title)
   — every past owner remains visible on the graph.
-- [At most one active ItemOwnership per Item](../instances/items.md#7-supersession-exactly-one-active-itemownership-per-item)
+- [At most one active ItemOwnership per Item](../instances/items.md#3-ownership-and-title)
   — identifying the current owner is a single-edge query.
-- [No direct parallel co-ownership of an Item](../instances/items.md#9-shared-ownership-routes-through-a-collective)
+- [No direct parallel co-ownership of an Item](../instances/items.md#8-shared-ownership-routes-through-a-collective)
   — shared ownership routes through a Collective.
 
 ## Authority and gates
@@ -83,14 +83,14 @@ most useful one.
 - [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
   — uniform across content moderation, moderator role changes,
   and `:Network` parameter amendments.
-- [Chat-key rotation on membership change is automatic, not voted](../instances/chats.md#9-encryption-as-the-privacy-mechanism)
+- [Chat-key rotation on membership change is automatic, not voted](../instances/chats.md#7-encryption-as-the-privacy-mechanism)
   — only mid-epoch rotation runs through governance.
-- [Chat-internal disavowal routes through a Proposal node](../instances/chats.md#10-moderation)
+- [Chat-internal disavowal routes through a Proposal node](../instances/chats.md#6-moderation-inside-the-chat)
   — both Level 1 (message) and Level 2 (member) carry the
   whole-node `'node'` sentinel
   ([nodes.md](nodes.md));
   no direct vote edge from a `ChatMember` drives the outcome.
-- [Collective content-acts default permissive; governance-acts default deny](../instances/collectives.md#2-acting-through-the-collective)
+- [Collective content-acts default permissive; governance-acts default deny](../instances/collectives.md#4-acting-through-the-collective)
   — asymmetry reflects reversibility.
 - [Edges attributed to a Collective carry no per-edge record of the acting member](edges.md)
   — accountability lives in the social contract, not in edge
@@ -125,7 +125,7 @@ most useful one.
   `sum |dim1| ≤ 1` and `sum |dim2| ≤ 1` per dimension; default
   uniform `(1/N, 1/N)`. Bounds reference-chain amplification at
   the source.
-- [`:TAGGING` is non-contributing; Hashtag is a ranking sink](../instances/hashtag.md#4-edges)
+- [`:TAGGING` is non-contributing; Hashtag is a ranking sink](../instances/hashtag.md#3-acts-around-a-type)
   — `:TAGGING` is traversable but adds no `(dim1, dim2)` factor; a
   Hashtag is a feed-ranking target reached through its tagged
   content and, having no outgoing edges, a sink that amplifies

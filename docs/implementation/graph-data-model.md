@@ -151,7 +151,7 @@ of redactions without requiring layer-aware constraint logic.
 | `avatar`            | String | Per intro. Asset lives in object storage. |
 | `website_url`       | String | Per intro. Content lives in Postgres. |
 | `moderation_status` | String | Node-level cache (per intro). |
-| `governance`        | Map    | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Keys are `action_key` strings in the Collective-specific namespaces `'decision:*'`, `'actas:*'`, `'system:*'` — see [collectives.md §8 "Action keys"](../instances/collectives.md#action-keys). Layered. |
+| `governance`        | Map    | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Keys are `action_key` strings in the Collective-specific namespaces `'decision:*'`, `'actas:*'`, `'system:*'` — see [collectives.md §8 "Action keys"](../instances/collectives.md#action-keys-and-dispatch). Layered. |
 
 ```cypher
 CREATE CONSTRAINT ON (c:Collective) ASSERT c.id IS UNIQUE;
@@ -196,13 +196,13 @@ CREATE INDEX ON :Comment(id);
 | `name_status`       | String  | Per intro (status for `name`). |
 | `description`       | String  | Per intro. Content lives in Postgres. |
 | `image`             | String  | Per intro. Asset lives in object storage. |
-| `governance`        | Map     | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Holds the chat's social contract: who admits members, disavows messages, disavows members, rotates keys, edits display fields, changes member roles. Keys are Chat-specific `action_key` strings; per-bearer voting overrides live on `:ChatMember.voting_weight`. Layered. A default map is installed at chat founding (Chats are the one default-having consumer flagged in [collectives.md §8 "No primitive defaults"](../instances/collectives.md#no-primitive-defaults)); the default contents live in [chats.md §10](../instances/chats.md#10-moderation). |
-| `epoch`             | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing `decision:rotate_key` Proposal. Concurrent transitions serialize per Chat. Derived cache per [layers.md §3](../primitive/layers.md#derived-caches-do-not-layer); not layered — rebuildable from membership-transition layers plus passed rotation Proposals. See [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism). |
+| `governance`        | Map     | Primitive shape `Map<String, Rule>` per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). Holds the chat's social contract: who admits members, disavows messages, disavows members, rotates keys, edits display fields, changes member roles. Keys are Chat-specific `action_key` strings; per-bearer voting overrides live on `:ChatMember.voting_weight`. Layered. A default map is installed at chat founding (Chats are the one default-having consumer flagged in [collectives.md §8 "No primitive defaults"](../instances/collectives.md#no-primitive-defaults)); the default contents live in [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). |
+| `epoch`             | Integer | Current chat-key epoch. Default `1`. Advanced by `+1` on every membership transition that takes effect — `:CLAIM` and `:APPROVAL` both present with positive top layers (join), or active `:APPROVAL` flipped to `dim1 < 0` (leave / disavowal cascade) — and on every passing `decision:rotate_key` Proposal. Concurrent transitions serialize per Chat. Derived cache per [layers.md §3](../primitive/layers.md#derived-caches-do-not-layer); not layered — rebuildable from membership-transition layers plus passed rotation Proposals. See [chats.md §9](../instances/chats.md#7-encryption-as-the-privacy-mechanism). |
 | `moderation_status` | String  | Node-level cache (per intro) for the Chat's per-field statuses (`name_status`, `description`, `image`). |
 
 The `content_privacy` setting (plaintext vs E2EE) lives in Postgres,
 not on the graph — message bodies are always Postgres-side per
-[chats.md §8-9](../instances/chats.md#8-chatmessages-as-first-class-content), so the graph never reads it.
+[chats.md §8-9](../instances/chats.md#3-creation), so the graph never reads it.
 See [data-model.md](data-model.md).
 
 ```cypher
@@ -215,7 +215,7 @@ CREATE INDEX ON :Chat(id);
 | Property            | Type   | Notes |
 |---|---|---|
 | `id`                | String | UUID v4. |
-| `content`           | String | Per intro. Body lives in Postgres (plaintext or ciphertext per [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism)). The protocol does not gate classification on disclosure of the chat key; "moderate only after reading" is a normative requirement on moderators, not a protocol invariant — see [moderation.md §5](../instances/moderation.md#5-scope). |
+| `content`           | String | Per intro. Body lives in Postgres (plaintext or ciphertext per [chats.md §9](../instances/chats.md#7-encryption-as-the-privacy-mechanism)). The protocol does not gate classification on disclosure of the chat key; "moderate only after reading" is a normative requirement on moderators, not a protocol invariant — see [moderation.md §5](../instances/moderation.md#5-scope). |
 | `attachments`       | String | Per intro. Assets live in object storage. |
 | `moderation_status` | String | Node-level cache (per intro). |
 
@@ -226,7 +226,7 @@ CREATE INDEX ON :ChatMessage(id);
 
 The `epoch` index a ciphertext was encrypted under lives in
 Postgres alongside the body row, not on the graph — message bodies
-are always Postgres-side per [chats.md §9](../instances/chats.md#9-encryption-as-the-privacy-mechanism),
+are always Postgres-side per [chats.md §9](../instances/chats.md#7-encryption-as-the-privacy-mechanism),
 so the graph never reads it. See [data-model.md](data-model.md).
 
 #### `:Item`
@@ -251,7 +251,7 @@ CREATE INDEX ON :Item(id);
 | Property            | Type   | Notes |
 |---|---|---|
 | `id`                | String | UUIDv5, content-addressed from `name`. See [data-model.md "Node identity strategies"](data-model.md#node-identity-strategies). |
-| `name`              | String | Canonical form: lowercase, no `#`. Immutable except via the `'illegal'` redaction cascade — see [hashtag.md §5](../instances/hashtag.md#5-lifecycle). Data; per-field status carried separately by `name_status`. |
+| `name`              | String | Canonical form: lowercase, no `#`. Immutable except via the `'illegal'` redaction cascade — see [hashtag.md §5](../instances/hashtag.md#5-moderation-and-lifecycle). Data; per-field status carried separately by `name_status`. |
 | `name_status`       | String | Per intro (status for `name`; the only user-input field on a Hashtag). |
 | `moderation_status` | String | Node-level cache (per intro). |
 
@@ -268,11 +268,11 @@ CREATE INDEX ON :Hashtag(id);
 | Property          | Type    | Notes |
 |---|---|---|
 | `id`              | String  | UUID v4. |
-| `target_property` | String  | Name of the property on the target node, or the reserved whole-node sentinel `'node'` — see [nodes.md "Whole-node targeting"](../primitive/nodes.md). The `'node'` sentinel covers both the moderation cascade (every user-input field plus all attachments — see [moderation.md §5](../instances/moderation.md#5-scope)) and chat-internal disavowal — see [chats.md §10](../instances/chats.md#10-moderation). |
+| `target_property` | String  | Name of the property on the target node, or the reserved whole-node sentinel `'node'` — see [nodes.md "Whole-node targeting"](../primitive/nodes.md). The `'node'` sentinel covers both the moderation cascade (every user-input field plus all attachments — see [moderation.md §5](../instances/moderation.md#5-scope)) and chat-internal disavowal — see [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). |
 | `value_kind`      | String  | Shape discriminator on `proposed_value` so frontends can render the right editor / display widget without out-of-band knowledge of every `target_property`. Enumerated: `'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:<action_key>'`. Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-terms). |
 | `rule_anchor`     | String  | **Required.** UUID of the node hosting the rule property(ies) this Proposal is governed by, per [governance.md §5 "Rule snapshot at author time"](../primitive/governance.md#rule-snapshot-at-author-time). The dispatcher reads each rule property on `rule_anchor` as-of the Proposal's authorship-edge timestamp (per [authorship.md](../primitive/authorship.md)) rather than at the current top layer, so amendments committed mid-flight don't retroactively change in-flight Proposals' rule parameters. Covers every current consumer with one value — Collective and Chat Proposals point at their host (`<host>.governance` indexed by `action_key`), Network dual-quorum moderation Proposals point at the Network (both `_quorum_fraction` and `_quorum_count` read as-of the same timestamp). Set at creation; does not layer. See [proposal.md §2](../instances/proposal.md#2-terms). |
 | `status`          | String  | Lifecycle state; layered, as is the `proposed_value_status` companion below (the identity properties above do not layer). Default `'open'` at creation; transitions exactly once, at threshold-cross, to a terminal value — `'passed'` (cascade applied), `'passed_but_invariant_rejected'` (threshold crossed but a composite `_from` re-validation failed, so the target writes rolled back while the crossing vote stands), `'failed'` (bidirectional tallies only — the negative side satisfied the mirror bar, [governance.md §2.4](../primitive/governance.md#24-threshold-policy)), or `'redacted'` (`proposed_value` redacted while open, [proposal.md §2](../instances/proposal.md#2-terms)). A Proposal stops accepting votes once `status ≠ 'open'`; one neither side ever crosses stays `'open'` indefinitely. Doubles as the on-graph outcome record where the Proposal has no target-property layer of its own — `ChatMessage` disavowal and display-content `set:*`. See [proposal.md §2](../instances/proposal.md#2-terms), [§6](../instances/proposal.md#6-lifecycle). |
-| `proposed_value`  | Variant | The proposed new value; shape determined by `value_kind`. Common patterns: (a) **Moderation classification** (`value_kind = 'scalar:string'`). `target_property` names the per-field moderation-status property on the target node (e.g., `'bio'`, `'content'`, `'username_status'`) or the `'node'` sentinel for whole-node coverage; `proposed_value ∈ {'sensitive', 'illegal', 'normal'}`. On pass, the cascade writes the new value as a layer (for `'sensitive'` / `'normal'`) or replaces the top layer with a redaction marker (for `'illegal'`, plus archive + Postgres tombstone). See [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths). (b) **Chat-internal disavowal** (`value_kind = 'scalar:string'`). `target_property = 'node'`, `proposed_value ∈ {'disavowed', 'normal'}`. The cascade writes a `dim1 < 0` (or `dim1 > 0` on reversal) layer on the relevant `:APPROVAL` edge per [chats.md §10](../instances/chats.md#10-moderation). (c) **Scalar property amendments** (`value_kind ∈ {'scalar:string', 'scalar:float', 'scalar:integer'}`). `proposed_value` is the new value of whatever graph property `target_property` names — a role string, a numeric threshold, etc. (d) **Governance-rule amendments** (`value_kind = 'rule'`). `proposed_value` is a `Rule` map of `{exec, amend}` triples per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). (e) **Composite atomic changes** (`value_kind = 'composite:<action_key>'`). `proposed_value` is a handler-specific bundle with `_from` / `_to` entries per affected property; the cascade re-validates against current state and refuses on mismatch — see [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals). |
+| `proposed_value`  | Variant | The proposed new value; shape determined by `value_kind`. Common patterns: (a) **Moderation classification** (`value_kind = 'scalar:string'`). `target_property` names the per-field moderation-status property on the target node (e.g., `'bio'`, `'content'`, `'username_status'`) or the `'node'` sentinel for whole-node coverage; `proposed_value ∈ {'sensitive', 'illegal', 'normal'}`. On pass, the cascade writes the new value as a layer (for `'sensitive'` / `'normal'`) or replaces the top layer with a redaction marker (for `'illegal'`, plus archive + Postgres tombstone). See [moderation.md §1](../instances/moderation.md#1-the-two-classification-paths). (b) **Chat-internal disavowal** (`value_kind = 'scalar:string'`). `target_property = 'node'`, `proposed_value ∈ {'disavowed', 'normal'}`. The cascade writes a `dim1 < 0` (or `dim1 > 0` on reversal) layer on the relevant `:APPROVAL` edge per [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). (c) **Scalar property amendments** (`value_kind ∈ {'scalar:string', 'scalar:float', 'scalar:integer'}`). `proposed_value` is the new value of whatever graph property `target_property` names — a role string, a numeric threshold, etc. (d) **Governance-rule amendments** (`value_kind = 'rule'`). `proposed_value` is a `Rule` map of `{exec, amend}` triples per [governance.md §2.6](../primitive/governance.md#26-packaging-rules-on-a-node--the-governance-map-convention). (e) **Composite atomic changes** (`value_kind = 'composite:<action_key>'`). `proposed_value` is a handler-specific bundle with `_from` / `_to` entries per affected property; the cascade re-validates against current state and refuses on mismatch — see [proposal.md §2 "Composite proposals"](../instances/proposal.md#composite-proposals). |
 | `proposed_value_status` | String | Layered moderation companion for `proposed_value`, the one user-bearing carrier field ([proposal.md §2](../instances/proposal.md#2-terms)). On a passing `'illegal'` classification the cascade writes the redaction marker onto `proposed_value` in place (identity properties don't layer) and onto this companion. |
 | `moderation_status` | String | Node-level cache (per intro). |
 
@@ -389,7 +389,7 @@ mismatched claims are rejected. The self-claim gesture also
 writes the bearer's `User|Collective → Junction` actor edge
 carrying `:AUTHOR` — the label, not the earliest timestamp, is
 what fixes junction authorship
-([authorship.md "Junction authorship"](../primitive/authorship.md#junction-authorship)).
+([authorship.md "Junction authorship"](../primitive/authorship.md)).
 See
 [graph-model.md §5](../primitive/graph-model.md)
 and edge-labels table below.
