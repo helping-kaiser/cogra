@@ -114,7 +114,7 @@ inviter-revocation rule (`def:epoch:inviter-revocation`),
 adopted as the fold's rule here.
 
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
-[layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-vouch-predicate))
+[layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-person-vouch-act))
 deliberately, with the scope stated honestly: **L1's math makes a
 `(0,0)`-netted bundle inert in endorsement flow and standing; its
 inertness in CoGra's feed and attribution holds because this spec

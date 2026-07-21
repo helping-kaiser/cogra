@@ -2,33 +2,33 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.22.0-dev, July 2026), reproducing its binding surface for the purpose
+> v0.23.0-dev, July 2026), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.22.0-dev ships as two artifacts:
+**Derived file — hard facts only.** v0.23.0-dev ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.23.0-dev_flat.tex`); this reference draws two
+scopes from it:
 
-- **The Closure Scope Edition** (*Peer Network — Closure Scope Markdown
-  Edition*) — the binding surface only: kernel record, the admission rules,
-  closure quantities, the two straddlers, and the shared mathematics.
-  Terminal read-sites are *named* in its boundary ledger
+- **The closure surface** — the binding material only: kernel record, the
+  admission rules, closure quantities, the two straddlers, and the shared
+  mathematics. Terminal read-sites are *named* in its boundary ledger
   (`tbl:symbols:boundary`) but their mechanisms are not specified there.
   Cited below by anchor label (`def:…`, `post:…`, `lem:…`, `rem:…`, `ax:…`,
   `subsec:…`); Layer 0 objects are cited through `PA-` labels.
-- **The full source** (`PeerNetwork_PeerNetwork_v0.22.0-dev_flat.tex`) — a
-  superset: additionally specifies the terminal defaults (Content Sorting,
-  Advertiser Transport, Content Governance, the Compositional Attribution
-  Calculus, bilateral bridge transport) with numbered theorems. Cited below
-  as *PN full §N / Theorem N.M*, and used **only** for terminal-default
-  material (§4.1–4.2, §10, §14.5 below), the grant's verbatim text (§4),
-  and one definition in §9.4.
+- **Terminal / full-paper material** — a superset: additionally specifies the
+  terminal defaults (Content Sorting, Advertiser Transport, Content
+  Governance, the Compositional Attribution Calculus, bilateral bridge
+  transport) with numbered theorems. Cited below as *PN full §N / Theorem
+  N.M*, and used **only** for terminal-default material (§4.1–4.2, §10, §14.5
+  below), the grant's verbatim text (§4), and one definition in §9.4.
 
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 260 distinct anchor names,
-`anchor_set_hash = b868e2b3cb174139e23587a3c91fa26eeb5c37e262182f9d4634d85e60d92db4`
+anchor-stability contract: 272 distinct anchor names,
+`anchor_set_hash = d644a451fbc5ccad84bfea5a4bb400779c886ee95969e2a9272df1037937e11a`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -70,7 +70,7 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 The map from an actor to the *person* behind it is never represented at
 Layer 1: it has no feedback read-site, hence terminal. Severing it changes
-no $\alpha_i$, no $W_{\text{end}}(j \to i)$, no title, and no gate.
+no $\alpha_i$, no $W_{\text{end}}(u \to i)$, no title, and no gate.
 (`rem:comparator:identity-is-layer-2`)
 
 ---
@@ -216,8 +216,8 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | dependent-set partition | validity replay | guild dashboards | L1·verify | consume only; recompute to audit |
 | title $\mathrm{owner}^{(k)}$ | recognition (iii) | guild routing | L1·closure ⋆ | consume kernel value; read downstream |
 | standing $\alpha_i$ | gate | reward $\alpha_C$ | L1·closure ⋆ | consume kernel value; read downstream |
-| bundle projection (net stance, Vouch Predicate, control-edge exclusion, inviter revocation) | via $W_{\text{end}} \to$ standing $\to$ gate | — | L1·closure | consume only |
-| $\tilde{w}(e)$, $W_{\text{end}}(j\to i)$, $\epsilon(e)$/$\epsilon(p)$, action stamps | via standing $\to$ write rule | feed $S$, bridge affinity | L1·closure | consume only; may recompute |
+| bundle projection (net stance, person-vouch predicate, control-edge exclusion, inviter revocation) | via $W_{\text{end}} \to$ standing $\to$ gate | — | L1·closure | consume only |
+| $\tilde{w}(e)$, $W_{\text{end}}(u\to i)$, $\epsilon(e)$/$\epsilon(p)$, action stamps | via standing $\to$ write rule | feed $S$, bridge affinity | L1·closure | consume only; may recompute |
 | Self-edge bond parameter $p_i$, $(b,N)_i^{\text{last}}$ | $\tilde{w}(e_{\text{Rep}}) \to W_{\text{end}} \to$ standing $\to$ write rule | terminal reads may observe | L1·closure | consume only; may recompute |
 | ownership thread, Item genesis | title $\to$ recognition (iii) | terminal display | L1·closure | consume only; may recompute |
 | settlement records Bid / Accept / Ratify / Withdraw / Rescind | recognition predicate | terminal reputation / dispute policy | L1·closure (records/rules) | consume recognition result; terminal policy free |
@@ -339,7 +339,7 @@ records, with Rule 4 taking precedence over Rule 2 for De-invite legs.
 
 Layer 1 / operator provides: the public append-only graph
 (`post:introduction:public-accessibility` … `post:introduction:epoch-edge-set`),
-the commitment ledger and endorsement-flow scoring infrastructure, and the
+the commitment ledger and standing-compilation infrastructure, and the
 epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the declared constants and the
 derived constants (§6 below). The operator's economic inflow is the Layer 0
 minting fee — the sole protocol-level value flow to the operator; no
@@ -370,7 +370,7 @@ remains the sole Layer 1 factor in the guild reward formula Eq. (8.2)
 (`eq:transport:epoch-entropy`). The default feed S(u,c) (full §7,
 `def:sorting:relevance-score`) is
 **unchanged and explicitly not netting-aware** — stance aggregation applies
-only to the endorsement-flow projection; "feed-ranking… read[s] raw records
+only to the initiator-owned vouch projection; "feed-ranking… read[s] raw records
 unchanged." $q = \tfrac12$ is fixed for every Layer-1 computation; a guild
 may expose $q \ne \tfrac12$ for its own sorting only (`rem:sorting:matrix-bfs`,
 normative). The bridge transport changed semantically: Channel 2 is now
@@ -464,7 +464,7 @@ deployment invariants (§13).
 | $\rho$ | $\max(\rho_{\text{pol}}, \theta/\nu)$; $= \rho_{\text{pol}}$ on any valid certificate (derived) | `def:epoch:participation-floor` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** write budget; not yet locked) | `post:epoch:epoch-boundary` |
 | $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer; not yet locked) | `post:epoch:epoch-boundary` |
-| BFS depth $L$ | 4 | `def:epoch:admissible-endorsement-path` |
+| Projected vouch depth $L_{\text{vch}}$ | 4 | `def:epoch:projected-vouch-depth` |
 | $\tilde{w}_{\text{spam}}$ | $\approx 0.011$ (derived) | `subsec:verification:spam-resistance` |
 | $\epsilon_{\text{clip}}$ | $\approx 1.5 \times 10^{-8}$ (derived; default $\tilde{w}_{\text{spam}}^L$, $L = 4$) | `def:epoch:prospective-bound` |
 | $\tilde{w}_{\max}$ | $\approx 0.986$ (derived) | `subsec:verification:self-edge-bond` |
@@ -527,7 +527,7 @@ An insolvent actor (W1) restores capacity immediately by committing burns.
 Re-crossing the wall (W2a) requires some combination of new burns raising
 $r_i$ directly and new **admissible vouch-positive connections** from actors
 with source rates above the current standing (positive parity alone is not
-sufficient — the Vouch Predicate gates actor-directed endorsement, §11.3).
+sufficient — the person-vouch predicate gates actor-directed endorsement, §11.3).
 
 Actor states (`tbl:epoch:actor-states`), by (W2a $\rho_{\text{act}} \ge
 \rho_\theta$, W1 $b \ge \theta$): **Active** (✓/✓, may act); **Band** (✓/✓,
@@ -673,7 +673,7 @@ in the boundary ledger, **reads stance marginals rather than path parity**.
 This is forced by the Quadrant Law: a coerced and unfair Accept with both
 parameters negative has $\epsilon = +1$ — correct for routing coherence,
 wrong as a verdict. Routing reads coherence; stance consumers read stance.
-The closure-side gate is the Vouch Predicate on Accept/Ratify (actor-directed
+The closure-side gate is the person-vouch predicate on Accept/Ratify (actor-directed
 records vouch only if $p_d > 0 \wedge p_i > 0$, §11.3).
 
 The full paper's **terminal default** for the read-site
@@ -752,7 +752,7 @@ supersedes, or tombstones — it stores **chronicles, never state**. The
 incidence) is a strict $\prec$-chain, so its $\prec$-latest member is
 well-defined without any linearization (`def:graph:parallel-bundle`). Layer 1
 reads bundles in **exactly two** places (`rem:graph:bundle-consumers`): the
-**standing** projection (net stance + Vouch Predicate + inviter revocation,
+**standing** projection (net stance + person-vouch predicate + inviter revocation,
 §11.3) and **title** (the epoch-quantized settlement fold, §7.2). Every other
 reading — current profile (latest), membership, decay, amended-vs-accumulated
 display — is Layer-2-free. A parallel *genesis* is rejected by record
@@ -791,7 +791,7 @@ record's **dependencies** are exactly its **asserted parents** (identity keys
 of prior records it must follow — backward-only metadata, not incidence,
 `def:graph:causal-assertion`) and, for a hyper-edge, its co-leg. A
 **dependent set** is a set of records closed under dependency, written whole
-or not at all (`cor:graph:leg-atomicity`). A record is in $E$ iff some write
+or not at all (`cor:graph:admission-leg-atomicity`). A record is in $E$ iff some write
 admitted its dependent set; a submission that is not written is not refused —
 it is nothing (the network has no ontology of the unwritten, and only the
 certificate speaks). The **set price** (`def:graph:set-price`) is the average
@@ -883,7 +883,7 @@ transition.
 **Payload-state invariance (`prop:graph:payload-state-invariance`).**
 Invariant under every payload state: $\boldsymbol{\Psi}_e$,
 $\boldsymbol{\Psi}_e^{[P]}$, $\epsilon(e)$, $\tilde{w}(e)$,
-$W_{\text{end}}(j \to i)$, $\alpha_i$, $\mathcal{S}$, $\mathrm{owner}^{(k)}$,
+$W_{\text{end}}(u \to i)$, $\alpha_i$, $\mathcal{S}$, $\mathrm{owner}^{(k)}$,
 $b_i$. Removal is scoring-neutral: the reduced projection carries the entire
 Layer-1 closure surface; epoch replay is bit-identical across full and
 reduced (`rem:graph:removal-scoring-neutral`).
@@ -963,8 +963,8 @@ $g \in \{0,1,2\}$; columns = directional mode $h$. Entry semantics:
 
 The slice $\boldsymbol{\Psi}_e$ is the stored object, always built from the
 record's own parameters — **stored slices stay per-record**. Aggregation of
-same-author bundles (net stance) happens only in the endorsement-flow
-projection: see §11.3. Structural bounds: the baseline entry
+same-author bundles (net stance) is a derived fold, never a change to the
+stored per-record slice: see §11.3. Structural bounds: the baseline entry
 $\Psi_e^{22} = \psi_+(1) > 0$ never vanishes
 (`lem:graph:non-vanishing-norm`);
 $\lVert\boldsymbol{\Psi}_e\rVert_F \le 3$ (`lem:graph:frobenius-bound`);
@@ -981,9 +981,14 @@ $\boldsymbol{\Psi}_e$ and exposes exactly the closure path-view interface:
 - the determinant magnitude $|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}$;
 - the determinant sign $\epsilon(e)$.
 
-The specified closure consumer of the resulting damped weight
-$\tilde{w}(e)$ is the double-cover endorsement-flow BFS — **one formula, one
-closure consumer** (`rem:epoch:shared-edge-primitive`). Terminal reads of
+The damped weight $\tilde{w}(e)$ is the identical **raw per-edge primitive**
+for every raw-graph consumer — feed ranking, the raw signed double-cover
+service, and Channel 1 of bridge transport — with no per-consumer variant
+(**one raw formula for all raw-graph consumers**,
+`rem:epoch:shared-raw-edge-primitive`). **Standing is not a raw-graph
+consumer:** it compiles complete acts into projected Actor edges and reads the
+complete-act coefficient and projected target activation instead (§11.3–11.4),
+never $\tilde{w}$. Terminal reads of
 the stored $3 \times 3$ record (the full paper's Scalar and Attribution
 Views, feed terminus norms, CAN base values) are named only in the boundary
 ledger; terminal read-sites may read the same published values by ledger
@@ -1030,7 +1035,7 @@ parameter product within an edge, leg product within a hyper-edge, parity
 product along a path. $(-1,-1)$ is gauge-equivalent to $(+1,+1)$ for
 *coherence* consumers. Stance is the author's directional verdict, read from
 the marginal sign of $p_d$; standing endorsement is a **stance consumer** on
-actor-directed legs (the Vouch Predicate, §11.3). Coherent condemnation is a
+actor-directed legs (the person-vouch predicate, §11.3). Coherent condemnation is a
 strong coherent signal, but not a vouch. Normative: (1) $\epsilon(e)$ is a
 coherence bit, never a favor bit; (2) indifference is zero magnitude, not a
 sign; (3) stance survives in the stored slice's marginal row and terminal
@@ -1096,7 +1101,7 @@ Request, Invitation L1. Such edges carry genuine directional stance and
 retain a full stored block; the Half-tier floor applies only in the path
 view and preserves determinant sign exactly.
 
-### 8.8 Derived path quantities consumed by the closure
+### 8.8 Derived path quantities consumed by raw-graph traversal
 
 - **Path matrix (`def:graph:path-matrix`):** for a directed path
   $p = (e_1, \dots, e_d)$ respecting causal order
@@ -1109,18 +1114,20 @@ view and preserves determinant sign exactly.
 - **Half-score factorization (`def:graph:svd-path-score`,
   `eq:graph:half-score`):** at $q = \tfrac12$ the path score is
   $\prod_{e\in p} \big(|\det \boldsymbol{\Psi}_e^{[P]}|^{1/2}\sqrt{1+\tau_e^2}\, e^{-\beta H_\tau(e)}\big) = \prod_{e\in p}\tilde{w}(e)$
-  (Dijkstra-compatible), consumed by the double-cover endorsement-flow BFS.
-  $q$ is fixed at $\tfrac12$ for Layer-1 closure traversal.
+  (Dijkstra-compatible), consumed by the raw-graph traversals (feed ranking,
+  the raw signed double-cover service, bridge Channel 1); standing reads the
+  projection quantities, not $\tilde{w}$ paths (§11.4).
+  $q$ is fixed at $\tfrac12$ for every raw-graph traversal.
 - **Hyper-edge reduction (`thm:graph:hyper-edge-reduction`):** any
   hyper-edge $\mathcal{H} = (a, p, h)$ decomposes into binary legs
   $e_{ap}, e_{ph}$ with multiplying path-view determinants and signs:
   $\epsilon(\mathcal{H}) = \epsilon(e_{ap}) \cdot \epsilon(e_{ph})$. The
-  closure traversal never consumes an opaque hyper-edge object; it consumes
+  raw traversal never consumes an opaque hyper-edge object; it consumes
   the legs.
 - **Linearization invariance (`lem:graph:linearization-invariance`):**
   fixing $E_k$ and the published constants, $\mathbb{T}_e$, $\tau_e$,
   $\epsilon(e)$, $\tilde{w}(e)$, every path parity, $\prod\tilde{w}(e)$, and
-  $W_{\text{end}}(j \to i)$ are functions of $(E_k, \prec)$ alone —
+  $W_{\text{end}}(u \to i)$ are functions of $(E_k, \prec)$ alone —
   invariant under every total order consistent with $\prec$; none references
   $\mathrm{pos}(e)$.
 
@@ -1182,7 +1189,7 @@ Chat; Withdraw/Rescind → Offer; Invitation L2 → invitee's Profile;
 De-invite L2 → de-invitee's Profile. Reference is trait-independent on both
 ends: its A-leg sources from any passive citing artifact, and its T-leg
 targets any existing passive node, including a Profile, never an Actor
-(`rem:nodes:reference-target-class`).
+(`rem:nodes:reference-author-weight`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
@@ -1209,7 +1216,7 @@ outermost constructor, and a genesis/anchoring record fixes it:
 
 **Actor** (active, $V_u$; `node:nodes:actor`) — sole active node type.
 Originates all edges, injects all temporality primitives; the only nodes
-eligible to appear as endpoints of endorsement flow. In: Self Rep. (from
+eligible to appear as endpoints of a standing-flow path. In: Self Rep. (from
 Profile, derived), Accept, Ratify (from Actors). Out: Registration → Profile
 (self-introduction), Publish → Content (genesis), and edges to all passive
 leaf types; Join Request, Invitation L1, Leave, De-invite L1 → Chat;
@@ -1231,7 +1238,7 @@ Passive leaf nodes (`subsec:nodes:leaf-passive-nodes`):
   Self-edge bond. Taggable, Reviewable. In: **Registration**, Self (Dec.),
   Opinion, Tag L1, Review L1, **Invitation L2, De-invite L2** (from Chats).
   Out: Self (Rep.) → Actor (derived), Tag L2 → Type, Review L2 → Comment. Profile-targeted actor-directed records are filtered
-  by the Vouch Predicate before they can carry source rate into standing.
+  by the person-vouch predicate before they can carry source rate into standing.
 - **Content** (`node:nodes:content`) — primary digital artifact, minted
   $\mathsf{key}(\cdot)$. Taggable, Reviewable. In: **Publish (genesis, fixes
   $\mathrm{creator}$)**, Opinion, Tag L1, Review L1. Out: Tag L2 → Type,
@@ -1273,7 +1280,7 @@ Hyper-leaf passive nodes (`subsec:nodes:hyper-leaf-passive-nodes`):
   Review L2 → Comment — its sole out-edges. Settlement Accept and Ratify
   reference the Offer via settles-pointers but are **not incident** to it.
 
-### 9.4 The Self-edge bond (`subsec:nodes:self-edge-bond-properties`)
+### 9.4 The Self-edge bond (`prop:nodes:self-edge-bond-properties`)
 
 Both components share intensity $p = \alpha_j/(\nu + \alpha_j)$,
 $p_d = 1$; Identity domain, mask $(1,0,0,1)$, Full tier. Stored tensor and
@@ -1294,14 +1301,16 @@ set, bundles, action counts, and the payload census
   traversal. Actor-sourced, so not a passive-sourced edge.
 - **Reputation** (Profile → Actor): **derived** passive-sourced edge —
   recomputed from the certificate, never appended
-  (`post:epoch:self-edge-bond-derivation`); terminal edge of the canonical
-  2-hop endorsement-flow path; $\tilde{w}(e_{\text{Rep}})$ is determined by
-  the *target* actor's $\alpha$, not the endorser's; vouch-positive by
-  construction when the standing-derived parameter is positive. **Tenure
-  channel:** boundary derivation ratchets $\tau_{e_{\text{Rep}}} \to 1^-$ (the
-  published tenure schedule); a mature bond can outweigh a first-epoch bond at
-  equal standing but stays under $\tilde{w}_{\max}$ and cannot restore a
-  failed gate by itself (`rem:epoch:tau-channel-frozen`).
+  (`post:epoch:self-edge-bond-derivation`). Two roles, kept apart: for **feed**
+  it is the terminal edge of the raw profile-bridged discovery path
+  (`def:nodes:profile-bridged-discovery-path`), $\tilde{w}(e_{\text{Rep}})$ set
+  by the *target* actor's $\alpha$; for **standing** the bond instead supplies
+  the projected target activation $g_i$ (the fourth-root $g_{\mathrm{vch}}$,
+  §11.4) — standing consumes $g_i$, never the raw Reputation leg as a traversed
+  hop (`rem:dynamics:standing-feed-separation`). **Tenure channel:** boundary
+  derivation ratchets $\tau_{e_{\text{Rep}}} \to 1^-$ (the published tenure
+  schedule); a mature bond can outweigh a first-epoch bond at equal standing in
+  the feed weight, but stays under $\tilde{w}_{\max}$.
 
 **Bond properties (`prop:nodes:self-edge-bond-properties`):** zero at zero;
 strictly monotone increasing in $\alpha_j$; $\tilde{w}(e_{\text{Rep}}) < 1$
@@ -1327,16 +1336,16 @@ in the boundary ledger).
 |---|---|---|---|---|---|---|
 | **Registration** | Actor → Profile | Identity | $(1,0,0,1)$ | Full | $p_d = p_i = 1$ (fixed); $\epsilon = +1$ forced | actor's self-introduction and the **anchoring record** of the grounded pair (Actor, Profile) — no identity key formed; the sole family carrying fresh grounded endpoints; root of the author's Lamport chain; parallel Registrations update payload only, never the identity (`edge:nodes:registration`, `def:graph:registration`) |
 | **Publish** | Actor → Content | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | **genesis record of a Content node**, fixing $\mathrm{creator}$; mirrors Owner (row-collapse); license qualifiers are structural metadata of this record (`edge:nodes:publish`) |
-| Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is actor-directed and subject to the Vouch Predicate |
+| Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is actor-directed and subject to the person-vouch predicate |
 | Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a standing vouch |
 | Participant | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | Full | interactivity $i$, responsibility $r$ ($p_d = i$, $p_i = r$) | the actor's own membership signal for the terminal membership fold (§9.8) |
 | Owner | Actor → Item | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | at $a = 0$ anchors the title thread but is routing-inert — title is sentiment-blind; orphaned Owner edges persist without title force |
 | **Join Request** | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | **Half** | urgency $u \in [-1,1]$, formality $f \in [-1,1]$ ($p_d = u$, $p_i = f$) | a proposal, not participation: creates no membership, alters no Chat state (`edge:nodes:join-request`) |
-| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settles-pointer → Bid; not binding — title moves only at Ratify; actor-directed: only stance-positive Accepts enter the endorsement-flow projection |
-| Ratify | Actor(buyer) → Actor(seller) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | final comfort $c$, final equity $e$ | settles-pointer must match the Accept's; the irreversible commit record; same Vouch-Predicate endorsement role |
-| Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — never vouches, excluded from the endorsement-flow projection |
+| Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settles-pointer → Bid; not binding — title moves only at Ratify; actor-directed: only stance-positive Accepts enter the initiator-owned vouch projection |
+| Ratify | Actor(buyer) → Actor(seller) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | final comfort $c$, final equity $e$ | settles-pointer must match the Accept's; the irreversible commit record; same person-vouch role |
+| Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — never vouches, excluded from the initiator-owned vouch projection |
 | Rescind | Actor(seller) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | seller's sole escape from a non-binding Accept before commit; control record |
-| **Leave** | Actor → Chat | Minimal | $(0,0,0,1)$ | Marginal | type-fixed $p_d = p_i = 1$; $\epsilon = +1$ forced | unilateral departure/dissociation declaration; **unconditional** (no membership precondition — a Leave from a never-member is a valid public record); no effect on standing, endorsement flow, title, settlement, or gates; exit record of the terminal membership fold (`edge:nodes:leave`, `subsec:necessity:unrestricted-departure`) |
+| **Leave** | Actor → Chat | Minimal | $(0,0,0,1)$ | Marginal | type-fixed $p_d = p_i = 1$; $\epsilon = +1$ forced | unilateral departure/dissociation declaration; **unconditional** (no membership precondition — a Leave from a never-member is a valid public record); no effect on standing, title, settlement, or gates; exit record of the terminal membership fold (`edge:nodes:leave`, `subsec:necessity:unrestricted-departure`) |
 
 Sentiment about a departure composes through Opinion (on the Chat or the
 Profile), never through the control record: a rage-quit is Leave plus a
@@ -1357,9 +1366,9 @@ leg position, never Layer 1 / Layer 2.
 | Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; L1: $p_d = e, p_i = f$; L2: $p_d = f, p_i = e$. Commentary, never state; standing-inert as a family |
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; L1: $p_d = g, p_i = u$; L2: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
 | **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; L1: $p_d = u, p_i = f$; L2: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent Reputation component (zero at zero standing). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
-| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the endorsement-flow projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
+| **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the initiator-owned vouch projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; L1: $p_d = i, p_i = 1$; L2: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is now the protocol act (§8.1); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`) |
-| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; L1: $p_d = f, p_i = e$; L2: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the semantics: a non-grounded target makes it parity-only and standing-inert, exactly like Tag; a Profile target makes the T-leg actor-directed and subject to the Vouch Predicate by type — a positive, effortful citation of a person is a weak, priced, authored vouch (§11.4); withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-target-class`) |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; L1: $p_d = f, p_i = e$; L2: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches standing semantics: a Reference whose semantic target is **not** a Profile is **standing-inert** (still read by feed, raw signed traversal, CAN, provenance, terminal policy); a **complete** Reference whose matched T-leg targets Profile$_i$ with strictly-positive $(e, f)$ compiles into one author-owned person-vouch, reaching a source $u$ only through $u$'s view of its **author** ($W_{\mathrm{view}}(u \to a)\,\tilde{W}_{\mathrm{vch}}(a \to i)$) — the artifact supplies context, no transferable standing, and incoming weight on it never enters the T-leg (§11.4); self-reference is excluded by the compiler; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-weight`, `def:nodes:standing-role-census`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
@@ -1410,9 +1419,9 @@ Invitation L2 (relevance $r \in [0,1]$, intensity 1). All other types
 contain at least one signed user-controlled parameter.
 
 **Coherence column, not vouch column:** $\epsilon$ is routing/coherence
-parity only; vouching is decided by the Vouch Predicate reading stance
-marginals — a $(-,-)$ Profile Opinion has $\epsilon = +1$ but does not enter
-endorsement flow.
+parity only; vouching is decided by the person-vouch predicate reading stance
+marginals — a $(-,-)$ Profile Opinion has $\epsilon = +1$ but is not a
+person-vouch (it fails the strictly-positive coordinate test).
 
 **Dispatch rule.** Leg identity is (family, leg-role), never tensor geometry:
 Reference L1 and Review L2, and Reference L2 and Review L1, are geometric
@@ -1481,7 +1490,7 @@ policy verdict).
 
 **Inviter Revocation (`def:epoch:inviter-revocation`).** Author $j$'s
 Invitation bundle toward incidence (Chat $C$, Profile $P$) is **suppressed**
-in the endorsement-flow projection iff the $\prec$-maximal element of $j$'s
+in the initiator-owned vouch projection iff the $\prec$-maximal element of $j$'s
 own {Invitation, De-invite} records with that incidence is a De-invite; a
 later Invitation re-establishes it. Suppression is strictly per-author — it
 never affects another author's invitation — and is a predicate, not a
@@ -1547,8 +1556,9 @@ override them.
 
 **(`ax:epoch:thermodynamic-boundary`.)** Internal quantities flow undamped.
 The Boltzmann factor $e^{-\beta H_\tau}$ is applied once, per edge, at the
-closure observation boundary (via $\tilde{w}(e)$); the sole specified
-consumer is the double-cover endorsement-flow BFS.
+observation boundary (via $\tilde{w}(e)$); its specified consumers are the
+raw-graph traversals (feed ranking, the raw signed double-cover service,
+bridge Channel 1).
 $\beta = 2\ln 2 \approx 1.386$; maximum-entropy edges damp to $\approx 38\%$
 of raw weight.
 
@@ -1584,7 +1594,7 @@ funding a member's own burns raises only that member's own source. The
 comparator sees a funded member exactly as it sees a self-funded one — the
 burn is real either way.
 
-### 11.3 Stance aggregation and the Vouch Predicate
+### 11.3 Stance aggregation and the person-vouch act
 
 **Net Stance (`def:epoch:net-stance`).** For author
 $j$, target node $v$, and edge type $t$, the **bundle** is the parallel
@@ -1598,19 +1608,19 @@ not records, hence no bundle); the settlement handshake edges Bid, Accept,
 Ratify (recognition reads individual records); the control edges Withdraw,
 Rescind, Leave, De-invite.
 
-The **endorsement-flow projection** of $E_k$ first replaces each eligible
-same-author bundle by one effective edge with parameters
+**Complete person-vouch compilation** reads the folded bundle: it replaces
+each eligible same-author bundle by one effective edge with parameters
 $(\bar{p}_d, \bar{p}_i)$ computed through the canonical tensor pipeline,
 taking $(\mathbb{T}_e, \tau_e)$ — hence $H_\tau$ — from the bundle's
-$\prec$-maximal (newest) member (well-defined: the bundle is a $\prec$-chain);
-it then applies the Vouch Predicate to every actor-directed effective edge.
-**The only specified consumer of the projection is the standing computation
-through endorsement flow** — feed, reward, terminal attribution, and
-terminal transport are not specified in the closure edition.
+$\prec$-maximal (newest) member (well-defined: the bundle is a $\prec$-chain),
+then selects the complete person-vouch acts below. **The fold is one input to
+standing, never a mutation of the record** — feed ranking, raw signed
+traversal, CAN, title, payload display, and settlement recognition continue to
+read their declared raw records or bundles.
 
 Aggregation properties (`prop:epoch:net-stance-properties`): order-free;
 range-safe (the clip returns parameters to the master formula's domain);
-vouch-gated; **priced** (every revision edge increments $N_j$, irrevocably
+person-vouch-gated; **priced** (every revision edge increments $N_j$, irrevocably
 diluting $r_j$); append-only. Sum-then-clip is deliberate: walking back
 accumulated conviction costs counter-edges in proportion to it — flip-flops
 are expensive, stance is sticky (`rem:epoch:conviction-inertia`). A prior
@@ -1626,131 +1636,141 @@ The aggregation key is per-author — cross-author netting is a rejected design
 attributes are the newest member's (above) — the newest-record rule is fixed
 in the spec, closing the last item that was open with the Peer Team.
 
-**Vouch Predicate (`def:epoch:vouch-predicate`).** An edge record or
-effective net bundle is
-**actor-directed** when its target is a **grounded** node — outermost
-identifier constructor $\mathsf{addr}$ or $\mathsf{prof}$
-(`rem:graph:vouch-taxonomy`), a syntactic test so any future census row
-targeting an Actor or Profile inherits the gate by construction. In the
-current census these are Profile-targeted user edges and the direct
-Actor-to-Actor handshake edges Accept and Ratify. A user-authored
-actor-directed record with effective parameters $(p_d, p_i)$ **vouches** iff
+**Person-Vouch Act (`def:epoch:person-vouch-act`).** Standing is computed only
+on **complete person-vouch acts** — a *whole-act* selector, not a per-leg gate.
+A binary record or complete hyper-edge act (`def:graph:complete-act`) is a
+person-vouch act at boundary $k$ iff all of: **(i)** its family and **semantic
+target** carry a person-vouch role in the standing-role census
+(`def:nodes:standing-role-census`); **(ii)** if a hyper-edge, its matched A-leg
+and T-leg form one complete act — no independent leg qualifies; **(iii)** its
+projected source is exactly its initiating author; **(iv)** its semantic target
+is Actor$_i$ or Profile$_i$ (a Profile compiles to the bound Actor $i$);
+**(v)** every mandatory family coordinate, after the per-author fold, is
+**strictly positive** — Opinion $p_d, p_i$; Reference $e, f$; Invitation
+$u, f, r$; Accept/Ratify $c, e$; **(vi)** live authored consent — a revoked
+Invitation is absent, and no control record vouches; **(vii)** no self-vouch
+(projected source $\neq$ target Actor). The predicate is local, order-free, and
+has no glyph. A coherent-hostile $(-,-)$ person-directed act fails (v); raw
+determinant parity stays available to raw consumers but never creates a vouch.
+Control records never vouch and are excluded before compilation, in every
+quadrant (`rem:epoch:control-edges-never-vouch` — load-bearing for De-invite,
+whose fixed positive parameters would otherwise vouch for the expellee).
 
-$$p_d > 0 \quad\text{and}\quad p_i > 0.$$
+Properties (`prop:epoch:person-vouch-properties`): **author-owned** (every
+projected edge is sourced by the author of the act that creates it);
+**passive-independent** (passive context identifies the act and its target but
+contributes no standing weight); **standing-atomic** (a complete hyper-edge
+contributes once or not at all, `cor:graph:standing-leg-atomicity`);
+**record-preserving** (non-vouching, incomplete, hostile, suppressed, or
+standing-inert records stay public, immutable, payload-removable, and readable
+by every non-standing consumer); **range-safe**; **self-vouch-free**;
+**deterministic**.
 
-For netted bundles, $(p_d, p_i) = (\bar{p}_d, \bar{p}_i)$; for non-netted
-settlement records, the predicate reads the record's own parameters. The
-derived Reputation component is vouch-positive by construction when
-its standing-derived parameter is positive. **Control records never vouch**
-and are excluded from the endorsement-flow projection outright, in every
-quadrant (`rem:epoch:control-edges-never-vouch` — load-bearing for
-De-invite L2, which targets a Profile with fixed positive parameters:
-without the exclusion every expulsion would vacuously vouch for the
-expellee).
+**Complete-act coefficient (`def:epoch:complete-act-coefficient`).** Each act's
+epoch-frozen intrinsic strength is the geometric mean of its mandatory positive
+coordinates,
+$\operatorname{coef}(q) = \big(\prod_{\ell=1}^m s_\ell\big)^{1/m} \in [0,1]$ —
+$\sqrt{p_d\,p_i}$ (Opinion), $\sqrt{e\,f}$ (Reference), $(u\,f\,r)^{1/3}$
+(Invitation), $\sqrt{c\,e}$ (Accept/Ratify) — zero on any non-vouching act,
+invariant under leg-role transposition, and independent of raw leg count,
+maturity, temporal entropy, passive-node degree, and incoming artifact weight.
 
-Properties (`prop:epoch:vouch-gate-properties`): order-free;
-boundary-continuous (at $p_d = 0$ or $p_i = 0$ the edge is already
-routing-inert); the vouch-gated projection is a **subgraph** of the
-parity-only projection (all standing hull bounds and contraction
-certificates preserved or improved); record-preserving (non-vouching records
-remain public, immutable, payload-removable, and readable by terminal
-consumers — they simply carry no source rate into standing);
-**one-quadrant correction** — mixed-sign actor-directed records were already
-parity-blocked; the additional exclusion is coherent hostility $(-,-)$:
-coherent for routing, not a vouch. The Vouch Predicate has no glyph: it is a
-local predicate on published parameters, analogous to settlement
-recognition. Coherence composes by determinant parity; stance gates
-actor-directed endorsement.
+### 11.4 Standing flow (the initiator-owned vouch projection)
 
-### 11.4 Endorsement flow (double-cover BFS)
+Standing no longer traverses the Action Graph. It is computed on a derived
+**Actor-only** graph compiled from complete person-vouch acts; the raw
+double-cover BFS survives as a separate service that does not compute standing
+(end of this section).
 
-**Admissible Endorsement Path (`def:epoch:admissible-endorsement-path`).** A
-path $p : j \to i$ is admissible iff (1) viable: consecutive edges respect
-causal order $\mathbb{T}_{e_k} \leq \mathbb{T}_{e_{k+1}}$; (2) actor
-endpoints: $j, i \in V_u$; (3) positive parity: $\epsilon(p) = +1$;
-(4) **vouch gate: every actor-directed leg present in the endorsement-flow
-projection satisfies the Vouch Predicate**; (5) bounded length:
-$|p| \leq L$ (default $L = 4$). Positive parity is necessary but not
-sufficient: coherence composes, stance gates.
+**Projected target activation (`def:epoch:projected-target-activation`).** In
+reduced standing $x = \hat{\alpha}_i = \alpha_i/\nu$, $p(x) = x/(1+x)$, the
+per-hop standing activation is the **fourth root** of the deployed standing
+core $Q$,
+$$g_{\mathrm{vch}}(x) = \left(\frac{Q(p(x))}{Q(1)}\right)^{1/L_{\mathrm{vch}}}, \qquad L_{\mathrm{vch}} = 4,$$
+zero for a never-ignited Actor, strictly increasing on positive live standing,
+and $< 1$ at every finite standing; below the safety floor $\rho_\theta$ it
+falls back to the last-valid standing pair, else to zero. Its log-gain is one
+quarter of the full core gain, so every simple projected path through at most
+four live targets spends at most one full-$Q$ budget.
 
-**Endorsement Flow Weight (`def:epoch:endorsement-flow-weight`):**
+**Initiator-owned vouch projection (`def:epoch:initiator-owned-vouch-projection`).**
+For each ordered Actor pair $(a, i)$, $a \neq i$, let $\mathcal{Q}_{ai}$ be the
+complete person-vouch acts authored by $a$ toward $i$ (after bundle folds,
+revocations, and the person-vouch predicate). If empty, no edge; otherwise
+select the max-coefficient act $q_{ai}$ and emit the **direct projected vouch
+edge**
 
-$$W_{\mathrm{end}}(j \to i) = \max_{p \in \mathrm{AdmPaths}(j \to i, L)} \prod_{e \in p} \tilde{w}(e),$$
+$$\tilde{W}_{\mathrm{vch}}(a \to i) = \operatorname{coef}(q_{ai}) \cdot g_i^{(k)}.$$
 
-zero if no admissible endorsement path exists. Canonical two-edge form
-(`def:epoch:canonical-endorsement-path`):
-$\text{Actor}_j \xrightarrow{\text{Opinion}} \text{Profile}_i \xrightarrow{\text{Reputation}} \text{Actor}_i$
-with $j$ holding a **vouch-positive** Opinion;
-$W_{\mathrm{end}}(j \to i)^{(k)} = \tilde{w}(e_{\mathrm{Op}}) \cdot \tilde{w}(e_{\mathrm{Rep}, i})$.
+The projection contains **Actors only** — passive artifacts, raw legs,
+payloads, and derived Self-edge records are absent
+(`prop:epoch:passive-non-interference`). A positive Opinion toward Profile$_i$
+compiles to one such hop (`def:epoch:direct-profile-vouch`); a complete
+Invitation or Reference toward Profile$_i$ likewise, each as one author-owned
+act (`rem:epoch:complete-hyper-vouches`) — standing traverses neither the raw
+stance leg nor the derived Reputation leg separately.
 
-A relevance-positive Invitation creates a weak conversational conduit
-$j \to \text{Chat} \to \text{Profile}_b \to \text{Actor}_b$ — triply damped,
-zero at zero invitee standing, suppressed by same-author De-invite
-(`rem:epoch:invitation-conduit`). A relevance-positive Reference whose T-leg
-targets a Profile opens the same class of weak, priced conduit
-($\text{Actor}_j \to \text{Artifact} \to \text{Profile}_i \to \text{Actor}_i$)
-through the target's Reputation bond, under identical damping — the Marginal
-A-leg throttles it below a direct Opinion, the terminal Reputation hop is zero
-at zero standing, and the path is hull-bounded. Its withdrawal channel is
-per-leg net stance rather than revocation; multiple References to one Profile
-do not stack (max-product), and self-reference is inert because the standing
-sum excludes $j = i$ (`rem:nodes:reference-target-class`).
+**Projected vouch depth (`def:epoch:projected-vouch-depth`).**
+$L_{\mathrm{vch}} = 4$, measured in **complete projected person-vouch acts** —
+distinct from the raw feed depth $L = 4$, which counts Action-Graph legs. A
+complete Reference or Invitation is one $L_{\mathrm{vch}}$ hop but two raw legs.
 
-**Double Cover BFS State (`def:epoch:double-cover-bfs-state`).** Each node
-$v$ carries $W^+(v)$ (max product over positive-parity paths from source
-$j$) and $W^-(v)$ (same, negative parity). Init: $W^+(j) = 1$,
-$W^-(j) = 0$, zeros elsewhere. **Prospective Contribution Bound
-(`def:epoch:prospective-bound`):**
-$\Phi(v, d) = (W^+(v) + W^-(v)) \cdot \tilde{w}_{\max}^{L-d}$; if
-$\Phi(v,d) < \epsilon_{\mathrm{clip}}$ (default
-$\tilde{w}_{\text{spam}}^L$) the node is clipped (both registers zeroed,
-outgoing edges skipped, permanent within the BFS).
+**Initiator-owned vouch path (`def:epoch:initiator-owned-vouch-path`).** A path
+$P : u = a_0 \to \cdots \to a_h = i$ in the projection with
+$1 \le h \le L_{\mathrm{vch}}$, each Actor at most once, **every edge
+$a_{\ell-1} \to a_\ell$ authored by $a_{\ell-1}$**, and strictly increasing
+projected act times. Its raw weight is
+$W(P) = \prod_{\ell=1}^{h} \tilde{W}_{\mathrm{vch}}(a_{\ell-1} \to a_\ell)$;
+every factor lies in $[0, 1)$, so the max-product always has a simple
+representative.
 
-**Algorithm (`alg:epoch:double-cover-bfs`)** — runs on the **vouch-gated
-endorsement-flow projection** $G$ (net-stance folding and Vouch-Predicate
-filtering applied before traversal; the BFS itself processes every edge it
-is given uniformly, `rem:epoch:vouch-gate-projection`):
+**Source-relative view (`def:epoch:source-relative-view`).**
 
-```text
- 1: Input: Source actor j, vouch-gated endorsement-flow projection G,
-    depth bound L, published derived constants ε_clip, w̃_max
- 2: W⁺(j) ← 1;  W⁻(j) ← 0
- 3: W⁺(v) ← 0;  W⁻(v) ← 0;  Clipped(v) ← false for all v ≠ j
- 4: for d = 1 to L do
- 5:     for all edges v → w satisfying: W⁺(v) + W⁻(v) > 0,  Clipped(v) = false,
-        causal-order viability do
- 6:         if (W⁺(v) + W⁻(v)) · w̃_max^{L−d} < ε_clip then
- 7:             W⁺(v) ← 0;  W⁻(v) ← 0;  Clipped(v) ← true;  continue
- 8:         end if
- 9:         w̃(e) ← |det Ψ[P]_e|^{1/2} · √(1 + τ_e²) · e^{−βH_τ(e)}
-10:         ε(e) ← sgn(det(Ψ[P]_e))
-11:         if ε(e) = +1 then
-12:             W⁺(w) ← max(W⁺(w), W⁺(v) · w̃(e))
-13:             W⁻(w) ← max(W⁻(w), W⁻(v) · w̃(e))
-14:         else
-15:             W⁺(w) ← max(W⁺(w), W⁻(v) · w̃(e))
-16:             W⁻(w) ← max(W⁻(w), W⁺(v) · w̃(e))
-17:         end if
-18:     end for
-19: end for
-20: return W_end(j → i) = W⁺(i) for all i ∈ V_u ∖ {j}
-```
+$$W_{\mathrm{view}}(u \to i) = \max_{P} W(P)$$
 
-Actor-to-actor structure is enforced by extracting $W^+(i)$ only for
-$i \in V_u$. Spam griefing floor: a spam chain of depth $L$ contributes at
-most $\tilde{w}_{\mathrm{spam}}^L \approx 1.5 \times 10^{-8}$.
+over simple causal projected paths $u \to i$ (zero if none;
+$W_{\mathrm{view}}(u \to u) = 1$ as traversal initialization). This is **not
+standing and not admitted flow** — it answers "through the Actors whose
+complete vouches I already follow, how strongly does this Actor appear?" It
+reads only the source's view of an authoring Actor, never incoming weight on a
+passive artifact (`rem:epoch:view-versus-admission`).
+
+**Safety clip (`def:epoch:standing-flow-clip`).** For every selected path the
+epoch certificate publishes a frozen clip $\upsilon_P \in [0, 1]$ obeying the
+exact simplex $\sum_{P \in \mathrm{sel}} \upsilon_P \le 1$ per ordered pair
+$(u, i)$ — distinct from the raw precision floor $\epsilon_{\mathrm{clip}}$,
+which only terminates negligible raw branches.
+
+**Safe standing flow (`def:epoch:safe-standing-flow`, `eq:epoch:safe-standing-flow`).**
+
+$$W_{\mathrm{end}}(u \to i) = \sum_{P \in \mathrm{sel}} \upsilon_P\, W(P) \le W_{\mathrm{view}}(u \to i),$$
+
+zero if no selected path carries a positive certified clip. This is the
+**sole** relational source-target weight entering standing (§11.5) — not a raw
+Action-Graph max-product, not a double-cover register. "Safe" certifies
+clipped-row contraction, forward invariance of the standing box, source-target
+no-stacking, and the zero-flow neutral fallback (`prop:epoch:clip-no-stacking`,
+`prop:epoch:clip-safe-polarity`): if nothing certifies, $W_{\mathrm{end}} = 0$
+and standing is neither invented nor reallocated.
+
+**Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
+double-cover traversal survives as a public raw-graph service for consumers
+needing signed raw-path evidence (the canonical bridge-consent calculation). It
+reads the sign already computed for feed ranking and **does not compute
+standing** — standing and feed share neither one activation nor one traversal
+(`rem:dynamics:standing-feed-separation`).
 
 ### 11.5 Standing
 
 **Standing $\alpha_i$ (`def:epoch:standing`, `eq:epoch:standing`)** — the
 **weighted mediant** of post-debit $(\text{balance}, \text{count})$ pairs:
 
-$$\alpha_i = \dfrac{b_i + \sum_{j \neq i} W_{\mathrm{end}}(j \to i) \cdot b_j}{\max(N_i, 1) + \sum_{j \neq i} W_{\mathrm{end}}(j \to i) \cdot N_j}$$
+$$\alpha_i = \dfrac{b_i + \sum_{u \neq i} W_{\mathrm{end}}(u \to i) \cdot b_u}{\max(N_i, 1) + \sum_{u \neq i} W_{\mathrm{end}}(u \to i) \cdot N_u}$$
 
 The actor's own pair enters with its own action mass $\max(N_i, 1)$; each
-vouching endorser's pair enters with weight $W_{\mathrm{end}}(j \to i) \cdot
-N_j$ (the endorser's action mass scaled by endorsement flow). A mediant lies
-in the hull of its component ratios $r_j = b_j/N_j$. **Reduction theorem:** on
+vouching source's pair enters with weight $W_{\mathrm{end}}(u \to i) \cdot
+N_u$ (the source's action mass scaled by safe standing flow, §11.4). A mediant
+lies in the hull of its component ratios $r_u = b_u/N_u$. **Reduction theorem:** on
 a uniform-activity population the mediant coincides exactly with the
 rate-DeGroot average of earlier editions — every published numeric survives
 the reduction. **Vouching is rival:** an endorser's action mass rides in every
@@ -1762,13 +1782,13 @@ scalar. Standing is the straddler: binding where the write rule reads it
 downstream read-sites read it.
 
 **Properties (`prop:epoch:standing-properties`)** (mediant properties): (1)
-bidirectional — $\partial\alpha_i/\partial W_{\mathrm{end}}(j \to i)$ has sign
-$\mathrm{sgn}(r_j - \alpha_i)$ (raising an endorser's weight moves standing
-toward that endorser's ratio); (2) hull bound —
-$\alpha_i \in [\min_j r_j, \max_j r_j]$ always; (3) neighbourhood
+bidirectional — $\partial\alpha_i/\partial W_{\mathrm{end}}(u \to i)$ has sign
+$\mathrm{sgn}(r_u - \alpha_i)$ (raising a source's weight moves standing
+toward that source's ratio); (2) hull bound —
+$\alpha_i \in [\min_u r_u, \max_u r_u]$ always; (3) neighbourhood
 convergence — as mutual flow grows dense the actor's own pair becomes a
-vanishing share and $\alpha_i \to \big(\sum_{j \neq i} b_j\big)/\big(\sum_{j
-\neq i} N_j\big)$, the pooled leave-one-out burn-per-action of the vouching
+vanishing share and $\alpha_i \to \big(\sum_{u \neq i} b_u\big)/\big(\sum_{u
+\neq i} N_u\big)$, the pooled leave-one-out burn-per-action of the vouching
 peers (`rem:epoch:dense-cluster-fairness`).
 
 **Dilution cost (`prop:epoch:dilution-cost`):** with
@@ -1858,12 +1878,12 @@ safety floor $\rho_\theta$ (`post:epoch:reduction-convention`).
  2: Step 0 — Snapshot
  3:     Snapshot subgraph: E_k                       (post:epoch:epoch-boundary)
  4:     Compute r_i^(k) from B_i^(k), N_i in E_k     (def:comparator:rate)
- 5: Step 1 — Endorsement flow
- 6:     Construct the vouch-gated endorsement-flow projection
-        (net stance + Vouch Predicate + control-edge exclusion
-         + inviter revocation)                       (def:epoch:net-stance)
- 7:     Run the double-cover BFS on it per source actor
- 8:     ⇒ W_end(j → i) for all actor pairs
+ 5: Step 1 — Standing flow (initiator-owned vouch projection)
+ 6:     Compile the projection: complete person-vouch acts → W̃_vch(a→i)
+        (net stance + person-vouch predicate + control-edge exclusion
+         + inviter revocation + coef·g_i)             (def:epoch:initiator-owned-vouch-projection)
+ 7:     Select paths, clip (Σ υ_P ≤ 1) per source actor
+ 8:     ⇒ W_end(u → i) = Σ υ_P·W(P) for all actor pairs  (def:epoch:safe-standing-flow)
  9: Step 2 — Standing
 10:     Recompute α_i^(k) for all actors i           (def:epoch:standing)
 11: Step 2.5 — Title certificate
@@ -2027,12 +2047,12 @@ effective floor is derived by the safety clamp (`rem:epoch:dial-scope`).
 
 | Quantity | Closure consumer | Notes |
 |---|---|---|
-| $\epsilon(e)$, $\epsilon(p)$ | double-cover endorsement-flow BFS (`alg:epoch:double-cover-bfs`) | parity routing; coherence bit, never a favor bit |
+| $\epsilon(e)$, $\epsilon(p)$ | raw signed double-cover service (`alg:epoch:double-cover-bfs`), feed ranking | parity routing; coherence bit, never a favor bit |
 | $\lvert\det \boldsymbol{\Psi}_e^{[P]}\rvert^{1/2}$ | $\tilde{w}(e)$ | coherence factor |
 | $\mathbb{T}_e$, $\tau_e$, $H_\tau(e)$ | $\mathbb{T}_e$: causal order + boundary replay; $\tau_e, H_\tau$: $\tilde{w}(e)$ | maturity and boundary factors; edge weight and replay checks |
 | $\prec_{\text{inc}}$, asserted parents | formation rule; causal closure of $E_k$ | backward-only dependency; formation and viability |
-| $\tilde{w}(e)$ | double-cover endorsement-flow BFS | one formula, **one closure consumer**; terminal read-sites may read the published value by ledger permission |
-| stance marginals $p_d, p_i$ | Vouch Predicate; settlement-adjacent stance reads | stance gates actor-directed endorsement; terminal stance consumers named in the ledger |
+| $\tilde{w}(e)$ | raw-graph traversals: feed ranking, the raw signed double-cover service, bridge Channel 1 | **one raw formula for all raw-graph consumers**; standing is not one of them; terminal read-sites may read the published value by ledger permission |
+| stance marginals $p_d, p_i$ | person-vouch predicate; settlement-adjacent stance reads | stance gates the person-vouch; terminal stance consumers named in the ledger |
 | `settles`-pointer | recognition clauses (i)–(ii) | identity-key resolution |
 | ownership thread | title certificate; recognition clause (iii) | title as straddler |
 | $\mathrm{owner}^{(k)}$ | recognition clause (iii) | terminal routing/display read it downstream |
@@ -2086,23 +2106,25 @@ time-locked supply auditability) reproduced by their own owners.
   published record for each edge contains exactly the fields required to
   recompute $\boldsymbol{\Psi}_e$, $\boldsymbol{\Psi}_e^{[P]}$,
   $\epsilon(e)$, $\tilde{w}(e)$, the identity key, and the payload witness;
-  closure computations depend on no unpublished field. The Vouch Predicate
+  closure computations depend on no unpublished field. The person-vouch predicate
   is likewise self-sufficient: two sign tests on public parameters, after
   public netting where applicable. Inviter revocation is self-sufficient: a
   $\prec$-maximum over a same-author, same-incidence public record chain.
 - **Independent Derivability of Standing Inputs
-  (`subsec:deployment:standing-inputs`).** All inputs to the standing
+  (`subsec:deployment:standing-package`).** All inputs to the standing
   computation — $B_i$ (public Layer-0 attestation interface), $N_i$ (from
-  the committed $E_k$), $r_i$, the vouch-gated endorsement-flow projection
-  (net stance, vouch gating, control-edge omission, and inviter revocation
-  all from public records), $W_{\text{end}}$ (double-cover BFS), $\alpha_i$
+  the committed $E_k$), $r_i$, the initiator-owned vouch projection
+  (net stance, person-vouch selection, control-edge omission, inviter
+  revocation, complete-act coefficients, and target activations, all from
+  public records), $W_{\text{end}}$ (the clipped safe standing flow over
+  selected paths), $\alpha_i$
   — are independently computable by any participant without querying the
   server.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and damped weight; **net
-  stance and Vouch Predicate; control-edge exclusion and inviter
-  revocation**; the **write rule (W1/W2a/W2b), closure rule, formation rule,
+  stance and the person-vouch predicate; complete-act coefficient and target
+  activation; control-edge exclusion and inviter revocation**; the **write rule (W1/W2a/W2b), closure rule, formation rule,
   and the θ-debit ledger**; settlement recognition and the **epoch title
   fold**; the epoch derivation sequence and certificate definitions; the
   safety-price/five-ρ-floor family — is
@@ -2181,11 +2203,11 @@ straddler is a design error."
 | $r_i$ | Neutral source $B_i/\max(N_i,1)$; the unique exogenous input to the standing recursion; derivable from the public ledger without traversal. | `def:comparator:rate` |
 | $N_i$ | Cumulative action count; non-decreasing; irrevocably incremented by every action. | — |
 | $b_i$ | Residual balance $B_i - \sum_a \theta^{(k_a)}$ (imported frame net of consummated per-action $\theta$-debits, each vintage-frozen); numerator of $r_i$ and the object of W1. Replaces the retired excess-burn diagnostic. | `def:comparator:residual-balance` |
-| $\bar{p}_d, \bar{p}_i$ | Net stance of a same-author, same-target, same-type bundle: sum-then-clip to $[-1,1]$; endorsement-flow projection only. | `def:epoch:net-stance` |
-| Vouch Predicate | Actor-directed record vouches iff $p_d > 0 \wedge p_i > 0$; no glyph by design. | `def:epoch:vouch-predicate` |
+| $\bar{p}_d, \bar{p}_i$ | Net stance of a same-author, same-target, same-type bundle: sum-then-clip to $[-1,1]$; initiator-owned vouch projection only. | `def:epoch:net-stance` |
+| Person-vouch act | A complete act vouches iff census-eligible, complete, author-sourced, person-targeted, all mandatory coordinates strictly positive, consented, and non-self; no glyph. | `def:epoch:person-vouch-act` |
 | inviter revocation | Per-author suppression predicate for Invitation bundles when the latest same-incidence record is a De-invite; no glyph. | `def:epoch:inviter-revocation` |
 | control-edge class | Withdraw, Rescind, Leave, De-invite L1/L2: type-fixed records, never vouch, excluded from the projection. | `rem:epoch:control-edges-never-vouch` |
-| $W_{\text{end}}(j \to i)$ | Endorsement flow weight: max admissible (vouch-gated, positive-parity) path product, length $\le L$. Zero if no admissible path. | `def:epoch:endorsement-flow-weight` |
+| $W_{\text{end}}(u \to i)$ | Safe standing flow: clipped sum $\sum_P \upsilon_P W(P)$ over selected initiator-owned vouch paths, $\le W_{\text{view}}$. Sole relational input to standing. | `def:epoch:safe-standing-flow` |
 | $W^+(v), W^-(v)$ | Double-cover parity registers. | `def:epoch:double-cover-bfs-state` |
 | $\Phi(v,d)$ | Prospective contribution bound $(W^+ + W^-)\tilde{w}_{\max}^{L-d}$; clip below $\epsilon_{\text{clip}}$. | `def:epoch:prospective-bound` |
 | $\epsilon_{\text{clip}}$ | Clipping threshold, default $\tilde{w}_{\text{spam}}^L \approx 1.5\times 10^{-8}$ ($L=4$). | `def:epoch:prospective-bound` |
@@ -2203,10 +2225,10 @@ straddler is a design error."
 | door headroom $H_k$ | $\sum_{e\in W_k}(\rho_{\text{act}}(e) - \rho_{\text{eff}})$: epoch stamp surplus over the door; congestion diagnostic **(L1·verify)**, consumed by no formula, no actuator. | `def:network:door-headroom` |
 | $W_{\text{loc}}$, $\mathcal{K}_{\text{row}}$ | Local width and local certificate **(L1·verify)**: published fence/stability evidence; consumed by no ν-side formula. | `subsec:epoch:floor-governance` |
 | `settles`-pointer | Identity-key reference Accept/Ratify → Bid; metadata, not incidence. | `def:graph:settlement-recognition` |
-| Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; actor-directed for the Vouch Predicate. | `edge:nodes:accept`, `edge:nodes:ratify` |
-| Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; endorsement-inert. | §9 |
+| Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; actor-directed for the person-vouch predicate. | `edge:nodes:accept`, `edge:nodes:ratify` |
+| Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; standing-inert. | §9 |
 | $\tau^*$ | Maturity crossover $\approx 0.94$. | `prop:epoch:crossover-location` |
-| Stability machinery **(not (L1·closure): (—) shared dynamics, plus fence objects $\lambda(\alpha^*)\hat{\Delta}$, $\mathcal{K}_{\text{row}}$, $W_{\text{loc}}$ tagged (L1·verify))** | $g(\alpha)$, $\tilde{g}(p)$, $\lambda(\alpha)$, $L_w$, $K(p)$, $\hat{\Delta}$; deployed safety gate = norm certificate $L_w\hat{\Delta} < 1$ (`thm:dynamics:coupled-contraction`); operative product $\lambda(\alpha^*)\hat{\Delta}$; $\lambda(1) = 0.32825$ (danger-band peak, App B); rate caps $\sup\Phi(\alpha) \approx 0.507$ unconditional, $\le 0.328$ gate-cleared; $\kappa_{\max} = \tfrac14\lambda(\alpha^*)\hat{\Delta}$; union-acyclic bound $L_w\hat{\Delta} < 4$; $\mathcal{E}$ endorsement/coupling graph; $C_\tau = \sqrt{1+\tau^2}e^{-\beta H_\tau}$; $\Pi$ excursion budget. The live relay set is vouch-filtered: non-vouching legs, control legs, and revocation-suppressed Invitation bundles have weight zero, so every contraction certificate weakly improves (`rem:dynamics:vouch-filtered-relays`). | `app:dynamics` |
+| Stability machinery **(not (L1·closure): (—) shared dynamics, plus fence objects $\lambda(\alpha^*)\hat{\Delta}$, $\mathcal{K}_{\text{row}}$, $W_{\text{loc}}$ tagged (L1·verify))** | $g(\alpha)$, $\tilde{g}(p)$, $\lambda(\alpha)$, $L_w$, $K(p)$, $\hat{\Delta}$; deployed safety gate = norm certificate $L_w\hat{\Delta} < 1$ (`thm:dynamics:coupled-contraction`); operative product $\lambda(\alpha^*)\hat{\Delta}$; $\lambda(1) = 0.32825$ (danger-band peak, App B); rate caps $\sup\Phi(\alpha) \approx 0.507$ unconditional, $\le 0.328$ gate-cleared; $\kappa_{\max} = \tfrac14\lambda(\alpha^*)\hat{\Delta}$; union-acyclic bound $L_w\hat{\Delta} < 4$; $\mathcal{E}$ endorsement/coupling graph; $C_\tau = \sqrt{1+\tau^2}e^{-\beta H_\tau}$; $\Pi$ excursion budget. The projected vouch set holds only complete author-owned person-vouches; non-vouching, control, and revocation-suppressed acts compile nothing, so every contraction certificate weakly improves (`rem:dynamics:person-vouch-filtered-paths`). | `app:dynamics` |
 
 ### 14.5 Terminal objects (full paper only)
 
