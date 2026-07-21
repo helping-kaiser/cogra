@@ -23,7 +23,7 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 0. Near-term design session | 1 | **Q29** | Collective key custody — member-held keys over backend custody. Nothing blocks on it mechanically, but custody of permanent signing power is the kind of debt to retire early; design it before collectives carry real value. |
+| 0. Near-term design session | 1 | **Q29** | Key custody — user key recovery and Collective member-held keys. User signing keys are client-held by decision (2026-07-21), which makes the recovery posture load-bearing for auth.md's wave-G rewrite; Collective custody of permanent signing power is the kind of debt to retire early. Run before wave G1. |
 | 1. L1-author discussion | 1 | **Q28** | Zero-jail person-landing — the hyper-edge T-leg escape. Parked pending discussion with the L1 author; an L2 policy fallback exists if L1 declines, so nothing downstream blocks on it. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
@@ -62,15 +62,35 @@ questions are closed.
 
 ---
 
-## Q29 — Collective key custody: member-held keys over backend custody
+## Q29 — Key custody: user recovery and Collective member-held keys
 
 **Where it shows up:**
 [collectives.md §2](instances/collectives.md#2-custody) (custody),
 [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
-(backend-mediated authoring)
-**Status:** open (design early — before collectives carry real value)
+(client-signed authoring),
+[auth.md](implementation/auth.md) (what recovery recovers)
+**Status:** open (design before wave G1 — auth.md depends on it)
 
 ### Context
+
+User writes are **client-signed, backend-relayed** ([substrate.md
+§6](primitive/substrate.md#6-authoring-path-and-admission)): the
+signing key lives on the member's device, and it is the key the
+actor's L0 address and burned admission value hang on. Two custody
+questions remain open, one per account kind.
+
+### The user question — recovery
+
+Key loss is identity loss: email recovery restores the CoGra
+*login*, never the L1 actor — standing, title, and the funded L0
+address hang on a key CoGra does not have. Decide the recovery
+posture along the ladder: device keystore only (device loss = actor
+loss, husk semantics); a user-passphrase-encrypted key backup
+stored by CoGra (the operator cannot decrypt — arguably still
+zero-custody); social or threshold recovery later. auth.md's
+rewrite must state what "recovery" recovers.
+
+### The Collective question — member-held keys
 
 A Collective's records are signed by one keypair. Today that key
 lives in **backend custody**: members authenticate to CoGra and the
@@ -79,8 +99,6 @@ in a rewritable system — a compromised or misused key means
 permanent, publicly attributed L1 records in the Collective's name,
 not database rows anyone can fix. Backend custody also concentrates
 every collective's signing power in one operator.
-
-### The question
 
 Design the member-held custody model. The working direction:
 

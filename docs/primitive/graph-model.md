@@ -108,10 +108,11 @@ events:
 
 The frontend keeps session data local; nothing becomes graph state
 unless the actor gestures in response. The rule is enforced by
-structure, not ethos alone: authoring is backend-mediated and
-every act costs its author θ — CoGra's backend has no write path
-for implicit signals, and a frontend that converted views into
-records would drain its users' capacity for noise.
+structure, not ethos alone: every record carries its author's own
+signature and costs its author θ — an implicit signal has no path
+into the graph unless the actor's key deliberately signs it, and a
+frontend that converted views into records would drain its users'
+capacity for noise.
 
 The stakes: the graph is not a surveillance log; every record
 corresponds to something its author consciously did; bots get no
