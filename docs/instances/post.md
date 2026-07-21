@@ -1,218 +1,188 @@
 # Post
 
-The **Post** is a content node — a piece of authored content
-(text and/or attached media) authored by a User or Collective.
-Posts are the primary public-content surface of the platform: they
-are the canonical target the [feed-ranking](../primitive/feed-ranking.md)
-algorithm orders, and they are what most opinion-bearing actor
-edges in a typical instance point at.
+The **Post** is CoGra's primary public content surface — a piece
+of authored content (text and/or media) published by a User or
+Collective. On the substrate a Post *is* an L1 **Content** node,
+minted by its author's Publish record
+([substrate-map.md §2](../primitive/substrate-map.md#2-content)):
+publicly attributed, priced, permanent. What the Post *shows* —
+title, body, media — is CoGra display content, carried per the
+payload model
+([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+
+Posts are the canonical target
+[feed-ranking](../primitive/feed-ranking.md) orders, and what most
+Opinion records in a typical instance point at.
 
 ---
 
 ## 1. Creation
 
-A Post is created by a single authoring gesture from one actor —
-either a User or a Collective. There is **no approval flow**:
-unlike junction nodes (see
-[graph-model.md §5](../primitive/graph-model.md)),
-a Post requires no second-party affirmation to come into existence.
-The author's outgoing edge is the only edge needed to bring the
-node into the graph.
+Publishing is one gesture: the author's **Publish** record
+(Actor → Content,
+[edges.md §2](../primitive/edges.md#2-binary-families-cogra-authors)).
+Genesis mints the Content node and fixes `creator` — no approval
+flow, no second-party affirmation. The identity key of the Publish
+record *is* the Post's identity, forever
+([layer1-interface.md §9](../primitive/layer1-interface.md#9-node-and-edge-type-inventory)).
 
-The gesture writes three records atomically:
+Like every act it is priced and gated: the backend checks the
+two-gate write rule and the act debits `θ`
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 
-- A new `:Post` node on the graph.
-- The Postgres `posts` entity row plus the first `post_versions`
-  row carrying the body, and any attachments
-  (see [data-model.md](../implementation/data-model.md)).
-- An actor edge from the authoring actor toward the new Post
-  node — the **authorship edge** (§5). Its `(dim1, dim2)` values
-  are the author's initial opinion of their own content,
-  typically high positive sentiment and relevance.
+The Publish record carries:
 
-A Collective authoring a Post is the same gesture: the graph
-records the Post as the Collective's, and the off-graph
-authentication that produced it traces — possibly through nested
-CollectiveMember chains — back to one or more Users with active
-sessions per [user.md §1](../primitive/user.md#1-user-vs-collective)
-and [auth.md](../implementation/auth.md). Members of the
-Collective do not individually sign or approve the post; the
-Collective's social-contract governance defines whether and how
-member consent is required, per
+- **The attachment parameter.** Publish is a single-parameter
+  family: `p_d` = the author's attachment `a ∈ [−1, 1]`, `p_i`
+  fixed at `1`. The frontend defaults it low (`+0.1`) per the
+  repo-wide low-defaults policy
+  ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)) —
+  headroom stays for deliberately strong attachment; the default
+  is a fallback, never the recommendation.
+- **License qualifiers.** Attribution `a ∈ {0, 1}` and oversight
+  `o ∈ {0, 0.5, 1}` are structural metadata of the Publish
+  record — declared at authoring time (mandatory in every
+  content-creation flow), immutable thereafter, out of reach of
+  any edit. Enforcement is CoGra's, per the four planks in
+  [platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations).
+- **The payload envelope.** The Peer Content Envelope carries the
+  Post's structured fields — title, description, body — and the
+  digests of attached media; media bytes live in blob storage,
+  witnessed transitively through the digests.
+
+In the same flow the backend writes CoGra's own state: the
+Postgres display rows and the mirror record. Both are derived
+surfaces — the L1 record wins any disagreement.
+
+A Collective authoring a Post is the same gesture performed by
+the Collective's own actor (keypair in backend custody). Whether
+and how member consent is required is the collective's
+social-contract governance, per
 [collectives.md](collectives.md).
 
 ---
 
-## 2. Graph-side properties
+## 2. What rides where
 
-A Post node carries the minimum the graph needs to traverse,
-filter, and rank. Substance lives in Postgres (§3).
+| Piece | Home |
+|---|---|
+| Title, description, body | Envelope fields on the Publish (and edit) payloads; Postgres display rows for query and render |
+| Media | Bytes in blob storage; digests committed in the envelope |
+| Topics | Tag hyper-edges toward Types (§3) |
+| Quotes, embeds, mentions | Reference hyper-edges with the Post as citing artifact (§3) |
+| Stances | Opinion records toward the node |
+| Comments | Review hyper-edges minting Comment nodes ([comment.md](comment.md)) |
+| Moderation state | Postgres flags + the verdict Tag mark ([moderation.md](moderation.md)) |
 
-The Post carries per-field moderation-status properties on
-**`title`** and **`description`** (both optional), **`content`**
-(the body), and **`attachments`** (every attached media under one
-status — see [moderation.md §5](moderation.md#5-scope) on
-per-attachment targeting), plus the node-level
-`moderation_status` cache. Universal mechanics in
-[nodes.md](../primitive/nodes.md);
-Post-specific cascade in §6. Body and attachment content live in
-Postgres / object storage (§3); concrete types and indexes in
-[graph-data-model.md](../implementation/graph-data-model.md).
-
----
-
-## 3. Postgres-side content
-
-A Post's substance is its title, description, body, and attached
-media — all live in Postgres, linked to the graph node by UUID. Edits to display
-content are append-only per
-[layers.md §4](../primitive/layers.md#4-layers-on-postgres-side-display-content):
-a new version row, no overwrite.
-
-- **`title`** / **`description`** — optional headline and short
-  summary. Stored on `post_versions` rows; see
-  [data-model.md](../implementation/data-model.md).
-- **`content`** — the body text. Stored on `post_versions` rows;
-  see [data-model.md](../implementation/data-model.md).
-- **Attachments** — images, videos, and other media via the
-  `post_attachments` junction table, which carries
-  per-attachment `display_order` and an optional `is_cover`
-  flag. Each row references one `media_attachments` asset, owned
-  by the same author as the Post (anti-hijack rule per
-  [data-model.md "Why parents point at attachments"](../implementation/data-model.md#why-parents-point-at-attachments)).
-
-The cached `posts.author_id` column is a derivation of the graph
-authorship rule — see §5 and
-[authorship.md "Caching"](../primitive/authorship.md#caching).
+The rule behind the split: the shared graph holds what the Post
+*is* and every act about it; Postgres holds what it *shows*
+([nodes.md §4](../primitive/nodes.md#4-display-content-and-moderation-surfaces)).
 
 ---
 
-## 4. Edges
+## 3. Acts around a Post
 
-### As source (outgoing)
+**By the author, with the Post:**
 
-A Post is not an actor and authors no actor edges. It carries
-two outgoing structural edge types, both system-created:
+- **Topic tagging** — a **Tag** hyper-edge (Actor → Post → Type),
+  authored by the Post's author, at creation or later; each tag is
+  its own priced act. See [hashtag.md](hashtag.md).
+- **Quoting, embedding, mentioning** — a **Reference** hyper-edge
+  (Actor → Post → target) per cited node, authored alongside the
+  Publish or later; nothing is minted, both endpoints pre-exist. A
+  mention targets the person's **Profile** — a positive, effortful
+  mention is a weak, priced vouch
+  ([edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)).
 
-- **`Post → Hashtag` (`:TAGGING`)** — one edge per hashtag the
-  post is tagged with. See
-  [edges.md §2 "Tagging"](../primitive/edges.md). The
-  Hashtag node is content-addressed by canonical name (per
-  [data-model.md "Node identity strategies"](../implementation/data-model.md#node-identity-strategies)),
-  so the same hashtag across instances resolves to the same
-  node.
-- **`Post → any node` (`:REFERENCES`)** — one edge per node the
-  Post embeds, quotes, or mentions: another Post it quotes or
-  cites (e.g. pointing at the original of a re-uploaded image),
-  a User or Collective named in the body, a Proposal it
-  campaigns for, etc. Hashtag is the one excluded target —
-  hashtags go through `:TAGGING` (above) and a single
-  structural edge per (source, target) pair is the rule. The
-  carrier semantics, target catalog, and deferred traversal
-  rules live in
-  [edges.md §2 "Reference"](../primitive/edges.md).
+**By anyone, toward the Post:**
 
-### As target (incoming)
-
-A Post receives:
-
-- **Actor edges** from Users and Collectives carrying
-  `(sentiment, relevance)` per
-  [edges.md §1](../primitive/edges.md) — the
-  like/dislike surface plus per-viewer relevance, used by
-  [feed-ranking](../primitive/feed-ranking.md) to weight the
-  Post for each viewing user. The earliest of these is the authorship
-  edge (§5).
-- **`Comment → Post` (`:CONTAINMENT`)** when a Comment is
-  written on the Post. See
-  [edges.md §2 "Containment / belonging"](../primitive/edges.md).
-- **`ChatMessage / Post / Comment → Post` (`:REFERENCES`)** when
-  another content node embeds the Post — a chat message sharing
-  the Post into a chat, another Post quoting or citing it (e.g.
-  pointing at the original of a re-uploaded image), a Comment
-  citing it. See
-  [edges.md §2 "Reference"](../primitive/edges.md) and
-  [chats.md](chats.md) for the worked-out ChatMessage patterns
-  (sharing a post into a chat, the personal-newsfeed shape).
-- **`Proposal → Post` (`:TARGETS`)** when a moderation Proposal
-  targets one of the Post's per-field moderation-status
-  properties (§3). See
-  [edges.md §2 "Subject targeting"](../primitive/edges.md);
-  cascade in §6.
+- **Opinion** — the stance surface: valence and connection,
+  full four-quadrant vocabulary, no authoring bar.
+- **Review** — commenting; the hyper-edge targets the Post and
+  mints the Comment ([comment.md](comment.md)).
+- **Reference** — being quoted or embedded: other artifacts point
+  at the Post as their Reference target. How the feed crosses a
+  reference's citation leg — the content-intrinsic and
+  initiator-owned channels — is
+  [feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set).
+- **The verdict Tag** — The Moderator's `(0,0)` + payload mark
+  toward a named moderation Type ([moderation.md](moderation.md)).
 
 ---
 
-## 5. Authorship
+## 4. Editing
 
-A Post's author is the actor whose incoming actor edge has the
-earliest layer-1 timestamp — the same rule that derives
-authorship for every node type
-([authorship.md](../primitive/authorship.md)). On the graph that
-edge carries the `:AUTHOR` sub-label; the author's `(dim1, dim2)`
-on the same edge are normal opinion values (sentiment / relevance),
-not a stand-in for the label. The two coexist: the label marks
-authorship, the dimensions carry the author's opinion of their
-own work.
+The instantiation of the node-value update rule
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
 
-`:AUTHOR` is the only representation of authorship on the graph
-side, and what the friend-authored fresh-post detection in
-[feed-ranking.md §5.2](../primitive/feed-ranking.md#92-friend-fresh-reordering)
-traverses. For Postgres-side display queries, `posts.author_id`
-is cached on the row. Both are rebuildable from the graph; the
-graph wins in any disagreement.
+- **Carrier:** the author's **Opinion `(0,0)` + payload** toward
+  the Post — the default edit carrier.
+- **Eligible author:** the creator, alone. A single-author fold,
+  so "newest" is exact: the author's records toward the node form
+  a strict `≺`-chain.
+- **Granularity:** per field — title, description, body, and the
+  media manifest each fold newest-wins independently; an edit
+  payload carries only the fields it changes. Replacing media is
+  new digests in a new edit payload; the old bytes' digests stay
+  committed on the superseded record.
+
+Every edit is a priced act — `θ`-debited, permanently counted.
+History is public: superseded payloads remain published unless
+removed (§5). The `(0,0)` edit records share the author's Opinion
+bundle toward their own Post with any organic stance records —
+they sum to nothing but refresh the bundle's newest-member
+temporal attributes, matching feed-ranking's
+revision-refreshes-newest rule.
+
+What never edits: the Post's identity (the genesis record), its
+`creator`, and its license qualifiers.
 
 ---
 
-## 6. Lifecycle
+## 5. Lifecycle
 
-Post nodes are **never deleted**. Per
-[layers.md §5](../primitive/layers.md#5-deletion-policy), the
-only permitted "removal" is in-place layer redaction on graph
-properties or a tombstone version row on Postgres-side display
-content; both preserve a visible record that the change
-occurred.
+Post nodes are **never deleted** — the shared graph is
+append-only, and the structural record of every act stays.
+Removal of content is **payload removal**: the payload state moves
+one way, full → reduced, per whole record; the visible mark for
+"never erase silently" is the immutable structural record plus the
+reduced payload state
+([layers.md](../primitive/layers.md)).
 
-Redaction triggers on a Post are moderation
-([moderation.md §1](moderation.md#1-the-two-classification-paths))
-and — with the author's opt-in — content-level account deletion.
+Which flows trigger removal on a Post — a moderation verdict, the
+author's account deletion — and the Postgres-side tombstone and
+archive mechanics live in [moderation.md](moderation.md),
+[account-deletion.md](account-deletion.md), and
+[retention-archive.md](../primitive/retention-archive.md). A full
+deletion sweeps payload and salt across the whole revision chain —
+the genesis payload and every edit record's payload (§4) — while
+every structural record stays.
 
-Account deletion of the Post's author does **not** by default
-affect the Post's body, attachments, or graph node — identity
-redaction targets the User node's PII only. The Post is
-content-redacted only if the author opts in to the content-level
-scope of [account-deletion.md](account-deletion.md).
-
-The Post's UUID is stable across every redaction. Authorship
-caches keyed on the UUID stay valid; the outgoing `:TAGGING`
-and `:REFERENCES` edges and every incoming actor / containment
-/ reference / targeting edge keep pointing at the same node. A
-redacted Post is a partially-or-fully gutted but
-still-graph-resident content node, not a removed one.
+The Post's identity key is stable across every removal: incident
+records keep pointing at the same node, and caches keyed on it
+stay valid. A removed Post is a reduced but still-graph-resident
+Content node, not a vanished one.
 
 ---
 
 ## What this doc is not
 
-- **Not the feed-ranking spec.** Where a Post surfaces in any
-  given viewing user's feed — including the friend-authored fresh-post
-  reorder layer, the community bot-defense / self-redemption
-  usage conventions that ride on top of regular Posts, and the
-  per-viewer filter and decay layers — lives in
+- **Not the feed spec.** Where a Post surfaces in a viewer's
+  feed — the path set, the channels a reference crosses, the
+  read-side layers — lives in
   [feed-ranking.md](../primitive/feed-ranking.md).
-- **Not the authorship rule.** The earliest-incoming-edge
-  derivation, the cache rebuild semantics, and the worked
-  example live in [authorship.md](../primitive/authorship.md).
-- **Not the moderation primitive.** The Proposal mechanism,
-  the mod gate, eligibility, thresholds, and the redaction
-  cascade live in [moderation.md](moderation.md).
-- **Not the deletion mechanism.** The redaction primitive lives
-  in [layers.md §5](../primitive/layers.md#5-deletion-policy);
-  the per-row legal hold and archive disposition live in
-  [retention-archive.md](../primitive/retention-archive.md).
-- **Not the edge catalog.** Per-target-type edges with
-  dimension labels live in [edges.md](../primitive/edges.md).
-- **Not the Memgraph or Postgres schema.** Concrete property
-  types, columns, indexes, and the
-  `post_attachments` / `media_attachments` shapes live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
+- **Not the update rule.** The fold semantics, the eligibility
+  model, and the update-record discipline live in
+  [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates);
+  this doc only declares the Post's three slots.
+- **Not the authorship rule.** Intrinsic author binding and its
+  caches live in [authorship.md](../primitive/authorship.md).
+- **Not the moderation mechanism.** Reports, proposals, verdicts,
+  and the removal cascade live in [moderation.md](moderation.md).
+- **Not the edge catalog.** Family semantics, parameter roles,
+  and census pointers live in
+  [edges.md](../primitive/edges.md).
+- **Not the store schemas.** Concrete Postgres columns, envelope
+  key layout, and mirror shapes live in
+  [data-model.md](../implementation/data-model.md) and
+  [graph-data-model.md](../implementation/graph-data-model.md).
