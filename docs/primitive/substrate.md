@@ -189,12 +189,38 @@ design question for this doc, not a per-instance improvisation.
 
 ## 6. Authoring path and admission
 
-**Backend-mediated.** The CoGra backend is the actor's authoring
-agent toward L1 — it holds the association between the person's
-account and their L1 actor (identity association is terminal by
-contract) and submits their gestures. Client-direct authoring is a
-decentralized-phase roadmap item
-([roadmap.md](../implementation/roadmap.md)).
+**Client-signed, backend-relayed.** A record's signature is the
+actor's own: the signing key lives on the member's device and never
+enters CoGra custody — it is the key the actor's L0 address, and
+every value burned to it, hangs on. The backend is the actor's
+preparation and transport agent, never their signer (it holds the
+person ↔ actor association — identity association is terminal by
+contract — and the carriage stores, nothing more). One write runs
+in four steps:
+
+1. **Prepare.** The backend validates the gesture (envelope
+   conformance, L2 policy), pre-checks the write rule below,
+   assembles the canonical record — payload envelope, salt,
+   content witness — and returns it to the client together with
+   the salt and witness, so the client recomputes the commitment
+   before signing. The user never signs blind bytes.
+2. **Sign.** On the device; the key never leaves it.
+3. **Relay.** The backend submits the signed record to L1 and
+   drives retries across epoch boundaries. Relaying confers
+   nothing: the signature covers the record, so the backend can
+   neither alter it nor author one unasked.
+4. **Confirm.** The mirror converges on the accepted record and
+   the staged payload is promoted to permanent carriage (§7). A
+   prepared record that never lands is discarded, staged payload
+   included, after a bounded number of epochs.
+
+**Custody exceptions:** the system actors (§8) sign in backend
+custody by design; Collectives do so as a stopgap
+([open-questions.md Q29](../open-questions.md)). Client-direct
+**transport** — the device submitting to L1 itself,
+mirror-independent — is a decentralized-phase roadmap item
+([roadmap.md](../implementation/roadmap.md)); the signature side
+is client-held from day one.
 
 **Admission is L1's, checked before submitting.** A gesture lands
 only if its author clears the two-gate write rule

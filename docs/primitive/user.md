@@ -25,10 +25,11 @@ CoGra side.
 
 - A **User** is a person. They hold off-graph credentials
   (password hash, verified email, refresh-token sessions — see
-  [auth.md](../implementation/auth.md)) that authenticate the API
-  requests from which the backend, as their authoring agent
-  ([substrate.md §6](substrate.md#6-authoring-path-and-admission)),
-  submits their records.
+  [auth.md](../implementation/auth.md)) that authenticate their
+  API requests, and their L1 signing key on their own device: the
+  backend prepares and relays their records
+  ([substrate.md §6](substrate.md#6-authoring-path-and-admission))
+  but never signs for them.
 - A **Collective** is a group acting through a single graph
   identity. Its keypair and L0 address sit in backend custody; its
   actions originate from authenticated Users authorized by the
