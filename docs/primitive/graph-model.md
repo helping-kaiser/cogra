@@ -154,9 +154,8 @@ truth relationships
   mirror holds is recomputable from published records, so a
   distrusting participant can audit CoGra's reads without CoGra's
   help.
-- **The overlay** is CoGra's own truth: Proposal machinery, the
-  `:Network` operational singleton, collective-membership
-  junctions. Overlay nodes carry **layered
+- **The overlay** is CoGra's own truth: Proposal machinery and
+  the `:Network` operational singleton. Overlay nodes carry **layered
   properties** — the append-only history pattern, applied where
   CoGra owns the store. Overlay state never enters any L1
   quantity.
