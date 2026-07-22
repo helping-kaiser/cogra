@@ -1,115 +1,111 @@
-# ADR-001: Graph Database Selection
+# ADR-001: Graph Store Selection
 
 **Status**: Accepted
-**Date**: 2026-04-10
+**Date**: 2026-07-22
 
 ---
 
 ## Context
 
-This project requires a database to store and traverse the social graph: a node catalog connected by uniform tensor edges (2 user dimensions + system dimensions, with per-category labels — see [edges.md](../primitive/edges.md)).
+The graph itself lives on PeerNetworks Layer 1 — every binding
+fact is an L1 record, and nothing CoGra stores is authoritative
+about topology ([substrate.md §3](../primitive/substrate.md#3-cogras-stores)).
+What CoGra needs locally is:
 
-The primary goals are:
-1. **Expressiveness** — graph traversal queries should be readable and maintainable
-2. **Rust compatibility** — there should be a working Rust client
-3. **Local dev simplicity** — should run easily in Docker without heavy dependencies
-4. **Learning value** — the project is exploratory; the DB should expose graph concepts clearly
+1. **A record mirror** — a queryable copy of the L1 records its
+   traversals consume. Pure cache: may lag, never diverges, fully
+   rebuildable from published records.
+2. **Overlay and operational state** — Proposal state, the
+   parameter carrier, role marks; all caches over records and
+   published fold rules.
+3. **Authoritative L2 state** — display content, identity
+   association, applicants, key-custody stores, honor ledgers.
+
+The heavy graph math never runs in a database: the ranking and
+attribution algorithm is exact greedy disjoint-path extraction
+([feed-ranking.md](../primitive/feed-ranking.md)), implemented
+once in the `ranker` crate for backend, miner, and device. What a
+store contributes to traversal is only **slice extraction**:
+hop-by-hop frontier expansion from the viewer, bounded by the dust
+floor χ.
 
 ---
 
 ## Decision
 
-**Memgraph** — using openCypher as the query language, connected from Rust via the bolt protocol using the `neo4rs` crate.
+**PostgreSQL only. No graph database in the stack.**
+
+The record mirror, the overlay, and all L2 state live in one
+Postgres instance ([data-model.md](data-model.md)); frontier
+expansion runs in Rust over indexed record tables — each hop is
+one indexed batch query, and χ-bounding shrinks the frontier fast.
+
+Reasoning:
+
+- **Nothing a graph store would hold is authoritative.** Every
+  candidate row is a rebuildable cache, so a second database
+  would be pure operational weight — backups, sync bookkeeping,
+  version pinning, a second query language — purchased for query
+  convenience alone.
+- **The math doesn't live in a store.** Path extraction, pair
+  folds, and eligibility cones are `ranker`/backend code over raw
+  records regardless of storage engine; a graph engine would
+  accelerate only the slice queries, which indexed SQL serves at
+  the current design scale.
+- **At the far end, neither engine survives anyway.** The
+  large-scale design point is miner-sharded, epoch-incremental
+  computation ([economics.md](../primitive/economics.md)) — not a
+  bigger central database of either kind.
+- **One store, one operational surface.** SQL fluency, one
+  backup/migration story, and the L2 truth tables were in
+  Postgres in every considered design.
 
 ---
 
 ## Alternatives Considered
 
-### Option A: PostgreSQL only (recursive CTEs)
+### Option A: A graph database as the traversal cache (Memgraph)
 
-**Pros:**
-- No additional infrastructure
-- Team familiar with SQL
-- Works well for shallow traversals (3-4 hops)
+Memgraph (openCypher, bolt via `neo4rs`) serves multi-hop
+expansion natively — index-free adjacency instead of per-hop
+index lookups — and ships a visual explorer (Memgraph Lab).
 
-**Cons:**
-- Recursive CTEs become hard to read for anything beyond simple `friends of friends`
-- Performance degrades at scale — Postgres does index lookups at each hop, not index-free adjacency
-- Graph algorithms (shortest path, weighted recommendations) require complex SQL that fights the data model
-- Defeats the learning goal of exploring dedicated graph databases
+**Rejected for now:** the mirror-as-cache role removes every
+durability argument, leaving only traversal speed the current
+scale does not yet need, at the cost of operating and
+synchronizing a second engine. Because the mirror is a pure
+cache, this door stays open at zero architectural cost: a graph
+store can be added later *as a cache in front of the record
+tables* without touching where truth lives. That is the
+escalation path if slice extraction ever dominates.
 
-**Verdict:** Rejected. Valid for production at small scale, but not aligned with the exploratory goals of this repo.
+### Option B: No local copy — query the L1 store directly
 
----
+**Rejected:** L1 is an external network; per-request remote
+queries cannot serve feed extraction, folds, or campaign sweeps,
+and every chain consumer keeps a local index for exactly this
+reason. The mirror *is* that index.
 
-### Option B: SurrealDB
+### Option C: In-memory graph service built from Postgres
 
-**Pros:**
-- Written in Rust — native SDK, excellent DX for Rust projects
-- Multi-model: can do graph, document, and relational in one DB
-- Growing community
-
-**Cons:**
-- SurrealQL is SQL-flavored with graph extensions (`->` notation) — readable but not as expressive as Cypher for complex graph patterns
-- Less mature than Neo4j-family databases for graph-specific workloads
-- Fewer graph algorithm primitives out of the box
-
-**Verdict:** Rejected. The SQL-flavored query model is a significant step down from Cypher for graph readability. The Rust-native argument is compelling but not decisive.
-
----
-
-### Option C: Neo4j
-
-**Pros:**
-- Industry standard — invented Cypher, largest ecosystem
-- Best learning resources (most Cypher tutorials target Neo4j)
-- Neo4j Browser is an excellent visual tool
-- Neo4j Aura offers a free cloud tier
-
-**Cons:**
-- Requires JVM — Docker image is 600MB+
-- The official Java driver; Rust driver (`neo4rs`) is community-maintained
-- Slower than Memgraph for in-memory graph workloads
-- Enterprise features are paywalled
-
-**Verdict:** Rejected in favor of Memgraph. Neo4j's main advantage is its learning ecosystem — but since Memgraph is fully bolt/Cypher compatible, all Neo4j Cypher resources apply 1:1.
-
----
-
-### Option D: ArangoDB
-
-**Pros:**
-- Multi-model (graph + document + key-value)
-- Mature, used in production
-
-**Cons:**
-- AQL (ArangoDB Query Language) is a third query language to learn — not Cypher, not SQL
-- No official Rust client; HTTP-based access only
-- The multi-model approach means graph features are not the primary focus
-
-**Verdict:** Rejected. AQL adds learning overhead without the payoff of Cypher's graph expressiveness.
-
----
-
-## Why Memgraph over Neo4j
-
-| Criterion | Memgraph | Neo4j |
-|---|---|---|
-| Query language | openCypher | Cypher (superset of openCypher) |
-| Rust driver | bolt → `neo4rs` | bolt → `neo4rs` (same) |
-| Docker image | ~200MB | ~600MB+ (JVM) |
-| Performance | Faster (in-memory first) | Slower at equivalent scale |
-| Graph algorithms | MAGE library | GDS plugin |
-| Visualization | Memgraph Lab (good) | Neo4j Browser (excellent) |
-| Learning resources | Good, Cypher-compatible | Best in class |
-
-The driver situation is identical — `neo4rs` works with Memgraph because both speak bolt. All Neo4j Cypher documentation applies to Memgraph. The lighter Docker footprint and faster traversal performance make Memgraph the better fit for local development.
+A dedicated process holding the record graph in memory for slice
+queries. **Deferred, not rejected** — this is what Option A's
+escalation would compete against if slice extraction becomes the
+bottleneck. Building it now would be optimizing ahead of data.
 
 ---
 
 ## Consequences
 
-- All graph queries are written in Cypher
-- The `neo4rs` crate is used for the bolt connection
-- Memgraph Lab (http://localhost:3000) is available locally for visual graph exploration
-- If we ever need to migrate to Neo4j, the Cypher queries are compatible with minimal changes
+- SQL is the only query language in the stack; all SQL lives in
+  `postgres-store`.
+- Slice extraction is hop-by-hop frontier expansion in Rust over
+  the mirror's indexes ([architecture.md](architecture.md)).
+- Graph-visual product features (profile neighborhoods, a
+  walk-the-graph explorer) are served by ordinary neighborhood
+  queries — one or two hops around a focal node — and rendered
+  client-side; they need no graph engine.
+- If slice extraction ever dominates, the escalation is a pure
+  traversal cache (Option A or C) added in front of the record
+  tables — an operational change, not an architectural one,
+  because nothing authoritative moves.

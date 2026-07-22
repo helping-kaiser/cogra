@@ -54,7 +54,7 @@ One act, two homes. L1 accepts the structural record with the
 payload witness; CoGra — the carriage service — holds the payload
 bytes and the salt (Postgres rows; media bytes in blob storage).
 The bytes are no copy of anything: carriage is their only home,
-verifiable against the witness. The Memgraph mirror caches the
+verifiable against the witness. The record mirror caches the
 structural record for traversal — it may lag L1, never diverge.
 
 A Collective authoring a Post is the same gesture performed by
@@ -191,5 +191,4 @@ Content node, not a vanished one.
   [edges.md](../primitive/edges.md).
 - **Not the store schemas.** Concrete Postgres columns, envelope
   key layout, and mirror shapes live in
-  [data-model.md](../implementation/data-model.md) and
-  [graph-data-model.md](../implementation/graph-data-model.md).
+  [data-model.md](../implementation/data-model.md).

@@ -32,11 +32,11 @@ the two disagree, the interface doc governs.
 
 **Two graphs, one substrate.** L1's graph is the shared public
 record — every CoGra act that binds or must be publicly attributable
-lands there as an L1 edge record. CoGra *also* owns a graph: the
-Memgraph store, partitioned into a **mirror** of the L1 records
-CoGra traverses and an **overlay** of L2-only structure L1 has no
-home for (§3). The mirror is a cache of L1's truth; the overlay is
-CoGra's own truth. Neither is a second authority over anything L1
+lands there as an L1 edge record. CoGra *also* holds graph state: a
+**record mirror** of the L1 records CoGra traverses and an
+**overlay** of L2-only structure L1 has no home for, both tables in
+CoGra's single Postgres store (§3). The mirror is a cache of L1's
+truth; the overlay is CoGra's own truth. Neither is a second authority over anything L1
 binds.
 
 ---
@@ -89,19 +89,20 @@ consumed L1 guarantee.
 
 ## 3. CoGra's stores
 
-CoGra runs a dual-database core, partitioned around the L1 seam:
+CoGra runs a single-store core — one Postgres instance plus blob
+storage — partitioned around the L1 seam:
 
-- **Memgraph — mirror.** A cache of the L1 records CoGra's
-  traversals consume (feed ranking, attribution, membership folds).
-  It may lag the L1 record; it must never diverge from it. Nothing
-  in the mirror is authoritative.
-- **Memgraph — overlay.** CoGra's own graph: nodes and edges L1 has
-  no home for. Proposal tally state and the `:Network` singleton.
-  Overlay structure is CoGra's truth, governed by CoGra's own
-  rules.
-- **Postgres.** Display content and operational metadata — what a
-  record *shows*, never what it *is*. Graph topology never lives
-  here.
+- **The record mirror.** A cache of the L1 records CoGra's
+  traversals consume (feed ranking, attribution, membership folds);
+  the traversal itself runs hop-by-hop in CoGra's own code over
+  indexed record tables. The mirror may lag the L1 record; it must
+  never diverge from it; it is fully rebuildable from published
+  records. Nothing in the mirror is authoritative.
+- **The overlay.** CoGra's own structure: state L1 has no home
+  for. Proposal tally state and the `:Network` singleton. Overlay
+  structure is CoGra's truth, governed by CoGra's own rules.
+- **Display content and operational metadata.** What a record
+  *shows*, never what it *is*.
 - **Blob storage.** Media bytes, verifiable against the digests
   committed in payloads (§7).
 
@@ -111,7 +112,7 @@ only as `B_i`; CoGra's own reward economy has its own rail —
 [ledger.md](../implementation/ledger.md).
 
 Store-level mechanics (schemas, sync, failure modes) live in
-[graph-data-model.md](../implementation/graph-data-model.md).
+[data-model.md](../implementation/data-model.md).
 
 ---
 
@@ -167,9 +168,8 @@ concept table in [substrate-map.md](substrate-map.md)):
    gesture, bounded by `M_payload`, witness-covered (§7). Every
    edge carries a payload projection, so every gesture can carry
    state.
-3. **L2 overlay in Memgraph** — nodes and edges of CoGra's own
-   graph, for structure that must be traversable but has no L1
-   home (§3).
+3. **L2 overlay** — CoGra's own structure, for state that must be
+   queryable but has no L1 home (§3).
 4. **Postgres / off-graph** — display content, operational
    metadata, private per-user state.
 

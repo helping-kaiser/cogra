@@ -76,10 +76,11 @@ ordinary Actors that CoGra regards as special —
 
 ## 3. Overlay node types (CoGra's graph)
 
-Overlay nodes live in CoGra's Memgraph — real stored nodes with
-layered properties, governed entirely by CoGra's rules. They exist
-for structure that must be traversable but has no L1 home. L1
-never sees them.
+Overlay nodes live in CoGra's own store
+([data-model.md](../implementation/data-model.md)) — real stored
+state with layered properties, governed entirely by CoGra's rules.
+They exist for structure that must be queryable but has no L1
+home. L1 never sees them.
 
 | Overlay node | Role |
 |---|---|

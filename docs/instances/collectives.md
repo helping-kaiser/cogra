@@ -89,11 +89,16 @@ co-signing.** At onboarding, the creator's device splits the key
 into two fresh random halves — one to the member's device, one
 to the backend — an independent split per member. The full key
 is never assembled anywhere: either half alone is noise, so
-neither the backend nor the member can sign by themselves.
+neither the backend nor the member can sign by themselves. A
+member need not be a person: a Collective can be a member of a
+Collective, and custody **recurses** — the member-side half is
+held under the member Collective's own custody arrangement,
+bottoming out at human devices.
 
 **The backend's half is the contract gate.** A member triggers a
-collective act with an instruction signed by their **own** user
-key — the client-signed authoring path applied to the trigger
+collective act with an instruction signed by their **own** key —
+a person's user key, or a member Collective's key via the same
+machinery — the client-signed authoring path applied to the trigger
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
 the backend contributes its half of the signature only after
 checking the instruction against the governance map (§6):
@@ -406,8 +411,7 @@ nobody anything either way.
 - **Not the settlement flow.** [items.md](items.md).
 - **Not the store schemas.** Mirror shapes and Postgres display
   rows live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
+  [data-model.md](../implementation/data-model.md).
 - **Not the auth path.** How a member's session authenticates a
   gesture that the Collective's key signs lives in
   [auth.md](../implementation/auth.md).

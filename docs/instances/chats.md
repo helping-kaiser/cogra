@@ -397,5 +397,4 @@ Chat-specific facts:
   crypto.
 - **Not the store schemas.** Body rows, privacy flags, and
   mirror shapes live in
-  [data-model.md](../implementation/data-model.md) and
-  [graph-data-model.md](../implementation/graph-data-model.md).
+  [data-model.md](../implementation/data-model.md).

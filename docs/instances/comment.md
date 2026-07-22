@@ -158,5 +158,4 @@ pointing at the same node.
   live in [edges.md](../primitive/edges.md).
 - **Not the store schemas.** Columns, envelope keys, and mirror
   shapes live in
-  [data-model.md](../implementation/data-model.md) and
-  [graph-data-model.md](../implementation/graph-data-model.md).
+  [data-model.md](../implementation/data-model.md).
