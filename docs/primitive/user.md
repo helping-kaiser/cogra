@@ -31,7 +31,8 @@ CoGra side.
   ([substrate.md §6](substrate.md#6-authoring-path-and-admission))
   but never signs for them.
 - A **Collective** is a group acting through a single graph
-  identity. Its keypair and L0 address sit in backend custody; its
+  identity. Its keypair is creator-held with per-member co-signing
+  ([collectives.md §2](../instances/collectives.md#2-custody)); its
   actions originate from authenticated Users authorized by the
   collective's social contract
   ([collectives.md](../instances/collectives.md)). Collectives can

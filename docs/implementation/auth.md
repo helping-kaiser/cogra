@@ -22,6 +22,8 @@ In scope:
 - Session tokens (JWT access + Postgres-backed refresh).
 - Session listing and revocation.
 - Rate limiting on auth endpoints.
+- Key-recovery backup — storing client-encrypted signing-key
+  blobs the server cannot decrypt (see "Key recovery").
 
 Out of scope:
 
@@ -47,11 +49,53 @@ Out of scope:
 
 ## Server-stored credentials vs. user-owned keys
 
-The server stores **password hashes** — credentials it can verify but not
-reverse. These are server-managed access controls, not user-owned secrets in
-the cryptographic-key sense. The principle that CoGra does not hold
-user-owned keys (relevant for Q15 federation reconciliation, where users
-may eventually hold identity key pairs client-side) is preserved.
+The server stores **password hashes** — credentials it can
+verify but not reverse — and, for accounts that opt into key
+backup, **client-encrypted key blobs** it cannot decrypt (see
+"Key recovery"). Neither puts a user-owned secret in CoGra's
+hands: the signing key itself is client-held
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission))
+and never enters custody.
+
+---
+
+## Key recovery
+
+What recovery recovers splits in two, and the split is the
+posture:
+
+- **Email recovery restores the login** — the server-side
+  account and its sessions. It never restores the actor: the
+  signing key, and with it the actor's L1 standing and funded
+  L0 address, is client-held and CoGra cannot reissue it.
+- **The recovery code restores the actor.** At key creation the
+  app generates a high-entropy recovery code alongside the
+  signing key, encrypts the key with the code on the device,
+  and uploads only the ciphertext. Recovery on a new device is
+  login plus code: fetch the blob, decrypt locally.
+
+Rules the posture hangs on:
+
+- **Generated codes only, never a user-chosen passphrase.** A
+  memorable passphrase over a stored blob is offline-crackable
+  the day the ciphertext leaks; a generated ~128-bit code is
+  not. Systems that accept passphrases can do so only because
+  guess-limiting secure hardware fronts the store —
+  infrastructure this posture deliberately avoids depending on.
+- **The backup is opt-in, and declining has a stated price.**
+  Device loss is then actor loss — the login survives, the
+  actor is a husk. The choice and its consequence are surfaced
+  when the key is created.
+- **Theft needs both factors.** The code alone is useless
+  without the blob behind the user's login; the blob is useless
+  without the code. Users can therefore keep redundant copies
+  of the code — redundancy against loss is safe in a way copies
+  of a raw key never are.
+- **The blob is a container.** Further client-held secrets — a
+  Collective creator's key, a member's co-signing half
+  ([collectives.md §2](../instances/collectives.md#2-custody)) —
+  ride the same code. A passkey-wrapped second unlock (WebAuthn
+  PRF) is a foreseen extension, not a posture change.
 
 ---
 

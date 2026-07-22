@@ -23,8 +23,8 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 0. Near-term design session | 1 | **Q29** | Key custody — user key recovery and Collective member-held keys. User signing keys are client-held by decision (2026-07-21), which makes the recovery posture load-bearing for auth.md's wave-G rewrite; Collective custody of permanent signing power is the kind of debt to retire early. Run before wave G1. |
 | 1. L1-author discussion | 1 | **Q28** | Zero-jail person-landing — the hyper-edge T-leg escape. Parked pending discussion with the L1 author; an L2 policy fallback exists if L1 declines, so nothing downstream blocks on it. |
+| 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
 
@@ -59,62 +59,41 @@ questions are closed.
 - Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#11-where-ranking-runs) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#8-severance-discovery-redemption), the actual bot-bridge defense). `χ` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`χ`/`b` corrected — `χ` bounds the node-set, not the path count).
 - Q26 — see [chats.md §3.1](instances/chats.md#8-chat-metadata-and-updates) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
 - Q27 — see [collectives.md §8 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §6](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
+- Q29 — see [auth.md "Key recovery"](implementation/auth.md#key-recovery) (user posture) and [collectives.md §2](instances/collectives.md#2-custody) (Collective custody). **Users:** email recovery restores the login only; the actor is restored by an opt-in client-encrypted key backup — the device generates a high-entropy recovery code alongside the signing key, encrypts the key locally, and CoGra stores only ciphertext it cannot decrypt (zero-custody preserved; theft needs code *and* login, so redundant copies of the code are safe against loss in a way raw-key copies never are). Generated codes only — a user-chosen passphrase over a stored blob is the offline-crackable failure mode, viable only behind guess-limited secure hardware this posture avoids depending on. Declining backup keeps husk semantics (device loss = actor loss, stated at key creation); a passkey-wrapped (WebAuthn PRF) second unlock is a foreseen extension. **Collectives:** the creator holds the full key (full custody from founding, censorship escape, same recovery posture); every other act-as-eligible member signs via a per-member 2-of-2 split — member device holds one half, the backend the other, the full key never assembled — so the backend alone can sign nothing (no operator custody) and a member cannot sign around the contract: the backend co-signs only after checking the member's user-key-signed instruction against the governance map (action-key eligibility, passed decision where required). Removal = the backend deletes its half; no membership event forces a re-key. Rejected: member-threshold signatures (human-quorum ceremony weight, resharing on every membership change) and per-member L1-registered full keys (any holder could sign decision-gated acts unilaterally); the per-member device+server split is the standard embedded-wallet architecture. The two L1 dependencies (signature scheme, actor key rotation) split off as Q30.
 
 ---
 
-## Q29 — Key custody: user recovery and Collective member-held keys
+## Q30 — L1 key model: signature scheme and actor key rotation
 
 **Where it shows up:**
 [collectives.md §2](instances/collectives.md#2-custody) (custody),
 [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission)
 (client-signed authoring),
-[auth.md](implementation/auth.md) (what recovery recovers)
-**Status:** open (design before wave G1 — auth.md depends on it)
+[auth.md "Key recovery"](implementation/auth.md#key-recovery)
+**Status:** open (in discussion with the L1 team)
 
 ### Context
 
-User writes are **client-signed, backend-relayed** ([substrate.md
-§6](primitive/substrate.md#6-authoring-path-and-admission)): the
-signing key lives on the member's device, and it is the key the
-actor's L0 address and burned admission value hang on. Two custody
-questions remain open, one per account kind.
+Q29's custody resolution leans on two properties of L1's key
+model that our docs nowhere pin down:
 
-### The user question — recovery
+- **Which signature scheme does L1 verify?** The Collective
+  custody model signs by per-member 2-of-2 co-signing
+  ([collectives.md §2](instances/collectives.md#2-custody)).
+  Under a Schnorr-family scheme (Ed25519 ideally) that is a
+  standard, audited threshold-signing configuration producing an
+  ordinary signature — the verifier cannot tell a split key
+  signed, and needs no changes. Under ECDSA the two-party
+  protocols exist in production but carry a materially worse
+  implementation-attack history.
+- **Can an actor rotate to a new key while keeping its identity,
+  L0 address, and standing?** Without rotation, a leaked or
+  compromised key — above all a Collective creator's full key —
+  is unfixable forever, and any future custody migration is
+  impossible.
 
-Key loss is identity loss: email recovery restores the CoGra
-*login*, never the L1 actor — standing, title, and the funded L0
-address hang on a key CoGra does not have. Decide the recovery
-posture along the ladder: device keystore only (device loss = actor
-loss, husk semantics); a user-passphrase-encrypted key backup
-stored by CoGra (the operator cannot decrypt — arguably still
-zero-custody); social or threshold recovery later. auth.md's
-rewrite must state what "recovery" recovers.
-
-### The Collective question — member-held keys
-
-A Collective's records are signed by one keypair. Today that key
-lives in **backend custody**: members authenticate to CoGra and the
-backend signs. On an append-only shared graph this is graver than
-in a rewritable system — a compromised or misused key means
-permanent, publicly attributed L1 records in the Collective's name,
-not database rows anyone can fix. Backend custody also concentrates
-every collective's signing power in one operator.
-
-Design the member-held custody model. The working direction:
-
-- the **creator holds the key** at founding;
-- **shares are distributed to the members eligible to act** on the
-  Collective's behalf (the act-as set), so signing power tracks the
-  social contract rather than the operator;
-- **threshold signatures** as the endpoint, so no single member —
-  and no backend — can sign alone where the contract demands
-  concurrence.
-
-Sub-questions: share redistribution on membership/role change
-(every kick or role edit potentially re-keys); recovery when
-share-holders go dark; how the L0 address custody follows the same
-model; and what the backend still signs during the transition.
-Backend custody stays the documented stopgap until this lands.
+Neither blocks documenting the resolved design; both gate its
+implementation.
 
 ---
 

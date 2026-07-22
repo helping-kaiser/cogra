@@ -55,8 +55,10 @@ both kinds resolve to the same grounded pair.
   state, never graph state. No User exists before verification —
   an L2 registration rule. See [user.md](user.md).
 - **Collective** — a group acting through a single graph identity:
-  one L1 **Actor + Profile**, keypair and L0 address in backend
-  custody (custody model open — Q29). Its membership, roles, and
+  one L1 **Actor + Profile**, keypair creator-held with
+  per-member co-signing
+  ([collectives.md §2](../instances/collectives.md#2-custody)).
+  Its membership, roles, and
   social contract are public payload-borne records with
   CoGra-published folds; L1's math reads none of it — it sees one
   ordinary actor. See
