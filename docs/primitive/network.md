@@ -79,7 +79,8 @@ project owner; a fork sets its own genesis.
 Genesis begins with money and proceeds so that every record's
 preconditions already stand:
 
-1. **The genesis admission burn.** The operator burns LBTC into a realization of the burn primitive,
+1. **The genesis admission burn.** The operator burns L-BTC (Liquid
+   Bitcoin) into a realization of the burn primitive,
    funding the addresses of everything in the cast
    ([economics.md §7.2](economics.md#72-the-admission-fund)).
 2. **The Genesis Moderator registers** — the instance's first
