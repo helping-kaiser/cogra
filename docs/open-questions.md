@@ -34,7 +34,7 @@ questions are closed.
 
 **Resolved:**
 
-- Q7 — see [data-model.md §"author_id + author_type"](implementation/data-model.md#author_id--author_type--discriminator-not-foreign-key).
+- Q7 — see [data-model.md §"author_id"](implementation/data-model.md#author_id--one-foreign-key-still-a-cache).
 - Q8 — see [chats.md §10](instances/chats.md#6-moderation-inside-the-chat) and [governance.md §8](primitive/governance.md#8-instances).
 - Q3 — see [graph-model.md §3](primitive/graph-model.md) "What creates an actor edge — stances-not-events".
 - Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md#3-the-per-edge-primitive-and-the-fold) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md) (dim1/dim2 unification, filtering vs. graph math). The deepest tie-break resolved separately — see Q16.
