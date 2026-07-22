@@ -79,7 +79,8 @@ project owner; a fork sets its own genesis.
 Genesis begins with money and proceeds so that every record's
 preconditions already stand:
 
-1. **The L0 genesis burn.** The operator burns LBTC into Layer 0,
+1. **The L0 genesis burn.** The operator burns L-BTC (Liquid
+   Bitcoin) into Layer 0,
    funding the addresses of everything in the cast
    ([economics.md §7.2](economics.md#72-the-l0-reserve-pool)).
 2. **The Genesis Moderator registers** — the instance's first
