@@ -2,81 +2,80 @@
 
 ## Overview
 
-CoGra is the **graph-architecture exploration** for **Peer Network**'s
-next evolution — a social media platform where feed ranking is driven
-entirely by the social graph and explicit user interactions, not AI
-algorithms.
+CoGra is a Layer 2 service on **PeerNetworks Layer 1**: a social
+platform whose binding facts — actors, content, stances, membership,
+ownership — live as records on the shared L1 graph, and whose feed
+ranking is driven entirely by that graph and explicit user
+interactions, never AI
+([substrate.md](../primitive/substrate.md)). What CoGra itself
+operates is deliberately small:
 
-The system's core uses a dual-database architecture; the economics
-primitive adds a third store — the **chain** — for money (balances,
-transfers, payouts) that the graph points to but never holds (see
-[ledger.md](ledger.md)). A social network has two data access patterns
-that map poorly to a single database:
+- **One database.** A single PostgreSQL instance holds everything
+  CoGra stores: the **record mirror** (a rebuildable cache of the
+  L1 records CoGra traverses), the **overlay** (Proposal tally
+  state and the `:Network` parameter carrier — caches over L1
+  records and published fold rules), and CoGra's authoritative L2
+  state (display content, identity association, honor ledgers,
+  staged applicants, operational metadata).
+  [data-model.md](data-model.md) is the schema;
+  [graph-db-options.md](graph-db-options.md) records why no graph
+  database is in the stack.
+- **Blob storage** for media bytes, verifiable against the digests
+  committed in payload envelopes
+  ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+- **The CGT rail** — the chain carrying CoGra's reward economy:
+  balances, escrow, transfers, payouts. The graph carries pointers
+  to it, never amounts ([ledger.md](ledger.md)).
 
-1. **Traversal queries** — "what should I see next?", "how is this person
-   connected to me?", "what's happening in my part of the graph?" Graph
-   problems; they perform well when the database understands relationships
-   natively.
+Two external surfaces complete the picture. **Layer 1** accepts
+CoGra's relayed records and publishes the accepted record set per
+epoch. **Layer 0** (Peer Attestation) is read-only: CoGra consumes
+the admission balance `B_i` through L1's interface and never
+authors L0 records. The two moneys never mix — admission money is
+Layer 0's, reward money is CGT on CoGra's own rail.
 
-2. **Lookup queries** — "give me the profile for user X", "give me the
-   content of post Y". Key-value / relational lookups; they perform well in
-   a traditional RDBMS.
-
-Splitting topology into a graph DB and display content into Postgres lets
-each database do what it was built for.
-
-### Vocabulary: display content vs metadata
-
-These describe a value's *purpose*, not its storage location, and
-the two categories overlap:
-
-- **Display content** — data that UIs render to the viewing user
-  (post bodies, message bodies, profile text, attachment URLs,
-  display names). Mostly Postgres rows.
-- **Metadata** — data that drives flows rather than being rendered:
-  edge weights and layer history, junction approval state,
-  moderation flags, retention bookkeeping. Mostly graph state.
-
-A single value can be both — a `ChatMember.role` lives on the
-graph (where it weights governance tallies) and a UI may also
-display it next to the member's name.
+Vocabulary used throughout: **display content** is what UIs render
+(bodies, names, media URLs); **operational metadata** is what
+drives flows without being rendered (staging state, moderation
+flags, retention bookkeeping). Both are Postgres rows. Neither is
+ever what a record *is* — that is always the L1 record itself.
 
 ---
 
 ## At a glance
 
 ```
-┌─────────────┐     GraphQL      ┌────────────────────────────────────────┐
-│   Client    │ ──────────────── │             API  (Axum)                │
-└─────────────┘                  └──────────────┬─────────────────────────┘
-                                                │
-                              ┌─────────────────┴──────────────────┐
-                              │                                     │
-                   ┌──────────▼──────────┐             ┌───────────▼───────────┐
-                   │   graph-engine      │             │   postgres-store      │
-                   │  (Cypher / bolt)    │             │      (SQLx)           │
-                   └──────────┬──────────┘             └───────────┬───────────┘
-                              │                                     │
-                   ┌──────────▼──────────┐             ┌───────────▼───────────┐
-                   │     Memgraph        │             │      PostgreSQL       │
-                   │   (graph layer)     │             │ (display-content layer)│
-                   └─────────────────────┘             └───────────────────────┘
-```
+┌────────────┐   GraphQL    ┌───────────────────────────────┐
+│   Client   │ ───────────► │          API (Axum)           │
+│ (holds the │ ◄─────────── │   prepare · serve · relay     │
+│ actor key, │              └───────┬───────────────┬───────┘
+│   signs)   │                      │               │
+└────────────┘              ┌───────▼───────┐  ┌────▼─────┐
+                            │  PostgreSQL   │  │   Blob   │
+                            │ record mirror │  │ storage  │
+                            │ overlay + L2  │  │ (media)  │
+                            │     truth     │  └──────────┘
+                            └───────▲───────┘
+                                    │ ingest accepted records
+              relay signed records  │
+                    ┌───────────────┴───────────────┐
+                    │     PeerNetworks Layer 1      │──► B_i (Layer 0
+                    │          (external)           │    export, read-
+                    └───────────────────────────────┘    only)
 
-The shared key between both databases is the **UUID** assigned at creation
-time. Memgraph stores graph topology (nodes + tensor edges). PostgreSQL stores
-everything needed to display content. Money lives in a third store, the
-**chain** (not shown above — it is on-chain, not a CoGra-operated
-database); the graph holds only pointers to it ([ledger.md](ledger.md)).
-See the [Components](#components) section below for what each crate does.
+        CGT rail (chain): reward money — the graph and the
+        stores hold pointers to it, never amounts (ledger.md).
+```
 
 | Concern | Choice |
 |---|---|
 | Backend language | Rust — latest stable toolchain (`rust-toolchain.toml` tracks `stable`), 2024 edition |
 | API | Axum + async-graphql |
-| Graph DB | Memgraph (openCypher, bolt protocol) |
-| Display-content DB | PostgreSQL 16 (SQLx) |
-| Money store | Chain — on-chain ledger ([ledger.md](ledger.md)) |
+| Store | PostgreSQL 16 (SQLx) — record mirror, overlay, L2 truth |
+| Media | Blob storage, digest-verified against payload envelopes |
+| Graph substrate | PeerNetworks Layer 1, behind one interface boundary |
+| Admission balance | Layer 0 export `B_i`, consume-only |
+| Money store | CGT rail — on-chain ledger ([ledger.md](ledger.md)) |
 | Android app | Kotlin + Jetpack Compose ([android.md](android.md)) |
 | API contract | exported `schema.graphql` → Apollo Kotlin codegen |
 | Ranking core | `ranker` crate — one implementation for backend, miner, and device |
@@ -110,80 +109,61 @@ Android-specific ones.
 
 ## Design Principles
 
-### 1. Graph DB owns topology, Postgres owns content
+### 1. Layer 1 owns the graph
 
-**Invariant:** Memgraph owns graph topology; Postgres owns display
-content; UUIDs are the shared key. No content in Memgraph; no
-topology in Postgres. Decision rule: data needed to **navigate or
-weight** the graph goes in Memgraph; data needed to **display**
-goes in Postgres.
+Every binding fact is an L1 record: priced, signed, witnessed,
+epoch-stamped, visible to every other L2. Nothing CoGra stores is
+authoritative about the graph — the record mirror is a cache (it
+may lag, it must never diverge, it is fully rebuildable from
+published records), and the overlay caches published fold rules
+(the charter's parameter schedule, Proposal tallies,
+`network_role` marks). Where a local table and the L1 record could
+disagree, the record governs — and because every binding value is
+recomputable from public records, a distrusting participant can
+audit CoGra's reads without CoGra's help.
 
-| Data | Where | Why |
-|---|---|---|
-| Node ID (UUID) | Both | Shared key between databases |
-| User bio, avatar, display name | Postgres | Display only |
-| Post content, media URLs | Postgres | Display only |
-| Actor edges (dim1, dim2 — see [edges.md](../primitive/edges.md) for per-edge-type labels) | Memgraph | Graph topology + ranking |
-| Structural edges (containment, tagging) | Memgraph | Graph topology |
-| Authorship | Memgraph (`:AUTHOR` sub-label on the authoring actor edge); Postgres (`author_id` column on `posts` / `comments` / `chat_messages` for display) | Derived from the earliest incoming layer-1 edge; see [authorship.md](../primitive/authorship.md) |
+### 2. One store, partitioned by truth relationship
 
-See [Graph Model](../primitive/graph-model.md) for the full node/edge
-specification.
+The decision rule, per [substrate.md §3](../primitive/substrate.md#3-cogras-stores):
+what a record **is** lives on L1; what it **shows** lives in
+Postgres; what it **weighs** is recomputed from records. Within
+Postgres the schema keeps three kinds of state apart — mirror
+tables (L1's truth, cached), overlay tables (CoGra's own
+machinery, itself derived from public records), and authoritative
+L2 tables (identity association, display content, honor ledgers,
+staged applicants). Money sits in none of them; payload bytes and
+salts sit in the carriage tables and blob storage
+([data-model.md](data-model.md)).
 
-### 2. UUIDs as the shared key
+### 3. Writes are client-signed, backend-relayed
 
-Every entity gets a UUID at creation time, stored in both databases as the
-only cross-reference. The graph engine never sees a username; the Postgres
-store never sees the topology.
+The signing key is the actor's own, lives on the device, and never
+enters CoGra custody; the backend prepares, relays, and confirms
+but cannot author ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+Custody exceptions — system actors and Collective co-signing — are
+design facts, not conveniences
+([collectives.md §2](../instances/collectives.md#2-custody),
+[auth.md](auth.md)). The mechanics are [below](#the-write-path).
 
-### 3. All ranking comes from the graph
+### 4. All ranking comes from the graph
 
-**Invariant:** All feed ranking is computed at query time from
-the edge tensor. There are no materialized counters, popularity
-scores, or algorithm-driven signals stored as node properties.
-The algorithm itself — its parameters, sort order, and
-tie-breaker chain — lives in
+The feed is computed at query time from viewer-rooted forward
+paths over L1 records — no materialized counters, no popularity
+scores, no algorithm-driven signals stored anywhere. Inbound
+records never shape the viewer's feed; global statistics enter as
+tie-breakers only. The algorithm belongs to
 [feed-ranking.md](../primitive/feed-ranking.md); this doc covers
-only how the system runs it (per-viewer, off the central hot
-path).
+only where it runs (per-viewer, off the central hot path).
 
-### 4. Edges are the source of truth
+### 5. The seam is one boundary
 
-All graph state lives in edges. Edges are:
-- **Directional** — A → B and B → A are independent
-- **Multi-dimensional** — 2 user dimensions + system dimensions
-- **Append-only** — new layers on top, never delete or overwrite
-- **Uniform in shape, not in meaning** — actor and structural
-  edges share the same tensor shape so the ranking algorithm
-  never branches on edge category. Semantics differ: actor-edge
-  dimensions are signed valence and connection-weight expressed
-  toward a target; structural-edge dimensions are typically `0`
-  or carry approval-pair state. See
-  [graph-model.md §3](../primitive/graph-model.md).
-
-There are no per-action relationship types like FOLLOWS, LIKED, or CREATED.
-Actor edges share one `:ACTOR` label and structural edges have a small fixed
-sub-label set (see [edges.md §3](../primitive/edges.md)). Meaning derives
-from node types at each end and dimension values.
-
-### 5. Writes are dual (content + topology)
-
-When a user creates a post:
-- Postgres: insert the immutable `posts` entity row plus the
-  first `post_versions` row (content + metadata)
-- Memgraph: create Post node + actor edge from User to Post (layer 1 =
-  authorship, with dim1/dim2 values)
-
-When a user reacts to a post:
-- Memgraph: create actor edge from User to Post (or add a layer if the edge
-  exists) with the user's dim1/dim2 values for that node type
-- Postgres: nothing
-
-When a user expresses a stance toward another user:
-- Memgraph: create/update actor edge from User to User with dim1/dim2 values
-  (per [edges.md](../primitive/edges.md): sentiment + interest for this edge
-  type)
-- Postgres: nothing
+All Layer 1 access — relaying signed records, ingesting accepted
+records, reading the `B_i` export — flows through a single
+interface in the backend. Nothing else in the codebase speaks to
+the substrate. That keeps the substrate swappable behind a stable
+contract (the client-direct transport of the decentralized phase
+crosses the same seam — [roadmap.md](roadmap.md)) and keeps every
+L1 assumption in one auditable place.
 
 ---
 
@@ -195,30 +175,26 @@ The public-facing binary. Responsibilities:
 - Starts the Axum HTTP server
 - Hosts the async-graphql schema at `/graphql`
 - Hosts the GraphQL playground at `/playground` (dev only)
-- Holds connection pools for both databases
-- Calls `graph-engine` and `postgres-store` to fulfill resolvers
-- No business logic — it orchestrates, it does not decide
-
-### `crates/graph-engine`
-
-The Memgraph access layer. Responsibilities:
-- Owns the `neo4rs::Graph` connection pool
-- Exposes typed Rust functions for every Cypher query
-- All Cypher strings live here, nowhere else
-- Returns domain types from `common`, not raw graph results
+- Orchestrates the write path (prepare → relay → confirm) and the
+  read paths; owns the L1 boundary interface
+- Calls `postgres-store` to fulfill resolvers
+- No business logic in resolvers — it orchestrates, it does not
+  decide
 
 ### `crates/postgres-store`
 
 The PostgreSQL access layer. Responsibilities:
 - Owns the `sqlx::PgPool`
-- Exposes typed Rust functions for every SQL query
+- Exposes typed Rust functions for every SQL query — mirror,
+  overlay, and L2 tables alike
 - All SQL strings live here, nowhere else
 - Manages migrations via SQLx
 
 ### `crates/common`
 
 Shared types with no external dependencies. Responsibilities:
-- Domain model structs (node types, edge types)
+- Domain model structs (record families, envelope fields, account
+  state)
 - Shared error types
 - No database or HTTP logic
 
@@ -227,229 +203,144 @@ Shared types with no external dependencies. Responsibilities:
 The feed-ranking math as a pure library: `FeedSlice` +
 `RankParams` in, ordered `FeedEntry` list out — the logical
 contract pinned in [miner-api.md](miner-api.md). No IO, no
-connection pools, no GraphQL. One implementation serves all three
-transport stages ([miner-api.md "Transport"](miner-api.md#transport)):
-linked into `api` for the backend-direct stage, wrapped by the
-miner container, and bound into the Android app via UniFFI.
+connection pools, no GraphQL. It consumes raw L1 edge records and
+folds per-author net stances itself
+([feed-ranking.md](../primitive/feed-ranking.md)). One
+implementation serves all three transport stages
+([miner-api.md "Transport"](miner-api.md#transport)): linked into
+`api` for the backend-direct stage, wrapped by the miner
+container, and bound into the Android app via UniFFI.
 
 ### `android/`
 
 The reference frontend — Kotlin + Jetpack Compose, with the typed
-GraphQL client generated from `schema.graphql`. Stack reasoning,
-module layout, the UniFFI binding, and the test story live in
-[android.md](android.md).
+GraphQL client generated from `schema.graphql`. It holds the
+member's actor key and performs the sign step of every write
+([android.md](android.md)). Stack reasoning, module layout, the
+UniFFI binding, and the test story live there.
 
 ---
 
-## Service-layer transactions
+## The write path
 
-Every write that touches more than one store, or more than one
-node in Memgraph that must succeed or fail together, runs inside
-a **single service-layer transaction** wrapped by the API. The
-service layer is the only place with handles on both pools, so it
-is the only place that can hold a Memgraph transaction and a
-Postgres transaction open simultaneously and commit them as one
-logical unit.
+[substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)
+owns the flow's semantics; this is the system view of the four
+steps:
 
-### Partial-failure handling
+1. **Prepare** (backend). Validate the gesture against L2 policy
+   and envelope conformance, pre-check the write rule (below),
+   assemble the canonical record — payload envelope, salt, content
+   witness — and store it as a **staged write** (Postgres row;
+   payload bytes staged in the carriage tables). Return record,
+   salt, and witness to the client so it recomputes the commitment
+   before signing.
+2. **Sign** (client). On the device; the key never leaves it.
+3. **Relay** (backend). Submit the signed record through the L1
+   boundary and drive retries across epoch boundaries. The
+   signature covers the record, so the relay can neither alter it
+   nor author one unasked.
+4. **Confirm** (ingestion). When the accepted record arrives in
+   the mirror, the staged write is promoted: payload becomes
+   permanent carriage, display rows become visible, flow state
+   advances. A staged write that never lands is garbage-collected
+   — staged payload included — after a bounded number of epochs
+   (an operational parameter, [data-model.md](data-model.md)).
 
-Two engines have two commit boundaries; an inter-commit window exists in
-which the first store has committed and the second has not. The pattern that
-closes it:
+### Atomicity
 
-- **Hold both transactions open** through every write. Any
-  error before either commit aborts both with a `ROLLBACK`; the
-  graph and the display-content row stay in pre-write state.
-- **Choose an order so the first-committed side is
-  idempotent on retry.** Graph writes use Cypher `MERGE` keyed
-  on the node UUID rather than `CREATE` — a retried
-  service-layer transaction collapses a duplicate Memgraph
-  commit into a no-op. Postgres inserts are paired with
-  `ON CONFLICT DO NOTHING` (or equivalent) on the relevant
-  primary key.
-- **Place the lower-risk commit last.** The order is chosen so
-  the more failure-prone engine commits first; if it fails,
-  rollback is clean. The second commit is then close to
-  guaranteed; if it does fail, the idempotency above lets the
-  caller retry safely.
+Flows that touch only L2 state run in **one Postgres
+transaction** — a single commit boundary; partial-failure
+choreography across stores does not exist here. Flows coupled to
+an L1 record never pre-commit their effects: everything that
+depends on the record landing stays staged until confirm, and
+there is no distributed transaction with L1 — whether a record
+lands is L1's fact alone, learned through ingestion.
 
-A two-phase commit primitive across the two engines is **not**
-in scope: implementation cost outweighs the gain at our scale.
-Idempotent retry + the cache-rebuild path
-([data-model.md](data-model.md#author_id-is-a-cached-derivation--except-for-media_attachments))
-together cover the residual inconsistency surface.
+### Write eligibility and account states
 
-Every dual-store write follows this shape: User registration
-(below), Post / Comment / ChatMessage authoring (graph node +
-Postgres body row), the redaction cascade (graph layer +
-Postgres archive row — and archive-first per
-[governance.md §6 "Cascade dispatch"](../primitive/governance.md#6-when-outcomes-take-effect)),
-account deletion (graph redactions + Postgres row clears).
-
-### Genesis bootstrap
-
-The bootstrap binary writes four nodes — the `:Network` singleton, the
-genesis User, the genesis User's `Wallet` (bound by `:PAYS_TO`), and the
-`bot-defense` Hashtag — in one transaction. The genesis User is an economic
-actor (it can earn from campaigns), so it gets its payout wallet at creation
-like every account. See
-[network.md §2](../primitive/network.md#2-creation) for the primitive-side
-framing.
-
-Because no graph exists until the transaction commits, no hostile Proposal
-can race it: there is no target to file against, no Network singleton to
-scope to, no eligibility set to vote from. After commit, the graph is in a
-complete state — singleton + bootstrap moderator + its payout Wallet +
-bot-defense Hashtag — and ordinary governance applies from there.
-
-The binary is the **only** writer of these four nodes and the only step
-that escapes the actor-gesture-or-governance rule (per
-[graph-model.md §1](../primitive/graph-model.md#1-core-principles)).
-
-Alongside the graph nodes the bootstrap writes the Postgres genesis rows —
-the genesis User's credential + profile rows and the first invite link —
-following the dual-store ordering above (graph commits first). It is gated on
-**both** stores, not just the graph: an instance counts as bootstrapped only
-when the `:Network` singleton *and* the genesis `users` row both exist. The
-singleton's `genesis_user_id` pointer names the genesis User, so a re-run that
-finds the graph committed but Postgres empty completes the Postgres half
-against the already-committed identity — reusing its UUID (the cross-store
-join key) rather than minting a second genesis User — and re-mints the lost
-invite link. A fully-bootstrapped re-run writes nothing and re-surfaces the
-existing link; a conflicting genesis handle aborts the repair rather than
-desync the stores. Without the Postgres half of the gate, a half-committed
-bootstrap would read as done and wedge the instance.
-
-### Cascade handler
-
-Every governance threshold-cross — moderation classification,
-member disavowal, eligibility dropout, Chat epoch rotation, Item
-ownership transfer — fans out through the **cascade handler**: a
-single dispatch module in the API service layer that sequences
-the derived writes for each cascade type. See
-[governance.md §6](../primitive/governance.md#6-when-outcomes-take-effect)
-for the mechanism.
-
-The handler runs **synchronously** inside the same service-layer
-transaction as the triggering vote layer. Per cascade type it
-knows the fan-out order; **archive writes precede graph
-mutations** (so a failed archive never leaves a redacted layer
-without an archive copy); any step failure **rolls back the
-whole transaction**, including the triggering write.
-
-The handler lives in `api/` (orchestration). It calls into `graph-engine`
-for the Cypher writes and `postgres-store` for the archive rows; the cascade
-module sequences the calls but holds no DB-specific code itself.
-
-### User registration (invitation acceptance)
-
-Email verification creates the User node, its invitation edges,
-and the first session in one service-layer transaction. The
-trigger is the invitee clicking the verification link with the
-single-use token written to the `auth_pending_registrations`
-row at registration submit (see
-[auth.md "Invitation acceptance"](auth.md#invitation-acceptance-the-default-path)).
-
-Inside the transaction:
-
-1. Validate the verification token (Postgres read).
-2. Read the inviter's pre-committed `(dim1, dim2)` from the
-   linked `auth_invitations` row (Postgres read).
-3. Create the User node in Memgraph with `network_role =
-   'member'` and layered properties initialized.
-4. Create the account's `Wallet` node — its counterfactual
-   self-custody address as the initial layered property — and
-   write the `:PAYS_TO` edge binding User → Wallet per
-   [ledger.md](ledger.md#the-wallet-node-and-the-pays_to-binding).
-5. Write the two invitation actor edges per
-   [invitations.md](../primitive/invitations.md) — inviter
-   value outward, invitee value back.
-6. Insert the first `auth_refresh_tokens` row (Postgres).
-7. Delete the `auth_pending_registrations` row (Postgres).
-
-The order makes each step rollback-safe. If any step fails the
-service layer rolls back both pools' transactions; the pending
-registration row survives so the invitee can retry.
-
-There is **no observable window** in which the User node exists
-without its invitation edges or its payout `Wallet`, or in which
-a session token is issued before the User. The
-[no-User-node-before-verification invariant in
-user.md §2](../primitive/user.md#2-creation) holds at the
-implementation level because of this ordering.
+Prepare pre-checks the two-gate write rule over the mirror's
+current state — W1 solvency, W2a the individual stamp wall, W2b
+the averaged door
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+A failed check is a normal, visible account state, not an auth
+failure: authentication gates the *service*, write standing gates
+the *graph* ([auth.md](auth.md)). The product surfaces the state
+and its restoration flow — an insolvent actor (W1) restores
+capacity immediately by committing burns; re-crossing the wall
+(W2a) takes new burns and admissible vouch-positive connections.
+Who funds the debits is economics
+([economics.md](../primitive/economics.md)).
 
 ---
 
-## Request Lifecycle: Feed Query
+## The read paths
 
-A personalized feed splits across two locations: the central backend
-serves the **data**; the viewing user's device computes the **ranking**.
-This split is structural, not an optimization — per-actor ranking
-cannot run on the central hot path at any real user count. See
-[feed-ranking.md §9](../primitive/feed-ranking.md#11-where-ranking-runs) for the full
-reasoning and the math/deployment separation.
+### Record ingestion (the mirror contract)
 
-```
-Phase 1 — central backend serves subgraph + seen-list
+Per epoch, the backend ingests the accepted record set through the
+L1 boundary and appends it to the mirror tables, advancing a
+stored epoch cursor. The contract is exactly the mirror's truth
+relationship: it may lag L1; it must never diverge; it is fully
+rebuildable from published records, so ingestion state is never
+precious. Confirmation of staged writes (§ above) and overlay
+fold updates (tallies, the parameter carrier, role marks) are
+driven off the same ingestion pass.
 
-1. Client → POST /graphql to fetch the viewing user's relevant graph
-   slice.
-2. API calls graph-engine: traverse outward from the viewing
-   user, bounded by the dust floor χ — weight-bounded, not
-   hop-bounded (feed-ranking.md §9); return the relevant subgraph
-   (nodes + their incident actor and structural edges, with
-   top-layer tensor values intact).
-3. API calls postgres-store: fetch the viewing user's seen-list from
-   user_view_log — a per-viewer set of already-shown content
-   UUIDs. See feed-ranking.md §8.
-4. API returns subgraph + seen-list to the client.
+### Feed query
 
-Phase 2 — viewer-side ranking and filtering
+A personalized feed splits across two locations: the central
+backend serves the **data**; the viewing user's device computes
+the **ranking**. The split is structural, not an optimization —
+per-actor ranking cannot run on the central hot path at any real
+user count
+([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
 
-5. Client filters the subgraph by node type (per
-   feed-ranking.md §9, "Filtering sits alongside ranking") and
-   removes seen content from the candidate set (pre-rank
-   exclusion per feed-ranking.md §8).
-6. Client runs the feed-ranking algorithm (feed-ranking.md
-   §1–§5) over the remaining candidates. Output: an ordered
-   list of node IDs.
+1. **Slice** — the backend expands hop-by-hop from the viewing
+   user over the indexed record tables, forward-only and bounded
+   by the dust floor χ (weight-bounded, not hop-bounded), and
+   returns the slice as raw L1 edge records per the slice contract
+   ([miner-api.md](miner-api.md)), together with the viewer's
+   seen-list.
+2. **Rank** — the client (or a delegated miner) filters and ranks
+   the slice with the `ranker` core.
+3. **Render** — the client fetches display content for the top-N
+   items and batches viewed IDs back to the view log on natural
+   checkpoints.
 
-Phase 3 — display-content fetch and render
+The backend never ranks; ranking and filtering run on the viewing
+user's side, client by default, an optional delegate miner in the
+future, both running the same algorithm.
 
-7. Client requests display content for the top-N items it is
-   about to render (post bodies, profile fields, media URLs)
-   from postgres-store via the API.
-8. Client renders. As items pass through the viewport, the
-   client batches their IDs and POSTs them back to
-   user_view_log on natural checkpoints (batch-fill, scroll
-   pause, app close). See feed-ranking.md §8.
-```
+---
 
-The central backend serves graph slices, seen-lists, and display content; it
-does **not** rank. Ranking and filtering run on the viewing user's side —
-client by default, an optional delegate "miner" in the future, both running
-the same algorithm (feed-ranking.md §9).
+## Genesis bootstrap
+
+The L1-side genesis sequence belongs to
+[network.md §2](../primitive/network.md#2-creation): the genesis
+L0 burn, the Genesis Moderator's Registration, the system-actor
+and Treasury Registrations, the endorsement Opinions, the Charter,
+and the genesis role Tag land as the instance's first accepted
+records.
+
+The bootstrap binary performs the CoGra-side seeding around those
+records: the reserved Type keys (content-addressed UUIDv5 via the
+naming service — [data-model.md](data-model.md)), the operational
+parameter carrier initialized from the Charter's genesis payload,
+the operator account's service rows, and the first invite staging.
+It is idempotent and gated on **both** sides — an instance counts
+as bootstrapped only when the Charter record is in the mirror
+*and* the operator's service rows exist; a re-run completes the
+missing half keyed on the recorded identities and writes nothing
+once both halves stand.
 
 ---
 
 ## Infrastructure
 
-```
-Local dev (Docker Compose):
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│  ┌─────────────────┐   ┌──────────────────┐   ┌─────────────┐    │
-│  │  gnp_postgres   │   │  gnp_memgraph    │   │  gnp_lab    │    │
-│  │  postgres:16    │   │  memgraph-mage   │   │  lab        │    │
-│  │  port 5432      │   │  bolt: 7687      │   │  port 3000  │    │
-│  └─────────────────┘   └──────────────────┘   └─────────────┘    │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-Memgraph and Lab image versions are pinned in
-[docker-compose.yml](../../docker/docker-compose.yml), and CI pins
-the same Memgraph version, so dev and CI test against the same
-engine.
-
-Volumes are named (`postgres_data`, `memgraph_data`) so data persists across
-`make down` / `make up`. Use `make reset-db` to wipe everything.
+Local development runs PostgreSQL via Docker Compose with named
+volumes, so data persists across `make down` / `make up`
+([development.md](development.md) has the commands and
+environment); CI pins the same engine version, so dev and CI test
+against the same store. Media blobs use a local volume in
+development. The L1 substrate sits behind the §5 boundary in every
+environment.
