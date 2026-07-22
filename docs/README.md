@@ -136,8 +136,8 @@ an `instances/` doc is a sign the mechanism belongs in
 ### `implementation/`
 
 - [roadmap](implementation/roadmap.md) — living sequencing plan:
-  vertical slices from auth through economics, each hand-testable;
-  open doc issues mapped to the slice that fixes them.
+  the L1 stand-in and its swap, vertical slices from the seam to the
+  CGT rail (each hand-testable), staged workstreams with their gates.
 - [architecture](implementation/architecture.md) — system design
   around the L1 seam: external surfaces, stores, write and read
   paths.
