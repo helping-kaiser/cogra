@@ -96,9 +96,8 @@ layer **by timestamp** — "read property X as-of T" returns the
 layer on X with the largest timestamp ≤ T. Per-node serialized
 writes make timestamps strictly monotonic per node, so a single timestamp
 pins the node's full state at that moment — no per-property index
-needed. Concrete storage shape (top-layer slot + `_layers` list)
-in
-[graph-data-model.md "Shared shape: layered node-property storage"](../implementation/graph-data-model.md#shared-shape-layered-node-property-storage).
+needed. Concrete storage shape in
+[data-model.md "Overlay state and layered properties"](../implementation/data-model.md#overlay-state-and-layered-properties).
 
 ### What properties belong on overlay nodes
 
