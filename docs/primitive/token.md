@@ -12,8 +12,8 @@ defines how CGT comes into existence — the **mint curve**, the
 releases new supply — and where the money that leaves the campaign
 equation goes: the **team treasury** and the **L0 reserve pool**.
 The campaign mechanics that *spend* CGT live in
-[economics.md](economics.md); the rail's claim/escrow plumbing and
-the specific chain are implementation
+[economics.md](economics.md); the rail's payout and escrow
+plumbing is implementation
 ([ledger.md](../implementation/ledger.md)). Design history:
 [open-questions.md Q20](../open-questions.md).
 
@@ -21,11 +21,16 @@ the specific chain are implementation
 > `reserve_share` in the flow formulas are defined in
 > [economics.md §7](economics.md#7-the-conservation-equation).
 
-CGT requires a cheap settlement layer with a **V3-style
-concentrated-liquidity DEX** (for the liquidity mechanism in §4)
-and no single-operator risk — an EVM L2 with Uniswap V3 or
-equivalent is the fit. The named chain is an implementation choice,
-deferred to the ledger.
+CGT requires a cheap settlement layer that can host the liquidity
+mechanism of §4 — sell released supply above spot, keep an
+always-on exit market, accrue the base asset — with **no single
+operator able to steal funds or permanently censor**. CGT lives on
+the **Liquid Network** as an issued asset, paired natively against
+**L-BTC (Liquid Bitcoin)**: block signing and the peg rest on an
+11-of-15 functionary federation, which meets that bar, and the
+base pair adds no second chain and no bridge to the money path.
+The rail mechanics live in the ledger
+([ledger.md](../implementation/ledger.md)).
 
 **Invariant: the token never feeds ranking.** Neither CGT balance
 nor token activity (transfers, campaign participation) is ever an
@@ -43,7 +48,7 @@ with zero ranking feedback — the same hard boundary
 Advertisers buy CGT and fund campaigns in it; contributors earn it;
 the rail is the ledger of CGT amounts, and L1 carries only the
 public campaign record and pointers
-([economics.md §10](economics.md#10-the-settlement-record-and-the-claim-flow)).
+([economics.md §10](economics.md#10-the-settlement-record-and-the-payout-flow)).
 CGT is a standard fungible on-chain token, and **burn is literal
 supply destruction**: the per-campaign burn line of
 [economics.md §7](economics.md#7-the-conservation-equation) removes
@@ -98,6 +103,12 @@ no asymptote. Keeping the mint on the calendar preserves the finite
 cap; releasing it through liquidity rather than direct distribution
 (§4) keeps it from dumping.
 
+The curve is enforced on the rail, not operated: the full lifetime
+supply exists from genesis, pre-minted into tranches under absolute
+timelocks, one per calendar step — "mint" throughout this doc is
+that consensus-enforced **release**, and no key exists that could
+issue beyond it ([ledger.md](../implementation/ledger.md)).
+
 ---
 
 ## 3. Initial allocation — proportional carry-forward
@@ -116,7 +127,7 @@ pools:
 Existing holders keep their **percentage** of that prior state,
 translated into CGT — *not* unit-for-unit. Carrying the percentage
 rather than a fixed conversion respects pre-existing holder
-expectations and seeds the initial liquidity pool (§4) without
+expectations and seeds the initial liquidity (§4) without
 manufacturing new concentration. The exact figures — the alpha
 total, the first-year total, the percentage→CGT conversion, and the
 split of the carried supply into liquidity-seed versus holder
@@ -136,102 +147,125 @@ economic instrument, not a voting weight.
 ## 4. Protocol-owned liquidity (POL)
 
 New supply does not arrive by transfer into user wallets. It is
-released through a liquidity pool the protocol owns, so that minted
-CGT only enters active circulation when there is genuine demand to
-absorb it — never as a calendar-timed dump.
+released through a market the protocol owns — a **covenant order
+ladder** on the rail: resting on-chain orders, non-custodial once
+placed — so that released CGT only enters active circulation when
+there is genuine demand to absorb it, never as a calendar-timed
+dump. The transaction-level mechanics are the ledger's
+([ledger.md](../implementation/ledger.md)).
 
-### 4.1 The base pool
+### 4.1 The base pair
 
-The protocol seeds and holds a **two-sided CGT/ETH pool**. The seed
-(CGT from the §3 carry-forward, paired with ETH) sets the
-**starting price** and is the always-on market: anyone can swap
-CGT↔ETH in either direction at any time, with the price sliding
-along the pool curve after each trade (standard AMM behaviour).
-This base pool is the **exit liquidity** for contributors cashing
-out earnings and the **entry** for advertisers buying CGT to fund
-campaigns. Liquidity is never one-directional here — only the
-*price* moves.
-
-**Why ETH as the pair.** ETH is the L2's native asset: pairing
-against it adds **no issuer or custodian** beyond the chain itself.
-A USD stablecoin (USDC) would price CGT directly in dollars but
-depends on a central issuer who can freeze or redeem; wrapped BTC
-reintroduces a custodian or bridge holding the real Bitcoin. ETH is
-the only deep pair with no extra trust dependency, matching the
-no-single-operator requirement. The consequence: **contributor
-earnings are realised in ETH**, so their USD value follows
-`(contributor share) · (CGT/ETH trajectory) · (ETH/USD)` — the
+The protocol's market is **CGT/L-BTC (Liquid Bitcoin)** — the
+rail's native asset. Pairing against it adds **no issuer or
+custodian** beyond the chain itself: a USD stablecoin prices CGT
+directly in dollars but depends on a central issuer who can freeze
+or redeem; wrapped or bridged BTC reintroduces a custodian holding
+the real Bitcoin. L-BTC is Bitcoin inside the same federation
+trust floor the Layer 0 reserve already stands on — the only deep
+pair with no extra trust dependency. The consequence:
+**contributor earnings are realised in L-BTC**, so their fiat
+value follows
+`(contributor share) · (CGT/L-BTC trajectory) · (BTC/USD)` — the
 contributor pool `(0.95 − reserve_share)·P` is exact and
 graph-plus-parameter-determined
 ([economics.md §7](economics.md#7-the-conservation-equation)), but
-the fiat figure carries ETH's volatility.
+the fiat figure carries Bitcoin's volatility.
 
-### 4.2 Demand-coupled release of new mint
+### 4.2 The ladder — demand-coupled release
 
-Each mint epoch's fresh CGT is **not** added to the base pool as a
-50/50 deposit (which would sell pressure straight into spot).
-Instead it is deposited as a **V3 concentrated-liquidity position
-placed entirely above the current price**, over the range
-`[TWAP_24h, 5 × TWAP_24h]`.
+The market is two-sided around a published anchor price (§4.3):
 
-A V3 position supplies liquidity only within a chosen price band. A
-band sitting **above** spot holds **only CGT** and acts as a stack
-of resting sell orders: it converts CGT→ETH *only as buyers push
-the price up into the band*. So freshly minted CGT enters active
-circulation **on demand** — when advertisers buy to fund campaigns
-— and sits dormant above spot otherwise. **Total supply grows on
-the calendar; active circulating supply grows on demand.** In an
-idle period POL simply accumulates CGT above spot and releases it
-when demand returns. This is the "add new CGT without dumping the
-price" property, done the V3-native way.
+- **Ask side — released supply.** Each released tranche (§2) is
+  placed as covenant sell orders spaced geometrically **above**
+  the anchor: a stack of resting sell orders that converts
+  CGT→L-BTC *only as buyers push into it*. Freshly released CGT
+  enters active circulation **on demand** — when advertisers buy
+  to fund campaigns — and sits dormant above the market otherwise.
+  **Total supply is a genesis constant; released supply grows on
+  the calendar; active circulating supply grows on demand.**
+- **Bid side — exit liquidity.** Protocol-held L-BTC rests in buy
+  orders **below** the anchor: the always-on exit for contributors
+  cashing out earnings. Ask-side sale proceeds replenish this side
+  first (§4.5), so the exit market's depth is protocol principal,
+  accrued in the base asset.
 
-### 4.3 Cadence — hourly sub-deposits
+Liquidity is never one-directional: anyone can buy from the asks
+or sell into the bids at any time; only the price walks the
+ladder.
 
-The daily mint is split into **24 hourly micro-deposits** of 1/24
-each rather than one daily deposit. This spreads the MEV attack
-surface across the day, and at per-hour sizes any single-event
-price manipulation is uneconomic.
+### 4.3 The anchor — the ladder's own fills
 
-### 4.4 Range anchor — the pool's own TWAP
+Order placement is anchored on a **published deterministic fold
+over the ladder's own on-chain fills**, epoch-granular — anyone
+recomputes the anchor from public chain data; no external oracle,
+no dependency on another venue's feed. At genesis, before any
+fills exist, the anchor is the seeded starting price set by the §3
+carry-forward's liquidity seed, pinned at launch. The manipulation
+economics match the pool-TWAP argument this replaces: an averaged,
+fill-weighted anchor moves only under sustained real trading
+against the ladder's own depth — uneconomic at the sizes any
+single re-placement exposes.
 
-The `[TWAP_24h, 5 × TWAP_24h]` band is anchored on the **pool's own
-24-hour time-weighted average price**, not an external oracle.
-Cross-venue arbitrage drags any single pool's spot toward the
-consensus market price within seconds, and a 24-hour average over
-that arbitraged spot can only be moved by holding price off-natural
-for many hours of sustained capital — uneconomic at typical mint
-sizes. An external oracle (Chainlink and the like) is overkill for
-the value at risk per deposit and adds a dependency the TWAP
-avoids.
+### 4.4 Cadence — epoch-granular re-placement
 
-### 4.5 Fee disposition — POL fees flow to the team treasury
+The ladder is maintained on an epoch cadence: each cycle the
+protocol re-centers unfilled orders around the updated anchor,
+places newly released tranche supply into the ask band, and tops
+the bid side back up to its liquidity target. Re-placement is an
+automated, publicly auditable treasury operation — explicit
+transactions on a published schedule
+([ledger.md](../implementation/ledger.md)).
 
-POL's positions earn DEX trading fees (the natural CGT/ETH fee tier
-is 0.30%). The protocol periodically collects them — a mix of CGT
-and ETH — and routes the proceeds to the **team treasury** (§6).
-Rejected alternatives: holding fees in the position forever
-(ignores a real revenue stream for no benefit) and buyback-and-burn
-(mere decoration on a deflation story already carried by campaign
-burn and the asymptotic mint curve).
+### 4.5 Income disposition — the spread flows to the team treasury
 
-### 4.6 MEV is bounded and never touches contributor proceeds
+An order ladder has no fee switch; it earns the way any standing
+market-maker does — the **spread**. Asks sit above the anchor and
+bids below it; the governed gap between them is paid by everyone
+who enters or exits CGT across the protocol's market — the
+order-book form of the pool fee this design descends from. It
+scales with everything that buys in or cashes out: campaign
+funding, earnings exits, and every future CGT use with an entry or
+exit leg.
 
-The POL surface is exposed to standard DEX MEV, but every vector
-hits *fee income*, not the supply mechanism or contributor
-earnings:
+The two L-BTC flows the ladder produces are kept strictly apart:
 
-- **Front-running a deposit by manipulating spot** — defeated by
-  the TWAP anchor plus hourly sizing (§4.3–4.4): manipulation cost
-  exceeds extractable value.
-- **Just-in-time liquidity** — captures a slice of POL's fee
-  revenue, not principal; the supply mechanism and contributor
-  payouts are untouched.
-- **Range-boundary arbitrage** — reduces POL fee income, same class
-  as JIT.
+- **Tranche-sale proceeds are principal.** L-BTC from ask-side
+  fills funds the bid side — the exit liquidity and the protocol's
+  base-asset accrual. It is never revenue: routing release
+  proceeds to the team would monetise the supply curve itself.
+- **The spread is income.** At each re-placement, the realized
+  spread gain above the bid side's liquidity target sweeps to the
+  **team treasury** (§6).
+
+Rejected alternatives: letting all proceeds pool as principal
+forever (ignores a real revenue stream for no benefit — the
+project's income must scale with the economy it runs) and skimming
+tranche sales (taxes supply release instead of trading activity,
+and thins the exit market).
+
+### 4.6 Manipulation is bounded and never touches contributor proceeds
+
+The ladder's attack surface is bounded the way the pool's was:
+every vector reaches *income*, never the supply mechanism or
+contributor earnings.
+
+- **Pushing spot to lift asks cheaply** — defeated by the
+  fill-weighted epoch anchor (§4.3) plus geometric spacing: moving
+  the anchor takes sustained capital traded against the ladder
+  itself, and a single epoch's exposure is bounded by what one
+  re-placement puts at market.
+- **Picking off stale orders after a market move** — the standing
+  market-maker's classic adverse-selection cost: an order priced
+  before a move fills at yesterday's price. Epoch re-pricing
+  bounds the staleness window, geometric spacing bounds the depth
+  exposed near the anchor, and the cost nets against spread income
+  in the same public accounting — it can thin the income stream,
+  never touch the committed payout side.
 
 The contributor share is graph-plus-parameter-determined and the
-CGT price trajectory is set by the mint/burn balance — both out of
-MEV reach.
+CGT price trajectory is set by the release/burn balance — both out
+of reach of anyone trading against the ladder.
 
 ---
 
@@ -290,8 +324,8 @@ It accrues from two streams:
 - **Campaign treasury share** — `0.02%·D + 1.98%·P` per settlement
   ([economics.md §7](economics.md#7-the-conservation-equation)),
   already CGT-denominated.
-- **POL fees** — a mix of CGT and ETH collected from the liquidity
-  positions (§4.5).
+- **Ladder spread** — the realized spread income swept from the
+  protocol's market at re-placement, L-BTC-denominated (§4.5).
 
 The team treasury is free to market-sell its holdings at its
 discretion. This is CoGra's answer to "if it's free, you're the
@@ -303,10 +337,13 @@ own liquidity, **not** from monetising user data.
 The reserve pool receives the `reserve_share·P` settlement line
 ([economics.md §7.2](economics.md#72-the-l0-reserve-pool)) and
 exists for exactly one kind of outflow: **funding the community's
-Layer-0 burns**. CGT is traded into LBTC (one or more hops through
-the base pool's ETH side) and burned at members', system actors',
-and Collectives' own addresses — the funder-unconstrained burn L1
-explicitly permits, raising only the funded member's own `B_i`.
+Layer-0 burns**. CGT is swapped into L-BTC through the protocol's
+own ladder at execution-time market price — chunked, publicly
+accounted, never at a frozen internal rate
+([ledger.md](../implementation/ledger.md)) — and burned at
+members', system actors', and Collectives' own addresses — the
+funder-unconstrained burn L1 explicitly permits, raising only the
+funded member's own `B_i`.
 
 - **Inflow rate is governed** — `reserve_share` is a `:Network`
   parameter the community sets, alongside the generosity and
