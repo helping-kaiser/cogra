@@ -255,8 +255,9 @@ What happens when the threshold is crossed. The outcome has one
 
 Nothing is ever deleted: L1 records are permanent by construction,
 and every CoGra-side carrier is append-only. The only reduction
-anywhere is the moderation payload-removal path with its visible
-mark ([layers.md §5](layers.md#5-deletion-policy)).
+anywhere is payload removal with its visible mark, through the
+authorization paths of
+[layers.md §5](layers.md#5-deletion-policy).
 
 ### 2.6 Packaging rules on a node — the `governance` map convention
 
