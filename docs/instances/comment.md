@@ -133,7 +133,7 @@ immutable structural record as the visible mark
 ([layers.md](../primitive/layers.md)). Triggering flows and
 Postgres-side tombstone/archive mechanics:
 [moderation.md](moderation.md),
-[account-deletion.md](account-deletion.md),
+[erasure.md](erasure.md),
 [retention-archive.md](../primitive/retention-archive.md).
 
 Removal never breaks a thread: the chain is structural, so

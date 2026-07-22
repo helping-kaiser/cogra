@@ -208,6 +208,11 @@ shared graph. CoGra's removal paths are **pure L2 policy with the
 payload-removal mark** — no L1 deletion gesture exists
 ([substrate-map.md §1](substrate-map.md#1-actors-and-identity)):
 
+- **Per-content removal (user-initiated).** The author of a
+  record removes its payload — a single record or a whole
+  revision chain, profile revisions included — immediate,
+  permanent, archived under a legal hold first
+  ([erasure.md §1](../instances/erasure.md#1-per-content-removal)).
 - **Account deletion (user-initiated) — the husk.** Identity-level
   (default): the person ↔ actor association is forgotten, Postgres
   display content is tombstoned, and payloads on identity-bearing
@@ -218,7 +223,7 @@ payload-removal mark** — no L1 deletion gesture exists
   address is self-custodied and untouched. Grace period, email
   confirmation, archive-first write ordering, and
   mention-to-marker resolution live in
-  [account-deletion.md](../instances/account-deletion.md).
+  [erasure.md](../instances/erasure.md).
 - **Moderation.** A passed classification against profile content
   or authored content runs the standard verdict flow
   ([moderation.md](../instances/moderation.md)); an `illegal`
@@ -228,7 +233,7 @@ payload-removal mark** — no L1 deletion gesture exists
 
 Future triggers — court order, next-of-kin under applicable
 inheritance law — are listed in
-[account-deletion.md](../instances/account-deletion.md) as planned
+[erasure.md](../instances/erasure.md) as planned
 reusers of the same mechanism with their own authorization rules.
 
 The grounded pair is stable through every reduction: records keep
@@ -249,8 +254,8 @@ anonymized, not removed.
   [auth.md](../implementation/auth.md).
 - **Not the deletion mechanism.** The payload-removal primitive
   lives in [layers.md §5](layers.md#5-deletion-policy); the
-  user-initiated path lives in
-  [account-deletion.md](../instances/account-deletion.md).
+  user-initiated paths live in
+  [erasure.md](../instances/erasure.md).
 - **Not the record catalog.** Per-family authoring semantics live
   in [edges.md](edges.md).
 - **Not the storage schema.** Concrete overlay properties,

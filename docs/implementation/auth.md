@@ -216,7 +216,7 @@ trace beyond itself.
 ### Self-service deletion (handoff out)
 
 User-initiated deletion is governed by
-[account-deletion.md](../instances/account-deletion.md). Auth's
+[erasure.md](../instances/erasure.md). Auth's
 contribution:
 
 - The deletion confirmation email goes to the verified address on
@@ -451,7 +451,7 @@ When MFA is added, the natural shape is **TOTP as the second factor with a
 WebAuthn upgrade path**, plus single-use recovery codes (stored hashed)
 issued at enrollment. MFA becomes a User-level setting; sessions issued
 post-MFA-success carry an `mfa: true` claim that high-stakes mutations
-(e.g. the [account-deletion.md](../instances/account-deletion.md)
+(e.g. the [erasure.md](../instances/erasure.md)
 confirmation, role changes per [network.md](../primitive/network.md)) can
 require.
 
@@ -469,7 +469,7 @@ require.
 - [collectives.md §2](../instances/collectives.md#2-custody) —
   Collective custody: creator-held key, per-member 2-of-2
   co-signing halves.
-- [account-deletion.md](../instances/account-deletion.md) —
+- [erasure.md](../instances/erasure.md) —
   consumes session listing and email verification.
 - [network.md](../primitive/network.md) — the genesis sequence
   that seeds the operator account; `network_role` read at action
