@@ -1,31 +1,120 @@
 # Data Model — PostgreSQL
 
-This document covers the **PostgreSQL schema** — primarily the
-display-content layer, plus a small set of operational metadata
-tables. See
-[architecture.md "Vocabulary"](architecture.md#vocabulary-display-content-vs-metadata)
-for the distinction between display content and metadata.
+CoGra runs a single store: this document covers the **PostgreSQL
+schema** — the L1 record mirror, the overlay, and CoGra's
+authoritative L2 state (display content plus the service tables).
+[architecture.md](architecture.md) is the system view;
+[graph-db-options.md](graph-db-options.md) records why no graph
+database is in the stack.
 
-For the graph model (nodes, edges, tensor dimensions, append-only layers),
-see [Graph Model](../primitive/graph-model.md).
+For the graph model itself (records, families, folds), see
+[graph-model.md](../primitive/graph-model.md).
 
 ## The Boundary Rule
 
-> If the data is needed to **navigate or weight** the graph → Memgraph.
-> If the data is needed to **display** something → Postgres.
+> What a record **is** lives on L1. What it **shows** lives in
+> Postgres. What it **weighs** is recomputed from records, never
+> stored.
 
-UUIDs are the shared key. Both databases store the same ID for the same
-entity; neither database stores the other's fields.
+Within the schema, three kinds of state stay apart
+([substrate.md §3](../primitive/substrate.md#3-cogras-stores)):
+
+- **Mirror tables** — L1's truth, cached. May lag, never diverge,
+  fully rebuildable from published records.
+- **Overlay tables** — CoGra's own machinery (Proposal state, the
+  parameter carrier, role marks), itself derived from public
+  records and published fold rules.
+- **L2 tables** — what CoGra alone is authoritative for: display
+  content, identity association, applicants, the key-custody
+  stores, honor ledgers, personal frontend state.
+
+UUIDs are the join key across CoGra's tables; mirrored L1 records
+keep L1's own record keys (see "ID Strategy").
+
+---
+
+## The record mirror
+
+The mirror caches accepted L1 records for traversal and folds. Its
+schema is deliberately thin here: **layer1-interface.md §8 owns the
+record shape**; the mirror stores what the interface defines and
+adds nothing. Conventions:
+
+- **Keying.** A mirrored record is keyed by **L1's own record
+  identifier, stored verbatim** — the mirror never re-mints
+  identity. Hyper-edge legs are child rows keyed (record, leg).
+- **Columns.** The fields consumed by traversal, folds, and
+  display resolution: family, author, target(s), the two authored
+  parameters, tier metadata, landing epoch, the payload-marked
+  flag, and the payload-witness reference.
+- **Indexes serve the standing query shapes:** by **author**
+  (forward expansion — the feed's hop-by-hop frontier queries —
+  and per-author bundle folds), by **target** (fold inputs,
+  display resolution), by **(family, target, epoch)** (membership,
+  edit, and ballot folds — newest-wins reads), and by **epoch**
+  (ingestion, incremental recompute).
+- **An epoch cursor** records the last fully-ingested epoch;
+  ingestion appends records and advances it
+  ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
+
+The contract is the mirror's whole identity: it may lag L1, it
+must never diverge, and it can be rebuilt from published records
+at any time — mirror state is never precious, and no backup of it
+is meaningful.
+
+---
+
+## Overlay state and layered properties
+
+Overlay tables hold CoGra's own machinery — state with no L1 home,
+every row derived from public records plus CoGra's published
+rules:
+
+- **Proposal state** — per-Proposal lifecycle and the
+  epoch-quantized tally, a cache over the ballot records
+  ([proposal.md](../instances/proposal.md)).
+- **The `:Network` parameter carrier** — the operational mirror of
+  the charter's parameter schedule, updated when a finalization
+  lands ([network.md §4](../primitive/network.md#4-the-overlay-carrier)).
+- **Role marks** — `network_role` per account, a cache of the
+  Publisher's role Tags and the class labels.
+
+Where an overlay row and the records could disagree, the records
+govern; every overlay table is rebuildable by replaying the folds.
+
+**Layered properties** — the append-only history pattern of
+[layers.md](../primitive/layers.md), applied where CoGra owns the
+store — take the same storage shape as display-content versioning
+below: an entity row plus append-only version rows keyed
+`(entity_id, created_at)`, newest row wins, history is the rows
+themselves. Governed overlay properties (the parameter carrier)
+version this way, so the operational cache preserves the same
+auditable history the charter schedule carries on L1.
+
+---
+
+## Staged writes
+
+The write path stages before it lands
+([architecture.md "The write path"](architecture.md#the-write-path)):
+a prepared record — canonical envelope, salt, witness — is a
+staged-write row from **prepare** until **confirm**, and staged
+payload bytes sit in the carriage tables flagged as staged.
+Promotion on confirm makes the payload permanent carriage and the
+display rows visible; a staged write that never lands is
+garbage-collected, staged payload included, after a bounded number
+of epochs (an operational parameter). Staged state is
+L2-operational: it is exempt from append-only history and leaves
+no trace when collected — nothing existed on the graph.
 
 ---
 
 ## PostgreSQL Schema
 
-Postgres holds all human-readable display content plus a few
-operational-metadata tables (seen-list, retention archive
-bookkeeping). It knows nothing about the social graph, edge
-weights, or feed ranking. Each display-content table answers
-the question: "given a UUID, what do I render on screen?"
+The sections below are the **L2 side** of the store: display
+content and the service tables. Display tables know nothing about
+records, weights, or ranking — each answers the question: "given a
+UUID, what do I render on screen?"
 
 ### Display-content versioning
 
@@ -50,9 +139,9 @@ visible marker, and the prior values move to the retention
 archive ([retention-archive.md](../primitive/retention-archive.md),
 [account-deletion.md](../instances/account-deletion.md)). The
 tombstone's `created_at` is the removed-at instant. Per-field
-moderation *status* stays graph-side
-([nodes.md](../primitive/nodes.md)); Postgres carries only the
-content and its markers.
+sensitive flags and the verdict vocabulary are operational
+metadata rows; the substrate-visible verdict is the Tag record
+([moderation.md](../instances/moderation.md)).
 
 Current-version reads are `ORDER BY created_at DESC LIMIT 1` per
 entity (or `DISTINCT ON (entity_id)` for lists), served by the
@@ -104,11 +193,13 @@ CREATE INDEX media_attachments_author_idx
 
 ```sql
 -- Users: identity and account state — one immutable-shape row per
--- account. email and password_hash live here once the account is
--- verified; before that, they sit on auth_pending_registrations and
--- are moved across in the same transaction that creates this row
+-- account. email and password_hash live here once the member has
+-- landed; before that, they sit on auth_applicants and are moved
+-- across when the approved applicant's Registration confirms
 -- (see auth.md §Account lifecycle; genesis bootstrap in
--- architecture.md §Genesis bootstrap and network.md §2).
+-- architecture.md §Genesis bootstrap and network.md §2). The row
+-- is the login half of the account; the actor half is the L1
+-- Registration, joined through the identity association.
 -- username/email/password_hash are account state, not display
 -- content: they stay single-current (UNIQUE could not survive
 -- version rows). Account-deletion redacts username in place to
@@ -140,9 +231,9 @@ CREATE TABLE user_profile_versions (
 -- Collectives: identity row for any collective actor (households,
 -- bands, co-ops, companies, ...). name is the handle for
 -- mentions/lookups, analogous to users.username; it is a
--- single-current cache of the layered graph property
--- (collectives.md §4 — renames append a graph layer and update
--- this cache).
+-- single-current cache of the collective's published profile fold
+-- (collectives.md — renames land as records and update this
+-- cache).
 CREATE TABLE collectives (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     name       TEXT        NOT NULL UNIQUE,
@@ -150,8 +241,8 @@ CREATE TABLE collectives (
 );
 
 -- Collective profiles: append-only versions of the profile display
--- fields. Changes land through the governance set:* cascade
--- (governance.md §6), each passing Proposal appending one version.
+-- fields. Changes land through the collective's governed edit
+-- flow (substrate.md §9); each applied change appends one version.
 CREATE TABLE collective_profile_versions (
     collective_id    UUID        NOT NULL REFERENCES collectives(id),
     display_name     TEXT        NOT NULL,
@@ -215,9 +306,10 @@ CREATE TABLE comment_versions (
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
 -- a single chat can carry both plaintext and encrypted messages. See
--- chats.md §9. Profile fields (name, description, image) change only
--- through the chat's governance set:* entries; each passing Proposal
--- appends a version.
+-- chats.md §9. Profile fields (name, description, image) change
+-- through the chat's edit carrier under its governed update
+-- authority (substrate.md §9); each applied change appends a
+-- version.
 CREATE TABLE chats (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -284,7 +376,9 @@ CREATE TABLE item_versions (
     PRIMARY KEY (item_id, created_at)
 );
 
--- Hashtag registry (name lookup + metadata).
+-- Hashtag registry — the L2 naming service for Types
+-- (hashtag.md): name lookup + metadata, including the reserved
+-- moderation Types seeded at bootstrap (network.md §2).
 -- id is derived via UUIDv5 from the canonical name (see "Node identity
 -- strategies" below). No DEFAULT — the API must always supply the
 -- deterministic UUID; relying on a random fallback would break content-
@@ -479,10 +573,12 @@ CREATE TABLE user_preferences (
 
 ### Authentication state
 
-Backend-only tables that gate participation in the graph (writing
-edges, authoring nodes, voting, joining junctions). Reading the
-graph never requires a row here — see
-[auth.md](auth.md) and [graph-model.md §1](../primitive/graph-model.md#1-core-principles).
+Backend-only tables behind CoGra's **service** authentication —
+sessions, credentials, applicant staging, the key-custody stores.
+Auth gates the service, never the graph: reading the shared graph
+requires no row here, and write standing is L1's write rule, not a
+session fact ([auth.md](auth.md),
+[architecture.md "Write eligibility"](architecture.md#write-eligibility-and-account-states)).
 
 ```sql
 -- Refresh tokens: one row per active session. The raw token is
@@ -502,71 +598,100 @@ CREATE TABLE auth_refresh_tokens (
 CREATE INDEX auth_refresh_tokens_user_idx
     ON auth_refresh_tokens (user_id, expires_at);
 
--- Invitations: one row per generated invite link. The link itself
--- carries only the row id; the pre-committed inviter edge values,
--- inviter identity, and time-gate live here. Time-gated and, per
--- invitations.md, single-use or multi-use at the inviter's choice:
--- a multi-use row admits many invitees; a single-use row is
--- consumed by its first accepted registration (consumed_at set in
--- the same transaction that creates the User node). Rows are
--- append-only in spirit (no updates to inviter_dim1 / inviter_dim2
--- / inviter_id / inviter_type after creation); revocation sets
--- revoked_at.
+-- Invite links: pure service-side staging UX (invitations.md §4).
+-- A link never authors anything and nothing here binds: the
+-- inviter's approval is the priced act, and the stance values are
+-- PRE-FILLED, not pre-committed — the inviter can adjust them at
+-- approval. The link URL carries only the row id. Time-gated and,
+-- at the inviter's choice, single-use (one applicant slot) or
+-- multi-use (many applicants stage through the same link until
+-- expiry — the queue scales, the vouching never does). Revocation
+-- sets revoked_at.
 --
--- inviter_id + inviter_type identifies the inviting actor. Users
--- and Collectives are symmetric actors in the primitive, so either
--- can issue invitations (see invitations.md). Same polymorphic
--- shape as author_id + author_type elsewhere — no SQL FK on
--- inviter_id, integrity guaranteed by the cache-rebuild path on
--- the graph side. inviter_dim1 / inviter_dim2 are the values that
--- will be written to the inviter's outgoing edge toward each
--- accepting invitee per invitations.md "Pre-committed inviter
--- values."
-CREATE TABLE auth_invitations (
+-- inviter_id + inviter_type identifies the inviting actor — the
+-- actual actor whose Opinion the approval commits, never a system
+-- actor. Same polymorphic shape as author_type elsewhere; no SQL
+-- FK on inviter_id.
+CREATE TABLE auth_invite_links (
     id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     inviter_id   UUID         NOT NULL,
     inviter_type TEXT         NOT NULL CHECK (inviter_type IN ('user', 'collective')),
-    inviter_dim1 REAL         NOT NULL CHECK (inviter_dim1 BETWEEN -1.0 AND 1.0),
-    inviter_dim2 REAL         NOT NULL CHECK (inviter_dim2 BETWEEN -1.0 AND 1.0),
+    prefill_dim1 REAL         NOT NULL CHECK (prefill_dim1 BETWEEN -1.0 AND 1.0),
+    prefill_dim2 REAL         NOT NULL CHECK (prefill_dim2 BETWEEN -1.0 AND 1.0),
     single_use   BOOLEAN      NOT NULL DEFAULT FALSE,
-    consumed_at  TIMESTAMPTZ,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMPTZ  NOT NULL,
     revoked_at   TIMESTAMPTZ
 );
-CREATE INDEX auth_invitations_inviter_idx
-    ON auth_invitations (inviter_type, inviter_id);
+CREATE INDEX auth_invite_links_inviter_idx
+    ON auth_invite_links (inviter_type, inviter_id);
 
--- Pending registrations: pre-User-node holding state. Created when
--- a registration form is submitted and consumed when the email-
--- verification step creates the User node, or expires after 24 h.
--- See auth.md §Account lifecycle for why no User node exists in
--- this state.
+-- Applicants: staged, off-graph service state (invitations.md §4).
+-- One row is everything CoGra knows about a person between
+-- following a link and landing on the graph: the login credentials
+-- (moved to users on landing), the device-generated actor identity
+-- — public key and L0 address, minted on the applicant's device at
+-- application time (auth.md §Account lifecycle) — and the
+-- approval/landing bookkeeping. An abandoned or unapproved
+-- application leaves no trace beyond this row; no account, no
+-- records, nothing on the graph.
 --
--- invitation_id is the auth_invitations row the registrant came in
--- through. The genesis User is written directly by the bootstrap
--- migration and never passes through this table (see network.md §2).
--- invitee_dim1 / invitee_dim2 are the invitee's chosen outgoing-
--- edge values toward the inviter, written to the graph edge on
--- verification per invitations.md.
--- email_verification_token_hash stores SHA-256 of the single-use
--- verification token, same hashing rationale as refresh tokens.
--- email is UNIQUE: the re-registration collision path (auth.md
--- §Re-registration collision) resolves a duplicate submit with
--- ON CONFLICT (email) DO UPDATE ... WHERE expires_at < NOW(), so a
--- live pending row is never displaced and an expired one is overwritten.
--- The unique constraint also serves the by-email lookup.
-CREATE TABLE auth_pending_registrations (
+-- Lifecycle: email-unverified rows expire after 24 h (reaper);
+-- verified applicants persist while their link lives, readable-
+-- but-not-acting per invitations.md §4. approved_at marks the
+-- inviter's priced approval (which kicks off funding + the staged
+-- Registration + the inviter's Opinion); landed_at is set when the
+-- Registration confirms in the mirror and the users row is
+-- created. The joiner's reciprocation is their own client-signed
+-- act after landing, not applicant state.
+--
+-- email is UNIQUE: a duplicate submit against a live row is
+-- rejected ("registration in progress"); an expired-but-unswept
+-- row is overwritten via ON CONFLICT (email) DO UPDATE ... WHERE
+-- expires_at < NOW(), so the experience never depends on the
+-- sweep schedule. The constraint also serves the by-email lookup.
+CREATE TABLE auth_applicants (
     id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    invite_link_id                UUID         NOT NULL REFERENCES auth_invite_links(id),
     username                      TEXT         NOT NULL,
     email                         TEXT         NOT NULL UNIQUE,
     password_hash                 TEXT         NOT NULL,
-    invitation_id                 UUID         NOT NULL REFERENCES auth_invitations(id),
-    invitee_dim1                  REAL         NOT NULL CHECK (invitee_dim1 BETWEEN -1.0 AND 1.0),
-    invitee_dim2                  REAL         NOT NULL CHECK (invitee_dim2 BETWEEN -1.0 AND 1.0),
     email_verification_token_hash BYTEA        NOT NULL UNIQUE,
+    email_verified_at             TIMESTAMPTZ,
+    actor_pubkey                  BYTEA        NOT NULL,
+    l0_address                    TEXT         NOT NULL,
+    approved_at                   TIMESTAMPTZ,
+    landed_at                     TIMESTAMPTZ,
     created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at                    TIMESTAMPTZ  NOT NULL
+);
+CREATE INDEX auth_applicants_link_idx
+    ON auth_applicants (invite_link_id, approved_at);
+
+-- Key backups: client-encrypted signing-key blobs (auth.md §Key
+-- recovery). Ciphertext under the device-generated recovery code —
+-- the server cannot decrypt, verify, or reconstruct anything from
+-- a row. Opt-in; one current blob per account, replacement
+-- appends; recovery on a new device is login + code.
+CREATE TABLE auth_key_backups (
+    user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blob       BYTEA       NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, created_at)
+);
+
+-- Collective co-signing halves: the backend's half of each
+-- act-as-eligible member's 2-of-2 split of the collective key
+-- (collectives.md §2). The full key never assembles server-side;
+-- the backend co-signs only after checking the member's signed
+-- instruction against the governance map. Deleting the row IS the
+-- removal semantics — no membership event forces a re-key.
+CREATE TABLE collective_cosign_halves (
+    collective_id UUID        NOT NULL REFERENCES collectives(id),
+    member_id     UUID        NOT NULL REFERENCES users(id),
+    key_half      BYTEA       NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (collective_id, member_id)
 );
 
 -- Password resets: one row per requested reset. Single-use,
@@ -652,28 +777,60 @@ CREATE INDEX versions_current_idx
 
 ---
 
-## What is intentionally NOT in Postgres
+### Honor ledgers
 
-- **Edge data** (sentiment, interest, relevance, layers) — graph-only
-- **Feed ordering / ranking** — graph-only
-- **Interaction history** (who reacted to what, who interacted with whom) —
-  graph-only (encoded in tensor edges)
-- **Counts** (inbound edges, reactions, comments) — derived from graph edges
-  at query time, not materialized
-- **Membership / ownership state** — graph-only (junction nodes: ChatMember,
-  CollectiveMember, ItemOwnership)
+Per-community, append-only, membership-gated
+([governance.md §11](../primitive/governance.md#11-honor)).
+`community_id` is the issuing community's actor UUID — CoGra
+itself is guild #1, and every ledger is keyed by its issuer, so
+balances are incomparable across communities by construction.
+Reads are membership-gated in the service layer: only a member's
+session can query their community's ledger, and no slice or
+ranking query path touches these tables — the ranker and miner
+slice consume only L1 records, so honor structurally cannot enter
+them. The single sanctioned feed read is a community's own named
+opt-in feed
+([feed-ranking.md §10](../primitive/feed-ranking.md#10-the-default-feed-and-named-feeds)).
 
-**Side note on read-time aggregation at scale.** "Not materialized" is a
-present-scale call, not a permanent one. Most counts are one-hop
-traversals, cheap per query. The exception that could bite is a hot
-aggregate on a high-fan-in node — a Proposal's live vote tally
-([governance.md §3](../primitive/governance.md)), recomputed from every
-incoming vote edge on every read once a Proposal carries millions of
-votes. The escalation, if real load ever demands it, is a per-Proposal
-cached tally in an operational table, invalidated on each new vote — a
-materialized aggregate that reverses the rule above for that one hot case.
-Left unbuilt until the data shows it's needed, mirroring the
-layer-accumulation side note in [layers.md](../primitive/layers.md).
+```sql
+-- Honor entries: never updated, never deleted. Freeze-on-expulsion
+-- is enforced by the membership check at read and issuance time,
+-- not by touching rows — a frozen ledger is inert, not erased.
+-- The issuance vocabulary (kinds, amounts, who may issue) is a
+-- governed policy owned by governance.md §11; ref_id points at the
+-- authorizing record where one exists.
+CREATE TABLE honor_entries (
+    community_id UUID        NOT NULL,
+    member_id    UUID        NOT NULL,
+    amount       NUMERIC     NOT NULL,
+    kind         TEXT        NOT NULL,
+    ref_id       BYTEA,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX honor_entries_member_idx
+    ON honor_entries (community_id, member_id, created_at);
+```
+
+---
+
+## What Postgres is never authoritative for
+
+- **The graph.** Records, stances, membership, ownership, roles —
+  L1's. The mirror and every overlay table are caches; where they
+  could disagree with the records, the records govern.
+- **Feed ordering / ranking.** Computed at query time by the
+  ranker from viewer-rooted paths over records — no materialized
+  scores, no popularity counters. Overlay tally caches exist for
+  *display* (a Proposal's live count is a frontend courtesy); the
+  binding tally is the epoch-quantized fold over ballot records
+  ([proposal.md](../instances/proposal.md)).
+- **Money.** Balances, escrow, transfers live on the CGT rail;
+  the admission balance is Layer 0's, read as `B_i`. Postgres
+  holds pointers and bookkeeping, never amounts that bind.
+- **Payload integrity.** The content witness is L1's evidence;
+  the carriage tables hold bytes and salts that verify against
+  it, and deletion is payload removal — the witness and the
+  structural record remain.
 
 ---
 
@@ -682,9 +839,10 @@ layer-accumulation side note in [layers.md](../primitive/layers.md).
 ### author_id is a cached derivation — except for media_attachments
 
 The `author_id` columns on `posts`, `comments`, and `chat_messages` are
-caches of the authorship derivation. The graph is the source of truth; see
-[authorship.md](../primitive/authorship.md) for the rule and the cache-
-rebuild semantics.
+caches: authorship is intrinsic to the signed L1 record
+([authorship.md](../primitive/authorship.md)), so the column is a
+projection of the mirror. If Postgres ever disagrees with the
+records, rebuild from the records.
 
 `media_attachments.author_id` is the **exception**: Media is not a graph
 node, so there is no graph-side authorship derivation to cache. The
@@ -722,8 +880,9 @@ different concern from per-asset cover.
 
 Every user-scoped table (`auth_refresh_tokens`,
 `auth_password_resets`, `auth_email_changes`,
-`auth_account_deletions`, `user_view_log`, `user_hidden_actors`,
-`chat_read_state`, `user_bookmarks`, `user_preferences`) carries
+`auth_account_deletions`, `auth_key_backups`, `user_view_log`,
+`user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
+`user_preferences`) carries
 `user_id REFERENCES users(id) ON DELETE CASCADE`. Account deletion does **not** remove the `users` row — PII
 is redacted in place per
 [account-deletion.md §1](../instances/account-deletion.md#1-two-redaction-levels)
@@ -734,8 +893,8 @@ single command that takes the user's private state with them.
 
 The polymorphic-actor columns (`posts.author_id`,
 `comments.author_id`, `chat_messages.author_id`,
-`media_attachments.author_id`, `auth_invitations.inviter_id`) carry
-no FK by design — see the next two notes.
+`media_attachments.author_id`, `auth_invite_links.inviter_id`)
+carry no FK by design — see the next two notes.
 
 ### author_id + author_type — discriminator, not foreign key
 
@@ -746,15 +905,15 @@ so each of these tables carries an `author_type` discriminator alongside
 `author_id` with a `CHECK` restricting it to `'user'` or `'collective'`.
 
 There is deliberately **no FK** from these columns to either parent
-table. For posts/comments/chat_messages, the graph is the source of
-truth for authorship; Postgres `author_id` is a cache. For
-media_attachments, the column is Postgres-native (per the note above)
-but uses the same shape for uniformity. A real FK would buy DB-level
-referential integrity at the cost of schema churn every time a new
-actor type is added (e.g. a future self-hosted instance introducing
-its own actor kind). For the cached cases, integrity is guaranteed by
-the cache-rebuild path: if Postgres ever disagrees with the graph,
-rebuild from the graph.
+table. For posts/comments/chat_messages, the L1 record is the
+source of truth for authorship; Postgres `author_id` is a cache.
+For media_attachments, the column is Postgres-native (per the note
+above) but uses the same shape for uniformity. A real FK would buy
+DB-level referential integrity at the cost of schema churn every
+time a new actor type is added (e.g. a future self-hosted instance
+introducing its own actor kind). For the cached cases, integrity
+is guaranteed by the cache-rebuild path: if Postgres ever
+disagrees with the records, rebuild from the records.
 
 Reads that need the parent row join on `author_type`:
 
@@ -774,17 +933,17 @@ foreign key can't point to five tables, so the table carries a
 `target_type` discriminator with a `CHECK` on the same five values
 the graph uses.
 
-The graph is the source of truth here too: a comment's parent is
-encoded in the `Comment → Target :CONTAINMENT` structural edge.
-Postgres `target_id` is a cache. Same cache-rebuild rule as
-`author_id`: if the cache disagrees with the graph, rebuild from the
-graph.
+The records are the source of truth here too: a comment's parent
+is the target of its Review record
+([comment.md](../instances/comment.md)). Postgres `target_id` is a
+cache of the mirror. Same cache-rebuild rule as `author_id`: if
+the cache disagrees with the records, rebuild from the records.
 
 This is also why old `posts(id) ON DELETE CASCADE` and a separate
-`parent_comment_id` column are gone: posts and comments are graph
-nodes that are never deleted (per [layers.md §5](../primitive/layers.md#5-deletion-policy)),
-and reply chains live on the graph as `Comment → Comment`
-containment edges — Postgres doesn't need a parallel column.
+`parent_comment_id` column are gone: content nodes are never
+deleted (per [layers.md §5](../primitive/layers.md#5-deletion-policy)),
+and reply chains are causal chains of Review records — Postgres
+doesn't need a parallel column.
 
 ### Why parents point at attachments
 
@@ -826,15 +985,17 @@ not by referencing their asset directly.
 
 ## ID Strategy
 
-1. UUIDs are generated in the **API layer** (Rust), not by the database.
-2. The same UUID is written to Postgres and Memgraph in the same request.
+1. UUIDs for L2 rows are generated in the **API layer** (Rust),
+   not by the database, and are the join key across CoGra's
+   tables and payload fields.
+2. Mirrored L1 records keep **L1's own record identifiers**,
+   stored verbatim — the mirror never re-mints identity (see "The
+   record mirror" above). The identity association joins the two
+   worlds: account UUID ↔ actor identity.
 3. Postgres uses `UUID` as the primary key type with a `DEFAULT
    gen_random_uuid()` fallback, but the API always supplies it explicitly.
    (Exception: hashtags drop the DEFAULT — see "Node identity strategies"
    below.)
-
-For how UUIDs are stored on the Memgraph side and the per-label index
-declarations, see [graph-data-model.md](graph-data-model.md).
 
 ---
 
@@ -857,8 +1018,10 @@ For these types, the UUID is **content-addressed**: derived
 deterministically from the canonical string via
 `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` with a fixed project-scoped
 namespace UUID. Same name → same UUID *across any instance or fork*. The
-UUID is mathematically redundant with the name, but it remains the database
-key and the bridge between Postgres and Memgraph.
+UUID is mathematically redundant with the name, but it remains the
+database key and the stable handle CoGra's tables and payloads
+carry for the Type ([hashtag.md](../instances/hashtag.md) — the L2
+naming service).
 
 The canonical-name normalization (currently for hashtags: lowercase, no
 `#`) is **load-bearing**: it determines what counts as "the same"
@@ -914,8 +1077,8 @@ creation is its own node.
 - **Chat**: a conversation container. Two chats with the same title are
   different chats.
 - **Item**: a goods entry.
-- **Junction nodes** (ChatMember, CollectiveMember, ItemOwnership,
-  Proposal, etc.): represent a relationship instance.
+- **Overlay rows** (Proposal): a machinery instance brought into
+  existence by one creation act.
 
 UUIDs for these types are **random**. There is no UNIQUE constraint on
 any user-facing field; identity is the UUID alone.
