@@ -104,7 +104,7 @@ the terms and the settlement
 ([economics.md §3](economics.md#3-the-campaign-record)). The money
 itself — escrow, payout state, balances — is never a graph object
 on either side of the seam; it lives on CoGra's own rail
-([economics.md §10](economics.md#10-the-settlement-record-and-the-claim-flow),
+([economics.md §10](economics.md#10-the-settlement-record-and-the-payout-flow),
 [ledger.md](../implementation/ledger.md)).
 
 ---
