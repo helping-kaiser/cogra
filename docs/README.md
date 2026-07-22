@@ -77,7 +77,7 @@ an `instances/` doc is a sign the mechanism belongs in
   from the earliest incoming edge.
 - [economics](primitive/economics.md) — pull-marketing campaigns:
   graph-computed reach (`h_anchor(target)`), per-path Shapley payout,
-  advertiser-discretionary settlement, the claim flow; no AI, no
+  advertiser-discretionary settlement, the payout flow; no AI, no
   economics→ranking feedback.
 - [token](primitive/token.md) — the CGT token: scheduled decaying
   mint, burn-as-destruction, protocol-owned liquidity; never feeds
@@ -159,9 +159,10 @@ an `instances/` doc is a sign the mechanism belongs in
 - [graph-db-options](implementation/graph-db-options.md) — why the
   graph state lives in Postgres and no graph database is in the
   stack; alternatives considered.
-- [ledger](implementation/ledger.md) — on-chain mechanics:
-  self-custody onboarding, the claim distributor and escrow, the
-  `Wallet` node, and where campaign data lives across the stores.
+- [ledger](implementation/ledger.md) — the CGT rail on the Liquid
+  Network: the issued asset, timelocked release tranches, the
+  covenant order ladder, batched push payouts, campaign escrow,
+  the reserve conversion, and device-held keys.
 
 ### Cross-cutting
 
