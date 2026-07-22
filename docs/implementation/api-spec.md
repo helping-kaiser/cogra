@@ -10,6 +10,12 @@ async-graphql.
 The schema is specified in sections: the **type system** and
 **queries** (the read surface), then the **mutation surface**
 (the write gestures). The governing principles below bind both.
+The API is CoGra's L2 service surface over the shared graph: it
+serves reads from the record mirror and the display stores, and
+it runs the write path — prepare, relay, confirm — around records
+only the acting user's device can sign
+([architecture.md](architecture.md),
+[substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 
 ---
 
@@ -17,14 +23,16 @@ The schema is specified in sections: the **type system** and
 
 The data is deeply relational and every view wants a different
 slice of it — a feed entry needs the content node, its author,
-the viewer's edge to it, and inbound-attention counts all at
-once; a profile wants none of that but a paginated authored-
-content list instead. GraphQL lets a client request exactly the
-fields it needs in one round trip, and lets the server resolve
-each field lazily — a Memgraph traversal or a Postgres lookup
-only runs when its field is actually selected. That laziness is
-load-bearing here, because the read path crosses two stores and
-the graph traversals are the expensive part.
+the viewer's stance records toward it, and inbound-attention
+counts all at once; a profile wants none of that but a paginated
+authored-content list instead. GraphQL lets a client request
+exactly the fields it needs in one round trip, and lets the
+server resolve each field lazily — a record-mirror traversal, a
+fold, or a display-content lookup only runs when its field is
+actually selected. That laziness is load-bearing here, because
+the read path spans the mirror, the overlay caches, and the
+display tables, and the traversals and folds are the expensive
+part.
 
 ---
 
@@ -60,8 +68,9 @@ is omitting result fields. Concretely:
   legitimately return one of several types — so a single field
   can carry a typed heterogeneous result.
 - **Precise scalars.** Custom scalars carry the invariants the
-  domain has — `UUID`, `DateTime`, and a bounded `[-1, +1]`
-  dimension scalar — instead of loose strings and floats.
+  domain has — `UUID`, `RecordId`, `DateTime`, and a bounded
+  `[-1, +1]` dimension scalar — instead of loose strings and
+  floats.
 - **Connections** carry every list (see Pagination).
 
 The litmus test: the schema is exact and composable because it is
@@ -71,36 +80,40 @@ optional.
 ### Everything on the graph is public; privacy is cryptographic
 
 Per [graph-model.md §1](../primitive/graph-model.md#1-core-principles),
-**every node, every edge, and every content body is readable
-without an account.** An unauthenticated request can compute any
-actor's view for any reader; accounts gate *participation*
-(writing), never *viewing*.
+**every record, every node, and every content body is readable
+without an account** — the shared graph is public by L1's own
+construction, and CoGra's mirror adds no gate. An unauthenticated
+request can compute any actor's view for any reader; accounts gate
+*participation* (writing), never *viewing*.
 
 Privacy of content is achieved by **encryption, not access
 control**. An encrypted `ChatMessage` returns its ciphertext to
 *every* requester exactly like any other field — the server gates
 nothing — and only a holder of the chat key can decrypt it
-client-side. Plaintext messages read like any other content, and
-chat topology (the chat, its membership, who-talks-to-whom) is
-public regardless. So there is no public/private *shape* split in
-the schema: edges and content are ordinary public fields, queried
+client-side ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+Plaintext messages read like any other content, and chat topology
+(the chat, its membership, who-talks-to-whom) is public
+regardless. So there is no public/private *shape* split in the
+schema: records and content are ordinary public fields, queried
 the same way for everyone.
 
-The one server-gated set is small and entirely **off-graph
-operational state** (per [data-model.md](data-model.md)): a
-viewer's personal frontend state (bookmarks, seen-list, hidden-
-actors, chat read pointers), preferences
-(`content_filtering_severity_level`), and auth/session state
-(sessions, tokens). It is gated by field-level authorization, not
-a separate query namespace — see below.
+The server-gated set is small and entirely **off-graph state**
+(per [data-model.md](data-model.md)): a viewer's personal
+frontend state (bookmarks, seen-list, hidden-actors, chat read
+pointers), preferences, auth/session state, staged writes, the
+key-backup blob — and the **honor ledgers**, whose reads are
+membership-gated in the service layer
+([data-model.md "Honor ledgers"](data-model.md#honor-ledgers)).
+All of it is gated by field-level authorization, not a separate
+query namespace — see below.
 
-Moderation adds no hidden set either: `'sensitive'` content is
+Moderation adds no hidden set either: `sensitive` content is
 returned with its status and the viewer's severity preference so
-the **frontend** applies the filter (per
-[nodes.md](../primitive/nodes.md)); redacted (`'illegal'`)
-content returns a visible redaction marker in place of the body —
-the one case where the API returns something other than the
-authored content, and never a silent disappearance.
+the **frontend** applies the filter
+([moderation.md](../instances/moderation.md)); redacted
+(`illegal`) content returns a visible redaction marker in place
+of the body — the one case where the API returns something other
+than the authored content, and never a silent disappearance.
 
 ### Private data is field-level authorization, never a parallel namespace
 
@@ -119,18 +132,30 @@ generic query cannot express it because the client does not yet
 know its own `id`. `me` returns the ordinary `User`/`Actor` type;
 it is an entry point, not a parallel tree.
 
-### State is append-only; reads expose current-and-history
+### The graph is a chronicle; reads expose folds and records
 
-The graph never overwrites and never deletes
-([graph-model.md §8](../primitive/graph-model.md),
-[layers.md](../primitive/layers.md)). Edges and node properties
-are layer stacks; the current state is the top layer. A field
-returns its current (top-layer) value by default, with the full
-layer history reachable as an explicit selection for the audit,
-opinion-shift, and "revised N times" surfaces. There is no
-destructive read or write — the absence of any
-`delete`/`unlike`/`unfollow` operation follows from the
-primitive, not from an oversight.
+The record set is append-only: nothing on the graph is ever
+overwritten or deleted, and revising a stance or a value appends
+a **parallel record** to the same-author bundle
+([edges.md §1](../primitive/edges.md#1-the-edge-record-and-cogras-two-axes)).
+What "current" means is always a **declared fold** over records —
+newest-wins for node values
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)),
+per-author netting for stances, the membership folds for chats
+and Collectives. The typed fields below return **fold results**
+(a chat's members, an item's owner, a proposal's tally); the raw
+chronicle behind every fold is reachable through the generic
+record surface (`records`), so any consumer can replay any fold
+from public records.
+
+Consequently there is no destructive verb anywhere: no
+`delete`/`unlike`/`unfollow`. A stance is changed by a new
+record; severance is netting a bundle to `(0,0)`, not a removal;
+an edit is a new update record the fold reads. The only erasure
+in the system is **payload removal** (full → reduced), reached
+through the moderation and account-deletion flows — never through
+a generic mutation
+([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
 
 ### Viewer context rides the request, not the arguments
 
@@ -140,13 +165,13 @@ token, the resolved viewer lives in the GraphQL execution context
 field-level authorization above and `me` resolution; it never
 scopes an ordinary read. The same query is valid authenticated or
 anonymous — authentication only changes what the gated fields
-yield. The auth model (invitation registration, JWT access +
+yield. The auth model (staged-applicant admission, JWT access +
 rotating refresh tokens, sessions) is specified in
 [auth.md](auth.md); this spec consumes it.
 
 ### Pagination is Relay cursor connections
 
-Every list, feed, and edge set paginates as a Relay-style
+Every list, feed, and record set paginates as a Relay-style
 connection (`edges { cursor node }`, `pageInfo`, optional
 `totalCount`). The append-only graph makes offset pagination
 quietly incorrect — items inserted at the head during a scroll
@@ -156,33 +181,55 @@ consumer fetches the first page with `first:` alone and follows
 `pageInfo.endCursor` into `after:` for the next.
 
 > **Naming note.** Relay names its pagination wrapper `edges` /
-> `node`. The graph's own central concept is also an edge — the
-> 2D tensor, surfaced as the `Edge` type below. The collision is
-> deliberate-but-bounded: `edges` inside a `*Connection` is the
-> pagination wrapper; the `Edge` type is the tensor. They never
-> appear in the same position, and the Relay convention is
-> well-known enough that consumers won't conflate them.
+> `node`. The graph's own central concept is the L1 **record**,
+> surfaced as the `Record` type below — so the two vocabularies
+> stay apart by construction: `edges` inside a `*Connection` is
+> always the pagination wrapper, and the substrate concept is
+> always `Record`. The Relay spelling is kept throughout.
 
 **Feed ranking and cursors.** The backend does not rank
-([feed-ranking.md §9](../primitive/feed-ranking.md)): it serves the
+([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)): it serves the
 viewer's weight-bounded subgraph slice, a ranker (device or delegated
 miner) orders it off the hot path, and the resulting id list is hydrated
 back into a cursor-paginated feed. The frozen snapshot lives with the
 ranker; the cursor indexes into the order it produced, never a per-page
 re-rank. The feed surface below splits the slice from the hydration.
 
+### The API prepares and relays; only the device signs
+
+Every graph write is an L1 record signed by **the acting actor's
+own key, on their device** — the backend cannot author, alter, or
+sign one ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+The mutation surface therefore has two halves:
+
+- **`prepare*` mutations** stage a gesture: the server validates
+  it against L2 policy, pre-checks L1's write rule, assembles the
+  canonical record(s) — payload envelope, salt, content witness —
+  and returns them for the device to verify and sign. Nothing has
+  happened on the graph yet.
+- **`submitRecords`** relays the signed records to L1 and drives
+  retries across epoch boundaries. Confirmation is asynchronous:
+  the record is real when it appears in the mirror, observed
+  through `stagedWrite` — there is no synchronous "write
+  succeeded" response, because whether a record lands is L1's
+  fact alone.
+
+Mutations that touch only L2 state (auth, private viewer state,
+media upload) are ordinary synchronous operations — one Postgres
+transaction, no signing.
+
 ### The write surface is a principled hybrid
 
-Specified in full in the mutation pass; the shape is fixed here
-so the read types anticipate it. Setting an actor edge toward any
-node is **one** generic mutation parameterized by target, target
-type, and the `(dim1, dim2)` tensor — mirroring the uniform edge
-model rather than minting a verb per interaction. Gestures that
-are genuinely their own thing (authoring a chat, casting a
-governance vote, opening a campaign) are standalone mutations.
-Operations are combined only where they are the same gesture —
-never merged for the sake of a smaller mutation count, and never
-split for the sake of a larger one.
+Setting a plain stance toward any node is **one** generic prepare
+mutation parameterized by target and the two authored parameters —
+mirroring the uniform record model rather than minting a verb per
+interaction. Gestures that are genuinely their own thing
+(authoring a post, founding a chat, opening a campaign) are
+standalone named prepares, because they carry flow-specific
+payloads, mint nodes, or stage multi-record batches. Operations
+are combined only where they are the same gesture — never merged
+for the sake of a smaller mutation count, and never split for the
+sake of a larger one.
 
 ### Errors are tiered — transport faults vs. expected outcomes
 
@@ -204,6 +251,13 @@ never by convenience:
   once (too long *and* disallowed characters), and the client should see
   them together.
 
+A failed **write-rule pre-check** is the canonical expected
+failure: an insolvent actor (W1) or one below the wall (W2a) is a
+normal, visible account state, not an auth fault — prepare
+returns it as a `userError` with the restoration flow left to the
+product surface
+([architecture.md "Write eligibility"](architecture.md#write-eligibility-and-account-states)).
+
 A single `ErrorCode` enum is the one vocabulary across both tiers — the
 `extensions.code` on a transport fault and the `code` on a `UserError`
 draw from it — so a code means the same thing wherever it appears. This
@@ -215,25 +269,35 @@ stringly-typed side channel.
 
 ## Type system — foundations
 
-The cross-cutting building blocks: scalars, the shared
-interfaces, the `Edge` tensor type, per-field moderation, and the
+The cross-cutting building blocks: scalars, the shared enums and
+interfaces, the `Record` type, per-field moderation, and the
 pagination wrappers. The concrete node object types build on
 these in the sections that follow.
 
 ### Scalars
 
 ```graphql
-"A UUID — the shared key across the graph (Memgraph) and
- display-content (Postgres) stores. Random v4 for most node types;
- content-addressed v5 for Hashtags."
+"A UUID — CoGra's L2 key, minted in the API layer and shared
+ across the Postgres tables and payload fields. Random v4 for most
+ kinds; content-addressed v5 for Hashtags (the naming service —
+ hashtag.md §1). Node ids are UUIDs; L1 records carry their own
+ RecordId."
 scalar UUID
 
-"An RFC 3339 / ISO 8601 timestamp."
+"An L1 record identifier, exactly as Layer 1 minted it — stored
+ and served verbatim; the mirror never re-mints identity
+ (data-model.md \"The record mirror\"). Opaque to clients."
+scalar RecordId
+
+"An RFC 3339 / ISO 8601 timestamp. Display-side time; the graph's
+ own clock is the epoch index (plain Int fields)."
 scalar DateTime
 
-"A signed edge-tensor dimension: a float constrained to the closed
+"A signed authored parameter: a float constrained to the closed
  range [-1.0, +1.0]. The range invariant lives in the type rather
- than in a plain Float."
+ than in a plain Float. (Families outside the stance vocabulary
+ restrict the range further per the L1 census — edges.md §1;
+ prepare validates per family.)"
 scalar Dimension
 ```
 
@@ -241,32 +305,36 @@ scalar Dimension
 
 ```graphql
 "A node's moderation state — the cached max severity across its
- per-field statuses. (Per-field status uses FieldModerationStatus.)"
+ fields. (Per-field status uses FieldModerationStatus.)"
 enum ModerationStatus { NORMAL SENSITIVE ILLEGAL }
 
-"The graph-layer label on an edge — every edge carries exactly one.
- ACTOR and STRUCTURAL are the two base labels; the rest are
- sub-labels that replace their base where one fits (AUTHOR / INVITE
- replace ACTOR; the others replace STRUCTURAL). A generic actor edge
- stays ACTOR; a structural edge with no sub-label (junction Shape-B
- votes, Campaign → Settlement) stays STRUCTURAL."
-enum EdgeLabel {
-  ACTOR AUTHOR INVITE
-  STRUCTURAL CONTAINMENT CLAIM APPROVAL BEARER TAGGING TARGETS
-  REFERENCES ANCHOR PROMOTES ENTITLES CLAIMS TRANSFERS PAYS_TO
+"The L1 record families CoGra authors — the fixed inventory
+ (edges.md §2–§3; the census in layer1-interface.md §9 is
+ normative for each family's domain, tier, and parameter roles).
+ Binary families relate author → target; hyper-edge families are
+ one act with an actor leg into a middle node and a terminal leg
+ out of it."
+enum RecordFamily {
+  # Binary
+  REGISTRATION PUBLISH OPINION AFFINITY PARTICIPANT OWNER
+  JOIN_REQUEST ACCEPT RATIFY WITHDRAW RESCIND LEAVE
+  # Hyper-edge
+  REVIEW SEND TAG BID INVITATION DE_INVITE REFERENCE
 }
 
-"The kind of a node — used to filter edge endpoints by the type of
- node on the far end (e.g. only a User's edges that point at Posts)."
+"The kind of a node — used to filter record endpoints by the type
+ of node on the far end (e.g. only a User's records that point at
+ Posts). PROPOSAL and CAMPAIGN are CoGra's typed views over
+ Content anchor nodes; OFFER is the Bid-minted settlement node."
 enum NodeKind {
   USER COLLECTIVE
   POST COMMENT CHAT CHAT_MESSAGE ITEM HASHTAG
-  PROPOSAL CAMPAIGN SETTLEMENT WALLET NETWORK
-  CHAT_MEMBER COLLECTIVE_MEMBER ITEM_OWNERSHIP
+  PROPOSAL CAMPAIGN OFFER
 }
 
-"The sign of an edge's top-layer dimension, for filtering edges by valence
- or by the neutral (0) state. POSITIVE: > 0. NEGATIVE: < 0. ZERO: exactly 0."
+"The sign of an authored parameter, for filtering records by
+ valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
+ ZERO: exactly 0."
 enum Sign { POSITIVE NEGATIVE ZERO }
 
 "The one error vocabulary, shared across both error tiers (governing
@@ -281,14 +349,17 @@ enum ErrorCode {
   RATE_LIMITED                 # an auth endpoint's per-IP / per-account backoff
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
-  # Expected business failures — carried in UserError.code or a union arm
+  # Expected business failures — carried in UserError.code
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
-  REGISTRATION_IN_PROGRESS     # a live pending registration already holds this email
-  VERIFICATION_TOKEN_INVALID   # registration verification token invalid or expired
+  APPLICATION_IN_PROGRESS      # a live application already holds this email
+  VERIFICATION_TOKEN_INVALID   # applicant verification token invalid or expired
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
+  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
+  STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
+  SIGNATURE_INVALID            # a submitted signature does not verify the record
 }
 ```
 
@@ -296,186 +367,165 @@ enum ErrorCode {
 
 ```graphql
 "Anything with a graph identity — implemented by every node type.
- It exists so heterogeneous endpoints (an edge's ends, a reference
+ It exists so heterogeneous endpoints (a record's ends, a reference
  target, a comment's parent) are typed without a sprawling union.
  It is a type-modeling device, not a navigation mandate: typed
  entry points are free to exist and nothing is forced through a
  single node(id) accessor."
 interface Node {
   id: UUID!
-  "When this node was created."
+  "When this node was created — its minting record's confirmation."
   createdAt: DateTime!
-  "When this node last changed — its most recent layer or
-   display-content version; equals createdAt if never changed."
+  "When this node last changed — its most recent fold-winning
+   update record or display-content version; equals createdAt if
+   never changed."
   updatedAt: DateTime!
-  "Edges originating at this node — the generic way to read any
-   relationship before named convenience views exist. Filter by graph
-   label, by the kind of node on the far end, by the sign of a top-layer
-   dimension (e.g. only positive :APPROVAL, or the (0,0) severance state),
-   and/or by a top-layer-timestamp window."
-  outgoingEdges(
-    label: EdgeLabel
+  "Records authored from this node — for an actor, their outgoing
+   chronicle; the generic way to read any relationship before named
+   convenience views exist. Filter by family, by the kind of node
+   on the far end, by parameter sign (e.g. only vouch-positive
+   Opinions, or (0,0) update records), payload-marked state, and/or
+   a landing-epoch window."
+  outgoingRecords(
+    family: RecordFamily
     toKind: NodeKind
-    dim1Sign: Sign
-    dim2Sign: Sign
-    since: DateTime
-    until: DateTime
+    pDirectedSign: Sign
+    pInterestSign: Sign
+    payloadMarked: Boolean
+    sinceEpoch: Int
+    untilEpoch: Int
     first: Int, after: String, last: Int, before: String
-  ): EdgeConnection!
-  "Edges pointing at this node. Exposed as public topology / an
+  ): RecordConnection!
+  "Records pointing at this node. Exposed as public topology / an
    inbound-attention surface only — per the feed-ranking model,
-   inbound edges never shape this node's own feed. Same dimension-sign
-   and timestamp filters as outgoingEdges; fromKind selects the near-end
-   source kind."
-  incomingEdges(
-    label: EdgeLabel
+   inbound records never shape this node's own feed. Same filters
+   as outgoingRecords; fromKind selects the source kind."
+  incomingRecords(
+    family: RecordFamily
     fromKind: NodeKind
-    dim1Sign: Sign
-    dim2Sign: Sign
-    since: DateTime
-    until: DateTime
+    pDirectedSign: Sign
+    pInterestSign: Sign
+    payloadMarked: Boolean
+    sinceEpoch: Int
+    untilEpoch: Int
     first: Int, after: String, last: Int, before: String
-  ): EdgeConnection!
+  ): RecordConnection!
 }
 
 "An entity that takes actions and authors content: a User or a
- Collective. Both expose the same outgoing-edge catalog, so the
- graph refers to actors through this interface wherever the
- User-vs-Collective distinction is not load-bearing."
+ Collective. On L1 both are the same thing — an Actor + Profile
+ grounded pair — so the graph refers to actors through this
+ interface wherever the User-vs-Collective distinction is not
+ load-bearing. Handles share one namespace across kinds: a mention
+ resolves to exactly one actor (data-model.md \"Actors\")."
 interface Actor implements Node {
-  # + Node fields (id, createdAt, updatedAt, outgoingEdges, incomingEdges)
-  "The unique mention handle — a User's username or a Collective's
-   name."
+  # + Node fields (id, createdAt, updatedAt, outgoingRecords, incomingRecords)
+  "The unique mention handle — one namespace across Users,
+   Collectives, and system actors."
   handle: ModeratedText!
   displayName: ModeratedText!
   avatar: ModeratedMedia!
   websiteUrl: ModeratedText!
+  "Network-scope role — the fold over the Publisher's role Tags
+   plus the class labels; Collectives carry COLLECTIVE
+   automatically and permanently (network.md)."
+  networkRole: NetworkRole!
+  "The actor's CGT payout address — a witnessed guild-key field of
+   their Registration profile payload, public like the rest of the
+   profile; a Liquid address, a pointer and never money
+   (ledger.md). Null when the actor has never set one. Updated by
+   parallel Registration (prepareProfileUpdate)."
+  payoutAddress: String
   "Node-level cache: max moderation severity across this actor's fields."
   moderationStatus: ModerationStatus!
-  "Outstanding invite links this actor has issued — pending onboarding
-   gestures, not the public who-invited-whom (that lives on the :INVITE
-   edges, read via incomingEdges). Field-level: each link's id is the link
-   capability, so this resolves only for the issuing actor (or, for a
-   Collective, its authorized members); null otherwise."
+  "Outstanding invite links this actor has issued — service-side
+   staging state, not graph structure (the public who-invited-whom
+   is the mutual Opinion pair — invitations.md §2). Field-level:
+   each link's id is the link capability, so this resolves only for
+   the issuing actor (or, for a Collective, its authorized
+   members); null otherwise."
   inviteLinks(first: Int, after: String, last: Int, before: String): InviteLinkConnection
 }
+
+"Network-scope role. MEMBER and MODERATOR are person-accountability
+ states materialized as the Publisher's role Tags; COLLECTIVE is a
+ class label conferring nothing — no ballots, no activity count, no
+ moderator eligibility."
+enum NetworkRole { MEMBER MODERATOR COLLECTIVE }
 ```
 
-### The edge tensor
+### The record
 
 ```graphql
-"A single directed edge: the uniform 2D tensor that carries every
- relationship and opinion in the graph. The top layer is the current
- state; the full append-only stack is read via the `edgeHistory` query."
-type Edge {
-  "Source — the node the edge originates at. Who wrote the edge
-   follows from the label: the source actor for an actor edge, the
-   system for a structural one."
-  from: Node!
-  "Target the edge points at."
-  to: Node!
-  label: EdgeLabel!
-  "Top-layer dimension 1 — signed valence (sentiment / approval /
-   affirmation). The user-facing label varies by edge type; the
-   math role does not."
-  dim1: Dimension!
-  "Top-layer dimension 2 — signed connection-weight (interest /
-   relevance / importance)."
-  dim2: Dimension!
-  "Index of the current (top) layer; 1 is the first interaction."
-  layer: Int!
-  "When the top layer was written."
-  timestamp: DateTime!
-  "The top layer's system-dimension slot — typed, optional, per-label
-   metadata, surfaced but never read by ranking. Null on labels that
-   don't use it."
-  systemDimension: SystemDimension
+"One accepted L1 record, served from the record mirror — the
+ uniform substrate fact behind every relationship and stance. The
+ mirror may lag L1 and never diverges; where any cached view could
+ disagree with records, records govern (architecture.md). A record
+ is immutable: revision is a parallel record in the same-author
+ bundle, and what \"current\" means is the consumer's declared
+ fold."
+type Record {
+  "L1's own identifier for this record, verbatim."
+  id: RecordId!
+  family: RecordFamily!
+  "The authoring actor — intrinsic to the signed record, never a
+   separate edge (authorship.md)."
+  author: Actor!
+  "The record's target: the far end of a binary family, or the
+   middle node the actor's leg enters on a hyper-edge (a Review's
+   parent, a Send's Chat, a Tag's content)."
+  target: Node!
+  "Hyper-edge only: the terminal leg's node — minted by the act
+   (Review's Comment, Send's Message, Bid's Offer) or pre-existing
+   (Tag's Type, Invitation's Profile, Reference's cited target).
+   Null on binary families."
+  terminal: Node
+  "The authored directional / valence parameter p_d (frontend
+   labels vary by gesture; the math role does not — edges.md §1)."
+  pDirected: Dimension!
+  "The authored intensity / connection parameter p_i."
+  pInterest: Dimension!
+  "The epoch in which the record landed — the graph's own clock;
+   epoch ages read against the public epoch certificates."
+  landingEpoch: Int!
+  "True when the record is payload-marked — folds then read it
+   individually, never through the author's netted bundle (ballots,
+   edits, membership records — substrate.md §9)."
+  payloadMarked: Boolean!
+  "The payload state: FULL while the content is carried, REDUCED
+   after payload removal — the one-way erasure that leaves the
+   structural record as the visible mark (substrate.md §7)."
+  payloadState: PayloadState!
+  "The content witness reference — L1's evidence that the carried
+   payload matches what was committed; verification material, never
+   content."
+  payloadWitness: String!
 }
 
-"One immutable layer of an Edge."
-type EdgeLayer {
-  dim1: Dimension!
-  dim2: Dimension!
-  layer: Int!
-  timestamp: DateTime!
-  "This layer's system-dimension slot — the per-label metadata the
-   layer was written with (e.g. a :TRANSFERS layer's on-chain
-   transaction reference). Null on labels that don't use it."
-  systemDimension: SystemDimension
-}
+"Payload carriage state — moves one way, full to reduced."
+enum PayloadState { FULL REDUCED }
 
-"One immutable layer of a node property — a graph property or a Postgres
- display-content version. `value` is serialized as a string (shaped by the
- property); null when the layer is a redaction."
-type PropertyLayer {
-  value: String
-  "Why the value was redacted; non-null exactly when this layer is a
-   redaction. On a Postgres display-content field the redaction is an
-   appended tombstone row and `timestamp` is the removed-at instant;
-   on a graph property the redaction is in place
-   (layers.md §5) — the layer keeps its original write `timestamp`,
-   and the removed-at instant travels here, with the reason."
-  redactionReason: String
-  layer: Int!
-  timestamp: DateTime!
-}
-
-"A page of edge layers — the paginated edgeHistory stack."
-type EdgeLayerConnection {
-  edges: [EdgeLayerEdge!]!
+"A page of records."
+type RecordConnection {
+  edges: [RecordEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
 }
-type EdgeLayerEdge {
+type RecordEdge {
   cursor: String!
-  node: EdgeLayer!
-}
-
-"A page of property layers — the paginated propertyHistory stack."
-type PropertyLayerConnection {
-  edges: [PropertyLayerEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type PropertyLayerEdge {
-  cursor: String!
-  node: PropertyLayer!
-}
-
-"A page of edges. (The wrapper is `EdgeEdge` because the element
- type is itself named `Edge` — the accepted cost of the bare Relay
- spelling.)"
-type EdgeConnection {
-  edges: [EdgeEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-
-type EdgeEdge {
-  cursor: String!
-  node: Edge!
-}
-
-"Per-label, never-ranked edge metadata. Each populated label uses
- its own field(s); all null on labels that don't. Today only
- :TRANSFERS populates it."
-type SystemDimension {
-  "On-chain transaction reference for a :TRANSFERS edge; null otherwise."
-  transactionRef: String
+  node: Record!
 }
 ```
 
-The **system-dimension slot** is the `systemDimension` field above:
-typed, optional, per-label edge metadata, surfaced by the API but
-never read by ranking
-([edges.md §2](../primitive/edges.md)). The slot
-is per-layer: `Edge.systemDimension` is the top layer's slot, and
-`edgeHistory` serves each past layer's own. Repeated transfers
-between one wallet pair re-layer the single `:TRANSFERS` edge (one
-label per endpoint pair), so every layer's on-chain transaction
-reference stays readable — past money flows remain auditable. Today
-only `:TRANSFERS` populates the slot (the on-chain transaction
-reference); other labels leave it null.
+The `Record` type serves the raw chronicle: same-author revisions
+appear as parallel records, and a bundle's net state is the
+consumer's fold, not a stored field. Decoded display content never
+rides the record — it lives on the typed nodes (a `Post`'s
+`content`, a `Chat`'s `name`), resolved from the display store
+that carries the payload bytes. `Record` is also the type the
+ranking surface consumes — the miner's `RankHop.records` and
+bundle audits speak this vocabulary
+([miner-api.md](miner-api.md)).
 
 ### Per-field moderation
 
@@ -499,8 +549,12 @@ type ModeratedMedia {
   status: FieldModerationStatus!
 }
 
-"Per-field moderation state. REDACTED is the field-level form of
- the node-level ILLEGAL — the value is gone, the mark remains."
+"Per-field moderation state. SENSITIVE is the read-side flag the
+ frontend filters on. REDACTED means the value is gone and the mark
+ remains — and redaction is record-granular: an illegal verdict
+ removes the whole record's payload (full → reduced), so every
+ field carried by that payload goes REDACTED together
+ (moderation.md). Per-field granularity exists for SENSITIVE only."
 enum FieldModerationStatus { NORMAL SENSITIVE REDACTED }
 ```
 
@@ -508,8 +562,11 @@ A media *gallery* (a list) can't wrap generically, so those fields
 keep their list and carry a sibling
 `attachmentsStatus: FieldModerationStatus!`. Every content-bearing
 node also keeps the node-level `moderationStatus: ModerationStatus!`
-cache — the cheap "is anything wrong here" check — per
-[nodes.md](../primitive/nodes.md).
+cache — the cheap "is anything wrong here" check. The
+substrate-visible verdict behind these flags is The Moderator's
+Tag record toward a named moderation Type; the flags are the
+Postgres projection of it
+([moderation.md](../instances/moderation.md)).
 
 ### Pagination
 
@@ -526,11 +583,8 @@ type PageInfo {
 Every list is a Relay connection: a `<Element>Connection` with
 `edges: [<Element>Edge!]!`, `pageInfo: PageInfo!`, and an optional
 `totalCount: Int`; each `<Element>Edge` has `cursor: String!` and
-`node: <Element>!`. The wrapper keeps the bare Relay `<Element>Edge`
-spelling throughout — so the tensor `Edge` type's own connection
-wrapper is `EdgeEdge`, accepted for idiom-consistency rather than
-special-cased. Connections are materialized per element type in
-the sections that use them.
+`node: <Element>!`. Connections are materialized per element type
+in the sections that use them.
 
 ### Error types
 
@@ -562,10 +616,11 @@ type UserError {
 The actor nodes and the public content nodes. To keep the listings
 readable, interface fields are **implied and omitted** from each
 body: the `Node` fields (`id`, `createdAt`, `updatedAt`,
-`outgoingEdges`, `incomingEdges`) on every type, and the `Actor`
-fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
-`moderationStatus`, `inviteLinks`) on the actor types. Only fields beyond
-the implemented interfaces are shown.
+`outgoingRecords`, `incomingRecords`) on every type, and the
+`Actor` fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
+`networkRole`, `payoutAddress`, `moderationStatus`, `inviteLinks`)
+on the actor types. Only fields beyond the implemented interfaces
+are shown.
 
 Two consequences of earlier principles show up throughout:
 
@@ -574,18 +629,21 @@ Two consequences of earlier principles show up throughout:
   redacted (or unset, where the field is optional), with `status`
   telling the two apart. A gallery keeps its list plus a sibling
   `attachmentsStatus`.
-- **Relationships stay generic** except the few fundamental
-  containment links pulled forward as named views: `author` on
-  every authored node, `target` on a Comment, and `chat` on a
-  ChatMessage. Everything else (comments, tags, members, owner) is
-  reached through `outgoingEdges` / `incomingEdges` until a named
-  view earns its place.
+- **Relationships stay generic** except the fundamental links
+  pulled forward as named views: `author` on every authored node,
+  `target` on a Comment, `chat` on a ChatMessage, and the
+  fold-derived views (`members`, `currentOwner`) whose value is a
+  declared fold rather than a record list. Everything else is
+  reached through `outgoingRecords` / `incomingRecords` until a
+  named view earns its place.
 
 ### Supporting display type
 
 ```graphql
 "A media asset (image / video / audio). Not a graph node — parents
- point at it and it never points back — so it carries no edges."
+ point at it and it never points back — so it carries no records.
+ Bytes live in blob storage, verifiable against the digests
+ committed in the referencing payload envelope (substrate.md §7)."
 type MediaAttachment {
   id: UUID!
   url: String!
@@ -610,15 +668,15 @@ type MediaOptions {
 ### Actors
 
 ```graphql
-"A person on the platform. Off-graph credentials authenticate the
- API requests that originate its edges."
+"A person on the platform — an L1 Actor + Profile grounded pair
+ whose signing key lives on their own device; the server-side
+ account (user_credentials) authenticates the service, never the
+ graph (auth.md)."
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
   "Profile cover image. User-only — Collectives carry no cover."
   cover: ModeratedMedia!
-  "Network-scope role. Only Users carry one."
-  networkRole: NetworkRole!
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
@@ -626,34 +684,49 @@ type User implements Node & Actor {
   bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
   "Nodes this user has seen — the view history behind feed de-duplication."
   viewHistory(first: Int, after: String, last: Int, before: String): ViewHistoryConnection
-  "Actors this user has hidden from their own feed."
+  "Actors this user has hidden from their own feed — a read-side
+   comfort that does not lift the viewer's own records' effect on
+   anyone else's feed (feed-ranking.md §8)."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
   "Active authentication sessions, one per refresh token."
   sessions: [Session!]
   "Cross-device preferences."
   preferences: UserPreferences
+  "The viewer's pending staged writes — prepared records awaiting
+   signature or confirmation, across devices."
+  stagedWrites(first: Int, after: String, last: Int, before: String): StagedWriteConnection
+  "The client-encrypted key-backup blob, if one was uploaded —
+   ciphertext under the recovery code; the server cannot decrypt it
+   (auth.md \"Key recovery\")."
+  keyBackup: String
 }
 
 "A group acting through one graph identity (household, band, co-op,
- company, …). Same outgoing-edge catalog as a User; it acts through
- its authorized members per its social contract."
+ company, …) — one L1 Actor + Profile like any other; membership is
+ a public payload fold, custody is creator-held with per-member
+ co-signing (collectives.md)."
 type Collective implements Node & Actor {
   "Profile description."
   description: ModeratedText!
-  "The social contract — per-action governance rules. Typed in the
-   governance section."
+  "The social contract — per-action governance rules, carried in
+   the Collective's Registration profile payload and amended
+   through its own governed flow. Typed in the governance section."
   governance: Governance!
+  "Current members — the public membership fold: member iff the
+   member-side payload-marked Opinion and the collective-side
+   decision-backed recognition both stand, newest records agreeing
+   (collectives.md §5). A fold view over records, not stored state."
+  members(first: Int, after: String, last: Int, before: String): CollectiveMemberConnection!
 }
-
-"Network-scope role for a User."
-enum NetworkRole { MEMBER MODERATOR }
 ```
 
 ### Content nodes
 
 ```graphql
 "Text and/or media authored by an actor — the primary public
- surface and the canonical feed-ranking target."
+ surface and the canonical feed-ranking target. Minted by a Publish
+ record; body edits are (0,0) + payload update records read by the
+ newest-wins fold (substrate.md §9)."
 type Post implements Node {
   "Optional title / headline."
   title: ModeratedText!
@@ -668,13 +741,14 @@ type Post implements Node {
   moderationStatus: ModerationStatus!
 }
 
-"A threaded response on a Post, Comment, Chat, ChatMessage, or Item
- — the universal threading primitive."
+"A threaded response — minted by a Review record targeting whatever
+ it responds to; reply chains are causal chains of Reviews and
+ depth attenuates natively (comment.md)."
 type Comment implements Node {
   "The body."
   content: ModeratedText!
   author: Actor!
-  "The node this comment is on."
+  "The node this comment is on — the Review's parent."
   target: CommentTarget!
   attachments(first: Int, after: String, last: Int, before: String): CommentAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
@@ -682,24 +756,35 @@ type Comment implements Node {
   moderationStatus: ModerationStatus!
 }
 
-"What a Comment can be posted on."
-union CommentTarget = Post | Comment | Chat | ChatMessage | Item
+"What a Review can respond to — root content, another Comment, a
+ conversation, a good, or a person's profile (edges.md §3)."
+union CommentTarget = Post | Comment | Chat | ChatMessage | Item | User | Collective
 
-"A conversation container — a first-class public node. Membership
- and who-talks-to-whom are public; only encrypted message bodies
- are opaque."
+"A conversation container — a first-class public node, minted by
+ its founder's own Participant record (the founding payload carries
+ name, description, image digests, and the governance map).
+ Membership and who-talks-to-whom are public; only encrypted
+ message bodies are opaque (chats.md)."
 type Chat implements Node {
   "Optional display name — any chat may set one, 1:1 or group."
   name: ModeratedText!
   description: ModeratedText!
   image: ModeratedMedia!
-  "The founding actor (per authorship.md)."
+  "The founding actor."
   author: Actor!
-  "Per-action governance (member admission, disavowal, key rotation,
-   role and property changes). Typed in the governance section."
+  "Per-decision governance — the chat's governance map: eligibility,
+   role weights, thresholds, amendment gates. Typed in the
+   governance section."
   governance: Governance!
-  "Current chat-key epoch; advances on membership change and on a
-   passed key-rotation Proposal."
+  "Current members — the membership fold: member iff the actor's
+   own ≺-latest {Participant, Leave} record is a Participant,
+   recognized per the chat's admission policy (chats.md §4). A fold
+   view, not stored state."
+  members(first: Int, after: String, last: Int, before: String): ChatMemberConnection!
+  "Current E2EE key epoch — derived from the public membership
+   transitions (rotation is automatic on every membership change,
+   plus governance-routed mid-epoch rotation); no counter is stored
+   anywhere (chats.md §7)."
   epoch: Int!
   "The requesting user's last-read timestamp in this chat; null when
    anonymous or never read. Field-level, viewer-scoped."
@@ -709,8 +794,8 @@ type Chat implements Node {
   moderationStatus: ModerationStatus!
 }
 
-"A single message in a Chat — itself a first-class node: likeable,
- commentable, referenceable."
+"A single message in a Chat — minted by a Send record; itself a
+ first-class node: likeable, commentable, referenceable."
 type ChatMessage implements Node {
   "The body. `value` is plaintext when contentPrivacy is PLAINTEXT,
    ciphertext when ENCRYPTED — returned to everyone, decryptable
@@ -731,27 +816,100 @@ type ChatMessage implements Node {
 "Per-message body privacy. A single chat may mix both freely."
 enum ContentPrivacy { PLAINTEXT ENCRYPTED }
 
-"A physical or digital good — ownable via ItemOwnership,
- transferable, and talked about."
+"A physical or digital good — minted by its genesis Owner record.
+ Ownership is L1's settlement machinery: Bid → Accept → Ratify,
+ title moving at the epoch certificate; CoGra never authors title
+ (items.md)."
 type Item implements Node {
   name: ModeratedText!
   description: ModeratedText!
+  "The listing actor — the genesis Owner's author."
   author: Actor!
+  "The current certified owner — owner^(k), consumed read-only from
+   L1's published title certificate; never a CoGra-authored fact."
+  currentOwner: Actor!
   attachments(first: Int, after: String, last: Int, before: String): ItemAttachmentConnection!
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
 }
 
-"A content-addressed topic tag — its identity is its canonical
- name. Authorless and terminal: it has no outgoing edges; content
- reaches it through incoming :TAGGING edges (Post, Comment, Item)
- and ChatMessage → Hashtag :REFERENCES — the one inbound edge that
- carries a tensor and accrues reference-borne ranking signal."
+"A settlement node minted by a Bid — the offer thread's middle
+ node, targeted by Withdraw / Rescind control records. Surfaced for
+ the marketplace flows; the price is a term on the Bid's payload
+ (items.md)."
+type Offer implements Node {
+  "The Bid that minted this offer."
+  bid: Record!
+  item: Item!
+}
+
+"A topic — on the substrate an L1 Type node: named identity,
+ compared by byte equality, anchored vacuously, owned by nobody
+ (hashtag.md). CoGra's naming service canonicalizes (lowercase, no
+ '#') and keys its registry by UUIDv5 of the canonical name.
+ Authorless and, by CoGra's declared traversal policy, a
+ forward-traversal sink: rankable, never transit. Content reaches
+ it through Tag records; follows are Affinity records; a
+ ChatMessage cites it by Reference."
 type Hashtag implements Node {
   "Canonical tag, lowercase and without '#'."
   name: ModeratedText!
   moderationStatus: ModerationStatus!
+}
+```
+
+### Membership views
+
+The membership folds, surfaced as typed views. These are **fold
+results, not nodes**: each row is derived from public records plus
+the declared fold rule, cached operationally, and rebuildable —
+where a cached row and the records could disagree, the records
+govern.
+
+```graphql
+"One chat member — a row of the chat membership fold."
+type ChatMember {
+  member: Actor!
+  "Role within the chat — the chat's governance map names the
+   vocabulary (admin / chat_mod / member in the reference
+   contract); role state rides the governed per-chat flows."
+  role: String!
+  "The epoch of the Participant record the fold currently reads."
+  sinceEpoch: Int!
+}
+type ChatMemberConnection {
+  edges: [ChatMemberEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ChatMemberEdge {
+  cursor: String!
+  node: ChatMember!
+}
+
+"One collective member — a row of the public membership fold
+ (collectives.md §5). Roles are sets; where a gate weighs by role,
+ the highest applicable weight counts."
+type CollectiveMember {
+  "The member — a User, or a Collective (membership recurses)."
+  member: Actor!
+  roles: [String!]!
+  "Ownership stake, when the collective's contract carries one."
+  ownershipPct: Float
+  "Per-member voting-weight override; null means role-derived."
+  votingWeight: Float
+  "The epoch of the newest fold-winning record pair."
+  sinceEpoch: Int!
+}
+type CollectiveMemberConnection {
+  edges: [CollectiveMemberEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type CollectiveMemberEdge {
+  cursor: String!
+  node: CollectiveMember!
 }
 ```
 
@@ -839,27 +997,59 @@ type UserPreferences {
   contentFilteringSeverityLevel: Int
 }
 
-"An outstanding invite link issued by an actor — a pre-committed onboarding
- gesture. Time-gated and, at the issuer's choice, single-use or multi-use.
- Its id is the link capability, so it is issuer-visible only."
+"An outstanding invite link issued by an actor — service-side
+ staging UX (invitations.md §4, auth.md). Nothing binds at issue:
+ the stance values are PRE-FILLED suggestions the inviter can
+ adjust at approval, and the approval itself is the priced act.
+ Time-gated and, at the issuer's choice, single-use (one applicant
+ slot) or multi-use. Its id is the link capability, so it is
+ issuer-visible only."
 type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
   inviter: Actor!
-  "Pre-committed dim1 for the inviter→invitee edge written on acceptance."
-  inviterDim1: Dimension!
-  "Pre-committed dim2 for that edge."
-  inviterDim2: Dimension!
-  "Whether the link is consumed by its first accepted registration
-   (single-use) or admits many invitees (multi-use)."
+  "Pre-filled p_d for the inviter's approval-time Opinion — a
+   suggestion, never a commitment."
+  prefillPDirected: Dimension!
+  "Pre-filled p_i for that Opinion."
+  prefillPInterest: Dimension!
+  "Whether the link admits one applicant slot (single-use) or many
+   applicants until expiry (multi-use)."
   singleUse: Boolean!
   createdAt: DateTime!
   expiresAt: DateTime!
   "When the link was revoked; null if still live."
   revokedAt: DateTime
-  "When a single-use link was consumed by its accepted registration;
-   always null on a multi-use link."
-  consumedAt: DateTime
+  "Applicants currently staged through this link, with their
+   status — the inviter's approval queue."
+  applicants(first: Int, after: String, last: Int, before: String): ApplicantConnection
+}
+
+"A staged applicant — off-graph service state between following a
+ link and landing on the graph (auth.md \"Account lifecycle\").
+ Visible to the issuing inviter (their approval queue) and to the
+ applicant's own device."
+type Applicant {
+  id: UUID!
+  handle: String!
+  "Whether the applicant has proved their email channel."
+  emailVerified: Boolean!
+  "When the inviter's priced approval happened; null while pending."
+  approvedAt: DateTime
+  "When the applicant's Registration confirmed and the account
+   landed; null before."
+  landedAt: DateTime
+  createdAt: DateTime!
+  expiresAt: DateTime!
+}
+type ApplicantConnection {
+  edges: [ApplicantEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type ApplicantEdge {
+  cursor: String!
+  node: Applicant!
 }
 
 type BookmarkConnection {
@@ -908,84 +1098,123 @@ type InviteLinkEdge {
 
 ---
 
-## Type system — junctions and governance
+## Type system — governance and economics
 
-Junction nodes (role-bearing, approval-gated relationships) and the
-shared `Governance` types that `Collective` and `Chat` carry.
-Interface fields stay implied/omitted as before. Junctions are not
-content, so they carry no `moderationStatus`. Each junction exposes
-two fundamental named views — its `bearer` (the `:BEARER` actor) and
-its claim parent — alongside the generic edge access.
+CoGra's typed views over the L1-anchored governance and campaign
+patterns. A `Proposal` or `Campaign` *is* a Content anchor node
+with a witnessed terms payload and `(0,0)` structure records; the
+types below are the decoded view of that pattern plus the overlay
+caches. Everywhere a cached figure appears (a tally, a running
+campaign value), the binding truth is the epoch-quantized fold
+over the public records — the cache exists for display and
+disputes resolve against the records
+([data-model.md](data-model.md)).
 
-### Junction state
+### Proposal
+
+The L1-anchored proposal pattern
+([proposal.md](../instances/proposal.md),
+[governance.md](../primitive/governance.md)): the proposer authors
+a **Content anchor** (payload = the proposal terms) plus a
+**`(0,0)` Reference** from the anchor to the proposal's subject;
+**votes are payload-marked ballot Opinions** toward the anchor,
+public and permanent, read individually and never through the
+netted bundle; **finalization** is the scope's executing
+authority's `(0,0)` Opinion + outcome payload. The same pattern
+runs at every scope — Network, chat, collective.
 
 ```graphql
-"A junction relationship's lifecycle state, derived from its
- claim/approval edge pair — never a stored flag. PENDING: claim
- only. ACTIVE: claim + approval, both top layers dim1 > 0. REVOKED:
- a non-positive (dim1 ≤ 0) top layer on either."
-enum JunctionState { PENDING ACTIVE REVOKED }
+"A governance proposal — the typed view over its Content anchor.
+ Terms are payload-borne and immutable; a revision is a new
+ proposal (substrate.md §9)."
+type Proposal implements Node {
+  "The proposing actor — the anchor's author. Authoring is never a
+   vote: the client flow casts the proposer's explicit +1 ballot as
+   its own priced act immediately after creation."
+  author: Actor!
+  "The proposal's subject — named by the anchor's (0,0) Reference,
+   replayable public structure."
+  target: Node!
+  "Which governance instance this proposal runs under — the
+   action-key vocabulary of the scope's contract
+   (collectives.md §6, chats.md §5, governance.md for Network
+   scope). E.g. \"decision:disavow_member\", \"decision:set:name\"."
+  actionKey: String!
+  "The proposed value, serialized; shape discriminated by
+   valueKind. The one moderatable field — it can embed
+   user-authored text, so it is reportable like any content; null
+   when the anchor payload was redacted."
+  proposedValue: ModeratedText!
+  "Shape discriminator for proposedValue — \"scalar:string\",
+   \"scalar:float\", \"scalar:integer\", \"rule\", or
+   \"composite:<action_key>\" (proposal.md)."
+  valueKind: String!
+  "The rule snapshot ruler: rules are read as-of the anchor's
+   landing epoch (proposal.md)."
+  anchorEpoch: Int!
+  "Every ballot on this proposal — the payload-marked ballot
+   Opinions toward the anchor, individually. Filter by stance;
+   public and auditable."
+  ballots(stance: Sign, first: Int, after: String, last: Int, before: String): RecordConnection!
+  "The tally — the epoch-quantized fold over accepted ballots, per
+   the scope's published formula (role weights, quorum). Served
+   from the overlay cache; the fold over records is binding, and
+   live counts are a frontend courtesy."
+  tally: ProposalTally!
+  status: ProposalStatus!
+  "The finalization record — the executing authority's (0,0)
+   Opinion + outcome payload (outcome, tally digest); null while
+   open. The outcome's public record."
+  finalization: Record
+}
+
+"A proposal's lifecycle state, derived from the tally fold and the
+ finalization record. The first crossing epoch triggers
+ finalization. REDACTED lands when the anchor payload is removed
+ while still open — the terms can never execute; ballots already
+ cast stay on record."
+enum ProposalStatus { OPEN PASSED FAILED REDACTED }
+
+"The tally of a proposal — the deterministic function of each
+ epoch's accepted ballot set (governance.md). Both sides carry the
+ scope's weighting; a petition-style Network tally reads only the
+ positive side."
+type ProposalTally {
+  positiveWeight: Float!
+  "Count of distinct ballot authors currently positive."
+  positiveCount: Int!
+  negativeWeight: Float!
+  negativeCount: Int!
+  "The epoch whose accepted ballot set this tally folds — the
+   cache's freshness mark."
+  asOfEpoch: Int!
+}
 ```
 
-### Junction nodes
+### Governance (the social contract)
+
+The per-action rules a Collective or Chat carries — supplied in
+the founding payload, amended only through its own governed flow.
+Each rule pairs a gate to perform the action (`exec`) with a gate
+to amend the rule itself (`amend`). Action keys are constructed
+from the gesture, never invented ad hoc
+([collectives.md §6](../instances/collectives.md#6-the-social-contract)):
+`decision:<operation>[:<role>]` for proposal-routed decisions,
+`actas:<gesture>` for outgoing-gesture eligibility, with
+class-level fallbacks; dispatch walks most-specific →
+class-general → the documented defaults.
 
 ```graphql
-"Membership in a Chat, with a role. Entry may require multi-sig
- approval; the membership itself can be voted on (kick, promote)."
-type ChatMember implements Node {
-  "The actor this membership represents (the :BEARER edge)."
-  bearer: Actor!
-  "The chat this membership is in (the claim parent)."
-  chat: Chat!
-  "Role within the chat — default vocabulary admin / chat_mod /
-   member; a chat may define its own."
-  role: String!
-  "Per-bearer voting-weight override; null means use the role-derived
-   weight from the chat's governance."
-  votingWeight: Float
-  state: JunctionState!
-}
-
-"Membership in a Collective, with a role and optional role-attached
- quantities. A Collective can itself be a member, so the bearer may
- be a Collective."
-type CollectiveMember implements Node {
-  bearer: Actor!
-  collective: Collective!
-  "Role within the collective (founder / shareholder / worker / …;
-   collective-defined)."
-  role: String!
-  "Ownership stake, when the role implies one."
-  ownershipPct: Float
-  "Per-bearer voting-weight override; null means role-derived."
-  votingWeight: Float
-  state: JunctionState!
-}
-
-"A single ownership claim on an Item. Transfers form an append-only
- chain of these per item; exactly one is ACTIVE at a time."
-type ItemOwnership implements Node {
-  bearer: Actor!
-  item: Item!
-  state: JunctionState!
-}
-```
-
-### Governance
-
-The social contract a Collective or Chat carries: per-action rules,
-each pairing a gate to perform the action (`exec`) with a gate to
-amend the rule itself (`amend`).
-
-```graphql
-"A node's social contract — its per-action governance rules."
+"A node's social contract — its per-action governance rules. Only
+ overrides are declared; undeclared actions fall to the documented
+ defaults of the owning doc (collectives.md §6, chats.md §5)."
 type Governance {
   rules: [GovernanceRule!]!
 }
 
-"The rule for one action key (e.g. \"decision:add_member\",
- \"decision:rotate_key\"). `exec` governs performing the action;
- `amend` governs changing this rule — self-applying, no regress."
+"The rule for one action key. `exec` governs performing the
+ action; `amend` governs changing this rule — self-applying, no
+ regress."
 type GovernanceRule {
   actionKey: String!
   exec: GovernanceExecGate!
@@ -996,17 +1225,16 @@ type GovernanceRule {
  votes are weighted, the passing condition, and whether the action's
  subject is barred from voting on it."
 type GovernanceExecGate {
-  "Who may vote — a predicate over graph state. Role-based in every
-   current instance; the role vocabulary is open per collectives.md, so
-   the schema carries it as a documented string rather than closing the
+  "Who may vote — a predicate over public state. Role-based in
+   every current instance; the role vocabulary is open, so the
+   schema carries it as a documented string rather than closing the
    grammar."
   eligibility: String!
   "How each eligible vote is weighted."
   weighting: VoteWeighting!
-  "Passing condition — one of the threshold shapes in governance.md §2.4
-   (count, fraction of eligible weight, supermajority, quorum +
-   cast-fraction, dual-quorum petition, or multi-gate). Carried as a
-   documented string; the exact serialization is the instance's choice."
+  "Passing condition — one of the threshold shapes in
+   governance.md §2.4. Carried as a documented string; the exact
+   serialization is the instance's choice."
   threshold: String!
   "Whether the subject of the action is barred from voting on it."
   excludeSubject: Boolean!
@@ -1014,27 +1242,25 @@ type GovernanceExecGate {
 
 "The voting gate for amending a rule — the same shape as
  GovernanceExecGate without `excludeSubject`, since an amendment's
- subject is the rule entry itself, not a member junction."
+ subject is the rule entry itself, not a member."
 type GovernanceAmendGate {
-  "Who may vote — see GovernanceExecGate.eligibility."
   eligibility: String!
-  "How each eligible vote is weighted."
   weighting: VoteWeighting!
-  "Passing condition — see GovernanceExecGate.threshold."
   threshold: String!
 }
 
-"How each eligible vote is weighted. EQUAL: every eligible voter counts
- 1 (one-member-one-vote). ROLE: the flat per-role multiplier in
- roleWeights. PROPERTY: the weight is read from the named junction
- property (e.g. \"ownership_pct\"), so a PROPERTY gate enfranchises only
- roles that carry that property. A per-junction voting_weight override,
- where set, wins over the mode."
+"How each eligible vote is weighted. EQUAL: every eligible voter
+ counts 1. ROLE: the flat per-role multiplier in roleWeights —
+ roles are sets, the highest applicable weight counts. PROPERTY:
+ the weight is read from the named membership property (e.g.
+ \"ownership_pct\"), so a PROPERTY gate enfranchises only roles
+ that carry it. A per-member voting-weight override, where set,
+ wins over the mode."
 type VoteWeighting {
   mode: WeightMode!
   "ROLE mode — per-role multipliers; null in other modes."
   roleWeights: [RoleWeight!]
-  "PROPERTY mode — junction property read as the weight; null otherwise."
+  "PROPERTY mode — membership property read as the weight; null otherwise."
   property: String
 }
 
@@ -1047,219 +1273,177 @@ type RoleWeight {
 }
 ```
 
----
+### Campaign and settlement
 
-## Type system — system, governance records, and economics
-
-The carrier and configuration nodes: `Proposal`, the economics
-records (`Campaign`, `Settlement`, `Wallet`), and the `Network`
-singleton. Of these, only `Proposal` carries user-authored content —
-its `proposedValue` can embed user-authored text and is moderated
-like any content field
-([nodes.md §6](../primitive/nodes.md)); the rest
-carry none and have no moderation fields. Money lives on the chain;
-these nodes hold only pointers and public scalar results.
-
-### Proposal
-
-```graphql
-"The subject carrier for a property-level governance vote — targets
- one property on another node via :TARGETS."
-type Proposal implements Node {
-  "The node whose property is proposed for change (the :TARGETS edge)."
-  target: Node!
-  "Name of the targeted property, or the sentinel \"node\" for a
-   whole-node operation (e.g. illegal-content classification)."
-  targetProperty: String!
-  "Shape discriminator for proposedValue — \"scalar:string\",
-   \"scalar:float\", \"scalar:integer\", \"rule\", or
-   \"composite:<action_key>\"."
-  valueKind: String!
-  "The proposed new value, serialized; its shape is discriminated by
-   valueKind — a scalar for scalar:*, a Rule (the GovernanceRule
-   exec/amend pair) for 'rule', and a handler-owned from/to bundle for
-   composite:*. The one moderatable field on a Proposal — it can embed
-   user-authored text, so it is reportable like any content field;
-   `value` is null when redacted, and a still-OPEN Proposal then goes
-   REDACTED."
-  proposedValue: ModeratedText!
-  "The node hosting the governance rule this proposal is judged by,
-   read as-of the proposal's authorship timestamp."
-  ruleAnchor: Node!
-  "The proposing actor — the authoring gesture is the author's first vote."
-  author: Actor!
-  "The live vote tally, computed at read time from current vote edges."
-  tally: ProposalTally!
-  "Every vote on this Proposal — the incoming vote edges, each from a voter
-   (an actor, or an eligibility junction for Shape-B scopes), dim1 carrying
-   the stance. Filter by stance; paginated. Public and auditable."
-  votes(stance: Sign, first: Int, after: String, last: Int, before: String): EdgeConnection!
-  status: ProposalStatus!
-}
-
-"A proposal's lifecycle state — transitions exactly once, to a terminal
- value, then permanent; a Proposal stops accepting votes once it leaves
- OPEN. PASSED and PASSED_BUT_INVARIANT_REJECTED land at threshold-cross.
- FAILED is the mirror rule for tallies that count negative votes: the
- negative side satisfied the same threshold shape required of the
- positive side (petition-style tallies count no negatives, so they never
- fail — an unloved petition simply stays OPEN). REDACTED lands when
- proposedValue is redacted while still open — the payload can never
- execute; the votes already cast stay on record."
-enum ProposalStatus { OPEN PASSED PASSED_BUT_INVARIANT_REJECTED FAILED REDACTED }
-
-"The live vote tally for a Proposal, computed at read time from the current
- top layer of every eligible voter's vote edge (governance.md §3) — not
- materialized (see data-model.md, read-time aggregation at scale). Positive
- and negative aggregates cover both vote shapes; petition-style
- Network-scope tallies read only the positive side."
-type ProposalTally {
-  "Weighted positive votes: Σ max(sign(dim1), 0) × voterWeight."
-  positiveWeight: Float!
-  "Count of distinct voters with a positive top-layer stance."
-  positiveCount: Int!
-  "Weighted negative votes: Σ max(−sign(dim1), 0) × voterWeight. Nonzero
-   only for bidirectional Shape-B scopes, where it feeds the FAILED
-   mirror rule; a petition-style Network tally reads only the positive
-   side."
-  negativeWeight: Float!
-  "Count of distinct voters with a negative top-layer stance."
-  negativeCount: Int!
-}
-```
-
-### Economics records
+The campaign pattern ([economics.md §3](../primitive/economics.md#3-the-campaign-record)):
+the advertiser authors a **Content anchor** whose witnessed
+payload carries the terms, with a `(0,0)` Reference to each named
+anchor and to the target; adjustments land as witnessed payloads
+on advertiser-authored `(0,0)` Opinions toward the anchor (newest
+per term wins); settlement publishes one witnessed payload on a
+`(0,0)` Opinion — the advertiser's when discretionary, the
+Publisher's when auto-settlement fires. Money never rides L1 or
+this API: the deposit sits in rail-side script escrow, payouts are
+**batched pushes** whose explicit outputs match the committed
+Merkle tree, and every money fact is read through pointers
+([ledger.md](ledger.md)).
 
 ```graphql
-"A pull-marketing campaign — a funded public request to raise a
- target node's reach into an anchor's cluster. Carrier node; the
- deposit and payouts live on-chain, the node holds pointers."
+"A pull-marketing campaign — the typed view over its anchor.
+ Immutable after creation: anchors and target (they are the
+ campaign's identity). Mutable while open, via adjustment records:
+ the window end, declared_goal, the support floor, and the
+ escrowed deposit — top-up only, never lowered."
 type Campaign implements Node {
-  "The advertiser — the campaign's authoring actor."
+  "The advertiser — the anchor's author."
   author: Actor!
-  "Actor whose cluster the campaign buys reach into (:ANCHOR)."
-  anchor: Actor!
-  "The promoted node the campaign drives reach toward (:PROMOTES)."
-  target: CampaignTarget!
-  "On-chain escrow pointer; the deposit amount is read from chain,
-   never stored on the node."
+  "The named anchor set A — the cluster(s) the campaign buys reach
+   into; any passive nodes (Profiles for person-cluster campaigns,
+   Types for topic campaigns)."
+  anchors: [Node!]!
+  "The promoted node C the campaign drives reach toward."
+  target: Node!
+  "Rail-side escrow pointer; the deposit amount is read through the
+   pointer, never stored here (economics.md §3)."
   escrow: String!
-  "Decay base for the reach metric and payout split (immutable)."
-  g: Float!
-  "h_anchor(target) at the start — the baseline."
-  hStart: Float!
-  "The reach-gain goal denominator (mutable before settlement)."
+  "Campaign window, as epoch indices — auditable from public
+   records alone."
+  startEpoch: Int!
+  endEpoch: Int!
+  "The campaign value V at startEpoch — the baseline."
+  vStart: Float!
+  "The V gain the advertiser is aiming for; strictly positive."
   declaredGoal: Float!
-  startTs: DateTime!
-  endTs: DateTime!
+  "The per-campaign support floor χ_c ≥ χ — the advertiser's
+   targeting-sharpness and compute-cost dial."
+  supportFloor: Float!
   status: CampaignStatus!
-  "Path-enumeration dust floor in force (mutable before settlement)."
-  dustFloor: Float!
-  "Running, approximate reach-gain record; the settled figure lives
-   on the Settlement."
-  achievedHGain: Float!
-  "The settlement record once settled; null while open."
+  "The running per-epoch V series — published as an operational
+   convenience; derivable by anyone from records and certificates,
+   and disputes resolve against the records (economics.md §9)."
+  progress(first: Int, after: String, last: Int, before: String): CampaignProgressConnection!
+  "The settlement view once settled; null while open."
   settlement: Settlement
 }
 
-"What a campaign can promote — any actor, content, or Proposal node
- (never a Hashtag)."
-union CampaignTarget =
-    User | Collective | Post | Comment | Chat | ChatMessage | Item | Proposal
-
-"Campaign lifecycle state. SETTLED: the advertiser released within the
- window plus grace period; AUTO_SETTLED: the backend's settlement key —
- which holds release authority after the grace period — fired the
- default split without the advertiser."
+"Campaign lifecycle state. SETTLED: the advertiser published the
+ settlement payload; AUTO_SETTLED: the publisher system actor
+ published it when the auto-settlement condition fired
+ (economics.md §6)."
 enum CampaignStatus { OPEN SETTLED AUTO_SETTLED }
 
-"The terminal record of a settled Campaign — public results plus
- on-chain pointers. Per-wallet payouts are Merkle leaves, never on
- the graph."
-type Settlement implements Node {
-  "The campaign that produced this settlement."
-  campaign: Campaign!
-  "On-chain distributor address; a pointer, no money on the node."
-  distributorAddress: String!
-  "Payout Merkle root; per-wallet figures verify against it."
-  merkleRoot: String!
-  "Released amount (public scalar result)."
-  settledP: Float!
-  "Achieved sustained reach gain (public result)."
-  achievedHGain: Float!
-  "The attribution instant t* — pins the graph state the split was
-   computed from; recorded for reproducibility alongside the dust
-   floor in force on the Campaign."
-  settledTStar: DateTime!
+"One epoch's campaign value."
+type CampaignValuePoint {
+  epoch: Int!
+  v: Float!
+}
+type CampaignProgressConnection {
+  edges: [CampaignProgressEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type CampaignProgressEdge {
+  cursor: String!
+  node: CampaignValuePoint!
 }
 
-"An account's payout wallet — holds the counterfactual self-custody
- on-chain address. Survives account deletion."
-type Wallet implements Node {
-  "The counterfactual self-custody on-chain address (layered)."
-  address: String!
-  "The account this wallet pays out (the :PAYS_TO actor)."
+"The settlement view — decoded from the settlement payload on the
+ (0,0) Opinion toward the campaign anchor (economics.md §10). The
+ payload pins everything needed to recompute the payout tree from
+ epoch t*'s records: anyone can verify the split."
+type Settlement {
+  campaign: Campaign!
+  "The settlement record itself — who published (advertiser or the
+   Publisher) and when."
+  record: Record!
+  "Released pool (public scalar result)."
+  settledP: Float!
+  "Achieved sustained V gain (public result; floored at zero)."
+  achievedGain: Float!
+  "The attribution epoch t* — eligibility, liveness, magnitudes,
+   and payout addresses all read from this one epoch's state."
+  tStar: Int!
+  "The reserve_share in force, recorded in the payload."
+  reserveShare: Float!
+  "The support floor χ_c in force, recorded in the payload."
+  supportFloor: Float!
+  "The payout tree's Merkle root — the public commitment of who is
+   owed what. Distribution is push, not claim: the rail pays every
+   earner directly at their witnessed payout address in force at
+   t*, and non-payment is publicly provable against the outputs
+   (ledger.md)."
+  merkleRoot: String!
+  "One account's payout leaf with its Merkle proof — verifiable
+   against merkleRoot client-side; null when the account earned
+   nothing. Frontend surface only, never on L1."
+  payoutLeaf(account: UUID!): PayoutLeaf
+}
+
+"One settlement payout leaf."
+type PayoutLeaf {
   account: Actor!
+  "CGT amount, as the rail-precision string the leaf commits."
+  amount: String!
+  "The payout address the tree pinned at t*."
+  address: String!
+  "The Merkle proof path for client-side verification."
+  proof: [String!]!
 }
 ```
 
-### Network
+### Network parameters
+
+The governed parameter schedule lives on L1 — the charter's
+payload-folded schedule, amended by finalization payloads — and
+the overlay carrier is the operational cache the backend, ranker,
+and miner read ([network.md](../primitive/network.md), the
+catalog's owner; this spec deliberately does not restate it).
 
 ```graphql
-"The singleton instance-configuration node. Every configuration
- property is public and amendable via a Proposal that :TARGETS it;
- the two activity aggregates at the bottom are server-maintained
- read-only counts, not amendable properties. Quorum properties come
- in dual-quorum pairs (a fraction and an absolute count)."
-type Network implements Node {
-  # Moderation classification quorums
-  moderationSensitiveQuorumFraction: Float!
-  moderationSensitiveQuorumCount: Int!
-  moderationIllegalQuorumFraction: Float!
-  moderationIllegalQuorumCount: Int!
+"One governed network parameter, from the operational carrier —
+ the cache of the charter's replayable parameter schedule. The
+ schedule on L1 is binding; the carrier is rebuildable from it."
+type NetworkParameter {
+  "The catalog key (network.md), e.g. \"gamma\", \"dust_floor\",
+   \"reserve_share\"."
+  key: String!
+  "The current value, serialized per the parameter's kind."
+  value: String!
+  "The epoch of the finalization payload this value came from (the
+   genesis charter payload for never-amended parameters)."
+  asOfEpoch: Int!
+}
+```
 
-  # Moderator-role-change quorum (critical bucket)
-  modRoleChangeQuorumFraction: Float!
-  modRoleChangeQuorumCount: Int!
+### Honor
 
-  # Platform guidelines (critical tier)
-  guidelinesVersion: Int!
-  "SHA-256 of the canonical guidelines document (64 hex chars)."
-  guidelinesHash: String!
-  guidelinesChangeQuorumFraction: Float!
-  guidelinesChangeQuorumCount: Int!
+Honor ledgers are per-community, append-only, and
+**membership-gated**: only a member's session can read their
+community's ledger, and no slice or ranking path touches it
+([data-model.md "Honor ledgers"](data-model.md#honor-ledgers),
+[governance.md §11](../primitive/governance.md#11-honor)). The
+read surface is deliberately minimal; issuance vocabulary and
+policy are governance's.
 
-  # Eligibility
-  "A User counts as active with at least one outgoing actor edge
-   inside this window."
-  activeThresholdDays: Int!
-
-  # Feed-ranking calibration (baseline bucket)
-  timeDecayHalfLifeDays: Int!
-  distanceDecayBase: Float!
-  dustFloor: Float!
-
-  # Amendment-rule quorums (governance of governance)
-  propertyChangeQuorumFraction: Float!
-  propertyChangeQuorumCount: Int!
-  criticalPropertyChangeQuorumFraction: Float!
-  criticalPropertyChangeQuorumCount: Int!
-
-  # Mod-gate
-  "Fraction of active moderators that must vote yes for critical-tier
-   destructive actions."
-  criticalModGateFraction: Float!
-
-  # Maintained activity aggregates (read-only, never amendable)
-  "Count of currently active Users — at least one outgoing actor edge
-   within activeThresholdDays. The dual-quorum fraction denominator
-   (governance.md §3), exposed so a client can compute the operative
-   pass bar min(fraction × activeMemberCount, count) and verify a
-   PASSED outcome."
-  activeMemberCount: Int!
-  "Count of currently active moderators — the critical mod-gate
-   denominator (governance.md §7)."
-  activeModCount: Int!
+```graphql
+"One honor-ledger entry — append-only, never updated or deleted.
+ Freeze-on-expulsion is the membership check at read time, not a
+ row state."
+type HonorEntry {
+  member: Actor!
+  amount: Float!
+  "The issuance kind, per the community's governed vocabulary."
+  kind: String!
+  createdAt: DateTime!
+}
+type HonorEntryConnection {
+  edges: [HonorEntryEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type HonorEntryEdge {
+  cursor: String!
+  node: HonorEntry!
 }
 ```
 
@@ -1307,7 +1491,7 @@ type AppVersionEdge {
 
 The root `Query` is deliberately small — a handful of entry points;
 everything else hangs off the returned nodes through their fields
-and the generic edge access. Reads need no authentication; `me`
+and the generic record access. Reads need no authentication; `me`
 resolves to null when the request is anonymous rather than erroring.
 
 ```graphql
@@ -1325,6 +1509,9 @@ type Query {
    order preserved; an unknown id yields null in its slot."
   nodes(ids: [UUID!]!): [Node]!
 
+  "Look up any actor by id or unique handle — one namespace across
+   kinds, so a handle resolves to exactly one actor."
+  actor(id: UUID, handle: String): Actor
   user(id: UUID, handle: String): User
   collective(id: UUID, handle: String): Collective
   post(id: UUID!): Post
@@ -1336,11 +1523,45 @@ type Query {
   hashtag(name: String!): Hashtag
   proposal(id: UUID!): Proposal
   campaign(id: UUID!): Campaign
-  settlement(id: UUID!): Settlement
-  "An account's payout wallet by id."
-  wallet(id: UUID!): Wallet
-  "The singleton network-configuration node."
-  network: Network!
+
+  "One L1 record by its own identifier — the unit of the chronicle."
+  record(id: RecordId!): Record
+
+  "Generic record lookup over the mirror — the public chronicle,
+   filterable along the mirror's own indexes: by author, by target,
+   by family, payload-marked state, and/or a landing-epoch window
+   (data-model.md \"The record mirror\"). The raw material behind
+   every fold this schema serves — any consumer can replay any fold
+   from here."
+  records(
+    author: UUID
+    target: UUID
+    family: RecordFamily
+    payloadMarked: Boolean
+    sinceEpoch: Int
+    untilEpoch: Int
+    first: Int, after: String, last: Int, before: String
+  ): RecordConnection!
+
+  "One staged write by id — the confirm-side observation point of
+   the write path. Field-level: resolves only for the staging
+   actor's session; null otherwise."
+  stagedWrite(id: UUID!): StagedWrite
+
+  "The governed network parameters, from the operational carrier —
+   all of them, or the named keys. The catalog is network.md's; the
+   charter schedule on L1 is binding."
+  networkParameters(keys: [String!]): [NetworkParameter!]!
+
+  "A community's honor ledger, newest first — membership-gated:
+   resolves only when the authenticated viewer is a member of the
+   community (the issuing Collective; CoGra itself is guild #1),
+   null otherwise. `member` narrows to one member's entries."
+  honorEntries(
+    community: UUID!
+    member: UUID
+    first: Int, after: String, last: Int, before: String
+  ): HonorEntryConnection
 
   "Releases from the application registry, newest first; `component`
    narrows to one platform component. Answers \"what's the current
@@ -1351,20 +1572,19 @@ type Query {
   ): AppVersionConnection!
 
   "Any actor's weight-bounded relevant subgraph — the raw material a
-   ranker (that actor's own device or a delegated miner) orders into a
-   feed. Parameterized by the `viewer` whose feed is ranked: a delegated
-   miner ranks on someone's behalf without holding their auth, and
-   computing any actor's view for any reader is the public-graph default
-   above. Pruned by `dustFloor` and `distanceDecayBase` — the same χ and
-   d(R) base the ranker runs with, defaults Network.dustFloor and
-   Network.distanceDecayBase — not hop-bounded: slice membership is
-   best-possible contribution `d(R) · ∏|dim| ≥ χ` (feed-ranking.md §4.4,
-   §9), a function of both levers, so a ranker running a softened decay
-   passes its base or the slice silently drops the distant nodes the
-   tuned d(R) keeps above χ. Null if the id resolves to no rankable
-   actor. The backend never ranks (feed-ranking.md §9) — it serves this
-   slice, and separately hydrates the ordered result via `feed`."
-  feedSlice(viewer: UUID!, dustFloor: Float, distanceDecayBase: Float): FeedSlice
+   ranker (that actor's own device or a delegated miner) orders into
+   a feed. Parameterized by the `viewer` whose feed is ranked: a
+   delegated miner ranks on someone's behalf without holding their
+   auth, and computing any actor's view for any reader is the
+   public-graph default above. Pruned by `dustFloor` (χ) and
+   `gamma` (the per-hop attenuation) — defaults are the governed
+   network parameters — not hop-bounded: slice membership is
+   best-possible path product ∏(γ·w̃) ≥ χ, a function of both
+   levers, so both travel (miner-api.md \"The slice path\"). Null if
+   the id resolves to no rankable actor. The backend never ranks
+   (feed-ranking.md §11) — it serves this slice, and separately
+   hydrates the ordered result via `feed`."
+  feedSlice(viewer: UUID!, dustFloor: Float, gamma: Float): FeedSlice
 
   "Hydrate a ranked feed from an ordered list of node ids — a ranker's
    output. Returns those nodes in the given order as a cursor-paginated
@@ -1374,44 +1594,10 @@ type Query {
     first: Int, after: String, last: Int, before: String
   ): NodeConnection!
 
-  "Generic edge lookup — filter by source, target, label, top-layer
-   dimension sign, and/or a top-layer-timestamp window. The public way
-   to read any relationship not yet exposed as a named view."
-  edges(
-    from: UUID
-    to: UUID
-    label: EdgeLabel
-    dim1Sign: Sign
-    dim2Sign: Sign
-    since: DateTime
-    until: DateTime
-    first: Int, after: String, last: Int, before: String
-  ): EdgeConnection!
-
-  "The full append-only layer stack of the single edge between two nodes
-   — the (from, to) pair identifies it, since an edge carries at most one
-   label. Oldest first; the last page's last entry is the current top layer.
-   Paginated — a long-lived edge can carry many layers. An opt-in history
-   gesture, never ranked."
-  edgeHistory(
-    from: UUID!, to: UUID!
-    first: Int, after: String, last: Int, before: String
-  ): EdgeLayerConnection!
-
-  "The full append-only layer stack of one property on a node — a graph
-   property or a Postgres display-content field, named by `property`.
-   Oldest first; the last page's last entry is the current value. Paginated —
-   a frequently-revised property can carry many layers. An opt-in history
-   gesture, never ranked."
-  propertyHistory(
-    id: UUID!, property: String!
-    first: Int, after: String, last: Int, before: String
-  ): PropertyLayerConnection!
-
   "Global search across nodes; returns mixed node types. Recall is
    lexical over the indexed name-class fields and post titles; order
    is exact-match tier first, then newest first — viewer-independent,
-   the backend never graph-ranks (feed-ranking.md §9). A ranker may
+   the backend never graph-ranks (feed-ranking.md §11). A ranker may
    re-order fetched results by the viewer's feed metric. Valid kinds:
    USER, COLLECTIVE, POST, CHAT, ITEM, HASHTAG; any other kind is a
    validation error — comments carry no indexed field, and chat
@@ -1426,7 +1612,7 @@ type Query {
   "Scoped message search within one chat — word-level full-text over
    plaintext bodies, newest first. Encrypted bodies are never
    searchable server-side: the backend holds only ciphertext
-   (chats.md §9). Null if the id resolves to no chat."
+   (chats.md §7). Null if the id resolves to no chat."
   chatSearch(
     chatId: UUID!
     query: String!
@@ -1437,19 +1623,40 @@ type Query {
 
 ### Feed
 
-The backend does not rank (feed-ranking.md §9). It serves the viewer's
-weight-bounded subgraph slice; a ranker — the viewer's device or a
-delegated miner — orders it and hands back an id list, which `feed`
-hydrates in order. The ranking metrics and contributing paths live with
-the ranker, specified in [miner-api.md](miner-api.md).
+The backend does not rank
+([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
+It serves the viewer's weight-bounded subgraph slice; a ranker —
+the viewer's device or a delegated miner — orders it and hands
+back an id list, which `feed` hydrates in order. The ranking
+metrics, the parameters, and the contributing paths live with the
+ranker, specified in [miner-api.md](miner-api.md).
+
+The slice contract is **raw L1 edge records**: the χ-bounded node
+set and the accepted records among those nodes, each with its
+landing epoch. The ranker folds same-author bundles, derives `w̃`,
+extracts, signs, and decays — all itself, exactly and never
+sampled, so any consumer can spot-check any ranking claim from the
+slice alone. Pre-folded aggregates are permitted only as a wire
+optimization that changes nothing observable
+([miner-api.md "The contract"](miner-api.md#the-contract)).
+
+The viewer's seen-list is not part of the slice: it is private
+operational state the device fetches under its own session
+(`User.viewHistory`) and forwards to a delegated ranker inside the
+request. Named opt-in feeds (topic, friends, guild) are read-side
+compositions the ranker and frontend build over the same slice
+surface — a named feed is presented as what it is and never as the
+neutral rank
+([feed-ranking.md §10](../primitive/feed-ranking.md#10-the-default-feed-and-named-feeds)).
 
 ```graphql
-"The viewer's relevant subgraph for ranking — nodes and the edges among
- them, weight-bounded by the dust floor under the requested decay base.
- Downloaded by the ranker; the backend computes no order over it."
+"The viewer's relevant subgraph for ranking — the χ-bounded node
+ set and the raw accepted records among those nodes, each with its
+ landing epoch. Downloaded by the ranker; the backend computes no
+ order over it."
 type FeedSlice {
   nodes(first: Int, after: String, last: Int, before: String): NodeConnection!
-  edges(first: Int, after: String, last: Int, before: String): EdgeConnection!
+  records(first: Int, after: String, last: Int, before: String): RecordConnection!
 }
 
 "A generic page of nodes — used by the hydrated feed and any mixed-type
@@ -1471,9 +1678,9 @@ Search is two surfaces: a global `search` over names and titles,
 and a per-chat `chatSearch` over plaintext message bodies.
 
 **What is indexed.** The global index covers the current value of
-the name-class fields and post titles: User `username` +
-`displayName`, Collective `name` + `displayName`, Hashtag `name`
-(served by the Postgres registry — [hashtag.md §3](../instances/hashtag.md#1-identity-and-the-naming-service)),
+the name-class fields and post titles: actor `handle` +
+`displayName`, Hashtag `name` (served by the naming-service
+registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
 bios, and attachments are not indexed. A Comment carries no
 indexed field and is not a searchable kind — a comment is found
@@ -1482,7 +1689,7 @@ index — casual conversation doesn't surface to strangers by
 keyword; their search surface is `chatSearch`, and only plaintext
 bodies are searchable — encrypted content never is, since the
 backend only ever holds ciphertext
-([chats.md §9](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies
@@ -1493,13 +1700,13 @@ semantics is an implementation choice.
 whose indexed field equals the query case-insensitively — then
 newest first. Both keys are viewer-independent: the backend never
 ranks by graph
-([feed-ranking.md §9](../primitive/feed-ranking.md#11-where-ranking-runs)).
+([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
 Graph-blended ordering is the ranker's option, the same split as
 the feed: the client or delegated miner re-orders the fetched
 candidates by the viewer's feed metric where the match is in the
 viewer's slice; matches outside the slice keep the recency order,
 which is the sort cascade's deepest fallback anyway
-([feed-ranking.md §5](../primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum)).
+([feed-ranking.md §7](../primitive/feed-ranking.md#7-sort-order-tie-breakers-zero-jail)).
 The delegated form is the miner's `rankSearch` operation
 ([miner-api.md](miner-api.md)).
 The no-AI rule applies to search ranking as much as to feeds.
@@ -1507,16 +1714,17 @@ The no-AI rule applies to search ranking as much as to feeds.
 
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
-filters by the viewer's `content_filtering_severity_level` — the
-same visibility model as every other read. Redacted fields are
-excluded from the index by an explicit rule, not by construction:
-the redaction cascade replaces the value in place with a visible
-marker ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
-e.g. the `redacted-user-{uuid}` handle sentinel — so a current
+filters by the viewer's severity preference — the same visibility
+model as every other read. Redacted fields are excluded from the
+index by an explicit rule, not by construction: display-side
+redaction appends a tombstone version whose content fields carry
+the visible marker
+([data-model.md "Display-content versioning"](data-model.md#display-content-versioning))
+— e.g. the `redacted-user-{uuid}` handle sentinel — so a current
 value still exists to match. The index skips redacted values (a
-version row or layer carrying a non-null redaction reason);
-without that rule, a substring query for "redacted" would surface
-every redacted handle and title.
+version row carrying a non-null redaction reason); without that
+rule, a substring query for "redacted" would surface every
+redacted handle and title.
 
 ```graphql
 type SearchConnection {
@@ -1544,69 +1752,90 @@ type ChatMessageEdge {
 ## Mutations
 
 The write surface is the **principled hybrid** fixed in the
-governing principles: one generic mutation for setting an actor
-edge, named standalone mutations for the gestures that are
-genuinely their own thing, combined only where they are the same
-gesture. The root `Mutation` is the index; the input and payload
-types follow per group.
+governing principles, run through the prepare → sign → relay →
+confirm flow. Each group below lists its mutations as an
+`extend type Mutation` block beside its inputs — there is no
+separate root index to keep in sync.
 
 ### Conventions
 
 These bind every mutation below.
 
+- **Two mutation classes.** A **`prepare*`** mutation stages L1
+  records for the device to sign — nothing exists on the graph
+  until the signed records are relayed and confirmed. Everything
+  else (auth, private viewer state, media upload) is an ordinary
+  L2 operation: one Postgres transaction, synchronous result.
 - **Single input, dedicated payload.** Each mutation takes one
-  `input: <Name>Input!` argument and returns a `<Name>Payload!`.
-  The payload wraps the affected node(s) so a caller selects the
-  exact post-write shape it needs and the payload can grow a field
-  without a breaking signature change.
-- **The viewer is the actor, and rides the request; `actAs` names a
-  Collective acting through them.** No mutation takes an author
-  argument — the authenticated viewer in the execution context is
-  the source of every gesture, mirroring the read surface. A
-  Collective acts through an authorized member: every mutation whose
-  gesture a Collective can produce takes an optional `actAs: UUID`
-  naming the Collective the gesture belongs to; null — the default —
-  acts as the viewer. The *acting identity* (the viewer, or the
-  Collective they act for) is what the gesture's edges originate
-  from. `actAs` carries intent only, never authority: the service
-  layer checks the viewer's eligibility under the Collective's
-  act-as rule and rejects the gesture otherwise. Act-as rules carry
-  eligibility only — an eligible member's gesture executes
-  immediately as the Collective's own, never held pending
-  co-signatures ([collectives.md §2](../instances/collectives.md#4-acting-through-the-collective)).
+  `input: <Name>Input!` argument and returns a payload type. Every
+  `prepare*` mutation returns the shared `PreparePayload` — the
+  staged records to sign — unless noted; the resulting entities
+  are read through normal queries once the records confirm.
+- **A prepare may stage a batch.** A gesture with structure —
+  a post with tags and references, a proposal anchor with its
+  subject Reference, a Collective founding — returns several
+  `PreparedWrite`s in relay order. **Each is its own priced act**
+  (one θ-debit each), signed individually and relayed
+  independently; there is no cross-record atomicity — whether each
+  lands is L1's fact alone, and the flow state advances per record
+  at confirm. The batch size is visible to the client, so the
+  total cost is legible before signing.
+- **The viewer is the actor; `actAs` names a Collective acting
+  through them.** No mutation takes an author argument — the
+  authenticated viewer in the execution context initiates every
+  gesture. A prepare whose gesture a Collective can produce takes
+  an optional `actAs: UUID`; null — the default — prepares the
+  viewer's own record. `actAs` carries intent, never authority:
+  the record's author becomes the Collective's actor, prepare
+  checks the viewer's eligibility under the Collective's
+  `actas:*` rules (content-acts default any-member, governance-acts
+  default deny — [collectives.md §4](../instances/collectives.md#4-acting-through-the-collective)),
+  and the signing route changes (see "Acting as a Collective").
   Where the target already pins the acting identity — editing
-  authored content, accepting an invitation whose membership names a
-  Collective bearer, leaving, revoking, settling, re-linking a
-  wallet — there is no
-  `actAs`; the identity is read off the target and the same
-  eligibility check runs. The Network-scope governance verbs also
-  take none — their gestures are per-User
-  ([governance.md §3](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only)).
+  authored content, leaving a chat one's Collective is in — the
+  identity is read off the target and the same eligibility check
+  runs. The Network-scope ballot gestures take no `actAs` where
+  the scope's rules make them per-User
+  ([governance.md](../primitive/governance.md)).
+- **Stance prepares take the intended net state.** The graph
+  stores chronicles: a bundle's current stance is the per-author
+  net fold, so "changing a like" means appending the parallel
+  record that moves the fold to the intended values. The client
+  states intent (`pDirected`, `pInterest` as the desired net
+  state); the backend assembles the delta record; the device
+  verifies and signs it. Severance is the same gesture with intent
+  `(0, 0)` — netting, never removal.
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
-  `status` on any input. The server assigns `NORMAL` on write and
-  only moderation governance moves it.
-- **Append-only, no destructive verbs.** There is no
-  `delete`/`unlike`/`unfollow`/`unset`. An `edit*` mutation appends
-  a property layer; re-`setEdge` appends an edge layer; severance
-  is the `(0,0)` layer, not a removal. The absence follows from the
-  primitive ([graph-model.md §8](../primitive/graph-model.md)).
-- **Proposal-backed actions create a Proposal and the author's
-  first vote, atomically.** The governance gestures
-  (`removeChatMember`, `classifyContent`, `amendNetworkParameter`,
-  …) are convenience verbs over one mechanism: each opens a
-  `Proposal` targeting the right node and property and casts the
-  author's opening vote. They return that `Proposal` — the outcome
-  lands later, when votes cross the threshold and the service layer
-  cascades the write. The service dispatches on the target node;
-  the caller names intent, not machinery.
+  `status` on any input. Fields start `NORMAL`; only moderation
+  governance moves them.
+- **Edits are update records; eligibility is checked at prepare.**
+  An edit prepare stages the concept's declared carrier — parallel
+  Registration for profiles, `(0,0)` Opinion + payload elsewhere
+  ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+  L1 would accept anyone's update-shaped record and let the fold
+  ignore it; CoGra's own API refuses to prepare a record its
+  published fold would never read — a freelance edit is a wasted
+  priced act the service does not manufacture.
+- **Proposal-backed actions stage the anchor pattern.** The
+  governance prepares each stage a Content anchor (terms payload)
+  plus the `(0,0)` Reference to the subject. **Creation is never a
+  vote**: the client flow immediately follows with
+  `prepareBallot` for the author's explicit `+1` — one more priced
+  act, consistent with proposer-pays
+  ([governance.md](../primitive/governance.md)). Outcomes
+  materialize later, off the tally fold, as the executing
+  authority's own records (a finalization Opinion; The Publisher's
+  role Tag; the chat authority's De-invite) — never as a cascade
+  this API performs for the caller.
 - **Authentication.** Every mutation requires an authenticated
-  viewer except `register`, `verifyEmail`,
-  `resendVerificationEmail`, `logIn`, `refreshSession`,
-  `requestPasswordReset`, `confirmPasswordReset`, and the
-  token-bearing `confirmAccountDeletion` — the gestures that
-  precede or recover a session.
+  viewer except the applicant-flow and session-recovery gestures:
+  `submitApplication`, `verifyApplicantEmail`,
+  `resendVerificationEmail`, `submitApplicantRegistration`,
+  `logIn`, `refreshSession`, `requestPasswordReset`,
+  `confirmPasswordReset`, and the token-bearing
+  `confirmAccountDeletion`.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
@@ -1619,886 +1848,872 @@ These bind every mutation below.
   — always report success, so surfacing a failure there would reintroduce
   the account enumeration they exist to prevent.
 
+### The write flow
+
+The system view is
+[architecture.md "The write path"](architecture.md#the-write-path);
+these are its API types. A prepare validates, pre-checks the write
+rule (a failure is a `WRITE_RULE_FAILED` userError — a normal
+account state with a product-surfaced restoration flow, never an
+auth fault), stages the write, and returns the canonical material.
+The device recomputes the commitment from record and salt,
+verifies the witness, and signs — **the user never signs blind
+bytes** ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+`submitRecords` relays; `stagedWrite` (and `User.stagedWrites`)
+observes the asynchronous confirm.
+
 ```graphql
-type Mutation {
-  # ── Generic actor edge ───────────────────────────────────────
-  "Set the acting identity's outgoing actor edge toward a node — the
-   one generic write for sentiment and connection-weight. Appends a new
-   layer if the edge already exists; the (0,0) tensor is severance,
-   not removal. Valid targets: User, Collective, Post, Comment,
-   Chat, ChatMessage, Item, and the junction nodes; never a
-   Proposal (an actor edge toward a Proposal is a vote — use
-   castVote), a Hashtag (not a graph gesture), or an
-   economics/system node."
-  setEdge(input: SetEdgeInput!): SetEdgePayload!
-
-  # ── Content authoring ────────────────────────────────────────
-  createPost(input: CreatePostInput!): CreatePostPayload!
-  "Append a new layer to one or more of a Post's authored fields."
-  editPost(input: EditPostInput!): EditPostPayload!
-  createComment(input: CreateCommentInput!): CreateCommentPayload!
-  editComment(input: EditCommentInput!): EditCommentPayload!
-  "Open a Chat and seat the acting identity as its founding member in
-   one gesture (the founder's self-claim collapses to ACTIVE with no
-   approval, the N=0 bootstrap)."
-  createChat(input: CreateChatInput!): CreateChatPayload!
-  "Post a message to a Chat the acting identity is an active member
-   of. contentPrivacy and epoch decide plaintext vs ciphertext."
-  createChatMessage(input: CreateChatMessageInput!): CreateChatMessagePayload!
-  editChatMessage(input: EditChatMessageInput!): EditChatMessagePayload!
-  createItem(input: CreateItemInput!): CreateItemPayload!
-  editItem(input: EditItemInput!): EditItemPayload!
-  "Append a new layer to the viewer's own profile fields (handle,
-   displayName, bio, avatar, cover, websiteUrl). Self only — no id,
-   the viewer is the edited User."
-  editProfile(input: EditProfileInput!): EditProfilePayload!
-  "Upload a media asset and get back its MediaAttachment id, to
-   reference from a create/edit content input."
-  uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
-
-  # ── Voting ───────────────────────────────────────────────────
-  "Cast — or recast — the acting identity's vote on a Proposal. The
-   service resolves the vote shape: a Network-scope Proposal takes
-   the viewer's direct User→Proposal actor edge (Shape A); a
-   chat/collective-scope Proposal takes the structural edge from the
-   voter's eligible junction (Shape B). Recasting appends a new
-   layer — this is how a vote is changed; there is no separate
-   gesture. dim1 carries the stance; a non-positive dim1 is a valid
-   recorded edge that a petition-style tally does not count. In a
-   bidirectional tally only a negative dim1 counts toward the FAILED
-   mirror bar; a zero dim1 counts to neither side — (0, 0) is the
-   abstain layer that vote recasting and the eligibility-dropout
-   cascade write (governance.md §6). Votes are accepted only while
-   the Proposal is OPEN."
-  castVote(input: CastVoteInput!): CastVotePayload!
-
-  # ── Chat membership and lifecycle ────────────────────────────
-  "Request to join a Chat. Resolves to an ACTIVE membership when the
-   chat admits openly (threshold 0), or a PENDING one carrying an
-   admission Proposal otherwise."
-  joinChat(input: JoinChatInput!): JoinChatPayload!
-  "Invite an actor into a Chat (inviter-first admission). Opens the
-   membership and its admission Proposal with the inviter's approving
-   vote; the invitee's acceptance is their self-claim."
-  inviteChatMember(input: InviteChatMemberInput!): InviteChatMemberPayload!
-  "Accept a chat invitation — the invitee's self-claim: their Shape A
-   vote on the admission Proposal plus their :AUTHOR edge on the
-   membership; resolves to ACTIVE once approvals suffice."
-  acceptChatInvite(input: AcceptChatInviteInput!): AcceptChatInvitePayload!
-  "Leave a Chat — a unilateral negative layer on the named
-   membership's claim; no vote, the junction goes REVOKED and the
-   chat epoch advances. The membership's bearer (the viewer, or a
-   Collective they act for) is who leaves."
-  leaveChat(input: LeaveChatInput!): LeaveChatPayload!
-  changeChatMemberRole(input: ChangeChatMemberRoleInput!): ProposalPayload!
-  "Disavow a member (Level 2) — proposal-backed; on passing, a
-   negative approval layer revokes the membership."
-  removeChatMember(input: RemoveChatMemberInput!): ProposalPayload!
-  "Disavow a message (Level 1) — proposal-backed; the body persists,
-   the chat's collective stance moves away from it."
-  disavowChatMessage(input: DisavowChatMessageInput!): ProposalPayload!
-  "Rotate the chat key mid-epoch — proposal-backed; on passing,
-   Chat.epoch advances."
-  rotateChatKey(input: RotateChatKeyInput!): ProposalPayload!
-  "Change one of a Chat's profile fields (name, description, image) —
-   proposal-backed; each field is a simple single-property Proposal
-   under its own gate, so one field per call."
-  editChatProfile(input: EditChatProfileInput!): ProposalPayload!
-
-  # ── Collectives ──────────────────────────────────────────────
-  "Create a Collective and seat the acting identity as its founding
-   member (N=0 bootstrap), with the social contract supplied inline."
-  createCollective(input: CreateCollectiveInput!): CreateCollectivePayload!
-  joinCollective(input: JoinCollectiveInput!): JoinCollectivePayload!
-  inviteCollectiveMember(input: InviteCollectiveMemberInput!): InviteCollectiveMemberPayload!
-  "Accept a collective invitation — the invitee's self-claim: their
-   Shape A vote on the admission Proposal plus their :AUTHOR edge on
-   the membership; resolves to ACTIVE once approvals suffice."
-  acceptCollectiveInvite(input: AcceptCollectiveInviteInput!): AcceptCollectiveInvitePayload!
-  leaveCollective(input: LeaveCollectiveInput!): LeaveCollectivePayload!
-  changeCollectiveMemberRole(input: ChangeCollectiveMemberRoleInput!): ProposalPayload!
-  removeCollectiveMember(input: RemoveCollectiveMemberInput!): ProposalPayload!
-  "Amend one governance rule on a Collective or Chat — proposal-backed,
-   judged by that rule's own amend gate."
-  amendGovernanceRule(input: AmendGovernanceRuleInput!): ProposalPayload!
-  "Change one of a Collective's profile fields (displayName,
-   description, avatar, websiteUrl) — proposal-backed; each field is a
-   simple single-property Proposal under its own gate, so one field
-   per call."
-  editCollectiveProfile(input: EditCollectiveProfileInput!): ProposalPayload!
-
-  # ── Items ────────────────────────────────────────────────────
-  "Initiate an ownership transfer — opens a transfer Proposal for the
-   next ItemOwnership; the counterparty approves with castVote. Works
-   owner-first (offer) or acquirer-first (request); the service infers
-   direction from whether the acting identity is the current owner."
-  transferItem(input: TransferItemInput!): TransferItemPayload!
-
-  # ── Network-scope governance ─────────────────────────────────
-  "Report content for classification (sensitive / illegal / back to
-   normal) — proposal-backed, judged by the Network's moderation
-   gate. Targets a per-field status, or the whole node. NORMAL is
-   valid only against a SENSITIVE classification — an 'illegal'
-   redaction is terminal (moderation.md §4)."
-  classifyContent(input: ClassifyContentInput!): ProposalPayload!
-  proposeModeratorRoleChange(input: ProposeModeratorRoleChangeInput!): ProposalPayload!
-  amendNetworkParameter(input: AmendNetworkParameterInput!): ProposalPayload!
-  amendGuidelines(input: AmendGuidelinesInput!): ProposalPayload!
-  "The generic proposal escape hatch — propose a change to any
-   targetable property for which no named verb above fits. Prefer a
-   named verb when one exists."
-  proposeChange(input: ProposeChangeInput!): ProposalPayload!
-
-  # ── Economics (the API subset; money moves on-chain) ─────────
-  "Open a pull-marketing campaign carrier node. The deposit is
-   escrowed on-chain beforehand; the node holds only the pointer."
-  createCampaign(input: CreateCampaignInput!): CreateCampaignPayload!
-  "Adjust a campaign's mutable knobs (declaredGoal, endTs, dustFloor)
-   while it is OPEN."
-  updateCampaign(input: UpdateCampaignInput!): UpdateCampaignPayload!
-  "Settle an OPEN campaign. The release is already executed
-   on-chain; writes the Settlement record pointing at it. The split
-   is graph-computed, never advertiser-chosen."
-  settleCampaign(input: SettleCampaignInput!): SettleCampaignPayload!
-  "Re-point the acting account's payout Wallet to a new on-chain
-   address (append a layer; the binding survives). The wallet pins
-   who acts — see the input."
-  relinkWallet(input: RelinkWalletInput!): RelinkWalletPayload!
-
-  # ── Auth and accounts (off-graph state, per auth.md) ─────────
-  "Submit a registration through an invite link. Writes the off-graph
-   pending-registration record and sends the verification email — no
-   User node or session exists until verifyEmail."
-  register(input: RegisterInput!): RegisterPayload!
-  "Complete registration with the emailed verification token.
-   Atomically creates the User node and its Wallet, writes the two
-   invitation edges, and issues the first session (auth.md)."
-  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
-  "Re-send the verification email for a live pending registration.
-   Rate-limited per pending-registration record (auth.md)."
-  resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
-  logIn(input: LogInInput!): LogInPayload!
-  refreshSession(input: RefreshSessionInput!): RefreshPayload!
-  "Revoke one session (the current one if no id is given)."
-  revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
-  "Revoke every session except the one making the request."
-  revokeOtherSessions: RevokeSessionsPayload!
-  requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
-  confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
-  "Change the password from within an authenticated session,
-   re-authenticating with the current one. A security event — revokes
-   the account's other sessions."
-  changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
-  "Begin an email change: re-authenticates, sends a confirmation code
-   to the current (original) address to prove account control, and a
-   verification link to the new address to prove it is reachable. The
-   address does not change until confirmEmailChange."
-  requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
-  "Complete an email change with the code from the current address;
-   applies only once the new address has been verified too."
-  confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
-  "Issue a time-gated invite link — single-use or multi-use, the
-   issuer's choice — carrying the inviter's pre-committed edge tensor."
-  createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
-  revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
-  "Begin account deletion (identity-only, or content-inclusive);
-   sends the confirmation link. The 7-day grace period opens at
-   confirmAccountDeletion, not here."
-  requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
-  confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
-  cancelAccountDeletion: AccountDeletionPayload!
-
-  # ── Private viewer state (Postgres; field-authorized to self) ─
-  setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
-  removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
-  hideActor(input: HideActorInput!): HideActorPayload!
-  unhideActor(input: UnhideActorInput!): UnhideActorPayload!
-  "Record that the viewer has seen a node (the feed de-dup signal)."
-  markSeen(input: MarkSeenInput!): MarkSeenPayload!
-  "Advance the viewer's last-read pointer in a Chat."
-  markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!
-  setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
+"One staged record awaiting signature — the canonical material the
+ device verifies and signs."
+type PreparedWrite {
+  "The staged-write id — the handle for submitRecords and stagedWrite."
+  id: UUID!
+  family: RecordFamily!
+  "The canonical record, serialized for signing (base64). Covers
+   everything — endpoints, parameters, payload witness — so the
+   relay can neither alter it nor author one unasked."
+  canonicalRecord: String!
+  "The payload salt, for recomputing the commitment on-device."
+  salt: String!
+  "The content witness the device verifies before signing."
+  witness: String!
+  "Epoch budget: an unlanded staged write is garbage-collected —
+   staged payload included — after this many epochs (an operational
+   parameter; data-model.md \"Staged writes\")."
+  gcAfterEpochs: Int!
 }
 
-"The shared payload for every proposal-backed governance mutation:
- the Proposal that was opened, carrying the author's first vote. The
- outcome is read later off the Proposal's tally and status."
-type ProposalPayload {
-  proposal: Proposal!
+"The shared payload of every prepare* mutation: the staged records
+ to sign, in relay order. Each is its own priced act."
+type PreparePayload {
+  writes: [PreparedWrite!]!
+}
+
+"A staged write's lifecycle. AWAITING_SIGNATURE: prepared, not yet
+ submitted. RELAYING: signed and submitted; the backend drives
+ retries across epoch boundaries. LANDED: the accepted record is
+ in the mirror and the staged effects are promoted. EXPIRED:
+ garbage-collected unlanded — nothing existed on the graph."
+enum StagedWriteState { AWAITING_SIGNATURE RELAYING LANDED EXPIRED }
+
+"One staged write — the observation point for the asynchronous
+ confirm. Field-authorized to the staging actor's session."
+type StagedWrite {
+  id: UUID!
+  state: StagedWriteState!
+  family: RecordFamily!
+  preparedAt: DateTime!
+  "The accepted record once LANDED; null before."
+  record: Record
+}
+type StagedWriteConnection {
+  edges: [StagedWriteEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type StagedWriteEdge {
+  cursor: String!
+  node: StagedWrite!
+}
+
+"One signed record heading to the relay."
+input SignedRecordInput {
+  stagedWriteId: UUID!
+  "The actor's signature over the canonical record — produced with
+   the actor's device-held key; opaque to this API. For a
+   co-signed Collective act this is the member-side contribution
+   (see \"Acting as a Collective\")."
+  signature: String!
+  "Collective acts only: the acting member's instruction, signed
+   with their OWN key — the operational trigger the backend checks
+   against the governance map before contributing its co-signing
+   half. Never graph state; on the graph the Collective's actor
+   signs alone."
+  instructionSignature: String
+}
+
+input SubmitRecordsInput {
+  records: [SignedRecordInput!]!
+}
+type SubmitRecordsPayload {
+  stagedWrites: [StagedWrite!]!
+}
+
+extend type Mutation {
+  "Relay signed records to L1. Verification failures surface as
+   SIGNATURE_INVALID userErrors per record; confirmation is
+   asynchronous — observe via stagedWrite."
+  submitRecords(input: SubmitRecordsInput!): SubmitRecordsPayload!
 }
 ```
 
-### The generic actor edge
+#### Acting as a Collective
+
+A record authored by a Collective is signed by the Collective's
+key — creator-held, with per-member 2-of-2 co-signing; the backend
+never holds a complete key
+([collectives.md §2](../instances/collectives.md#2-custody)). The
+API shape: prepare with `actAs` stages the record with the
+Collective as author; the acting member's device submits it with
+their `instructionSignature` (their own key — the client-signed
+authoring path applied to the trigger) plus their member-side
+signature contribution; the backend verifies the instruction
+against the governance map — `actas:*` eligibility, and a passed
+decision where the contract requires one — and only then completes
+the signature with its half and relays. The creator's device holds
+the full key and signs alone. On the shared graph the Collective's
+actor signs alone either way: **no per-record member attribution
+exists, deliberately** — accountability lives in the social
+contract. The split-signature mechanics and their open L1
+dependencies are [collectives.md §2](../instances/collectives.md#2-custody)'s;
+until the splits ship, backend custody is the documented stopgap
+and `signature` is omitted on such acts — the instruction alone
+authorizes the backend's stopgap signing.
+
+### The generic stance
 
 ```graphql
-"The acting identity's outgoing actor edge toward `target`. No source
- argument — the viewer (or the Collective named by actAs) is the
- source; no label — it is always the :ACTOR edge. Writing again
- appends a layer; (0,0) is severance."
-input SetEdgeInput {
+"Prepare the acting identity's stance toward a node — the one
+ generic write for sentiment and connection. The target selects
+ the family: Affinity toward a Hashtag (the follow-topic gesture),
+ Opinion toward everything else — toward a Profile it is the
+ interpersonal stance (and the reciprocation gesture that
+ completes the CoGra-join mutual pair — invitations.md §2).
+ pDirected / pInterest are the INTENDED NET STATE of the author's
+ bundle (conventions): (0,0) is severance. Valid toward any
+ passive node; ballots go through prepareBallot."
+input PrepareStanceInput {
   target: UUID!
-  dim1: Dimension!
-  dim2: Dimension!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  pDirected: Dimension!
+  pInterest: Dimension!
+  "Act as this Collective (see conventions); null = the viewer's
+   own gesture."
   actAs: UUID
 }
 
-type SetEdgePayload {
-  "The edge's new top layer."
-  edge: Edge!
+extend type Mutation {
+  prepareStance(input: PrepareStanceInput!): PreparePayload!
 }
 ```
-
-The valid targets are the node kinds the catalog defines an
-inbound actor edge for
-([edges.md §1](../primitive/edges.md)), minus
-Proposal: the two actors, the five content kinds, and the three
-junction kinds. A `target`
-that resolves to a `Proposal`, `Hashtag`, `Campaign`, `Settlement`,
-`Wallet`, or `Network` is rejected — a Proposal because the actor
-edge toward it *is* a vote (one label per endpoint pair, so the two
-cannot coexist; use `castVote`), a Hashtag because liking a tag is
-not a graph operation, the rest because they carry no inbound actor
-edge. The one further guard: a Collective setting an edge toward its
-*own* `CollectiveMember` is rejected, because the `:APPROVAL` edge
-already owns that pair.
 
 ### Content authoring
 
-```graphql
-"Author a Post. Body fields are plain strings — moderation status is
- server-assigned. Tags and references are explicit structured inputs,
- never parsed from the body, so display content and graph topology
- stay decoupled."
-input CreatePostInput {
-  title: String
-  description: String
-  content: String!
-  "Media assets, in gallery order; mark at most one as the cover."
-  attachments: [AttachmentInput!]
-  "Hashtag names to tag (lowercase, no '#'); created implicitly if new."
-  tags: [String!]
-  "Nodes this Post references; the per-reference tensor splits the
-   reference fan-out budget."
-  references: [ReferenceInput!]
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
+Creating content stages a batch: the minting record (Publish for
+a Post, Review for a Comment, Send for a Message, Owner for an
+Item) whose payload envelope carries the body fields and media
+digests, plus one Tag record per declared topic and one Reference
+record per citation — each its own priced act. The license
+declaration is mandatory in every content-creation flow
+([platform-guidelines.md](../instances/platform-guidelines.md)):
+authoring-time attribution and AI-origin declarations ride the
+envelope and drive the render obligations.
 
-"One attachment placement within a gallery."
+```graphql
+"One attachment placement within a gallery. Assets are uploaded
+ first via uploadMedia; the envelope commits their digests."
 input AttachmentInput {
   mediaId: UUID!
   displayOrder: Int!
   isCover: Boolean
 }
 
-"A reference from authored content to another node, carrying its
- share of the fan-out budget."
-input ReferenceInput {
-  target: UUID!
-  dim1: Dimension!
-  dim2: Dimension!
+"A topic declaration — one Tag record toward the canonical Type
+ (names are normalized by the naming service; a new name needs no
+ creation act, Types anchor vacuously — hashtag.md). Parameters
+ default per the low-defaults policy; Tag confidence is
+ census-bounded to [0, 1]."
+input TagInput {
+  name: String!
+  pDirected: Dimension
+  pInterest: Dimension
 }
 
-"Append a new layer to any subset of a Post's authored fields; a
- supplied gallery replaces the current arrangement (the assets stay
- append-only). Omitted fields are untouched; there is no overwrite."
-input EditPostInput {
+"A citation — one Reference record from the authored artifact to
+ the target. A mention is a Reference targeting the person's
+ Profile."
+input ReferenceInput {
+  target: UUID!
+  pDirected: Dimension!
+  pInterest: Dimension!
+}
+
+"The mandatory authoring-time declaration (platform-guidelines.md):
+ whether attribution is required on reuse surfaces, and the
+ AI-origin degree driving the AI badge and provenance obligations."
+input LicenseInput {
+  attributionRequired: Boolean!
+  aiOrigin: Float!
+}
+
+"Author a Post — stages the Publish plus the Tag and Reference
+ records. Body fields are plain strings — moderation status is
+ server-assigned. Tags and references are explicit structured
+ inputs, never parsed from the body, so display content and graph
+ structure stay decoupled."
+input PreparePostInput {
+  title: String
+  description: String
+  content: String!
+  attachments: [AttachmentInput!]
+  tags: [TagInput!]
+  references: [ReferenceInput!]
+  license: LicenseInput!
+  "The Publish record's attachment parameter; defaults to the
+   low-defaults policy value (+0.1)."
+  pDirected: Dimension
+  "Act as this Collective (see conventions)."
+  actAs: UUID
+}
+
+"Edit a Post — stages one (0,0) + payload update record carrying
+ the new values for the supplied fields; omitted fields are
+ untouched (newest-wins fold per field). A supplied gallery is the
+ full intended arrangement. Only the eligible author's edit is
+ prepared. New tags or citations are their own gestures, not edit
+ fields."
+input PreparePostEditInput {
   id: UUID!
   title: String
   description: String
   content: String
   attachments: [AttachmentInput!]
-  tags: [String!]
-  references: [ReferenceInput!]
 }
 
-type CreatePostPayload { post: Post! }
-type EditPostPayload { post: Post! }
-
-input CreateCommentInput {
+"Author a Comment — stages the Review (targeting whatever it
+ responds to; the terminal leg mints the Comment) plus any Tag and
+ Reference records."
+input PrepareCommentInput {
   "The node the comment is on (a CommentTarget)."
   target: UUID!
   content: String!
   attachments: [AttachmentInput!]
-  "Hashtag names to tag (lowercase, no '#'); created implicitly if new."
-  tags: [String!]
+  tags: [TagInput!]
   references: [ReferenceInput!]
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  license: LicenseInput!
+  pDirected: Dimension
+  pInterest: Dimension
   actAs: UUID
 }
-input EditCommentInput {
+
+input PrepareCommentEditInput {
   id: UUID!
   content: String
   attachments: [AttachmentInput!]
-  tags: [String!]
-  references: [ReferenceInput!]
 }
-type CreateCommentPayload { comment: Comment! }
-type EditCommentPayload { comment: Comment! }
 
-"Open a Chat. The acting identity becomes its founding member in the
- same gesture; the founder seat needs no approval."
-input CreateChatInput {
+"Update the acting identity's profile — stages a parallel
+ Registration: L1's own profile-update idiom, payload only, never
+ identity (substrate.md §9). Covers the display fields and the
+ witnessed payout address (a Liquid address — ledger.md). Omitted
+ fields are untouched. For a Collective's profile, actAs routes
+ through its governed edit flow. The handle is L2 account state,
+ not profile payload — see changeHandle."
+input PrepareProfileUpdateInput {
+  displayName: String
+  bio: String
+  avatarMediaId: UUID
+  coverMediaId: UUID
+  websiteUrl: String
+  payoutAddress: String
+  actAs: UUID
+}
+
+"Upload a single media asset. A pure L2 operation — the binary
+ rides the GraphQL multipart request as an Upload; the asset's
+ digest enters payload envelopes at prepare time. Layout hints the
+ server cannot infer (alt text) are supplied, the rest (aspect
+ ratio, duration) are derived."
+input UploadMediaInput {
+  file: Upload!
+  altText: String
+  "Act as this Collective; null = the viewer is the asset's author."
+  actAs: UUID
+}
+type UploadMediaPayload { media: MediaAttachment! }
+
+extend type Mutation {
+  preparePost(input: PreparePostInput!): PreparePayload!
+  preparePostEdit(input: PreparePostEditInput!): PreparePayload!
+  prepareComment(input: PrepareCommentInput!): PreparePayload!
+  prepareCommentEdit(input: PrepareCommentEditInput!): PreparePayload!
+  prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
+  uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
+}
+```
+
+A media gallery on a create/edit input is the **full intended
+gallery** for that write: the new current arrangement, referencing
+assets already uploaded via `uploadMedia`. The envelope commits
+the digests; the bytes stay in CoGra carriage, verifiable against
+them ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
+Messages have no edit surface: Message bodies are not among the
+declared updatable values
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+
+### Chats
+
+The L1 flow ([chats.md](../instances/chats.md)): the founder's own
+Participant mints the Chat; Join Request and Invitation are
+proposals, never participation; membership materializes only from
+the invitee's **own** Participant; Leave is unilateral and
+unconditional. A kick is a passed `decision:disavow_member`
+proposal followed by the executing chat authority's De-invite
+citing the anchor — the fold recognizes only proposal-backed
+De-invites.
+
+```graphql
+"Found a Chat — stages the founding Participant; the payload
+ carries name, description, image digests, and the governance map."
+input PrepareChatInput {
   name: String
   description: String
   imageMediaId: UUID
-  "The social contract; defaults to the standard chat governance if
-   omitted."
+  "The governance map; defaults to the reference chat contract
+   (chats.md §5) if omitted."
   governance: GovernanceInput
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
 }
-type CreateChatPayload {
-  chat: Chat!
-  "The founder's own membership, already ACTIVE."
-  membership: ChatMember!
-}
 
-"Post a message to a chat the acting identity actively belongs to.
- For an encrypted message, `content` is the ciphertext and `epoch`
- names the key it is under; for plaintext, `epoch` is null."
-input CreateChatMessageInput {
+"Post a message — stages the Send (the terminal leg mints the
+ Message). For an encrypted message, `content` is the ciphertext
+ and `epoch` names the chat-key epoch it is under; for plaintext,
+ `epoch` is null. Membership is CoGra's read-side fold policy —
+ prepare enforces it as L2 policy."
+input PrepareChatMessageInput {
   chat: UUID!
   content: String!
   contentPrivacy: ContentPrivacy!
   epoch: Int
   attachments: [AttachmentInput!]
   references: [ReferenceInput!]
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
-input EditChatMessageInput {
-  id: UUID!
-  content: String
-  contentPrivacy: ContentPrivacy
-  epoch: Int
-  attachments: [AttachmentInput!]
-}
-type CreateChatMessagePayload { message: ChatMessage! }
-type EditChatMessagePayload { message: ChatMessage! }
-
-input CreateItemInput {
-  name: String!
-  description: String
-  attachments: [AttachmentInput!]
-  tags: [String!]
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
-input EditItemInput {
-  id: UUID!
-  name: String
-  description: String
-  attachments: [AttachmentInput!]
-  tags: [String!]
-}
-type CreateItemPayload {
-  item: Item!
-  "The author's initial ownership, already ACTIVE."
-  ownership: ItemOwnership!
-}
-type EditItemPayload { item: Item! }
-
-"Append a new layer to the viewer's own profile. Self only — the
- viewer is the User edited, so there is no id. Omitted fields are
- untouched; for the optional text fields a blank value clears them. A
- handle change is subject to the global handle-uniqueness constraint.
- Bounds: `displayName` 1–50 characters, `bio` ≤300, `websiteUrl` ≤200
- and an `http`/`https` URL — the scheme allowlist keeps a `javascript:`
- value off a rendered profile link."
-input EditProfileInput {
-  handle: String
-  displayName: String
-  bio: String
-  avatarMediaId: UUID
-  coverMediaId: UUID
-  websiteUrl: String
-}
-type EditProfilePayload { user: User! }
-
-"Upload a single media asset. The binary rides the GraphQL multipart
- request as an Upload; layout hints the server cannot infer (alt
- text) are supplied, the rest (aspect ratio, duration) are derived."
-input UploadMediaInput {
-  file: Upload!
-  altText: String
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture — the asset's author."
-  actAs: UUID
-}
-type UploadMediaPayload { media: MediaAttachment! }
-```
-
-A media gallery on a create/edit input is the **full intended
-gallery** for that write: the new current arrangement, given as
-`AttachmentInput` placements that reference assets already uploaded
-via `uploadMedia`. Gallery arrangement is a named append-only
-carve-out ([layers.md §5](../primitive/layers.md#5-deletion-policy)) —
-an edit replaces the junction rows that order the gallery, while the
-assets themselves stay append-only (redaction tombstones them in
-place, never deletes). `Upload` is the standard GraphQL
-multipart-request scalar — the one place the API ingests a binary
-rather than JSON.
-
-The valid `references` targets are per-source. A ChatMessage may
-reference any node — including a Hashtag, its only path to one,
-since ChatMessage has no `:TAGGING` edge type. A Post or Comment
-`references` entry naming a Hashtag is rejected: `:TAGGING`
-already owns that pair, and a (source, target) pair carries one
-structural edge
-([edges.md §2 "Reference"](../primitive/edges.md));
-tags go through the `tags` input.
-
-### Voting
-
-```graphql
-"A vote on a Proposal. No voter argument — the acting identity is the
- voter, and the service resolves whether the vote is the voter's
- direct actor edge (Network scope) or their eligible junction's
- structural edge (chat/collective scope). `as` names the voting
- junction explicitly when the voter holds more than one eligible
- junction."
-input CastVoteInput {
-  proposal: UUID!
-  dim1: Dimension!
-  "Shape A only — the importance / personal-stake dimension of the
-   voter's actor edge; null defaults to 0. On a Shape B vote the
-   structural edge's dim2 is canon-fixed at 0 (edges.md §2): null or
-   0 is accepted, anything else is a validation error."
-  dim2: Dimension
-  "The junction to vote from, when the voter has several eligible
-   ones; defaults to the unique eligible junction."
-  as: UUID
-  "Act as this Collective (see conventions); null = the viewer votes.
-   Coexists with `as`: actAs names who votes, `as` names which of
-   their junctions carries the vote."
+  license: LicenseInput!
   actAs: UUID
 }
 
-type CastVotePayload {
-  "The vote edge's new top layer."
-  vote: Edge!
-  "The Proposal's tally and status, recomputed after the vote."
-  proposal: Proposal!
-}
-```
-
-### Chat membership and lifecycle
-
-```graphql
-input JoinChatInput {
+"Join a Chat — stages the actor's own Participant. Prepared
+ directly for openly-admitting chats; for gated chats only when
+ backed by an approved Join Request or a standing Invitation, per
+ the chat's recognized-membership policy."
+input PrepareChatJoinInput {
   chat: UUID!
-  "Requested role; defaults to the chat's member role."
-  role: String
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
 }
-type JoinChatPayload {
-  membership: ChatMember!
-  "The admission Proposal when approval is required; null on an open
-   (threshold-0) join that is already ACTIVE."
-  admission: Proposal
+
+"Ask to join — stages a Join Request (a proposal, never
+ participation; ignoring one requires no graph action)."
+input PrepareChatJoinRequestInput {
+  chat: UUID!
+  "Optional message, carried as payload."
+  message: String
+  actAs: UUID
 }
 
-input InviteChatMemberInput {
+"Invite someone — stages an Invitation (Actor → Chat → invitee's
+ Profile): a public, priced vouch that the invitee fits. The
+ invitee joins by their own Participant. Census-bounded relevance
+ parameter; the message rides the payload."
+input PrepareChatInvitationInput {
   chat: UUID!
   invitee: UUID!
-  role: String
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  message: String
+  pDirected: Dimension
+  pInterest: Dimension
   actAs: UUID
-}
-type InviteChatMemberPayload {
-  "The PENDING membership awaiting the invitee's self-claim."
-  membership: ChatMember!
-  admission: Proposal!
 }
 
-input LeaveChatInput {
-  "The membership to leave. Its :BEARER pins who leaves — the viewer's
-   own membership, or one borne by a Collective the viewer may act
-   for; the junction id disambiguates, so there is no actAs."
-  membership: UUID!
-}
-type LeaveChatPayload {
-  membership: ChatMember!
-}
-
-input ChangeChatMemberRoleInput {
-  membership: UUID!
-  role: String!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
-input RemoveChatMemberInput {
-  membership: UUID!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
-input DisavowChatMessageInput {
-  message: UUID!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
-input RotateChatKeyInput {
+"Leave — stages the unilateral Leave record. A rage-quit is Leave
+ plus a separate negative stance; sentiment never rides control
+ records."
+input PrepareChatLeaveInput {
   chat: UUID!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
 }
 
-"Accept an invitation to a chat — the invitee's self-claim, cast as
- their vote on the admission Proposal."
-input AcceptChatInviteInput {
-  membership: UUID!
-}
-type AcceptChatInvitePayload {
-  membership: ChatMember!
-  admission: Proposal!
+"Execute a passed kick — stages the De-invite (Actor → Chat →
+ member's Profile) with the authorizing proposal's anchor cited in
+ the payload. Prepared only for the chat authority the per-chat
+ contract designates, and only against a passed
+ decision:disavow_member proposal; the membership fold ignores
+ anything else (a freelance De-invite merely revokes the author's
+ own prior Invitation vouch)."
+input PrepareDeInviteInput {
+  chat: UUID!
+  member: UUID!
+  "The authorizing proposal."
+  proposal: UUID!
+  actAs: UUID
 }
 
-"Change a Chat's profile — exactly one of name / description /
- imageMediaId. Each profile field is a simple single-property Proposal
- judged by its own `decision:set:*` gate
- ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions),
- [proposal.md §2](../instances/proposal.md#composite-proposals));
- supplying more than one field is a validation error — there is no
- multi-field bundle."
-input EditChatProfileInput {
+"Edit chat metadata — stages the (0,0) + payload update record for
+ the supplied fields. Update authority is a per-chat governed
+ property (admin-only vs every-member; optionally proposal-gated —
+ then this prepare is refused toward prepareProposal)."
+input PrepareChatMetadataEditInput {
   chat: UUID!
   name: String
   description: String
   imageMediaId: UUID
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
+}
+
+extend type Mutation {
+  prepareChat(input: PrepareChatInput!): PreparePayload!
+  prepareChatMessage(input: PrepareChatMessageInput!): PreparePayload!
+  prepareChatJoin(input: PrepareChatJoinInput!): PreparePayload!
+  prepareChatJoinRequest(input: PrepareChatJoinRequestInput!): PreparePayload!
+  prepareChatInvitation(input: PrepareChatInvitationInput!): PreparePayload!
+  prepareChatLeave(input: PrepareChatLeaveInput!): PreparePayload!
+  prepareDeInvite(input: PrepareDeInviteInput!): PreparePayload!
+  prepareChatMetadataEdit(input: PrepareChatMetadataEditInput!): PreparePayload!
 }
 ```
 
+Key epochs need no mutation: rotation is automatic on every
+membership transition (derived from public records), and the one
+governance-routed rotation — mid-epoch, e.g. after a device
+compromise — is a `decision:rotate_key` proposal through
+`prepareProposal`; on pass, members re-run the key update
+off-graph ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+Role changes, message disavowal, and every other chat decision
+ride the same proposal machinery under the chat's governance map.
+
 ### Collectives
 
+Founding is a device-side ceremony: the creator's device generates
+the Collective's key and L0 address (custody starts creator-held —
+[collectives.md §2](../instances/collectives.md#2-custody)), the
+θ-debits are treasury-funded, and the prepare stages the batch —
+the Collective's Registration (profile + social contract payload,
+signed with the new collective key on the creator's device) and
+the founder ↔ collective mutual Opinion pair (stance fabric, not
+CoGra-join). Membership is the public payload fold
+([collectives.md §5](../instances/collectives.md#5-membership--a-public-fold)):
+member-side payload-marked `(0,0)` Opinions (join/leave) paired
+with collective-side decision-backed recognition records; roles,
+stakes, and weight overrides ride the collective-side payloads.
+
 ```graphql
-"Create a Collective with its social contract; the acting identity
- becomes the founding member (a Collective founding a sub-Collective
- acts through actAs)."
-input CreateCollectiveInput {
+"Found a Collective — stages its Registration and the founder ↔
+ collective connectivity pair. The handle is reserved in the L2
+ namespace at prepare."
+input PrepareCollectiveInput {
   handle: String!
   displayName: String!
   description: String
   avatarMediaId: UUID
   websiteUrl: String
+  "The social contract, carried in the Registration payload."
   governance: GovernanceInput!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  "A Collective founding a sub-Collective acts through actAs."
   actAs: UUID
 }
-type CreateCollectivePayload {
-  collective: Collective!
-  membership: CollectiveMember!
-}
 
-input JoinCollectiveInput {
+"Declare joining — stages the member-side payload-marked (0,0)
+ Opinion toward the Collective's Profile. Membership stands only
+ once the collective-side recognition agrees."
+input PrepareCollectiveJoinInput {
   collective: UUID!
-  role: String
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
 }
-type JoinCollectivePayload {
-  membership: CollectiveMember!
-  admission: Proposal
-}
 
-input InviteCollectiveMemberInput {
+"Declare leaving — the member-side leave payload; unilateral, the
+ fold reads the newest member-side record."
+input PrepareCollectiveLeaveInput {
   collective: UUID!
-  invitee: UUID!
-  role: String
-  "Ownership stake, where the role implies one."
-  ownershipPct: Float
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
   actAs: UUID
 }
-type InviteCollectiveMemberPayload {
-  membership: CollectiveMember!
-  admission: Proposal!
-}
 
-input LeaveCollectiveInput {
-  "The membership to leave. Its :BEARER pins who leaves — the viewer's
-   own membership, or one borne by a Collective the viewer may act
-   for; the junction id disambiguates, so there is no actAs."
-  membership: UUID!
-}
-type LeaveCollectivePayload {
-  membership: CollectiveMember!
-}
-
-input ChangeCollectiveMemberRoleInput {
-  membership: UUID!
-  role: String
+"The collective-side half of the membership fold — stages the
+ decision-backed acceptance or revocation payload toward the
+ member's Profile, carrying roles, ownership stake, and weight
+ override where the contract defines them. actAs is the Collective
+ (a governance-act: default deny, and backed by a passed decision
+ where the contract requires one)."
+input PrepareCollectiveRecognitionInput {
+  "The Collective acting (via actAs semantics — required here)."
+  actAs: UUID!
+  member: UUID!
+  action: RecognitionAction!
+  roles: [String!]
   ownershipPct: Float
   votingWeight: Float
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
+  "The authorizing decision's proposal, where the contract
+   requires one."
+  proposal: UUID
 }
-input RemoveCollectiveMemberInput {
-  membership: UUID!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
-}
+enum RecognitionAction { ACCEPT REVOKE }
 
-"Accept an invitation to a collective — the invitee's self-claim, cast
- as their vote on the admission Proposal."
-input AcceptCollectiveInviteInput {
-  membership: UUID!
+extend type Mutation {
+  prepareCollective(input: PrepareCollectiveInput!): PreparePayload!
+  prepareCollectiveJoin(input: PrepareCollectiveJoinInput!): PreparePayload!
+  prepareCollectiveLeave(input: PrepareCollectiveLeaveInput!): PreparePayload!
+  prepareCollectiveRecognition(input: PrepareCollectiveRecognitionInput!): PreparePayload!
 }
-type AcceptCollectiveInvitePayload {
-  membership: CollectiveMember!
-  admission: Proposal!
-}
+```
 
-"Change a Collective's profile — exactly one of displayName /
- description / avatarMediaId / websiteUrl. Each profile field is a
- simple single-property Proposal judged by its own `decision:set:*`
- gate ([collectives.md §8](../instances/collectives.md#simple-and-composite-actions));
- supplying more than one field is a validation error — there is no
- multi-field bundle."
-input EditCollectiveProfileInput {
-  collective: UUID!
-  displayName: String
+Profile and contract changes route through the shared machinery:
+`prepareProfileUpdate` with `actAs` for display fields (the
+governed edit flow), `prepareProposal` for `decision:set:*` and
+rule amendments under the contract's own amend gates. Collectives
+are never invited to CoGra and have no inviter
+([economics.md §7.3](../primitive/economics.md#73-the-inviter-reward)).
+
+### Items and the marketplace
+
+L1's settlement machinery, adopted wholesale
+([items.md](../instances/items.md)): the genesis Owner mints the
+Item; transfer is the Bid → Accept → Ratify thread (the Bid mints
+the Offer node; Withdraw / Rescind cancel); title is `owner^(k)`,
+consumed read-only — it moves at the epoch certificate, never at
+the Ratify. Money is the one CoGra-side piece: the price is a term
+on the Bid payload, and payment settles rail-side through a
+buyer + platform script escrow released against the epoch
+certificate in which the settlement is recognized
+([ledger.md](ledger.md)).
+
+```graphql
+"List a good — stages the genesis Owner (mints the Item; payload
+ carries the display fields and digests). Attachment parameter
+ defaults to the low-defaults policy value."
+input PrepareItemInput {
+  name: String!
   description: String
-  avatarMediaId: UUID
-  websiteUrl: String
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  attachments: [AttachmentInput!]
+  tags: [TagInput!]
+  license: LicenseInput!
+  pDirected: Dimension
   actAs: UUID
 }
 
-"Amend one rule of a node's social contract, addressed by its action
- key. The rule's own amend gate judges the change."
-input AmendGovernanceRuleInput {
-  "The Collective or Chat whose governance is amended."
-  node: UUID!
-  actionKey: String!
-  rule: GovernanceRuleInput!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
+"Edit an Item — stages the (0,0) + payload update record. The
+ eligible author is the current certified owner (owner^(k) as of
+ the record's landing epoch); a superseded owner's edit is never
+ prepared."
+input PrepareItemEditInput {
+  id: UUID!
+  name: String
+  description: String
+  attachments: [AttachmentInput!]
 }
-```
 
-The social-contract inputs (`GovernanceInput`, `GovernanceRuleInput`)
-mirror the read-side `Governance` types and are defined under
-[Governance inputs](#governance-inputs) below.
-
-### Items
-
-```graphql
-"Initiate an ownership transfer. Owner-first (the acting identity is
- the current owner offering to `counterparty`) and acquirer-first (the
- acting identity requests ownership from the current owner) are the
- same gesture; the service reads the direction from the acting
- identity's relation to the item. Approval is the counterparty's
- castVote on the returned Proposal."
-input TransferItemInput {
+"Bid on an Item — stages the Bid (mints the Offer). The price is a
+ payload term in CGT, a number the records pin and the rail
+ settles — never money on the graph. Census-bounded urgency
+ parameter."
+input PrepareBidInput {
   item: UUID!
-  counterparty: UUID!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
+  "CGT amount, rail-precision string."
+  price: String!
+  pDirected: Dimension
+  pInterest: Dimension
   actAs: UUID
 }
-type TransferItemPayload {
-  "The PENDING next ownership."
-  ownership: ItemOwnership!
-  transfer: Proposal!
+
+"Accept a Bid (seller → buyer, settles-pointer to it). Not binding
+ alone — the buyer's Ratify commits."
+input PrepareAcceptInput {
+  offer: UUID!
+  actAs: UUID
+}
+
+"Ratify (buyer → seller) — the commit. Title moves at the epoch
+ certificate; the escrowed payment releases against that same
+ certificate."
+input PrepareRatifyInput {
+  offer: UUID!
+  actAs: UUID
+}
+
+"Withdraw a Bid (buyer cancel) — a control record."
+input PrepareWithdrawInput {
+  offer: UUID!
+  actAs: UUID
+}
+
+"Rescind an Accept before the commit (seller cancel) — a control
+ record."
+input PrepareRescindInput {
+  offer: UUID!
+  actAs: UUID
+}
+
+extend type Mutation {
+  prepareItem(input: PrepareItemInput!): PreparePayload!
+  prepareItemEdit(input: PrepareItemEditInput!): PreparePayload!
+  prepareBid(input: PrepareBidInput!): PreparePayload!
+  prepareAccept(input: PrepareAcceptInput!): PreparePayload!
+  prepareRatify(input: PrepareRatifyInput!): PreparePayload!
+  prepareWithdraw(input: PrepareWithdrawInput!): PreparePayload!
+  prepareRescind(input: PrepareRescindInput!): PreparePayload!
 }
 ```
 
-### Network-scope governance
+For a Collective, settlement signatures (Accept / Ratify) are
+governance-acts: default deny, routed through the contract
+(`decision:transfer:Item`) so the cascade performs the gesture
+only after the internal vote passes.
+
+### Governance and moderation
+
+Every governance gesture is the anchor pattern (see the Proposal
+type): these prepares stage the anchor batch; ballots are their
+own gesture. Reporting **is** proposing — a report stages a
+moderation proposal whose anchor payload carries the reporter's
+justification and whose `(0,0)` Reference names the subject; there
+is no separate reports store
+([moderation.md](../instances/moderation.md)). Verdict
+materialization (The Moderator's Tag), role materialization (The
+Publisher's Tag), and finalization are the system actors' own
+records, never client mutations.
 
 ```graphql
-"Propose a moderation classification on content. `field` names the
- per-field status to move, or 'node' for a whole-node classification;
- `status` is the target state. NORMAL un-classifies a SENSITIVE field
- only — REDACTED ('illegal') is terminal, so a NORMAL proposal
- against a redacted field is rejected
- ([moderation.md §4](../instances/moderation.md#4-eligibility-weights-thresholds)).
- A Proposal is itself a valid target for exactly one field — its
- proposedValue."
-input ClassifyContentInput {
-  target: UUID!
-  field: String!
-  status: ModerationStatus!
+"The generic proposal — stages the Content anchor (terms payload)
+ and the (0,0) Reference to the subject. The scope and its rules
+ follow from the subject and actionKey (Network / chat /
+ collective); the anchor's landing epoch is the rule-snapshot
+ ruler. Follow with prepareBallot for the author's explicit +1."
+input PrepareProposalInput {
+  "The proposal's subject node."
+  subject: UUID!
+  "The governance instance — \"decision:<operation>[:<role>]\" per
+   the scope's contract."
+  actionKey: String!
+  proposedValue: String!
+  "Shape discriminator — \"scalar:*\", \"rule\", or
+   \"composite:<action_key>\" (proposal.md)."
+  valueKind: String!
+  actAs: UUID
 }
 
-input ProposeModeratorRoleChangeInput {
+"A ballot — stages the payload-marked ballot Opinion toward the
+ proposal's anchor: public, permanent, priced, epoch-quantized.
+ Recasting is a new ballot record; the tally reads each author's
+ newest. Accepted only while the proposal is OPEN as of the
+ current tally fold."
+input PrepareBallotInput {
+  proposal: UUID!
+  "The stance: POSITIVE or NEGATIVE (ZERO is not a ballot)."
+  direction: Sign!
+  actAs: UUID
+}
+
+"Report content — a moderation-classification proposal.
+ SENSITIVE and ILLEGAL classify; NORMAL is valid only against a
+ standing SENSITIVE classification — an illegal redaction is
+ terminal (moderation.md). The justification rides the anchor
+ payload."
+input PrepareReportInput {
+  target: UUID!
+  status: ModerationStatus!
+  justification: String!
+}
+
+"Propose a network-role change (moderator promotion / demotion) —
+ a Network-scope proposal; on pass The Publisher materializes the
+ role Tag."
+input PrepareModeratorRoleChangeInput {
   user: UUID!
   role: NetworkRole!
 }
 
-"Amend one Network configuration property. `value` is serialized per
- the property's type."
-input AmendNetworkParameterInput {
+"Amend one governed network parameter — a Network-scope proposal
+ targeting the charter schedule; the catalog and buckets are
+ network.md's. On pass the finalization payload extends the
+ schedule and the operational carrier follows."
+input PrepareParameterChangeInput {
+  "The catalog key (network.md)."
   parameter: String!
+  "The value, serialized per the parameter's kind."
   value: String!
 }
 
-"Bump the platform guidelines to a new version and content hash."
-input AmendGuidelinesInput {
+"Bump the platform guidelines to a new version and content hash —
+ a Network-scope proposal (platform-guidelines.md)."
+input PrepareGuidelinesChangeInput {
   version: Int!
   "SHA-256 of the canonical guidelines document (64 hex chars)."
   hash: String!
 }
 
-"The generic proposal — a change to any targetable property. Shape
- discriminated by valueKind, exactly as the Proposal read type."
-input ProposeChangeInput {
-  target: UUID!
-  targetProperty: String!
-  valueKind: String!
-  proposedValue: String!
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture."
-  actAs: UUID
+extend type Mutation {
+  prepareProposal(input: PrepareProposalInput!): PreparePayload!
+  prepareBallot(input: PrepareBallotInput!): PreparePayload!
+  prepareReport(input: PrepareReportInput!): PreparePayload!
+  prepareModeratorRoleChange(input: PrepareModeratorRoleChangeInput!): PreparePayload!
+  prepareParameterChange(input: PrepareParameterChangeInput!): PreparePayload!
+  prepareGuidelinesChange(input: PrepareGuidelinesChangeInput!): PreparePayload!
 }
 ```
 
-### Economics
+### Campaigns
 
-Only the carrier-node gestures are GraphQL mutations; money moves
-on-chain and is never written through this API. Minting, burning,
-deposits, transfers, payout claims, and auto-settlement are on-chain
-or scheduled operations — their graph traces (`:TRANSFERS`,
-`:ENTITLES`, `:CLAIMS`, `:PAYS_TO`) are system-written, never set by
-a client mutation ([ledger.md](ledger.md)).
+The advertiser's gestures around the campaign anchor
+([economics.md §3](../primitive/economics.md#3-the-campaign-record)).
+The deposit is escrowed on the rail **before** creation — the
+anchor payload carries the pointer, and amounts are read through
+it, never asserted. Anchors and target are immutable (they are the
+campaign's identity); a different targeting is a different
+campaign.
 
 ```graphql
-"Open a campaign. The deposit is already escrowed on-chain; `escrow`
- is the pointer, the amount is read from chain. `g` is fixed at
- open and the baseline hStart is h_anchor(target) at startTs;
- declaredGoal, endTs, and dustFloor remain tunable while OPEN."
-input CreateCampaignInput {
-  anchor: UUID!
-  "Must differ from anchor — anchor == target is degenerate
-   (h(self) is undefined) and rejected."
+"Open a campaign — stages the anchor Content (terms payload) and
+ its (0,0) References to each named anchor and the target."
+input PrepareCampaignInput {
+  "The named anchor set — passive nodes (Profiles, Types)."
+  anchors: [UUID!]!
   target: UUID!
+  "Rail-side escrow pointer; the deposit is already locked there."
   escrow: String!
-  "Strictly positive — the auto-settlement formula divides by it,
-   so declaredGoal ≤ 0 is rejected."
+  "Campaign window, epoch indices."
+  startEpoch: Int!
+  endEpoch: Int!
+  "Strictly positive — the auto-settlement formula divides by it."
   declaredGoal: Float!
-  "Defaults to the Network's distance_decay_base in force at
-   creation."
-  g: Float
-  startTs: DateTime!
-  endTs: DateTime!
-  dustFloor: Float
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture — the campaign's advertiser."
+  "χ_c ≥ χ; defaults to the network dust floor."
+  supportFloor: Float
+  "The advertiser; a Collective advertises through actAs."
   actAs: UUID
 }
-type CreateCampaignPayload { campaign: Campaign! }
 
-"Adjust an OPEN campaign's mutable knobs. Omitted fields are
- untouched; each supplied field appends a layer."
-input UpdateCampaignInput {
+"Adjust an OPEN campaign — stages the (0,0) Opinion whose payload
+ carries the changed terms (newest per term wins). Mutable:
+ endEpoch (free extension — the anti-bot lever), declaredGoal,
+ supportFloor, and the deposit — top-up only, via a fresh escrow
+ pointer; never lowered."
+input PrepareCampaignAdjustmentInput {
   campaign: UUID!
-  "Strictly positive, as at creation."
+  endEpoch: Int
   declaredGoal: Float
-  "Window extension — free and unlimited."
-  endTs: DateTime
-  dustFloor: Float
+  supportFloor: Float
+  "Escrow pointer covering the topped-up deposit."
+  escrowTopUp: String
 }
-type UpdateCampaignPayload { campaign: Campaign! }
 
-"Settle a campaign. The release is already executed on-chain by the
- holder of release authority; `release` is the pointer — the
- released pool P and the payout Merkle root are read from chain,
- never passed through this API. The per-wallet split is
- graph-computed, never advertiser-chosen. An earlier attribution
- snapshot may be named within the campaign window."
-input SettleCampaignInput {
+"Settle a campaign discretionarily — stages the advertiser's
+ settlement payload Opinion. The advertiser names the attribution
+ epoch t* within the window; the backend computes the split from
+ epoch t*'s public state (the payload pins settled_P,
+ achieved_gain, t*, the shares in force, and the Merkle root, so
+ anyone can recompute the tree). Auto-settlement needs no
+ mutation — The Publisher authors it when the condition fires.
+ The rail then pushes the payouts (ledger.md)."
+input PrepareSettlementInput {
   campaign: UUID!
-  release: String!
-  attributionSnapshotTs: DateTime
-}
-type SettleCampaignPayload {
-  campaign: Campaign!
-  settlement: Settlement!
+  "The attribution epoch, within the campaign window."
+  tStar: Int!
+  actAs: UUID
 }
 
-"The wallet's :PAYS_TO binding pins the acting account — the User it
- pays out, or a Collective the viewer is eligible to act for — so
- there is no actAs; the service runs the same eligibility check."
-input RelinkWalletInput {
-  wallet: UUID!
-  address: String!
+extend type Mutation {
+  prepareCampaign(input: PrepareCampaignInput!): PreparePayload!
+  prepareCampaignAdjustment(input: PrepareCampaignAdjustmentInput!): PreparePayload!
+  prepareSettlement(input: PrepareSettlementInput!): PreparePayload!
 }
-type RelinkWalletPayload { wallet: Wallet! }
 ```
 
 ### Auth and accounts
 
-The token mechanics (JWT access + rotating refresh, sessions,
-invitation registration) are specified in [auth.md](auth.md); this
-surface consumes them.
-
-Every invite link is minted by `createInviteLink` — except the
-**first**. An instance's first link is seeded by the bootstrap
+The flows are specified in [auth.md](auth.md); this surface
+consumes them. Every member arrives through the staged-applicant
+flow: a link stages, the inviter's approval is the priced act, the
+joiner's own signature grounds the actor
+([invitations.md §4](../primitive/invitations.md#4-invite-links-staged-applicants-explicit-approval)).
+The genesis member is seeded by the bootstrap around the L1
+genesis sequence and never passes through these mutations
 ([network.md §2](../primitive/network.md#2-creation),
-[architecture.md "Genesis bootstrap"](architecture.md#genesis-bootstrap)),
-since `createInviteLink` requires an authenticated issuer and no account
-exists before the genesis User. The first real user registers through
-that seeded link; from there every link comes through this surface.
+[architecture.md "Genesis bootstrap"](architecture.md#genesis-bootstrap))
+— which also seeds the instance's **first** invite link, since
+`createInviteLink` requires an authenticated issuer and no account
+exists before the genesis member.
+
+The applicant's device runs the key ceremony **before**
+submitting: it generates the signing key and L0 address locally
+(approval funds a burn to that address, so it must exist first)
+and offers the key-backup choice
+([auth.md "Account lifecycle"](auth.md#account-lifecycle)). The
+application submit returns an opaque **applicant token** the
+device stores; it authorizes exactly the applicant's own flow —
+polling status, and signing the staged Registration once approval
+lands. Landing (the Registration confirming in the mirror) creates
+the actor and credentials rows and issues the first session.
+Reciprocation — the joiner's own Opinion toward the inviter's
+Profile, completing the mutual pair — is an ordinary graph act
+after landing (`prepareStance`), prompted at first login; auth's
+involvement ends at landing.
 
 ```graphql
-"Register through an invite link. Verification writes both invitation
- edges ([invitations.md](../primitive/invitations.md)): inviter→invitee
- from the link's pre-committed tensor, invitee→inviter from dim1/dim2
- here."
-input RegisterInput {
+"Apply through an invite link. Creates the staged applicant row —
+ off-graph service state only: no account, no records, nothing on
+ the graph — and sends the verification email. The device-minted
+ actor identity (public key, L0 address) rides the submit."
+input SubmitApplicationInput {
   inviteLink: UUID!
   handle: String!
   email: String!
   password: String!
-  "The invitee's own outgoing edge toward the inviter — initially
-   their only outbound connection, so it shapes their entire first
-   feed. Null means an explicit skip: the (+0.5, +0.5) fallback."
-  dim1: Dimension
-  dim2: Dimension
+  "The device-generated actor public key (the key never leaves the
+   device; this is its public half)."
+  actorPubkey: String!
+  "The device-generated L0 address — the address approval funds."
+  l0Address: String!
 }
-
-"The pending registration's receipt; no User node or session exists yet
- (both arrive at verifyEmail). On refusal expiresAt is null and userErrors
- carries one of INVITE_UNUSABLE, HANDLE_TAKEN, WEAK_PASSWORD, or
- REGISTRATION_IN_PROGRESS."
-type RegisterPayload {
-  "When the pending registration expires unverified (24 h, auth.md)."
+"On refusal, userErrors carries one of INVITE_UNUSABLE,
+ HANDLE_TAKEN, WEAK_PASSWORD, or APPLICATION_IN_PROGRESS."
+type SubmitApplicationPayload {
+  "The device-stored token authorizing this applicant's flow."
+  applicantToken: String!
+  "When the application expires unverified (24 h, auth.md)."
   expiresAt: DateTime!
 }
 
-input VerifyEmailInput {
-  verificationToken: String!
-  deviceLabel: String
-}
+input VerifyApplicantEmailInput { verificationToken: String! }
+"ok is false with a VERIFICATION_TOKEN_INVALID userError when the
+ token is invalid or the application expired."
+type VerifyApplicantEmailPayload { ok: Boolean! }
 
 input ResendVerificationEmailInput { email: String! }
-"Always succeeds, to avoid revealing whether a pending registration
- exists."
+"Always succeeds, to avoid revealing whether an application exists."
 type ResendVerificationEmailPayload { ok: Boolean! }
+
+"The applicant's own view of their application — status, the
+ staged Registration once approval lands, and the first session
+ once landed."
+type ApplicationView {
+  applicant: Applicant!
+  "The staged Registration awaiting the device's signature; null
+   before approval and after landing."
+  stagedRegistration: PreparedWrite
+  "The first session — present exactly once, when the application
+   has landed and this view is first read after it."
+  auth: AuthSession
+}
+
+"Sign the staged Registration — the applicant-token twin of
+ submitRecords, since no session exists before landing."
+input SubmitApplicantRegistrationInput {
+  applicantToken: String!
+  signature: String!
+}
+type SubmitApplicantRegistrationPayload {
+  stagedWrite: StagedWrite!
+}
+
+"Approve staged applicants — the inviter's deliberate, priced act:
+ per applicant or in batch, with the pre-filled stance values
+ adjusted at will. Triggers the funding burn and the staged
+ Registration backend-side, and returns the inviter's own Opinion
+ records to sign — the vouch is the inviter's signature, not a
+ server write."
+input ApproveApplicantsInput {
+  approvals: [ApplicantApprovalInput!]!
+}
+input ApplicantApprovalInput {
+  applicant: UUID!
+  "The inviter's stance toward the joiner — pre-filled from the
+   link, committed here."
+  pDirected: Dimension!
+  pInterest: Dimension!
+}
 
 input LogInInput {
   email: String!
@@ -2511,19 +2726,14 @@ input RefreshSessionInput {
 }
 
 "A fresh access + refresh token pair, the issuing session, and the
- viewer it authenticates — the success result shared by verifyEmail,
- logIn, and refreshSession."
+ viewer it authenticates — the success result shared by logIn,
+ refreshSession, and landing."
 type AuthSession {
   accessToken: String!
   refreshToken: String!
   session: Session!
   user: User!
 }
-
-"First session from a verified registration; auth is null with a
- VERIFICATION_TOKEN_INVALID userError when the token is invalid or its
- pending registration expired."
-type VerifyEmailPayload { auth: AuthSession! }
 
 "A session from credentials; auth is null with an INVALID_CREDENTIALS
  userError when the email / password pair did not match."
@@ -2566,7 +2776,7 @@ type ChangePasswordPayload { ok: Boolean! }
 
 "Begin an email change. Re-authenticates with currentPassword; the
  server sends a confirmation code to the current address and a
- verification link to newEmail."
+ verification link to newEmail (the two-sided proof, auth.md)."
 input RequestEmailChangeInput {
   newEmail: String!
   currentPassword: String!
@@ -2583,16 +2793,33 @@ input ConfirmEmailChangeInput {
 }
 type ConfirmEmailChangePayload { user: User! }
 
+"Change the viewer's handle — L2 account state (the mention
+ namespace), not graph or profile payload. Subject to the global
+ handle rules: 3–30 chars of [a-z0-9_], case-folded, one namespace
+ across kinds; the charset keeps the redacted-user-{uuid} sentinel
+ unreachable (auth.md)."
+input ChangeHandleInput { handle: String! }
+type ChangeHandlePayload { user: User! }
+
+"Upload (or replace) the client-encrypted key-backup blob —
+ ciphertext under the device-generated recovery code; the server
+ stores what it cannot decrypt (auth.md \"Key recovery\").
+ Retrieval is the User.keyBackup field: login + code is the
+ recovery."
+input UploadKeyBackupInput { blob: String! }
+type UploadKeyBackupPayload { ok: Boolean! }
+
+"Issue a time-gated invite link — single-use or multi-use, the
+ issuer's choice — carrying the inviter's PRE-FILLED stance values
+ (a suggestion; the approval commits)."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
-  "Pre-committed tensor for the inviter→invitee edge on acceptance."
-  inviterDim1: Dimension!
-  inviterDim2: Dimension!
-  "Consumed by the first accepted registration when true; admits many
-   invitees otherwise. Defaults to multi-use."
+  prefillPDirected: Dimension!
+  prefillPInterest: Dimension!
+  "One applicant slot when true; many applicants otherwise.
+   Defaults to multi-use."
   singleUse: Boolean
-  "Act as this Collective (see conventions); null = the viewer's own
-   gesture — the link's issuer."
+  "Act as this Collective; null = the viewer issues."
   actAs: UUID
 }
 type CreateInviteLinkPayload {
@@ -2603,8 +2830,11 @@ type CreateInviteLinkPayload {
 input RevokeInviteLinkInput { inviteLink: UUID! }
 type RevokeInviteLinkPayload { inviteLink: InviteLink! }
 
-"Begin deletion. Identity-only by default; opt into content-level
- redaction with includeContent."
+"Begin account deletion (identity-only by default; opt into
+ content-level redaction with includeContent). What remains after
+ execution is the L1 husk: structural records, standing, and title
+ persist; identity association, display content, and payloads go
+ (account-deletion.md)."
 input RequestAccountDeletionInput {
   includeContent: Boolean
 }
@@ -2623,6 +2853,38 @@ input ConfirmAccountDeletionInput {
 type AccountDeletionPayload {
   scheduledFor: DateTime
   includesContent: Boolean!
+}
+
+extend type Query {
+  "The applicant's own application view, authorized by the
+   applicant token."
+  application(applicantToken: String!): ApplicationView
+}
+
+extend type Mutation {
+  submitApplication(input: SubmitApplicationInput!): SubmitApplicationPayload!
+  verifyApplicantEmail(input: VerifyApplicantEmailInput!): VerifyApplicantEmailPayload!
+  resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
+  submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
+  approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+  logIn(input: LogInInput!): LogInPayload!
+  refreshSession(input: RefreshSessionInput!): RefreshPayload!
+  "Revoke one session (the current one if no id is given)."
+  revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
+  "Revoke every session except the one making the request."
+  revokeOtherSessions: RevokeSessionsPayload!
+  requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
+  confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
+  changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
+  requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
+  confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
+  changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
+  uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
+  createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
+  revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
+  requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
+  confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+  cancelAccountDeletion: AccountDeletionPayload!
 }
 ```
 
@@ -2663,19 +2925,32 @@ input SetPreferencesInput {
   contentFilteringSeverityLevel: Int
 }
 type SetPreferencesPayload { preferences: UserPreferences! }
+
+extend type Mutation {
+  setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
+  removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+  hideActor(input: HideActorInput!): HideActorPayload!
+  unhideActor(input: UnhideActorInput!): UnhideActorPayload!
+  "Record that the viewer has seen nodes (the feed de-dup signal)."
+  markSeen(input: MarkSeenInput!): MarkSeenPayload!
+  "Advance the viewer's last-read pointer in a Chat."
+  markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!
+  setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
+}
 ```
 
-Bookmarks and hidden-actors have explicit `remove*` verbs because the
-"no destructive operation" rule is a *graph* invariant — private
-operational state carries no append-only history and no public
-visibility, so a remove is a genuine delete of a row, not a redaction.
+Bookmarks and hidden-actors have explicit `remove*` verbs because
+the "no destructive operation" rule is a *graph* invariant —
+private operational state carries no append-only history and no
+public visibility, so a remove is a genuine delete of a row, not a
+redaction.
 
 ### Governance inputs
 
 The write-side mirror of the `Governance` read types. A
 `GovernanceInput` is the full social contract supplied at
-`createChat` / `createCollective`; a single `GovernanceRuleInput`
-is the unit of `amendGovernanceRule`.
+`prepareChat` / `prepareCollective` (riding the founding payload);
+rule amendments travel as `rule`-kind proposal values.
 
 ```graphql
 input GovernanceInput {
