@@ -136,7 +136,7 @@ A **redaction tombstone** is just another version row: its
 `redaction_reason` is non-null, its content fields carry the
 visible marker, and the prior values move to the retention
 archive ([retention-archive.md](../primitive/retention-archive.md),
-[account-deletion.md](../instances/account-deletion.md)). The
+[erasure.md](../instances/erasure.md)). The
 tombstone's `created_at` is the removed-at instant. Per-field
 sensitive flags and the verdict vocabulary are operational
 metadata rows; the substrate-visible verdict is the Tag record
@@ -174,7 +174,7 @@ points at a parent — see "Why parents point at attachments" below.
 -- rebuild-from-records path. Used by the API to enforce that only
 -- the uploader's own parents can reference an asset (anti-hijack),
 -- and to find an actor's media when redacting their account (see
--- instances/account-deletion.md).
+-- instances/erasure.md).
 CREATE TABLE media_attachments (
     id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id   UUID         NOT NULL REFERENCES actors(id),
@@ -209,7 +209,7 @@ mention resolves to exactly one actor.
 -- bootstrap). handle is the mention/lookup name — account state,
 -- not display content, so it stays single-current (UNIQUE could
 -- not survive version rows). Account-deletion redacts a handle in
--- place to 'redacted-user-{uuid}' per account-deletion.md — the
+-- place to 'redacted-user-{uuid}' per erasure.md — the
 -- sanctioned in-place redaction, not an edit path.
 CREATE TABLE actors (
     id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -717,7 +717,7 @@ CREATE TABLE auth_email_changes (
 );
 
 -- Account deletions: the grace-period state per
--- account-deletion.md §4 — requested, cancellable from any
+-- erasure.md §5 — requested, cancellable from any
 -- logged-in session until scheduled_for, executed by the worker
 -- after it. include_content records the content-level opt-in
 -- (settable at request or confirmation).
@@ -879,7 +879,7 @@ rows exist only for user-kind actors is a service-layer fact
 (only a login mints them), not a constraint. Account deletion
 does **not** remove the `actors` row or its credentials — PII
 is redacted in place per
-[account-deletion.md §1](../instances/account-deletion.md#1-two-redaction-levels)
+[erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)
 — so `ON DELETE CASCADE` does not fire in any normal flow. The FK
 exists to prevent orphans from buggy code paths and to give an
 operator running an explicit `DELETE` (e.g. emergency cleanup) a
@@ -955,7 +955,7 @@ junction row is FK-enforced, supports per-relationship metadata
 without table churn, and makes "find all parents using
 attachment X" a normal indexed lookup (relevant for ownership
 tracing on account redaction — see
-[account-deletion.md](../instances/account-deletion.md)).
+[erasure.md](../instances/erasure.md)).
 
 **Anti-hijack** is enforced at the API layer: when a parent
 references an attachment, the API checks

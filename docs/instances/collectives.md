@@ -364,7 +364,7 @@ Internal disputes resolve by the contract, never on the thread.
   have existed: the membership record chains (§5) are permanent
   public history.
 - **Deletion is the husk**, same as any account
-  ([account-deletion.md](account-deletion.md)): identity
+  ([erasure.md](erasure.md)): identity
   association forgotten, Postgres tombstoned, payloads removed
   to the reduced projection; standing, title, and trust edges
   persist on L1.
@@ -407,7 +407,7 @@ nobody anything either way.
 - **Not the account model.** The Actor + Profile pair, identity
   association, and the husk live in
   [user.md](../primitive/user.md) and
-  [account-deletion.md](account-deletion.md).
+  [erasure.md](erasure.md).
 - **Not the settlement flow.** [items.md](items.md).
 - **Not the store schemas.** Mirror shapes and Postgres display
   rows live in

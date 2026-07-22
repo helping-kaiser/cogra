@@ -5,23 +5,27 @@ legal purposes. The retention archive is the platform's universal
 disposition for "redact from public view but retain for statutory
 obligations" cases.
 
-Both current authorization paths use it:
+All current authorization paths use it:
 
 - **Illegal-content cascades** ([moderation](../instances/moderation.md))
   may need to retain the original as evidence for prosecution, or
   may be required to destroy it (e.g., content illegal to possess
   at all). The hold value is set per case at redaction time.
-- **Account deletion** ([account-deletion](../instances/account-deletion.md))
-  retains identity and (opt-in) content originals. The hold value
-  reflects the applicable statutory retention period in the
-  jurisdiction the instance operates under — examples: ~10 years
-  for content tied to financial transactions in many tax regimes
-  (e.g., § 147 AO in Germany, IRS record-retention requirements
-  in the US, similar provisions elsewhere); often shorter for
-  ordinary PII under data-protection storage-minimization rules
-  (GDPR/DSGVO in the EU, comparable laws elsewhere). The
-  specific retention period is jurisdiction-dependent, not
-  pinned to any one country.
+- **Self-service erasure** ([erasure](../instances/erasure.md) —
+  per-content removal and account deletion) retains the removed
+  originals. The hold value follows the data class and the
+  applicable statutory retention period in the jurisdiction the
+  instance operates under — examples: ~10 years for content tied
+  to financial transactions in many tax regimes (e.g., § 147 AO
+  in Germany, IRS record-retention requirements in the US,
+  similar provisions elsewhere); often shorter for ordinary PII
+  under data-protection storage-minimization rules (GDPR/DSGVO
+  in the EU, comparable laws elsewhere). The specific retention
+  period is jurisdiction-dependent, not pinned to any one
+  country. For removed content the hold is **never zero at the
+  requester's option**: erasure hides content from public
+  surfaces, and the archive is what keeps a self-service removal
+  from doubling as evidence destruction.
 
 The archive's hard-delete-on-hold-expiry is the **only point in
 the system where content is genuinely removed** — the named
@@ -47,8 +51,8 @@ post body, a media attachment, etc.):
   prior row contents for Postgres-side ones — schema-on-read, so
   the archive does not migrate when source formats evolve.
 - `redaction_reason` records the trigger
-  (`'illegal-content-cascade'`, `'user-self-service'`,
-  `'court-order'`, etc.).
+  (`'illegal-content-cascade'`, `'user-content-removal'`,
+  `'user-account-deletion'`, `'court-order'`, etc.).
 - `redacted_by` identifies the initiator — the requesting User
   for self-service, the authorizing Proposal for moderation
   cascades.
@@ -84,12 +88,17 @@ Different content types and authorization paths set different
   hard-delete (`legal_hold_until = now()`) and reports to
   authorities. Until reviewed, the row sits with a placeholder
   hold awaiting `legal_admin` action.
-- **Account deletion.** Statutory retention for tax / economic
-  records (often ~10 years for content tied to financial
-  transactions, varies by jurisdiction); data-protection
-  storage minimization for ordinary PII (often a short or zero
-  hold, expirable on user request — GDPR/DSGVO and equivalents
-  elsewhere).
+- **Self-service erasure** (per-content removal and account
+  deletion). The hold follows the data class
+  ([erasure.md §4](../instances/erasure.md#4-retention-archive)):
+  removed **content records** are always retained under a hold —
+  statutory retention where the content is tied to economic
+  settlement (often ~10 years for financial records, varies by
+  jurisdiction), a bounded evidence-retention window otherwise —
+  and the requester cannot shorten it. **Ordinary identity PII**
+  gets data-protection storage minimization (often a short or
+  zero hold, expirable on user request — GDPR/DSGVO and
+  equivalents elsewhere).
 - **Court orders.** As ordered by the court.
 
 The archive table holds the original; whether and when it is
@@ -167,7 +176,7 @@ app), the graph and public Postgres surfaces never see it.
 - **Not the authorization paths.** Who decides to redact — and
   what hold value to set — runs through the relevant instance
   docs ([moderation](../instances/moderation.md),
-  [account-deletion](../instances/account-deletion.md)). Each
+  [erasure](../instances/erasure.md)). Each
   maintains its own scope and hold-rule conventions.
 - **Not the retention schedule.** "How long should X be held"
   comes from law, not from this doc; per-row hold values are
