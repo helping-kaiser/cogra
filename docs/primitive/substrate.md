@@ -215,8 +215,13 @@ in four steps:
    included, after a bounded number of epochs.
 
 **Custody exceptions:** the system actors (§8) sign in backend
-custody by design; Collectives do so as a stopgap
-([open-questions.md Q29](../open-questions.md)). Client-direct
+custody by design. A Collective's key is creator-held with
+per-member 2-of-2 co-signing — the backend holds half of each
+member's split and co-signs after checking the social contract,
+never a complete key
+([collectives.md §2](../instances/collectives.md#2-custody));
+full backend custody remains the implementation stopgap until
+the splits ship. Client-direct
 **transport** — the device submitting to L1 itself,
 mirror-independent — is a decentralized-phase roadmap item
 ([roadmap.md](../implementation/roadmap.md)); the signature side

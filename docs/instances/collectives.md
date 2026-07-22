@@ -69,20 +69,55 @@ act-as machinery (§4).
 
 ## 2. Custody
 
-The Collective's key lives in **backend custody** — members
-authenticate to CoGra, and the backend signs the Collective's
-records ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-What custody protects is graver here than in a rewritable
-system: a compromise means **signed L1 records** — permanent,
-publicly attributed acts of the Collective — not database rows
-anyone can fix.
+The Collective's key is **creator-held, with per-member
+co-signing** — the backend never holds a complete key. What
+custody protects is graver here than in a rewritable system: a
+compromise means **signed L1 records** — permanent, publicly
+attributed acts of the Collective — not database rows anyone
+can fix.
 
-**Custody is an open question, not a settled answer**
-([open-questions.md Q29](../open-questions.md#q29--key-custody-user-recovery-and-collective-member-held-keys)):
-backend custody is the stopgap, and the direction under design is
-member-held keys — creator-held at founding, shares distributed
-to act-as-eligible members, threshold signatures as the
-endpoint. Until that lands, custody discipline is the control.
+**The creator holds the full key.** Founding a Collective is
+taking custody of it: the key is generated on the creator's
+device, never enters CoGra custody, and rides the same recovery
+posture as a user key
+([auth.md "Key recovery"](../implementation/auth.md#key-recovery)).
+The creator can always act alone — and their key is the
+Collective's escape from a backend that stops cooperating.
+
+**Every other act-as-eligible member signs by 2-of-2
+co-signing.** At onboarding, the creator's device splits the key
+into two fresh random halves — one to the member's device, one
+to the backend — an independent split per member. The full key
+is never assembled anywhere: either half alone is noise, so
+neither the backend nor the member can sign by themselves.
+
+**The backend's half is the contract gate.** A member triggers a
+collective act with an instruction signed by their **own** user
+key — the client-signed authoring path applied to the trigger
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
+the backend contributes its half of the signature only after
+checking the instruction against the governance map (§6):
+action-key eligibility, and a passed decision where the contract
+requires one. No member can sign around the contract; the worst
+a hostile backend can do is refuse. The instruction is
+operational state, not graph state — on the shared graph the
+Collective's actor signs alone, per §4's
+no-per-record-attribution rule.
+
+**Membership change is share hygiene, not re-keying.** Removing
+a member is one deletion — the backend discards its half for
+that member, and the member's half is permanently useless. A
+lost member device costs nothing: the creator issues a fresh
+split. No event in the membership fold ever forces a key
+rotation.
+
+Two dependencies are open with the L1 team
+([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation)):
+the signature scheme L1 verifies (a Schnorr-family scheme makes
+the 2-of-2 a standard threshold-signing configuration), and
+actor key rotation — same actor, new key — without which a
+compromised creator key is unfixable. Until the splits ship,
+backend custody remains the implementation stopgap.
 
 ---
 

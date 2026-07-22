@@ -58,7 +58,8 @@ verifiable against the witness. The Memgraph mirror caches the
 structural record for traversal — it may lag L1, never diverge.
 
 A Collective authoring a Post is the same gesture performed by
-the Collective's own actor (keypair in backend custody). Whether
+the Collective's own actor (custody per
+[collectives.md §2](collectives.md#2-custody)). Whether
 and how member consent is required is the collective's
 social-contract governance, per
 [collectives.md](collectives.md).
