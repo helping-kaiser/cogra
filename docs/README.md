@@ -137,12 +137,12 @@ an `instances/` doc is a sign the mechanism belongs in
 - [roadmap](implementation/roadmap.md) — living sequencing plan:
   vertical slices from auth through economics, each hand-testable;
   open doc issues mapped to the slice that fixes them.
-- [architecture](implementation/architecture.md) — system design,
-  dual-database split, data flow.
-- [data-model](implementation/data-model.md) — Postgres schema for
-  display content (plus a few operational-metadata tables).
-- [graph-data-model](implementation/graph-data-model.md) — Memgraph
-  schema: node labels, edge labels, properties, indexes, constraints.
+- [architecture](implementation/architecture.md) — system design
+  around the L1 seam: external surfaces, stores, write and read
+  paths.
+- [data-model](implementation/data-model.md) — the Postgres schema:
+  display content, the L1 record mirror, overlay and operational
+  tables.
 - [development](implementation/development.md) — local setup,
   tools, workflows.
 - [api-spec](implementation/api-spec.md) — backend GraphQL spec:
@@ -156,8 +156,9 @@ an `instances/` doc is a sign the mechanism belongs in
   Jetpack Compose, Apollo Kotlin codegen off the exported
   `schema.graphql`, the `ranker` core via UniFFI, module and test
   layout.
-- [graph-db-options](implementation/graph-db-options.md) — why
-  Memgraph; alternatives considered.
+- [graph-db-options](implementation/graph-db-options.md) — why the
+  graph state lives in Postgres and no graph database is in the
+  stack; alternatives considered.
 - [ledger](implementation/ledger.md) — on-chain mechanics:
   self-custody onboarding, the claim distributor and escrow, the
   `Wallet` node, and where campaign data lives across the stores.

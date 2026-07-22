@@ -112,7 +112,7 @@ One account = one L0 address, self-custodied.
   ([network.md §9](network.md#9-mod-role-changes)).
 - Operational per-account state (moderation flags, service
   bookkeeping) per
-  [graph-data-model.md](../implementation/graph-data-model.md).
+  [data-model.md](../implementation/data-model.md).
 
 Cold start: a fresh account has standing `α = 0` — endorsement
 has nothing to amplify until real vouches arrive; the write rule
@@ -255,5 +255,4 @@ anonymized, not removed.
   in [edges.md](edges.md).
 - **Not the storage schema.** Concrete overlay properties,
   columns, and indexes live in
-  [graph-data-model.md](../implementation/graph-data-model.md) and
   [data-model.md](../implementation/data-model.md).

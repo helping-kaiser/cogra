@@ -406,8 +406,7 @@ nobody anything either way.
 - **Not the settlement flow.** [items.md](items.md).
 - **Not the store schemas.** Mirror shapes and Postgres display
   rows live in
-  [graph-data-model.md](../implementation/graph-data-model.md)
-  and [data-model.md](../implementation/data-model.md).
+  [data-model.md](../implementation/data-model.md).
 - **Not the auth path.** How a member's session authenticates a
   gesture that the Collective's key signs lives in
   [auth.md](../implementation/auth.md).

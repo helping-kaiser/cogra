@@ -144,8 +144,8 @@ vouch you through the gate.
 
 ## 6. The mirror and the overlay
 
-CoGra's Memgraph holds two kinds of state with two different
-truth relationships
+CoGra's own store holds two kinds of graph-shaped state with two
+different truth relationships
 ([substrate.md §3](substrate.md#3-cogras-stores)):
 
 - **The mirror** caches L1 records for traversal. It may lag the
@@ -155,12 +155,12 @@ truth relationships
   distrusting participant can audit CoGra's reads without CoGra's
   help.
 - **The overlay** is CoGra's own truth: Proposal machinery and
-  the `:Network` operational singleton. Overlay nodes carry **layered
-  properties** — the append-only history pattern, applied where
-  CoGra owns the store. Overlay state never enters any L1
+  the `:Network` operational singleton. Overlay state carries
+  **layered properties** — the append-only history pattern, applied
+  where CoGra owns the store. Overlay state never enters any L1
   quantity.
 
-One CoGra flow typically writes all three stores: the L1 gesture
+One CoGra flow typically writes all three kinds of state: the L1 gesture
 is submitted through the backend, the mirror converges on the
 accepted record, and the overlay and Postgres carry the flow's
 CoGra-side state
