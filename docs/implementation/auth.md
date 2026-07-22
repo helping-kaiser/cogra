@@ -173,9 +173,10 @@ backend then runs the admission sequence:
 3. **The inviter's Opinion** toward the new Profile — prepared
    for the inviter, signed on their device, relayed.
 4. **Landing** — when the Registration confirms in the mirror,
-   the `users` row is created (credentials moved across from the
-   applicant row), the identity association is recorded, the
-   first session is issued, and the applicant row is marked
+   the actor row and its login credentials are created (moved
+   across from the applicant row; the identity association is
+   columns on the actor row — [data-model.md](data-model.md)),
+   the first session is issued, and the applicant row is marked
    landed.
 
 The flow tolerates latency at every step — an approval the
@@ -255,15 +256,18 @@ pinned to the offending field (`handle` / `email`).
 
 - **Handle.** 3–30 characters, `[a-z0-9_]` (lowercase letters,
   digits, underscore). The handle is **case-folded to lowercase**
-  on registration: `users.username` is UNIQUE case-sensitively in
-  Postgres, but mentions and search resolve handles
-  case-insensitively, so folding is what keeps `@alice` a single
+  on registration: `actors.handle` is UNIQUE case-sensitively in
+  Postgres — one namespace across users, Collectives, and system
+  actors, so a mention resolves to exactly one actor — but
+  mentions and search resolve handles case-insensitively, so
+  folding is what keeps `@alice` a single
   account rather than admitting a distinct `Alice`. The charset
   excludes `-`, which leaves the `redacted-user-{uuid}` redaction
   sentinel ([api-spec.md](api-spec.md)) unreachable by any real
   registration.
 - **Email.** Trimmed and **lowercased** to a canonical form used
-  for both the stored `users.email` and the login lookup, so the
+  for both the stored `user_credentials.email` and the login
+  lookup, so the
   case-sensitive UNIQUE constraint behaves case-insensitively. The
   shape check is lenient (one `@`, a non-empty local part, a
   dotted domain, ≤254 chars) — not full RFC 5322; the
@@ -439,9 +443,9 @@ standard floor for a community network and avoids the support
 burden of TOTP / WebAuthn / recovery-code mechanics during early
 operations.
 
-No schema reservation: the `users` table carries no MFA column today. When
-MFA lands, a normal column-add migration covers existing rows with `NULL`
-(the "not enrolled" state).
+No schema reservation: `user_credentials` carries no MFA column today.
+When MFA lands, a normal column-add migration covers existing rows with
+`NULL` (the "not enrolled" state).
 
 When MFA is added, the natural shape is **TOTP as the second factor with a
 WebAuthn upgrade path**, plus single-use recovery codes (stored hashed)
