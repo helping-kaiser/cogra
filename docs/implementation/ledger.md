@@ -42,10 +42,12 @@ no "you must have a wallet to earn" gate.
 
 - **CoGra never holds any part of the key.** No MPC shards, no custodial
   key-shard provider — that custody model is the thing being ruled out.
+  The client-encrypted backup blob auth stores is not custody — CoGra
+  cannot decrypt it ([auth.md "Key recovery"](auth.md#key-recovery)).
 - **"No wallet" means no _funded or external_ wallet, not no key.** The
   cryptographic identity exists from day one, held by the user. A UI hint
   surfaces the responsibility: the key is copy-able / device-stored, and a
-  lost key is unrecoverable by CoGra.
+  key lost together with its recovery code is unrecoverable by CoGra.
 - **Counterfactual address.** A smart account's address is derivable
   before any on-chain transaction. Earnings accrue to it from the first
   settlement the account is entitled to, whether or not the user has ever
