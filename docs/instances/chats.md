@@ -358,10 +358,10 @@ the fold, and the full history stays public.
 
 Content removal is payload removal to the reduced projection,
 whole-record and one-way, with the triggering flows —
-moderation verdicts, the author's account deletion — and the
-Postgres tombstone/archive mechanics in
-[moderation.md](moderation.md),
-[account-deletion.md](account-deletion.md), and
+moderation verdicts, the author's own per-content removal, the
+author's account deletion — and the Postgres tombstone/archive
+mechanics in [moderation.md](moderation.md),
+[erasure.md](erasure.md), and
 [retention-archive.md](../primitive/retention-archive.md).
 Chat-specific facts:
 
@@ -373,7 +373,8 @@ Chat-specific facts:
 - **A chat is a public space, not first-person expression:**
   account deletion of the founder never sweeps the Chat; the
   member's own Messages are swept only under the content-level
-  opt-in.
+  opt-in, or removed one at a time per
+  [erasure.md §1](erasure.md#1-per-content-removal).
 - **Disavowal is non-destructive** (§6) — stance, not removal.
 
 ---

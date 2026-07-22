@@ -76,7 +76,7 @@ CoGra's posture toward it is strictly **consume-only**:
   carries no title force. Nobody can write themselves into a
   thread.
 - Title never lapses. A deleted account's husk still holds its
-  titles ([account-deletion.md](account-deletion.md)); transfer
+  titles ([erasure.md](erasure.md)); transfer
   out of a husk follows the same settlement flow as any other,
   requiring the key holder's records.
 
@@ -205,10 +205,11 @@ the thread.
 
 Item nodes and every settlement record are permanent. Content
 removal is payload removal to the reduced projection — triggered
-by moderation verdicts; goods are not first-person expression,
-so content-level account deletion never sweeps Items
+by moderation verdicts only; goods are not first-person
+expression, so self-service erasure never reaches Items — neither
+per-content removal nor content-level account deletion
 ([moderation.md](moderation.md),
-[account-deletion.md](account-deletion.md)). Identity, pointer
+[erasure.md](erasure.md)). Identity, pointer
 resolution, and **title survive every payload state** — a
 fully-reduced Item still has an owner, a thread, and a
 tradeable claim.

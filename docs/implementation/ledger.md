@@ -168,7 +168,7 @@ gas responsibility on the earner.
   expire, or strand. Delivered CGT is self-custodied
   from the moment it lands and survives anything platform-side,
   account deletion included
-  ([account-deletion.md](../instances/account-deletion.md)).
+  ([erasure.md](../instances/erasure.md)).
 - **The destination is the witnessed payout address** — the guild-key
   field of the account's Registration payload
   ([user.md §3](../primitive/user.md#3-graph-side-properties)), a

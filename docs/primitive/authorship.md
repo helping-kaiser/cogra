@@ -96,7 +96,7 @@ is not derivable from the shared graph.
 Authorship survives everything: payload removal and account
 deletion erase names and words, never the author binding — the
 husk's records remain its records
-([account-deletion.md](../instances/account-deletion.md)).
+([erasure.md](../instances/erasure.md)).
 
 ---
 

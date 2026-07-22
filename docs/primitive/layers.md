@@ -285,7 +285,7 @@ content is still illegal and still findable."
 
 This section defines the redaction *mechanism*; the
 *authorization* — who decides what gets redacted, by what process
-— runs through separate instance docs by scope. Two paths exist
+— runs through separate instance docs by scope. Three paths exist
 today:
 
 - **Illegal content.** Network-level governance per
@@ -294,20 +294,24 @@ today:
   requires the critical-tier mod gate and a community quorum, and
   the verdict is materialized by the moderation system actor. The
   cascade then executes the redaction defined above.
-- **Personal data on user request.** A User can request that
-  their own account be removed from public view, per
-  [account-deletion](../instances/account-deletion.md) —
-  identity-level by default, content-level on opt-in.
+- **Per-content removal.** The author of a record can remove its
+  payload — a single record or a whole revision chain — per
+  [erasure.md §1](../instances/erasure.md#1-per-content-removal):
+  immediate, permanent, always archived under a legal hold first.
+- **Account deletion.** A User can request that their whole
+  account be removed from public view, per
+  [erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)
+  — identity-level by default, content-level on opt-in.
 
 External pressure (court orders, legal demands) does not bypass
 the moderation mechanism; the principle that all external demands
 enter as ordinary Proposals lives in
 [governance.md §7 "External demands enter as Proposals"](governance.md#external-demands-enter-as-proposals).
 Court-ordered user-anonymization is a separate path planned in
-account-deletion.md, also routed through Proposals.
+erasure.md, also routed through Proposals.
 
 Disposition of the redacted original (preserve vs. destroy) is
-the same mechanism in both paths — the
+the same mechanism in every path — the
 [retention archive](retention-archive.md) — with per-row hold
 values set per case.
 

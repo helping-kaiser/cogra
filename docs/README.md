@@ -114,10 +114,11 @@ an `instances/` doc is a sign the mechanism belongs in
   normative document the Network references when classifying
   content; bucket contents; amendment procedure pinned by
   `:Network` version + SHA-256 hash.
-- [account-deletion](instances/account-deletion.md) — user-initiated
-  PII redaction; identity-default and content-opt-in scope;
-  7-day grace period; reuses redaction mechanism + archive
-  primitives.
+- [erasure](instances/erasure.md) — user-initiated erasure:
+  per-content removal (single record or revision chain, immediate,
+  archived under legal hold) and account deletion
+  (identity-default, content-opt-in, 7-day grace); reuses
+  redaction mechanism + archive primitives.
 - [post](instances/post.md) — per-node doc for the Post content
   node; primary public-content surface; creation, edges,
   authorship, lifecycle.
