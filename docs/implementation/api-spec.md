@@ -148,13 +148,15 @@ chronicle behind every fold is reachable through the generic
 record surface (`records`), so any consumer can replay any fold
 from public records.
 
-Consequently there is no destructive verb anywhere: no
+Consequently there is no destructive verb on graph state: no
 `delete`/`unlike`/`unfollow`. A stance is changed by a new
 record; severance is netting a bundle to `(0,0)`, not a removal;
 an edit is a new update record the fold reads. The only erasure
 in the system is **payload removal** (full → reduced), reached
-through the moderation and account-deletion flows — never through
-a generic mutation
+through the moderation flow and the self-service erasure
+mutations — `removeContent` and the account-deletion trio below
+([erasure.md](../instances/erasure.md)) — never through a
+generic delete on ordinary writes
 ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
 
 ### Viewer context rides the request, not the arguments
@@ -2830,16 +2832,32 @@ type CreateInviteLinkPayload {
 input RevokeInviteLinkInput { inviteLink: UUID! }
 type RevokeInviteLinkPayload { inviteLink: InviteLink! }
 
+"Remove the payload of a record the viewer authored — the
+ per-content self-service erasure path (erasure.md §1). Immediate
+ and permanent: the record drops to its reduced projection with
+ the author-removed mark, the original moves to the retention
+ archive under its legal hold. The client owns the explicit
+ permanence confirmation."
+input RemoveContentInput {
+  record: RecordId!
+  "Also remove every record in the target's revision chain — the
+   whole post/comment/profile history. Defaults to false (the
+   single record only)."
+  includeRevisions: Boolean
+}
+"The removed record(s), now payloadState: REDUCED."
+type RemoveContentPayload { records: [Record!]! }
+
 "Begin account deletion (identity-only by default; opt into
  content-level redaction with includeContent). What remains after
  execution is the L1 husk: structural records, standing, and title
  persist; identity association, display content, and payloads go
- (account-deletion.md)."
+ (erasure.md)."
 input RequestAccountDeletionInput {
   includeContent: Boolean
 }
 "Confirming opens the 7-day grace period and fixes the execution
- deadline ([account-deletion.md §4](../instances/account-deletion.md#4-the-user-self-service-trigger))."
+ deadline ([erasure.md §5](../instances/erasure.md#5-the-self-service-triggers))."
 input ConfirmAccountDeletionInput {
   deletionToken: String!
   "Opt into content-level redaction at confirmation — the second of
@@ -2882,6 +2900,7 @@ extend type Mutation {
   uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
+  removeContent(input: RemoveContentInput!): RemoveContentPayload!
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
   cancelAccountDeletion: AccountDeletionPayload!

@@ -391,8 +391,9 @@ carries the document as witnessed payload
   the archive disposition in
   [retention-archive.md](../primitive/retention-archive.md); this
   doc provides the community-driven authorization for
-  illegal-content classification (account-deletion is a separate
-  user-initiated authorization path).
+  illegal-content classification ([erasure.md](erasure.md) holds
+  the separate user-initiated authorization paths — per-content
+  removal and account deletion).
 - **Not the platform guidelines themselves.** The bucket contents
   and amendment procedure are in
   [platform-guidelines.md](platform-guidelines.md).

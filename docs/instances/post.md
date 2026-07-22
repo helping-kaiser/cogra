@@ -157,13 +157,16 @@ reduced payload state
 ([layers.md](../primitive/layers.md)).
 
 Which flows trigger removal on a Post — a moderation verdict, the
-author's account deletion — and the Postgres-side tombstone and
-archive mechanics live in [moderation.md](moderation.md),
-[account-deletion.md](account-deletion.md), and
+author's own per-content removal, the author's account deletion
+(content-level) — and the Postgres-side tombstone and archive
+mechanics live in [moderation.md](moderation.md),
+[erasure.md](erasure.md), and
 [retention-archive.md](../primitive/retention-archive.md). A full
 deletion sweeps payload and salt across the whole revision chain —
 the genesis payload and every edit record's payload (§4) — while
-every structural record stays.
+every structural record stays; a single superseded revision can
+also be removed alone
+([erasure.md §1](erasure.md#1-per-content-removal)).
 
 The Post's identity key is stable across every removal: incident
 records keep pointing at the same node, and caches keyed on it
