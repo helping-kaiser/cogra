@@ -46,9 +46,9 @@ The cost of this choice is named openly: Liquid has no
 concentrated-liquidity DEX and no precedent for a protocol-run
 covenant market at scale. The ladder below is novel engineering on
 Liquid's covenant and Simplicity primitives, accepted knowingly —
-the liquidity *jobs* are what the design requires, and they are
-reproducible with covenants; the V3 pool was only ever one way to do
-them ([token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)).
+the liquidity *jobs* are what the design requires
+([token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)),
+and covenants can do them.
 
 ---
 
@@ -163,9 +163,9 @@ gas responsibility on the earner.
   outputs. A missing or short output is a broken public promise,
   visible to everyone — that substitutes for the trustlessness the
   claim model bought with per-user proofs.
-- **"Never expires" becomes "already delivered."** Earnings land at
-  the earner's own address at settlement; there is no unclaimed pool
-  to account for, expire, or strand. Delivered CGT is self-custodied
+- **Delivered, not held.** Earnings land at the earner's own
+  address at settlement; there is no unclaimed pool to account for,
+  expire, or strand. Delivered CGT is self-custodied
   from the moment it lands and survives anything platform-side,
   account deletion included
   ([account-deletion.md](../instances/account-deletion.md)).
