@@ -12,7 +12,7 @@ the graph carries relationships and pointers, never amounts.
 This doc defines the one economic primitive: **pull marketing** —
 the campaign, its value metric, how the payout pool splits among
 contributors, and how settlement is published. CGT issuance and
-liquidity are [token.md](token.md); the rail's claim/escrow
+liquidity are [token.md](token.md); the rail's payout/escrow
 mechanics are implementation
 ([ledger.md](../implementation/ledger.md)). Design history:
 [open-questions.md Q20](../open-questions.md).
@@ -647,7 +647,7 @@ from.
 
 ---
 
-## 10. The settlement record and the claim flow
+## 10. The settlement record and the payout flow
 
 Money amounts live on the CGT rail only; L1 carries the public
 record. Settlement (§6) publishes **one witnessed payload on a
@@ -661,15 +661,22 @@ The payload carries:
 - the `reserve_share` and `χ_c` in force (recorded so the split is
   a pure function of public state — anyone can recompute the payout
   tree from epoch `t*`'s records plus this payload);
-- the distributor pointer and the payout tree's **Merkle root**.
+- the payout tree's **Merkle root** — the public commitment of who
+  is owed what.
 
 Per-account payout figures are Merkle leaves, verifiable against
 the root and surfaced in frontends — never on L1. Distribution is
-**claim, not push**: each contributor claims by proof on the rail
-and pays their own transaction cost; earnings rest non-custodially
-at the account's counterfactual address and never expire. CoGra is
-never in the claim path — distributor mechanics, self-custody
-onboarding, and store layout are the ledger's concern
+**push, not claim**: the rail pays every earner directly, in
+batched transactions whose explicit outputs match the committed
+tree, transaction costs on the protocol — no claim step, nothing
+for the earner to do. Payouts read each account's witnessed payout
+address in force at `t*`, the same one-ruler rule as everything
+else in the settlement (§8.3), so the tree pins amount *and*
+destination and **non-payment is publicly provable** — anyone can
+line the outputs up against the leaves. Earnings land
+self-custodied at the earner's own address the moment the batch
+settles; there is no unclaimed pool to expire or strand. Batching,
+escrow release, and transaction mechanics are the ledger's concern
 ([ledger.md](../implementation/ledger.md)).
 
 ---

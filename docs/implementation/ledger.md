@@ -1,188 +1,278 @@
 # Ledger
 
-The chain is the ledger of money. The economics primitive defines
-settlement as a graph event and the claim relationship at the
-topology level ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow));
-this doc is the mechanics half of that split — how an account gets a
-self-custody key at signup, how the canonical claim distributor and its
-non-custodial escrow work on-chain, how the `Wallet` node and the
-`:PAYS_TO` edge bind it to the graph, and where campaign data lives across
-the stores. Money amounts never touch the graph; the graph carries
-relationships and pointers.
+The rail is the ledger of money, and the rail has a name: **CGT is
+an issued asset on the Liquid Network**, traded natively against
+**L-BTC (Liquid Bitcoin)**. The economics primitive defines what the
+money does — the campaign equation, the payout split, the reserve
+line ([economics.md](../primitive/economics.md)); token.md defines
+the supply curve and the liquidity design
+([token.md](../primitive/token.md)); this doc is the mechanics half:
+how those designs execute as Liquid transactions — the asset, the
+release schedule, the order ladder, push payouts, escrow, the
+reserve conversion, and the keys. Everything here is contract-level:
+it names the on-chain shapes and their trust boundaries, not wire
+formats or calibration numbers.
 
-Design history:
-[Q20 (resolved)](../open-questions.md).
-The token's issuance and liquidity mechanics are a separate doc
-([token.md](../primitive/token.md)); the named chain is an
-implementation choice deferred there.
+Money amounts never leave the rail. L1 carries the public campaign
+record and pointers ([economics.md §10](../primitive/economics.md#10-the-settlement-record-and-the-payout-flow));
+Postgres carries display content and cached views; balances,
+escrow, transfers, and payouts live here
+([architecture.md](architecture.md)). Layer 0 never appears on this
+rail at all — admission money is a different asset behind the L1
+boundary, read only as the scalar `B_i`
+([economics.md §1](../primitive/economics.md#1-the-two-economies)).
 
----
-
-## Three stores, one ledger
-
-The boundary rule ([data-model.md](data-model.md)) decides where each
-piece of campaign and payout data lives: **navigate-or-weight → Memgraph,
-display → Postgres, money → chain.** No store holds another's fields; the
-shared UUID joins them ([architecture.md](architecture.md)).
-
-| Store | Owns | Examples |
-|-------|------|----------|
-| **Chain** | the ledger of money | balances, transfers, per-settlement payout trees (Merkle roots), claim state, the canonical distributor's escrow |
-| **Memgraph** | graph topology + pointers to chain | `Campaign` / `Settlement` / `Wallet` nodes; `:ANCHOR` `:PROMOTES` `:ENTITLES` `:CLAIMS` `:TRANSFERS` `:PAYS_TO` edges; the campaign terms that navigate or weight the graph |
-| **Postgres** | display content + operational metadata | nothing campaign-specific — a `Campaign` carries no display content ([nodes.md](../primitive/nodes.md)); see [Where campaign data lives](#where-campaign-data-lives) |
+Design history: [Q20 (resolved)](../open-questions.md).
 
 ---
 
-## Self-custody from signup
+## Why Liquid
 
-Every account is backed by a signing key the **user** holds from signup —
-a passkey / device-stored key backing a smart account, generated at
-sign-up so onboarding is a normal login. There is no seed-phrase wall and
-no "you must have a wallet to earn" gate.
+The chain choice follows the pairing requirement. CGT's base market
+must pair against an asset with **no issuer or custodian beyond the
+chain itself** ([token.md §4.1](../primitive/token.md#41-the-base-pair)),
+and the project's preferred base asset is Bitcoin — the same asset
+family Layer 0's reserve instantiates as L-BTC. On Liquid, L-BTC
+*is* the native asset: the pair is CGT/L-BTC with no bridge, no
+wrapped asset, and no second chain anywhere in the money path.
 
-- **CoGra never holds any part of the key.** No MPC shards, no custodial
-  key-shard provider — that custody model is the thing being ruled out.
-  The client-encrypted backup blob auth stores is not custody — CoGra
-  cannot decrypt it ([auth.md "Key recovery"](auth.md#key-recovery)).
-- **"No wallet" means no _funded or external_ wallet, not no key.** The
-  cryptographic identity exists from day one, held by the user. A UI hint
-  surfaces the responsibility: the key is copy-able / device-stored, and a
-  key lost together with its recovery code is unrecoverable by CoGra.
-- **Counterfactual address.** A smart account's address is derivable
-  before any on-chain transaction. Earnings accrue to it from the first
-  settlement the account is entitled to, whether or not the user has ever
-  funded or deployed the account.
+Liquid's operator model satisfies the no-single-operator requirement
+as token.md §1 states it: blocks are signed and the peg is managed
+by an 11-of-15 functionary federation, so no single operator can
+steal funds or permanently censor. The residual trust — a federation
+quorum — is the same floor the L0 reserve already stands on.
 
-### Why a key from signup is non-negotiable
-
-Trustless claim is **equivalent** to the user holding a key from the
-moment they earn — there is no zero-key trustless claim. A claimant proves
-ownership with a key held since they earned, so CoGra is never in the
-claim path. The zero-key alternative would force CoGra to attest
-identity → wallet at claim time: a trusted gatekeeper with a liveness and
-fraud surface, rejected as ethos-breaking. The key-from-signup model is
-what makes the escrow below trustless, and it is why earnings survive
-account deletion — the durable handle is the off-platform key, not the
-in-network identity ([account-deletion.md](../instances/account-deletion.md)).
+The cost of this choice is named openly: Liquid has no
+concentrated-liquidity DEX and no precedent for a protocol-run
+covenant market at scale. The ladder below is novel engineering on
+Liquid's covenant and Simplicity primitives, accepted knowingly —
+the liquidity *jobs* are what the design requires
+([token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)),
+and covenants can do them.
 
 ---
 
-## The claim distributor
+## The asset
 
-One **canonical, permanently-claimable distributor** contract holds every
-account's claimable CGT. Each settlement publishes the per-contributor
-split (Shapley, [economics.md §6](../primitive/economics.md#8-attribution--the-reward-share-r_c))
-as a **Merkle root** added to the distributor; the `Settlement` node
-records that root and the canonical distributor address
-([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
+CGT is a standard Liquid issued asset:
 
-- **Claim, not push.** Each contributor claims by Merkle proof and pays
-  their own gas. Push — the contract fanning CGT to every wallet at
-  settlement with CoGra paying gas — is rejected: once users pay their own
-  gas (the intended responsibility model) and earnings accrue as a
-  claimable buildup, the mechanism *is* claim.
-- **One accumulating buildup.** Because the distributor is canonical, an
-  account's unclaimed total accumulates across every settlement it is
-  entitled to, all claimable at its counterfactual address. The on-screen
-  "unclaimed" figure is that running total — the
-  test-the-network-then-cash-out UX.
-- **Never expires.** Under self-custody the unclaimed pool is owned by
-  user-held keys, not orphaned, so burning it would destroy *recoverable*
-  user value; lost-key funds are already de-facto out of circulation
-  (locked-forever ≈ economic burn without the confiscation). No supply
-  reason compels expiry — deflation is carried by campaign burn and the
-  asymptotic mint curve ([token.md](../primitive/token.md)).
-
-Two consequences follow:
-
-1. The distributor must stay **permanently claimable** — immutable, or
-   upgradeable only in ways that can never strand a historical claim.
-2. Supply accounting carries a growing **"unclaimed / locked" bucket**,
-   surfaced for transparency, never destroyed.
-
-**Gas batching.** Per-settlement roots are fixed by
-[economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)
-(each `Settlement` carries its own root). A contributor entitled by
-several settlements claims them in one transaction by submitting their
-proofs together against the canonical distributor — the gas amortization
-is a claim-call ergonomic, deferred to on-chain implementation; the
-claim-by-proof model and the never-expiring buildup are unaffected by it.
+- **Fixed supply at issuance.** The genesis issuance creates the
+  full finite supply — the mint curve's asymptote, translated into a
+  single pre-mint — and creates **no reissuance tokens**, so no key
+  anywhere can ever mint more. The supply cap is enforced by the
+  chain, not by policy.
+- **Registered.** The asset carries a Liquid Asset Registry entry
+  (ticker, name, precision, issuer domain), the listing prerequisite
+  for standard Liquid wallets and venues.
+- **Burnable by anyone.** Burn is the protocol's `destroyamount`
+  primitive — provable supply destruction, permissionless per
+  holder. The campaign burn line
+  ([economics.md §7](../primitive/economics.md#7-the-conservation-equation))
+  executes as literal destruction, exactly the semantics
+  [token.md §1](../primitive/token.md#1-the-unit-of-account) promises.
+- **Deliberately explicit.** Liquid blinds amounts by default;
+  protocol transactions — tranche releases, ladder placements,
+  payouts, escrow movements, conversions, burns — are written with
+  **explicit (unblinded) amounts and asset ids**. Public accounting
+  is a design requirement, and an unreadable ledger cannot honor it.
 
 ---
 
-## The `Wallet` node and the `:PAYS_TO` binding
+## Supply release — timelocked tranches
 
-The payout wallet is a **`Wallet` carrier node**
-([nodes.md](../primitive/nodes.md)), created at signup carrying the
-account's counterfactual self-custody address. The on-chain address is a
-**layered property** ([layers.md](../primitive/layers.md)): re-linking
-writes a new top layer, non-destructively.
+The calendar mint of [token.md §2](../primitive/token.md#2-issuance--the-decaying-calendar-mint)
+executes as a **release schedule**: the pre-minted supply is split
+at genesis into tranches locked under **plain absolute timelocks**
+matching the calendar curve's steps. A tranche becomes spendable
+when its date arrives and not a block earlier — the schedule is
+consensus-enforced, not an operational promise, and it needs no
+covenant machinery: absolute timelocks are the oldest, most boring
+primitive on the chain.
 
-- A single structural **`:PAYS_TO`** edge `User | Collective → Wallet`
-  (`(0, 0)`, non-traversable) binds an account to its wallet — a one-hop
-  "this account's wallet" lookup. There is exactly **one `Wallet` per
-  account**: re-linking re-layers the address property on the same node,
-  so the binding edge is permanent.
-- The economic edges point at the **node**, not the address:
-  `Settlement → Wallet` (`:ENTITLES`) and `Wallet → Settlement`
-  (`:CLAIMS`) ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
-  Each reflects the address **in force when it was written** (the layer at
-  that timestamp); future payouts read the current top layer. A wallet's
-  earning and claim history stays attached across re-links.
-- **Survives account deletion.** Redacting the `User` node
-  ([layers.md §5](../primitive/layers.md#5-deletion-policy)) does not
-  strand earnings — entitlements already point at the `Wallet`, and the
-  chain honors the off-platform key
+"Mint" in token.md's supply arithmetic thereby reads as *release*:
+total issued supply is a genesis constant; the curve governs when
+tranches unlock into the ladder's ask side. Live supply still
+evolves as release minus burn, and the long-run deflationary
+crossover of [token.md §5](../primitive/token.md#5-supply-trajectory)
+is unchanged.
+
+---
+
+## The ladder
+
+The protocol-owned liquidity of
+[token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)
+is a **protocol-run covenant order ladder** — resting orders on the
+chain itself, non-custodial once placed:
+
+- **Ask side — released supply.** Unlocked tranche CGT sits in
+  covenant sell orders spaced geometrically above the anchor price —
+  the discretized band. Each covenant is spendable by anyone paying
+  its stated price in L-BTC, without the protocol's cooperation.
+  Freshly released CGT therefore enters circulation only as buyers
+  lift orders — demand-coupled release, done the UTXO-native way.
+- **Bid side — exit liquidity.** Treasury-held L-BTC sits in buy
+  orders below the anchor: the always-on exit for contributors
+  cashing out earnings. Ask-side sale proceeds fund this side first —
+  the base-asset accrual that keeps the exit market solvent is
+  protocol principal, never revenue.
+- **The anchor — a fold over the ladder's own fills.** The reference
+  price is a **published deterministic fold over the ladder's own
+  on-chain fills**, epoch-granular — anyone recomputes it from chain
+  data; no oracle, no external venue dependency. The manipulation
+  economics carry over from the TWAP argument: moving an averaged,
+  fill-weighted anchor takes sustained capital against the ladder's
+  own depth.
+- **The spread — the trading income.** Asks sit above the anchor,
+  bids below; the gap is a governed parameter. A round trip through
+  the ladder pays that gap to the protocol — the order-book form of
+  the pool fee, collected through prices instead of a fee switch. It
+  scales with everything that enters or exits CGT across this
+  market: advertisers funding campaigns, earners cashing out, and
+  every future use that buys in or sells out.
+- **Re-placement — an auditable treasury operation.** Each epoch the
+  protocol re-centers unfilled orders around the updated anchor,
+  tops the bid side back to its liquidity target, and sweeps the
+  realized spread gain above that target to the team treasury
+  ([token.md §4.5](../primitive/token.md#45-income-disposition--the-spread-flows-to-the-team-treasury)).
+  Placement and sweep transactions are explicit and follow a
+  published cadence — auditable like every other treasury flow.
+
+The division of the two L-BTC flows is deliberate: **tranche-sale
+proceeds are principal** (they become the bid side's depth), **the
+spread is income** (it goes to the team). Routing release proceeds
+to the team would monetize the supply curve itself; the ladder
+keeps the team's income tied to trading activity, as the pool fee
+was.
+
+---
+
+## Payouts — batched push
+
+Settlement commits the payout tree on L1 — the Merkle root inside
+the settlement payload
+([economics.md §10](../primitive/economics.md#10-the-settlement-record-and-the-payout-flow)).
+The rail side then **pays every earner directly**: batched
+transactions whose explicit outputs match the committed tree, one
+output per earning account at its payout address, fees paid by the
+protocol. There is no claim step, no distributor contract, and no
+gas responsibility on the earner.
+
+- **Non-payment is publicly provable.** The tree is witnessed on L1
+  and the outputs are unblinded: anyone can line up leaves against
+  outputs. A missing or short output is a broken public promise,
+  visible to everyone — that substitutes for the trustlessness the
+  claim model bought with per-user proofs.
+- **Delivered, not held.** Earnings land at the earner's own
+  address at settlement; there is no unclaimed pool to account for,
+  expire, or strand. Delivered CGT is self-custodied
+  from the moment it lands and survives anything platform-side,
+  account deletion included
   ([account-deletion.md](../instances/account-deletion.md)).
+- **The destination is the witnessed payout address** — the guild-key
+  field of the account's Registration payload
+  ([user.md §3](../primitive/user.md#3-graph-side-properties)), a
+  Liquid address, public and actor-attributed. Payouts read the
+  address in force at the attribution epoch `t*`, the same one-ruler
+  rule everything else in a settlement reads
+  ([economics.md §8.3](../primitive/economics.md#83-everything-at-t)) —
+  so the committed tree pins amount *and* destination, and the
+  output match stays a pure function of public state.
 
 ---
 
-## Where campaign data lives
+## Escrow — the campaign deposit
 
-There is **no Postgres campaign table.** A `Campaign` carries no display
-content ([nodes.md](../primitive/nodes.md)), so by the boundary rule its
-data splits across the other two stores:
+A campaign's deposit `D` moves into a **script escrow** when the
+campaign anchor lands, and the anchor's payload carries the escrow
+pointer — funding is provable from the start
+([economics.md §3](../primitive/economics.md#3-the-campaign-record)).
+The escrow's authority shape:
 
-- **Memgraph — the `Campaign` node.** The navigable / weighting terms and
-  public state live as node properties
-  ([economics.md §2](../primitive/economics.md#3-the-campaign-record)):
-  `g`, `h_start`, `declared_goal`, `start_ts`, `end_ts`, `status`, the
-  deposit pointer, the `dust_floor` in force, and the layered
-  `achieved_h_gain` progress trajectory. The `:ANCHOR` / `:PROMOTES`
-  declarations carry the anchor and target as topology. The
-  auto-settlement
-  scheduler finds campaigns past `end_ts + 30d` by querying these node
-  properties — an operational query over graph state, not a Postgres scan.
-- **Chain — money.** The deposit, the per-settlement Merkle root, the
-  distributor escrow, and claim state. Amounts never appear on the graph;
-  the `Campaign` node's deposit pointer and the `Settlement` node's
-  root / address reference them
-  ([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)).
-  The campaign escrow grants release authority to the advertiser
-  during the window and the 30-day grace period, and to the backend's
-  settlement key thereafter — which is what lets auto-settlement
-  ([economics.md §4](../primitive/economics.md#6-settlement-and-release))
-  fire without the advertiser.
+- **2-of-2, advertiser + platform**, for every movement during the
+  campaign window and the evaluation delay — top-ups, the refund
+  split of a discretionary settlement, the payout split itself. The
+  advertiser can never be paid out *from*, and the platform can
+  never redirect, unilaterally.
+- **Timelock fallback to the settlement key.** Past the fallback
+  maturity, the platform's settlement key alone can execute — which
+  is what lets auto-settlement fire for an absent advertiser
+  ([economics.md §6](../primitive/economics.md#6-settlement-and-release))
+  without ever holding unilateral authority while the advertiser is
+  live.
 
-A Postgres `campaigns` table is deliberately absent: it would have to
-store the `anchor` / `target` node references it keys on, and those are
-graph topology, which the boundary rule keeps in Memgraph ("neither
-database stores the other's fields").
+Release always executes the settlement split of
+[economics.md §7](../primitive/economics.md#7-the-conservation-equation):
+payout batch, treasury share, reserve line, burn, inviter shares —
+one escrow, explicit outputs, matching the settlement payload.
 
 ---
 
-## Write coupling: chain and graph
+## Conversion — the reserve line
 
-Settlement is a single terminal event
-([economics.md §7](../primitive/economics.md#10-the-settlement-record-and-the-claim-flow)):
-the on-chain Merkle root and the on-graph `Settlement` node (plus its
-`:ENTITLES` edges) are written together, so a published root always has a
-graph record pointing at it. A claim writes the on-chain claim and the
-`:CLAIMS` graph edge together, keeping "entitled but unclaimed" a faithful
-one-hop graph query
-([edges.md §2](../primitive/edges.md)). Cross-store
-write ordering and the failure modes around a partial write follow the
-same discipline as the Memgraph ↔ Postgres pairing documented in
-[account-deletion.md "Write ordering across stores"](../instances/account-deletion.md)
-and [data-model.md](data-model.md) — the chain is simply a third store
-under the same rule.
+The L0 reserve pool's single outflow
+([token.md §6.2](../primitive/token.md#62-the-l0-reserve-pool)) runs
+entirely inside the one chain: the pool's `reserve_share·P` inflow
+is swapped **CGT → L-BTC through the protocol's own ladder** — the
+reserve pool sells into the bid side like any other holder — and the
+resulting L-BTC executes **destination-addressed Layer-0 burns** at
+members', system actors', and Collectives' own addresses, the
+funder-unconstrained burn L1 permits.
+
+- **Execution-time price, never a frozen rate.** Each settlement's
+  reserve line converts at the market the ladder shows when the
+  conversion runs, chunked to bound price impact. No internal
+  CGT/L-BTC factor is ever quoted or held — a layer that freezes a
+  conversion factor across its period inherits and can amplify
+  within-cycle timing advantages, so no such factor exists.
+- **Publicly accounted.** CGT in, L-BTC out, burns executed — all
+  explicit on one chain. The steady-state target ("advertiser
+  revenue covers the community's L0 costs") stays checkable in
+  realized terms, arithmetic over public transactions.
+
+There is no peg step, no exchange hop, and no custody boundary in
+this flow: CGT and the L0 reserve asset live on the same chain, and
+the two economies still touch only here, in the one sanctioned
+direction ([economics.md §1](../primitive/economics.md#1-the-two-economies)).
+
+---
+
+## Keys
+
+The rail key is an ordinary **device-held Liquid key** — the same
+custody posture as the actor key
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission),
+[android.md](android.md)): generated and held on the user's device,
+never in CoGra custody, backed up through the same recovery-code and
+client-encrypted-blob story
+([auth.md "Key recovery"](auth.md#key-recovery)). There is no smart
+account, no passkey contract stack, and no counterfactual address
+machinery — a UTXO chain needs none of it; an address exists the
+moment the key does.
+
+The account's payout address is published as the Registration
+guild-key field ([user.md §3](../primitive/user.md#3-graph-side-properties)) —
+updating it is a parallel Registration, newest wins, every prior
+state witnessed. Losing the key and its recovery code loses the CGT
+at that address; CoGra cannot recover it and never could — the same
+responsibility line auth.md draws for the actor key.
+
+Build-time candidate: **LWK** (Blockstream's Rust Liquid wallet kit,
+with UniFFI bindings) fits the existing Rust + UniFFI stack for
+backend and Android alike — to be verified when the rail is built.
+
+---
+
+## The marketplace rail
+
+Item trading stays the deferred workstream
+([items.md](../instances/items.md)); the seam it will use is fixed
+here. Ownership rides L1's settlement machinery end to end —
+`Bid → Accept → Ratify`, title read from `owner^(k)`, never
+authored. Money is the only CoGra-side piece: the price is a term on
+the Bid's payload, and payment settles as a **CGT transfer through a
+script escrow of the same family as the campaign deposit** —
+buyer + platform co-signed, timelock fallback, explicit outputs —
+released against the L1 settlement thread's outcome. The graph
+carries the thread and the price term; the rail carries the money;
+neither store ever holds the other's half.
