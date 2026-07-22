@@ -196,8 +196,7 @@ type RankHop {
 
 `Node`, `Record`, and the scalars are the [api-spec.md](api-spec.md)
 types — the ranker speaks the same type vocabulary as the backend it
-sits beside; api-spec.md's post-rebase rewrite re-pins them against the
-shapes here.
+sits beside.
 
 ## Search re-ranking
 
