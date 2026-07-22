@@ -4,7 +4,7 @@ The per-concept routing table: where every CoGra concept lives on
 the substrate. Each row names its **primary mechanism** from the
 closed menu in [substrate.md §5](substrate.md#5-the-mechanism-menu-closed)
 — `gesture` (an L1 edge from the fixed inventory), `payload` (state
-riding an L1 record), `overlay` (CoGra's own Memgraph graph),
+riding an L1 record), `overlay` (CoGra's own graph state),
 `off-graph` (Postgres / blob / service state) — plus `consume` for
 concepts that are read-side constructions over L1 records:
 published-value views, adopted folds, and reimplemented terminal
@@ -90,7 +90,7 @@ mechanics live in each concept's own doc.
 | Moderation: illegal | gesture (system actor) | Whole-record **payload removal** (full → reduced projection) plus the Tag verdict. Redaction granularity is the record — the content commitment forbids partial rewrite. The visible mark is the immutable structural record + reduced payload state. See [moderation.md](../instances/moderation.md), [layers.md](layers.md). |
 | Moderation vocabulary | overlay | Verdict categories and per-field sensitive flags survive as Postgres metadata; moderation Types ride the L2 naming service. |
 | License / provenance (`l_ij`, `o`) | payload | Authoring-time declaration is mandatory in every content-creation flow (an L2 write-validation rule); render obligations and the provenance-chain format are CoGra's published spec. Enforcement rides the report → Proposal → moderation path. |
-| Honor ledger | off-graph | A per-community append-only Postgres ledger with membership-gated reads — never on a chain, never in Memgraph, so the ranker and miner slice structurally cannot consume it. See [governance.md](governance.md). |
+| Honor ledger | off-graph | A per-community append-only Postgres ledger with membership-gated reads — never on a chain, never in the record mirror: the ranker and miner slice consume only L1 records, so honor structurally cannot enter them. See [governance.md](governance.md). |
 
 ---
 

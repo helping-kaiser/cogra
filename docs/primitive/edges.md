@@ -110,15 +110,15 @@ leg indices name leg *position*, never Layer 1 / Layer 2.)
 
 ## 5. Overlay edges (CoGra's graph)
 
-Overlay edges live in CoGra's Memgraph and never enter any L1
+Overlay edges live in CoGra's own store and never enter any L1
 quantity. They connect overlay nodes to each other and to mirrored
 L1 records; their semantics are CoGra's alone. **No overlay edge
 type is currently declared** — the overlay's structure today is
 its nodes ([nodes.md §3](nodes.md#3-overlay-node-types-cogras-graph)).
 
 Votes, references, proposal targets, and collective membership are
-**not** overlay structure — all live on L1 and reach Memgraph
-through the mirror like every other L1 record: a vote is a
+**not** overlay structure — all live on L1 and reach CoGra
+through the record mirror like every other L1 record: a vote is a
 payload-marked ballot Opinion toward the proposal anchor (§2), a
 reference is a Reference record (§3), a proposal's subject is the
 anchor's `(0,0)` Reference toward the subject node

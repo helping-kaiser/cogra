@@ -870,9 +870,9 @@ honor-ledger semantics and operated per community.
 - **Home: a per-community append-only Postgres ledger with
   membership-gated reads.** Never on a chain (public
   verifiability would contradict its unverifiable-private-state
-  semantics), never in Memgraph — keeping honor out of the graph
-  store means the ranker and the miner slice **structurally
-  cannot** consume it. The single sanctioned read into any feed is
+  semantics), never among the graph's record tables — the ranker
+  and the miner slice consume only L1 records, so they
+  **structurally cannot** consume it. The single sanctioned read into any feed is
   a community's own named opt-in feed
   ([feed-ranking.md §10](feed-ranking.md#10-the-default-feed-and-named-feeds)).
 - **Honor never confers vote weight.** The ballot machinery above

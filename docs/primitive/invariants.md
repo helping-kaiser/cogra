@@ -38,7 +38,7 @@ most useful one.
 - [Topology is always public](graph-model.md#1-core-principles) —
   privacy of content is achieved via end-to-end encryption, never
   by hiding nodes or edges.
-- [Memgraph owns topology, Postgres owns display content](../implementation/architecture.md#1-graph-db-owns-topology-postgres-owns-content)
+- [Memgraph owns topology, Postgres owns display content](../implementation/architecture.md#2-one-store-partitioned-by-truth-relationship)
   — UUIDs are the shared key; no content in Memgraph, no topology
   in Postgres.
 
@@ -102,7 +102,7 @@ most useful one.
 
 ## Ranking
 
-- [Ranking comes only from the graph](../implementation/architecture.md#3-all-ranking-comes-from-the-graph)
+- [Ranking comes only from the graph](../implementation/architecture.md#4-all-ranking-comes-from-the-graph)
   — no materialized counters, popularity scores, or ML signals;
   ranking is computed at query time from the edge tensor.
 - [Kill rule: a `0` in either dim zeros the path product](feed-ranking.md#31-the-damped-weight)

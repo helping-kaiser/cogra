@@ -277,7 +277,6 @@ the public records carry it.
   semantics live in
   [layer1-interface.md](../primitive/layer1-interface.md) and
   [edges.md](../primitive/edges.md).
-- **Not the storage schema.** The overlay Proposal node's concrete
+- **Not the storage schema.** The overlay Proposal state's concrete
   shape lives in
-  [graph-data-model.md](../implementation/graph-data-model.md);
-  Postgres has no Proposal shape.
+  [data-model.md](../implementation/data-model.md).

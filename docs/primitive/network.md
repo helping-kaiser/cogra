@@ -11,7 +11,7 @@ anchors the instance — proposals about the Network name it, and
 every passed parameter change lands as a witnessed payload on a
 finalization Opinion toward it, so the parameter schedule is
 replayable from public records. The `:Network` **overlay carrier**
-in Memgraph is the operational mirror of that schedule — the node
+is the operational mirror of that schedule — the state
 the ranker, miner slice, and backend actually read
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 
@@ -152,7 +152,7 @@ governance a public, priced, replayable record chain:
 The catalog below names every governed parameter, its role, and
 its **gating bucket** — baseline or critical — under the
 amendment-rule pairs of §11. Concrete storage shape lives in
-[graph-data-model.md](../implementation/graph-data-model.md).
+[data-model.md](../implementation/data-model.md).
 
 > **Notation.** The feed parameters map to the symbols `k`, `γ`,
 > `χ`, and `f(Δt)`; see [notation.md](notation.md).
@@ -266,7 +266,7 @@ Defaults bootstrap; they are not fixed.
 
 ## 4. The overlay carrier
 
-The `:Network` node in the Memgraph overlay is the **operational
+The `:Network` node in CoGra's overlay is the **operational
 mirror** of the charter's parameter schedule: layered governed
 properties, one per catalog entry, updated when a finalization
 lands. The ranker, the miner slice, and the backend read the
@@ -504,4 +504,4 @@ fixed.
 - **Not the account spec.** See [user.md](user.md).
 - **Not the storage schema.** Concrete overlay property types,
   defaults, and indexes live in
-  [graph-data-model.md](../implementation/graph-data-model.md).
+  [data-model.md](../implementation/data-model.md).
