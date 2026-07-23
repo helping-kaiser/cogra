@@ -97,9 +97,10 @@ auditable history the charter schedule carries on L1.
 
 The write path stages before it lands
 ([architecture.md "The write path"](architecture.md#the-write-path)):
-a prepared record — canonical envelope, salt, witness — is a
-staged-write row from **prepare** until **confirm**, and staged
-payload bytes sit in the carriage tables flagged as staged.
+a staged act — the canonical proposal, joined by the host-sealed
+verified act as the handshake advances — is a staged-write row
+from **prepare** until **confirm**, and staged payload bytes sit
+in the carriage tables flagged as staged.
 Promotion on confirm makes the payload permanent carriage and the
 display rows visible; a staged write that never lands is
 garbage-collected, staged payload included, after a bounded number

@@ -47,7 +47,7 @@ ever what a record *is* — that is always the L1 record itself.
 ```
 ┌────────────┐   GraphQL    ┌───────────────────────────────┐
 │   Client   │ ───────────► │          API (Axum)           │
-│ (holds the │ ◄─────────── │   prepare · serve · relay     │
+│ (holds the │ ◄─────────── │   prepare · relay · serve     │
 │ actor key, │              └───────┬───────────────┬───────┘
 │   signs)   │                      │               │
 └────────────┘              ┌───────▼───────┐  ┌────▼─────┐
@@ -57,7 +57,7 @@ ever what a record *is* — that is always the L1 record itself.
                             │     truth     │  └──────────┘
                             └───────▲───────┘
                                     │ ingest accepted records
-              relay signed records  │
+       relay proposals + approvals  │
                     ┌───────────────┴───────────────┐
                     │     PeerNetworks Layer 1      │──► B_i (Layer 0
                     │          (external)           │    export, read-
@@ -175,8 +175,8 @@ The public-facing binary. Responsibilities:
 - Starts the Axum HTTP server
 - Hosts the async-graphql schema at `/graphql`
 - Hosts the GraphQL playground at `/playground` (dev only)
-- Orchestrates the write path (prepare → relay → confirm) and the
-  read paths; owns the L1 boundary interface
+- Orchestrates the write path (prepare → seal → approve →
+  confirm) and the read paths; owns the L1 boundary interface
 - Calls `postgres-store` to fulfill resolvers
 - No business logic in resolvers — it orchestrates, it does not
   decide
@@ -215,8 +215,8 @@ container, and bound into the Android app via UniFFI.
 
 The reference frontend — Kotlin + Jetpack Compose, with the typed
 GraphQL client generated from `schema.graphql`. It holds the
-member's actor key and performs the sign step of every write
-([android.md](android.md)). Stack reasoning, module layout, the
+member's actor key and performs both signing steps of every
+write — pre-commitment and approval ([android.md](android.md)). Stack reasoning, module layout, the
 UniFFI binding, and the test story live there.
 
 ---
@@ -224,27 +224,36 @@ UniFFI binding, and the test story live there.
 ## The write path
 
 [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)
-owns the flow's semantics; this is the system view of the four
+owns the flow's semantics — L1's admission handshake takes two
+device signatures per act; this is the system view of the five
 steps:
 
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
-   assemble the canonical record — payload envelope, salt, content
-   witness — and store it as a **staged write** (Postgres row;
-   payload bytes staged in the carriage tables). Return record,
-   salt, and witness to the client so it recomputes the commitment
-   before signing.
-2. **Sign** (client). On the device; the key never leaves it.
-3. **Relay** (backend). Submit the signed record through the L1
-   boundary and drive retries across epoch boundaries. The
-   signature covers the record, so the relay can neither alter it
-   nor author one unasked.
-4. **Confirm** (ingestion). When the accepted record arrives in
-   the mirror, the staged write is promoted: payload becomes
+   assemble the canonical proposal — act body, payload envelope,
+   dependency list — and store it as a **staged write** (Postgres
+   row; payload bytes staged in the carriage tables). Return the
+   proposal with its pre-digests to the client so it recomputes
+   what it commits to before signing.
+2. **Pre-sign** (client). The device signs the proposal
+   pre-commitment; the key never leaves it.
+3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
+   proposal through the L1 boundary; the L1 host verifies it,
+   adds the projection salts, and returns the sealed **verified
+   act**, stored on the staged write.
+4. **Approve** (client, then backend). The device verifies the
+   host seal, the exact returned body, and both commitment
+   openings, then signs the **approval witness** — only then is
+   the act orderable. The backend relays the approval and drives
+   retries across epoch boundaries. Both signatures cover the
+   act, so the relay can neither alter it nor author one unasked.
+5. **Confirm** (ingestion). When the accepted act arrives in the
+   mirror, the staged write is promoted: payload becomes
    permanent carriage, display rows become visible, flow state
-   advances. A staged write that never lands is garbage-collected
-   — staged payload included — after a bounded number of epochs
-   (an operational parameter, [data-model.md](data-model.md)).
+   advances. A staged write that never completes the handshake
+   and lands is garbage-collected — staged payload included —
+   after a bounded number of epochs (an operational parameter,
+   [data-model.md](data-model.md)).
 
 ### Atomicity
 

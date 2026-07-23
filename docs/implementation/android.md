@@ -46,12 +46,14 @@ written once, in Rust, and bound to every platform the same way.
 The app is where the member's actor key lives: it generates the
 key and L0 address at application time, offers the recovery-code
 backup at key creation (encrypt locally, upload only ciphertext —
-[auth.md "Key recovery"](auth.md#key-recovery)), and signs every
-prepared record before the backend relays it
+[auth.md "Key recovery"](auth.md#key-recovery)), and signs both
+steps of every write — the proposal pre-commitment, then the
+approval witness over the host-sealed verified act
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-The key never leaves the device; the app recomputes the prepared
-record's commitment before signing, so the user never signs blind
-bytes. The concrete signing crypto follows the L1 key model, which
+The key never leaves the device; before each signature the app
+verifies what it signs — the recomputed pre-digests at pre-sign;
+the host seal, exact body, and both commitment openings at
+approval — so the user never signs blind bytes. The concrete signing crypto follows the L1 key model, which
 is open with the L1 team
 ([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation));
 until it resolves, the app's key handling stays scheme-neutral.
