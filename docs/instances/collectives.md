@@ -164,8 +164,8 @@ contract, not in per-record attribution — and internally holding
 members accountable is likewise the contract's business.
 
 Two coarse gesture classes, with opposite defaults —
-**Invariant: content-acts default permissive, governance-acts
-default deny** (the asymmetry reflects reversibility):
+**content-acts default permissive, governance-acts default
+deny** (the asymmetry reflects reversibility):
 
 - **Content-acts** — publishing, commenting, stances, tags.
   **Default: any active member** may produce one. A Collective
@@ -364,7 +364,7 @@ Internal disputes resolve by the contract, never on the thread.
 
 ## 8. Lifecycle
 
-- **Invariant: dissolution is a membership fact, not a graph one.** A
+- **Dissolution is a membership fact, not a graph one.** A
   Collective whose last member leaves has no one who can trigger
   its key — acting capacity is gone; the actor, its standing,
   its titles, and its history persist. Members can never *not*

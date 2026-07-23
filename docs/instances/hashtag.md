@@ -115,7 +115,7 @@ The default feed stays untouched by follows.
 
 ## 5. Moderation and lifecycle
 
-**Invariant: a Type's name is unerasable from the shared graph.**
+**A Type's name is unerasable from the shared graph.**
 A Type has no records of its own — nothing mints it, no payload
 rides it — so there is **nothing to remove**. Its name is not
 payload either: the byte string is a structural endpoint
