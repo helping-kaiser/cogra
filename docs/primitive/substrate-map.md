@@ -57,12 +57,12 @@ mechanics live in each concept's own doc.
 | Concept | Primary | Mapping |
 |---|---|---|
 | Stance toward content | gesture | **Opinion** (Actor → any passive node) — the archetypal edge. CoGra's two authoring axes map onto the edge parameters: valence → `p_d`, connection → `p_i`; the stored 3×3 slice is derived storage. See [edges.md](edges.md). |
-| Stance toward a person | gesture | **Opinion → Profile** — the interpersonal stance carrier. Vouch-positive stances (`p_d > 0 ∧ p_i > 0`) feed the target's standing through endorsement flow; everything else is routing/stance signal only. |
+| Stance toward a person | gesture | **Opinion → Profile** — the interpersonal stance carrier. Stances whose folded bundle is vouch-positive (`p̄_d > 0 ∧ p̄_i > 0`) feed the target's standing through the standing projection; everything else is routing/stance signal only. |
 | Stance toward a collective | gesture | Opinion → the collective's Profile — same carrier, same vouch semantics. |
 | Follow a topic | gesture | **Affinity** (Actor → Type) — relevance, not verdict. Its feed effect is feed policy, not topology: [feed-ranking.md](feed-ranking.md). |
 | Tagging content | gesture | The **Tag** hyper-edge (Actor → content → Type) — authored by anyone. The content author's tag is the content's own topic declaration (content-intrinsic); a third party's tag reaches the Type only through its own author, mirroring the reference channels ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)). |
 | Reference / quote / embed / mention | gesture | An L1 **Reference** hyper-edge (Actor → citing artifact → target): the quoting Post or Comment points at the cited node; nothing is minted. A mention targets the person's **Profile** — positive, effortful mentions are weak, priced vouches. The feed crosses a reference's **citation leg** only through its two channels — content-intrinsic (the reference's author owns the carrier) or initiator-owned (reached through the reference's author) ([feed-ranking.md §4](feed-ranking.md#4-the-path-set)); attribution reads the same shared paths, so quoted authors are credited by the path math ([economics.md](economics.md)). |
-| Stance revision | gesture | A new L1 record in the author's same-target bundle — records are chronicles, never overwritten. The endorsement-flow projection nets same-author bundles (sum-then-clip); presentation of "current vs. history" is L2. |
+| Stance revision | gesture | A new L1 record in the author's same-target bundle — records are chronicles, never overwritten. The standing projection nets same-author bundles (sum-then-clip); presentation of "current vs. history" is L2. |
 | Severance | gesture | Authoring counter-edges that net the bundle to `(0,0)` — routing-inert for every consumer of the projection. A viewer-side blocklist is separate read-side comfort: [feed-ranking.md](feed-ranking.md). |
 
 ---
@@ -89,7 +89,7 @@ mechanics live in each concept's own doc.
 | Moderation: sensitive | gesture (system actor) | A read-side flag in Postgres plus a substrate-visible mark: the moderation system actor authors **Tag `(0,0)` + payload** toward a named moderation Type. Newest tag wins per (target, Type). Content stays. |
 | Moderation: illegal | gesture (system actor) | Whole-record **payload removal** (full → reduced projection) plus the Tag verdict. Redaction granularity is the record — the content commitment forbids partial rewrite. The visible mark is the immutable structural record + reduced payload state. See [moderation.md](../instances/moderation.md), [layers.md](layers.md). |
 | Moderation vocabulary | overlay | Verdict categories and per-field sensitive flags survive as Postgres metadata; moderation Types ride the L2 naming service. |
-| License / provenance (`l_ij`, `o`) | payload | Authoring-time declaration is mandatory in every content-creation flow (an L2 write-validation rule); render obligations and the provenance-chain format are CoGra's published spec. Enforcement rides the report → Proposal → moderation path. |
+| License / provenance (`l_ij`, `o`) | gesture | License qualifiers are public protocol references of the genesis Publish act (`def:graph:public-protocol-reference`) — structural, retained across every payload state. Authoring-time declaration is mandatory in every content-creation flow (an L2 write-validation rule); render obligations and the provenance-chain format are CoGra's published spec. Enforcement rides the report → Proposal → moderation path. |
 | Honor ledger | off-graph | A per-community append-only Postgres ledger with membership-gated reads — never on a chain, never in the record mirror: the ranker and miner slice consume only L1 records, so honor structurally cannot enter them. See [governance.md](governance.md). |
 
 ---
@@ -114,7 +114,7 @@ where each concept sits relative to the seam.
 
 | Concept | Primary | Mapping |
 |---|---|---|
-| Admission money | consume | Layer 0's reserve behind `B_i` and the θ-debit — consume-only; CoGra reads `B_i` and the entry cost through L1's interface and never authors L0 records. |
+| Admission money | consume | Layer 0's reserve behind `B_i` and the θ-debit — consume-only; CoGra reads `B_i` and the burn benchmarks (`B_W1`/`B_safety`/`B_door` — there is no universal admission price) through L1's interface and never authors L0 records. |
 | CGT (reward economy) | off-graph | CoGra's own token — the campaign-pool currency, fully disconnected from the L0 reserve. "Burn" means CGT supply destruction, never the θ-debit. |
 | Subsidised θ-debits | off-graph | Only the actor's own balance ever pays the actor's θ (W1). Community funding is Layer-0 burns to the member's own address (`rem:gates:guild-funding`) — funder-unconstrained, the comparator sees a funded member exactly as a self-funded one; generosity and caps are governed `:Network` parameters. System actors and Collectives draw on the CoGra community treasury. |
 | Campaigns, settlement, payouts | gesture | The campaign's public record rides L1: an advertiser-authored Content anchor carries the terms as witnessed payload, `(0,0)` References declare the targeting, and adjustments and settlement land as witnessed payloads on Opinions toward the anchor ([economics.md §3](economics.md#3-the-campaign-record), [§10](economics.md#10-the-settlement-record-and-the-payout-flow)). The money rail and payout plumbing stay CoGra's own, off-graph; the attribution they pay against is computed over L1 records (below). |

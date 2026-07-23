@@ -64,7 +64,10 @@ they never mix:
   the θ-debit. Writing any record costs its author θ off their own
   balance; capacity is the balance
   (`post:epoch:act-debit`). This money is the L1/L0 kernel's:
-  CoGra consumes `B_i` and the entry cost through the interface and
+  CoGra consumes `B_i` and the burn benchmarks
+  (`B_W1`/`B_safety`/`B_door`,
+  `cor:epoch:universal-burn-benchmarks` — gate benchmarks; there
+  is no universal admission price) through the interface and
   never authors L0 records
   ([substrate-map.md §7](substrate-map.md#7-economics-and-feed-pointers)).
 - **The reward economy** — **CGT**, the advertisers' money spread
@@ -171,7 +174,7 @@ each named anchor and to the target. That declares the targeting as
 replayable public structure while injecting nothing: a `(0, 0)`
 record has `w̃ = 0` and never vouches
 (`rem:graph:zero-parameter-degeneracy`,
-`def:epoch:vouch-predicate`) — the same degeneracy the proposal
+`def:epoch:person-vouch-eligibility`) — the same degeneracy the proposal
 pattern rests on
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 Reach toward the target is delivered by real contributor records

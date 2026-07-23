@@ -18,7 +18,8 @@ how a database table would:
 - **Nodes are implicit.** A node exists iff some accepted record
   references it in an endpoint field. There is no node-creation
   operation, no node table, no node attribute store — the graph's
-  primitive record set is edges, and nothing else.
+  primitive history is authored acts and their edge projections,
+  nothing else (`ax:graph:authored-act-ontology`).
 - **Identity is an algebra.** Every node identifier is **grounded**
   (`addr(a)` Actor, `prof(a)` Profile — anchored by a Registration),
   **named** (`name(s)` Type — a commons compared by byte equality),

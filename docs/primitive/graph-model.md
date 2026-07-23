@@ -41,10 +41,11 @@ CoGra's own stores. The node and edge catalogs live in
 ## 2. Time, causality, maturity
 
 Records carry **causal time, not wall-clock time**. Each accepted
-**act** is a Lamport event over its endpoints and asserted
-parents, and the host publishes one authoritative order `𝒬_k`
-that totalizes concurrent acts — every record inherits its act's
-logical time, and `≺` means precedence in that published order
+**act** is a Lamport event over its endpoints, asserted parents,
+and declared dependencies, and the host publishes one
+authoritative order `𝒬_k` that totalizes concurrent acts — every
+record inherits its act's logical time, and `≺` means precedence
+in that published order
 (`def:graph:authoritative-act-order`). Two participants holding
 the same published order derive the same result; agreement on the
 order, not merely the record set, is what replay consumes — there
@@ -73,8 +74,8 @@ What "current" means is always a declared fold:
 
 - **L1 reads bundles in exactly two places.** The standing
   projection nets each same-author bundle by sum-then-clip before
-  endorsement flow, and the title fold reads settlement records
-  epoch-quantized. Nothing else on L1 consumes a bundle.
+  the safe standing flow `W_end`, and the title fold reads
+  settlement records epoch-quantized. Nothing else on L1 consumes a bundle.
 - **Every other current-state read is its consumer's declared
   rule.** CoGra declares its folds per surface: the current
   profile is the newest Registration payload; chat membership is

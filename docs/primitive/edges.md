@@ -49,7 +49,7 @@ gesture.
   routing-inert; indifference is magnitude zero, not a third sign.
 - **Revision is a new record.** The record set stores chronicles:
   revising a stance appends a parallel record to the same-author
-  bundle. L1's endorsement-flow projection nets each bundle by
+  bundle. L1's standing projection nets each bundle by
   sum-then-clip; what "current" means anywhere else is the
   consumer's declared read rule ([graph-model.md](graph-model.md)).
 
@@ -61,7 +61,7 @@ gesture.
 |---|---|---|
 | **Registration** | Actor → Profile | Account creation — the self-introduction anchoring the grounded pair. Parameters fixed at `(1, 1)`. Profile content (bio, avatar digests, …) rides the payload; profile edits are parallel Registrations updating payload only, never identity. |
 | **Publish** | Actor → Content | Creating a Post (also, for a proposer, anchoring a proposal text — [substrate-map.md §5](substrate-map.md#5-governance-and-moderation) — and, for the publisher system actor, platform documents and the network charter). `p_d` = the author's attachment; license qualifiers are structural metadata of this record. |
-| **Opinion** | Actor → any passive node | The universal stance gesture — sentiment toward a Post, Comment, Chat, Message, Item, Type, or Profile. Toward a Profile it is actor-directed: it enters endorsement flow only when vouch-positive (`p_d > 0 ∧ p_i > 0`). Also the **ballot**: a payload-marked Opinion toward a proposal anchor, direction = stance sign ([governance.md](governance.md)); the system-actor finalization gesture at `(0,0)` + payload; and the **default edit carrier**: an eligible author's `(0,0)` + payload record revising a node's updatable values, newest-wins ([substrate.md §9](substrate.md#9-node-values-and-updates)). |
+| **Opinion** | Actor → any passive node | The universal stance gesture — sentiment toward a Post, Comment, Chat, Message, Item, Type, or Profile. Toward a Profile it is actor-directed: it feeds the target's standing only when the author's folded bundle is vouch-positive (`p̄_d > 0 ∧ p̄_i > 0`; `def:epoch:person-vouch-eligibility`). Also the **ballot**: a payload-marked Opinion toward a proposal anchor, direction = stance sign ([governance.md](governance.md)); the system-actor finalization gesture at `(0,0)` + payload; and the **default edit carrier**: an eligible author's `(0,0)` + payload record revising a node's updatable values, newest-wins ([substrate.md §9](substrate.md#9-node-values-and-updates)). |
 | **Affinity** | Actor → Type | Following a topic — relevance, not verdict; never a standing vouch. |
 | **Participant** | Actor → Chat | The record the membership fold reads: member iff the actor's own ≺-latest {Participant, Leave} record toward the Chat is a Participant. In gated chats CoGra's fold policy recognizes a Participant only when backed by an approved Join Request or an Invitation. |
 | **Owner** | Actor → Item | Item genesis — listing a good mints the Item and roots its ownership thread. Title is sentiment-blind: an `(0, …)` Owner still anchors the thread. |
@@ -77,9 +77,9 @@ gesture.
 ## 3. Hyper-edge families CoGra authors
 
 A hyper-edge is **one act** — one θ-debit, one stamp — that
-decomposes into two legs: the actor's leg into the middle node, and
-an author-fixed terminal leg out of it. (The interface's "L1/L2"
-leg indices name leg *position*, never Layer 1 / Layer 2.)
+decomposes into two legs: the actor's initiating leg into the
+middle node (the census's /A leg) and an author-fixed terminal leg
+out of it (/T).
 
 | Family | Shape | CoGra gesture |
 |---|---|---|
