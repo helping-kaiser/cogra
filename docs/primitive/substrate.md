@@ -34,10 +34,10 @@ the two disagree, the interface doc governs.
 record — every CoGra act that binds or must be publicly attributable
 lands there as an L1 edge record. CoGra *also* holds graph state: a
 **record mirror** of the L1 records CoGra traverses and an
-**overlay** of L2-only structure L1 has no home for, both tables in
+**overlay** of operational caches over them, both tables in
 CoGra's single Postgres store (§3). The mirror is a cache of L1's
-truth; the overlay is CoGra's own truth. Neither is a second authority over anything L1
-binds.
+truth; the overlay is derived from it by CoGra's published fold
+rules. Neither is a second authority over anything L1 binds.
 
 ---
 
@@ -100,9 +100,10 @@ storage — partitioned around the L1 seam:
   indexed record tables. The mirror may lag the L1 record; it must
   never diverge from it; it is fully rebuildable from published
   records. Nothing in the mirror is authoritative.
-- **The overlay.** CoGra's own structure: state L1 has no home
-  for. Proposal tally state and the `:Network` singleton. Overlay
-  structure is CoGra's truth, governed by CoGra's own rules.
+- **The overlay.** Operational caches derived from L1 records by
+  CoGra's published fold rules — Proposal tally state, `:Network`
+  carrier state. Rebuildable like the mirror; the records and the
+  published rules are the truth.
 - **Display content and operational metadata.** What a record
   *shows*, never what it *is*.
 - **Blob storage.** Media bytes, verifiable against the digests
