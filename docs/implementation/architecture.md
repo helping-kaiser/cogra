@@ -332,7 +332,10 @@ The L1-side genesis sequence belongs to
 L0 burn, the Genesis Moderator's Registration, the system-actor
 and Treasury Registrations, the endorsement Opinions, the Charter,
 and the genesis role Tag land as the instance's first accepted
-records.
+records. The bootstrap is the one write that escapes the
+actor-gesture-or-governance rule — the out-of-graph-authority
+invariant stated there; every subsequent change runs through
+governance.
 
 The bootstrap binary performs the CoGra-side seeding around those
 records: the reserved Type keys (content-addressed UUIDv5 via the

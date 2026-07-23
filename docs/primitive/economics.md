@@ -423,7 +423,7 @@ the settlement payload (§10).
 
 ### 7.1 The strict cap
 
-**Invariant: total-to-graph `< D` always.** Contributors and
+**Total-to-graph `< D` always.** Contributors and
 inviters together take `(0.95 − reserve_share)·P + 0.01·P ≤
 0.96·P`, and `P ≤ D`, so
 
