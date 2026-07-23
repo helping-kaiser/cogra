@@ -65,13 +65,14 @@ CGT is released on a **calendar schedule**, not per user action. A
 fixed daily amount unlocks; the daily amount **steps down ~10%
 once a year** on a fixed anniversary date (the rate holds flat
 within a year, then drops — not a continuous decay). Because the
-steps are geometric, the curve's **lifetime release converges to a
-finite cap**: a fixed daily release decaying 10%/year sums to
-roughly ten years of the first year's release and no more.
+yearly totals form a geometric series, the curve's **lifetime
+release converges to a finite cap**: at a 10% step the infinite
+sum is exactly **ten times the first year's release**
+(`1/(1 − 0.9) = 10`) — approached asymptotically, never exceeded.
 
 > *Illustrative, not canonical:* ≈5000 CGT/day at the schedule's
-> genesis, stepping to ≈4500/day after the first year, with a
-> lifetime release asymptote on the order of ~18M CGT. The exact
+> genesis, stepping to ≈4500/day after the first year — an
+> asymptote of 18.25M CGT at exactly 5000/day. The exact
 > genesis rate, the precise anniversary date of each step, and the
 > asymptote depend on CoGra's launch timing relative to the
 > existing peer-network schedule (§3) and are pinned at launch.
