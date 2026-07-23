@@ -114,9 +114,11 @@ One account = one L0 address, self-custodied.
   bookkeeping) per
   [data-model.md](../implementation/data-model.md).
 
-Cold start: a fresh account has standing `α = 0` — endorsement
-has nothing to amplify until real vouches arrive; the write rule
-is cleared by the funded burn, not by standing
+Cold start: with no vouches a fresh account's standing is exactly
+its own commitment rate, `α = r` (`cor:epoch:zero-relational-row`).
+Registration is an ordinary final-set act whose stamp is that
+rate, so the funded burn clears the write rule through the stamp;
+vouches then lift or dilute standing from that baseline
 ([substrate.md §6](substrate.md#6-authoring-path-and-admission)).
 
 ---

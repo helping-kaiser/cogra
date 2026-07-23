@@ -142,10 +142,12 @@ design error:
 | **Self-funding** | Can it stand on its own? | Always open — an L0 burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
 A Collective the community defunds (severance netting its
-inbound stances to `(0,0)`) loses standing regardless of its
-internal health; a thriving internal membership buys no protocol
-standing by itself. Each authority is earned and lost on its own
-terms.
+inbound stances to `(0,0)`) falls back to its own commitment
+rate — the standing its treasury-funded burns buy, every
+relational lift gone (`cor:epoch:zero-relational-row`) — no
+matter how healthy its internal membership; a thriving internal
+membership buys no protocol standing by itself. Each authority is
+earned and lost on its own terms.
 
 ---
 
