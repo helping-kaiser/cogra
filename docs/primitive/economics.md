@@ -421,6 +421,15 @@ the settlement payload (§10).
   punished; `0.05%·D` deters spam-creation without burning honest
   advertisers.
 
+The equation is **campaign-only**. Internal CGT flows — tips,
+marketplace purchases — carry none of these lines: no burn, no
+treasury, no reserve, no inviter share. The fee is on the gate, not
+in the flow: protocol income realizes where CGT enters and exits —
+the ladder's spread
+([token.md §4.5](token.md#45-income-disposition--the-spread-flows-to-the-team-treasury)) —
+and scales with all of it, campaigns, tips, and purchases alike
+([ledger.md](../implementation/ledger.md)).
+
 ### 7.1 The strict cap
 
 **Total-to-graph `< D` always.** Contributors and
