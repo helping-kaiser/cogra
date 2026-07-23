@@ -89,8 +89,9 @@ preconditions already stand:
    each Registration signed by its own backend-custodied key.
 4. **The Genesis Moderator endorses The Publisher and The
    Moderator** — vouch Opinions clearing their wall; the burn is
-   not optional, endorsement alone cannot reach a zero-burn actor
-   ([substrate.md §8](substrate.md#8-system-actors)). The Treasury
+   not optional: W1 reads only the actor's own balance, and the
+   endorsement lifts standing only as an external positive-rate
+   source ([substrate.md §8](substrate.md#8-system-actors)). The Treasury
    needs no endorsement: it never writes again.
 5. **The Publisher publishes The Charter** — its witnessed payload
    carries the charter text and the genesis value of every

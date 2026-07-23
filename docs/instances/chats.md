@@ -67,7 +67,7 @@ Two L1 facts frame the whole doc:
 ## 3. Creation
 
 **Founding a Chat** is the founder's own **Participant** record:
-its identity key mints the Chat node, fixes the founder as
+its act identifier mints the Chat node, fixes the founder as
 creator, and is simultaneously the first membership signal. The
 founding payload carries the initial chat metadata — name,
 description, image digests, and the chat's governance map (§5) —

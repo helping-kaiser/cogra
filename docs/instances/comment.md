@@ -18,8 +18,8 @@ Commenting is one act: the author's **Review** hyper-edge
 (Actor → parent → Comment,
 [edges.md §3](../primitive/edges.md#3-hyper-edge-families-cogra-authors)) —
 one `θ`-debit, one stamp, two legs. The A-leg targets the parent;
-the terminal leg mints the new Comment node, whose identity key
-is the Review record's. No approval flow, no second-party
+the terminal leg mints the new Comment node, whose identity is
+the Review act's identifier. No approval flow, no second-party
 affirmation.
 
 **The parent is whatever the response responds to.** Threading is

@@ -22,9 +22,9 @@ how a database table would:
 - **Identity is an algebra.** Every node identifier is **grounded**
   (`addr(a)` Actor, `prof(a)` Profile — anchored by a Registration),
   **named** (`name(s)` Type — a commons compared by byte equality),
-  or **minted** (`key(…)` — the identity key of the record that
-  created it). A node's type is fixed by its anchoring record,
-  never by payload.
+  or **minted** (`mint(actid)` — the identifier of the authored
+  act that created it). A node's type is fixed by its anchoring
+  record, never by payload.
 - **Properties are folds.** Any "node property" — sentiment, norm,
   creator, membership — is a declared fold over the records that
   reference the node. What a node *shows* in CoGra (name, body,
