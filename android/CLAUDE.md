@@ -113,9 +113,14 @@ state flag that re-fires on recomposition.
 Tokens are persisted in DataStore, encrypted via Tink with a Keystore-backed
 master key (`core:network`'s token store). The refresh token rotates on every
 use — the client must overwrite its stored copy each refresh
-([auth.md §Tokens](../docs/implementation/auth.md)). The access token rides as
-a `Bearer` header; an `UNAUTHENTICATED` response triggers a single-flight
-refresh-and-replay.
+([auth.md §Tokens](../docs/implementation/auth.md#tokens)). The access token
+rides as a `Bearer` header; an `UNAUTHENTICATED` response triggers a
+single-flight refresh-and-replay.
+
+This section covers session tokens only. The device-held **actor key** and
+the pre-sign/approve write flow are specified in
+[android.md](../docs/implementation/android.md) and land with roadmap
+slice 1; their rules are added here when the code does.
 
 ## Tests ship with the code
 
