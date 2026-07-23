@@ -268,10 +268,9 @@ on that path is authored by the account itself**.
   exclusion an account could author the final hop of its own
   eligibility path. With it, eligibility is strictly
   other-authored. A *confederate* authoring that landing hop
-  remains possible — parked as
-  [open-questions.md Q28](../open-questions.md#q28--zero-jail-person-landing-the-hyper-edge-t-leg-escape)
-  with an L2 policy fallback; until it resolves, this residual is
-  accepted and bounded (§11).
+  remains possible — the accepted residual on record in resolved
+  [open-questions.md Q28](../open-questions.md); it stays bounded
+  (§11).
 - **Union, not intersection.** Either cone qualifies: a fresh
   advertiser's forward cone is nearly empty, so demanding both
   would strangle new campaigns; either-cone membership still
@@ -734,11 +733,10 @@ and every path through it dies at that hop.
 - the absent-advertiser slow farm (§6.1) — bounded by `τ`, the
   skipped evaluation window, eligibility, and the cap;
 - confederate-authored eligibility (§4.1) — a real member can land
-  a person-stance hop on a farm; open at L1 as
-  [Q28](../open-questions.md#q28--zero-jail-person-landing-the-hyper-edge-t-leg-escape),
-  with an L2 policy fallback; meanwhile the farm still earns only
-  what real viewers' extractions route through it, at the funnel
-  ceiling, under the cap;
+  a person-stance hop on a farm; the accepted residual of resolved
+  [Q28](../open-questions.md); the farm still earns only what real
+  viewers' extractions route through it, at the funnel ceiling,
+  under the cap;
 - double-negative credit (§8.2) — forced by conservation.
 
 The only gating CoGra applies is **infrastructure payment** — a
