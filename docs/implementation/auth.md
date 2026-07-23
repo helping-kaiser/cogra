@@ -166,10 +166,12 @@ backend then runs the admission sequence:
 1. **Funding** — the community-funded L0 burn to the applicant's
    address ([economics.md](../primitive/economics.md)).
 2. **Registration** — the backend prepares the staged
-   Registration; the applicant's device **signs it on next app
-   open** (the backend cannot sign for anyone —
+   Registration; the applicant's device **runs the full signing
+   handshake on next app open** — pre-commitment, then approval
+   over the host-sealed verified act: one ceremony, two
+   signatures (the backend cannot sign for anyone —
    [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
-   the backend relays and the record lands.
+   the backend relays each step and the record lands.
 3. **The inviter's Opinion** toward the new Profile — prepared
    for the inviter, signed on their device, relayed.
 4. **Landing** — when the Registration confirms in the mirror,

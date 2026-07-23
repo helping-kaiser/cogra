@@ -18,7 +18,8 @@ how a database table would:
 - **Nodes are implicit.** A node exists iff some accepted record
   references it in an endpoint field. There is no node-creation
   operation, no node table, no node attribute store — the graph's
-  primitive record set is edges, and nothing else.
+  primitive history is authored acts and their edge projections,
+  nothing else (`ax:graph:authored-act-ontology`).
 - **Identity is an algebra.** Every node identifier is **grounded**
   (`addr(a)` Actor, `prof(a)` Profile — anchored by a Registration),
   **named** (`name(s)` Type — a commons compared by byte equality),
@@ -49,6 +50,11 @@ how a database table would:
 
 CoGra accounts are a service-layer concept; on the shared graph
 both kinds resolve to the same grounded pair.
+
+**Invariant: one actor type.** User and Collective are CoGra
+service-layer accounts; each resolves to one ordinary grounded
+Actor + Profile pair — L1 has no account types, and "active
+member" and "voter" are scoped subsets, never instance-free.
 
 - **User** — a person's account: one L1 **Actor + Profile**, one
   L0 address. The person ↔ actor association is CoGra service

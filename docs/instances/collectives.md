@@ -142,10 +142,12 @@ design error:
 | **Self-funding** | Can it stand on its own? | Always open — an L0 burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
 A Collective the community defunds (severance netting its
-inbound stances to `(0,0)`) loses standing regardless of its
-internal health; a thriving internal membership buys no protocol
-standing by itself. Each authority is earned and lost on its own
-terms.
+inbound stances to `(0,0)`) falls back to its own commitment
+rate — the standing its treasury-funded burns buy, every
+relational lift gone (`cor:epoch:zero-relational-row`) — no
+matter how healthy its internal membership; a thriving internal
+membership buys no protocol standing by itself. Each authority is
+earned and lost on its own terms.
 
 ---
 
@@ -154,13 +156,16 @@ terms.
 A Collective takes no gestures by itself: every record attributed
 to it is initiated by an authorized member — a User, or a
 sub-Collective acting recursively through its own authorized
-members. On the shared graph the Collective's actor signs; **no
-per-edge record of the acting member exists, deliberately.**
+members. On the shared graph the Collective's actor signs;
+**Invariant: no per-edge record of the acting member exists,
+deliberately.**
 Accountability for who may trigger the key lives in the social
 contract, not in per-record attribution — and internally holding
 members accountable is likewise the contract's business.
 
-Two coarse gesture classes, with opposite defaults:
+Two coarse gesture classes, with opposite defaults —
+**Invariant: content-acts default permissive, governance-acts
+default deny** (the asymmetry reflects reversibility):
 
 - **Content-acts** — publishing, commenting, stances, tags.
   **Default: any active member** may produce one. A Collective
@@ -359,7 +364,7 @@ Internal disputes resolve by the contract, never on the thread.
 
 ## 8. Lifecycle
 
-- **Dissolution is a membership fact, not a graph one.** A
+- **Invariant: dissolution is a membership fact, not a graph one.** A
   Collective whose last member leaves has no one who can trigger
   its key — acting capacity is gone; the actor, its standing,
   its titles, and its history persist. Members can never *not*

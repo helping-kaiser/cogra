@@ -44,11 +44,10 @@ its own Network until then.
 ## 2. Creation
 
 The Network is brought into existence by the **instance
-bootstrap** — the one-shot genesis step, and the only step that
-depends on out-of-graph authority
-([graph-model.md §1](graph-model.md#1-core-principles)); the
-authority is confined to it. Every subsequent change runs through
-governance.
+bootstrap** — the one-shot genesis step. **Invariant:
+out-of-graph authority is confined to the bootstrap** — it is the
+only write that escapes the actor-gesture-or-governance rule;
+every subsequent change runs through governance.
 
 ### The cast
 
@@ -57,7 +56,7 @@ used across all docs:
 
 | Name | What it is | What it authors |
 |---|---|---|
-| **The Genesis Moderator** | the operator's own account — the first member; an ordinary Actor + Profile with a self-custodied L0 address, undemotably `moderator` (§9) | the first Registration; the endorsement Opinions that ignite the system actors; ordinarily, the first invitations |
+| **The Genesis Moderator** | the operator's own account — the first member; an ordinary Actor + Profile with a self-custodied L0 address, undemotably `moderator` (§9) | the first Registration; the person-vouch Opinions that lift the system actors' standing above their own rate; ordinarily, the first invitations |
 | **The Publisher** | the system actor acting on the Network's behalf, in backend custody ([substrate.md §8](substrate.md#8-system-actors)) | The Charter, platform documents, Network-scope finalizations, role Tags (§9), auto-settlement payloads ([economics.md](economics.md)) |
 | **The Moderator** | the system actor for verdict gestures, in backend custody | Tag verdicts and payload removals ([moderation.md](../instances/moderation.md)) |
 | **The Treasury** | the team's account — destination of the campaign treasury share and funder of system-actor and Collective burns ([economics.md §7](economics.md#7-the-conservation-equation)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |

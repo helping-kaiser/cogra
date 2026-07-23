@@ -28,8 +28,8 @@ operates is deliberately small:
   to it, never amounts ([ledger.md](ledger.md)).
 
 Two external surfaces complete the picture. **Layer 1** accepts
-CoGra's relayed records and publishes the accepted record set per
-epoch. **Layer 0** (Peer Attestation) is read-only: CoGra consumes
+CoGra's relayed records and publishes the accepted acts per epoch
+in their authoritative order `𝒬_k`. **Layer 0** (Peer Attestation) is read-only: CoGra consumes
 the admission balance `B_i` through L1's interface and never
 authors L0 records. The two moneys never mix — admission money is
 Layer 0's, reward money is CGT on CoGra's own rail.
@@ -47,7 +47,7 @@ ever what a record *is* — that is always the L1 record itself.
 ```
 ┌────────────┐   GraphQL    ┌───────────────────────────────┐
 │   Client   │ ───────────► │          API (Axum)           │
-│ (holds the │ ◄─────────── │   prepare · serve · relay     │
+│ (holds the │ ◄─────────── │   prepare · relay · serve     │
 │ actor key, │              └───────┬───────────────┬───────┘
 │   signs)   │                      │               │
 └────────────┘              ┌───────▼───────┐  ┌────▼─────┐
@@ -57,7 +57,7 @@ ever what a record *is* — that is always the L1 record itself.
                             │     truth     │  └──────────┘
                             └───────▲───────┘
                                     │ ingest accepted records
-              relay signed records  │
+       relay proposals + approvals  │
                     ┌───────────────┴───────────────┐
                     │     PeerNetworks Layer 1      │──► B_i (Layer 0
                     │          (external)           │    export, read-
@@ -114,8 +114,8 @@ Android-specific ones.
 Every binding fact is an L1 record: priced, signed, witnessed,
 epoch-stamped, visible to every other L2. Nothing CoGra stores is
 authoritative about the graph — the record mirror is a cache (it
-may lag, it must never diverge, it is fully rebuildable from
-published records), and the overlay caches published fold rules
+may lag, it must never diverge, it is fully rebuildable from the
+published ordered sequence), and the overlay caches published fold rules
 (the charter's parameter schedule, Proposal tallies,
 `network_role` marks). Where a local table and the L1 record could
 disagree, the record governs — and because every binding value is
@@ -124,7 +124,8 @@ audit CoGra's reads without CoGra's help.
 
 ### 2. One store, partitioned by truth relationship
 
-The decision rule, per [substrate.md §3](../primitive/substrate.md#3-cogras-stores):
+**Invariant** — the decision rule, per
+[substrate.md §3](../primitive/substrate.md#3-cogras-stores):
 what a record **is** lives on L1; what it **shows** lives in
 Postgres; what it **weighs** is recomputed from records. Within
 Postgres the schema keeps three kinds of state apart — mirror
@@ -147,9 +148,10 @@ design facts, not conveniences
 
 ### 4. All ranking comes from the graph
 
-The feed is computed at query time from viewer-rooted forward
-paths over L1 records — no materialized counters, no popularity
-scores, no algorithm-driven signals stored anywhere. Inbound
+**Invariant:** the feed is computed at query time from
+viewer-rooted forward paths over L1 records — no materialized
+counters, no popularity scores, no algorithm-driven signals
+stored anywhere. Inbound
 records never shape the viewer's feed; global statistics enter as
 tie-breakers only. The algorithm belongs to
 [feed-ranking.md](../primitive/feed-ranking.md); this doc covers
@@ -175,8 +177,8 @@ The public-facing binary. Responsibilities:
 - Starts the Axum HTTP server
 - Hosts the async-graphql schema at `/graphql`
 - Hosts the GraphQL playground at `/playground` (dev only)
-- Orchestrates the write path (prepare → relay → confirm) and the
-  read paths; owns the L1 boundary interface
+- Orchestrates the write path (prepare → seal → approve →
+  confirm) and the read paths; owns the L1 boundary interface
 - Calls `postgres-store` to fulfill resolvers
 - No business logic in resolvers — it orchestrates, it does not
   decide
@@ -215,8 +217,8 @@ container, and bound into the Android app via UniFFI.
 
 The reference frontend — Kotlin + Jetpack Compose, with the typed
 GraphQL client generated from `schema.graphql`. It holds the
-member's actor key and performs the sign step of every write
-([android.md](android.md)). Stack reasoning, module layout, the
+member's actor key and performs both signing steps of every
+write — pre-commitment and approval ([android.md](android.md)). Stack reasoning, module layout, the
 UniFFI binding, and the test story live there.
 
 ---
@@ -224,27 +226,36 @@ UniFFI binding, and the test story live there.
 ## The write path
 
 [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)
-owns the flow's semantics; this is the system view of the four
+owns the flow's semantics — L1's admission handshake takes two
+device signatures per act; this is the system view of the five
 steps:
 
 1. **Prepare** (backend). Validate the gesture against L2 policy
    and envelope conformance, pre-check the write rule (below),
-   assemble the canonical record — payload envelope, salt, content
-   witness — and store it as a **staged write** (Postgres row;
-   payload bytes staged in the carriage tables). Return record,
-   salt, and witness to the client so it recomputes the commitment
-   before signing.
-2. **Sign** (client). On the device; the key never leaves it.
-3. **Relay** (backend). Submit the signed record through the L1
-   boundary and drive retries across epoch boundaries. The
-   signature covers the record, so the relay can neither alter it
-   nor author one unasked.
-4. **Confirm** (ingestion). When the accepted record arrives in
-   the mirror, the staged write is promoted: payload becomes
+   assemble the canonical proposal — act body, payload envelope,
+   dependency list — and store it as a **staged write** (Postgres
+   row; payload bytes staged in the carriage tables). Return the
+   proposal with its pre-digests to the client so it recomputes
+   what it commits to before signing.
+2. **Pre-sign** (client). The device signs the proposal
+   pre-commitment; the key never leaves it.
+3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
+   proposal through the L1 boundary; the L1 host verifies it,
+   adds the projection salts, and returns the sealed **verified
+   act**, stored on the staged write.
+4. **Approve** (client, then backend). The device verifies the
+   host seal, the exact returned body, and both commitment
+   openings, then signs the **approval witness** — only then is
+   the act orderable. The backend relays the approval and drives
+   retries across epoch boundaries. Both signatures cover the
+   act, so the relay can neither alter it nor author one unasked.
+5. **Confirm** (ingestion). When the accepted act arrives in the
+   mirror, the staged write is promoted: payload becomes
    permanent carriage, display rows become visible, flow state
-   advances. A staged write that never lands is garbage-collected
-   — staged payload included — after a bounded number of epochs
-   (an operational parameter, [data-model.md](data-model.md)).
+   advances. A staged write that never completes the handshake
+   and lands is garbage-collected — staged payload included —
+   after a bounded number of epochs (an operational parameter,
+   [data-model.md](data-model.md)).
 
 ### Atomicity
 
@@ -277,12 +288,13 @@ Who funds the debits is economics
 
 ### Record ingestion (the mirror contract)
 
-Per epoch, the backend ingests the accepted record set through the
-L1 boundary and appends it to the mirror tables, advancing a
-stored epoch cursor. The contract is exactly the mirror's truth
-relationship: it may lag L1; it must never diverge; it is fully
-rebuildable from published records, so ingestion state is never
-precious. Confirmation of staged writes (§ above) and overlay
+Per epoch, the backend ingests the accepted ordered act sequence
+`𝒬_k` through the L1 boundary and appends it to the mirror
+tables — each record with its authoritative causal key (act time,
+position) — advancing a stored epoch cursor. The contract is
+exactly the mirror's truth relationship: it may lag L1; it must
+never diverge; it is fully rebuildable from the published
+sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay
 fold updates (tallies, the parameter carrier, role marks) are
 driven off the same ingestion pass.
 

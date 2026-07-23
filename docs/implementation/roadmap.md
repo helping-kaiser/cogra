@@ -77,7 +77,7 @@ write needs a landed, funded actor with a device-held key.
 ### Slice 0 — The seam and the stand-in
 
 - The single L1 interface boundary in the `api` crate — prepare,
-  relay, ingest, and the `B_i` read
+  the two relay legs (seal, approve), ingest, and the `B_i` read
   ([architecture.md](architecture.md)) — with the stand-in behind it.
 - Record mirror tables, ingestion, epoch cursor
   ([data-model.md](data-model.md)).
@@ -92,11 +92,11 @@ write needs a landed, funded actor with a device-held key.
 
 - The staged-applicant flow end to end: invite link → application
   with the on-device key ceremony (actor key + L0 address +
-  recovery-code offer) → funding burn → staged Registration signed on
-  next open → landing ([auth.md](auth.md)).
+  recovery-code offer) → funding burn → staged Registration signed
+  (both handshake steps) on next open → landing ([auth.md](auth.md)).
 - Login, sessions, credentials — the L2 half.
-- The write path: prepare → sign on device → relay → confirm
-  ([architecture.md](architecture.md)).
+- The write path: prepare → pre-sign on device → seal → approve
+  on device → confirm ([architecture.md](architecture.md)).
 - Android from the start: the actor key lives on the device, so the
   client is not optional here — key ceremony, signing, login
   ([android.md](android.md)).
