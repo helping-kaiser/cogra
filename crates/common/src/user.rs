@@ -4,14 +4,14 @@ use std::fmt;
 use std::str::FromStr;
 
 /// A User's Network-scope role
-/// ([network.md §8](../primitive/network.md)). Layered on the `:User`
-/// node; read at the action site, never carried in an access token
-/// ([auth.md](../implementation/auth.md)).
+/// ([network.md §8](../../../docs/primitive/network.md)). Layered on the
+/// `:User` node; read at the action site, never carried in an access
+/// token ([auth.md](../../../docs/implementation/auth.md)).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetworkRole {
     /// Every registered user, automatically. The default.
     Member,
-    /// A platform-wide governance gate-keeper (see network.md §9).
+    /// A platform-wide governance gate-keeper (see network.md §8).
     Moderator,
 }
 

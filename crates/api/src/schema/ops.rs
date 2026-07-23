@@ -1,7 +1,8 @@
 //! Auth/account resolver logic, kept out of the `Mutation` root so the root
 //! reads as an index. Each function consumes the flows specified in
-//! [auth.md](../../../docs/implementation/auth.md) and
-//! [architecture.md](../../../docs/implementation/architecture.md).
+//! [auth.md](../../../../docs/implementation/auth.md); the registration
+//! flow is the pre-rebase shape
+//! ([roadmap.md "Where the code stands"](../../../../docs/implementation/roadmap.md#where-the-code-stands)).
 
 use std::sync::Arc;
 
@@ -168,8 +169,8 @@ pub async fn register(ctx: &Context<'_>, input: RegisterInput) -> Result<Registe
     }
 }
 
-/// `verifyEmail` — the registration dual-store transaction
-/// (architecture.md "User registration"). Atomically creates the `:User`
+/// `verifyEmail` — the registration dual-store transaction (pre-rebase
+/// flow). Atomically creates the `:User`
 /// node, its `:Wallet` + `:PAYS_TO`, the two invitation edges, the verified
 /// `users` row, the first profile version, and the first session; then
 /// deletes the pending record. The graph commits first (idempotent on retry
@@ -280,8 +281,8 @@ pub async fn verify_email(
 
     // Commit graph first: a crash between the two commits leaves at worst an
     // unreachable orphan graph node (no users row to log in against), which is
-    // the benign side of the inter-commit window (architecture.md
-    // "Partial-failure handling").
+    // the benign side of the inter-commit window (the pre-rebase
+    // dual-store rule).
     gtx.commit()
         .await
         .map_err(|e| internal("committing graph transaction", e))?;
@@ -440,8 +441,9 @@ pub async fn refresh_session(
     }))
 }
 
-/// `editProfile` — append a new layer to the viewer's own profile (api-spec.md
-/// "editProfile"). Self only: the edited User is the viewer, so there is no id.
+/// `editProfile` — append a new layer to the viewer's own profile (pre-rebase
+/// surface; the rebased api-spec's form is `prepareProfileUpdate`). Self only:
+/// the edited User is the viewer, so there is no id.
 /// Omitted fields carry forward from the current version; a blank `bio` /
 /// `websiteUrl` clears it.
 ///
@@ -449,8 +451,8 @@ pub async fn refresh_session(
 /// moderation status, unchanged by a normal edit. A handle change is the lone
 /// field that touches the graph: it updates `users.username` and appends the
 /// node's `username` layer, so it runs as a dual-store transaction with the
-/// graph committing first (its relabel is idempotent on retry —
-/// architecture.md "Partial-failure handling"). Either way exactly one new
+/// graph committing first (its relabel is idempotent on retry — the
+/// pre-rebase dual-store rule). Either way exactly one new
 /// profile version lands, so `updatedAt` advances on every successful edit.
 pub async fn edit_profile(
     ctx: &Context<'_>,

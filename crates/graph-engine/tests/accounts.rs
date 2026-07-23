@@ -327,7 +327,7 @@ async fn relabel_to_the_same_value_appends_no_layer() {
 
     let (current, _) = handle_state(&graph, user_id).await;
     // Idempotent on the value: a retry after a partial failure must not stack a
-    // duplicate layer (architecture.md "Partial-failure handling").
+    // duplicate layer (the pre-rebase dual-store rule).
     relabel(&graph, user_id, &current)
         .await
         .expect("relabel no-op");

@@ -1,5 +1,5 @@
 //! GraphQL type system for slice 0 — the auth/account surface
-//! ([api-spec.md](../../../docs/implementation/api-spec.md)). The broader
+//! ([api-spec.md](../../../../docs/implementation/api-spec.md)). The broader
 //! node catalog (Post, Comment, the `Node`/`Actor` interfaces, …) arrives in
 //! later slices as their resolvers do; this file carries only what
 //! register / verifyEmail / logIn / refreshSession / me need.
@@ -199,8 +199,9 @@ pub struct RefreshSessionInput {
     pub refresh_token: String,
 }
 
-/// Append a new layer to the viewer's own profile (api-spec.md
-/// "EditProfileInput"). Self only — the viewer is the edited User, so there is
+/// Append a new layer to the viewer's own profile (pre-rebase surface; the
+/// rebased api-spec's form is `PrepareProfileUpdateInput`). Self only — the
+/// viewer is the edited User, so there is
 /// no id. Omitted fields carry forward from the current version; a blank `bio`
 /// / `websiteUrl` clears that field. The media fields (avatar / cover) arrive
 /// with the media slice.

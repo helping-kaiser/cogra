@@ -1,5 +1,5 @@
-//! Graph schema — constraints and indexes from
-//! docs/implementation/graph-data-model.md, applied on startup.
+//! Graph schema — constraints and indexes from the pre-rebase graph data
+//! model (doc retired in the L1 docs rebase), applied on startup.
 //!
 //! Every statement is idempotent in Memgraph (re-creating an existing
 //! constraint or index is a no-op), so `apply_schema` runs unconditionally
@@ -7,8 +7,8 @@
 //!
 //! The edge-tensor-uniformity invariant is NOT here: Memgraph constraints
 //! are node-only, so it is enforced by service-layer write paths and
-//! integration tests — see graph-data-model.md "Tensor uniformity
-//! enforcement".
+//! integration tests (the pre-rebase tensor-uniformity enforcement
+//! rule).
 
 use neo4rs::Graph;
 
