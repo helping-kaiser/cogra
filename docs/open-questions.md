@@ -140,7 +140,7 @@ than from the author:
   legally, so self-guards and artifact-ownership constraints
   don't close the escape.
 - **The standing-side `j = i` exclusion has no feed
-  counterpart.** L1's endorsement flow excludes self-reach; the
+  counterpart.** L1's standing flow excludes self-reach; the
   feed's path math has no analogous exclusion on person-landing
   legs.
 - **Review, Send, and Bid mint author-owned nodes reachable from

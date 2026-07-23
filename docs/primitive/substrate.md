@@ -375,9 +375,9 @@ per-concept table: [substrate-map.md](substrate-map.md)):
   Tag marks the same records — different folds, both live. Where
   one field has a single eligible author, "newest" is exact (one
   author's records toward a node form a strict `≺`-chain); where
-  several authors are eligible, "newest" is epoch-granular — L1
-  binds no finer cross-author order — and co-epochal updates
-  resolve by the public canonical replay order, so the fold stays
+  several authors are eligible, "newest" is precedence in the
+  published authoritative order `𝒬_k`
+  (`def:graph:authoritative-act-order`), so the fold stays
   deterministic.
 - **Fold granularity** — newest per field, per parameter, or per
   (target, Type), declared with the concept.

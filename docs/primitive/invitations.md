@@ -100,8 +100,8 @@ The inviter's Opinion controls how the new member's content
 traverses the inviter's network — paths from the inviter's
 neighborhood reach the joiner through it at its real `w̃` — and,
 being a vouch-positive person stance, it feeds the joiner's
-standing through endorsement flow. The inviter is signaling to
-their network how strongly to weight this new voice. Strong
+standing through the standing projection. The inviter is
+signaling to their network how strongly to weight this new voice. Strong
 values are a real commitment: severance later means authoring the
 counter-stance that nets the pair to `(0, 0)`
 ([feed-ranking.md §8.1](feed-ranking.md#81-the-act)).

@@ -159,7 +159,7 @@ Inbound records land on the **Profile** — the person-facing
 anchor:
 
 - **Opinions** — the interpersonal stance carrier; vouch-positive
-  stances feed the target's standing through endorsement flow
+  stances feed the target's standing through the standing projection
   ([substrate-map.md §3](substrate-map.md#3-stances-and-revision)).
 - **References** — mentions: a positive, effortful mention is a
   weak, priced vouch
