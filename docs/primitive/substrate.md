@@ -247,15 +247,17 @@ only if its author clears the two-gate write rule
 - **W1 — solvency:** `b_i ≥ θ`; the write debits `θ` from the
   actor's residual balance. Capacity *is* the balance — remaining
   acts are `⌊b_i/θ⌋`, restored immediately by committing burns.
-- **W2a — the wall:** the actor's boundary-frozen action stamp
-  clears the safety floor, `ρ_act ≥ ρ_θ`. Individual, never
-  averaged.
+- **W2a — the wall:** the actor's act-owned stamp, evaluated once
+  at final-set closure (`def:epoch:final-act-stamps`), clears the
+  safety floor, `ρ_act ≥ ρ_θ`. Individual, never averaged.
 - **W2b — the door:** the epoch's action-weighted stamp average
   clears the effective floor, `ρ_ep ≥ ρ_eff`, within the epoch
   budget. Band actors enter when the door has headroom.
 
-The backend checks eligibility against this surface before
-submitting, and drives the restoration flows when a check fails: an
+The backend pre-checks eligibility against this surface before
+submitting — an L2 estimate from the last published certificate,
+since the stamps themselves are evaluated only at final-set
+closure — and drives the restoration flows when a check fails: an
 insolvent actor (W1) restores capacity immediately by committing
 burns; re-crossing the wall (W2a) takes some combination of new
 burns and admissible vouch-positive connections from actors with
@@ -373,9 +375,9 @@ per-concept table: [substrate-map.md](substrate-map.md)):
   Tag marks the same records — different folds, both live. Where
   one field has a single eligible author, "newest" is exact (one
   author's records toward a node form a strict `≺`-chain); where
-  several authors are eligible, "newest" is epoch-granular — L1
-  binds no finer cross-author order — and co-epochal updates
-  resolve by the public canonical replay order, so the fold stays
+  several authors are eligible, "newest" is precedence in the
+  published authoritative order `𝒬_k`
+  (`def:graph:authoritative-act-order`), so the fold stays
   deterministic.
 - **Fold granularity** — newest per field, per parameter, or per
   (target, Type), declared with the concept.

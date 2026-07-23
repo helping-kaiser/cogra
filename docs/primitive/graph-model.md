@@ -12,8 +12,8 @@ CoGra's own stores. The node and edge catalogs live in
 
 ## 1. Core principles
 
-- **Directional.** Every record runs from its author toward a
-  target; `A → B` and `B → A` are independent records, and one
+- **Invariant: directional.** Every record runs from its author
+  toward a target; `A → B` and `B → A` are independent records, and one
   never implies the other. A friendship is two records; an
   unreciprocated stance is one. Directedness is what prevents
   unilateral influence fabrication — nobody can create an edge
@@ -24,7 +24,7 @@ CoGra's own stores. The node and edge catalogs live in
   ([substrate.md §7](substrate.md#7-payload-carriage)). The store
   holds chronicles, never state — every notion of "current" is a
   declared read rule over the records (§3).
-- **Public.** The shared graph is continuously readable by anyone,
+- **Invariant: public.** The shared graph is continuously readable by anyone,
   without an account — an L1 substrate guarantee, not a CoGra
   choice. Accounts gate participation in CoGra's service, never
   viewing. Privacy of content is payload custody and E2EE;
@@ -41,10 +41,11 @@ CoGra's own stores. The node and edge catalogs live in
 ## 2. Time, causality, maturity
 
 Records carry **causal time, not wall-clock time**. Each accepted
-**act** is a Lamport event over its endpoints and asserted
-parents, and the host publishes one authoritative order `𝒬_k`
-that totalizes concurrent acts — every record inherits its act's
-logical time, and `≺` means precedence in that published order
+**act** is a Lamport event over its endpoints, asserted parents,
+and declared dependencies, and the host publishes one
+authoritative order `𝒬_k` that totalizes concurrent acts — every
+record inherits its act's logical time, and `≺` means precedence
+in that published order
 (`def:graph:authoritative-act-order`). Two participants holding
 the same published order derive the same result; agreement on the
 order, not merely the record set, is what replay consumes — there
@@ -69,12 +70,18 @@ Revising a stance never edits anything: it **appends a parallel
 record** to the author's bundle toward the same target — the
 bundle is a `≺`-chain, the full history public by construction.
 
+**Invariant: parallel records are unrestricted; "current" is a
+declared fold.** The append layer never rejects, merges, or
+supersedes a same-author record
+(`ax:graph:parallel-authored-acts`); every current-state read
+names the fold it applies.
+
 What "current" means is always a declared fold:
 
 - **L1 reads bundles in exactly two places.** The standing
   projection nets each same-author bundle by sum-then-clip before
-  endorsement flow, and the title fold reads settlement records
-  epoch-quantized. Nothing else on L1 consumes a bundle.
+  the safe standing flow `W_end`, and the title fold reads
+  settlement records epoch-quantized. Nothing else on L1 consumes a bundle.
 - **Every other current-state read is its consumer's declared
   rule.** CoGra declares its folds per surface: the current
   profile is the newest Registration payload; chat membership is
@@ -128,17 +135,20 @@ attributable records.
 
 Two influence channels exist, and they must never be conflated:
 
-- **The feed is outbound-only.** Only outgoing records from the
+- **Invariant: the feed is outbound-only.** Only outgoing records from the
   viewing user, walked forward, shape that user's feed — inbound
   records toward the user contribute nothing. A swarm pointing ten
   thousand stances at you appears in *their* feeds, never in
   yours. This is CoGra feed policy, stated in the published
   ranking spec ([feed-ranking.md](feed-ranking.md)).
 - **Standing is inbound — and gates writing, never ranking.**
-  Vouch-positive stances toward a person *do* lift that person's
-  standing `α_i` through L1's endorsement flow; standing feeds
-  the write gate and is freely readable downstream — but it never
-  enters the feed: who may act, never what the feed shows.
+  Eligible vouches toward a person *do* move that person's
+  standing `α_i` through L1's standing projection — lifting when
+  the voucher's rate exceeds the target's standing, diluting
+  otherwise (`prop:epoch:final-standing-bidirectional-response`);
+  standing feeds the write gate and is freely readable
+  downstream — but it never enters the feed: who may act, never
+  what the feed shows.
 
 In one line: inbound records never shape your feed; they can
 vouch you through the gate.

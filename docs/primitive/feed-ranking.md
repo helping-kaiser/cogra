@@ -8,8 +8,8 @@ formula-complete
 ([layer1-interface.md §4](layer1-interface.md#4-the-reimplementation-grant),
 §I.12). This document is that publication — the complete
 computation of CoGra's feed score `S(u,c)`, from raw L1 records to
-sorted order. Anyone holding the public record set and the epoch
-certificates can reproduce every ranking claim it makes.
+sorted order. Anyone holding the published ordered records and
+the epoch certificates can reproduce every ranking claim it makes.
 
 > **Notation.** L1 symbols (`p_d`, `p_i`, `w̃(e)`, `ε`, `τ_e`,
 > `𝕋^act_q`, `≺`, `E_k`, `α_i`) are the interface's
@@ -77,13 +77,14 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 [layer1-interface.md §8.7](layer1-interface.md#87-path-view-tiers-parity-and-the-damped-weight)).
 Adopting rather than re-deriving buys the proven structure:
 
-- **Every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
+- **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
   (`prop:epoch:damped-weight-bounds`), and determinant magnitudes
   top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
   products only shrink with depth.
 - **The tier ladder is built in.** Full / Half / Marginal routing
-  floors damp proposal-like and annotation-like hops by published
-  formula, not by CoGra policy.
+  floors damp proposal-like and annotation-like hops by the
+  published formula, which CoGra adopts as-is — an L1 terminal
+  default.
 - **Determinism.** `w̃(e)` is a function of the published
   authoritative act order `𝒬_k` and the constants alone
   (`lem:graph:ordered-replay-determinism`) — every consumer
@@ -92,7 +93,7 @@ Adopting rather than re-deriving buys the proven structure:
   ranker all evaluate this same primitive; there is no CoGra-side
   variant to trust.
 
-**Zero is inert.** If either effective parameter is zero, `ε(e)`
+**Invariant: zero is inert.** If either effective parameter is zero, `ε(e)`
 is undefined and `w̃(e) = 0`
 (`rem:graph:zero-parameter-degeneracy`) — the edge carries no
 path. Indifference is magnitude zero, not a third sign; nothing
@@ -117,7 +118,7 @@ adopted as the fold's rule here.
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
 [layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-person-vouch-relation-layer))
 deliberately, with the scope stated honestly: **L1's math makes a
-`(0,0)`-netted bundle inert in endorsement flow and standing; its
+`(0,0)`-netted bundle inert in the standing projection; its
 inertness in CoGra's feed and attribution holds because this spec
 declares the same fold.** Attribution consumes the same folded
 paths (§6.4), so netting a bundle to `(0,0)` also kills earnings —
@@ -127,7 +128,7 @@ The fold gives revision its economics: stances are chronicles
 ([graph-model.md §3](graph-model.md#3-revision-and-current-state)),
 so walking back accumulated conviction costs counter-records in
 proportion to it, each one a priced act
-(`ver:stance:counter-edge-withdrawal`). Flip-flops are expensive;
+(`rem:epoch:conviction-inertia`). Flip-flops are expensive;
 severance is burn-priced.
 
 ---
@@ -137,7 +138,7 @@ severance is burn-priced.
 `S(u,c)` is computed over paths from the viewing person `u` to the
 candidate `c`. What counts as a path:
 
-**Forward-only.** Paths traverse records in their stored direction
+**Invariant: forward-only.** Paths traverse records in their stored direction
 only. This is what makes the inbound-inert rule (§1) mechanical:
 propagation flows along directions the viewing user (and their
 transitive network) established; records pointing *at* you move
@@ -183,7 +184,7 @@ surfaces content. A vote stays a stance on the proposal, never on
 its subject — the anchor's `(0,0)` subject Reference has `w̃ = 0`,
 so the stop is enforced by the math, not by a traversal rule.
 
-**Types are sinks.** Every path reaching a Type ends there:
+**Invariant: Types are sinks.** Every path reaching a Type ends there:
 Types rank as targets — topic pages — and never transit, so
 following a topic cannot amplify anything "behind" it. The stop
 is CoGra's declared traversal policy, not an L1 census fact — a
@@ -203,8 +204,8 @@ surfaces the artifact it cites. The **citation T-leg is not a free
 out-edge of the artifact.** Both its endpoints are pre-existing
 passive nodes, so anyone can hang a citation off anyone's content;
 a passive node must never become a switchboard that carries a
-stranger's reference onward to every viewer who reaches it. Exactly
-two channels cross the T-leg:
+stranger's reference onward to every viewer who reaches it.
+**Invariant:** exactly two channels cross the T-leg:
 
 - **Content-intrinsic** — the reference author *is* the carrier's
   author. The citation is part of the content, so any path reaching
@@ -301,7 +302,8 @@ defined (a zero parameter is already inert, §3.1).
 coherence bit, never a favor bit (`rem:graph:sign-semantics`) —
 `(−1, −1)` is gauge-equivalent to `(+1, +1)` for routing. That is
 right for standing (coherent condemnation is a strong coherent
-signal, and the Vouch Predicate gates stance separately) and wrong
+signal, and person-vouch eligibility
+(`def:epoch:person-vouch-eligibility`) gates stance separately) and wrong
 for a feed: hate-and-avoid must rank *opposite* to love-and-seek,
 not identical. The stance survives in the stored slice's marginal
 row precisely for terminal read-sites — and the feed is one: it
@@ -395,9 +397,12 @@ would silently reintroduce it.
 - **Summing all paths diverges.** At Full-tier per-hop weights
   (`w̃ ≈ 0.3–0.5`), path count grows like `b^depth`; branching
   `b ≥ 2–3` lets a cluster amplify one entry edge without bound.
-  The L1 spec rejects sum-scoring for exactly this
-  redundancy-amplification failure
-  (`subsec:necessity:max-product-path-scoring`).
+  Rejecting sum-scoring for this redundancy-amplification failure
+  is CoGra's call — the raw path rule is a replaceable terminal
+  default — and it follows the precedent L1's standing side sets
+  with its anti-stacking max-product envelope
+  (`def:epoch:depth-bounded-source-envelope`,
+  `prop:epoch:final-flow-no-stacking`).
 - **Disjoint-sum is the principled middle.** By Menger's theorem
   the number of internally disjoint `u→c` paths is capped by the
   minimum node cut, so breadth counts exactly when it is realized
@@ -407,8 +412,8 @@ would silently reintroduce it.
   amplification ceiling of exactly 1×, no matter how many internal
   records it manufactures. A `k`-th disjoint path requires a
   `k`-th independent real entry.
-- **`q` stays at ½, unexposed.** L1 fixes `q = ½` for its own
-  traversal and grants guilds other values for their own sorting
+- **`q` stays at ½, unexposed.** `q = ½` is the canonical raw
+  default; a guild may expose other values for its own sorting
   (`rem:sorting:matrix-bfs`). The disjoint-sum already is the
   diversity mechanism; exposing `q` would add a redundant dial at
   roughly 3× compute. At most a future named opt-in feed.
@@ -478,7 +483,7 @@ every consumer of the shared computation:
   bundles;
 - no attribution earnings — the same paths carry the money (§6.4);
 - no vouch propagation — netted bundles are routing-inert in
-  endorsement flow by L1 math;
+  the standing projection by L1 math;
 - no subsidised capacity — an actor nobody's live records reach
   loses community funding for their θ-debits: severance and
   defunding are the same act ([economics.md](economics.md)).
@@ -505,8 +510,8 @@ remove another author's leg — parked as
 
 Severance is write-side: author counter-records until your bundle
 toward the target nets to `(0,0)`. That single act is
-routing-inert everywhere at once — feed (§3.2), endorsement flow
-and standing (L1 math), attribution (§6.4) — and it is priced:
+routing-inert everywhere at once — feed (§3.2), standing
+projection (L1 math), attribution (§6.4) — and it is priced:
 each counter-record debits `θ`, in proportion to the conviction
 being walked back. It is simultaneously the community defense and
 the economic one: a bridge into a bot cluster keeps *earning* from
@@ -583,6 +588,10 @@ the natural actor, or the read-side filter (§9.1) does the
 personal part.
 
 ### 8.6 Community evidence
+
+**Invariant: the `bot-defense` Type name is reserved** — seeded
+at genesis; its semantic role is platform-defined, not emergent
+from first use.
 
 A **bot-defense post** adds what structure can't capture: a
 regular Publish plus a Tag toward the reserved `bot-defense` Type

@@ -64,7 +64,8 @@ title fold; the **title certificate** `owner^(k)` maps each Item
 to the thread's terminal actor and is published by L1 alongside
 the epoch certificate.
 
-CoGra's posture toward it is strictly **consume-only**:
+**Invariant:** CoGra's posture toward title is strictly
+**consume-only**:
 
 - The current owner of any Item is a certificate lookup, never a
   graph traversal and never a CoGra-stored fact.
@@ -192,8 +193,8 @@ edit; every edit is a priced act with public history.
 
 ## 8. Shared ownership routes through a Collective
 
-`owner^(k)` maps each Item to **one** actor — the substrate has
-no co-ownership. Sharing routes through a **Collective**: the
+**Invariant: single owner.** `owner^(k)` maps each Item to
+**one** actor — the substrate has no co-ownership. Sharing routes through a **Collective**: the
 collective's single actor holds title, and the sharing — a
 couple's car, a co-op's tools, a band's equipment — is the
 collective's own membership and social contract

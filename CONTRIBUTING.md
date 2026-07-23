@@ -102,11 +102,14 @@ them:
   Postgres-side — must leave a visible mark.
 - **Never let inbound edges affect a user's feed.** Only outgoing
   edges from the viewing user shape their feed.
-- **Never break edge tensor uniformity.** All edges (actor and
-  structural) have the same shape: 2 dimensions + system
-  dimensions.
-- **Never store graph topology in Postgres or content in
-  Memgraph.** Each database does what it's built for.
+- **Never break the uniform two-parameter grammar.** Every record
+  carries the same two user parameters `(p_d, p_i)`; domain,
+  mask, and tier are family-fixed by the census, never per-edge
+  choices.
+- **Never treat CoGra's stores as authoritative about the
+  graph.** Every binding fact is an L1 record; the record mirror
+  is a rebuildable cache. Money lives on the chain — the graph
+  carries pointers, never amounts.
 - **Never skip tests.** Linting, unit tests, and integration tests
   are created alongside the code, not after.
 
@@ -199,8 +202,7 @@ link-check (`make docs-link-check`, requires `lychee` —
 - `cargo fmt` enforced.
 - `clippy -D warnings` enforced.
 - No `unwrap()` in library code — use `thiserror` / `anyhow`.
-- Cypher queries only in `graph-engine`, SQL only in
-  `postgres-store`.
+- SQL only in `postgres-store`.
 - No comments on obvious code. Comments explain *why*, not *what*.
 
 ---

@@ -106,14 +106,15 @@ original.
 ### 2.2 Eligibility
 
 Who can vote. Always expressed as a condition on existing state —
-L1 records, overlay junctions, or both:
+L1 records and the published folds over them:
 
 - "Members of Chat Y" — the canonical membership fold over the
   member's own Participant / Leave chain
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
 - "CollectiveMembers of Collective Z with role `shareholder`" —
-  overlay junction state
-  ([collectives.md](../instances/collectives.md)).
+  the membership fold's role state, read from the collective-side
+  acceptance payloads
+  ([collectives.md §5](../instances/collectives.md#5-membership--a-public-fold)).
 - "Active Network members" — every account, filtered by the
   governed activity window
   ([network.md §8](network.md#8-membership-and-roles)).
@@ -132,10 +133,10 @@ never unwritten, and the tally is a read-side computation.
 How each ballot's contribution is scaled. An instance picks one of
 three **weight modes**: **equal** — every eligible voter counts
 `1` (one-member-one-vote); **role** — a flat per-role multiplier;
-or **property** — the weight is read from a property on the
-voter's overlay junction (e.g. `ownership_pct`), so this mode
+or **property** — the weight is read from a property in the
+voter's membership fold state (e.g. `ownership_pct`), so this mode
 enfranchises only roles that carry that property. An explicit
-per-junction `voting_weight` overrides the mode where set.
+per-member `voting_weight` overrides the mode where set.
 
 **Role-derived defaults by scope:**
 
@@ -143,14 +144,15 @@ per-junction `voting_weight` overrides the mode where set.
 |---|---|---|
 | Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
 | Collective | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
-| Network | none — every active member's weight is `1` | no `voting_weight` override; Network membership has no junction to carry one |
+| Network | none — every active member's weight is `1` | no `voting_weight` override; Network membership carries no per-member fold state to hold one |
 
 The chat-scope `chat_mod` role is deliberately distinct from the
 Network-scope `network_role = 'moderator'`; do not confuse them
 ([§7](#7-the-mod-gate)).
 
-**`voting_weight` override.** Any overlay junction may carry an
-optional, **nullable** `voting_weight` property. When set
+**`voting_weight` override.** Any member's fold state may carry
+an optional, **nullable** `voting_weight` field, riding the
+collective-side acceptance payload. When set
 (non-null), it is read directly as the voter's weight and the
 role-derived default is ignored. When null (the default), the
 role-derived rule applies. The override is the escape hatch for
@@ -158,8 +160,9 @@ instances whose intended weight does not fall out naturally from
 role + ownership — e.g. a small collective with per-member
 negotiated weights.
 
-Roles, junction properties, and the governed rule entries all
-live in CoGra's overlay and Postgres — never on L1
+Role sets and per-member properties ride the collective-side
+acceptance payloads on L1, folded by CoGra's published rule; the
+governed rule entries live in CoGra's overlay and Postgres
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 The ballots are public; the weighting applied to them is CoGra's
 published policy over CoGra's own state.
@@ -248,10 +251,10 @@ What happens when the threshold is crossed. The outcome has one
     finalization Opinion toward the charter anchor, making the
     parameter schedule replayable
     ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule));
-  - **overlay and Postgres writes** — junction admissions,
-    display-content versions, rule-entry amendments, mirror
-    updates of L1-materialized state — CoGra-side state following
-    CoGra's own append-only discipline ([layers.md](layers.md)).
+  - **overlay and Postgres writes** — display-content versions,
+    rule-entry amendments, cached folds of L1-materialized state
+    (membership, roles) — CoGra-side state following CoGra's own
+    append-only discipline ([layers.md](layers.md)).
 
 Nothing is ever deleted: L1 records are permanent by construction,
 and every CoGra-side carrier is append-only. The only reduction
@@ -348,10 +351,10 @@ of scope-specific vote carriers.
   [economics.md](economics.md)), epoch-quantized in their landing,
   and visible to everyone forever. There is no secret ballot
   (§12).
-- **Weighting is read-side.** Role weights, junction properties,
-  and eligibility conditions are applied by CoGra's published
-  tally formula over its overlay state (§2.2–2.3); the ballot
-  record itself carries no weight.
+- **Weighting is read-side.** Role weights, membership-fold
+  properties, and eligibility conditions are applied by CoGra's
+  published tally formula over the published fold state
+  (§2.2–2.3); the ballot record itself carries no weight.
 - **Authoring is never a vote.** The proposal anchor's genesis is
   a **Publish** record, and Publish and Opinion never share a
   bundle — so creating a Proposal contains no ballot. The client
@@ -465,7 +468,7 @@ whose ballots each contribute to the same tally — the structure is
 mechanism is introduced; the result is a **co-signed act**:
 
 - The would-be change is materialized as a pending subject (a
-  Proposal, a pending collective junction) so co-signers have
+  Proposal, a pending membership admission) so co-signers have
   something to ballot on.
 - Co-signers cast ballots until the threshold is reached.
 - On threshold-cross, the outcome takes effect per §6.
@@ -473,9 +476,11 @@ mechanism is introduced; the result is a **co-signed act**:
 "N parties concur" and "governance with threshold N" are the same
 primitive — there is no separate "co-signature" concept. The
 current consumer is **collective membership admission**: the
-candidate junction stays pending until the required approver
-ballots arrive; the finalization then activates it
-([collectives.md](../instances/collectives.md)).
+candidate's membership stays pending — their member-side join
+Opinion unanswered — until the required approver ballots arrive;
+the finalization backs the collective-side acceptance that
+completes the fold
+([collectives.md §5](../instances/collectives.md#5-membership--a-public-fold)).
 
 Chat membership is deliberately **not** a consumer: the landed L1
 flow makes joining unilateral — an Invitation or Join Request is a
@@ -552,7 +557,8 @@ snapshot weights, but they carry the burden of explaining why.
 ### Rule snapshot at author time
 
 The "current at tally time" default above governs **per-voter
-data** — a voter's role, `ownership_pct`, junction properties. It
+data** — a voter's role, `ownership_pct`, membership-fold
+properties. It
 does **not** extend to **the rule itself** — the eligibility
 predicate, weight function, and threshold the tally evaluates
 against. When rule parameters are amendable via this same

@@ -28,22 +28,28 @@ computes `S(u,c)` per candidate target, orders the candidates, and
 returns the ordered id list. The viewer hands that list to the backend's
 `feed` query for display hydration.
 
-**The slice contract is raw L1 edge records**
+**The slice contract is raw L1 edge records plus their order
+coordinates**
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)):
 the `χ`-bounded node set and the accepted records among those nodes,
-each with its landing epoch. The ranker derives everything else itself —
+each with its landing epoch, its authoritative causal key
+`(𝕋^act, pos)`, and its host-cached edge-projection maturity `τ_e`.
+The maturity is a non-normative L1 by-product, shipped because it is
+order-derived over the full prior history — which no bounded slice
+carries — and a distrusting consumer recomputes it from published
+records. The ranker derives everything else itself —
 it folds same-author bundles into effective edges
 ([§3.2](../primitive/feed-ranking.md#32-the-fold--per-author-net-stance)),
-computes `w̃` per folded hop
+computes `w̃` per folded hop, maturity included
 ([§3.1](../primitive/feed-ranking.md#31-the-damped-weight)),
 extracts up to `k` node-disjoint strongest paths, signs each by balance
 and taint, decays each terminal record by epoch age, and sums
 ([§5–§6](../primitive/feed-ranking.md#5-per-path-quantities)). Epoch
 ages read against the public epoch certificates; no trusted clock and no
 observation metadata ride the slice. Because the inputs are raw public
-records, any consumer can spot-check any ranking claim; pre-folded
-aggregates are permitted only as a wire optimization that changes
-nothing observable.
+records plus a recomputable by-product, any consumer can spot-check any
+ranking claim; pre-folded aggregates are permitted only as a wire
+optimization that changes nothing observable.
 
 The extraction is **exact, never sampled** — binding here exactly as it
 binds the `ranker` crate

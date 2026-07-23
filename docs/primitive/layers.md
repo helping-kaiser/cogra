@@ -171,7 +171,7 @@ mechanisms with two different scopes; they are not interchangeable.
   visible mark described in this section.
 - **Severance** — an author netting their own stance bundle toward
   a target to `(0, 0)` by appending counter-records — routing-inert
-  for every consumer of the endorsement-flow projection
+  for every consumer of the standing projection
   ([graph-model.md §3](graph-model.md#3-revision-and-current-state),
   [feed-ranking.md](feed-ranking.md)). Touches no content; each
   counter-record is itself a priced act.
@@ -250,7 +250,7 @@ Implementation specifics belong in
 
 Three surfaces, three rules:
 
-- **The shared graph: no record is ever removed.** There is no
+- **Invariant — the shared graph: no record is ever removed.** There is no
   API path, no admin escape hatch, no court-order path that
   deletes a record. The only permitted transition is the payload
   reduction above, and it leaves the structural record intact.
