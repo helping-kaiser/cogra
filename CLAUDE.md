@@ -43,10 +43,15 @@ these — these are the rules most often violated:
 
 ## Architecture (one-screen reference)
 
-Dual-database core: **Memgraph** (graph topology, edges, traversal) +
-**PostgreSQL** (display content + operational metadata). The economics
-primitive adds a third store — the **chain** (money: balances,
-transfers, payouts); the graph carries pointers, never amounts. See
+The graph lives on PeerNetworks **Layer 1** — every binding fact
+is an L1 record, and nothing CoGra stores is authoritative about
+it. One store: **PostgreSQL**, partitioned by truth relationship —
+the L1 record mirror (cached, rebuildable from the published
+ordered sequence), overlay caches of published fold rules, and
+authoritative L2 state (display content, identity association).
+Money lives on the rails — L0 admission money and the **CGT
+chain** (balances, transfers, payouts); the graph carries
+pointers, never amounts. See
 [docs/implementation/architecture.md](docs/implementation/architecture.md)
 and, for the chain, [docs/implementation/ledger.md](docs/implementation/ledger.md).
 
@@ -63,7 +68,7 @@ Crates:
 | Crate | Role |
 |---|---|
 | `api` | Axum HTTP server, async-graphql schema |
-| `graph-engine` | Cypher queries against Memgraph via bolt protocol |
+| `graph-engine` | legacy crate from the retired dual-database design — no longer in the documented architecture; pending a removal decision |
 | `postgres-store` | SQLx queries, migrations, display-content CRUD |
 | `common` | Shared domain types, error types |
 | `ranker` | pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
@@ -101,13 +106,15 @@ Cross-cutting design questions live in
   Postgres-side — must leave a visible mark.
 - **Never let inbound edges affect a user's feed.** Only outgoing
   edges from the viewing user shape their feed.
-- **Never break edge tensor uniformity.** All edges (actor and
-  structural) have the same shape: 2 dimensions + system
-  dimensions.
-- **Never store graph topology in Postgres or content in
-  Memgraph.** Each database does what it's built for. Money lives on
-  the chain — the graph carries relationships and pointers to it,
-  never amounts
+- **Never break the uniform two-parameter grammar.** Every record
+  carries the same two user parameters `(p_d, p_i)`; domain,
+  mask, and tier are family-fixed by the census, never per-edge
+  choices.
+- **Never treat CoGra's stores as authoritative about the
+  graph.** Every binding fact is an L1 record; the record mirror
+  is a rebuildable cache — it may lag, it must never diverge.
+  Money lives on the chain — the graph carries relationships and
+  pointers to it, never amounts
   ([docs/implementation/ledger.md](docs/implementation/ledger.md)).
 - **Never make design decisions autonomously.** Always ask.
   Suggest options, explain trade-offs, but let the human decide.
@@ -295,6 +302,5 @@ it without a named reason.
 - `cargo fmt` enforced.
 - `clippy -D warnings` enforced.
 - No `unwrap()` in library code — use `thiserror` / `anyhow`.
-- Cypher queries only in `graph-engine`, SQL only in
-  `postgres-store`.
+- SQL only in `postgres-store`.
 - No comments on obvious code. Comments explain *why*, not *what*.
