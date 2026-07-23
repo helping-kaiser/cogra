@@ -124,7 +124,8 @@ audit CoGra's reads without CoGra's help.
 
 ### 2. One store, partitioned by truth relationship
 
-The decision rule, per [substrate.md §3](../primitive/substrate.md#3-cogras-stores):
+**Invariant** — the decision rule, per
+[substrate.md §3](../primitive/substrate.md#3-cogras-stores):
 what a record **is** lives on L1; what it **shows** lives in
 Postgres; what it **weighs** is recomputed from records. Within
 Postgres the schema keeps three kinds of state apart — mirror
@@ -147,9 +148,10 @@ design facts, not conveniences
 
 ### 4. All ranking comes from the graph
 
-The feed is computed at query time from viewer-rooted forward
-paths over L1 records — no materialized counters, no popularity
-scores, no algorithm-driven signals stored anywhere. Inbound
+**Invariant:** the feed is computed at query time from
+viewer-rooted forward paths over L1 records — no materialized
+counters, no popularity scores, no algorithm-driven signals
+stored anywhere. Inbound
 records never shape the viewer's feed; global statistics enter as
 tie-breakers only. The algorithm belongs to
 [feed-ranking.md](../primitive/feed-ranking.md); this doc covers

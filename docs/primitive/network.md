@@ -44,11 +44,10 @@ its own Network until then.
 ## 2. Creation
 
 The Network is brought into existence by the **instance
-bootstrap** — the one-shot genesis step, and the only step that
-depends on out-of-graph authority
-([graph-model.md §1](graph-model.md#1-core-principles)); the
-authority is confined to it. Every subsequent change runs through
-governance.
+bootstrap** — the one-shot genesis step. **Invariant:
+out-of-graph authority is confined to the bootstrap** — it is the
+only write that escapes the actor-gesture-or-governance rule;
+every subsequent change runs through governance.
 
 ### The cast
 

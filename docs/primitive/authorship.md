@@ -1,7 +1,8 @@
 # Authorship
 
-Authorship in CoGra is **intrinsic to every L1 record** — never
-derived, never stored as an edge, never inferred from timestamps.
+**Invariant:** authorship is **intrinsic to every L1 record** —
+never derived, never stored as an edge, never inferred from
+timestamps.
 Each accepted record carries its author as part of its identity:
 `author(e)` is a field of the record and a component of the
 act identifier

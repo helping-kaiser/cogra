@@ -12,8 +12,8 @@ CoGra's own stores. The node and edge catalogs live in
 
 ## 1. Core principles
 
-- **Directional.** Every record runs from its author toward a
-  target; `A → B` and `B → A` are independent records, and one
+- **Invariant: directional.** Every record runs from its author
+  toward a target; `A → B` and `B → A` are independent records, and one
   never implies the other. A friendship is two records; an
   unreciprocated stance is one. Directedness is what prevents
   unilateral influence fabrication — nobody can create an edge
@@ -24,7 +24,7 @@ CoGra's own stores. The node and edge catalogs live in
   ([substrate.md §7](substrate.md#7-payload-carriage)). The store
   holds chronicles, never state — every notion of "current" is a
   declared read rule over the records (§3).
-- **Public.** The shared graph is continuously readable by anyone,
+- **Invariant: public.** The shared graph is continuously readable by anyone,
   without an account — an L1 substrate guarantee, not a CoGra
   choice. Accounts gate participation in CoGra's service, never
   viewing. Privacy of content is payload custody and E2EE;
@@ -69,6 +69,12 @@ ago") and service logic.
 Revising a stance never edits anything: it **appends a parallel
 record** to the author's bundle toward the same target — the
 bundle is a `≺`-chain, the full history public by construction.
+
+**Invariant: parallel records are unrestricted; "current" is a
+declared fold.** The append layer never rejects, merges, or
+supersedes a same-author record
+(`ax:graph:parallel-authored-acts`); every current-state read
+names the fold it applies.
 
 What "current" means is always a declared fold:
 
@@ -129,7 +135,7 @@ attributable records.
 
 Two influence channels exist, and they must never be conflated:
 
-- **The feed is outbound-only.** Only outgoing records from the
+- **Invariant: the feed is outbound-only.** Only outgoing records from the
   viewing user, walked forward, shape that user's feed — inbound
   records toward the user contribute nothing. A swarm pointing ten
   thousand stances at you appears in *their* feeds, never in

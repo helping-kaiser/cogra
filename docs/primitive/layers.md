@@ -250,7 +250,7 @@ Implementation specifics belong in
 
 Three surfaces, three rules:
 
-- **The shared graph: no record is ever removed.** There is no
+- **Invariant — the shared graph: no record is ever removed.** There is no
   API path, no admin escape hatch, no court-order path that
   deletes a record. The only permitted transition is the payload
   reduction above, and it leaves the structural record intact.
