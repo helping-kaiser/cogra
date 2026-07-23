@@ -12,8 +12,8 @@ The schema is specified in sections: the **type system** and
 (the write gestures). The governing principles below bind both.
 The API is CoGra's L2 service surface over the shared graph: it
 serves reads from the record mirror and the display stores, and
-it runs the write path — prepare, relay, confirm — around records
-only the acting user's device can sign
+it runs the write path — prepare, seal, approve, confirm — around
+acts only the acting user's device can sign
 ([architecture.md](architecture.md),
 [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 
@@ -199,22 +199,28 @@ re-rank. The feed surface below splits the slice from the hydration.
 
 ### The API prepares and relays; only the device signs
 
-Every graph write is an L1 record signed by **the acting actor's
-own key, on their device** — the backend cannot author, alter, or
-sign one ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-The mutation surface therefore has two halves:
+Every graph write is an L1 act signed **twice** by the acting
+actor's own key, on their device — the pre-commitment over the
+proposal, then the approval witness over the exact host-sealed
+verified act; the backend cannot author, alter, or sign one
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+The mutation surface therefore has three legs:
 
 - **`prepare*` mutations** stage a gesture: the server validates
   it against L2 policy, pre-checks L1's write rule, assembles the
-  canonical record(s) — payload envelope, salt, content witness —
-  and returns them for the device to verify and sign. Nothing has
-  happened on the graph yet.
-- **`submitRecords`** relays the signed records to L1 and drives
-  retries across epoch boundaries. Confirmation is asynchronous:
-  the record is real when it appears in the mirror, observed
-  through `stagedWrite` — there is no synchronous "write
-  succeeded" response, because whether a record lands is L1's
-  fact alone.
+  canonical proposal(s) — act body, payload envelope, dependency
+  list — and returns them with their pre-digests for the device
+  to verify and pre-sign. Nothing has happened on the graph yet.
+- **`submitProposals`** relays the pre-signed proposals to L1's
+  seal round trip and returns each host-sealed **verified act**
+  for the device to verify — seal, exact body, both commitment
+  openings — and sign the approval witness over.
+- **`approveActs`** relays the approval witnesses — only an
+  approved act is orderable — and drives retries across epoch
+  boundaries. Confirmation is asynchronous: the act is real when
+  it appears in the mirror, observed through `stagedWrite` —
+  there is no synchronous "write succeeded" response, because
+  whether an act lands is L1's fact alone.
 
 Mutations that touch only L2 state (auth, private viewer state,
 media upload) are ordinary synchronous operations — one Postgres
@@ -694,8 +700,9 @@ type User implements Node & Actor {
   sessions: [Session!]
   "Cross-device preferences."
   preferences: UserPreferences
-  "The viewer's pending staged writes — prepared records awaiting
-   signature or confirmation, across devices."
+  "The viewer's pending staged writes — acts mid-handshake,
+   awaiting a signature, the host seal, or confirmation, across
+   devices."
   stagedWrites(first: Int, after: String, last: Int, before: String): StagedWriteConnection
   "The client-encrypted key-backup blob, if one was uploaded —
    ciphertext under the recovery code; the server cannot decrypt it
@@ -1754,8 +1761,8 @@ type ChatMessageEdge {
 ## Mutations
 
 The write surface is the **principled hybrid** fixed in the
-governing principles, run through the prepare → sign → relay →
-confirm flow. Each group below lists its mutations as an
+governing principles, run through the prepare → pre-sign → seal →
+approve → confirm flow. Each group below lists its mutations as an
 `extend type Mutation` block beside its inputs — there is no
 separate root index to keep in sync.
 
@@ -1764,24 +1771,27 @@ separate root index to keep in sync.
 These bind every mutation below.
 
 - **Two mutation classes.** A **`prepare*`** mutation stages L1
-  records for the device to sign — nothing exists on the graph
-  until the signed records are relayed and confirmed. Everything
-  else (auth, private viewer state, media upload) is an ordinary
-  L2 operation: one Postgres transaction, synchronous result.
+  acts for the device to sign — nothing exists on the graph until
+  the handshake completes (pre-sign, seal, approve) and the act
+  confirms. Everything else (auth, private viewer state, media
+  upload) is an ordinary L2 operation: one Postgres transaction,
+  synchronous result.
 - **Single input, dedicated payload.** Each mutation takes one
   `input: <Name>Input!` argument and returns a payload type. Every
   `prepare*` mutation returns the shared `PreparePayload` — the
-  staged records to sign — unless noted; the resulting entities
-  are read through normal queries once the records confirm.
+  staged proposals to pre-sign — unless noted; the resulting
+  entities are read through normal queries once the acts confirm.
 - **A prepare may stage a batch.** A gesture with structure —
   a post with tags and references, a proposal anchor with its
   subject Reference, a Collective founding — returns several
   `PreparedWrite`s in relay order. **Each is its own priced act**
-  (one θ-debit each), signed individually and relayed
-  independently; there is no cross-record atomicity — whether each
-  lands is L1's fact alone, and the flow state advances per record
-  at confirm. The batch size is visible to the client, so the
-  total cost is legible before signing.
+  (one θ-debit each) running its own two-signature handshake; the
+  transport batches freely — one `submitProposals` or
+  `approveActs` call carries the whole batch's signatures — but
+  there is no cross-record atomicity: whether each lands is L1's
+  fact alone, and the flow state advances per record at confirm.
+  The batch size is visible to the client, so the total cost is
+  legible before signing.
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -1858,53 +1868,77 @@ these are its API types. A prepare validates, pre-checks the write
 rule (a failure is a `WRITE_RULE_FAILED` userError — a normal
 account state with a product-surfaced restoration flow, never an
 auth fault), stages the write, and returns the canonical material.
-The device recomputes the commitment from record and salt,
-verifies the witness, and signs — **the user never signs blind
-bytes** ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-`submitRecords` relays; `stagedWrite` (and `User.stagedWrites`)
-observes the asynchronous confirm.
+The device recomputes the pre-digests from the proposal and
+pre-signs; after `submitProposals` returns the host-sealed
+verified act, it verifies the seal, the exact body, and both
+commitment openings before signing the approval witness — **the
+user never signs blind bytes, at either step**
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+`approveActs` relays the approvals; `stagedWrite` (and
+`User.stagedWrites`) observes the asynchronous confirm.
 
 ```graphql
-"One staged record awaiting signature — the canonical material the
- device verifies and signs."
+"One staged proposal awaiting the pre-commitment signature — the
+ canonical material the device verifies and pre-signs."
 type PreparedWrite {
-  "The staged-write id — the handle for submitRecords and stagedWrite."
+  "The staged-write id — the handle for the whole handshake."
   id: UUID!
   family: RecordFamily!
-  "The canonical record, serialized for signing (base64). Covers
-   everything — endpoints, parameters, payload witness — so the
-   relay can neither alter it nor author one unasked."
-  canonicalRecord: String!
-  "The payload salt, for recomputing the commitment on-device."
-  salt: String!
-  "The content witness the device verifies before signing."
-  witness: String!
-  "Epoch budget: an unlanded staged write is garbage-collected —
-   staged payload included — after this many epochs (an operational
-   parameter; data-model.md \"Staged writes\")."
+  "The canonical proposal, serialized for pre-signing (base64).
+   Covers everything the author asserts — endpoints, parameters,
+   dependency list, both pre-digests — so the relay can neither
+   alter it nor author one unasked."
+  canonicalProposal: String!
+  "The domain-separated content pre-digest; the device recomputes
+   it from the payload bytes before pre-signing."
+  contentPreDigest: String!
+  "The domain-separated dependency pre-digest; the device
+   recomputes it from the canonical dependency encoding."
+  dependencyPreDigest: String!
+  "Epoch budget: a staged write that never completes the handshake
+   and lands is garbage-collected — staged payload included — after
+   this many epochs (an operational parameter; data-model.md
+   \"Staged writes\")."
   gcAfterEpochs: Int!
 }
 
-"The shared payload of every prepare* mutation: the staged records
- to sign, in relay order. Each is its own priced act."
+"The shared payload of every prepare* mutation: the staged
+ proposals to pre-sign, in relay order. Each is its own priced act."
 type PreparePayload {
   writes: [PreparedWrite!]!
 }
 
-"A staged write's lifecycle. AWAITING_SIGNATURE: prepared, not yet
- submitted. RELAYING: signed and submitted; the backend drives
- retries across epoch boundaries. LANDED: the accepted record is
- in the mirror and the staged effects are promoted. EXPIRED:
- garbage-collected unlanded — nothing existed on the graph."
-enum StagedWriteState { AWAITING_SIGNATURE RELAYING LANDED EXPIRED }
+"A staged write's lifecycle. AWAITING_PRE_SIGN: prepared, the
+ pre-commitment not yet submitted. SEALING: pre-signed and
+ submitted; the backend awaits the host-sealed verified act.
+ AWAITING_APPROVAL: the sealed act is back and awaits the device's
+ approval witness. RELAYING: approved and submitted for ordering;
+ the backend drives retries across epoch boundaries. LANDED: the
+ accepted act is in the mirror and the staged effects are
+ promoted. EXPIRED: garbage-collected without landing — nothing
+ existed on the graph."
+enum StagedWriteState {
+  AWAITING_PRE_SIGN
+  SEALING
+  AWAITING_APPROVAL
+  RELAYING
+  LANDED
+  EXPIRED
+}
 
-"One staged write — the observation point for the asynchronous
- confirm. Field-authorized to the staging actor's session."
+"One staged write — the observation point for the handshake and
+ the asynchronous confirm. Field-authorized to the staging actor's
+ session."
 type StagedWrite {
   id: UUID!
   state: StagedWriteState!
   family: RecordFamily!
   preparedAt: DateTime!
+  "The host-sealed verified act once AWAITING_APPROVAL (base64):
+   the exact body the device verifies — seal, equality with what
+   it pre-signed, both commitment openings — and signs the
+   approval witness over. Null in earlier states."
+  verifiedAct: String
   "The accepted record once LANDED; null before."
   record: Record
 }
@@ -1918,13 +1952,13 @@ type StagedWriteEdge {
   node: StagedWrite!
 }
 
-"One signed record heading to the relay."
-input SignedRecordInput {
+"One pre-signed proposal heading to the seal round trip."
+input ProposalSignatureInput {
   stagedWriteId: UUID!
-  "The actor's signature over the canonical record — produced with
-   the actor's device-held key; opaque to this API. For a
-   co-signed Collective act this is the member-side contribution
-   (see \"Acting as a Collective\")."
+  "The actor's pre-commitment signature over the canonical
+   proposal — produced with the actor's device-held key; opaque to
+   this API. For a co-signed Collective act this is the
+   member-side contribution (see \"Acting as a Collective\")."
   signature: String!
   "Collective acts only: the acting member's instruction, signed
    with their OWN key — the operational trigger the backend checks
@@ -1934,18 +1968,41 @@ input SignedRecordInput {
   instructionSignature: String
 }
 
-input SubmitRecordsInput {
-  records: [SignedRecordInput!]!
+input SubmitProposalsInput {
+  proposals: [ProposalSignatureInput!]!
 }
-type SubmitRecordsPayload {
+type SubmitProposalsPayload {
+  stagedWrites: [StagedWrite!]!
+}
+
+"One approval witness heading to the ordering relay."
+input ApprovalSignatureInput {
+  stagedWriteId: UUID!
+  "The actor's approval-witness signature over the exact verified
+   act, host-added commitments included. Collective acts follow
+   the same co-signing route as the pre-commitment."
+  signature: String!
+  "Collective acts only — same rule as on ProposalSignatureInput."
+  instructionSignature: String
+}
+
+input ApproveActsInput {
+  approvals: [ApprovalSignatureInput!]!
+}
+type ApproveActsPayload {
   stagedWrites: [StagedWrite!]!
 }
 
 extend type Mutation {
-  "Relay signed records to L1. Verification failures surface as
-   SIGNATURE_INVALID userErrors per record; confirmation is
-   asynchronous — observe via stagedWrite."
-  submitRecords(input: SubmitRecordsInput!): SubmitRecordsPayload!
+  "Relay pre-signed proposals to L1's seal round trip.
+   Verification failures surface as SIGNATURE_INVALID userErrors
+   per proposal. When the seal returns synchronously the payload's
+   staged writes are already AWAITING_APPROVAL, verified act
+   included; otherwise observe via stagedWrite."
+  submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
+  "Relay approval witnesses — only an approved act is orderable.
+   Landing stays asynchronous; observe via stagedWrite."
+  approveActs(input: ApproveActsInput!): ApproveActsPayload!
 }
 ```
 
@@ -2682,21 +2739,35 @@ type ResendVerificationEmailPayload { ok: Boolean! }
  once landed."
 type ApplicationView {
   applicant: Applicant!
-  "The staged Registration awaiting the device's signature; null
-   before approval and after landing."
+  "The staged Registration awaiting the device's signatures; null
+   before approval and after landing. The handshake state and the
+   sealed verified act ride the staged write."
   stagedRegistration: PreparedWrite
   "The first session — present exactly once, when the application
    has landed and this view is first read after it."
   auth: AuthSession
 }
 
-"Sign the staged Registration — the applicant-token twin of
- submitRecords, since no session exists before landing."
+"Pre-sign the staged Registration — the applicant-token twin of
+ submitProposals, since no session exists before landing. The
+ returned staged write carries the host-sealed verified act for
+ the approval step."
 input SubmitApplicantRegistrationInput {
   applicantToken: String!
   signature: String!
 }
 type SubmitApplicantRegistrationPayload {
+  stagedWrite: StagedWrite!
+}
+
+"Approve the sealed Registration — the applicant-token twin of
+ approveActs; the device verifies the seal, the exact body, and
+ both commitment openings first."
+input ApproveApplicantRegistrationInput {
+  applicantToken: String!
+  signature: String!
+}
+type ApproveApplicantRegistrationPayload {
   stagedWrite: StagedWrite!
 }
 
@@ -2884,6 +2955,7 @@ extend type Mutation {
   verifyApplicantEmail(input: VerifyApplicantEmailInput!): VerifyApplicantEmailPayload!
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
   submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
+  approveApplicantRegistration(input: ApproveApplicantRegistrationInput!): ApproveApplicantRegistrationPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!

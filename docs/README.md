@@ -149,7 +149,7 @@ an `instances/` doc is a sign the mechanism belongs in
   tools, workflows.
 - [api-spec](implementation/api-spec.md) — backend GraphQL spec:
   type system, queries (read surface), and mutations (the
-  prepare → sign → relay write surface).
+  prepare → pre-sign → seal → approve write surface).
 - [miner-api](implementation/miner-api.md) — the off-backend ranking
   surface: subgraph slice in, ordered feed out.
 - [auth](implementation/auth.md) — server-side credentials,
