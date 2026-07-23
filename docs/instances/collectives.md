@@ -156,13 +156,16 @@ earned and lost on its own terms.
 A Collective takes no gestures by itself: every record attributed
 to it is initiated by an authorized member — a User, or a
 sub-Collective acting recursively through its own authorized
-members. On the shared graph the Collective's actor signs; **no
-per-edge record of the acting member exists, deliberately.**
+members. On the shared graph the Collective's actor signs;
+**Invariant: no per-edge record of the acting member exists,
+deliberately.**
 Accountability for who may trigger the key lives in the social
 contract, not in per-record attribution — and internally holding
 members accountable is likewise the contract's business.
 
-Two coarse gesture classes, with opposite defaults:
+Two coarse gesture classes, with opposite defaults —
+**Invariant: content-acts default permissive, governance-acts
+default deny** (the asymmetry reflects reversibility):
 
 - **Content-acts** — publishing, commenting, stances, tags.
   **Default: any active member** may produce one. A Collective
@@ -361,7 +364,7 @@ Internal disputes resolve by the contract, never on the thread.
 
 ## 8. Lifecycle
 
-- **Dissolution is a membership fact, not a graph one.** A
+- **Invariant: dissolution is a membership fact, not a graph one.** A
   Collective whose last member leaves has no one who can trigger
   its key — acting capacity is gone; the actor, its standing,
   its titles, and its history persist. Members can never *not*

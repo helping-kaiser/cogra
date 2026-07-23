@@ -77,7 +77,7 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 [layer1-interface.md §8.7](layer1-interface.md#87-path-view-tiers-parity-and-the-damped-weight)).
 Adopting rather than re-deriving buys the proven structure:
 
-- **Every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
+- **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
   (`prop:epoch:damped-weight-bounds`), and determinant magnitudes
   top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
   products only shrink with depth.
@@ -93,7 +93,7 @@ Adopting rather than re-deriving buys the proven structure:
   ranker all evaluate this same primitive; there is no CoGra-side
   variant to trust.
 
-**Zero is inert.** If either effective parameter is zero, `ε(e)`
+**Invariant: zero is inert.** If either effective parameter is zero, `ε(e)`
 is undefined and `w̃(e) = 0`
 (`rem:graph:zero-parameter-degeneracy`) — the edge carries no
 path. Indifference is magnitude zero, not a third sign; nothing
@@ -138,7 +138,7 @@ severance is burn-priced.
 `S(u,c)` is computed over paths from the viewing person `u` to the
 candidate `c`. What counts as a path:
 
-**Forward-only.** Paths traverse records in their stored direction
+**Invariant: forward-only.** Paths traverse records in their stored direction
 only. This is what makes the inbound-inert rule (§1) mechanical:
 propagation flows along directions the viewing user (and their
 transitive network) established; records pointing *at* you move
@@ -184,7 +184,7 @@ surfaces content. A vote stays a stance on the proposal, never on
 its subject — the anchor's `(0,0)` subject Reference has `w̃ = 0`,
 so the stop is enforced by the math, not by a traversal rule.
 
-**Types are sinks.** Every path reaching a Type ends there:
+**Invariant: Types are sinks.** Every path reaching a Type ends there:
 Types rank as targets — topic pages — and never transit, so
 following a topic cannot amplify anything "behind" it. The stop
 is CoGra's declared traversal policy, not an L1 census fact — a
@@ -204,8 +204,8 @@ surfaces the artifact it cites. The **citation T-leg is not a free
 out-edge of the artifact.** Both its endpoints are pre-existing
 passive nodes, so anyone can hang a citation off anyone's content;
 a passive node must never become a switchboard that carries a
-stranger's reference onward to every viewer who reaches it. Exactly
-two channels cross the T-leg:
+stranger's reference onward to every viewer who reaches it.
+**Invariant:** exactly two channels cross the T-leg:
 
 - **Content-intrinsic** — the reference author *is* the carrier's
   author. The citation is part of the content, so any path reaching
@@ -588,6 +588,10 @@ the natural actor, or the read-side filter (§9.1) does the
 personal part.
 
 ### 8.6 Community evidence
+
+**Invariant: the `bot-defense` Type name is reserved** — seeded
+at genesis; its semantic role is platform-defined, not emergent
+from first use.
 
 A **bot-defense post** adds what structure can't capture: a
 regular Publish plus a Tag toward the reserved `bot-defense` Type

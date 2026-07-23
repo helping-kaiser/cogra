@@ -22,6 +22,10 @@ parity bit, the damped weight `w̃(e)` — is derived by published
 formula. CoGra sets the two parameters and the payload; it consumes
 the rest.
 
+**Invariant: uniform two-parameter grammar.** Every record
+carries the same two user parameters `(p_d, p_i)`; domain, mask,
+and tier are family-fixed by the census, never per-edge choices.
+
 **CoGra's two authoring axes map onto the two parameters.** The
 grammar is uniform across every family: `p_d` carries the
 **directional / valence** role ("how do I stand on this?") and

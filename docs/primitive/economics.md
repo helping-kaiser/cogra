@@ -181,8 +181,11 @@ Reach toward the target is delivered by real contributor records
 only; a campaign that could carry signal would be buying ranking
 directly, the feedback the no-AI invariant forbids.
 
-Money never rides L1: the deposit sits in rail-side escrow, and
-per-contributor figures live in the settlement tree (§10). The
+**Invariant: money never rides L1.** Amounts live on the rails —
+L0 admission money, CGT reward money — and the graph carries
+pointers, never amounts. Here: the deposit sits in rail-side
+escrow, and per-contributor figures live in the settlement tree
+(§10). The
 anchor carries the public record and pointers.
 
 ### 3.1 Forbidden configurations

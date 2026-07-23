@@ -51,6 +51,11 @@ how a database table would:
 CoGra accounts are a service-layer concept; on the shared graph
 both kinds resolve to the same grounded pair.
 
+**Invariant: one actor type.** User and Collective are CoGra
+service-layer accounts; each resolves to one ordinary grounded
+Actor + Profile pair — L1 has no account types, and "active
+member" and "voter" are scoped subsets, never instance-free.
+
 - **User** — a person's account: one L1 **Actor + Profile**, one
   L0 address. The person ↔ actor association is CoGra service
   state, never graph state. No User exists before verification —

@@ -222,6 +222,10 @@ The no-push principle: **the chat moves away from a message or a
 member; it never moves the message or the member away.** Both
 levels are ordinary chat-scope proposals (§5).
 
+**Invariant:** chat-internal disavowal routes through a
+Proposal — the anchor's `(0,0)` subject Reference names the
+target; no direct vote edge from a member drives the outcome.
+
 - **Level 1 — message disavowal** (`decision:disavow_message`):
   targets the Message via the anchor's `(0,0)` Reference. The
   passed proposal plus its finalization *is* the on-graph
@@ -256,9 +260,9 @@ ciphertext, the key-epoch index it was encrypted under.
 ### Keys, organized in epochs
 
 A chat's lifetime partitions into key epochs, each with its own
-symmetric key. **Rotation is automatic on every membership
-transition** — join, leave, kick — the moment the fold's verdict
-changes; an evicted member must not be able to block their own
+symmetric key. **Invariant: rotation is automatic on every
+membership transition** — join, leave, kick — the moment the
+fold's verdict changes; an evicted member must not be able to block their own
 removal from future epochs, so rotation is never voted. The
 membership transitions are public L1 records, so the epoch index
 is derivable from public state — no counter is stored anywhere.
