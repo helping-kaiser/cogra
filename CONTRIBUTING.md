@@ -1,10 +1,11 @@
 # Contributing to CoGra
 
 This guide is for human contributors. [CLAUDE.md](CLAUDE.md) is
-the AI-facing equivalent. Shared rules (mission, core principles,
-hard design rules, workflow basics) live in both; audience-
-specific ones (session hygiene, AI guardrails) live in only one.
-Drift is caught by author vigilance, not tooling.
+the AI-facing equivalent. Shared rules (hard design rules,
+workflow basics) live in both; the mission and core principles
+live here; audience-specific ones (session hygiene, AI
+guardrails) live in only one. Drift is caught by author
+vigilance, not tooling.
 
 ---
 
@@ -16,7 +17,11 @@ social media platform that replaces AI-driven content algorithms
 with a transparent, graph-driven, user-controlled system. The
 current Peer Network platform works like Instagram; this repo
 branches off to design and prototype the graph network that will
-succeed it, a multi-year effort.
+succeed it, a multi-year effort. The graph itself lives on the
+**PeerNetworks Layer 1** substrate; CoGra is the Layer 2 built
+on top —
+[docs/primitive/layer1-interface.md](docs/primitive/layer1-interface.md)
+is the binding contract.
 
 **Mission:** decentralize the power of social media. The goal is
 not to become the next Instagram/X/TikTok with a graph bolted on —
@@ -31,13 +36,15 @@ themselves. Every design decision must resist re-centralization.
 These are non-negotiable. Every decision must be evaluated against
 them:
 
-1. **No AI content algorithms.** Feed ranking is driven entirely by
-   the social graph and direct edge weights. Every user gets a
-   personalized view based on their own connections and explicit
-   preferences.
-2. **All edges are directional.** Only your outgoing edges shape
-   your feed; inbound edges from others never do. Nothing can
-   push onto you.
+1. **No AI content algorithms.** No AI in any feed, named or
+   default. The default feed is driven entirely by the social
+   graph and direct edge weights; named opt-in feeds may consume
+   declared, labeled L2 signals. Every user gets a personalized
+   view based on their own connections and explicit preferences.
+2. **All edges are directional.** Only viewer-rooted forward
+   paths — starting from your own outgoing edges — shape your
+   feed; inbound edges from others never do. Nothing can push
+   onto you.
 3. **[Append-only](docs/primitive/layers.md#append-only-vocabulary)
    on the graph.** Graph state and Postgres-side display content
    are both layered, never overwritten. Transparency and
@@ -86,30 +93,35 @@ them:
 ### Never
 
 - **Never introduce AI into ranking, recommendations, or
-  economics.** Feed ranking and
+  economics.** No AI in any feed, named or default. The default
+  feed and
   [ad-revenue distribution](docs/primitive/economics.md) are
-  driven only by the graph and its weights. AI as a
-  frontend/UI helper is open — that boundary is intentionally
-  permissive — but it must not touch the graph's signal or the
-  economics computation.
+  driven only by the graph and its weights; named opt-in feeds
+  may consume declared L2 signals — always labeled, never
+  presented as the neutral rank. AI as a frontend/UI helper is
+  open — that boundary is intentionally permissive — but it must
+  not touch the graph's signal or the economics computation.
 - **Never delete graph structure.** Nodes, edges, and layer stacks
   are never removed. State transitions are always layered, never
   destructive. The only permitted "deletion" on the graph is
-  in-place redaction per
+  redaction — payload removal per
   [docs/primitive/layers.md §5](docs/primitive/layers.md#5-deletion-policy). The
   same spirit applies to Postgres-side display content.
 - **Never erase silently.** Any redaction — graph-side or
   Postgres-side — must leave a visible mark.
-- **Never let inbound edges affect a user's feed.** Only outgoing
-  edges from the viewing user shape their feed.
+- **Never let inbound edges affect a user's feed.** Only
+  viewer-rooted forward paths — walks starting from the viewing
+  user's own outgoing edges — shape their feed.
 - **Never break the uniform two-parameter grammar.** Every record
   carries the same two user parameters `(p_d, p_i)`; domain,
   mask, and tier are family-fixed by the census, never per-edge
   choices.
 - **Never treat CoGra's stores as authoritative about the
   graph.** Every binding fact is an L1 record; the record mirror
-  is a rebuildable cache. Money lives on the chain — the graph
-  carries pointers, never amounts.
+  is a rebuildable cache — it may lag, it must never diverge.
+  Money lives on the CGT rail — the graph carries relationships
+  and pointers to it, never amounts
+  ([docs/implementation/ledger.md](docs/implementation/ledger.md)).
 - **Never skip tests.** Linting, unit tests, and integration tests
   are created alongside the code, not after.
 
@@ -191,8 +203,9 @@ Skip:
 ### Tests
 
 Run `make ci` before pushing. `cargo fmt`, `cargo clippy -D
-warnings`, unit tests, integration tests, and the docs
-link-check (`make docs-link-check`, requires `lychee` —
+warnings`, the SQLx offline-query check (`make sqlx-check`),
+unit tests, integration tests, and the docs link-check
+(`make docs-link-check`, requires `lychee` —
 `cargo install lychee`) must all pass.
 
 ---

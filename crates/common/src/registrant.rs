@@ -6,8 +6,8 @@
 //! retried after the graph committed but Postgres did not produces the **same**
 //! ids on the retry. The graph write `MERGE`s on these ids, so the retry adopts
 //! the orphaned nodes instead of creating duplicates — the idempotent-first-commit
-//! discipline from
-//! [architecture.md "Partial-failure handling"](../implementation/architecture.md).
+//! discipline of the pre-rebase dual-store code this type still serves
+//! ([roadmap.md "Where the code stands"](../../../docs/implementation/roadmap.md#where-the-code-stands)).
 //!
 //! Unlike [`hashtag`](crate::hashtag) ids, these need no cross-instance
 //! stability: the pending-row id is per-instance and random, so the derived ids

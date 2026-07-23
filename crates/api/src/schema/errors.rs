@@ -1,5 +1,5 @@
 //! The two-tier error model
-//! ([api-spec.md](../../../docs/implementation/api-spec.md), "Errors are
+//! ([api-spec.md](../../../../docs/implementation/api-spec.md), "Errors are
 //! tiered"). `ErrorCode` is the one vocabulary shared across both tiers;
 //! `UserError` is the per-payload business-failure list every mutation carries.
 //!

@@ -16,10 +16,6 @@ substrate: Layer 1 owns the public graph and its admission rules;
 CoGra owns the terminal complement — feed, rewards, display, and
 community policy. The binding contract is
 [docs/primitive/layer1-interface.md](docs/primitive/layer1-interface.md).
-*The docs are currently being rebased onto this substrate — docs not
-yet rewritten may still describe the pre-L1 design; where they
-conflict, the interface wins. This note is removed once the rebase
-completes.*
 
 ## Mission
 
@@ -36,16 +32,18 @@ position in the graph and the weighted edges they create through
 explicit interactions. There are no learned models and no
 popularity amplifiers.
 
-**Directional edges only.** What you see is shaped by your
-outgoing edges, never by who points at you. Bot clusters and
+**Directional edges only.** What you see is shaped by
+viewer-rooted forward paths — walks that start from your own
+outgoing edges — never by who points at you. Bot clusters and
 unwanted attention can't insert themselves into your feed by
 liking your content.
 
 **[Append-only](docs/primitive/layers.md#append-only-vocabulary)
 history.** Edges and node properties are layered, not
-overwritten. The only carve-out is in-place redaction of illegal
-content, and even that leaves a visible trace. Transparency and
-auditability over convenience.
+overwritten. The only carve-out is redaction — payload removal
+to the reduced projection, whether moderation- or
+author-initiated — and even that leaves a visible trace.
+Transparency and auditability over convenience.
 
 **Governance, not admin escape hatches.** Redactions and policy
 changes run through community votes on the graph, with weights

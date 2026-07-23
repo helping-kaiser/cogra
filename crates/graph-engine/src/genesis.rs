@@ -78,8 +78,8 @@ pub async fn genesis_identity(graph: &Graph) -> Result<Option<GenesisIdentity>, 
 
 /// Identity and content supplied to the bootstrap at run time — the genesis
 /// User's handle and the version-1 platform-guidelines digest. Everything
-/// else is a fixed default from
-/// [graph-data-model.md](../../../docs/implementation/graph-data-model.md).
+/// else is a fixed default from the pre-rebase graph data model (doc
+/// retired in the L1 docs rebase).
 pub struct GenesisInput {
     pub network_id: Uuid,
     pub user_id: Uuid,
@@ -92,8 +92,9 @@ pub struct GenesisInput {
     pub guidelines_hash: String,
 }
 
-/// The `:Network` singleton's default parameter set
-/// ([graph-data-model.md §:Network](../../../docs/implementation/graph-data-model.md)).
+/// The `:Network` singleton's default parameter set (pre-rebase graph
+/// data model; the rebased parameter catalog is
+/// [network.md](../../../docs/primitive/network.md)).
 /// Each is a layered config property; `guidelines_hash` is the one value
 /// supplied at run time (`$guidelines_hash`), the rest are fixed defaults.
 fn network_set_body() -> String {

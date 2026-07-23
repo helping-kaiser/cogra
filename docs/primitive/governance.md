@@ -142,7 +142,7 @@ per-member `voting_weight` overrides the mode where set.
 
 | Scope | Default source | Out-of-the-box roles → weights |
 |---|---|---|
-| Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
+| Chat | Per-action role weights inside each chat's `governance` entry (`exec.weighting`) — see [chats.md §6](../instances/chats.md#6-moderation-inside-the-chat) | `admin = 5`, `chat_mod = 3`, `member = 1` in the default-vocabulary entries (`decision:add_member` is count-based); per-action amendable |
 | Collective | Composite of `role` and `ownership_pct` per the collective's social contract — see [collectives.md](../instances/collectives.md) | Defined per collective; e.g. `role = founder` weighted by `ownership_pct`, or one-member-one-vote with role multipliers |
 | Network | none — every active member's weight is `1` | no `voting_weight` override; Network membership carries no per-member fold state to hold one |
 
@@ -232,7 +232,7 @@ What happens when the threshold is crossed. The outcome has one
   system actor ([substrate.md §8](substrate.md#8-system-actors));
   at chat scope it is the chat-authority member whose per-chat
   role authorizes execution
-  ([chats.md §10](../instances/chats.md#6-moderation-inside-the-chat)); at
+  ([chats.md §6](../instances/chats.md#6-moderation-inside-the-chat)); at
   collective scope it is the collective actor itself. The
   finalization is the on-graph outcome record of every Proposal —
   the tally digest makes the pass auditable against the published
@@ -766,7 +766,7 @@ are records CoGra cannot forge or erase.
   hosts as many instances as its social contract specifies;
   admission is the co-signed-act consumer (§3).
 - **Chat moderation and kick** —
-  [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). Message
+  [chats.md §6](../instances/chats.md#6-moderation-inside-the-chat). Message
   disavowal (Level 1) and member disavowal (Level 2) as
   bidirectional-tally Proposals under the chat's `governance`
   entries; a passed `decision:disavow_member` is executed by the
@@ -774,7 +774,7 @@ are records CoGra cannot forge or erase.
   cites the authorizing anchor
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership)).
 - **Chat property and rule changes** —
-  [chats.md §10](../instances/chats.md#6-moderation-inside-the-chat). Name,
+  [chats.md §6](../instances/chats.md#6-moderation-inside-the-chat). Name,
   description, key-rotation, role changes, and `governance` map
   amendments (governance of governance), each under its entry's
   `exec` / `amend` triples.

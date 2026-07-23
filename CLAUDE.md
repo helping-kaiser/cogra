@@ -6,10 +6,11 @@ Re-read this file at the start of every task.
 
 **Audience split.** CLAUDE.md is AI-facing;
 [CONTRIBUTING.md](CONTRIBUTING.md) is human-facing. Shared rules
-(mission, core principles, hard design rules, workflow basics)
-live in both; audience-specific rules (session hygiene, the
-Commit + Push + PR cycle, autonomous-decision guardrails) live in
-just one. Drift is caught by author vigilance, not tooling.
+(hard design rules, workflow basics) live in both; the mission
+and core principles live in CONTRIBUTING.md; audience-specific
+rules (session hygiene, the Commit + Push + PR cycle,
+autonomous-decision guardrails) live in just one. Drift is
+caught by author vigilance, not tooling.
 
 ---
 
@@ -50,10 +51,10 @@ the L1 record mirror (cached, rebuildable from the published
 ordered sequence), overlay caches of published fold rules, and
 authoritative L2 state (display content, identity association).
 Money lives on the rails — L0 admission money and the **CGT
-chain** (balances, transfers, payouts); the graph carries
+rail** (balances, transfers, payouts); the graph carries
 pointers, never amounts. See
 [docs/implementation/architecture.md](docs/implementation/architecture.md)
-and, for the chain, [docs/implementation/ledger.md](docs/implementation/ledger.md).
+and, for the rail, [docs/implementation/ledger.md](docs/implementation/ledger.md).
 
 The repo is a monorepo: `crates/` (Rust backend) + `android/`
 (Kotlin + Jetpack Compose app —
@@ -71,7 +72,7 @@ Crates:
 | `graph-engine` | legacy crate from the retired dual-database design — no longer in the documented architecture; pending a removal decision |
 | `postgres-store` | SQLx queries, migrations, display-content CRUD |
 | `common` | Shared domain types, error types |
-| `ranker` | pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
+| `ranker` | planned, not yet in `crates/` — pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
 
 Docs are layered:
 
@@ -90,22 +91,25 @@ Cross-cutting design questions live in
 ### Never
 
 - **Never introduce AI into ranking, recommendations, or
-  economics.** Feed ranking and
+  economics.** No AI in any feed, named or default. The default
+  feed and
   [ad-revenue distribution](docs/primitive/economics.md) are
-  driven only by the graph and its weights. AI as a
-  frontend/UI helper is open — that boundary is intentionally
-  permissive — but it must not touch the graph's signal or the
-  economics computation.
+  driven only by the graph and its weights; named opt-in feeds
+  may consume declared L2 signals — always labeled, never
+  presented as the neutral rank. AI as a frontend/UI helper is
+  open — that boundary is intentionally permissive — but it must
+  not touch the graph's signal or the economics computation.
 - **Never delete graph structure.** Nodes, edges, and layer stacks
   are never removed. State transitions are always layered, never
   destructive. The only permitted "deletion" on the graph is
-  in-place redaction per
+  redaction — payload removal per
   [docs/primitive/layers.md §5](docs/primitive/layers.md#5-deletion-policy). The
   same spirit applies to Postgres-side display content.
 - **Never erase silently.** Any redaction — graph-side or
   Postgres-side — must leave a visible mark.
-- **Never let inbound edges affect a user's feed.** Only outgoing
-  edges from the viewing user shape their feed.
+- **Never let inbound edges affect a user's feed.** Only
+  viewer-rooted forward paths — walks starting from the viewing
+  user's own outgoing edges — shape their feed.
 - **Never break the uniform two-parameter grammar.** Every record
   carries the same two user parameters `(p_d, p_i)`; domain,
   mask, and tier are family-fixed by the census, never per-edge
@@ -113,8 +117,8 @@ Cross-cutting design questions live in
 - **Never treat CoGra's stores as authoritative about the
   graph.** Every binding fact is an L1 record; the record mirror
   is a rebuildable cache — it may lag, it must never diverge.
-  Money lives on the chain — the graph carries relationships and
-  pointers to it, never amounts
+  Money lives on the CGT rail — the graph carries relationships
+  and pointers to it, never amounts
   ([docs/implementation/ledger.md](docs/implementation/ledger.md)).
 - **Never make design decisions autonomously.** Always ask.
   Suggest options, explain trade-offs, but let the human decide.
@@ -275,7 +279,7 @@ When fixing wrong, stale, or imprecise text in a docs pass:
 make run    # first-time: init + start DBs + migrate + start API
 make dev    # returning: start DBs + migrate + start API
 make api    # just the API (if DBs already running)
-make ci     # lint + test + docs link check (run before pushing)
+make ci     # lint + sqlx check + test + docs link check (run before pushing)
 ```
 
 Full make-target list, env vars, and other dev guidance:

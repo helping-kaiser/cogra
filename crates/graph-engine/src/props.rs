@@ -1,7 +1,7 @@
 //! Cypher fragments for the layered node-property shape.
 //!
-//! Every property marked "layered" in
-//! [graph-data-model.md](../../../docs/implementation/graph-data-model.md)
+//! Every property marked "layered" in the pre-rebase graph data model
+//! (doc retired in the L1 docs rebase)
 //! occupies two slots: `X` (the current top-layer value, read directly by
 //! queries and constraints) and `X_layers` (the append-only
 //! `List<Map{value, timestamp, layer}>` history). At creation a property has
@@ -11,8 +11,8 @@
 //! These helpers emit `SET`-clause text that references a `now` already
 //! bound in the query (`WITH localDateTime() AS now`), so every property and
 //! edge written by one statement shares one strictly-consistent timestamp —
-//! the "single timestamp pins the node's full state" rule from
-//! graph-data-model.md.
+//! the "single timestamp pins the node's full state" rule from the
+//! pre-rebase graph data model.
 
 /// A `SET` assignment for a layered property: writes the top-layer slot and
 /// seeds its single-entry history. `value_expr` is a Cypher expression
@@ -39,8 +39,8 @@ pub(crate) fn plain(target: &str, prop: &str, value_expr: &str) -> String {
 /// The `username` data property carries the handle; the `display_name` /
 /// `bio` / `avatar` / `cover` / `website_url` graph properties hold their
 /// field's moderation **status**, not the text — the displayed values live
-/// in Postgres (graph-data-model.md "per-field moderation-status
-/// properties").
+/// in Postgres (pre-rebase graph data model: per-field moderation-status
+/// properties).
 pub(crate) fn user_set_body(target: &str, role_expr: &str) -> String {
     let mut clauses = vec![
         layered(target, "username", "$username"),
