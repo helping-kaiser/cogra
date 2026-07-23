@@ -61,22 +61,15 @@ live supply evolves as **cumulative release − cumulative burn**
 
 ## 2. Issuance — the decaying calendar release
 
-CGT is released on a **calendar schedule**, not per user action. A
-fixed daily amount unlocks; the daily amount **steps down ~10%
-once a year** on a fixed anniversary date (the rate holds flat
-within a year, then drops — not a continuous decay). Because the
-yearly totals form a geometric series, the curve's **lifetime
-release converges to a finite cap**: at a 10% step the infinite
-sum is exactly **ten times the first year's release**
-(`1/(1 − 0.9) = 10`) — approached asymptotically, never exceeded.
-
-> *Illustrative, not canonical:* ≈5000 CGT/day at the schedule's
-> genesis, stepping to ≈4500/day after the first year — an
-> asymptote of 18.25M CGT at exactly 5000/day. The exact
-> genesis rate, the precise anniversary date of each step, and the
-> asymptote depend on CoGra's launch timing relative to the
-> existing peer-network schedule (§3) and are pinned at launch.
-> They do not change any mechanism in this doc.
+CGT is released on a **calendar schedule**, not per user action:
+**5000 CGT/day through the schedule's first year**, stepping down
+**10% on each anniversary** — 4500/day in the second year, 4050 in
+the third, and so on (the rate holds flat within a year, then
+drops — not a continuous decay). Because the yearly totals form a
+geometric series, the curve's **lifetime release converges to a
+finite cap**: the infinite sum is exactly **ten times the first
+year's release** (`1/(1 − 0.9) = 10`) — **18.25M CGT**, approached
+asymptotically, never exceeded.
 
 CGT **inherits the peer-network token's release schedule at its
 current point** — no reset, no fresh issuance event at launch. The
@@ -294,7 +287,7 @@ Conversion is market flow, not supply change — it moves units, the
 way any holder's sale does — so the trajectory above is set by
 release and burn alone.
 
-There is no fixed "18M supply": that figure is the *release*
+There is no fixed "18.25M supply": that figure is the *release*
 curve's asymptote, and live supply peaks somewhere below it, then
 declines as burn outpaces the tapering release. Throughout, POL's
 demand-coupled release (§4.2) means **active circulating supply
