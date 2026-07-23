@@ -12,7 +12,7 @@ sorted order. Anyone holding the public record set and the epoch
 certificates can reproduce every ranking claim it makes.
 
 > **Notation.** L1 symbols (`p_d`, `p_i`, `w̃(e)`, `ε`, `τ_e`,
-> `𝕋_e`, `≺`, `E_k`, `α_i`) are the interface's
+> `𝕋^act_q`, `≺`, `E_k`, `α_i`) are the interface's
 > ([layer1-interface.md §14](layer1-interface.md#14-symbol-ledger-layer-1-tagged-objects));
 > CoGra's own symbols (`S(u,c)`, `k`, `γ`, `χ`, `f(Δt)`) are
 > indexed in [notation.md](notation.md).
@@ -74,7 +74,7 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 ```
 
 (`def:epoch:damped-edge-weight`;
-[layer1-interface.md §8.6](layer1-interface.md#86-path-view-tiers-parity-and-the-damped-weight)).
+[layer1-interface.md §8.7](layer1-interface.md#87-path-view-tiers-parity-and-the-damped-weight)).
 Adopting rather than re-deriving buys the proven structure:
 
 - **Every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
@@ -84,9 +84,10 @@ Adopting rather than re-deriving buys the proven structure:
 - **The tier ladder is built in.** Full / Half / Marginal routing
   floors damp proposal-like and annotation-like hops by published
   formula, not by CoGra policy.
-- **Determinism.** `w̃(e)` is a function of `(E_k, ≺)` alone
-  (`lem:graph:linearization-invariance`) — every consumer computes
-  the same value from the same records.
+- **Determinism.** `w̃(e)` is a function of the published
+  authoritative act order `𝒬_k` and the constants alone
+  (`lem:graph:ordered-replay-determinism`) — every consumer
+  holding the same ordered history computes the same value.
 - **One formula, three consumers.** Backend, miner, and on-device
   ranker all evaluate this same primitive; there is no CoGra-side
   variant to trust.
@@ -114,7 +115,7 @@ inviter-revocation rule (`def:epoch:inviter-revocation`),
 adopted as the fold's rule here.
 
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
-[layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-person-vouch-act))
+[layer1-interface.md §11.3](layer1-interface.md#113-stance-aggregation-and-the-person-vouch-relation-layer))
 deliberately, with the scope stated honestly: **L1's math makes a
 `(0,0)`-netted bundle inert in endorsement flow and standing; its
 inertness in CoGra's feed and attribution holds because this spec
@@ -153,15 +154,14 @@ node-disjointness in §6 means *person*-disjointness — a person
 cannot be reused across "independent" paths via their two graph
 nodes.
 
-**Direction-forward, not time-forward.** L1's own default feed
-admits only causally ascending paths (`𝕋` strictly increasing
-along the path — its path-viability axiom). CoGra's feed
-deliberately does not adopt that axiom: a stance recorded today
-must be able to reach content published years ago, or no new
-connection would ever surface an existing body of work. Staleness
-is `f(Δt)`'s job (§5.3), not a path-admission rule. Causal time
-still matters — it orders each bundle for the fold and anchors
-epoch age.
+**Direction-forward, not time-forward.** L1's raw services measure
+connectivity in the current public snapshot — raw path viability
+does not require ascending times (`def:graph:raw-snapshot-path`) —
+and CoGra's feed is the same: a stance recorded today must be able
+to reach content published years ago, or no new connection would
+ever surface an existing body of work. Staleness is `f(Δt)`'s job
+(§5.3), not a path-admission rule. Causal order still matters — it
+orders each bundle for the fold and anchors epoch age.
 
 **Traversal policy.** Declared per family, as
 [edges.md](edges.md#5-overlay-edges-cogras-graph) requires:
@@ -316,8 +316,8 @@ what the feed *does* with quadrant III is this section.
 
 Nothing in `w̃` ages: `τ_e` is novelty at landing — how
 established the endpoints already were — frozen at write time
-([layer1-interface.md §8.2](layer1-interface.md#82-temporal-structure)),
-and `𝕋_e` is pure order. A three-year-old record carries the
+([layer1-interface.md §8.3](layer1-interface.md#83-temporal-structure)),
+and the act time `𝕋^act_q` is pure order. A three-year-old record carries the
 `w̃` it had the day it landed. Without a recency input, stale
 accumulated signal beats a friend's brand-new post forever. So the
 feed applies its own factor on each path's **terminal stance

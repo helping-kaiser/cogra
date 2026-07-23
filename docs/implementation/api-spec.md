@@ -2411,7 +2411,7 @@ input PrepareBidInput {
   actAs: UUID
 }
 
-"Accept a Bid (seller → buyer, settles-pointer to it). Not binding
+"Accept a Bid (seller → buyer, settlement reference to it). Not binding
  alone — the buyer's Ratify commits."
 input PrepareAcceptInput {
   offer: UUID!

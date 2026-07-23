@@ -49,8 +49,10 @@ founding User:
    same mutual-pair geometry an invited person gets, so the new
    collective is reachable in viewers' feeds and its own forward
    cone is non-empty. The founder's side is a vouch-positive
-   person stance: the burn is the ignition, endorsement
-   amplifies it. This pair is stance fabric, **not** the
+   person stance: the burn funds the collective's own acts (W1
+   reads only its own balance), and the founder's vouch lifts its
+   standing as an external positive-rate source. This pair is
+   stance fabric, **not** the
    CoGra-join relation — no referral fires (§9).
 
 **Collectives are never invited.** The CoGra-join mutual-pair

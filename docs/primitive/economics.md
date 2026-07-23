@@ -63,7 +63,7 @@ they never mix:
 - **The admission economy** — Layer 0's reserve behind `B_i` and
   the θ-debit. Writing any record costs its author θ off their own
   balance; capacity is the balance
-  (`post:epoch:theta-debit`). This money is the L1/L0 kernel's:
+  (`post:epoch:act-debit`). This money is the L1/L0 kernel's:
   CoGra consumes `B_i` and the entry cost through the interface and
   never authors L0 records
   ([substrate-map.md §7](substrate-map.md#7-economics-and-feed-pointers)).

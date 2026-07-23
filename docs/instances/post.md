@@ -22,8 +22,8 @@ Publishing is one gesture: the author's **Publish** record
 (Actor → Content,
 [edges.md §2](../primitive/edges.md#2-binary-families-cogra-authors)).
 Genesis mints the Content node and fixes `creator` — no approval
-flow, no second-party affirmation. The identity key of the Publish
-record *is* the Post's identity, forever
+flow, no second-party affirmation. The Publish act's identifier
+*is* the Post's identity, forever
 ([layer1-interface.md §9](../primitive/layer1-interface.md#9-node-and-edge-type-inventory)).
 
 Like every act it is priced and gated: the backend checks the
