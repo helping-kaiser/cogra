@@ -23,10 +23,10 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
-| 1. L1-author discussion | 1 | **Q28** | Zero-jail person-landing — the hyper-edge T-leg escape. Parked pending discussion with the L1 author; an L2 policy fallback exists if L1 declines, so nothing downstream blocks on it. |
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
+| 1. L1-author discussion | 1 | **Q31** | Publish-genesis identity — per-record vs per-family. Edition 4 leans per-record via `mint(actid)` without ruling. Open with the L1 team; blocks nothing downstream. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
-| 3. Federation phase | 1 | **Q15** | Identity reconciliation across separately-running instances for handle-based and per-creation node types. Type 1 nodes (hashtags) federate for free per Q14; Types 2 and 3 need a protocol; cross-instance bootstrap and integrity raise further sub-questions. Deferred until federation becomes concrete. |
+| 3. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -35,31 +35,32 @@ questions are closed.
 **Resolved:**
 
 - Q7 — see [data-model.md §"author_id"](implementation/data-model.md#author_id--one-foreign-key-still-a-cache).
-- Q8 — see [chats.md §10](instances/chats.md#6-moderation-inside-the-chat) and [governance.md §8](primitive/governance.md#8-instances).
-- Q3 — see [graph-model.md §3](primitive/graph-model.md) "What creates an actor edge — stances-not-events".
-- Q2 — see [feed-ranking.md §3-§4](primitive/feed-ranking.md#3-the-per-edge-primitive-and-the-fold) (per-edge composition, parallel tracks, taint rule, sum collapser) and [graph-model.md §6](primitive/graph-model.md) (dim1/dim2 unification, filtering vs. graph math). The deepest tie-break resolved separately — see Q16.
-- Q11 — see [feed-ranking.md §3.6–§3.7](primitive/feed-ranking.md#8-severance-discovery-redemption) (`(0, 0)` severance edge, cascading severance, redemption) and [feed-ranking.md §5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (zero-jail banishment of `h(t) = 0`). Self-discovery and return-pathway UX surfaces are tracked as forward sub-questions Q12 and Q13.
-- Q12 — see [feed-ranking.md §3.8.1](primitive/feed-ranking.md#84-discovery--the-inbound-self-query) (severance discovery via inbound self-query, trust-weighted reading) and [feed-ranking.md §3.8.2](primitive/feed-ranking.md#85-bridge-auto-detection) (auto-detection of bot-bridge nodes via delta-funnel path patterns, with path-length-aware action guidance). Cause identification is the auto-detect's job, complemented by the community posts in §3.8.3.
-- Q13 — see [feed-ranking.md §3.8.4](primitive/feed-ranking.md#87-redemption) (severer-side redemption surface, delta-funnel check on the redeeming node's outbound) and [feed-ranking.md §3.8.5](primitive/feed-ranking.md#87-redemption) (self-redemption posts via the same `bot-defense` hashtag mechanism, surfaced in the severer's "review severed accounts" view).
+- Q8 — see [chats.md §6](instances/chats.md#6-moderation-inside-the-chat) and [governance.md §8](primitive/governance.md#8-instances).
+- Q3 — see [graph-model.md §4](primitive/graph-model.md#4-stances-not-events) "Stances, not events".
+- Q2 — see [feed-ranking.md §3–§4](primitive/feed-ranking.md#3-the-per-edge-primitive-and-the-fold) (the per-edge primitive, the fold, the path set). The deepest tie-break resolved separately — see Q16.
+- Q11 — see [feed-ranking.md §8](primitive/feed-ranking.md#8-severance-discovery-redemption) (`(0, 0)` severance edge, cascading severance, redemption) and [feed-ranking.md §6](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (zero-jail banishment of `h(t) = 0`). Self-discovery and return-pathway UX surfaces are tracked as forward sub-questions Q12 and Q13.
+- Q12 — see [feed-ranking.md §8.4](primitive/feed-ranking.md#84-discovery--the-inbound-self-query) (severance discovery via inbound self-query, trust-weighted reading) and [feed-ranking.md §8.5](primitive/feed-ranking.md#85-bridge-auto-detection) (auto-detection of bot-bridge nodes via delta-funnel path patterns, with path-length-aware action guidance). Cause identification is the auto-detect's job, complemented by the community posts in §8.6.
+- Q13 — see [feed-ranking.md §8.7](primitive/feed-ranking.md#87-redemption) (severer-side redemption surface, delta-funnel check on the redeeming node's outbound; self-redemption posts via the same `bot-defense` hashtag mechanism, surfaced in the severer's "review severed accounts" view).
 - Q14 — see [data-model.md "Node identity strategies"](implementation/data-model.md#node-identity-strategies) (three-strategy framework: content-addressed UUIDv5 for canonical-string nodes like Hashtag, random UUID + UNIQUE handle for User/Collective, random UUID alone for per-creation nodes). Hashtag IDs are now content-addressed so independent creations of the same canonical name converge on one node. Cross-instance federation reconciliation for Types 2 and 3 is deferred as Q15.
 - Q6 — see [invitations.md §3 "Default values and customization"](primitive/invitations.md#3-default-values-and-customization). Defaults are `(+0.1, +0.1)` on both stances — the repo-wide low-defaults policy (normal actions default low so stronger stances stay expressible); both inviter and invitee choose their own stance during the invitation flow. The doc walks through the asymmetric-friend example: "love them, not their content" is a modest positive pair, never negative connection — a `p_i < 0` stance taints every path through it and suppresses rather than neutralizes.
-- Q4 — see [feed-ranking.md §7](primitive/feed-ranking.md#53-recency). Time decay anchors on the **reactor edge's top-layer age** (the last actor edge in the path), applied as a scalar `f(Δt)` multiplier alongside `d(R)` to all four metrics (`h, i, j, k`). Default exponential with **30-day half-life**, frontend-tunable. Intermediate edges don't decay — silence on a relationship edge is not stance revocation. Post-node age has no separate decay — the authorship edge is itself a reactor edge and ages with the post, so old-with-no-engagement decays naturally and old-with-fresh-engagement resurfaces via fresh reactor-edge layers. Worked cold-start example in §7.3 shows the math.
-- Q1 — see [graph-model.md §8](primitive/graph-model.md). Layer count, layer timestamps, and the sequence of past edge values are **not ranking inputs**. They are metadata for audit, history, and UI surfaces (e.g., a "this edge has been revised N times" indicator, or a stale-edge prompt). Ranking sees only the top layer of each edge — the user's current expressed stance. Rationale: introducing layer-count amplification would let the system infer intent from interaction frequency, in tension with both **stances-not-events** ([graph-model.md §3](primitive/graph-model.md)) and the user-controlled-ranking principle. Edge cases like "two friends with identical edges but very different real-world contact frequency" are explicitly not auto-resolved by the system; users update stances reactively (similar to pruning a stale subscription list) rather than the system inferring from behavior.
-- Q5 — see [feed-ranking.md §8](primitive/feed-ranking.md#94-the-already-seen-filter). The seen-list is a per-viewer set of content UUIDs treated as **another input to the feed-ranking computation**, alongside `R`, `d(R)`, `f(Δt)`, and the §5.2 friend-author-boost. Pre-rank exclusion (perf win — already-seen content never enters the math). New activity on a seen post does **not** resurface it; the new comment/reaction is independently rankable as its own node. Storage location is the viewing user's choice — backend-side `user_view_log` table in Postgres is the central frontend's default ([data-model.md](implementation/data-model.md)), but self-hosted clients can keep the same data locally and pass it to the calculator (the math is the same regardless of where the JSON came from); a delegated miner holds no copy — the seen-list rides inside each request per Q24's push model. Default frontend rule for "seen": every content item that passes through the viewport during a render. Frontend batches and flushes on natural checkpoints (batch-fill, scroll pause, app close); cache-clear before flush is an accepted small loss-window. Default 1-year compaction bounds storage at ~7 MB per active-user-year; the trade-off (a resurging old post will reappear if its view-log entry has been compacted) is documented and treated as acceptable feed character. No privacy-concealment story — viewing history is no more sensitive than reaction history per the network's transparency posture; "history" becomes a UI feature using the same data.
+- Q4 — see [feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency). Time decay anchors on the **reactor edge's top-layer age** (the last actor edge in the path), applied as a scalar `f(Δt)` multiplier alongside `d(R)` to all four metrics (`h, i, j, k`). Default exponential with **30-day half-life**, frontend-tunable. Intermediate edges don't decay — silence on a relationship edge is not stance revocation. Post-node age has no separate decay — the authorship edge is itself a reactor edge and ages with the post, so old-with-no-engagement decays naturally and old-with-fresh-engagement resurfaces via fresh reactor-edge layers.
+- Q1 — see [graph-model.md §3](primitive/graph-model.md#3-revision-and-current-state). Layer count, layer timestamps, and the sequence of past edge values are **not ranking inputs**. They are metadata for audit, history, and UI surfaces (e.g., a "this edge has been revised N times" indicator, or a stale-edge prompt). Ranking sees only the top layer of each edge — the user's current expressed stance. Rationale: introducing layer-count amplification would let the system infer intent from interaction frequency, in tension with both **stances-not-events** ([graph-model.md §4](primitive/graph-model.md#4-stances-not-events)) and the user-controlled-ranking principle. Edge cases like "two friends with identical edges but very different real-world contact frequency" are explicitly not auto-resolved by the system; users update stances reactively (similar to pruning a stale subscription list) rather than the system inferring from behavior.
+- Q5 — see [feed-ranking.md §9.4](primitive/feed-ranking.md#94-the-already-seen-filter). The seen-list is a per-viewer set of content UUIDs applied as a read-side layer of the feed computation, beside §9.2's friend-fresh reordering (a reorder layer, never a boost). Pre-rank exclusion (perf win — already-seen content never enters the math). New activity on a seen post does **not** resurface it; the new comment/reaction is independently rankable as its own node. Storage location is the viewing user's choice — backend-side `user_view_log` table in Postgres is the central frontend's default ([data-model.md](implementation/data-model.md)), but self-hosted clients can keep the same data locally and pass it to the calculator (the math is the same regardless of where the JSON came from); a delegated miner holds no copy — the seen-list rides inside each request per Q24's push model. Default frontend rule for "seen": every content item that passes through the viewport during a render. Frontend batches and flushes on natural checkpoints (batch-fill, scroll pause, app close); cache-clear before flush is an accepted small loss-window. Default 1-year compaction bounds storage at ~7 MB per active-user-year; the trade-off (a resurging old post will reappear if its view-log entry has been compacted) is documented and treated as acceptable feed character. No privacy-concealment story — viewing history is no more sensitive than reaction history per the network's transparency posture; "history" becomes a UI feature using the same data.
 - Q10 — reframed as a side note rather than an open design question. See [layers.md "Side note on long-term storage"](primitive/layers.md#side-note-on-long-term-storage). Typical actor behavior bounds layer accumulation tightly — people update an edge a handful of times over its lifetime, not hundreds, and node properties change even less frequently. The corner cases that *would* accumulate substantial history (e.g., a decades-old company restructuring through CollectiveMember edges) are precisely the ones where preserving history has value. If a real instance ever runs into storage pressure, compaction-friendly approaches that respect the no-silent-deletion principle exist — but it's an implementation-time decision contingent on real data, not a design-time one to settle preemptively.
 - Q9 — see [moderation.md](instances/moderation.md) and [network.md](primitive/network.md). Authorization for redaction runs through community-driven Network governance: any User authors a Proposal classifying content as `illegal`; threshold-cross requires at least one moderator's positive vote (the gate), ≥2/3 of cast votes in favor, and a low community quorum; threshold-cross triggers the [layers.md §5](primitive/layers.md#5-deletion-policy) redaction cascade. External pressure (court orders, etc.) doesn't bypass the mechanism — it prompts a moderator to start the same Proposal, which the community completes. Pathological corner cases (all moderators compromised) fall under the federation/forking exit per Q15.
-- Q17 — see [feed-ranking.md §3.1](primitive/feed-ranking.md#4-the-path-set). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §3](primitive/graph-model.md) (stances-not-events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
-- Q18 — see [feed-ranking.md §3](primitive/feed-ranking.md#3-the-per-edge-primitive-and-the-fold) (path simplicity is by construction — every hop factor is below one, so a cyclic walk revisiting an intermediate only shrinks; no separate vertex-simple rule or visited set exists, and mutual-edge 2-cycles never let the same intermediate's mediating role multiply into the product) and [feed-ranking.md §4.1](primitive/feed-ranking.md#5-per-path-quantities) (single-transit-cap rejected — for 100 paths `U → Aᵢ → B → t` the sum factors as `d(3) · s(B → t) · Σᵢ s(U → Aᵢ) · s(Aᵢ → B)`, a clean product of "network-aggregate endorsement of `B`" times "`B`'s stance on `t`," which is trust propagation working correctly; bot-bridge amplification is already handled by severance + delta-funnel auto-detection in §3.6–§3.8, and `d(R)` already calibrates direct-vs-indirect, making 100 R=3 paths beating one R=2 path the intentional default). The "every hop attenuates" entry in [invariants.md "Ranking"](primitive/invariants.md#ranking) carries the rule.
-- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §1](primitive/economics.md). Surfaced follow-ups: Q16's token angle (token signals excluded from `S`) carried into its recency resolution; the mod-gate hardening direction it surfaced carried into the Q19 resolution. The rail specifics this entry names are the pre-Liquid design, since superseded — single-store Postgres beside the Liquid-native rail, ladder POL instead of V3, push payouts instead of the claim escrow, no `Wallet` node ([ledger.md](implementation/ledger.md)).
-- Q21 — see [collectives.md §8](instances/collectives.md#6-the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [data-model.md](implementation/data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
+- Q17 — see [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set). No `Content → Author` back-edge exists or is added; content actor edges terminate at the content node and contribute only to ranking that content. The "I liked Alice's last three posts, so show me more Alice" intuition is supported by an explicit follow gesture, not inferred from post-affinity — that inference would be exactly the behavior-to-edge translation [graph-model.md §4](primitive/graph-model.md#4-stances-not-events) (stances, not events) rules out. Back-edge variants (with-cap, with-weight-discount, gated-on-reciprocation, propagate-to-author-only) each failed against either bot-bridge amplification or the actor-only-factor symmetry of §3.1, or both. A frontend may surface a follow-prompt after observed repeated engagement, but this is a UX nudge, not a graph mechanism, and is not added prophylactically — revisit only if feed-quality data shows the gap matters.
+- Q18 — see [feed-ranking.md §3](primitive/feed-ranking.md#3-the-per-edge-primitive-and-the-fold) (path simplicity is by construction — every hop factor is below one, so a cyclic walk revisiting an intermediate only shrinks; no separate vertex-simple rule or visited set exists, and mutual-edge 2-cycles never let the same intermediate's mediating role multiply into the product) and [feed-ranking.md §5](primitive/feed-ranking.md#5-per-path-quantities) (single-transit-cap rejected — for 100 paths `U → Aᵢ → B → t` the sum factors as `d(3) · s(B → t) · Σᵢ s(U → Aᵢ) · s(Aᵢ → B)`, a clean product of "network-aggregate endorsement of `B`" times "`B`'s stance on `t`," which is trust propagation working correctly; bot-bridge amplification is already handled by severance + delta-funnel auto-detection in §8, and `d(R)` already calibrates direct-vs-indirect, making 100 R=3 paths beating one R=2 path the intentional default). The "every hop attenuates" entry in [invariants.md "Ranking"](primitive/invariants.md#ranking) carries the rule.
+- Q20 — see [economics.md](primitive/economics.md) (pull-marketing campaigns: the `Campaign` node, the sustained-level `achieved_h_gain` metric, per-path Shapley attribution `φ_i = Σ w_π/|A_π|`, advertiser-discretionary release `P ∈ [0, D]`, the conservation equation with a flat-on-D anti-spam floor plus a scaling-on-P split, and the `Settlement`-node claim flow), [token.md](primitive/token.md) (CGT: decaying calendar mint on the peer-network curve with no fresh premine, one-sided V3 POL above spot with fees routed to treasury), and [ledger.md](implementation/ledger.md) (three stores, money → chain; self-custody key from signup, non-custodial never-expiring claim escrow, the `Wallet` node). Q20.2's ledger home is the chain as a third store; Q20.3's "pull marketing" anchor is [economics.md §2](primitive/economics.md#2-pull-marketing). Surfaced follow-ups: Q16's token angle (token signals excluded from `S`) carried into its recency resolution; the mod-gate hardening direction it surfaced carried into the Q19 resolution. The rail specifics this entry names are the pre-Liquid design, since superseded — single-store Postgres beside the Liquid-native rail, ladder POL instead of V3, push payouts instead of the claim escrow, no `Wallet` node ([ledger.md](implementation/ledger.md)).
+- Q21 — see [collectives.md §6](instances/collectives.md#6-the-social-contract). The role-catalog problem dissolves under a single layered `governance` map property on `:Collective`, keyed by `action_key` string. Each entry is a `Rule` of paired `exec` + `amend` triples so amendment cost is calibrated per-rule (CEO-can-hire stays cheap; share-distribution stays expensive) and the `amend` triple is self-applying (no infinite regress, no primitive default needed). The role vocabulary is **implicit** — the set of strings used in any `governance.<key>` eligibility predicate plus the strings assigned to any active member's `role`; typos are amendable like any other `role` change via a Proposal targeting `CollectiveMember.role`. Schema is fixed (one map property, declared in [data-model.md](implementation/data-model.md)); the action set is data, so new action keys never require a schema change. Composite atomic changes spanning multiple junctions (e.g. admit shareholder with redistribution, transfer shares between shareholders) ride on a new `value_kind = 'composite:<action_key>'` discriminator on Proposal with `_from` / `_to` bundle entries the cascade re-validates against current state — see [proposal.md §2 "Composite proposals"](instances/proposal.md#composite-proposals). The new `value_kind` field also makes `proposed_value`'s shape self-describing for frontends (`'scalar:string'`, `'scalar:float'`, `'scalar:integer'`, `'rule'`, `'composite:*'`) — no per-action_key out-of-band knowledge needed to render the right editor.
 - Q19 — see [governance.md §7](primitive/governance.md#7-the-mod-gate) (the mod-gate, now two-tiered) and [governance.md §3](primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only) (denominator inflation reframed). The mod-gate gains a **critical tier** keyed to the existing baseline/critical stakes split: low-stakes actions keep the flat **≥1 positive moderator vote**; destructive/irreversible ones (moderator role changes, `illegal`-redaction, guidelines amendments, critical `:Network` amendments) require `mod_yes ≥ ⌈Network.critical_mod_gate_fraction · |active mods|⌉` (new `:Network` property, default `0.50`, itself in the critical bucket so loosening it is a critical act — recursion closed). This shuts the catastrophic vector the flat-one gate left open: one compromised moderator key plus a community bot-flood could pass anything. Because the fraction is `≤ 1`, `⌈f · |active mods|⌉` never exceeds the active-mod count — the gate is always satisfiable, needs no absolute floor, self-strengthens as the moderator set grows (one or two mods round to one; a real majority at three+), and is deadlock-free; and since minting a moderator is itself critical, the denominator is Sybil-resistant by construction. Stake/wealth-gating was declined upstream (Q20) as plutocracy. The community-side denominator inflation is **not** a takeover vector — a petition tally counts only positive votes, so inflation can only make a Proposal harder to pass, never force one through — so it is reframed as a bounded *liveness* residual (the absolute bar `quorum_count` caps it), not an open question. Tier annotations propagated to [network.md §9/§11](primitive/network.md#9-mod-role-changes), [moderation.md §3](instances/moderation.md#3-the-mod-gate-rule), [platform-guidelines.md](instances/platform-guidelines.md), and [data-model.md](implementation/data-model.md).
-- Q16 — see [feed-ranking.md §5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §7](primitive/feed-ranking.md#53-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the non-traversable `:TRANSFERS` tensor. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
-- Q23 — see [api-spec.md "Search"](implementation/api-spec.md#search). The global `search` index covers name-class fields and post titles only — User/Collective handles + display names, Hashtag/Chat/Item names, Post `title`; bodies, descriptions, bios, and attachments are unindexed, and Comment (no indexed field) is not a searchable kind. Name-class fields match case-insensitively by prefix and substring, titles by word-level full-text. Backend order is exact-match tier then newest-first — both viewer-independent, honoring [feed-ranking.md §9](primitive/feed-ranking.md#11-where-ranking-runs)'s backend-never-ranks split; graph-blended ordering is the ranker's option over fetched candidates (no-AI rule applies), with recency the deepest fallback per Q16 — the delegated form is the miner's `rankSearch` operation ([miner-api.md](implementation/miner-api.md)). `sensitive` fields stay indexed and return with per-field status — the standard read-surface visibility model; redacted fields are excluded by an explicit skip-redacted index rule (redaction leaves a visible in-place marker, so a current value still exists to match). Chat messages are excluded from the global index — the scoped `chatSearch` query searches one chat's plaintext bodies newest-first, and encrypted content is never searchable server-side ([chats.md §9](instances/chats.md#7-encryption-as-the-privacy-mechanism)).
-- Q24 — see [miner-api.md "Transport"](implementation/miner-api.md#transport), ["Delegation and trust"](implementation/miner-api.md#delegation-and-trust), and ["The pair-state operations"](implementation/miner-api.md#the-pair-state-operations). Wire form is **GraphQL with the pinned types verbatim** — a remote miner serves the same small schema, the on-device runner is an in-process call over the same types, and the backend-direct rollout stage hosts the operations in the backend's own schema; a second wire encoding was rejected as a hand-synced parallel serialization. The remote signature is `rank(viewer, params)`: reads are unauthenticated and `feedSlice` is viewer-parameterized, so the **miner re-fetches the slice itself** and the device never downloads it. Delegation is a **push model with no standing credential** — seen-list and rank params ride inside each request, the miner never authenticates to the backend (indistinguishable from an anonymous reader; [auth.md](implementation/auth.md) manages no delegation tokens), and revocation is the viewer ceasing to call. Output is **advisory and spot-checkable** — deterministic math means the device can re-rank any handful of targets and compare — with no mandated audit and no attestation; the remedy for a bad miner is switching. The §3.8 surfaces get **three dedicated stateless operations** (`severanceStatus`, `clusterAnalysis`, `redemptionCheck` — polled, watch lists and cadence client-side) returning structural facts; scores, thresholds, and action guidance stay frontend-computed per §3.8's frontend-latitude rule. Miner discovery and incentives are explicitly out of scope until someone wants to operate a paid miner.
-- Q22 — see [feed-ranking.md §4.5](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum) (the per-target metric decomposes into `O(R·|E_slice|)` message-passing — `d(R)` per-hop, `f(Δt)` at reactor-edge readout, `s_path` a real accumulator, `c_path` a two-state taint lift, `i` drops the reactor edge, `j`/`k` no traversal; the sole obstruction is §3's vertex-simple invariant) and [feed-ranking.md §9](primitive/feed-ranking.md#11-where-ranking-runs) (slice membership is a best-path **max** frontier — cheap and cycle-immune; the all-paths **sum** is the deferred metric). The invariant splits by regime: exact branch-and-bound enumeration when the slice is sparse (cheap, `b^R` small), a memory-1 **non-backtracking** relaxation when dense (kills the bidirectional 2-cycles §3 names; the triangle+ residual is a sub-percent `d(R)`-decayed effect, and adversarial tight clusters are caught structurally by severance/delta-funnel [§3.6–§3.8](primitive/feed-ranking.md#8-severance-discovery-redemption), the actual bot-bridge defense). `χ` is a compute-budget cutoff, not the cycle defense. Surfaces updated: [miner-api.md](implementation/miner-api.md) (`rank` is message-passing over the slice, the `RankPath` drill-down a separate bounded enumeration) and [notation.md](primitive/notation.md) (`χ`/`b` corrected — `χ` bounds the node-set, not the path count).
-- Q26 — see [chats.md §3.1](instances/chats.md#8-chat-metadata-and-updates) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
-- Q27 — see [collectives.md §8 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §6](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
+- Q16 — see [feed-ranking.md §6](primitive/feed-ranking.md#6-the-score--greedy-disjoint-sum). The intrinsic per-node scalar `S(t)` is dropped: the sort cascade's deepest fallback is **recency** — newest content first, ranked by the target's authorship-edge age ([feed-ranking.md §5.3](primitive/feed-ranking.md#53-recency)). Recency is a global node metric — cheap, not inbound-edge-gameable, and (per Q20) token-independent, so the lone fallback channel opens no side channel onto the money rail. The abstract intrinsic-scalar framing didn't fit a network where every value is graph-derived relative to a viewer; the deepest fallback wants a concrete global signal, and freshest-wins is the obvious one. The candidate token/in-degree/path-count inputs are recorded as rejected in git history.
+- Q23 — see [api-spec.md "Search"](implementation/api-spec.md#search). The global `search` index covers name-class fields and post titles only — User/Collective handles + display names, Hashtag/Chat/Item names, Post `title`; bodies, descriptions, bios, and attachments are unindexed, and Comment (no indexed field) is not a searchable kind. Name-class fields match case-insensitively by prefix and substring, titles by word-level full-text. Backend order is exact-match tier then newest-first — both viewer-independent, honoring [feed-ranking.md §11](primitive/feed-ranking.md#11-where-ranking-runs)'s backend-never-ranks split; graph-blended ordering is the ranker's option over fetched candidates (no-AI rule applies), with recency the deepest fallback per Q16 — the delegated form is the miner's `rankSearch` operation ([miner-api.md](implementation/miner-api.md)). `sensitive` fields stay indexed and return with per-field status — the standard read-surface visibility model; redacted fields are excluded by an explicit skip-redacted index rule (redaction leaves a visible in-place marker, so a current value still exists to match). Chat messages are excluded from the global index — the scoped `chatSearch` query searches one chat's plaintext bodies newest-first, and encrypted content is never searchable server-side ([chats.md §7](instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+- Q24 — see [miner-api.md "Transport"](implementation/miner-api.md#transport), ["Delegation and trust"](implementation/miner-api.md#delegation-and-trust), and ["The pair-state operations"](implementation/miner-api.md#the-pair-state-operations). Wire form is **GraphQL with the pinned types verbatim** — a remote miner serves the same small schema, the on-device runner is an in-process call over the same types, and the backend-direct rollout stage hosts the operations in the backend's own schema; a second wire encoding was rejected as a hand-synced parallel serialization. The remote signature is `rank(viewer, params)`: reads are unauthenticated and `feedSlice` is viewer-parameterized, so the **miner re-fetches the slice itself** and the device never downloads it. Delegation is a **push model with no standing credential** — seen-list and rank params ride inside each request, the miner never authenticates to the backend (indistinguishable from an anonymous reader; [auth.md](implementation/auth.md) manages no delegation tokens), and revocation is the viewer ceasing to call. Output is **advisory and spot-checkable** — deterministic math means the device can re-rank any handful of targets and compare — with no mandated audit and no attestation; the remedy for a bad miner is switching. The §8.4–§8.7 surfaces get **three dedicated stateless operations** (`severanceStatus`, `clusterAnalysis`, `redemptionCheck` — polled, watch lists and cadence client-side) returning structural facts; scores, thresholds, and action guidance stay frontend-computed per §3.8's frontend-latitude rule. Miner discovery and incentives are explicitly out of scope until someone wants to operate a paid miner.
+- Q22 — see [feed-ranking.md §6.1](primitive/feed-ranking.md#61-definition) and [§11](primitive/feed-ranking.md#11-where-ranking-runs). Ranking is computable as declared: the score is the exact greedy disjoint-sum — a never-sampled k-node-disjoint path extraction over the viewer's slice — and [miner-api.md "The contract"](implementation/miner-api.md#the-contract) pins the slice a ranker fetches. The `RankPath` drill-down is produced by the same extraction that produced the score ([miner-api.md "Output"](implementation/miner-api.md#output)). Adversarial tight clusters are caught structurally by severance/delta-funnel ([feed-ranking.md §8](primitive/feed-ranking.md#8-severance-discovery-redemption)), the actual bot-bridge defense.
+- Q26 — see [chats.md §7 "Keys, organized in epochs"](instances/chats.md#keys-organized-in-epochs) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
+- Q27 — see [collectives.md §6 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §4](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
 - Q29 — see [auth.md "Key recovery"](implementation/auth.md#key-recovery) (user posture) and [collectives.md §2](instances/collectives.md#2-custody) (Collective custody). **Users:** email recovery restores the login only; the actor is restored by an opt-in client-encrypted key backup — the device generates a high-entropy recovery code alongside the signing key, encrypts the key locally, and CoGra stores only ciphertext it cannot decrypt (zero-custody preserved; theft needs code *and* login, so redundant copies of the code are safe against loss in a way raw-key copies never are). Generated codes only — a user-chosen passphrase over a stored blob is the offline-crackable failure mode, viable only behind guess-limited secure hardware this posture avoids depending on. Declining backup keeps husk semantics (device loss = actor loss, stated at key creation); a passkey-wrapped (WebAuthn PRF) second unlock is a foreseen extension. **Collectives:** the creator holds the full key (full custody from founding, censorship escape, same recovery posture); every other act-as-eligible member signs via a per-member 2-of-2 split — member device holds one half, the backend the other, the full key never assembled — so the backend alone can sign nothing (no operator custody) and a member cannot sign around the contract: the backend co-signs only after checking the member's user-key-signed instruction against the governance map (action-key eligibility, passed decision where required). Removal = the backend deletes its half; no membership event forces a re-key. Rejected: member-threshold signatures (human-quorum ceremony weight, resharing on every membership change) and per-member L1-registered full keys (any holder could sign decision-gated acts unilaterally); the per-member device+server split is the standard embedded-wallet architecture. The two L1 dependencies (signature scheme, actor key rotation) split off as Q30.
+- Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
 ---
 
@@ -108,77 +109,36 @@ realization rather than at silence.
 
 ---
 
-## Q28 — Zero-jail person-landing: the hyper-edge T-leg escape
+## Q31 — Publish genesis: parallelism exemption per record or per family
 
-**Where it shows up:** [feed-ranking.md §7](primitive/feed-ranking.md#7-sort-order-tie-breakers-zero-jail)
-(zero-jail as unreachability),
-[layer1-interface.md §9.6](primitive/layer1-interface.md#96-hyper-edge-types-subsecnodeshyper-edges)
-(the hyper-edge census)
-**Status:** open (parked — pending discussion with the L1 author)
+**Where it shows up:**
+[layer1-interface.md](primitive/layer1-interface.md) (the edge
+census; minted-node identity)
+**Status:** open (in discussion with the L1 team — posed
+2026-07-17, re-asked 2026-07-21; blocks nothing downstream)
 
 ### Context
 
-Zero-jail's predicate is unreachability: every path from viewer
-to target crosses a `(0,0)`-netted bundle, and a viewer's zeroing
-kills exactly the paths through their own records. A census-wide
-sweep confirms the binary families are safe — a binary edge's
-source is always its author, so netting the author's bundles
-removes it from the path set. The escape lives in **hyper-edge
-T-legs**, whose carrier legs source from passive artifacts rather
-than from the author:
-
-- **Reference is a confirmed escape.** Its A-leg sources from any
-  passive artifact — no ownership constraint — and its Full-tier
-  T-leg lands on any Profile. Netting is per-author, so neither
-  the viewer nor any third party can remove another author's
-  Reference legs: a jailed actor's Profile stays reachable
-  through a Reference authored from an artifact the viewer still
-  reaches.
-- **Chat Invitation is a Marginal-tier twin** iff self-invitation
-  is formation-legal — the census doesn't say. Moot as a fix
-  either way: a confederate account reproduces both geometries
-  legally, so self-guards and artifact-ownership constraints
-  don't close the escape.
-- **The standing-side `j = i` exclusion has no feed
-  counterpart.** L1's standing flow excludes self-reach; the
-  feed's path math has no analogous exclusion on person-landing
-  legs.
-- **Review, Send, and Bid mint author-owned nodes reachable from
-  non-owned carriers** (Send is explicitly not membership-gated).
-  The earnings side is closed by reward-eligibility path
-  filtering (lands with economics.md's rebase rewrite); **feed
-  visibility of a jailed author's minted content stays open**.
+The census marks Publish "parallelism-exempt by construction."
+Whether that exemption — and with it minted-node genesis — reads
+**per record** (every Publish act mints a distinct node) or **per
+family** is L1's to rule, and the ruling is pending. Edition 4
+leans per-record without ruling: the operative sentence is
+carried verbatim, while act identifiers now embed an author-local
+sequence and minted identity is `mint(actid)` — identity per
+minted act by term formation.
 
 ### The question
 
-For the L1 author: (1) is the unconstrained Reference A-leg
-intended? (2) is self-invitation formation-legal, and should the
-census say so? (3) is the standing-vs-feed `j = i` asymmetry
-intended — is there room for an L1-side lever, such as the leg
-author's standing gating person-landing T-leg traversability?
-
-### Constraints (from established principles)
-
-- **Netting is per-author by L1 math.** No viewer-side removal of
-  third-party records exists, so any real fix is either L1-side
-  or feed-scope policy — never a new removal mechanism.
-- **Feed policy is CoGra's to declare.** The published ranking
-  spec can exclude person-landing hops from feed scope by policy —
-  the L2 fallback if L1 declines all three levers.
-
-### Related
-
-Severance, discovery, and redemption
-([feed-ranking.md §8](primitive/feed-ranking.md#8-severance-discovery-redemption));
-the reward-side closure of the same geometry (economics.md, with
-its rebase rewrite).
+For the L1 team: is Publish-genesis identity per-record or
+per-family?
 
 ---
 
 ## Q25 — Standing miner delegation: a scoped credential or miner-held seen-list
 
 **Where it shows up:** [miner-api.md "Delegation and trust"](implementation/miner-api.md#delegation-and-trust),
-[feed-ranking.md §8.2](primitive/feed-ranking.md#94-the-already-seen-filter)
+[feed-ranking.md §9.4](primitive/feed-ranking.md#94-the-already-seen-filter)
 **Status:** open (deferred — miner rollout phase)
 
 ### Context
@@ -208,7 +168,7 @@ When delegated miners are real, does standing delegation become
 worth its machinery? Specifically: what a scoped, revocable miner
 credential looks like in auth.md's session model; whether a
 miner-held seen-list re-enters
-[feed-ranking.md §8.2](primitive/feed-ranking.md#94-the-already-seen-filter)'s
+[feed-ranking.md §9.4](primitive/feed-ranking.md#94-the-already-seen-filter)'s
 storage-home list, and what compaction and multi-device sync mean
 for it; and whether the answer changes the trust posture (today a
 miner is indistinguishable from an anonymous reader).
@@ -218,7 +178,7 @@ miner is indistinguishable from an anonymous reader).
 - **Revocation must stay simple.** The push model's symmetry — the
   viewer stops calling, nothing to revoke server-side — is the bar
   any credential design has to clear.
-- **The math is storage-agnostic.** §8.1's calculator takes a JSON
+- **The math is storage-agnostic.** The ranker takes a JSON
   list; where it came from must keep not mattering.
 - **No new sensitivity claims.** Viewing history is no more
   sensitive than reaction history per the network's transparency
@@ -232,129 +192,70 @@ incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-sco
 
 ---
 
-## Q15 — Cross-instance federation: identity reconciliation for handle-based and per-creation nodes
+## Q15 — Federation between independently-bootstrapped L1 networks
 
-**Where it shows up:** [data-model.md "Node identity strategies"](implementation/data-model.md#node-identity-strategies) (Type 2 and Type 3 federation notes)
+**Where it shows up:** [data-model.md "Node identity strategies"](implementation/data-model.md#node-identity-strategies) (Type 2 and Type 3 federation notes),
+[network.md §2](primitive/network.md#2-creation) (a fork sets its
+own genesis)
 **Status:** open (deferred — federation phase)
 
 ### Context
 
-The Q14 resolution settled three identity strategies in the data
-model, with very different federation properties:
-
-- **Type 1 — canonical-string identity, content-addressed
-  UUIDv5** (Hashtag). Federates by construction when forks
-  intend to share the namespace: the same canonical name
-  produces the same UUID across any instance or fork. Forks
-  that intend to diverge implicitly create incompatible
-  hashtag IDs — the namespace UUID is committed forever the
-  moment the genesis migration runs, so a fork keeping it
-  inherits the shared namespace, and a fork rotating it
-  breaks compatibility for every existing tag.
-- **Type 2 — handle-based identity, random UUID + UNIQUE handle
-  per instance** (User, Collective). Within an instance, the
-  UNIQUE constraint prevents collision. Across separated
-  instances, instance A's `@alice` and instance B's `@alice`
-  have different UUIDs and could be the same person, two
-  different people, or one impersonating another.
-- **Type 3 — per-creation identity, random UUID alone** (Post,
-  Comment, ChatMessage, Chat, Item, junction nodes). Within an
-  instance, every creation is a distinct node. Across instances,
-  cross-references (e.g. a post in instance A linked from
-  content in instance B) require translation between local
-  identities.
-
-Type 1 is solved. Types 2 and 3 are open for any future
-federation between Cogra instances.
+Within one PeerNetworks Layer 1 network, cross-instance identity
+is solved by construction: every minted node is a
+globally-identified L1 act shared by every L2 frontend over the
+same records, and canonical-name Types converge by L1's identity
+algebra with no reconciliation protocol
+([hashtag.md §1](instances/hashtag.md#1-identity-and-the-naming-service)).
+What remains open is the harder case: **two networks with
+separate geneses** — a fork that set its own Charter
+([network.md §2](primitive/network.md#2-creation)) or an
+independently-bootstrapped deployment — later wanting to exchange
+or merge content.
 
 ### The question
 
-When two separately-running instances begin to exchange data —
-through a federation protocol, partial sync, or content embedded
-in one another — how do their identity spaces reconcile?
+When two separately-bootstrapped networks begin to exchange data,
+how do their spaces reconcile? Specifically:
 
-Specifically:
-
-- **Type 2 reconciliation (handles).** Instance A's `@alice` and
-  instance B's `@alice`: same person or two? Manual claim by the
-  owner with a cryptographic key? Inferred from external
-  signals? Aliased explicitly via a graph mechanism? Always
-  treated as different unless explicitly merged?
-- **Type 3 reconciliation (per-creation).** A post in instance A
-  referenced from instance B: does it get a "shadow" UUID in
-  B's namespace? Is the original UUID preserved with an
-  instance-prefix? How does cross-instance authorship
-  attribution work?
-- **Federation protocol surface.** How do instances discover
-  each other, agree on synchronization scope, and handle
-  disagreements (e.g. instance A says "Bob is a bot, severed,"
-  instance B disagrees)?
-- **`:Network` singleton ID distribution.** Within an instance
-  the singleton's `id` is a one-query lookup, but every client
-  composing a Network-scope Proposal needs that UUID up front.
-  Across instances, each `:Network` has its own UUID; a
-  federation protocol has to decide whether singleton IDs are
-  discoverable, signed, or pinned to instance metadata. See
-  [network.md §2](primitive/network.md#2-creation) and
-  [data-model.md](implementation/data-model.md).
-- **First-user serialization across instances.** Within one
-  instance, the bootstrap is the only path that
-  writes the genesis User, so concurrent registration cannot
-  race ([network.md §2](primitive/network.md#2-creation),
-  [auth.md](implementation/auth.md)). Two separately-running
-  instances independently mint their own genesis users; if
-  they later federate, the federation protocol has to decide
-  what "the genesis user" means when both instances have one.
-- **Hashtag UUIDv5 backend integrity.** Hashtag IDs are
-  derived from a namespace UUID and the canonical name. The
-  derivation runs in the backend, with no per-row check that
-  `id == UUIDv5(namespace, name)`
-  ([data-model.md](implementation/data-model.md)). Within one
-  honest instance, backend discipline is sufficient. Federated
-  exchange of hashtag references requires deciding whether
-  instance B accepts instance A's hashtag IDs on trust, recomputes
-  them, or expects an attestation (binary hash, signed build, or
-  similar) that A computed the UUID the agreed way.
+- **Same-person claims.** The same person holds accounts on both
+  networks. The client-held actor key makes a cryptographic claim
+  the natural mechanism — the same key can sign on both — but
+  what the claim binds (handles, standing, content authorship)
+  and where it is recorded is undesigned.
+- **Cross-network references.** A record minted on network A and
+  cited from network B needs a network qualifier — minted
+  identities are unique within one network's act order, not
+  across orders.
+- **Two-Charter reconciliation.** Each network has its own
+  genesis, Charter, parameter schedule, and genesis actors;
+  federation has to decide what, if anything, reconciles — and
+  what "the genesis user" means when both networks have one.
+- **Protocol surface.** Discovery, synchronization scope, and
+  disagreement (network A severs an actor network B trusts).
 
 ### Constraints (from established principles)
 
-- **No central authority.** Per CLAUDE.md, anyone can fork and
-  self-host. Federation cannot depend on a central registry.
+- **No central authority.** Anyone can fork and self-host
+  ([network.md §2](primitive/network.md#2-creation)); federation
+  cannot depend on a central registry.
 - **Append-only.** Per [layers.md](primitive/layers.md),
-  reconciliation cannot retroactively rewrite local state. New
-  layers / new edges may be appended; old ones stay.
+  reconciliation cannot retroactively rewrite local state; claims
+  land as new records.
+- **The census is closed.** No new L1 edge types can be minted;
+  any aliasing or claim mechanism rides payloads on existing
+  families, or lives off-graph.
 - **Transparency.** Reconciliation choices (alias, claim, merge)
   leave a visible trace on-graph.
 - **Severance is local to the severing community.** Per
-  [feed-ranking.md §3.7](primitive/feed-ranking.md#83-cascading-severance--and-its-locality), the math is
+  [feed-ranking.md §8.3](primitive/feed-ranking.md#83-cascading-severance--and-its-locality), the math is
   per-viewer. Federation should not import or export severance
   state automatically.
 
-### Options considered
-
-None worked out yet. Surfaced as possibilities only:
-
-- **Cryptographic claim / proof.** Users hold a key pair;
-  claiming an identity across instances requires signing with
-  the private key. Solves the "is this the same person?"
-  question but raises key-management questions and introduces a
-  cryptographic dependency.
-- **Aliasing edges.** A new edge type that maps "instance A's
-  `@alice` → instance B's `@alice`" as an explicit graph-level
-  claim. Requires consensus on what counts as authoritative
-  aliasing.
-- **Always-distinct.** Instances treat each other's identities
-  as separate. Federation only allows reading, not merging.
-  Loses the cross-instance same-person semantics but is the
-  simplest model.
-- **Hybrid (per-strategy).** Different reconciliation rules for
-  Type 2 (cryptographic claim) and Type 3 (instance-prefix
-  cross-references).
-
 ### Related
 
-Q14 (resolved — sets up the per-type strategies that this
-question completes for the cross-instance case),
-[feed-ranking.md §3.7](primitive/feed-ranking.md#83-cascading-severance--and-its-locality) (cluster
+Q14 (resolved — sets up the per-type identity strategies; within
+one network they need no cross-instance protocol at all),
+[feed-ranking.md §8.3](primitive/feed-ranking.md#83-cascading-severance--and-its-locality) (cluster
 severance — local to the severing community per principle, but
 federation could change this).
