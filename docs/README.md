@@ -78,9 +78,9 @@ an `instances/` doc is a sign the mechanism belongs in
   graph-computed campaign value `V` from viewer weights, per-path
   Shapley payout, advertiser-discretionary settlement, the payout
   flow; no AI, no economics→ranking feedback.
-- [token](primitive/token.md) — the CGT token: scheduled decaying
-  mint, burn-as-destruction, protocol-owned liquidity; never feeds
-  ranking.
+- [token](primitive/token.md) — the CGT token: genesis pre-mint on
+  a scheduled decaying release, burn-as-destruction, protocol-owned
+  liquidity; never feeds ranking.
 - [invitations](primitive/invitations.md) — two-edge onboarding
   pattern for new actors.
 - [network](primitive/network.md) — the global community of all

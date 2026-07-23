@@ -58,8 +58,8 @@ and covenants can do them.
 CGT is a standard Liquid issued asset:
 
 - **Fixed supply at issuance.** The genesis issuance creates the
-  full finite supply — the mint curve's asymptote, translated into a
-  single pre-mint — and creates **no reissuance tokens**, so no key
+  full finite supply — the release curve's asymptote, translated
+  into a single pre-mint — and creates **no reissuance tokens**, so no key
   anywhere can ever mint more. The supply cap is enforced by the
   chain, not by policy.
 - **Registered.** The asset carries a Liquid Asset Registry entry
@@ -81,8 +81,8 @@ CGT is a standard Liquid issued asset:
 
 ## Supply release — timelocked tranches
 
-The calendar mint of [token.md §2](../primitive/token.md#2-issuance--the-decaying-calendar-mint)
-executes as a **release schedule**: the pre-minted supply is split
+The calendar release of [token.md §2](../primitive/token.md#2-issuance--the-decaying-calendar-release)
+is enforced by the chain, not operated: the pre-minted supply is split
 at genesis into tranches locked under **plain absolute timelocks**
 matching the calendar curve's steps. A tranche becomes spendable
 when its date arrives and not a block earlier — the schedule is
@@ -90,12 +90,10 @@ consensus-enforced, not an operational promise, and it needs no
 covenant machinery: absolute timelocks are the oldest, most boring
 primitive on the chain.
 
-"Mint" in token.md's supply arithmetic thereby reads as *release*:
-total issued supply is a genesis constant; the curve governs when
-tranches unlock into the ladder's ask side. Live supply still
-evolves as release minus burn, and the long-run deflationary
-crossover of [token.md §5](../primitive/token.md#5-supply-trajectory)
-is unchanged.
+Total issued supply is a genesis constant; the curve governs when
+tranches unlock into the ladder's ask side; live supply evolves as
+release minus burn toward the long-run deflationary crossover of
+[token.md §5](../primitive/token.md#5-supply-trajectory).
 
 ---
 
