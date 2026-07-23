@@ -167,16 +167,19 @@ different truth relationships
   mirror holds is recomputable from published records, so a
   distrusting participant can audit CoGra's reads without CoGra's
   help.
-- **The overlay** is CoGra's own truth: Proposal machinery and
-  the `:Network` operational singleton. Overlay state carries
-  **layered properties** — the append-only history pattern, applied
-  where CoGra owns the store. Overlay state never enters any L1
-  quantity.
+- **The overlay** is a set of operational caches derived from L1
+  records by CoGra's published fold rules: Proposal tally state
+  and the network charter's parameter carrier
+  ([network.md](network.md)). Overlay state carries **layered
+  properties** — the append-only history pattern at per-property
+  granularity — but the records and the published rules are the
+  truth: every cached value is rebuildable by replaying the folds.
+  Overlay state never enters any L1 quantity.
 
 One CoGra flow typically writes all three kinds of state: the L1 gesture
 is submitted through the backend, the mirror converges on the
-accepted record, and the overlay and Postgres carry the flow's
-CoGra-side state
+accepted record, and the overlay caches and display content carry
+the flow's CoGra-side state
 ([substrate.md §4](substrate.md#4-the-gesture-pattern)). The
 gesture is the part that binds; everything else is CoGra's to
 rebuild from the record if it is ever lost.
