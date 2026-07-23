@@ -73,8 +73,9 @@ an `instances/` doc is a sign the mechanism belongs in
 - [feed-ranking](primitive/feed-ranking.md) — ranking algorithm.
 - [notation](primitive/notation.md) — the L1 / CoGra symbol split:
   which ledger owns which glyph, plus the CoGra symbol index.
-- [authorship](primitive/authorship.md) — how authorship is derived
-  from the earliest incoming edge.
+- [authorship](primitive/authorship.md) — authorship as intrinsic
+  to every L1 record: part of the act identity, never derived;
+  node creators fixed at genesis.
 - [economics](primitive/economics.md) — pull-marketing campaigns:
   graph-computed reach (`h_anchor(target)`), per-path Shapley payout,
   advertiser-discretionary settlement, the payout flow; no AI, no
@@ -102,14 +103,14 @@ an `instances/` doc is a sign the mechanism belongs in
 - [collectives](instances/collectives.md) — collectives as actors;
   social-contract governance with example configurations
   (corporate, household, co-op).
-- [items](instances/items.md) — items as content; ItemOwnership
-  transfer flow; single-owner invariant.
-- [moderation](instances/moderation.md) — `sensitive` and
-  `illegal` both per-field on a per-field moderation-status
-  property; reports as Proposals on the graph;
-  mod-vote-required-for-every-classification gate; per-field
-  redaction cascade; node-level `moderation_status` cache holds
-  the max severity.
+- [items](instances/items.md) — items as content; the Bid →
+  Accept → Ratify settlement handshake; consume-only title
+  certificate `owner^(k)`; single-owner invariant.
+- [moderation](instances/moderation.md) — `sensitive` as a
+  read-side flag plus the `(0,0)` verdict Tag; `illegal` as
+  whole-record payload removal to the reduced projection; reports
+  as Proposals on the graph;
+  mod-vote-required-for-every-classification gate.
 - [platform-guidelines](instances/platform-guidelines.md) — the
   normative document the Network references when classifying
   content; bucket contents; amendment procedure pinned by
