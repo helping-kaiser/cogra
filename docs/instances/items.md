@@ -12,8 +12,9 @@ it.** No ownership junction, no transfer proposal, no CoGra-side
 ownership state exists.
 
 Marketplace flows aren't the focus of the first CoGra iterations
-(posts and chats are), but the ownership model below is
-committed; only the money rail is deferred (§6).
+(posts and chats are), but the ownership model and the money seam
+below are committed; the rail build is sequenced in
+[roadmap.md](../implementation/roadmap.md).
 
 ---
 
@@ -154,21 +155,41 @@ how standing grows
 
 L1 holds no value, locks nothing, adjudicates nothing — it
 records Offers and ownership changes. The money side is CoGra's,
-and the seam is fixed even though the rail is deferred:
+on the CGT rail, and it never becomes a graph object — a
+transfer is purely rail-side:
 
-- **Price is a term on the Bid payload** — witnessed, public,
-  part of the offer the seller accepts.
-- **Money settles on CoGra's token rail**: a CGT `:TRANSFERS`
-  with CoGra escrow, released against the **epoch certificate**
-  in which the settlement is recognized and title-transferring —
-  the deterministic commit anchor the escrow observes. Never
-  against the Ratify, which is inside the regret window.
-- **Listing, pricing UX, and escrow mechanics** are the deferred
-  marketplace workstream; the rail design lives with
-  [ledger.md](../implementation/ledger.md) and
-  [economics.md](../primitive/economics.md). Ownership rides L1
-  settlement regardless — a barter or gift transfer needs no
-  rail at all.
+- **The asking price is a field of the Item** — it rides the
+  payload like name and description, updated through the edit
+  fold under the current certified owner's authorship (§7):
+  witnessed, public, newest-wins, and portable — any L2 reading
+  the records sees the listing. The **offered price is a term on
+  the Bid payload** — witnessed, public, part of the offer the
+  seller accepts. Both are numbers the records pin; money never
+  appears on the graph.
+- **Fund-at-Bid.** The buyer's escrow is locked on the rail
+  before the Bid lands, and the Bid payload carries the escrow
+  pointer — an offer is funded, willing capital, never a free
+  option. Cancelling is the ordinary Withdraw — the offer dies
+  instantly on L1 — and the refund follows on the platform's
+  next attestation sweep.
+- **Payment releases against the epoch certificate** in which
+  the settlement is recognized and title-transferring — the
+  deterministic commit anchor — never against the Ratify, which
+  is inside the regret window. The escrow is a fixed-destination
+  two-branch covenant: each party can move money only away from
+  itself, and the platform only attests which legitimate outcome
+  occurred — shape, oracle role, and the liveness-not-safety
+  residual live in
+  [ledger.md](../implementation/ledger.md#the-marketplace-rail).
+- **No per-sale fee.** Protocol income realizes at the CGT gate —
+  the ladder's spread — never inside the flow
+  ([economics.md §7](../primitive/economics.md#7-the-conservation-equation)).
+
+Ownership rides L1 settlement regardless — a barter or gift
+transfer needs no rail at all. Items are also deliberately
+**outside the tipping surface**: a tip resolves to an author,
+and for a good the certified owner and the genesis author can
+diverge ([ledger.md](../implementation/ledger.md#tipping)).
 
 ---
 
@@ -184,7 +205,8 @@ instantiated for Items:
   initially). Ownership changes hands; the editing right follows
   the certificate, and a superseded owner's later edit records
   are written but never win the fold.
-- **Granularity:** per field — name, description, media manifest.
+- **Granularity:** per field — name, description, media
+  manifest, asking price (§6).
 
 The genesis record, the thread, and the license qualifiers never
 edit; every edit is a priced act with public history.
@@ -224,9 +246,9 @@ tradeable claim.
 - **Not the settlement spec.** The recognition predicate, the
   title fold, order-freeness, and the frontier caveats live in
   [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition).
-- **Not the marketplace.** Listing surfaces, price discovery,
-  escrow flows, and the CGT rail are the deferred workstream
-  ([ledger.md](../implementation/ledger.md)).
+- **Not the marketplace rail.** Escrow shapes, the covenant, and
+  transaction mechanics live in
+  [ledger.md](../implementation/ledger.md#the-marketplace-rail).
 - **Not the update rule.** Fold semantics live in
   [substrate.md §9](../primitive/substrate.md#9-node-values-and-updates).
 - **Not the edge catalog.** Family semantics and census pointers

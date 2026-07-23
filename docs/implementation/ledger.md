@@ -8,8 +8,9 @@ line ([economics.md](../primitive/economics.md)); token.md defines
 the supply curve and the liquidity design
 ([token.md](../primitive/token.md)); this doc is the mechanics half:
 how those designs execute as Liquid transactions — the asset, the
-release schedule, the order ladder, push payouts, escrow, the
-reserve conversion, and the keys. Everything here is contract-level:
+release schedule, the order ladder, push payouts, escrow, tipping,
+the reserve conversion, the keys, and the marketplace rail.
+Everything here is contract-level:
 it names the on-chain shapes and their trust boundaries, not wire
 formats or calibration numbers.
 
@@ -206,6 +207,16 @@ Release always executes the settlement split of
 payout batch, treasury share, reserve line, burn, inviter shares —
 one escrow, explicit outputs, matching the settlement payload.
 
+The platform's signature is the **oracle** in this shape: Liquid
+scripts cannot read L1, so the platform key attests the L1 outcome
+the release matches — the settlement payload and its epoch
+certificate. That seam is L1's own posture: a terminal escrow "may
+observe the public log", and the observing mechanism is terminal
+(`rem:graph:settlement-cross-layer`,
+[layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)) —
+the attestation is CoGra's to make and everyone's to audit, against
+the same public state it attests.
+
 ---
 
 ## Conversion — the reserve line
@@ -263,16 +274,94 @@ backend and Android alike — to be verified when the rail is built.
 
 ---
 
+## Tipping
+
+A tip is **a rail transfer plus a public stance**. The money leg is
+an ordinary Liquid transaction from the tipper's device-held rail
+key to the recipient's witnessed payout address; the graph leg is a
+tipper-authored **Opinion toward the tipped node** — an ordinary
+priced stance (low-defaults policy) whose payload carries the
+rail-transaction pointer. The graph carries the pointer, never the
+amount, like every other money fact.
+
+- **Deliberately public.** The in-CoGra tip is public display — the
+  stance, the pointer, and the explicit (unblinded) transfer are all
+  readable by anyone. The private flow needs no platform: a direct
+  chain send to the same address exists outside CoGra by
+  construction; CoGra adds only the public gesture.
+- **The destination is resolved, never chosen.** The transfer pays
+  the tipped node's **author's** witnessed payout address — the same
+  Registration guild-key field push payouts read. An account with no
+  payout address is not tippable; the UI prompts the would-be
+  recipient to set one. There are no held balances and no unclaimed
+  pool, here or anywhere on the rail.
+- **Targets: any authored passive node except Chats and Items.**
+  Content, Comments, chat Messages, and Profiles (the direct person
+  tip) all resolve to their author. Items are excluded — goods, not
+  first-person expression, and the certified owner and the genesis
+  author can diverge, so there is no unambiguous recipient. Chats
+  are excluded — a shared space, not one member's expression. A tip
+  toward an encrypted chat Message leaks nothing new: record
+  existence and membership are already public L1 structure, and the
+  body stays ciphertext.
+- **No fee lines.** The fee is on the gate, not in the internal
+  flow: protocol income realizes where CGT enters and exits — the
+  ladder's spread — so a tip carries no burn, treasury, inviter, or
+  reserve share
+  ([economics.md §7](../primitive/economics.md#7-the-conservation-equation)).
+  The tipper's only protocol cost is the stance's own θ-debit,
+  admission money like any act's.
+
+---
+
 ## The marketplace rail
 
-Item trading stays the deferred workstream
-([items.md](../instances/items.md)); the seam it will use is fixed
-here. Ownership rides L1's settlement machinery end to end —
-`Bid → Accept → Ratify`, title read from `owner^(k)`, never
-authored. Money is the only CoGra-side piece: the price is a term on
-the Bid's payload, and payment settles as a **CGT transfer through a
-script escrow of the same family as the campaign deposit** —
-buyer + platform co-signed, timelock fallback, explicit outputs —
-released against the L1 settlement thread's outcome. The graph
-carries the thread and the price term; the rail carries the money;
-neither store ever holds the other's half.
+Ownership rides L1's settlement machinery end to end —
+`Bid → Accept → Ratify`, title read from `owner^(k)`, never authored
+([items.md](../instances/items.md)). Money is the CoGra-side half,
+and it is purely rail-side — a transfer is never a graph object:
+
+- **Prices live on the graph as terms, never amounts held.** The
+  asking price is a field of the Item itself, riding the edit-fold
+  payload under the current certified owner's authorship —
+  witnessed, public, newest-wins, portable across L2s
+  ([items.md §6](../instances/items.md#6-the-money-seam)). The
+  offered price is a term on the Bid's payload. Both are numbers
+  the records pin; the rail moves the money.
+- **Fund-at-Bid.** The buyer locks the purchase escrow before the
+  Bid lands, and the Bid's payload carries the escrow pointer — the
+  campaign pattern: funding provable from the start. A Bid is
+  thereby funded, willing capital, never a free option. Cancel is
+  the ordinary Withdraw — the offer dies instantly on L1 — and the
+  refund follows on the platform's next attestation sweep.
+- **The purchase escrow is a fixed-destination two-branch
+  covenant.** Branch A pays the **seller's address**: executable by
+  the platform's signature — attesting the settlement certificate,
+  title transferred — or by the buyer's signature alone. Branch B
+  **refunds the buyer**: by the platform's signature — attesting
+  defeat (a Withdraw or Rescind, a consumed tie, a competitor's
+  earlier epoch) — or by the seller's signature alone. Each party
+  can move money only **away from itself**, and the platform only
+  selects between the two legitimate outcomes — it can never
+  redirect. The two bad end states — buyer holding title and
+  refund, seller holding title and payment — are structurally
+  unreachable: no signature combination produces them.
+- **No timelock fallback — deliberately.** The script can never
+  learn whether title transferred, so any time-based self-refund
+  would reopen the buyer-keeps-both state. The accepted residual is
+  **liveness, never safety**: a dark platform plus an apathetic
+  counterparty strands funds in escrow; it never double-pays.
+  Either counterparty can always resolve unilaterally in the
+  other's favor, and commercial reputation
+  ([items.md §5](../instances/items.md#5-commercial-reputation)) is
+  the soft incentive to do so.
+- **The platform signature is the oracle**, exactly as in the
+  campaign escrow: it attests the L1 epoch-certificate outcome —
+  recognition for branch A, defeat for branch B — because Liquid
+  scripts cannot read L1; the escrow observes the public log
+  through CoGra's key, and that mechanism is terminal
+  (`rem:graph:settlement-cross-layer`). Release keys on the epoch
+  certificate, never the Ratify — the regret window sits between
+  them.
+- **No per-sale fee.** The same gate posture as tips: the protocol
+  earns where money enters and exits CGT, never inside the flow.

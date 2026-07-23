@@ -2429,11 +2429,13 @@ L1's settlement machinery, adopted wholesale
 Item; transfer is the Bid → Accept → Ratify thread (the Bid mints
 the Offer node; Withdraw / Rescind cancel); title is `owner^(k)`,
 consumed read-only — it moves at the epoch certificate, never at
-the Ratify. Money is the one CoGra-side piece: the price is a term
-on the Bid payload, and payment settles rail-side through a
-buyer + platform script escrow released against the epoch
-certificate in which the settlement is recognized
-([ledger.md](ledger.md)).
+the Ratify. Money is the one CoGra-side piece: the asking price is
+an Item payload field (the edit fold), the offered price is a term
+on the Bid payload, and payment settles rail-side through the
+fixed-destination two-branch purchase covenant — locked before the
+Bid lands, released against the epoch certificate in which the
+settlement is recognized
+([ledger.md](ledger.md#the-marketplace-rail)).
 
 ```graphql
 "List a good — stages the genesis Owner (mints the Item; payload
@@ -2445,6 +2447,9 @@ input PrepareItemInput {
   attachments: [AttachmentInput!]
   tags: [TagInput!]
   license: LicenseInput!
+  "CGT amount, rail-precision string; omitted = not offered for
+   sale (items.md §6)."
+  askingPrice: String
   pDirected: Dimension
   actAs: UUID
 }
@@ -2458,6 +2463,8 @@ input PrepareItemEditInput {
   name: String
   description: String
   attachments: [AttachmentInput!]
+  "Set or change the listing; empty string clears it."
+  askingPrice: String
 }
 
 "Bid on an Item — stages the Bid (mints the Offer). The price is a
@@ -2468,6 +2475,10 @@ input PrepareBidInput {
   item: UUID!
   "CGT amount, rail-precision string."
   price: String!
+  "Rail-side escrow pointer; the purchase covenant is already
+   locked there — a Bid is funded before it lands (fund-at-Bid,
+   ledger.md)."
+  escrow: String!
   pDirected: Dimension
   pInterest: Dimension
   actAs: UUID
@@ -2488,7 +2499,9 @@ input PrepareRatifyInput {
   actAs: UUID
 }
 
-"Withdraw a Bid (buyer cancel) — a control record."
+"Withdraw a Bid (buyer cancel) — a control record. The offer dies
+ instantly on L1; the escrow refund follows on the platform's next
+ attestation sweep."
 input PrepareWithdrawInput {
   offer: UUID!
   actAs: UUID
@@ -2516,6 +2529,42 @@ For a Collective, settlement signatures (Accept / Ratify) are
 governance-acts: default deny, routed through the contract
 (`decision:transfer:Item`) so the cascade performs the gesture
 only after the internal vote passes.
+
+### Tipping
+
+A tip is a rail transfer plus a public stance
+([ledger.md](ledger.md#tipping)). The client reads the target
+author's `payoutAddress`, sends the explicit Liquid transfer from
+the device-held rail key, then prepares the stance — an Opinion
+toward the tipped node whose payload carries the transaction
+pointer. The backend validates the target class and checks the
+transfer's destination against the author's witnessed payout
+address; a target whose author has published no payout address is
+not tippable — an expected outcome, not a fault, and the UI's cue
+to prompt the recipient.
+
+```graphql
+"Tip a node's author — stages the tipper's Opinion toward the
+ target, payload carrying the rail-transaction pointer (a pointer,
+ never an amount). Valid targets: any authored passive node except
+ Chats and Items — Profiles included (the direct person tip), chat
+ Messages included (existence and membership are already public
+ structure; the body stays ciphertext). Stance parameters default
+ to the low-defaults policy value."
+input PrepareTipInput {
+  target: UUID!
+  "Pointer to the executed Liquid transfer; its destination must
+   match the target author's witnessed payout address in force."
+  txPointer: String!
+  pDirected: Dimension
+  pInterest: Dimension
+  actAs: UUID
+}
+
+extend type Mutation {
+  prepareTip(input: PrepareTipInput!): PreparePayload!
+}
+```
 
 ### Governance and moderation
 
