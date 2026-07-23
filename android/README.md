@@ -4,7 +4,7 @@ The reference frontend. See
 [docs/implementation/android.md](../docs/implementation/android.md) for the
 design and [android/CLAUDE.md](CLAUDE.md) for the assistant rules.
 
-## Modules (slice 1)
+## Modules
 
 - `core:domain` — use-cases and domain types; plain Kotlin, no Android deps.
 - `core:network` — Apollo client + generated operations and the encrypted
@@ -13,7 +13,9 @@ design and [android/CLAUDE.md](CLAUDE.md) for the assistant rules.
 - `app` — application shell, navigation, DI entry point.
 
 `core:ranker` and the other `feature:*` modules land with the slices that
-need them.
+need them, as does the device-held **actor key** and its client-sign write
+flow (roadmap slice 1) — see
+[docs/implementation/android.md](../docs/implementation/android.md).
 
 ## First-time setup
 
