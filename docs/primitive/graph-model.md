@@ -28,7 +28,7 @@ CoGra's own stores. The node and edge catalogs live in
   without an account — an L1 substrate guarantee, not a CoGra
   choice. Accounts gate participation in CoGra's service, never
   viewing. Privacy of content is payload custody and E2EE;
-  topology is always public.
+  topology — chat topology included — is always public.
 - **Priced.** Every act debits its author's balance by θ at
   write time — one θ, one stamp per act, however many leg records
   a hyper-edge decomposes into — and capacity *is* the balance.
