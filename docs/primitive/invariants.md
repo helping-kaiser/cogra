@@ -35,14 +35,13 @@ most useful one.
 - [Parallel records are unrestricted; "current" is a declared fold](graph-model.md#3-revision-and-current-state)
   — the append layer never rejects, merges, or supersedes a
   same-author record; every current-state read names its fold.
-- [Chat topology is always public](../instances/chats.md#1-mental-model-reset)
-  — only message **bodies** are private, and only when encrypted.
 - [Inbound records don't affect the receiver's feed](graph-model.md#5-directionality-and-influence)
   — anti-bot foundation; only outgoing records, walked forward,
   shape a feed.
 - [Topology is always public](graph-model.md#1-core-principles) —
   privacy of content is payload custody and E2EE, never hidden
-  nodes or records.
+  nodes or records; chat topology included, only message bodies
+  can be encrypted.
 - [One store, partitioned by truth relationship](../implementation/architecture.md#2-one-store-partitioned-by-truth-relationship)
   — what a record *is* lives on L1; what it *shows* lives in
   Postgres; what it *weighs* is recomputed from records.
@@ -64,13 +63,6 @@ most useful one.
 - [No User node before verification](user.md#2-creation) — the
   graph has no "unverified" or "pending" User state; accounts
   either exist with full standing or they don't.
-- [Dissolution is a membership fact, not a graph one](../instances/collectives.md#8-lifecycle)
-  — a Collective's acting capacity ends with its last member; the
-  actor, its standing, its titles, and its history persist.
-- [A Type's name is unerasable from the shared graph](../instances/hashtag.md#5-moderation-and-lifecycle)
-  — a Type has no records of its own; suppression is read-side
-  (verdict Tag + registry tombstone); the UUIDv5 registry key
-  stays stable.
 - [Title is consume-only](../instances/items.md#3-ownership-and-title)
   — the current owner is the certificate lookup `owner^(k)`,
   never a traversal, never a CoGra-stored fact; the ownership
@@ -87,17 +79,6 @@ most useful one.
 - [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
   — uniform across content moderation, moderator role changes,
   and `:Network` parameter amendments.
-- ["Moderation" is Network-scope](../instances/moderation.md#vocabulary-moderation-vs-chat-scope-kick)
-  — classifying content as `sensitive`/`illegal`; removing a
-  member from a chat is the chat-scope kick, a different flow.
-- [Chat-key rotation on membership change is automatic, not voted](../instances/chats.md#7-encryption-as-the-privacy-mechanism)
-  — an evicted member must not block their own removal; only
-  mid-epoch rotation runs through governance.
-- [Chat-internal disavowal routes through a Proposal](../instances/chats.md#6-moderation-inside-the-chat)
-  — the anchor's `(0,0)` subject Reference names the target; no
-  direct vote edge from a member drives the outcome.
-- [Collective content-acts default permissive; governance-acts default deny](../instances/collectives.md#4-acting-through-the-collective)
-  — asymmetry reflects reversibility.
 - [No per-edge record of the acting member](../instances/collectives.md#4-acting-through-the-collective)
   — accountability lives in the social contract, not in edge
   attribution. Deliberate non-feature.
@@ -141,9 +122,6 @@ most useful one.
 - [Money never rides L1](economics.md#3-the-campaign-record) —
   amounts live on the rails (L0 admission money, CGT reward
   money); the graph carries pointers, never amounts.
-- [Total-to-graph `< D` always](economics.md#71-the-strict-cap) —
-  contributor and inviter payouts never reach the advertiser's
-  full deposit; the strict cap is structural.
 
 ---
 

@@ -30,7 +30,7 @@ reporter's capacity like any other act (§2).
 
 ### Vocabulary: moderation vs chat-scope kick
 
-**Invariant — scope reservation.** "Moderation" is Network-scope:
+**Scope reservation.** "Moderation" is Network-scope:
 classifying content as `sensitive` or `illegal` via the
 governance flow in this doc. Removing a *member from a chat* is
 the chat-scope **kick** flow — a passed `decision:disavow_member`
