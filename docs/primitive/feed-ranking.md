@@ -497,10 +497,15 @@ reachable through it, at the 1× bridge ceiling (§6.2).
 A cancellation `S = 0` (opposing live paths summing to zero) is
 not jail — it sorts as the neutral score it is; jail is absence.
 
-One reachability gap is open: hyper-edge T-legs landing on a
-Profile source from passive artifacts, so no viewer's netting can
-remove another author's leg — parked as
-[open-questions.md Q28](../open-questions.md).
+Hyper-edge T-legs landing on a Profile source from passive
+artifacts, so no viewer's netting can remove another author's
+leg. For References, §4's two-channel rule closes the gap — the
+citation leg crosses only through the reference's author, at the
+viewer's forward weight to that author, which for a jailed author
+is dead. The Invitation T-leg twin persists as accepted geometry,
+handled by read-side policy — CoGra declines to render self- or
+confederate-invitation trolling (resolved
+[open-questions.md Q28](../open-questions.md)).
 
 ---
 

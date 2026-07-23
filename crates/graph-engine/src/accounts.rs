@@ -4,10 +4,10 @@
 //!
 //! All writes take a `&mut Txn` rather than `&Graph`: the service layer holds
 //! one Memgraph transaction open alongside a Postgres transaction and commits
-//! them together (architecture.md "Service-layer transactions"). Writes use
+//! them together (pre-rebase dual-store code). Writes use
 //! `MERGE` keyed on the node UUID with `ON CREATE SET`, so a retry after a
-//! committed graph write collapses to a no-op — the idempotent-first-commit
-//! discipline from architecture.md "Partial-failure handling". That no-op holds
+//! committed graph write collapses to a no-op — the pre-rebase
+//! idempotent-first-commit discipline. That no-op holds
 //! only because the caller supplies *stable* node ids across retries
 //! ([`common::registrant_ids`]); random ids would defeat the MERGE.
 
@@ -105,7 +105,7 @@ pub async fn create_registrant(
 /// The append fires **only when the value actually changes**, so a retried
 /// service-layer transaction — one whose graph half committed but whose
 /// Postgres half failed — collapses to a no-op instead of stacking a duplicate
-/// layer (architecture.md "Partial-failure handling": the first-committed side
+/// layer (the pre-rebase dual-store rule: the first-committed side
 /// must be idempotent on retry). The node's `username` UNIQUE constraint
 /// rejects a handle another account holds; the resolver pre-checks availability
 /// for a typed userError, and this is the backstop. `RETURN` yields a row

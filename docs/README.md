@@ -2,10 +2,7 @@
 
 CoGra is a Layer 2 on the **PeerNetworks Layer 1** substrate;
 [`primitive/layer1-interface.md`](primitive/layer1-interface.md) is
-the binding L1 → L2 contract. *Docs rebase in progress: docs not yet
-rewritten against it may still describe the pre-L1 design — where
-they conflict, the interface wins. This note is removed once the
-rebase completes.*
+the binding L1 → L2 contract.
 
 ## Layers
 
@@ -59,14 +56,15 @@ an `instances/` doc is a sign the mechanism belongs in
   behaves: record model, causal time, revision and folds,
   directionality, mirror + overlay.
 - [governance](primitive/governance.md) — weighted role-based voting
-  primitive: five components, two vote shapes, sticky outcomes,
-  Proposal nodes, multi-candidate decisions.
+  primitive: five components, the one L1 ballot shape, sticky
+  outcomes, Proposal nodes, multi-candidate decisions.
 - [nodes](primitive/nodes.md) — node catalog: the L1 node types
   CoGra's concepts resolve to, plus CoGra's overlay node types.
 - [edges](primitive/edges.md) — edge catalog: the L1 families
   CoGra authors as gestures, plus the overlay edges.
-- [layers](primitive/layers.md) — append-only across edges, node
-  properties, and Postgres-side display content; deletion policy.
+- [layers](primitive/layers.md) — append-only across whole-record
+  layers, per-property overlay layers, and versioned display-content
+  rows; deletion policy.
 - [retention-archive](primitive/retention-archive.md) — universal
   disposition for redacted originals; per-row legal hold;
   statutory hard-delete on expiry; legal-admin access path.
@@ -77,9 +75,9 @@ an `instances/` doc is a sign the mechanism belongs in
   to every L1 record: part of the act identity, never derived;
   node creators fixed at genesis.
 - [economics](primitive/economics.md) — pull-marketing campaigns:
-  graph-computed reach (`h_anchor(target)`), per-path Shapley payout,
-  advertiser-discretionary settlement, the payout flow; no AI, no
-  economics→ranking feedback.
+  graph-computed campaign value `V` from viewer weights, per-path
+  Shapley payout, advertiser-discretionary settlement, the payout
+  flow; no AI, no economics→ranking feedback.
 - [token](primitive/token.md) — the CGT token: scheduled decaying
   mint, burn-as-destruction, protocol-owned liquidity; never feeds
   ranking.
@@ -87,7 +85,8 @@ an `instances/` doc is a sign the mechanism belongs in
   pattern for new actors.
 - [network](primitive/network.md) — the global community of all
   users on an instance; `network_role` (member / moderator);
-  genesis-mod bootstrap; multi-sig role changes.
+  genesis-mod bootstrap; Proposal-driven mod role changes
+  (mod-gate + dual quorum).
 - [user](primitive/user.md) — per-node doc for the User actor
   node; on-behalf-of distinction with Collective; creation,
   edges, network membership, lifecycle.
@@ -137,8 +136,9 @@ an `instances/` doc is a sign the mechanism belongs in
 ### `implementation/`
 
 - [roadmap](implementation/roadmap.md) — living sequencing plan:
-  the L1 stand-in and its swap, vertical slices from the seam to the
-  CGT rail (each hand-testable), staged workstreams with their gates.
+  the L1 stand-in and its swap, vertical slices from the seam
+  through the CGT rail and flows (each hand-testable), staged
+  workstreams with their gates.
 - [architecture](implementation/architecture.md) — system design
   around the L1 seam: external surfaces, stores, write and read
   paths.
@@ -149,7 +149,7 @@ an `instances/` doc is a sign the mechanism belongs in
   tools, workflows.
 - [api-spec](implementation/api-spec.md) — backend GraphQL spec:
   type system, queries (read surface), and mutations (the
-  prepare → pre-sign → seal → approve write surface).
+  prepare → pre-sign → seal → approve → confirm write surface).
 - [miner-api](implementation/miner-api.md) — the off-backend ranking
   surface: subgraph slice in, ordered feed out.
 - [auth](implementation/auth.md) — server-side credentials,
@@ -165,7 +165,8 @@ an `instances/` doc is a sign the mechanism belongs in
 - [ledger](implementation/ledger.md) — the CGT rail on the Liquid
   Network: the issued asset, timelocked release tranches, the
   covenant order ladder, batched push payouts, campaign escrow,
-  the reserve conversion, and device-held keys.
+  tipping, the marketplace rail, the reserve conversion, and
+  device-held keys.
 
 ### Cross-cutting
 
