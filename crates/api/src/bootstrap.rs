@@ -3,8 +3,9 @@
 //!
 //! An instance is "bootstrapped" only when **both** stores carry their genesis
 //! writes: the graph `:Network` singleton *and* the Postgres genesis `users`
-//! row. The bootstrap commits the graph first, then Postgres
-//! ([architecture.md "Partial-failure handling"](../../../docs/implementation/architecture.md)),
+//! row. The bootstrap commits the graph first, then Postgres (pre-rebase
+//! dual-store code —
+//! [roadmap.md "Where the code stands"](../../../docs/implementation/roadmap.md#where-the-code-stands)),
 //! so the one reachable partial state is graph-committed / Postgres-empty. This
 //! gate detects it and completes the Postgres half on a re-run, reusing the
 //! genesis identity already committed to the graph (the graph `:User` node and

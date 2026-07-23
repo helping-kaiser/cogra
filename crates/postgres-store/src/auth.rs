@@ -1,10 +1,13 @@
-//! Authentication state — the off-graph credential and session rows behind
-//! [auth.md](../../../docs/implementation/auth.md): pending registrations,
-//! invitations, the `users` credential row, and rotating refresh tokens.
+//! Authentication state — the off-graph credential and session rows:
+//! pending registrations, invitations, the `users` credential row, and
+//! rotating refresh tokens. The rows serve the pre-rebase flow; the
+//! rebased design ([auth.md](../../../docs/implementation/auth.md))
+//! replaces pending registrations with staged applicants in slice 1
+//! ([roadmap.md "Where the code stands"](../../../docs/implementation/roadmap.md#where-the-code-stands)).
 //!
 //! Transactional writes take `&mut PgConnection` so the service layer can
 //! hold one Postgres transaction open alongside the Memgraph one and commit
-//! them together (architecture.md "Service-layer transactions"). Standalone
+//! them together (pre-rebase dual-store code). Standalone
 //! reads and single-statement writes take `&PgPool`.
 
 use chrono::{DateTime, Utc};
@@ -27,7 +30,7 @@ pub struct PendingRegistration {
 
 /// An invite link's server-side row. The link URL carries only `id`; the
 /// pre-committed inviter tensor stays here so relaying the link cannot tamper
-/// with it (auth.md "Invitation generation").
+/// with it (auth.md "Invite-link generation (inviter side)").
 #[derive(Debug)]
 pub struct Invitation {
     pub id: Uuid,
@@ -177,8 +180,8 @@ pub async fn username_taken(pool: &PgPool, username: &str) -> Result<bool, sqlx:
 /// pending record (auth.md "Email verification"). Transactional.
 ///
 /// `ON CONFLICT (id) DO NOTHING` pairs with the graph-side MERGE so a retried
-/// registration is idempotent on both stores (architecture.md "Partial-failure
-/// handling"). In practice the conflict never fires — a committed prior attempt
+/// registration is idempotent on both stores (the pre-rebase dual-store
+/// rule). In practice the conflict never fires — a committed prior attempt
 /// deletes the pending row in the same transaction, so a retry stops at the
 /// pending lookup — but the guard makes the write safe by construction rather
 /// than by argument.

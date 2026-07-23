@@ -37,7 +37,7 @@ fn env_or(key: &str, default: &str) -> String {
 }
 
 /// SHA-256 hex digest of the canonical version-1 platform-guidelines document,
-/// seeded onto `Network.guidelines_hash` (graph-data-model.md §:Network).
+/// seeded onto `Network.guidelines_hash` (network.md §3 "Platform guidelines").
 fn guidelines_hash() -> String {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),

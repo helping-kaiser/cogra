@@ -19,7 +19,8 @@ pub const HANDLE_MAX_LEN: usize = 30;
 /// verification email is the authoritative proof the address is real.
 pub const EMAIL_MAX_LEN: usize = 254;
 
-/// Profile-field bounds for `editProfile` (api-spec.md "EditProfileInput").
+/// Profile-field bounds for `editProfile` (pre-rebase surface; the rebased
+/// api-spec's form is `PrepareProfileUpdateInput`).
 /// The docs leave these open; these are the chosen values, gathered here with
 /// the other tunables. `display_name` is required and non-empty once trimmed;
 /// `bio` and `website_url` are optional, and an empty value clears them. The
