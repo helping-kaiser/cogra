@@ -1640,13 +1640,18 @@ back an id list, which `feed` hydrates in order. The ranking
 metrics, the parameters, and the contributing paths live with the
 ranker, specified in [miner-api.md](miner-api.md).
 
-The slice contract is **raw L1 edge records**: the χ-bounded node
-set and the accepted records among those nodes, each with its
-landing epoch. The ranker folds same-author bundles, derives `w̃`,
+The slice contract is **raw L1 edge records plus their order
+coordinates**: the χ-bounded node set and the accepted records
+among those nodes, each with its landing epoch, its authoritative
+causal key, and its host-cached edge-projection maturity `τ_e` —
+a non-normative L1 by-product a distrusting consumer recomputes
+from the published ordered history, which no bounded slice
+carries. The ranker folds same-author bundles, derives `w̃`,
 extracts, signs, and decays — all itself, exactly and never
-sampled, so any consumer can spot-check any ranking claim from the
-slice alone. Pre-folded aggregates are permitted only as a wire
-optimization that changes nothing observable
+sampled, so any consumer can spot-check any ranking claim from
+the slice given the shipped maturities. Pre-folded aggregates are
+permitted only as a wire optimization that changes nothing
+observable
 ([miner-api.md "The contract"](miner-api.md#the-contract)).
 
 The viewer's seen-list is not part of the slice: it is private

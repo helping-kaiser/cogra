@@ -28,8 +28,8 @@ operates is deliberately small:
   to it, never amounts ([ledger.md](ledger.md)).
 
 Two external surfaces complete the picture. **Layer 1** accepts
-CoGra's relayed records and publishes the accepted record set per
-epoch. **Layer 0** (Peer Attestation) is read-only: CoGra consumes
+CoGra's relayed records and publishes the accepted acts per epoch
+in their authoritative order `𝒬_k`. **Layer 0** (Peer Attestation) is read-only: CoGra consumes
 the admission balance `B_i` through L1's interface and never
 authors L0 records. The two moneys never mix — admission money is
 Layer 0's, reward money is CGT on CoGra's own rail.
@@ -114,8 +114,8 @@ Android-specific ones.
 Every binding fact is an L1 record: priced, signed, witnessed,
 epoch-stamped, visible to every other L2. Nothing CoGra stores is
 authoritative about the graph — the record mirror is a cache (it
-may lag, it must never diverge, it is fully rebuildable from
-published records), and the overlay caches published fold rules
+may lag, it must never diverge, it is fully rebuildable from the
+published ordered sequence), and the overlay caches published fold rules
 (the charter's parameter schedule, Proposal tallies,
 `network_role` marks). Where a local table and the L1 record could
 disagree, the record governs — and because every binding value is
@@ -286,12 +286,13 @@ Who funds the debits is economics
 
 ### Record ingestion (the mirror contract)
 
-Per epoch, the backend ingests the accepted record set through the
-L1 boundary and appends it to the mirror tables, advancing a
-stored epoch cursor. The contract is exactly the mirror's truth
-relationship: it may lag L1; it must never diverge; it is fully
-rebuildable from published records, so ingestion state is never
-precious. Confirmation of staged writes (§ above) and overlay
+Per epoch, the backend ingests the accepted ordered act sequence
+`𝒬_k` through the L1 boundary and appends it to the mirror
+tables — each record with its authoritative causal key (act time,
+position) — advancing a stored epoch cursor. The contract is
+exactly the mirror's truth relationship: it may lag L1; it must
+never diverge; it is fully rebuildable from the published
+sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay
 fold updates (tallies, the parameter carrier, role marks) are
 driven off the same ingestion pass.
 

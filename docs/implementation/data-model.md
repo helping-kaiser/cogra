@@ -20,7 +20,7 @@ Within the schema, three kinds of state stay apart
 ([substrate.md §3](../primitive/substrate.md#3-cogras-stores)):
 
 - **Mirror tables** — L1's truth, cached. May lag, never diverge,
-  fully rebuildable from published records.
+  fully rebuildable from the published ordered sequence.
 - **Overlay tables** — CoGra's own machinery (Proposal state, the
   parameter carrier, role marks), itself derived from public
   records and published fold rules.
@@ -45,22 +45,26 @@ adds nothing. Conventions:
   identity. Hyper-edge legs are child rows keyed (record, leg).
 - **Columns.** The fields consumed by traversal, folds, and
   display resolution: family, author, target(s), the two authored
-  parameters, tier metadata, landing epoch, the payload-marked
+  parameters, tier metadata, landing epoch, the authoritative
+  causal key (act time, position — what `≺` and newest-wins folds
+  read), the host-cached edge-projection maturity `τ_e` (an L1
+  by-product; `w̃`'s order-derived ingredient), the payload-marked
   flag, and the payload-witness reference.
 - **Indexes serve the standing query shapes:** by **author**
   (forward expansion — the feed's hop-by-hop frontier queries —
   and per-author bundle folds), by **target** (fold inputs,
   display resolution), by **(family, target, epoch)** (membership,
-  edit, and ballot folds — newest-wins reads), and by **epoch**
-  (ingestion, incremental recompute).
+  edit, and ballot folds — newest-wins reads, resolved within an
+  epoch by the causal key), and by **epoch** (ingestion,
+  incremental recompute).
 - **An epoch cursor** records the last fully-ingested epoch;
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
 
 The contract is the mirror's whole identity: it may lag L1, it
-must never diverge, and it can be rebuilt from published records
-at any time — mirror state is never precious, and no backup of it
-is meaningful.
+must never diverge, and it can be rebuilt from the published
+ordered sequence at any time — mirror state is never precious,
+and no backup of it is meaningful.
 
 ---
 

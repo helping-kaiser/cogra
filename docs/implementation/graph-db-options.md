@@ -14,7 +14,7 @@ What CoGra needs locally is:
 
 1. **A record mirror** — a queryable copy of the L1 records its
    traversals consume. Pure cache: may lag, never diverges, fully
-   rebuildable from published records.
+   rebuildable from the published ordered sequence.
 2. **Overlay and operational state** — Proposal state, the
    parameter carrier, role marks; all caches over records and
    published fold rules.

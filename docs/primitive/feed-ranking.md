@@ -8,8 +8,8 @@ formula-complete
 ([layer1-interface.md §4](layer1-interface.md#4-the-reimplementation-grant),
 §I.12). This document is that publication — the complete
 computation of CoGra's feed score `S(u,c)`, from raw L1 records to
-sorted order. Anyone holding the public record set and the epoch
-certificates can reproduce every ranking claim it makes.
+sorted order. Anyone holding the published ordered records and
+the epoch certificates can reproduce every ranking claim it makes.
 
 > **Notation.** L1 symbols (`p_d`, `p_i`, `w̃(e)`, `ε`, `τ_e`,
 > `𝕋^act_q`, `≺`, `E_k`, `α_i`) are the interface's
