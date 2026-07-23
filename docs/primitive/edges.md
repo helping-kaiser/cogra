@@ -13,9 +13,10 @@ CoGra's gestures onto them.
 ## 1. The edge record and CoGra's two axes
 
 Every L1 edge record carries: its author (intrinsic — authorship is
-never a separate edge), its endpoints, causal time and maturity,
-**two continuous user parameters `(p_d, p_i)`**, a payload
-projection with its witness, and the identity key. Everything else
+never a separate edge), its endpoints, its act's authoritative time
+and its own maturity,
+**two continuous user parameters `(p_d, p_i)`**, its act's payload
+projection with its witness, and the act identifier. Everything else
 on the record — the stored 3×3 sentiment slice, the path view, the
 parity bit, the damped weight `w̃(e)` — is derived by published
 formula. CoGra sets the two parameters and the payload; it consumes
@@ -65,7 +66,7 @@ gesture.
 | **Participant** | Actor → Chat | The record the membership fold reads: member iff the actor's own ≺-latest {Participant, Leave} record toward the Chat is a Participant. In gated chats CoGra's fold policy recognizes a Participant only when backed by an approved Join Request or an Invitation. |
 | **Owner** | Actor → Item | Item genesis — listing a good mints the Item and roots its ownership thread. Title is sentiment-blind: an `(0, …)` Owner still anchors the thread. |
 | **Join Request** | Actor → Chat | Asking to join — a proposal awaiting the chat's response. The membership fold never reads it; ignoring one requires no graph action. |
-| **Accept** | Actor (seller) → Actor (buyer) | Transfer step 2: the owner's consent to a Bid (settles-pointer to it). Not binding alone. |
+| **Accept** | Actor (seller) → Actor (buyer) | Transfer step 2: the owner's consent to a Bid (settlement reference to its act). Not binding alone. |
 | **Ratify** | Actor (buyer) → Actor (seller) | Transfer step 3: the buyer's commit. Title moves at the epoch certificate, not at the Ratify. |
 | **Withdraw** | Actor (buyer) → Offer | Buyer cancel — a control record, type-fixed parameters. |
 | **Rescind** | Actor (seller) → Offer | Seller cancel before commit — control record. |

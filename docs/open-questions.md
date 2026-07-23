@@ -95,6 +95,17 @@ model that our docs nowhere pin down:
 Neither blocks documenting the resolved design; both gate its
 implementation.
 
+**Edition-4 status (PN v0.23.2-dev):** L1 now specifies a
+mandatory act-authentication handshake — author pre-commitment,
+host-sealed verified act, author approval witness — but expressly
+declares signature schemes, key management, and algorithm
+migration deployment concerns, and says nothing about rotation
+(`post:graph:act-authentication-requirements`,
+`rem:graph:authentication-realization-out-of-scope`;
+[layer1-interface.md §8.2](primitive/layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake)).
+Both questions stay open, now aimed at that postulate's
+realization rather than at silence.
+
 ---
 
 ## Q28 — Zero-jail person-landing: the hyper-edge T-leg escape

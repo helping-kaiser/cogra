@@ -182,7 +182,7 @@ This section covers redaction only.
 
 Every L1 record carries a payload projection — the content bytes —
 and presents in two projections, **full** and **reduced**
-([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
+([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)).
 Redaction is **payload removal**: the payload and the private
 value beside it are removed from carriage, and the record drops to
 its reduced projection. Three L1 facts fix the mechanism's shape:
@@ -190,25 +190,26 @@ its reduced projection. Three L1 facts fix the mechanism's shape:
 - **Removal erases, never rewrites.** The content commitment is
   binding — no second payload is consistent with it — so a record
   can lose its content but never carry substituted content
-  (`post:graph:separable-edge-commitment`). Redaction granularity
+  (`post:graph:separable-act-projections`). Redaction granularity
   is therefore **the record**: there is no partial rewrite, no
   per-field marker, no edited-down version.
 - **The transition is monotone.** Payload state moves toward
   reduced only: a record enters carriage **full** or **full-empty**
   (the canonical zero-length payload, private value present) and
-  can only drop to **reduced** (`def:graph:payload-state`).
+  can only drop to **reduced** (`def:graph:act-payload-state`).
   Redaction is irreversible by construction; restoring content
   means authoring a new record.
 - **Removal is scoring-neutral.** The reduced projection carries
   the entire L1 closure surface — standing, title, weights, and
   epoch replay are bit-identical across full and reduced
-  (`prop:graph:payload-state-invariance`). Redaction never
+  (`prop:graph:removable-projection-invariance`). Redaction never
   changes what a record *does*; it changes what it *shows*.
 
-**Who removes.** L1 places removal authority with the record's
-author (for hyper-edge terminal legs, the initiating actor —
-`def:graph:payload-controller`). CoGra runs the
-carriage-obligation shape of `rem:graph:payload-custody-phases`
+**Who removes.** L1 places removal authority with the act's
+author — a hyper-edge carries one act payload, owned by its
+initiating author; there is no per-leg controller
+(`def:graph:act-payload-controller`). CoGra runs the
+carriage-obligation shape of `rem:graph:act-payload-custody-phases`
 ahead of decentralization: Layer 1 tracks only the witness, while
 payload and private value live in CoGra's carriage, and CoGra as
 the carriage service also executes removals under its published

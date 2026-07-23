@@ -4,8 +4,8 @@ Authorship in CoGra is **intrinsic to every L1 record** — never
 derived, never stored as an edge, never inferred from timestamps.
 Each accepted record carries its author as part of its identity:
 `author(e)` is a field of the record and a component of the
-identity key
-([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
+act identifier
+([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)).
 There is no authoring edge, no author label, and no
 earliest-incoming-edge rule — the question "who authored this?"
 is answered by reading the record, not by traversing anything.
