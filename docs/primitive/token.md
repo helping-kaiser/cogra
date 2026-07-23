@@ -7,9 +7,9 @@ CoGra's own rail. It is one of the two moneys of
 **fully disconnected from the other**: the Layer 0 reserve behind
 `B_i` and the θ-debit is a different asset on the far side of the
 L1 boundary, never minted, held, or priced by CoGra. This doc
-defines how CGT comes into existence — the **mint curve**, the
+defines CGT's supply side — the **release schedule**, the
 **initial allocation**, and the **protocol-owned liquidity** that
-releases new supply — and where the money that leaves the campaign
+moves released supply into circulation — and where the money that leaves the campaign
 equation goes: the **team treasury** and the **L0 reserve pool**.
 The campaign mechanics that *spend* CGT live in
 [economics.md](economics.md); the rail's payout and escrow
@@ -54,30 +54,30 @@ supply destruction**: the per-campaign burn line of
 [economics.md §7](economics.md#7-the-conservation-equation) removes
 those units permanently. "Burn" in CoGra vocabulary means exactly
 this — never L1's θ-debit, which spends the *other* money. Total
-live supply evolves as **cumulative mint − cumulative burn** (§5),
-not as a fixed number.
+live supply evolves as **cumulative release − cumulative burn**
+(§5), not as a fixed number.
 
 ---
 
-## 2. Issuance — the decaying calendar mint
+## 2. Issuance — the decaying calendar release
 
-CGT is issued on a **calendar schedule**, not per user action. A
-fixed daily amount is minted; the daily amount **steps down ~10%
+CGT is released on a **calendar schedule**, not per user action. A
+fixed daily amount unlocks; the daily amount **steps down ~10%
 once a year** on a fixed anniversary date (the rate holds flat
 within a year, then drops — not a continuous decay). Because the
-steps are geometric, the curve's **lifetime issuance converges to a
-finite cap**: a fixed daily mint decaying 10%/year sums to roughly
-ten years of the first year's issuance and no more.
+steps are geometric, the curve's **lifetime release converges to a
+finite cap**: a fixed daily release decaying 10%/year sums to
+roughly ten years of the first year's release and no more.
 
 > *Illustrative, not canonical:* ≈5000 CGT/day at the schedule's
 > genesis, stepping to ≈4500/day after the first year, with a
-> lifetime mint asymptote on the order of ~18M CGT. The exact
+> lifetime release asymptote on the order of ~18M CGT. The exact
 > genesis rate, the precise anniversary date of each step, and the
 > asymptote depend on CoGra's launch timing relative to the
 > existing peer-network schedule (§3) and are pinned at launch.
 > They do not change any mechanism in this doc.
 
-CGT **inherits the peer-network token's mint schedule at its
+CGT **inherits the peer-network token's release schedule at its
 current point** — no reset, no fresh issuance event at launch. The
 schedule has already been running (§3); CGT continues it forward
 from wherever it stands. The inherited curve is **CGT's own supply
@@ -85,29 +85,30 @@ curve and nothing else**: it has no relationship to the L0 reserve,
 which CoGra never mints and whose economics belong to the L1/L0
 kernel.
 
-**Why a decaying calendar mint, and not per-action distribution.**
-Rewarding users per activity — per like, post, or comment — is the
-anti-pattern: bots out-produce humans at exactly those actions, so
-a per-action mint pays the spammers. That *distribution* mechanism
-is rejected. What is kept is the *supply curve*: a scheduled,
-decaying mint. Early-holder upside then comes from **demand growth
+**Why a decaying calendar release, and not per-action
+distribution.** Rewarding users per activity — per like, post, or
+comment — is the anti-pattern: bots out-produce humans at exactly
+those actions, so a per-action release pays the spammers. That
+*distribution* mechanism is rejected. What is kept is the *supply
+curve*: a scheduled, decaying release. Early-holder upside then comes from **demand growth
 against a slow-growing supply**, not from a mechanism that pays
 inactive early users on a calendar — joining early and holding
 benefits from the rise without rewarding squatting.
 
 **Why scheduled, and not coupled to burn or campaign volume.** The
-asymptote exists *because* the mint is scheduled and independent of
-activity. Any mechanism that ties the mint amount to burn or
+asymptote exists *because* the release is scheduled and independent
+of activity. Any mechanism that ties the release amount to burn or
 campaign volume makes issuance linear in volume — unbounded supply,
-no asymptote. Keeping the mint on the calendar preserves the finite
-cap; releasing it through liquidity rather than direct distribution
-(§4) keeps it from dumping.
+no asymptote. Keeping the release on the calendar preserves the
+finite cap; selling it through the protocol's own market rather
+than direct distribution (§4) keeps it from dumping.
 
 The curve is enforced on the rail, not operated: the full lifetime
-supply exists from genesis, pre-minted into tranches under absolute
-timelocks, one per calendar step — "mint" throughout this doc is
-that consensus-enforced **release**, and no key exists that could
-issue beyond it ([ledger.md](../implementation/ledger.md)).
+supply is minted **once, at genesis** — the only mint that ever
+happens — pre-split into tranches under absolute timelocks, one per
+calendar step. Each step is that tranche's consensus-enforced
+unlock, and no key exists that could issue beyond it
+([ledger.md](../implementation/ledger.md)).
 
 ---
 
@@ -122,7 +123,7 @@ pools:
 
 - **Alpha-phase tokens** — holdings from CoGra's alpha period.
 - **The peer-network token's first-year supply** — what its
-  schedule (§2) minted during roughly its first year of runtime.
+  schedule (§2) released during roughly its first year of runtime.
 
 Existing holders keep their **percentage** of that prior state,
 translated into CGT — *not* unit-for-unit. Carrying the percentage
@@ -147,7 +148,7 @@ economic instrument, not a voting weight.
 ## 4. Protocol-owned liquidity (POL)
 
 New supply does not arrive by transfer into user wallets. It is
-released through a market the protocol owns — a **covenant order
+sold through a market the protocol owns — a **covenant order
 ladder** on the rail: resting on-chain orders, non-custodial once
 placed — so that released CGT only enters active circulation when
 there is genuine demand to absorb it, never as a calendar-timed
@@ -271,30 +272,30 @@ of reach of anyone trading against the ladder.
 
 ## 5. Supply trajectory
 
-Live supply moves as **cumulative mint − cumulative burn**. Mint
-follows the decaying schedule (§2); burn is the per-campaign sink
+Live supply moves as **cumulative release − cumulative burn**.
+Release follows the decaying schedule (§2); burn is the per-campaign sink
 of [economics.md §7](economics.md#7-the-conservation-equation),
 ranging from a small floor (`0.03%·D` on refund-only settlements)
 up to `2%·D` at full payout, and persisting as long as campaigns
 run.
 
-- **Early in the curve**, the daily mint can exceed total daily
-  burn, so total supply grows; the direction depends on campaign
-  volume and payout mix against the then-current mint.
-- **After the decay tapers**, the scheduled mint shrinks toward its
-  asymptote while burn persists with campaign activity, so **burn
+- **Early in the curve**, the daily release can exceed total daily
+  burn, so live supply grows; the direction depends on campaign
+  volume and payout mix against the then-current release.
+- **After the decay tapers**, the scheduled release shrinks toward
+  its asymptote while burn persists with campaign activity, so **burn
   comes to dominate and supply contracts** — a long-run
   deflationary regime.
 
 Beside burn, campaign flow also *sells* CGT: the L0 reserve pool
 (§6.2) converts its `reserve_share·P` inflow out of CGT entirely.
 Conversion is market flow, not supply change — it moves units, the
-way any holder's sale does — so the trajectory above is set by mint
-and burn alone.
+way any holder's sale does — so the trajectory above is set by
+release and burn alone.
 
-There is no fixed "18M supply": that figure is the *mint* curve's
-asymptote, and live supply peaks somewhere below it, then declines
-as burn outpaces the tapering mint. Throughout, POL's
+There is no fixed "18M supply": that figure is the *release*
+curve's asymptote, and live supply peaks somewhere below it, then
+declines as burn outpaces the tapering release. Throughout, POL's
 demand-coupled release (§4.2) means **active circulating supply
 tracks demand even while total supply is still growing** — so
 long-run holding stays structurally attractive, with upside driven
