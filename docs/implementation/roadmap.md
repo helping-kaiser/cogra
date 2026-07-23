@@ -173,14 +173,21 @@ write needs a landed, funded actor with a device-held key.
 
 ### Slice 7 — CGT flows: tipping and the marketplace
 
-**Design session pending — scheduled next; its outcome fills in this
-slice.** What is already fixed: the marketplace seam — ownership
-rides L1's `Bid → Accept → Ratify` and payment settles as a CGT
-transfer through a script escrow of the campaign-deposit family
-([ledger.md](ledger.md), [items.md](../instances/items.md)).
-User-to-user tipping in CGT is not yet designed anywhere. Both flows
-are designed before this slice is specced further.
-
+- Tipping: the rail-transfer-plus-public-stance flow —
+  payout-address resolution, the device-signed explicit transfer,
+  `prepareTip` staging the Opinion with the transaction pointer,
+  the no-payout-address prompt ([ledger.md](ledger.md),
+  [api-spec.md](api-spec.md)).
+- Marketplace: the asking price through the Item edit fold;
+  fund-at-Bid with the escrow pointer on the Bid; the
+  fixed-destination two-branch purchase covenant, released against
+  the epoch certificate, refunds on the attestation sweep
+  ([ledger.md](ledger.md), [items.md](../instances/items.md)).
+- No fee lines on either flow — protocol income stays at the ladder
+  gate ([economics.md §7](../primitive/economics.md#7-the-conservation-equation)).
+- **Hand test:** tip a post and see the public stance land with its
+  pointer; buy an Item end to end — fund, bid, accept, ratify,
+  title moving at the boundary, the covenant paying out.
 - **Surfaces:** rail, backend, API, Android.
 
 ### Slice 8 — Erasure and moderation plumbing
