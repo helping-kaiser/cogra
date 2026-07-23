@@ -20,9 +20,9 @@ committed; only the money rail is deferred (§6).
 ## 1. Creation (listing)
 
 Listing a good is the author's **genesis Owner** record
-(Actor → Item): its identity key mints the Item and roots the
+(Actor → Item): its act identifier mints the Item and roots the
 ownership thread
-(`def:graph:item-genesis`,
+(`def:graph:item-genesis-act`,
 [layer1-interface.md §7.2](../primitive/layer1-interface.md#72-settlement-recognition)).
 Like Publish, Owner is a single-parameter family — `p_d` = the
 attachment `a`, `p_i` fixed at `1` — and **title is
@@ -94,9 +94,11 @@ an authored choice.
    urgency ride the act; a predatory Bid is stance-visible per
    leg.
 2. **Accept** (seller → buyer) — the owner's consent, carrying a
-   settles-pointer to the Bid's identity key. Not binding alone.
+   settlement reference to the Bid act's identifier. Not binding
+   alone.
 3. **Ratify** (buyer → seller) — the buyer's commit, its
-   settles-pointer matching the Accept's.
+   settlement reference matching the Accept's, plus a reference to
+   the exact Accept act it confirms.
 4. **Withdraw** (buyer → Offer) / **Rescind** (seller → Offer) —
    the cancel records; control records, no sentiment.
 
@@ -143,7 +145,7 @@ Commerce also leaves ordinary interpersonal fabric: Accept and
 Ratify are actor-directed records, and stance-positive ones are
 person-vouch acts like any other — good-faith trade is part of
 how standing grows
-([layer1-interface.md §11.3](../primitive/layer1-interface.md#113-stance-aggregation-and-the-person-vouch-act)).
+([layer1-interface.md §11.3](../primitive/layer1-interface.md#113-stance-aggregation-and-the-person-vouch-relation-layer)).
 
 ---
 

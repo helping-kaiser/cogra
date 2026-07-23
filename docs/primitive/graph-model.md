@@ -40,19 +40,22 @@ CoGra's own stores. The node and edge catalogs live in
 
 ## 2. Time, causality, maturity
 
-Records carry **causal time, not wall-clock time**. Each record's
-local time `T_e` is a Lamport clock over shared endpoints and
-asserted parents; the causal order `≺` is its transitive closure,
-and records it doesn't relate are concurrent. Two participants
-holding the same record set derive the same order — there is no
-server clock to trust.
+Records carry **causal time, not wall-clock time**. Each accepted
+**act** is a Lamport event over its endpoints and asserted
+parents, and the host publishes one authoritative order `𝒬_k`
+that totalizes concurrent acts — every record inherits its act's
+logical time, and `≺` means precedence in that published order
+(`def:graph:authoritative-act-order`). Two participants holding
+the same published order derive the same result; agreement on the
+order, not merely the record set, is what replay consumes — there
+is no server clock to trust.
 
 Each record also carries a **maturity** scalar `τ_e` — how
 established the endpoints already were when the record landed —
 which feeds the damped weight `w̃(e)` together with the boundary
 factor. Fresh corners of the graph weigh differently than
 established ones, by published formula
-([layer1-interface.md §8.2](layer1-interface.md#82-temporal-structure)).
+([layer1-interface.md §8.3](layer1-interface.md#83-temporal-structure)).
 
 Wall-clock time never orders the shared record set. CoGra keeps
 it as Postgres operational timestamps for display ("posted 2h

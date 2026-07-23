@@ -19,7 +19,7 @@ the two disagree, the interface doc governs.
   L0 exports through L1's interface.
 - **Layer 1 (PeerNetworks)** — the shared public graph
   `G = (V, E)` and the binding surface: the accepted edge set, the
-  declared constants, the burn snapshot, the four admission rules,
+  declared constants, the burn snapshot, the admission rules,
   and the two straddlers (standing `α_i` as gate input, title
   `owner^(k)`). Public, append-only, replayable
   ([layer1-interface.md §1](layer1-interface.md#1-the-layer-model)).
@@ -55,9 +55,11 @@ What CoGra **consumes as published** (recompute only to audit):
 - the accepted edge set `E_k` and the epoch certificates;
 - the declared and derived constants;
 - the burn snapshot `B_i` (an L0 input surfaced by L1);
-- the four admission rules — the two-gate write rule
-  (W1 solvency / W2a wall / W2b door), closure, formation,
-  settlement recognition
+- the admission rules — formation (with the approval handshake
+  and the authoritative act order), the proposed final state, the
+  staged standing package, the final gates (the two-gate write
+  rule: W1 solvency / W2a wall / W2b door), settlement
+  recognition, and the write
   ([layer1-interface.md §7](layer1-interface.md));
 - standing `α_i` as gate input and title `owner^(k)` as read by
   recognition — the two straddlers, freely readable downstream but
@@ -149,7 +151,7 @@ a CoGra fold silently contradict L1's own folds. Payload-borne
 semantics with a published fold — ballots, edits, collective
 membership — are the house pattern, not a violation: the payload
 is exactly where guild meaning belongs
-([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)).
+([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)).
 
 ---
 
@@ -195,23 +197,34 @@ enters CoGra custody — it is the key the actor's L0 address, and
 every value burned to it, hangs on. The backend is the actor's
 preparation and transport agent, never their signer (it holds the
 person ↔ actor association — identity association is terminal by
-contract — and the carriage stores, nothing more). One write runs
-in four steps:
+contract — and the carriage stores, nothing more). L1's admission
+handshake requires two author signatures per act — the proposal
+pre-commitment before host salting, and the approval witness over
+the exact host-sealed verified act
+([layer1-interface.md §8.2](layer1-interface.md#82-the-write-dependencies-and-the-admission-handshake))
+— so one write runs in five steps:
 
 1. **Prepare.** The backend validates the gesture (envelope
-   conformance, L2 policy), pre-checks the write rule below,
-   assembles the canonical record — payload envelope, salt,
-   content witness — and returns it to the client together with
-   the salt and witness, so the client recomputes the commitment
-   before signing. The user never signs blind bytes.
-2. **Sign.** On the device; the key never leaves it.
-3. **Relay.** The backend submits the signed record to L1 and
-   drives retries across epoch boundaries. Relaying confers
-   nothing: the signature covers the record, so the backend can
-   neither alter it nor author one unasked.
-4. **Confirm.** The mirror converges on the accepted record and
+   conformance, L2 policy), pre-checks the write rule below, and
+   assembles the canonical proposal — act body, payload envelope,
+   dependency list — returning it to the client with the
+   pre-digests, so the client recomputes what it commits to. The
+   user never signs blind bytes.
+2. **Pre-sign.** On the device, the client signs the proposal
+   pre-commitment; the key never leaves it.
+3. **Relay and seal.** The backend submits the pre-signed
+   proposal to L1, whose host verifies it, adds the projection
+   salts, and returns the sealed **verified act**.
+4. **Approve.** The client verifies the host seal and the exact
+   returned body, checks both commitment openings, and signs the
+   **approval witness** — only then is the act orderable. The
+   backend relays the approval and drives retries across epoch
+   boundaries; relaying confers nothing: both signatures cover
+   the act, so the backend can neither alter it nor author one
+   unasked.
+5. **Confirm.** The mirror converges on the accepted act and
    the staged payload is promoted to permanent carriage (§7). A
-   prepared record that never lands is discarded, staged payload
+   prepared act that never lands is discarded, staged payload
    included, after a bounded number of epochs.
 
 **Custody exceptions:** the system actors (§8) sign in backend
@@ -262,7 +275,7 @@ admission side.
 
 CoGra is the carriage service for its users' content. The model is
 **witness-anchored carriage**
-([layer1-interface.md §8.3](layer1-interface.md#83-the-edge-record-and-payload-carriage)):
+([layer1-interface.md §8.4](layer1-interface.md#84-the-act-record-and-payload-carriage)):
 
 - **The container is the Peer Content Envelope** — a
   deterministic-CBOR manifest holding CoGra's structured fields
@@ -311,9 +324,11 @@ treasury ([economics.md](economics.md)) and endorsed at bootstrap
 to clear the wall like any other actor. The full bootstrap cast —
 including **The Treasury**, an L1-registered account that
 materializes no outcomes — is
-[network.md §2](network.md#2-creation). The burn is not optional: standing
-is ignition-then-amplification — endorsement alone cannot reach a
-zero-burn actor
+[network.md §2](network.md#2-creation). The burn is not optional:
+W1 reads only the actor's own balance — endorsement never pays an
+actor's θ, a zero-rate cohort cannot vouch itself above the wall,
+and only a current external positive-rate vouch lifts standing,
+within the contributing-rate hull
 ([layer1-interface.md §7.1](layer1-interface.md#71-the-two-gate-write-rule)). Their gestures are priced like anyone's: a verdict costs
 capacity per passed proposal. Bootstrap, key handling, and the full
 gesture vocabulary: [network.md](network.md),
@@ -326,7 +341,7 @@ gesture vocabulary: [network.md](network.md),
 
 An L1 node has no property store — every "node property" is a
 declared fold over the records referencing the node's identifier
-([layer1-interface.md §8](layer1-interface.md#8-kernel-data-model-the-graph-and-the-edge-record)).
+([layer1-interface.md §8](layer1-interface.md#8-kernel-data-model-authored-acts-projections-and-the-graph)).
 A node is never re-minted and a payload is never rewritten;
 updating a minted node means authoring *about* it. CoGra's single
 rule for every updatable node value follows:

@@ -25,7 +25,7 @@ A convenience subset; the ledger is the authority.
 | `Ψ_e`, `Ψ_e^[P]` | Stored 3×3 sentiment slice; its 2×2 path view. |
 | `ε(e)`, `ε(p)` | Determinant sign of an edge / parity product of a path — the coherence bit. |
 | `w̃(e)` | Damped edge weight: coherence × maturity × boundary. |
-| `𝕋_e`, `τ_e`, `≺` | Lamport time, maturity scalar, causal order. |
+| `𝕋^act_q`, `τ_e`, `≺` | Act-owned authoritative logical time, maturity scalar, authoritative-order precedence. |
 | `E_k` | Epoch-`k` snapshot edge set. |
 | `α_i` | Standing — gate input on L1, freely readable downstream. |
 | `r_i`, `b_i`, `N_i` | Commitment rate, residual balance, action count. |
@@ -33,7 +33,7 @@ A convenience subset; the ledger is the authority.
 | `θ`, `ν` | Safety price (the θ-debit) and numéraire. |
 | `ρ_pol`, `ρ_θ`, `ρ_eff` | Policy floor, the wall, the door — the gate-axis floors. |
 | `ρ_act`, `ρ_ep` | Action stamps read by the write rule (W2a / W2b). |
-| `W_end(j → i)` | Safe standing flow — clipped flow over the initiator-owned vouch projection. |
+| `W_end(j → i)` | Final safe standing flow — the certified stage's admitted flow over the person-vouch relation layer. |
 | `L`, `L_vch` | Depth bounds: raw signed BFS (4); projected vouch flow (4). |
 | `owner^(k)` | The title certificate. |
 | `M_payload` | Payload byte bound. |
