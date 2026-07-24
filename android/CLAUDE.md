@@ -29,7 +29,13 @@ new surfaces raise new questions.
 ## Module discipline
 
 Gradle modules mirror the backend's crate discipline; each unit-tests in
-isolation.
+isolation. The app is currently a placeholder shell awaiting slice 1
+(the pre-rebase auth/profile surface was removed with backend slice 0 —
+[roadmap.md "Where the code stands"](../docs/implementation/roadmap.md));
+today's modules are `app` (shell, theme, the placeholder screen) and
+`core:network` (Apollo codegen against the contract, no operations yet).
+
+The split each slice builds into:
 
 - `core:domain` — use-cases and domain types. **Plain Kotlin, no Android
   dependencies.** The only DI annotation allowed here is `javax.inject`
@@ -44,9 +50,9 @@ isolation.
 - `app` — application shell, navigation, theme, and the build-specific
   bindings (e.g. the GraphQL endpoint URL).
 
-`core:ranker` and the other `feature:*` modules are added by the slices that
-need them ([roadmap.md](../docs/implementation/roadmap.md)) — do not scaffold
-empty modules ahead of a slice.
+`core:ranker`, `core:domain`, and the `feature:*` modules are added by the
+slices that need them ([roadmap.md](../docs/implementation/roadmap.md)) —
+do not scaffold empty modules ahead of a slice.
 
 ## The contract is generated
 
@@ -110,15 +116,16 @@ state flag that re-fires on recomposition.
 
 ## Auth / tokens
 
-Tokens are persisted in DataStore, encrypted via Tink with a Keystore-backed
-master key (`core:network`'s token store). The refresh token rotates on every
-use — the client must overwrite its stored copy each refresh
-([auth.md §Tokens](../docs/implementation/auth.md#tokens)). The access token
-rides as a `Bearer` header; an `UNAUTHENTICATED` response triggers a
-single-flight refresh-and-replay.
+The decided session-token architecture, built with slice 1's auth
+rebuild: tokens persist in DataStore, encrypted via Tink with a
+Keystore-backed master key (`core:network`'s token store). The refresh
+token rotates on every use — the client must overwrite its stored copy
+each refresh ([auth.md §Tokens](../docs/implementation/auth.md#tokens)).
+The access token rides as a `Bearer` header; an `UNAUTHENTICATED`
+response triggers a single-flight refresh-and-replay.
 
-This section covers session tokens only. The device-held **actor key** and
-the pre-sign/approve write flow are specified in
+This section covers session tokens only. The device-held **actor key**
+and the pre-sign/approve write flow are specified in
 [android.md](../docs/implementation/android.md) and land with roadmap
 slice 1; their rules are added here when the code does.
 
