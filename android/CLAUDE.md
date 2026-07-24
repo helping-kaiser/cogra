@@ -32,9 +32,9 @@ Gradle modules mirror the backend's crate discipline; each unit-tests in
 isolation. The app is currently a placeholder shell awaiting slice 1
 (the pre-rebase auth/profile surface was removed with backend slice 0 —
 [roadmap.md "Where the code stands"](../docs/implementation/roadmap.md));
-today's modules are `app` (shell, theme, the placeholder screen),
-`core:crypto` (the client-side signing and key-backup crypto), and
-`core:network` (Apollo codegen against the contract, no operations yet).
+today's modules are `app` (shell, theme, the placeholder screen —
+plus the endpoint build config), `core:crypto`, `core:domain`, and
+`core:network`; the `feature:*` modules land with the slice-1 UI.
 
 The split each slice builds into:
 
@@ -132,10 +132,17 @@ each refresh ([auth.md §Tokens](../docs/implementation/auth.md#tokens)).
 The access token rides as a `Bearer` header; an `UNAUTHENTICATED`
 response triggers a single-flight refresh-and-replay.
 
-This section covers session tokens only. The device-held **actor key**
-and the pre-sign/approve write flow are specified in
-[android.md](../docs/implementation/android.md) and land with roadmap
-slice 1; their rules are added here when the code does.
+The **actor key** and onboarding state ride the same encrypted
+DataStore through `core:network`'s identity store: the actor seed
+(exportable by design — it goes into the backup blob, so a
+non-extractable Keystore key is impossible), the applicant token, the
+pending backup blob awaiting its first-session upload, and the
+per-write handshake material (private nonce + pre-signature, keyed by
+staged-write id) that lets the approve step verify against what THIS
+device pre-signed across process death. The **recovery code is never
+persisted** — displayed once at ceremony time, held only by the user.
+The signing steps themselves live in `core:domain`'s `WriteSigner` /
+`RegistrationSigner`; UI never touches `core:crypto` directly.
 
 ## Tests ship with the code
 
