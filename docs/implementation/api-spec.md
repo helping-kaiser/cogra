@@ -708,6 +708,11 @@ type User implements Node & Actor {
    ciphertext under the recovery code; the server cannot decrypt it
    (auth.md \"Key recovery\")."
   keyBackup: String
+  "The actor whose invite this account came through — landing
+   provenance for the reciprocation gesture (the graph's own record
+   of the vouch is the inviter's Opinion). Null for accounts
+   without an application trace (genesis actors)."
+  invitedBy: Actor
 }
 
 "A group acting through one graph identity (household, band, co-op,
@@ -1556,6 +1561,16 @@ type Query {
    the write path. Field-level: resolves only for the staging
    actor's session; null otherwise."
   stagedWrite(id: UUID!): StagedWrite
+
+  "The host key the device verifies seals against before approving
+   (base64) — realization transparency: every host-added field of a
+   verified act is checkable on-device (substrate.md §6)."
+  hostPublicKey: String!
+
+  "Anonymous pre-submit check of an invite link, so the app can
+   gate the registration form and the key ceremony on a usable
+   capability. Null when the id references no link."
+  inviteLinkCheck(id: UUID!): InviteLinkCheck
 
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
@@ -2977,6 +2992,19 @@ type CreateInviteLinkPayload {
 
 input RevokeInviteLinkInput { inviteLink: UUID! }
 type RevokeInviteLinkPayload { inviteLink: InviteLink }
+
+"The anonymous pre-submit view of an invite link (the
+ `inviteLinkCheck` query) — enough to gate the registration form
+ and the key ceremony on a usable capability, and to show who is
+ vouching. Holding the id is holding the link."
+type InviteLinkCheck {
+  "Whether the link can stage a new applicant now — live,
+   unexpired, unrevoked, and (single-use) its one slot free."
+  usable: Boolean!
+  "The issuing actor's handle."
+  inviterHandle: String!
+  expiresAt: DateTime!
+}
 
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate

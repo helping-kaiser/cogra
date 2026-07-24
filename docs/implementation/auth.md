@@ -167,11 +167,31 @@ and, at the inviter's choice, single-use (one applicant slot) or
 multi-use (many applicants until expiry); the inviter can revoke
 a link at any time.
 
+### Link URLs
+
+Every emailed or shared link is a web URL on the per-environment
+web origin — the web app serves everyone the native apps don't
+reach, and one URL opens the app where one is installed
+(Android App Links on the same paths):
+
+- Invite: `https://<web-origin>/join/<link-id>`
+- Email verification: `https://<web-origin>/verify?token=<token>`
+- Password reset: `https://<web-origin>/reset?token=<token>`
+
+Native apps also accept the pasted link or bare token directly —
+the universal fallback when link verification is unavailable (and
+the dev path: the dev mailer logs the bare token, and composing
+full URLs into mail bodies arrives with the web pages that answer
+them).
+
 ### Application (the staged state)
 
 1. **Link open.** The applicant opens the URL in the app. The
-   server validates the link row (unexpired, not revoked, slot
-   available) and the app renders the registration form.
+   app validates the capability through the anonymous
+   `inviteLinkCheck` query — usability (unexpired, not revoked,
+   slot available) plus the inviter's handle, so an unusable link
+   refuses before the form and the key ceremony, and the form can
+   show who is vouching.
 2. **Registration submit.** The applicant chooses handle,
    email, and password. The server creates an `auth_applicants`
    row — off-graph service state only, no account, nothing on
@@ -240,8 +260,9 @@ that never land are garbage-collected per the write path
 when the joiner points back — their own client-signed Opinion
 toward the inviter's Profile, prompted at first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
-It is a graph act, not an auth step; auth's involvement ends at
-landing.
+The prompt's target comes from the viewer-only `User.invitedBy`
+field — landing provenance kept on the applicant row. It is a
+graph act, not an auth step; auth's involvement ends at landing.
 
 **Reaper.** A periodic background job deletes expired
 `auth_applicants` rows (email never verified within 24 h, or the
