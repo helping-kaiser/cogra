@@ -1,4 +1,294 @@
 """
+An actor in the one handle namespace — a mention resolves to exactly
+one actor.
+"""
+interface Actor {
+	id: UUID!
+	handle: String!
+}
+
+type Applicant {
+	id: UUID!
+	handle: String!
+	emailVerified: Boolean!
+	"""
+	When the inviter's priced approval happened; null while pending.
+	"""
+	approvedAt: DateTime
+	"""
+	When the applicant's Registration confirmed and the account
+	landed; null before.
+	"""
+	landedAt: DateTime
+	createdAt: DateTime!
+	expiresAt: DateTime!
+}
+
+input ApplicantApprovalInput {
+	applicant: UUID!
+	"""
+	Pre-filled from the link, committed here.
+	"""
+	pDirected: Dimension!
+	pInterest: Dimension!
+}
+
+type ApplicantConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [ApplicantEdge!]!
+	"""
+	A list of nodes.
+	"""
+	nodes: [Applicant!]!
+}
+
+"""
+An edge in a connection.
+"""
+type ApplicantEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Applicant!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+type ApplicationView {
+	applicant: Applicant!
+	"""
+	The staged Registration awaiting the device's signatures — its
+	handshake state and, once sealed, the verified act. Null before
+	approval and after landing. Re-staged automatically if a previous
+	staging expired.
+	"""
+	stagedRegistration: StagedWrite
+}
+
+input ApprovalSignatureInput {
+	stagedWriteId: UUID!
+	"""
+	The approval-witness signature over the exact verified act,
+	host-added commitments included (base64).
+	"""
+	signature: String!
+}
+
+input ApproveActsInput {
+	approvals: [ApprovalSignatureInput!]!
+}
+
+type ApproveActsPayload {
+	"""
+	Landing stays asynchronous; observe via `stagedWrite`.
+	"""
+	stagedWrites: [StagedWrite!]
+	userErrors: [UserError!]!
+}
+
+input ApproveApplicantRegistrationInput {
+	applicantToken: String!
+	"""
+	The approval-witness signature over the exact verified act
+	(base64).
+	"""
+	signature: String!
+}
+
+type ApproveApplicantRegistrationPayload {
+	stagedWrite: StagedWrite
+	userErrors: [UserError!]!
+}
+
+input ApproveApplicantsInput {
+	approvals: [ApplicantApprovalInput!]!
+}
+
+type AuthSession {
+	"""
+	The bearer token for `Authorization: Bearer <token>`; 15-minute
+	lifetime.
+	"""
+	accessToken: String!
+	"""
+	The rotating refresh token. Every refresh consumes it and issues
+	a successor — replace the stored copy on every refresh.
+	"""
+	refreshToken: String!
+	"""
+	The issuing session.
+	"""
+	session: Session
+	"""
+	The viewer the pair authenticates.
+	"""
+	user: User
+}
+
+input ChangeHandleInput {
+	handle: String!
+}
+
+type ChangeHandlePayload {
+	user: User
+	userErrors: [UserError!]!
+}
+
+input ChangePasswordInput {
+	currentPassword: String!
+	newPassword: String!
+}
+
+type ChangePasswordPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+input ClaimLandedSessionInput {
+	applicantToken: String!
+	deviceLabel: String
+}
+
+type ClaimLandedSessionPayload {
+	"""
+	The first session — mintable repeatedly while the applicant token
+	is valid; the token is the secret.
+	"""
+	auth: AuthSession
+	userErrors: [UserError!]!
+}
+
+input ConfirmEmailChangeInput {
+	"""
+	Either side's proof: the code mailed to the current (original)
+	address, or the token from the new address's verification link.
+	The change applies only once both sides have been confirmed.
+	"""
+	code: String!
+}
+
+type ConfirmEmailChangePayload {
+	user: User
+	userErrors: [UserError!]!
+}
+
+input ConfirmPasswordResetInput {
+	resetToken: String!
+	newPassword: String!
+}
+
+type ConfirmPasswordResetPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+input CreateInviteLinkInput {
+	expiresAt: DateTime!
+	prefillPDirected: Dimension!
+	prefillPInterest: Dimension!
+	"""
+	Defaults to multi-use.
+	"""
+	singleUse: Boolean
+}
+
+type CreateInviteLinkPayload {
+	"""
+	Its id is the shareable capability.
+	"""
+	inviteLink: InviteLink
+	userErrors: [UserError!]!
+}
+
+"""
+Implement the DateTime<Utc> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
+scalar Dimension
+
+"""
+One shared error vocabulary across both tiers: transport faults ride
+the GraphQL errors array; expected outcomes ride `userErrors`.
+"""
+enum ErrorCode {
+	"""
+	The request needed an authenticated viewer and had none.
+	"""
+	UNAUTHENTICATED
+	"""
+	The viewer is not eligible for the field or gesture.
+	"""
+	FORBIDDEN
+	"""
+	The referenced object does not exist.
+	"""
+	NOT_FOUND
+	"""
+	Malformed input; `field` names the offender.
+	"""
+	BAD_INPUT
+	"""
+	An auth endpoint's per-IP / per-account backoff.
+	"""
+	RATE_LIMITED
+	"""
+	Collapsed server fault; detail is logged, not surfaced.
+	"""
+	INTERNAL
+	"""
+	The email / password pair did not match.
+	"""
+	INVALID_CREDENTIALS
+	"""
+	Invite link invalid, expired, revoked, or consumed.
+	"""
+	INVITE_UNUSABLE
+	"""
+	The handle is already held in the one actor namespace.
+	"""
+	HANDLE_TAKEN
+	"""
+	Under the length floor or in the breach corpus.
+	"""
+	WEAK_PASSWORD
+	"""
+	A live application already holds this email.
+	"""
+	APPLICATION_IN_PROGRESS
+	"""
+	The email-verification token is invalid or expired.
+	"""
+	VERIFICATION_TOKEN_INVALID
+	"""
+	Refresh token invalid, expired, or reuse-detected.
+	"""
+	REFRESH_TOKEN_INVALID
+	"""
+	The prepare pre-check: W1 solvency or W2 stamps.
+	"""
+	WRITE_RULE_FAILED
+	"""
+	The staged write was garbage-collected unlanded.
+	"""
+	STAGED_WRITE_EXPIRED
+	"""
+	A submitted signature does not verify the record.
+	"""
+	SIGNATURE_INVALID
+}
+
+"""
 Connectivity report for the API process and its store.
 """
 type Health {
@@ -17,12 +307,721 @@ type Health {
 	mirrorEpoch: Int!
 }
 
+type InviteLink {
+	"""
+	The shareable capability: the URL carries only this id, so it is
+	issuer-visible only.
+	"""
+	id: UUID!
+	"""
+	The issuing actor.
+	"""
+	inviter: Actor
+	"""
+	A suggestion, never a commitment.
+	"""
+	prefillPDirected: Dimension!
+	prefillPInterest: Dimension!
+	"""
+	One applicant slot (single-use) or many applicants until expiry
+	(multi-use).
+	"""
+	singleUse: Boolean!
+	createdAt: DateTime!
+	expiresAt: DateTime!
+	"""
+	Null if still live.
+	"""
+	revokedAt: DateTime
+	"""
+	The inviter's approval queue.
+	"""
+	applicants(after: String, before: String, first: Int, last: Int): ApplicantConnection!
+}
+
+type InviteLinkConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [InviteLinkEdge!]!
+	"""
+	A list of nodes.
+	"""
+	nodes: [InviteLink!]!
+}
+
+"""
+An edge in a connection.
+"""
+type InviteLinkEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: InviteLink!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+input LogInInput {
+	email: String!
+	password: String!
+	deviceLabel: String
+}
+
+type LogInPayload {
+	"""
+	Null with an INVALID_CREDENTIALS userError when the email /
+	password pair did not match.
+	"""
+	auth: AuthSession
+	userErrors: [UserError!]!
+}
+
+type Mutation {
+	"""
+	Creates the staged applicant row — off-graph service state only:
+	no account, no records, nothing on the graph — and sends the
+	verification email. On refusal, `userErrors` carries one of
+	INVITE_UNUSABLE, HANDLE_TAKEN, WEAK_PASSWORD, or
+	APPLICATION_IN_PROGRESS.
+	"""
+	submitApplication(input: SubmitApplicationInput!): SubmitApplicationPayload!
+	"""
+	Proves the login channel. `ok` is false with a
+	VERIFICATION_TOKEN_INVALID userError when the token is invalid or
+	the application expired.
+	"""
+	verifyApplicantEmail(input: VerifyApplicantEmailInput!): VerifyApplicantEmailPayload!
+	"""
+	Always succeeds, to avoid revealing whether an application
+	exists.
+	"""
+	resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
+	"""
+	Approve staged applicants — the inviter's deliberate, priced act:
+	per applicant or in batch, with the pre-filled stance values
+	adjusted at will. Triggers the funding burn and the staged
+	Registration backend-side, and returns the inviter's own Opinion
+	records to sign — the vouch is the inviter's signature, not a
+	server write.
+	"""
+	approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+	"""
+	Pre-sign the staged Registration — the applicant-token twin of
+	`submitProposals`, since no session exists before landing. The
+	returned staged write carries the host-sealed verified act for
+	the approval step.
+	"""
+	submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
+	"""
+	Relay the approval witness — the applicant-token twin of
+	`approveActs`; the device verifies the seal, the exact body, and
+	both commitment openings first. Landing stays asynchronous.
+	"""
+	approveApplicantRegistration(input: ApproveApplicantRegistrationInput!): ApproveApplicantRegistrationPayload!
+	"""
+	Mints a session for a landed applicant. Callable repeatedly while
+	the applicant token is valid — the token is the secret; a
+	userError (BAD_INPUT) reports an application that has not landed
+	yet.
+	"""
+	claimLandedSession(input: ClaimLandedSessionInput!): ClaimLandedSessionPayload!
+	"""
+	A session from credentials; `auth` is null with an
+	INVALID_CREDENTIALS userError when the email / password pair did
+	not match.
+	"""
+	logIn(input: LogInInput!): LogInPayload!
+	"""
+	A rotated session; `auth` is null with a REFRESH_TOKEN_INVALID
+	userError when the refresh token is invalid, expired, or was
+	already rotated (reuse) — a reuse-detected token also revokes
+	every session.
+	"""
+	refreshSession(input: RefreshSessionInput!): RefreshPayload!
+	"""
+	Revoke one session (the current one if no id is given). The
+	associated access token cannot be invalidated mid-TTL but cannot
+	be refreshed past expiry.
+	"""
+	revokeSession(input: RevokeSessionInput!): RevokeSessionPayload!
+	"""
+	Revoke every session except the one making the request.
+	"""
+	revokeOtherSessions: RevokeSessionsPayload!
+	"""
+	Always succeeds, to avoid revealing whether an account exists. If
+	one does, a single-use reset link goes to its address.
+	"""
+	requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetPayload!
+	"""
+	Rotates the password and revokes every session — a reset is a
+	security event.
+	"""
+	confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
+	"""
+	Re-verifies the current password, rotates the hash, and revokes
+	the account's other sessions.
+	"""
+	changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
+	"""
+	Re-authenticates with the current password, then runs the
+	two-sided proof: a confirmation code to the current address, a
+	verification link to the new one. Always succeeds for a
+	well-formed request, to avoid revealing whether the new address
+	is already registered.
+	"""
+	requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
+	"""
+	Submits either side's proof; the change applies — and the account
+	email updates — only once both the original-address code and the
+	new-address verification have been confirmed.
+	"""
+	confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
+	"""
+	Renames the account in the one actor namespace — L2 account
+	state, not graph or profile payload. Subject to the global handle
+	rules: 3–30 chars of [a-z0-9_], case-folded.
+	"""
+	changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
+	"""
+	Upload (or replace) the client-encrypted key-backup blob —
+	ciphertext under the device-generated recovery code; the server
+	stores what it cannot decrypt. Retrieval is the `User.keyBackup`
+	field: login + code is the recovery.
+	"""
+	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
+	"""
+	Issues an invite link — pure service-side staging UX; its id is
+	the shareable capability. Nothing binds at issue: the stance
+	values are pre-filled suggestions, and the approval is the priced
+	act.
+	"""
+	createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
+	"""
+	Revokes one of the viewer's own invite links.
+	"""
+	revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
+	"""
+	Prepares the viewer's stance toward a target as the delta record
+	whose bundle nets to the stated intent. Toward a Profile this is
+	the reciprocation gesture completing the CoGra-join mutual pair.
+	"""
+	prepareStance(input: PrepareStanceInput!): PreparePayload!
+	"""
+	Relays the pre-signed proposals to L1's seal round trip. When the
+	seal returns synchronously the payload's staged writes are
+	already AWAITING_APPROVAL, verified act included. Verification
+	failures surface as SIGNATURE_INVALID userErrors per proposal.
+	"""
+	submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
+	"""
+	Relays the approval witnesses — only an approved act is orderable
+	— and drives retries across epoch boundaries. Landing stays
+	asynchronous; observe via `stagedWrite`.
+	"""
+	approveActs(input: ApproveActsInput!): ApproveActsPayload!
+}
+
+"""
+Information about pagination in a connection
+"""
+type PageInfo {
+	"""
+	When paginating backwards, are there more items?
+	"""
+	hasPreviousPage: Boolean!
+	"""
+	When paginating forwards, are there more items?
+	"""
+	hasNextPage: Boolean!
+	"""
+	When paginating backwards, the cursor to continue.
+	"""
+	startCursor: String
+	"""
+	When paginating forwards, the cursor to continue.
+	"""
+	endCursor: String
+}
+
+"""
+Staged proposals to pre-sign, in relay order. Each is its own priced
+act running its own two-signature handshake; null when `userErrors`
+is non-empty.
+"""
+type PreparePayload {
+	writes: [PreparedWrite!]
+	userErrors: [UserError!]!
+}
+
+input PrepareStanceInput {
+	"""
+	The target actor; toward a Profile this is the reciprocation
+	gesture completing the CoGra-join mutual pair.
+	"""
+	target: UUID!
+	"""
+	The intended net state of the author's bundle — (0,0) is
+	severance.
+	"""
+	pDirected: Dimension!
+	pInterest: Dimension!
+}
+
+type PreparedWrite {
+	"""
+	The handle for the whole handshake.
+	"""
+	id: UUID!
+	family: RecordFamily!
+	"""
+	The canonical proposal, serialized for pre-signing (base64). It
+	carries everything the author asserts — endpoints, parameters,
+	dependency list, payload bytes — and the device recomputes every
+	signing base from it: the user never signs blind bytes.
+	"""
+	canonicalProposal: String!
+	"""
+	Domain-separated digest over the payload bytes — a transport
+	cross-check for the parsed proposal. The signing pre-digests are
+	computed on-device under the private nonce and never leave it.
+	"""
+	contentPreDigest: String!
+	"""
+	Domain-separated digest over the canonical dependency encoding —
+	the dependency-side transport cross-check.
+	"""
+	dependencyPreDigest: String!
+	"""
+	A staged write that never completes the handshake and lands is
+	garbage-collected — staged payload included — after this many
+	epochs (an operational parameter; data-model.md "Staged writes").
+	"""
+	gcAfterEpochs: Int!
+}
+
+input ProposalSignatureInput {
+	stagedWriteId: UUID!
+	"""
+	The pre-commitment blob (base64): the device's private nonce and
+	pre-commitment signature — produced with the actor's device-held
+	key; opaque to this API.
+	"""
+	signature: String!
+}
+
 type Query {
 	"""
 	Reports whether the API can reach its store, and how far the record
 	mirror has ingested.
 	"""
 	health: Health!
+	"""
+	The viewer's own account, resolved from the request's auth token.
+	Null when the request is unauthenticated.
+	"""
+	me: User
+	"""
+	The applicant's own view of their application, authorized by the
+	applicant token; null when the token authorizes nothing.
+	"""
+	application(applicantToken: String!): ApplicationView
+	"""
+	One staged write mid-handshake. Field-level: resolves only for
+	the staging actor's session; null otherwise.
+	"""
+	stagedWrite(id: UUID!): StagedWrite
+}
+
+type Record {
+	"""
+	L1's own record identifier, verbatim.
+	"""
+	id: String!
+	family: RecordFamily!
+	"""
+	The landing epoch.
+	"""
+	epoch: Int!
+	"""
+	Authoritative act time — the first component of the causal key.
+	"""
+	actTime: Int!
+	"""
+	Position within the epoch's authoritative order.
+	"""
+	position: Int!
+}
+
+"""
+The record families of the L1 edge census (layer1-interface.md §9).
+"""
+enum RecordFamily {
+	REGISTRATION
+	PUBLISH
+	OPINION
+	AFFINITY
+	PARTICIPANT
+	OWNER
+	JOIN_REQUEST
+	ACCEPT
+	RATIFY
+	WITHDRAW
+	RESCIND
+	LEAVE
+	TAG
+	REVIEW
+	BID
+	INVITATION
+	DE_INVITE
+	SEND
+	REFERENCE
+}
+
+type RefreshPayload {
+	"""
+	A rotated session; null with a REFRESH_TOKEN_INVALID userError
+	when the token is invalid, expired, or was already rotated —
+	reuse also revokes every session.
+	"""
+	auth: AuthSession
+	userErrors: [UserError!]!
+}
+
+input RefreshSessionInput {
+	refreshToken: String!
+}
+
+input RequestEmailChangeInput {
+	newEmail: String!
+	currentPassword: String!
+}
+
+"""
+Always succeeds for a well-formed request, to avoid revealing whether
+the new address is already registered — a silent verb, no
+`userErrors`.
+"""
+type RequestEmailChangePayload {
+	ok: Boolean!
+}
+
+input RequestPasswordResetInput {
+	email: String!
+}
+
+"""
+Always succeeds, to avoid revealing whether an account exists — a
+silent verb, no `userErrors`.
+"""
+type RequestPasswordResetPayload {
+	ok: Boolean!
+}
+
+input ResendVerificationEmailInput {
+	email: String!
+}
+
+"""
+Always succeeds, to avoid revealing whether an application exists —
+one of the three deliberately-silent verbs, so no `userErrors`.
+"""
+type ResendVerificationEmailPayload {
+	ok: Boolean!
+}
+
+input RevokeInviteLinkInput {
+	inviteLink: UUID!
+}
+
+type RevokeInviteLinkPayload {
+	inviteLink: InviteLink
+	userErrors: [UserError!]!
+}
+
+input RevokeSessionInput {
+	"""
+	The session to revoke; the current one if omitted.
+	"""
+	session: UUID
+}
+
+type RevokeSessionPayload {
+	"""
+	The revoked session, in its terminal state.
+	"""
+	session: Session
+	userErrors: [UserError!]!
+}
+
+type RevokeSessionsPayload {
+	revokedCount: Int
+	userErrors: [UserError!]!
+}
+
+type Session {
+	id: UUID!
+	"""
+	Short user-readable origin of the session, e.g. derived from the
+	device at login.
+	"""
+	deviceLabel: String
+	createdAt: DateTime!
+	"""
+	Null if unused since issue.
+	"""
+	lastUsedAt: DateTime
+	expiresAt: DateTime!
+	"""
+	Whether this is the session that issued the current request.
+	"""
+	isCurrent: Boolean!
+}
+
+type StagedWrite {
+	id: UUID!
+	state: StagedWriteState!
+	family: RecordFamily!
+	"""
+	The canonical proposal the handshake covers (base64) — the same
+	bytes prepare returned, re-readable after a lost response.
+	"""
+	canonicalProposal: String!
+	"""
+	The host-sealed verified act once the seal has returned (base64):
+	every host-added field the device verifies before approving. Null
+	in earlier states.
+	"""
+	verifiedAct: String
+	"""
+	The accepted record once LANDED; null before.
+	"""
+	record: Record
+}
+
+type StagedWriteConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [StagedWriteEdge!]!
+	"""
+	A list of nodes.
+	"""
+	nodes: [StagedWrite!]!
+}
+
+"""
+An edge in a connection.
+"""
+type StagedWriteEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: StagedWrite!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+Handshake progress of a staged write (api-spec "The write flow").
+"""
+enum StagedWriteState {
+	"""
+	Prepared; the pre-commitment not yet submitted.
+	"""
+	AWAITING_PRE_SIGN
+	"""
+	Pre-signed and submitted; the backend awaits the host-sealed
+	verified act.
+	"""
+	SEALING
+	"""
+	The sealed act is back and awaits the device's approval witness.
+	"""
+	AWAITING_APPROVAL
+	"""
+	Approved and submitted for ordering; the backend drives retries
+	across epoch boundaries.
+	"""
+	RELAYING
+	"""
+	The accepted act is in the mirror and the staged effects are
+	promoted.
+	"""
+	LANDED
+	"""
+	Garbage-collected without landing — nothing existed on the graph.
+	"""
+	EXPIRED
+}
+
+input SubmitApplicantRegistrationInput {
+	applicantToken: String!
+	"""
+	The pre-commitment blob (base64): the device's private nonce and
+	pre-signature over the canonical proposal.
+	"""
+	signature: String!
+}
+
+type SubmitApplicantRegistrationPayload {
+	"""
+	Carries the host-sealed verified act for the approval step.
+	"""
+	stagedWrite: StagedWrite
+	userErrors: [UserError!]!
+}
+
+"""
+The application submit: the login triple plus the device key
+ceremony's public outputs (the key never leaves the device; approval
+funds a burn to the submitted address, so it must exist first).
+"""
+input SubmitApplicationInput {
+	inviteLink: UUID!
+	handle: String!
+	email: String!
+	password: String!
+	"""
+	The device-held actor key's public half (base64).
+	"""
+	actorPubkey: String!
+	"""
+	The device-generated L0 address — the address approval funds.
+	"""
+	l0Address: String!
+}
+
+type SubmitApplicationPayload {
+	"""
+	The opaque token authorizing exactly this applicant's own flow:
+	status polling, registration signing, the landing claim. Null
+	when `userErrors` is non-empty.
+	"""
+	applicantToken: String
+	"""
+	When the application expires unverified (24 h, auth.md).
+	"""
+	expiresAt: DateTime
+	userErrors: [UserError!]!
+}
+
+input SubmitProposalsInput {
+	proposals: [ProposalSignatureInput!]!
+}
+
+type SubmitProposalsPayload {
+	"""
+	Already AWAITING_APPROVAL with the verified act included when the
+	seal returned synchronously; otherwise observe via `stagedWrite`.
+	"""
+	stagedWrites: [StagedWrite!]
+	userErrors: [UserError!]!
+}
+
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
+
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
+scalar UUID
+
+input UploadKeyBackupInput {
+	"""
+	The client-encrypted key-backup blob (base64) — ciphertext under
+	the device-generated recovery code; the server stores what it
+	cannot decrypt.
+	"""
+	blob: String!
+}
+
+type UploadKeyBackupPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+type User implements Actor {
+	id: UUID!
+	"""
+	The account's name in the one actor namespace: 3–30 characters of
+	[a-z0-9_], case-folded.
+	"""
+	handle: String!
+	"""
+	The current display name (the newest profile version).
+	"""
+	displayName: String
+	"""
+	Active authentication sessions, one per refresh token.
+	Field-level: resolves only for the account's own viewer; null
+	otherwise.
+	"""
+	sessions: [Session!]
+	"""
+	Acts mid-handshake — awaiting a signature, the host seal, or
+	confirmation — across devices. Field-level: viewer-only.
+	"""
+	stagedWrites(after: String, before: String, first: Int, last: Int): StagedWriteConnection
+	"""
+	The client-encrypted key-backup blob, if one was uploaded —
+	ciphertext under the recovery code; the server cannot decrypt it.
+	Field-level: viewer-only.
+	"""
+	keyBackup: String
+	"""
+	The account's invite links — service-side staging state, not
+	graph structure. Field-level: each link's id is the link
+	capability, so this resolves only for the issuing actor.
+	"""
+	inviteLinks(after: String, before: String, first: Int, last: Int): InviteLinkConnection
+}
+
+"""
+An expected business outcome, carried as data on the mutation payload
+— the list is empty exactly when the mutation succeeded.
+"""
+type UserError {
+	"""
+	Human-readable description of the refusal.
+	"""
+	message: String!
+	code: ErrorCode!
+	"""
+	Path into the nested input naming the offending field; null for a
+	whole-operation failure.
+	"""
+	field: [String!]
+}
+
+input VerifyApplicantEmailInput {
+	verificationToken: String!
+}
+
+type VerifyApplicantEmailPayload {
+	"""
+	False with a VERIFICATION_TOKEN_INVALID userError when the token
+	is invalid or the application expired.
+	"""
+	ok: Boolean!
+	userErrors: [UserError!]!
 }
 
 """
@@ -33,6 +1032,11 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 Directs the executor to skip this field or fragment when the `if` argument is true.
 """
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Provides a scalar specification URL for specifying the behavior of custom scalar types.
+"""
+directive @specifiedBy(url: String!) on SCALAR
 schema {
 	query: Query
+	mutation: Mutation
 }
