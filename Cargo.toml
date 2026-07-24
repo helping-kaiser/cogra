@@ -54,10 +54,16 @@ chrono = { version = "0.4", features = ["serde"] }
 # The interim act-authentication realization for the L1 stand-in
 # (open-questions.md Q30 — stand-in-scoped choices, not a Q30 resolution):
 # Ed25519 signatures, SHA-256 salted hash commitments.
-ed25519-dalek = { version = "2", features = ["rand_core"] }
+ed25519-dalek = { version = "2", features = ["rand_core", "pkcs8", "pem"] }
 sha2 = { version = "0.10" }
 rand = { version = "0.8" }
 hex = { version = "0.4" }
+
+# Service-side auth (auth.md): Argon2id password hashing, Ed25519-signed
+# JWT access tokens, url-safe token material.
+argon2 = { version = "0.5" }
+jsonwebtoken = { version = "9" }
+base64 = { version = "0.22" }
 
 [profile.dev]
 opt-level = 0

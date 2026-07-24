@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(p_d), 0)::float8 AS \"p_d!\",\n                  COALESCE(SUM(p_i), 0)::float8 AS \"p_i!\"\n           FROM mirror_record_legs\n           WHERE family = 'opinion' AND leg = 'binary'\n             AND source = $1 AND target = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "p_d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_i!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "636bb068873e2ebe135aa857b05e0713c1e52779d74e5961d0c7b999d712b12e"
+}

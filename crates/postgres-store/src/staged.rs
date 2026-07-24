@@ -311,6 +311,47 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     })
 }
 
+/// The applicant's live staged write of one family — the staged
+/// Registration the admission sequence signs (auth.md "Approval and
+/// landing"). Expired stagings are ignored: a fresh one replaces them.
+pub async fn live_for_applicant(
+    pool: &PgPool,
+    applicant_id: Uuid,
+    family: Family,
+) -> Result<Option<StagedWrite>, StagedError> {
+    let id = sqlx::query_scalar!(
+        "SELECT id FROM staged_writes
+         WHERE applicant_id = $1 AND family = $2 AND state <> 'expired'
+         ORDER BY created_at DESC LIMIT 1",
+        applicant_id,
+        family.as_str(),
+    )
+    .fetch_optional(pool)
+    .await?;
+    match id {
+        Some(id) => Ok(Some(load(pool, id).await?)),
+        None => Ok(None),
+    }
+}
+
+/// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
+pub async fn list_for_actor(
+    pool: &PgPool,
+    actor_id: Uuid,
+) -> Result<Vec<StagedWrite>, StagedError> {
+    let ids = sqlx::query_scalar!(
+        "SELECT id FROM staged_writes WHERE actor_id = $1 ORDER BY created_at DESC",
+        actor_id,
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut writes = Vec::with_capacity(ids.len());
+    for id in ids {
+        writes.push(load(pool, id).await?);
+    }
+    Ok(writes)
+}
+
 /// Guarded state transition: `from` → `to`, failing with the actual state
 /// when the row is elsewhere in the handshake.
 async fn transition(

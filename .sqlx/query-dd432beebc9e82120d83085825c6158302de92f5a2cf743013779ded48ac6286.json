@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_invite_links SET revoked_at = NOW()\n         WHERE id = $1 AND inviter_id = $2 AND revoked_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dd432beebc9e82120d83085825c6158302de92f5a2cf743013779ded48ac6286"
+}

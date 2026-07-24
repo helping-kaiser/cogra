@@ -143,6 +143,60 @@ pub async fn record_ids_in_epoch(pool: &PgPool, epoch: i64) -> Result<Vec<String
     .await?)
 }
 
+/// One mirror record's identity and causal key (the slice-1 read
+/// surface; the full record read arrives with the content slice).
+#[derive(Debug, Clone)]
+pub struct RecordMeta {
+    pub record_id: String,
+    pub family: String,
+    pub epoch: i64,
+    pub act_time: i64,
+    pub position: i64,
+}
+
+pub async fn record_meta(
+    pool: &PgPool,
+    record_id: &str,
+) -> Result<Option<RecordMeta>, MirrorError> {
+    Ok(sqlx::query!(
+        "SELECT record_id, family, epoch, act_time, position
+         FROM mirror_records WHERE record_id = $1",
+        record_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| RecordMeta {
+        record_id: r.record_id,
+        family: r.family,
+        epoch: r.epoch,
+        act_time: r.act_time,
+        position: r.position,
+    }))
+}
+
+/// The net of one author's Opinion bundle toward one node — the sum of
+/// the authored parameters across their accepted Opinion records
+/// (api-spec "The generic stance": the client states intent as the net;
+/// the backend derives the delta record from this read).
+pub async fn net_opinion(
+    pool: &PgPool,
+    author_source: &str,
+    target: &str,
+) -> Result<(f64, f64), MirrorError> {
+    let row = sqlx::query!(
+        r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
+                  COALESCE(SUM(p_i), 0)::float8 AS "p_i!"
+           FROM mirror_record_legs
+           WHERE family = 'opinion' AND leg = 'binary'
+             AND source = $1 AND target = $2"#,
+        author_source,
+        target,
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok((row.p_d, row.p_i))
+}
+
 /// Wipes the mirror and resets the cursor. The mirror is a rebuildable
 /// projection — this is the documented recovery path (re-ingest from the
 /// published sequence), used by the dev CLI's rebuild command and tests.

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_email_changes SET original_confirmed_at = NOW()\n         WHERE user_id = $1 AND original_code_hash = $2\n           AND original_confirmed_at IS NULL AND expires_at > NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "73dcad7e605e7496712c4d533badb5d5a13df35580ed6001949709191eaefe99"
+}

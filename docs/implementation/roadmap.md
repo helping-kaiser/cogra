@@ -109,9 +109,26 @@ write needs a landed, funded actor with a device-held key.
 - Android from the start: the actor key lives on the device, so the
   client is not optional here — key ceremony, signing, login
   ([android.md](android.md)).
+- Web at full parity ([web.md](web.md)): the web app serves everyone
+  the Android app doesn't reach — without the key ceremony and
+  signing in the browser, an iOS or desktop user could not join at
+  all. The browser key-custody design (WebCrypto vs. a Wasm-bound
+  `common::l1`) is decided before the web cut starts.
 - **Hand test:** take an invite link all the way to a landed, funded
   actor; sign a write from the phone.
-- **Surfaces:** backend, API, Android.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 1.1 — API-edge hardening
+
+- Auth rate limiting (per-IP and per-account backoff on login,
+  application submits, resets, resends) and the breach-corpus
+  password check ([auth.md](auth.md)).
+- GraphQL query depth and complexity budgets — a single nested
+  query can fetch N objects without tripping any per-endpoint
+  limit.
+- Sequenced directly behind slice 1: it hardens the auth surface
+  slice 1 rebuilds and the API that protects it.
+- **Surfaces:** backend, API.
 
 ### Slice 2 — Content
 
@@ -124,7 +141,7 @@ write needs a landed, funded actor with a device-held key.
   listing — deliberately **not** the ranked feed, so this slice
   doesn't block on the ranker.
 - **Hand test:** post from the phone, read it back.
-- **Surfaces:** backend, API, Android.
+- **Surfaces:** backend, API, Android, web.
 
 ### Slice 3 — The ranker and the feed
 
@@ -140,8 +157,9 @@ write needs a landed, funded actor with a device-held key.
   decentralized end state. No stage changes the slice-in,
   ordered-list-out shape.
 - **Hand test:** ranked feed on the device; later, the same feed
-  ranked by the container and on-device.
-- **Surfaces:** backend, API, miner transport, Android.
+  ranked by the container and on-device (web ranks backend-direct
+  until the Wasm stage — [web.md](web.md)).
+- **Surfaces:** backend, API, miner transport, Android, web.
 
 ### Slice 4 — Governance
 
@@ -163,7 +181,7 @@ write needs a landed, funded actor with a device-held key.
   member-held splits are the Q30-gated workstream below.
 - Chats: creation, membership flows, messaging, E2EE with client-side
   keys ([chats.md](../instances/chats.md)).
-- **Surfaces:** backend, API, Android.
+- **Surfaces:** backend, API, Android, web.
 
 ### Slice 6 — The CGT rail
 
@@ -197,7 +215,7 @@ write needs a landed, funded actor with a device-held key.
 - **Hand test:** tip a post and see the public stance land with its
   pointer; buy an Item end to end — fund, bid, accept, ratify,
   title moving at the boundary, the covenant paying out.
-- **Surfaces:** rail, backend, API, Android.
+- **Surfaces:** rail, backend, API, Android, web.
 
 ### Slice 8 — Erasure and moderation plumbing
 
@@ -211,7 +229,7 @@ write needs a landed, funded actor with a device-held key.
   ([moderation.md](../instances/moderation.md)).
 - **Hand test:** remove your own post; watch the tombstone appear and
   the archive row land.
-- **Surfaces:** backend, API, Android.
+- **Surfaces:** backend, API, Android, web.
 
 ## Staged workstreams
 
@@ -234,11 +252,6 @@ On the roadmap but outside the slice order; each names its gate.
 - **The goods program** — the fiat-backed honor goods program,
   staged, starting near-zero-fiat
   ([governance.md](../primitive/governance.md)).
-- **API-edge hardening** — auth rate limiting and the breach-corpus
-  password check ([auth.md](auth.md)), plus GraphQL query depth and
-  complexity budgets (a single nested query can fetch N objects
-  without tripping any per-endpoint limit). Lands with the rebuilt
-  auth surface and the API it protects.
 - **Passkey-wrapped second unlock** — the WebAuthn-PRF unlock of the
   key-backup blob; a foreseen extension of the recovery-code posture,
   not a posture change ([auth.md](auth.md)).
