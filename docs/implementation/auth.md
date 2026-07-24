@@ -152,7 +152,11 @@ joiner's own signature grounds the actor. The genesis member is
 the exception: it is seeded around the L1 genesis sequence by the
 bootstrap binary
 ([network.md §2](../primitive/network.md#2-creation)) and never
-passes through the flows below.
+passes through the flows below — the bootstrap creates its login
+credentials and seals its actor seed into a standard key-backup
+blob, printing the recovery code once, so the operator reaches
+the account through the ordinary login + restore path
+([architecture.md](architecture.md#genesis-bootstrap)).
 
 ### Invite-link generation (inviter side)
 
