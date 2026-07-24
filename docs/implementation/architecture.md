@@ -183,6 +183,21 @@ The public-facing binary. Responsibilities:
 - No business logic in resolvers — it orchestrates, it does not
   decide
 
+### `crates/l1-standin`
+
+The substrate behind the seam until PeerNetworks Layer 1 ships
+([roadmap.md "The stand-in and the swap"](roadmap.md)).
+Implements the host side of the
+[layer1-interface.md](../primitive/layer1-interface.md) contract —
+formation checks against the edge census, the admission handshake
+(verify, salt, seal; approval witness), the authoritative order and
+causal keys, edge-projection maturity, the θ-debit ledger, and
+epoch publication — with the two documented simplifications (money
+as numbers, standing stubbed). It owns its own `l1_*` tables in
+the shared Postgres instance: they play L1's role, nothing outside
+the crate touches them, and the whole crate is replaced at the
+swap.
+
 ### `crates/postgres-store`
 
 The PostgreSQL access layer. Responsibilities:
@@ -341,7 +356,9 @@ The bootstrap binary performs the CoGra-side seeding around those
 records: the reserved Type keys (content-addressed UUIDv5 via the
 naming service — [data-model.md](data-model.md)), the operational
 parameter carrier initialized from the Charter's genesis payload,
-the operator account's service rows, and the first invite staging.
+and the operator account's service rows. The first invite is
+staged through the ordinary invite flow once it exists
+([auth.md](auth.md)), not by the bootstrap.
 It is idempotent and gated on **both** sides — an instance counts
 as bootstrapped only when the Charter record is in the mirror
 *and* the operator's service rows exist; a re-run completes the
