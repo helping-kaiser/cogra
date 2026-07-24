@@ -80,7 +80,7 @@ is invariant across it.
 
 Overlay nodes — CoGra's own graph state
 ([nodes.md §3](nodes.md#3-overlay-node-types-cogras-graph)) — can
-change over time: a Proposal's tally state, a `:Network`
+change over time: a Proposal's tally state, a network
 parameter, a CollectiveMember's role. These changes add layers to
 the **specific property** that changed: instead of appending a
 copy of the node with one value different, the store appends just

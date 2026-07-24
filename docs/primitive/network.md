@@ -10,9 +10,9 @@ publisher-authored Content node on PeerNetworks Layer 1 that
 anchors the instance — proposals about the Network name it, and
 every passed parameter change lands as a witnessed payload on a
 finalization Opinion toward it, so the parameter schedule is
-replayable from public records. The `:Network` **overlay carrier**
-is the operational mirror of that schedule — the state
-the ranker, miner slice, and backend actually read
+replayable from public records. The **overlay carrier** in
+CoGra's store is the operational mirror of that schedule — the
+state the ranker, miner slice, and backend actually read
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 
 This doc covers the charter and carrier (creation, parameter
@@ -111,8 +111,8 @@ preconditions already stand:
    content-addressed UUIDv5 keys
    ([data-model.md](../implementation/data-model.md)), stable from
    network birth regardless of when each name first lands on L1
-   ([hashtag.md](../instances/hashtag.md)). The `:Network` overlay
-   carrier is seeded with the genesis parameter values alongside.
+   ([hashtag.md](../instances/hashtag.md)). The overlay carrier
+   is seeded with the genesis parameter values alongside.
 
 The CoGra-side bootstrap is one step; the L1 genesis records land
 as the instance's first accepted acts. There is no runtime genesis
@@ -267,7 +267,7 @@ Defaults bootstrap; they are not fixed.
 
 ## 4. The overlay carrier
 
-The `:Network` node in CoGra's overlay is the **operational
+The carrier node in CoGra's overlay is the **operational
 mirror** of the charter's parameter schedule: layered governed
 properties, one per catalog entry, updated when a finalization
 lands. The ranker, the miner slice, and the backend read the
@@ -450,7 +450,7 @@ consequences shared across all of them:
 
 ---
 
-## 11. Amending `:Network` parameters
+## 11. Amending network parameters
 
 Two amendment-rule pairs gate changes to the governed parameters,
 separated by stakes:
