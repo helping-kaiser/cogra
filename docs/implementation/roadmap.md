@@ -112,8 +112,8 @@ write needs a landed, funded actor with a device-held key.
 - Web at full parity ([web.md](web.md)): the web app serves everyone
   the Android app doesn't reach — without the key ceremony and
   signing in the browser, an iOS or desktop user could not join at
-  all. The browser key-custody design (WebCrypto vs. a Wasm-bound
-  `common::l1`) is decided before the web cut starts.
+  all. The browser key custody is WebCrypto-held keys
+  ([web.md](web.md#key-custody--webcrypto)).
 - **Hand test:** take an invite link all the way to a landed, funded
   actor; sign a write from the phone.
 - **Surfaces:** backend, API, Android, web.
