@@ -6,6 +6,9 @@
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    // Shared in-memory fakes and the in-test host sealer, consumed by
+    // every feature module's tests via testFixtures(project(...)).
+    `java-test-fixtures`
 }
 
 kotlin {
@@ -16,6 +19,7 @@ dependencies {
     api(project(":core:crypto"))
     implementation(libs.javax.inject)
     implementation(libs.kotlinx.coroutines.core)
+    testFixturesImplementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
