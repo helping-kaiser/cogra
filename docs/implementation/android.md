@@ -84,6 +84,9 @@ Tests ship with development, per the shared rule:
 
 - Domain logic and ViewModels: JUnit unit tests, per module.
 - Network: MockWebServer against the generated Apollo client.
+- The handshake and key-backup crypto: the Kotlin implementation
+  is pinned to the reference by the golden vectors in
+  `client-crypto-vectors.json` at the repo root (`make vectors`).
 - UI: Compose UI tests per feature module.
 - The ranking math is tested on the Rust side in `ranker`; the
   bindings carry a thin smoke test.

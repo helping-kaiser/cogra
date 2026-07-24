@@ -1915,7 +1915,7 @@ type PreparedWrite {
 "The shared payload of every prepare* mutation: the staged
  proposals to pre-sign, in relay order. Each is its own priced act."
 type PreparePayload {
-  writes: [PreparedWrite!]!
+  writes: [PreparedWrite!]
 }
 
 "A staged write's lifecycle. AWAITING_PRE_SIGN: prepared, the
@@ -1943,7 +1943,6 @@ type StagedWrite {
   id: UUID!
   state: StagedWriteState!
   family: RecordFamily!
-  preparedAt: DateTime!
   "The host-sealed verified act once AWAITING_APPROVAL (base64):
    the exact body the device verifies — seal, equality with what
    it pre-signed, both commitment openings — and signs the
@@ -1982,7 +1981,7 @@ input SubmitProposalsInput {
   proposals: [ProposalSignatureInput!]!
 }
 type SubmitProposalsPayload {
-  stagedWrites: [StagedWrite!]!
+  stagedWrites: [StagedWrite!]
 }
 
 "One approval witness heading to the ordering relay."
@@ -2000,7 +1999,7 @@ input ApproveActsInput {
   approvals: [ApprovalSignatureInput!]!
 }
 type ApproveActsPayload {
-  stagedWrites: [StagedWrite!]!
+  stagedWrites: [StagedWrite!]
 }
 
 extend type Mutation {
@@ -2780,9 +2779,9 @@ input SubmitApplicationInput {
  HANDLE_TAKEN, WEAK_PASSWORD, or APPLICATION_IN_PROGRESS."
 type SubmitApplicationPayload {
   "The device-stored token authorizing this applicant's flow."
-  applicantToken: String!
+  applicantToken: String
   "When the application expires unverified (24 h, auth.md)."
-  expiresAt: DateTime!
+  expiresAt: DateTime
 }
 
 input VerifyApplicantEmailInput { verificationToken: String! }
@@ -2814,7 +2813,7 @@ input ClaimLandedSessionInput {
   deviceLabel: String
 }
 type ClaimLandedSessionPayload {
-  auth: AuthSession!
+  auth: AuthSession
 }
 
 "Pre-sign the staged Registration — the applicant-token twin of
@@ -2826,7 +2825,7 @@ input SubmitApplicantRegistrationInput {
   signature: String!
 }
 type SubmitApplicantRegistrationPayload {
-  stagedWrite: StagedWrite!
+  stagedWrite: StagedWrite
 }
 
 "Approve the sealed Registration — the applicant-token twin of
@@ -2837,7 +2836,7 @@ input ApproveApplicantRegistrationInput {
   signature: String!
 }
 type ApproveApplicantRegistrationPayload {
-  stagedWrite: StagedWrite!
+  stagedWrite: StagedWrite
 }
 
 "Approve staged applicants — the inviter's deliberate, priced act:
@@ -2873,22 +2872,24 @@ input RefreshSessionInput {
 
 "A fresh access + refresh token pair, the issuing session, and the
  viewer it authenticates — the success result shared by logIn,
- refreshSession, and landing."
+ refreshSession, and landing. session and user resolve lazily and
+ are null only when the row vanished between minting and
+ resolution."
 type AuthSession {
   accessToken: String!
   refreshToken: String!
-  session: Session!
-  user: User!
+  session: Session
+  user: User
 }
 
 "A session from credentials; auth is null with an INVALID_CREDENTIALS
  userError when the email / password pair did not match."
-type LogInPayload { auth: AuthSession! }
+type LogInPayload { auth: AuthSession }
 
 "A rotated session; auth is null with a REFRESH_TOKEN_INVALID userError
  when the refresh token is invalid, expired, or was already rotated
  (reuse) — a reuse-detected token also revokes every session (auth.md)."
-type RefreshPayload { auth: AuthSession! }
+type RefreshPayload { auth: AuthSession }
 
 input RevokeSessionInput {
   "The session to revoke; the current one if omitted."
@@ -2896,10 +2897,10 @@ input RevokeSessionInput {
 }
 type RevokeSessionPayload {
   "The revoked session, in its terminal state."
-  session: Session!
+  session: Session
 }
 type RevokeSessionsPayload {
-  revokedCount: Int!
+  revokedCount: Int
 }
 
 input RequestPasswordResetInput { email: String! }
@@ -2910,7 +2911,7 @@ input ConfirmPasswordResetInput {
   resetToken: String!
   newPassword: String!
 }
-type ConfirmPasswordResetPayload { ok: Boolean! }
+type ConfirmPasswordResetPayload { ok: Boolean }
 
 "Change the password while authenticated. Re-verifies currentPassword,
  breach-checks newPassword, and revokes the account's other sessions."
@@ -2918,7 +2919,7 @@ input ChangePasswordInput {
   currentPassword: String!
   newPassword: String!
 }
-type ChangePasswordPayload { ok: Boolean! }
+type ChangePasswordPayload { ok: Boolean }
 
 "Begin an email change. Re-authenticates with currentPassword; the
  server sends a confirmation code to the current address and a
@@ -2938,7 +2939,7 @@ type RequestEmailChangePayload { ok: Boolean! }
 input ConfirmEmailChangeInput {
   code: String!
 }
-type ConfirmEmailChangePayload { user: User! }
+type ConfirmEmailChangePayload { user: User }
 
 "Change the viewer's handle — L2 account state (the mention
  namespace), not graph or profile payload. Subject to the global
@@ -2946,7 +2947,7 @@ type ConfirmEmailChangePayload { user: User! }
  across kinds; the charset keeps the redacted-user-{uuid} sentinel
  unreachable (auth.md)."
 input ChangeHandleInput { handle: String! }
-type ChangeHandlePayload { user: User! }
+type ChangeHandlePayload { user: User }
 
 "Upload (or replace) the client-encrypted key-backup blob —
  ciphertext under the device-generated recovery code; the server
@@ -2954,7 +2955,7 @@ type ChangeHandlePayload { user: User! }
  Retrieval is the User.keyBackup field: login + code is the
  recovery."
 input UploadKeyBackupInput { blob: String! }
-type UploadKeyBackupPayload { ok: Boolean! }
+type UploadKeyBackupPayload { ok: Boolean }
 
 "Issue a time-gated invite link — single-use or multi-use, the
  issuer's choice — carrying the inviter's PRE-FILLED stance values
@@ -2971,11 +2972,11 @@ input CreateInviteLinkInput {
 }
 type CreateInviteLinkPayload {
   "The link — its id is the shareable capability."
-  inviteLink: InviteLink!
+  inviteLink: InviteLink
 }
 
 input RevokeInviteLinkInput { inviteLink: UUID! }
-type RevokeInviteLinkPayload { inviteLink: InviteLink! }
+type RevokeInviteLinkPayload { inviteLink: InviteLink }
 
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate
