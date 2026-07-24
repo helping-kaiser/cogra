@@ -29,14 +29,14 @@ new surfaces raise new questions.
 ## Module discipline
 
 Gradle modules mirror the backend's crate discipline; each unit-tests in
-isolation. The app is currently a placeholder shell awaiting slice 1
-(the pre-rebase auth/profile surface was removed with backend slice 0 —
-[roadmap.md "Where the code stands"](../docs/implementation/roadmap.md));
-today's modules are `app` (shell, theme, the placeholder screen —
-plus the endpoint build config), `core:crypto`, `core:domain`, and
-`core:network`; the `feature:*` modules land with the slice-1 UI.
+isolation. Today's modules: `app` (shell, navigation, theme, the
+endpoint/web-origin build config), `core:crypto`, `core:domain`
+(with shared test fixtures under `testFixtures/`), `core:network`,
+and the slice-1 feature surfaces `feature:onboarding`,
+`feature:auth`, `feature:home`, `feature:invites`,
+`feature:settings`. `core:ranker` arrives with slice 3.
 
-The split each slice builds into:
+The split:
 
 - `core:crypto` — the client crypto mirroring `common::l1`: deterministic
   CBOR, the tagged hashing, Ed25519 signing (BouncyCastle's lightweight

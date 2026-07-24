@@ -8,15 +8,20 @@ design and [android/CLAUDE.md](CLAUDE.md) for the assistant rules.
 
 - `core:crypto` — the client-side signing and key-backup crypto, pinned to
   the repo-root golden vectors; plain Kotlin, no Android deps.
-- `core:domain` — use-cases and domain types; plain Kotlin, no Android deps.
-- `core:network` — Apollo client + generated operations and the encrypted
-  token store; no UI.
-- `feature:auth` — login + profile Compose screens and their ViewModels.
+- `core:domain` — use-cases, domain types, and the signing orchestration;
+  plain Kotlin, no Android deps.
+- `core:network` — Apollo client + generated operations, the encrypted
+  token/identity stores, and the refresh machinery; no UI.
+- `feature:onboarding` — invite check, application + key ceremony, and the
+  wait-and-sign status screen.
+- `feature:auth` — login, actor restore, password reset.
+- `feature:home` — the signed-in shell: reciprocation prompt, husk warning,
+  handshake resume.
+- `feature:invites` — links, the approval queue, the on-device vouch.
+- `feature:settings` — sessions, key backup, credentials, sign-out.
 - `app` — application shell, navigation, DI entry point.
 
-`core:ranker` and the other `feature:*` modules land with the slices that
-need them, as does the device-held **actor key** and its client-sign write
-flow (roadmap slice 1) — see
+`core:ranker` lands with slice 3 — see
 [docs/implementation/android.md](../docs/implementation/android.md).
 
 ## First-time setup
@@ -47,6 +52,13 @@ The endpoint is configurable via `cogra.graphqlUrl` — set it in
 `android/local.properties` (gitignored) or pass `-Pcogra.graphqlUrl=…`. The
 default targets `http://10.0.2.2:8080/graphql`, the host loopback as seen from
 the Android emulator.
+
+`cogra.webOrigin` (default `https://cogra.example`) sets the web origin
+behind shareable links (auth.md "Link URLs"): its host becomes the App-Links
+host for `/join/<id>`, and share sheets compose URLs against it. App-Link
+verification needs the real deployed origin; in dev, drive a link into the
+app with `adb shell am start -a android.intent.action.VIEW -d "<url>" com.cogra.app`
+or paste it into the invite screen.
 
 On a **physical device** `10.0.2.2` is meaningless, so tunnel the host's port
 to the device and point the app at `localhost` (already cleartext-permitted):
