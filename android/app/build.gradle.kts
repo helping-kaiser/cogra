@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -11,6 +12,12 @@ plugins {
 // to the emulator's host loopback.
 val graphqlUrl: String = (findProperty("cogra.graphqlUrl") as String?)
     ?: "http://10.0.2.2:8080/graphql"
+
+// The per-environment web origin behind every shareable link (auth.md
+// "Link URLs"); its host doubles as the App Links host.
+val webOrigin: String = (findProperty("cogra.webOrigin") as String?)
+    ?: "https://cogra.example"
+val webHost: String = webOrigin.substringAfter("://").substringBefore("/")
 
 android {
     namespace = "com.cogra.app"
@@ -23,6 +30,8 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         buildConfigField("String", "GRAPHQL_URL", "\"$graphqlUrl\"")
+        buildConfigField("String", "WEB_ORIGIN", "\"$webOrigin\"")
+        manifestPlaceholders["cograWebHost"] = webHost
     }
 
     buildTypes {
@@ -52,6 +61,16 @@ kotlin {
 
 dependencies {
     implementation(project(":core:network"))
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:onboarding"))
+    implementation(project(":feature:home"))
+    implementation(project(":feature:invites"))
+    implementation(project(":feature:settings"))
+
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

@@ -14,10 +14,23 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.CoGra">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- The canonical invite URL (auth.md "Link URLs"). Verification
+                 needs the real deployed origin serving assetlinks.json; in
+                 dev, drive links via `adb shell am start`. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="${cograWebHost}"
+                    android:pathPrefix="/join" />
             </intent-filter>
         </activity>
     </application>

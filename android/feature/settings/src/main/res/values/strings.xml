@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_backup_title">Key backup</string>
+    <string name="settings_backup_body">Create or replace your recovery code. A new code re-encrypts your key and replaces the old backup — recovery always uses the newest one.</string>
+    <string name="settings_backup_no_actor">Your actor key isn\'t on this phone, so there\'s nothing to back up. Restore it first from the home screen.</string>
+    <string name="settings_backup_create">Create a new recovery code</string>
+    <string name="settings_backup_code_explainer">Write this code down somewhere safe. It is shown only this once; any older code stops working.</string>
+    <string name="settings_backup_saved">I\'ve written it down</string>
+
+    <string name="settings_sessions_title">Sessions</string>
+    <string name="settings_session_unnamed">Unnamed device</string>
+    <string name="settings_session_current"> (this device)</string>
+    <string name="settings_session_revoke">Revoke</string>
+    <string name="settings_revoke_others">Sign out everywhere else</string>
+    <string name="settings_session_revoked">Session revoked.</string>
+    <string name="settings_others_revoked">All other sessions signed out.</string>
+
+    <string name="settings_credentials_title">Credentials</string>
+    <string name="settings_current_password">Current password</string>
+    <string name="settings_new_password">New password</string>
+    <string name="settings_change_password">Change password</string>
+    <string name="settings_password_changed">Password changed. Other sessions were signed out.</string>
+    <string name="settings_wrong_password">Your current password didn\'t match.</string>
+    <string name="settings_new_handle">New handle</string>
+    <string name="settings_change_handle">Change handle</string>
+    <string name="settings_handle_changed">Handle changed.</string>
+    <string name="settings_handle_taken">That handle is taken.</string>
+    <string name="settings_new_email">New email</string>
+    <string name="settings_request_email">Change email</string>
+    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change. Enter your current password above first.</string>
+    <string name="settings_email_code">Confirmation code</string>
+    <string name="settings_confirm_email">Confirm email change</string>
+    <string name="settings_email_confirmed">Email updated.</string>
+    <string name="settings_bad_input">Check the entered value.</string>
+
+    <string name="settings_sign_out">Sign out</string>
+
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
+    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
+</resources>

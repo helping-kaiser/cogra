@@ -7,8 +7,8 @@ import com.cogra.crypto.sealKeyBackup
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.FakeIdentityStore
-import com.cogra.domain.FakeTokenStore
+import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
