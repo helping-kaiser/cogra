@@ -159,6 +159,10 @@ an `instances/` doc is a sign the mechanism belongs in
   Jetpack Compose, Apollo Kotlin codegen off the exported
   `schema.graphql`, the `ranker` core via UniFFI, module and test
   layout.
+- [web](implementation/web.md) — the web app: Next.js + TypeScript,
+  Apollo Client with types generated off the same `schema.graphql`,
+  server-rendered pages for shareable links, the `ranker` core via
+  Wasm.
 - [graph-db-options](implementation/graph-db-options.md) — why the
   graph state lives in Postgres and no graph database is in the
   stack; alternatives considered.
