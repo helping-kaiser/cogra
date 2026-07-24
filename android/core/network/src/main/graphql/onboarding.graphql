@@ -1,0 +1,80 @@
+# The anonymous applicant flow: invite check → application → the
+# registration-handshake twins → the first-session claim (auth.md
+# "Account lifecycle"; api-spec.md "Auth and accounts").
+
+query InviteLinkCheck($id: UUID!) {
+  inviteLinkCheck(id: $id) {
+    usable
+    inviterHandle
+    expiresAt
+  }
+}
+
+mutation SubmitApplication($input: SubmitApplicationInput!) {
+  submitApplication(input: $input) {
+    applicantToken
+    expiresAt
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation VerifyApplicantEmail($input: VerifyApplicantEmailInput!) {
+  verifyApplicantEmail(input: $input) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ResendVerificationEmail($input: ResendVerificationEmailInput!) {
+  resendVerificationEmail(input: $input) {
+    ok
+  }
+}
+
+query Application($applicantToken: String!) {
+  application(applicantToken: $applicantToken) {
+    applicant {
+      ...ApplicantFields
+    }
+    stagedRegistration {
+      ...StagedWriteFields
+    }
+  }
+}
+
+mutation SubmitApplicantRegistration($input: SubmitApplicantRegistrationInput!) {
+  submitApplicantRegistration(input: $input) {
+    stagedWrite {
+      ...StagedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ApproveApplicantRegistration($input: ApproveApplicantRegistrationInput!) {
+  approveApplicantRegistration(input: $input) {
+    stagedWrite {
+      ...StagedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ClaimLandedSession($input: ClaimLandedSessionInput!) {
+  claimLandedSession(input: $input) {
+    auth {
+      ...AuthSessionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

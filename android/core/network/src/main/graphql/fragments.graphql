@@ -1,0 +1,50 @@
+# Shared selections. Every non-silent payload carries userErrors — empty
+# exactly on success (api-spec.md "Errors are tiered").
+
+fragment UserErrorFields on UserError {
+  message
+  code
+  field
+}
+
+fragment StagedWriteFields on StagedWrite {
+  id
+  state
+  family
+  canonicalProposal
+  verifiedAct
+  record {
+    id
+  }
+}
+
+fragment PreparedWriteFields on PreparedWrite {
+  id
+  family
+  canonicalProposal
+  gcAfterEpochs
+}
+
+fragment AuthSessionFields on AuthSession {
+  accessToken
+  refreshToken
+}
+
+fragment SessionFields on Session {
+  id
+  deviceLabel
+  createdAt
+  lastUsedAt
+  expiresAt
+  isCurrent
+}
+
+fragment ApplicantFields on Applicant {
+  id
+  handle
+  emailVerified
+  approvedAt
+  landedAt
+  createdAt
+  expiresAt
+}
