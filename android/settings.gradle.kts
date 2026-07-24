@@ -22,8 +22,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "cogra"
 
-// Post-L1-rebase shell: only the app and the Apollo contract module exist.
 // The domain and feature modules return with the slices that need them
 // (docs/implementation/roadmap.md).
 include(":app")
+include(":core:crypto")
 include(":core:network")
