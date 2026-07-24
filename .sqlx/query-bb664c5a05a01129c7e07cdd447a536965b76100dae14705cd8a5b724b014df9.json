@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'awaiting_approval', content_salt = $2, deps_salt = $3,\n             content_commitment = $4, deps_commitment = $5, host_seal = $6,\n             updated_at = NOW()\n         WHERE id = $1 AND state = 'sealing'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb664c5a05a01129c7e07cdd447a536965b76100dae14705cd8a5b724b014df9"
+}

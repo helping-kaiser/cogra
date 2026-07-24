@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM staged_writes\n         WHERE state = 'expired' AND expired_epoch + $2 <= $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1f6e48b21e73b2667e02db590dc8db37f74ccc2a36aabd67182e60b247cdd550"
+}
