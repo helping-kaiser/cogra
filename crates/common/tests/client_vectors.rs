@@ -10,20 +10,17 @@
 
 use std::path::Path;
 
-use aes_gcm::aead::{Aead, Payload};
-use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::crypto::{self, tags};
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{canonical_deps, pre_commitment_msg};
+use common::l1::key_backup::{self, RecoveryCode};
 use common::l1::{
     ActId, ActorKey, NodeId, PreSignedProposal, Proposal, StructuralBody, VerifiedAct, wire,
 };
 use ed25519_dalek::SigningKey;
-use hkdf::Hkdf;
 use serde_json::{Value, json};
-use sha2::Sha256;
 
 fn seq_bytes(start: u8, len: usize) -> Vec<u8> {
     (0..len).map(|i| start.wrapping_add(i as u8)).collect()
@@ -62,35 +59,6 @@ fn body_json(b: &StructuralBody) -> Value {
         "actId": b.act_id().to_string(),
         "canonicalBytesHex": hx(&b.canonical_bytes()),
     })
-}
-
-/// The recovery code's display form: Crockford base32, grouped 5-5-5-5-6
-/// (auth.md "Blob format (v1)").
-fn crockford_code(bytes: &[u8]) -> String {
-    const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-    let mut bits: u32 = 0;
-    let mut nbits: u32 = 0;
-    let mut chars = String::new();
-    for &b in bytes {
-        bits = (bits << 8) | u32::from(b);
-        nbits += 8;
-        while nbits >= 5 {
-            nbits -= 5;
-            chars.push(char::from(ALPHABET[((bits >> nbits) & 31) as usize]));
-        }
-    }
-    if nbits > 0 {
-        chars.push(char::from(ALPHABET[((bits << (5 - nbits)) & 31) as usize]));
-    }
-    assert_eq!(chars.len(), 26, "16 code bytes encode to 26 characters");
-    [
-        &chars[0..5],
-        &chars[5..10],
-        &chars[10..15],
-        &chars[15..20],
-        &chars[20..26],
-    ]
-    .join("-")
 }
 
 fn encoding_vectors() -> Value {
@@ -233,14 +201,21 @@ fn build_vectors() -> Value {
         sealed
     );
 
-    // The key-backup blob (auth.md "Blob format (v1)"), fixed code, salt,
-    // and nonce; plaintext is the CBOR container around the actor seed.
-    let code_bytes = seq_bytes(0x00, 16);
-    let hkdf_salt = seq_bytes(0x51, 16);
-    let aes_nonce = seq_bytes(0x61, 12);
+    // The key-backup blob (auth.md "Blob format (v1)") via the shipping
+    // module, under a fixed code, salt, and nonce; the real open path
+    // must accept the fixture it pins.
+    let code_bytes: [u8; 16] = seq_bytes(0x00, 16).try_into().expect("16 bytes");
+    let hkdf_salt: [u8; 16] = seq_bytes(0x51, 16).try_into().expect("16 bytes");
+    let aes_nonce: [u8; 12] = seq_bytes(0x61, 12).try_into().expect("12 bytes");
+    let code = RecoveryCode::from_bytes(code_bytes);
+    let blob = key_backup::seal_with(&actor_seed, &code, &hkdf_salt, &aes_nonce);
+    assert_eq!(
+        key_backup::open(&blob, &code).expect("the blob opens under the same code"),
+        actor_seed
+    );
     let mut content_key = [0u8; 32];
-    Hkdf::<Sha256>::new(Some(&hkdf_salt), &code_bytes)
-        .expand(b"cogra:key-backup:v1", &mut content_key)
+    hkdf::Hkdf::<sha2::Sha256>::new(Some(&hkdf_salt), &code_bytes)
+        .expand(key_backup::HKDF_INFO, &mut content_key)
         .expect("32 bytes is a valid HKDF-SHA-256 output length");
     let plaintext = {
         let mut e = Encoder::new();
@@ -249,31 +224,6 @@ fn build_vectors() -> Value {
         e.uint(1);
         e.finish()
     };
-    let mut blob = vec![0x01];
-    blob.extend_from_slice(&hkdf_salt);
-    blob.extend_from_slice(&aes_nonce);
-    let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(&content_key));
-    let header = blob.clone();
-    let ciphertext = cipher
-        .encrypt(
-            Nonce::from_slice(&aes_nonce),
-            Payload {
-                msg: &plaintext,
-                aad: &header,
-            },
-        )
-        .expect("AES-GCM encrypts");
-    let opened = cipher
-        .decrypt(
-            Nonce::from_slice(&aes_nonce),
-            Payload {
-                msg: &ciphertext,
-                aad: &header,
-            },
-        )
-        .expect("the blob opens under the same code");
-    assert_eq!(opened, plaintext);
-    blob.extend_from_slice(&ciphertext);
 
     json!({
         "version": 1,
@@ -321,7 +271,7 @@ fn build_vectors() -> Value {
         },
         "keyBackup": {
             "recoveryCodeBytesHex": hx(&code_bytes),
-            "recoveryCodeDisplay": crockford_code(&code_bytes),
+            "recoveryCodeDisplay": code.display(),
             "hkdfInfoUtf8": "cogra:key-backup:v1",
             "hkdfSaltHex": hx(&hkdf_salt),
             "contentKeyHex": hx(&content_key),

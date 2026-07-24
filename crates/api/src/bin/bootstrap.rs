@@ -80,5 +80,21 @@ async fn main() -> anyhow::Result<()> {
     if let Some((id, address)) = api::bootstrap::genesis_identity(&pool, &handle).await? {
         println!("  Genesis Moderator : {id} (@{handle}, L0 address {address})");
     }
+
+    // The operator's way in (bootstrap.rs `ensure_operator_login`): the
+    // genesis account gets login credentials and its custodied seed
+    // sealed as a standard key-backup blob; from here the operator uses
+    // only product flows — sign in, restore with the code.
+    let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
+    let password = env_or("GENESIS_PASSWORD", "genesis-dev-password");
+    let login = api::bootstrap::ensure_operator_login(&pool, &handle, &email, &password).await?;
+    if login.credentials_created {
+        println!("  Operator login    : {email} (GENESIS_EMAIL / GENESIS_PASSWORD)");
+    }
+    if let Some(code) = login.recovery_code {
+        println!("  Recovery code     : {code}");
+        println!("    Shown only this once — it restores the genesis actor in the app");
+        println!("    (sign in, then Restore). A lost code can be replaced from Settings.");
+    }
     Ok(())
 }
