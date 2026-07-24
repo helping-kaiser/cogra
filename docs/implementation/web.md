@@ -48,6 +48,19 @@ binds it through UniFFI. This is a later rollout stage
 ([miner-api.md "Transport"](miner-api.md#transport)); until then
 the web app calls `rank` on the backend like any client.
 
+## Design guidelines
+
+Styling starts minimal: Tailwind's default scales — spacing,
+type, color — are the design tokens. No component library or
+fuller design language until real screens exist to justify one;
+adopting one is a deliberate decision, not a drift.
+
+## Accessibility
+
+Part of the bar from day one, never retrofitted: every page
+lands with semantic HTML, ARIA where semantics fall short, and
+keyboard operability, alongside its tests.
+
 ## Layout
 
 - `src/app/` — routes (App Router); pages stay thin.
