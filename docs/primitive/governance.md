@@ -217,7 +217,7 @@ trust model demands more than one veto-bearing group.
 
 **All numeric parameters are tunable via this same primitive.**
 Role weights, quorum fractions, threshold counts — every number is
-governed state (a `:Network` parameter or a rule entry), amendable
+governed state (a network parameter or a rule entry), amendable
 through a Proposal under its own amendment rule. Defaults exist to
 bootstrap; they are not fixed rules.
 
@@ -370,7 +370,7 @@ hop, no vote-specific ranking rule
 ### Petition-style tally and dual quorum (Network-scope only)
 
 Network-scope governance — moderator role changes, content
-moderation classifications, and `:Network` parameter amendments
+moderation classifications, and network parameter amendments
 ([network.md §10](network.md#10-network-wide-governance)) — uses
 **petition-style tally**: only positive ballots contribute. The
 mechanism applies at Network scope only. Chat-internal and
@@ -406,7 +406,7 @@ positive_count ≥ min( quorum_fraction × |active_members| , quorum_count )
 ```
 
 - `quorum_fraction` and `quorum_count` are the proposal-type's
-  governed pair on the `:Network` singleton
+  governed pair on the network charter
   ([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule)).
 - `|active_members|` is the count of members active inside the
   governed activity window (`active_threshold_epochs`), read at
@@ -671,11 +671,12 @@ baseline/critical stakes split that buckets every Network-scope
 action ([network.md §11](network.md#11-amending-network-parameters)):
 
 - **Baseline tier** — low-stakes actions (`sensitive`
-  classification and un-classification, baseline `:Network`
-  amendments): **at least one** positive moderator ballot.
+  classification and un-classification, baseline network
+  parameter amendments): **at least one** positive moderator
+  ballot.
 - **Critical tier** — destructive or irreversible actions
   (moderator role changes, `illegal` classification, guidelines
-  amendments, critical `:Network` amendments): positive moderator
+  amendments, critical network parameter amendments): positive moderator
   ballots `≥ ⌈critical_mod_gate_fraction · |active_mods|⌉`, where
   `|active_mods|` is the moderators active inside the governed
   activity window.
@@ -791,7 +792,7 @@ are records CoGra cannot forge or erase.
 - **Platform-guidelines amendments** —
   [platform-guidelines.md](../instances/platform-guidelines.md).
   Critical-tier mod-gate plus the `guidelines_change_*` pair.
-- **`:Network` parameter amendments** —
+- **Network parameter amendments** —
   [network.md §11](network.md#11-amending-network-parameters).
   Baseline and critical amendment-rule pairs on the charter;
   mod-gate at the matching tier.

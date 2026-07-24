@@ -40,8 +40,8 @@ A convenience subset; the ledger is the authority.
 
 ## 2. CoGra symbols
 
-Feed-calibration parameters are governed properties of the
-`:Network` singleton ([network.md](network.md)).
+Feed-calibration parameters are governed network parameters
+([network.md](network.md)).
 
 | Symbol | Meaning | Canonical home |
 |---|---|---|
