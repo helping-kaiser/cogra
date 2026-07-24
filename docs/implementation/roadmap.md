@@ -45,14 +45,16 @@ or the plan shifts.
 
 ## Where the code stands
 
-Slice 0 is landed. The pre-rebase code — the dual-store auth and
-content flows, the Memgraph layer, and the Android thin client's
-login/profile surface — was removed with it rather than carried
-alongside: one state, no dormant legacy. The backend now runs the
-seam, the stand-in, the record mirror with its epoch cursor, and
-the genesis bootstrap; the GraphQL contract is down to the health
-probe until slice 1 rebuilds onboarding, and the Android app is a
-placeholder shell awaiting the same slice.
+Slice 0 and slice 1's backend halves are landed: the seam, the
+stand-in, the record mirror with its epoch cursor, the genesis
+bootstrap, the staged write path, and the onboarding/session
+surface — the exported GraphQL contract is the full slice-1
+surface. What remains of slice 1 is its two clients: the Android
+app is a placeholder shell, the web app a scaffold. The
+client-crypto groundwork both cuts build on is in place — the
+key-backup blob format ([auth.md](auth.md#blob-format-v1)) and
+the golden vectors (`client-crypto-vectors.json`, `make
+vectors`).
 
 ## The stand-in and the swap
 
@@ -114,8 +116,13 @@ write needs a landed, funded actor with a device-held key.
   signing in the browser, an iOS or desktop user could not join at
   all. The browser key custody is WebCrypto-held keys
   ([web.md](web.md#key-custody--webcrypto)).
+- Key mobility ships with the clients: restoring the actor on a
+  second device — login plus recovery code
+  ([auth.md](auth.md#key-recovery)) — and the backup settings
+  surface (enable late, replace the code).
 - **Hand test:** take an invite link all the way to a landed, funded
-  actor; sign a write from the phone.
+  actor; sign a write from the phone; restore the actor in the
+  browser with the recovery code.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 1.1 — API-edge hardening
