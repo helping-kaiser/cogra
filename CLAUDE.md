@@ -59,10 +59,13 @@ and, for the rail, [docs/implementation/ledger.md](docs/implementation/ledger.md
 The repo is a monorepo: `crates/` (Rust backend) + `android/`
 (Kotlin + Jetpack Compose app —
 [docs/implementation/android.md](docs/implementation/android.md))
++ `web/` (Next.js + TypeScript app —
+[docs/implementation/web.md](docs/implementation/web.md))
 + `docs/`. This file holds the shared and backend rules;
-`android/CLAUDE.md` holds the Android-specific ones. The
-frontend/backend contract is the exported `schema.graphql`
-(checked in, CI-diffed, Apollo Kotlin codegen).
+`android/CLAUDE.md` and `web/CLAUDE.md` hold the
+platform-specific ones. The frontend/backend contract is the
+exported `schema.graphql` (checked in, CI-diffed; Apollo Kotlin
+and GraphQL Code Generator both generate from it).
 
 Crates:
 
