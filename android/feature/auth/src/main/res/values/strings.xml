@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Sign in to CoGra</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Sign in</string>
+    <string name="login_forgot">Forgot password?</string>
+    <string name="login_invalid_credentials">That email and password don\'t match.</string>
+
+    <string name="restore_title">Restore your actor</string>
+    <string name="restore_explainer">Enter your recovery code to bring your actor key onto this device. Your posts and relationships all flow from it.</string>
+    <string name="restore_code">Recovery code</string>
+    <string name="restore_submit">Restore</string>
+    <string name="restore_malformed">That doesn\'t look like a recovery code — it has 26 letters and digits.</string>
+    <string name="restore_wrong_code">The code doesn\'t open your backup. Check it character by character.</string>
+    <string name="restore_no_backup">This account has no key backup. Without one, the actor can\'t be restored.</string>
+
+    <string name="reset_title">Reset your password</string>
+    <string name="reset_request">Email me a reset token</string>
+    <string name="reset_requested">If that address has an account, a reset token is on its way.</string>
+    <string name="reset_token">Reset token</string>
+    <string name="reset_new_password">New password</string>
+    <string name="reset_confirm">Set new password</string>
+    <string name="reset_token_invalid">The reset token is invalid or expired.</string>
+
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
+    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
+</resources>

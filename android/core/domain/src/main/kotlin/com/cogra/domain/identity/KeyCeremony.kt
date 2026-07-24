@@ -39,6 +39,15 @@ class KeyCeremony @Inject constructor(private val identity: IdentityStore) {
         )
     }
 
+    /** The stored key's public outputs; null when no key exists. */
+    suspend fun publicIdentity(): ActorPublicIdentity? = identity.actorSeed()?.let { seed ->
+        val key = ActorKey.fromSeed(seed)
+        ActorPublicIdentity(
+            publicKeyBase64 = Base64.getEncoder().encodeToString(key.publicKeyBytes()),
+            l0Address = key.address(),
+        )
+    }
+
     /**
      * The backup offer, accepted: seals the stored seed under a fresh
      * recovery code, parks the blob for the first-session upload, and

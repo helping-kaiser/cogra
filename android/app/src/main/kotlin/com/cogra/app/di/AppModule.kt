@@ -5,6 +5,7 @@
 package com.cogra.app.di
 
 import com.cogra.app.BuildConfig
+import com.cogra.domain.di.WebOrigin
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
 import dagger.Provides
@@ -18,4 +19,8 @@ object AppModule {
     @Provides
     @GraphqlEndpoint
     fun graphqlEndpoint(): String = BuildConfig.GRAPHQL_URL
+
+    @Provides
+    @WebOrigin
+    fun webOrigin(): String = BuildConfig.WEB_ORIGIN
 }
