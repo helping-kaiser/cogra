@@ -48,6 +48,34 @@ binds it through UniFFI. This is a later rollout stage
 ([miner-api.md "Transport"](miner-api.md#transport)); until then
 the web app calls `rank` on the backend like any client.
 
+## Key custody — WebCrypto
+
+The browser holds the actor key with WebCrypto — decided over a
+Wasm-bound `common::l1`. The interim signing schemes are
+stand-in-scoped and replaced at the substrate swap
+([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation)),
+so a shared Wasm core would buy toolchain cost without a durable
+implementation. The drift risk of a reimplementation — the
+handshake's deterministic CBOR, tagged hashing, and Ed25519 in
+TypeScript — is pinned instead by the golden vectors in
+`client-crypto-vectors.json` at the repo root, exported from the
+reference implementation in `common` (`make vectors`).
+
+The seed is generated as raw bytes — it must enter the
+key-backup blob ([auth.md "Key recovery"](auth.md#key-recovery))
+— then imported as a **non-extractable** Ed25519 `CryptoKey` and
+persisted in IndexedDB: script injection can use the key while a
+page lives, but cannot exfiltrate it.
+
+## Session tokens in the browser
+
+The contract keeps tokens client-held (`refreshSession` takes
+the refresh token as an input), so the browser stores the
+rotating refresh token in persistent storage and the access
+token in memory. The accepted XSS blast radius is a session —
+revocable, rotating, reuse-detected
+([auth.md "Tokens"](auth.md#tokens)) — never the actor key.
+
 ## Design guidelines
 
 Styling starts minimal: Tailwind's default scales — spacing,
@@ -79,6 +107,8 @@ Tests ship with development, per the shared rule:
   setup Next.js documents.
 - Network: mocked at the HTTP boundary with MSW against the
   generated operations (the web twin of Android's MockWebServer).
+- Crypto: golden-vector tests against the repo-root
+  `client-crypto-vectors.json` ("Key custody" above).
 - End-to-end (Playwright) is added when there are flows worth
   driving, not before.
 
