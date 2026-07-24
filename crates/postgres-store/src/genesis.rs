@@ -110,6 +110,30 @@ pub async fn insert_system_key(
     Ok(())
 }
 
+/// The operator's login for the genesis account (auth.md "Account
+/// lifecycle" — the genesis member never passes the applicant flow, so
+/// the bootstrap creates its credentials). Idempotent: an existing row
+/// is left untouched.
+pub async fn insert_credentials(
+    pool: &PgPool,
+    actor_id: Uuid,
+    email: &str,
+    password_hash: &str,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "INSERT INTO user_credentials (actor_id, email, password_hash)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (actor_id) DO NOTHING",
+        actor_id,
+        email,
+        password_hash,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
 pub async fn system_key(pool: &PgPool, actor_id: Uuid) -> Result<Option<Vec<u8>>, sqlx::Error> {
     Ok(sqlx::query!(
         "SELECT signing_seed FROM system_actor_keys WHERE actor_id = $1",

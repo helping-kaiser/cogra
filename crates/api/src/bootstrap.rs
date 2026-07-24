@@ -72,6 +72,8 @@ pub enum BootstrapError {
     Ingest(#[from] crate::ingest::IngestError),
     #[error("L1 relay: {0}")]
     Relay(String),
+    #[error("operator login: {0}")]
+    OperatorLogin(String),
 }
 
 impl From<l1_standin::StandInError> for BootstrapError {
@@ -412,4 +414,59 @@ pub async fn genesis_identity(
     Ok(genesis::actor_by_handle(pool, handle)
         .await?
         .map(|row| (row.id, row.l0_address)))
+}
+
+/// What the operator-login step created on this run.
+#[derive(Debug, PartialEq, Eq)]
+pub struct OperatorLogin {
+    pub credentials_created: bool,
+    /// The fresh recovery code's display form — printed exactly once,
+    /// when the backup blob was newly sealed; None when one stood.
+    pub recovery_code: Option<String>,
+}
+
+/// The Genesis Moderator is a person's account (network.md §2 — the
+/// operator; they alone carry global moderation until a second moderator
+/// is added), but it never passes the applicant flow — so the bootstrap
+/// finishes it: login credentials, and the actor seed sealed into a
+/// standard key-backup blob under a fresh recovery code. The operator
+/// then reaches the key through the ordinary product path — sign in,
+/// restore with the code (auth.md "Key recovery"). Idempotent: existing
+/// credentials and an existing blob are left untouched.
+pub async fn ensure_operator_login(
+    pool: &PgPool,
+    handle: &str,
+    email: &str,
+    password: &str,
+) -> Result<OperatorLogin, BootstrapError> {
+    let row = genesis::actor_by_handle(pool, handle)
+        .await?
+        .ok_or(BootstrapError::Unrepairable)?;
+    let hash = crate::auth::hash_password(password)
+        .map_err(|e| BootstrapError::OperatorLogin(e.to_string()))?;
+    let credentials_created = genesis::insert_credentials(pool, row.id, email, &hash).await?;
+
+    let recovery_code = if postgres_store::auth::latest_key_backup(pool, row.id)
+        .await?
+        .is_none()
+    {
+        let seed = genesis::system_key(pool, row.id)
+            .await?
+            .ok_or(BootstrapError::Unrepairable)?;
+        let seed: [u8; 32] = seed
+            .as_slice()
+            .try_into()
+            .map_err(|_| BootstrapError::Unrepairable)?;
+        let code = common::l1::key_backup::RecoveryCode::generate();
+        let blob = common::l1::key_backup::seal(&seed, &code);
+        postgres_store::auth::upload_key_backup(pool, row.id, &blob).await?;
+        Some(code.display())
+    } else {
+        None
+    };
+
+    Ok(OperatorLogin {
+        credentials_created,
+        recovery_code,
+    })
 }
