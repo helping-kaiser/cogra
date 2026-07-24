@@ -62,4 +62,13 @@ interface IdentityStore {
 
     /** Every staged-write id with persisted material — the resume set. */
     suspend fun handshakeIds(): Set<String>
+
+    /**
+     * Device-local UX state: whether the first-login reciprocation
+     * prompt was answered (signed or dismissed). Slice 1 has no read
+     * surface over the viewer's own Opinions, so the device remembers.
+     */
+    suspend fun reciprocationHandled(): Boolean
+
+    suspend fun markReciprocationHandled()
 }

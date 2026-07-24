@@ -2,15 +2,15 @@ package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.FakeIdentityStore
+import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
-import com.cogra.domain.TestHost
+import com.cogra.domain.testing.TestHost
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.repo.WriteRepository
-import com.cogra.domain.testProposalBytes
+import com.cogra.domain.testing.testProposalBytes
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import java.util.Base64
