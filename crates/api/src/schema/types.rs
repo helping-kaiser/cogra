@@ -117,9 +117,11 @@ impl UserError {
     /// Maps a flow refusal onto the shared vocabulary, rooted at `root`.
     pub fn from_onboarding(e: &OnboardingError, root: &str) -> Self {
         let path = |f: &str| {
-            Some(vec![root.to_string(), f.to_string()])
-                .filter(|_| !root.is_empty())
-                .or_else(|| Some(vec![f.to_string()]))
+            if root.is_empty() {
+                Some(vec![f.to_string()])
+            } else {
+                Some(vec![root.to_string(), f.to_string()])
+            }
         };
         match e {
             OnboardingError::InviteUnusable => {
