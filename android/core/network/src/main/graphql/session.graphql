@@ -1,0 +1,52 @@
+# Login, the rotating refresh, and session management (auth.md
+# "Tokens", "Sessions").
+
+mutation LogIn($input: LogInInput!) {
+  logIn(input: $input) {
+    auth {
+      ...AuthSessionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RefreshSession($input: RefreshSessionInput!) {
+  refreshSession(input: $input) {
+    auth {
+      ...AuthSessionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+query Sessions {
+  me {
+    sessions {
+      ...SessionFields
+    }
+  }
+}
+
+mutation RevokeSession($input: RevokeSessionInput!) {
+  revokeSession(input: $input) {
+    session {
+      id
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RevokeOtherSessions {
+  revokeOtherSessions {
+    revokedCount
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
