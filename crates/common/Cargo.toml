@@ -11,20 +11,23 @@ uuid      = { workspace = true }
 thiserror = { workspace = true }
 
 # The L1 seam model's interim act-authentication realization
-# (common::l1::crypto; open-questions.md Q30).
+# (common::l1::crypto; open-questions.md Q30) and the key-backup blob
+# (common::l1::key_backup; auth.md "Blob format (v1)").
 ed25519-dalek = { workspace = true }
 sha2          = { workspace = true }
 rand          = { workspace = true }
 hex           = { workspace = true }
+hkdf          = { workspace = true }
+aes-gcm       = { workspace = true }
 
 [dev-dependencies]
 # The golden-vector export (tests/client_vectors.rs): the crate's own
-# crypto stack re-declared for the integration test, plus the key-backup
-# blob reference (auth.md "Blob format (v1)").
+# crypto stack re-declared for the integration test (hkdf re-declared so
+# the contentKey vector cross-checks the KDF independently of the
+# shipping key_backup module).
 serde_json    = { workspace = true }
 base64        = { workspace = true }
 hex           = { workspace = true }
 ed25519-dalek = { workspace = true }
 sha2          = { workspace = true }
 hkdf          = { workspace = true }
-aes-gcm       = { workspace = true }
