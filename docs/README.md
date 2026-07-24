@@ -112,8 +112,8 @@ an `instances/` doc is a sign the mechanism belongs in
   mod-vote-required-for-every-classification gate.
 - [platform-guidelines](instances/platform-guidelines.md) — the
   normative document the Network references when classifying
-  content; bucket contents; amendment procedure pinned by
-  `:Network` version + SHA-256 hash.
+  content; bucket contents; amendment procedure pinned by the
+  governed version + SHA-256 hash pair.
 - [erasure](instances/erasure.md) — user-initiated erasure:
   per-content removal (single record or revision chain, immediate,
   archived under legal hold) and account deletion

@@ -340,7 +340,7 @@ members', system actors', and Collectives' own addresses — the
 funder-unconstrained burn L1 explicitly permits, raising only the
 funded member's own `B_i`.
 
-- **Inflow rate is governed** — `reserve_share` is a `:Network`
+- **Inflow rate is governed** — `reserve_share` is a network
   parameter the community sets, alongside the generosity and
   per-member caps that govern the outflow. The community that pays
   the fee governs both sides of it.

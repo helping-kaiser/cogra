@@ -237,7 +237,7 @@ Both factors are the published feed computation itself
 ([feed-ranking §6.1](feed-ranking.md#61-definition)): exact
 `k`-disjoint extraction, signed, recency-decayed — never a separate
 metric. `w(u)` is used raw; a governed transform slot (targeting
-sharpness) is reserved on the `:Network` charter but ships as
+sharpness) is reserved on the network charter but ships as
 identity. Raising `V` *is* reaching the crowd: there is no reach
 apart from real viewers' extractions.
 
@@ -405,7 +405,7 @@ refund         = 0.9995 · (D − P)
 
 The structure: a **flat-on-`D` anti-spam floor** on burn +
 treasury, plus a **scaling-on-`P` share** across the five outflows.
-`reserve_share` is a governed `:Network` parameter (genesis default
+`reserve_share` is a governed network parameter (genesis default
 `1%`), bounded to a pinned ceiling so governance can dial the
 community's self-funding up or down but never gut the contributor
 pool; the value in force at settlement applies and is recorded in
@@ -465,7 +465,7 @@ kind: CGT converted to L0 burns at members', system actors', and
 Collectives' own addresses (`rem:gates:guild-funding`; conversion
 mechanics in [token.md](token.md)) — covering the θ-debits the
 community's members would otherwise pay out of pocket. Subsidy
-generosity and per-member caps are governed `:Network` parameters
+generosity and per-member caps are governed network parameters
 alongside `reserve_share` itself, so the community that pays the
 fee also governs the rate and the spending policy — opt-in, opt-out,
 and rebalanceable in low-activity times by vote.

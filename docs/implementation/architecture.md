@@ -13,7 +13,7 @@ operates is deliberately small:
 - **One database.** A single PostgreSQL instance holds everything
   CoGra stores: the **record mirror** (a rebuildable cache of the
   L1 records CoGra traverses), the **overlay** (Proposal tally
-  state and the `:Network` parameter carrier — caches over L1
+  state and the network parameter carrier — caches over L1
   records and published fold rules), and CoGra's authoritative L2
   state (display content, identity association, honor ledgers,
   staged applicants, operational metadata).

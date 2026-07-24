@@ -77,7 +77,7 @@ rules:
 - **Proposal state** — per-Proposal lifecycle and the
   epoch-quantized tally, a cache over the ballot records
   ([proposal.md](../instances/proposal.md)).
-- **The `:Network` parameter carrier** — the operational mirror of
+- **The network parameter carrier** — the operational mirror of
   the charter's parameter schedule, updated when a finalization
   lands ([network.md §4](../primitive/network.md#4-the-overlay-carrier)).
 - **Role marks** — `network_role` per account, a cache of the

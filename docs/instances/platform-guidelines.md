@@ -7,7 +7,7 @@ Proposal mechanism that powers the rest of the platform: the
 guidelines themselves are amendable by the Network at any time.
 
 This doc is the **canonical text**. Its current version is pinned
-by two governed `:Network` properties (version number + content
+by two governed network properties (version number + content
 hash), and each ratified version's text is anchored on L1 as a
 platform document — a publisher-authored Content node whose
 anchoring Publish record carries the document as witnessed
@@ -118,7 +118,7 @@ classification decision.
 The guidelines are amendable via the same Proposal primitive that
 governs everything else on the platform.
 
-**Subject.** Two governed `:Network` properties move together as
+**Subject.** Two governed network properties move together as
 the canonical pointer to a guidelines version:
 
 - `Network.guidelines_version` — monotonic integer, incremented
@@ -129,7 +129,7 @@ the canonical pointer to a guidelines version:
 A guidelines amendment is a single Proposal that sets both
 properties to the new version's values atomically — one vote
 covers the pair, since a version without its hash (or vice versa)
-is meaningless. Like every `:Network` parameter change, the passed
+is meaningless. Like every network parameter change, the passed
 amendment is finalized onto the network charter's L1 anchor, so
 the version schedule is replayable from public records
 ([network.md](../primitive/network.md)); the ratified text itself

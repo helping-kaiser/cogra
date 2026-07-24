@@ -101,9 +101,9 @@ storage — partitioned around the L1 seam:
   never diverge from it; it is fully rebuildable from published
   records. Nothing in the mirror is authoritative.
 - **The overlay.** Operational caches derived from L1 records by
-  CoGra's published fold rules — Proposal tally state, `:Network`
-  carrier state. Rebuildable like the mirror; the records and the
-  published rules are the truth.
+  CoGra's published fold rules — Proposal tally state,
+  parameter-carrier state. Rebuildable like the mirror; the
+  records and the published rules are the truth.
 - **Display content and operational metadata.** What a record
   *shows*, never what it *is*.
 - **Blob storage.** Media bytes, verifiable against the digests

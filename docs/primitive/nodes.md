@@ -91,7 +91,7 @@ home. L1 never sees them.
 | Overlay node | Role |
 |---|---|
 | **Proposal** | The governance carrier: proposed change, tally state, and role snapshot as layered properties. The public relations all live on L1 via the proposal's Content anchor: the subject (the anchor's `(0,0)` Reference), the ballots (payload-marked Opinions toward the anchor), and the finalization edge ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). See [proposal.md](../instances/proposal.md). |
-| **Network** | Singleton per instance: the governed parameter home — feed-calibration parameters, subsidy knobs, eligibility definitions — as layered properties. Anchored on L1 by a publisher-authored Content node (the network charter): proposals about the Network target that anchor, and every passed parameter change lands as a witnessed payload on its finalization Opinion toward the anchor, so the parameter schedule is replayable from public records. The overlay singleton is the operational carrier the ranker and backend read. See [network.md](network.md). |
+| **Network** | Singleton per instance: the governed parameter home — feed-calibration parameters, subsidy knobs, eligibility definitions — as layered properties. Anchored on L1 by a publisher-authored Content node (the network charter): proposals about the Network target that anchor, and every passed parameter change lands as a witnessed payload on its finalization Opinion toward the anchor, so the parameter schedule is replayable from public records. The overlay's parameter carrier is the operational mirror the ranker and backend read. See [network.md](network.md). |
 
 Collective membership needs no overlay node: it is a public fold
 over payload-marked records on both sides, with roles and stakes

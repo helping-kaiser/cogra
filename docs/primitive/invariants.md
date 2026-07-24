@@ -78,7 +78,7 @@ most useful one.
   actor-gesture-or-governance rule.
 - [Mod weight = member weight = 1; mod is a gate, not a weight](governance.md#7-the-mod-gate)
   — uniform across content moderation, moderator role changes,
-  and `:Network` parameter amendments.
+  and network parameter amendments.
 - [No per-edge record of the acting member](../instances/collectives.md#4-acting-through-the-collective)
   — accountability lives in the social contract, not in edge
   attribution. Deliberate non-feature.
