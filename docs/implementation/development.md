@@ -77,10 +77,13 @@ make up           Start Postgres in background
 make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
 make migrate      Run pending Postgres migrations only
+make bootstrap    One-time instance setup: seed genesis, land the L1 genesis records
 make ci           Full CI pipeline: lint, sqlx-check, test, then docs-link-check
 make lint         cargo clippy (offline) + cargo fmt --check (read-only)
 make fmt          cargo fmt --all (writes files)
 make test         cargo test --all
+make schema       Regenerate schema.graphql (the frontend contract)
+make vectors      Regenerate client-crypto-vectors.json (the client crypto contract)
 make sqlx-prepare Regenerate .sqlx/ offline metadata (needs a live, migrated DB)
 make sqlx-check   Verify .sqlx/ matches the queries (needs a live, migrated DB)
 make docs-link-check  Check markdown link targets + anchors (needs lychee)

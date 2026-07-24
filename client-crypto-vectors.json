@@ -1,0 +1,214 @@
+{
+  "encoding": [
+    {
+      "cborHex": "00",
+      "value": "uint 0"
+    },
+    {
+      "cborHex": "17",
+      "value": "uint 23"
+    },
+    {
+      "cborHex": "1818",
+      "value": "uint 24"
+    },
+    {
+      "cborHex": "18ff",
+      "value": "uint 255"
+    },
+    {
+      "cborHex": "190100",
+      "value": "uint 256"
+    },
+    {
+      "cborHex": "19ffff",
+      "value": "uint 65535"
+    },
+    {
+      "cborHex": "1a00010000",
+      "value": "uint 65536"
+    },
+    {
+      "cborHex": "1affffffff",
+      "value": "uint 4294967295"
+    },
+    {
+      "cborHex": "1b0000000100000000",
+      "value": "uint 4294967296"
+    },
+    {
+      "cborHex": "40",
+      "value": "bytes ''"
+    },
+    {
+      "cborHex": "420102",
+      "value": "bytes 0102"
+    },
+    {
+      "cborHex": "60",
+      "value": "text ''"
+    },
+    {
+      "cborHex": "65636f677261",
+      "value": "text 'cogra'"
+    },
+    {
+      "cborHex": "6e68c3a96c6c6f20e2869220e29c93",
+      "value": "text 'héllo → ✓'"
+    },
+    {
+      "cborHex": "fb0000000000000000",
+      "value": "float 0.0"
+    },
+    {
+      "cborHex": "fb3ff0000000000000",
+      "value": "float 1.0"
+    },
+    {
+      "cborHex": "fbbff0000000000000",
+      "value": "float -1.0"
+    },
+    {
+      "cborHex": "fb3fe0000000000000",
+      "value": "float 0.5"
+    },
+    {
+      "cborHex": "fbbfd0000000000000",
+      "value": "float -0.25"
+    },
+    {
+      "cborHex": "f6",
+      "value": "null"
+    },
+    {
+      "cborHex": "80",
+      "value": "array(0)"
+    },
+    {
+      "cborHex": "8201816178",
+      "value": "array(2)[uint 1, array(1)[text 'x']]"
+    }
+  ],
+  "handshake": {
+    "approvalActId": "act:65b60673d6ed884bf01c2c222d82ada0740f29ac:1:opinion",
+    "approvalSignatureHex": "7e7cf6c72479c32e2043d0d1901cc06cf092ae12145e74aeb396c891667ca55354ea642748caeddb49382904146c58133f1f7ec92a71f469de429494472c5703",
+    "canonicalDepsHex": "81766163743a626f623a313a726567697374726174696f6e",
+    "contentCommitmentHex": "89532aeaec14aab7813d230807f51cc90575bbcd593692f618dcd18ca4869558",
+    "contentPreDigestHex": "6d1afe784f49a30c8f01d530d89438d5afb799f22ae029c5eee7c9128256fe06",
+    "contentSaltHex": "c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0",
+    "depsCommitmentHex": "c26a8671258d56021e5842aaa837c12d8e109e211fc1a99d191102434d588ef0",
+    "depsPreDigestHex": "ee30d75127cccb2d04ff379da099093028c0d450dc6d0a2e0b507494bacee055",
+    "depsSaltHex": "e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff00",
+    "host": {
+      "publicKeyHex": "adc14011f82d1c56d956aa4f9d73d8858361a606048525e0d08c638dc75dd8c7",
+      "seedHex": "4142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f60"
+    },
+    "hostSealHex": "1af02cf56d0a1f0f727087b2d4286c2443945e7b7ad4d7d01483434fa3e12c92c4825f3ecd13343698e1f430c6c146e6d68a178129d61fecbc077f8e6103d606",
+    "nonceHex": "a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0",
+    "preCommitmentMsgHex": "8358598978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f6800158206d1afe784f49a30c8f01d530d89438d5afb799f22ae029c5eee7c9128256fe065820ee30d75127cccb2d04ff379da099093028c0d450dc6d0a2e0b507494bacee055",
+    "preSignatureHex": "e3dba63ba4a392757eca07d24e4285717b187b516a50c640a7945d802cd43a3ef4f4f00df5bf58297c719cbca614f0dcfab27b0cc97c8fd07a3c3f79ea26600f",
+    "proposal": {
+      "body": {
+        "actId": "act:65b60673d6ed884bf01c2c222d82ada0740f29ac:1:opinion",
+        "assertedParents": [],
+        "author": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
+        "canonicalBytesHex": "8978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f68001",
+        "family": "opinion",
+        "license": null,
+        "middle": null,
+        "pD": 1.0,
+        "pI": -0.25,
+        "seq": 1,
+        "settlementRef": null,
+        "target": "prof:bob"
+      },
+      "deps": [
+        "act:bob:1:registration"
+      ],
+      "payloadHex": "68656c6c6f2c20636f677261"
+    },
+    "sealMsgHex": "8558598978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f680015840e3dba63ba4a392757eca07d24e4285717b187b516a50c640a7945d802cd43a3ef4f4f00df5bf58297c719cbca614f0dcfab27b0cc97c8fd07a3c3f79ea26600f582089532aeaec14aab7813d230807f51cc90575bbcd593692f618dcd18ca48695585820c26a8671258d56021e5842aaa837c12d8e109e211fc1a99d191102434d588ef001",
+    "wirePreCommitmentHex": "83015820a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc05840e3dba63ba4a392757eca07d24e4285717b187b516a50c640a7945d802cd43a3ef4f4f00df5bf58297c719cbca614f0dcfab27b0cc97c8fd07a3c3f79ea26600f",
+    "wireProposalHex": "840158598978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f680014c68656c6c6f2c20636f67726181766163743a626f623a313a726567697374726174696f6e",
+    "wireVerifiedActHex": "8c0158598978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f680014c68656c6c6f2c20636f67726181766163743a626f623a313a726567697374726174696f6e582079b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad0496645820a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc05840e3dba63ba4a392757eca07d24e4285717b187b516a50c640a7945d802cd43a3ef4f4f00df5bf58297c719cbca614f0dcfab27b0cc97c8fd07a3c3f79ea26600f5820c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe05820e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff00582089532aeaec14aab7813d230807f51cc90575bbcd593692f618dcd18ca48695585820c26a8671258d56021e5842aaa837c12d8e109e211fc1a99d191102434d588ef058401af02cf56d0a1f0f727087b2d4286c2443945e7b7ad4d7d01483434fa3e12c92c4825f3ecd13343698e1f430c6c146e6d68a178129d61fecbc077f8e6103d606"
+  },
+  "keyBackup": {
+    "aesNonceHex": "6162636465666768696a6b6c",
+    "blobBase64": "AVFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2wfivUZLsXqxsfWtKwy5Xt06DTEl6LLkYXNWrNYTHusDjcksWPnOUQelGCBa46v5/OF4PQK",
+    "blobHex": "015152535455565758595a5b5c5d5e5f606162636465666768696a6b6c1f8af5192ec5eac6c7d6b4ac32e57b74e834c497a2cb9185cd5ab3584c7bac0e3724b163e739441e9460816b8eafe7f385e0f40a",
+    "contentKeyHex": "79e1ee0a3d78b79fec82c4d336a18b831ea8dc6d79c8dada1f496d51afeab93c",
+    "hkdfInfoUtf8": "cogra:key-backup:v1",
+    "hkdfSaltHex": "5152535455565758595a5b5c5d5e5f60",
+    "plaintextHex": "8258200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2001",
+    "recoveryCodeBytesHex": "000102030405060708090a0b0c0d0e0f",
+    "recoveryCodeDisplay": "000G4-0R40M-30E20-9185G-R38E1W"
+  },
+  "sha256Tagged": [
+    {
+      "digestHex": "186a106b1280521c25b4cc2f9d96d525b3ab4dd87c0e609f86c6ee8ac8358dfd",
+      "partsHex": [],
+      "tagUtf8": "cogra-l1:pre-commitment:v1"
+    },
+    {
+      "digestHex": "e27fbb79180c44ceb596e332646d1799a8ca42c116638d6da913c2fa0b19fa8b",
+      "partsHex": [
+        "",
+        "0102"
+      ],
+      "tagUtf8": "cogra-l1:commitment:content:v1"
+    },
+    {
+      "digestHex": "8cdf38c509435ca50fb0ae39cca18916c69460183941853dad0b2f6327c0167f",
+      "partsHex": [
+        "7365616c"
+      ],
+      "tagUtf8": "cogra-l1:approval:v1"
+    }
+  ],
+  "signing": {
+    "l0Address": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
+    "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+    "samples": [
+      {
+        "msgUtf8": "cogra",
+        "signatureHex": "120c0fd5af8b90142e4ea6790df6c628975342dc9346cc19aee92a8c15aed7909502a0f94396ba0609a5abf20c0807de5ed872d9e6b059c37bb21be25e34b603",
+        "tagUtf8": "cogra-l1:approval:v1"
+      }
+    ],
+    "seedHex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
+  },
+  "structuralBodies": [
+    {
+      "actId": "act:65b60673d6ed884bf01c2c222d82ada0740f29ac:1:opinion",
+      "assertedParents": [],
+      "author": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
+      "canonicalBytesHex": "8978366163743a363562363036373364366564383834626630316332633232326438326164613037343066323961633a313a6f70696e696f6ef66870726f663a626f62fb3ff0000000000000fbbfd0000000000000f6f68001",
+      "family": "opinion",
+      "license": null,
+      "middle": null,
+      "pD": 1.0,
+      "pI": -0.25,
+      "seq": 1,
+      "settlementRef": null,
+      "target": "prof:bob"
+    },
+    {
+      "actId": "act:alice-addr:7:review",
+      "assertedParents": [
+        "act:alice-addr:6:opinion",
+        "act:bob:2:opinion"
+      ],
+      "author": "alice-addr",
+      "canonicalBytesHex": "89776163743a616c6963652d616464723a373a726576696577781d6d696e743a6163743a616c6963652d616464723a333a7075626c6973686c6e616d653a67656e6572616cfb3fe0000000000000fbbff0000000000000756163743a616c6963652d616464723a353a73656e646943432d42592d342e308278186163743a616c6963652d616464723a363a6f70696e696f6e716163743a626f623a323a6f70696e696f6e01",
+      "family": "review",
+      "license": "CC-BY-4.0",
+      "middle": "mint:act:alice-addr:3:publish",
+      "pD": 0.5,
+      "pI": -1.0,
+      "seq": 7,
+      "settlementRef": "act:alice-addr:5:send",
+      "target": "name:general"
+    }
+  ],
+  "version": 1
+}
