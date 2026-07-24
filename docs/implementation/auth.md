@@ -79,7 +79,9 @@ posture:
   app generates a high-entropy recovery code alongside the
   signing key, encrypts the key with the code on the device,
   and uploads only the ciphertext. Recovery on a new device is
-  login plus code: fetch the blob, decrypt locally.
+  login plus code: fetch the blob, decrypt locally. The same
+  flow is how an actor reaches a second device — key mobility
+  and loss recovery are one mechanism.
 
 Rules the posture hangs on:
 
@@ -92,7 +94,10 @@ Rules the posture hangs on:
 - **The backup is opt-in, and declining has a stated price.**
   Device loss is then actor loss — the login survives, the
   actor is a husk. The choice and its consequence are surfaced
-  when the key is created.
+  when the key is created. Declining is not final: backup can
+  be enabled, or the code replaced, from settings at any time —
+  a new code re-encrypts and re-uploads, and recovery serves
+  the newest blob.
 - **Theft needs both factors.** The code alone is useless
   without the blob behind the user's login; the blob is useless
   without the code. Users can therefore keep redundant copies
@@ -103,6 +108,38 @@ Rules the posture hangs on:
   ([collectives.md §2](../instances/collectives.md#2-custody)) —
   ride the same code. A passkey-wrapped second unlock (WebAuthn
   PRF) is a foreseen extension, not a posture change.
+
+### Blob format (v1)
+
+One format across every client — a blob sealed on the phone must
+open in the browser. The primitives are the ones every client
+platform ships natively (WebCrypto, Android Keystore/Tink):
+
+- **Recovery code.** 16 CSPRNG bytes, shown as 26 Crockford
+  base32 characters in dash-separated groups of 5-5-5-5-6.
+  Input is normalized before decoding: uppercase, `I`/`L` → `1`,
+  `O` → `0`, separators stripped. No check digit — AES-GCM's
+  tag is what detects a mistyped code, at unlock.
+- **Key derivation.** HKDF-SHA-256 over the 16 code bytes with
+  the blob's random 16-byte salt and info `cogra:key-backup:v1`
+  yields the 32-byte content key. The code is full-entropy, so
+  a memory-hard KDF would add cost without strength.
+- **Sealing.** AES-256-GCM under a random 12-byte nonce. The
+  blob is `version 0x01 ‖ salt ‖ nonce ‖ ciphertext`; the 29
+  header bytes ride as the associated data, so no part of the
+  blob is malleable.
+- **Contents.** The plaintext is the deterministic-CBOR array
+  `[seed bytes, container version 1]` — today the actor key's
+  32-byte Ed25519 seed. Future client-held secrets (the
+  Collective splits) extend the array — "the blob is a
+  container", concretely.
+- **Wire form.** The blob crosses the API base64-encoded — into
+  `uploadKeyBackup`, out of `User.keyBackup`.
+
+Golden vectors for every step live in
+`client-crypto-vectors.json` at the repo root, exported from the
+reference implementation in `common` (`make vectors`); each
+client's crypto tests consume them.
 
 ---
 
@@ -149,9 +186,12 @@ a link at any time.
    application time because approval funds a burn **to the
    applicant's own address** — the address must exist before
    anyone can fund it. In the same step the app offers the
-   key-backup choice: generate the recovery code, encrypt, and
-   upload the blob — or decline, with the consequence stated
-   ("Key recovery" above).
+   key-backup choice: generate the recovery code and seal the
+   blob on the device — or decline, with the consequence stated
+   ("Key recovery" above). The sealed blob waits on the device
+   and uploads on the first session after landing: the backup
+   store hangs off the landed account, and before landing there
+   is no actor to lose.
 4. **Email verification.** The applicant clicks the link,
    proving the login channel. Unverified applications expire
    after 24 hours (reaper below); verification re-bounds the
