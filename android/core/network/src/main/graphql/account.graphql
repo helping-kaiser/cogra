@@ -1,0 +1,142 @@
+# The viewer's own account: profile and provenance, the key backup,
+# credentials, and the inviter surface (api-spec.md "Auth and
+# accounts", "Private viewer state").
+
+query Me {
+  me {
+    id
+    handle
+    displayName
+    invitedBy {
+      id
+      handle
+    }
+  }
+}
+
+query KeyBackup {
+  me {
+    id
+    keyBackup
+  }
+}
+
+mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
+  uploadKeyBackup(input: $input) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ChangePassword($input: ChangePasswordInput!) {
+  changePassword(input: $input) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ChangeHandle($input: ChangeHandleInput!) {
+  changeHandle(input: $input) {
+    user {
+      id
+      handle
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+  requestPasswordReset(input: $input) {
+    ok
+  }
+}
+
+mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
+  confirmPasswordReset(input: $input) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RequestEmailChange($input: RequestEmailChangeInput!) {
+  requestEmailChange(input: $input) {
+    ok
+  }
+}
+
+mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
+  confirmEmailChange(input: $input) {
+    user {
+      id
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+query InviteLinks {
+  me {
+    id
+    inviteLinks(first: 50) {
+      nodes {
+        id
+        singleUse
+        createdAt
+        expiresAt
+        revokedAt
+        applicants(first: 50) {
+          nodes {
+            ...ApplicantFields
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation CreateInviteLink($input: CreateInviteLinkInput!) {
+  createInviteLink(input: $input) {
+    inviteLink {
+      id
+      singleUse
+      createdAt
+      expiresAt
+      revokedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RevokeInviteLink($input: RevokeInviteLinkInput!) {
+  revokeInviteLink(input: $input) {
+    inviteLink {
+      id
+      revokedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ApproveApplicants($input: ApproveApplicantsInput!) {
+  approveApplicants(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

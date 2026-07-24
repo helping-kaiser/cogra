@@ -1,0 +1,178 @@
+// The repositories against a MockWebServer through the real generated
+// Apollo client: tier mapping (Success / Refused / Failed), scalar
+// adapters, fragment mapping, and the null-`me` translation.
+
+package com.cogra.network
+
+import com.apollographql.apollo.ApolloClient
+import com.cogra.domain.ErrorCode
+import com.cogra.domain.Outcome
+import com.cogra.domain.WriteState
+import com.cogra.network.auth.AuthGuard
+import com.cogra.network.auth.SessionRefresher
+import com.cogra.network.repo.OnboardingRepositoryImpl
+import com.cogra.network.repo.SessionRepositoryImpl
+import com.cogra.network.repo.WriteRepositoryImpl
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.store.TokenStore
+import com.google.common.truth.Truth.assertThat
+import java.util.Base64
+import javax.inject.Provider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
+class InMemoryTokenStore : TokenStore {
+    override val tokens = MutableStateFlow<AuthTokens?>(null)
+
+    override suspend fun current(): AuthTokens? = tokens.value
+
+    override suspend fun save(tokens: AuthTokens) {
+        this.tokens.value = tokens
+    }
+
+    override suspend fun clear() {
+        tokens.value = null
+    }
+}
+
+class RepositoriesTest {
+
+    private lateinit var server: MockWebServer
+    private lateinit var client: ApolloClient
+    private val tokenStore = InMemoryTokenStore()
+
+    @Before
+    fun setUp() {
+        server = MockWebServer()
+        server.start()
+        client = ApolloClient.Builder().serverUrl(server.url("/graphql").toString()).build()
+    }
+
+    @After
+    fun tearDown() {
+        client.close()
+        server.shutdown()
+    }
+
+    private fun enqueue(json: String) {
+        server.enqueue(MockResponse().setBody(json).addHeader("Content-Type", "application/json"))
+    }
+
+    private fun guard() = AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client }))
+
+    @Test
+    fun inviteCheckMapsBothBranches() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client)
+        enqueue(
+            """{"data":{"inviteLinkCheck":{"__typename":"InviteLinkCheck",
+               "usable":true,"inviterHandle":"inviter","expiresAt":"2027-01-01T00:00:00+00:00"}}}""",
+        )
+        val check = (onboarding.checkInviteLink("id") as Outcome.Success).value
+        assertThat(checkNotNull(check).usable).isTrue()
+        assertThat(check.inviterHandle).isEqualTo("inviter")
+        assertThat(check.expiresAt.toString()).isEqualTo("2027-01-01T00:00:00Z")
+
+        enqueue("""{"data":{"inviteLinkCheck":null}}""")
+        assertThat((onboarding.checkInviteLink("id") as Outcome.Success).value).isNull()
+    }
+
+    @Test
+    fun aRefusalCarriesCodeAndFieldPath() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client)
+        enqueue(
+            """{"data":{"submitApplication":{"__typename":"SubmitApplicationPayload",
+               "applicantToken":null,"expiresAt":null,
+               "userErrors":[{"__typename":"UserError","message":"taken",
+               "code":"HANDLE_TAKEN","field":["input","handle"]}]}}}""",
+        )
+        val refused = onboarding.submitApplication("l", "h", "e@x.com", "p".repeat(12), "pk", "addr")
+            as Outcome.Refused
+        val error = refused.errors.single()
+        assertThat(error.code).isEqualTo(ErrorCode.HANDLE_TAKEN)
+        assertThat(error.field).containsExactly("input", "handle").inOrder()
+    }
+
+    @Test
+    fun anUnknownErrorCodeDegradesToUnknown() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client)
+        enqueue(
+            """{"data":{"submitApplication":{"__typename":"SubmitApplicationPayload",
+               "applicantToken":null,"expiresAt":null,
+               "userErrors":[{"__typename":"UserError","message":"new refusal",
+               "code":"SOME_FUTURE_CODE","field":null}]}}}""",
+        )
+        val refused = onboarding.submitApplication("l", "h", "e@x.com", "p".repeat(12), "pk", "addr")
+            as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
+    }
+
+    @Test
+    fun transportFaultsAreFailed() = runTest {
+        val writes = WriteRepositoryImpl(client, guard())
+        server.enqueue(MockResponse().setResponseCode(500))
+        assertThat(writes.hostPublicKey()).isInstanceOf(Outcome.Failed::class.java)
+
+        // The GraphQL errors array is the transport tier too.
+        enqueue("""{"errors":[{"message":"internal error"}],"data":null}""")
+        assertThat(writes.stagedWrite("id")).isInstanceOf(Outcome.Failed::class.java)
+    }
+
+    @Test
+    fun stagedWriteFieldsMapToTheDomainView() = runTest {
+        val writes = WriteRepositoryImpl(client, guard())
+        tokenStore.save(AuthTokens("a", "r"))
+        val proposal = Base64.getEncoder().encodeToString(byteArrayOf(1, 2, 3))
+        enqueue(
+            """{"data":{"stagedWrite":{"__typename":"StagedWrite","id":"w1",
+               "state":"AWAITING_APPROVAL","family":"OPINION",
+               "canonicalProposal":"$proposal","verifiedAct":null,"record":null}}}""",
+        )
+        val view = checkNotNull((writes.stagedWrite("w1") as Outcome.Success).value)
+        assertThat(view.state).isEqualTo(WriteState.AWAITING_APPROVAL)
+        assertThat(view.family).isEqualTo(com.cogra.crypto.Family.OPINION)
+        assertThat(view.canonicalProposal).isEqualTo(byteArrayOf(1, 2, 3))
+        assertThat(view.verifiedAct).isNull()
+        assertThat(view.recordId).isNull()
+    }
+
+    @Test
+    fun theHostKeyIsCachedPerProcess() = runTest {
+        val writes = WriteRepositoryImpl(client, guard())
+        val key = Base64.getEncoder().encodeToString(ByteArray(32) { 7 })
+        enqueue("""{"data":{"hostPublicKey":"$key"}}""")
+        assertThat((writes.hostPublicKey() as Outcome.Success).value).isEqualTo(ByteArray(32) { 7 })
+        assertThat((writes.hostPublicKey() as Outcome.Success).value).isEqualTo(ByteArray(32) { 7 })
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    @Test
+    fun aSignedOutViewerReadRefusesWithoutReplay() = runTest {
+        val sessions = SessionRepositoryImpl(client, guard())
+        enqueue("""{"data":{"me":null}}""")
+        val refused = sessions.sessions() as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
+        // No tokens → no refresh, no replay.
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    @Test
+    fun sessionsMapWithInstants() = runTest {
+        val sessions = SessionRepositoryImpl(client, guard())
+        tokenStore.save(AuthTokens("a", "r"))
+        enqueue(
+            """{"data":{"me":{"__typename":"User","sessions":[
+               {"__typename":"Session","id":"s1","deviceLabel":"phone",
+                "createdAt":"2026-07-24T12:00:00+00:00","lastUsedAt":null,
+                "expiresAt":"2026-08-23T12:00:00+00:00","isCurrent":true}]}}}""",
+        )
+        val list = (sessions.sessions() as Outcome.Success).value
+        assertThat(list.single().deviceLabel).isEqualTo("phone")
+        assertThat(list.single().lastUsedAt).isNull()
+        assertThat(list.single().isCurrent).isTrue()
+    }
+}
