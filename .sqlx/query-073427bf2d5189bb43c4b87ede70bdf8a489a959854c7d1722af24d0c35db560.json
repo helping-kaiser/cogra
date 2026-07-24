@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'landed', updated_at = NOW()\n         WHERE state <> 'landed'\n           AND act_id IN (SELECT record_id FROM mirror_records WHERE epoch = $1)\n         RETURNING id, actor_id, applicant_id, act_id, family",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "applicant_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "family",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "073427bf2d5189bb43c4b87ede70bdf8a489a959854c7d1722af24d0c35db560"
+}

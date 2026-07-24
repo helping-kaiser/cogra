@@ -43,9 +43,11 @@ impl From<StandInError> for BoundaryError {
     }
 }
 
-/// The seam contract. Four operations, nothing else: the two relay legs
-/// of the admission handshake, the epoch-package read ingestion consumes,
-/// and the B_i read. Prepare is L2 orchestration in front of the seam,
+/// The seam contract: the two relay legs of the admission handshake, the
+/// epoch-package read ingestion consumes, the B_i read, and the published
+/// θ price the write-rule pre-check estimates against
+/// (layer1-interface.md §11.8 — the certificate carries θ with a
+/// one-boundary lead). Prepare is L2 orchestration in front of the seam,
 /// not a seam operation (substrate.md §6 step 1).
 pub trait L1Boundary: Send + Sync {
     /// Relay leg 1: submit the pre-signed proposal; the host verifies,
@@ -79,6 +81,12 @@ pub trait L1Boundary: Send + Sync {
     /// The host key clients verify seals against (realization
     /// transparency — every host-added field checkable before approval).
     fn host_public_key(&self) -> impl Future<Output = Result<Vec<u8>, BoundaryError>> + Send;
+
+    /// The θ price the next act debits, in the units `balance` reports —
+    /// the published value the prepare pre-check reads
+    /// (`def:epoch:safety-threshold`; substrate.md §6 "an L2 estimate from
+    /// the last published certificate").
+    fn current_theta(&self) -> impl Future<Output = Result<f64, BoundaryError>> + Send;
 }
 
 /// The stand-in behind the seam.
@@ -104,5 +112,9 @@ impl L1Boundary for StandInBoundary {
 
     async fn host_public_key(&self) -> Result<Vec<u8>, BoundaryError> {
         Ok(self.0.host_public_key().await?)
+    }
+
+    async fn current_theta(&self) -> Result<f64, BoundaryError> {
+        Ok(self.0.config().theta_micro as f64 / 1e6)
     }
 }
