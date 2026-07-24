@@ -1,0 +1,46 @@
+# The client legs of the write path: prepare → submit → approve →
+# observe; the seal key the device verifies against (api-spec.md "The
+# write flow").
+
+query HostPublicKey {
+  hostPublicKey
+}
+
+mutation PrepareStance($input: PrepareStanceInput!) {
+  prepareStance(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation SubmitProposals($input: SubmitProposalsInput!) {
+  submitProposals(input: $input) {
+    stagedWrites {
+      ...StagedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ApproveActs($input: ApproveActsInput!) {
+  approveActs(input: $input) {
+    stagedWrites {
+      ...StagedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+query StagedWrite($id: UUID!) {
+  stagedWrite(id: $id) {
+    ...StagedWriteFields
+  }
+}
