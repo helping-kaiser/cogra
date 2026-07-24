@@ -252,6 +252,20 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         .expect("link")
         .to_string();
 
+    // The applicant's device checks the capability anonymously before
+    // the form and the key ceremony.
+    let check = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) {
+                 inviteLinkCheck(id: $id) { usable inviterHandle }
+               }"#,
+            json!({ "id": link_id }),
+        )
+        .await;
+    assert_eq!(check["inviteLinkCheck"]["usable"], true);
+    assert_eq!(check["inviteLinkCheck"]["inviterHandle"], "inviter");
+
     // The applicant's key ceremony happens on the device, then the
     // application is submitted with only the public outputs.
     let joiner_key = ActorKey::generate();
@@ -453,7 +467,27 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(auth["user"]["displayName"], "joiner");
     let joiner_token = auth["accessToken"].as_str().expect("token").to_string();
 
-    // Reciprocation — the joiner's own act, completing the mutual pair.
+    // Reciprocation — the joiner's own act toward the account that
+    // vouched them in, discovered through the viewer's provenance read.
+    // The genesis-seeded inviter carries no such trace.
+    let provenance = rig
+        .gql(
+            Some(&joiner_token),
+            r#"query { me { invitedBy { id handle } } }"#,
+            json!({}),
+        )
+        .await;
+    assert_eq!(provenance["me"]["invitedBy"]["handle"], "inviter");
+    assert_eq!(provenance["me"]["invitedBy"]["id"], inviter_id.to_string());
+    let inviter_provenance = rig
+        .gql(
+            Some(&inviter_token),
+            r#"query { me { invitedBy { id } } }"#,
+            json!({}),
+        )
+        .await;
+    assert!(inviter_provenance["me"]["invitedBy"].is_null());
+
     let reciprocation = rig
         .gql(
             Some(&joiner_token),
@@ -463,7 +497,7 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
                  }
                }"#,
             json!({ "input": {
-                "target": inviter_id,
+                "target": provenance["me"]["invitedBy"]["id"],
                 "pDirected": 0.5,
                 "pInterest": 0.1,
             }}),
