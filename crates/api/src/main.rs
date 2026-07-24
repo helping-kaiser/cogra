@@ -34,10 +34,19 @@ async fn main() -> anyhow::Result<()> {
     let ingest_interval: u64 = env_or("L1_INGEST_INTERVAL_SECS", "2")
         .parse()
         .context("L1_INGEST_INTERVAL_SECS must be a number of seconds")?;
+    // The staged-write GC bound (data-model.md "Staged writes" — an
+    // operational parameter; development.md).
+    let gc_after_epochs: i64 = env_or(
+        "STAGED_WRITE_GC_EPOCHS",
+        &api::ingest::DEFAULT_GC_AFTER_EPOCHS.to_string(),
+    )
+    .parse()
+    .context("STAGED_WRITE_GC_EPOCHS must be a number of epochs")?;
     tokio::spawn(api::ingest::ingest_loop(
         boundary,
         pool.clone(),
         ingest_interval,
+        gc_after_epochs,
     ));
 
     let schema = api::schema::build(pool);
