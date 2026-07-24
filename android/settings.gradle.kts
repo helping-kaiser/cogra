@@ -22,10 +22,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "cogra"
 
-// Slice 1 stands up only the modules the login -> profile cut needs.
-// core:ranker and feature:feed arrive with the slices that need them
+// Post-L1-rebase shell: only the app and the Apollo contract module exist.
+// The domain and feature modules return with the slices that need them
 // (docs/implementation/roadmap.md).
 include(":app")
 include(":core:network")
-include(":core:domain")
-include(":feature:auth")
