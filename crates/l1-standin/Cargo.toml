@@ -1,0 +1,25 @@
+[package]
+name    = "l1-standin"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+common    = { path = "../common" }
+
+# The stand-in owns its own L1-side tables (l1_*): it plays the substrate,
+# not CoGra's store layer, so its SQL lives here — the named exception to
+# the "SQL only in postgres-store" rule (CLAUDE.md "Code style").
+sqlx      = { workspace = true }
+tokio     = { workspace = true }
+thiserror = { workspace = true }
+anyhow    = { workspace = true }
+tracing   = { workspace = true }
+chrono    = { workspace = true }
+rand      = { workspace = true }
+ed25519-dalek = { workspace = true }
+hex       = { workspace = true }
+
+[dev-dependencies]
