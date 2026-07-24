@@ -131,6 +131,11 @@ jobs:
         run: |
           cargo run -p api --bin export-schema > schema.graphql
           git diff --exit-code schema.graphql
+      # Same rationale for the other cross-platform contract artifact: the
+      # test already ran under `cargo test --all`; the named step makes
+      # client-crypto drift readable from the checks list alone.
+      - name: Check client-crypto-vectors.json drift
+        run: cargo test -p common --test client_vectors
 
   android:
     name: Android

@@ -16,3 +16,15 @@ ed25519-dalek = { workspace = true }
 sha2          = { workspace = true }
 rand          = { workspace = true }
 hex           = { workspace = true }
+
+[dev-dependencies]
+# The golden-vector export (tests/client_vectors.rs): the crate's own
+# crypto stack re-declared for the integration test, plus the key-backup
+# blob reference (auth.md "Blob format (v1)").
+serde_json    = { workspace = true }
+base64        = { workspace = true }
+hex           = { workspace = true }
+ed25519-dalek = { workspace = true }
+sha2          = { workspace = true }
+hkdf          = { workspace = true }
+aes-gcm       = { workspace = true }

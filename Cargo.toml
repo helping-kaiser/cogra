@@ -65,6 +65,12 @@ argon2 = { version = "0.5" }
 jsonwebtoken = { version = "9" }
 base64 = { version = "0.22" }
 
+# The key-backup blob reference (auth.md "Blob format (v1)") — used only
+# by common's golden-vector export. Pinned to the 0.10-generation
+# RustCrypto stack to stay on the workspace's sha2/digest line.
+hkdf = { version = "0.12" }
+aes-gcm = { version = "0.10" }
+
 [profile.dev]
 opt-level = 0
 
