@@ -35,13 +35,15 @@ make dev          # start DBs + migrate + start API
 
 The API will be available at `http://localhost:8080`.
 GraphQL playground: `http://localhost:8080/playground`.
-Memgraph Lab (visual graph browser): `http://localhost:3000`.
 
 ---
 
 ## Environment Variables
 
 All variables are in `.env` (gitignored, copied from `.env.example`).
+Every binary loads `.env` at startup (dotenvy), so plain `cargo run`
+behaves like the make targets; variables already set in the shell win
+over file values.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -50,10 +52,11 @@ All variables are in `.env` (gitignored, copied from `.env.example`).
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
 | `POSTGRES_PORT` | `5432` | Exposed host port |
-| `MEMGRAPH_HOST` | `localhost` | Memgraph bolt host |
-| `MEMGRAPH_PORT` | `7687` | Memgraph bolt port |
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
+| `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
+| `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
+| `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |
 
 ---
@@ -66,7 +69,7 @@ make run          Full start: init + dev (first-time friendly)
 make dev          Start DBs + migrate + start API
 make api          Start the API server only
 make api-release   Start the API server in release mode (realistic auth/crypto latency)
-make up           Start Postgres + Memgraph in background
+make up           Start Postgres in background
 make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
 make migrate      Run pending Postgres migrations only
@@ -85,23 +88,21 @@ make logs         Follow docker compose logs (Ctrl+C to stop)
 
 ## Database Tools
 
-### Memgraph Lab
+### The l1-dev CLI
 
-Available at http://localhost:3000 when services are running. Lets you:
-- Run Cypher queries interactively
-- Visualize the graph with a node/edge explorer
-- Inspect schema and indexes
+The slice-0 hand-test driver: it plays the device (key generation, both
+signing steps of the admission handshake) and drives the stand-in's
+dev-only surfaces (burn credit, epoch close) plus mirror ingestion.
 
-Starter queries:
-```cypher
--- See all nodes
-MATCH (n) RETURN n LIMIT 50;
-
--- See all relationships
-MATCH ()-[r]->() RETURN r LIMIT 50;
-
--- Show the schema
-CALL schema.node_type_properties();
+```bash
+cargo run -p api --bin l1-dev keygen
+cargo run -p api --bin l1-dev burn <address> <micro>
+cargo run -p api --bin l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
+cargo run -p api --bin l1-dev close     # close the current epoch
+cargo run -p api --bin l1-dev ingest    # pull published epochs into the mirror
+cargo run -p api --bin l1-dev rebuild   # wipe the mirror and re-ingest everything
+cargo run -p api --bin l1-dev balance <address>
+cargo run -p api --bin l1-dev status    # mirror cursor + records per epoch
 ```
 
 ### Postgres
@@ -178,7 +179,7 @@ before committing.
 make test
 
 # Single crate
-cargo test -p graph-engine
+cargo test -p l1-standin
 
 # Single test
 cargo test -p postgres-store test_name
@@ -187,7 +188,7 @@ cargo test -p postgres-store test_name
 cargo test -- --nocapture
 ```
 
-Integration tests that hit the databases require services to be running (`make up`).
+Integration tests that hit the database require Postgres to be running (`make up`).
 
 ---
 
@@ -196,4 +197,6 @@ Integration tests that hit the databases require services to be running (`make u
 - `cargo fmt` enforced in CI — run `make fmt` before committing
 - `clippy -D warnings` enforced in CI — run `make lint` to check
 - No `unwrap()` in library code — use `thiserror` / `anyhow` appropriately
-- Cypher queries in `graph-engine` only, SQL in `postgres-store` only
+- SQL in `postgres-store` only — except the `l1-standin` crate, which
+  owns its own `l1_*` tables (it plays the substrate, not CoGra's store;
+  the whole set is dropped at the swap)

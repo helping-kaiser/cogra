@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_acts (\n            act_id, author, seq, family, author_pubkey, middle, target,\n            p_d, p_i, settlement_ref, license, asserted_parents, deps,\n            payload, nonce, pre_signature, content_salt, deps_salt,\n            content_commitment, deps_commitment, host_seal, status\n         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,'sealed')\n         ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Bytea",
+        "Text",
+        "Text",
+        "Float8",
+        "Float8",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "db4618831884c490eee60eb97cb49fa27cb3976e71c335e4e86c675687a652c5"
+}

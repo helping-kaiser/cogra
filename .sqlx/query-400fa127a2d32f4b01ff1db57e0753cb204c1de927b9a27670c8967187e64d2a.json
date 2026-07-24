@@ -1,0 +1,98 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT act_id, author, seq, family, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps,\n                length(payload) AS payload_len, content_commitment\n         FROM l1_acts WHERE status = 'approved'\n         ORDER BY approved_at, act_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "middle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "settlement_ref",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "asserted_parents",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 11,
+        "name": "deps",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "payload_len",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "content_commitment",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "400fa127a2d32f4b01ff1db57e0753cb204c1de927b9a27670c8967187e64d2a"
+}

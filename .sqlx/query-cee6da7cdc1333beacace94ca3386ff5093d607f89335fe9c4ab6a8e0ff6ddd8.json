@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "last_epoch",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cee6da7cdc1333beacace94ca3386ff5093d607f89335fe9c4ab6a8e0ff6ddd8"
+}

@@ -45,22 +45,29 @@ or the plan shifts.
 
 ## Where the code stands
 
-The running code predates the L1 rebase: registration, login and
-sessions, post/comment authoring with a chronological listing, the
-exported `schema.graphql`, and the Android thin client (login +
-profile) — all server-authored against the retired dual-store
-design. The code phase starts by separating this into L1-role code
-(superseded by the substrate and its stand-in) and L2 code (candidate
-for reuse); how much is salvageable is discovered slice by slice, not
-decided upfront.
+Slice 0 is landed. The pre-rebase code — the dual-store auth and
+content flows, the Memgraph layer, and the Android thin client's
+login/profile surface — was removed with it rather than carried
+alongside: one state, no dormant legacy. The backend now runs the
+seam, the stand-in, the record mirror with its epoch cursor, and
+the genesis bootstrap; the GraphQL contract is down to the health
+probe until slice 1 rebuilds onboarding, and the Android app is a
+placeholder shell awaiting the same slice.
 
 ## The stand-in and the swap
 
 Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
 behind the interface boundary: an implementation of the
 [layer1-interface.md](../primitive/layer1-interface.md) contract with
-money simplified — the `B_i` surface and θ-debits honored as numbers,
-without a real Layer 0 economy behind them.
+two named simplifications. **Money** — the `B_i` surface and θ-debits
+honored as numbers, without a real Layer 0 economy behind them.
+**Standing** — formation, the admission handshake, ordering, causal
+keys, maturity, and the θ-ledger are implemented in full, but the
+staged-standing solve (layer1-interface.md §11.4–11.5) is not: every
+act's stamp is taken as 1, so the W2a wall and W2b door pass
+trivially and the derived Self-edge reading carries a constant
+coordinate. The gates' call-sites are real; the real substrate brings
+the real stamps at the swap.
 
 Because every slice builds against the contract, the real substrate's
 arrival is a **swap, not a slice**: when L1 is available, the
@@ -76,9 +83,11 @@ write needs a landed, funded actor with a device-held key.
 
 ### Slice 0 — The seam and the stand-in
 
-- The single L1 interface boundary in the `api` crate — prepare,
-  the two relay legs (seal, approve), ingest, and the `B_i` read
-  ([architecture.md](architecture.md)) — with the stand-in behind it.
+- The single L1 interface boundary in the `api` crate — the two
+  relay legs (seal, approve), ingest, and the `B_i` read
+  ([architecture.md](architecture.md)) — with the stand-in behind
+  it. Prepare is L2 orchestration in front of the seam, not a seam
+  operation ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 - Record mirror tables, ingestion, epoch cursor
   ([data-model.md](data-model.md)).
 - Genesis: the L1-side genesis sequence against the stand-in + the

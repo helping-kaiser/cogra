@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mirror_record_legs",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "5b28b8379b34cc7d45f21abef2254f6271bdcee5d3e4693187b95b9950dc02ec"
+}
