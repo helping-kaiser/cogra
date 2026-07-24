@@ -135,10 +135,14 @@ a link at any time.
 1. **Link open.** The applicant opens the URL in the app. The
    server validates the link row (unexpired, not revoked, slot
    available) and the app renders the registration form.
-2. **Registration submit.** The applicant chooses username,
+2. **Registration submit.** The applicant chooses handle,
    email, and password. The server creates an `auth_applicants`
    row — off-graph service state only, no account, nothing on
-   the graph — and sends a verification email.
+   the graph — sends a verification email, and returns the
+   **applicant token**: the hashed-at-rest secret that authorizes
+   exactly this applicant's own flow (status, registration
+   signing, the first-session claim). The row id is visible to
+   the inviter's queue and is deliberately not a capability.
 3. **The key ceremony, on the device.** The app generates the
    applicant's signing key and L0 address locally; the public
    key and address join the applicant row. This runs at
@@ -150,7 +154,9 @@ a link at any time.
    ("Key recovery" above).
 4. **Email verification.** The applicant clicks the link,
    proving the login channel. Unverified applications expire
-   after 24 hours (reaper below).
+   after 24 hours (reaper below); verification re-bounds the
+   application's life to its link's expiry — a verified applicant
+   persists exactly while the link lives.
 
 A staged applicant can already **read** — the shared graph is
 public — but cannot act. Approval latency is a UX cost, not a
@@ -164,7 +170,11 @@ deliberate, priced act that commits the inviter's vouch; the
 backend then runs the admission sequence:
 
 1. **Funding** — the community-funded L0 burn to the applicant's
-   address ([economics.md](../primitive/economics.md)).
+   address ([economics.md](../primitive/economics.md)). Funding and
+   the staging below run inside the approval, guarded by the
+   approval mark so a retried or concurrent approval never
+   double-funds; a crash between the steps heals on the
+   applicant's next status poll.
 2. **Registration** — the backend prepares the staged
    Registration; the applicant's device **runs the full signing
    handshake on next app open** — pre-commitment, then approval
@@ -177,9 +187,9 @@ backend then runs the admission sequence:
 4. **Landing** — when the Registration confirms in the mirror,
    the actor row and its login credentials are created (moved
    across from the applicant row; the identity association is
-   columns on the actor row — [data-model.md](data-model.md)),
-   the first session is issued, and the applicant row is marked
-   landed.
+   columns on the actor row — [data-model.md](data-model.md)) and
+   the applicant row is marked landed; the device then claims the
+   first session with its applicant token.
 
 The flow tolerates latency at every step — an approval the
 applicant's device hasn't signed yet simply waits; staged records

@@ -727,26 +727,33 @@ CREATE INDEX auth_invite_links_inviter_idx
 -- records, nothing on the graph.
 --
 -- Lifecycle: email-unverified rows expire after 24 h (reaper);
--- verified applicants persist while their link lives, readable-
--- but-not-acting per invitations.md §4. approved_at marks the
--- inviter's priced approval (which kicks off funding + the staged
--- Registration + the inviter's Opinion); landed_at is set when the
--- Registration confirms in the mirror and the actor + credentials
--- rows are created. The joiner's reciprocation is their own
+-- verification re-bounds expires_at to the link's expiry, so a
+-- verified applicant persists exactly while the link lives,
+-- readable-but-not-acting per invitations.md §4. approved_at marks
+-- the inviter's priced approval (which runs funding + the staged
+-- Registration inside the approval, and prepares the inviter's
+-- Opinion); landed_at is set when the Registration confirms in the
+-- mirror and the actor + credentials rows are created. The joiner's reciprocation is their own
 -- client-signed act after landing, not applicant state.
 --
 -- email is UNIQUE: a duplicate submit against a live row is
--- rejected ("registration in progress"); an expired-but-unswept
--- row is overwritten via ON CONFLICT (email) DO UPDATE ... WHERE
--- expires_at < NOW(), so the experience never depends on the
--- sweep schedule. The constraint also serves the by-email lookup.
+-- rejected ("registration in progress"); an expired-but-unswept,
+-- never-approved row is overwritten via ON CONFLICT (email) DO
+-- UPDATE ... WHERE expires_at < NOW(), so the experience never
+-- depends on the sweep schedule. The constraint also serves the by-email lookup.
 CREATE TABLE auth_applicants (
     id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     invite_link_id                UUID         NOT NULL REFERENCES auth_invite_links(id),
-    username                      TEXT         NOT NULL,
+    handle                        TEXT         NOT NULL,
     email                         TEXT         NOT NULL UNIQUE,
     password_hash                 TEXT         NOT NULL,
     email_verification_token_hash BYTEA        NOT NULL UNIQUE,
+    -- The applicant token: the hashed-at-rest secret authorizing the
+    -- applicant's own flow (status, registration signing, the
+    -- first-session claim). A dedicated secret because the row id is
+    -- visible to the inviter's approval queue and must not be a
+    -- session-minting capability.
+    applicant_token_hash          BYTEA        NOT NULL UNIQUE,
     email_verified_at             TIMESTAMPTZ,
     actor_pubkey                  BYTEA        NOT NULL,
     l0_address                    TEXT         NOT NULL,
