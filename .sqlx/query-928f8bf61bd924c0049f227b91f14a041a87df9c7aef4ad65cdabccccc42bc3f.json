@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applicants SET landed_at = NOW(), actor_id = $2 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "928f8bf61bd924c0049f227b91f14a041a87df9c7aef4ad65cdabccccc42bc3f"
+}
