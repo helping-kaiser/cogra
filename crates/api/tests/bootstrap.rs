@@ -2,7 +2,7 @@
 //! idempotent re-run, the crash-repair path, and the unrepairable state
 //! (architecture.md "Genesis bootstrap").
 
-use api::bootstrap::{BootstrapError, BootstrapOutcome, GenesisInput, run};
+use api::bootstrap::{BootstrapError, BootstrapOutcome, GenesisInput, ensure_operator_login, run};
 use common::l1::Family;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::genesis;
@@ -151,5 +151,85 @@ async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     }
 
     let err = run(&host, &pool, input()).await.expect_err("unrepairable");
+    assert!(matches!(err, BootstrapError::Unrepairable));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("bootstraps");
+
+    let login = ensure_operator_login(&pool, "operator", "op@example.com", "a strong password")
+        .await
+        .expect("operator login");
+    assert!(login.credentials_created);
+    let code = login.recovery_code.expect("a fresh code on first run");
+
+    // The credentials verify like any login.
+    let credentials = postgres_store::auth::credentials_by_email(&pool, "op@example.com")
+        .await
+        .expect("query")
+        .expect("credentials row");
+    assert!(api::auth::verify_password(
+        &credentials.password_hash,
+        "a strong password"
+    ));
+
+    // The uploaded blob is a standard key-backup blob: the printed code
+    // opens it, and inside is the custodied genesis seed.
+    let blob = postgres_store::auth::latest_key_backup(&pool, credentials.actor_id)
+        .await
+        .expect("query")
+        .expect("blob row");
+    let code_bytes: [u8; 16] = {
+        // Re-parse the display form the way a client would: strip the
+        // separators and decode Crockford base32.
+        const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+        let mut bits: u64 = 0;
+        let mut nbits = 0u32;
+        let mut out = Vec::new();
+        for c in code.chars().filter(|c| *c != '-') {
+            let v = ALPHABET
+                .iter()
+                .position(|a| *a as char == c)
+                .expect("crockford char") as u64;
+            bits = (bits << 5) | v;
+            nbits += 5;
+            if nbits >= 8 {
+                nbits -= 8;
+                out.push(((bits >> nbits) & 0xFF) as u8);
+            }
+        }
+        out.try_into().expect("16 code bytes")
+    };
+    let opened = common::l1::key_backup::open(
+        &blob,
+        &common::l1::key_backup::RecoveryCode::from_bytes(code_bytes),
+    )
+    .expect("the printed code opens the blob");
+    let custodied = genesis::system_key(&pool, credentials.actor_id)
+        .await
+        .expect("query")
+        .expect("custodied seed");
+    assert_eq!(opened.as_slice(), custodied.as_slice());
+
+    // Re-running mints nothing new: credentials stand, the blob stands,
+    // no second code is printed.
+    let rerun = ensure_operator_login(&pool, "operator", "other@example.com", "another password")
+        .await
+        .expect("rerun");
+    assert!(!rerun.credentials_created);
+    assert!(rerun.recovery_code.is_none());
+    let unchanged = postgres_store::auth::credentials_by_email(&pool, "op@example.com")
+        .await
+        .expect("query");
+    assert!(unchanged.is_some(), "the original login is untouched");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_operator_login_requires_a_bootstrapped_instance(pool: PgPool) {
+    let err = ensure_operator_login(&pool, "operator", "op@example.com", "pw pw pw pw")
+        .await
+        .expect_err("no genesis actor yet");
     assert!(matches!(err, BootstrapError::Unrepairable));
 }
