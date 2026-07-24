@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes SET state = $2, updated_at = NOW()\n         WHERE id = $1 AND state = ANY($3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2003567970aff70e6db983ada0d08e571dc577dda6ede14bae71896ae5557a55"
+}

@@ -5,6 +5,7 @@
 
 pub mod genesis;
 pub mod mirror;
+pub mod staged;
 
 /// Re-exported so callers don't need a direct sqlx dependency.
 pub use sqlx::PgPool;
