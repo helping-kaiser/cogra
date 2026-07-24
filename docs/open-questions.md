@@ -107,6 +107,15 @@ migration deployment concerns, and says nothing about rotation
 Both questions stay open, now aimed at that postulate's
 realization rather than at silence.
 
+**Interim realization (stand-in only).** The L1 stand-in's
+handshake runs on Ed25519 signatures, SHA-256 salted hash
+commitments, and canonical CBOR serialization
+(`common::l1::crypto`) — the Schnorr-family lean this question
+already records, chosen so slice work can sign records today.
+A stand-in-scoped deployment choice, not a Q30 resolution: the
+real substrate's schemes replace it at the swap, and rotation
+remains unaddressed.
+
 ---
 
 ## Q31 — Publish genesis: parallelism exemption per record or per family

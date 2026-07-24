@@ -93,7 +93,21 @@ below: an entity row plus append-only version rows keyed
 `(entity_id, created_at)`, newest row wins, history is the rows
 themselves. Governed overlay properties (the parameter carrier)
 version this way, so the operational cache preserves the same
-auditable history the charter schedule carries on L1.
+auditable history the charter schedule carries on L1. The
+carrier's concrete shape:
+
+```sql
+-- The network parameter carrier (network.md §4): append-only
+-- version rows per governed parameter; the newest row is the value
+-- in force; the genesis seed (the Charter payload's values) is the
+-- fold's base case; each landed finalization appends.
+CREATE TABLE network_parameter_versions (
+    parameter  TEXT        NOT NULL,
+    value      JSONB       NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (parameter, created_at)
+);
+```
 
 ---
 
@@ -672,6 +686,17 @@ CREATE TABLE auth_key_backups (
     blob       BYTEA       NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, created_at)
+);
+
+-- System-actor key custody: the backend-custodied signing seeds of
+-- the system actors (substrate.md §8 — custody by design), seeded
+-- at genesis (network.md §2). The Genesis Moderator's seed sits
+-- here too for the bootstrap's crash-repair path — the operator's
+-- own account on the operator's own server; real users' keys are
+-- device-held and never appear in this table (auth.md).
+CREATE TABLE system_actor_keys (
+    actor_id     UUID  PRIMARY KEY REFERENCES actors(id),
+    signing_seed BYTEA NOT NULL
 );
 
 -- Collective co-signing halves: the backend's half of each

@@ -71,10 +71,10 @@ Crates:
 
 | Crate | Role |
 |---|---|
-| `api` | Axum HTTP server, async-graphql schema |
-| `graph-engine` | legacy crate from the retired dual-database design — no longer in the documented architecture; pending a removal decision |
-| `postgres-store` | SQLx queries, migrations, display-content CRUD |
-| `common` | Shared domain types, error types |
+| `api` | Axum HTTP server, async-graphql schema; owns the L1 boundary trait, ingestion, and the bootstrap |
+| `l1-standin` | the L1 stand-in behind the seam — formation, admission handshake, ordering, θ-ledger, epoch publication; replaced wholesale when the real Layer 1 ships |
+| `postgres-store` | SQLx queries, migrations, the record mirror, display-content CRUD |
+| `common` | Shared domain types, error types, the L1 seam data model (`common::l1`) |
 | `ranker` | planned, not yet in `crates/` — pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
 
 Docs are layered:
@@ -347,5 +347,7 @@ it without a named reason.
 - `cargo fmt` enforced.
 - `clippy -D warnings` enforced.
 - No `unwrap()` in library code — use `thiserror` / `anyhow`.
-- SQL only in `postgres-store`.
+- SQL only in `postgres-store` — except `l1-standin`, which owns its
+  own `l1_*` tables (it plays the substrate, not CoGra's store; the
+  whole set is dropped at the swap).
 - No comments on obvious code. Comments explain *why*, not *what*.
