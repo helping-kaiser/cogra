@@ -81,6 +81,147 @@ impl Encoder {
     }
 }
 
+/// Decode failures over the subset.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum DecodeError {
+    #[error("unexpected end of input at byte {0}")]
+    Truncated(usize),
+    #[error("expected {expected} at byte {at}, found major type {found}")]
+    WrongType {
+        at: usize,
+        expected: &'static str,
+        found: u8,
+    },
+    #[error("unsupported head byte {0:#04x}")]
+    Unsupported(u8),
+    #[error("invalid UTF-8 in text item")]
+    Utf8,
+    #[error("{0} bytes of trailing input")]
+    Trailing(usize),
+}
+
+/// Reader over the same deterministic subset the `Encoder` writes. Decoding
+/// is lenient about head widths — the signing bases are always re-encoded
+/// canonically from the decoded values, so wire-level canonicality is never
+/// load-bearing.
+pub struct Decoder<'a> {
+    input: &'a [u8],
+    pos: usize,
+}
+
+impl<'a> Decoder<'a> {
+    pub fn new(input: &'a [u8]) -> Self {
+        Self { input, pos: 0 }
+    }
+
+    fn byte(&mut self) -> Result<u8, DecodeError> {
+        let b = *self
+            .input
+            .get(self.pos)
+            .ok_or(DecodeError::Truncated(self.pos))?;
+        self.pos += 1;
+        Ok(b)
+    }
+
+    fn take(&mut self, n: usize) -> Result<&'a [u8], DecodeError> {
+        let end = self
+            .pos
+            .checked_add(n)
+            .filter(|&e| e <= self.input.len())
+            .ok_or(DecodeError::Truncated(self.pos))?;
+        let slice = &self.input[self.pos..end];
+        self.pos = end;
+        Ok(slice)
+    }
+
+    fn head(&mut self, major: u8, expected: &'static str) -> Result<u64, DecodeError> {
+        let at = self.pos;
+        let b = self.byte()?;
+        if b >> 5 != major {
+            return Err(DecodeError::WrongType {
+                at,
+                expected,
+                found: b >> 5,
+            });
+        }
+        match b & 0x1F {
+            v @ 0..=23 => Ok(u64::from(v)),
+            24 => Ok(u64::from(self.byte()?)),
+            25 => Ok(u64::from(u16::from_be_bytes(
+                self.take(2)?
+                    .try_into()
+                    .map_err(|_| DecodeError::Truncated(at))?,
+            ))),
+            26 => Ok(u64::from(u32::from_be_bytes(
+                self.take(4)?
+                    .try_into()
+                    .map_err(|_| DecodeError::Truncated(at))?,
+            ))),
+            27 => Ok(u64::from_be_bytes(
+                self.take(8)?
+                    .try_into()
+                    .map_err(|_| DecodeError::Truncated(at))?,
+            )),
+            _ => Err(DecodeError::Unsupported(b)),
+        }
+    }
+
+    pub fn uint(&mut self) -> Result<u64, DecodeError> {
+        self.head(0, "uint")
+    }
+
+    pub fn bytes(&mut self) -> Result<Vec<u8>, DecodeError> {
+        let len = self.head(2, "bytes")?;
+        Ok(self.take(len as usize)?.to_vec())
+    }
+
+    pub fn text(&mut self) -> Result<String, DecodeError> {
+        let len = self.head(3, "text")?;
+        let raw = self.take(len as usize)?;
+        String::from_utf8(raw.to_vec()).map_err(|_| DecodeError::Utf8)
+    }
+
+    pub fn array(&mut self) -> Result<u64, DecodeError> {
+        self.head(4, "array")
+    }
+
+    pub fn float(&mut self) -> Result<f64, DecodeError> {
+        let at = self.pos;
+        let b = self.byte()?;
+        if b != 0xFB {
+            return Err(DecodeError::WrongType {
+                at,
+                expected: "float",
+                found: b >> 5,
+            });
+        }
+        Ok(f64::from_bits(u64::from_be_bytes(
+            self.take(8)?
+                .try_into()
+                .map_err(|_| DecodeError::Truncated(at))?,
+        )))
+    }
+
+    /// A text item or the null sentinel.
+    pub fn text_or_null(&mut self) -> Result<Option<String>, DecodeError> {
+        if self.input.get(self.pos) == Some(&0xF6) {
+            self.pos += 1;
+            return Ok(None);
+        }
+        self.text().map(Some)
+    }
+
+    /// Asserts the input is fully consumed.
+    pub fn finish(self) -> Result<(), DecodeError> {
+        let rest = self.input.len() - self.pos;
+        if rest == 0 {
+            Ok(())
+        } else {
+            Err(DecodeError::Trailing(rest))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
