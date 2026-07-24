@@ -32,13 +32,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      android: ${{ steps.android.outputs.android }}
+      android: ${{ steps.frontends.outputs.android }}
+      web: ${{ steps.frontends.outputs.web }}
     steps:
       - uses: actions/checkout@v4
-      # The Rust gate. `android/**` is subtracted alongside docs so an
-      # Android-only PR skips the Rust lint/test jobs; a schema.graphql change
-      # is NOT excluded, so it still trips the Rust jobs (and, below, the
-      # Android one) since both sides of the contract depend on it.
+      # The Rust gate. `android/**` and `web/**` are subtracted alongside docs
+      # so a frontend-only PR skips the Rust lint/test jobs; a schema.graphql
+      # change is NOT excluded, so it still trips the Rust jobs (and, below,
+      # the frontend ones) since all sides of the contract depend on it.
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -49,15 +50,19 @@ jobs:
               - '!docs/**'
               - '!**/*.md'
               - '!android/**'
-      # The Android gate. Default (OR) quantifier: any of these paths fires it.
-      # Kept in its own step because the OR semantics are incompatible with the
-      # `every` quantifier the Rust gate above depends on.
+              - '!web/**'
+      # The frontend gates. Default (OR) quantifier: any of these paths fires
+      # them. Kept in their own step because the OR semantics are incompatible
+      # with the `every` quantifier the Rust gate above depends on.
       - uses: dorny/paths-filter@v3
-        id: android
+        id: frontends
         with:
           filters: |
             android:
               - 'android/**'
+              - 'schema.graphql'
+            web:
+              - 'web/**'
               - 'schema.graphql'
 
   lint:
@@ -158,3 +163,31 @@ jobs:
         run: ./gradlew test
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
+
+  web:
+    name: Web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    # Codegen runs against the committed schema.graphql, so contract drift
+    # fails this job as a TypeScript compile error in `build`.
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate GraphQL types
+        run: npm run codegen
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build

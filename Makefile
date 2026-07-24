@@ -4,7 +4,7 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema sqlx-prepare sqlx-check android-ci android-lint android-test android-build
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-ci
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -102,6 +102,12 @@ android-build: ## Assemble the debug APK (./gradlew :app:assembleDebug)
 
 android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience only)
 	cd android && ./gradlew lint
+
+web-dev: ## Start the web app dev server (needs Node from web/.nvmrc)
+	cd web && npm run dev
+
+web-ci: ## Run the web CI checks (mirrors the web job in ci.yml)
+	cd web && npm ci && npm run codegen && npm run lint && npm test && npm run build
 
 logs: ## Follow docker compose logs
 	$(DOCKER_COMPOSE) logs -f
