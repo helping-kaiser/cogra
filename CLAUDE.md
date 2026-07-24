@@ -250,6 +250,44 @@ settled and you're mechanically applying it across N files,
 parallel batches are fine again — the distinction is iteration
 vs. application.
 
+### Discussion gates writing
+
+While a design discussion has any open thread, don't edit files —
+not even for sub-points that seem settled. An open thread can
+invalidate the "settled" part, and a fan-out of edits can't be
+course-corrected mid-flight. Writing resumes only when the human
+explicitly closes the discussion.
+
+- **Deliver design briefs as plain text.** When asked for
+  background + options + a recommendation, write the complete
+  brief as a normal message — background, all options, founded
+  recommendation, then the questions in prose — and end the
+  turn. No question dialogs on top: they interrupt reading and
+  force nuanced answers into preset choices.
+- **Answer questions before acting.** A rejection that contains a
+  question ("why X?") is a request to stop and explain, not a
+  speed bump. Reply with the explanation only and end the turn;
+  retry the edit only after an explicit green-light. Re-attempting
+  the action alongside the answer reads as steamrolling, even when
+  the answer is correct.
+
+### Research artifacts go to `tmp_research_files/`
+
+Audit findings, best-practices reviews, PR-prompt files, and other
+working notes live in the gitignored `tmp_research_files/` at the
+repo root, in a dated subfolder (e.g.
+`tmp_research_files/2026-06-19-best-practices-audit/`) — never
+committed. The repo holds decisions and docs, not the notes that
+produced them. For an audit, write a README (overview + decisions
+table grounded in official sources) plus one self-contained
+`pr-*.md` prompt per bundled change. `tmp_research_files/README.md`
+indexes the decision records worth keeping.
+
+### Refer to "the L1 team", never a name
+
+External Layer-1 collaborators appear as "the L1 team" or "the L1
+author" in docs, commits, and PRs — never a personal name.
+
 ### Tightening passes: write current state, not change history
 
 When fixing wrong, stale, or imprecise text in a docs pass:
