@@ -7,6 +7,7 @@ sharing this repository with the backend
 | Concern | Choice |
 |---|---|
 | Language / UI | Kotlin + Jetpack Compose |
+| Design language | [Material 3](https://m3.material.io) — what Compose's component library implements |
 | GraphQL client | Apollo Kotlin, generated from the exported `schema.graphql` |
 | Ranking core | the `ranker` crate, bound via UniFFI |
 | Build | Gradle, multi-module |
@@ -57,6 +58,12 @@ approval — so the user never signs blind bytes. The concrete signing crypto fo
 is open with the L1 team
 ([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation));
 until it resolves, the app's key handling stays scheme-neutral.
+
+## Accessibility
+
+Part of the bar from day one, never retrofitted: every screen
+lands with its Compose semantics — content descriptions, roles,
+touch-target sizes — alongside its UI tests.
 
 ## Module layout
 
