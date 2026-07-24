@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE l1_acts\n         SET status = 'approved', approval_signature = $2, approved_at = NOW()\n         WHERE act_id = $1 AND status = 'sealed'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6a78240257f6841e0830a142cf6c25f5d08457c837ed95f3d17ba4cebabaf279"
+}

@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT node_id, frontier, degree FROM l1_node_state",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "frontier",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "degree",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f978beb98c9bd1eeb2121d325eec8a82ecb3be4f5a62480ed8d345d87737de02"
+}
