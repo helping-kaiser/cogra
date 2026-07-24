@@ -762,7 +762,7 @@ charter — an L1 Content node anchored by the publisher system
 actor, with passed changes landing as witnessed payloads on their
 finalization Opinions toward it
 (newest finalization per parameter wins) and mirrored into the
-`:Network` carrier node the ranker reads
+parameter carrier the ranker reads
 ([network.md](network.md#feed-ranking-calibration)). Set by the
 genesis operator, migrating to community governance; numbers live
 there, not here. Frontend overrides layer view-side on top: they

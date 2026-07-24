@@ -164,7 +164,7 @@ is a gate, not a weight," and names the failure modes each side
 of the multi-gate pattern closes off. The same component
 reappears in moderator role changes
 ([network.md §9](../primitive/network.md#9-mod-role-changes))
-and `:Network` parameter amendments
+and network parameter amendments
 ([network.md §11](../primitive/network.md#11-amending-network-parameters)).
 
 Instance-specific arithmetic — `moderation_sensitive_*` and
@@ -184,8 +184,8 @@ eligibility-and-voting body for moderation Proposals.
   [governance.md](../primitive/governance.md).
 - **Tally:** petition-style — only positive votes contribute. See
   [governance.md §3 "Petition-style tally and dual quorum"](../primitive/governance.md#petition-style-tally-and-dual-quorum-network-scope-only).
-- **Dual-quorum bars** (governed properties of the `:Network`
-  overlay singleton, replayable from its charter anchor —
+- **Dual-quorum bars** (governed properties of the overlay
+  parameter carrier, replayable from the charter anchor —
   [network.md](../primitive/network.md)). A Proposal passes when
   `positive_count ≥ min(P × |active members|, K)`:
 
@@ -205,7 +205,7 @@ over (a fixed engagement-level positive-vote count is sufficient).
 The mod gate carries the integrity guarantee independently of
 either bar.
 
-Every number above is a governed `:Network` parameter, amendable
+Every number above is a governed network parameter, amendable
 via the rules in
 [network.md §11](../primitive/network.md#11-amending-network-parameters)
 — the `moderation_illegal_*` parameters fall in the critical
@@ -241,7 +241,7 @@ filtering is read-side and free of the commitment's granularity.
 
 **Out of scope:**
 
-- Overlay structure (Proposal tally state, `:Network` parameters,
+- Overlay structure (Proposal tally state, the parameter carrier,
   CollectiveMember junctions) — no user-authored content;
   governed by their own machinery.
 - The reward economy's records (campaigns, settlements, payouts)
@@ -373,7 +373,7 @@ amendable via the same Proposal primitive (dual-quorum bars in
 `Network.guidelines_change_quorum_count`, tuned higher than
 single-content classification because an amendment shifts the
 normative frame for *all future* moderation). The current version
-is pinned by the governed `:Network` properties
+is pinned by the governed network properties
 `guidelines_version` + `guidelines_hash`, and each ratified
 version's text is anchored on L1 as a platform document — a
 publisher-authored Content node whose anchoring Publish record
