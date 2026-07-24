@@ -7,5 +7,12 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-uuid     = { workspace = true }
+uuid      = { workspace = true }
 thiserror = { workspace = true }
+
+# The L1 seam model's interim act-authentication realization
+# (common::l1::crypto; open-questions.md Q30).
+ed25519-dalek = { workspace = true }
+sha2          = { workspace = true }
+rand          = { workspace = true }
+hex           = { workspace = true }
