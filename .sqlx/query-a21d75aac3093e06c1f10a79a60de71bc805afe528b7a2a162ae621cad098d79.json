@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(MAX(epoch) + 1, 0) AS \"e!\" FROM l1_epochs",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "e!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a21d75aac3093e06c1f10a79a60de71bc805afe528b7a2a162ae621cad098d79"
+}

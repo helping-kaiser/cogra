@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT epoch FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "500ed5e103a7c8a15b011a07c829f574dc67d1a9ddf77b2b7d77c6faa40b8bae"
+}

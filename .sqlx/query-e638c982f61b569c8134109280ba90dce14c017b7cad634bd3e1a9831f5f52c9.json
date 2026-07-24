@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mirror_record_legs\n                     (record_id, leg, source, target, p_d, p_i,\n                      domain, mask_a00, mask_a01, mask_a10, mask_a11, tier,\n                      tau, family, epoch, act_time, position)\n                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Float8",
+        "Float8",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Float8",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e638c982f61b569c8134109280ba90dce14c017b7cad634bd3e1a9831f5f52c9"
+}

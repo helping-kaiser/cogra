@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1) AS \"exists!\"",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM mirror_records WHERE author = $1 AND family = $2\n           ) AS \"exists!\"",
   "describe": {
     "columns": [
       {
@@ -11,6 +11,7 @@
     ],
     "parameters": {
       "Left": [
+        "Text",
         "Text"
       ]
     },
@@ -18,5 +19,5 @@
       null
     ]
   },
-  "hash": "1dcaf0dd04ffb42c41136b3852efc9b0a09e47c7356d00bc09185ea84c0ad479"
+  "hash": "63984509489f3f8a69090ba04e11657a00e2738b91ab988d2c5d514f428f6fc6"
 }

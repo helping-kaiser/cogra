@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mirror_epoch_cursor SET last_epoch = -1 WHERE singleton",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "c23509666ef4807a47729b6d18114d0115ee457f24c7e46ec2b99d2b44e49f17"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT burned_total_micro, balance_micro, action_count\n             FROM l1_accounts WHERE address = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "burned_total_micro",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "balance_micro",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "action_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fd250973ee2bd25a343970255622d0fb7d09542adb721cd82c7aa728983956b3"
+}
