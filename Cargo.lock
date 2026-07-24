@@ -48,6 +48,7 @@ dependencies = [
  "axum",
  "chrono",
  "common",
+ "dotenvy",
  "hex",
  "http-body-util",
  "l1-standin",
