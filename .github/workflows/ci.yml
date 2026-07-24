@@ -106,16 +106,8 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
-      memgraph:
-        # Pinned to the same minor version as docker/docker-compose.yml so
-        # dev and CI test against the same engine.
-        image: memgraph/memgraph-mage:3.10.1
-        ports:
-          - 7687:7687
     env:
       DATABASE_URL: postgres://gnp:gnp_secret@localhost:5432/gnp_db
-      MEMGRAPH_HOST: localhost
-      MEMGRAPH_PORT: 7687
       RUST_LOG: debug
     steps:
       - uses: actions/checkout@v4

@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "crates/api",
-    "crates/graph-engine",
+    "crates/l1-standin",
     "crates/postgres-store",
     "crates/common",
 ]
@@ -29,9 +29,6 @@ async-graphql-axum = { version = "7" }
 # PostgreSQL
 sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "migrate"] }
 
-# Graph DB — Memgraph via bolt protocol (neo4rs is bolt-compatible)
-neo4rs = { version = "0.8" }
-
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
@@ -50,6 +47,14 @@ config = { version = "0.14" }
 # Shared primitive types
 uuid = { version = "1", features = ["v4", "v5", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+
+# The interim act-authentication realization for the L1 stand-in
+# (open-questions.md Q30 — stand-in-scoped choices, not a Q30 resolution):
+# Ed25519 signatures, SHA-256 salted hash commitments.
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+sha2 = { version = "0.10" }
+rand = { version = "0.8" }
+hex = { version = "0.4" }
 
 [profile.dev]
 opt-level = 0
