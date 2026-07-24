@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applicants SET email_verification_token_hash = $2\n         WHERE id = $1 AND email_verified_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7bd0ba1da1031824e8098fca54e1b5fa1cbc34141717fd3adae1dd2cb24073ff"
+}
