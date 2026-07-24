@@ -50,10 +50,10 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     boundary.approve(witness).await.expect("approved");
 
     // Nothing to ingest before the epoch closes.
-    let landed = api::ingest::ingest_pending(&boundary, &pool)
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
-    assert_eq!(landed, 0);
+    assert_eq!(outcome.epochs, 0);
     assert_eq!(
         mirror::last_ingested_epoch(&pool).await.expect("cursor"),
         -1
@@ -61,10 +61,10 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
 
     // Close and ingest: the record lands, the cursor advances.
     standin.close_epoch().await.expect("closes").expect("acts");
-    let landed = api::ingest::ingest_pending(&boundary, &pool)
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
-    assert_eq!(landed, 1);
+    assert_eq!(outcome.epochs, 1);
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     assert_eq!(
         mirror::record_ids_in_epoch(&pool, 0).await.expect("ids"),
@@ -72,10 +72,10 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     );
 
     // A second pass is a no-op — ingestion resumes from the cursor.
-    let landed = api::ingest::ingest_pending(&boundary, &pool)
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
-    assert_eq!(landed, 0);
+    assert_eq!(outcome.epochs, 0);
 
     // The B_i read through the boundary sees the consummated debit.
     let balance = boundary.balance(&actor.address()).await.expect("balance");

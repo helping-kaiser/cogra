@@ -141,7 +141,7 @@ pub async fn run(
 ) -> Result<BootstrapOutcome, BootstrapError> {
     // Catch up the mirror first, so the gate reads current state.
     let boundary = StandInBoundary(standin.clone());
-    crate::ingest::ingest_pending(&boundary, pool).await?;
+    crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
 
     let l2_half = genesis::system_actors_present(pool).await?;
     let l1_half = match genesis::actor_by_handle(pool, PUBLISHER_HANDLE).await? {
@@ -287,7 +287,7 @@ pub async fn run(
 
     // Close the genesis epoch and land the records in the mirror.
     standin.close_epoch().await?;
-    crate::ingest::ingest_pending(&boundary, pool).await?;
+    crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
 
     // The gate must now hold on both sides.
     let landed = mirror::has_record_by(pool, &publisher.key.address(), Family::Publish).await?;

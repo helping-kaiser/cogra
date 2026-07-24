@@ -5,6 +5,8 @@
 pub mod bootstrap;
 pub mod ingest;
 pub mod l1;
+pub mod prepare;
+pub mod relay;
 pub mod schema;
 
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
