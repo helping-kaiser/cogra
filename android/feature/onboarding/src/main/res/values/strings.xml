@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="invite_title">Join CoGra</string>
+    <string name="invite_explainer">CoGra is invite-only: someone who knows you vouches you in. Paste your invite link (or its code) below.</string>
+    <string name="invite_input">Invite link or code</string>
+    <string name="invite_check">Check invite</string>
+    <string name="invite_continue">Continue</string>
+    <string name="invite_vouched_by">@%1$s is vouching for you.</string>
+    <string name="invite_malformed">That doesn\'t contain an invite code.</string>
+    <string name="invite_not_found">This invite doesn\'t exist. Check the link with the person who sent it.</string>
+    <string name="invite_unusable">This invite can\'t be used any more — it expired, was revoked, or its slot is taken. Ask your inviter for a new one.</string>
+    <string name="invite_login_instead">Already a member? Sign in</string>
+
+    <string name="apply_title">Your account</string>
+    <string name="apply_handle">Handle</string>
+    <string name="apply_handle_rules">3–30 characters: a–z, 0–9, _</string>
+    <string name="apply_password_rules">At least 12 characters.</string>
+    <string name="apply_continue">Continue</string>
+    <string name="apply_handle_taken">That handle is taken.</string>
+    <string name="apply_in_progress">An application with this email is already underway — check your inbox.</string>
+    <string name="apply_bad_input">Check the highlighted field.</string>
+
+    <string name="backup_title">Your key, your actor</string>
+    <string name="backup_explainer">Your identity on the graph is a key that exists only on this phone. A recovery code lets you restore it if this phone is ever lost — we store only an encrypted copy that the code unlocks.</string>
+    <string name="backup_accept">Create my recovery code</string>
+    <string name="backup_decline">Not now</string>
+    <string name="backup_code_explainer">Write this code down somewhere safe — on paper is best. It is shown only this once, and we can never recover it for you.</string>
+    <string name="backup_code_saved">I\'ve written it down</string>
+    <string name="backup_decline_title">Continue without a backup?</string>
+    <string name="backup_decline_consequence">If this phone is lost or broken, your posts, relationships, and standing are permanently lost with it. Your login would survive, but the actor behind it can never be restored. You can create a backup later in Settings.</string>
+    <string name="backup_decline_confirm">I accept the risk</string>
+    <string name="backup_decline_cancel">Go back</string>
+
+    <string name="status_title">Your application</string>
+    <string name="verify_explainer">We emailed you a verification token. Paste it here to prove the address is yours.</string>
+    <string name="verify_token">Verification token</string>
+    <string name="verify_submit">Verify email</string>
+    <string name="verify_failed">That token is invalid or expired — resend and try the newest one.</string>
+    <string name="verify_resend">Resend the email</string>
+    <string name="verify_resent">If an application holds that address, a fresh token is on its way.</string>
+    <string name="status_awaiting_approval">Waiting for your inviter\'s approval. You can close the app — we\'ll pick up right here.</string>
+    <string name="status_awaiting_landing">Approved! Your Registration is signed and on its way onto the graph.</string>
+    <string name="status_claimed">Welcome to CoGra.</string>
+    <string name="status_gone">This application is no longer active — it may have expired. Ask your inviter for a fresh link.</string>
+    <string name="status_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>
+
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
+    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+</resources>

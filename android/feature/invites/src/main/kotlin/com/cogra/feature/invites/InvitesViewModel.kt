@@ -1,0 +1,137 @@
+package com.cogra.feature.invites
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cogra.domain.ErrorCode
+import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.Outcome
+import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.signing.WriteResult
+import com.cogra.domain.signing.WriteSigner
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class InvitesUiState(
+    val loading: Boolean = true,
+    val links: List<InviteLinkInfo> = emptyList(),
+    val creating: Boolean = false,
+    val singleUse: Boolean = false,
+    val prefillPDirected: Double = 0.5,
+    val prefillPInterest: Double = 0.5,
+    /** The applicant currently being approved, if any. */
+    val approvingId: String? = null,
+    val error: ErrorCode? = null,
+    val transportFailed: Boolean = false,
+    /** One-shot: the vouch landed in the relay after on-device signing. */
+    val vouchSigned: Boolean = false,
+)
+
+/**
+ * The inviter surface (auth.md "Invite-link generation", "Approval and
+ * landing"): links stage, approval is the priced act, and the vouch —
+ * the inviter's own Opinion — is signed on this device.
+ */
+@HiltViewModel
+class InvitesViewModel @Inject constructor(
+    private val account: AccountRepository,
+    private val signer: WriteSigner,
+    @WebOrigin private val webOrigin: String,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(InvitesUiState())
+    val state = _state.asStateFlow()
+
+    init {
+        refresh()
+    }
+
+    /** The canonical shareable URL (auth.md "Link URLs"). */
+    fun shareUrl(link: InviteLinkInfo): String = "$webOrigin/join/${link.id}"
+
+    fun onSingleUseChange(v: Boolean) = _state.update { it.copy(singleUse = v) }
+
+    fun onPrefillPDirectedChange(v: Double) = _state.update { it.copy(prefillPDirected = v) }
+
+    fun onPrefillPInterestChange(v: Double) = _state.update { it.copy(prefillPInterest = v) }
+
+    fun refresh() {
+        viewModelScope.launch {
+            when (val outcome = account.inviteLinks()) {
+                is Outcome.Success -> _state.update {
+                    it.copy(loading = false, links = outcome.value, transportFailed = false)
+                }
+                is Outcome.Refused -> _state.update {
+                    it.copy(loading = false, error = outcome.errors.first().code)
+                }
+                is Outcome.Failed -> _state.update { it.copy(loading = false, transportFailed = true) }
+            }
+        }
+    }
+
+    fun onCreate() {
+        if (_state.value.creating) return
+        _state.update { it.copy(creating = true, error = null, transportFailed = false) }
+        viewModelScope.launch {
+            val outcome = account.createInviteLink(
+                // The operational default; links are revocable any time.
+                expiresAt = Instant.now().plus(7, ChronoUnit.DAYS),
+                prefillPDirected = _state.value.prefillPDirected,
+                prefillPInterest = _state.value.prefillPInterest,
+                singleUse = _state.value.singleUse,
+            )
+            when (outcome) {
+                is Outcome.Success -> {
+                    _state.update { it.copy(creating = false) }
+                    refresh()
+                }
+                is Outcome.Refused -> _state.update {
+                    it.copy(creating = false, error = outcome.errors.first().code)
+                }
+                is Outcome.Failed -> _state.update { it.copy(creating = false, transportFailed = true) }
+            }
+        }
+    }
+
+    fun onRevoke(linkId: String) {
+        viewModelScope.launch {
+            account.revokeInviteLink(linkId)
+            refresh()
+        }
+    }
+
+    /**
+     * The deliberate, priced act: approve, then sign the returned
+     * Opinion writes on this device — the vouch is the inviter's
+     * signature, not a server write.
+     */
+    fun onApprove(applicantId: String, pDirected: Double, pInterest: Double) {
+        if (_state.value.approvingId != null) return
+        _state.update { it.copy(approvingId = applicantId, error = null, vouchSigned = false) }
+        viewModelScope.launch {
+            val prepared = when (val outcome = account.approveApplicant(applicantId, pDirected, pInterest)) {
+                is Outcome.Success -> outcome.value
+                is Outcome.Refused -> {
+                    _state.update {
+                        it.copy(approvingId = null, error = outcome.errors.first().code)
+                    }
+                    return@launch
+                }
+                is Outcome.Failed -> {
+                    _state.update { it.copy(approvingId = null, transportFailed = true) }
+                    return@launch
+                }
+            }
+            val results = signer.sign(prepared)
+            val signed = results.all { it is WriteResult.Done }
+            _state.update { it.copy(approvingId = null, vouchSigned = signed) }
+            refresh()
+        }
+    }
+}
