@@ -453,12 +453,39 @@ pub async fn land_applicant(
     .execute(&mut *conn)
     .await?;
     sqlx::query!(
-        "UPDATE auth_applicants SET landed_at = NOW() WHERE id = $1",
+        "UPDATE auth_applicants SET landed_at = NOW(), actor_id = $2 WHERE id = $1",
         applicant_id,
+        actor_id,
     )
     .execute(&mut *conn)
     .await?;
     Ok(())
+}
+
+/// The actor that issued the invite link this account's application came
+/// through — landing provenance; None for actors without an application
+/// trace (genesis actors).
+pub async fn inviter_of(
+    pool: &PgPool,
+    actor_id: Uuid,
+) -> Result<Option<ActorIdentity>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address
+         FROM auth_applicants a
+         JOIN auth_invite_links l ON l.id = a.invite_link_id
+         JOIN actors i ON i.id = l.inviter_id
+         WHERE a.actor_id = $1",
+        actor_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| ActorIdentity {
+        id: r.id,
+        kind: r.kind,
+        handle: r.handle,
+        actor_pubkey: r.actor_pubkey,
+        l0_address: r.l0_address,
+    }))
 }
 
 /// The reaper (auth.md "Account lifecycle"): deletes expired applications

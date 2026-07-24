@@ -339,6 +339,24 @@ type InviteLink {
 	applicants(after: String, before: String, first: Int, last: Int): ApplicantConnection!
 }
 
+"""
+The anonymous pre-submit view of an invite link — enough for the app
+to gate the registration form and key ceremony on a usable capability,
+and to show who is vouching. Holding the id is holding the link.
+"""
+type InviteLinkCheck {
+	"""
+	Whether the link can stage a new applicant now — live, unexpired,
+	unrevoked, and (single-use) its one slot free.
+	"""
+	usable: Boolean!
+	"""
+	The issuing actor's handle.
+	"""
+	inviterHandle: String!
+	expiresAt: DateTime!
+}
+
 type InviteLinkConnection {
 	"""
 	Information to aid in pagination.
@@ -623,6 +641,18 @@ type Query {
 	mirror has ingested.
 	"""
 	health: Health!
+	"""
+	The host key the device verifies seals against before approving
+	(base64) — realization transparency: every host-added field of a
+	verified act is checkable on-device.
+	"""
+	hostPublicKey: String!
+	"""
+	Anonymous pre-submit check of an invite link, so the app can gate
+	the registration form and key ceremony on a usable capability.
+	Null when the id references no link.
+	"""
+	inviteLinkCheck(id: UUID!): InviteLinkCheck
 	"""
 	The viewer's own account, resolved from the request's auth token.
 	Null when the request is unauthenticated.
@@ -986,6 +1016,13 @@ type User implements Actor {
 	Field-level: viewer-only.
 	"""
 	keyBackup: String
+	"""
+	The actor whose invite this account came through — landing
+	provenance for the reciprocation gesture; the graph's own record
+	of the vouch is the inviter's Opinion. Field-level: viewer-only;
+	null for accounts without an application trace (genesis actors).
+	"""
+	invitedBy: Actor
 	"""
 	The account's invite links — service-side staging state, not
 	graph structure. Field-level: each link's id is the link

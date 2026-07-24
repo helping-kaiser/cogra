@@ -4,12 +4,15 @@
 //! fields are field-level authorized on their types.
 
 use async_graphql::{Context, Object, SimpleObject};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
 
 use super::mutation::application_view;
-use super::types::{ApplicationView, StagedWriteType, User};
+use super::types::{ApplicationView, InviteLinkCheck, StagedWriteType, User};
 use crate::auth::Viewer;
+use crate::l1::{L1Boundary, StandInBoundary};
 
 /// Connectivity report for the API process and its store.
 #[derive(SimpleObject)]
@@ -40,6 +43,40 @@ impl Query {
             postgres_connected: postgres_store::ping(pool).await,
             mirror_epoch,
         })
+    }
+
+    /// The host key the device verifies seals against before approving
+    /// (base64) — realization transparency: every host-added field of a
+    /// verified act is checkable on-device.
+    async fn host_public_key(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let key = boundary
+            .host_public_key()
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(B64.encode(key))
+    }
+
+    /// Anonymous pre-submit check of an invite link, so the app can gate
+    /// the registration form and key ceremony on a usable capability.
+    /// Null when the id references no link.
+    async fn invite_link_check(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+    ) -> async_graphql::Result<Option<InviteLinkCheck>> {
+        let pool = ctx.data::<PgPool>()?;
+        let Some(link) = store::invite_link(pool, id).await? else {
+            return Ok(None);
+        };
+        let inviter = store::actor_identity(pool, link.inviter_id)
+            .await?
+            .ok_or_else(|| async_graphql::Error::new("invite link without inviter"))?;
+        Ok(Some(InviteLinkCheck {
+            usable: store::invite_link_usable(pool, id).await?,
+            inviter_handle: inviter.handle,
+            expires_at: link.expires_at,
+        }))
     }
 
     /// The viewer's own account, resolved from the request's auth token.

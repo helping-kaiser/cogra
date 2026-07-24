@@ -32,8 +32,13 @@ hiltNavigationCompose = "1.2.0"
 apollo = "4.1.1"
 
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
-# is deprecated in current androidx.security-crypto).
+# is deprecated in current androidx.security-crypto). BouncyCastle's
+# lightweight API backs the signing crypto in core:crypto: Tink's own
+# Ed25519 lives in its `subtle` package, which Tink documents as internal
+# and subject to removal, and its keyset API cannot import a raw seed —
+# which key recovery requires.
 tink = "1.15.0"
+bouncycastle = "1.85"
 
 # Type-safe Navigation Compose routes are @Serializable, so the build needs
 # the kotlinx-serialization plugin (versioned with Kotlin) and its JSON runtime.
@@ -92,6 +97,7 @@ apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", 
 
 # Crypto
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
+bouncycastle-provider = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 
 # DI annotations
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
