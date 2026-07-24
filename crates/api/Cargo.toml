@@ -2,8 +2,8 @@
 name    = "api"
 version.workspace = true
 edition.workspace = true
-# Two binaries live here (the server + the schema exporter); name the
-# server as default so `cargo run -p api` and `make api` stay unambiguous.
+# Several binaries live here (server + tools); name the server as default
+# so `cargo run -p api` and `make api` stay unambiguous.
 default-run = "api"
 
 [lints]
@@ -21,37 +21,31 @@ path = "src/bin/export-schema.rs"
 name = "bootstrap"
 path = "src/bin/bootstrap.rs"
 
+[[bin]]
+name = "l1-dev"
+path = "src/bin/l1-dev.rs"
+
 [dependencies]
 common           = { path = "../common" }
-graph-engine     = { path = "../graph-engine" }
+l1-standin       = { path = "../l1-standin" }
 postgres-store   = { path = "../postgres-store" }
 
-tokio             = { workspace = true }
-axum              = { workspace = true }
-async-graphql     = { workspace = true, features = ["chrono", "uuid"] }
+tokio              = { workspace = true }
+axum               = { workspace = true }
+async-graphql      = { workspace = true, features = ["chrono", "uuid"] }
 async-graphql-axum = { workspace = true }
-serde             = { workspace = true }
-serde_json        = { workspace = true }
-anyhow            = { workspace = true }
-thiserror         = { workspace = true }
-tracing           = { workspace = true }
+serde              = { workspace = true }
+serde_json         = { workspace = true }
+anyhow             = { workspace = true }
+thiserror          = { workspace = true }
+tracing            = { workspace = true }
 tracing-subscriber = { workspace = true }
-uuid              = { workspace = true }
-chrono            = { workspace = true }
-
-# Auth (auth.md): Argon2id password hashing, Ed25519 JWT access tokens,
-# SHA-256-hashed opaque refresh tokens.
-argon2       = { version = "0.5" }
-jsonwebtoken = { version = "9" }
-ring         = { version = "0.17" }
-rand         = { version = "0.8" }
-sha2         = { version = "0.10" }
-base64       = { version = "0.22" }
+uuid               = { workspace = true }
+chrono             = { workspace = true }
+hex                = { workspace = true }
+sha2               = { workspace = true }
+sqlx               = { workspace = true }
 
 [dev-dependencies]
-tower         = { version = "0.5", features = ["util"] }
+tower          = { version = "0.5", features = ["util"] }
 http-body-util = { version = "0.1" }
-# Integration tests seed and clean up store fixtures directly.
-sqlx          = { workspace = true }
-neo4rs        = { workspace = true }
-chrono        = { workspace = true }
