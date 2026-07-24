@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO system_actor_keys (actor_id, signing_seed) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e0c93f29057072d55b28e8cff376284b05189e9e23fbf548228fb2bdd5b1ca5f"
+}

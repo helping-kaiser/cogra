@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_node_state (node_id, frontier, degree)\n             VALUES ($1, $2, $3)\n             ON CONFLICT (node_id) DO UPDATE\n             SET frontier = EXCLUDED.frontier, degree = EXCLUDED.degree",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f747284bf8c4653ded0130e4bda47df014343ffdf393ffec2340daa1dc2c00a8"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT act_id, act_time AS \"act_time!\" FROM l1_acts WHERE status = 'accepted'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "act_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "act_time!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "afa72dec6e382821e2f06789d1580eb66bcd6fa49686bc4b0459428510dd0fb7"
+}

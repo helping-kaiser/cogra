@@ -1,11 +1,10 @@
-// API entry point — Axum HTTP server hosting the async-graphql schema.
-// Startup applies both stores' schemas (Postgres migrations, Memgraph
-// constraints + indexes) before serving.
-
-use std::sync::Arc;
+// API entry point — Axum HTTP server hosting the async-graphql schema,
+// with the L1 stand-in behind the seam and the mirror-ingestion loop
+// running alongside.
 
 use anyhow::Context;
-use api::auth::jwt::JwtKeys;
+use api::l1::StandInBoundary;
+use l1_standin::{StandIn, StandInConfig};
 use tracing_subscriber::EnvFilter;
 
 fn env_or(key: &str, default: &str) -> String {
@@ -14,6 +13,9 @@ fn env_or(key: &str, default: &str) -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // .env first, so plain `cargo run` matches the make targets; real
+    // environment variables win over file values (dotenvy never overrides).
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
@@ -28,25 +30,17 @@ async fn main() -> anyhow::Result<()> {
         .context("running Postgres migrations")?;
     tracing::info!("PostgreSQL connected, migrations applied");
 
-    let memgraph_host = env_or("MEMGRAPH_HOST", "localhost");
-    let memgraph_port = env_or("MEMGRAPH_PORT", "7687")
+    let boundary = StandInBoundary(StandIn::new(pool.clone(), StandInConfig::default()));
+    let ingest_interval: u64 = env_or("L1_INGEST_INTERVAL_SECS", "2")
         .parse()
-        .context("MEMGRAPH_PORT must be a port number")?;
-    let graph = graph_engine::connect(&memgraph_host, memgraph_port)
-        .await
-        .context("connecting to Memgraph")?;
-    graph_engine::schema::apply_schema(&graph)
-        .await
-        .context("applying graph constraints + indexes")?;
-    tracing::info!("Memgraph connected, graph schema applied");
+        .context("L1_INGEST_INTERVAL_SECS must be a number of seconds")?;
+    tokio::spawn(api::ingest::ingest_loop(
+        boundary,
+        pool.clone(),
+        ingest_interval,
+    ));
 
-    let signing_key = std::env::var("JWT_SIGNING_KEY").context(
-        "JWT_SIGNING_KEY must be set — run `make bootstrap` to generate the instance signing key",
-    )?;
-    let jwt =
-        Arc::new(JwtKeys::from_pkcs8_base64(&signing_key).context("loading JWT_SIGNING_KEY")?);
-
-    let schema = api::schema::build(pool, graph, jwt.clone());
+    let schema = api::schema::build(pool);
     let addr = format!(
         "{}:{}",
         env_or("API_HOST", "0.0.0.0"),
@@ -56,6 +50,6 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {addr}"))?;
     tracing::info!("listening on http://{addr} — /graphql, /health, /playground (dev)");
-    axum::serve(listener, api::app(schema, jwt)).await?;
+    axum::serve(listener, api::app(schema)).await?;
     Ok(())
 }

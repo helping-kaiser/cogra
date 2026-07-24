@@ -27,9 +27,8 @@ init: ## First-time setup: copy .env, check & install dependencies
 	fi
 	@echo "All dependencies ready."
 
-up: ## Start all services (Postgres + Memgraph)
+up: ## Start all services (Postgres)
 	$(DOCKER_COMPOSE) up -d
-	@echo "Memgraph Lab: http://localhost:3000"
 
 down: ## Stop all services
 	$(DOCKER_COMPOSE) down
@@ -60,7 +59,7 @@ sqlx-prepare: ## Regenerate the committed .sqlx/ offline metadata (needs a live,
 sqlx-check: ## Verify .sqlx/ matches the queries against the live schema (needs a live, migrated DB)
 	$(CARGO) sqlx prepare --workspace --check --database-url $(DATABASE_URL)
 
-bootstrap: up ## One-time instance setup: generate the JWT key, write genesis nodes + first invite link
+bootstrap: up ## One-time instance setup: seed genesis and land the L1 genesis records
 	@echo "Waiting for Postgres to be ready..."
 	@until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U $(POSTGRES_USER) > /dev/null 2>&1; do sleep 1; done
 	$(CARGO) run -p api --bin bootstrap

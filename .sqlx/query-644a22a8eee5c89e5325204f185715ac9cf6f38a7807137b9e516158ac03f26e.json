@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_accounts (address, burned_total_micro, balance_micro)\n             VALUES ($1, $2, $2)\n             ON CONFLICT (address) DO UPDATE SET\n                 burned_total_micro = l1_accounts.burned_total_micro + EXCLUDED.burned_total_micro,\n                 balance_micro      = l1_accounts.balance_micro + EXCLUDED.balance_micro",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "644a22a8eee5c89e5325204f185715ac9cf6f38a7807137b9e516158ac03f26e"
+}
