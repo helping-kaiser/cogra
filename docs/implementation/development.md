@@ -56,6 +56,9 @@ over file values.
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
+| `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
+| `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
+| `APPLICANT_REAPER_INTERVAL_SECS` | `600` | Sweep interval for expired, never-approved applications ([auth.md](auth.md#account-lifecycle)) |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |

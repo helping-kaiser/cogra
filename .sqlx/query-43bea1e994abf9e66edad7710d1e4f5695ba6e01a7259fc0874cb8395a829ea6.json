@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE actors SET handle = $2 WHERE id = $1 AND kind = 'user'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "43bea1e994abf9e66edad7710d1e4f5695ba6e01a7259fc0874cb8395a829ea6"
+}

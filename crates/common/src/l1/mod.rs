@@ -16,6 +16,7 @@ pub mod crypto;
 pub mod encoding;
 pub mod handshake;
 pub mod identifier;
+pub mod wire;
 
 pub use census::{Domain, Family, FamilyKind, LegRole, LegSpec, Tier};
 pub use client::ActorKey;

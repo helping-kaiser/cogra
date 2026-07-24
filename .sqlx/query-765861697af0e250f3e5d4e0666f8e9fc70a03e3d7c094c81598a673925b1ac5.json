@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applicants a\n         SET email_verified_at = NOW(),\n             expires_at = l.expires_at\n         FROM auth_invite_links l\n         WHERE a.invite_link_id = l.id\n           AND a.email_verification_token_hash = $1\n           AND a.email_verified_at IS NULL\n           AND a.expires_at > NOW()\n         RETURNING a.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "765861697af0e250f3e5d4e0666f8e9fc70a03e3d7c094c81598a673925b1ac5"
+}

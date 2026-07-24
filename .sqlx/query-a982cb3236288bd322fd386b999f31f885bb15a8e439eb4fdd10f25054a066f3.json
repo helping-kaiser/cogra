@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials SET password_hash = $2 WHERE actor_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a982cb3236288bd322fd386b999f31f885bb15a8e439eb4fdd10f25054a066f3"
+}

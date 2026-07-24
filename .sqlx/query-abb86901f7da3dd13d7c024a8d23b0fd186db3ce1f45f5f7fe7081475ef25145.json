@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT record_id, family, epoch, act_time, position\n         FROM mirror_records WHERE record_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "position",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "abb86901f7da3dd13d7c024a8d23b0fd186db3ce1f45f5f7fe7081475ef25145"
+}

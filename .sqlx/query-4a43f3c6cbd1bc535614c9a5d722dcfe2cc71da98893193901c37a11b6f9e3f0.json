@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_key_backups (user_id, blob) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4a43f3c6cbd1bc535614c9a5d722dcfe2cc71da98893193901c37a11b6f9e3f0"
+}

@@ -1850,15 +1850,19 @@ These bind every mutation below.
   viewer except the applicant-flow and session-recovery gestures:
   `submitApplication`, `verifyApplicantEmail`,
   `resendVerificationEmail`, `submitApplicantRegistration`,
+  `approveApplicantRegistration`, `claimLandedSession`,
   `logIn`, `refreshSession`, `requestPasswordReset`,
   `confirmPasswordReset`, and the token-bearing
-  `confirmAccountDeletion`.
+  `confirmAccountDeletion`. An applicant token that authorizes
+  nothing reads as `UNAUTHENTICATED` on the mutations and null from
+  `application`.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
   are implied on the read types; a payload's named result field is null
-  whenever `userErrors` is non-empty, so the bodies show the populated
-  success shape. Transport faults ride the `errors` array with an
+  whenever `userErrors` is non-empty — the exported SDL therefore
+  declares every named result field nullable; the bodies below show
+  the populated success shape. Transport faults ride the `errors` array with an
   `extensions.code` and are never repeated per payload. The one carve-out
   carries no `userErrors`: the three deliberately-silent verbs —
   `resendVerificationEmail`, `requestPasswordReset`, `requestEmailChange`
@@ -1891,14 +1895,15 @@ type PreparedWrite {
   family: RecordFamily!
   "The canonical proposal, serialized for pre-signing (base64).
    Covers everything the author asserts — endpoints, parameters,
-   dependency list, both pre-digests — so the relay can neither
+   payload bytes, dependency list — so the relay can neither
    alter it nor author one unasked."
   canonicalProposal: String!
-  "The domain-separated content pre-digest; the device recomputes
-   it from the payload bytes before pre-signing."
+  "Domain-separated digest over the payload bytes — a transport
+   cross-check for the parsed proposal. The signing pre-digests are
+   salted by the device's private nonce and never leave it."
   contentPreDigest: String!
-  "The domain-separated dependency pre-digest; the device
-   recomputes it from the canonical dependency encoding."
+  "Domain-separated digest over the canonical dependency encoding —
+   the dependency-side transport cross-check."
   dependencyPreDigest: String!
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after
@@ -2746,9 +2751,10 @@ and offers the key-backup choice
 ([auth.md "Account lifecycle"](auth.md#account-lifecycle)). The
 application submit returns an opaque **applicant token** the
 device stores; it authorizes exactly the applicant's own flow —
-polling status, and signing the staged Registration once approval
-lands. Landing (the Registration confirming in the mirror) creates
-the actor and credentials rows and issues the first session.
+polling status, signing the staged Registration once approval
+lands, and claiming the first session. Landing (the Registration
+confirming in the mirror) creates the actor and credentials rows;
+the device then mints the first session with `claimLandedSession`.
 Reciprocation — the joiner's own Opinion toward the inviter's
 Profile, completing the mutual pair — is an ordinary graph act
 after landing (`prepareStance`), prompted at first login; auth's
@@ -2788,18 +2794,27 @@ input ResendVerificationEmailInput { email: String! }
 "Always succeeds, to avoid revealing whether an application exists."
 type ResendVerificationEmailPayload { ok: Boolean! }
 
-"The applicant's own view of their application — status, the
- staged Registration once approval lands, and the first session
- once landed."
+"The applicant's own view of their application — status and the
+ staged Registration once approval lands."
 type ApplicationView {
   applicant: Applicant!
-  "The staged Registration awaiting the device's signatures; null
-   before approval and after landing. The handshake state and the
-   sealed verified act ride the staged write."
-  stagedRegistration: PreparedWrite
-  "The first session — present exactly once, when the application
-   has landed and this view is first read after it."
-  auth: AuthSession
+  "The staged Registration awaiting the device's signatures — its
+   handshake state, canonical proposal, and, once sealed, the
+   verified act. Null before approval and after landing; re-staged
+   automatically when a previous staging expired, so a lost
+   response never strands the flow."
+  stagedRegistration: StagedWrite
+}
+
+"Mint a session for a landed application. Callable repeatedly
+ while the applicant token is valid — the token is the secret; an
+ application that has not landed yet is a BAD_INPUT userError."
+input ClaimLandedSessionInput {
+  applicantToken: String!
+  deviceLabel: String
+}
+type ClaimLandedSessionPayload {
+  auth: AuthSession!
 }
 
 "Pre-sign the staged Registration — the applicant-token twin of
@@ -2827,10 +2842,14 @@ type ApproveApplicantRegistrationPayload {
 
 "Approve staged applicants — the inviter's deliberate, priced act:
  per applicant or in batch, with the pre-filled stance values
- adjusted at will. Triggers the funding burn and the staged
- Registration backend-side, and returns the inviter's own Opinion
- records to sign — the vouch is the inviter's signature, not a
- server write."
+ adjusted at will. Runs the admission sequence backend-side —
+ the funding burn, then the staged Registration — inside the
+ approval, guarded so a retried or concurrent approval can never
+ double-fund; landing waits only on the Registration confirming.
+ Returns the inviter's own Opinion records to sign — the vouch is
+ the inviter's signature, not a server write. Approval requires a
+ verified email; an already-approved, expired, or foreign-queue
+ applicant refuses with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
   approvals: [ApplicantApprovalInput!]!
 }
@@ -2912,9 +2931,10 @@ input RequestEmailChangeInput {
  newEmail is already registered."
 type RequestEmailChangePayload { ok: Boolean! }
 
-"Complete an email change. `code` is the one mailed to the current
- (original) address; the change applies only if newEmail's
- verification link has also been followed."
+"Complete an email change. `code` is either side's proof — the
+ code mailed to the current (original) address, or the token from
+ newEmail's verification link; either may arrive first. The change
+ applies only once both sides have been confirmed."
 input ConfirmEmailChangeInput {
   code: String!
 }
@@ -3011,6 +3031,7 @@ extend type Mutation {
   submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
   approveApplicantRegistration(input: ApproveApplicantRegistrationInput!): ApproveApplicantRegistrationPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+  claimLandedSession(input: ClaimLandedSessionInput!): ClaimLandedSessionPayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO actor_profile_versions (actor_id, display_name)\n         VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3282a0d8aed6d7b97f651e205e7f11a4682e64a503ef17a197ae57ccc7cf4159"
+}

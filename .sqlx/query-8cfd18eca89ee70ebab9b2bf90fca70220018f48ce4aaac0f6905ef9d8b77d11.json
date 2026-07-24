@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id FROM staged_writes\n         WHERE applicant_id = $1 AND family = $2 AND state <> 'expired'\n         ORDER BY created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8cfd18eca89ee70ebab9b2bf90fca70220018f48ce4aaac0f6905ef9d8b77d11"
+}

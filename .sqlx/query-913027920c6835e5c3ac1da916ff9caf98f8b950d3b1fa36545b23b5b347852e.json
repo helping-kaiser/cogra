@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT NOT EXISTS(SELECT 1 FROM actors WHERE handle = $1)\n               AND NOT EXISTS(\n                   SELECT 1 FROM auth_applicants\n                   WHERE handle = $1\n                     AND landed_at IS NULL\n                     AND (expires_at > NOW() OR approved_at IS NOT NULL)\n               ) AS \"available!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "available!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "913027920c6835e5c3ac1da916ff9caf98f8b950d3b1fa36545b23b5b347852e"
+}

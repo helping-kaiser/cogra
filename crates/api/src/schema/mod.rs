@@ -1,58 +1,58 @@
 //! The GraphQL schema — the exported `schema.graphql` is generated from
-//! here and is the frontend contract.
+//! here and is the frontend contract (checked in, CI-diffed; Apollo
+//! Kotlin and GraphQL Code Generator both generate from it).
 //!
-//! Slice 0 carries no product surface: the pre-rebase auth/content schema
-//! was retired with the dual-store design, and the rebuilt surface arrives
-//! with slice 1 (onboarding and client-signed writes — roadmap.md). What
-//! remains is the health probe.
+//! Slice 1's surface: onboarding and the applicant flow, sessions and
+//! credentials, invite links, and the client-signed write path's relay
+//! legs (api-spec.md).
 
-use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
+mod mutation;
+mod query;
+pub mod types;
+
+use std::sync::Arc;
+
+use async_graphql::{EmptySubscription, Schema};
+use l1_standin::StandIn;
 use postgres_store::PgPool;
 
-pub type ApiSchema = Schema<Query, EmptyMutation, EmptySubscription>;
+pub use mutation::Mutation;
+pub use query::Query;
 
-/// Connectivity report for the API process and its store.
-#[derive(SimpleObject)]
-pub struct Health {
-    /// Version of the backend serving this schema.
-    backend_version: String,
-    /// True when PostgreSQL answers a round-trip probe.
-    postgres_connected: bool,
-    /// The last L1 epoch fully ingested into the record mirror; -1 until
-    /// the first epoch lands.
-    mirror_epoch: i64,
+use crate::auth::AuthConfig;
+use crate::l1::StandInBoundary;
+use crate::mailer::Mailer;
+use crate::onboarding::OnboardingConfig;
+
+pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
+
+/// Everything the resolvers reach through the schema context.
+pub struct ApiContext {
+    pub pool: PgPool,
+    pub boundary: StandInBoundary,
+    /// The stand-in's dev L0 surface the admission funding uses —
+    /// replaced at the swap along with the crate (roadmap.md).
+    pub funding: StandIn,
+    pub auth: AuthConfig,
+    pub mailer: Arc<dyn Mailer>,
+    pub onboarding: OnboardingConfig,
 }
 
-/// The query root.
-pub struct Query;
-
-#[Object]
-impl Query {
-    /// Reports whether the API can reach its store, and how far the record
-    /// mirror has ingested.
-    async fn health(&self, ctx: &Context<'_>) -> async_graphql::Result<Health> {
-        let pool = ctx.data::<PgPool>()?;
-        let mirror_epoch = postgres_store::mirror::last_ingested_epoch(pool)
-            .await
-            .unwrap_or(-1);
-        Ok(Health {
-            backend_version: env!("CARGO_PKG_VERSION").to_string(),
-            postgres_connected: postgres_store::ping(pool).await,
-            mirror_epoch,
-        })
-    }
-}
-
-/// Builds the executable schema with the live store handle attached.
-pub fn build(pool: PgPool) -> ApiSchema {
-    Schema::build(Query, EmptyMutation, EmptySubscription)
-        .data(pool)
+/// Builds the executable schema with the live handles attached.
+pub fn build(ctx: ApiContext) -> ApiSchema {
+    Schema::build(Query, Mutation, EmptySubscription)
+        .data(ctx.pool)
+        .data(ctx.boundary)
+        .data(ctx.funding)
+        .data(ctx.auth)
+        .data(ctx.mailer)
+        .data(ctx.onboarding)
         .finish()
 }
 
 /// The schema's SDL — what `schema.graphql` must contain.
 pub fn sdl() -> String {
-    Schema::build(Query, EmptyMutation, EmptySubscription)
+    Schema::build(Query, Mutation, EmptySubscription)
         .finish()
         .sdl()
 }
