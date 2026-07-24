@@ -357,8 +357,16 @@ The bootstrap binary performs the CoGra-side seeding around those
 records: the reserved Type keys (content-addressed UUIDv5 via the
 naming service — [data-model.md](data-model.md)), the operational
 parameter carrier initialized from the Charter's genesis payload,
-and the operator account's service rows. The first invite is
-staged through the ordinary invite flow once it exists
+and the operator account's service rows. It also finishes the
+Genesis Moderator as a **person's account** — the operator carries
+every global-moderation duty until a second moderator exists, so
+the account must be reachable through the product: login
+credentials from `GENESIS_EMAIL` / `GENESIS_PASSWORD`, and the
+custodied actor seed sealed into a standard key-backup blob whose
+recovery code is printed exactly once. From there the operator
+uses only ordinary flows — sign in, restore the actor with the
+code ([auth.md](auth.md#key-recovery)), invite. The first invite
+is staged through the ordinary invite flow once it exists
 ([auth.md](auth.md)), not by the bootstrap.
 It is idempotent and gated on **both** sides — an instance counts
 as bootstrapped only when the Charter record is in the mirror
