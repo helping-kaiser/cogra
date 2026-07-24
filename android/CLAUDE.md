@@ -32,11 +32,19 @@ Gradle modules mirror the backend's crate discipline; each unit-tests in
 isolation. The app is currently a placeholder shell awaiting slice 1
 (the pre-rebase auth/profile surface was removed with backend slice 0 —
 [roadmap.md "Where the code stands"](../docs/implementation/roadmap.md));
-today's modules are `app` (shell, theme, the placeholder screen) and
+today's modules are `app` (shell, theme, the placeholder screen),
+`core:crypto` (the client-side signing and key-backup crypto), and
 `core:network` (Apollo codegen against the contract, no operations yet).
 
 The split each slice builds into:
 
+- `core:crypto` — the client crypto mirroring `common::l1`: deterministic
+  CBOR, the tagged hashing, Ed25519 signing (BouncyCastle's lightweight
+  API — Tink's Ed25519 is `subtle`-internal and its keyset API cannot
+  import the raw seed key recovery needs), the admission handshake, the
+  wire codecs, and the key-backup blob. **Plain Kotlin, no Android
+  dependencies**; its tests are pinned to the repo-root
+  `client-crypto-vectors.json` golden vectors.
 - `core:domain` — use-cases and domain types. **Plain Kotlin, no Android
   dependencies.** The only DI annotation allowed here is `javax.inject`
   (plain Java), which keeps the module JVM-testable while letting Hilt build
