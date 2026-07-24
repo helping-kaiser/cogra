@@ -3,8 +3,10 @@
 // SQL lives here, nowhere else; the one exception is the l1-standin crate,
 // which owns its own L1-side tables behind the seam.
 
+pub mod auth;
 pub mod genesis;
 pub mod mirror;
+pub mod params;
 pub mod staged;
 
 /// Re-exported so callers don't need a direct sqlx dependency.

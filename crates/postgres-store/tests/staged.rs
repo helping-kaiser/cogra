@@ -369,15 +369,16 @@ async fn an_applicant_can_stage_a_write_before_any_actor_row_exists(pool: PgPool
     let applicant = Uuid::new_v4();
     sqlx::query(
         "INSERT INTO auth_applicants
-             (id, invite_link_id, username, email, password_hash,
-              email_verification_token_hash, actor_pubkey, l0_address,
-              expires_at)
-         VALUES ($1, $2, 'newbie', 'n@example.com', 'x', $3, $4, 'newbie',
+             (id, invite_link_id, handle, email, password_hash,
+              email_verification_token_hash, applicant_token_hash,
+              actor_pubkey, l0_address, expires_at)
+         VALUES ($1, $2, 'newbie', 'n@example.com', 'x', $3, $4, $5, 'newbie',
                  NOW() + INTERVAL '1 day')",
     )
     .bind(applicant)
     .bind(link)
     .bind(vec![9u8; 32])
+    .bind(vec![8u8; 32])
     .bind(vec![1u8; 32])
     .execute(&pool)
     .await
