@@ -6,6 +6,8 @@ design and [android/CLAUDE.md](CLAUDE.md) for the assistant rules.
 
 ## Modules
 
+- `core:crypto` — the client-side signing and key-backup crypto, pinned to
+  the repo-root golden vectors; plain Kotlin, no Android deps.
 - `core:domain` — use-cases and domain types; plain Kotlin, no Android deps.
 - `core:network` — Apollo client + generated operations and the encrypted
   token store; no UI.

@@ -632,6 +632,25 @@ impl User {
             .map(|blob| B64.encode(blob)))
     }
 
+    /// The actor whose invite this account came through — landing
+    /// provenance for the reciprocation gesture; the graph's own record
+    /// of the vouch is the inviter's Opinion. Field-level: viewer-only;
+    /// null for accounts without an application trace (genesis actors).
+    async fn invited_by(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::inviter_of(pool, self.identity.id)
+            .await?
+            .map(|identity| {
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }))
+    }
+
     /// The account's invite links — service-side staging state, not
     /// graph structure. Field-level: each link's id is the link
     /// capability, so this resolves only for the issuing actor.
@@ -652,6 +671,19 @@ impl User {
             offset_connection(links, after, before, first, last, InviteLink).await?,
         ))
     }
+}
+
+/// The anonymous pre-submit view of an invite link — enough for the app
+/// to gate the registration form and key ceremony on a usable capability,
+/// and to show who is vouching. Holding the id is holding the link.
+#[derive(SimpleObject)]
+pub struct InviteLinkCheck {
+    /// Whether the link can stage a new applicant now — live, unexpired,
+    /// unrevoked, and (single-use) its one slot free.
+    pub usable: bool,
+    /// The issuing actor's handle.
+    pub inviter_handle: String,
+    pub expires_at: DateTime<Utc>,
 }
 
 /// An invite link: pure service-side staging UX. Nothing binds at issue —
