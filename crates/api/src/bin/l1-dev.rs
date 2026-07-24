@@ -24,6 +24,8 @@ use common::l1::identifier::NodeId;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::mirror;
 
+use api::ingest::DEFAULT_GC_AFTER_EPOCHS as GC_AFTER_EPOCHS;
+
 async fn connect() -> anyhow::Result<(postgres_store::PgPool, StandIn)> {
     let database_url =
         std::env::var("DATABASE_URL").context("DATABASE_URL must be set (see .env.example)")?;
@@ -162,17 +164,25 @@ async fn main() -> anyhow::Result<()> {
         }
         "ingest" => {
             let (pool, standin) = connect().await?;
-            let n = api::ingest::ingest_pending(&StandInBoundary(standin), &pool).await?;
+            let outcome =
+                api::ingest::ingest_pending(&StandInBoundary(standin), &pool, GC_AFTER_EPOCHS)
+                    .await?;
             println!(
-                "{n} epoch(s) ingested; mirror cursor at {}",
+                "{} epoch(s) ingested; mirror cursor at {}",
+                outcome.epochs,
                 mirror::last_ingested_epoch(&pool).await?
             );
         }
         "rebuild" => {
             let (pool, standin) = connect().await?;
             mirror::reset(&pool).await?;
-            let n = api::ingest::ingest_pending(&StandInBoundary(standin), &pool).await?;
-            println!("mirror rebuilt from the published sequence: {n} epoch(s)");
+            let outcome =
+                api::ingest::ingest_pending(&StandInBoundary(standin), &pool, GC_AFTER_EPOCHS)
+                    .await?;
+            println!(
+                "mirror rebuilt from the published sequence: {} epoch(s)",
+                outcome.epochs
+            );
         }
         "balance" => {
             let (_, standin) = connect().await?;

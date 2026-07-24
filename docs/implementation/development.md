@@ -55,6 +55,7 @@ over file values.
 | `API_HOST` | `0.0.0.0` | API bind address |
 | `API_PORT` | `8080` | API bind port |
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
+| `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |

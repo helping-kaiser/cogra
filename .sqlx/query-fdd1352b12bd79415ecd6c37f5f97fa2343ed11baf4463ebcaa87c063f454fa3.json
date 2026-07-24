@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO author_seq_counters (author, next_seq) VALUES ($1, 0)\n         ON CONFLICT (author) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdd1352b12bd79415ecd6c37f5f97fa2343ed11baf4463ebcaa87c063f454fa3"
+}
