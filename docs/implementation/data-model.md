@@ -115,16 +115,98 @@ CREATE TABLE network_parameter_versions (
 
 The write path stages before it lands
 ([architecture.md "The write path"](architecture.md#the-write-path)):
-a staged act — the canonical proposal, joined by the host-sealed
-verified act as the handshake advances — is a staged-write row
-from **prepare** until **confirm**, and staged payload bytes sit
-in the carriage tables flagged as staged.
-Promotion on confirm makes the payload permanent carriage and the
-display rows visible; a staged write that never lands is
-garbage-collected, staged payload included, after a bounded number
-of epochs (an operational parameter). Staged state is
-L2-operational: it is exempt from append-only history and leaves
-no trace when collected — nothing existed on the graph.
+a staged act — the canonical proposal, joined by the device's
+pre-commitment and the host-sealed verified act as the handshake
+advances — is one `staged_writes` row from **prepare** until
+**confirm**. Staged payload bytes ride the row; the carriage
+tables arrive with the content slice and take over permanent
+payload storage then. Promotion on confirm makes the display rows
+visible and drives the flows built on landing (an applicant's
+Registration confirming creates the actor row —
+[auth.md](auth.md)). Staged state is L2-operational: it is exempt
+from append-only history and leaves no trace once collected —
+nothing existed on the graph.
+
+```sql
+CREATE TABLE staged_writes (
+    id             UUID        PRIMARY KEY,
+    -- The staging identity: an actor's session write, or an
+    -- applicant's staged Registration before any actor row exists.
+    -- Exactly one is set.
+    actor_id       UUID        REFERENCES actors(id),
+    applicant_id   UUID        REFERENCES auth_applicants(id),
+
+    -- The canonical proposal, stored losslessly: prepare's exact
+    -- proposal is what the device signs and the relay submits.
+    act_id           TEXT             NOT NULL UNIQUE,
+    author           TEXT             NOT NULL,
+    seq              BIGINT           NOT NULL,
+    family           TEXT             NOT NULL,
+    middle           TEXT,
+    target           TEXT             NOT NULL,
+    p_d              DOUBLE PRECISION NOT NULL,
+    p_i              DOUBLE PRECISION NOT NULL,
+    settlement_ref   TEXT,
+    license          TEXT,
+    asserted_parents TEXT[]           NOT NULL DEFAULT '{}',
+    deps             TEXT[]           NOT NULL DEFAULT '{}',
+    payload          BYTEA            NOT NULL,
+
+    state          TEXT        NOT NULL DEFAULT 'awaiting_pre_sign'
+        CHECK (state IN ('awaiting_pre_sign', 'sealing',
+                         'awaiting_approval', 'relaying', 'landed',
+                         'expired')),
+
+    -- The device's pre-commitment leg, then the host-sealed
+    -- verified act, stored as the relay legs return them.
+    author_pubkey  BYTEA,
+    nonce          BYTEA,
+    pre_signature  BYTEA,
+    content_salt        BYTEA,
+    deps_salt           BYTEA,
+    content_commitment  BYTEA,
+    deps_commitment     BYTEA,
+    host_seal           BYTEA,
+
+    prepared_epoch BIGINT      NOT NULL,
+    expired_epoch  BIGINT,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CHECK (num_nonnulls(actor_id, applicant_id) = 1)
+);
+```
+
+Lifecycle rules, driven off the ingestion pass:
+
+- **Promotion matches by act identifier.** Every epoch's ingestion
+  marks the staged writes whose records landed. The mirror
+  governs: a record landing after its staged write was collected
+  still promotes — though its staged payload is already gone.
+- **GC is two-phase and epoch-denominated.** A write that has not
+  landed within `STAGED_WRITE_GC_EPOCHS` epochs of its
+  preparation ([development.md](development.md)) is **expired** —
+  payload dropped, state observable, so a device polling a lost
+  handshake sees the terminal state rather than a vanished id.
+  One further window later the row is deleted. A lost host seal
+  (a relay crash between seal and store) expires the write
+  immediately: the salts cannot be re-fetched, so no approval can
+  ever be produced — the device re-prepares under a fresh
+  sequence value.
+
+The author-local act sequence `s_q`
+([layer1-interface.md §8.1](../primitive/layer1-interface.md#8-kernel-data-model-authored-acts-projections-and-the-graph))
+is allocated at prepare from one counter per L1 author atom —
+serving users, applicants, and system actors alike — caught up
+against the mirror on every allocation so acts landed outside the
+prepare path can never cause identifier reuse:
+
+```sql
+CREATE TABLE author_seq_counters (
+    author   TEXT   PRIMARY KEY,
+    next_seq BIGINT NOT NULL
+);
+```
 
 ---
 

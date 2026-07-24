@@ -160,7 +160,8 @@ only where it runs (per-viewer, off the central hot path).
 ### 5. The seam is one boundary
 
 All Layer 1 access — relaying signed records, ingesting accepted
-records, reading the `B_i` export — flows through a single
+records, reading the `B_i` export and the published θ price the
+write-rule pre-check estimates against — flows through a single
 interface in the backend. Nothing else in the codebase speaks to
 the substrate. That keeps the substrate swappable behind a stable
 contract (the client-direct transport of the decentralized phase
