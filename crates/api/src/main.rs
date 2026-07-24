@@ -13,6 +13,9 @@ fn env_or(key: &str, default: &str) -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // .env first, so plain `cargo run` matches the make targets; real
+    // environment variables win over file values (dotenvy never overrides).
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();

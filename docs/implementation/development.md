@@ -41,6 +41,9 @@ GraphQL playground: `http://localhost:8080/playground`.
 ## Environment Variables
 
 All variables are in `.env` (gitignored, copied from `.env.example`).
+Every binary loads `.env` at startup (dotenvy), so plain `cargo run`
+behaves like the make targets; variables already set in the shell win
+over file values.
 
 | Variable | Default | Description |
 |---|---|---|

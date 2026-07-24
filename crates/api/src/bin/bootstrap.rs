@@ -40,6 +40,9 @@ fn guidelines_hash() -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // .env first, so plain `cargo run` matches the make targets; real
+    // environment variables win over file values (dotenvy never overrides).
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
