@@ -71,10 +71,10 @@ mechanics live in each concept's own doc.
 
 | Concept | Primary | Mapping |
 |---|---|---|
-| Joining a chat | gesture | Membership materializes only from the joiner's **own Participant edge** (Actor → Chat). Join Request (Actor → Chat) and Invitation (Actor → Chat → Profile of the invitee) are proposals — they never participate. |
-| Chat membership state | consume | The canonical membership fold over the member's own Participant / Leave chain, with recognized De-invites applied conservatively — a terminal read-site CoGra adopts as its fold. Read-side, per chat policy: [chats.md](../instances/chats.md). |
+| Joining a chat | gesture | Membership materializes only from the joiner's **own Participant act** — the hyper movement record (Actor → Chat → Chat, *I move from A to T*); a join targets the chat with both legs ([chats.md §2](../instances/chats.md#2-the-l1-shape)). Join Request (Actor → Chat) and Invitation (Actor → Chat → Profile of the invitee) are proposals — they never participate. |
+| Chat membership state | consume | The canonical membership fold over the member's own Participant / Leave chain — read keyed on leg role over the bundled chat lineage, with CoGra's published ban semantics ([chats.md §4](../instances/chats.md#4-membership)) — a terminal read-site CoGra adopts as its fold. |
 | Leaving a chat | gesture | **Leave** (Actor → Chat) — unilateral and unconditional. |
-| Kick / expulsion | gesture | A passed `decision:disavow_member` Proposal (weighted per-chat roles, L2), executed by a **chat-authority actor** — an ordinary member whose per-chat role authorizes execution — authoring the L1 **De-invite** (Actor → Chat → Profile), its payload citing the authorizing Proposal's L1 anchor. The membership fold recognizes only proposal-backed De-invites, so a freelance De-invite is membership-inert (it merely revokes the author's own invitation vouch). Non-sticky: a later Participant strictly following the De-invite re-establishes membership under the fold. |
+| Kick / expulsion | gesture | A passed `decision:disavow_member` Proposal (weighted per-chat roles, L2), executed by a **chat-authority actor** — an ordinary member whose per-chat role authorizes execution — authoring the L1 **De-invite** (Actor → Chat → Profile), its payload citing the authorizing Proposal's L1 anchor. The membership fold recognizes only proposal-backed De-invites, so a freelance De-invite is membership-inert (it merely revokes the author's own invitation vouch). A recognized De-invite **bans**: a later self-authored Participant does not re-establish membership; lifting the ban is a `decision:lift_ban` proposal executed as a proposal-backed Invitation ([chats.md §4](../instances/chats.md#4-membership)). |
 
 ---
 
