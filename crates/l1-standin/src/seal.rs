@@ -46,10 +46,12 @@ pub(crate) async fn seal(
 
     // Minted-endpoint rules (`def:graph:genesis-act-and-creator`): a
     // self-minted target (mint of this very act) is valid exactly for the
-    // genesis families; Publish always mints — its Content node is this
-    // act's mint. Foreign minted references are permitted even when
-    // unanchored: dangling identifiers are fold-neutral, never a formation
-    // failure (`lem:graph:dangling-neutral-fold`).
+    // genesis families. Genesis identity is per record, so an ordinary-role
+    // act toward an existing mint — a Publish revising its Content node —
+    // is well-formed; the fold, never formation, decides what it means.
+    // Foreign minted references are permitted even when unanchored:
+    // dangling identifiers are fold-neutral, never a formation failure
+    // (`lem:graph:dangling-neutral-fold`).
     // A founding Participant self-loops at its own mint — both legs enter
     // the Chat the act creates — so the middle-node rule exempts exactly
     // that shape.
@@ -62,11 +64,6 @@ pub(crate) async fn seal(
         return Err(formation(format!(
             "{family} is not a genesis family and cannot mint its target"
         )));
-    }
-    if family == common::l1::Family::Publish && body.target != own_mint {
-        return Err(formation(
-            "publish is the genesis act of its Content node: the target must be the act's own mint",
-        ));
     }
 
     // Carriage and dependency bounds.
