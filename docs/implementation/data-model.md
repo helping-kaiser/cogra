@@ -401,7 +401,7 @@ CREATE TABLE comment_versions (
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
 -- a single chat can carry both plaintext and encrypted messages. See
--- chats.md §9. Profile fields (name, description, image) change
+-- chats.md §7. Profile fields (name, description, image) change
 -- through the chat's edit carrier under its governed update
 -- authority (substrate.md §9); each applied change appends a
 -- version.
@@ -429,7 +429,7 @@ CREATE TABLE chat_messages (
 );
 
 -- Chat-message versions. content_privacy is per-message and
--- per-version (see chats.md §4.2): 'plaintext' bodies are readable
+-- per-version (see chats.md §7): 'plaintext' bodies are readable
 -- text; 'encrypted' bodies are ciphertext under the chat's
 -- member-derived symmetric key for the epoch the version was
 -- authored in. A chat can carry both freely.
