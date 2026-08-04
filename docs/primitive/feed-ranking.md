@@ -465,7 +465,10 @@ graphs and integer-stance habits), global statistics over the
 folded bundles toward `t` break the tie, in governed composition
 (§12): net stance `Σ_a f(Δt_a) · (p̄_d + p̄_i)`, then gross volume
 `Σ_a f(Δt_a) · (|p̄_d| + |p̄_i|)`, summed per stance-author `a`;
-the final fallback is recency — newest terminal record first.
+the final fallback is recency — newest content first, by the
+target's **genesis** authorship record's age. An update record
+never refreshes it: "newest" means newest content, not
+most-recently-edited.
 Global statistics enter here and only here, never the primary
 rank.
 

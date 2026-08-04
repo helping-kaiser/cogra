@@ -39,6 +39,14 @@ so a superseded profile revision is an ordinary target.
   edit blanked the current view, but the superseded payload
   stays published until removed, because edits are never erasure
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+- **A reduced head remains the head.** The update fold selects its
+  head record regardless of payload state
+  ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
+  removing the newest revision's payload never makes the fold fall
+  through to a superseded payload — the head stays selected and
+  renders absent. Single-revision removal therefore never
+  republishes a predecessor as the current value; erasing the
+  history itself means removing those records too.
 - **Scope: content and profile records the requesting User
   authored.** Publish (posts), Review (comments), Send
   (messages), and Registration (profile revisions). Items are
@@ -47,7 +55,7 @@ so a superseded profile revision is an ordinary target.
   removal trigger there. For encrypted Messages the payload is a
   ciphertext blob; the removal is the same one-way transition as
   for plaintext, and chat epoch keys are untouched
-  ([chats.md §9](chats.md#7-encryption-as-the-privacy-mechanism)).
+  ([chats.md §7](chats.md#7-encryption-as-the-privacy-mechanism)).
 - **Immediate and permanent.** One authenticated request with an
   explicit client-side confirmation; no email round-trip, no
   grace period — proportionate for a single record, where
