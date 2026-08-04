@@ -380,6 +380,58 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 10 * THETA).await;
+
+    let hyper = |seq, family, middle: &NodeId, target: &NodeId| Proposal {
+        body: StructuralBody {
+            author: actor.address(),
+            seq,
+            family,
+            middle: Some(middle.clone()),
+            target: target.clone(),
+            p_d: 0.5,
+            p_i: 0.5,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: vec![],
+        deps: vec![],
+    };
+
+    // A Bid toward an existing Offer would hang a second Item's incidence
+    // on it — rejected at formation.
+    let item = NodeId::Mint(ActId::new("lister", 0, Family::Owner).expect("ok"));
+    let foreign_offer = NodeId::Mint(ActId::new("other", 1, Family::Bid).expect("ok"));
+    assert!(matches!(
+        host.seal(actor.pre_sign(hyper(0, Family::Bid, &item, &foreign_offer)))
+            .await,
+        Err(StandInError::Formation(_))
+    ));
+
+    // A Bid minting its own Offer seals.
+    let own_offer = NodeId::Mint(ActId::new(&actor.address(), 1, Family::Bid).expect("ok"));
+    submit(&host, &actor, hyper(1, Family::Bid, &item, &own_offer)).await;
+
+    // An ordinary-role Send toward an existing Message stays legal — the
+    // Edition-5 permission set keeps it, and CoGra's transcript fold, not
+    // formation, is what ignores it.
+    let chat = NodeId::Mint(ActId::new("founder", 0, Family::Participant).expect("ok"));
+    let foreign_message = NodeId::Mint(ActId::new("other", 2, Family::Send).expect("ok"));
+    submit(
+        &host,
+        &actor,
+        hyper(2, Family::Send, &chat, &foreign_message),
+    )
+    .await;
+
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 2);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool) {
     let host = standin(pool);
     let author = funded_actor(&host, 10 * THETA).await;

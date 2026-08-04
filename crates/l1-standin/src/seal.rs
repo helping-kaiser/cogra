@@ -65,6 +65,15 @@ pub(crate) async fn seal(
             "{family} is not a genesis family and cannot mint its target"
         )));
     }
+    // Bid/T alone is fresh-mint-only (Edition-5 draft §3.9): a Bid toward
+    // an existing Offer would hang a second Item's incidence on it — real
+    // raw incidence, live in CAN and sentiment even where no fold reads
+    // it. Offer revision is a new Offer.
+    if family == common::l1::Family::Bid && body.target != own_mint {
+        return Err(formation(
+            "bid mints its Offer: the terminal target must be the act's own mint",
+        ));
+    }
 
     // Carriage and dependency bounds.
     if pre.proposal.payload.len() > standin.config().max_payload_bytes {
