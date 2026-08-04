@@ -349,47 +349,78 @@ A node is never re-minted and a payload is never rewritten;
 updating a minted node means authoring *about* it. CoGra's single
 rule for every updatable node value follows:
 
-**A node's updatable values are a newest-wins fold over witnessed
-payloads on update records toward the node.** An update is an
-ordinary gesture (§4): a new inventory edge toward the existing
+**A node's updatable values are a fold over witnessed payloads on
+update records toward the node: per declared field, the newest
+eligible record wins — "newest" read as the head of its author's
+declared causal chain, never the bare `≺`-maximum.** An update is
+an ordinary gesture (§4): a new inventory edge toward the existing
 node, the new values in its payload envelope (§7), read back by
-the declared fold. Each concept declares three slots (the
+the declared fold. Each concept declares four slots (the
 per-concept table: [substrate-map.md](substrate-map.md)):
 
-- **Carrier family.** Three instantiations cover CoGra: **parallel
-  Registration** for Profile content — L1's own profile-update
-  idiom; **Tag `(0,0)` + payload at a named Type** for system-actor
-  materializations (verdicts, roles; newest per (target, Type));
-  and **Opinion `(0,0)` + payload toward the node** — the default
-  edit carrier — for everything else: Post and Comment bodies, chat
-  name/description/image, item name/description/media, campaign
-  terms.
+- **Carrier family — the family that created the node revises
+  it.** A genesis act mints; an act of the same family toward the
+  existing node is an ordinary-role update record, and the
+  distinction is decidable from two fields of the act itself
+  ([nodes.md §1](nodes.md#1-l1-node-types-the-shared-graph)). That
+  is what makes CoGra's edits legible to every other L2 without
+  reading our payload keyspace — a Post's full revision history is
+  simply its Publish bundle. The carriers: ordinary-role
+  **Publish** for Content — posts and campaign terms
+  ([economics.md §3.2](economics.md#32-adjustability)); ordinary-role
+  **Review** for Comment — A-leg to the same parent, T-leg to the
+  existing Comment; ordinary-role **Owner** for Item — no title
+  force, only the self-minting act roots the thread; **parallel
+  Registration** for Profile — L1's own idiom, the pattern the
+  rest generalizes. Two carriers sit outside the pattern by
+  design: **Tag `(0,0)` + payload at a named Type** for
+  system-actor materializations (verdicts, roles; newest per
+  (target, Type)), and the finalization **Opinion `(0,0)`**, which
+  materializes an *outcome* (§8), never a node-value edit. **Chat
+  revises by succession, not in place** — its metadata is the
+  lineage head's founding payload
+  ([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates)).
+  *(The in-place carriers rest on the Edition-5 draft's formation
+  permissions — non-self-minting Publish, Review/T, and Owner
+  targets; [layer1-interface.md](layer1-interface.md)'s Edition-4
+  copy predates them and refreshes when the edition lands.)*
 - **Eligible authors** — declared per (node, field): the creator,
-  the current owner, the chat's authorized members (admin-only or
-  every member — a per-chat governed choice), or the designated
-  system actor. Eligibility is a CoGra read rule, never an L1
-  restriction: L1 accepts anyone's update-shaped records, and an
-  ineligible one is written but never wins the fold — the same
-  shape as freelance De-invites, which the membership fold
-  ignores. Eligibility is per fold, so folds coexist on one node:
-  a member updates their own bio while The Moderator's verdict
-  Tag marks the same records — different folds, both live. Where
-  one field has a single eligible author, "newest" is exact (one
-  author's records toward a node form a strict `≺`-chain); where
-  several authors are eligible, "newest" is precedence in the
-  published authoritative order `𝒬_k`
-  (`def:graph:authoritative-act-order`), so the fold stays
-  deterministic.
+  the current certified owner, or the designated system actor.
+  Eligibility is a CoGra read rule, never an L1 restriction: L1
+  accepts anyone's update-shaped records, and an ineligible one is
+  written but never wins the fold — the same shape as freelance
+  De-invites, which the membership fold ignores. Eligibility is
+  per fold, so folds coexist on one node: a member updates their
+  own bio while The Moderator's verdict Tag marks the same records
+  — different folds, both live.
 - **Fold granularity** — newest per field, per parameter, or per
   (target, Type), declared with the concept.
+- **Chain root.** The head is the terminus of the declared
+  causal-parent chain from the root; an update record without such
+  a chain is fold-ignored. Roots: the genesis act (Content,
+  Comment), the anchoring Registration (Profile), and for Item the
+  genesis act *or that author's own prior head* — a new owner's
+  first edit has no same-author predecessor. The chain is what
+  keeps the head the author's choice: same-author records are
+  guaranteed *distinct*, not author-ordered — among dependency-free
+  acts the host picks the `≺`-maximum, so a bare newest-wins fold
+  would be deterministic yet host-steerable. Two update records
+  declaring the same parent are a branch: **neither advances the
+  head — the incumbent holds.** CoGra therefore populates the
+  causal parent on every update record at prepare time and
+  serializes edits per (node, author), so its own clients never
+  author a branch.
 
 Discipline for update records:
 
-- **`(0,0)` parameters, payload-marked.** An update is not a
-  stance: zero parameters make the record routing-inert and
-  vouch-inert, and the payload mark lets folds read update records
-  **individually** — never the author's netted bundle — the same
-  discipline ballots use ([governance.md](governance.md)).
+- **Inert parameters, read individually.** An update is not a
+  stance: each carrier is authored at its inert setting — Publish
+  and Owner at attachment `0`, Review at `(0,0)` — so the record
+  is routing-inert and vouch-inert (zero is inert,
+  [edges.md §1](edges.md#1-the-edge-record-and-cogras-two-axes)).
+  Folds read update records **individually** — never the author's
+  netted bundle — the same discipline ballots use
+  ([governance.md](governance.md)).
 - **Priced like any act.** Every update record debits `θ` and
   permanently increments the author's record count. Editing is
   cheap, never free.
@@ -420,13 +451,28 @@ An edit toward a coverless node could only serve to hide, and
 nothing here hides — superseded payloads stay published either
 way.
 
-Not everything with a cover updates. A node's **identity** never
-does: proposal terms, campaign anchors and target, Type names, and
-anchored platform documents are immutable — a revision is a new
-node, by design ([proposal.md](../instances/proposal.md)); people
-voted on, paid against, or subscribed to that exact text. License
-qualifiers are structural metadata of the Publish record, fixed at
-creation, out of reach of any update.
+Not everything with a cover updates — and since genesis is per
+record, immutability is a **declared fold scope, never a
+structural impossibility**: ordinary-role acts are legal against
+any minted node, so a fold that wants immutable values must say it
+reads the genesis payload alone. The rule, with its one named
+exception: **a Publish toward an existing Content node means
+revise — except at a proposal anchor, whose terms are its genesis
+Publish payload,** because people voted on that exact text
+([proposal.md §2](../instances/proposal.md#2-terms)). The network
+charter's genesis values and each anchored platform document read
+genesis-only the same way — the charter's parameter schedule rides
+finalization payloads, and a guidelines amendment anchors a *new*
+document node
+([network.md §3](network.md#3-the-charter-anchor-and-the-parameter-schedule),
+[platform-guidelines.md §3](../instances/platform-guidelines.md#3-amendment-procedure)).
+Campaign anchors revise like posts, with `anchors` and `target`
+excluded per field ([economics.md §3.2](economics.md#32-adjustability)).
+Type names never update — the name *is* the identity. And a
+node's **identity** never updates anywhere: the genesis record,
+`creator`, and license qualifiers — structural metadata of the
+genesis Publish, fixed at creation — are out of reach of any
+update record.
 
 ---
 
