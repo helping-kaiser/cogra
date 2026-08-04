@@ -44,8 +44,8 @@ Chat and Message nodes they anchor
 
 | Record | Shape | Role |
 |---|---|---|
-| **Participant** | Actor → Chat | The actor's own membership signal — the record the fold reads. The founding Participant mints the Chat. |
-| **Leave** | Actor → Chat | The exit record — unilateral, unconditional, a control record. |
+| **Participant** | Actor → Chat → Chat | The hyper movement record — one meaning, *I move from A to T*: A-leg = whence, T-leg = whither. Founding targets the fresh mint with both legs; joining targets the existing chat with both; founding a **successor** runs A-leg to the predecessor, T-leg to the mint (§8); a **move** runs A-leg to the chat left, T-leg to the chat joined. The record the membership fold reads — keyed on **leg role**, never bare family incidence (§4). |
+| **Leave** | Actor → Chat | The exit record — unilateral, unconditional, a control record. Departure *without* destination: there is no "nowhere" node and a self-referential T-leg is a join, so Leave is not subsumed by the move form. |
 | **Join Request** | Actor → Chat | Asking to join — a proposal, never participation. |
 | **Invitation** | Actor → Chat → Profile | Inviting — a public, priced vouch that the invitee fits; a proposal, never participation. |
 | **De-invite** | Actor → Chat → Profile | The expulsion mark, and withdrawal of one's own Invitation; a control record. |
@@ -63,18 +63,61 @@ Two L1 facts frame the whole doc:
   CoGra's membership gate on messages is the same read-side fold,
   applied at render and traversal time.
 
+Participant's T-leg is census-forced positive and Marginal — a
+weak lineage marker, structural rather than stance-bearing; the
+member's real stance toward the destination rides the A-leg, and
+for a join or founding the self-loop T-leg is routing-inert
+whatever it carries. *(Participant's hyper shape is the Edition-5
+draft's census;
+[layer1-interface.md](../primitive/layer1-interface.md)'s
+Edition-4 copy predates it and refreshes when the edition lands.)*
+
 ---
 
 ## 3. Creation
 
-**Founding a Chat** is the founder's own **Participant** record:
-its act identifier mints the Chat node, fixes the founder as
-creator, and is simultaneously the first membership signal. The
-founding payload carries the initial chat metadata — name,
-description, image digests, and the chat's governance map (§5) —
-in the Peer Content Envelope
+**Founding a Chat** is the founder's own **Participant** act,
+both legs targeting the fresh mint: its act identifier mints the
+Chat node, fixes the founder as creator, and is simultaneously
+the first membership signal. The founding payload carries the
+initial chat metadata — name, description, image digests — the
+chat's governance map (§5), and the name of the chat's **system
+actor** (below), in the Peer Content Envelope
 ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
 A Collective founds a chat the same way, through its own actor.
+
+**Every chat has a system actor** — an ordinary L1 actor admitted
+as part of chat creation and named in the founding payload. It
+exists to execute the chat's passed decisions as succession acts
+(§8); it holds no role in the room and earns nothing. CoGra holds
+its keys — the Publisher custody pattern
+([substrate.md §8](../primitive/substrate.md#8-system-actors))
+applied per chat — and its admission and θ-debits are funded by
+the members through rail transfers to its account.
+
+**Lineage.** A chat is addressed and rendered as its **lineage**
+— the chain of Chat nodes its successions produce (§8). A
+succession is **linear** iff its founding act is authored by the
+actor named in the predecessor's founding payload; a stranger's
+actor cannot extend someone else's lineage, and anyone else's
+succession founds a **fork** (§8). The L2 fold bundles the linear
+lineage into **one logical chat**, epoch-granularly: a record
+toward lineage chat `C_k` is in the bundle iff it landed in an L1
+epoch ≤ the epoch where `C_k`'s successor landed. Later records
+toward a superseded node are deliberate and fall out; CoGra's own
+prepare step always targets the lineage head, so the cutoff only
+affects records prepared outside CoGra. Membership, messages,
+backing, bans, stances, and the key-epoch count all read the
+bundle (§4, §7), and the feed ranks the lineage as one candidate
+([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+
+**The named actor changes only by succession.** Payloads are
+immutable, so "changing the system actor" is an
+incumbent-authored succession whose new founding payload names
+the new actor, executed on a passed
+`decision:change_system_actor` proposal (§5). If the incumbent
+can never act again, the lineage is frozen at its head, and the
+community's exit is a real fork — the intended failure mode.
 
 **Posting a Message** is one **Send** act: the terminal leg mints
 the Message node; the importance parameter rides the A-leg; the
@@ -134,9 +177,34 @@ authority policy `𝒫`:
   compilation; this predicate governs membership — two folds over
   the same records, asking different questions.
 - **Backing (gated chats):** where the chat's governance map
-  requires admission approval, the fold recognizes a Participant
-  only when backed by an approved Join Request or an Invitation.
-  In open chats, any Participant is recognized as-is.
+  requires admission approval, the fold recognizes a Participant —
+  keyed to its **T-leg**, the chat being entered — only when
+  backed by an approved Join Request or an Invitation; the
+  founding act is exempt, since it mints the chat it enters. In
+  open chats, any Participant is recognized as-is.
+
+**Three act shapes, keyed on leg role.** Participant is a
+movement record — *from A to T* (§2) — so departure is
+expressible two ways, and the fold for chat `C` reads three
+shapes: a Participant whose **T-leg is `C`** — participation in
+`C`; a Participant whose **A-leg is `C` and T-leg is not** —
+departure from `C`; and a **Leave** toward `C` — departure. The
+`≺`-maximal element of the combined per-author chain governs,
+under the ban clause above. Keying on leg role, never bare family
+incidence, is load-bearing: a fold reading "any Participant
+incident on `C`" as participation would treat a move's A-leg as a
+rejoin of the chat being left. One move act is simultaneously a
+departure from its A-chat and an arrival in its T-chat; a "move"
+from a chat the author was never in is a decorated join — origin
+is unchecked at formation, and the inert claim changes nothing
+the fold computes.
+
+**Every fold here runs over the bundled lineage** (§3), never a
+single Chat node — membership, the ban predicate, backing, and
+the key-epoch count (§7) alike. Membership therefore carries
+across a linear succession with nobody acting, and so do bans: a
+De-invite or backing record anywhere in the lineage is in the
+bundle, so succession cannot launder an expulsion.
 
 ### Joining
 
@@ -210,10 +278,10 @@ person, **Opinion → Chat** for the space.
 Every chat carries a **governance map** — its social contract:
 per-decision eligibility, role weights, thresholds, and amendment
 rules, with the default map installed in the founding payload.
-The map itself is a chat node value under the update rule (§8),
-and the roles it names (`admin`, `chat_mod`, `member` in the
-default vocabulary) are per-chat L2 state — L1 knows nothing of
-them.
+The map rides the founding payload, so it changes only at
+succession boundaries (§8), and the roles it names (`admin`,
+`chat_mod`, `member` in the default vocabulary) are per-chat L2
+state — L1 knows nothing of them.
 
 Chat decisions run the **house governance pattern at chat scope**
 ([governance.md](../primitive/governance.md),
@@ -237,13 +305,21 @@ Default map at founding:
 | `decision:lift_ban` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 40% quorum | — |
 | `decision:rotate_key` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 | `decision:change_role` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 30% quorum | yes |
-| `decision:set:metadata` | per the chat's update-authority setting (§8) | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
+| `decision:set:metadata` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
+| `decision:change_system_actor` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 
 Each entry carries its own `amend` triple (default: ≥ 2/3 cast,
 ≥ 30% quorum, same weights) — governance of governance applies
 all the way down. Role weight is never a veto: every act runs
 through the weighted tally, and a community can pass any decision
 without its admins.
+
+A passed decision that changes the founding payload — metadata
+(`decision:set:metadata`), the map itself (its `amend` triple),
+the system-actor pointer (`decision:change_system_actor`) — is
+executed by the chat's system actor as one succession act (§8).
+Everything else executes as before: a chat-authority member's
+De-invite or Invitation, an off-graph key run.
 
 Gated admission approves a *Join Request*; the approval's public
 record is the proposal thread itself.
@@ -294,15 +370,34 @@ ciphertext, the key-epoch index it was encrypted under.
 ### Keys, organized in epochs
 
 A chat's lifetime partitions into key epochs, each with its own
-symmetric key. **Rotation is automatic on every membership
-transition** — join, leave, kick — the moment the
-fold's verdict changes; an evicted member must not be able to block their own
-removal from future epochs, so rotation is never voted. The
-membership transitions are public L1 records, so the epoch index
-is derivable from public state — no counter is stored anywhere.
-Key derivation itself is the off-graph group-key protocol
-(Signal/MLS-style); CoGra does not reinvent crypto, and picking
-the library is an implementation decision.
+symmetric key — counted over the **bundled lineage** (§3), never
+per Chat node. **Rotation is automatic on every membership
+transition** — join, leave, kick, each leg of a fork move — the
+moment the fold's verdict changes; an evicted member must not be
+able to block their own removal from future epochs, so rotation
+is never voted. The membership transitions are public L1 records,
+so the epoch index is derivable from public state — no counter is
+stored anywhere. Key derivation itself is the off-graph group-key
+protocol (Signal/MLS-style); CoGra does not reinvent crypto, and
+picking the library is an implementation decision.
+
+**Succession and forks.** A linear succession (§8) is
+membership-preserving, so it is not a membership transition: no
+rotation fires, and the key domain continues across the lineage —
+same room, same keys, history stays readable. A **fork** starts a
+fresh key domain: the branch begins at key epoch 1 and derives
+its own keys, while the origin keeps its unchanged — members who
+did not move still read its history and keep talking there. A
+mover's act is a membership transition in **both** chats —
+departure and arrival — advancing both key epochs; the mover must
+not read the origin's later epochs, so this is cryptographically
+required, not policy. For an encrypted chat a fork is therefore a
+**hard history boundary**: even a perfect lineage fold cannot
+show the origin's transcript to someone who joins the branch
+later and was never in the origin — the bytes are under the
+origin's keys, and no rule can hand them over except a member
+choosing to disclose. For a fork that is the correct semantics: a
+new room, a clean slate.
 
 **Mid-epoch rotation** — e.g. after a device compromise, before
 any membership change — is the one governance-routed rotation:
@@ -356,23 +451,42 @@ server-side.
 
 ## 8. Chat metadata and updates
 
-Name, description, and image are updatable chat values under the
-node-value update rule
-([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
+Chat revises by **succession, never in place**
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+A chat's current metadata — name, description, image, governance
+map — is **the lineage head's founding payload**; there is no
+separate metadata fold and no in-place carrier.
 
-- **Carrier:** Opinion `(0,0)` + payload toward the Chat.
-- **Eligible authors:** a **per-chat governed property** — from
-  admin-only through every member, with optional proposal-gating
-  per field (`decision:set:metadata`, §5). Where several authors
-  are eligible, the fold is epoch-granular with the canonical
-  replay order breaking co-epochal ties.
-- **Granularity:** per field.
+- **An update is a succession authored by the chat's system
+  actor** (§3): one act, A-leg to the current head `C_k`, T-leg
+  minting the successor `C_{k+1}`, whose founding payload carries
+  the new values. The founding payload is the unit of change —
+  metadata, governance map, and system-actor name all change only
+  at succession boundaries, one priced act per change, executing
+  a passed proposal (§5). The actor authors everything inert:
+  A-leg `(0,0)`, the T-leg's forced-positive coordinate at `0` —
+  routing-inert under zero-is-inert
+  ([feed-ranking.md §3.1](../primitive/feed-ranking.md#31-the-damped-weight)).
+- **Nobody else acts.** The L2 fold bundles the linear lineage
+  into one logical chat (§3): membership, messages, backing,
+  bans, stances, and the key-epoch count carry forward
+  automatically, and the feed ranks the lineage as one candidate
+  ([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+  Nobody re-joins, nothing re-anchors, and superseded heads stay
+  published — history is public, as everywhere.
+- **A succession by anyone else is a fork**, never an update: a
+  new lineage whose members are exactly those who author their
+  own move acts (§2) — partial adoption is a fork, not a failure,
+  and nobody's community is moved by a proposer. A forking branch
+  typically mints a fresh system actor in its founding payload to
+  regain the update capability. The fork is also the escape from
+  a frozen lineage (§3) and a hard history boundary for encrypted
+  chats (§7).
 
 **Message bodies never edit** — a Message has no cover to resolve
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates));
-a correction is the next message. The governance map itself
-updates only through its own `amend` machinery (§5). Every edit
-is a priced act; history is public.
+a correction is the next message. Every update is a priced act;
+history is public.
 
 ---
 
