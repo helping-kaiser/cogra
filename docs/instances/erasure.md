@@ -39,6 +39,14 @@ so a superseded profile revision is an ordinary target.
   edit blanked the current view, but the superseded payload
   stays published until removed, because edits are never erasure
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+- **A reduced head remains the head.** The update fold selects its
+  head record regardless of payload state
+  ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
+  removing the newest revision's payload never makes the fold fall
+  through to a superseded payload — the head stays selected and
+  renders absent. Single-revision removal therefore never
+  republishes a predecessor as the current value; erasing the
+  history itself means removing those records too.
 - **Scope: content and profile records the requesting User
   authored.** Publish (posts), Review (comments), Send
   (messages), and Registration (profile revisions). Items are

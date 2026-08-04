@@ -393,6 +393,16 @@ Discipline for update records:
 - **Priced like any act.** Every update record debits `θ` and
   permanently increments the author's record count. Editing is
   cheap, never free.
+- **Selection ignores payload state.** The fold picks its head
+  record first and renders that record's payload — a **reduced
+  head remains the head**, rendering absent
+  ([erasure.md §1](../instances/erasure.md#1-per-content-removal)).
+  This is a selection rule, never "skip reduced records": falling
+  through would republish a superseded payload at the exact moment
+  its author exercises removal. A **full-empty** payload
+  ([layers.md §5](layers.md#5-deletion-policy)) is different — a
+  declared "the value is nothing" — and renders as deliberately
+  empty, not absent.
 - **History is public.** Superseded payloads remain published;
   removal (§7) is the only erasure and sweeps per record — full
   deletion removes payload and salt across the whole revision
