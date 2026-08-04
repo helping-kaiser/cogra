@@ -154,15 +154,6 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    // Publish must mint its own Content node.
-    let mut bad = opinion(&actor, 5, "x", vec![]);
-    bad.body.family = Family::Publish;
-    bad.body.target = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
-    assert!(matches!(
-        host.seal(actor.pre_sign(bad)).await,
-        Err(StandInError::Formation(_))
-    ));
-
     // A formation failure produces no Layer-1 object: nothing to close.
     assert!(host.close_epoch().await.expect("ok").is_none());
 }
@@ -386,6 +377,38 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     let balance = host.balance(&publisher.address()).await.expect("ok");
     assert_eq!(balance.action_count, 1);
     assert!((balance.balance - 9.0).abs() < 1e-9);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool) {
+    let host = standin(pool);
+    let author = funded_actor(&host, 10 * THETA).await;
+
+    // Genesis identity is per record: a Publish toward an existing Content
+    // node is the revise gesture, well-formed at the substrate — the L2
+    // fold, not formation, decides whether it wins.
+    let existing = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
+    let revise = Proposal {
+        body: StructuralBody {
+            author: author.address(),
+            seq: 0,
+            family: Family::Publish,
+            middle: None,
+            target: existing.clone(),
+            p_d: 0.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: b"revised body".to_vec(),
+        deps: vec![],
+    };
+    submit(&host, &author, revise).await;
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 1);
+    assert_eq!(package.records[0].family, Family::Publish);
+    assert_eq!(package.records[0].legs[0].target, existing);
 }
 
 #[sqlx::test(migrations = "../../migrations")]
