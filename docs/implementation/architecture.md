@@ -194,7 +194,12 @@ formation checks against the edge census, the admission handshake
 (verify, salt, seal; approval witness), the authoritative order and
 causal keys, edge-projection maturity, the θ-debit ledger, and
 epoch publication — with the two documented simplifications (money
-as numbers, standing stubbed). It owns its own `l1_*` tables in
+as numbers, standing stubbed). The stand-in mirrors the substrate
+contract as the L1 side defines it — where a bilaterally agreed
+edition supersedes the mirrored copy, the code follows the
+agreement — and enforces nothing CoGra-specific: CoGra's own
+restrictions live in L2 prepare and folds, keeping the delta at
+the swap as small as possible. It owns its own `l1_*` tables in
 the shared Postgres instance: they play L1's role, nothing outside
 the crate touches them, and the whole crate is replaced at the
 swap.
