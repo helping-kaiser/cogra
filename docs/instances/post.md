@@ -122,11 +122,22 @@ The rule behind the split: the shared graph holds what the Post
 The instantiation of the node-value update rule
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)):
 
-- **Carrier:** the author's **Opinion `(0,0)` + payload** toward
-  the Post — the default edit carrier.
-- **Eligible author:** the creator, alone. A single-author fold,
-  so "newest" is exact: the author's records toward the node form
-  a strict `≺`-chain.
+- **Carrier:** the creator's ordinary-role **Publish** toward the
+  Post — the family that minted it, so the Post's full revision
+  history is its Publish bundle and any L2 identifies each edit
+  from act fields alone
+  ([nodes.md §1](../primitive/nodes.md#1-l1-node-types-the-shared-graph)).
+  Edits are authored at attachment `0`: routing-inert,
+  vouch-inert.
+- **Eligible author:** the creator, alone — an eligibility read
+  rule, never a write restriction.
+- **Chain root:** the genesis Publish. The current value is the
+  head of the creator's declared causal-parent chain from genesis;
+  an edit without its chain is fold-ignored, and two edits
+  declaring the same parent are a branch — neither advances the
+  head ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+  The backend populates the chain at prepare time and serializes
+  edits per Post.
 - **Granularity:** per field — title, description, body, and the
   media manifest each fold newest-wins independently; an edit
   payload carries only the fields it changes. Replacing media is
@@ -135,11 +146,12 @@ The instantiation of the node-value update rule
 
 Every edit is a priced act — `θ`-debited, permanently counted.
 History is public: superseded payloads remain published unless
-removed (§5). The `(0,0)` edit records share the author's Opinion
-bundle toward their own Post with any organic stance records —
-they sum to nothing but refresh the bundle's newest-member
-temporal attributes, matching feed-ranking's
-revision-refreshes-newest rule.
+removed (§5). An edit is the Publish bundle's newest member, so it
+refreshes the authorship hop's recency like any revision — but the
+deepest "newest content first" fallback reads the **genesis**
+Publish's age, which no edit refreshes
+([feed-ranking.md §7](../primitive/feed-ranking.md#7-sort-order-tie-breakers-zero-jail)):
+editing never re-bumps a Post as new content.
 
 What never edits: the Post's identity (the genesis record), its
 `creator`, and its license qualifiers.

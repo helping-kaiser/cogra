@@ -94,6 +94,11 @@ on CoGra's rail, off-graph
 content or the payout address is a **parallel Registration** —
 same grounded pair, fresh payload, newest-wins per field
 (`edge:nodes:registration`); every prior state stays witnessed.
+"Newest" is chain-read: the current value is the head of the
+declared causal-parent chain rooted at the **anchoring
+Registration**, and a parallel Registration without its chain is
+fold-ignored
+([substrate.md §9](substrate.md#9-node-values-and-updates)).
 The payout destination is thereby a public, actor-attributed
 record: it cannot be silently swapped.
 
