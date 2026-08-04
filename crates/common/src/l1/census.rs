@@ -14,7 +14,6 @@ pub enum Family {
     Publish,
     Opinion,
     Affinity,
-    Participant,
     Owner,
     JoinRequest,
     Accept,
@@ -22,7 +21,7 @@ pub enum Family {
     Withdraw,
     Rescind,
     Leave,
-    // Hyper (§9.6)
+    // Hyper (§9.6; Participant per the Edition-5 draft — see `legs`)
     Tag,
     Review,
     Bid,
@@ -30,6 +29,7 @@ pub enum Family {
     DeInvite,
     Send,
     Reference,
+    Participant,
 }
 
 impl Family {
@@ -38,7 +38,6 @@ impl Family {
         Family::Publish,
         Family::Opinion,
         Family::Affinity,
-        Family::Participant,
         Family::Owner,
         Family::JoinRequest,
         Family::Accept,
@@ -53,6 +52,7 @@ impl Family {
         Family::DeInvite,
         Family::Send,
         Family::Reference,
+        Family::Participant,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -91,7 +91,8 @@ impl Family {
             | Family::Invitation
             | Family::DeInvite
             | Family::Send
-            | Family::Reference => FamilyKind::Hyper,
+            | Family::Reference
+            | Family::Participant => FamilyKind::Hyper,
             _ => FamilyKind::Binary,
         }
     }
@@ -142,13 +143,6 @@ impl Family {
                 domain: Domain::Epistemic,
                 mask: [false, true, false, true],
                 tier: Tier::Marginal,
-                fixed_params: false,
-            }],
-            Family::Participant => &[LegSpec {
-                role: LegRole::Binary,
-                domain: Domain::Relational,
-                mask: [true, true, true, true],
-                tier: Tier::Full,
                 fixed_params: false,
             }],
             Family::Owner => &[LegSpec {
@@ -312,6 +306,29 @@ impl Family {
                     fixed_params: false,
                 },
             ],
+            // The Edition-5 uniform movement act — A-leg whence, T-leg
+            // whither; found/join self-loop (A = T legal). The T-leg is a
+            // weak lineage marker, census-forced positive (`params_check`)
+            // so it can never flip a walk's parity; the member's real
+            // stance rides the A-leg. layer1-interface.md's Edition-4
+            // census predates the hyper shape and refreshes when the
+            // edition lands.
+            Family::Participant => &[
+                LegSpec {
+                    role: LegRole::A,
+                    domain: Domain::Relational,
+                    mask: [true, true, true, true],
+                    tier: Tier::Full,
+                    fixed_params: false,
+                },
+                LegSpec {
+                    role: LegRole::T,
+                    domain: Domain::Epistemic,
+                    mask: [false, true, false, true],
+                    tier: Tier::Marginal,
+                    fixed_params: false,
+                },
+            ],
         }
     }
 
@@ -375,9 +392,19 @@ impl Family {
                 NodeId::Name(_) => Ok(()),
                 _ => class_err("target", "a Type", target),
             },
-            Family::Participant | Family::JoinRequest | Family::Leave => match target {
+            Family::JoinRequest | Family::Leave => match target {
                 NodeId::Mint(_) => Ok(()),
                 _ => class_err("target", "a Chat (minted node)", target),
+            },
+            // Both endpoints are Chats — whence (middle) and whither
+            // (target); a found or join self-loops (A = T).
+            Family::Participant => match (middle, target) {
+                (Some(NodeId::Mint(_)), NodeId::Mint(_)) => Ok(()),
+                (Some(NodeId::Mint(_)), _) => {
+                    class_err("terminal target", "a Chat (minted node)", target)
+                }
+                (Some(m), _) => class_err("middle", "a Chat (minted node)", m),
+                (None, _) => Err("hyper family requires a middle node".into()),
             },
             Family::Owner => match target {
                 NodeId::Mint(_) => Ok(()),
@@ -448,12 +475,15 @@ impl Family {
             }
             // Tag: relevance r ∈ [-1,1], confidence c ∈ [0,1].
             // Bid: generosity g ∈ [-1,1], urgency u ∈ [0,1].
+            // Participant: A-leg stance signed; the second component is the
+            //   T-leg's forced-positive rendering (the transposed first
+            //   slot), so a movement leg can never flip a walk's parity.
             // Invitation: A-leg params signed; terminal relevance r ∈ [0,1]
             //   rides the tuple's second slot rendering — the stored tuple
             //   here is (u, f); r is carried as a third family field only in
-            //   payload renderings, so no extra check applies. Tag and Bid
-            //   constrain the second component.
-            Family::Tag | Family::Bid => {
+            //   payload renderings, so no extra check applies. Tag, Bid, and
+            //   Participant constrain the second component.
+            Family::Tag | Family::Bid | Family::Participant => {
                 if (0.0..=1.0).contains(&p_i) {
                     Ok(())
                 } else {
@@ -609,6 +639,7 @@ pub enum MintedNode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::l1::identifier::ActId;
 
     #[test]
     fn every_family_round_trips_and_has_census_rows() {
@@ -674,6 +705,49 @@ mod tests {
                 .is_err()
         );
         assert!(Family::Tag.endpoint_check("pub", &src, None, &ty).is_err());
+    }
+
+    #[test]
+    fn participant_moves_between_chats_and_self_loops() {
+        let src = NodeId::parse("addr:alice").expect("ok");
+        let c0 = NodeId::Mint(ActId::new("founder", 0, Family::Participant).expect("ok"));
+        let c1 = NodeId::Mint(ActId::new("other", 3, Family::Participant).expect("ok"));
+        let profile = NodeId::parse("prof:alice").expect("ok");
+
+        // Join / found self-loop (A = T) and a move (A ≠ T) are both legal.
+        assert!(
+            Family::Participant
+                .endpoint_check("alice", &src, Some(&c0), &c0)
+                .is_ok()
+        );
+        assert!(
+            Family::Participant
+                .endpoint_check("alice", &src, Some(&c0), &c1)
+                .is_ok()
+        );
+        // Both endpoints must be Chats (minted nodes).
+        assert!(
+            Family::Participant
+                .endpoint_check("alice", &src, Some(&profile), &c1)
+                .is_err()
+        );
+        assert!(
+            Family::Participant
+                .endpoint_check("alice", &src, Some(&c0), &profile)
+                .is_err()
+        );
+        assert!(
+            Family::Participant
+                .endpoint_check("alice", &src, None, &c1)
+                .is_err()
+        );
+
+        // A-leg stance is signed; the T-leg's forced-positive rendering
+        // pins the second component to [0, 1] — the system actor's inert
+        // (0, 0) passes.
+        assert!(Family::Participant.params_check(-0.5, 0.5).is_ok());
+        assert!(Family::Participant.params_check(0.0, 0.0).is_ok());
+        assert!(Family::Participant.params_check(0.5, -0.1).is_err());
     }
 
     #[test]

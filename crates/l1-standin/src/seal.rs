@@ -46,12 +46,18 @@ pub(crate) async fn seal(
 
     // Minted-endpoint rules (`def:graph:genesis-act-and-creator`): a
     // self-minted target (mint of this very act) is valid exactly for the
-    // genesis families; Publish always mints — its Content node is this
-    // act's mint. Foreign minted references are permitted even when
-    // unanchored: dangling identifiers are fold-neutral, never a formation
-    // failure (`lem:graph:dangling-neutral-fold`).
+    // genesis families. Genesis identity is per record, so an ordinary-role
+    // act toward an existing mint — a Publish revising its Content node —
+    // is well-formed; the fold, never formation, decides what it means.
+    // Foreign minted references are permitted even when unanchored:
+    // dangling identifiers are fold-neutral, never a formation failure
+    // (`lem:graph:dangling-neutral-fold`).
+    // A founding Participant self-loops at its own mint — both legs enter
+    // the Chat the act creates — so the middle-node rule exempts exactly
+    // that shape.
     let own_mint = NodeId::Mint(act_id.clone());
-    if body.middle.as_ref() == Some(&own_mint) {
+    let founding_participant = family == common::l1::Family::Participant && body.target == own_mint;
+    if body.middle.as_ref() == Some(&own_mint) && !founding_participant {
         return Err(formation("the middle node cannot be minted by its own act"));
     }
     if body.target == own_mint && family.minted_node().is_none() {
@@ -59,9 +65,13 @@ pub(crate) async fn seal(
             "{family} is not a genesis family and cannot mint its target"
         )));
     }
-    if family == common::l1::Family::Publish && body.target != own_mint {
+    // Bid/T alone is fresh-mint-only (Edition-5 draft §3.9): a Bid toward
+    // an existing Offer would hang a second Item's incidence on it — real
+    // raw incidence, live in CAN and sentiment even where no fold reads
+    // it. Offer revision is a new Offer.
+    if family == common::l1::Family::Bid && body.target != own_mint {
         return Err(formation(
-            "publish is the genesis act of its Content node: the target must be the act's own mint",
+            "bid mints its Offer: the terminal target must be the act's own mint",
         ));
     }
 
