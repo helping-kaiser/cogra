@@ -540,7 +540,10 @@ bundle audits speak this vocabulary
 Each user-authored field carries its moderation status co-located
 with its value, so a redacted field is never confused with an empty
 one. Scalar fields use a wrapper type; `value` is null when the field is
-redacted (or unset, where optional), and `status` says which.
+redacted (or unset, where optional), and `status` says which. A
+deliberately empty value — a full-empty payload,
+[layers.md §5](../primitive/layers.md#5-deletion-policy) — is an
+empty string under `NORMAL` status: empty is a value, null never is.
 
 ```graphql
 "Text carrying its own moderation status. `value` is null when the
