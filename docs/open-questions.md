@@ -24,7 +24,6 @@ within a phase, order is flexible.
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
-| 1. L1-author discussion | 1 | **Q31** | Publish-genesis identity — per-record vs per-family. Edition 4 leans per-record via `mint(actid)` without ruling. Open with the L1 team; blocks nothing downstream. |
 | 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 3. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -60,6 +59,7 @@ questions are closed.
 - Q26 — see [chats.md §7 "Keys, organized in epochs"](instances/chats.md#keys-organized-in-epochs) and [layers.md §3 "Derived caches do not layer"](primitive/layers.md#derived-caches-do-not-layer). `Chat.epoch` is a **derived cache** — rebuildable as `1` plus the count of effected membership transitions plus passed `decision:rotate_key` Proposals, both append-only and timestamp-pinned; layers.md now states that a cache may be a fold over past events, not only a function of current state. The rotation outcome joins [proposal.md §6](instances/proposal.md#6-lifecycle)'s no-graph-layer list: the cascade refreshes the cache in place, a cache refresh is not an outcome carrier ([governance.md §2.5](primitive/governance.md#25-outcome)), and the Proposal's terminal `status` is the on-graph record. The layered-property alternative was rejected as the exact anti-pattern layers.md names — duplicating history that already lives in the source data, at a layer per membership change.
 - Q27 — see [collectives.md §6 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §4](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
 - Q29 — see [auth.md "Key recovery"](implementation/auth.md#key-recovery) (user posture) and [collectives.md §2](instances/collectives.md#2-custody) (Collective custody). **Users:** email recovery restores the login only; the actor is restored by an opt-in client-encrypted key backup — the device generates a high-entropy recovery code alongside the signing key, encrypts the key locally, and CoGra stores only ciphertext it cannot decrypt (zero-custody preserved; theft needs code *and* login, so redundant copies of the code are safe against loss in a way raw-key copies never are). Generated codes only — a user-chosen passphrase over a stored blob is the offline-crackable failure mode, viable only behind guess-limited secure hardware this posture avoids depending on. Declining backup keeps husk semantics (device loss = actor loss, stated at key creation); a passkey-wrapped (WebAuthn PRF) second unlock is a foreseen extension. **Collectives:** the creator holds the full key (full custody from founding, censorship escape, same recovery posture); every other act-as-eligible member signs via a per-member 2-of-2 split — member device holds one half, the backend the other, the full key never assembled — so the backend alone can sign nothing (no operator custody) and a member cannot sign around the contract: the backend co-signs only after checking the member's user-key-signed instruction against the governance map (action-key eligibility, passed decision where required). Removal = the backend deletes its half; no membership event forces a re-key. Rejected: member-threshold signatures (human-quorum ceremony weight, resharing on every membership change) and per-member L1-registered full keys (any holder could sign decision-gated acts unilaterally); the per-member device+server split is the standard embedded-wallet architecture. The two L1 dependencies (signature scheme, actor key rotation) split off as Q30.
+- Q31 — see [nodes.md §1](primitive/nodes.md#1-l1-node-types-the-shared-graph). The L1 team's Edition-5 draft rules genesis **per record** (*Artifact Update Semantics*, Ruling 1): `mint` takes an *act* identifier, so a per-family reading would falsify the identifier algebra's arity. An act of a mint-capable family whose target equals the mint of its own identifier is the genesis act and mints; an act of the same family toward an existing node mints nothing — it is an update record, the formation footing under [substrate.md §9](primitive/substrate.md#9-node-values-and-updates)'s per-family carriers. [layer1-interface.md](primitive/layer1-interface.md) mirrors the ruling when the published edition lands.
 - Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
 ---
@@ -115,37 +115,6 @@ already records, chosen so slice work can sign records today.
 A stand-in-scoped deployment choice, not a Q30 resolution: the
 real substrate's schemes replace it at the swap, and rotation
 remains unaddressed.
-
----
-
-## Q31 — Publish genesis: parallelism exemption per record or per family
-
-**Where it shows up:**
-[layer1-interface.md](primitive/layer1-interface.md) (the edge
-census; minted-node identity)
-**Status:** open, answer received (posed 2026-07-17, re-asked
-2026-07-21; blocks nothing downstream). The L1 team's Edition-5
-draft rules **per record** — *Artifact Update Semantics*,
-Ruling 1: `mint` takes an *act* identifier, so a per-family
-reading would falsify the identifier algebra's arity. Closes into
-[nodes.md §1](primitive/nodes.md#1-l1-node-types-the-shared-graph)
-when the edition lands.
-
-### Context
-
-The census marks Publish "parallelism-exempt by construction."
-Whether that exemption — and with it minted-node genesis — reads
-**per record** (every Publish act mints a distinct node) or **per
-family** is L1's to rule, and the ruling is pending. Edition 4
-leans per-record without ruling: the operative sentence is
-carried verbatim, while act identifiers now embed an author-local
-sequence and minted identity is `mint(actid)` — identity per
-minted act by term formation.
-
-### The question
-
-For the L1 team: is Publish-genesis identity per-record or
-per-family?
 
 ---
 

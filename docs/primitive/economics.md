@@ -201,10 +201,15 @@ anchor carries the public record and pointers.
 ### 3.2 Adjustability
 
 Public visibility of every adjustment is the discipline. Term
-changes land as witnessed payloads on advertiser-authored `(0, 0)`
-Opinions toward the campaign anchor — newest change per term wins,
-the same replayable-schedule shape as the network charter
-([feed-ranking §12](feed-ranking.md#12-calibration-parameters)).
+changes land as witnessed payloads on advertiser-authored
+ordinary-role **Publish** records toward the campaign anchor — the
+anchor is a Content node and revises like one, newest change per
+term along the advertiser's declared causal chain from the
+anchor's genesis
+([substrate.md §9](substrate.md#9-node-values-and-updates)). A
+campaign anchor is no proposal anchor: its cover view is the
+campaign's rules, which contributors read to know what earns, and
+superseded terms are history exactly as for a post.
 
 - **Mutable before settlement:** `e_end` (free, unlimited
   extensions — the anti-bot lever, §6.1), `declared_goal`, `χ_c`
@@ -213,8 +218,14 @@ the same replayable-schedule shape as the network charter
   escrowed `D` — **top-up only**, never lowered: the locked escrow
   backs §7's flat-on-`D` anti-spam floor.
 - **Immutable after creation:** `anchors` and `target`. They define
-  the campaign's identity — whose feeds, what node. Changing them
-  would create a different campaign in disguise.
+  the campaign's identity — whose feeds, what node — so they are
+  not in the updatable set: a later Publish carrying different
+  ones is fold-ignored per field. The targeting is *also* declared
+  structurally, as the anchor's `(0, 0)` References at creation
+  (§3); later References from the anchor toward other nodes are
+  ineligible and equally fold-ignored — the fold protects the
+  declaration, the records don't protect themselves. Changing
+  either would create a different campaign in disguise.
 
 ---
 

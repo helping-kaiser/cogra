@@ -108,19 +108,38 @@ signs ([feed-ranking.md](../primitive/feed-ranking.md)).
 
 The node-value update rule
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)),
-instantiated for Comments exactly as for Posts
-([post.md §4](post.md#4-editing)):
+instantiated for Comments:
 
-- **Carrier:** the author's **Opinion `(0,0)` + payload** toward
-  the Comment.
-- **Eligible author:** the creator alone — exact `≺`-newest.
+- **Carrier:** the creator's ordinary-role **Review** — the same
+  shape as creation: A-leg to the same parent, T-leg to the
+  existing Comment instead of a fresh mint. Authored at `(0,0)`,
+  routing-inert; the Comment's revision history is its Review
+  bundle.
+- **Eligible author:** the creator alone.
+- **Chain root:** the genesis Review — head of the declared
+  causal chain; same-parent siblings are a branch and the
+  incumbent holds
+  ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
 - **Granularity:** per field — body and media manifest fold
   independently.
 
-Every edit is priced; history is public; the `(0,0)` records
-refresh the author's bundle without summing into any stance. The
-Comment's identity, its `creator`, its parent (the minting
-record's A-leg target), and its license qualifiers never edit —
+**The parent is genesis-fixed.** The Comment's parent is its
+**genesis** Review's A-leg target. Formation cannot check that an
+edit's A-leg matches it — that would take a lookup — so an edit
+whose A-leg differs from genesis is fold-ignored: it neither
+reparents the Comment nor wins the body fold. The record is still
+a live edge in traversal and sentiment, which is why the feed
+channel-gates ordinary-role Review T-legs — a stranger's
+mismatched "edit" cannot wire someone else's Comment beneath an
+arbitrary carrier
+([feed-ranking.md §4](../primitive/feed-ranking.md#4-the-path-set)).
+
+One consequence, accepted knowingly: an edit's A-leg lands weight
+on the parent — the existing commenting mechanic, N+1 times
+instead of once.
+
+Every edit is priced; history is public. The Comment's identity,
+its `creator`, its parent, and its license qualifiers never edit —
 responding to something else is a new Comment.
 
 ---
