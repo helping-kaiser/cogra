@@ -123,8 +123,13 @@ remains unaddressed.
 **Where it shows up:**
 [layer1-interface.md](primitive/layer1-interface.md) (the edge
 census; minted-node identity)
-**Status:** open (in discussion with the L1 team — posed
-2026-07-17, re-asked 2026-07-21; blocks nothing downstream)
+**Status:** open, answer received (posed 2026-07-17, re-asked
+2026-07-21; blocks nothing downstream). The L1 team's Edition-5
+draft rules **per record** — *Artifact Update Semantics*,
+Ruling 1: `mint` takes an *act* identifier, so a per-family
+reading would falsify the identifier algebra's arity. Closes into
+[nodes.md §1](primitive/nodes.md#1-l1-node-types-the-shared-graph)
+when the edition lands.
 
 ### Context
 
