@@ -742,8 +742,9 @@ type Collective implements Node & Actor {
 ```graphql
 "Text and/or media authored by an actor — the primary public
  surface and the canonical feed-ranking target. Minted by a Publish
- record; body edits are (0,0) + payload update records read by the
- newest-wins fold (substrate.md §9)."
+ record; edits are ordinary-role Publish + payload records at
+ attachment 0, read by the chain-ordered per-field fold
+ (substrate.md §9, post.md §4)."
 type Post implements Node {
   "Optional title / headline."
   title: ModeratedText!
@@ -793,15 +794,19 @@ type Chat implements Node {
    role weights, thresholds, amendment gates. Typed in the
    governance section."
   governance: Governance!
-  "Current members — the membership fold: member iff the actor's
-   own ≺-latest {Participant, Leave} record is a Participant,
-   recognized per the chat's admission policy (chats.md §4). A fold
-   view, not stored state."
+  "Current members — the membership fold over the bundled lineage:
+   member iff not banned, and the actor's own ≺-latest
+   {Participant, Leave} — keyed on leg role, a move's A-leg is a
+   departure — is a Participant strictly ≺-following any recognized
+   De-invite, recognized per the chat's admission policy
+   (chats.md §4). A fold view, not stored state."
   members(first: Int, after: String, last: Int, before: String): ChatMemberConnection!
   "Current E2EE key epoch — derived from the public membership
-   transitions (rotation is automatic on every membership change,
-   plus governance-routed mid-epoch rotation); no counter is stored
-   anywhere (chats.md §7)."
+   transitions, counted over the bundled lineage (rotation is
+   automatic on every membership transition; a linear succession is
+   membership-preserving and rotates nothing; governance-routed
+   mid-epoch rotation adds one); no counter is stored anywhere
+   (chats.md §7)."
   epoch: Int!
   "The requesting user's last-read timestamp in this chat; null when
    anonymous or never read. Field-level, viewer-scoped."
@@ -1847,7 +1852,10 @@ These bind every mutation below.
   governance moves them.
 - **Edits are update records; eligibility is checked at prepare.**
   An edit prepare stages the concept's declared carrier — parallel
-  Registration for profiles, `(0,0)` Opinion + payload elsewhere
+  Registration for profiles; elsewhere the node's own minting
+  family in its inert setting: Publish at attachment `0` for
+  posts, Review at `(0,0)` for comments, Owner at attachment `0`
+  for items
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
   L1 would accept anyone's update-shaped record and let the fold
   ignore it; CoGra's own API refuses to prepare a record its
@@ -2151,12 +2159,12 @@ input PreparePostInput {
   actAs: UUID
 }
 
-"Edit a Post — stages one (0,0) + payload update record carrying
- the new values for the supplied fields; omitted fields are
- untouched (newest-wins fold per field). A supplied gallery is the
- full intended arrangement. Only the eligible author's edit is
- prepared. New tags or citations are their own gestures, not edit
- fields."
+"Edit a Post — stages one ordinary-role Publish + payload record
+ at attachment 0 carrying the new values for the supplied fields;
+ omitted fields are untouched (newest-wins fold per field). A
+ supplied gallery is the full intended arrangement. Only the
+ eligible author's edit is prepared. New tags or citations are
+ their own gestures, not edit fields."
 input PreparePostEditInput {
   id: UUID!
   title: String
@@ -2330,18 +2338,6 @@ input PrepareDeInviteInput {
   actAs: UUID
 }
 
-"Edit chat metadata — stages the (0,0) + payload update record for
- the supplied fields. Update authority is a per-chat governed
- property (admin-only vs every-member; optionally proposal-gated —
- then this prepare is refused toward prepareProposal)."
-input PrepareChatMetadataEditInput {
-  chat: UUID!
-  name: String
-  description: String
-  imageMediaId: UUID
-  actAs: UUID
-}
-
 extend type Mutation {
   prepareChat(input: PrepareChatInput!): PreparePayload!
   prepareChatMessage(input: PrepareChatMessageInput!): PreparePayload!
@@ -2350,9 +2346,16 @@ extend type Mutation {
   prepareChatInvitation(input: PrepareChatInvitationInput!): PreparePayload!
   prepareChatLeave(input: PrepareChatLeaveInput!): PreparePayload!
   prepareDeInvite(input: PrepareDeInviteInput!): PreparePayload!
-  prepareChatMetadataEdit(input: PrepareChatMetadataEditInput!): PreparePayload!
 }
 ```
+
+Chat metadata has no edit mutation: a chat revises by succession,
+never in place — a passed `decision:set:metadata` proposal is
+executed by the chat's system actor as one succession act whose
+founding payload carries the new values
+([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates)).
+The governance prepares above cover the deciding; the execution is
+backend-authored.
 
 Key epochs need no mutation: rotation is automatic on every
 membership transition (derived from public records), and the one
@@ -2476,10 +2479,10 @@ input PrepareItemInput {
   actAs: UUID
 }
 
-"Edit an Item — stages the (0,0) + payload update record. The
- eligible author is the current certified owner (owner^(k) as of
- the record's landing epoch); a superseded owner's edit is never
- prepared."
+"Edit an Item — stages one ordinary-role Owner + payload record at
+ attachment 0. The eligible author is the current certified owner
+ (owner^(k) as of the record's landing epoch); a superseded
+ owner's edit is never prepared."
 input PrepareItemEditInput {
   id: UUID!
   name: String
