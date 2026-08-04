@@ -389,6 +389,57 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
+    let host = standin(pool);
+    let founder = funded_actor(&host, 10 * THETA).await;
+
+    // The found shape: both legs at the act's own mint — the A-leg enters
+    // the Chat the act creates, the T-leg mints it.
+    let own_mint =
+        NodeId::Mint(ActId::new(&founder.address(), 0, Family::Participant).expect("ok"));
+    let found = Proposal {
+        body: StructuralBody {
+            author: founder.address(),
+            seq: 0,
+            family: Family::Participant,
+            middle: Some(own_mint.clone()),
+            target: own_mint.clone(),
+            p_d: 1.0,
+            p_i: 0.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: b"founding payload".to_vec(),
+        deps: vec![],
+    };
+    submit(&host, &founder, found).await;
+
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 1);
+    let record = &package.records[0];
+    assert_eq!(record.family, Family::Participant);
+    assert_eq!(record.legs.len(), 2);
+    let a = record
+        .legs
+        .iter()
+        .find(|l| l.role == LegRole::A)
+        .expect("A leg");
+    let t = record
+        .legs
+        .iter()
+        .find(|l| l.role == LegRole::T)
+        .expect("T leg");
+    assert_eq!(a.source, NodeId::Addr(founder.address()));
+    assert_eq!(a.target, own_mint);
+    assert_eq!(t.source, own_mint);
+    assert_eq!(t.target, own_mint);
+    // The T-leg renders the tuple transposed: the forced-positive
+    // component leads.
+    assert_eq!((t.p_d, t.p_i), (0.0, 1.0));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn maturity_grows_with_prior_degree(pool: PgPool) {
     let host = standin(pool);
     let alice = funded_actor(&host, 10 * THETA).await;
