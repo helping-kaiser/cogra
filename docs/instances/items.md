@@ -73,10 +73,15 @@ the epoch certificate.
 - Authorship and ownership are distinct: the lister (`creator`
   of the genesis record) is immutable; `owner^(k)` changes with
   each settled transfer.
-- An Owner record not reachable from genesis through boundary
-  transfers is *orphaned* — it persists (append-only) but
-  carries no title force. Nobody can write themselves into a
-  thread.
+- Only the self-minting genesis act roots the thread, and no
+  later Owner record carries title force of its own — title moves
+  only through recognized settlements. Two very different
+  gestures share that title-inert shape: a stranger's failed
+  claim, which persists (append-only) and does nothing, and the
+  certified owner's legitimate listing edit (§7), which persists
+  the same way and wins the edit fold. Title force and fold
+  eligibility are separate questions; on neither can anybody
+  write themselves into a thread.
 - Title never lapses. A deleted account's husk still holds its
   titles ([erasure.md](erasure.md)); transfer
   out of a husk follows the same settlement flow as any other,
@@ -202,12 +207,21 @@ The node-value update rule
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)),
 instantiated for Items:
 
-- **Carrier:** Opinion `(0,0)` + payload toward the Item.
+- **Carrier:** an ordinary-role **Owner** record toward the Item —
+  the family that minted it, authored at attachment `0`,
+  routing-inert. No title force: only the self-minting genesis act
+  roots the thread, and title moves only through recognized
+  settlements (§3).
 - **Eligible author:** the **current certified owner** —
   `owner^(k)` as of the edit record's landing epoch (the lister,
   initially). Ownership changes hands; the editing right follows
   the certificate, and a superseded owner's later edit records
   are written but never win the fold.
+- **Chain root:** the genesis act *or the author's own prior
+  head* — a new owner's first edit has no same-author
+  predecessor. Within one owner's records the declared causal
+  chain picks the head; a chainless edit is fold-ignored
+  ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
 - **Granularity:** per field — name, description, media
   manifest, asking price (§6).
 - **Persistence with attribution.** An eligible edit stays
