@@ -226,7 +226,7 @@ record(s) carrying that content:
 | Comment | the Review bundle's payloads — the genesis record and the creator's ordinary-role Review edits |
 | Chat message | the Send record's payload (plaintext or ciphertext, [chats.md §7](chats.md#7-encryption-as-the-privacy-mechanism); see "Encrypted message classification" below) |
 | Profile content (bio, avatar, display name) | the Registration bundle's payloads |
-| Chat name / description / image | the founding Participant record's payload and the eligible members' edit records revising it (who is eligible is the chat's own governed choice) |
+| Chat name / description / image | the lineage's founding Participant payloads — each Chat node's metadata is its own founding payload, the lineage head's being current ([chats.md §8](chats.md#8-chat-metadata-and-updates)) |
 | Item name / description / media | the Owner bundle's payloads — the genesis record and the certified owners' ordinary-role Owner edits revising it |
 | Topic name | a Type is a bare name with no payload; an offensive topic is a naming-service and read-side concern ([hashtag.md](hashtag.md)), plus classification of the content tagged with it |
 | Proposal text / report justification | the proposal's Content anchor payload — anchors are ordinary records, moderatable like any content |

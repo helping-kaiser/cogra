@@ -169,8 +169,8 @@ orders each bundle for the fold and anchors epoch age.
 
 | Family | Feed traversal |
 |---|---|
-| Opinion, Publish, Affinity, Participant, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below); genesis legs are ordinary hops. |
+| Opinion, Publish, Affinity, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
+| Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); genesis legs are ordinary hops. |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
@@ -266,6 +266,22 @@ forward weight to them. A genesis Review needs no gate: its T-leg
 mints the Comment, so nothing pre-existing can be hijacked. The
 parent fold is genesis-keyed regardless — a mismatched edit never
 reparents ([comment.md §4](../instances/comment.md#4-editing)).
+
+**Chat lineages.** A chat candidate is its **lineage** — the
+succession chain the L2 fold bundles into one logical chat
+([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates))
+ranks as a single candidate, and the bundle's internal records
+drop out of that candidate's path set: no path to the lineage
+transits its own succession legs, so a chat never self-amplifies
+through its update history. A Participant's movement **T-leg**
+(`C₀ → C₁`) has two pre-existing endpoints — the exact shape that
+gates a citation — and its carrier is a Chat, which has no single
+author: only the **initiator-owned** channel crosses it, so a
+mover's or stranger's successor claim reaches the destination
+only through that author, at the viewer's forward weight to them.
+The A-leg is an ordinary hop; a join's or founding's self-loop
+T-leg is routing-inert, and a system-actor succession is authored
+entirely at zero — `w̃ = 0`, crossing nothing.
 
 **Simple by construction.** Every hop factor is below one
 (`γ ≤ 1`, `w̃ < 1`), so a strongest path never revisits a node — a
