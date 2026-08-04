@@ -50,8 +50,12 @@ pub(crate) async fn seal(
     // act's mint. Foreign minted references are permitted even when
     // unanchored: dangling identifiers are fold-neutral, never a formation
     // failure (`lem:graph:dangling-neutral-fold`).
+    // A founding Participant self-loops at its own mint — both legs enter
+    // the Chat the act creates — so the middle-node rule exempts exactly
+    // that shape.
     let own_mint = NodeId::Mint(act_id.clone());
-    if body.middle.as_ref() == Some(&own_mint) {
+    let founding_participant = family == common::l1::Family::Participant && body.target == own_mint;
+    if body.middle.as_ref() == Some(&own_mint) && !founding_participant {
         return Err(formation("the middle node cannot be minted by its own act"));
     }
     if body.target == own_mint && family.minted_node().is_none() {
