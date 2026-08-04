@@ -97,27 +97,42 @@ the write rule
 ## 4. Membership
 
 Membership is **computed, never stored**. CoGra adopts the
-canonical membership fold as its read rule
+canonical membership fold
 (`def:nodes:canonical-membership-fold`,
-[layer1-interface.md §9.8](../primitive/layer1-interface.md#98-membership-proposals-and-revocation)):
+[layer1-interface.md §9.8](../primitive/layer1-interface.md#98-membership-proposals-and-revocation))
+**with ban semantics**, which the canonical fold explicitly
+permits a policy `𝒫` to declare. "Banned" is a property this
+fold computes, never a state L1 stores — a De-invite is one
+record at one point in the order. Two clauses:
 
-> An actor is a member iff their own record chain toward the Chat
-> is non-empty and its `≺`-latest {Participant, Leave} element is
-> a Participant — with **recognized** De-invites applied
-> conservatively: a recognized De-invite defeats membership only
-> if it strictly `≺`-follows that latest element, and a
-> Participant strictly following the De-invite re-establishes
-> membership.
+> **Banned.** `a` is banned from `C` iff the `≺`-maximal element
+> of the authority set's recognized {De-invite, Invitation}
+> records toward the incidence `(C, prof(a))` is a De-invite.
+>
+> **Member.** `a` is a member of `C` iff `a` is not banned, and
+> `a`'s own `≺`-latest {Participant, Leave} element toward `C` is
+> a Participant that strictly `≺`-follows the latest recognized
+> De-invite toward `(C, prof(a))`, where one exists.
+
+Where no De-invite exists, the member clause reduces to the
+canonical fold — the ordinary join/leave path is unchanged.
 
 On top of the fold sit CoGra's two published policy clauses, the
 authority policy `𝒫`:
 
-- **Recognition:** the fold recognizes only **proposal-backed
-  De-invites** — authored by a chat-authority actor with the
-  authorizing proposal's anchor cited in the payload (§6). A
-  freelance De-invite is membership-inert; its only effect is
-  suppressing the author's *own* Invitation vouch toward that
-  (Chat, Profile) — evidence, not force.
+- **Recognition:** the ban predicate reads only **proposal-backed
+  records authored by chat-authority actors** — the authorizing
+  proposal's anchor cited in the payload (§6): De-invites
+  (`decision:disavow_member`) and un-ban Invitations
+  (`decision:lift_ban`, §5). A freelance De-invite is
+  membership-inert; its only effect is suppressing the author's
+  *own* Invitation vouch toward that (Chat, Profile) — evidence,
+  not force, and per-author by L1's own rule. An ordinary member's
+  Invitation is a vouch and admission backing, never part of the
+  ban predicate — otherwise any member could un-ban anyone. L1's
+  Inviter Revocation stays per-author because it governs vouch
+  compilation; this predicate governs membership — two folds over
+  the same records, asking different questions.
 - **Backing (gated chats):** where the chat's governance map
   requires admission approval, the fold recognizes a Participant
   only when backed by an approved Join Request or an Invitation.
@@ -159,11 +174,28 @@ Level 2) **executed on L1**: the executing chat-authority actor —
 an ordinary member whose per-chat role authorizes execution,
 never a global system actor — authors the **De-invite**
 (Actor → Chat → Profile), its payload citing the authorizing
-proposal's anchor. The fold applies it conservatively, and it is
-**non-sticky**: a later Participant re-establishes membership. A
-re-kick is a fresh proposal; a reversal is a counter-proposal.
-There is no admin-unilateral kick — authority comes from the
-passed proposal, and the De-invite is its materialization.
+proposal's anchor. A recognized De-invite **bans**: a later
+self-authored Participant does not re-establish membership, and
+lifting the ban is its own community decision (un-ban below) —
+expulsion and re-entry are symmetric acts of the chat, never a
+race against the expelled. There is no admin-unilateral kick —
+authority comes from the passed proposal, and the De-invite is
+its materialization.
+
+### Un-ban
+
+Lifting a ban is a passed **`decision:lift_ban`** proposal (§5)
+executed as a **proposal-backed Invitation**: a chat-authority
+actor authors the Invitation (Actor → Chat → Profile), its
+payload citing the authorizing proposal's anchor. Invitation is
+already the "this person fits here" gesture over exactly this
+incidence, and it does double duty — in a gated chat, the same
+record supplies the admission backing the returning member needs.
+
+An un-ban restores **eligibility, never membership**: the person
+re-enters by authoring a new Participant strictly `≺`-following
+the De-invite — nobody is silently re-added to a room they may
+not want back into.
 
 ### Membership sentiment
 
@@ -202,6 +234,7 @@ Default map at founding:
 | `decision:add_member` | `role IN (admin, chat_mod)` | — (count) | 1 approver | — |
 | `decision:disavow_message` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 20% quorum | — |
 | `decision:disavow_member` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 40% quorum | yes |
+| `decision:lift_ban` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 40% quorum | — |
 | `decision:rotate_key` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 | `decision:change_role` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 30% quorum | yes |
 | `decision:set:metadata` | per the chat's update-authority setting (§8) | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
@@ -335,11 +368,11 @@ node-value update rule
   replay order breaking co-epochal ties.
 - **Granularity:** per field.
 
-Message bodies edit under the default instantiation — the
-author's own `(0,0)` + payload toward the Message, creator-only,
-per field. The governance map itself updates only through its own
-`amend` machinery (§5). Every edit is a priced act; history is
-public.
+**Message bodies never edit** — a Message has no cover to resolve
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates));
+a correction is the next message. The governance map itself
+updates only through its own `amend` machinery (§5). Every edit
+is a priced act; history is public.
 
 ---
 

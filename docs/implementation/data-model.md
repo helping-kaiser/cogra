@@ -401,7 +401,7 @@ CREATE TABLE comment_versions (
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
 -- a single chat can carry both plaintext and encrypted messages. See
--- chats.md §9. Profile fields (name, description, image) change
+-- chats.md §7. Profile fields (name, description, image) change
 -- through the chat's edit carrier under its governed update
 -- authority (substrate.md §9); each applied change appends a
 -- version.
@@ -429,17 +429,17 @@ CREATE TABLE chat_messages (
 );
 
 -- Chat-message versions. content_privacy is per-message and
--- per-version (see chats.md §4.2): 'plaintext' bodies are readable
+-- per-version (see chats.md §7): 'plaintext' bodies are readable
 -- text; 'encrypted' bodies are ciphertext under the chat's
 -- member-derived symmetric key for the epoch the version was
 -- authored in. A chat can carry both freely.
 --
--- epoch records which key the ciphertext is under (see chats.md §9:
+-- epoch records which key the ciphertext is under (see chats.md §7:
 -- chat keys are organized in epochs, advanced on membership change
 -- and on passing mid-epoch rotation Proposals). NULL for plaintext
 -- rows; NOT NULL for encrypted rows. The frontend uses it to pick
--- the right key. An edit may re-encrypt under the current epoch,
--- which is why the column is per-version.
+-- the right key. Message bodies never edit (api-spec.md, chats.md
+-- §8); version rows arise from redaction only.
 CREATE TABLE chat_message_versions (
     chat_message_id  UUID        NOT NULL REFERENCES chat_messages(id),
     content          TEXT        NOT NULL,
