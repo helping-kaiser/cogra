@@ -335,11 +335,11 @@ node-value update rule
   replay order breaking co-epochal ties.
 - **Granularity:** per field.
 
-Message bodies edit under the default instantiation — the
-author's own `(0,0)` + payload toward the Message, creator-only,
-per field. The governance map itself updates only through its own
-`amend` machinery (§5). Every edit is a priced act; history is
-public.
+**Message bodies never edit** — a Message has no cover to resolve
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates));
+a correction is the next message. The governance map itself
+updates only through its own `amend` machinery (§5). Every edit
+is a priced act; history is public.
 
 ---
 
