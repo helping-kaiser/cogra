@@ -55,7 +55,7 @@ so a superseded profile revision is an ordinary target.
   removal trigger there. For encrypted Messages the payload is a
   ciphertext blob; the removal is the same one-way transition as
   for plaintext, and chat epoch keys are untouched
-  ([chats.md §9](chats.md#7-encryption-as-the-privacy-mechanism)).
+  ([chats.md §7](chats.md#7-encryption-as-the-privacy-mechanism)).
 - **Immediate and permanent.** One authenticated request with an
   explicit client-side confirmation; no email round-trip, no
   grace period — proportionate for a single record, where
