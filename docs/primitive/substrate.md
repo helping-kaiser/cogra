@@ -408,10 +408,23 @@ Discipline for update records:
   deletion removes payload and salt across the whole revision
   chain while every structural record stays.
 
-Not everything updates. A node's **identity** never does: proposal
-terms, campaign anchors and target, Type names, and anchored
-platform documents are immutable — a revision is a new node, by
-design ([proposal.md](../instances/proposal.md)). License
+What updates is what has a **cover** — a surface that renders the
+node standing alone, one body at a time, so a fold must pick that
+body. Post, Comment, Item, Profile, and chat metadata all render
+covers and all update. A chat **Message** has none: it renders
+only in transcript sequence, is not intelligible out of that
+context, and a correction is simply the next message — so Message
+bodies are not updatable values
+([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates)).
+An edit toward a coverless node could only serve to hide, and
+nothing here hides — superseded payloads stay published either
+way.
+
+Not everything with a cover updates. A node's **identity** never
+does: proposal terms, campaign anchors and target, Type names, and
+anchored platform documents are immutable — a revision is a new
+node, by design ([proposal.md](../instances/proposal.md)); people
+voted on, paid against, or subscribed to that exact text. License
 qualifiers are structural metadata of the Publish record, fixed at
 creation, out of reach of any update.
 

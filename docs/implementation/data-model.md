@@ -434,12 +434,12 @@ CREATE TABLE chat_messages (
 -- member-derived symmetric key for the epoch the version was
 -- authored in. A chat can carry both freely.
 --
--- epoch records which key the ciphertext is under (see chats.md §9:
+-- epoch records which key the ciphertext is under (see chats.md §7:
 -- chat keys are organized in epochs, advanced on membership change
 -- and on passing mid-epoch rotation Proposals). NULL for plaintext
 -- rows; NOT NULL for encrypted rows. The frontend uses it to pick
--- the right key. An edit may re-encrypt under the current epoch,
--- which is why the column is per-version.
+-- the right key. Message bodies never edit (api-spec.md, chats.md
+-- §8); version rows arise from redaction only.
 CREATE TABLE chat_message_versions (
     chat_message_id  UUID        NOT NULL REFERENCES chat_messages(id),
     content          TEXT        NOT NULL,
