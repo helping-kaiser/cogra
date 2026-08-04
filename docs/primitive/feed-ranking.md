@@ -170,7 +170,7 @@ orders each bundle for the fold and anchors epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Participant, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). |
+| Hyper-edges: Review, Send, Bid, Invitation | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below); genesis legs are ordinary hops. |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
 | Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
@@ -249,6 +249,23 @@ which Tag records the topic feed (§10) surfaces for a viewer —
 the author's own declarations plus those of taggers the viewer
 actually reaches, never every stranger's. The `(0,0)` verdict Tag
 carries `w̃ = 0` and crosses neither channel.
+
+**Edit legs.** A comment edit is an ordinary-role Review whose
+T-leg targets the existing Comment
+([comment.md §4](../instances/comment.md#4-editing)) — both its
+endpoints pre-exist, the exact shape that makes a citation T-leg
+gated: formation cannot check the edit's A-leg against the
+Comment's genesis parent, so anyone can author a Review wiring an
+arbitrary Comment beneath an arbitrary carrier, with Review/A's
+full-tier strength on the first hop. The same two channels apply:
+**content-intrinsic** when the Review's author is the Comment's
+creator — a real edit, part of the content — and
+**initiator-owned** otherwise, so a stranger's mismatched "edit"
+reaches the Comment only through its own author, at the viewer's
+forward weight to them. A genesis Review needs no gate: its T-leg
+mints the Comment, so nothing pre-existing can be hijacked. The
+parent fold is genesis-keyed regardless — a mismatched edit never
+reparents ([comment.md §4](../instances/comment.md#4-editing)).
 
 **Simple by construction.** Every hop factor is below one
 (`γ ≤ 1`, `w̃ < 1`), so a strongest path never revisits a node — a
