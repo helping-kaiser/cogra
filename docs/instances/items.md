@@ -11,10 +11,10 @@ certificate `owner^(k)`. **CoGra never authors title — it reads
 it.** No ownership junction, no transfer proposal, no CoGra-side
 ownership state exists.
 
-Marketplace flows aren't the focus of the first CoGra iterations
-(posts and chats are), but the ownership model and the money seam
-below are committed; the rail build is sequenced in
-[roadmap.md](../implementation/roadmap.md).
+Marketplace flows ship with the rail build — Slice 7 in
+[roadmap.md](../implementation/roadmap.md), buy-an-Item end to end
+as its acceptance test (posts and chats come first); the ownership
+model and the money seam below are committed now.
 
 ---
 
@@ -165,7 +165,10 @@ transfer is purely rail-side:
   the records sees the listing. The **offered price is a term on
   the Bid payload** — witnessed, public, part of the offer the
   seller accepts. Both are numbers the records pin; money never
-  appears on the graph.
+  appears on the graph. The description and asking price a buyer
+  read are **advisory**: what was bought, and at what price, is
+  pinned by the Bid/Accept/Ratify payloads of the settlement
+  itself, never by the Item fold's state at any moment.
 - **Fund-at-Bid.** The buyer's escrow is locked on the rail
   before the Bid lands, and the Bid payload carries the escrow
   pointer — an offer is funded, willing capital, never a free
@@ -207,6 +210,12 @@ instantiated for Items:
   are written but never win the fold.
 - **Granularity:** per field — name, description, media
   manifest, asking price (§6).
+- **Persistence with attribution.** An eligible edit stays
+  current until a later eligible edit supersedes it — across
+  ownership changes, so a description survives its sale and a
+  freshly bought item never renders blank. The render shows who
+  authored the current description beside it: the previous
+  owner's words never appear as the new owner's claim.
 
 The genesis record, the thread, and the license qualifiers never
 edit; every edit is a priced act with public history.
