@@ -143,8 +143,13 @@ governance a public, priced, replayable record chain:
   the chain of finalization payloads: **the newest finalization
   per parameter wins**, and reading the schedule as-of any epoch
   is a pure fold over public records.
-- **Genesis values live in the charter's own payload** (§2) — the
-  fold's base case.
+- **Genesis values live in the charter's genesis payload** (§2) —
+  the fold's base case, read from the genesis Publish alone: a
+  later Publish toward the charter anchor is fold-ignored, the
+  same genesis-pinned reading as proposal terms
+  ([substrate.md §9](substrate.md#9-node-values-and-updates)).
+  The schedule never rides Publishes — passed changes land only
+  as finalization payloads (above).
 - **Rule snapshots read the same schedule**: a Proposal's tally
   reads every governed parameter as-of its own anchor's landing
   epoch

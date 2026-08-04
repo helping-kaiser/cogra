@@ -58,8 +58,8 @@ The opening gesture comprises:
   dispatch (§3).
 
 A Proposal cannot be re-targeted and its terms cannot be revised:
-the payload witness fixes both at landing (§2). A revised change
-is a new Proposal.
+both folds read only the opening gesture's records (§2). A
+revised change is a new Proposal.
 
 ---
 
@@ -90,11 +90,18 @@ keyspace:
     bundle covering multiple values, applied atomically
     (below).
 
-**The terms are immutable by the witness.** The payload is
-committed at the anchor's landing; nothing can rewrite what
-voters are voting on. This is stronger than any layering rule: a
-changed anchor payload is publicly detectable evidence, not a
-possible state. The **rule snapshot** shares the same ruler —
+**The terms are the genesis Publish payload.** The payload is
+committed at the anchor's landing, and the terms fold reads the
+genesis record alone: a later Publish toward the anchor — legal,
+and elsewhere the ordinary revise gesture
+([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates))
+— is fold-ignored here. The proposal anchor is that rule's one
+named exception, because people voted on that exact text; an L2
+rendering "the anchor's newest Publish payload" would show its
+voters an amendment nobody voted on. The subject reads the same
+way: the anchor's subject Reference is the opening gesture's
+`(0,0)` Reference (§1), and later References from the anchor are
+fold-ignored. The **rule snapshot** shares the same ruler —
 tally and execution read the governing Rule as-of the anchor's
 landing epoch
 ([governance.md §5](../primitive/governance.md#rule-snapshot-at-author-time)).
