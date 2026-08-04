@@ -154,15 +154,6 @@ async fn seal_rejects_formation_failures(pool: PgPool) {
         Err(StandInError::Formation(_))
     ));
 
-    // Publish must mint its own Content node.
-    let mut bad = opinion(&actor, 5, "x", vec![]);
-    bad.body.family = Family::Publish;
-    bad.body.target = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
-    assert!(matches!(
-        host.seal(actor.pre_sign(bad)).await,
-        Err(StandInError::Formation(_))
-    ));
-
     // A formation failure produces no Layer-1 object: nothing to close.
     assert!(host.close_epoch().await.expect("ok").is_none());
 }
@@ -386,6 +377,141 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
     let balance = host.balance(&publisher.address()).await.expect("ok");
     assert_eq!(balance.action_count, 1);
     assert!((balance.balance - 9.0).abs() < 1e-9);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
+    let host = standin(pool);
+    let actor = funded_actor(&host, 10 * THETA).await;
+
+    let hyper = |seq, family, middle: &NodeId, target: &NodeId| Proposal {
+        body: StructuralBody {
+            author: actor.address(),
+            seq,
+            family,
+            middle: Some(middle.clone()),
+            target: target.clone(),
+            p_d: 0.5,
+            p_i: 0.5,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: vec![],
+        deps: vec![],
+    };
+
+    // A Bid toward an existing Offer would hang a second Item's incidence
+    // on it — rejected at formation.
+    let item = NodeId::Mint(ActId::new("lister", 0, Family::Owner).expect("ok"));
+    let foreign_offer = NodeId::Mint(ActId::new("other", 1, Family::Bid).expect("ok"));
+    assert!(matches!(
+        host.seal(actor.pre_sign(hyper(0, Family::Bid, &item, &foreign_offer)))
+            .await,
+        Err(StandInError::Formation(_))
+    ));
+
+    // A Bid minting its own Offer seals.
+    let own_offer = NodeId::Mint(ActId::new(&actor.address(), 1, Family::Bid).expect("ok"));
+    submit(&host, &actor, hyper(1, Family::Bid, &item, &own_offer)).await;
+
+    // An ordinary-role Send toward an existing Message stays legal — the
+    // Edition-5 permission set keeps it, and CoGra's transcript fold, not
+    // formation, is what ignores it.
+    let chat = NodeId::Mint(ActId::new("founder", 0, Family::Participant).expect("ok"));
+    let foreign_message = NodeId::Mint(ActId::new("other", 2, Family::Send).expect("ok"));
+    submit(
+        &host,
+        &actor,
+        hyper(2, Family::Send, &chat, &foreign_message),
+    )
+    .await;
+
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 2);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool) {
+    let host = standin(pool);
+    let author = funded_actor(&host, 10 * THETA).await;
+
+    // Genesis identity is per record: a Publish toward an existing Content
+    // node is the revise gesture, well-formed at the substrate — the L2
+    // fold, not formation, decides whether it wins.
+    let existing = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
+    let revise = Proposal {
+        body: StructuralBody {
+            author: author.address(),
+            seq: 0,
+            family: Family::Publish,
+            middle: None,
+            target: existing.clone(),
+            p_d: 0.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: b"revised body".to_vec(),
+        deps: vec![],
+    };
+    submit(&host, &author, revise).await;
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 1);
+    assert_eq!(package.records[0].family, Family::Publish);
+    assert_eq!(package.records[0].legs[0].target, existing);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
+    let host = standin(pool);
+    let founder = funded_actor(&host, 10 * THETA).await;
+
+    // The found shape: both legs at the act's own mint — the A-leg enters
+    // the Chat the act creates, the T-leg mints it.
+    let own_mint =
+        NodeId::Mint(ActId::new(&founder.address(), 0, Family::Participant).expect("ok"));
+    let found = Proposal {
+        body: StructuralBody {
+            author: founder.address(),
+            seq: 0,
+            family: Family::Participant,
+            middle: Some(own_mint.clone()),
+            target: own_mint.clone(),
+            p_d: 1.0,
+            p_i: 0.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![],
+        },
+        payload: b"founding payload".to_vec(),
+        deps: vec![],
+    };
+    submit(&host, &founder, found).await;
+
+    let package = host.close_epoch().await.expect("ok").expect("lands");
+    assert_eq!(package.records.len(), 1);
+    let record = &package.records[0];
+    assert_eq!(record.family, Family::Participant);
+    assert_eq!(record.legs.len(), 2);
+    let a = record
+        .legs
+        .iter()
+        .find(|l| l.role == LegRole::A)
+        .expect("A leg");
+    let t = record
+        .legs
+        .iter()
+        .find(|l| l.role == LegRole::T)
+        .expect("T leg");
+    assert_eq!(a.source, NodeId::Addr(founder.address()));
+    assert_eq!(a.target, own_mint);
+    assert_eq!(t.source, own_mint);
+    assert_eq!(t.target, own_mint);
+    // The T-leg renders the tuple transposed: the forced-positive
+    // component leads.
+    assert_eq!((t.p_d, t.p_i), (0.0, 1.0));
 }
 
 #[sqlx::test(migrations = "../../migrations")]

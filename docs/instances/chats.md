@@ -123,7 +123,12 @@ community's exit is a real fork — the intended failure mode.
 the Message node; the importance parameter rides the A-leg; the
 body — plaintext or ciphertext (§7) — rides the payload envelope;
 the witness lands on L1 while the bytes and salt stay in CoGra
-carriage, and the mirror caches the structural record. Quoting,
+carriage, and the mirror caches the structural record. **A
+Message belongs to the chat that minted it**: the transcript is
+exactly the Messages minted by Send acts into the lineage, and an
+ordinary-role Send toward an existing Message — legal at L1 — is
+never a transcript entry, so nobody renders someone else's
+message inside another chat. Quoting,
 embedding, and mentioning from a message are **Reference**
 hyper-edges with the Message as citing artifact; topics are
 **Tag** hyper-edges — the author's own or third-party
