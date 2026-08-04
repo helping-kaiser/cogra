@@ -26,6 +26,20 @@ how a database table would:
   or **minted** (`mint(actid)` — the identifier of the authored
   act that created it). A node's type is fixed by its anchoring
   record, never by payload.
+- **Genesis is per record, not per family.** `mint` takes an *act*
+  identifier, so whether an act mints is decidable from two fields
+  of the act itself: an act of a mint-capable family whose target
+  equals the mint of its own identifier is the **genesis act** — it
+  mints the node, fixes `creator`, establishes genesis context, and
+  (for Item) roots title; an act of the same family toward an
+  existing node mints nothing — it is an ordinary-role record, the
+  update shape of
+  [substrate.md §9](substrate.md#9-node-values-and-updates). A node
+  can never be re-minted: `mint` is injective and an ordinary act's
+  target is not derived from its own identifier. *(Edition-5 draft
+  ruling; [layer1-interface.md](layer1-interface.md)'s Edition-4
+  copy still glosses Publish at the family level and mirrors the
+  ruling when the edition lands.)*
 - **Properties are folds.** Any "node property" — sentiment, norm,
   creator, membership — is a declared fold over the records that
   reference the node. What a node *shows* in CoGra (name, body,
@@ -36,12 +50,12 @@ how a database table would:
 |---|---|---|---|
 | **Actor** | grounded | its Registration | The acting identity — sole active node type; every record is authored by one. Behind every CoGra account (§2). |
 | **Profile** | grounded | the same Registration | The person-facing anchor, uniquely bound to its Actor by the derived Self-edge bond. Target of interpersonal stances. Profile content rides the actor's Registration payloads (witnessed); what is shown comes from Postgres (§4). |
-| **Content** | minted | its Publish record | A published artifact; Publish genesis fixes `creator`. Most are CoGra Posts ([post.md](../instances/post.md)); proposer-authored Content nodes anchor proposal texts, and publisher-authored ones anchor platform documents and the network charter ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). |
+| **Content** | minted | its genesis Publish record | A published artifact; the genesis Publish fixes `creator`, and the creator's later ordinary-role Publishes toward the node are its revisions ([post.md §4](../instances/post.md#4-editing)). Most are CoGra Posts ([post.md](../instances/post.md)); proposer-authored Content nodes anchor proposal texts, and publisher-authored ones anchor platform documents and the network charter ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)). |
 | **Item** | minted | its genesis Owner record | A physical or digital good — ownable via L1's settlement machinery; the Item *is* its genesis record. See [items.md](../instances/items.md). |
 | **Type** | named | vacuous | A semantic anchor: CoGra topics (hashtags), moderation verdict categories, and any named concept. Canonical-name resolution is CoGra's L2 naming service. See [hashtag.md](../instances/hashtag.md). |
 | **Chat** | minted | its creating record | A conversation container. Membership is a fold, never a stored state (see [substrate-map.md §4](substrate-map.md#4-conversations-and-membership)). See [chats.md](../instances/chats.md). |
-| **Message** | minted | its Send hyper-edge | A single utterance in a Chat — a first-class node: stance-able, taggable, reviewable. |
-| **Comment** | minted | its Review hyper-edge | A reply or annotation on any passive parent — including another Comment or a Message; reply chains are native causal chains of Review records. See [comment.md](../instances/comment.md). |
+| **Message** | minted | its genesis Send hyper-edge | A single utterance in a Chat — a first-class node: stance-able, taggable, reviewable. A Message belongs to the chat its genesis Send minted it into. |
+| **Comment** | minted | its genesis Review hyper-edge | A reply or annotation on any passive parent — including another Comment or a Message; reply chains are native causal chains of Review records. The parent is the genesis Review's A-leg target ([comment.md](../instances/comment.md)). |
 | **Offer** | minted | its Bid hyper-edge | A settlement artifact in the `Bid → Accept → Ratify` transfer flow. Not a content surface — CoGra reads it only through settlement recognition. |
 
 ---
