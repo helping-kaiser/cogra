@@ -99,6 +99,33 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun aRestoreResultRefreshesTheHuskStateAndConfirms() = runTest(dispatcher) {
+        identity.seed = null
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.huskWarning).isTrue()
+
+        // The Restore destination landed the seed and reported back.
+        identity.seed = actor.seed()
+        vm.onActorRestored()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.huskWarning).isFalse()
+        assertThat(vm.state.value.actorRestored).isTrue()
+    }
+
+    @Test
+    fun theRestoreConfirmationClearsOnceShown() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onActorRestored()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.actorRestored).isTrue()
+
+        vm.onActorRestoredShown()
+        assertThat(vm.state.value.actorRestored).isFalse()
+    }
+
+    @Test
     fun parkedHandshakesSurfaceAndResume() = runTest(dispatcher) {
         val pre = actor.preSign(
             com.cogra.crypto.decodeProposal(com.cogra.domain.testing.testProposalBytes(actor, 9u)),
