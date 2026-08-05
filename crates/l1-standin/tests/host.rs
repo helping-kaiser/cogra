@@ -128,6 +128,30 @@ async fn empty_close_publishes_nothing(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn close_loop_publishes_on_the_interval(pool: PgPool) {
+    let host = standin(pool);
+    let clock = tokio::spawn(l1_standin::close_loop(host.clone(), 1));
+
+    let actor = funded_actor(&host, 3 * THETA).await;
+    let act_id = submit(&host, &actor, registration(&actor)).await;
+
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+    let package = loop {
+        if let Some(package) = host.epochs_since(-1).await.expect("epochs").pop() {
+            break package;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "interval close never published the approved act"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    };
+    assert_eq!(package.records.len(), 1);
+    assert_eq!(package.records[0].act_id, act_id);
+    clock.abort();
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn seal_rejects_formation_failures(pool: PgPool) {
     let host = standin(pool);
     let actor = funded_actor(&host, 3 * THETA).await;

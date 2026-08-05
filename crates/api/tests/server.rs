@@ -21,7 +21,7 @@ fn test_app(pool: PgPool) -> axum::Router {
         boundary: api::l1::StandInBoundary(standin.clone()),
         funding: standin,
         auth: auth.clone(),
-        mailer: Arc::new(api::mailer::DevMailer),
+        mailer: Arc::new(api::mailer::DevMailer::new(None)),
         onboarding: api::onboarding::OnboardingConfig::default(),
     });
     api::app(schema, auth)
