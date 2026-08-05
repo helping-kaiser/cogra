@@ -224,7 +224,13 @@ them).
 
 A staged applicant can already **read** — the shared graph is
 public — but cannot act. Approval latency is a UX cost, not a
-correctness problem.
+correctness problem. Clients take that literally: an applicant
+lands in the same shell as a member and browses the read surfaces
+immediately, with the application riding along as cards and
+dismissible hints — the actionable email-verification step, the
+approval wait, the landing — and only *acting* gated. The waiting
+state is never a wall, and the poll/sign loop that advances the
+application runs app-scoped, above any one screen.
 
 ### Approval and landing
 
