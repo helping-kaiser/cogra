@@ -198,3 +198,24 @@ impl StandIn {
         &self.pool
     }
 }
+
+/// The dev clock: close an epoch on a fixed interval, playing the real
+/// substrate closing on its own clock. Spawned by the API host when the
+/// interval is configured (development.md); an idle tick publishes
+/// nothing, and manual `l1-dev close` stays available for deterministic
+/// tests.
+pub async fn close_loop(standin: StandIn, interval_secs: u64) {
+    let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
+    loop {
+        ticker.tick().await;
+        match standin.close_epoch().await {
+            Ok(Some(package)) => tracing::info!(
+                epoch = package.epoch,
+                records = package.records.len(),
+                "interval close published an epoch"
+            ),
+            Ok(None) => {}
+            Err(e) => tracing::error!(error = %e, "interval close failed; will retry"),
+        }
+    }
+}

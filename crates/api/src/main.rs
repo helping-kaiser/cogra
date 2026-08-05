@@ -80,6 +80,19 @@ async fn main() -> anyhow::Result<()> {
         gc_after_epochs,
     ));
 
+    // The dev epoch clock (development.md): unset means no interval close —
+    // epochs then close only on the act budget or manual `l1-dev close`.
+    if let Ok(raw) = std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS") {
+        let close_interval: u64 = raw
+            .parse()
+            .context("L1_EPOCH_CLOSE_INTERVAL_SECS must be a number of seconds")?;
+        tokio::spawn(l1_standin::close_loop(standin.clone(), close_interval));
+        tracing::info!(
+            interval_secs = close_interval,
+            "epoch interval close active"
+        );
+    }
+
     // The applicant reaper (auth.md "Account lifecycle").
     let reaper_interval: u64 = env_or("APPLICANT_REAPER_INTERVAL_SECS", "600")
         .parse()
