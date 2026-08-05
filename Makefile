@@ -96,8 +96,8 @@ build: ## Build all crates
 
 android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + Android SDK)
 
-android-test: ## Run Android unit tests (./gradlew test)
-	cd android && ./gradlew test
+android-test: ## Run Android unit tests; scope to one module with m=feature:home
+	cd android && ./gradlew $(if $(m),:$(m):test,test)
 
 android-build: ## Assemble the debug APK (./gradlew :app:assembleDebug)
 	cd android && ./gradlew :app:assembleDebug
