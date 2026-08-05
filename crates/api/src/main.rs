@@ -112,7 +112,9 @@ async fn main() -> anyhow::Result<()> {
         boundary,
         funding: standin,
         auth: auth.clone(),
-        mailer: Arc::new(DevMailer),
+        mailer: Arc::new(DevMailer::new(
+            std::env::var_os("DEV_MAILER_LOG").map(std::path::PathBuf::from),
+        )),
         onboarding: OnboardingConfig {
             admission_burn_micro,
             gc_after_epochs,
