@@ -6,7 +6,10 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.RegistrationFlow
+import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
@@ -19,6 +22,26 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val loading: Boolean = true,
+    /**
+     * A staged applicant browsing the shell before landing (auth.md
+     * "Application"): reads are open, acting is gated, and the
+     * application rides along as the cards below.
+     */
+    val applicant: Boolean = false,
+    /** The applicant flow's last report; null before the first pass. */
+    val progress: RegistrationProgress? = null,
+    /** In-memory only: the hint returns on the next app open. */
+    val waitingHintDismissed: Boolean = false,
+    val verificationToken: String = "",
+    val resendEmail: String = "",
+    val verifying: Boolean = false,
+    val verified: Boolean = false,
+    val verifyFailed: Boolean = false,
+    val resent: Boolean = false,
+    /** One-shot: the approval just came through in this app run. */
+    val approved: Boolean = false,
+    /** One-shot: landed, claimed — greet the new member once. */
+    val welcome: Boolean = false,
     val profile: UserProfile? = null,
     /** Signed in without the actor key — the husk state (auth.md). */
     val huskWarning: Boolean = false,
@@ -42,13 +65,41 @@ class HomeViewModel @Inject constructor(
     private val writes: WriteRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
+    private val onboarding: OnboardingRepository,
+    private val registration: RegistrationFlow,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
     val state = _state.asStateFlow()
 
     init {
-        refresh()
+        viewModelScope.launch {
+            if (identity.applicantToken() != null) {
+                // Applicant shape: no session, no profile — observe the
+                // app-scoped flow instead. Landing flips the token store
+                // and navigation recreates Home in its member shape.
+                _state.update { it.copy(loading = false, applicant = true) }
+                registration.ensureAdvancing()
+                registration.progress.collect(::onProgress)
+            } else {
+                if (registration.consumeClaimed()) {
+                    _state.update { it.copy(welcome = true) }
+                }
+                refresh()
+            }
+        }
+    }
+
+    /** Live transitions become one-shots; a cold open shows only state. */
+    private fun onProgress(progress: RegistrationProgress?) {
+        _state.update { state ->
+            val approved = state.approved ||
+                (
+                    state.progress is RegistrationProgress.AwaitingApproval &&
+                        progress is RegistrationProgress.AwaitingLanding
+                    )
+            state.copy(progress = progress, approved = approved)
+        }
     }
 
     /**
@@ -93,6 +144,38 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun onTokenChange(v: String) = _state.update { it.copy(verificationToken = v, verifyFailed = false) }
+
+    fun onResendEmailChange(v: String) = _state.update { it.copy(resendEmail = v, resent = false) }
+
+    fun onVerify() {
+        val token = _state.value.verificationToken.trim()
+        if (token.isBlank() || _state.value.verifying) return
+        _state.update { it.copy(verifying = true, verifyFailed = false) }
+        viewModelScope.launch {
+            when (onboarding.verifyEmail(token)) {
+                is Outcome.Success -> _state.update { it.copy(verifying = false, verified = true) }
+                else -> _state.update { it.copy(verifying = false, verifyFailed = true) }
+            }
+        }
+    }
+
+    fun onResend() {
+        val email = _state.value.resendEmail.trim()
+        if (email.isBlank()) return
+        viewModelScope.launch {
+            onboarding.resendVerificationEmail(email)
+            _state.update { it.copy(resent = true) }
+        }
+    }
+
+    /** In-memory: the hint is a reminder, so the next app open revives it. */
+    fun onDismissWaitingHint() = _state.update { it.copy(waitingHintDismissed = true) }
+
+    fun onApprovedShown() = _state.update { it.copy(approved = false) }
+
+    fun onWelcomeShown() = _state.update { it.copy(welcome = false) }
 
     fun onPDirectedChange(v: Double) = _state.update { it.copy(pDirected = v) }
 

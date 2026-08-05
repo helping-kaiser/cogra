@@ -1,9 +1,11 @@
 package com.cogra.feature.home
 
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.cogra.domain.ActorRef
 import com.cogra.domain.UserProfile
+import com.cogra.domain.signing.RegistrationProgress
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -20,6 +22,8 @@ class HomeScreenTest {
         compose.setContent {
             HomeScreen(
                 state = state,
+                onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
+                onDismissWaitingHint = {}, onApprovedShown = {}, onWelcomeShown = {},
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
                 onActorRestoredShown = onActorRestoredShown,
@@ -27,6 +31,14 @@ class HomeScreenTest {
             )
         }
     }
+
+    private fun applicant(progress: RegistrationProgress?, dismissed: Boolean = false) =
+        HomeUiState(
+            loading = false,
+            applicant = true,
+            progress = progress,
+            waitingHintDismissed = dismissed,
+        )
 
     @Test
     fun theHuskStateOffersRestore() {
@@ -74,5 +86,53 @@ class HomeScreenTest {
         render(HomeUiState(loading = false, pendingHandshakes = 2))
         compose.onNodeWithTag("home_pending").assertExists()
         compose.onNodeWithTag("home_resume").assertExists()
+    }
+
+    @Test
+    fun anApplicantAwaitingVerificationGetsTheTokenCardAndNoMemberChrome() {
+        render(applicant(RegistrationProgress.AwaitingEmailVerification))
+        compose.onNodeWithTag("verify_token").assertExists()
+        compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
+        // Acting surfaces stay out of the applicant shell.
+        compose.onNodeWithTag("home_invites").assertDoesNotExist()
+        compose.onNodeWithTag("home_settings").assertDoesNotExist()
+    }
+
+    @Test
+    fun theWaitingHintShowsAndDismisses() {
+        render(applicant(RegistrationProgress.AwaitingApproval))
+        compose.onNodeWithTag("home_waiting").assertExists()
+        compose.onNodeWithTag("home_waiting_dismiss").assertExists()
+    }
+
+    @Test
+    fun aDismissedWaitingHintIsGoneButNothingElseAppears() {
+        render(applicant(RegistrationProgress.AwaitingApproval, dismissed = true))
+        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
+        compose.onNodeWithTag("home_invites").assertDoesNotExist()
+    }
+
+    @Test
+    fun landingRendersItsStatusLine() {
+        render(applicant(RegistrationProgress.AwaitingLanding))
+        compose.onNodeWithTag("home_landing").assertExists()
+    }
+
+    @Test
+    fun applicantErrorsRender() {
+        render(applicant(RegistrationProgress.ApplicationGone))
+        compose.onNodeWithTag("home_application_gone").assertExists()
+    }
+
+    @Test
+    fun theApprovalOneShotShowsTheSnackbar() {
+        render(applicant(RegistrationProgress.AwaitingLanding).copy(approved = true))
+        compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun theWelcomeOneShotShowsTheSnackbarInTheMemberShell() {
+        render(HomeUiState(loading = false, welcome = true))
+        compose.onNodeWithTag("home_snackbar").assertExists()
     }
 }
