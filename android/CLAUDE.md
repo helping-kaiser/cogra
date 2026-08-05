@@ -155,6 +155,12 @@ pieces").
 - Network: MockWebServer against the generated Apollo client.
 - UI: Compose tests under Robolectric so they run on the JVM in CI (no
   emulator). Bind assertions to `testTag`s, not display copy.
+- Navigation: the app module tests the real NavHost with
+  `TestNavHostController` (the documented Navigation Compose pattern —
+  `CograNavGraph` takes the controller as a parameter) under
+  Robolectric, launched from the debug-only `HiltTestActivity`;
+  `@TestInstallIn` fakes replace `core:network`'s bindings so real
+  Hilt ViewModels run against scriptable in-memory state.
 - Keep crypto behind an interface so the token store tests with a fake; the
   real Keystore-backed path carries only a thin smoke test (it needs a
   device).
