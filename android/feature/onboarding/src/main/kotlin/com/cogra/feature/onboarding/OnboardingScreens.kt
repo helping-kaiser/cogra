@@ -1,4 +1,7 @@
-// The three onboarding destinations. Stateless screens + thin routes
+// The onboarding destinations: invite entry and the application form.
+// After submit the applicant lands in the Home shell, where the
+// application rides along as cards (feature:home) — there is no
+// waiting screen. Stateless screens + thin routes
 // (android/CLAUDE.md "Architecture"); semantics land with the UI
 // (android.md "Accessibility").
 
@@ -38,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.signing.RegistrationProgress
 
 // --------------------------------------------------------------------
 // Invite entry
@@ -369,125 +371,6 @@ private fun ErrorCode.applyMessage(): Int = when (this) {
     ErrorCode.BAD_INPUT -> R.string.apply_bad_input
     ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
     else -> R.string.error_generic
-}
-
-// --------------------------------------------------------------------
-// Status: verify, wait, sign, land
-// --------------------------------------------------------------------
-
-@Composable
-fun StatusRoute(viewModel: StatusViewModel = hiltViewModel()) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    StatusScreen(
-        state = state,
-        onTokenChange = viewModel::onTokenChange,
-        onVerify = viewModel::onVerify,
-        onResendEmailChange = viewModel::onResendEmailChange,
-        onResend = viewModel::onResend,
-    )
-}
-
-@Composable
-fun StatusScreen(
-    state: StatusUiState,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
-    onResendEmailChange: (String) -> Unit,
-    onResend: () -> Unit,
-) {
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.status_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.semantics { heading() },
-            )
-            when (val progress = state.progress) {
-                null -> CircularProgressIndicator(modifier = Modifier.testTag("status_loading"))
-                RegistrationProgress.AwaitingEmailVerification -> VerifyBlock(
-                    state, onTokenChange, onVerify, onResendEmailChange, onResend,
-                )
-                RegistrationProgress.AwaitingApproval -> StatusLine("status_waiting", R.string.status_awaiting_approval)
-                RegistrationProgress.AwaitingLanding -> StatusLine("status_landing", R.string.status_awaiting_landing)
-                is RegistrationProgress.SessionClaimed -> StatusLine("status_claimed", R.string.status_claimed)
-                RegistrationProgress.ApplicationGone -> StatusLine("status_gone", R.string.status_gone)
-                RegistrationProgress.NoApplication -> StatusLine("status_gone", R.string.status_gone)
-                is RegistrationProgress.RejectedByDevice -> StatusLine("status_rejected", R.string.status_rejected)
-                is RegistrationProgress.Refused -> StatusLine("status_refused", R.string.error_generic)
-                is RegistrationProgress.Failed -> StatusLine("status_offline", R.string.error_transport)
-            }
-        }
-    }
-}
-
-@Composable
-private fun VerifyBlock(
-    state: StatusUiState,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
-    onResendEmailChange: (String) -> Unit,
-    onResend: () -> Unit,
-) {
-    Text(
-        text = stringResource(R.string.verify_explainer),
-        modifier = Modifier.testTag("status_verify"),
-    )
-    OutlinedTextField(
-        value = state.verificationToken,
-        onValueChange = onTokenChange,
-        label = { Text(stringResource(R.string.verify_token)) },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("verify_token"),
-    )
-    if (state.verifyFailed) {
-        Refusal("verify_error", R.string.verify_failed)
-    }
-    Button(
-        onClick = onVerify,
-        enabled = state.verificationToken.isNotBlank() && !state.verifying,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("verify_submit"),
-    ) {
-        Text(stringResource(R.string.verify_submit))
-    }
-    OutlinedTextField(
-        value = state.resendEmail,
-        onValueChange = onResendEmailChange,
-        label = { Text(stringResource(R.string.login_email)) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("resend_email"),
-    )
-    TextButton(
-        onClick = onResend,
-        enabled = state.resendEmail.isNotBlank(),
-        modifier = Modifier.testTag("verify_resend"),
-    ) {
-        Text(stringResource(R.string.verify_resend))
-    }
-    if (state.resent) {
-        Text(
-            text = stringResource(R.string.verify_resent),
-            modifier = Modifier.testTag("verify_resent"),
-        )
-    }
-}
-
-@Composable
-private fun StatusLine(tag: String, text: Int) {
-    Text(text = stringResource(text), modifier = Modifier.testTag(tag))
 }
 
 @Composable

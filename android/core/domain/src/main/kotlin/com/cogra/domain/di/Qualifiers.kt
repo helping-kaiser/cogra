@@ -12,3 +12,20 @@ import javax.inject.Qualifier
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class WebOrigin
+
+/**
+ * The app-lifetime coroutine scope for work that must outlive any one
+ * screen (the applicant poll/sign loop). Provided by the app module.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationScope
+
+/**
+ * The human-readable label this device reports on session-creating
+ * calls (auth.md: the session list's display name). Null when the
+ * platform offers none. Provided by the app module.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DeviceLabel

@@ -18,5 +18,22 @@
     <string name="home_open_settings">Settings</string>
     <string name="stance_p_directed">Directed weight</string>
     <string name="stance_p_interest">Interest weight</string>
+
+    <string name="home_verify_explainer">We emailed you a verification token. Paste it here to prove the address is yours.</string>
+    <string name="home_verify_token">Verification token</string>
+    <string name="home_verify_submit">Verify email</string>
+    <string name="home_verify_failed">That token is invalid or expired — resend and try the newest one.</string>
+    <string name="home_verify_resend">Resend the email</string>
+    <string name="home_verify_resent">If an application holds that address, a fresh token is on its way.</string>
+    <string name="home_verify_email">Email</string>
+    <string name="home_waiting_title">Waiting for your inviter\'s approval</string>
+    <string name="home_waiting_body">You can look around meanwhile — acting unlocks when you land. Close the app any time; we\'ll pick up right here.</string>
+    <string name="home_waiting_dismiss">Got it</string>
+    <string name="home_approved">Approved! Your Registration is signed and on its way onto the graph.</string>
+    <string name="home_welcome">Welcome to CoGra.</string>
+    <string name="home_application_gone">This application is no longer active — it may have expired. Ask your inviter for a fresh link.</string>
+    <string name="home_application_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>
+
+    <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
 </resources>

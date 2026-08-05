@@ -3,7 +3,6 @@ package com.cogra.feature.onboarding
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.cogra.domain.signing.RegistrationProgress
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,26 +73,4 @@ class OnboardingScreensTest {
         compose.onNodeWithTag("apply_continue").assertIsNotEnabled()
     }
 
-    @Test
-    fun statusRendersEachStage() {
-        compose.setContent {
-            StatusScreen(
-                state = StatusUiState(progress = RegistrationProgress.AwaitingEmailVerification),
-                onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
-            )
-        }
-        compose.onNodeWithTag("verify_token").assertExists()
-        compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
-    }
-
-    @Test
-    fun statusShowsApprovalWaitAndLanding() {
-        compose.setContent {
-            StatusScreen(
-                state = StatusUiState(progress = RegistrationProgress.AwaitingApproval),
-                onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
-            )
-        }
-        compose.onNodeWithTag("status_waiting").assertExists()
-    }
 }
