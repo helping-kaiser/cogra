@@ -268,6 +268,22 @@ The prompt's target comes from the viewer-only `User.invitedBy`
 field — landing provenance kept on the applicant row. It is a
 graph act, not an auth step; auth's involvement ends at landing.
 
+The prompt derives from the graph, not from client state: the
+viewer-only `User.hasReciprocated` field is true iff the joiner's
+reciprocal Opinion exists — confirmed in the record mirror, or in
+flight as one of the viewer's staged writes. The confirmed check
+latches: once the mirror shows the Opinion, `reciprocated_at` is
+set on the landed applicant row and the mirror is not queried
+again. The latch is a derived cache that cannot diverge — the
+accepted back-edge is permanent
+([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)) —
+and is rebuildable by re-scanning the mirror; an in-flight staged
+write answers true without latching. Clients show the prompt only
+when `invitedBy` is set and `hasReciprocated` is false. Dismissing
+the prompt is a device-local preference, never account state: the
+prompt is an offer, and it legitimately reappears on a new device
+until the pair is complete.
+
 **Reaper.** A periodic background job deletes expired
 `auth_applicants` rows (email never verified within 24 h, or the
 link's lifetime ended without approval). The reaper is the normal
