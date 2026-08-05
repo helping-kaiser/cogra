@@ -759,6 +759,12 @@ CREATE TABLE auth_applicants (
     l0_address                    TEXT         NOT NULL,
     approved_at                   TIMESTAMPTZ,
     landed_at                     TIMESTAMPTZ,
+    -- Latched derived cache of an L1 fact: set when the record
+    -- mirror confirms the joiner's reciprocal Opinion toward the
+    -- inviter (auth.md "Reciprocation is the joiner's own act").
+    -- The accepted back-edge is permanent (invitations.md §2), so
+    -- the latch cannot diverge; rebuildable from the mirror.
+    reciprocated_at               TIMESTAMPTZ,
     created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at                    TIMESTAMPTZ  NOT NULL
 );

@@ -716,6 +716,12 @@ type User implements Node & Actor {
    of the vouch is the inviter's Opinion). Null for accounts
    without an application trace (genesis actors)."
   invitedBy: Actor
+  "Whether the viewer's reciprocal Opinion toward invitedBy exists —
+   confirmed in the record mirror (latched on the landed applicant
+   row) or in flight as one of the viewer's staged writes. Drives
+   the first-login reciprocation prompt (auth.md \"Reciprocation is
+   the joiner's own act\"). Vacuously true when invitedBy is null."
+  hasReciprocated: Boolean!
 }
 
 "A group acting through one graph identity (household, band, co-op,
