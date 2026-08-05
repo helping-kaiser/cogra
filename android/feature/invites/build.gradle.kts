@@ -9,6 +9,20 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Unit tests run once, on the debug variant: the release variant would
+// re-compile and re-run every suite for no extra signal.
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) {
+        it.enableUnitTest = false
+    }
+}
+
+// Robolectric suites pay a per-class sandbox warmup; run test classes
+// in parallel forks instead of one core at a time.
+tasks.withType<Test>().configureEach {
+    maxParallelForks = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+}
+
 android {
     namespace = "com.cogra.feature.invites"
     compileSdk = libs.versions.compileSdk.get().toInt()
