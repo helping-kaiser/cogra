@@ -69,9 +69,11 @@ internal object NetworkProvidesModule {
         EncryptedStore(dataStore, cipher)
 }
 
+// Public, not internal: test code replaces this module wholesale via
+// @TestInstallIn, which needs to name the class.
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class NetworkBindsModule {
+abstract class NetworkBindsModule {
 
     @Binds
     abstract fun tokenStore(impl: TokenStoreImpl): TokenStore

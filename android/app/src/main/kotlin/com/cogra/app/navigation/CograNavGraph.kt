@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -97,8 +98,10 @@ class AuthStateViewModel @Inject constructor(
 }
 
 @Composable
-fun CograNavGraph(deepLinkedInviteId: String?) {
-    val navController = rememberNavController()
+fun CograNavGraph(
+    deepLinkedInviteId: String?,
+    navController: NavHostController = rememberNavController(),
+) {
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
 
