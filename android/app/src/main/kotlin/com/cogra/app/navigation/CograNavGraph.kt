@@ -29,7 +29,6 @@ import com.cogra.feature.home.HomeRoute
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
-import com.cogra.feature.onboarding.StatusRoute
 import com.cogra.feature.settings.SettingsRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -45,9 +44,6 @@ data class InviteEntry(val inviteId: String? = null)
 
 @Serializable
 data class Apply(val inviteId: String)
-
-@Serializable
-data object OnboardingStatus
 
 @Serializable
 data object Login
@@ -106,12 +102,15 @@ fun CograNavGraph(
     val phase by authState.phase.collectAsStateWithLifecycle()
 
     // Auth drives navigation: every phase flip lands on that phase's
-    // root with a cleared stack (android/CLAUDE.md "Navigation").
+    // root with a cleared stack (android/CLAUDE.md "Navigation"). An
+    // applicant lands on Home too — the read shell with the application
+    // riding along as hints, never a wall (auth.md "Application"); the
+    // ONBOARDING→SIGNED_IN flip recreates Home into its member shape.
     LaunchedEffect(phase) {
         val root: Any = when (phase) {
             AuthPhase.LOADING -> return@LaunchedEffect
             AuthPhase.SIGNED_IN -> Home
-            AuthPhase.ONBOARDING -> OnboardingStatus
+            AuthPhase.ONBOARDING -> Home
             AuthPhase.SIGNED_OUT -> InviteEntry(deepLinkedInviteId)
         }
         navController.navigate(root) {
@@ -138,14 +137,15 @@ fun CograNavGraph(
         composable<Apply> { entry ->
             ApplyRoute(
                 inviteId = entry.toRoute<Apply>().inviteId,
+                // The phase holder only re-reads the applicant token on a
+                // token-store emission, so the submit navigates itself.
                 onSubmitted = {
-                    navController.navigate(OnboardingStatus) {
+                    navController.navigate(Home) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
             )
         }
-        composable<OnboardingStatus> { StatusRoute() }
         composable<Login> {
             LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
         }

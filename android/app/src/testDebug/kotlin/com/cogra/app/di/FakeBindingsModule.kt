@@ -7,6 +7,8 @@
 
 package com.cogra.app.di
 
+import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
@@ -36,6 +38,19 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
     override suspend fun me(): Outcome<UserProfile?> = Outcome.Success(profile)
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(backupBlob)
+}
+
+/** Scriptable applicant state: tests set the status and the claim. */
+class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
+    var status: ApplicationStatus? = null
+    var claimTokens: AuthTokens? = null
+
+    override suspend fun application(applicantToken: String): Outcome<ApplicationStatus?> =
+        Outcome.Success(status)
+
+    override suspend fun claimLandedSession(applicantToken: String, deviceLabel: String?): Outcome<AuthTokens> =
+        claimTokens?.let { Outcome.Success(it) }
+            ?: super.claimLandedSession(applicantToken, deviceLabel)
 }
 
 @Module
@@ -68,7 +83,10 @@ object FakeBindingsModule {
 
     @Provides
     @Singleton
-    fun onboardingRepository(): OnboardingRepository = ThrowingOnboardingRepository()
+    fun scriptedOnboardingRepository(): ScriptedOnboardingRepository = ScriptedOnboardingRepository()
+
+    @Provides
+    fun onboardingRepository(fake: ScriptedOnboardingRepository): OnboardingRepository = fake
 
     @Provides
     @Singleton
