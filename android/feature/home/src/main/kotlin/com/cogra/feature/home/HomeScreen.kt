@@ -15,10 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -31,12 +36,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun HomeRoute(
+    actorRestoredResult: Boolean,
+    onActorRestoredResultConsumed: () -> Unit,
     onOpenInvites: () -> Unit,
     onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(actorRestoredResult) {
+        if (actorRestoredResult) {
+            onActorRestoredResultConsumed()
+            viewModel.onActorRestored()
+        }
+    }
     HomeScreen(
         state = state,
         onPDirectedChange = viewModel::onPDirectedChange,
@@ -44,6 +57,7 @@ fun HomeRoute(
         onReciprocate = viewModel::onReciprocate,
         onDismissReciprocation = viewModel::onDismissReciprocation,
         onResumePending = viewModel::onResumePending,
+        onActorRestoredShown = viewModel::onActorRestoredShown,
         onOpenInvites = onOpenInvites,
         onOpenSettings = onOpenSettings,
         onRestoreActor = onRestoreActor,
@@ -58,11 +72,28 @@ fun HomeScreen(
     onReciprocate: () -> Unit,
     onDismissReciprocation: () -> Unit,
     onResumePending: () -> Unit,
+    onActorRestoredShown: () -> Unit,
     onOpenInvites: () -> Unit,
     onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
 ) {
-    Scaffold { padding ->
+    val snackbarHostState = remember { SnackbarHostState() }
+    val restoredMessage = stringResource(R.string.home_actor_restored)
+    // Consumed only after the snackbar is done: clearing first would
+    // flip the LaunchedEffect key and cancel the showing coroutine.
+    LaunchedEffect(state.actorRestored) {
+        if (state.actorRestored) {
+            snackbarHostState.showSnackbar(restoredMessage)
+            onActorRestoredShown()
+        }
+    }
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(snackbarData = data, modifier = Modifier.testTag("home_snackbar"))
+            }
+        },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -70,6 +70,14 @@ data object Settings
 enum class AuthPhase { LOADING, SIGNED_OUT, ONBOARDING, SIGNED_IN }
 
 /**
+ * The Restore→Home result key. It rides the back-stack ENTRY's
+ * savedStateHandle — a different object from the one injected into the
+ * entry's ViewModels, so it must be read here, where the entry is in
+ * hand (android/CLAUDE.md "Navigation").
+ */
+private const val ACTOR_RESTORED_RESULT = "actor_restored"
+
+/**
  * The activity-scoped auth-state holder: the token store decides
  * signed-in; a parked applicant token routes to the status screen.
  */
@@ -142,10 +150,24 @@ fun CograNavGraph(deepLinkedInviteId: String?) {
             PasswordResetRoute(onDone = { navController.popBackStack() })
         }
         composable<Restore> {
-            RestoreRoute(onRestored = { navController.popBackStack() })
+            RestoreRoute(
+                onRestored = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(ACTOR_RESTORED_RESULT, true)
+                    navController.popBackStack()
+                },
+            )
         }
-        composable<Home> {
+        composable<Home> { entry ->
+            val actorRestoredResult by entry.savedStateHandle
+                .getStateFlow(ACTOR_RESTORED_RESULT, false)
+                .collectAsStateWithLifecycle()
             HomeRoute(
+                actorRestoredResult = actorRestoredResult,
+                onActorRestoredResultConsumed = {
+                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
+                },
                 onOpenInvites = { navController.navigate(Invites) },
                 onOpenSettings = { navController.navigate(Settings) },
                 onRestoreActor = { navController.navigate(Restore) },

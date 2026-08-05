@@ -32,6 +32,8 @@ data class HomeUiState(
     /** Handshakes parked mid-flight on this device. */
     val pendingHandshakes: Int = 0,
     val transportFailed: Boolean = false,
+    /** One-shot: a restore just landed the actor key; cleared once shown. */
+    val actorRestored: Boolean = false,
 )
 
 @HiltViewModel
@@ -46,6 +48,16 @@ class HomeViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
+        refresh()
+    }
+
+    /**
+     * The Restore destination reported success into Home's back-stack
+     * entry; Home outlives that push/pop, so this is the only signal
+     * that the husk state must be re-read.
+     */
+    fun onActorRestored() {
+        _state.update { it.copy(actorRestored = true) }
         refresh()
     }
 
@@ -126,5 +138,9 @@ class HomeViewModel @Inject constructor(
             signer.resume()
             _state.update { it.copy(pendingHandshakes = identity.handshakeIds().size) }
         }
+    }
+
+    fun onActorRestoredShown() {
+        _state.update { it.copy(actorRestored = false) }
     }
 }
