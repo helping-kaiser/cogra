@@ -30,13 +30,18 @@ data class SettingsUiState(
     val newEmail: String = "",
     val emailChangeCode: String = "",
     val emailChangeRequested: Boolean = false,
-    /** One-shot confirmation of the last completed action. */
-    val done: SettingsAction? = null,
-    val error: ErrorCode? = null,
-    val transportFailed: Boolean = false,
+    /** One-shot snackbar message; consumed via onFeedbackShown after display. */
+    val feedback: SettingsFeedback? = null,
 )
 
 enum class SettingsAction { PASSWORD_CHANGED, HANDLE_CHANGED, EMAIL_CONFIRMED, SESSION_REVOKED, OTHERS_REVOKED }
+
+/** At most one message is pending at a time; the snackbar shows it once. */
+sealed interface SettingsFeedback {
+    data class Done(val action: SettingsAction) : SettingsFeedback
+    data class Error(val code: ErrorCode) : SettingsFeedback
+    data object Transport : SettingsFeedback
+}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -66,19 +71,21 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onFeedbackShown() = _state.update { it.copy(feedback = null) }
+
     // ------------------------------------------------------------ backup
 
     /** Enable late or replace the code — recovery serves the newest blob. */
     fun onCreateBackup() {
         if (_state.value.busy) return
-        _state.update { it.copy(busy = true, error = null, transportFailed = false) }
+        _state.update { it.copy(busy = true, feedback = null) }
         viewModelScope.launch {
             when (val outcome = backup.enableOrReplace()) {
                 is Outcome.Success -> _state.update { it.copy(busy = false, newBackupCode = outcome.value) }
                 is Outcome.Refused -> _state.update {
-                    it.copy(busy = false, error = outcome.errors.first().code)
+                    it.copy(busy = false, feedback = SettingsFeedback.Error(outcome.errors.first().code))
                 }
-                is Outcome.Failed -> _state.update { it.copy(busy = false, transportFailed = true) }
+                is Outcome.Failed -> _state.update { it.copy(busy = false, feedback = SettingsFeedback.Transport) }
             }
         }
     }
@@ -99,15 +106,17 @@ class SettingsViewModel @Inject constructor(
 
     private fun revoke(block: suspend () -> Pair<Outcome<Unit>, SettingsAction>) {
         if (_state.value.busy) return
-        _state.update { it.copy(busy = true, done = null) }
+        _state.update { it.copy(busy = true, feedback = null) }
         viewModelScope.launch {
             val (outcome, action) = block()
             when (outcome) {
-                is Outcome.Success -> _state.update { it.copy(busy = false, done = action) }
-                is Outcome.Refused -> _state.update {
-                    it.copy(busy = false, error = outcome.errors.first().code)
+                is Outcome.Success -> _state.update {
+                    it.copy(busy = false, feedback = SettingsFeedback.Done(action))
                 }
-                is Outcome.Failed -> _state.update { it.copy(busy = false, transportFailed = true) }
+                is Outcome.Refused -> _state.update {
+                    it.copy(busy = false, feedback = SettingsFeedback.Error(outcome.errors.first().code))
+                }
+                is Outcome.Failed -> _state.update { it.copy(busy = false, feedback = SettingsFeedback.Transport) }
             }
             refresh()
         }
@@ -115,15 +124,15 @@ class SettingsViewModel @Inject constructor(
 
     // ------------------------------------------------------- credentials
 
-    fun onCurrentPasswordChange(v: String) = _state.update { it.copy(currentPassword = v, error = null) }
+    fun onCurrentPasswordChange(v: String) = _state.update { it.copy(currentPassword = v) }
 
-    fun onNewPasswordChange(v: String) = _state.update { it.copy(newPassword = v, error = null) }
+    fun onNewPasswordChange(v: String) = _state.update { it.copy(newPassword = v) }
 
-    fun onNewHandleChange(v: String) = _state.update { it.copy(newHandle = v.lowercase(), error = null) }
+    fun onNewHandleChange(v: String) = _state.update { it.copy(newHandle = v.lowercase()) }
 
-    fun onNewEmailChange(v: String) = _state.update { it.copy(newEmail = v, error = null) }
+    fun onNewEmailChange(v: String) = _state.update { it.copy(newEmail = v) }
 
-    fun onEmailChangeCodeChange(v: String) = _state.update { it.copy(emailChangeCode = v, error = null) }
+    fun onEmailChangeCodeChange(v: String) = _state.update { it.copy(emailChangeCode = v) }
 
     fun onChangePassword() = credentialAction(SettingsAction.PASSWORD_CHANGED) {
         account.changePassword(_state.value.currentPassword, _state.value.newPassword)
@@ -136,10 +145,10 @@ class SettingsViewModel @Inject constructor(
     /** Two-sided proof: the request mails both addresses (auth.md). */
     fun onRequestEmailChange() {
         if (_state.value.busy) return
-        _state.update { it.copy(busy = true, error = null) }
+        _state.update { it.copy(busy = true, feedback = null) }
         viewModelScope.launch {
             when (account.requestEmailChange(_state.value.newEmail.trim(), _state.value.currentPassword)) {
-                is Outcome.Failed -> _state.update { it.copy(busy = false, transportFailed = true) }
+                is Outcome.Failed -> _state.update { it.copy(busy = false, feedback = SettingsFeedback.Transport) }
                 else -> _state.update { it.copy(busy = false, emailChangeRequested = true) }
             }
         }
@@ -151,22 +160,22 @@ class SettingsViewModel @Inject constructor(
 
     private fun credentialAction(action: SettingsAction, block: suspend () -> Outcome<Unit>) {
         if (_state.value.busy) return
-        _state.update { it.copy(busy = true, error = null, transportFailed = false, done = null) }
+        _state.update { it.copy(busy = true, feedback = null) }
         viewModelScope.launch {
             when (val outcome = block()) {
                 is Outcome.Success -> _state.update {
                     it.copy(
                         busy = false,
-                        done = action,
+                        feedback = SettingsFeedback.Done(action),
                         currentPassword = "",
                         newPassword = "",
                         emailChangeCode = "",
                     )
                 }
                 is Outcome.Refused -> _state.update {
-                    it.copy(busy = false, error = outcome.errors.first().code)
+                    it.copy(busy = false, feedback = SettingsFeedback.Error(outcome.errors.first().code))
                 }
-                is Outcome.Failed -> _state.update { it.copy(busy = false, transportFailed = true) }
+                is Outcome.Failed -> _state.update { it.copy(busy = false, feedback = SettingsFeedback.Transport) }
             }
         }
     }

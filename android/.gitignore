@@ -11,3 +11,4 @@ local.properties
 
 # Per-module build output
 **/build/
+.kotlin/

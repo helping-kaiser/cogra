@@ -3,7 +3,9 @@ package com.cogra.feature.settings
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.SessionInfo
+import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
@@ -16,7 +18,7 @@ class SettingsScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: SettingsUiState) {
+    private fun render(state: SettingsUiState, onFeedbackShown: () -> Unit = {}) {
         compose.setContent {
             SettingsScreen(
                 state = state,
@@ -26,9 +28,42 @@ class SettingsScreenTest {
                 onNewHandleChange = {}, onChangeHandle = {},
                 onNewEmailChange = {}, onRequestEmailChange = {},
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
+                onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
             )
         }
+    }
+
+    @Test
+    fun aCompletedActionShowsTheConfirmationSnackbar() {
+        render(SettingsUiState(feedback = SettingsFeedback.Done(SettingsAction.HANDLE_CHANGED)))
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+    }
+
+    @Test
+    fun aRefusalShowsTheErrorSnackbar() {
+        render(SettingsUiState(feedback = SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS)))
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+    }
+
+    @Test
+    fun theSnackbarConsumesItsOneShotAfterShowing() {
+        var shown = false
+        render(
+            SettingsUiState(feedback = SettingsFeedback.Transport),
+            onFeedbackShown = { shown = true },
+        )
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+        // Consumption happens only after the snackbar's display run ends.
+        assertThat(shown).isFalse()
+        compose.mainClock.advanceTimeBy(10_000)
+        assertThat(shown).isTrue()
+    }
+
+    @Test
+    fun noPendingFeedbackMeansNoSnackbar() {
+        render(SettingsUiState())
+        compose.onNodeWithTag("settings_snackbar").assertDoesNotExist()
     }
 
     @Test

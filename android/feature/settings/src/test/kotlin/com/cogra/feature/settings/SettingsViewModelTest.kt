@@ -110,7 +110,8 @@ class SettingsViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(sessionRepo.revoked).isEqualTo("s2")
         assertThat(vm.state.value.sessions).hasSize(1)
-        assertThat(vm.state.value.done).isEqualTo(SettingsAction.SESSION_REVOKED)
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Done(SettingsAction.SESSION_REVOKED))
     }
 
     @Test
@@ -123,8 +124,10 @@ class SettingsViewModelTest {
         vm.onNewPasswordChange("a new strong password")
         vm.onChangePassword()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.error).isEqualTo(ErrorCode.INVALID_CREDENTIALS)
-        assertThat(vm.state.value.done).isNull()
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS))
+        vm.onFeedbackShown()
+        assertThat(vm.state.value.feedback).isNull()
     }
 
     @Test
@@ -135,7 +138,8 @@ class SettingsViewModelTest {
         vm.onNewPasswordChange("a new strong password")
         vm.onChangePassword()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.done).isEqualTo(SettingsAction.PASSWORD_CHANGED)
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Done(SettingsAction.PASSWORD_CHANGED))
         assertThat(vm.state.value.currentPassword).isEmpty()
         assertThat(vm.state.value.newPassword).isEmpty()
     }
