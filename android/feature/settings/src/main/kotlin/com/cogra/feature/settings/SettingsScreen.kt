@@ -9,8 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -20,6 +25,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +45,7 @@ import com.cogra.domain.ErrorCode
 
 @Composable
 fun SettingsRoute(
+    onBack: () -> Unit,
     onHandleChanged: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -52,6 +59,7 @@ fun SettingsRoute(
     }
     SettingsScreen(
         state = state,
+        onBack = onBack,
         onCreateBackup = viewModel::onCreateBackup,
         onBackupCodeSaved = viewModel::onBackupCodeSaved,
         onRevokeSession = viewModel::onRevokeSession,
@@ -71,9 +79,11 @@ fun SettingsRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
+    onBack: () -> Unit,
     onCreateBackup: () -> Unit,
     onBackupCodeSaved: () -> Unit,
     onRevokeSession: (String) -> Unit,
@@ -102,6 +112,27 @@ fun SettingsScreen(
         }
     }
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_title),
+                        modifier = Modifier.semantics { heading() },
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("settings_back"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                        )
+                    }
+                },
+            )
+        },
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(snackbarData = data, modifier = Modifier.testTag("settings_snackbar"))
@@ -116,11 +147,6 @@ fun SettingsScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.semantics { heading() },
-            )
             BackupSection(state, onCreateBackup, onBackupCodeSaved)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(

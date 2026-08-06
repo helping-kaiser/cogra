@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.SessionInfo
 import com.google.common.truth.Truth.assertThat
@@ -19,10 +20,15 @@ class SettingsScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: SettingsUiState, onFeedbackShown: () -> Unit = {}) {
+    private fun render(
+        state: SettingsUiState,
+        onFeedbackShown: () -> Unit = {},
+        onBack: () -> Unit = {},
+    ) {
         compose.setContent {
             SettingsScreen(
                 state = state,
+                onBack = onBack,
                 onCreateBackup = {}, onBackupCodeSaved = {},
                 onRevokeSession = {}, onRevokeOthers = {},
                 onCurrentPasswordChange = {}, onNewPasswordChange = {}, onChangePassword = {},
@@ -87,6 +93,14 @@ class SettingsScreenTest {
     fun noPendingFeedbackMeansNoSnackbar() {
         render(SettingsUiState())
         compose.onNodeWithTag("settings_snackbar").assertDoesNotExist()
+    }
+
+    @Test
+    fun theTopBarBackArrowReportsUp() {
+        var back = false
+        render(SettingsUiState(), onBack = { back = true })
+        compose.onNodeWithTag("settings_back").performClick()
+        assertThat(back).isTrue()
     }
 
     @Test

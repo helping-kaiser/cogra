@@ -178,9 +178,12 @@ fun CograNavGraph(
                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
             )
         }
-        composable<Invites> { InvitesRoute() }
+        composable<Invites> {
+            InvitesRoute(onBack = { navController.navigateUp() })
+        }
         composable<Settings> {
             SettingsRoute(
+                onBack = { navController.navigateUp() },
                 onHandleChanged = {
                     navController.previousBackStackEntry
                         ?.savedStateHandle

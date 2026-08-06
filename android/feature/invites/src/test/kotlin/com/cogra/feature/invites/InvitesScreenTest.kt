@@ -2,8 +2,10 @@ package com.cogra.feature.invites
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
+import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
@@ -16,14 +18,23 @@ class InvitesScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: InvitesUiState) {
+    private fun render(state: InvitesUiState, onBack: () -> Unit = {}) {
         compose.setContent {
             InvitesScreen(
                 state = state,
+                onBack = onBack,
                 onSingleUseChange = {}, onPrefillPDirectedChange = {}, onPrefillPInterestChange = {},
                 onCreate = {}, onRevoke = {}, onApprove = { _, _, _ -> }, onShare = {},
             )
         }
+    }
+
+    @Test
+    fun theTopBarBackArrowReportsUp() {
+        var back = false
+        render(InvitesUiState(), onBack = { back = true })
+        compose.onNodeWithTag("invites_back").performClick()
+        assertThat(back).isTrue()
     }
 
     private fun link(application: ApplicationInfo?) = InviteLinkInfo(
