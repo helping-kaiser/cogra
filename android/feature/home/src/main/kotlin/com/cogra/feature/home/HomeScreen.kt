@@ -1,5 +1,6 @@
 package com.cogra.feature.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,18 +30,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeRoute(
@@ -119,6 +124,7 @@ fun HomeScreen(
     onStartKeyCeremony: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val restoredMessage = stringResource(R.string.home_actor_restored)
     // Consumed only after the snackbar is done: clearing first would
     // flip the LaunchedEffect key and cancel the showing coroutine.
@@ -196,87 +202,85 @@ fun HomeScreen(
                         onStartKeyCeremony = onStartKeyCeremony,
                         onRestoreActor = onRestoreActor,
                     )
-                    return@Column
-                }
-                if (state.huskWarning) {
-                    RestoreCard(onRestoreActor)
-                }
-                state.reciprocationTarget?.let { inviter ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = stringResource(R.string.home_reciprocate_title, inviter.handle),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.testTag("home_reciprocation"),
-                            )
-                            Text(stringResource(R.string.home_reciprocate_body))
-                            LabeledSlider(
-                                label = stringResource(R.string.stance_p_directed),
-                                value = state.pDirected,
-                                onChange = onPDirectedChange,
-                                tag = "home_p_directed",
-                            )
-                            LabeledSlider(
-                                label = stringResource(R.string.stance_p_interest),
-                                value = state.pInterest,
-                                onChange = onPInterestChange,
-                                tag = "home_p_interest",
-                            )
-                            if (state.signingFailed) {
+                } else {
+                    if (state.huskWarning) {
+                        RestoreCard(onRestoreActor)
+                    }
+                    state.reciprocationTarget?.let { inviter ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(
-                                    text = stringResource(R.string.home_signing_failed),
-                                    color = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.testTag("home_signing_failed"),
+                                    text = stringResource(R.string.home_reciprocate_title, inviter.handle),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.testTag("home_reciprocation"),
                                 )
-                            }
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = onReciprocate,
-                                    enabled = !state.signing,
-                                    modifier = Modifier.testTag("home_reciprocate"),
-                                ) {
-                                    Text(stringResource(R.string.home_reciprocate_sign))
+                                Text(stringResource(R.string.home_reciprocate_body))
+                                LabeledSlider(
+                                    label = stringResource(R.string.stance_p_directed),
+                                    value = state.pDirected,
+                                    onChange = onPDirectedChange,
+                                    tag = "home_p_directed",
+                                )
+                                LabeledSlider(
+                                    label = stringResource(R.string.stance_p_interest),
+                                    value = state.pInterest,
+                                    onChange = onPInterestChange,
+                                    tag = "home_p_interest",
+                                )
+                                if (state.signingFailed) {
+                                    Text(
+                                        text = stringResource(R.string.home_signing_failed),
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.testTag("home_signing_failed"),
+                                    )
                                 }
-                                TextButton(
-                                    onClick = onDismissReciprocation,
-                                    modifier = Modifier.testTag("home_reciprocate_skip"),
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = onReciprocate,
+                                        enabled = !state.signing,
+                                        modifier = Modifier.testTag("home_reciprocate"),
+                                    ) {
+                                        Text(stringResource(R.string.home_reciprocate_sign))
+                                    }
+                                    TextButton(
+                                        onClick = onDismissReciprocation,
+                                        modifier = Modifier.testTag("home_reciprocate_skip"),
+                                    ) {
+                                        Text(stringResource(R.string.home_reciprocate_skip))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (state.reciprocated) {
+                        Text(
+                            text = stringResource(R.string.home_reciprocated),
+                            modifier = Modifier.testTag("home_reciprocated"),
+                        )
+                    }
+                    if (state.pendingHandshakes > 0) {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    stringResource(R.string.home_pending, state.pendingHandshakes),
+                                    modifier = Modifier.testTag("home_pending"),
+                                )
+                                OutlinedButton(
+                                    onClick = onResumePending,
+                                    modifier = Modifier.testTag("home_resume"),
                                 ) {
-                                    Text(stringResource(R.string.home_reciprocate_skip))
+                                    Text(stringResource(R.string.home_resume))
                                 }
                             }
                         }
                     }
                 }
-                if (state.reciprocated) {
-                    Text(
-                        text = stringResource(R.string.home_reciprocated),
-                        modifier = Modifier.testTag("home_reciprocated"),
-                    )
-                }
-                if (state.pendingHandshakes > 0) {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                stringResource(R.string.home_pending, state.pendingHandshakes),
-                                modifier = Modifier.testTag("home_pending"),
-                            )
-                            OutlinedButton(
-                                onClick = onResumePending,
-                                modifier = Modifier.testTag("home_resume"),
-                            ) {
-                                Text(stringResource(R.string.home_resume))
-                            }
-                        }
-                    }
-                }
-                OutlinedButton(
-                    onClick = onOpenInvites,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("home_invites"),
-                ) {
-                    Text(stringResource(R.string.home_open_invites))
-                }
+                val invitesLockedMessage = stringResource(R.string.home_invites_locked_message)
+                InvitesButton(
+                    locked = state.applicant,
+                    onOpen = onOpenInvites,
+                    onLockedTap = { scope.launch { snackbarHostState.showSnackbar(invitesLockedMessage) } },
+                )
                 OutlinedButton(
                     onClick = onOpenSettings,
                     modifier = Modifier
@@ -287,6 +291,40 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Acting is gated for applicants, but the surface stays visible (auth.md
+ * "Application"): the locked look borrows the M3 disabled tokens (38%
+ * content, 12% outline) while the button stays tappable, so a tap can
+ * explain the lock instead of dying silently.
+ */
+@Composable
+private fun InvitesButton(locked: Boolean, onOpen: () -> Unit, onLockedTap: () -> Unit) {
+    val lockedState = stringResource(R.string.home_invites_locked)
+    OutlinedButton(
+        onClick = if (locked) onLockedTap else onOpen,
+        colors = if (locked) {
+            ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            )
+        } else {
+            ButtonDefaults.outlinedButtonColors()
+        },
+        border = if (locked) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+        } else {
+            ButtonDefaults.outlinedButtonBorder(enabled = true)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("home_invites")
+            .then(
+                if (locked) Modifier.semantics { stateDescription = lockedState } else Modifier,
+            ),
+    ) {
+        Text(stringResource(R.string.home_open_invites))
     }
 }
 

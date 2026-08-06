@@ -192,8 +192,30 @@ class CograNavGraphTest {
 
         waitForTag("home_waiting")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
-        // Acting surfaces stay hidden until landing.
-        assertThat(compose.onAllNodesWithTag("home_invites").fetchSemanticsNodes()).isEmpty()
+        // Only acting is gated: the shell buttons stay visible.
+        assertThat(compose.onAllNodesWithTag("home_invites").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("home_settings").fetchSemanticsNodes()).isNotEmpty()
+    }
+
+    @Test
+    fun anApplicantReachesSettingsAndSignsOut() {
+        // The applicant is an ordinary logged-in account (auth.md
+        // "Application"): account management is never gated.
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = true)
+        render()
+
+        waitForTag("home_settings")
+        compose.onNodeWithTag("home_settings").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
+
+        compose.onNodeWithTag("settings_sign_out").performScrollTo().performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+        }
     }
 
     @Test

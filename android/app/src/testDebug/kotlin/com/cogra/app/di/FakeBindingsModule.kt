@@ -52,9 +52,11 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
     }
 }
 
-/** Sessions enough for the Settings destination to render. */
+/** Sessions enough for the Settings destination to render and sign out. */
 class ScriptedSessionRepository : ThrowingSessionRepository() {
     override suspend fun sessions(): Outcome<List<SessionInfo>> = Outcome.Success(emptyList())
+
+    override suspend fun revokeSession(id: String?): Outcome<Unit> = Outcome.Success(Unit)
 }
 
 /** Scriptable applicant state: tests set the me-driven status. */
