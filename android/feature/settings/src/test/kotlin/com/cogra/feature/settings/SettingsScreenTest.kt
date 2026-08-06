@@ -76,6 +76,14 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun everyPasswordFieldCarriesItsVisibilityToggle() {
+        render(SettingsUiState())
+        compose.onNodeWithTag("settings_current_password_toggle").assertExists()
+        compose.onNodeWithTag("settings_new_password_toggle").assertExists()
+        compose.onNodeWithTag("settings_email_password_toggle").assertExists()
+    }
+
+    @Test
     fun noPendingFeedbackMeansNoSnackbar() {
         render(SettingsUiState())
         compose.onNodeWithTag("settings_snackbar").assertDoesNotExist()

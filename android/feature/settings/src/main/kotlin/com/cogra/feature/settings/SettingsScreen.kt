@@ -31,10 +31,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 
 @Composable
@@ -256,27 +256,19 @@ private fun CredentialsSection(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.semantics { heading() },
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.currentPassword,
                 onValueChange = onCurrentPasswordChange,
-                label = { Text(stringResource(R.string.settings_current_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_current_password"),
+                label = stringResource(R.string.settings_current_password),
+                testTag = "settings_current_password",
+                modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.newPassword,
                 onValueChange = onNewPasswordChange,
-                label = { Text(stringResource(R.string.settings_new_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_new_password"),
+                label = stringResource(R.string.settings_new_password),
+                testTag = "settings_new_password",
+                modifier = Modifier.fillMaxWidth(),
             )
             Button(
                 onClick = onChangePassword,
@@ -313,16 +305,12 @@ private fun CredentialsSection(
                     .fillMaxWidth()
                     .testTag("settings_new_email"),
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.emailChangePassword,
                 onValueChange = onEmailChangePasswordChange,
-                label = { Text(stringResource(R.string.settings_email_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_email_password"),
+                label = stringResource(R.string.settings_email_password),
+                testTag = "settings_email_password",
+                modifier = Modifier.fillMaxWidth(),
             )
             Button(
                 onClick = onRequestEmailChange,
