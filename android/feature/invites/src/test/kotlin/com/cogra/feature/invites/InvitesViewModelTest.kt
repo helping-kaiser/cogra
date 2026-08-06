@@ -53,12 +53,12 @@ class InvitesViewModelTest {
             return Outcome.Success(Unit)
         }
 
-        override suspend fun approveApplicant(
-            applicantId: String,
+        override suspend fun approveApplication(
+            applicationId: String,
             pDirected: Double,
             pInterest: Double,
         ): Outcome<List<PreparedWriteView>> =
-            approveOutcome ?: writes.prepareStance(applicantId, pDirected, pInterest)
+            approveOutcome ?: writes.prepareStance(applicationId, pDirected, pInterest)
     }
 
     @Before
@@ -97,7 +97,7 @@ class InvitesViewModelTest {
     fun approvingSignsTheVouchOnDevice() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onApprove("applicant-1", 0.4, 0.2)
+        vm.onApprove("application-1", 0.4, 0.2)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.vouchSigned).isTrue()
         assertThat(vm.state.value.approvingId).isNull()
@@ -113,7 +113,7 @@ class InvitesViewModelTest {
             Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "already approved")))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onApprove("applicant-1", 0.4, 0.2)
+        vm.onApprove("application-1", 0.4, 0.2)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.error).isEqualTo(ErrorCode.BAD_INPUT)
         assertThat(vm.state.value.vouchSigned).isFalse()

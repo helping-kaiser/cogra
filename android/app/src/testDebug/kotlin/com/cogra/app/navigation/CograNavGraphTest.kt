@@ -19,7 +19,9 @@ import com.cogra.app.di.ScriptedOnboardingRepository
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.sealKeyBackup
+import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.ApplicationView
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.UserProfile
 import com.cogra.domain.testing.FakeIdentityStore
@@ -75,6 +77,23 @@ class CograNavGraphTest {
         tokens.save(AuthTokens(accessToken = "access", refreshToken = "refresh"))
     }
 
+    private fun member() = UserProfile("u1", "jakob", null, AccountState.MEMBER, invitedBy = null)
+
+    private fun applicant() = UserProfile("u1", "joiner", null, AccountState.APPLICANT, invitedBy = null)
+
+    private fun applicantStatus(keyAttached: Boolean) = ApplicationStatus(
+        accountState = AccountState.APPLICANT,
+        application = ApplicationView(
+            handle = "joiner",
+            emailVerified = true,
+            keyAttached = keyAttached,
+            approvedAt = null,
+            landedAt = null,
+            expiresAt = Instant.MAX,
+        ),
+        stagedRegistration = null,
+    )
+
     private fun waitForTag(tag: String) {
         // Generous: the first Robolectric + Hilt test in a JVM pays a
         // multi-second class-loading warmup that once tripped 5s.
@@ -94,7 +113,7 @@ class CograNavGraphTest {
     fun aSignedInSessionLandsOnHome() {
         signIn()
         identity.seed = ActorKey.generate().seed()
-        account.profile = UserProfile("u1", "jakob", null, invitedBy = null)
+        account.profile = member()
         render()
         waitForTag("home_greeting")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
@@ -106,7 +125,7 @@ class CograNavGraphTest {
         val code = RecoveryCode.generate()
         signIn()
         identity.seed = null
-        account.profile = UserProfile("u1", "jakob", null, invitedBy = null)
+        account.profile = member()
         account.backupBlob = sealKeyBackup(actor.seed(), code)
         render()
 
@@ -133,17 +152,12 @@ class CograNavGraphTest {
 
     @Test
     fun anApplicantLandsInTheHomeShellWithTheWaitingHint() {
-        // A parked applicant token, verified email, approval pending —
-        // the ONBOARDING phase roots at Home, never at a wall.
-        identity.token = "applicant-token"
-        onboarding.status = ApplicationStatus(
-            handle = "joiner",
-            emailVerified = true,
-            approvedAt = null,
-            landedAt = null,
-            expiresAt = Instant.MAX,
-            stagedRegistration = null,
-        )
+        // Registration returned an ordinary session: the applicant is
+        // simply signed in, and Home is the root — never a wall.
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = true)
         render()
 
         waitForTag("home_waiting")
@@ -153,26 +167,30 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun aLandedApplicationClaimsItsSessionAndBecomesTheMemberShell() {
-        identity.token = "applicant-token"
-        identity.seed = ActorKey.generate().seed()
-        onboarding.status = ApplicationStatus(
-            handle = "joiner",
-            emailVerified = true,
-            approvedAt = Instant.now(),
-            landedAt = Instant.now(),
-            expiresAt = Instant.MAX,
-            stagedRegistration = null,
-        )
-        onboarding.claimTokens = AuthTokens(accessToken = "access", refreshToken = "refresh")
-        account.profile = UserProfile("u1", "joiner", null, invitedBy = null)
+    fun theCeremonyCardRunsTheKeyCeremonyAndReturns() {
+        signIn()
+        identity.seed = null
+        account.profile = applicant()
+        onboarding.status = applicantStatus(keyAttached = false)
         render()
 
-        // The app-scoped flow claims on its first pass; the phase flips
-        // and Home is recreated in its member shape.
-        waitForTag("home_invites")
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
-        assertThat(tokens.tokens.value).isNotNull()
-        assertThat(identity.token).isNull()
+        // The missing key proof surfaces as a card; take it.
+        waitForTag("home_create_key")
+        compose.onNodeWithTag("home_create_key").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<KeyCeremony>()).isTrue()
+
+        // Accept the backup: mint, attach, seal, show the code once.
+        compose.onNodeWithTag("backup_accept").performClick()
+        waitForTag("backup_code")
+        assertThat(identity.seed).isNotNull()
+        assertThat(onboarding.attachedKeys).hasSize(1)
+        assertThat(account.uploadedBackup).isNotNull()
+
+        // Confirming the code pops back into the Home shell.
+        compose.onNodeWithTag("backup_code_saved").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+        }
     }
 }

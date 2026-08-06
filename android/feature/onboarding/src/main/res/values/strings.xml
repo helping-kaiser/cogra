@@ -15,9 +15,9 @@
     <string name="apply_handle">Handle</string>
     <string name="apply_handle_rules">3–30 characters: a–z, 0–9, _</string>
     <string name="apply_password_rules">At least 12 characters.</string>
-    <string name="apply_continue">Continue</string>
+    <string name="apply_continue">Create account</string>
     <string name="apply_handle_taken">That handle is taken.</string>
-    <string name="apply_in_progress">An application with this email is already underway — check your inbox.</string>
+    <string name="apply_email_in_use">That email already belongs to an account — sign in instead.</string>
     <string name="apply_bad_input">Check the highlighted field.</string>
 
     <string name="backup_title">Your key, your actor</string>

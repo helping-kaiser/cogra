@@ -1,6 +1,6 @@
-// The staged-applicant flow: invite check, application with the on-
-// device key ceremony and backup offer, and the status screen that
-// signs the Registration and claims the first session (auth.md).
+// The joining flow: invite check, the registration form (account +
+// session), and the logged-in key ceremony with its backup offer
+// (auth.md "Application").
 
 plugins {
     alias(libs.plugins.android.library)

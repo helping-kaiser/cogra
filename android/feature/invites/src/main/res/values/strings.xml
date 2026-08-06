@@ -10,8 +10,10 @@
     <string name="invites_revoke">Revoke</string>
     <string name="invites_revoked">Revoked</string>
     <string name="invites_vouch_signed">Approved — your vouch is signed and on its way.</string>
-    <string name="applicant_ready">@%1$s applied and verified their email — ready for your approval.</string>
+    <string name="applicant_ready">@%1$s applied and proved their email and key — ready for your approval.</string>
     <string name="applicant_unverified">@%1$s applied; waiting on their email verification.</string>
+    <string name="applicant_no_key">@%1$s applied; waiting on their device key.</string>
+    <string name="applicant_incomplete">@%1$s applied; waiting on their email verification and device key.</string>
     <string name="applicant_approved">@%1$s approved — waiting for their signature and landing.</string>
     <string name="applicant_landed">@%1$s is a member.</string>
     <string name="applicant_approve">Approve and vouch</string>

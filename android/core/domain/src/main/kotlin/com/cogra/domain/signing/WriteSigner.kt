@@ -65,6 +65,61 @@ class WriteSigner @Inject constructor(
     }
 
     /**
+     * Signs one staged write served mid-handshake — the path of the
+     * staged Registration, which the backend stages at approval and the
+     * device discovers on the status poll (auth.md "Approval and
+     * landing"): same two signatures, same verification, through the
+     * ordinary session-authorized legs.
+     */
+    suspend fun signStaged(staged: StagedWriteView): WriteResult {
+        val key = actorKey()
+        return when (staged.state) {
+            WriteState.AWAITING_PRE_SIGN -> when (val pre = identity.handshake(staged.id)) {
+                // A fresh staging: pre-sign from the served proposal.
+                null -> {
+                    val step = try {
+                        preSignStep(key, staged.canonicalProposal)
+                    } catch (e: WireException) {
+                        return WriteResult.RejectedByDevice(staged.id, e.message ?: "malformed proposal")
+                    }
+                    identity.saveHandshake(staged.id, step.pre)
+                    when (val submitted = writes.submitProposal(staged.id, step.signatureBase64)) {
+                        is Outcome.Success -> approveFrom(key, step.pre, submitted.value)
+                        is Outcome.Refused -> refused(staged.id, submitted.errors)
+                        is Outcome.Failed -> WriteResult.Failed(staged.id, submitted.cause)
+                    }
+                }
+                // The submit response was lost; re-send THIS device's material.
+                else -> when (val submitted = writes.submitProposal(staged.id, preCommitmentSignature(pre))) {
+                    is Outcome.Success -> approveFrom(key, pre, submitted.value)
+                    is Outcome.Refused -> refused(staged.id, submitted.errors)
+                    is Outcome.Failed -> WriteResult.Failed(staged.id, submitted.cause)
+                }
+            }
+            WriteState.SEALING, WriteState.AWAITING_APPROVAL -> when (val pre = identity.handshake(staged.id)) {
+                // Pre-signed by a device that is not this one (or the
+                // material is gone): only the expiry re-stage recovers.
+                null -> WriteResult.Refused(
+                    staged.id,
+                    listOf(UserError(ErrorCode.INTERNAL, "handshake material lost — awaiting re-stage")),
+                )
+                else -> approveFrom(key, pre, staged)
+            }
+            WriteState.RELAYING, WriteState.LANDED -> {
+                identity.clearHandshake(staged.id)
+                WriteResult.Done(staged.id, staged.state)
+            }
+            WriteState.EXPIRED -> {
+                identity.clearHandshake(staged.id)
+                WriteResult.Refused(
+                    staged.id,
+                    listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
+                )
+            }
+        }
+    }
+
+    /**
      * Continues every persisted handshake from its server-side state —
      * the process-death and lost-response recovery path.
      */

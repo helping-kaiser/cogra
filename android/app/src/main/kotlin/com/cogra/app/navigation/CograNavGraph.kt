@@ -1,8 +1,10 @@
 // The single NavHost with type-safe routes (android/CLAUDE.md
 // "Navigation"): auth state drives navigation — signed-out vs.
-// onboarding vs. signed-in is a conditional-navigation concern observed
-// from one activity-scoped holder, and every phase flip clears the back
-// stack.
+// signed-in is a conditional-navigation concern observed from one
+// activity-scoped holder, and every phase flip clears the back stack.
+// Registration returns an ordinary session, so an applicant is simply
+// signed in: the applicant/member distinction lives inside the Home
+// shell, not in navigation (auth.md "Application").
 
 package com.cogra.app.navigation
 
@@ -20,7 +22,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
-import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -29,6 +30,7 @@ import com.cogra.feature.home.HomeRoute
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
+import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.settings.SettingsRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -55,6 +57,9 @@ data object PasswordReset
 data object Restore
 
 @Serializable
+data object KeyCeremony
+
+@Serializable
 data object Home
 
 @Serializable
@@ -64,7 +69,7 @@ data object Invites
 data object Settings
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
-enum class AuthPhase { LOADING, SIGNED_OUT, ONBOARDING, SIGNED_IN }
+enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
 
 /**
  * The Restore→Home result key. It rides the back-stack ENTRY's
@@ -74,22 +79,14 @@ enum class AuthPhase { LOADING, SIGNED_OUT, ONBOARDING, SIGNED_IN }
  */
 private const val ACTOR_RESTORED_RESULT = "actor_restored"
 
-/**
- * The activity-scoped auth-state holder: the token store decides
- * signed-in; a parked applicant token routes to the status screen.
- */
+/** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
     tokens: TokenStore,
-    identity: IdentityStore,
 ) : ViewModel() {
     val phase: StateFlow<AuthPhase> =
         tokens.tokens.map { pair ->
-            when {
-                pair != null -> AuthPhase.SIGNED_IN
-                identity.applicantToken() != null -> AuthPhase.ONBOARDING
-                else -> AuthPhase.SIGNED_OUT
-            }
+            if (pair != null) AuthPhase.SIGNED_IN else AuthPhase.SIGNED_OUT
         }.stateIn(viewModelScope, SharingStarted.Eagerly, AuthPhase.LOADING)
 }
 
@@ -104,13 +101,11 @@ fun CograNavGraph(
     // Auth drives navigation: every phase flip lands on that phase's
     // root with a cleared stack (android/CLAUDE.md "Navigation"). An
     // applicant lands on Home too — the read shell with the application
-    // riding along as hints, never a wall (auth.md "Application"); the
-    // ONBOARDING→SIGNED_IN flip recreates Home into its member shape.
+    // riding along as cards, never a wall (auth.md "Application").
     LaunchedEffect(phase) {
         val root: Any = when (phase) {
             AuthPhase.LOADING -> return@LaunchedEffect
             AuthPhase.SIGNED_IN -> Home
-            AuthPhase.ONBOARDING -> Home
             AuthPhase.SIGNED_OUT -> InviteEntry(deepLinkedInviteId)
         }
         navController.navigate(root) {
@@ -135,16 +130,12 @@ fun CograNavGraph(
             )
         }
         composable<Apply> { entry ->
-            ApplyRoute(
-                inviteId = entry.toRoute<Apply>().inviteId,
-                // The phase holder only re-reads the applicant token on a
-                // token-store emission, so the submit navigates itself.
-                onSubmitted = {
-                    navController.navigate(Home) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-            )
+            // A successful register flips the token store; the phase
+            // holder navigates.
+            ApplyRoute(inviteId = entry.toRoute<Apply>().inviteId)
+        }
+        composable<KeyCeremony> {
+            KeyCeremonyRoute(onDone = { navController.popBackStack() })
         }
         composable<Login> {
             LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
@@ -174,6 +165,7 @@ fun CograNavGraph(
                 onOpenInvites = { navController.navigate(Invites) },
                 onOpenSettings = { navController.navigate(Settings) },
                 onRestoreActor = { navController.navigate(Restore) },
+                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
             )
         }
         composable<Invites> { InvitesRoute() }

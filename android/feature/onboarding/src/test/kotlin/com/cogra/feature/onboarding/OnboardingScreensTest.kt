@@ -33,13 +33,49 @@ class OnboardingScreensTest {
     }
 
     @Test
-    fun theBackupStepShowsTheCodeExactlyWhenCreated() {
+    fun theFormBlocksAnInvalidSubmit() {
         compose.setContent {
             ApplyScreen(
-                state = ApplyUiState(step = ApplyStep.BACKUP, recoveryCode = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"),
-                onHandleChange = {}, onEmailChange = {}, onPasswordChange = {},
-                onContinueToBackup = {}, onAcceptBackup = {}, onCodeSaved = {},
-                onDeclineBackup = {}, onCancelDecline = {}, onConfirmDecline = {},
+                state = ApplyUiState(handle = "ab", email = "a@b.c", password = "short"),
+                onHandleChange = {},
+                onEmailChange = {},
+                onPasswordChange = {},
+                onSubmit = {},
+            )
+        }
+        compose.onNodeWithTag("apply_continue").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aRefusedRegisterRendersItsMessage() {
+        compose.setContent {
+            ApplyScreen(
+                state = ApplyUiState(
+                    handle = "joiner",
+                    email = "a@b.c",
+                    password = "a strong password",
+                    error = com.cogra.domain.ErrorCode.EMAIL_IN_USE,
+                    errorField = "email",
+                ),
+                onHandleChange = {},
+                onEmailChange = {},
+                onPasswordChange = {},
+                onSubmit = {},
+            )
+        }
+        compose.onNodeWithTag("apply_error").assertExists()
+    }
+
+    @Test
+    fun theCeremonyShowsTheCodeExactlyWhenCreated() {
+        compose.setContent {
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(recoveryCode = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"),
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
             )
         }
         compose.onNodeWithTag("backup_code").assertExists()
@@ -49,11 +85,13 @@ class OnboardingScreensTest {
     @Test
     fun decliningSurfacesTheConsequenceDialog() {
         compose.setContent {
-            ApplyScreen(
-                state = ApplyUiState(step = ApplyStep.BACKUP, confirmingDecline = true),
-                onHandleChange = {}, onEmailChange = {}, onPasswordChange = {},
-                onContinueToBackup = {}, onAcceptBackup = {}, onCodeSaved = {},
-                onDeclineBackup = {}, onCancelDecline = {}, onConfirmDecline = {},
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(confirmingDecline = true),
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
             )
         }
         compose.onNodeWithTag("backup_decline_consequence").assertExists()
@@ -61,16 +99,18 @@ class OnboardingScreensTest {
     }
 
     @Test
-    fun theFormBlocksAnInvalidSubmit() {
+    fun aFailedAttachRendersItsError() {
         compose.setContent {
-            ApplyScreen(
-                state = ApplyUiState(handle = "ab", email = "a@b.c", password = "short"),
-                onHandleChange = {}, onEmailChange = {}, onPasswordChange = {},
-                onContinueToBackup = {}, onAcceptBackup = {}, onCodeSaved = {},
-                onDeclineBackup = {}, onCancelDecline = {}, onConfirmDecline = {},
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(attachFailed = true),
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
             )
         }
-        compose.onNodeWithTag("apply_continue").assertIsNotEnabled()
+        compose.onNodeWithTag("ceremony_attach_error").assertExists()
+        compose.onNodeWithTag("backup_accept").assertExists()
     }
-
 }
