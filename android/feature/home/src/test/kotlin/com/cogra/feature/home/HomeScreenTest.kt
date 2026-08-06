@@ -3,6 +3,8 @@ package com.cogra.feature.home
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.UserProfile
@@ -19,7 +21,12 @@ class HomeScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: HomeUiState, onActorRestoredShown: () -> Unit = {}) {
+    private fun render(
+        state: HomeUiState,
+        onActorRestoredShown: () -> Unit = {},
+        onOpenInvites: () -> Unit = {},
+        onOpenSettings: () -> Unit = {},
+    ) {
         compose.setContent {
             HomeScreen(
                 state = state,
@@ -30,7 +37,7 @@ class HomeScreenTest {
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
                 onActorRestoredShown = onActorRestoredShown,
-                onOpenInvites = {}, onOpenSettings = {}, onRestoreActor = {},
+                onOpenInvites = onOpenInvites, onOpenSettings = onOpenSettings, onRestoreActor = {},
                 onStartKeyCeremony = {},
             )
         }
@@ -100,13 +107,40 @@ class HomeScreenTest {
     }
 
     @Test
-    fun anApplicantAwaitingVerificationGetsTheTokenCardAndNoMemberChrome() {
+    fun anApplicantAwaitingVerificationGetsTheTokenCardAndTheShellButtons() {
         render(applicant(awaiting(emailVerified = false)))
         compose.onNodeWithTag("verify_token").assertExists()
         compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
-        // Acting surfaces stay out of the applicant shell.
-        compose.onNodeWithTag("home_invites").assertDoesNotExist()
-        compose.onNodeWithTag("home_settings").assertDoesNotExist()
+        // Only acting is gated (auth.md "Application"): the shell buttons
+        // stay — Settings live, Invites visible but locked.
+        compose.onNodeWithTag("home_invites").assertExists()
+        compose.onNodeWithTag("home_settings").assertExists()
+    }
+
+    @Test
+    fun anApplicantsSettingsButtonNavigates() {
+        var opened = false
+        render(applicant(awaiting()), onOpenSettings = { opened = true })
+        compose.onNodeWithTag("home_settings").performScrollTo().performClick()
+        assertThat(opened).isTrue()
+    }
+
+    @Test
+    fun anApplicantsInvitesTapExplainsInsteadOfNavigating() {
+        var opened = false
+        render(applicant(awaiting()), onOpenInvites = { opened = true })
+        compose.onNodeWithTag("home_invites").performScrollTo().performClick()
+        assertThat(opened).isFalse()
+        compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun aMembersInvitesTapNavigates() {
+        var opened = false
+        render(HomeUiState(loading = false), onOpenInvites = { opened = true })
+        compose.onNodeWithTag("home_invites").performScrollTo().performClick()
+        assertThat(opened).isTrue()
+        compose.onNodeWithTag("home_snackbar").assertDoesNotExist()
     }
 
     @Test
@@ -133,10 +167,11 @@ class HomeScreenTest {
     }
 
     @Test
-    fun aDismissedWaitingHintIsGoneButNothingElseAppears() {
+    fun aDismissedWaitingHintLeavesTheShellButtons() {
         render(applicant(awaiting(), dismissed = true))
         compose.onNodeWithTag("home_waiting").assertDoesNotExist()
-        compose.onNodeWithTag("home_invites").assertDoesNotExist()
+        compose.onNodeWithTag("home_invites").assertExists()
+        compose.onNodeWithTag("home_settings").assertExists()
     }
 
     @Test
