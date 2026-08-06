@@ -45,6 +45,12 @@ class LoginScreenTest {
     }
 
     @Test
+    fun thePasswordFieldCarriesItsVisibilityToggle() {
+        render(LoginUiState())
+        compose.onNodeWithTag("login_password_toggle").assertExists()
+    }
+
+    @Test
     fun progressDisablesTheForm() {
         render(LoginUiState(email = "a@b.c", password = "x", inProgress = true))
         compose.onNodeWithTag("login_progress").assertExists()

@@ -37,10 +37,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 
 // --------------------------------------------------------------------
@@ -206,18 +206,14 @@ fun ApplyScreen(
                     .fillMaxWidth()
                     .testTag("apply_email"),
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.password,
                 onValueChange = onPasswordChange,
-                label = { Text(stringResource(R.string.login_password)) },
-                supportingText = { Text(stringResource(R.string.apply_password_rules)) },
+                label = stringResource(R.string.login_password),
+                testTag = "apply_password",
+                supportingText = stringResource(R.string.apply_password_rules),
                 isError = state.errorField == "password",
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("apply_password"),
+                modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
                 Text(

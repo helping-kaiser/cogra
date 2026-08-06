@@ -1,9 +1,13 @@
 package com.cogra.feature.settings
 
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.SessionInfo
+import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
@@ -16,19 +20,87 @@ class SettingsScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: SettingsUiState) {
+    private fun render(
+        state: SettingsUiState,
+        onFeedbackShown: () -> Unit = {},
+        onBack: () -> Unit = {},
+    ) {
         compose.setContent {
             SettingsScreen(
                 state = state,
+                onBack = onBack,
                 onCreateBackup = {}, onBackupCodeSaved = {},
                 onRevokeSession = {}, onRevokeOthers = {},
                 onCurrentPasswordChange = {}, onNewPasswordChange = {}, onChangePassword = {},
                 onNewHandleChange = {}, onChangeHandle = {},
-                onNewEmailChange = {}, onRequestEmailChange = {},
+                onNewEmailChange = {}, onEmailChangePasswordChange = {}, onRequestEmailChange = {},
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
+                onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
             )
         }
+    }
+
+    @Test
+    fun aCompletedActionShowsTheConfirmationSnackbar() {
+        render(SettingsUiState(feedback = SettingsFeedback.Done(SettingsAction.HANDLE_CHANGED)))
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+    }
+
+    @Test
+    fun aRefusalShowsTheErrorSnackbar() {
+        render(SettingsUiState(feedback = SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS)))
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+    }
+
+    @Test
+    fun theSnackbarConsumesItsOneShotAfterShowing() {
+        var shown = false
+        render(
+            SettingsUiState(feedback = SettingsFeedback.Transport),
+            onFeedbackShown = { shown = true },
+        )
+        compose.onNodeWithTag("settings_snackbar").assertExists()
+        // Consumption happens only after the snackbar's display run ends.
+        assertThat(shown).isFalse()
+        compose.mainClock.advanceTimeBy(10_000)
+        assertThat(shown).isTrue()
+    }
+
+    @Test
+    fun theEmailChangeRequestNeedsItsOwnPasswordField() {
+        // The password-change card's field must not arm the request.
+        render(SettingsUiState(newEmail = "new@example.org", currentPassword = "pw"))
+        compose.onNodeWithTag("settings_email_password").assertExists()
+        compose.onNodeWithTag("settings_request_email").assertIsNotEnabled()
+    }
+
+    @Test
+    fun anEmailChangePasswordArmsTheRequest() {
+        render(SettingsUiState(newEmail = "new@example.org", emailChangePassword = "pw"))
+        compose.onNodeWithTag("settings_request_email").assertIsEnabled()
+    }
+
+    @Test
+    fun everyPasswordFieldCarriesItsVisibilityToggle() {
+        render(SettingsUiState())
+        compose.onNodeWithTag("settings_current_password_toggle").assertExists()
+        compose.onNodeWithTag("settings_new_password_toggle").assertExists()
+        compose.onNodeWithTag("settings_email_password_toggle").assertExists()
+    }
+
+    @Test
+    fun noPendingFeedbackMeansNoSnackbar() {
+        render(SettingsUiState())
+        compose.onNodeWithTag("settings_snackbar").assertDoesNotExist()
+    }
+
+    @Test
+    fun theTopBarBackArrowReportsUp() {
+        var back = false
+        render(SettingsUiState(), onBack = { back = true })
+        compose.onNodeWithTag("settings_back").performClick()
+        assertThat(back).isTrue()
     }
 
     @Test

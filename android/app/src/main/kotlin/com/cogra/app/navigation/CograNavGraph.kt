@@ -79,6 +79,9 @@ enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
  */
 private const val ACTOR_RESTORED_RESULT = "actor_restored"
 
+/** The Settings→Home result key: the handle changed, re-read the profile. */
+private const val HANDLE_CHANGED_RESULT = "handle_changed"
+
 /** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
@@ -157,10 +160,17 @@ fun CograNavGraph(
             val actorRestoredResult by entry.savedStateHandle
                 .getStateFlow(ACTOR_RESTORED_RESULT, false)
                 .collectAsStateWithLifecycle()
+            val handleChangedResult by entry.savedStateHandle
+                .getStateFlow(HANDLE_CHANGED_RESULT, false)
+                .collectAsStateWithLifecycle()
             HomeRoute(
                 actorRestoredResult = actorRestoredResult,
                 onActorRestoredResultConsumed = {
                     entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
+                },
+                handleChangedResult = handleChangedResult,
+                onHandleChangedResultConsumed = {
+                    entry.savedStateHandle[HANDLE_CHANGED_RESULT] = false
                 },
                 onOpenInvites = { navController.navigate(Invites) },
                 onOpenSettings = { navController.navigate(Settings) },
@@ -168,7 +178,18 @@ fun CograNavGraph(
                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
             )
         }
-        composable<Invites> { InvitesRoute() }
-        composable<Settings> { SettingsRoute() }
+        composable<Invites> {
+            InvitesRoute(onBack = { navController.navigateUp() })
+        }
+        composable<Settings> {
+            SettingsRoute(
+                onBack = { navController.navigateUp() },
+                onHandleChanged = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(HANDLE_CHANGED_RESULT, true)
+                },
+            )
+        }
     }
 }

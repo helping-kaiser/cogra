@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="invites_title">Invites</string>
+    <string name="back">Back</string>
     <string name="invites_create_title">Invite someone you know</string>
     <string name="invites_create_body">The stance values are a pre-filled suggestion — you commit them at approval, and approving is your priced vouch.</string>
     <string name="invites_single_use">Single-use</string>

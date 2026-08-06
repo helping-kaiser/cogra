@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
 
     <string name="settings_backup_title">Key backup</string>
     <string name="settings_backup_body">Create or replace your recovery code. A new code re-encrypts your key and replaces the old backup — recovery always uses the newest one.</string>
@@ -28,8 +29,10 @@
     <string name="settings_handle_changed">Handle changed.</string>
     <string name="settings_handle_taken">That handle is taken.</string>
     <string name="settings_new_email">New email</string>
+    <string name="settings_email_password">Current password</string>
     <string name="settings_request_email">Change email</string>
-    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change. Enter your current password above first.</string>
+    <string name="settings_email_change_requested">Confirmation codes sent — check both inboxes.</string>
+    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change.</string>
     <string name="settings_email_code">Confirmation code</string>
     <string name="settings_confirm_email">Confirm email change</string>
     <string name="settings_email_confirmed">Email updated.</string>

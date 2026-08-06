@@ -9,9 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -19,6 +24,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,11 +45,15 @@ import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 
 @Composable
-fun InvitesRoute(viewModel: InvitesViewModel = hiltViewModel()) {
+fun InvitesRoute(
+    onBack: () -> Unit,
+    viewModel: InvitesViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     InvitesScreen(
         state = state,
+        onBack = onBack,
         onSingleUseChange = viewModel::onSingleUseChange,
         onPrefillPDirectedChange = viewModel::onPrefillPDirectedChange,
         onPrefillPInterestChange = viewModel::onPrefillPInterestChange,
@@ -60,9 +70,11 @@ fun InvitesRoute(viewModel: InvitesViewModel = hiltViewModel()) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InvitesScreen(
     state: InvitesUiState,
+    onBack: () -> Unit,
     onSingleUseChange: (Boolean) -> Unit,
     onPrefillPDirectedChange: (Double) -> Unit,
     onPrefillPInterestChange: (Double) -> Unit,
@@ -71,7 +83,29 @@ fun InvitesScreen(
     onApprove: (String, Double, Double) -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
 ) {
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.invites_title),
+                        modifier = Modifier.semantics { heading() },
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("invites_back"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,11 +114,6 @@ fun InvitesScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.invites_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.semantics { heading() },
-            )
             if (state.error != null || state.transportFailed) {
                 Text(
                     text = stringResource(R.string.error_transport),

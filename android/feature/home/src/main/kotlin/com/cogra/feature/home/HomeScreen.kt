@@ -45,6 +45,8 @@ import com.cogra.domain.signing.RegistrationProgress
 fun HomeRoute(
     actorRestoredResult: Boolean,
     onActorRestoredResultConsumed: () -> Unit,
+    handleChangedResult: Boolean,
+    onHandleChangedResultConsumed: () -> Unit,
     onOpenInvites: () -> Unit,
     onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
@@ -56,6 +58,14 @@ fun HomeRoute(
         if (actorRestoredResult) {
             onActorRestoredResultConsumed()
             viewModel.onActorRestored()
+        }
+    }
+    // Settings already confirmed the change; here the stale greeting
+    // just gets re-read, silently.
+    LaunchedEffect(handleChangedResult) {
+        if (handleChangedResult) {
+            onHandleChangedResultConsumed()
+            viewModel.refresh()
         }
     }
     HomeScreen(

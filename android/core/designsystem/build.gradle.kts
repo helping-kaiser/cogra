@@ -1,13 +1,7 @@
-// The joining flow: invite check, the registration form (account +
-// session), and the logged-in key ceremony with its backup offer
-// (auth.md "Application").
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
 }
 
 // Unit tests run once, on the debug variant: the release variant would
@@ -25,7 +19,7 @@ tasks.withType<Test>().configureEach {
 }
 
 android {
-    namespace = "com.cogra.feature.onboarding"
+    namespace = "com.cogra.core.designsystem"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
@@ -53,26 +47,17 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":core:designsystem"))
-    implementation(project(":core:domain"))
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
+    // api: every feature that uses a designsystem component gets the
+    // icon set with it (R8 strips the unused bulk in release builds).
+    api(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
-    testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.truth)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
