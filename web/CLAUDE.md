@@ -47,5 +47,8 @@ Per the shared rule, tests land with the change:
 - Components and helpers: Vitest + React Testing Library
   (`npm test`).
 - Network: MSW against the generated operations.
+- Crypto: golden-vector tests that read the repo-root
+  `client-crypto-vectors.json` — never copy vector values into
+  test code.
 - Bind assertions to roles/test ids, not display copy, where copy
   is still in flux.
