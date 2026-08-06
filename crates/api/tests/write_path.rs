@@ -11,7 +11,7 @@ use common::l1::Family;
 use common::l1::client::ActorKey;
 use common::l1::identifier::NodeId;
 use l1_standin::{StandIn, StandInConfig};
-use postgres_store::staged::{self, PreSignedParts, StagedBy, StagedState};
+use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -111,7 +111,7 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -140,7 +140,7 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
     assert_eq!(outcome.epochs, 1);
     assert_eq!(outcome.promoted.len(), 1);
     assert_eq!(outcome.promoted[0].id, prepared.id);
-    assert_eq!(outcome.promoted[0].staged_by, StagedBy::Actor(actor_id));
+    assert_eq!(outcome.promoted[0].actor_id, actor_id);
     assert_eq!(
         staged::load(&rig.pool, prepared.id)
             .await
@@ -170,7 +170,7 @@ async fn prepare_allocates_consecutive_sequence_values(pool: PgPool) {
             &rig.boundary,
             &rig.pool,
             GC,
-            StagedBy::Actor(actor_id),
+            actor_id,
             rig.registration(&key),
         )
         .await
@@ -188,14 +188,7 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     let mut bad_params = rig.registration(&key);
     bad_params.p_d = 0.5;
     assert!(matches!(
-        prepare::prepare(
-            &rig.boundary,
-            &rig.pool,
-            GC,
-            StagedBy::Actor(actor_id),
-            bad_params
-        )
-        .await,
+        prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, bad_params).await,
         Err(PrepareError::Formation(_))
     ));
 
@@ -204,14 +197,7 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     bad_target.family = Family::Opinion;
     bad_target.target = NodeId::Addr(key.address());
     assert!(matches!(
-        prepare::prepare(
-            &rig.boundary,
-            &rig.pool,
-            GC,
-            StagedBy::Actor(actor_id),
-            bad_target
-        )
-        .await,
+        prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, bad_target).await,
         Err(PrepareError::Formation(_))
     ));
 
@@ -241,15 +227,7 @@ async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool)
     .expect("actor row");
 
     // No burn: b_i = 0 < θ — a normal, visible account state.
-    match prepare::prepare(
-        &rig.boundary,
-        &rig.pool,
-        GC,
-        StagedBy::Actor(id),
-        rig.registration(&key),
-    )
-    .await
-    {
+    match prepare::prepare(&rig.boundary, &rig.pool, GC, id, rig.registration(&key)).await {
         Err(PrepareError::WriteRule { balance, theta }) => {
             assert_eq!(balance, 0.0);
             assert!(theta > 0.0);
@@ -266,7 +244,7 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -302,7 +280,7 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -354,7 +332,7 @@ async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -402,7 +380,7 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -439,7 +417,7 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -458,7 +436,7 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
         &rig.boundary,
         &rig.pool,
         GC,
-        StagedBy::Actor(actor_id),
+        actor_id,
         rig.registration(&key),
     )
     .await
@@ -470,7 +448,7 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
             &rig.boundary,
             &rig.pool,
             GC,
-            StagedBy::Actor(walker_id),
+            walker_id,
             rig.registration(&walker),
         )
         .await

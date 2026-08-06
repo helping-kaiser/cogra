@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials SET account_state = 'member'\n         WHERE actor_id = $1 AND account_state = 'applicant'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4eaf7ebffc93eda57bd16577fb9c62d786670a33f86aa4c4f98cdeee647bf686"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, applicant_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -15,116 +15,111 @@
       },
       {
         "ordinal": 2,
-        "name": "applicant_id",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 3,
         "name": "author",
         "type_info": "Text"
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "seq",
         "type_info": "Int8"
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "family",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "middle",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "target",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "p_d",
         "type_info": "Float8"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "p_i",
         "type_info": "Float8"
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "settlement_ref",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 10,
         "name": "license",
         "type_info": "Text"
       },
       {
-        "ordinal": 12,
+        "ordinal": 11,
         "name": "asserted_parents",
         "type_info": "TextArray"
       },
       {
-        "ordinal": 13,
+        "ordinal": 12,
         "name": "deps",
         "type_info": "TextArray"
       },
       {
-        "ordinal": 14,
+        "ordinal": 13,
         "name": "payload",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 15,
+        "ordinal": 14,
         "name": "state",
         "type_info": "Text"
       },
       {
-        "ordinal": 16,
+        "ordinal": 15,
         "name": "author_pubkey",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 17,
+        "ordinal": 16,
         "name": "nonce",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 18,
+        "ordinal": 17,
         "name": "pre_signature",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 19,
+        "ordinal": 18,
         "name": "content_salt",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 20,
+        "ordinal": 19,
         "name": "deps_salt",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 21,
+        "ordinal": 20,
         "name": "content_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 22,
+        "ordinal": 21,
         "name": "deps_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 23,
+        "ordinal": 22,
         "name": "host_seal",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 24,
+        "ordinal": 23,
         "name": "prepared_epoch",
         "type_info": "Int8"
       }
@@ -136,8 +131,7 @@
     },
     "nullable": [
       false,
-      true,
-      true,
+      false,
       false,
       false,
       false,
@@ -162,5 +156,5 @@
       false
     ]
   },
-  "hash": "b16bf3d3bb829a440172e0a80f3cb0fb28c56fcc81738fdb6f74928366fd35f2"
+  "hash": "f358f7e50f490ec4c44e56378be0c6f7b778253c342bae131ddcfe7a7df3ef99"
 }
