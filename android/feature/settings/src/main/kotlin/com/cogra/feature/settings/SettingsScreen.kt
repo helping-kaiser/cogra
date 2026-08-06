@@ -15,10 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -50,6 +55,7 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
         onRequestEmailChange = viewModel::onRequestEmailChange,
         onEmailChangeCodeChange = viewModel::onEmailChangeCodeChange,
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
+        onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
     )
 }
@@ -70,9 +76,26 @@ fun SettingsScreen(
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
+    onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
 ) {
-    Scaffold { padding ->
+    val snackbarHostState = remember { SnackbarHostState() }
+    val feedbackMessage = state.feedback?.let { stringResource(it.message()) }
+    // Consumed only after the snackbar is done: clearing first would
+    // flip the LaunchedEffect key and cancel the showing coroutine.
+    LaunchedEffect(state.feedback) {
+        if (feedbackMessage != null) {
+            snackbarHostState.showSnackbar(feedbackMessage)
+            onFeedbackShown()
+        }
+    }
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(snackbarData = data, modifier = Modifier.testTag("settings_snackbar"))
+            }
+        },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,27 +109,6 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.semantics { heading() },
             )
-            state.error?.let {
-                Text(
-                    text = stringResource(it.settingsMessage()),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("settings_error"),
-                )
-            }
-            if (state.transportFailed) {
-                Text(
-                    text = stringResource(R.string.error_transport),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("settings_transport_error"),
-                )
-            }
-            state.done?.let {
-                Text(
-                    text = stringResource(it.message()),
-                    modifier = Modifier.testTag("settings_done"),
-                )
-            }
-
             BackupSection(state, onCreateBackup, onBackupCodeSaved)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(
@@ -329,6 +331,12 @@ private fun CredentialsSection(
             }
         }
     }
+}
+
+private fun SettingsFeedback.message(): Int = when (this) {
+    is SettingsFeedback.Done -> action.message()
+    is SettingsFeedback.Error -> code.settingsMessage()
+    SettingsFeedback.Transport -> R.string.error_transport
 }
 
 private fun ErrorCode.settingsMessage(): Int = when (this) {
