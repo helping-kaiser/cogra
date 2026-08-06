@@ -1,0 +1,30 @@
+# Session lifecycle: credentials in, rotating token pair out.
+# Mirrors the Android operation set (android/core/network).
+
+mutation LogIn($input: LogInInput!) {
+  logIn(input: $input) {
+    auth {
+      accessToken
+      refreshToken
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation RefreshSession($input: RefreshSessionInput!) {
+  refreshSession(input: $input) {
+    auth {
+      accessToken
+      refreshToken
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
