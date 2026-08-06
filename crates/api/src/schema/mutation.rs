@@ -1,9 +1,12 @@
 //! The slice-1 mutation surface (api-spec.md "Auth and accounts", "The
-//! write flow"): the applicant flow and its token-authorized twins,
-//! sessions and credentials, invite links, and the generic write-path
-//! relay legs. Conventions: one `input` argument, a dedicated payload,
-//! `userErrors` empty exactly on success — except the three
+//! write flow"): registration and the session-authorized admission
+//! steps, sessions and credentials, invite links, and the generic
+//! write-path relay legs. Conventions: one `input` argument, a dedicated
+//! payload, `userErrors` empty exactly on success — except the three
 //! deliberately-silent verbs, which carry no `userErrors` at all.
+//! Acting mutations require the MEMBER account state — a `FORBIDDEN`
+//! transport fault otherwise, never a userError (api-spec
+//! "Authentication").
 
 use std::sync::Arc;
 
@@ -13,12 +16,12 @@ use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
 use common::l1::wire;
 use l1_standin::StandIn;
-use postgres_store::staged::{PreSignedParts, StagedBy};
+use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
 
 use super::types::{
-    ApplicationView, AuthSession, Dimension, ErrorCode, InviteLink, PreparedWrite, Session,
+    Application, AuthSession, Dimension, ErrorCode, InviteLink, PreparedWrite, Session,
     StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
@@ -50,6 +53,33 @@ fn viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         .as_ref()
         .copied()
         .ok_or_else(unauthenticated)
+}
+
+/// The transport-tier refusal for an acting request from a non-member
+/// account — a client bug, never a state to render (api-spec
+/// "Authentication").
+fn forbidden() -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new("member account required").extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "FORBIDDEN");
+        },
+    )
+}
+
+/// The member gate on acting mutations: the account state is read live
+/// at the action site, never from a token claim (auth.md "Account
+/// states").
+async fn member_viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
+    let v = viewer(ctx)?;
+    let pool = ctx.data::<PgPool>()?;
+    let credentials = store::credentials_by_actor(pool, v.user_id)
+        .await?
+        .ok_or_else(unauthenticated)?;
+    if credentials.account_state != store::AccountState::Member {
+        return Err(forbidden());
+    }
+    Ok(v)
 }
 
 fn internal(e: impl std::fmt::Display) -> UserError {
@@ -92,41 +122,41 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
 // Inputs and payloads
 // ---------------------------------------------------------------------
 
-/// The application submit: the login triple plus the device key
-/// ceremony's public outputs (the key never leaves the device; approval
-/// funds a burn to the submitted address, so it must exist first).
+/// Register through an invite link (auth.md §Application step 2): the
+/// invite capability plus the login triple. Creates a real account in
+/// the applicant state and returns an ordinary session — there is no
+/// applicant token, no parallel auth surface. Pure L2: nothing touches
+/// L1.
 #[derive(InputObject)]
-struct SubmitApplicationInput {
+struct RegisterInput {
     invite_link: Uuid,
     handle: String,
     email: String,
     password: String,
-    /// The device-held actor key's public half (base64).
-    actor_pubkey: String,
-    /// The device-generated L0 address — the address approval funds.
-    l0_address: String,
+    device_label: Option<String>,
 }
 
+/// On refusal, `userErrors` carries one of INVITE_UNUSABLE,
+/// HANDLE_TAKEN, EMAIL_IN_USE, or WEAK_PASSWORD — all surfaced at the
+/// form, before any later step.
 #[derive(SimpleObject)]
-struct SubmitApplicationPayload {
-    /// The opaque token authorizing exactly this applicant's own flow:
-    /// status polling, registration signing, the landing claim. Null
-    /// when `userErrors` is non-empty.
-    applicant_token: Option<String>,
-    /// When the application expires unverified (24 h, auth.md).
+struct RegisterPayload {
+    auth: Option<AuthSession>,
+    /// When the account expires unless its email is verified (24 h,
+    /// auth.md "Expiry").
     expires_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
 }
 
 #[derive(InputObject)]
-struct VerifyApplicantEmailInput {
+struct VerifyEmailInput {
     verification_token: String,
 }
 
 #[derive(SimpleObject)]
-struct VerifyApplicantEmailPayload {
+struct VerifyEmailPayload {
     /// False with a VERIFICATION_TOKEN_INVALID userError when the token
-    /// is invalid or the application expired.
+    /// is invalid or the account expired.
     ok: bool,
     user_errors: Vec<UserError>,
 }
@@ -143,17 +173,52 @@ struct ResendVerificationEmailPayload {
     ok: bool,
 }
 
+/// Attach the device-minted actor identity to the viewer's account — the
+/// key ceremony's server half (auth.md §Application step 3). Replaceable
+/// while the viewer's application is unapproved; FORBIDDEN once approval
+/// has bound the address.
 #[derive(InputObject)]
-struct ApplicantApprovalInput {
-    applicant: Uuid,
-    /// Pre-filled from the link, committed here.
+struct AttachActorKeyInput {
+    /// The device-generated actor public key (base64) — the key never
+    /// leaves the device; this is its public half.
+    actor_pubkey: String,
+    /// The device-generated L0 address — the address approval funds.
+    l0_address: String,
+}
+
+#[derive(SimpleObject)]
+struct AttachActorKeyPayload {
+    user: Option<User>,
+    user_errors: Vec<UserError>,
+}
+
+/// Re-arm an expired, never-approved application with a fresh invite
+/// link — a new application row for the viewer's account (auth.md
+/// "Expiry"). BAD_INPUT while a live application exists;
+/// INVITE_UNUSABLE for a dead link.
+#[derive(InputObject)]
+struct ApplyWithInviteInput {
+    invite_link: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct ApplyWithInvitePayload {
+    application: Option<Application>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct ApplicationApprovalInput {
+    application: Uuid,
+    /// The inviter's stance toward the joiner — pre-filled from the
+    /// link, committed here.
     p_directed: Dimension,
     p_interest: Dimension,
 }
 
 #[derive(InputObject)]
 struct ApproveApplicantsInput {
-    approvals: Vec<ApplicantApprovalInput>,
+    approvals: Vec<ApplicationApprovalInput>,
 }
 
 /// Staged proposals to pre-sign, in relay order. Each is its own priced
@@ -162,49 +227,6 @@ struct ApproveApplicantsInput {
 #[derive(SimpleObject)]
 struct PreparePayload {
     writes: Option<Vec<PreparedWrite>>,
-    user_errors: Vec<UserError>,
-}
-
-#[derive(InputObject)]
-struct SubmitApplicantRegistrationInput {
-    applicant_token: String,
-    /// The pre-commitment blob (base64): the device's private nonce and
-    /// pre-signature over the canonical proposal.
-    signature: String,
-}
-
-#[derive(SimpleObject)]
-struct SubmitApplicantRegistrationPayload {
-    /// Carries the host-sealed verified act for the approval step.
-    staged_write: Option<StagedWriteType>,
-    user_errors: Vec<UserError>,
-}
-
-#[derive(InputObject)]
-struct ApproveApplicantRegistrationInput {
-    applicant_token: String,
-    /// The approval-witness signature over the exact verified act
-    /// (base64).
-    signature: String,
-}
-
-#[derive(SimpleObject)]
-struct ApproveApplicantRegistrationPayload {
-    staged_write: Option<StagedWriteType>,
-    user_errors: Vec<UserError>,
-}
-
-#[derive(InputObject)]
-struct ClaimLandedSessionInput {
-    applicant_token: String,
-    device_label: Option<String>,
-}
-
-#[derive(SimpleObject)]
-struct ClaimLandedSessionPayload {
-    /// The first session — mintable repeatedly while the applicant token
-    /// is valid; the token is the secret.
-    auth: Option<AuthSession>,
     user_errors: Vec<UserError>,
 }
 
@@ -434,49 +456,39 @@ pub struct Mutation;
 
 #[Object]
 impl Mutation {
-    /// Creates the staged applicant row — off-graph service state only:
-    /// no account, no records, nothing on the graph — and sends the
-    /// verification email. On refusal, `userErrors` carries one of
-    /// INVITE_UNUSABLE, HANDLE_TAKEN, WEAK_PASSWORD, or
-    /// APPLICATION_IN_PROGRESS.
-    async fn submit_application(
+    /// Register through an invite link: creates the account — the actor
+    /// row (no key yet) and its credentials, in the applicant state —
+    /// records the application against the link, sends the verification
+    /// email, and returns an ordinary session.
+    async fn register(
         &self,
         ctx: &Context<'_>,
-        input: SubmitApplicationInput,
-    ) -> async_graphql::Result<SubmitApplicationPayload> {
+        input: RegisterInput,
+    ) -> async_graphql::Result<RegisterPayload> {
         let pool = ctx.data::<PgPool>()?;
+        let auth_cfg = ctx.data::<AuthConfig>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
-        let actor_pubkey = match decode_b64("actorPubkey", &input.actor_pubkey) {
-            Ok(b) => b,
-            Err(e) => {
-                return Ok(SubmitApplicationPayload {
-                    applicant_token: None,
-                    expires_at: None,
-                    user_errors: vec![e],
-                });
-            }
-        };
-        match onboarding::submit_application(
+        match onboarding::register(
             pool,
+            auth_cfg,
             mailer.as_ref(),
-            onboarding::ApplicationInput {
+            onboarding::RegistrationInput {
                 invite_link: input.invite_link,
                 handle: input.handle,
                 email: input.email,
                 password: input.password,
-                actor_pubkey,
-                l0_address: input.l0_address,
+                device_label: input.device_label,
             },
         )
         .await
         {
-            Ok(submitted) => Ok(SubmitApplicationPayload {
-                applicant_token: Some(submitted.applicant_token),
-                expires_at: Some(submitted.expires_at),
+            Ok(registered) => Ok(RegisterPayload {
+                auth: Some(AuthSession::from_issued(registered.session)),
+                expires_at: Some(registered.expires_at),
                 user_errors: vec![],
             }),
-            Err(e) => Ok(SubmitApplicationPayload {
-                applicant_token: None,
+            Err(e) => Ok(RegisterPayload {
+                auth: None,
                 expires_at: None,
                 user_errors: vec![UserError::from_onboarding(&e, "")],
             }),
@@ -485,20 +497,77 @@ impl Mutation {
 
     /// Proves the login channel. `ok` is false with a
     /// VERIFICATION_TOKEN_INVALID userError when the token is invalid or
-    /// the application expired.
-    async fn verify_applicant_email(
+    /// the account expired.
+    async fn verify_email(
         &self,
         ctx: &Context<'_>,
-        input: VerifyApplicantEmailInput,
-    ) -> async_graphql::Result<VerifyApplicantEmailPayload> {
+        input: VerifyEmailInput,
+    ) -> async_graphql::Result<VerifyEmailPayload> {
         let pool = ctx.data::<PgPool>()?;
         match onboarding::verify_email(pool, &input.verification_token).await {
-            Ok(()) => Ok(VerifyApplicantEmailPayload {
+            Ok(()) => Ok(VerifyEmailPayload {
                 ok: true,
                 user_errors: vec![],
             }),
-            Err(e) => Ok(VerifyApplicantEmailPayload {
+            Err(e) => Ok(VerifyEmailPayload {
                 ok: false,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
+    }
+
+    /// Attaches the device-minted actor identity to the viewer's account
+    /// — the key ceremony's server half. Replaceable while the viewer's
+    /// application is unapproved; FORBIDDEN once approval has bound the
+    /// address.
+    async fn attach_actor_key(
+        &self,
+        ctx: &Context<'_>,
+        input: AttachActorKeyInput,
+    ) -> async_graphql::Result<AttachActorKeyPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let actor_pubkey = match decode_b64("actorPubkey", &input.actor_pubkey) {
+            Ok(b) => b,
+            Err(e) => {
+                return Ok(AttachActorKeyPayload {
+                    user: None,
+                    user_errors: vec![e],
+                });
+            }
+        };
+        match onboarding::attach_actor_key(pool, v.user_id, actor_pubkey, input.l0_address).await {
+            Ok(()) => Ok(AttachActorKeyPayload {
+                user: store::actor_identity(pool, v.user_id)
+                    .await?
+                    .map(|identity| User::from_viewer(identity, v)),
+                user_errors: vec![],
+            }),
+            Err(OnboardingError::Forbidden) => Err(forbidden()),
+            Err(e) => Ok(AttachActorKeyPayload {
+                user: None,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
+    }
+
+    /// Re-arms an expired, never-approved application with a fresh
+    /// invite link — a new application row for the viewer's account.
+    async fn apply_with_invite(
+        &self,
+        ctx: &Context<'_>,
+        input: ApplyWithInviteInput,
+    ) -> async_graphql::Result<ApplyWithInvitePayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        match onboarding::apply_with_invite(pool, v.user_id, input.invite_link).await {
+            Ok(application) => Ok(ApplyWithInvitePayload {
+                application: Some(Application(application)),
+                user_errors: vec![],
+            }),
+            Err(OnboardingError::Forbidden) => Err(forbidden()),
+            Err(e) => Ok(ApplyWithInvitePayload {
+                application: None,
                 user_errors: vec![UserError::from_onboarding(&e, "")],
             }),
         }
@@ -524,13 +593,14 @@ impl Mutation {
     /// adjusted at will. Triggers the funding burn and the staged
     /// Registration backend-side, and returns the inviter's own Opinion
     /// records to sign — the vouch is the inviter's signature, not a
-    /// server write.
+    /// server write. Requires an approvable application: email verified
+    /// and key attached.
     async fn approve_applicants(
         &self,
         ctx: &Context<'_>,
         input: ApproveApplicantsInput,
     ) -> async_graphql::Result<PreparePayload> {
-        let v = viewer(ctx)?;
+        let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let funding = ctx.data::<StandIn>()?;
@@ -539,7 +609,7 @@ impl Mutation {
             .approvals
             .iter()
             .map(|a| onboarding::Approval {
-                applicant: a.applicant,
+                application: a.application,
                 p_d: a.p_directed.0,
                 p_i: a.p_interest.0,
             })
@@ -570,126 +640,6 @@ impl Mutation {
                         err
                     })
                     .collect(),
-            }),
-        }
-    }
-
-    /// Pre-sign the staged Registration — the applicant-token twin of
-    /// `submitProposals`, since no session exists before landing. The
-    /// returned staged write carries the host-sealed verified act for
-    /// the approval step.
-    async fn submit_applicant_registration(
-        &self,
-        ctx: &Context<'_>,
-        input: SubmitApplicantRegistrationInput,
-    ) -> async_graphql::Result<SubmitApplicantRegistrationPayload> {
-        let pool = ctx.data::<PgPool>()?;
-        let boundary = ctx.data::<StandInBoundary>()?;
-        let funding = ctx.data::<StandIn>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
-        let blob = match decode_b64("signature", &input.signature).and_then(|raw| {
-            wire::decode_pre_commitment(&raw).map_err(|_| {
-                UserError::at(
-                    ErrorCode::BadInput,
-                    "not a pre-commitment blob",
-                    vec!["signature".to_string()],
-                )
-            })
-        }) {
-            Ok(b) => b,
-            Err(e) => {
-                return Ok(SubmitApplicantRegistrationPayload {
-                    staged_write: None,
-                    user_errors: vec![e],
-                });
-            }
-        };
-        match onboarding::submit_applicant_registration(
-            pool,
-            boundary,
-            funding,
-            cfg,
-            &input.applicant_token,
-            blob.0,
-            blob.1,
-        )
-        .await
-        {
-            Ok(w) => Ok(SubmitApplicantRegistrationPayload {
-                staged_write: Some(StagedWriteType(w)),
-                user_errors: vec![],
-            }),
-            Err(e) => Ok(SubmitApplicantRegistrationPayload {
-                staged_write: None,
-                user_errors: vec![UserError::from_onboarding(&e, "")],
-            }),
-        }
-    }
-
-    /// Relay the approval witness — the applicant-token twin of
-    /// `approveActs`; the device verifies the seal, the exact body, and
-    /// both commitment openings first. Landing stays asynchronous.
-    async fn approve_applicant_registration(
-        &self,
-        ctx: &Context<'_>,
-        input: ApproveApplicantRegistrationInput,
-    ) -> async_graphql::Result<ApproveApplicantRegistrationPayload> {
-        let pool = ctx.data::<PgPool>()?;
-        let boundary = ctx.data::<StandInBoundary>()?;
-        let signature = match decode_b64("signature", &input.signature) {
-            Ok(b) => b,
-            Err(e) => {
-                return Ok(ApproveApplicantRegistrationPayload {
-                    staged_write: None,
-                    user_errors: vec![e],
-                });
-            }
-        };
-        match onboarding::approve_applicant_registration(
-            pool,
-            boundary,
-            &input.applicant_token,
-            signature,
-        )
-        .await
-        {
-            Ok(w) => Ok(ApproveApplicantRegistrationPayload {
-                staged_write: Some(StagedWriteType(w)),
-                user_errors: vec![],
-            }),
-            Err(e) => Ok(ApproveApplicantRegistrationPayload {
-                staged_write: None,
-                user_errors: vec![UserError::from_onboarding(&e, "")],
-            }),
-        }
-    }
-
-    /// Mints a session for a landed applicant. Callable repeatedly while
-    /// the applicant token is valid — the token is the secret; a
-    /// userError (BAD_INPUT) reports an application that has not landed
-    /// yet.
-    async fn claim_landed_session(
-        &self,
-        ctx: &Context<'_>,
-        input: ClaimLandedSessionInput,
-    ) -> async_graphql::Result<ClaimLandedSessionPayload> {
-        let pool = ctx.data::<PgPool>()?;
-        let auth_cfg = ctx.data::<AuthConfig>()?;
-        match onboarding::claim_landed_session(
-            pool,
-            auth_cfg,
-            &input.applicant_token,
-            input.device_label.as_deref(),
-        )
-        .await
-        {
-            Ok(issued) => Ok(ClaimLandedSessionPayload {
-                auth: Some(AuthSession::from_issued(issued)),
-                user_errors: vec![],
-            }),
-            Err(e) => Ok(ClaimLandedSessionPayload {
-                auth: None,
-                user_errors: vec![UserError::from_onboarding(&e, "")],
             }),
         }
     }
@@ -1105,7 +1055,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateInviteLinkInput,
     ) -> async_graphql::Result<CreateInviteLinkPayload> {
-        let v = viewer(ctx)?;
+        let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         if input.expires_at <= Utc::now() {
             return Ok(CreateInviteLinkPayload {
@@ -1139,7 +1089,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: RevokeInviteLinkInput,
     ) -> async_graphql::Result<RevokeInviteLinkPayload> {
-        let v = viewer(ctx)?;
+        let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         if !store::revoke_invite_link(pool, input.invite_link, v.user_id).await? {
             return Ok(RevokeInviteLinkPayload {
@@ -1167,7 +1117,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: PrepareStanceInput,
     ) -> async_graphql::Result<PreparePayload> {
-        let v = viewer(ctx)?;
+        let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
@@ -1220,11 +1170,15 @@ impl Mutation {
         let identity = store::actor_identity(pool, v.user_id)
             .await?
             .ok_or_else(unauthenticated)?;
+        // No staged write exists for a keyless account — the Registration
+        // stages only after the attach proof — so a missing key here is a
+        // client bug, not a state to render.
+        let author_pubkey = identity.actor_pubkey.ok_or_else(forbidden)?;
         let mut writes = Vec::with_capacity(input.proposals.len());
         let mut user_errors = Vec::new();
         for (i, proposal) in input.proposals.iter().enumerate() {
             let owned = match staged::load(pool, proposal.staged_write_id).await {
-                Ok(w) if w.staged_by == StagedBy::Actor(v.user_id) => w,
+                Ok(w) if w.actor_id == v.user_id => w,
                 Ok(_) | Err(staged::StagedError::NotFound(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
@@ -1259,7 +1213,7 @@ impl Mutation {
                 pool,
                 owned.id,
                 PreSignedParts {
-                    author_pubkey: identity.actor_pubkey.clone(),
+                    author_pubkey: author_pubkey.clone(),
                     nonce,
                     pre_signature,
                 },
@@ -1301,7 +1255,7 @@ impl Mutation {
         let mut user_errors = Vec::new();
         for (i, approval) in input.approvals.iter().enumerate() {
             let owned = match staged::load(pool, approval.staged_write_id).await {
-                Ok(w) if w.staged_by == StagedBy::Actor(v.user_id) => w,
+                Ok(w) if w.actor_id == v.user_id => w,
                 Ok(_) | Err(staged::StagedError::NotFound(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
@@ -1343,32 +1297,4 @@ impl Mutation {
             })
         }
     }
-}
-
-/// The applicant's own view resolver shares this with the query root.
-pub async fn application_view(
-    ctx: &Context<'_>,
-    applicant_token: &str,
-) -> async_graphql::Result<Option<ApplicationView>> {
-    let pool = ctx.data::<PgPool>()?;
-    let boundary = ctx.data::<StandInBoundary>()?;
-    let funding = ctx.data::<StandIn>()?;
-    let cfg = ctx.data::<OnboardingConfig>()?;
-    let applicant = match onboarding::applicant_by_token(pool, applicant_token).await {
-        Ok(a) => a,
-        Err(OnboardingError::Unauthenticated) => return Ok(None),
-        Err(e) => return Err(async_graphql::Error::new(e.to_string())),
-    };
-    let staged_registration =
-        match onboarding::staged_registration(pool, boundary, funding, cfg, &applicant).await {
-            Ok(w) => w,
-            Err(e) => {
-                tracing::error!(error = %e, "staged-registration repair failed");
-                None
-            }
-        };
-    Ok(Some(ApplicationView {
-        applicant,
-        staged_registration,
-    }))
 }

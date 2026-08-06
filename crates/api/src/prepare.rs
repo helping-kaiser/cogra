@@ -7,7 +7,7 @@
 use common::l1::census::Family;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::staged::{self, StagedBy};
+use postgres_store::staged;
 use postgres_store::{PgPool, mirror};
 use uuid::Uuid;
 
@@ -72,7 +72,7 @@ pub async fn prepare<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
     gc_after_epochs: i64,
-    staged_by: StagedBy,
+    actor_id: Uuid,
     gesture: Gesture,
 ) -> Result<Prepared, PrepareError> {
     // Formation, pre-checked on the same census surface the host enforces
@@ -126,7 +126,7 @@ pub async fn prepare<B: L1Boundary>(
         deps: gesture.deps,
     };
     let id = Uuid::new_v4();
-    staged::insert(&mut tx, id, staged_by, &proposal, prepared_epoch).await?;
+    staged::insert(&mut tx, id, actor_id, &proposal, prepared_epoch).await?;
     tx.commit().await?;
     Ok(Prepared {
         id,

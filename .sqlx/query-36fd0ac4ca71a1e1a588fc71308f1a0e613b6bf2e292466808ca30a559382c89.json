@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, invite_link_id, handle, email, password_hash,\n                email_verified_at, actor_pubkey, l0_address,\n                approved_at, landed_at, created_at, expires_at\n         FROM auth_applicants WHERE applicant_token_hash = $1",
+  "query": "SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,\n                  (c.email_verified_at IS NOT NULL) AS \"email_verified!\",\n                  (a.actor_pubkey IS NOT NULL) AS \"key_attached!\",\n                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at\n           FROM auth_applications ap\n           JOIN actors a ON a.id = ap.account_id\n           JOIN user_credentials c ON c.actor_id = ap.account_id\n           WHERE ap.id = $1",
   "describe": {
     "columns": [
       {
@@ -10,63 +10,53 @@
       },
       {
         "ordinal": 1,
-        "name": "invite_link_id",
+        "name": "account_id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 2,
+        "name": "invite_link_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
         "name": "handle",
         "type_info": "Text"
       },
       {
-        "ordinal": 3,
-        "name": "email",
-        "type_info": "Text"
-      },
-      {
         "ordinal": 4,
-        "name": "password_hash",
-        "type_info": "Text"
+        "name": "email_verified!",
+        "type_info": "Bool"
       },
       {
         "ordinal": 5,
-        "name": "email_verified_at",
-        "type_info": "Timestamptz"
+        "name": "key_attached!",
+        "type_info": "Bool"
       },
       {
         "ordinal": 6,
-        "name": "actor_pubkey",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 7,
-        "name": "l0_address",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 8,
         "name": "approved_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 7,
         "name": "landed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 9,
         "name": "expires_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Bytea"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -74,15 +64,13 @@
       false,
       false,
       false,
-      false,
-      true,
-      false,
-      false,
+      null,
+      null,
       true,
       true,
       false,
       false
     ]
   },
-  "hash": "d06132415c52c5e252080e9c45920f43735db9d9c47bdc83ad84b52bd0f42bdb"
+  "hash": "36fd0ac4ca71a1e1a588fc71308f1a0e613b6bf2e292466808ca30a559382c89"
 }

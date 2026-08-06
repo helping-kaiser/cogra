@@ -6,7 +6,6 @@
 
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
-use postgres_store::staged::StagedBy;
 use postgres_store::{PgPool, auth as store, mirror};
 use uuid::Uuid;
 
@@ -45,11 +44,16 @@ pub async fn prepare_stance<B: L1Boundary>(
             message: "stance parameters must lie in [-1, 1]".into(),
         });
     }
-    let author = store::actor_identity(pool, viewer)
+    let author_address = store::actor_identity(pool, viewer)
         .await?
-        .ok_or_else(|| StanceError::Internal("viewer without an actor row".into()))?;
-    let target_actor = store::actor_identity(pool, target)
+        .and_then(|identity| identity.l0_address)
+        .ok_or_else(|| StanceError::Internal("viewer without an attached address".into()))?;
+    // A keyless account (an applicant before its ceremony) has no
+    // Profile on the graph to point at — the same refusal as an unknown
+    // id.
+    let target_address = store::actor_identity(pool, target)
         .await?
+        .and_then(|identity| identity.l0_address)
         .ok_or(StanceError::BadInput {
             field: "target",
             message: "target is not a known actor".into(),
@@ -62,8 +66,8 @@ pub async fn prepare_stance<B: L1Boundary>(
     // is specified for that case.
     let (net_d, net_i) = mirror::net_opinion(
         pool,
-        &NodeId::Addr(author.l0_address.clone()).to_string(),
-        &NodeId::Prof(target_actor.l0_address.clone()).to_string(),
+        &NodeId::Addr(author_address.clone()).to_string(),
+        &NodeId::Prof(target_address.clone()).to_string(),
     )
     .await
     .map_err(|e| StanceError::Internal(e.to_string()))?;
@@ -86,12 +90,12 @@ pub async fn prepare_stance<B: L1Boundary>(
         boundary,
         pool,
         gc_after_epochs,
-        StagedBy::Actor(viewer),
+        viewer,
         Gesture {
-            author: author.l0_address,
+            author: author_address,
             family: Family::Opinion,
             middle: None,
-            target: NodeId::Prof(target_actor.l0_address),
+            target: NodeId::Prof(target_address),
             p_d: delta_d,
             p_i: delta_i,
             settlement_ref: None,

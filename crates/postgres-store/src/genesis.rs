@@ -22,8 +22,8 @@ pub struct ActorRow {
     pub id: Uuid,
     pub kind: String,
     pub handle: String,
-    pub actor_pubkey: Vec<u8>,
-    pub l0_address: String,
+    pub actor_pubkey: Option<Vec<u8>>,
+    pub l0_address: Option<String>,
 }
 
 /// The L2-half gate: the operator's service rows exist when every system
@@ -112,8 +112,9 @@ pub async fn insert_system_key(
 
 /// The operator's login for the genesis account (auth.md "Account
 /// lifecycle" — the genesis member never passes the applicant flow, so
-/// the bootstrap creates its credentials). Idempotent: an existing row
-/// is left untouched.
+/// the bootstrap creates its credentials): seeded in the terminal member
+/// state with the email marked verified, so the account reaper can never
+/// touch it. Idempotent: an existing row is left untouched.
 pub async fn insert_credentials(
     pool: &PgPool,
     actor_id: Uuid,
@@ -121,8 +122,9 @@ pub async fn insert_credentials(
     password_hash: &str,
 ) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
-        "INSERT INTO user_credentials (actor_id, email, password_hash)
-         VALUES ($1, $2, $3)
+        "INSERT INTO user_credentials
+             (actor_id, email, password_hash, account_state, email_verified_at)
+         VALUES ($1, $2, $3, 'member', NOW())
          ON CONFLICT (actor_id) DO NOTHING",
         actor_id,
         email,

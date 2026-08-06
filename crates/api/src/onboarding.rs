@@ -1,8 +1,9 @@
-// The staged-applicant admission flow (auth.md "Account lifecycle";
-// invitations.md §4): link → application with the device key ceremony →
-// funding burn → staged Registration signed on next open → landing. The
-// backend orchestrates and relays; the applicant's own signatures ground
-// the actor — nothing here can author for anyone.
+// The applicant-as-account admission flow (auth.md "Account lifecycle";
+// invitations.md §4): link → registration (a real account + session) →
+// the key ceremony as a logged-in attach → funding burn at approval →
+// staged Registration signed on the device → landing flips the account
+// to member. The backend orchestrates and relays; the applicant's own
+// signatures ground the actor — nothing here can author for anyone.
 
 use chrono::{DateTime, Duration, Utc};
 use common::l1::census::Family;
@@ -10,7 +11,6 @@ use common::l1::crypto;
 use common::l1::encoding::Encoder;
 use common::l1::identifier::NodeId;
 use l1_standin::StandIn;
-use postgres_store::staged::{PreSignedParts, StagedBy, StagedWrite};
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
 
@@ -18,10 +18,17 @@ use crate::auth::{self, AuthConfig, IssuedSession};
 use crate::l1::L1Boundary;
 use crate::mailer::{Mail, Mailer};
 use crate::prepare::{self, Gesture, PrepareError};
-use crate::relay::{self, RelayError};
+use crate::relay::RelayError;
 
-/// Unverified applications expire after 24 hours (auth.md "Application").
-const APPLICANT_TTL_HOURS: i64 = 24;
+/// A never-verified account expires this long after registration
+/// (auth.md "Expiry"); past the bound it is dead — reapable, and
+/// replaceable in place by a registration claiming its handle or email.
+const UNVERIFIED_TTL_HOURS: i64 = 24;
+
+/// The moment before which a never-verified account counts as dead.
+fn dead_before() -> DateTime<Utc> {
+    Utc::now() - Duration::hours(UNVERIFIED_TTL_HOURS)
+}
 
 /// Operational knobs of the admission flow.
 #[derive(Clone)]
@@ -51,6 +58,8 @@ pub enum OnboardingError {
     InviteUnusable,
     #[error("handle already taken")]
     HandleTaken,
+    #[error("the email already belongs to an account")]
+    EmailInUse,
     #[error("{0}")]
     WeakPassword(&'static str),
     /// A `BAD_INPUT` refusal pinned to a field path.
@@ -59,13 +68,13 @@ pub enum OnboardingError {
         field: &'static str,
         message: String,
     },
-    #[error("a live application already holds this email")]
-    ApplicationInProgress,
+    /// The viewer's account state does not permit the gesture — a
+    /// transport-tier FORBIDDEN at the mutation layer (api-spec
+    /// "Authentication").
+    #[error("the account state does not permit this")]
+    Forbidden,
     #[error("verification token invalid or expired")]
     VerificationTokenInvalid,
-    /// The applicant token authorized nothing.
-    #[error("unknown applicant token")]
-    Unauthenticated,
     #[error("write rule: balance {balance} below the act price {theta}")]
     WriteRule { balance: f64, theta: f64 },
     #[error("signature invalid: {0}")]
@@ -106,33 +115,38 @@ impl From<RelayError> for OnboardingError {
 }
 
 // ---------------------------------------------------------------------
-// Application
+// Registration
 // ---------------------------------------------------------------------
 
-/// What the application submit needs from the device: the login triple
-/// plus the key ceremony's public outputs (api-spec `submitApplication`).
+/// The registration form (api-spec `register`): the invite capability
+/// plus the login triple.
 #[derive(Debug, Clone)]
-pub struct ApplicationInput {
+pub struct RegistrationInput {
     pub invite_link: Uuid,
     pub handle: String,
     pub email: String,
     pub password: String,
-    pub actor_pubkey: Vec<u8>,
-    pub l0_address: String,
+    pub device_label: Option<String>,
 }
 
-/// The submit's result: the applicant token that authorizes the
-/// applicant's own flow, and the unverified application's expiry.
-pub struct SubmittedApplication {
-    pub applicant_token: String,
+/// A registered account: an ordinary session, plus when the account
+/// expires unless its email is verified.
+pub struct RegisteredAccount {
+    pub session: IssuedSession,
     pub expires_at: DateTime<Utc>,
 }
 
-pub async fn submit_application(
+/// Registers a real account through an invite link (auth.md §Application
+/// step 2): the actor row (no key yet), the credentials in the applicant
+/// state, and the application row, then an ordinary session. Handle and
+/// email conflicts surface here, at the form. Pure L2 — nothing touches
+/// L1.
+pub async fn register(
     pool: &PgPool,
+    auth_cfg: &AuthConfig,
     mailer: &dyn Mailer,
-    input: ApplicationInput,
-) -> Result<SubmittedApplication, OnboardingError> {
+    input: RegistrationInput,
+) -> Result<RegisteredAccount, OnboardingError> {
     let handle = auth::normalize_handle(&input.handle).map_err(|m| OnboardingError::BadInput {
         field: "handle",
         message: m.to_string(),
@@ -142,82 +156,64 @@ pub async fn submit_application(
         message: m.to_string(),
     })?;
     auth::check_password(&input.password).map_err(OnboardingError::WeakPassword)?;
-
-    // The key ceremony's outputs must cohere: the L0 address is the one
-    // the submitted public key controls — approval funds a burn to it,
-    // and funding an address the key cannot spend from would strand the
-    // admission (substrate.md §6).
-    let verifying =
-        crypto::verifying_key_from_bytes(&input.actor_pubkey).ok_or(OnboardingError::BadInput {
-            field: "actorPubkey",
-            message: "not a valid public key".into(),
-        })?;
-    if crypto::address_of(&verifying) != input.l0_address {
-        return Err(OnboardingError::BadInput {
-            field: "l0Address",
-            message: "address does not belong to the submitted key".into(),
-        });
-    }
-
     if !store::invite_link_usable(pool, input.invite_link).await? {
         return Err(OnboardingError::InviteUnusable);
     }
-    if !store::handle_available(pool, &handle).await? {
-        return Err(OnboardingError::HandleTaken);
-    }
-    // An email already on a landed account reads the same as a live
-    // application — one message, no account enumeration.
-    if store::credentials_by_email(pool, &email).await?.is_some() {
-        return Err(OnboardingError::ApplicationInProgress);
-    }
+    let link = store::invite_link(pool, input.invite_link)
+        .await?
+        .ok_or(OnboardingError::InviteUnusable)?;
 
     let password_hash = auth::hash_password(&input.password)?;
     let verification = auth::new_secret();
-    let applicant_token = auth::new_secret();
-    let expires_at = Utc::now() + Duration::hours(APPLICANT_TTL_HOURS);
-    let outcome = store::submit_applicant(
+    let account_id = Uuid::new_v4();
+    let outcome = store::register_account(
         pool,
+        account_id,
         Uuid::new_v4(),
-        input.invite_link,
+        link.id,
         &handle,
         &email,
         &password_hash,
         &verification.hash,
-        &applicant_token.hash,
-        &input.actor_pubkey,
-        &input.l0_address,
-        expires_at,
+        dead_before(),
+        // The application row, not the account, is bounded by its
+        // link's expiry (auth.md "Expiry").
+        link.expires_at,
     )
     .await?;
-    if outcome == store::SubmitOutcome::EmailHeld {
-        return Err(OnboardingError::ApplicationInProgress);
+    match outcome {
+        store::RegisterOutcome::Created => {}
+        store::RegisterOutcome::HandleTaken => return Err(OnboardingError::HandleTaken),
+        store::RegisterOutcome::EmailInUse => return Err(OnboardingError::EmailInUse),
     }
 
     mailer
         .send(Mail {
             to: email,
-            subject: "Verify your CoGra application".into(),
+            subject: "Verify your CoGra email".into(),
             body: format!(
-                "Your verification token: {}\n\nThe application expires in {APPLICANT_TTL_HOURS} hours if unverified.",
+                "Your verification token: {}\n\nThe account expires in {UNVERIFIED_TTL_HOURS} hours if unverified.",
                 verification.token
             ),
         })
         .await;
-    Ok(SubmittedApplication {
-        applicant_token: applicant_token.token,
-        expires_at,
+    let session =
+        auth::issue_session(pool, auth_cfg, account_id, input.device_label.as_deref()).await?;
+    Ok(RegisteredAccount {
+        session,
+        expires_at: Utc::now() + Duration::hours(UNVERIFIED_TTL_HOURS),
     })
 }
 
 pub async fn verify_email(pool: &PgPool, token: &str) -> Result<(), OnboardingError> {
-    store::verify_applicant_email(pool, &auth::hash_of(token))
+    store::verify_account_email(pool, &auth::hash_of(token), dead_before())
         .await?
         .map(|_| ())
         .ok_or(OnboardingError::VerificationTokenInvalid)
 }
 
-/// Deliberately silent: succeeds whether or not an application exists,
-/// so the verb reveals nothing (api-spec "the three silent verbs").
+/// Deliberately silent: succeeds whether or not an account exists, so
+/// the verb reveals nothing (api-spec "the three silent verbs").
 pub async fn resend_verification(
     pool: &PgPool,
     mailer: &dyn Mailer,
@@ -226,13 +222,15 @@ pub async fn resend_verification(
     let Ok(email) = auth::normalize_email(email) else {
         return Ok(());
     };
-    if let Some(applicant) = store::unverified_applicant_by_email(pool, &email).await? {
+    if let Some(account_id) =
+        store::unverified_account_by_email(pool, &email, dead_before()).await?
+    {
         let fresh = auth::new_secret();
-        store::rotate_verification_token(pool, applicant.id, &fresh.hash).await?;
+        store::rotate_verification_token(pool, account_id, &fresh.hash).await?;
         mailer
             .send(Mail {
                 to: email,
-                subject: "Verify your CoGra application".into(),
+                subject: "Verify your CoGra email".into(),
                 body: format!("Your verification token: {}", fresh.token),
             })
             .await;
@@ -241,19 +239,95 @@ pub async fn resend_verification(
 }
 
 // ---------------------------------------------------------------------
+// The key ceremony's server half
+// ---------------------------------------------------------------------
+
+/// Attaches the device-minted actor identity to the viewer's account
+/// (auth.md §Application step 3). Replaceable while the application is
+/// unapproved; Forbidden once approval has bound the address — a device
+/// lost before approval costs nothing but a re-run of the ceremony.
+pub async fn attach_actor_key(
+    pool: &PgPool,
+    account_id: Uuid,
+    actor_pubkey: Vec<u8>,
+    l0_address: String,
+) -> Result<(), OnboardingError> {
+    // The ceremony's outputs must cohere: the L0 address is the one the
+    // submitted public key controls — approval funds a burn to it, and
+    // funding an address the key cannot spend from would strand the
+    // admission (substrate.md §6).
+    let verifying =
+        crypto::verifying_key_from_bytes(&actor_pubkey).ok_or(OnboardingError::BadInput {
+            field: "actorPubkey",
+            message: "not a valid public key".into(),
+        })?;
+    if crypto::address_of(&verifying) != l0_address {
+        return Err(OnboardingError::BadInput {
+            field: "l0Address",
+            message: "address does not belong to the submitted key".into(),
+        });
+    }
+    if store::attach_actor_key(pool, account_id, &actor_pubkey, &l0_address).await? {
+        Ok(())
+    } else {
+        Err(OnboardingError::Forbidden)
+    }
+}
+
+// ---------------------------------------------------------------------
+// Re-arming an expired application
+// ---------------------------------------------------------------------
+
+/// Re-arms an expired, never-approved application with a fresh invite
+/// link — a new application row for the viewer's account (auth.md
+/// "Expiry"). Refused while a live application exists.
+pub async fn apply_with_invite(
+    pool: &PgPool,
+    account_id: Uuid,
+    invite_link: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    let credentials = store::credentials_by_actor(pool, account_id)
+        .await?
+        .ok_or(OnboardingError::Forbidden)?;
+    if credentials.account_state != store::AccountState::Applicant {
+        return Err(OnboardingError::Forbidden);
+    }
+    if let Some(latest) = store::latest_application_for(pool, account_id).await?
+        && latest.landed_at.is_none()
+        && (latest.approved_at.is_some() || latest.expires_at > Utc::now())
+    {
+        return Err(OnboardingError::BadInput {
+            field: "inviteLink",
+            message: "a live application already exists".into(),
+        });
+    }
+    if !store::invite_link_usable(pool, invite_link).await? {
+        return Err(OnboardingError::InviteUnusable);
+    }
+    let link = store::invite_link(pool, invite_link)
+        .await?
+        .ok_or(OnboardingError::InviteUnusable)?;
+    let id = Uuid::new_v4();
+    store::create_application(pool, id, account_id, link.id, link.expires_at).await?;
+    store::application(pool, id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application vanished after creation".into()))
+}
+
+// ---------------------------------------------------------------------
 // Approval — the inviter's priced act
 // ---------------------------------------------------------------------
 
-/// One approval: the applicant plus the stance values the inviter
+/// One approval: the application plus the stance values the inviter
 /// commits (pre-filled from the link, adjusted at will).
 #[derive(Debug, Clone)]
 pub struct Approval {
-    pub applicant: Uuid,
+    pub application: Uuid,
     pub p_d: f64,
     pub p_i: f64,
 }
 
-/// Approves staged applicants: marks each approval, runs the admission
+/// Approves applications: marks each approval, runs the admission
 /// sequence backend-side (funding burn + staged Registration), and
 /// prepares the inviter's own Opinion records — the vouch is the
 /// inviter's signature, never a server write (api-spec
@@ -269,10 +343,10 @@ pub async fn approve_applicants<B: L1Boundary>(
     // Validate every entry before executing any: the mutation refuses
     // wholesale rather than half-approving a batch.
     let mut errors = Vec::new();
-    let mut applicants = Vec::with_capacity(approvals.len());
+    let mut applications = Vec::with_capacity(approvals.len());
     for (i, approval) in approvals.iter().enumerate() {
         match validate_approval(pool, inviter, approval).await {
-            Ok(applicant) => applicants.push(applicant),
+            Ok(application) => applications.push(application),
             Err(e) => errors.push((i, e)),
         }
     }
@@ -281,8 +355,18 @@ pub async fn approve_applicants<B: L1Boundary>(
     }
 
     let mut prepared = Vec::with_capacity(approvals.len());
-    for (i, (approval, applicant)) in approvals.iter().zip(applicants).enumerate() {
-        match approve_one(pool, boundary, funding, cfg, inviter, approval, &applicant).await {
+    for (i, (approval, application)) in approvals.iter().zip(applications).enumerate() {
+        match approve_one(
+            pool,
+            boundary,
+            funding,
+            cfg,
+            inviter,
+            approval,
+            &application,
+        )
+        .await
+        {
             Ok(opinion) => prepared.push(opinion),
             Err(e) => {
                 // Execution failures after the validation pass are
@@ -303,50 +387,55 @@ async fn validate_approval(
     pool: &PgPool,
     inviter: Uuid,
     approval: &Approval,
-) -> Result<store::Applicant, OnboardingError> {
+) -> Result<store::Application, OnboardingError> {
     if !(-1.0..=1.0).contains(&approval.p_d) || !(-1.0..=1.0).contains(&approval.p_i) {
         return Err(OnboardingError::BadInput {
             field: "pDirected",
             message: "stance parameters must lie in [-1, 1]".into(),
         });
     }
-    let applicant =
-        store::applicant(pool, approval.applicant)
-            .await?
-            .ok_or(OnboardingError::BadInput {
-                field: "applicant",
-                message: "unknown applicant".into(),
-            })?;
-    let link = store::invite_link(pool, applicant.invite_link_id)
+    let application = store::application(pool, approval.application)
         .await?
-        .ok_or_else(|| OnboardingError::Internal("applicant without a link".into()))?;
+        .ok_or(OnboardingError::BadInput {
+            field: "application",
+            message: "unknown application".into(),
+        })?;
+    let link = store::invite_link(pool, application.invite_link_id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
     if link.inviter_id != inviter {
-        // Someone else's queue reads as an unknown applicant — the
+        // Someone else's queue reads as an unknown application — the
         // approval queue is issuer-visible only.
         return Err(OnboardingError::BadInput {
-            field: "applicant",
-            message: "unknown applicant".into(),
+            field: "application",
+            message: "unknown application".into(),
         });
     }
-    if applicant.approved_at.is_some() {
+    if application.approved_at.is_some() {
         return Err(OnboardingError::BadInput {
-            field: "applicant",
+            field: "application",
             message: "already approved".into(),
         });
     }
-    if applicant.email_verified_at.is_none() {
+    if !application.email_verified {
         return Err(OnboardingError::BadInput {
-            field: "applicant",
+            field: "application",
             message: "email not verified".into(),
         });
     }
-    if applicant.expires_at <= Utc::now() {
+    if !application.key_attached {
         return Err(OnboardingError::BadInput {
-            field: "applicant",
+            field: "application",
+            message: "no key attached".into(),
+        });
+    }
+    if application.expires_at <= Utc::now() {
+        return Err(OnboardingError::BadInput {
+            field: "application",
             message: "application expired".into(),
         });
     }
-    Ok(applicant)
+    Ok(application)
 }
 
 async fn approve_one<B: L1Boundary>(
@@ -356,37 +445,39 @@ async fn approve_one<B: L1Boundary>(
     cfg: &OnboardingConfig,
     inviter: Uuid,
     approval: &Approval,
-    applicant: &store::Applicant,
+    application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
     // The approved_at guard is the concurrency gate: a concurrent
     // duplicate approval loses here, before any burn.
     let mut conn = pool.acquire().await?;
-    let approved = store::approve_applicant(&mut conn, applicant.id)
+    let account_id = store::approve_application(&mut conn, application.id)
         .await?
         .ok_or(OnboardingError::BadInput {
-            field: "applicant",
+            field: "application",
             message: "already approved".into(),
         })?;
     drop(conn);
 
+    let approved = store::application(pool, application.id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application vanished at approval".into()))?;
     let registration = ensure_admission_staged(pool, boundary, funding, cfg, &approved).await?;
+    let applicant_address = actor_address(pool, account_id).await?;
 
     // The inviter's Opinion toward the new Profile, dependent on the
     // Registration so it orders after the anchor it vouches for
     // (invitations.md §2).
-    let inviter_identity = store::actor_identity(pool, inviter)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("inviter without an actor row".into()))?;
+    let inviter_address = actor_address(pool, inviter).await?;
     let opinion = prepare::prepare(
         boundary,
         pool,
         cfg.gc_after_epochs,
-        StagedBy::Actor(inviter),
+        inviter,
         Gesture {
-            author: inviter_identity.l0_address,
+            author: inviter_address,
             family: Family::Opinion,
             middle: None,
-            target: NodeId::Prof(approved.l0_address.clone()),
+            target: NodeId::Prof(applicant_address),
             p_d: approval.p_d,
             p_i: approval.p_i,
             settlement_ref: None,
@@ -400,6 +491,15 @@ async fn approve_one<B: L1Boundary>(
     Ok(opinion)
 }
 
+/// The attached L0 address of an actor row; Internal when the actor is
+/// missing or keyless — callers only reach here past the attach proof.
+async fn actor_address(pool: &PgPool, actor_id: Uuid) -> Result<String, OnboardingError> {
+    store::actor_identity(pool, actor_id)
+        .await?
+        .and_then(|identity| identity.l0_address)
+        .ok_or_else(|| OnboardingError::Internal("actor without an attached address".into()))
+}
+
 /// The interim Registration payload until the Peer Content Envelope
 /// arrives with the content slice: version + display name (= handle at
 /// landing, decision D9).
@@ -411,26 +511,28 @@ fn registration_payload(handle: &str) -> Vec<u8> {
     e.finish()
 }
 
-/// Idempotently brings an approved applicant to "staged and fundable":
+/// Idempotently brings an approved application to "staged and fundable":
 /// the funding burn (guarded by the fresh address's zero burn history)
-/// and the staged Registration. Also the repair path — a crash between
-/// approval and staging heals on the applicant's next poll.
+/// and the staged Registration, staged under the applicant's own actor
+/// row. Also the repair path — a crash between approval and staging
+/// heals on the applicant's next status poll (`User.application`).
 pub async fn ensure_admission_staged<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
     funding: &StandIn,
     cfg: &OnboardingConfig,
-    applicant: &store::Applicant,
+    application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    if applicant.approved_at.is_none() {
+    if application.approved_at.is_none() {
         return Err(OnboardingError::BadInput {
-            field: "applicant",
+            field: "application",
             message: "not approved".into(),
         });
     }
-    if let Some(existing) = staged::live_for_applicant(pool, applicant.id, Family::Registration)
-        .await
-        .map_err(|e| OnboardingError::Internal(e.to_string()))?
+    if let Some(existing) =
+        staged::live_for_actor(pool, application.account_id, Family::Registration)
+            .await
+            .map_err(|e| OnboardingError::Internal(e.to_string()))?
     {
         return Ok(prepare::Prepared {
             id: existing.id,
@@ -439,16 +541,17 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         });
     }
 
-    // The applicant's address is fresh — minted at application time and
+    let address = actor_address(pool, application.account_id).await?;
+    // The applicant's address is fresh — minted at the key ceremony and
     // funded only by this flow — so a zero burn history is the funding
     // idempotency guard (no double-fund on repair).
     let balance = boundary
-        .balance(&applicant.l0_address)
+        .balance(&address)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?;
     if balance.burned_total == 0.0 {
         funding
-            .credit_burn(&applicant.l0_address, cfg.admission_burn_micro)
+            .credit_burn(&address, cfg.admission_burn_micro)
             .await
             .map_err(|e| OnboardingError::Internal(e.to_string()))?;
     }
@@ -457,133 +560,22 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         boundary,
         pool,
         cfg.gc_after_epochs,
-        StagedBy::Applicant(applicant.id),
+        application.account_id,
         Gesture {
-            author: applicant.l0_address.clone(),
+            author: address.clone(),
             family: Family::Registration,
             middle: None,
-            target: NodeId::Prof(applicant.l0_address.clone()),
+            target: NodeId::Prof(address),
             p_d: 1.0,
             p_i: 1.0,
             settlement_ref: None,
             license: None,
             asserted_parents: vec![],
             deps: vec![],
-            payload: registration_payload(&applicant.handle),
+            payload: registration_payload(&application.handle),
         },
     )
     .await?)
-}
-
-// ---------------------------------------------------------------------
-// The applicant's own flow: status, signing, the first session
-// ---------------------------------------------------------------------
-
-pub async fn applicant_by_token(
-    pool: &PgPool,
-    applicant_token: &str,
-) -> Result<store::Applicant, OnboardingError> {
-    store::applicant_by_token_hash(pool, &auth::hash_of(applicant_token))
-        .await?
-        .ok_or(OnboardingError::Unauthenticated)
-}
-
-/// The staged Registration the applicant's device signs, re-staged on
-/// demand when the previous staging expired (the repair path).
-pub async fn staged_registration<B: L1Boundary>(
-    pool: &PgPool,
-    boundary: &B,
-    funding: &StandIn,
-    cfg: &OnboardingConfig,
-    applicant: &store::Applicant,
-) -> Result<Option<StagedWrite>, OnboardingError> {
-    if applicant.approved_at.is_none() || applicant.landed_at.is_some() {
-        return Ok(None);
-    }
-    let prepared = ensure_admission_staged(pool, boundary, funding, cfg, applicant).await?;
-    Ok(Some(
-        staged::load(pool, prepared.id)
-            .await
-            .map_err(|e| OnboardingError::Internal(e.to_string()))?,
-    ))
-}
-
-/// The applicant-token twin of `submitProposals`: relays the device's
-/// pre-commitment over the staged Registration.
-pub async fn submit_applicant_registration<B: L1Boundary>(
-    pool: &PgPool,
-    boundary: &B,
-    funding: &StandIn,
-    cfg: &OnboardingConfig,
-    applicant_token: &str,
-    nonce: Vec<u8>,
-    pre_signature: Vec<u8>,
-) -> Result<StagedWrite, OnboardingError> {
-    let applicant = applicant_by_token(pool, applicant_token).await?;
-    let staged_write = staged_registration(pool, boundary, funding, cfg, &applicant)
-        .await?
-        .ok_or(OnboardingError::BadInput {
-            field: "applicantToken",
-            message: "no staged registration awaits a signature".into(),
-        })?;
-    relay::submit_pre_signed(
-        boundary,
-        pool,
-        staged_write.id,
-        PreSignedParts {
-            author_pubkey: applicant.actor_pubkey.clone(),
-            nonce,
-            pre_signature,
-        },
-    )
-    .await?;
-    staged::load(pool, staged_write.id)
-        .await
-        .map_err(|e| OnboardingError::Internal(e.to_string()))
-}
-
-/// The applicant-token twin of `approveActs`: relays the approval
-/// witness; landing stays asynchronous through the mirror.
-pub async fn approve_applicant_registration<B: L1Boundary>(
-    pool: &PgPool,
-    boundary: &B,
-    applicant_token: &str,
-    approval_signature: Vec<u8>,
-) -> Result<StagedWrite, OnboardingError> {
-    let applicant = applicant_by_token(pool, applicant_token).await?;
-    let staged_write = staged::live_for_applicant(pool, applicant.id, Family::Registration)
-        .await
-        .map_err(|e| OnboardingError::Internal(e.to_string()))?
-        .ok_or(OnboardingError::BadInput {
-            field: "applicantToken",
-            message: "no staged registration awaits approval".into(),
-        })?;
-    relay::submit_approval(boundary, pool, staged_write.id, approval_signature).await?;
-    staged::load(pool, staged_write.id)
-        .await
-        .map_err(|e| OnboardingError::Internal(e.to_string()))
-}
-
-/// Mints a session for a landed applicant (decision D3 — the explicit
-/// mutation replacing the one-shot query field). Callable repeatedly
-/// while the applicant token is valid: the token is the secret.
-pub async fn claim_landed_session(
-    pool: &PgPool,
-    auth_cfg: &AuthConfig,
-    applicant_token: &str,
-    device_label: Option<&str>,
-) -> Result<IssuedSession, OnboardingError> {
-    let applicant = applicant_by_token(pool, applicant_token).await?;
-    if applicant.landed_at.is_none() {
-        return Err(OnboardingError::BadInput {
-            field: "applicantToken",
-            message: "the application has not landed yet".into(),
-        });
-    }
-    let credentials = store::credentials_by_email(pool, &applicant.email)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("landed applicant without credentials".into()))?;
-    Ok(auth::issue_session(pool, auth_cfg, credentials.actor_id, device_label).await?)
 }
 
 // ---------------------------------------------------------------------
@@ -591,43 +583,38 @@ pub async fn claim_landed_session(
 // ---------------------------------------------------------------------
 
 /// Confirm-side landing (auth.md "Approval and landing" step 4): every
-/// promoted applicant-staged Registration creates the actor and
-/// credentials rows and marks the applicant landed. Driven off the
-/// ingestion pass; a failure logs and leaves the applicant approved —
-/// the row lands on a later pass or surfaces operationally.
+/// promoted Registration flips its account's approved application to
+/// landed and the account state to member. Driven off the ingestion
+/// pass; a no-op for Registrations without an approved application (the
+/// genesis records on a rebuild). A failure logs and leaves the
+/// application approved — it lands on a later pass or surfaces
+/// operationally.
 pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
     for write in promoted {
-        let StagedBy::Applicant(applicant_id) = write.staged_by else {
-            continue;
-        };
         if write.family != Family::Registration.as_str() {
             continue;
         }
-        let result = async {
-            let mut tx = pool.begin().await?;
-            store::land_applicant(&mut tx, applicant_id, Uuid::new_v4()).await?;
-            tx.commit().await
-        }
-        .await;
-        match result {
-            Ok(()) => tracing::info!(applicant = %applicant_id, "applicant landed"),
+        match store::land_account(pool, write.actor_id).await {
+            Ok(true) => tracing::info!(account = %write.actor_id, "application landed"),
+            Ok(false) => {}
             Err(e) => {
-                tracing::error!(applicant = %applicant_id, error = %e, "landing failed");
+                tracing::error!(account = %write.actor_id, error = %e, "landing failed");
             }
         }
     }
 }
 
-/// The applicant reaper (auth.md "Account lifecycle"): a periodic sweep
-/// of expired, never-approved applications.
+/// The account reaper (auth.md "Reaper"): a periodic sweep deleting
+/// never-verified accounts past their bound — freeing handle and email.
+/// Verified accounts are never reaped.
 pub async fn reaper_loop(pool: PgPool, interval_secs: u64) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     loop {
         ticker.tick().await;
-        match store::reap_applicants(&pool).await {
+        match store::reap_unverified_accounts(&pool, dead_before()).await {
             Ok(0) => {}
-            Ok(n) => tracing::info!(reaped = n, "expired applications swept"),
-            Err(e) => tracing::error!(error = %e, "applicant reaper failed"),
+            Ok(n) => tracing::info!(reaped = n, "never-verified accounts swept"),
+            Err(e) => tracing::error!(error = %e, "account reaper failed"),
         }
     }
 }

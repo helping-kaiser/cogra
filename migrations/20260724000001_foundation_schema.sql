@@ -7,23 +7,34 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Actors: one row per actor CoGra serves, any kind. Carries the identity
--- association: row UUID ↔ actor public key + L0 address.
+-- association: row UUID ↔ actor public key + L0 address — NULL for a
+-- user-kind actor from registration until the key ceremony attaches the
+-- device-minted halves (auth.md §Application); the CHECK keeps the other
+-- kinds complete.
 CREATE TABLE actors (
     id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     kind         TEXT        NOT NULL CHECK (kind IN ('user', 'collective', 'system')),
     handle       TEXT        NOT NULL UNIQUE,
-    actor_pubkey BYTEA       NOT NULL,
-    l0_address   TEXT        NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    actor_pubkey BYTEA,
+    l0_address   TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (kind = 'user' OR (actor_pubkey IS NOT NULL AND l0_address IS NOT NULL))
 );
 
--- User credentials: the login half of a user-kind actor (rows only for
--- kind = 'user'; enforced where sessions are minted).
+-- User credentials: the account half of a user-kind actor, created at
+-- registration together with the actor row (auth.md §Application).
+-- account_state is the service state gating acting (auth.md §Account
+-- states); landing flips it to 'member'. email_verified_at and the token
+-- hash carry the registration verification proof; the reaper deletes
+-- never-verified accounts whole (auth.md "Expiry").
 CREATE TABLE user_credentials (
-    actor_id      UUID        PRIMARY KEY REFERENCES actors(id),
-    email         TEXT        NOT NULL UNIQUE,
-    password_hash TEXT        NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    actor_id                      UUID        PRIMARY KEY REFERENCES actors(id),
+    email                         TEXT        NOT NULL UNIQUE,
+    password_hash                 TEXT        NOT NULL,
+    account_state                 TEXT        NOT NULL CHECK (account_state IN ('guest', 'applicant', 'member')),
+    email_verified_at             TIMESTAMPTZ,
+    email_verification_token_hash BYTEA       UNIQUE,
+    created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Media attachments: asset metadata only; parents point at attachments.
@@ -255,23 +266,29 @@ CREATE TABLE auth_invite_links (
 CREATE INDEX auth_invite_links_inviter_idx
     ON auth_invite_links (inviter_id);
 
-CREATE TABLE auth_applicants (
-    id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    invite_link_id                UUID         NOT NULL REFERENCES auth_invite_links(id),
-    username                      TEXT         NOT NULL,
-    email                         TEXT         NOT NULL UNIQUE,
-    password_hash                 TEXT         NOT NULL,
-    email_verification_token_hash BYTEA        NOT NULL UNIQUE,
-    email_verified_at             TIMESTAMPTZ,
-    actor_pubkey                  BYTEA        NOT NULL,
-    l0_address                    TEXT         NOT NULL,
-    approved_at                   TIMESTAMPTZ,
-    landed_at                     TIMESTAMPTZ,
-    created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    expires_at                    TIMESTAMPTZ  NOT NULL
+-- Applications: one row per application attempt — invite-link provenance
+-- and approval/landing bookkeeping for an account in the applicant state
+-- (auth.md §Application; data-model.md). The account itself (actors +
+-- user_credentials) exists from registration; this row carries only what
+-- is application-scoped. expires_at is bounded by the link's expiry; a
+-- fresh invite re-arms an expired application with a new row
+-- (applyWithInvite). reciprocated_at is the latched derived cache of the
+-- joiner's reciprocal Opinion confirming in the mirror (auth.md
+-- "Reciprocation is the joiner's own act").
+CREATE TABLE auth_applications (
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    invite_link_id  UUID        NOT NULL REFERENCES auth_invite_links(id),
+    approved_at     TIMESTAMPTZ,
+    landed_at       TIMESTAMPTZ,
+    reciprocated_at TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at      TIMESTAMPTZ NOT NULL
 );
-CREATE INDEX auth_applicants_link_idx
-    ON auth_applicants (invite_link_id, approved_at);
+CREATE INDEX auth_applications_link_idx
+    ON auth_applications (invite_link_id, approved_at);
+CREATE INDEX auth_applications_account_idx
+    ON auth_applications (account_id);
 
 CREATE TABLE auth_key_backups (
     user_id    UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,

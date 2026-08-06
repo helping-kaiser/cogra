@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_applications (id, account_id, invite_link_id, expires_at)\n         VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "76f0c9f124984d77382e6dc327ec57b8397ddaf75b90159f4c7a94f63db29b9c"
+}

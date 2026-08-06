@@ -146,10 +146,11 @@ pub async fn run(
     crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
 
     let l2_half = genesis::system_actors_present(pool).await?;
-    let l1_half = match genesis::actor_by_handle(pool, PUBLISHER_HANDLE).await? {
-        Some(publisher) => {
-            mirror::has_record_by(pool, &publisher.l0_address, Family::Publish).await?
-        }
+    let publisher_address = genesis::actor_by_handle(pool, PUBLISHER_HANDLE)
+        .await?
+        .and_then(|publisher| publisher.l0_address);
+    let l1_half = match publisher_address {
+        Some(address) => mirror::has_record_by(pool, &address, Family::Publish).await?,
         // No service rows to key the check on: any ingested record at all
         // means an L1 history exists that these rows should describe.
         None => mirror::last_ingested_epoch(pool).await? >= 0,
@@ -413,7 +414,7 @@ pub async fn genesis_identity(
 ) -> Result<Option<(Uuid, String)>, BootstrapError> {
     Ok(genesis::actor_by_handle(pool, handle)
         .await?
-        .map(|row| (row.id, row.l0_address)))
+        .and_then(|row| row.l0_address.map(|address| (row.id, address))))
 }
 
 /// What the operator-login step created on this run.

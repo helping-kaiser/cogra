@@ -16,8 +16,11 @@ use common::l1::{crypto, wire};
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
 
+use l1_standin::StandIn;
+
 use crate::auth::Viewer;
-use crate::onboarding::OnboardingError;
+use crate::l1::StandInBoundary;
+use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
 /// A stance dimension: a float constrained to the closed range
 /// [-1.0, +1.0]. Prepare validates per family.
@@ -71,8 +74,8 @@ pub enum ErrorCode {
     HandleTaken,
     /// Under the length floor or in the breach corpus.
     WeakPassword,
-    /// A live application already holds this email.
-    ApplicationInProgress,
+    /// The email already belongs to an account.
+    EmailInUse,
     /// The email-verification token is invalid or expired.
     VerificationTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
@@ -142,15 +145,15 @@ impl UserError {
                 code: ErrorCode::BadInput,
                 field: path(field),
             },
-            OnboardingError::ApplicationInProgress => {
-                UserError::new(ErrorCode::ApplicationInProgress, e.to_string())
-            }
+            OnboardingError::EmailInUse => UserError {
+                message: e.to_string(),
+                code: ErrorCode::EmailInUse,
+                field: path("email"),
+            },
             OnboardingError::VerificationTokenInvalid => {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
             }
-            OnboardingError::Unauthenticated => {
-                UserError::new(ErrorCode::Unauthenticated, e.to_string())
-            }
+            OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
             OnboardingError::WriteRule { .. } => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
@@ -420,6 +423,28 @@ impl StagedWriteType {
 // Auth and account types
 // ---------------------------------------------------------------------
 
+/// A user account's service state (auth.md "Account states"): it gates
+/// acting through CoGra, never reading, and is distinct from the
+/// mutual-pair membership of invitations.md §2. GUEST is reserved — no
+/// flow creates one yet.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum AccountState {
+    Guest,
+    Applicant,
+    Member,
+}
+
+impl AccountState {
+    pub fn from_store(s: store::AccountState) -> Self {
+        match s {
+            store::AccountState::Guest => Self::Guest,
+            store::AccountState::Applicant => Self::Applicant,
+            store::AccountState::Member => Self::Member,
+        }
+    }
+}
+
 /// An active authentication session — one per refresh token.
 pub struct Session {
     pub row: store::Session,
@@ -458,8 +483,8 @@ impl Session {
 }
 
 /// A fresh access + refresh token pair, the issuing session, and the
-/// viewer it authenticates — the success result shared by logIn,
-/// refreshSession, and the landing claim.
+/// viewer it authenticates — the success result shared by register,
+/// logIn, and refreshSession.
 pub struct AuthSession {
     pub access_token: String,
     pub refresh_token: String,
@@ -523,8 +548,9 @@ pub enum Actor {
     User(User),
 }
 
-/// A member account. The server-side login (credentials, sessions)
-/// authenticates the service, never the graph.
+/// A person on the platform. The server-side account (credentials,
+/// sessions) authenticates the service, never the graph; the account
+/// state says whether it already fronts a full actor (auth.md).
 pub struct User {
     pub identity: store::ActorIdentity,
     /// The requesting session when this User IS the viewer — gates the
@@ -651,6 +677,61 @@ impl User {
             }))
     }
 
+    /// The account's service state — gates acting through CoGra (auth.md
+    /// "Account states"). Field-level: viewer-only.
+    async fn account_state(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<AccountState>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::credentials_by_actor(pool, self.identity.id)
+            .await?
+            .map(|c| AccountState::from_store(c.account_state)))
+    }
+
+    /// Whether the account's email is verified — one of the two
+    /// approvability proofs while an application is pending. Field-level:
+    /// viewer-only.
+    async fn email_verified(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<bool>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::credentials_by_actor(pool, self.identity.id)
+            .await?
+            .map(|c| c.email_verified_at.is_some()))
+    }
+
+    /// The account's latest application — the applicant's own view of
+    /// its progress; null when the account has none. Reading it is the
+    /// admission flow's repair hook: an approved application whose
+    /// staged Registration was lost re-stages here, on the poll (auth.md
+    /// "Approval and landing"). Field-level: viewer-only.
+    async fn application(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Application>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let Some(application) = store::latest_application_for(pool, self.identity.id).await? else {
+            return Ok(None);
+        };
+        if application.approved_at.is_some() && application.landed_at.is_none() {
+            let boundary = ctx.data::<StandInBoundary>()?;
+            let funding = ctx.data::<StandIn>()?;
+            let cfg = ctx.data::<OnboardingConfig>()?;
+            if let Err(e) =
+                onboarding::ensure_admission_staged(pool, boundary, funding, cfg, &application)
+                    .await
+            {
+                tracing::error!(error = %e, "staged-registration repair failed");
+            }
+        }
+        Ok(Some(Application(application)))
+    }
+
     /// The account's invite links — service-side staging state, not
     /// graph structure. Field-level: each link's id is the link
     /// capability, so this resolves only for the issuing actor.
@@ -740,38 +821,50 @@ impl InviteLink {
         self.0.revoked_at
     }
 
-    /// The inviter's approval queue.
-    async fn applicants(
+    /// The inviter's approval queue: applications staged through this
+    /// link, with their status.
+    async fn applications(
         &self,
         ctx: &Context<'_>,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
-    ) -> async_graphql::Result<Connection<String, Applicant>> {
+    ) -> async_graphql::Result<Connection<String, Application>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = store::applicants_for_link(pool, self.0.id).await?;
-        offset_connection(rows, after, before, first, last, Applicant).await
+        let rows = store::applications_for_link(pool, self.0.id).await?;
+        offset_connection(rows, after, before, first, last, Application).await
     }
 }
 
-/// A staged applicant — off-graph service state only; nothing exists on
-/// the graph until the Registration lands. Visible to the issuing
-/// inviter (their approval queue) and to the applicant's own device.
-pub struct Applicant(pub store::Applicant);
+/// An application attempt — the invite-link provenance and
+/// approval/landing bookkeeping of an account in the applicant state
+/// (auth.md "Application"). Visible to the issuing inviter (their
+/// approval queue) and to the applying account itself
+/// (`User.application`).
+pub struct Application(pub store::Application);
 
 #[Object]
-impl Applicant {
+impl Application {
     async fn id(&self) -> Uuid {
         self.0.id
     }
 
+    /// The applying account's handle.
     async fn handle(&self) -> &str {
         &self.0.handle
     }
 
+    /// Whether the account has proved its email channel — one of the two
+    /// approvability proofs.
     async fn email_verified(&self) -> bool {
-        self.0.email_verified_at.is_some()
+        self.0.email_verified
+    }
+
+    /// Whether the account has attached its device-minted key and L0
+    /// address — the other approvability proof.
+    async fn key_attached(&self) -> bool {
+        self.0.key_attached
     }
 
     /// When the inviter's priced approval happened; null while pending.
@@ -779,8 +872,8 @@ impl Applicant {
         self.0.approved_at
     }
 
-    /// When the applicant's Registration confirmed and the account
-    /// landed; null before.
+    /// When the Registration confirmed and the account became a member;
+    /// null before.
     async fn landed_at(&self) -> Option<DateTime<Utc>> {
         self.0.landed_at
     }
@@ -791,28 +884,6 @@ impl Applicant {
 
     async fn expires_at(&self) -> DateTime<Utc> {
         self.0.expires_at
-    }
-}
-
-/// The applicant's own view of their application, authorized by the
-/// applicant token.
-pub struct ApplicationView {
-    pub applicant: store::Applicant,
-    pub staged_registration: Option<staged::StagedWrite>,
-}
-
-#[Object]
-impl ApplicationView {
-    async fn applicant(&self) -> Applicant {
-        Applicant(self.applicant.clone())
-    }
-
-    /// The staged Registration awaiting the device's signatures — its
-    /// handshake state and, once sealed, the verified act. Null before
-    /// approval and after landing. Re-staged automatically if a previous
-    /// staging expired.
-    async fn staged_registration(&self) -> Option<StagedWriteType> {
-        self.staged_registration.clone().map(StagedWriteType)
     }
 }
 

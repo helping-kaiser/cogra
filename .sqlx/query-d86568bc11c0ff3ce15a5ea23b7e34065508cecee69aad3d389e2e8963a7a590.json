@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.actor_id FROM user_credentials c\n         JOIN actors a ON a.id = c.actor_id\n         WHERE c.email_verified_at IS NULL\n           AND c.created_at < $1\n           AND (a.handle = $2 OR c.email = $3)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d86568bc11c0ff3ce15a5ea23b7e34065508cecee69aad3d389e2e8963a7a590"
+}
