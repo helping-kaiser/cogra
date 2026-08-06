@@ -105,10 +105,11 @@ write needs a landed, funded actor with a device-held key.
 
 ### Slice 1 — Onboarding and client-signed writes
 
-- The staged-applicant flow end to end: invite link → application
-  with the on-device key ceremony (actor key + L0 address +
-  recovery-code offer) → funding burn → staged Registration signed
-  (both handshake steps) on next open → landing ([auth.md](auth.md)).
+- The staged-applicant flow end to end: invite link → registration
+  (account + session) → logged-in key ceremony (actor key + L0
+  address + recovery-code offer) and email verification → approval
+  with funding burn → staged Registration signed (both handshake
+  steps) → landing ([auth.md](auth.md)).
 - Login, sessions, credentials — the L2 half.
 - The write path: prepare → pre-sign on device → seal → approve
   on device → confirm ([architecture.md](architecture.md)).

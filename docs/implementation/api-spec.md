@@ -345,6 +345,12 @@ enum NodeKind {
  ZERO: exactly 0."
 enum Sign { POSITIVE NEGATIVE ZERO }
 
+"A user account's service state (auth.md \"Account states\"): it
+ gates acting through CoGra, never reading, and is distinct from
+ the mutual-pair membership of invitations.md §2. GUEST is
+ reserved — no flow creates one yet."
+enum AccountState { GUEST APPLICANT MEMBER }
+
 "The one error vocabulary, shared across both error tiers (governing
  principles): the `extensions.code` on a transport fault and the `code` on a
  `UserError` both draw from it. Grows as gestures add expected failures."
@@ -362,8 +368,8 @@ enum ErrorCode {
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
-  APPLICATION_IN_PROGRESS      # a live application already holds this email
-  VERIFICATION_TOKEN_INVALID   # applicant verification token invalid or expired
+  EMAIL_IN_USE                 # the email already belongs to an account
+  VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
   WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
@@ -711,13 +717,22 @@ type User implements Node & Actor {
    ciphertext under the recovery code; the server cannot decrypt it
    (auth.md \"Key recovery\")."
   keyBackup: String
+  "The account's service state — gates acting through CoGra
+   (auth.md \"Account states\")."
+  accountState: AccountState
+  "Whether the account's email is verified — one of the two
+   approvability proofs while an application is pending."
+  emailVerified: Boolean
+  "The account's latest application — the applicant's own view of
+   its progress; null when the account has none."
+  application: Application
   "The actor whose invite this account came through — landing
    provenance for the reciprocation gesture (the graph's own record
    of the vouch is the inviter's Opinion). Null for accounts
    without an application trace (genesis actors)."
   invitedBy: Actor
   "Whether the viewer's reciprocal Opinion toward invitedBy exists —
-   confirmed in the record mirror (latched on the landed applicant
+   confirmed in the record mirror (latched on the landed application
    row) or in flight as one of the viewer's staged writes. Drives
    the first-login reciprocation prompt (auth.md \"Reciprocation is
    the joiner's own act\"). Vacuously true when invitedBy is null."
@@ -1048,36 +1063,42 @@ type InviteLink {
   expiresAt: DateTime!
   "When the link was revoked; null if still live."
   revokedAt: DateTime
-  "Applicants currently staged through this link, with their
+  "Applications currently staged through this link, with their
    status — the inviter's approval queue."
-  applicants(first: Int, after: String, last: Int, before: String): ApplicantConnection
+  applications(first: Int, after: String, last: Int, before: String): ApplicationConnection
 }
 
-"A staged applicant — off-graph service state between following a
- link and landing on the graph (auth.md \"Account lifecycle\").
- Visible to the issuing inviter (their approval queue) and to the
- applicant's own device."
-type Applicant {
+"An application attempt — the invite-link provenance and
+ approval/landing bookkeeping of an account in the applicant
+ state (auth.md \"Application\"). Visible to the issuing inviter
+ (their approval queue) and to the applying account itself
+ (User.application)."
+type Application {
   id: UUID!
+  "The applying account's handle."
   handle: String!
-  "Whether the applicant has proved their email channel."
+  "Whether the account has proved its email channel — one of the
+   two approvability proofs."
   emailVerified: Boolean!
+  "Whether the account has attached its device-minted key and L0
+   address — the other approvability proof."
+  keyAttached: Boolean!
   "When the inviter's priced approval happened; null while pending."
   approvedAt: DateTime
-  "When the applicant's Registration confirmed and the account
-   landed; null before."
+  "When the Registration confirmed and the account became a
+   member; null before."
   landedAt: DateTime
   createdAt: DateTime!
   expiresAt: DateTime!
 }
-type ApplicantConnection {
-  edges: [ApplicantEdge!]!
+type ApplicationConnection {
+  edges: [ApplicationEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
 }
-type ApplicantEdge {
+type ApplicationEdge {
   cursor: String!
-  node: Applicant!
+  node: Application!
 }
 
 type BookmarkConnection {
@@ -1879,15 +1900,16 @@ These bind every mutation below.
   role Tag; the chat authority's De-invite) — never as a cascade
   this API performs for the caller.
 - **Authentication.** Every mutation requires an authenticated
-  viewer except the applicant-flow and session-recovery gestures:
-  `submitApplication`, `verifyApplicantEmail`,
-  `resendVerificationEmail`, `submitApplicantRegistration`,
-  `approveApplicantRegistration`, `claimLandedSession`,
-  `logIn`, `refreshSession`, `requestPasswordReset`,
+  viewer except the entry and recovery gestures: `register`,
+  `verifyEmail`, `resendVerificationEmail`, `logIn`,
+  `refreshSession`, `requestPasswordReset`,
   `confirmPasswordReset`, and the token-bearing
-  `confirmAccountDeletion`. An applicant token that authorizes
-  nothing reads as `UNAUTHENTICATED` on the mutations and null from
-  `application`.
+  `confirmAccountDeletion`. Acting mutations further require the
+  `MEMBER` account state — an acting call from a guest or
+  applicant account is a `FORBIDDEN` transport fault, not a
+  userError: the client already gates acting on
+  `User.accountState`, so such a request is a client bug, never a
+  state to render.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
@@ -2770,101 +2792,78 @@ genesis sequence and never passes through these mutations
 `createInviteLink` requires an authenticated issuer and no account
 exists before the genesis member.
 
-The applicant's device runs the key ceremony **before**
-submitting: it generates the signing key and L0 address locally
-(approval funds a burn to that address, so it must exist first)
-and offers the key-backup choice
-([auth.md "Account lifecycle"](auth.md#account-lifecycle)). The
-application submit returns an opaque **applicant token** the
-device stores; it authorizes exactly the applicant's own flow —
-polling status, signing the staged Registration once approval
-lands, and claiming the first session. Landing (the Registration
-confirming in the mirror) creates the actor and credentials rows;
-the device then mints the first session with `claimLandedSession`.
-Reciprocation — the joiner's own Opinion toward the inviter's
-Profile, completing the mutual pair — is an ordinary graph act
-after landing (`prepareStance`), prompted at first login; auth's
-involvement ends at landing.
+Registration creates a real account in the **applicant** state
+and returns an ordinary session (`register`); every later step
+is session-authorized — there is no applicant token, no parallel
+auth surface. The key ceremony is a logged-in step: the device
+generates the signing key and L0 address locally and attaches
+the public halves (`attachActorKey`) — approval funds a burn to
+that address, so the attach is one of the two approvability
+proofs (the verified email is the other), and the attached key
+is replaceable until approval
+([auth.md "Application"](auth.md#application-the-applicant-state)).
+Progress is `me`-driven — `User.accountState`,
+`User.emailVerified`, `User.application` — and the staged
+Registration rides the ordinary staged-write surface: once
+approval stages it, the device signs with `submitProposals` /
+`approveActs` like any other write. Landing (the Registration
+confirming in the mirror) flips the account to `member`; nothing
+moves, nothing is claimed. Reciprocation — the joiner's own
+Opinion toward the inviter's Profile, completing the mutual
+pair — is an ordinary graph act after landing (`prepareStance`),
+prompted at first login; auth's involvement ends at landing.
 
 ```graphql
-"Apply through an invite link. Creates the staged applicant row —
- off-graph service state only: no account, no records, nothing on
- the graph — and sends the verification email. The device-minted
- actor identity (public key, L0 address) rides the submit."
-input SubmitApplicationInput {
+"Register through an invite link. Creates the account — the
+ actor row (no key yet) and its credentials, in the applicant
+ state — records the application against the link, sends the
+ verification email, and returns an ordinary session. Pure L2:
+ nothing touches L1 (auth.md §Application)."
+input RegisterInput {
   inviteLink: UUID!
   handle: String!
   email: String!
   password: String!
+  deviceLabel: String
+}
+"On refusal, userErrors carries one of INVITE_UNUSABLE,
+ HANDLE_TAKEN, EMAIL_IN_USE, or WEAK_PASSWORD — all surfaced at
+ the form, before any later step."
+type RegisterPayload {
+  auth: AuthSession
+  "When the account expires unless its email is verified (24 h,
+   auth.md \"Expiry\")."
+  expiresAt: DateTime
+}
+
+input VerifyEmailInput { verificationToken: String! }
+"ok is false with a VERIFICATION_TOKEN_INVALID userError when the
+ token is invalid or the account expired."
+type VerifyEmailPayload { ok: Boolean! }
+
+input ResendVerificationEmailInput { email: String! }
+"Always succeeds, to avoid revealing whether an account exists."
+type ResendVerificationEmailPayload { ok: Boolean! }
+
+"Attach the device-minted actor identity to the viewer's account
+ — the key ceremony's server half (auth.md §Application).
+ Replaceable while the viewer's application is unapproved;
+ FORBIDDEN once approval has bound the address."
+input AttachActorKeyInput {
   "The device-generated actor public key (the key never leaves the
    device; this is its public half)."
   actorPubkey: String!
   "The device-generated L0 address — the address approval funds."
   l0Address: String!
 }
-"On refusal, userErrors carries one of INVITE_UNUSABLE,
- HANDLE_TAKEN, WEAK_PASSWORD, or APPLICATION_IN_PROGRESS."
-type SubmitApplicationPayload {
-  "The device-stored token authorizing this applicant's flow."
-  applicantToken: String
-  "When the application expires unverified (24 h, auth.md)."
-  expiresAt: DateTime
-}
+type AttachActorKeyPayload { user: User }
 
-input VerifyApplicantEmailInput { verificationToken: String! }
-"ok is false with a VERIFICATION_TOKEN_INVALID userError when the
- token is invalid or the application expired."
-type VerifyApplicantEmailPayload { ok: Boolean! }
-
-input ResendVerificationEmailInput { email: String! }
-"Always succeeds, to avoid revealing whether an application exists."
-type ResendVerificationEmailPayload { ok: Boolean! }
-
-"The applicant's own view of their application — status and the
- staged Registration once approval lands."
-type ApplicationView {
-  applicant: Applicant!
-  "The staged Registration awaiting the device's signatures — its
-   handshake state, canonical proposal, and, once sealed, the
-   verified act. Null before approval and after landing; re-staged
-   automatically when a previous staging expired, so a lost
-   response never strands the flow."
-  stagedRegistration: StagedWrite
-}
-
-"Mint a session for a landed application. Callable repeatedly
- while the applicant token is valid — the token is the secret; an
- application that has not landed yet is a BAD_INPUT userError."
-input ClaimLandedSessionInput {
-  applicantToken: String!
-  deviceLabel: String
-}
-type ClaimLandedSessionPayload {
-  auth: AuthSession
-}
-
-"Pre-sign the staged Registration — the applicant-token twin of
- submitProposals, since no session exists before landing. The
- returned staged write carries the host-sealed verified act for
- the approval step."
-input SubmitApplicantRegistrationInput {
-  applicantToken: String!
-  signature: String!
-}
-type SubmitApplicantRegistrationPayload {
-  stagedWrite: StagedWrite
-}
-
-"Approve the sealed Registration — the applicant-token twin of
- approveActs; the device verifies the seal, the exact body, and
- both commitment openings first."
-input ApproveApplicantRegistrationInput {
-  applicantToken: String!
-  signature: String!
-}
-type ApproveApplicantRegistrationPayload {
-  stagedWrite: StagedWrite
-}
+"Re-arm an expired, never-approved application with a fresh
+ invite link — a new application row for the viewer's account
+ (auth.md \"Expiry\"). BAD_INPUT while a live application exists;
+ INVITE_UNUSABLE for a dead link."
+input ApplyWithInviteInput { inviteLink: UUID! }
+type ApplyWithInvitePayload { application: Application }
 
 "Approve staged applicants — the inviter's deliberate, priced act:
  per applicant or in batch, with the pre-filled stance values
@@ -2873,14 +2872,15 @@ type ApproveApplicantRegistrationPayload {
  approval, guarded so a retried or concurrent approval can never
  double-fund; landing waits only on the Registration confirming.
  Returns the inviter's own Opinion records to sign — the vouch is
- the inviter's signature, not a server write. Approval requires a
- verified email; an already-approved, expired, or foreign-queue
- applicant refuses with BAD_INPUT pinned to its entry."
+ the inviter's signature, not a server write. Approval requires an
+ approvable application — email verified and key attached; an
+ already-approved, expired, or foreign-queue application refuses
+ with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
-  approvals: [ApplicantApprovalInput!]!
+  approvals: [ApplicationApprovalInput!]!
 }
-input ApplicantApprovalInput {
-  applicant: UUID!
+input ApplicationApprovalInput {
+  application: UUID!
   "The inviter's stance toward the joiner — pre-filled from the
    link, committed here."
   pDirected: Dimension!
@@ -2898,8 +2898,8 @@ input RefreshSessionInput {
 }
 
 "A fresh access + refresh token pair, the issuing session, and the
- viewer it authenticates — the success result shared by logIn,
- refreshSession, and landing. session and user resolve lazily and
+ viewer it authenticates — the success result shared by register,
+ logIn, and refreshSession. session and user resolve lazily and
  are null only when the row vanished between minting and
  resolution."
 type AuthSession {
@@ -3005,10 +3005,10 @@ type CreateInviteLinkPayload {
 input RevokeInviteLinkInput { inviteLink: UUID! }
 type RevokeInviteLinkPayload { inviteLink: InviteLink }
 
-"The anonymous pre-submit view of an invite link (the
+"The anonymous pre-registration view of an invite link (the
  `inviteLinkCheck` query) — enough to gate the registration form
- and the key ceremony on a usable capability, and to show who is
- vouching. Holding the id is holding the link."
+ on a usable capability, and to show who is vouching. Holding the
+ id is holding the link."
 type InviteLinkCheck {
   "Whether the link can stage a new applicant now — live,
    unexpired, unrevoked, and (single-use) its one slot free."
@@ -3059,20 +3059,13 @@ type AccountDeletionPayload {
   includesContent: Boolean!
 }
 
-extend type Query {
-  "The applicant's own application view, authorized by the
-   applicant token."
-  application(applicantToken: String!): ApplicationView
-}
-
 extend type Mutation {
-  submitApplication(input: SubmitApplicationInput!): SubmitApplicationPayload!
-  verifyApplicantEmail(input: VerifyApplicantEmailInput!): VerifyApplicantEmailPayload!
+  register(input: RegisterInput!): RegisterPayload!
+  verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
-  submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
-  approveApplicantRegistration(input: ApproveApplicantRegistrationInput!): ApproveApplicantRegistrationPayload!
+  attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
+  applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
-  claimLandedSession(input: ClaimLandedSessionInput!): ClaimLandedSessionPayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."

@@ -20,8 +20,9 @@ endpoint shapes belong with the implementation.
 
 In scope:
 
-- Account lifecycle (applicant staging via invite links, the
-  device key ceremony, approval, landing, deletion handoff).
+- Account lifecycle (registration via invite links, the account
+  states, the device key ceremony, approval, landing, deletion
+  handoff).
 - Credentials (password storage, reset, and change; email change).
 - Session tokens (JWT access + Postgres-backed refresh).
 - Session listing and revocation.
@@ -158,6 +159,30 @@ blob, printing the recovery code once, so the operator reaches
 the account through the ordinary login + restore path
 ([architecture.md](architecture.md#genesis-bootstrap)).
 
+### Account states
+
+Every user-kind account carries one **account state** — `guest |
+applicant | member`, a column on the credentials row
+([data-model.md](data-model.md)):
+
+- **`guest`** — an account with no application. Reserved in the
+  enum; no flow creates one yet.
+- **`applicant`** — registered through an invite link, not yet
+  landed. Reads everything; the only signing it does is its own
+  admission handshake.
+- **`member`** — the Registration confirmed; the account fronts a
+  full actor on the graph.
+
+The state gates *acting through CoGra* and is enforced
+server-side — an acting call from a non-member account is
+`FORBIDDEN` ([api-spec.md](api-spec.md)). It is service state,
+distinct from two neighbors: the mutual-pair **membership** of
+[invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)
+— a `member` account that has not yet reciprocated is a member in
+the account sense while its pair is still incomplete — and write
+**standing**, which is L1's write rule over a member's records,
+never an account fact (see the doc intro).
+
 ### Invite-link generation (inviter side)
 
 When an authenticated actor generates an invite link, the server
@@ -188,44 +213,62 @@ the dev path: the dev mailer logs the bare token, and composing
 full URLs into mail bodies arrives with the web pages that answer
 them).
 
-### Application (the staged state)
+### Application (the applicant state)
 
 1. **Link open.** The applicant opens the URL in the app. The
    app validates the capability through the anonymous
    `inviteLinkCheck` query — usability (unexpired, not revoked,
    slot available) plus the inviter's handle, so an unusable link
-   refuses before the form and the key ceremony, and the form can
-   show who is vouching.
-2. **Registration submit.** The applicant chooses handle,
-   email, and password. The server creates an `auth_applicants`
-   row — off-graph service state only, no account, nothing on
-   the graph — sends a verification email, and returns the
-   **applicant token**: the hashed-at-rest secret that authorizes
-   exactly this applicant's own flow (status, registration
-   signing, the first-session claim). The row id is visible to
-   the inviter's queue and is deliberately not a capability.
-3. **The key ceremony, on the device.** The app generates the
-   applicant's signing key and L0 address locally; the public
-   key and address join the applicant row. This runs at
-   application time because approval funds a burn **to the
+   refuses before the form, and the form can show who is
+   vouching.
+2. **Registration.** The applicant chooses handle, email, and
+   password. The server creates a real account — the actor row
+   (no key yet) and its login credentials, in the **applicant**
+   account state — records the application against the link,
+   sends the verification email, and returns an ordinary
+   session. Handle and email conflicts surface here, at the
+   form, before anything else has happened. From this point the
+   person is simply a logged-in account: sessions, sign-out,
+   password change and reset all work as for any other account,
+   and every later step of the flow is session-authorized —
+   there is no applicant-side token, no parallel auth surface.
+   The account is pure L2 state; **nothing touches L1 before
+   approval.**
+3. **The key ceremony, as a logged-in step.** The app generates
+   the applicant's signing key and L0 address locally and
+   attaches the public key and address to the account. This runs
+   before approval because approval funds a burn **to the
    applicant's own address** — the address must exist before
    anyone can fund it. In the same step the app offers the
    key-backup choice: generate the recovery code and seal the
    blob on the device — or decline, with the consequence stated
-   ("Key recovery" above). The sealed blob waits on the device
-   and uploads on the first session after landing: the backup
-   store hangs off the landed account, and before landing there
-   is no actor to lose.
+   ("Key recovery" above). The sealed blob uploads immediately
+   after the attach — the account it hangs off already exists.
+   The attached key is replaceable while the application is
+   unapproved — a device lost before approval costs nothing but
+   a re-run of the ceremony — and immutable from approval on,
+   when the funding burn binds the address.
 4. **Email verification.** The applicant clicks the link,
-   proving the login channel. Unverified applications expire
-   after 24 hours (reaper below); verification re-bounds the
-   application's life to its link's expiry — a verified applicant
-   persists exactly while the link lives.
+   proving the login channel.
 
-A staged applicant can already **read** — the shared graph is
-public — but cannot act. Approval latency is a UX cost, not a
-correctness problem. Clients take that literally: an applicant
-lands in the same shell as a member and browses the read surfaces
+An application is **approvable** once the email is verified and
+a key is attached — the server enforces both at approval. The
+two proofs are independent; the app can run steps 3 and 4 in
+either order.
+
+**Expiry.** A never-verified account expires 24 hours after
+registration: the reaper deletes it — credentials, application,
+any uploaded backup — and frees the handle. Once verified, the
+account persists: a verified-but-never-approved applicant keeps
+their login indefinitely. The application row, not the account,
+is bounded by its link's expiry; a fresh invite link re-arms an
+expired application (`applyWithInvite`,
+[api-spec.md](api-spec.md)) without touching the account.
+
+An applicant can already **read** — the shared graph is public —
+but cannot act. Approval latency is a UX cost, not a correctness
+problem. Clients take that literally: an applicant lands in the
+same shell as a member and browses the read surfaces
 immediately, with the application riding along as cards and
 dismissible hints — the actionable email-verification step, the
 approval wait, the landing — and only *acting* gated. The waiting
@@ -251,15 +294,20 @@ backend then runs the admission sequence:
    over the host-sealed verified act: one ceremony, two
    signatures (the backend cannot sign for anyone —
    [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
-   the backend relays each step and the record lands.
+   the backend relays each step and the record lands. The
+   handshake rides the ordinary session-authorized staged-write
+   surface ([api-spec.md](api-spec.md)) — a session exists from
+   registration, so admission needs no dedicated signing
+   mutations.
 3. **The inviter's Opinion** toward the new Profile — prepared
    for the inviter, signed on their device, relayed.
 4. **Landing** — when the Registration confirms in the mirror,
-   the actor row and its login credentials are created (moved
-   across from the applicant row; the identity association is
-   columns on the actor row — [data-model.md](data-model.md)) and
-   the applicant row is marked landed; the device then claims the
-   first session with its applicant token.
+   the account state flips to `member` and the application row is
+   marked landed. Nothing moves and nothing is claimed: the
+   credentials have been the account's since registration, the
+   identity association since the attach
+   ([data-model.md](data-model.md)), and the sessions never
+   stopped being ordinary sessions.
 
 The flow tolerates latency at every step — an approval the
 applicant's device hasn't signed yet simply waits; staged records
@@ -271,7 +319,7 @@ when the joiner points back — their own client-signed Opinion
 toward the inviter's Profile, prompted at first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 The prompt's target comes from the viewer-only `User.invitedBy`
-field — landing provenance kept on the applicant row. It is a
+field — landing provenance kept on the application row. It is a
 graph act, not an auth step; auth's involvement ends at landing.
 
 The prompt derives from the graph, not from client state: the
@@ -279,7 +327,7 @@ viewer-only `User.hasReciprocated` field is true iff the joiner's
 reciprocal Opinion exists — confirmed in the record mirror, or in
 flight as one of the viewer's staged writes. The confirmed check
 latches: once the mirror shows the Opinion, `reciprocated_at` is
-set on the landed applicant row and the mirror is not queried
+set on the landed application row and the mirror is not queried
 again. The latch is a derived cache that cannot diverge — the
 accepted back-edge is permanent
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)) —
@@ -290,27 +338,33 @@ the prompt is a device-local preference, never account state: the
 prompt is an offer, and it legitimately reappears on a new device
 until the pair is complete.
 
-**Reaper.** A periodic background job deletes expired
-`auth_applicants` rows (email never verified within 24 h, or the
-link's lifetime ended without approval). The reaper is the normal
+**Reaper.** A periodic background job deletes never-verified
+accounts past their 24-hour bound — actor row, credentials,
+application, any key backup — freeing the handle and email.
+Deletion is legitimate exactly because nothing has touched L1: a
+pre-member account is pure L2 service state. Verified accounts
+are never reaped; an application whose link expired simply stops
+being approvable ("Expiry" above). The reaper is the normal
 cleanup path; it does not run as part of any user-facing request.
 
-**Re-registration collision.** A UNIQUE constraint on `email` in
-`auth_applicants` prevents two live applications for the same
-address. If the existing row is still live, the submit is
-rejected and the API surfaces "application in progress — check
-your email"; if it is expired but not yet swept, the submit
-overwrites it (`ON CONFLICT (email) DO UPDATE ... WHERE
-expires_at < NOW()`), so the experience never depends on the
-sweep schedule. The constraint and conflict handling live with
-the schema in [data-model.md](data-model.md).
+**Registration collision.** `actors.handle` and
+`user_credentials.email` are UNIQUE; a duplicate registration
+refuses at the form (`HANDLE_TAKEN` / `EMAIL_IN_USE`). One
+carve-out keeps the experience independent of the sweep
+schedule: a never-verified account past its 24-hour bound is
+dead even before the reaper sweeps it, so a registration
+claiming its handle or email replaces it in place. The
+constraints and replacement handling live with the schema in
+[data-model.md](data-model.md).
 
-**Why nothing exists before approval:** the primitive forbids a
-partial member — there is no "pending" actor state on the graph,
-and the no-User-before-verification invariant survives as CoGra's
-L2 rule ([user.md §2](../primitive/user.md#2-creation)). An
-applicant is exactly one off-graph row; abandoning it leaves no
-trace beyond itself.
+**Why nothing touches L1 before approval:** the primitive
+forbids a partial member — there is no "pending" actor state on
+the graph, and the no-User-before-verification invariant
+survives as CoGra's L2 rule
+([user.md §2](../primitive/user.md#2-creation)). A pre-member
+account is pure L2 service state — rows in CoGra's store,
+nothing on the graph; the graph first learns of the person when
+their approved Registration lands.
 
 ### Self-service deletion (handoff out)
 
@@ -349,8 +403,8 @@ logged, and never returned by the API.
 
 ### Handle and email format
 
-Both are validated and normalized at application submit before
-any store write; a failure surfaces as a `BAD_INPUT` userError
+Both are validated and normalized at registration before any
+store write; a failure surfaces as a `BAD_INPUT` userError
 pinned to the offending field (`handle` / `email`).
 
 - **Handle.** 3–30 characters, `[a-z0-9_]` (lowercase letters,
@@ -526,9 +580,9 @@ thresholds are an implementation choice.
 
 - Login attempts — limited per IP and per account, with
   exponential backoff on consecutive failures.
-- Application submits — limited per IP and per invite link.
+- Registrations — limited per IP and per invite link.
 - Password-reset requests — limited per IP and per account.
-- Verification-email resend — limited per applicant row.
+- Verification-email resend — limited per account.
 
 Abuse mitigation lives at the API edge, not in the graph primitives — same
 framing as [moderation.md](../instances/moderation.md).
