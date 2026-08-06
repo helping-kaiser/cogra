@@ -152,9 +152,9 @@ There is no fire-and-forget invitation.
 The flow:
 
 1. **The link stages.** A person following the link registers as
-   an **applicant** — off-graph service state only. An abandoned
-   or unapproved application leaves no record beyond itself:
-   no account, no records, nothing on the graph.
+   an **applicant** — service-side state only: nothing touches
+   the graph before approval, and an abandoned or unapproved
+   application leaves no record on it.
 2. **The inviter approves** — per applicant, or in batches for
    high-reach onboarding. Approval is the deliberate act that
    commits the inviter's stance: the backend then runs the
