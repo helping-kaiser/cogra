@@ -1,9 +1,10 @@
-// The onboarding destinations: invite entry and the application form.
-// After submit the applicant lands in the Home shell, where the
-// application rides along as cards (feature:home) — there is no
-// waiting screen. Stateless screens + thin routes
-// (android/CLAUDE.md "Architecture"); semantics land with the UI
-// (android.md "Accessibility").
+// The onboarding destinations: invite entry, the registration form,
+// and the key ceremony. Registering logs the applicant in and drops
+// them into the Home shell, where the application rides along as cards
+// (feature:home); the ceremony is a logged-in step reached from its
+// card. Stateless screens + thin routes (android/CLAUDE.md
+// "Architecture"); semantics land with the UI (android.md
+// "Accessibility").
 
 package com.cogra.feature.onboarding
 
@@ -142,31 +143,22 @@ fun InviteEntryScreen(
 }
 
 // --------------------------------------------------------------------
-// Application form + the key/backup step
+// Registration form
 // --------------------------------------------------------------------
 
 @Composable
 fun ApplyRoute(
     inviteId: String,
-    onSubmitted: () -> Unit,
     viewModel: ApplyViewModel = hiltViewModel(),
 ) {
     viewModel.inviteId = inviteId
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.submitted) {
-        if (state.submitted) onSubmitted()
-    }
     ApplyScreen(
         state = state,
         onHandleChange = viewModel::onHandleChange,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
-        onContinueToBackup = viewModel::onContinueToBackup,
-        onAcceptBackup = viewModel::onAcceptBackup,
-        onCodeSaved = viewModel::onCodeSaved,
-        onDeclineBackup = viewModel::onDeclineBackup,
-        onCancelDecline = viewModel::onCancelDecline,
-        onConfirmDecline = viewModel::onConfirmDecline,
+        onSubmit = viewModel::onSubmit,
     )
 }
 
@@ -176,7 +168,123 @@ fun ApplyScreen(
     onHandleChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onContinueToBackup: () -> Unit,
+    onSubmit: () -> Unit,
+) {
+    Scaffold { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.apply_title),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            OutlinedTextField(
+                value = state.handle,
+                onValueChange = onHandleChange,
+                label = { Text(stringResource(R.string.apply_handle)) },
+                supportingText = { Text(stringResource(R.string.apply_handle_rules)) },
+                isError = state.errorField == "handle",
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("apply_handle"),
+            )
+            OutlinedTextField(
+                value = state.email,
+                onValueChange = onEmailChange,
+                label = { Text(stringResource(R.string.login_email)) },
+                isError = state.errorField == "email",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("apply_email"),
+            )
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = onPasswordChange,
+                label = { Text(stringResource(R.string.login_password)) },
+                supportingText = { Text(stringResource(R.string.apply_password_rules)) },
+                isError = state.errorField == "password",
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("apply_password"),
+            )
+            state.error?.let {
+                Text(
+                    text = stringResource(it.applyMessage()),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("apply_error"),
+                )
+            }
+            if (state.transportFailed) {
+                Text(
+                    text = stringResource(R.string.error_transport),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("apply_transport_error"),
+                )
+            }
+            if (state.inProgress) {
+                CircularProgressIndicator(modifier = Modifier.testTag("apply_progress"))
+            }
+            Button(
+                onClick = onSubmit,
+                enabled = state.formValid && !state.inProgress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("apply_continue"),
+            ) {
+                Text(stringResource(R.string.apply_continue))
+            }
+        }
+    }
+}
+
+private fun ErrorCode.applyMessage(): Int = when (this) {
+    ErrorCode.INVITE_UNUSABLE -> R.string.invite_unusable
+    ErrorCode.HANDLE_TAKEN -> R.string.apply_handle_taken
+    ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
+    ErrorCode.EMAIL_IN_USE -> R.string.apply_email_in_use
+    ErrorCode.BAD_INPUT -> R.string.apply_bad_input
+    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
+    else -> R.string.error_generic
+}
+
+// --------------------------------------------------------------------
+// Key ceremony — a logged-in step, reached from its Home card
+// --------------------------------------------------------------------
+
+@Composable
+fun KeyCeremonyRoute(
+    onDone: () -> Unit,
+    viewModel: KeyCeremonyViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state.done) {
+        if (state.done) onDone()
+    }
+    KeyCeremonyScreen(
+        state = state,
+        onAcceptBackup = viewModel::onAcceptBackup,
+        onCodeSaved = viewModel::onCodeSaved,
+        onDeclineBackup = viewModel::onDeclineBackup,
+        onCancelDecline = viewModel::onCancelDecline,
+        onConfirmDecline = viewModel::onConfirmDecline,
+    )
+}
+
+@Composable
+fun KeyCeremonyScreen(
+    state: KeyCeremonyUiState,
     onAcceptBackup: () -> Unit,
     onCodeSaved: () -> Unit,
     onDeclineBackup: () -> Unit,
@@ -192,13 +300,64 @@ fun ApplyScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            when (state.step) {
-                ApplyStep.FORM -> FormStep(
-                    state, onHandleChange, onEmailChange, onPasswordChange, onContinueToBackup,
+            Text(
+                text = stringResource(R.string.backup_title),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(stringResource(R.string.backup_explainer))
+            if (state.attachFailed) {
+                Text(
+                    text = stringResource(R.string.error_transport),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("ceremony_attach_error"),
                 )
-                ApplyStep.BACKUP -> BackupStep(
-                    state, onAcceptBackup, onCodeSaved, onDeclineBackup,
-                )
+            }
+            if (state.inProgress) {
+                CircularProgressIndicator(modifier = Modifier.testTag("backup_progress"))
+            }
+            when (val code = state.recoveryCode) {
+                null -> {
+                    Button(
+                        onClick = onAcceptBackup,
+                        enabled = !state.inProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("backup_accept"),
+                    ) {
+                        Text(stringResource(R.string.backup_accept))
+                    }
+                    OutlinedButton(
+                        onClick = onDeclineBackup,
+                        enabled = !state.inProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("backup_decline"),
+                    ) {
+                        Text(stringResource(R.string.backup_decline))
+                    }
+                }
+                else -> {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = code,
+                            style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .testTag("backup_code"),
+                        )
+                    }
+                    Text(stringResource(R.string.backup_code_explainer))
+                    Button(
+                        onClick = onCodeSaved,
+                        enabled = !state.inProgress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("backup_code_saved"),
+                    ) {
+                        Text(stringResource(R.string.backup_code_saved))
+                    }
+                }
             }
         }
     }
@@ -227,150 +386,6 @@ fun ApplyScreen(
             },
         )
     }
-}
-
-@Composable
-private fun FormStep(
-    state: ApplyUiState,
-    onHandleChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onContinue: () -> Unit,
-) {
-    Text(
-        text = stringResource(R.string.apply_title),
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.semantics { heading() },
-    )
-    OutlinedTextField(
-        value = state.handle,
-        onValueChange = onHandleChange,
-        label = { Text(stringResource(R.string.apply_handle)) },
-        supportingText = { Text(stringResource(R.string.apply_handle_rules)) },
-        isError = state.errorField == "handle",
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("apply_handle"),
-    )
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = onEmailChange,
-        label = { Text(stringResource(R.string.login_email)) },
-        isError = state.errorField == "email",
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("apply_email"),
-    )
-    OutlinedTextField(
-        value = state.password,
-        onValueChange = onPasswordChange,
-        label = { Text(stringResource(R.string.login_password)) },
-        supportingText = { Text(stringResource(R.string.apply_password_rules)) },
-        isError = state.errorField == "password",
-        visualTransformation = PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("apply_password"),
-    )
-    state.error?.let {
-        Text(
-            text = stringResource(it.applyMessage()),
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.testTag("apply_error"),
-        )
-    }
-    if (state.transportFailed) {
-        Text(
-            text = stringResource(R.string.error_transport),
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.testTag("apply_transport_error"),
-        )
-    }
-    Button(
-        onClick = onContinue,
-        enabled = state.formValid && !state.inProgress,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("apply_continue"),
-    ) {
-        Text(stringResource(R.string.apply_continue))
-    }
-}
-
-@Composable
-private fun BackupStep(
-    state: ApplyUiState,
-    onAcceptBackup: () -> Unit,
-    onCodeSaved: () -> Unit,
-    onDeclineBackup: () -> Unit,
-) {
-    Text(
-        text = stringResource(R.string.backup_title),
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.semantics { heading() },
-    )
-    Text(stringResource(R.string.backup_explainer))
-    if (state.inProgress) {
-        CircularProgressIndicator(modifier = Modifier.testTag("backup_progress"))
-    }
-    when (val code = state.recoveryCode) {
-        null -> {
-            Button(
-                onClick = onAcceptBackup,
-                enabled = !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("backup_accept"),
-            ) {
-                Text(stringResource(R.string.backup_accept))
-            }
-            OutlinedButton(
-                onClick = onDeclineBackup,
-                enabled = !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("backup_decline"),
-            ) {
-                Text(stringResource(R.string.backup_decline))
-            }
-        }
-        else -> {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = code,
-                    style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .testTag("backup_code"),
-                )
-            }
-            Text(stringResource(R.string.backup_code_explainer))
-            Button(
-                onClick = onCodeSaved,
-                enabled = !state.inProgress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("backup_code_saved"),
-            ) {
-                Text(stringResource(R.string.backup_code_saved))
-            }
-        }
-    }
-}
-
-private fun ErrorCode.applyMessage(): Int = when (this) {
-    ErrorCode.INVITE_UNUSABLE -> R.string.invite_unusable
-    ErrorCode.HANDLE_TAKEN -> R.string.apply_handle_taken
-    ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
-    ErrorCode.APPLICATION_IN_PROGRESS -> R.string.apply_in_progress
-    ErrorCode.BAD_INPUT -> R.string.apply_bad_input
-    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
-    else -> R.string.error_generic
 }
 
 @Composable

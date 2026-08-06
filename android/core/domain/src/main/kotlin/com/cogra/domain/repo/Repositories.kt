@@ -17,35 +17,36 @@ import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
 import java.time.Instant
 
-/** The anonymous applicant flow: invite link to landed first session. */
+/**
+ * The joining flow (auth.md "Application"): registration creates the
+ * account and returns an ordinary session; every later step is
+ * session-authorized — there is no applicant token.
+ */
 interface OnboardingRepository {
     /** Null when the id references no link. */
     suspend fun checkInviteLink(id: String): Outcome<InviteCheck?>
 
-    suspend fun submitApplication(
+    /** Creates the account in the applicant state; the first session. */
+    suspend fun register(
         inviteLink: String,
         handle: String,
         email: String,
         password: String,
-        actorPubkeyBase64: String,
-        l0Address: String,
-    ): Outcome<String>
+        deviceLabel: String?,
+    ): Outcome<AuthTokens>
 
     suspend fun verifyEmail(verificationToken: String): Outcome<Unit>
 
     suspend fun resendVerificationEmail(email: String): Outcome<Unit>
 
-    /** The applicant's status poll; null when the token authorizes nothing. */
-    suspend fun application(applicantToken: String): Outcome<ApplicationStatus?>
+    /** The key ceremony's server half; replaceable until approval. */
+    suspend fun attachActorKey(actorPubkeyBase64: String, l0Address: String): Outcome<Unit>
 
-    /** The applicant-token twin of `submitProposals` (one staged Registration). */
-    suspend fun submitRegistration(applicantToken: String, signatureBase64: String): Outcome<StagedWriteView>
+    /** Re-arms an expired, never-approved application with a fresh link. */
+    suspend fun applyWithInvite(inviteLink: String): Outcome<Unit>
 
-    /** The applicant-token twin of `approveActs`. */
-    suspend fun approveRegistration(applicantToken: String, signatureBase64: String): Outcome<StagedWriteView>
-
-    /** Mints the first session once landed; BAD_INPUT while not landed yet. */
-    suspend fun claimLandedSession(applicantToken: String, deviceLabel: String?): Outcome<AuthTokens>
+    /** The me-driven status poll — also the crash-repair hook. */
+    suspend fun applicationStatus(): Outcome<ApplicationStatus>
 }
 
 /** Login, refresh, and session management — the L2 half of auth. */
@@ -114,8 +115,8 @@ interface AccountRepository {
     suspend fun revokeInviteLink(id: String): Outcome<Unit>
 
     /** The priced vouch; returns the inviter's own Opinion writes to sign. */
-    suspend fun approveApplicant(
-        applicantId: String,
+    suspend fun approveApplication(
+        applicationId: String,
         pDirected: Double,
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>>

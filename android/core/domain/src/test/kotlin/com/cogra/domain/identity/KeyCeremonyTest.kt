@@ -4,33 +4,24 @@ import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
-import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.ErrorCode
+import com.cogra.domain.Outcome
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
-import com.cogra.domain.InviteCheck
-import com.cogra.domain.InviteLinkInfo
-import com.cogra.domain.Outcome
-import com.cogra.domain.SessionInfo
-import com.cogra.domain.StagedWriteView
-import com.cogra.domain.UserError
-import com.cogra.domain.UserProfile
-import com.cogra.domain.repo.AccountRepository
-import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.testing.ThrowingAccountRepository
+import com.cogra.domain.testing.ThrowingOnboardingRepository
+import com.cogra.domain.testing.ThrowingSessionRepository
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
-import java.time.Instant
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-private open class StubAccount : AccountRepository {
+private class StubAccount : ThrowingAccountRepository() {
     var uploaded: ByteArray? = null
     var served: ByteArray? = null
     var failUpload = false
 
-    override suspend fun me(): Outcome<UserProfile?> = throw UnsupportedOperationException()
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(served)
 
     override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
@@ -38,35 +29,28 @@ private open class StubAccount : AccountRepository {
         uploaded = blob
         return Outcome.Success(Unit)
     }
+}
 
-    override suspend fun changePassword(currentPassword: String, newPassword: String) =
-        throw UnsupportedOperationException()
-    override suspend fun changeHandle(handle: String) = throw UnsupportedOperationException()
-    override suspend fun requestPasswordReset(email: String) = throw UnsupportedOperationException()
-    override suspend fun confirmPasswordReset(resetToken: String, newPassword: String) =
-        throw UnsupportedOperationException()
-    override suspend fun requestEmailChange(newEmail: String, currentPassword: String) =
-        throw UnsupportedOperationException()
-    override suspend fun confirmEmailChange(code: String) = throw UnsupportedOperationException()
-    override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = throw UnsupportedOperationException()
-    override suspend fun createInviteLink(
-        expiresAt: Instant,
-        prefillPDirected: Double,
-        prefillPInterest: Double,
-        singleUse: Boolean,
-    ): Outcome<InviteLinkInfo> = throw UnsupportedOperationException()
-    override suspend fun revokeInviteLink(id: String) = throw UnsupportedOperationException()
-    override suspend fun approveApplicant(applicantId: String, pDirected: Double, pInterest: Double) =
-        throw UnsupportedOperationException()
+private class AttachRecorder : ThrowingOnboardingRepository() {
+    val attached = mutableListOf<Pair<String, String>>()
+    var outcome: Outcome<Unit> = Outcome.Success(Unit)
+
+    override suspend fun attachActorKey(actorPubkeyBase64: String, l0Address: String): Outcome<Unit> {
+        attached += actorPubkeyBase64 to l0Address
+        return outcome
+    }
 }
 
 class KeyCeremonyTest {
 
     private val identity = FakeIdentityStore()
+    private val onboarding = AttachRecorder()
+    private val account = StubAccount()
+    private val ceremony = KeyCeremony(identity, onboarding, account)
 
     @Test
     fun theCeremonyCreatesAndStoresTheKey() = runTest {
-        val public = KeyCeremony(identity).createActorKey()
+        val public = ceremony.createActorKey()
         val stored = ActorKey.fromSeed(checkNotNull(identity.seed))
         assertThat(public.l0Address).isEqualTo(stored.address())
         assertThat(Base64.getDecoder().decode(public.publicKeyBase64))
@@ -74,8 +58,14 @@ class KeyCeremonyTest {
     }
 
     @Test
+    fun theAttachSendsTheStoredKeysPublicHalves() = runTest {
+        val public = ceremony.createActorKey()
+        assertThat(ceremony.attachActorKey()).isEqualTo(Outcome.Success(Unit))
+        assertThat(onboarding.attached).containsExactly(public.publicKeyBase64 to public.l0Address)
+    }
+
+    @Test
     fun theBackupOfferSealsTheSeedUnderAFreshCode() = runTest {
-        val ceremony = KeyCeremony(identity)
         ceremony.createActorKey()
         val display = ceremony.createPendingBackup()
         // The parked blob opens under the displayed code and carries the seed.
@@ -87,9 +77,24 @@ class KeyCeremonyTest {
     }
 
     @Test
+    fun theFlushUploadsThenClearsAndAFailureKeepsTheBlob() = runTest {
+        // Nothing parked: trivially done.
+        assertThat(ceremony.uploadPendingBackup()).isTrue()
+
+        identity.pendingBlob = byteArrayOf(7)
+        account.failUpload = true
+        assertThat(ceremony.uploadPendingBackup()).isFalse()
+        assertThat(identity.pendingBlob).isEqualTo(byteArrayOf(7))
+
+        account.failUpload = false
+        assertThat(ceremony.uploadPendingBackup()).isTrue()
+        assertThat(account.uploaded).isEqualTo(byteArrayOf(7))
+        assertThat(identity.pendingBlob).isNull()
+    }
+
+    @Test
     fun enableOrReplaceUploadsABlobTheNewCodeOpens() = runTest {
         identity.seed = ActorKey.generate().seed()
-        val account = StubAccount()
         val outcome = BackupManager(identity, account).enableOrReplace()
         val display = (outcome as Outcome.Success).value
         val opened = openKeyBackup(checkNotNull(account.uploaded), RecoveryCode.fromInput(display))
@@ -98,7 +103,7 @@ class KeyCeremonyTest {
 
     @Test
     fun enableOrReplaceWithoutAKeyFails() = runTest {
-        assertThat(BackupManager(identity, StubAccount()).enableOrReplace())
+        assertThat(BackupManager(identity, account).enableOrReplace())
             .isInstanceOf(Outcome.Failed::class.java)
     }
 
@@ -106,7 +111,7 @@ class KeyCeremonyTest {
     fun restoreRoundTripsTheActor() = runTest {
         val seed = ActorKey.generate().seed()
         val code = RecoveryCode.generate()
-        val account = StubAccount().apply { served = sealKeyBackup(seed, code) }
+        account.served = sealKeyBackup(seed, code)
         val result = ActorRestorer(identity, account).restore(code.display())
         assertThat(result).isEqualTo(RestoreResult.Restored)
         assertThat(identity.seed).isEqualTo(seed)
@@ -114,7 +119,6 @@ class KeyCeremonyTest {
 
     @Test
     fun restoreDistinguishesItsFailures() = runTest {
-        val account = StubAccount()
         val restorer = ActorRestorer(identity, account)
 
         // Not a code at all.
@@ -133,15 +137,9 @@ class KeyCeremonyTest {
     @Test
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r")) }
-        val sessions = object : SessionRepository {
-            override suspend fun logIn(email: String, password: String, deviceLabel: String?) =
-                throw UnsupportedOperationException()
-            override suspend fun refresh(refreshToken: String): Outcome<AuthTokens> =
-                throw UnsupportedOperationException()
-            override suspend fun sessions(): Outcome<List<SessionInfo>> = throw UnsupportedOperationException()
+        val sessions = object : ThrowingSessionRepository() {
             override suspend fun revokeSession(id: String?): Outcome<Unit> =
                 Outcome.Failed(IOException("offline"))
-            override suspend fun revokeOtherSessions(): Outcome<Int> = throw UnsupportedOperationException()
         }
         SignOut(sessions, tokens).signOut()
         assertThat(tokens.current()).isNull()

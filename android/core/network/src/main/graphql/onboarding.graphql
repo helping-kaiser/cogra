@@ -1,6 +1,8 @@
-# The anonymous applicant flow: invite check → application → the
-# registration-handshake twins → the first-session claim (auth.md
-# "Account lifecycle"; api-spec.md "Auth and accounts").
+# The joining flow (auth.md "Application (the applicant state)";
+# api-spec.md "Auth and accounts"): invite check → register (account +
+# session) → the logged-in key attach and email verification → the
+# me-driven status poll. The staged Registration rides the ordinary
+# staged-write surface in writes.graphql.
 
 query InviteLinkCheck($id: UUID!) {
   inviteLinkCheck(id: $id) {
@@ -10,9 +12,11 @@ query InviteLinkCheck($id: UUID!) {
   }
 }
 
-mutation SubmitApplication($input: SubmitApplicationInput!) {
-  submitApplication(input: $input) {
-    applicantToken
+mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    auth {
+      ...AuthSessionFields
+    }
     expiresAt
     userErrors {
       ...UserErrorFields
@@ -20,8 +24,8 @@ mutation SubmitApplication($input: SubmitApplicationInput!) {
   }
 }
 
-mutation VerifyApplicantEmail($input: VerifyApplicantEmailInput!) {
-  verifyApplicantEmail(input: $input) {
+mutation VerifyEmail($input: VerifyEmailInput!) {
+  verifyEmail(input: $input) {
     ok
     userErrors {
       ...UserErrorFields
@@ -35,21 +39,10 @@ mutation ResendVerificationEmail($input: ResendVerificationEmailInput!) {
   }
 }
 
-query Application($applicantToken: String!) {
-  application(applicantToken: $applicantToken) {
-    applicant {
-      ...ApplicantFields
-    }
-    stagedRegistration {
-      ...StagedWriteFields
-    }
-  }
-}
-
-mutation SubmitApplicantRegistration($input: SubmitApplicantRegistrationInput!) {
-  submitApplicantRegistration(input: $input) {
-    stagedWrite {
-      ...StagedWriteFields
+mutation AttachActorKey($input: AttachActorKeyInput!) {
+  attachActorKey(input: $input) {
+    user {
+      id
     }
     userErrors {
       ...UserErrorFields
@@ -57,10 +50,10 @@ mutation SubmitApplicantRegistration($input: SubmitApplicantRegistrationInput!) 
   }
 }
 
-mutation ApproveApplicantRegistration($input: ApproveApplicantRegistrationInput!) {
-  approveApplicantRegistration(input: $input) {
-    stagedWrite {
-      ...StagedWriteFields
+mutation ApplyWithInvite($input: ApplyWithInviteInput!) {
+  applyWithInvite(input: $input) {
+    application {
+      ...ApplicationFields
     }
     userErrors {
       ...UserErrorFields
@@ -68,13 +61,17 @@ mutation ApproveApplicantRegistration($input: ApproveApplicantRegistrationInput!
   }
 }
 
-mutation ClaimLandedSession($input: ClaimLandedSessionInput!) {
-  claimLandedSession(input: $input) {
-    auth {
-      ...AuthSessionFields
+query ApplicationStatus {
+  me {
+    id
+    accountState
+    application {
+      ...ApplicationFields
     }
-    userErrors {
-      ...UserErrorFields
+    stagedWrites(first: 10) {
+      nodes {
+        ...StagedWriteFields
+      }
     }
   }
 }

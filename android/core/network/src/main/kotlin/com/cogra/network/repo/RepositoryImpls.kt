@@ -8,12 +8,13 @@ package com.cogra.network.repo
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
+import com.cogra.crypto.Family
+import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
-import com.cogra.domain.ApplicantInfo
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
@@ -21,19 +22,20 @@ import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
+import com.cogra.domain.WriteState
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
-import com.cogra.network.graphql.ApplicationQuery
+import com.cogra.network.graphql.ApplicationStatusQuery
+import com.cogra.network.graphql.ApplyWithInviteMutation
 import com.cogra.network.graphql.ApproveActsMutation
-import com.cogra.network.graphql.ApproveApplicantRegistrationMutation
 import com.cogra.network.graphql.ApproveApplicantsMutation
+import com.cogra.network.graphql.AttachActorKeyMutation
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
-import com.cogra.network.graphql.ClaimLandedSessionMutation
 import com.cogra.network.graphql.ConfirmEmailChangeMutation
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
@@ -44,6 +46,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.PrepareStanceMutation
+import com.cogra.network.graphql.RegisterMutation
 import com.cogra.network.graphql.RequestEmailChangeMutation
 import com.cogra.network.graphql.RequestPasswordResetMutation
 import com.cogra.network.graphql.ResendVerificationEmailMutation
@@ -52,38 +55,37 @@ import com.cogra.network.graphql.RevokeOtherSessionsMutation
 import com.cogra.network.graphql.RevokeSessionMutation
 import com.cogra.network.graphql.SessionsQuery
 import com.cogra.network.graphql.StagedWriteQuery
-import com.cogra.network.graphql.SubmitApplicantRegistrationMutation
-import com.cogra.network.graphql.SubmitApplicationMutation
 import com.cogra.network.graphql.SubmitProposalsMutation
 import com.cogra.network.graphql.UploadKeyBackupMutation
-import com.cogra.network.graphql.VerifyApplicantEmailMutation
-import com.cogra.network.graphql.type.ApplicantApprovalInput
+import com.cogra.network.graphql.VerifyEmailMutation
+import com.cogra.network.graphql.type.ApplicationApprovalInput
+import com.cogra.network.graphql.type.ApplyWithInviteInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
-import com.cogra.network.graphql.type.ApproveApplicantRegistrationInput
 import com.cogra.network.graphql.type.ApproveApplicantsInput
+import com.cogra.network.graphql.type.AttachActorKeyInput
 import com.cogra.network.graphql.type.ChangeHandleInput
 import com.cogra.network.graphql.type.ChangePasswordInput
-import com.cogra.network.graphql.type.ClaimLandedSessionInput
 import com.cogra.network.graphql.type.ConfirmEmailChangeInput
 import com.cogra.network.graphql.type.ConfirmPasswordResetInput
 import com.cogra.network.graphql.type.CreateInviteLinkInput
 import com.cogra.network.graphql.type.LogInInput
 import com.cogra.network.graphql.type.PrepareStanceInput
 import com.cogra.network.graphql.type.ProposalSignatureInput
+import com.cogra.network.graphql.type.RegisterInput
 import com.cogra.network.graphql.type.RequestEmailChangeInput
 import com.cogra.network.graphql.type.RequestPasswordResetInput
 import com.cogra.network.graphql.type.ResendVerificationEmailInput
 import com.cogra.network.graphql.type.RevokeInviteLinkInput
 import com.cogra.network.graphql.type.RevokeSessionInput
-import com.cogra.network.graphql.type.SubmitApplicantRegistrationInput
-import com.cogra.network.graphql.type.SubmitApplicationInput
 import com.cogra.network.graphql.type.SubmitProposalsInput
 import com.cogra.network.graphql.type.UploadKeyBackupInput
-import com.cogra.network.graphql.type.VerifyApplicantEmailInput
+import com.cogra.network.graphql.type.VerifyEmailInput
 import com.cogra.network.payload
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
+import com.cogra.network.toInfo
+import com.cogra.network.toView
 import java.time.Instant
 import java.util.Base64
 import javax.inject.Inject
@@ -98,6 +100,7 @@ private fun authOf(fields: com.cogra.network.graphql.fragment.AuthSessionFields)
 @Singleton
 class OnboardingRepositoryImpl @Inject constructor(
     private val client: ApolloClient,
+    private val guard: AuthGuard,
 ) : OnboardingRepository {
 
     override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> =
@@ -111,88 +114,76 @@ class OnboardingRepositoryImpl @Inject constructor(
             is Outcome.Failed -> fetched
         }
 
-    override suspend fun submitApplication(
+    override suspend fun register(
         inviteLink: String,
         handle: String,
         email: String,
         password: String,
-        actorPubkeyBase64: String,
-        l0Address: String,
-    ): Outcome<String> = client.mutation(
-        SubmitApplicationMutation(
-            SubmitApplicationInput(
+        deviceLabel: String?,
+    ): Outcome<AuthTokens> = client.mutation(
+        RegisterMutation(
+            RegisterInput(
                 inviteLink = inviteLink,
                 handle = handle,
                 email = email,
                 password = password,
-                actorPubkey = actorPubkeyBase64,
-                l0Address = l0Address,
+                deviceLabel = Optional.presentIfNotNull(deviceLabel),
             ),
         ),
-    ).payloadOutcome({ it.submitApplication.userErrors.map { e -> e.userErrorFields } }) {
-        it.submitApplication.applicantToken
+    ).payloadOutcome({ it.register.userErrors.map { e -> e.userErrorFields } }) {
+        it.register.auth?.authSessionFields?.let(::authOf)
     }
 
     override suspend fun verifyEmail(verificationToken: String): Outcome<Unit> = client.mutation(
-        VerifyApplicantEmailMutation(VerifyApplicantEmailInput(verificationToken)),
-    ).payloadOutcome({ it.verifyApplicantEmail.userErrors.map { e -> e.userErrorFields } }) {
-        if (it.verifyApplicantEmail.ok == true) Unit else null
+        VerifyEmailMutation(VerifyEmailInput(verificationToken)),
+    ).payloadOutcome({ it.verifyEmail.userErrors.map { e -> e.userErrorFields } }) {
+        if (it.verifyEmail.ok == true) Unit else null
     }
 
     override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = client.mutation(
         ResendVerificationEmailMutation(ResendVerificationEmailInput(email)),
     ).payloadOutcome({ emptyList() }) { if (it.resendVerificationEmail.ok) Unit else null }
 
-    override suspend fun application(applicantToken: String): Outcome<ApplicationStatus?> =
-        when (val fetched = client.query(ApplicationQuery(applicantToken)).fetch()) {
-            is Outcome.Success -> Outcome.Success(
-                fetched.value.application?.let { view ->
-                    val a = view.applicant.applicantFields
+    override suspend fun attachActorKey(
+        actorPubkeyBase64: String,
+        l0Address: String,
+    ): Outcome<Unit> = guard.run {
+        client.mutation(
+            AttachActorKeyMutation(
+                AttachActorKeyInput(actorPubkey = actorPubkeyBase64, l0Address = l0Address),
+            ),
+        ).payloadOutcome({ it.attachActorKey.userErrors.map { e -> e.userErrorFields } }) {
+            it.attachActorKey.user?.let { Unit }
+        }
+    }
+
+    override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = guard.run {
+        client.mutation(
+            ApplyWithInviteMutation(ApplyWithInviteInput(inviteLink)),
+        ).payloadOutcome({ it.applyWithInvite.userErrors.map { e -> e.userErrorFields } }) {
+            it.applyWithInvite.application?.let { Unit }
+        }
+    }
+
+    override suspend fun applicationStatus(): Outcome<ApplicationStatus> = guard.run {
+        when (val fetched = client.query(ApplicationStatusQuery()).fetch()) {
+            is Outcome.Success -> {
+                val me = fetched.value.me ?: return@run unauthenticated()
+                Outcome.Success(
                     ApplicationStatus(
-                        handle = a.handle,
-                        emailVerified = a.emailVerified,
-                        approvedAt = a.approvedAt,
-                        landedAt = a.landedAt,
-                        expiresAt = a.expiresAt,
-                        stagedRegistration = view.stagedRegistration?.stagedWriteFields?.toDomain(),
-                    )
-                },
-            )
+                        accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
+                        application = me.application?.applicationFields?.toView(),
+                        stagedRegistration = me.stagedWrites?.nodes.orEmpty()
+                            .map { it.stagedWriteFields.toDomain() }
+                            .firstOrNull {
+                                it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
+                            },
+                    ),
+                )
+            }
             is Outcome.Refused -> fetched
             is Outcome.Failed -> fetched
         }
-
-    override suspend fun submitRegistration(
-        applicantToken: String,
-        signatureBase64: String,
-    ): Outcome<StagedWriteView> = client.mutation(
-        SubmitApplicantRegistrationMutation(
-            SubmitApplicantRegistrationInput(applicantToken, signatureBase64),
-        ),
-    ).payloadOutcome({ it.submitApplicantRegistration.userErrors.map { e -> e.userErrorFields } }) {
-        it.submitApplicantRegistration.stagedWrite?.stagedWriteFields?.toDomain()
-    }
-
-    override suspend fun approveRegistration(
-        applicantToken: String,
-        signatureBase64: String,
-    ): Outcome<StagedWriteView> = client.mutation(
-        ApproveApplicantRegistrationMutation(
-            ApproveApplicantRegistrationInput(applicantToken, signatureBase64),
-        ),
-    ).payloadOutcome({ it.approveApplicantRegistration.userErrors.map { e -> e.userErrorFields } }) {
-        it.approveApplicantRegistration.stagedWrite?.stagedWriteFields?.toDomain()
-    }
-
-    override suspend fun claimLandedSession(
-        applicantToken: String,
-        deviceLabel: String?,
-    ): Outcome<AuthTokens> = client.mutation(
-        ClaimLandedSessionMutation(
-            ClaimLandedSessionInput(applicantToken, Optional.presentIfNotNull(deviceLabel)),
-        ),
-    ).payloadOutcome({ it.claimLandedSession.userErrors.map { e -> e.userErrorFields } }) {
-        it.claimLandedSession.auth?.authSessionFields?.let(::authOf)
     }
 }
 
@@ -332,6 +323,7 @@ class AccountRepositoryImpl @Inject constructor(
                         id = me.id,
                         handle = me.handle,
                         displayName = me.displayName,
+                        accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
                         invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
                     ),
                 )
@@ -411,9 +403,8 @@ class AccountRepositoryImpl @Inject constructor(
                             createdAt = link.createdAt,
                             expiresAt = link.expiresAt,
                             revokedAt = link.revokedAt,
-                            applicants = link.applicants.nodes.map { node ->
-                                val a = node.applicantFields
-                                ApplicantInfo(a.id, a.handle, a.emailVerified, a.approvedAt, a.landedAt)
+                            applications = link.applications.nodes.map { node ->
+                                node.applicationFields.toInfo()
                             },
                         )
                     },
@@ -447,7 +438,7 @@ class AccountRepositoryImpl @Inject constructor(
                     createdAt = link.createdAt,
                     expiresAt = link.expiresAt,
                     revokedAt = link.revokedAt,
-                    applicants = emptyList(),
+                    applications = emptyList(),
                 )
             }
         }
@@ -460,14 +451,14 @@ class AccountRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun approveApplicant(
-        applicantId: String,
+    override suspend fun approveApplication(
+        applicationId: String,
         pDirected: Double,
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             ApproveApplicantsMutation(
-                ApproveApplicantsInput(listOf(ApplicantApprovalInput(applicantId, pDirected, pInterest))),
+                ApproveApplicantsInput(listOf(ApplicationApprovalInput(applicationId, pDirected, pInterest))),
             ),
         ).payloadOutcome({ it.approveApplicants.userErrors.map { e -> e.userErrorFields } }) {
             it.approveApplicants.writes?.map { w -> w.preparedWriteFields.toDomain() }

@@ -29,24 +29,18 @@ interface TokenStore {
 /**
  * The device-held actor identity and the onboarding state that must
  * survive process death: the actor seed (exportable — it goes into the
- * backup blob), the applicant token, the sealed backup blob awaiting its
- * first-session upload, and the per-write handshake material the
- * approve step verifies against (the private nonce and pre-signature
- * exist only on the device — trusting the server's echo would weaken
- * "the device verifies what it signs").
+ * backup blob), the sealed backup blob awaiting a retried upload, and
+ * the per-write handshake material the approve step verifies against
+ * (the private nonce and pre-signature exist only on the device —
+ * trusting the server's echo would weaken "the device verifies what it
+ * signs").
  */
 interface IdentityStore {
     suspend fun actorSeed(): ByteArray?
 
     suspend fun saveActorSeed(seed: ByteArray)
 
-    suspend fun applicantToken(): String?
-
-    suspend fun saveApplicantToken(token: String)
-
-    suspend fun clearApplicantToken()
-
-    /** The sealed blob waiting for the first session after landing. */
+    /** A sealed blob whose upload has not succeeded yet. */
     suspend fun pendingBackupBlob(): ByteArray?
 
     suspend fun savePendingBackupBlob(blob: ByteArray)

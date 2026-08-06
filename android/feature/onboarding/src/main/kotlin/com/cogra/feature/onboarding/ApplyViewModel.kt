@@ -1,12 +1,11 @@
 package com.cogra.feature.onboarding
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
-import com.cogra.domain.identity.KeyCeremony
-import com.cogra.domain.repo.OnboardingRepository
-import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.identity.Register
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,20 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The two steps of one destination: the form, then the key + backup step. */
-enum class ApplyStep { FORM, BACKUP }
-
 data class ApplyUiState(
-    val step: ApplyStep = ApplyStep.FORM,
     val handle: String = "",
     val email: String = "",
     val password: String = "",
     val inProgress: Boolean = false,
-    /** The recovery code, displayed exactly once; never persisted. */
-    val recoveryCode: String? = null,
-    /** The decline path asks for an explicit confirmation of the price. */
-    val confirmingDecline: Boolean = false,
-    val submitted: Boolean = false,
     val error: ErrorCode? = null,
     val errorField: String? = null,
     val transportFailed: Boolean = false,
@@ -37,16 +27,16 @@ data class ApplyUiState(
 }
 
 /**
- * Application with the on-device key ceremony (auth.md "Application"
- * steps 2–3): the key and address exist before the submit — approval
- * funds a burn to the applicant's own address — and the backup offer
- * rides the same step, its consequence stated before a decline.
+ * The registration form (auth.md "Application" step 2): the invite
+ * capability plus the login triple. Handle and email conflicts surface
+ * here, at the form, before anything else has happened. Success flips
+ * the token store — the person is simply logged in, and the key
+ * ceremony and email verification follow as logged-in steps in the
+ * Home shell.
  */
 @HiltViewModel
 class ApplyViewModel @Inject constructor(
-    private val onboarding: OnboardingRepository,
-    private val ceremony: KeyCeremony,
-    private val identity: IdentityStore,
+    private val register: Register,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ApplyUiState())
@@ -61,71 +51,28 @@ class ApplyViewModel @Inject constructor(
 
     fun onPasswordChange(v: String) = _state.update { it.copy(password = v, error = null, errorField = null) }
 
-    /** FORM → BACKUP: the ceremony runs now; the offer is next. */
-    fun onContinueToBackup() {
-        if (!_state.value.formValid || _state.value.inProgress) return
-        _state.update { it.copy(step = ApplyStep.BACKUP, confirmingDecline = false) }
-    }
-
-    fun onAcceptBackup() {
-        if (_state.value.inProgress || _state.value.recoveryCode != null) return
-        _state.update { it.copy(inProgress = true) }
-        viewModelScope.launch {
-            ceremony.createActorKey()
-            val code = ceremony.createPendingBackup()
-            _state.update { it.copy(inProgress = false, recoveryCode = code) }
-        }
-    }
-
-    /** After the user confirms the code is written down. */
-    fun onCodeSaved() = submit(withKey = false)
-
-    fun onDeclineBackup() = _state.update { it.copy(confirmingDecline = true) }
-
-    fun onCancelDecline() = _state.update { it.copy(confirmingDecline = false) }
-
-    /** The stated price accepted: no backup, the key exists only here. */
-    fun onConfirmDecline() = submit(withKey = true)
-
-    private fun submit(withKey: Boolean) {
+    fun onSubmit() {
         val current = _state.value
-        if (current.inProgress) return
+        if (!current.formValid || current.inProgress) return
         _state.update { it.copy(inProgress = true, transportFailed = false) }
         viewModelScope.launch {
-            // Declining creates the key now; accepting created it with
-            // the backup offer.
-            val public = if (withKey) {
-                ceremony.createActorKey()
-            } else {
-                checkNotNull(ceremony.publicIdentity()) { "the backup offer creates the key" }
-            }
-            val outcome = onboarding.submitApplication(
+            val outcome = register.register(
                 inviteLink = inviteId,
                 handle = current.handle.trim(),
                 email = current.email.trim(),
                 password = current.password,
-                actorPubkeyBase64 = public.publicKeyBase64,
-                l0Address = public.l0Address,
+                deviceLabel = Build.MODEL,
             )
             when (outcome) {
-                is Outcome.Success -> {
-                    identity.saveApplicantToken(outcome.value)
-                    _state.update { it.copy(inProgress = false, submitted = true) }
-                }
+                is Outcome.Success -> _state.update { it.copy(inProgress = false) }
                 is Outcome.Refused -> {
                     val error = outcome.errors.first()
                     _state.update {
-                        it.copy(
-                            inProgress = false,
-                            step = ApplyStep.FORM,
-                            confirmingDecline = false,
-                            error = error.code,
-                            errorField = error.field?.lastOrNull(),
-                        )
+                        it.copy(inProgress = false, error = error.code, errorField = error.field?.lastOrNull())
                     }
                 }
                 is Outcome.Failed -> _state.update {
-                    it.copy(inProgress = false, transportFailed = true, confirmingDecline = false)
+                    it.copy(inProgress = false, transportFailed = true)
                 }
             }
         }

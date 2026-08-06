@@ -20,12 +20,3 @@ annotation class WebOrigin
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class ApplicationScope
-
-/**
- * The human-readable label this device reports on session-creating
- * calls (auth.md: the session list's display name). Null when the
- * platform offers none. Provided by the app module.
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class DeviceLabel

@@ -25,11 +25,27 @@ data class SessionInfo(
     val isCurrent: Boolean,
 )
 
+/**
+ * A user account's service state (auth.md "Account states"): it gates
+ * acting, never reading. The client gates acting mutations on MEMBER —
+ * a FORBIDDEN from an acting call is a client bug, not a state to
+ * render (api-spec.md "Conventions").
+ */
+enum class AccountState {
+    GUEST,
+    APPLICANT,
+    MEMBER,
+
+    /** A state this client version does not know — gate acting. */
+    UNKNOWN,
+}
+
 /** The viewer's own account. */
 data class UserProfile(
     val id: String,
     val handle: String,
     val displayName: String?,
+    val accountState: AccountState,
     /** Landing provenance — the reciprocation target; null for genesis actors. */
     val invitedBy: ActorRef?,
 )
@@ -44,14 +60,28 @@ data class InviteCheck(
     val expiresAt: Instant,
 )
 
-/** The applicant's own view of their application (`application` query). */
-data class ApplicationStatus(
+/** The viewer's own application row (`User.application`). */
+data class ApplicationView(
     val handle: String,
+    /** One of the two approvability proofs. */
     val emailVerified: Boolean,
+    /** The other proof: the device-minted key and L0 address are attached. */
+    val keyAttached: Boolean,
     val approvedAt: Instant?,
     val landedAt: Instant?,
     val expiresAt: Instant,
-    /** Null before approval and after landing. */
+)
+
+/**
+ * The me-driven onboarding status poll (api-spec.md "Auth and
+ * accounts"): the account state, the latest application, and the staged
+ * Registration riding the ordinary staged-write surface.
+ */
+data class ApplicationStatus(
+    val accountState: AccountState,
+    /** Null when the account has none (expired and reaped). */
+    val application: ApplicationView?,
+    /** The unexpired staged Registration; null when none is staged. */
     val stagedRegistration: StagedWriteView?,
 )
 
@@ -94,14 +124,15 @@ data class InviteLinkInfo(
     val expiresAt: Instant,
     val revokedAt: Instant?,
     /** The issuer's approval queue. */
-    val applicants: List<ApplicantInfo>,
+    val applications: List<ApplicationInfo>,
 )
 
-/** A staged applicant in the inviter's queue. */
-data class ApplicantInfo(
+/** An application in the inviter's queue. */
+data class ApplicationInfo(
     val id: String,
     val handle: String,
     val emailVerified: Boolean,
+    val keyAttached: Boolean,
     val approvedAt: Instant?,
     val landedAt: Instant?,
 )

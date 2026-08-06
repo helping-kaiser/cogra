@@ -54,7 +54,6 @@ class FakeTokenStore : TokenStore {
 
 class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
-    var token: String? = null
     var pendingBlob: ByteArray? = null
     var reciprocationDone = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
@@ -63,16 +62,6 @@ class FakeIdentityStore : IdentityStore {
 
     override suspend fun saveActorSeed(seed: ByteArray) {
         this.seed = seed
-    }
-
-    override suspend fun applicantToken(): String? = token
-
-    override suspend fun saveApplicantToken(token: String) {
-        this.token = token
-    }
-
-    override suspend fun clearApplicantToken() {
-        token = null
     }
 
     override suspend fun pendingBackupBlob(): ByteArray? = pendingBlob
@@ -178,8 +167,8 @@ open class ThrowingAccountRepository : AccountRepository {
         singleUse: Boolean,
     ): Outcome<InviteLinkInfo> = throw UnsupportedOperationException()
     override suspend fun revokeInviteLink(id: String): Outcome<Unit> = throw UnsupportedOperationException()
-    override suspend fun approveApplicant(
-        applicantId: String,
+    override suspend fun approveApplication(
+        applicationId: String,
         pDirected: Double,
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
@@ -196,24 +185,19 @@ open class ThrowingSessionRepository : SessionRepository {
 
 open class ThrowingOnboardingRepository : OnboardingRepository {
     override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> = throw UnsupportedOperationException()
-    override suspend fun submitApplication(
+    override suspend fun register(
         inviteLink: String,
         handle: String,
         email: String,
         password: String,
-        actorPubkeyBase64: String,
-        l0Address: String,
-    ): Outcome<String> = throw UnsupportedOperationException()
+        deviceLabel: String?,
+    ): Outcome<AuthTokens> = throw UnsupportedOperationException()
     override suspend fun verifyEmail(verificationToken: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = throw UnsupportedOperationException()
-    override suspend fun application(applicantToken: String): Outcome<ApplicationStatus?> =
+    override suspend fun attachActorKey(actorPubkeyBase64: String, l0Address: String): Outcome<Unit> =
         throw UnsupportedOperationException()
-    override suspend fun submitRegistration(applicantToken: String, signatureBase64: String): Outcome<StagedWriteView> =
-        throw UnsupportedOperationException()
-    override suspend fun approveRegistration(applicantToken: String, signatureBase64: String): Outcome<StagedWriteView> =
-        throw UnsupportedOperationException()
-    override suspend fun claimLandedSession(applicantToken: String, deviceLabel: String?): Outcome<AuthTokens> =
-        throw UnsupportedOperationException()
+    override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = throw UnsupportedOperationException()
+    override suspend fun applicationStatus(): Outcome<ApplicationStatus> = throw UnsupportedOperationException()
 }
 
 open class ThrowingWriteRepository : WriteRepository {

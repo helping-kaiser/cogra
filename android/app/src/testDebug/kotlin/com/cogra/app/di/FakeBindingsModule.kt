@@ -7,8 +7,8 @@
 
 package com.cogra.app.di
 
+import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
-import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
@@ -34,23 +34,29 @@ import javax.inject.Singleton
 class ScriptedAccountRepository : ThrowingAccountRepository() {
     var profile: UserProfile? = null
     var backupBlob: ByteArray? = null
+    var uploadedBackup: ByteArray? = null
 
     override suspend fun me(): Outcome<UserProfile?> = Outcome.Success(profile)
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(backupBlob)
+
+    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
+        uploadedBackup = blob
+        return Outcome.Success(Unit)
+    }
 }
 
-/** Scriptable applicant state: tests set the status and the claim. */
+/** Scriptable applicant state: tests set the me-driven status. */
 class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
-    var status: ApplicationStatus? = null
-    var claimTokens: AuthTokens? = null
+    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null)
+    val attachedKeys = mutableListOf<String>()
 
-    override suspend fun application(applicantToken: String): Outcome<ApplicationStatus?> =
-        Outcome.Success(status)
+    override suspend fun applicationStatus(): Outcome<ApplicationStatus> = Outcome.Success(status)
 
-    override suspend fun claimLandedSession(applicantToken: String, deviceLabel: String?): Outcome<AuthTokens> =
-        claimTokens?.let { Outcome.Success(it) }
-            ?: super.claimLandedSession(applicantToken, deviceLabel)
+    override suspend fun attachActorKey(actorPubkeyBase64: String, l0Address: String): Outcome<Unit> {
+        attachedKeys += actorPubkeyBase64
+        return Outcome.Success(Unit)
+    }
 }
 
 @Module
