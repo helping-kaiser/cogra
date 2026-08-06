@@ -1,15 +1,16 @@
 name: Docs CI
 
 # Triggers on every PR/push so the required `Markdown link check`
-# status posts on every PR. The job is gated at the job level on
-# whether any docs/markdown files changed; GitHub treats a skipped
-# job's check_run as a passing required status check, so docs-only
-# gating still leaves a mergeable PR.
+# status posts on every PR. The docs filter runs as a step inside
+# the job — not as a separate gating job, which would cost a full
+# runner spin-up and a `needs:` hop before lychee could start — and
+# the lychee step is skipped when no docs or markdown changed, so
+# the job (and the required status) still completes green.
 #
-# Workflow-level `paths:` is deliberately avoided here: a path-skipped
-# workflow posts NO status on PRs that don't match, leaving the
-# required check pending forever and blocking merges. See ci.yml's
-# header for the same rationale.
+# Workflow-level `paths:` is deliberately avoided here: a
+# path-skipped workflow posts NO status on PRs that don't match,
+# leaving the required check pending forever and blocking merges.
+# See ci.yml's header for the same rationale.
 
 on:
   push:
@@ -18,11 +19,9 @@ on:
     branches: [main]
 
 jobs:
-  changes:
-    name: Detect docs changes
+  link-check:
+    name: Markdown link check
     runs-on: ubuntu-latest
-    outputs:
-      docs: ${{ steps.filter.outputs.docs }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -32,15 +31,8 @@ jobs:
             docs:
               - 'docs/**'
               - '**/*.md'
-
-  link-check:
-    name: Markdown link check
-    needs: changes
-    if: needs.changes.outputs.docs == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Run lychee
+        if: steps.filter.outputs.docs == 'true'
         uses: lycheeverse/lychee-action@v2
         with:
           args: >-
