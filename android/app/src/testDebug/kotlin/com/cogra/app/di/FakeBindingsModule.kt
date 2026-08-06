@@ -10,6 +10,7 @@ package com.cogra.app.di
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.Outcome
+import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
@@ -44,6 +45,16 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
         uploadedBackup = blob
         return Outcome.Success(Unit)
     }
+
+    override suspend fun changeHandle(handle: String): Outcome<Unit> {
+        profile = profile?.copy(handle = handle)
+        return Outcome.Success(Unit)
+    }
+}
+
+/** Sessions enough for the Settings destination to render. */
+class ScriptedSessionRepository : ThrowingSessionRepository() {
+    override suspend fun sessions(): Outcome<List<SessionInfo>> = Outcome.Success(emptyList())
 }
 
 /** Scriptable applicant state: tests set the me-driven status. */
@@ -96,7 +107,7 @@ object FakeBindingsModule {
 
     @Provides
     @Singleton
-    fun sessionRepository(): SessionRepository = ThrowingSessionRepository()
+    fun sessionRepository(): SessionRepository = ScriptedSessionRepository()
 
     @Provides
     @Singleton

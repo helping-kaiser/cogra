@@ -87,6 +87,8 @@ unit-tests in isolation:
 - `core:crypto` — the client-side crypto mirroring `common::l1`
   (signing handshake, wire codecs, key-backup blob), pinned to the
   golden vectors; plain Kotlin, no Android dependencies.
+- `core:designsystem` — shared pure-UI Compose components and the
+  Material icon set; no domain or network dependencies.
 - `core:domain` — use-cases and domain types; plain Kotlin, no
   Android dependencies.
 - `core:ranker` — UniFFI bindings to the `ranker` crate (the

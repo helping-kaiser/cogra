@@ -47,6 +47,20 @@ class OnboardingScreensTest {
     }
 
     @Test
+    fun theFormPasswordCarriesItsVisibilityToggle() {
+        compose.setContent {
+            ApplyScreen(
+                state = ApplyUiState(),
+                onHandleChange = {},
+                onEmailChange = {},
+                onPasswordChange = {},
+                onSubmit = {},
+            )
+        }
+        compose.onNodeWithTag("apply_password_toggle").assertExists()
+    }
+
+    @Test
     fun aRefusedRegisterRendersItsMessage() {
         compose.setContent {
             ApplyScreen(

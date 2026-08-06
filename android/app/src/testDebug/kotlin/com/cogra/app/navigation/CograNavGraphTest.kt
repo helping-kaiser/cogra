@@ -5,10 +5,14 @@
 package com.cogra.app.navigation
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
@@ -38,6 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalTestApi::class)
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
 class CograNavGraphTest {
@@ -148,6 +153,31 @@ class CograNavGraphTest {
                 compose.onAllNodesWithTag("home_restore").fetchSemanticsNodes().isEmpty()
         }
         assertThat(identity.seed).isEqualTo(actor.seed())
+    }
+
+    @Test
+    fun aChangedHandleRefreshesTheHomeGreeting() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+
+        waitForTag("home_greeting")
+        compose.onNodeWithTag("home_settings").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
+
+        compose.onNodeWithTag("settings_new_handle").performScrollTo().performTextInput("renamed")
+        compose.onNodeWithTag("settings_change_handle").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        // Home outlives the push/pop; only the nav result re-reads the
+        // profile, so the greeting must show the new handle on return.
+        compose.onNodeWithTag("settings_back").performClick()
+        compose.waitUntilAtLeastOneExists(
+            hasTestTag("home_greeting") and hasText("renamed", substring = true),
+            timeoutMillis = 30_000,
+        )
     }
 
     @Test

@@ -9,16 +9,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -26,17 +37,29 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 
 @Composable
-fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onBack: () -> Unit,
+    onHandleChanged: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // The nav result rides the moment the change lands — independent of
+    // the snackbar's own consumption of the same one-shot.
+    LaunchedEffect(state.feedback) {
+        if ((state.feedback as? SettingsFeedback.Done)?.action == SettingsAction.HANDLE_CHANGED) {
+            onHandleChanged()
+        }
+    }
     SettingsScreen(
         state = state,
+        onBack = onBack,
         onCreateBackup = viewModel::onCreateBackup,
         onBackupCodeSaved = viewModel::onBackupCodeSaved,
         onRevokeSession = viewModel::onRevokeSession,
@@ -47,16 +70,20 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
         onNewHandleChange = viewModel::onNewHandleChange,
         onChangeHandle = viewModel::onChangeHandle,
         onNewEmailChange = viewModel::onNewEmailChange,
+        onEmailChangePasswordChange = viewModel::onEmailChangePasswordChange,
         onRequestEmailChange = viewModel::onRequestEmailChange,
         onEmailChangeCodeChange = viewModel::onEmailChangeCodeChange,
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
+        onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
+    onBack: () -> Unit,
     onCreateBackup: () -> Unit,
     onBackupCodeSaved: () -> Unit,
     onRevokeSession: (String) -> Unit,
@@ -67,12 +94,51 @@ fun SettingsScreen(
     onNewHandleChange: (String) -> Unit,
     onChangeHandle: () -> Unit,
     onNewEmailChange: (String) -> Unit,
+    onEmailChangePasswordChange: (String) -> Unit,
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
+    onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
 ) {
-    Scaffold { padding ->
+    val snackbarHostState = remember { SnackbarHostState() }
+    val feedbackMessage = state.feedback?.let { stringResource(it.message()) }
+    // Consumed only after the snackbar is done: clearing first would
+    // flip the LaunchedEffect key and cancel the showing coroutine.
+    LaunchedEffect(state.feedback) {
+        if (feedbackMessage != null) {
+            snackbarHostState.showSnackbar(feedbackMessage)
+            onFeedbackShown()
+        }
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_title),
+                        modifier = Modifier.semantics { heading() },
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("settings_back"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                        )
+                    }
+                },
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(snackbarData = data, modifier = Modifier.testTag("settings_snackbar"))
+            }
+        },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,39 +147,13 @@ fun SettingsScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.semantics { heading() },
-            )
-            state.error?.let {
-                Text(
-                    text = stringResource(it.settingsMessage()),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("settings_error"),
-                )
-            }
-            if (state.transportFailed) {
-                Text(
-                    text = stringResource(R.string.error_transport),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("settings_transport_error"),
-                )
-            }
-            state.done?.let {
-                Text(
-                    text = stringResource(it.message()),
-                    modifier = Modifier.testTag("settings_done"),
-                )
-            }
-
             BackupSection(state, onCreateBackup, onBackupCodeSaved)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(
                 state,
                 onCurrentPasswordChange, onNewPasswordChange, onChangePassword,
                 onNewHandleChange, onChangeHandle,
-                onNewEmailChange, onRequestEmailChange,
+                onNewEmailChange, onEmailChangePasswordChange, onRequestEmailChange,
                 onEmailChangeCodeChange, onConfirmEmailChange,
             )
 
@@ -230,6 +270,7 @@ private fun CredentialsSection(
     onNewHandleChange: (String) -> Unit,
     onChangeHandle: () -> Unit,
     onNewEmailChange: (String) -> Unit,
+    onEmailChangePasswordChange: (String) -> Unit,
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
@@ -241,27 +282,19 @@ private fun CredentialsSection(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.semantics { heading() },
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.currentPassword,
                 onValueChange = onCurrentPasswordChange,
-                label = { Text(stringResource(R.string.settings_current_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_current_password"),
+                label = stringResource(R.string.settings_current_password),
+                testTag = "settings_current_password",
+                modifier = Modifier.fillMaxWidth(),
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.newPassword,
                 onValueChange = onNewPasswordChange,
-                label = { Text(stringResource(R.string.settings_new_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_new_password"),
+                label = stringResource(R.string.settings_new_password),
+                testTag = "settings_new_password",
+                modifier = Modifier.fillMaxWidth(),
             )
             Button(
                 onClick = onChangePassword,
@@ -298,9 +331,16 @@ private fun CredentialsSection(
                     .fillMaxWidth()
                     .testTag("settings_new_email"),
             )
+            PasswordTextField(
+                value = state.emailChangePassword,
+                onValueChange = onEmailChangePasswordChange,
+                label = stringResource(R.string.settings_email_password),
+                testTag = "settings_email_password",
+                modifier = Modifier.fillMaxWidth(),
+            )
             Button(
                 onClick = onRequestEmailChange,
-                enabled = state.newEmail.contains('@') && state.currentPassword.isNotEmpty() && !state.busy,
+                enabled = state.newEmail.contains('@') && state.emailChangePassword.isNotEmpty() && !state.busy,
                 modifier = Modifier.testTag("settings_request_email"),
             ) {
                 Text(stringResource(R.string.settings_request_email))
@@ -331,6 +371,12 @@ private fun CredentialsSection(
     }
 }
 
+private fun SettingsFeedback.message(): Int = when (this) {
+    is SettingsFeedback.Done -> action.message()
+    is SettingsFeedback.Error -> code.settingsMessage()
+    SettingsFeedback.Transport -> R.string.error_transport
+}
+
 private fun ErrorCode.settingsMessage(): Int = when (this) {
     ErrorCode.INVALID_CREDENTIALS -> R.string.settings_wrong_password
     ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
@@ -343,6 +389,7 @@ private fun ErrorCode.settingsMessage(): Int = when (this) {
 private fun SettingsAction.message(): Int = when (this) {
     SettingsAction.PASSWORD_CHANGED -> R.string.settings_password_changed
     SettingsAction.HANDLE_CHANGED -> R.string.settings_handle_changed
+    SettingsAction.EMAIL_CHANGE_REQUESTED -> R.string.settings_email_change_requested
     SettingsAction.EMAIL_CONFIRMED -> R.string.settings_email_confirmed
     SettingsAction.SESSION_REVOKED -> R.string.settings_session_revoked
     SettingsAction.OTHERS_REVOKED -> R.string.settings_others_revoked
