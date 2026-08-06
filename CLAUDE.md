@@ -217,6 +217,18 @@ Stop and ask only **before** writing — to align on approach, pick
 between options, or surface contradictions. Once the writing is
 done, the workflow runs straight through to the PR.
 
+### Hand test and session hand-off
+
+The final hand test of an Android or web change — on the physical
+device, by hand — belongs to the human, not Claude. Claude still
+verifies its own work along the way, but only through means that
+need no human involvement: unit/UI tests, CI, and emulator or
+adb-driven checks. Then it hands off: every session that changed
+`android/` or `web/` ends by deploying the newest build to the
+human's phone (Android: install the debug build; web: make the
+dev build reachable from the phone's browser) and writing short
+hand-test notes — what's new, and how to test it, step by step.
+
 ---
 
 ## Hard rules — research and session hygiene
