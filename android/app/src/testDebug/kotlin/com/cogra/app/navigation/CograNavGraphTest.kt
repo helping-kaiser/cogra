@@ -173,7 +173,7 @@ class CograNavGraphTest {
 
         // Home outlives the push/pop; only the nav result re-reads the
         // profile, so the greeting must show the new handle on return.
-        compose.runOnUiThread { navController.popBackStack() }
+        compose.onNodeWithTag("settings_back").performClick()
         compose.waitUntilAtLeastOneExists(
             hasTestTag("home_greeting") and hasText("renamed", substring = true),
             timeoutMillis = 30_000,
