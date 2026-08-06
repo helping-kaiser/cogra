@@ -9,7 +9,7 @@
 
 import { CborDecodeError, CborDecoder, CborEncoder } from "./cbor";
 import { ActId, IdentifierError, NodeId } from "./identifiers";
-import { canonicalDeps, Proposal, StructuralBody, VerifiedAct } from "./handshake";
+import { Proposal, StructuralBody, VerifiedAct } from "./handshake";
 
 /** A wire blob that does not parse. */
 export class WireError extends Error {
