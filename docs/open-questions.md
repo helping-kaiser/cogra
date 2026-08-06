@@ -24,8 +24,9 @@ within a phase, order is flexible.
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
-| 2. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
-| 3. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
+| 2. Next auth contract change | 1 | **Q32** | Two small gaps the web session/auth port surfaced: a dedicated reset-token error code, and a contract carrier for the promised reuse-detection security event. Bundle with whatever next touches the auth schema. |
+| 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
+| 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -115,6 +116,39 @@ already records, chosen so slice work can sign records today.
 A stand-in-scoped deployment choice, not a Q30 resolution: the
 real substrate's schemes replace it at the swap, and rotation
 remains unaddressed.
+
+---
+
+## Q32 — Auth-contract gaps surfaced by the web session/auth port
+
+**Where it shows up:**
+[auth.md "Tokens"](implementation/auth.md#tokens) (reuse
+detection), [api-spec.md "Auth and accounts"](implementation/api-spec.md#auth-and-accounts)
+**Status:** open (small; resolve with the next schema-touching auth change)
+
+### Context
+
+Porting the session surface to web forced a close read of the
+auth contract against the backend and turned up two gaps. Neither
+blocks slice 1 — both clients work against the contract as it is.
+
+### The questions
+
+- **A dedicated reset-token error code.** `confirmPasswordReset`
+  reports an invalid, expired, or already-used reset token as
+  `VERIFICATION_TOKEN_INVALID` — the email-verification code,
+  whose enum doc describes email verification. Both clients
+  switch on it (now documented in api-spec.md), but the
+  vocabulary is misleading. Adding `RESET_TOKEN_INVALID` is a
+  schema + backend + both-clients change; decide whether the
+  cleaner vocabulary is worth the contract churn.
+- **Surfacing reuse detection.** auth.md promises that
+  refresh-token reuse "surfaces a security event on next login,"
+  but the contract has no carrier: `RefreshError::Invalid` and
+  `::Reuse` collapse to one `REFRESH_TOKEN_INVALID` code, and
+  `LogInPayload` carries no security-event field. As specified,
+  the promise is unimplementable; either the contract grows a
+  carrier or auth.md drops the promise.
 
 ---
 

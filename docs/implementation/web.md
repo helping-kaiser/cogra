@@ -80,6 +80,66 @@ token in memory. The accepted XSS blast radius is a session —
 revocable, rotating, reuse-detected
 ([auth.md "Tokens"](auth.md#tokens)) — never the actor key.
 
+Concretely: the refresh token lives in `localStorage` — its
+`storage` event propagates sign-out and rotation to other tabs —
+and the access token lives in per-tab module memory. The XSS
+exposure of `localStorage` and IndexedDB is identical, so the
+choice is ergonomics, not security.
+
+The auth phase (`resolving → signedOut / signedIn`) derives from
+token presence alone, no `me` bootstrap — Android's `AuthPhase`.
+Guarded calls follow Android's `AuthGuard`: on an UNAUTHENTICATED
+refusal, refresh once and replay once; a still-unauthenticated
+replay is surfaced, never looped. UNAUTHENTICATED arrives two
+ways, and the guard handles both: a null `me` on a viewer read,
+and an errors-array entry with `extensions.code` — the backend's
+only emission for guarded mutations
+([api-spec.md "Errors are tiered"](api-spec.md#errors-are-tiered--transport-faults-vs-expected-outcomes)),
+which the outcome mapping synthesizes into the same refusal shape.
+
+Refresh is single-flight at two levels. In-tab, concurrent
+callers serialize on a mutex and a caller that finds the access
+token already rotated skips the network. Cross-tab, the network
+call runs under a Web Lock (`navigator.locks`) and re-reads the
+stored refresh token first, so a consumed token is never spent
+twice — accidental reuse would revoke every session. Web Locks
+needs a secure context; without it the in-tab mutex still holds.
+Only a `REFRESH_TOKEN_INVALID` refusal clears the tokens (the
+global sign-out); transport failures and other refusals keep the
+session — offline never signs out.
+
+The browser talks GraphQL same-origin: a Next.js rewrite proxies
+`/graphql` to `GRAPHQL_URL`, so no CORS configuration and no
+public endpoint variable exist.
+
+## Routes
+
+The slice-1 route map (Android parity per surface):
+
+| Route | Access | Surface (Android counterpart) |
+|---|---|---|
+| `/` | public | signed out: invite front door (InviteEntry); signed in: Home |
+| `/login` | public; signed-in → redirect `/` | Login |
+| `/reset` (+`?token=` pre-fills the confirm form) | public | PasswordReset |
+| `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply; signed in: re-arm |
+| `/verify?token=` | public, sessionless | email-verification result |
+| `/key` | gated; key attached → redirect `/` | KeyCeremony |
+| `/invites` | gated | Invites |
+| `/settings` | gated | Settings |
+| `/restore` | gated | Restore |
+
+Everything else 404. `/join`, `/verify`, and `/reset` are the
+doc-fixed link URLs ([auth.md "Link URLs"](auth.md#link-urls)).
+
+Gating is client-side — tokens are client-held, so the server
+never knows the auth state. The `(app)` route group's layout
+guards the gated routes and replaces a signed-out visit to
+`/login`; `/` branches in place on the phase. Phase flips replace
+the location, never push — the Android navigation parity. Web
+deltas from Android: `/invites` renders the applicant lock
+in-page (the URL is directly addressable), and `/reset?token=`
+arrives as a link where Android pastes the token in-app.
+
 ## Design guidelines
 
 Styling starts minimal: Tailwind's default scales — spacing,
