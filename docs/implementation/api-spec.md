@@ -2938,6 +2938,9 @@ input ConfirmPasswordResetInput {
   resetToken: String!
   newPassword: String!
 }
+"An invalid, expired, or already-used reset token is a
+ VERIFICATION_TOKEN_INVALID userError pinned to resetToken; a weak
+ newPassword is WEAK_PASSWORD."
 type ConfirmPasswordResetPayload { ok: Boolean }
 
 "Change the password while authenticated. Re-verifies currentPassword,
