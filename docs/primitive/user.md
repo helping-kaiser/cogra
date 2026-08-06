@@ -66,13 +66,15 @@ Two paths produce an account:
   path produces the first account; all subsequent accounts come in
   via invitation.
 
-**Invariant: no User before verification.** An account either
-exists with full standing or does not exist — no "unverified" or
-"pending" partial actorhood. Pre-verification state is held
-off-graph (a pending-registration record in auth's storage); on
-verification, the backend performs the registration flow as one
-service-level step. The invariant is an L2 registration rule — L1
-sees only the records once CoGra submits them
+**Invariant: no User before landing.** On the graph, an actor
+either exists with full standing or does not exist — no
+"unverified" or "pending" partial actorhood. Pre-landing state is
+held off-graph: an account in the applicant state
+([auth.md "Account states"](../implementation/auth.md#account-states));
+the inviter's approval stages the Registration, the applicant's
+device signs it, and only the confirmed record creates the User.
+The invariant is an L2 registration rule — L1 sees only the
+records once CoGra submits them
 ([auth.md "Account lifecycle"](../implementation/auth.md#account-lifecycle)).
 
 ---

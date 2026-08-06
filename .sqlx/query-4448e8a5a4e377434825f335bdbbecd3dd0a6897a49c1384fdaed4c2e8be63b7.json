@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials\n         SET email_verified_at = NOW()\n         WHERE email_verification_token_hash = $1\n           AND email_verified_at IS NULL\n           AND created_at >= $2\n         RETURNING actor_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4448e8a5a4e377434825f335bdbbecd3dd0a6897a49c1384fdaed4c2e8be63b7"
+}

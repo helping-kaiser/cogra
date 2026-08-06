@@ -2,7 +2,9 @@ package com.cogra.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
@@ -22,8 +24,10 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val loading: Boolean = true,
+    /** A pull-to-refresh pass is in flight. */
+    val refreshing: Boolean = false,
     /**
-     * A staged applicant browsing the shell before landing (auth.md
+     * An applicant browsing the shell before landing (auth.md
      * "Application"): reads are open, acting is gated, and the
      * application rides along as the cards below.
      */
@@ -38,9 +42,14 @@ data class HomeUiState(
     val verified: Boolean = false,
     val verifyFailed: Boolean = false,
     val resent: Boolean = false,
+    /** The re-arm card's fresh-invite input (a dead application). */
+    val rearmInput: String = "",
+    val rearming: Boolean = false,
+    val rearmError: ErrorCode? = null,
+    val rearmMalformed: Boolean = false,
     /** One-shot: the approval just came through in this app run. */
     val approved: Boolean = false,
-    /** One-shot: landed, claimed — greet the new member once. */
+    /** One-shot: landed in this app run — greet the new member once. */
     val welcome: Boolean = false,
     val profile: UserProfile? = null,
     /** Signed in without the actor key — the husk state (auth.md). */
@@ -74,20 +83,9 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (identity.applicantToken() != null) {
-                // Applicant shape: no session, no profile — observe the
-                // app-scoped flow instead. Landing flips the token store
-                // and navigation recreates Home in its member shape.
-                _state.update { it.copy(loading = false, applicant = true) }
-                registration.ensureAdvancing()
-                registration.progress.collect(::onProgress)
-            } else {
-                if (registration.consumeClaimed()) {
-                    _state.update { it.copy(welcome = true) }
-                }
-                refresh()
-            }
+            registration.progress.collect(::onProgress)
         }
+        refresh()
     }
 
     /** Live transitions become one-shots; a cold open shows only state. */
@@ -100,6 +98,12 @@ class HomeViewModel @Inject constructor(
                     )
             state.copy(progress = progress, approved = approved)
         }
+        if (progress is RegistrationProgress.Member) {
+            // A landing watched live greets once; either way the member
+            // shape must be re-read while the UI still shows applicant.
+            if (registration.consumeLanded()) _state.update { it.copy(welcome = true) }
+            if (_state.value.applicant) refresh()
+        }
     }
 
     /**
@@ -109,24 +113,44 @@ class HomeViewModel @Inject constructor(
      */
     fun onActorRestored() {
         _state.update { it.copy(actorRestored = true) }
+        // An applicant restoring mid-flow may have a Registration to
+        // sign now — poll immediately.
+        if (_state.value.applicant) registration.ensureAdvancing()
+        refresh()
+    }
+
+    /** Pull-to-refresh: the one manual re-pull, applicant or member. */
+    fun onPullRefresh() {
+        _state.update { it.copy(refreshing = true) }
+        if (_state.value.applicant) registration.ensureAdvancing()
         refresh()
     }
 
     fun refresh() {
         viewModelScope.launch {
-            val huskWarning = identity.actorSeed() == null
+            val seedOnDevice = identity.actorSeed() != null
             val pending = identity.handshakeIds().size
             when (val outcome = account.me()) {
                 is Outcome.Success -> {
                     val profile = outcome.value
-                    val prompt = profile?.invitedBy != null &&
-                        !huskWarning &&
+                    val applicant = profile?.accountState == AccountState.APPLICANT
+                    // The poll/sign loop is onboarding-only: started (or
+                    // poked) for an applicant, never for a member.
+                    if (applicant) registration.ensureAdvancing()
+                    val member = profile?.accountState == AccountState.MEMBER
+                    val prompt = member &&
+                        profile?.invitedBy != null &&
+                        seedOnDevice &&
                         !identity.reciprocationHandled()
                     _state.update {
                         it.copy(
                             loading = false,
+                            refreshing = false,
+                            applicant = applicant,
                             profile = profile,
-                            huskWarning = huskWarning,
+                            // The applicant cards carry their own key
+                            // guidance; the husk card is the member's.
+                            huskWarning = member && !seedOnDevice,
                             reciprocationTarget = if (prompt) profile?.invitedBy else null,
                             pendingHandshakes = pending,
                             transportFailed = false,
@@ -136,10 +160,10 @@ class HomeViewModel @Inject constructor(
                 is Outcome.Refused -> _state.update {
                     // The auth-state holder handles a dead session; here
                     // just stop loading.
-                    it.copy(loading = false, huskWarning = huskWarning, pendingHandshakes = pending)
+                    it.copy(loading = false, refreshing = false, pendingHandshakes = pending)
                 }
                 is Outcome.Failed -> _state.update {
-                    it.copy(loading = false, huskWarning = huskWarning, transportFailed = true)
+                    it.copy(loading = false, refreshing = false, transportFailed = true)
                 }
             }
         }
@@ -155,7 +179,11 @@ class HomeViewModel @Inject constructor(
         _state.update { it.copy(verifying = true, verifyFailed = false) }
         viewModelScope.launch {
             when (onboarding.verifyEmail(token)) {
-                is Outcome.Success -> _state.update { it.copy(verifying = false, verified = true) }
+                is Outcome.Success -> {
+                    _state.update { it.copy(verifying = false, verified = true) }
+                    // The proof just changed server-side: poll now.
+                    registration.ensureAdvancing()
+                }
                 else -> _state.update { it.copy(verifying = false, verifyFailed = true) }
             }
         }
@@ -167,6 +195,34 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             onboarding.resendVerificationEmail(email)
             _state.update { it.copy(resent = true) }
+        }
+    }
+
+    fun onRearmInputChange(v: String) =
+        _state.update { it.copy(rearmInput = v, rearmError = null, rearmMalformed = false) }
+
+    /** A dead application re-arms with a fresh invite (auth.md "Expiry"). */
+    fun onRearm() {
+        if (_state.value.rearming) return
+        val id = extractInviteId(_state.value.rearmInput)
+        if (id == null) {
+            _state.update { it.copy(rearmMalformed = true) }
+            return
+        }
+        _state.update { it.copy(rearming = true, rearmError = null, rearmMalformed = false) }
+        viewModelScope.launch {
+            when (val outcome = onboarding.applyWithInvite(id)) {
+                is Outcome.Success -> {
+                    _state.update { it.copy(rearming = false, rearmInput = "") }
+                    registration.ensureAdvancing()
+                }
+                is Outcome.Refused -> _state.update {
+                    it.copy(rearming = false, rearmError = outcome.errors.first().code)
+                }
+                is Outcome.Failed -> _state.update {
+                    it.copy(rearming = false, rearmError = ErrorCode.INTERNAL)
+                }
+            }
         }
     }
 
@@ -225,5 +281,14 @@ class HomeViewModel @Inject constructor(
 
     fun onActorRestoredShown() {
         _state.update { it.copy(actorRestored = false) }
+    }
+
+    private companion object {
+        val INVITE_ID = Regex(
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        )
+
+        /** Accepts the full URL or the bare id, like the invite entry. */
+        fun extractInviteId(input: String): String? = INVITE_ID.find(input.trim())?.value
     }
 }

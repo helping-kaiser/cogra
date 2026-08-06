@@ -60,7 +60,7 @@ over file values.
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
 | `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
-| `APPLICANT_REAPER_INTERVAL_SECS` | `600` | Sweep interval for expired, never-approved applications ([auth.md](auth.md#account-lifecycle)) |
+| `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 24-hour bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |

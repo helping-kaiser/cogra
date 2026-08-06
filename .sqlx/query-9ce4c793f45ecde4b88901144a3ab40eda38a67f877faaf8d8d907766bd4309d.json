@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT actor_id FROM user_credentials\n         WHERE email_verified_at IS NULL AND created_at < $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9ce4c793f45ecde4b88901144a3ab40eda38a67f877faaf8d8d907766bd4309d"
+}

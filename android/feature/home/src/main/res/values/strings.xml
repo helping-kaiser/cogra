@@ -31,8 +31,19 @@
     <string name="home_waiting_dismiss">Got it</string>
     <string name="home_approved">Approved! Your Registration is signed and on its way onto the graph.</string>
     <string name="home_welcome">Welcome to CoGra.</string>
-    <string name="home_application_gone">This application is no longer active — it may have expired. Ask your inviter for a fresh link.</string>
     <string name="home_application_rejected">Something didn\'t verify on this phone, so nothing was signed. Try again from a fresh approval.</string>
+
+    <string name="home_create_key_title">Create your key</string>
+    <string name="home_create_key_body">Your identity on the graph is a key minted on this phone. Create it now — your inviter can only approve you once it exists.</string>
+    <string name="home_create_key_button">Create my key</string>
+
+    <string name="home_rearm_title">Your application expired</string>
+    <string name="home_rearm_body">Your login is fine, but the application ran out before approval. Paste a fresh invite link to re-apply.</string>
+    <string name="home_rearm_input">Invite link or code</string>
+    <string name="home_rearm_submit">Re-apply</string>
+    <string name="home_rearm_invalid">That doesn\'t contain an invite code.</string>
+    <string name="home_rearm_unusable">This invite can\'t be used — ask your inviter for a new one.</string>
+    <string name="home_rearm_live">You already have a live application.</string>
 
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>

@@ -15,13 +15,13 @@ async fn seed_user(pool: &PgPool, handle: &str, email: &str, password: &str) -> 
     postgres_store::genesis::insert_actor(&mut conn, id, "user", handle, &[1u8; 32], handle)
         .await
         .expect("actor");
-    sqlx::query(
-        "INSERT INTO user_credentials (actor_id, email, password_hash) VALUES ($1, $2, $3)",
+    drop(conn);
+    postgres_store::genesis::insert_credentials(
+        pool,
+        id,
+        email,
+        &auth::hash_password(password).expect("hash"),
     )
-    .bind(id)
-    .bind(email)
-    .bind(auth::hash_password(password).expect("hash"))
-    .execute(pool)
     .await
     .expect("credentials");
     id

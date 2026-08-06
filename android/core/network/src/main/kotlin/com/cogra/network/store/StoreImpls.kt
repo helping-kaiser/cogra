@@ -1,8 +1,8 @@
 // The domain stores over the encrypted layer. Tokens overwrite in
 // place (the refresh token rotates on every use); the identity store
-// keeps the actor seed, the applicant token, the pending backup blob,
-// and the per-write handshake material that must survive process death
-// (the approve step verifies against what THIS device pre-signed).
+// keeps the actor seed, the pending backup blob, and the per-write
+// handshake material that must survive process death (the approve step
+// verifies against what THIS device pre-signed).
 
 package com.cogra.network.store
 
@@ -70,12 +70,6 @@ class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) :
 
     override suspend fun saveActorSeed(seed: ByteArray) = store.put(SEED, seed)
 
-    override suspend fun applicantToken(): String? = store.get(APPLICANT)?.decodeToString()
-
-    override suspend fun saveApplicantToken(token: String) = store.put(APPLICANT, token.encodeToByteArray())
-
-    override suspend fun clearApplicantToken() = store.remove(APPLICANT)
-
     override suspend fun pendingBackupBlob(): ByteArray? = store.get(PENDING_BLOB)
 
     override suspend fun savePendingBackupBlob(blob: ByteArray) = store.put(PENDING_BLOB, blob)
@@ -117,7 +111,6 @@ class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) :
 
     private companion object {
         const val SEED = "actor_seed"
-        const val APPLICANT = "applicant_token"
         const val PENDING_BLOB = "pending_backup_blob"
         const val RECIPROCATION = "reciprocation_handled"
         const val HS_PREFIX = "handshake:"

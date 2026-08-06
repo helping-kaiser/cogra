@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT actor_id, email, password_hash FROM user_credentials WHERE email = $1",
+  "query": "SELECT actor_id, email, password_hash, account_state, email_verified_at\n         FROM user_credentials WHERE email = $1",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,16 @@
         "ordinal": 2,
         "name": "password_hash",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "account_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "email_verified_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -27,8 +37,10 @@
     "nullable": [
       false,
       false,
-      false
+      false,
+      false,
+      true
     ]
   },
-  "hash": "ff38af76aa165111b62fe40b2f043511570ace73fc0a234f341646ca3711a036"
+  "hash": "fdbda5e953b639fe46d00535e28639b70202c252dd82aaa84ff7b69f90d428a1"
 }
