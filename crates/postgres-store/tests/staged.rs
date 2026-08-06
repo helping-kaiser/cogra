@@ -8,7 +8,7 @@ use common::l1::handshake::{
     EpochPackage, Proposal, PublishedLeg, PublishedRecord, StructuralBody, VerifiedAct,
 };
 use common::l1::identifier::{ActId, NodeId};
-use postgres_store::staged::{self, PreSignedParts, StagedBy, StagedError, StagedState};
+use postgres_store::staged::{self, PreSignedParts, StagedError, StagedState};
 use postgres_store::{genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -86,10 +86,10 @@ fn published(author: &str, seq: u64, family: Family, epoch: i64, position: i64) 
     }
 }
 
-async fn stage(pool: &PgPool, by: StagedBy, p: &Proposal, prepared_epoch: i64) -> Uuid {
+async fn stage(pool: &PgPool, actor_id: Uuid, p: &Proposal, prepared_epoch: i64) -> Uuid {
     let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
-    staged::insert(&mut tx, id, by, p, prepared_epoch)
+    staged::insert(&mut tx, id, actor_id, p, prepared_epoch)
         .await
         .expect("insert");
     tx.commit().await.expect("commit");
@@ -135,11 +135,11 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
 async fn insert_and_load_round_trip_the_proposal(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let p = proposal("alice", 3);
-    let id = stage(&pool, StagedBy::Actor(actor_id), &p, 4).await;
+    let id = stage(&pool, actor_id, &p, 4).await;
 
     let w = staged::load(&pool, id).await.expect("loads");
     assert_eq!(w.id, id);
-    assert_eq!(w.staged_by, StagedBy::Actor(actor_id));
+    assert_eq!(w.actor_id, actor_id);
     assert_eq!(w.state, StagedState::AwaitingPreSign);
     assert_eq!(w.proposal, p);
     assert_eq!(w.prepared_epoch, 4);
@@ -161,7 +161,7 @@ async fn load_of_unknown_id_is_not_found(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_row_edited_out_of_band_loads_as_corrupt(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
-    let id = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 0), 0).await;
+    let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
     sqlx::query("UPDATE staged_writes SET family = 'bogus' WHERE id = $1")
         .bind(id)
         .execute(&pool)
@@ -177,7 +177,7 @@ async fn a_row_edited_out_of_band_loads_as_corrupt(pool: PgPool) {
 async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let p = proposal("alice", 0);
-    let id = stage(&pool, StagedBy::Actor(actor_id), &p, 0).await;
+    let id = stage(&pool, actor_id, &p, 0).await;
 
     // Pre-sign: parts stored, state sealing; retry from sealing accepted.
     staged::record_pre_signed(&pool, id, &pre_parts())
@@ -217,7 +217,7 @@ async fn the_handshake_lifecycle_advances_through_its_states(pool: PgPool) {
 async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
     let p = proposal("alice", 0);
-    let id = stage(&pool, StagedBy::Actor(actor_id), &p, 0).await;
+    let id = stage(&pool, actor_id, &p, 0).await;
 
     // Sealing before any pre-commitment exists.
     assert!(matches!(
@@ -254,8 +254,8 @@ async fn out_of_order_transitions_are_refused_with_the_actual_state(pool: PgPool
 #[sqlx::test(migrations = "../../migrations")]
 async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
-    let landed = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 0), 0).await;
-    let waiting = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 1), 0).await;
+    let landed = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    let waiting = stage(&pool, actor_id, &proposal("alice", 1), 0).await;
 
     mirror::ingest_epoch(
         &pool,
@@ -270,7 +270,7 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
     let promoted = staged::promote_landed(&pool, 0).await.expect("promotes");
     assert_eq!(promoted.len(), 1);
     assert_eq!(promoted[0].id, landed);
-    assert_eq!(promoted[0].staged_by, StagedBy::Actor(actor_id));
+    assert_eq!(promoted[0].actor_id, actor_id);
     assert_eq!(promoted[0].act_id, "act:alice:0:opinion");
     assert_eq!(promoted[0].family, "opinion");
     assert_eq!(
@@ -294,9 +294,9 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
 #[sqlx::test(migrations = "../../migrations")]
 async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
-    let stale = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 0), 0).await;
-    let fresh = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 1), 5).await;
-    let done = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 2), 0).await;
+    let stale = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    let fresh = stage(&pool, actor_id, &proposal("alice", 1), 5).await;
+    let done = stage(&pool, actor_id, &proposal("alice", 2), 0).await;
     sqlx::query("UPDATE staged_writes SET state = 'landed' WHERE id = $1")
         .bind(done)
         .execute(&pool)
@@ -331,8 +331,8 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
     let actor_id = actor(&pool, "alice", "alice").await;
-    let doomed = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 0), 0).await;
-    let spared = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 1), 0).await;
+    let doomed = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    let spared = stage(&pool, actor_id, &proposal("alice", 1), 0).await;
 
     staged::expire_one(&pool, doomed, 0).await.expect("expires");
     assert_eq!(
@@ -351,51 +351,11 @@ async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
-async fn an_applicant_can_stage_a_write_before_any_actor_row_exists(pool: PgPool) {
-    // The staged Registration of auth.md "Approval and landing": the
-    // staging identity is the applicant row, not an actor.
-    let inviter = actor(&pool, "inviter", "inviter").await;
-    let link = Uuid::new_v4();
-    sqlx::query(
-        "INSERT INTO auth_invite_links
-             (id, inviter_id, prefill_dim1, prefill_dim2, expires_at)
-         VALUES ($1, $2, 0.1, 0.1, NOW() + INTERVAL '1 day')",
-    )
-    .bind(link)
-    .bind(inviter)
-    .execute(&pool)
-    .await
-    .expect("link");
-    let applicant = Uuid::new_v4();
-    sqlx::query(
-        "INSERT INTO auth_applicants
-             (id, invite_link_id, handle, email, password_hash,
-              email_verification_token_hash, applicant_token_hash,
-              actor_pubkey, l0_address, expires_at)
-         VALUES ($1, $2, 'newbie', 'n@example.com', 'x', $3, $4, $5, 'newbie',
-                 NOW() + INTERVAL '1 day')",
-    )
-    .bind(applicant)
-    .bind(link)
-    .bind(vec![9u8; 32])
-    .bind(vec![8u8; 32])
-    .bind(vec![1u8; 32])
-    .execute(&pool)
-    .await
-    .expect("applicant");
-
-    let p = proposal("newbie", 0);
-    let id = stage(&pool, StagedBy::Applicant(applicant), &p, 0).await;
-    let w = staged::load(&pool, id).await.expect("loads");
-    assert_eq!(w.staged_by, StagedBy::Applicant(applicant));
-}
-
-#[sqlx::test(migrations = "../../migrations")]
 async fn a_record_landing_after_collection_still_promotes(pool: PgPool) {
     // The mirror governs: late landing wins over expiry, though the staged
     // payload is already gone (data-model.md "Staged writes").
     let actor_id = actor(&pool, "alice", "alice").await;
-    let id = stage(&pool, StagedBy::Actor(actor_id), &proposal("alice", 0), 0).await;
+    let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
     staged::expire_one(&pool, id, 0).await.expect("expires");
 
     mirror::ingest_epoch(

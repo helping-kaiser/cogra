@@ -67,7 +67,7 @@ class RepositoriesTest {
 
     @Test
     fun inviteCheckMapsBothBranches() = runTest {
-        val onboarding = OnboardingRepositoryImpl(client)
+        val onboarding = OnboardingRepositoryImpl(client, guard())
         enqueue(
             """{"data":{"inviteLinkCheck":{"__typename":"InviteLinkCheck",
                "usable":true,"inviterHandle":"inviter","expiresAt":"2027-01-01T00:00:00+00:00"}}}""",
@@ -82,15 +82,27 @@ class RepositoriesTest {
     }
 
     @Test
-    fun aRefusalCarriesCodeAndFieldPath() = runTest {
-        val onboarding = OnboardingRepositoryImpl(client)
+    fun registerReturnsTheOrdinarySessionPair() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
         enqueue(
-            """{"data":{"submitApplication":{"__typename":"SubmitApplicationPayload",
-               "applicantToken":null,"expiresAt":null,
+            """{"data":{"register":{"__typename":"RegisterPayload",
+               "auth":{"__typename":"AuthSession","accessToken":"a","refreshToken":"r"},
+               "expiresAt":"2026-08-07T12:00:00+00:00","userErrors":[]}}}""",
+        )
+        val tokens = (onboarding.register("l", "h", "e@x.com", "p".repeat(12), "phone") as Outcome.Success).value
+        assertThat(tokens).isEqualTo(AuthTokens("a", "r"))
+    }
+
+    @Test
+    fun aRefusalCarriesCodeAndFieldPath() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
+        enqueue(
+            """{"data":{"register":{"__typename":"RegisterPayload",
+               "auth":null,"expiresAt":null,
                "userErrors":[{"__typename":"UserError","message":"taken",
                "code":"HANDLE_TAKEN","field":["input","handle"]}]}}}""",
         )
-        val refused = onboarding.submitApplication("l", "h", "e@x.com", "p".repeat(12), "pk", "addr")
+        val refused = onboarding.register("l", "h", "e@x.com", "p".repeat(12), null)
             as Outcome.Refused
         val error = refused.errors.single()
         assertThat(error.code).isEqualTo(ErrorCode.HANDLE_TAKEN)
@@ -99,16 +111,69 @@ class RepositoriesTest {
 
     @Test
     fun anUnknownErrorCodeDegradesToUnknown() = runTest {
-        val onboarding = OnboardingRepositoryImpl(client)
+        val onboarding = OnboardingRepositoryImpl(client, guard())
         enqueue(
-            """{"data":{"submitApplication":{"__typename":"SubmitApplicationPayload",
-               "applicantToken":null,"expiresAt":null,
+            """{"data":{"register":{"__typename":"RegisterPayload",
+               "auth":null,"expiresAt":null,
                "userErrors":[{"__typename":"UserError","message":"new refusal",
                "code":"SOME_FUTURE_CODE","field":null}]}}}""",
         )
-        val refused = onboarding.submitApplication("l", "h", "e@x.com", "p".repeat(12), "pk", "addr")
+        val refused = onboarding.register("l", "h", "e@x.com", "p".repeat(12), null)
             as Outcome.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
+    }
+
+    @Test
+    fun applicationStatusMapsTheViewerAndPicksTheLiveRegistration() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
+        tokenStore.save(AuthTokens("a", "r"))
+        val proposal = Base64.getEncoder().encodeToString(byteArrayOf(1))
+        enqueue(
+            """{"data":{"me":{"__typename":"User","id":"u1","accountState":"APPLICANT",
+               "application":{"__typename":"Application","id":"app1","handle":"joiner",
+                 "emailVerified":true,"keyAttached":false,"approvedAt":null,"landedAt":null,
+                 "createdAt":"2026-08-06T12:00:00+00:00","expiresAt":"2026-08-07T12:00:00+00:00"},
+               "stagedWrites":{"__typename":"StagedWriteConnection","nodes":[
+                 {"__typename":"StagedWrite","id":"old","state":"EXPIRED","family":"REGISTRATION",
+                  "canonicalProposal":"$proposal","verifiedAct":null,"record":null},
+                 {"__typename":"StagedWrite","id":"reg","state":"AWAITING_PRE_SIGN","family":"REGISTRATION",
+                  "canonicalProposal":"$proposal","verifiedAct":null,"record":null}]}}}}""",
+        )
+        val status = (onboarding.applicationStatus() as Outcome.Success).value
+        assertThat(status.accountState).isEqualTo(com.cogra.domain.AccountState.APPLICANT)
+        val application = checkNotNull(status.application)
+        assertThat(application.emailVerified).isTrue()
+        assertThat(application.keyAttached).isFalse()
+        // The expired staging is dead; the live one is served.
+        assertThat(checkNotNull(status.stagedRegistration).id).isEqualTo("reg")
+        assertThat(status.stagedRegistration?.state).isEqualTo(WriteState.AWAITING_PRE_SIGN)
+    }
+
+    @Test
+    fun applicationStatusWithoutAViewerRefuses() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
+        enqueue("""{"data":{"me":null}}""")
+        val refused = onboarding.applicationStatus() as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
+    }
+
+    @Test
+    fun attachActorKeyMapsSuccessAndRefusal() = runTest {
+        val onboarding = OnboardingRepositoryImpl(client, guard())
+        tokenStore.save(AuthTokens("a", "r"))
+        enqueue(
+            """{"data":{"attachActorKey":{"__typename":"AttachActorKeyPayload",
+               "user":{"__typename":"User","id":"u1"},"userErrors":[]}}}""",
+        )
+        assertThat(onboarding.attachActorKey("pk", "addr")).isInstanceOf(Outcome.Success::class.java)
+
+        enqueue(
+            """{"data":{"attachActorKey":{"__typename":"AttachActorKeyPayload",
+               "user":null,"userErrors":[{"__typename":"UserError","message":"bound",
+               "code":"FORBIDDEN","field":null}]}}}""",
+        )
+        val refused = onboarding.attachActorKey("pk", "addr") as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.FORBIDDEN)
     }
 
     @Test

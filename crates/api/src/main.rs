@@ -1,6 +1,6 @@
 // API entry point — Axum HTTP server hosting the async-graphql schema,
 // with the L1 stand-in behind the seam and the mirror-ingestion and
-// applicant-reaper loops running alongside.
+// account-reaper loops running alongside.
 
 use std::sync::Arc;
 
@@ -93,10 +93,11 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    // The applicant reaper (auth.md "Account lifecycle").
-    let reaper_interval: u64 = env_or("APPLICANT_REAPER_INTERVAL_SECS", "600")
+    // The account reaper (auth.md "Reaper"): never-verified accounts
+    // past their bound are deleted whole.
+    let reaper_interval: u64 = env_or("ACCOUNT_REAPER_INTERVAL_SECS", "600")
         .parse()
-        .context("APPLICANT_REAPER_INTERVAL_SECS must be a number of seconds")?;
+        .context("ACCOUNT_REAPER_INTERVAL_SECS must be a number of seconds")?;
     tokio::spawn(api::onboarding::reaper_loop(pool.clone(), reaper_interval));
 
     let admission_burn_micro: i64 = env_or(

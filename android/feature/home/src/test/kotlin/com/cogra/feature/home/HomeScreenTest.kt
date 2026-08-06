@@ -3,6 +3,7 @@ package com.cogra.feature.home
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.UserProfile
 import com.cogra.domain.signing.RegistrationProgress
@@ -22,12 +23,15 @@ class HomeScreenTest {
         compose.setContent {
             HomeScreen(
                 state = state,
+                onPullRefresh = {},
                 onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
+                onRearmInputChange = {}, onRearm = {},
                 onDismissWaitingHint = {}, onApprovedShown = {}, onWelcomeShown = {},
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
                 onActorRestoredShown = onActorRestoredShown,
                 onOpenInvites = {}, onOpenSettings = {}, onRestoreActor = {},
+                onStartKeyCeremony = {},
             )
         }
     }
@@ -36,9 +40,16 @@ class HomeScreenTest {
         HomeUiState(
             loading = false,
             applicant = true,
+            profile = UserProfile("u", "joiner", null, AccountState.APPLICANT, null),
             progress = progress,
             waitingHintDismissed = dismissed,
         )
+
+    private fun awaiting(
+        emailVerified: Boolean = true,
+        keyAttached: Boolean = true,
+        keyOnDevice: Boolean = true,
+    ) = RegistrationProgress.AwaitingApproval(emailVerified, keyAttached, keyOnDevice)
 
     @Test
     fun theHuskStateOffersRestore() {
@@ -52,7 +63,7 @@ class HomeScreenTest {
         render(
             HomeUiState(
                 loading = false,
-                profile = UserProfile("u", "joiner", null, ActorRef("i", "inviter")),
+                profile = UserProfile("u", "joiner", null, AccountState.MEMBER, ActorRef("i", "inviter")),
                 reciprocationTarget = ActorRef("i", "inviter"),
             ),
         )
@@ -90,7 +101,7 @@ class HomeScreenTest {
 
     @Test
     fun anApplicantAwaitingVerificationGetsTheTokenCardAndNoMemberChrome() {
-        render(applicant(RegistrationProgress.AwaitingEmailVerification))
+        render(applicant(awaiting(emailVerified = false)))
         compose.onNodeWithTag("verify_token").assertExists()
         compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
         // Acting surfaces stay out of the applicant shell.
@@ -99,15 +110,31 @@ class HomeScreenTest {
     }
 
     @Test
+    fun aMissingKeyShowsTheCeremonyCardAlongsideTheVerifyCard() {
+        // The two proofs are independent (auth.md "Application"): both
+        // cards can show at once.
+        render(applicant(awaiting(emailVerified = false, keyAttached = false, keyOnDevice = false)))
+        compose.onNodeWithTag("verify_token").assertExists()
+        compose.onNodeWithTag("home_create_key").assertExists()
+    }
+
+    @Test
+    fun aKeyAttachedElsewhereOffersRestoreInstead() {
+        render(applicant(awaiting(keyAttached = true, keyOnDevice = false)))
+        compose.onNodeWithTag("home_restore").assertExists()
+        compose.onNodeWithTag("home_create_key").assertDoesNotExist()
+    }
+
+    @Test
     fun theWaitingHintShowsAndDismisses() {
-        render(applicant(RegistrationProgress.AwaitingApproval))
+        render(applicant(awaiting()))
         compose.onNodeWithTag("home_waiting").assertExists()
         compose.onNodeWithTag("home_waiting_dismiss").assertExists()
     }
 
     @Test
     fun aDismissedWaitingHintIsGoneButNothingElseAppears() {
-        render(applicant(RegistrationProgress.AwaitingApproval, dismissed = true))
+        render(applicant(awaiting(), dismissed = true))
         compose.onNodeWithTag("home_waiting").assertDoesNotExist()
         compose.onNodeWithTag("home_invites").assertDoesNotExist()
     }
@@ -119,9 +146,28 @@ class HomeScreenTest {
     }
 
     @Test
+    fun aDeadApplicationRendersTheRearmCard() {
+        render(applicant(RegistrationProgress.NeedsInvite))
+        compose.onNodeWithTag("home_rearm").assertExists()
+        compose.onNodeWithTag("rearm_input").assertExists()
+        compose.onNodeWithTag("rearm_submit").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aRearmRefusalRendersItsMessage() {
+        render(
+            applicant(RegistrationProgress.NeedsInvite).copy(
+                rearmInput = "x",
+                rearmError = com.cogra.domain.ErrorCode.INVITE_UNUSABLE,
+            ),
+        )
+        compose.onNodeWithTag("rearm_error").assertExists()
+    }
+
+    @Test
     fun applicantErrorsRender() {
-        render(applicant(RegistrationProgress.ApplicationGone))
-        compose.onNodeWithTag("home_application_gone").assertExists()
+        render(applicant(RegistrationProgress.RejectedByDevice("seal mismatch")))
+        compose.onNodeWithTag("home_application_rejected").assertExists()
     }
 
     @Test

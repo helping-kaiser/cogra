@@ -29,15 +29,6 @@ pub enum StagedError {
     Storage(#[from] sqlx::Error),
 }
 
-/// Who staged the write: an actor's session write, or an applicant's
-/// staged Registration before any actor row exists (auth.md "Approval and
-/// landing").
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StagedBy {
-    Actor(Uuid),
-    Applicant(Uuid),
-}
-
 /// Handshake progress, states per api-spec.md "The write flow".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StagedState {
@@ -74,11 +65,13 @@ impl StagedState {
     }
 }
 
-/// One staged write, reconstructed into seam types.
+/// One staged write, reconstructed into seam types. The staging actor is
+/// one actor row for every writer — an applicant's staged Registration
+/// stages under their own account's actor row (auth.md §Application).
 #[derive(Debug, Clone)]
 pub struct StagedWrite {
     pub id: Uuid,
-    pub staged_by: StagedBy,
+    pub actor_id: Uuid,
     pub state: StagedState,
     pub proposal: Proposal,
     pub prepared_epoch: i64,
@@ -170,14 +163,10 @@ pub async fn allocate_seq(conn: &mut PgConnection, author: &str) -> Result<i64, 
 pub async fn insert(
     conn: &mut PgConnection,
     id: Uuid,
-    staged_by: StagedBy,
+    actor_id: Uuid,
     proposal: &Proposal,
     prepared_epoch: i64,
 ) -> Result<(), StagedError> {
-    let (actor_id, applicant_id) = match staged_by {
-        StagedBy::Actor(a) => (Some(a), None),
-        StagedBy::Applicant(a) => (None, Some(a)),
-    };
     let body = &proposal.body;
     let seq = i64::try_from(body.seq)
         .map_err(|_| StagedError::Corrupt(id, "seq exceeds the storable range".into()))?;
@@ -185,14 +174,13 @@ pub async fn insert(
     let deps: Vec<String> = proposal.deps.iter().map(ActId::to_string).collect();
     sqlx::query!(
         "INSERT INTO staged_writes
-             (id, actor_id, applicant_id, act_id, author, seq, family,
+             (id, actor_id, act_id, author, seq, family,
               middle, target, p_d, p_i, settlement_ref, license,
               asserted_parents, deps, payload, prepared_epoch)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                 $14, $15, $16, $17)",
+                 $14, $15, $16)",
         id,
         actor_id,
-        applicant_id,
         body.act_id().to_string(),
         body.author,
         seq,
@@ -216,7 +204,7 @@ pub async fn insert(
 /// Loads one staged write, reconstructed into seam types.
 pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     let row = sqlx::query!(
-        "SELECT id, actor_id, applicant_id, author, seq, family, middle,
+        "SELECT id, actor_id, author, seq, family, middle,
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
                 deps, payload, state, author_pubkey, nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
@@ -229,11 +217,6 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     .ok_or(StagedError::NotFound(id))?;
 
     let corrupt = |what: &str| StagedError::Corrupt(id, what.to_string());
-    let staged_by = match (row.actor_id, row.applicant_id) {
-        (Some(a), None) => StagedBy::Actor(a),
-        (None, Some(a)) => StagedBy::Applicant(a),
-        _ => return Err(corrupt("staging identity")),
-    };
     let family = Family::parse(&row.family).ok_or_else(|| corrupt("family"))?;
     let middle = row
         .middle
@@ -302,7 +285,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     };
     Ok(StagedWrite {
         id: row.id,
-        staged_by,
+        actor_id: row.actor_id,
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
         proposal,
         prepared_epoch: row.prepared_epoch,
@@ -311,19 +294,19 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     })
 }
 
-/// The applicant's live staged write of one family — the staged
+/// The actor's live staged write of one family — e.g. the staged
 /// Registration the admission sequence signs (auth.md "Approval and
 /// landing"). Expired stagings are ignored: a fresh one replaces them.
-pub async fn live_for_applicant(
+pub async fn live_for_actor(
     pool: &PgPool,
-    applicant_id: Uuid,
+    actor_id: Uuid,
     family: Family,
 ) -> Result<Option<StagedWrite>, StagedError> {
     let id = sqlx::query_scalar!(
         "SELECT id FROM staged_writes
-         WHERE applicant_id = $1 AND family = $2 AND state <> 'expired'
+         WHERE actor_id = $1 AND family = $2 AND state <> 'expired'
          ORDER BY created_at DESC LIMIT 1",
-        applicant_id,
+        actor_id,
         family.as_str(),
     )
     .fetch_optional(pool)
@@ -481,7 +464,7 @@ pub async fn record_relaying(pool: &PgPool, id: Uuid) -> Result<(), StagedError>
 #[derive(Debug, Clone)]
 pub struct PromotedWrite {
     pub id: Uuid,
-    pub staged_by: StagedBy,
+    pub actor_id: Uuid,
     pub act_id: String,
     pub family: String,
 }
@@ -497,26 +480,20 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
          SET state = 'landed', updated_at = NOW()
          WHERE state <> 'landed'
            AND act_id IN (SELECT record_id FROM mirror_records WHERE epoch = $1)
-         RETURNING id, actor_id, applicant_id, act_id, family",
+         RETURNING id, actor_id, act_id, family",
         epoch,
     )
     .fetch_all(pool)
     .await?;
-    rows.into_iter()
-        .map(|r| {
-            let staged_by = match (r.actor_id, r.applicant_id) {
-                (Some(a), None) => StagedBy::Actor(a),
-                (None, Some(a)) => StagedBy::Applicant(a),
-                _ => return Err(StagedError::Corrupt(r.id, "staging identity".into())),
-            };
-            Ok(PromotedWrite {
-                id: r.id,
-                staged_by,
-                act_id: r.act_id,
-                family: r.family,
-            })
+    Ok(rows
+        .into_iter()
+        .map(|r| PromotedWrite {
+            id: r.id,
+            actor_id: r.actor_id,
+            act_id: r.act_id,
+            family: r.family,
         })
-        .collect()
+        .collect())
 }
 
 /// Expires one staged write immediately — the terminal path for a

@@ -1,10 +1,11 @@
-// The on-device key ceremony (auth.md "Application" step 3): the actor
-// key and L0 address are generated before the application submit —
-// approval funds a burn to the applicant's own address, so the address
-// must exist first. The backup offer rides the same step; the sealed
-// blob waits on-device and uploads on the first session after landing.
-// The recovery code is returned for display exactly once and never
-// stored (auth.md "Key recovery").
+// The on-device key ceremony (auth.md "Application" step 3), now a
+// logged-in step: the device mints the actor key and L0 address, sends
+// only the public halves through `attachActorKey` — approval funds a
+// burn to the applicant's own address, so the address must exist before
+// approval — and the backup offer rides the same step. The sealed blob
+// uploads immediately after the attach; a failed upload parks it for a
+// retried flush. The recovery code is returned for display exactly once
+// and never stored (auth.md "Key recovery").
 
 package com.cogra.domain.identity
 
@@ -15,20 +16,26 @@ import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
 import com.cogra.domain.Outcome
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
 import javax.inject.Inject
 
-/** The public outputs of the ceremony — what rides the application submit. */
+/** The public outputs of the ceremony — what `attachActorKey` carries. */
 data class ActorPublicIdentity(val publicKeyBase64: String, val l0Address: String)
 
-class KeyCeremony @Inject constructor(private val identity: IdentityStore) {
+class KeyCeremony @Inject constructor(
+    private val identity: IdentityStore,
+    private val onboarding: OnboardingRepository,
+    private val account: AccountRepository,
+) {
 
     /**
      * Generates and stores a fresh actor key, returning its public
-     * outputs. Pre-submit only: overwrites any earlier unlanded key.
+     * outputs. Pre-approval only: overwrites any earlier unbound key —
+     * the attached key is replaceable until approval binds the address.
      */
     suspend fun createActorKey(): ActorPublicIdentity {
         val key = ActorKey.generate()
@@ -49,8 +56,18 @@ class KeyCeremony @Inject constructor(private val identity: IdentityStore) {
     }
 
     /**
+     * The ceremony's server half: attaches the stored key's public
+     * outputs to the viewer's account (the one approvability proof the
+     * server cannot see otherwise).
+     */
+    suspend fun attachActorKey(): Outcome<Unit> {
+        val public = checkNotNull(publicIdentity()) { "the ceremony creates the key first" }
+        return onboarding.attachActorKey(public.publicKeyBase64, public.l0Address)
+    }
+
+    /**
      * The backup offer, accepted: seals the stored seed under a fresh
-     * recovery code, parks the blob for the first-session upload, and
+     * recovery code, parks the blob for [uploadPendingBackup], and
      * returns the code's display form — shown once, never stored.
      * Declining the offer is simply not calling this.
      */
@@ -59,6 +76,22 @@ class KeyCeremony @Inject constructor(private val identity: IdentityStore) {
         val code = RecoveryCode.generate()
         identity.savePendingBackupBlob(sealKeyBackup(seed, code))
         return code.display()
+    }
+
+    /**
+     * Uploads the parked blob — immediately after the attach, and
+     * retried from the status poll while it stays parked. Failure keeps
+     * the blob; true when nothing is pending.
+     */
+    suspend fun uploadPendingBackup(): Boolean {
+        val blob = identity.pendingBackupBlob() ?: return true
+        return when (account.uploadKeyBackup(blob)) {
+            is Outcome.Success -> {
+                identity.clearPendingBackupBlob()
+                true
+            }
+            else -> false
+        }
     }
 }
 

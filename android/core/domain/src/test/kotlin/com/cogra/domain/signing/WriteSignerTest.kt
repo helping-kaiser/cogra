@@ -176,6 +176,107 @@ class WriteSignerTest {
     }
 
     @Test
+    fun signStagedSignsAFreshStagingEndToEnd() = runTest {
+        // The staged-Registration path: the write arrives already staged
+        // (AWAITING_PRE_SIGN) instead of prepared.
+        val repo = FakeWriteRepository(actor)
+        val staged = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.AWAITING_PRE_SIGN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        val result = WriteSigner(repo, identity).signStaged(staged)
+        assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun signStagedResendsPersistedMaterialInsteadOfReSigning() = runTest {
+        // A lost submit response: the material exists, the staging still
+        // says AWAITING_PRE_SIGN — the same nonce is re-sent.
+        val repo = FakeWriteRepository(actor)
+        val proposal = testProposalBytes(actor)
+        val pre = actor.preSign(com.cogra.crypto.decodeProposal(proposal))
+        identity.saveHandshake("reg-1", pre)
+        val staged = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.AWAITING_PRE_SIGN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = proposal,
+            verifiedAct = null,
+            recordId = null,
+        )
+        val result = WriteSigner(repo, identity).signStaged(staged)
+        assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun signStagedContinuesAMidHandshakeStagingWithMaterial() = runTest {
+        val repo = FakeWriteRepository(actor).apply { failApprove = true }
+        val signer = WriteSigner(repo, identity)
+        val fresh = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.AWAITING_PRE_SIGN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        assertThat(signer.signStaged(fresh)).isInstanceOf(WriteResult.Failed::class.java)
+        assertThat(identity.handshakes.keys).containsExactly("reg-1")
+
+        repo.failApprove = false
+        val result = signer.signStaged(repo.staged.getValue("reg-1"))
+        assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun signStagedWithoutMaterialMidHandshakeRefuses() = runTest {
+        // Pre-signed by another device (or the material is gone): only
+        // the expiry re-stage recovers.
+        val repo = FakeWriteRepository(actor)
+        val staged = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.AWAITING_APPROVAL,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = byteArrayOf(1),
+            recordId = null,
+        )
+        val result = WriteSigner(repo, identity).signStaged(staged) as WriteResult.Refused
+        assertThat(result.errors.single().code).isEqualTo(ErrorCode.INTERNAL)
+    }
+
+    @Test
+    fun signStagedClearsFinishedAndExpiredStagings() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val signer = WriteSigner(repo, identity)
+        val pre = actor.preSign(com.cogra.crypto.decodeProposal(testProposalBytes(actor)))
+        identity.saveHandshake("reg-1", pre)
+        val relaying = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.RELAYING,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        assertThat(signer.signStaged(relaying)).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
+        assertThat(identity.handshakes).isEmpty()
+
+        identity.saveHandshake("reg-2", pre)
+        val expired = relaying.copy(id = "reg-2", state = WriteState.EXPIRED)
+        val refused = signer.signStaged(expired) as WriteResult.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.STAGED_WRITE_EXPIRED)
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
     fun signingWithoutAKeyThrows() = runTest {
         val bare = FakeIdentityStore()
         assertThrows(NoActorKeyException::class.java) {

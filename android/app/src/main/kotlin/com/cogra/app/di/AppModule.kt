@@ -1,15 +1,13 @@
 // Build-specific bindings the shell owns (android/CLAUDE.md "Module
 // discipline"): the GraphQL endpoint comes from the build config
 // (`cogra.graphqlUrl`), and the platform-flavored values core:domain
-// declares as qualifiers — the app-lifetime scope, the device label —
+// declares as qualifiers — the app-lifetime scope, the web origin —
 // are provided here.
 
 package com.cogra.app.di
 
-import android.os.Build
 import com.cogra.app.BuildConfig
 import com.cogra.domain.di.ApplicationScope
-import com.cogra.domain.di.DeviceLabel
 import com.cogra.domain.di.WebOrigin
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
@@ -41,8 +39,4 @@ object AppModule {
     @Singleton
     @ApplicationScope
     fun applicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    @Provides
-    @DeviceLabel
-    fun deviceLabel(): String? = Build.MODEL
 }

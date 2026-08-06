@@ -8,12 +8,16 @@ package com.cogra.network
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Operation
 import com.cogra.crypto.Family
+import com.cogra.domain.AccountState
+import com.cogra.domain.ApplicationInfo
+import com.cogra.domain.ApplicationView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
+import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
@@ -71,6 +75,10 @@ internal fun StagedWriteState.toDomain(): WriteState =
     runCatching { WriteState.valueOf(rawValue) }
         .getOrElse { error("unknown staged-write state $rawValue") }
 
+/** An unknown state gates acting, like every non-member state. */
+internal fun com.cogra.network.graphql.type.AccountState.toDomain(): AccountState =
+    runCatching { AccountState.valueOf(rawValue) }.getOrDefault(AccountState.UNKNOWN)
+
 /** The census names match by construction; an unknown family is a contract break. */
 internal fun RecordFamily.toDomain(): Family =
     runCatching { Family.valueOf(rawValue) }
@@ -90,4 +98,24 @@ internal fun PreparedWriteFields.toDomain(): PreparedWriteView = PreparedWriteVi
     family = family.toDomain(),
     canonicalProposal = Base64.getDecoder().decode(canonicalProposal),
     gcAfterEpochs = gcAfterEpochs,
+)
+
+/** The viewer's own application row. */
+internal fun ApplicationFields.toView(): ApplicationView = ApplicationView(
+    handle = handle,
+    emailVerified = emailVerified,
+    keyAttached = keyAttached,
+    approvedAt = approvedAt,
+    landedAt = landedAt,
+    expiresAt = expiresAt,
+)
+
+/** The same row, as the inviter's queue shows it. */
+internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
+    id = id,
+    handle = handle,
+    emailVerified = emailVerified,
+    keyAttached = keyAttached,
+    approvedAt = approvedAt,
+    landedAt = landedAt,
 )

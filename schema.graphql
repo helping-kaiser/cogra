@@ -1,4 +1,16 @@
 """
+A user account's service state (auth.md "Account states"): it gates
+acting through CoGra, never reading, and is distinct from the
+mutual-pair membership of invitations.md §2. GUEST is reserved — no
+flow creates one yet.
+"""
+enum AccountState {
+	GUEST
+	APPLICANT
+	MEMBER
+}
+
+"""
 An actor in the one handle namespace — a mention resolves to exactly
 one actor.
 """
@@ -7,33 +19,46 @@ interface Actor {
 	handle: String!
 }
 
-type Applicant {
+type Application {
 	id: UUID!
+	"""
+	The applying account's handle.
+	"""
 	handle: String!
+	"""
+	Whether the account has proved its email channel — one of the two
+	approvability proofs.
+	"""
 	emailVerified: Boolean!
+	"""
+	Whether the account has attached its device-minted key and L0
+	address — the other approvability proof.
+	"""
+	keyAttached: Boolean!
 	"""
 	When the inviter's priced approval happened; null while pending.
 	"""
 	approvedAt: DateTime
 	"""
-	When the applicant's Registration confirmed and the account
-	landed; null before.
+	When the Registration confirmed and the account became a member;
+	null before.
 	"""
 	landedAt: DateTime
 	createdAt: DateTime!
 	expiresAt: DateTime!
 }
 
-input ApplicantApprovalInput {
-	applicant: UUID!
+input ApplicationApprovalInput {
+	application: UUID!
 	"""
-	Pre-filled from the link, committed here.
+	The inviter's stance toward the joiner — pre-filled from the
+	link, committed here.
 	"""
 	pDirected: Dimension!
 	pInterest: Dimension!
 }
 
-type ApplicantConnection {
+type ApplicationConnection {
 	"""
 	Information to aid in pagination.
 	"""
@@ -41,36 +66,40 @@ type ApplicantConnection {
 	"""
 	A list of edges.
 	"""
-	edges: [ApplicantEdge!]!
+	edges: [ApplicationEdge!]!
 	"""
 	A list of nodes.
 	"""
-	nodes: [Applicant!]!
+	nodes: [Application!]!
 }
 
 """
 An edge in a connection.
 """
-type ApplicantEdge {
+type ApplicationEdge {
 	"""
 	The item at the end of the edge
 	"""
-	node: Applicant!
+	node: Application!
 	"""
 	A cursor for use in pagination
 	"""
 	cursor: String!
 }
 
-type ApplicationView {
-	applicant: Applicant!
-	"""
-	The staged Registration awaiting the device's signatures — its
-	handshake state and, once sealed, the verified act. Null before
-	approval and after landing. Re-staged automatically if a previous
-	staging expired.
-	"""
-	stagedRegistration: StagedWrite
+"""
+Re-arm an expired, never-approved application with a fresh invite
+link — a new application row for the viewer's account (auth.md
+"Expiry"). BAD_INPUT while a live application exists;
+INVITE_UNUSABLE for a dead link.
+"""
+input ApplyWithInviteInput {
+	inviteLink: UUID!
+}
+
+type ApplyWithInvitePayload {
+	application: Application
+	userErrors: [UserError!]!
 }
 
 input ApprovalSignatureInput {
@@ -94,22 +123,31 @@ type ApproveActsPayload {
 	userErrors: [UserError!]!
 }
 
-input ApproveApplicantRegistrationInput {
-	applicantToken: String!
-	"""
-	The approval-witness signature over the exact verified act
-	(base64).
-	"""
-	signature: String!
-}
-
-type ApproveApplicantRegistrationPayload {
-	stagedWrite: StagedWrite
-	userErrors: [UserError!]!
-}
-
 input ApproveApplicantsInput {
-	approvals: [ApplicantApprovalInput!]!
+	approvals: [ApplicationApprovalInput!]!
+}
+
+"""
+Attach the device-minted actor identity to the viewer's account — the
+key ceremony's server half (auth.md §Application step 3). Replaceable
+while the viewer's application is unapproved; FORBIDDEN once approval
+has bound the address.
+"""
+input AttachActorKeyInput {
+	"""
+	The device-generated actor public key (base64) — the key never
+	leaves the device; this is its public half.
+	"""
+	actorPubkey: String!
+	"""
+	The device-generated L0 address — the address approval funds.
+	"""
+	l0Address: String!
+}
+
+type AttachActorKeyPayload {
+	user: User
+	userErrors: [UserError!]!
 }
 
 type AuthSession {
@@ -149,20 +187,6 @@ input ChangePasswordInput {
 
 type ChangePasswordPayload {
 	ok: Boolean
-	userErrors: [UserError!]!
-}
-
-input ClaimLandedSessionInput {
-	applicantToken: String!
-	deviceLabel: String
-}
-
-type ClaimLandedSessionPayload {
-	"""
-	The first session — mintable repeatedly while the applicant token
-	is valid; the token is the secret.
-	"""
-	auth: AuthSession
 	userErrors: [UserError!]!
 }
 
@@ -263,9 +287,9 @@ enum ErrorCode {
 	"""
 	WEAK_PASSWORD
 	"""
-	A live application already holds this email.
+	The email already belongs to an account.
 	"""
-	APPLICATION_IN_PROGRESS
+	EMAIL_IN_USE
 	"""
 	The email-verification token is invalid or expired.
 	"""
@@ -334,9 +358,10 @@ type InviteLink {
 	"""
 	revokedAt: DateTime
 	"""
-	The inviter's approval queue.
+	The inviter's approval queue: applications staged through this
+	link, with their status.
 	"""
-	applicants(after: String, before: String, first: Int, last: Int): ApplicantConnection!
+	applications(after: String, before: String, first: Int, last: Int): ApplicationConnection!
 }
 
 """
@@ -403,19 +428,30 @@ type LogInPayload {
 
 type Mutation {
 	"""
-	Creates the staged applicant row — off-graph service state only:
-	no account, no records, nothing on the graph — and sends the
-	verification email. On refusal, `userErrors` carries one of
-	INVITE_UNUSABLE, HANDLE_TAKEN, WEAK_PASSWORD, or
-	APPLICATION_IN_PROGRESS.
+	Register through an invite link: creates the account — the actor
+	row (no key yet) and its credentials, in the applicant state —
+	records the application against the link, sends the verification
+	email, and returns an ordinary session.
 	"""
-	submitApplication(input: SubmitApplicationInput!): SubmitApplicationPayload!
+	register(input: RegisterInput!): RegisterPayload!
 	"""
 	Proves the login channel. `ok` is false with a
 	VERIFICATION_TOKEN_INVALID userError when the token is invalid or
-	the application expired.
+	the account expired.
 	"""
-	verifyApplicantEmail(input: VerifyApplicantEmailInput!): VerifyApplicantEmailPayload!
+	verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
+	"""
+	Attaches the device-minted actor identity to the viewer's account
+	— the key ceremony's server half. Replaceable while the viewer's
+	application is unapproved; FORBIDDEN once approval has bound the
+	address.
+	"""
+	attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
+	"""
+	Re-arms an expired, never-approved application with a fresh
+	invite link — a new application row for the viewer's account.
+	"""
+	applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
 	"""
 	Always succeeds, to avoid revealing whether an application
 	exists.
@@ -427,29 +463,10 @@ type Mutation {
 	adjusted at will. Triggers the funding burn and the staged
 	Registration backend-side, and returns the inviter's own Opinion
 	records to sign — the vouch is the inviter's signature, not a
-	server write.
+	server write. Requires an approvable application: email verified
+	and key attached.
 	"""
 	approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
-	"""
-	Pre-sign the staged Registration — the applicant-token twin of
-	`submitProposals`, since no session exists before landing. The
-	returned staged write carries the host-sealed verified act for
-	the approval step.
-	"""
-	submitApplicantRegistration(input: SubmitApplicantRegistrationInput!): SubmitApplicantRegistrationPayload!
-	"""
-	Relay the approval witness — the applicant-token twin of
-	`approveActs`; the device verifies the seal, the exact body, and
-	both commitment openings first. Landing stays asynchronous.
-	"""
-	approveApplicantRegistration(input: ApproveApplicantRegistrationInput!): ApproveApplicantRegistrationPayload!
-	"""
-	Mints a session for a landed applicant. Callable repeatedly while
-	the applicant token is valid — the token is the secret; a
-	userError (BAD_INPUT) reports an application that has not landed
-	yet.
-	"""
-	claimLandedSession(input: ClaimLandedSessionInput!): ClaimLandedSessionPayload!
 	"""
 	A session from credentials; `auth` is null with an
 	INVALID_CREDENTIALS userError when the email / password pair did
@@ -659,11 +676,6 @@ type Query {
 	"""
 	me: User
 	"""
-	The applicant's own view of their application, authorized by the
-	applicant token; null when the token authorizes nothing.
-	"""
-	application(applicantToken: String!): ApplicationView
-	"""
 	One staged write mid-handshake. Field-level: resolves only for
 	the staging actor's session; null otherwise.
 	"""
@@ -727,6 +739,36 @@ type RefreshPayload {
 
 input RefreshSessionInput {
 	refreshToken: String!
+}
+
+"""
+Register through an invite link (auth.md §Application step 2): the
+invite capability plus the login triple. Creates a real account in
+the applicant state and returns an ordinary session — there is no
+applicant token, no parallel auth surface. Pure L2: nothing touches
+L1.
+"""
+input RegisterInput {
+	inviteLink: UUID!
+	handle: String!
+	email: String!
+	password: String!
+	deviceLabel: String
+}
+
+"""
+On refusal, `userErrors` carries one of INVITE_UNUSABLE,
+HANDLE_TAKEN, EMAIL_IN_USE, or WEAK_PASSWORD — all surfaced at the
+form, before any later step.
+"""
+type RegisterPayload {
+	auth: AuthSession
+	"""
+	When the account expires unless its email is verified (24 h,
+	auth.md "Expiry").
+	"""
+	expiresAt: DateTime
+	userErrors: [UserError!]!
 }
 
 input RequestEmailChangeInput {
@@ -898,57 +940,6 @@ enum StagedWriteState {
 	EXPIRED
 }
 
-input SubmitApplicantRegistrationInput {
-	applicantToken: String!
-	"""
-	The pre-commitment blob (base64): the device's private nonce and
-	pre-signature over the canonical proposal.
-	"""
-	signature: String!
-}
-
-type SubmitApplicantRegistrationPayload {
-	"""
-	Carries the host-sealed verified act for the approval step.
-	"""
-	stagedWrite: StagedWrite
-	userErrors: [UserError!]!
-}
-
-"""
-The application submit: the login triple plus the device key
-ceremony's public outputs (the key never leaves the device; approval
-funds a burn to the submitted address, so it must exist first).
-"""
-input SubmitApplicationInput {
-	inviteLink: UUID!
-	handle: String!
-	email: String!
-	password: String!
-	"""
-	The device-held actor key's public half (base64).
-	"""
-	actorPubkey: String!
-	"""
-	The device-generated L0 address — the address approval funds.
-	"""
-	l0Address: String!
-}
-
-type SubmitApplicationPayload {
-	"""
-	The opaque token authorizing exactly this applicant's own flow:
-	status polling, registration signing, the landing claim. Null
-	when `userErrors` is non-empty.
-	"""
-	applicantToken: String
-	"""
-	When the application expires unverified (24 h, auth.md).
-	"""
-	expiresAt: DateTime
-	userErrors: [UserError!]!
-}
-
 input SubmitProposalsInput {
 	proposals: [ProposalSignatureInput!]!
 }
@@ -1024,6 +1015,25 @@ type User implements Actor {
 	"""
 	invitedBy: Actor
 	"""
+	The account's service state — gates acting through CoGra (auth.md
+	"Account states"). Field-level: viewer-only.
+	"""
+	accountState: AccountState
+	"""
+	Whether the account's email is verified — one of the two
+	approvability proofs while an application is pending. Field-level:
+	viewer-only.
+	"""
+	emailVerified: Boolean
+	"""
+	The account's latest application — the applicant's own view of
+	its progress; null when the account has none. Reading it is the
+	admission flow's repair hook: an approved application whose
+	staged Registration was lost re-stages here, on the poll (auth.md
+	"Approval and landing"). Field-level: viewer-only.
+	"""
+	application: Application
+	"""
 	The account's invite links — service-side staging state, not
 	graph structure. Field-level: each link's id is the link
 	capability, so this resolves only for the issuing actor.
@@ -1048,14 +1058,14 @@ type UserError {
 	field: [String!]
 }
 
-input VerifyApplicantEmailInput {
+input VerifyEmailInput {
 	verificationToken: String!
 }
 
-type VerifyApplicantEmailPayload {
+type VerifyEmailPayload {
 	"""
 	False with a VERIFICATION_TOKEN_INVALID userError when the token
-	is invalid or the application expired.
+	is invalid or the account expired.
 	"""
 	ok: Boolean!
 	userErrors: [UserError!]!

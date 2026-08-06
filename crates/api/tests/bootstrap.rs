@@ -49,29 +49,29 @@ async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     let ids = mirror::record_ids_in_epoch(&pool, 0).await.expect("ids");
     assert_eq!(ids.len(), 8);
-    let publisher = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
+    let publisher_address = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
         .await
         .expect("query")
-        .expect("publisher row");
+        .expect("publisher row")
+        .l0_address
+        .expect("keyed");
     for family in [Family::Publish, Family::Tag] {
         assert!(
-            mirror::has_record_by(&pool, &publisher.l0_address, family)
+            mirror::has_record_by(&pool, &publisher_address, family)
                 .await
                 .expect("gate"),
             "publisher's {family} record must be in the mirror"
         );
     }
+    let operator_address = operator.l0_address.expect("keyed");
     assert!(
-        mirror::has_record_by(&pool, &operator.l0_address, Family::Registration)
+        mirror::has_record_by(&pool, &operator_address, Family::Registration)
             .await
             .expect("gate")
     );
 
     // The first record is the Genesis Moderator's Registration.
-    assert_eq!(
-        ids[0],
-        format!("act:{}:0:registration", operator.l0_address)
-    );
+    assert_eq!(ids[0], format!("act:{operator_address}:0:registration"));
 }
 
 #[sqlx::test(migrations = "../../migrations")]
@@ -120,12 +120,14 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     // The re-run completes the missing half keyed on the stored identities.
     let outcome = run(&host, &pool, input()).await.expect("repairs");
     assert_eq!(outcome, BootstrapOutcome::Repaired);
-    let publisher = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
+    let publisher_address = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
         .await
         .expect("query")
-        .expect("row");
+        .expect("row")
+        .l0_address
+        .expect("keyed");
     assert!(
-        mirror::has_record_by(&pool, &publisher.l0_address, Family::Publish)
+        mirror::has_record_by(&pool, &publisher_address, Family::Publish)
             .await
             .expect("gate")
     );

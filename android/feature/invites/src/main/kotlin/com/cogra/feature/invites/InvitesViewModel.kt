@@ -25,7 +25,7 @@ data class InvitesUiState(
     val singleUse: Boolean = false,
     val prefillPDirected: Double = 0.5,
     val prefillPInterest: Double = 0.5,
-    /** The applicant currently being approved, if any. */
+    /** The application currently being approved, if any. */
     val approvingId: String? = null,
     val error: ErrorCode? = null,
     val transportFailed: Boolean = false,
@@ -111,11 +111,11 @@ class InvitesViewModel @Inject constructor(
      * Opinion writes on this device — the vouch is the inviter's
      * signature, not a server write.
      */
-    fun onApprove(applicantId: String, pDirected: Double, pInterest: Double) {
+    fun onApprove(applicationId: String, pDirected: Double, pInterest: Double) {
         if (_state.value.approvingId != null) return
-        _state.update { it.copy(approvingId = applicantId, error = null, vouchSigned = false) }
+        _state.update { it.copy(approvingId = applicationId, error = null, vouchSigned = false) }
         viewModelScope.launch {
-            val prepared = when (val outcome = account.approveApplicant(applicantId, pDirected, pInterest)) {
+            val prepared = when (val outcome = account.approveApplication(applicationId, pDirected, pInterest)) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> {
                     _state.update {

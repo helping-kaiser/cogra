@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT handle, email, password_hash, actor_pubkey, l0_address\n         FROM auth_applicants\n         WHERE id = $1 AND approved_at IS NOT NULL AND landed_at IS NULL",
+  "query": "SELECT actor_id, email, password_hash, account_state, email_verified_at\n         FROM user_credentials WHERE actor_id = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "handle",
-        "type_info": "Text"
+        "name": "actor_id",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -20,13 +20,13 @@
       },
       {
         "ordinal": 3,
-        "name": "actor_pubkey",
-        "type_info": "Bytea"
+        "name": "account_state",
+        "type_info": "Text"
       },
       {
         "ordinal": 4,
-        "name": "l0_address",
-        "type_info": "Text"
+        "name": "email_verified_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -39,8 +39,8 @@
       false,
       false,
       false,
-      false
+      true
     ]
   },
-  "hash": "2b401032601bc5163c975d52d93121c04710fd8ca0e0425be19ebef0f4014803"
+  "hash": "d47f14a685f2aeab9d51d28bf80c61526b62e0c716818f7bfa4d4a4597a69e69"
 }

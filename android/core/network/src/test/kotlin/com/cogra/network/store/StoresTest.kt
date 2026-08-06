@@ -80,14 +80,10 @@ class StoresTest {
         val identity = IdentityStoreImpl(store())
         val seed = ActorKey.generate().seed()
         identity.saveActorSeed(seed)
-        identity.saveApplicantToken("tok")
         identity.savePendingBackupBlob(byteArrayOf(7, 8))
         assertThat(identity.actorSeed()).isEqualTo(seed)
-        assertThat(identity.applicantToken()).isEqualTo("tok")
         assertThat(identity.pendingBackupBlob()).isEqualTo(byteArrayOf(7, 8))
-        identity.clearApplicantToken()
         identity.clearPendingBackupBlob()
-        assertThat(identity.applicantToken()).isNull()
         assertThat(identity.pendingBackupBlob()).isNull()
     }
 

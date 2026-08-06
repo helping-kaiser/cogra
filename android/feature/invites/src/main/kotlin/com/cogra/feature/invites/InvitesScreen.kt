@@ -35,7 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cogra.domain.ApplicantInfo
+import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 
 @Composable
@@ -203,48 +203,54 @@ private fun LinkCard(
                     }
                 }
             }
-            link.applicants.forEach { applicant ->
-                ApplicantRow(applicant, approvingId, onApprove)
+            link.applications.forEach { application ->
+                ApplicationRow(application, approvingId, onApprove)
             }
         }
     }
 }
 
 @Composable
-private fun ApplicantRow(
-    applicant: ApplicantInfo,
+private fun ApplicationRow(
+    application: ApplicationInfo,
     approvingId: String?,
     onApprove: (String, Double, Double) -> Unit,
 ) {
     var pDirected by remember { mutableStateOf(0.5) }
     var pInterest by remember { mutableStateOf(0.5) }
+    // Approvable = both proofs (auth.md "Application"): email verified
+    // and the device key attached; the server enforces both at approval.
+    val approvable = application.emailVerified && application.keyAttached
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = when {
-                applicant.landedAt != null -> stringResource(R.string.applicant_landed, applicant.handle)
-                applicant.approvedAt != null -> stringResource(R.string.applicant_approved, applicant.handle)
-                !applicant.emailVerified -> stringResource(R.string.applicant_unverified, applicant.handle)
-                else -> stringResource(R.string.applicant_ready, applicant.handle)
+                application.landedAt != null -> stringResource(R.string.applicant_landed, application.handle)
+                application.approvedAt != null -> stringResource(R.string.applicant_approved, application.handle)
+                !application.emailVerified && !application.keyAttached ->
+                    stringResource(R.string.applicant_incomplete, application.handle)
+                !application.emailVerified -> stringResource(R.string.applicant_unverified, application.handle)
+                !application.keyAttached -> stringResource(R.string.applicant_no_key, application.handle)
+                else -> stringResource(R.string.applicant_ready, application.handle)
             },
-            modifier = Modifier.testTag("applicant_${applicant.id}"),
+            modifier = Modifier.testTag("application_${application.id}"),
         )
-        if (applicant.approvedAt == null && applicant.emailVerified) {
+        if (application.approvedAt == null && approvable) {
             StanceSlider(
                 stringResource(R.string.stance_p_directed),
                 pDirected,
                 { pDirected = it },
-                "approve_p_directed_${applicant.id}",
+                "approve_p_directed_${application.id}",
             )
             StanceSlider(
                 stringResource(R.string.stance_p_interest),
                 pInterest,
                 { pInterest = it },
-                "approve_p_interest_${applicant.id}",
+                "approve_p_interest_${application.id}",
             )
             Button(
-                onClick = { onApprove(applicant.id, pDirected, pInterest) },
+                onClick = { onApprove(application.id, pDirected, pInterest) },
                 enabled = approvingId == null,
-                modifier = Modifier.testTag("approve_${applicant.id}"),
+                modifier = Modifier.testTag("approve_${application.id}"),
             ) {
                 Text(stringResource(R.string.applicant_approve))
             }

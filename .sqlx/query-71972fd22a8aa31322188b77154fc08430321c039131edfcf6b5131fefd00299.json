@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id FROM staged_writes\n         WHERE applicant_id = $1 AND family = $2 AND state <> 'expired'\n         ORDER BY created_at DESC LIMIT 1",
+  "query": "SELECT id FROM staged_writes\n         WHERE actor_id = $1 AND family = $2 AND state <> 'expired'\n         ORDER BY created_at DESC LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "8cfd18eca89ee70ebab9b2bf90fca70220018f48ce4aaac0f6905ef9d8b77d11"
+  "hash": "71972fd22a8aa31322188b77154fc08430321c039131edfcf6b5131fefd00299"
 }

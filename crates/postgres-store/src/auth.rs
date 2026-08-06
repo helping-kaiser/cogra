@@ -1,7 +1,8 @@
 // Authentication and onboarding state (auth.md; data-model.md
-// "Authentication state"): invite links, staged applicants, credentials,
-// refresh-token sessions, and key backups. Auth gates the service, never
-// the graph — nothing in this module is authoritative about any record.
+// "Authentication state"): invite links, accounts and their
+// applications, credentials, refresh-token sessions, and key backups.
+// Auth gates the service, never the graph — nothing in this module is
+// authoritative about any record.
 
 use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
@@ -21,18 +22,52 @@ pub struct InviteLink {
     pub revoked_at: Option<DateTime<Utc>>,
 }
 
-/// One staged applicant (data-model.md `auth_applicants`): everything
-/// CoGra knows about a person between following a link and landing.
+/// The account state gating acting through CoGra (auth.md "Account
+/// states"): service state on the credentials row, never a graph fact.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AccountState {
+    Guest,
+    Applicant,
+    Member,
+}
+
+impl AccountState {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AccountState::Guest => "guest",
+            AccountState::Applicant => "applicant",
+            AccountState::Member => "member",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "guest" => AccountState::Guest,
+            "applicant" => AccountState::Applicant,
+            "member" => AccountState::Member,
+            _ => return None,
+        })
+    }
+}
+
+fn decode_account_state(s: &str) -> Result<AccountState, sqlx::Error> {
+    AccountState::parse(s)
+        .ok_or_else(|| sqlx::Error::Decode(format!("unknown account_state {s:?}").into()))
+}
+
+/// One application attempt (data-model.md `auth_applications`): the
+/// invite-link provenance and approval/landing bookkeeping of an account
+/// in the applicant state. The joined proof fields (`handle`,
+/// `email_verified`, `key_attached`) come off the account rows — they are
+/// what approvability reads.
 #[derive(Debug, Clone)]
-pub struct Applicant {
+pub struct Application {
     pub id: Uuid,
+    pub account_id: Uuid,
     pub invite_link_id: Uuid,
     pub handle: String,
-    pub email: String,
-    pub password_hash: String,
-    pub email_verified_at: Option<DateTime<Utc>>,
-    pub actor_pubkey: Vec<u8>,
-    pub l0_address: String,
+    pub email_verified: bool,
+    pub key_attached: bool,
     pub approved_at: Option<DateTime<Utc>>,
     pub landed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
@@ -51,12 +86,15 @@ pub struct Session {
     pub revoked_at: Option<DateTime<Utc>>,
 }
 
-/// The login half of an account.
+/// The account half of a user-kind actor (data-model.md
+/// `user_credentials`).
 #[derive(Debug, Clone)]
 pub struct Credentials {
     pub actor_id: Uuid,
     pub email: String,
     pub password_hash: String,
+    pub account_state: AccountState,
+    pub email_verified_at: Option<DateTime<Utc>>,
 }
 
 // ---------------------------------------------------------------------
@@ -166,7 +204,7 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
                  AND l.revoked_at IS NULL
                  AND l.expires_at > NOW()
                  AND (NOT l.single_use OR NOT EXISTS(
-                     SELECT 1 FROM auth_applicants a
+                     SELECT 1 FROM auth_applications a
                      WHERE a.invite_link_id = l.id
                        AND (a.expires_at > NOW()
                             OR a.approved_at IS NOT NULL
@@ -180,91 +218,150 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
 }
 
 // ---------------------------------------------------------------------
-// Applicants
+// Registration and applications
 // ---------------------------------------------------------------------
 
-/// The outcome of an application submit against the email constraint
-/// (auth.md "Re-registration collision").
+/// The outcome of a registration against the two uniqueness constraints
+/// (auth.md "Registration collision").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SubmitOutcome {
+pub enum RegisterOutcome {
     Created,
-    /// A live application (or a landed account's row) already holds the
-    /// email.
-    EmailHeld,
+    HandleTaken,
+    EmailInUse,
 }
 
+/// Registers an account through an invite link, in one transaction
+/// (auth.md §Application step 2): the actor row (no key yet), the
+/// credentials in the applicant state, the first profile version
+/// (display name = handle until the owner edits), and the application
+/// row against the link. A dead account — never verified and past
+/// `dead_before` — holding the handle or email is deleted first, so the
+/// experience never depends on the reaper's schedule.
 #[allow(clippy::too_many_arguments)]
-pub async fn submit_applicant(
+pub async fn register_account(
     pool: &PgPool,
-    id: Uuid,
+    account_id: Uuid,
+    application_id: Uuid,
     invite_link_id: Uuid,
     handle: &str,
     email: &str,
     password_hash: &str,
     verification_token_hash: &[u8],
-    applicant_token_hash: &[u8],
-    actor_pubkey: &[u8],
-    l0_address: &str,
-    expires_at: DateTime<Utc>,
-) -> Result<SubmitOutcome, sqlx::Error> {
-    // An expired-but-unswept row is overwritten so the experience never
-    // depends on the reaper's schedule; approved or landed rows are never
-    // overwritten.
-    let rows = sqlx::query!(
-        "INSERT INTO auth_applicants
-             (id, invite_link_id, handle, email, password_hash,
-              email_verification_token_hash, applicant_token_hash,
-              actor_pubkey, l0_address, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         ON CONFLICT (email) DO UPDATE SET
-             id = EXCLUDED.id,
-             invite_link_id = EXCLUDED.invite_link_id,
-             handle = EXCLUDED.handle,
-             password_hash = EXCLUDED.password_hash,
-             email_verification_token_hash = EXCLUDED.email_verification_token_hash,
-             applicant_token_hash = EXCLUDED.applicant_token_hash,
-             actor_pubkey = EXCLUDED.actor_pubkey,
-             l0_address = EXCLUDED.l0_address,
-             email_verified_at = NULL,
-             created_at = NOW(),
-             expires_at = EXCLUDED.expires_at
-         WHERE auth_applicants.expires_at < NOW()
-           AND auth_applicants.approved_at IS NULL
-           AND auth_applicants.landed_at IS NULL",
-        id,
-        invite_link_id,
+    dead_before: DateTime<Utc>,
+    application_expires_at: DateTime<Utc>,
+) -> Result<RegisterOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let dead: Vec<Uuid> = sqlx::query_scalar!(
+        "SELECT c.actor_id FROM user_credentials c
+         JOIN actors a ON a.id = c.actor_id
+         WHERE c.email_verified_at IS NULL
+           AND c.created_at < $1
+           AND (a.handle = $2 OR c.email = $3)",
+        dead_before,
         handle,
+        email,
+    )
+    .fetch_all(&mut *tx)
+    .await?;
+    delete_account_rows(&mut tx, &dead).await?;
+
+    let inserted = sqlx::query!(
+        "INSERT INTO actors (id, kind, handle) VALUES ($1, 'user', $2)",
+        account_id,
+        handle,
+    )
+    .execute(&mut *tx)
+    .await;
+    if let Some(outcome) = refused_unique(inserted)? {
+        return Ok(outcome);
+    }
+    let inserted = sqlx::query!(
+        "INSERT INTO user_credentials
+             (actor_id, email, password_hash, account_state,
+              email_verification_token_hash)
+         VALUES ($1, $2, $3, 'applicant', $4)",
+        account_id,
         email,
         password_hash,
         verification_token_hash,
-        applicant_token_hash,
-        actor_pubkey,
-        l0_address,
-        expires_at,
     )
-    .execute(pool)
-    .await?
-    .rows_affected();
-    Ok(if rows == 1 {
-        SubmitOutcome::Created
-    } else {
-        SubmitOutcome::EmailHeld
-    })
+    .execute(&mut *tx)
+    .await;
+    if let Some(outcome) = refused_unique(inserted)? {
+        return Ok(outcome);
+    }
+    sqlx::query!(
+        "INSERT INTO actor_profile_versions (actor_id, display_name)
+         VALUES ($1, $2)",
+        account_id,
+        handle,
+    )
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query!(
+        "INSERT INTO auth_applications (id, account_id, invite_link_id, expires_at)
+         VALUES ($1, $2, $3, $4)",
+        application_id,
+        account_id,
+        invite_link_id,
+        application_expires_at,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(RegisterOutcome::Created)
 }
 
-/// Maps one applicant row (a sqlx anonymous record) onto the struct —
-/// the queries all select the same field set.
-macro_rules! applicant_from_row {
+/// Maps a unique-constraint violation onto the registration outcome it
+/// refuses with; passes every other result through.
+fn refused_unique(
+    result: Result<sqlx::postgres::PgQueryResult, sqlx::Error>,
+) -> Result<Option<RegisterOutcome>, sqlx::Error> {
+    match result {
+        Ok(_) => Ok(None),
+        Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
+            Some("actors_handle_key") => Ok(Some(RegisterOutcome::HandleTaken)),
+            Some("user_credentials_email_key") => Ok(Some(RegisterOutcome::EmailInUse)),
+            _ => Err(sqlx::Error::Database(e)),
+        },
+        Err(e) => Err(e),
+    }
+}
+
+/// Deletes accounts whole — profile versions, credentials, and the actor
+/// row, whose FK cascades take sessions, applications, backups, and the
+/// other user-scoped rows. Only ever called for never-verified accounts,
+/// which cannot have touched L1 (auth.md "Reaper").
+async fn delete_account_rows(conn: &mut PgConnection, ids: &[Uuid]) -> Result<(), sqlx::Error> {
+    if ids.is_empty() {
+        return Ok(());
+    }
+    sqlx::query!(
+        "DELETE FROM actor_profile_versions WHERE actor_id = ANY($1)",
+        ids,
+    )
+    .execute(&mut *conn)
+    .await?;
+    sqlx::query!("DELETE FROM user_credentials WHERE actor_id = ANY($1)", ids)
+        .execute(&mut *conn)
+        .await?;
+    sqlx::query!("DELETE FROM actors WHERE id = ANY($1)", ids)
+        .execute(&mut *conn)
+        .await?;
+    Ok(())
+}
+
+/// Maps one application row (a sqlx anonymous record, account rows
+/// joined) onto the struct — the queries all select the same field set.
+macro_rules! application_from_row {
     ($r:expr) => {
-        Applicant {
+        Application {
             id: $r.id,
+            account_id: $r.account_id,
             invite_link_id: $r.invite_link_id,
             handle: $r.handle,
-            email: $r.email,
-            password_hash: $r.password_hash,
-            email_verified_at: $r.email_verified_at,
-            actor_pubkey: $r.actor_pubkey,
-            l0_address: $r.l0_address,
+            email_verified: $r.email_verified,
+            key_attached: $r.key_attached,
             approved_at: $r.approved_at,
             landed_at: $r.landed_at,
             created_at: $r.created_at,
@@ -273,110 +370,142 @@ macro_rules! applicant_from_row {
     };
 }
 
-pub async fn applicant(pool: &PgPool, id: Uuid) -> Result<Option<Applicant>, sqlx::Error> {
+pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, invite_link_id, handle, email, password_hash,
-                email_verified_at, actor_pubkey, l0_address,
-                approved_at, landed_at, created_at, expires_at
-         FROM auth_applicants WHERE id = $1",
+        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+                  (c.email_verified_at IS NOT NULL) AS "email_verified!",
+                  (a.actor_pubkey IS NOT NULL) AS "key_attached!",
+                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+           FROM auth_applications ap
+           JOIN actors a ON a.id = ap.account_id
+           JOIN user_credentials c ON c.actor_id = ap.account_id
+           WHERE ap.id = $1"#,
         id,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| applicant_from_row!(r)))
+    .map(|r| application_from_row!(r)))
 }
 
-/// The applicant-token lookup — the sole authorization of the applicant's
-/// own flow (status polling, registration signing, the session claim).
-pub async fn applicant_by_token_hash(
+/// The account's newest application — the applicant's own view of its
+/// progress (`User.application`); None when the account has none.
+pub async fn latest_application_for(
     pool: &PgPool,
-    token_hash: &[u8],
-) -> Result<Option<Applicant>, sqlx::Error> {
+    account_id: Uuid,
+) -> Result<Option<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, invite_link_id, handle, email, password_hash,
-                email_verified_at, actor_pubkey, l0_address,
-                approved_at, landed_at, created_at, expires_at
-         FROM auth_applicants WHERE applicant_token_hash = $1",
-        token_hash,
+        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+                  (c.email_verified_at IS NOT NULL) AS "email_verified!",
+                  (a.actor_pubkey IS NOT NULL) AS "key_attached!",
+                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+           FROM auth_applications ap
+           JOIN actors a ON a.id = ap.account_id
+           JOIN user_credentials c ON c.actor_id = ap.account_id
+           WHERE ap.account_id = $1
+           ORDER BY ap.created_at DESC LIMIT 1"#,
+        account_id,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| applicant_from_row!(r)))
+    .map(|r| application_from_row!(r)))
 }
 
 /// The inviter's approval queue for one link, newest first.
-pub async fn applicants_for_link(
+pub async fn applications_for_link(
     pool: &PgPool,
     invite_link_id: Uuid,
-) -> Result<Vec<Applicant>, sqlx::Error> {
+) -> Result<Vec<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, invite_link_id, handle, email, password_hash,
-                email_verified_at, actor_pubkey, l0_address,
-                approved_at, landed_at, created_at, expires_at
-         FROM auth_applicants WHERE invite_link_id = $1
-         ORDER BY created_at DESC",
+        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+                  (c.email_verified_at IS NOT NULL) AS "email_verified!",
+                  (a.actor_pubkey IS NOT NULL) AS "key_attached!",
+                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+           FROM auth_applications ap
+           JOIN actors a ON a.id = ap.account_id
+           JOIN user_credentials c ON c.actor_id = ap.account_id
+           WHERE ap.invite_link_id = $1
+           ORDER BY ap.created_at DESC"#,
         invite_link_id,
     )
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| applicant_from_row!(r))
+    .map(|r| application_from_row!(r))
     .collect())
 }
 
-/// Marks the email channel proven and extends the application's life to
-/// its link's expiry — a verified applicant persists while the link lives
-/// (auth.md "Application"; the upsert predicate reads `expires_at`, so
-/// the extension is what protects a verified row from being overwritten).
-pub async fn verify_applicant_email(
+/// A fresh application row for an account a new invite link re-arms
+/// (auth.md "Expiry"; `applyWithInvite`). Liveness — at most one live
+/// application per account — is checked by the caller, not a constraint.
+pub async fn create_application(
+    pool: &PgPool,
+    id: Uuid,
+    account_id: Uuid,
+    invite_link_id: Uuid,
+    expires_at: DateTime<Utc>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO auth_applications (id, account_id, invite_link_id, expires_at)
+         VALUES ($1, $2, $3, $4)",
+        id,
+        account_id,
+        invite_link_id,
+        expires_at,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Marks the email channel proven (auth.md §Application step 4).
+/// Single-use, and dead accounts — past `dead_before`, never verified —
+/// cannot verify: they are already replaceable.
+pub async fn verify_account_email(
     pool: &PgPool,
     verification_token_hash: &[u8],
+    dead_before: DateTime<Utc>,
 ) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
-        "UPDATE auth_applicants a
-         SET email_verified_at = NOW(),
-             expires_at = l.expires_at
-         FROM auth_invite_links l
-         WHERE a.invite_link_id = l.id
-           AND a.email_verification_token_hash = $1
-           AND a.email_verified_at IS NULL
-           AND a.expires_at > NOW()
-         RETURNING a.id",
+        "UPDATE user_credentials
+         SET email_verified_at = NOW()
+         WHERE email_verification_token_hash = $1
+           AND email_verified_at IS NULL
+           AND created_at >= $2
+         RETURNING actor_id",
         verification_token_hash,
+        dead_before,
     )
     .fetch_optional(pool)
     .await
 }
 
-/// The live, unverified applicant holding an email — the resend target.
-pub async fn unverified_applicant_by_email(
+/// The live, unverified account holding an email — the resend target.
+pub async fn unverified_account_by_email(
     pool: &PgPool,
     email: &str,
-) -> Result<Option<Applicant>, sqlx::Error> {
-    Ok(sqlx::query!(
-        "SELECT id, invite_link_id, handle, email, password_hash,
-                email_verified_at, actor_pubkey, l0_address,
-                approved_at, landed_at, created_at, expires_at
-         FROM auth_applicants
-         WHERE email = $1 AND email_verified_at IS NULL AND expires_at > NOW()",
+    dead_before: DateTime<Utc>,
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT actor_id FROM user_credentials
+         WHERE email = $1 AND email_verified_at IS NULL AND created_at >= $2",
         email,
+        dead_before,
     )
     .fetch_optional(pool)
-    .await?
-    .map(|r| applicant_from_row!(r)))
+    .await
 }
 
 /// Replaces the verification token for a resend — the raw token never
 /// persists, so a resend mints a fresh secret.
 pub async fn rotate_verification_token(
     pool: &PgPool,
-    applicant_id: Uuid,
+    account_id: Uuid,
     new_token_hash: &[u8],
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        "UPDATE auth_applicants SET email_verification_token_hash = $2
-         WHERE id = $1 AND email_verified_at IS NULL",
-        applicant_id,
+        "UPDATE user_credentials SET email_verification_token_hash = $2
+         WHERE actor_id = $1 AND email_verified_at IS NULL",
+        account_id,
         new_token_hash,
     )
     .execute(pool)
@@ -384,98 +513,110 @@ pub async fn rotate_verification_token(
     Ok(())
 }
 
-/// Marks the inviter's priced approval. Refused (None) unless the
-/// application is live, email-verified, and not yet approved.
-pub async fn approve_applicant(
+/// Attaches the device-minted actor identity — the key ceremony's server
+/// half (auth.md §Application step 3). Replaceable while the account is
+/// an applicant with no approved application; false once approval has
+/// bound the address (or the account is not an applicant at all).
+pub async fn attach_actor_key(
+    pool: &PgPool,
+    account_id: Uuid,
+    actor_pubkey: &[u8],
+    l0_address: &str,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE actors a
+         SET actor_pubkey = $2, l0_address = $3
+         FROM user_credentials c
+         WHERE a.id = $1 AND c.actor_id = a.id
+           AND a.kind = 'user'
+           AND c.account_state = 'applicant'
+           AND NOT EXISTS(
+               SELECT 1 FROM auth_applications ap
+               WHERE ap.account_id = a.id AND ap.approved_at IS NOT NULL
+           )",
+        account_id,
+        actor_pubkey,
+        l0_address,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Marks the inviter's priced approval — the `approved_at IS NULL`
+/// predicate is the concurrency gate against a duplicate approval.
+/// Refused (None) unless the application is live and approvable: email
+/// verified and key attached, both enforced here as well as validated by
+/// the caller (auth.md §Application).
+pub async fn approve_application(
     conn: &mut PgConnection,
     id: Uuid,
-) -> Result<Option<Applicant>, sqlx::Error> {
-    let approved = sqlx::query!(
-        "UPDATE auth_applicants
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "UPDATE auth_applications ap
          SET approved_at = NOW()
-         WHERE id = $1
-           AND approved_at IS NULL
-           AND email_verified_at IS NOT NULL
-           AND expires_at > NOW()
-         RETURNING id, invite_link_id, handle, email, password_hash,
-                   email_verified_at, actor_pubkey, l0_address,
-                   approved_at, landed_at, created_at, expires_at",
+         FROM actors a, user_credentials c
+         WHERE ap.id = $1 AND a.id = ap.account_id AND c.actor_id = ap.account_id
+           AND ap.approved_at IS NULL
+           AND ap.landed_at IS NULL
+           AND ap.expires_at > NOW()
+           AND c.email_verified_at IS NOT NULL
+           AND a.actor_pubkey IS NOT NULL
+         RETURNING ap.account_id",
         id,
     )
     .fetch_optional(conn)
-    .await?;
-    Ok(approved.map(|r| applicant_from_row!(r)))
+    .await
 }
 
-/// Lands an approved applicant whose Registration confirmed: creates the
-/// actor row (the identity association), the credentials, and the first
-/// profile version (display name = handle until the member edits), and
-/// marks the applicant landed — one transaction (auth.md "Approval and
-/// landing" step 4).
-pub async fn land_applicant(
-    conn: &mut PgConnection,
-    applicant_id: Uuid,
-    actor_id: Uuid,
-) -> Result<(), sqlx::Error> {
-    let row = sqlx::query!(
-        "SELECT handle, email, password_hash, actor_pubkey, l0_address
-         FROM auth_applicants
-         WHERE id = $1 AND approved_at IS NOT NULL AND landed_at IS NULL",
-        applicant_id,
+/// Lands an account whose Registration confirmed (auth.md "Approval and
+/// landing" step 4): flips the account state to member and marks the
+/// approved application landed. Nothing moves — the credentials have
+/// been the account's since registration. True when an application
+/// landed (false for actors with no approved application, e.g. a
+/// genesis Registration re-ingested on rebuild).
+pub async fn land_account(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let landed = sqlx::query!(
+        "UPDATE auth_applications
+         SET landed_at = NOW()
+         WHERE account_id = $1 AND approved_at IS NOT NULL AND landed_at IS NULL",
+        account_id,
     )
-    .fetch_one(&mut *conn)
-    .await?;
+    .execute(&mut *tx)
+    .await?
+    .rows_affected()
+        == 1;
+    if !landed {
+        return Ok(false);
+    }
     sqlx::query!(
-        "INSERT INTO actors (id, kind, handle, actor_pubkey, l0_address)
-         VALUES ($1, 'user', $2, $3, $4)",
-        actor_id,
-        row.handle,
-        row.actor_pubkey,
-        row.l0_address,
+        "UPDATE user_credentials SET account_state = 'member'
+         WHERE actor_id = $1 AND account_state = 'applicant'",
+        account_id,
     )
-    .execute(&mut *conn)
+    .execute(&mut *tx)
     .await?;
-    sqlx::query!(
-        "INSERT INTO user_credentials (actor_id, email, password_hash)
-         VALUES ($1, $2, $3)",
-        actor_id,
-        row.email,
-        row.password_hash,
-    )
-    .execute(&mut *conn)
-    .await?;
-    sqlx::query!(
-        "INSERT INTO actor_profile_versions (actor_id, display_name)
-         VALUES ($1, $2)",
-        actor_id,
-        row.handle,
-    )
-    .execute(&mut *conn)
-    .await?;
-    sqlx::query!(
-        "UPDATE auth_applicants SET landed_at = NOW(), actor_id = $2 WHERE id = $1",
-        applicant_id,
-        actor_id,
-    )
-    .execute(&mut *conn)
-    .await?;
-    Ok(())
+    tx.commit().await?;
+    Ok(true)
 }
 
-/// The actor that issued the invite link this account's application came
-/// through — landing provenance; None for actors without an application
-/// trace (genesis actors).
+/// The actor that issued the invite link this account's landed
+/// application came through — landing provenance; None for accounts
+/// without an application trace (genesis actors).
 pub async fn inviter_of(
     pool: &PgPool,
-    actor_id: Uuid,
+    account_id: Uuid,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
         "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.l0_address
-         FROM auth_applicants a
-         JOIN auth_invite_links l ON l.id = a.invite_link_id
+         FROM auth_applications ap
+         JOIN auth_invite_links l ON l.id = ap.invite_link_id
          JOIN actors i ON i.id = l.inviter_id
-         WHERE a.actor_id = $1",
-        actor_id,
+         WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL
+         ORDER BY ap.landed_at DESC LIMIT 1",
+        account_id,
     )
     .fetch_optional(pool)
     .await?
@@ -488,37 +629,26 @@ pub async fn inviter_of(
     }))
 }
 
-/// The reaper (auth.md "Account lifecycle"): deletes expired applications
-/// that were never approved. Approved rows persist — their funding burn
-/// happened; landed rows persist as the account's registration trace.
-pub async fn reap_applicants(pool: &PgPool) -> Result<u64, sqlx::Error> {
-    Ok(sqlx::query!(
-        "DELETE FROM auth_applicants
-         WHERE expires_at < NOW()
-           AND approved_at IS NULL
-           AND landed_at IS NULL",
+/// The reaper (auth.md "Reaper"): deletes never-verified accounts past
+/// their bound, whole — freeing handle and email. Verified accounts are
+/// never reaped; deletion is legitimate exactly because nothing has
+/// touched L1.
+pub async fn reap_unverified_accounts(
+    pool: &PgPool,
+    dead_before: DateTime<Utc>,
+) -> Result<u64, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let dead: Vec<Uuid> = sqlx::query_scalar!(
+        "SELECT actor_id FROM user_credentials
+         WHERE email_verified_at IS NULL AND created_at < $1",
+        dead_before,
     )
-    .execute(pool)
-    .await?
-    .rows_affected())
-}
-
-/// Whether a handle can still be claimed: free in the one actor
-/// namespace and not held by a live or in-flight application
-/// (decision D7 — checked at submit and re-checked at approval).
-pub async fn handle_available(pool: &PgPool, handle: &str) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar!(
-        r#"SELECT NOT EXISTS(SELECT 1 FROM actors WHERE handle = $1)
-               AND NOT EXISTS(
-                   SELECT 1 FROM auth_applicants
-                   WHERE handle = $1
-                     AND landed_at IS NULL
-                     AND (expires_at > NOW() OR approved_at IS NOT NULL)
-               ) AS "available!""#,
-        handle,
-    )
-    .fetch_one(pool)
-    .await
+    .fetch_all(&mut *tx)
+    .await?;
+    let count = dead.len() as u64;
+    delete_account_rows(&mut tx, &dead).await?;
+    tx.commit().await?;
+    Ok(count)
 }
 
 // ---------------------------------------------------------------------
@@ -529,34 +659,46 @@ pub async fn credentials_by_email(
     pool: &PgPool,
     email: &str,
 ) -> Result<Option<Credentials>, sqlx::Error> {
-    Ok(sqlx::query!(
-        "SELECT actor_id, email, password_hash FROM user_credentials WHERE email = $1",
+    sqlx::query!(
+        "SELECT actor_id, email, password_hash, account_state, email_verified_at
+         FROM user_credentials WHERE email = $1",
         email,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| Credentials {
-        actor_id: r.actor_id,
-        email: r.email,
-        password_hash: r.password_hash,
-    }))
+    .map(|r| {
+        Ok(Credentials {
+            actor_id: r.actor_id,
+            email: r.email,
+            password_hash: r.password_hash,
+            account_state: decode_account_state(&r.account_state)?,
+            email_verified_at: r.email_verified_at,
+        })
+    })
+    .transpose()
 }
 
 pub async fn credentials_by_actor(
     pool: &PgPool,
     actor_id: Uuid,
 ) -> Result<Option<Credentials>, sqlx::Error> {
-    Ok(sqlx::query!(
-        "SELECT actor_id, email, password_hash FROM user_credentials WHERE actor_id = $1",
+    sqlx::query!(
+        "SELECT actor_id, email, password_hash, account_state, email_verified_at
+         FROM user_credentials WHERE actor_id = $1",
         actor_id,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| Credentials {
-        actor_id: r.actor_id,
-        email: r.email,
-        password_hash: r.password_hash,
-    }))
+    .map(|r| {
+        Ok(Credentials {
+            actor_id: r.actor_id,
+            email: r.email,
+            password_hash: r.password_hash,
+            account_state: decode_account_state(&r.account_state)?,
+            email_verified_at: r.email_verified_at,
+        })
+    })
+    .transpose()
 }
 
 pub async fn update_password_hash(
@@ -929,14 +1071,16 @@ pub async fn latest_key_backup(
 // Actor reads the auth flows need
 // ---------------------------------------------------------------------
 
-/// The identity association of one actor row.
+/// The identity association of one actor row. The key halves are None
+/// for a user-kind actor between registration and the key ceremony's
+/// attach (auth.md §Application); always present for the other kinds.
 #[derive(Debug, Clone)]
 pub struct ActorIdentity {
     pub id: Uuid,
     pub kind: String,
     pub handle: String,
-    pub actor_pubkey: Vec<u8>,
-    pub l0_address: String,
+    pub actor_pubkey: Option<Vec<u8>>,
+    pub l0_address: Option<String>,
 }
 
 /// The newest profile version's display name (data-model.md

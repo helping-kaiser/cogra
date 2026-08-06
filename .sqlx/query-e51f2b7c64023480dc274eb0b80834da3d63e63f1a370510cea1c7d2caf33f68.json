@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM actor_profile_versions WHERE actor_id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e51f2b7c64023480dc274eb0b80834da3d63e63f1a370510cea1c7d2caf33f68"
+}
