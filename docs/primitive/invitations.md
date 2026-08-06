@@ -187,7 +187,7 @@ any time.
   priced approval.
 
 Registration mechanics — email verification, applicant handling,
-the service-level admission step — live in
+the client-signed admission handshake — live in
 [auth.md](../implementation/auth.md).
 
 ---
