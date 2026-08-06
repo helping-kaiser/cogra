@@ -44,9 +44,12 @@ written once, in Rust, and bound to every platform the same way.
 
 ## The actor key — the device is the signer
 
-The app is where the member's actor key lives: it generates the
-key and L0 address at application time, offers the recovery-code
-backup at key creation (encrypt locally, upload only ciphertext —
+The app is where the member's actor key lives: it mints the key
+and L0 address as a logged-in step of the application
+([auth.md "Application"](auth.md#application-the-applicant-state)),
+attaches only the public halves, offers the recovery-code backup
+at key creation (encrypt locally, upload only ciphertext — the
+sealed blob uploads immediately after the attach;
 [auth.md "Key recovery"](auth.md#key-recovery)), and signs both
 steps of every write — the proposal pre-commitment, then the
 approval witness over the host-sealed verified act
@@ -58,6 +61,16 @@ approval — so the user never signs blind bytes. The concrete signing crypto fo
 is open with the L1 team
 ([open-questions.md Q30](../open-questions.md#q30--l1-key-model-signature-scheme-and-actor-key-rotation));
 until it resolves, the app's key handling stays scheme-neutral.
+
+The application's poll/sign loop runs app-scoped, above any one
+screen ([auth.md "Application"](auth.md#application-the-applicant-state)),
+with a stage-aware cadence: 3 s while the wait is on the server
+or this device (landing, a staged Registration to sign), 30 s
+while it is on a human (verification, approval), and an immediate
+pass on app entry and after any user action that changes server
+state. Auto-polling is onboarding-only — the loop stops for good
+at membership; from then on every fetch is event-driven, a user
+action with an outcome to collect or an explicit refresh.
 
 ## Accessibility
 
