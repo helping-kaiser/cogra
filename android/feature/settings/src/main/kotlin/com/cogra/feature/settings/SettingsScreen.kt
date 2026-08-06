@@ -38,8 +38,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.domain.ErrorCode
 
 @Composable
-fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onHandleChanged: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // The nav result rides the moment the change lands — independent of
+    // the snackbar's own consumption of the same one-shot.
+    LaunchedEffect(state.feedback) {
+        if ((state.feedback as? SettingsFeedback.Done)?.action == SettingsAction.HANDLE_CHANGED) {
+            onHandleChanged()
+        }
+    }
     SettingsScreen(
         state = state,
         onCreateBackup = viewModel::onCreateBackup,
