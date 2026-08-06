@@ -26,6 +26,7 @@ rootProject.name = "cogra"
 // (docs/implementation/roadmap.md).
 include(":app")
 include(":core:crypto")
+include(":core:designsystem")
 include(":core:domain")
 include(":core:network")
 include(":feature:auth")

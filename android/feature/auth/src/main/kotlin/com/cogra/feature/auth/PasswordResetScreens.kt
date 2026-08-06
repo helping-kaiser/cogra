@@ -27,12 +27,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.repo.AccountRepository
@@ -174,16 +174,12 @@ fun PasswordResetScreen(
                     .fillMaxWidth()
                     .testTag("reset_token"),
             )
-            OutlinedTextField(
+            PasswordTextField(
                 value = state.newPassword,
                 onValueChange = onNewPasswordChange,
-                label = { Text(stringResource(R.string.reset_new_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("reset_password"),
+                label = stringResource(R.string.reset_new_password),
+                testTag = "reset_password",
+                modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
                 Text(
