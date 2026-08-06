@@ -28,8 +28,10 @@
     <string name="settings_handle_changed">Handle changed.</string>
     <string name="settings_handle_taken">That handle is taken.</string>
     <string name="settings_new_email">New email</string>
+    <string name="settings_email_password">Current password</string>
     <string name="settings_request_email">Change email</string>
-    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change. Enter your current password above first.</string>
+    <string name="settings_email_change_requested">Confirmation codes sent — check both inboxes.</string>
+    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change.</string>
     <string name="settings_email_code">Confirmation code</string>
     <string name="settings_confirm_email">Confirm email change</string>
     <string name="settings_email_confirmed">Email updated.</string>

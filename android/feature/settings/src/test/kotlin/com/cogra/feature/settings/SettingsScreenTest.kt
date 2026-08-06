@@ -1,5 +1,6 @@
 package com.cogra.feature.settings
 
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -26,7 +27,7 @@ class SettingsScreenTest {
                 onRevokeSession = {}, onRevokeOthers = {},
                 onCurrentPasswordChange = {}, onNewPasswordChange = {}, onChangePassword = {},
                 onNewHandleChange = {}, onChangeHandle = {},
-                onNewEmailChange = {}, onRequestEmailChange = {},
+                onNewEmailChange = {}, onEmailChangePasswordChange = {}, onRequestEmailChange = {},
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
                 onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
@@ -58,6 +59,20 @@ class SettingsScreenTest {
         assertThat(shown).isFalse()
         compose.mainClock.advanceTimeBy(10_000)
         assertThat(shown).isTrue()
+    }
+
+    @Test
+    fun theEmailChangeRequestNeedsItsOwnPasswordField() {
+        // The password-change card's field must not arm the request.
+        render(SettingsUiState(newEmail = "new@example.org", currentPassword = "pw"))
+        compose.onNodeWithTag("settings_email_password").assertExists()
+        compose.onNodeWithTag("settings_request_email").assertIsNotEnabled()
+    }
+
+    @Test
+    fun anEmailChangePasswordArmsTheRequest() {
+        render(SettingsUiState(newEmail = "new@example.org", emailChangePassword = "pw"))
+        compose.onNodeWithTag("settings_request_email").assertIsEnabled()
     }
 
     @Test
