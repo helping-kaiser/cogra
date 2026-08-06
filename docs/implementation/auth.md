@@ -271,9 +271,13 @@ problem. Clients take that literally: an applicant lands in the
 same shell as a member and browses the read surfaces
 immediately, with the application riding along as cards and
 dismissible hints — the actionable email-verification step, the
-approval wait, the landing — and only *acting* gated. The waiting
-state is never a wall, and the poll/sign loop that advances the
-application runs app-scoped, above any one screen.
+approval wait, the landing — and only *acting* gated. A gated
+acting surface stays visible but locked: styled as disabled yet
+still tappable, with the tap explaining that approval unlocks
+it. Account management — settings, sign-out, password change —
+is never gated; the applicant is an ordinary logged-in account.
+The waiting state is never a wall, and the poll/sign loop that
+advances the application runs app-scoped, above any one screen.
 
 ### Approval and landing
 
@@ -568,6 +572,19 @@ Server-initiated revocations:
 A revoked session says nothing about the actor: the signing key
 lives on the device, and no session state can author, block, or
 revoke a record.
+
+### Sign-out
+
+Sign-out is self-revocation: the client revokes its own session
+(best-effort — an unreachable server doesn't block it) and
+discards its stored tokens. The actor key and staged handshake
+material stay on the device; signing out is an auth act, not an
+identity act. It works identically in every account state — an
+applicant signs out exactly as a member does, and the client
+keeps the sign-out surface reachable in the applicant shell.
+There is no separate "abandon application" act: a signed-out
+application keeps following its lifecycle ("Application" —
+expiry, re-arm).
 
 ---
 
