@@ -65,7 +65,11 @@ The seed is generated as raw bytes — it must enter the
 key-backup blob ([auth.md "Key recovery"](auth.md#key-recovery))
 — then imported as a **non-extractable** Ed25519 `CryptoKey` and
 persisted in IndexedDB: script injection can use the key while a
-page lives, but cannot exfiltrate it.
+page lives, but cannot exfiltrate it. The raw seed is kept beside
+it only while no backup blob exists — auth.md's "declining is not
+final" needs the seed to enable or re-key a backup later — and is
+wiped the moment a blob is uploaded; from then on custody is the
+non-extractable key alone.
 
 ## Session tokens in the browser
 
@@ -93,6 +97,8 @@ keyboard operability, alongside its tests.
 
 - `src/app/` — routes (App Router); pages stay thin.
 - `src/lib/` — Apollo wiring, domain helpers, shared UI.
+- `src/lib/crypto/` — the vector-pinned client crypto
+  ("Key custody" above).
 - `src/lib/graphql/` — operation documents; codegen output goes to
   `src/__generated__/`.
 
