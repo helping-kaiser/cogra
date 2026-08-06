@@ -138,6 +138,17 @@ Cross-cutting design questions live in
 - **Explain why.** This is a learning project as much as a
   building project. Explain the reasoning behind choices, not just
   the implementation.
+- **Fix what you find.** When a task surfaces an adjacent defect —
+  a bug, a stale doc, a broken pattern — fix it in the same effort
+  after notifying. Notifying is required; asking permission is not.
+  Only genuine design decisions stop for the human.
+- **Technical how-questions answer themselves.** "Never make
+  design decisions autonomously" covers product and design
+  choices. For purely technical questions — how a pattern is
+  built, where code lives, which API shape — the documented
+  industry standard *is* the decision: follow it and name the
+  source. The human should almost never field a "how should this
+  be done technically" question.
 - **Move slowly and correctly.** Quality over speed. No
   rushing, no shortcuts.
 - **Build from official sources.** Implement the way the

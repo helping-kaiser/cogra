@@ -30,9 +30,9 @@ new surfaces raise new questions.
 
 Gradle modules mirror the backend's crate discipline; each unit-tests in
 isolation. Today's modules: `app` (shell, navigation, theme, the
-endpoint/web-origin build config), `core:crypto`, `core:domain`
-(with shared test fixtures under `testFixtures/`), `core:network`,
-and the slice-1 feature surfaces `feature:onboarding`,
+endpoint/web-origin build config), `core:crypto`, `core:designsystem`,
+`core:domain` (with shared test fixtures under `testFixtures/`),
+`core:network`, and the slice-1 feature surfaces `feature:onboarding`,
 `feature:auth`, `feature:home`, `feature:invites`,
 `feature:settings`. `core:ranker` arrives with slice 3.
 
@@ -52,15 +52,20 @@ The split:
   implementations live in `core:network`.
 - `core:network` — Apollo client, generated operations, the encrypted token
   store, and the DI module that binds the domain interfaces. No UI.
+- `core:designsystem` — shared pure-UI Compose components (e.g.
+  `PasswordTextField`) plus the Material icon set, exposed `api` so every
+  consumer gets it. No domain, network, or DI dependencies.
 - `feature:*` — one module per surface: Compose screens plus their
   ViewModels. A feature depends on `core:domain`, never on `core:network`'s
   implementations directly — the DI graph supplies those.
 - `app` — application shell, navigation, theme, and the build-specific
   bindings (e.g. the GraphQL endpoint URL).
 
-`core:ranker`, `core:domain`, and the `feature:*` modules are added by the
-slices that need them ([roadmap.md](../docs/implementation/roadmap.md)) —
-do not scaffold empty modules ahead of a slice.
+Modularity is reuse-driven: the moment a piece is plausibly reusable
+across surfaces, build it into a shared module immediately — never
+duplicate it "for now". What stays forbidden is the empty module with no
+consumer: `core:ranker` and new feature surfaces arrive with the slice
+that first needs them ([roadmap.md](../docs/implementation/roadmap.md)).
 
 ## The contract is generated
 
