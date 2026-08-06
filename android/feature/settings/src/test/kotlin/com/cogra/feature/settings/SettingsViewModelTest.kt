@@ -36,6 +36,8 @@ class SettingsViewModelTest {
     private val account = object : ThrowingAccountRepository() {
         var uploaded: ByteArray? = null
         var passwordOutcome: Outcome<Unit> = Outcome.Success(Unit)
+        var emailRequestOutcome: Outcome<Unit> = Outcome.Success(Unit)
+        var emailRequestPassword: String? = null
 
         override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
             uploaded = blob
@@ -46,6 +48,13 @@ class SettingsViewModelTest {
             passwordOutcome
 
         override suspend fun changeHandle(handle: String): Outcome<Unit> = Outcome.Success(Unit)
+
+        override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit> {
+            emailRequestPassword = currentPassword
+            return emailRequestOutcome
+        }
+
+        override suspend fun confirmEmailChange(code: String): Outcome<Unit> = Outcome.Success(Unit)
     }
 
     private val sessionRepo = object : ThrowingSessionRepository() {
@@ -142,6 +151,54 @@ class SettingsViewModelTest {
             .isEqualTo(SettingsFeedback.Done(SettingsAction.PASSWORD_CHANGED))
         assertThat(vm.state.value.currentPassword).isEmpty()
         assertThat(vm.state.value.newPassword).isEmpty()
+    }
+
+    @Test
+    fun aRefusedEmailChangeRequestSurfacesAndStaysClosed() = runTest(dispatcher) {
+        account.emailRequestOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.INVALID_CREDENTIALS, "no match")))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNewEmailChange("new@example.org")
+        vm.onEmailChangePasswordChange("wrong")
+        vm.onRequestEmailChange()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS))
+        assertThat(vm.state.value.emailChangeRequested).isFalse()
+    }
+
+    @Test
+    fun anEmailChangeRequestUsesItsOwnPasswordAndOpensTheConfirmStep() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNewEmailChange("new@example.org")
+        vm.onEmailChangePasswordChange("the password")
+        vm.onRequestEmailChange()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.emailRequestPassword).isEqualTo("the password")
+        assertThat(vm.state.value.emailChangeRequested).isTrue()
+        assertThat(vm.state.value.emailChangePassword).isEmpty()
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Done(SettingsAction.EMAIL_CHANGE_REQUESTED))
+    }
+
+    @Test
+    fun aConfirmedEmailChangeResetsTheFlow() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNewEmailChange("new@example.org")
+        vm.onEmailChangePasswordChange("the password")
+        vm.onRequestEmailChange()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onEmailChangeCodeChange("123456")
+        vm.onConfirmEmailChange()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.feedback)
+            .isEqualTo(SettingsFeedback.Done(SettingsAction.EMAIL_CONFIRMED))
+        assertThat(vm.state.value.emailChangeRequested).isFalse()
+        assertThat(vm.state.value.newEmail).isEmpty()
+        assertThat(vm.state.value.emailChangeCode).isEmpty()
     }
 
     @Test

@@ -52,6 +52,7 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
         onNewHandleChange = viewModel::onNewHandleChange,
         onChangeHandle = viewModel::onChangeHandle,
         onNewEmailChange = viewModel::onNewEmailChange,
+        onEmailChangePasswordChange = viewModel::onEmailChangePasswordChange,
         onRequestEmailChange = viewModel::onRequestEmailChange,
         onEmailChangeCodeChange = viewModel::onEmailChangeCodeChange,
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
@@ -73,6 +74,7 @@ fun SettingsScreen(
     onNewHandleChange: (String) -> Unit,
     onChangeHandle: () -> Unit,
     onNewEmailChange: (String) -> Unit,
+    onEmailChangePasswordChange: (String) -> Unit,
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
@@ -115,7 +117,7 @@ fun SettingsScreen(
                 state,
                 onCurrentPasswordChange, onNewPasswordChange, onChangePassword,
                 onNewHandleChange, onChangeHandle,
-                onNewEmailChange, onRequestEmailChange,
+                onNewEmailChange, onEmailChangePasswordChange, onRequestEmailChange,
                 onEmailChangeCodeChange, onConfirmEmailChange,
             )
 
@@ -232,6 +234,7 @@ private fun CredentialsSection(
     onNewHandleChange: (String) -> Unit,
     onChangeHandle: () -> Unit,
     onNewEmailChange: (String) -> Unit,
+    onEmailChangePasswordChange: (String) -> Unit,
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
@@ -300,9 +303,20 @@ private fun CredentialsSection(
                     .fillMaxWidth()
                     .testTag("settings_new_email"),
             )
+            OutlinedTextField(
+                value = state.emailChangePassword,
+                onValueChange = onEmailChangePasswordChange,
+                label = { Text(stringResource(R.string.settings_email_password)) },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("settings_email_password"),
+            )
             Button(
                 onClick = onRequestEmailChange,
-                enabled = state.newEmail.contains('@') && state.currentPassword.isNotEmpty() && !state.busy,
+                enabled = state.newEmail.contains('@') && state.emailChangePassword.isNotEmpty() && !state.busy,
                 modifier = Modifier.testTag("settings_request_email"),
             ) {
                 Text(stringResource(R.string.settings_request_email))
@@ -351,6 +365,7 @@ private fun ErrorCode.settingsMessage(): Int = when (this) {
 private fun SettingsAction.message(): Int = when (this) {
     SettingsAction.PASSWORD_CHANGED -> R.string.settings_password_changed
     SettingsAction.HANDLE_CHANGED -> R.string.settings_handle_changed
+    SettingsAction.EMAIL_CHANGE_REQUESTED -> R.string.settings_email_change_requested
     SettingsAction.EMAIL_CONFIRMED -> R.string.settings_email_confirmed
     SettingsAction.SESSION_REVOKED -> R.string.settings_session_revoked
     SettingsAction.OTHERS_REVOKED -> R.string.settings_others_revoked

@@ -28,13 +28,18 @@ data class SettingsUiState(
     val newPassword: String = "",
     val newHandle: String = "",
     val newEmail: String = "",
+    val emailChangePassword: String = "",
     val emailChangeCode: String = "",
     val emailChangeRequested: Boolean = false,
     /** One-shot snackbar message; consumed via onFeedbackShown after display. */
     val feedback: SettingsFeedback? = null,
 )
 
-enum class SettingsAction { PASSWORD_CHANGED, HANDLE_CHANGED, EMAIL_CONFIRMED, SESSION_REVOKED, OTHERS_REVOKED }
+enum class SettingsAction {
+    PASSWORD_CHANGED, HANDLE_CHANGED,
+    EMAIL_CHANGE_REQUESTED, EMAIL_CONFIRMED,
+    SESSION_REVOKED, OTHERS_REVOKED,
+}
 
 /** At most one message is pending at a time; the snackbar shows it once. */
 sealed interface SettingsFeedback {
@@ -132,6 +137,8 @@ class SettingsViewModel @Inject constructor(
 
     fun onNewEmailChange(v: String) = _state.update { it.copy(newEmail = v) }
 
+    fun onEmailChangePasswordChange(v: String) = _state.update { it.copy(emailChangePassword = v) }
+
     fun onEmailChangeCodeChange(v: String) = _state.update { it.copy(emailChangeCode = v) }
 
     fun onChangePassword() = credentialAction(SettingsAction.PASSWORD_CHANGED) {
@@ -147,9 +154,23 @@ class SettingsViewModel @Inject constructor(
         if (_state.value.busy) return
         _state.update { it.copy(busy = true, feedback = null) }
         viewModelScope.launch {
-            when (account.requestEmailChange(_state.value.newEmail.trim(), _state.value.currentPassword)) {
+            val outcome = account.requestEmailChange(
+                _state.value.newEmail.trim(),
+                _state.value.emailChangePassword,
+            )
+            when (outcome) {
+                is Outcome.Success -> _state.update {
+                    it.copy(
+                        busy = false,
+                        emailChangeRequested = true,
+                        emailChangePassword = "",
+                        feedback = SettingsFeedback.Done(SettingsAction.EMAIL_CHANGE_REQUESTED),
+                    )
+                }
+                is Outcome.Refused -> _state.update {
+                    it.copy(busy = false, feedback = SettingsFeedback.Error(outcome.errors.first().code))
+                }
                 is Outcome.Failed -> _state.update { it.copy(busy = false, feedback = SettingsFeedback.Transport) }
-                else -> _state.update { it.copy(busy = false, emailChangeRequested = true) }
             }
         }
     }
@@ -170,6 +191,10 @@ class SettingsViewModel @Inject constructor(
                         currentPassword = "",
                         newPassword = "",
                         emailChangeCode = "",
+                        // A confirmed change completes the request flow.
+                        newEmail = if (action == SettingsAction.EMAIL_CONFIRMED) "" else it.newEmail,
+                        emailChangeRequested = it.emailChangeRequested &&
+                            action != SettingsAction.EMAIL_CONFIRMED,
                     )
                 }
                 is Outcome.Refused -> _state.update {
