@@ -1,0 +1,34 @@
+# Account reads and credential recovery.
+# requestPasswordReset is a silent verb: no userErrors by design —
+# surfacing a failure would reintroduce account enumeration
+# (api-spec.md § Mutations → Conventions → Errors).
+
+query Me {
+  me {
+    id
+    handle
+    displayName
+    accountState
+    invitedBy {
+      id
+      handle
+    }
+  }
+}
+
+mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+  requestPasswordReset(input: $input) {
+    ok
+  }
+}
+
+mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
+  confirmPasswordReset(input: $input) {
+    ok
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
