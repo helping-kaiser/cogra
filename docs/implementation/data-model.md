@@ -25,7 +25,7 @@ Within the schema, three kinds of state stay apart
   parameter carrier, role marks), itself derived from public
   records and published fold rules.
 - **L2 tables** — what CoGra alone is authoritative for: display
-  content, identity association, applicants, the key-custody
+  content, identity association, accounts and applications, the key-custody
   stores, honor ledgers, personal frontend state.
 
 UUIDs are the join key across CoGra's tables; mirrored L1 records
@@ -122,7 +122,7 @@ advances — is one `staged_writes` row from **prepare** until
 tables arrive with the content slice and take over permanent
 payload storage then. Promotion on confirm makes the display rows
 visible and drives the flows built on landing (an applicant's
-Registration confirming creates the actor row —
+Registration confirming flips their account to member —
 [auth.md](auth.md)). Staged state is L2-operational: it is exempt
 from append-only history and leaves no trace once collected —
 nothing existed on the graph.
@@ -130,11 +130,10 @@ nothing existed on the graph.
 ```sql
 CREATE TABLE staged_writes (
     id             UUID        PRIMARY KEY,
-    -- The staging identity: an actor's session write, or an
-    -- applicant's staged Registration before any actor row exists.
-    -- Exactly one is set.
-    actor_id       UUID        REFERENCES actors(id),
-    applicant_id   UUID        REFERENCES auth_applicants(id),
+    -- The staging actor. An applicant's staged Registration
+    -- stages under their own actor row like any other write —
+    -- the account exists from registration (auth.md).
+    actor_id       UUID        NOT NULL REFERENCES actors(id),
 
     -- The canonical proposal, stored losslessly: prepare's exact
     -- proposal is what the device signs and the relay submits.
@@ -171,9 +170,7 @@ CREATE TABLE staged_writes (
     prepared_epoch BIGINT      NOT NULL,
     expired_epoch  BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CHECK (num_nonnulls(actor_id, applicant_id) = 1)
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -303,8 +300,10 @@ mention resolves to exactly one actor.
 ```sql
 -- Actors: one row per actor CoGra serves, any kind. The row
 -- carries the identity association — CoGra's row UUID ↔ the
--- actor's public key + L0 address: minted on the device for
--- users (auth.md §Account lifecycle), created at founding for
+-- actor's public key + L0 address: minted on the device and
+-- attached at the logged-in key ceremony for users (auth.md
+-- §Application; NULL from registration until the attach — the
+-- CHECK keeps the other kinds complete), created at founding for
 -- Collectives (collectives.md §2), seeded at genesis for the
 -- system actors (network.md §2; system handles are reserved at
 -- bootstrap). handle is the mention/lookup name — account state,
@@ -316,22 +315,30 @@ CREATE TABLE actors (
     id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     kind         TEXT        NOT NULL CHECK (kind IN ('user', 'collective', 'system')),
     handle       TEXT        NOT NULL UNIQUE,
-    actor_pubkey BYTEA       NOT NULL,
-    l0_address   TEXT        NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    actor_pubkey BYTEA,
+    l0_address   TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (kind = 'user' OR (actor_pubkey IS NOT NULL AND l0_address IS NOT NULL))
 );
 
--- User credentials: the login half of a user-kind actor — rows
--- exist only for kind = 'user'. email and password_hash arrive
--- from auth_applicants when the approved applicant's Registration
--- confirms (auth.md §Account lifecycle). Nothing references this
--- row; it is a pure bolt-on keyed by the actor. No credentials,
--- no login, no sessions — enforced where sessions are minted.
+-- User credentials: the account half of a user-kind actor — rows
+-- exist only for kind = 'user', created at registration together
+-- with the actor row (auth.md §Application). account_state is the
+-- service state gating acting (auth.md §Account states); landing
+-- flips it to 'member'. email_verified_at and the token hash
+-- carry the registration verification proof; the reaper deletes
+-- never-verified accounts whole, and a registration may replace a
+-- dead (never-verified, past-bound) account in place (auth.md
+-- "Registration collision"). Nothing references this row; it is a
+-- pure bolt-on keyed by the actor.
 CREATE TABLE user_credentials (
-    actor_id      UUID        PRIMARY KEY REFERENCES actors(id),
-    email         TEXT        NOT NULL UNIQUE,
-    password_hash TEXT        NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    actor_id                      UUID        PRIMARY KEY REFERENCES actors(id),
+    email                         TEXT        NOT NULL UNIQUE,
+    password_hash                 TEXT        NOT NULL,
+    account_state                 TEXT        NOT NULL CHECK (account_state IN ('guest', 'applicant', 'member')),
+    email_verified_at             TIMESTAMPTZ,
+    email_verification_token_hash BYTEA       UNIQUE,
+    created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Actor profiles: append-only versions of the profile display
@@ -665,7 +672,7 @@ CREATE TABLE user_preferences (
 ### Authentication state
 
 Backend-only tables behind CoGra's **service** authentication —
-sessions, credentials, applicant staging, the key-custody stores.
+sessions, credentials, application state, the key-custody stores.
 Auth gates the service, never the graph: reading the shared graph
 requires no row here, and write standing is L1's write rule, not a
 session fact ([auth.md](auth.md),
@@ -715,61 +722,44 @@ CREATE TABLE auth_invite_links (
 CREATE INDEX auth_invite_links_inviter_idx
     ON auth_invite_links (inviter_id);
 
--- Applicants: staged, off-graph service state (invitations.md §4).
--- One row is everything CoGra knows about a person between
--- following a link and landing on the graph: the login credentials
--- (moved to the actor + credentials rows on landing), the
--- device-generated actor identity
--- — public key and L0 address, minted on the applicant's device at
--- application time (auth.md §Account lifecycle) — and the
--- approval/landing bookkeeping. An abandoned or unapproved
--- application leaves no trace beyond this row; no account, no
--- records, nothing on the graph.
+-- Applications: one row per application attempt — the invite-link
+-- provenance and the approval/landing bookkeeping for an account
+-- in the applicant state (auth.md §Application). The account
+-- itself (actors + user_credentials) exists from registration;
+-- this row carries only what is application-scoped. approved_at
+-- marks the inviter's priced approval (which runs funding + the
+-- staged Registration inside the approval, and prepares the
+-- inviter's Opinion); landed_at is set when the Registration
+-- confirms in the mirror and account_state flips to 'member'.
+-- The joiner's reciprocation is their own client-signed act after
+-- landing, not application state.
 --
--- Lifecycle: email-unverified rows expire after 24 h (reaper);
--- verification re-bounds expires_at to the link's expiry, so a
--- verified applicant persists exactly while the link lives,
--- readable-but-not-acting per invitations.md §4. approved_at marks
--- the inviter's priced approval (which runs funding + the staged
--- Registration inside the approval, and prepares the inviter's
--- Opinion); landed_at is set when the Registration confirms in the
--- mirror and the actor + credentials rows are created. The joiner's reciprocation is their own
--- client-signed act after landing, not applicant state.
---
--- email is UNIQUE: a duplicate submit against a live row is
--- rejected ("registration in progress"); an expired-but-unswept,
--- never-approved row is overwritten via ON CONFLICT (email) DO
--- UPDATE ... WHERE expires_at < NOW(), so the experience never
--- depends on the sweep schedule. The constraint also serves the by-email lookup.
-CREATE TABLE auth_applicants (
-    id                            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    invite_link_id                UUID         NOT NULL REFERENCES auth_invite_links(id),
-    handle                        TEXT         NOT NULL,
-    email                         TEXT         NOT NULL UNIQUE,
-    password_hash                 TEXT         NOT NULL,
-    email_verification_token_hash BYTEA        NOT NULL UNIQUE,
-    -- The applicant token: the hashed-at-rest secret authorizing the
-    -- applicant's own flow (status, registration signing, the
-    -- first-session claim). A dedicated secret because the row id is
-    -- visible to the inviter's approval queue and must not be a
-    -- session-minting capability.
-    applicant_token_hash          BYTEA        NOT NULL UNIQUE,
-    email_verified_at             TIMESTAMPTZ,
-    actor_pubkey                  BYTEA        NOT NULL,
-    l0_address                    TEXT         NOT NULL,
-    approved_at                   TIMESTAMPTZ,
-    landed_at                     TIMESTAMPTZ,
+-- expires_at is bounded by the link's expiry. An expired,
+-- never-approved application stops being approvable but deletes
+-- nothing — a fresh invite re-arms the account with a new row
+-- (applyWithInvite, api-spec.md). At most one live application
+-- per account is enforced at applyWithInvite, not by constraint —
+-- liveness is time-dependent. Never-verified accounts are deleted
+-- whole by the reaper, applications included (auth.md "Expiry").
+CREATE TABLE auth_applications (
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    invite_link_id  UUID        NOT NULL REFERENCES auth_invite_links(id),
+    approved_at     TIMESTAMPTZ,
+    landed_at       TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
     -- mirror confirms the joiner's reciprocal Opinion toward the
     -- inviter (auth.md "Reciprocation is the joiner's own act").
     -- The accepted back-edge is permanent (invitations.md §2), so
     -- the latch cannot diverge; rebuildable from the mirror.
-    reciprocated_at               TIMESTAMPTZ,
-    created_at                    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    expires_at                    TIMESTAMPTZ  NOT NULL
+    reciprocated_at TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at      TIMESTAMPTZ NOT NULL
 );
-CREATE INDEX auth_applicants_link_idx
-    ON auth_applicants (invite_link_id, approved_at);
+CREATE INDEX auth_applications_link_idx
+    ON auth_applications (invite_link_id, approved_at);
+CREATE INDEX auth_applications_account_idx
+    ON auth_applications (account_id);
 
 -- Key backups: client-encrypted signing-key blobs (auth.md §Key
 -- recovery). Ciphertext under the device-generated recovery code —
