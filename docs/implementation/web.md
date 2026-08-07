@@ -71,6 +71,15 @@ final" needs the seed to enable or re-key a backup later — and is
 wiped the moment a blob is uploaded; from then on custody is the
 non-extractable key alone.
 
+That wipe shapes the settings backup surface. While the seed is
+retained (backup declined earlier), enabling is one step: seal,
+upload, wipe. Once a blob exists, replacing the code re-proves
+the current one: the surface fetches the blob, opens it in
+memory, re-seals the seed under a fresh code, and uploads — the
+seed is never re-persisted. A browser that lost the code
+therefore cannot re-key; that adds no loss mode, since without
+the code the actor could never reach another device anyway.
+
 ## Session tokens in the browser
 
 The contract keeps tokens client-held (`refreshSession` takes
@@ -172,12 +181,20 @@ parity, not doc-fixed:
   re-stages on a later poll. Cross-device continuation is parked
   in [open-questions.md](../open-questions.md).
 
+Member-time prepares — the approval vouch, reciprocation — never
+join the loop: the surface signs inline within the user action
+and reports the outcome there (Android's post-member model:
+event-driven, no background fetch). Material a failed signing
+leaves parked surfaces on Home as a resume card.
+
 The signing orchestration lives in `src/lib/signing/` (write
 signer, registration signer, flow) over the custody store in
 `src/lib/identity/`; handshake material — the private nonce and
 pre-signature, keyed by staged-write id — persists in IndexedDB
 before the submit, so the approve step verifies against what THIS
-browser pre-signed across page reloads.
+browser pre-signed across page reloads. One write signer serves
+the whole app — `resume()` spans every persisted handshake,
+whichever surface started it.
 
 ## Design guidelines
 
