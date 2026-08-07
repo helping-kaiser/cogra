@@ -59,10 +59,12 @@ interface IdentityStore {
 
     /**
      * Device-local UX state: whether the first-login reciprocation
-     * prompt was answered (signed or dismissed). Slice 1 has no read
-     * surface over the viewer's own Opinions, so the device remembers.
+     * prompt was dismissed on this device. Dismissal memory only —
+     * whether the pair is complete is the graph-derived
+     * `User.hasReciprocated` (auth.md "Reciprocation is the joiner's
+     * own act"); the offer legitimately reappears on a new device.
      */
-    suspend fun reciprocationHandled(): Boolean
+    suspend fun reciprocationDismissed(): Boolean
 
-    suspend fun markReciprocationHandled()
+    suspend fun markReciprocationDismissed()
 }

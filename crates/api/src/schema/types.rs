@@ -12,8 +12,9 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Utc};
 use common::l1::census::Family;
+use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
-use postgres_store::{PgPool, auth as store, staged};
+use postgres_store::{PgPool, auth as store, mirror, staged};
 use uuid::Uuid;
 
 use l1_standin::StandIn;
@@ -682,6 +683,40 @@ impl User {
                     viewer_session: None,
                 })
             }))
+    }
+
+    /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
+    /// confirmed in the record mirror (latched on the landed application
+    /// row) or in flight as one of the viewer's staged writes. Drives
+    /// the first-login reciprocation prompt (auth.md "Reciprocation is
+    /// the joiner's own act"). Vacuously true when invitedBy is null —
+    /// and for any viewer but the account's own: the field exists only
+    /// to drive the viewer's own prompt.
+    async fn has_reciprocated(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if !self.is_viewer(ctx) {
+            return Ok(true);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let Some(inviter) = store::inviter_of(pool, self.identity.id).await? else {
+            return Ok(true);
+        };
+        if store::reciprocation_latched(pool, self.identity.id).await? {
+            return Ok(true);
+        }
+        // Without both addresses no Opinion can exist — a keyless viewer
+        // has signed nothing.
+        let (Some(viewer_address), Some(inviter_address)) =
+            (&self.identity.l0_address, &inviter.l0_address)
+        else {
+            return Ok(false);
+        };
+        let source = NodeId::Addr(viewer_address.clone()).to_string();
+        let target = NodeId::Prof(inviter_address.clone()).to_string();
+        if mirror::has_opinion_toward(pool, &source, &target).await? {
+            store::latch_reciprocated(pool, self.identity.id).await?;
+            return Ok(true);
+        }
+        Ok(staged::has_live_targeting(pool, self.identity.id, Family::Opinion, &target).await?)
     }
 
     /// The account's service state — gates acting through CoGra (auth.md

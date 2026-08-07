@@ -23,6 +23,7 @@ const meMember = graphql.query("Me", () =>
         handle: "tester",
         displayName: null,
         accountState: "MEMBER",
+        hasReciprocated: true,
         invitedBy: null,
       },
     },
