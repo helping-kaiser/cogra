@@ -137,8 +137,47 @@ guards the gated routes and replaces a signed-out visit to
 `/login`; `/` branches in place on the phase. Phase flips replace
 the location, never push — the Android navigation parity. Web
 deltas from Android: `/invites` renders the applicant lock
-in-page (the URL is directly addressable), and `/reset?token=`
-arrives as a link where Android pastes the token in-app.
+in-page (the URL is directly addressable), `/reset?token=` and
+`/verify?token=` arrive as links where Android pastes the token
+in-app, and re-arm lives in two places — the Home card (Android
+parity) and a context action on `/join/<link-id>` for a signed-in
+visitor, since the link itself is directly addressable.
+
+## The onboarding poll loop
+
+The poll/sign loop that advances an application is app-scoped,
+above any one screen ([auth.md](auth.md) — the applicant browses
+while it runs). The web loop mirrors Android's `RegistrationFlow`
+semantics — the cadence is an implementation choice, mirrored for
+parity, not doc-fixed:
+
+- One pass: poll the viewer status → flush a parked backup blob
+  unconditionally → branch (member / sign the staged Registration
+  / re-arm needed / landing awaited / the applicant cards, with a
+  silent repair-attach when the server lost the key proof).
+- Cadence: 3 s while the wait is on a machine (landing, a
+  transport retry), 30 s while it is on a human (verification,
+  approval, a fresh invite). `ensureAdvancing()` starts the loop
+  or pokes a running one into an immediate pass — called whenever
+  a proof just changed server-side.
+- The loop is onboarding-only: it ends for good at member and at
+  a device rejection. A one-shot landed signal fires only for a
+  landing the loop watched live. Web addition: sign-out resets
+  the loop; the next session starts clean.
+- Handshake material lost (a staged write at `SEALING` or
+  `AWAITING_APPROVAL` with no local nonce — pre-signed in another
+  browser, or custody cleared): the device refuses with a
+  synthesized `INTERNAL` "awaiting re-stage" and keeps polling;
+  the staging garbage-collects and the approved application
+  re-stages on a later poll. Cross-device continuation is parked
+  in [open-questions.md](../open-questions.md).
+
+The signing orchestration lives in `src/lib/signing/` (write
+signer, registration signer, flow) over the custody store in
+`src/lib/identity/`; handshake material — the private nonce and
+pre-signature, keyed by staged-write id — persists in IndexedDB
+before the submit, so the approve step verifies against what THIS
+browser pre-signed across page reloads.
 
 ## Design guidelines
 

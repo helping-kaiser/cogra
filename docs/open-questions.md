@@ -25,8 +25,9 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. Next auth contract change | 1 | **Q32** | Two small gaps the web session/auth port surfaced: a dedicated reset-token error code, and a contract carrier for the promised reuse-detection security event. Bundle with whatever next touches the auth schema. |
-| 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
-| 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
+| 3. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
+| 4. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
+| 5. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -149,6 +150,41 @@ blocks slice 1 — both clients work against the contract as it is.
   `LogInPayload` carries no security-event field. As specified,
   the promise is unimplementable; either the contract grows a
   carrier or auth.md drops the promise.
+
+---
+
+## Q33 — Cross-device handshake continuation
+
+**Where it shows up:**
+[api-spec.md "The write flow"](implementation/api-spec.md#the-write-flow),
+[web.md "The onboarding poll loop"](implementation/web.md#the-onboarding-poll-loop)
+**Status:** open (deferred — revisit when multi-device onboarding pain is real, or at the substrate swap)
+
+### Context
+
+The approve step verifies the host-sealed act against handshake
+material persisted on the device that pre-signed — device custody
+is the anti-substitution guarantee. When a staged write sits at
+`SEALING`/`AWAITING_APPROVAL` and the current device holds no
+material (pre-signed in another browser; custody cleared), both
+clients refuse with a synthesized `INTERNAL` "awaiting re-stage"
+and wait: the staging garbage-collects after `gcAfterEpochs`, and
+an approved application re-stages on a later status poll. Correct
+and self-healing, but slow — and on web the second-browser case
+is easier to hit than on Android.
+
+### The question
+
+A device holding the same restored actor key could instead verify
+the served act's embedded pre-signature under its own public key
+(recomputing the pre-commitment message from the served body,
+nonce, and payload) and approve — cryptographically sound, since
+a valid pre-signature proves a holder of this key signed exactly
+that body. It widens the trust posture from "what THIS device
+signed" to "what SOME holder of this key signed", so it is a
+deliberate design change, not an implementation shortcut. The
+whole interim handshake is stand-in-scoped (Q30); decide only if
+the wait proves painful before the substrate swap.
 
 ---
 
