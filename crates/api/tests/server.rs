@@ -22,6 +22,7 @@ fn test_app(pool: PgPool) -> axum::Router {
         funding: standin,
         auth: auth.clone(),
         mailer: Arc::new(api::mailer::DevMailer::new(None)),
+        web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
         onboarding: api::onboarding::OnboardingConfig::default(),
     });
     api::app(schema, auth)

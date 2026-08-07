@@ -38,8 +38,8 @@ impl api::mailer::Mailer for TestMailer {
 }
 
 impl TestMailer {
-    /// The token on the last line-of-interest of the newest message to
-    /// `to` — mails carry "…token…: <secret>".
+    /// The token out of the newest message to `to` — read from the
+    /// link's `token=` parameter (auth.md "Link URLs").
     fn latest_token_for(&self, to: &str) -> String {
         let mails = self.0.lock().expect("mailbox");
         let mail = mails
@@ -49,7 +49,7 @@ impl TestMailer {
             .unwrap_or_else(|| panic!("no mail for {to}"));
         mail.body
             .lines()
-            .find_map(|l| l.split(": ").nth(1))
+            .find_map(|l| l.split("token=").nth(1))
             .expect("token line")
             .trim()
             .to_string()
@@ -74,6 +74,7 @@ impl Rig {
             funding: standin.clone(),
             auth: auth.clone(),
             mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
+            web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
             onboarding: api::onboarding::OnboardingConfig::default(),
         });
         Self {

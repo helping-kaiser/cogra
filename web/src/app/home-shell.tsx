@@ -1,37 +1,69 @@
 "use client";
 
-// The signed-in shell (Android's Home, cards land with later PRs). The
-// guarded Me read exercises the refresh-and-replay path; a refused read
-// means a dead session — the phase flip handles it, the shell just stops
-// loading (screens never self-navigate on auth failure).
+// The signed-in shell (Android's Home). An applicant is simply signed in
+// — the applicant/member distinction lives inside this shell as cards,
+// never in navigation (auth.md "The applicant experience"). The guarded
+// Me read exercises the refresh-and-replay path; a refused read means a
+// dead session — the phase flip handles it, the shell just stops loading
+// (screens never self-navigate on auth failure).
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
+import { ApplicantStatus } from "./applicant-status";
 
 export function HomeShell() {
   const client = useApolloClient();
   const guard = useAuthGuard();
+  const flow = useRegistrationFlow();
+  const progress = useRegistrationProgress();
+
   const [me, setMe] = useState<MeUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [transportFailed, setTransportFailed] = useState(false);
+  const [welcome, setWelcome] = useState(false);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     let cancelled = false;
     void guard
       .run(() => fetchMe(client))
       .then((outcome) => {
         if (cancelled) return;
         setLoading(false);
-        if (outcome.kind === "success") setMe(outcome.value);
-        else if (outcome.kind === "failed") setTransportFailed(true);
+        if (outcome.kind === "success") {
+          setMe(outcome.value);
+          setTransportFailed(false);
+        } else if (outcome.kind === "failed") {
+          setTransportFailed(true);
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [client, guard]);
+
+  useEffect(() => refresh(), [refresh]);
+
+  // The poll loop is an applicant-only mechanism: start (or poke) it
+  // whenever the viewer turns out to be an applicant, never for a member.
+  const isApplicant = me?.accountState === "APPLICANT";
+  useEffect(() => {
+    if (isApplicant) flow.ensureAdvancing();
+  }, [isApplicant, flow]);
+
+  // A landing watched live arrives as a flow notification: greet once
+  // (consumeLanded is the one-shot filter — a cold open as member greets
+  // nobody), then re-read the viewer, whose account state just flipped.
+  useEffect(() => {
+    return flow.subscribe(() => {
+      if (flow.progress()?.kind !== "member") return;
+      if (flow.consumeLanded()) setWelcome(true);
+      refresh();
+    });
+  }, [flow, refresh]);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
@@ -46,6 +78,12 @@ export function HomeShell() {
           Hello, @{me.handle}
         </p>
       )}
+      {welcome && (
+        <p role="status" data-testid="home_welcome" className="text-sm">
+          Welcome — you&apos;re in. Your registration landed.
+        </p>
+      )}
+      {isApplicant && <ApplicantStatus progress={progress} />}
       {transportFailed && (
         <p
           role="alert"

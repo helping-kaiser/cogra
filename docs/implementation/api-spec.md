@@ -1997,6 +1997,12 @@ type StagedWrite {
   id: UUID!
   state: StagedWriteState!
   family: RecordFamily!
+  "The canonical proposal (base64) — the same bytes prepare
+   returned, re-readable after a lost response. A device that
+   never saw the prepare (a backend-staged Registration discovered
+   on the poll, a crashed client resuming) decodes and pre-signs
+   from here."
+  canonicalProposal: String!
   "The host-sealed verified act once AWAITING_APPROVAL (base64):
    the exact body the device verifies — seal, equality with what
    it pre-signed, both commitment openings — and signs the
@@ -2006,9 +2012,9 @@ type StagedWrite {
   record: Record
 }
 type StagedWriteConnection {
-  edges: [StagedWriteEdge!]!
   pageInfo: PageInfo!
-  totalCount: Int
+  edges: [StagedWriteEdge!]!
+  nodes: [StagedWrite!]!
 }
 type StagedWriteEdge {
   cursor: String!
@@ -2018,10 +2024,12 @@ type StagedWriteEdge {
 "One pre-signed proposal heading to the seal round trip."
 input ProposalSignatureInput {
   stagedWriteId: UUID!
-  "The actor's pre-commitment signature over the canonical
-   proposal — produced with the actor's device-held key; opaque to
-   this API. For a co-signed Collective act this is the
-   member-side contribution (see \"Acting as a Collective\")."
+  "The pre-commitment blob (base64): deterministic CBOR
+   `[1, nonce, preSignature]` — the device's private nonce and its
+   pre-commitment signature over the canonical proposal, produced
+   with the actor's device-held key; opaque to this API. For a
+   co-signed Collective act the signature half is the member-side
+   contribution (see \"Acting as a Collective\")."
   signature: String!
   "Collective acts only: the acting member's instruction, signed
    with their OWN key — the operational trigger the backend checks

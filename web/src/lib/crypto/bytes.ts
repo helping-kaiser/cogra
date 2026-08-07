@@ -43,3 +43,26 @@ export function randomBytes(length: number): Uint8Array<ArrayBuffer> {
   crypto.getRandomValues(out);
   return out;
 }
+
+// Standard base64 with padding — the wire form of every byte field the
+// API carries (canonicalProposal, verifiedAct, signature, blob). Built
+// on atob/btoa, which browsers and Node both provide; loops instead of
+// String.fromCharCode.apply keep large blobs off the call stack.
+
+export function toBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+export function fromBase64(s: string): Uint8Array<ArrayBuffer> {
+  let bin: string;
+  try {
+    bin = atob(s);
+  } catch {
+    throw new RangeError("invalid base64 input");
+  }
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
