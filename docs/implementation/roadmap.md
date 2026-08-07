@@ -45,22 +45,22 @@ or the plan shifts.
 
 ## Where the code stands
 
-Slice 0 and slice 1's backend halves are landed: the seam, the
-stand-in, the record mirror with its epoch cursor, the genesis
-bootstrap, the staged write path, and the onboarding/session
-surface — the exported GraphQL contract is the full slice-1
-surface. **Both client cuts are built.** Android: the
-vector-pinned crypto (`core:crypto`), the signing orchestration
-and stores (`core:domain` + `core:network`), and the five feature
-surfaces (onboarding, auth, home, invites, settings) with
-auth-driven navigation. Web: the same surface at parity
-([web.md](web.md)) — the crypto core, WebCrypto key custody, the
-onboarding handshake, and the member surfaces. What remains of
-slice 1 is the end-to-end hand test's browser-restore leg. The
-client-crypto groundwork both cuts build
-on is in place — the key-backup blob format
-([auth.md](auth.md#blob-format-v1)) and the golden vectors
-(`client-crypto-vectors.json`, `make vectors`).
+**Slices 0 and 1 are closed.** Backend: the seam, the stand-in,
+the record mirror with its epoch cursor, the genesis bootstrap,
+the staged write path, and the onboarding/session surface — the
+exported GraphQL contract is the full slice-1 surface. Android:
+the vector-pinned crypto (`core:crypto`), the signing
+orchestration and stores (`core:domain` + `core:network`), and
+the five feature surfaces (onboarding, auth, home, invites,
+settings) with auth-driven navigation. Web: the same surface at
+parity ([web.md](web.md)) — the crypto core, WebCrypto key
+custody, the onboarding handshake, and the member surfaces. The
+end-to-end hand test — invite link to landed actor, phone-signed
+write, browser restore via recovery code — passed 2026-08-07.
+The client-crypto groundwork both cuts build on is in place —
+the key-backup blob format ([auth.md](auth.md#blob-format-v1))
+and the golden vectors (`client-crypto-vectors.json`,
+`make vectors`). Next in sequence: slice 1.1.
 
 ## The stand-in and the swap
 
