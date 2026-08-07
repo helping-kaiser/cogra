@@ -65,6 +65,14 @@ argon2 = { version = "0.5" }
 jsonwebtoken = { version = "9" }
 base64 = { version = "0.22" }
 
+# API-edge hardening (auth.md "Rate limiting", "Password requirements"):
+# client-IP derivation behind the CLIENT_IP_SOURCE knob, the HIBP
+# range-API breach lookup (rustls to stay on the sqlx TLS stack), and
+# SHA-1 for the k-anonymity prefix — same RustCrypto generation as sha2.
+axum-client-ip = { version = "1" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+sha1 = { version = "0.10" }
+
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation
 # RustCrypto stack to stay on the workspace's sha2/digest line.

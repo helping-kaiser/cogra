@@ -20,9 +20,11 @@ pub use mutation::Mutation;
 pub use query::Query;
 
 use crate::auth::AuthConfig;
+use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mailer, WebOrigin};
 use crate::onboarding::OnboardingConfig;
+use crate::ratelimit::RateLimitConfig;
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -37,6 +39,8 @@ pub struct ApiContext {
     pub mailer: Arc<dyn Mailer>,
     pub web_origin: WebOrigin,
     pub onboarding: OnboardingConfig,
+    pub rate_limits: RateLimitConfig,
+    pub breach: Arc<dyn BreachCorpus>,
 }
 
 /// Builds the executable schema with the live handles attached.
@@ -49,6 +53,8 @@ pub fn build(ctx: ApiContext) -> ApiSchema {
         .data(ctx.mailer)
         .data(ctx.web_origin)
         .data(ctx.onboarding)
+        .data(ctx.rate_limits)
+        .data(ctx.breach)
         .finish()
 }
 
