@@ -4,6 +4,7 @@
 //! handle changes, and the key-backup roundtrip.
 
 use chrono::{Duration, Utc};
+use common::l1::client::ActorKey;
 use postgres_store::{PgPool, auth as store};
 use uuid::Uuid;
 
@@ -11,10 +12,20 @@ use api::auth::{self, AuthConfig, RefreshError};
 
 async fn seed_user(pool: &PgPool, handle: &str, email: &str, password: &str) -> Uuid {
     let id = Uuid::new_v4();
+    // A distinct key per actor — the actors table binds a key to at most
+    // one account (auth.md §Application).
+    let key = ActorKey::generate();
     let mut conn = pool.acquire().await.expect("conn");
-    postgres_store::genesis::insert_actor(&mut conn, id, "user", handle, &[1u8; 32], handle)
-        .await
-        .expect("actor");
+    postgres_store::genesis::insert_actor(
+        &mut conn,
+        id,
+        "user",
+        handle,
+        &key.public_key_bytes(),
+        handle,
+    )
+    .await
+    .expect("actor");
     drop(conn);
     postgres_store::genesis::insert_credentials(
         pool,

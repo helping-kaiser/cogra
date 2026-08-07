@@ -361,6 +361,17 @@ async fn the_attach_guards_hold(pool: PgPool) {
     .await
     .expect("replaces");
 
+    // Re-attaching the account's own current key is the crash-healing
+    // repair path — never a conflict with itself.
+    onboarding::attach_actor_key(
+        &rig.pool,
+        account,
+        replacement.public_key_bytes(),
+        replacement.address(),
+    )
+    .await
+    .expect("repairs");
+
     // A member account cannot attach — the genesis path owns its key.
     let member_key = ActorKey::generate();
     assert!(matches!(
@@ -396,6 +407,100 @@ async fn the_attach_guards_hold(pool: PgPool) {
             .await,
         Err(OnboardingError::Forbidden)
     ));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_attach_refuses_a_key_bound_elsewhere(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, false).await;
+
+    // First applicant lands their key.
+    let first_key = ActorKey::generate();
+    let first = rig
+        .register(rig.form(link, "first", "first@example.com"))
+        .await
+        .expect("registers");
+    rig.verify_directly(first).await;
+    onboarding::attach_actor_key(
+        &rig.pool,
+        first,
+        first_key.public_key_bytes(),
+        first_key.address(),
+    )
+    .await
+    .expect("attaches");
+
+    // A second account attaching the same key: an address binds at most
+    // one account (auth.md §Application) — refused, and refused again on
+    // retry (the silent repair-attach path a shared device runs into).
+    let second = rig
+        .register(rig.form(link, "second", "second@example.com"))
+        .await
+        .expect("registers");
+    rig.verify_directly(second).await;
+    for _ in 0..2 {
+        assert!(matches!(
+            onboarding::attach_actor_key(
+                &rig.pool,
+                second,
+                first_key.public_key_bytes(),
+                first_key.address(),
+            )
+            .await,
+            Err(OnboardingError::ActorKeyInUse)
+        ));
+    }
+
+    // A member's key is just as bound as an applicant's.
+    let (inviter_pubkey, inviter_address) = sqlx::query_as::<_, (Vec<u8>, String)>(
+        "SELECT actor_pubkey, l0_address FROM actors WHERE id = $1",
+    )
+    .bind(inviter)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("inviter row");
+    assert_eq!(
+        store::attach_actor_key(&rig.pool, second, &inviter_pubkey, &inviter_address)
+            .await
+            .expect("query"),
+        store::AttachOutcome::KeyInUse
+    );
+
+    // The address index holds on its own: a fresh key paired with the
+    // first account's address (only reachable below the derivation
+    // check) is still refused.
+    let fresh = ActorKey::generate();
+    assert_eq!(
+        store::attach_actor_key(
+            &rig.pool,
+            second,
+            &fresh.public_key_bytes(),
+            &first_key.address(),
+        )
+        .await
+        .expect("query"),
+        store::AttachOutcome::KeyInUse
+    );
+
+    // The refusal left nothing behind; the second account's own key
+    // attaches cleanly, and the first account is untouched.
+    let second_key = ActorKey::generate();
+    onboarding::attach_actor_key(
+        &rig.pool,
+        second,
+        second_key.public_key_bytes(),
+        second_key.address(),
+    )
+    .await
+    .expect("attaches its own");
+    let first_address =
+        sqlx::query_scalar::<_, String>("SELECT l0_address FROM actors WHERE id = $1")
+            .bind(first)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("first row");
+    assert_eq!(first_address, first_key.address());
 }
 
 #[sqlx::test(migrations = "../../migrations")]

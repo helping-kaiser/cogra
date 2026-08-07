@@ -369,6 +369,7 @@ enum ErrorCode {
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
+  ACTOR_KEY_IN_USE             # the actor key is bound to a different account
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
   WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
@@ -2856,7 +2857,9 @@ type ResendVerificationEmailPayload { ok: Boolean! }
 "Attach the device-minted actor identity to the viewer's account
  — the key ceremony's server half (auth.md §Application).
  Replaceable while the viewer's application is unapproved;
- FORBIDDEN once approval has bound the address."
+ FORBIDDEN once approval has bound the address. An address binds
+ at most one account: a key already bound to a different account
+ refuses with an ACTOR_KEY_IN_USE userError."
 input AttachActorKeyInput {
   "The device-generated actor public key (the key never leaves the
    device; this is its public half)."

@@ -302,12 +302,18 @@ fun KeyCeremonyScreen(
                 modifier = Modifier.semantics { heading() },
             )
             Text(stringResource(R.string.backup_explainer))
-            if (state.attachFailed) {
-                Text(
+            when (state.attachError) {
+                AttachError.NETWORK -> Text(
                     text = stringResource(R.string.error_transport),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("ceremony_attach_error"),
                 )
+                AttachError.KEY_IN_USE -> Text(
+                    text = stringResource(R.string.error_key_in_use),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("ceremony_key_in_use"),
+                )
+                null -> Unit
             }
             if (state.inProgress) {
                 CircularProgressIndicator(modifier = Modifier.testTag("backup_progress"))

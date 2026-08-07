@@ -513,17 +513,32 @@ pub async fn rotate_verification_token(
     Ok(())
 }
 
+/// The outcome of a key attach against the actor-identity uniqueness
+/// indexes (auth.md §Application step 3): an address binds at most one
+/// account.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AttachOutcome {
+    Attached,
+    /// The key or its derived address is already bound to a different
+    /// account. The unique indexes are the enforcement, so a concurrent
+    /// duplicate attach cannot slip through a check-then-write gap.
+    KeyInUse,
+    /// The account is not an unapproved applicant.
+    Refused,
+}
+
 /// Attaches the device-minted actor identity — the key ceremony's server
 /// half (auth.md §Application step 3). Replaceable while the account is
-/// an applicant with no approved application; false once approval has
-/// bound the address (or the account is not an applicant at all).
+/// an applicant with no approved application; `Refused` once approval
+/// has bound the address (or the account is not an applicant at all),
+/// `KeyInUse` when the key is bound to a different account.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: &[u8],
     l0_address: &str,
-) -> Result<bool, sqlx::Error> {
-    Ok(sqlx::query!(
+) -> Result<AttachOutcome, sqlx::Error> {
+    let updated = sqlx::query!(
         "UPDATE actors a
          SET actor_pubkey = $2, l0_address = $3
          FROM user_credentials c
@@ -539,9 +554,18 @@ pub async fn attach_actor_key(
         l0_address,
     )
     .execute(pool)
-    .await?
-    .rows_affected()
-        == 1)
+    .await;
+    match updated {
+        Ok(r) if r.rows_affected() == 1 => Ok(AttachOutcome::Attached),
+        Ok(_) => Ok(AttachOutcome::Refused),
+        Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
+            Some("actors_actor_pubkey_key" | "actors_l0_address_key") => {
+                Ok(AttachOutcome::KeyInUse)
+            }
+            _ => Err(sqlx::Error::Database(e)),
+        },
+        Err(e) => Err(e),
+    }
 }
 
 /// Marks the inviter's priced approval — the `approved_at IS NULL`
