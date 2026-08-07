@@ -12,7 +12,6 @@ import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ActorRef
@@ -20,7 +19,6 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
-import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
 import com.cogra.domain.WriteState
 import com.cogra.domain.repo.AccountRepository
@@ -86,13 +84,11 @@ import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
 import com.cogra.network.toInfo
 import com.cogra.network.toView
+import com.cogra.network.unauthenticatedRefusal
 import java.time.Instant
 import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
-
-private fun unauthenticated(): Outcome.Refused =
-    Outcome.Refused(listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer for this request")))
 
 private fun authOf(fields: com.cogra.network.graphql.fragment.AuthSessionFields): AuthTokens =
     AuthTokens(fields.accessToken, fields.refreshToken)
@@ -168,7 +164,7 @@ class OnboardingRepositoryImpl @Inject constructor(
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> = guard.run {
         when (val fetched = client.query(ApplicationStatusQuery()).fetch()) {
             is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticated()
+                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
                 Outcome.Success(
                     ApplicationStatus(
                         accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
@@ -211,7 +207,7 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun sessions(): Outcome<List<SessionInfo>> = guard.run {
         when (val fetched = client.query(SessionsQuery()).fetch()) {
             is Outcome.Success -> {
-                val sessions = fetched.value.me?.sessions ?: return@run unauthenticated()
+                val sessions = fetched.value.me?.sessions ?: return@run unauthenticatedRefusal()
                 Outcome.Success(
                     sessions.map {
                         val s = it.sessionFields
@@ -317,7 +313,7 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun me(): Outcome<UserProfile?> = guard.run {
         when (val fetched = client.query(MeQuery()).fetch()) {
             is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticated()
+                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
                 Outcome.Success(
                     UserProfile(
                         id = me.id,
@@ -336,7 +332,7 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun keyBackup(): Outcome<ByteArray?> = guard.run {
         when (val fetched = client.query(KeyBackupQuery()).fetch()) {
             is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticated()
+                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
                 Outcome.Success(me.keyBackup?.let { Base64.getDecoder().decode(it) })
             }
             is Outcome.Refused -> fetched
@@ -393,8 +389,8 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = guard.run {
         when (val fetched = client.query(InviteLinksQuery()).fetch()) {
             is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticated()
-                val links = me.inviteLinks?.nodes ?: return@run unauthenticated()
+                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
+                val links = me.inviteLinks?.nodes ?: return@run unauthenticatedRefusal()
                 Outcome.Success(
                     links.map { link ->
                         InviteLinkInfo(
