@@ -7,6 +7,7 @@
 // dead session — the phase flip handles it, the shell just stops loading
 // (screens never self-navigate on auth failure).
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -14,6 +15,7 @@ import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
 import { ApplicantStatus } from "./applicant-status";
+import { MemberStatus } from "./member-status";
 
 export function HomeShell() {
   const client = useApolloClient();
@@ -74,9 +76,27 @@ export function HomeShell() {
         </p>
       )}
       {me !== null && (
-        <p data-testid="home_greeting" className="text-lg">
-          Hello, @{me.handle}
-        </p>
+        <>
+          <p data-testid="home_greeting" className="text-lg">
+            Hello, @{me.handle}
+          </p>
+          <nav className="flex gap-4">
+            <Link
+              href="/invites"
+              data-testid="home_invites"
+              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            >
+              Invites
+            </Link>
+            <Link
+              href="/settings"
+              data-testid="home_settings"
+              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            >
+              Settings
+            </Link>
+          </nav>
+        </>
       )}
       {welcome && (
         <p role="status" data-testid="home_welcome" className="text-sm">
@@ -84,6 +104,7 @@ export function HomeShell() {
         </p>
       )}
       {isApplicant && <ApplicantStatus progress={progress} />}
+      {me?.accountState === "MEMBER" && <MemberStatus me={me} />}
       {transportFailed && (
         <p
           role="alert"
