@@ -736,7 +736,9 @@ type User implements Node & Actor {
    confirmed in the record mirror (latched on the landed application
    row) or in flight as one of the viewer's staged writes. Drives
    the first-login reciprocation prompt (auth.md \"Reciprocation is
-   the joiner's own act\"). Vacuously true when invitedBy is null."
+   the joiner's own act\"). Vacuously true when invitedBy is null —
+   and for any viewer but the account's own: the field exists only
+   to drive the viewer's own prompt."
   hasReciprocated: Boolean!
 }
 

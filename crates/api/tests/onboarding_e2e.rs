@@ -281,7 +281,7 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
             None,
             r#"mutation($input: RegisterInput!) {
                  register(input: $input) {
-                   auth { accessToken user { handle } }
+                   auth { accessToken user { id handle } }
                    expiresAt
                    userErrors { code message }
                  }
@@ -299,6 +299,11 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(auth["user"]["handle"], "joiner");
     assert!(registered["register"]["expiresAt"].is_string());
     let joiner_token = auth["accessToken"].as_str().expect("token").to_string();
+    let joiner_id: uuid::Uuid = auth["user"]["id"]
+        .as_str()
+        .expect("id")
+        .parse()
+        .expect("uuid");
 
     // The fresh account reads its own state: an applicant, unverified,
     // application pending both proofs.
@@ -484,20 +489,24 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     let provenance = rig
         .gql(
             Some(&joiner_token),
-            r#"query { me { invitedBy { id handle } } }"#,
+            r#"query { me { invitedBy { id handle } hasReciprocated } }"#,
             json!({}),
         )
         .await;
     assert_eq!(provenance["me"]["invitedBy"]["handle"], "inviter");
     assert_eq!(provenance["me"]["invitedBy"]["id"], inviter_id.to_string());
+    // No gesture yet: the prompt-driving field reads false.
+    assert_eq!(provenance["me"]["hasReciprocated"], false);
     let inviter_provenance = rig
         .gql(
             Some(&inviter_token),
-            r#"query { me { invitedBy { id } } }"#,
+            r#"query { me { invitedBy { id } hasReciprocated } }"#,
             json!({}),
         )
         .await;
     assert!(inviter_provenance["me"]["invitedBy"].is_null());
+    // Vacuously true without an invitedBy trace.
+    assert_eq!(inviter_provenance["me"]["hasReciprocated"], true);
 
     let reciprocation = rig
         .gql(
@@ -520,7 +529,47 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         &reciprocation["prepareStance"]["writes"],
     )
     .await;
+
+    // In flight: the staged write answers true, but the latch — the
+    // mirror-confirmed cache — is not set yet.
+    let in_flight = rig
+        .gql(
+            Some(&joiner_token),
+            r#"query { me { hasReciprocated } }"#,
+            json!({}),
+        )
+        .await;
+    assert_eq!(in_flight["me"]["hasReciprocated"], true);
+    let unlatched: Option<chrono::DateTime<chrono::Utc>> =
+        sqlx::query_scalar("SELECT reciprocated_at FROM auth_applications WHERE account_id = $1")
+            .bind(joiner_id)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("latch read");
+    assert!(unlatched.is_none());
+
     rig.close_and_ingest().await;
+
+    // Confirmed: the mirror shows the Opinion, the read latches it on
+    // the landed application row, and stays true from the latch alone.
+    for _ in 0..2 {
+        let confirmed = rig
+            .gql(
+                Some(&joiner_token),
+                r#"query { me { hasReciprocated } }"#,
+                json!({}),
+            )
+            .await;
+        assert_eq!(confirmed["me"]["hasReciprocated"], true);
+        let latched: Option<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
+            "SELECT reciprocated_at FROM auth_applications WHERE account_id = $1",
+        )
+        .bind(joiner_id)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("latch read");
+        assert!(latched.is_some());
+    }
 
     // The shared graph now carries the Registration and the mutual
     // Opinion pair; the joiner's act debited their own funded balance.

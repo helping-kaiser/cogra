@@ -10,6 +10,7 @@ query Me {
     handle
     displayName
     accountState
+    hasReciprocated
     invitedBy {
       id
       handle

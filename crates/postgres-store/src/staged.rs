@@ -317,6 +317,30 @@ pub async fn live_for_actor(
     }
 }
 
+/// Whether the actor has a live staged write of the family toward the
+/// target — the in-flight half of a graph-derived read (auth.md
+/// "Reciprocation is the joiner's own act"). Expired stagings are
+/// ignored; a landed one is fine — its record is in the mirror anyway.
+pub async fn has_live_targeting(
+    pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+) -> Result<bool, StagedError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM staged_writes
+               WHERE actor_id = $1 AND family = $2 AND target = $3
+                 AND state <> 'expired'
+           ) AS "exists!""#,
+        actor_id,
+        family.as_str(),
+        target,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
 pub async fn list_for_actor(
     pool: &PgPool,

@@ -20,6 +20,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER", handle = "ada") {
           handle,
           displayName: null,
           accountState,
+          hasReciprocated: true,
           invitedBy: null,
         },
       },

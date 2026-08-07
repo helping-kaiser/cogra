@@ -46,6 +46,13 @@ data class UserProfile(
     val handle: String,
     val displayName: String?,
     val accountState: AccountState,
+    /**
+     * Whether the viewer's reciprocal Opinion toward [invitedBy] exists —
+     * graph-derived, mirror-confirmed or in flight (auth.md
+     * "Reciprocation is the joiner's own act"). Vacuously true without
+     * an inviter.
+     */
+    val hasReciprocated: Boolean,
     /** Landing provenance — the reciprocation target; null for genesis actors. */
     val invitedBy: ActorRef?,
 )

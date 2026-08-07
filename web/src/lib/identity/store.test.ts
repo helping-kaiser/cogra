@@ -118,10 +118,10 @@ describe("identity store", () => {
     expect(await store.handshake("missing")).toBeNull();
   });
 
-  it("remembers the reciprocation answer one-way", async () => {
-    expect(await store.reciprocationHandled()).toBe(false);
-    await store.markReciprocationHandled();
-    expect(await store.reciprocationHandled()).toBe(true);
+  it("remembers the reciprocation dismissal one-way", async () => {
+    expect(await store.reciprocationDismissed()).toBe(false);
+    await store.markReciprocationDismissed();
+    expect(await store.reciprocationDismissed()).toBe(true);
   });
 
   it("upgrades a v1 database in place", async () => {
@@ -139,7 +139,7 @@ describe("identity store", () => {
       req.onerror = () => reject(req.error);
     });
     store = createIdentityStore();
-    await store.markReciprocationHandled();
-    expect(await store.reciprocationHandled()).toBe(true);
+    await store.markReciprocationDismissed();
+    expect(await store.reciprocationDismissed()).toBe(true);
   });
 });
