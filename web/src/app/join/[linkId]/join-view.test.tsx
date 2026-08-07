@@ -37,6 +37,23 @@ function signedInStore() {
   return store;
 }
 
+function meHandler(accountState: "APPLICANT" | "MEMBER") {
+  return graphql.query("Me", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "u1",
+          handle: "ada",
+          displayName: null,
+          accountState,
+          invitedBy: null,
+        },
+      },
+    }),
+  );
+}
+
 describe("JoinView", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -171,17 +188,35 @@ describe("JoinView", () => {
     expect(await screen.findByTestId("apply_error")).toHaveTextContent("taken");
   });
 
-  it("offers re-arm instead of the form when signed in", async () => {
-    server.use(usableCheck);
+  it("offers re-arm instead of the form to a signed-in applicant", async () => {
+    server.use(usableCheck, meHandler("APPLICANT"));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("rearm_submit")).toBeInTheDocument();
     expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
     expect(screen.queryByTestId("invite_login")).not.toBeInTheDocument();
   });
 
+  it("offers a member no action — the invite is for someone new", async () => {
+    server.use(usableCheck, meHandler("MEMBER"));
+    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
+    expect(await screen.findByTestId("join_member_note")).toBeInTheDocument();
+    expect(screen.getByTestId("join_member_invites")).toHaveAttribute("href", "/invites");
+    expect(screen.queryByTestId("rearm_submit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
+  });
+
+  it("offers no action while the account state is unknown", async () => {
+    server.use(usableCheck, graphql.query("Me", () => HttpResponse.error()));
+    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
+    expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
+    expect(screen.queryByTestId("rearm_submit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("join_member_note")).not.toBeInTheDocument();
+  });
+
   it("re-arms, pokes the loop, and goes home", async () => {
     server.use(
       usableCheck,
+      meHandler("APPLICANT"),
       graphql.mutation("ApplyWithInvite", () =>
         HttpResponse.json({
           data: {
@@ -204,6 +239,7 @@ describe("JoinView", () => {
   it("surfaces a re-arm refusal", async () => {
     server.use(
       usableCheck,
+      meHandler("APPLICANT"),
       graphql.mutation("ApplyWithInvite", () =>
         HttpResponse.json({
           data: {

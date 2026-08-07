@@ -11,7 +11,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { ErrorCode } from "@/__generated__/graphql";
+import type { AccountState, ErrorCode } from "@/__generated__/graphql";
+import { fetchMe } from "@/lib/api/auth-api";
 import {
   applyWithInvite,
   checkInviteLink,
@@ -63,9 +64,30 @@ type CheckState =
 
 export function JoinView({ linkId }: { linkId: string }) {
   const client = useApolloClient();
+  const guard = useAuthGuard();
   const phase = useAuthPhase();
 
   const inviteId = extractInviteId(linkId);
+
+  // Acting is gated on the live account state, client-side (api-spec.md
+  // "Errors are tiered": a FORBIDDEN from an ungated call is a client
+  // bug). Null while signed out, resolving, or unreachable — no action
+  // renders until the state is known.
+  const [accountState, setAccountState] = useState<AccountState | null>(null);
+  useEffect(() => {
+    if (phase !== "signedIn") return;
+    let cancelled = false;
+    void guard
+      .run(() => fetchMe(client))
+      .then((outcome) => {
+        if (!cancelled && outcome.kind === "success") {
+          setAccountState(outcome.value.accountState);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, client, guard]);
 
   const [checkState, setCheckState] = useState<CheckState>({ status: "checking" });
   // Reset during render when the route param changes — the App Router
@@ -141,7 +163,24 @@ export function JoinView({ linkId }: { linkId: string }) {
       )}
 
       {usable && inviteId !== null && phase === "signedOut" && <ApplyForm inviteId={inviteId} />}
-      {usable && inviteId !== null && phase === "signedIn" && <RearmPanel inviteId={inviteId} />}
+      {usable && inviteId !== null && phase === "signedIn" && accountState === "APPLICANT" && (
+        <RearmPanel inviteId={inviteId} />
+      )}
+      {phase === "signedIn" && accountState === "MEMBER" && (
+        <>
+          <p data-testid="join_member_note" className="text-sm">
+            You&apos;re already a member, so this invite isn&apos;t for you — it brings someone new
+            in.
+          </p>
+          <Link
+            href="/invites"
+            data-testid="join_member_invites"
+            className="text-sm text-zinc-600 underline dark:text-zinc-400"
+          >
+            Invite someone from your own Invites page
+          </Link>
+        </>
+      )}
 
       {phase === "signedOut" && (
         <Link
