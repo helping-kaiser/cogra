@@ -117,4 +117,29 @@ describe("identity store", () => {
   it("returns null for unknown handshake ids", async () => {
     expect(await store.handshake("missing")).toBeNull();
   });
+
+  it("remembers the reciprocation answer one-way", async () => {
+    expect(await store.reciprocationHandled()).toBe(false);
+    await store.markReciprocationHandled();
+    expect(await store.reciprocationHandled()).toBe(true);
+  });
+
+  it("upgrades a v1 database in place", async () => {
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.open("cogra.identity", 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore("actor");
+        req.result.createObjectStore("pendingBackup");
+        req.result.createObjectStore("handshake");
+      };
+      req.onsuccess = () => {
+        req.result.close();
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+    store = createIdentityStore();
+    await store.markReciprocationHandled();
+    expect(await store.reciprocationHandled()).toBe(true);
+  });
 });

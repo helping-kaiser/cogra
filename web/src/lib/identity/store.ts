@@ -12,11 +12,13 @@ import { PreSignedProposal } from "@/lib/crypto/handshake";
 import { decodeProposal, encodeProposal } from "@/lib/crypto/wire";
 
 const DB_NAME = "cogra.identity";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const ACTOR = "actor";
 const BACKUP = "pendingBackup";
 const HANDSHAKE = "handshake";
+const UX = "ux";
 const SINGLETON_KEY = "current";
+const RECIPROCATION_KEY = "reciprocationHandled";
 
 type ActorRecord = {
   privateKey: CryptoKey;
@@ -51,6 +53,15 @@ export type IdentityStore = {
   handshake(stagedWriteId: string): Promise<PreSignedProposal | null>;
   clearHandshake(stagedWriteId: string): Promise<void>;
   handshakeIds(): Promise<string[]>;
+  /**
+   * Device-local UX state, the slice-1 interim for the absent
+   * User.hasReciprocated: whether the first-login reciprocation prompt
+   * was answered — signed or dismissed — on this device. One-way; the
+   * prompt legitimately reappears on a new device (auth.md "Approval
+   * and landing").
+   */
+  reciprocationHandled(): Promise<boolean>;
+  markReciprocationHandled(): Promise<void>;
 };
 
 function asPromise<T>(req: IDBRequest<T>): Promise<T> {
@@ -68,6 +79,7 @@ function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(ACTOR)) db.createObjectStore(ACTOR);
       if (!db.objectStoreNames.contains(BACKUP)) db.createObjectStore(BACKUP);
       if (!db.objectStoreNames.contains(HANDSHAKE)) db.createObjectStore(HANDSHAKE);
+      if (!db.objectStoreNames.contains(UX)) db.createObjectStore(UX);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -171,6 +183,14 @@ export function createIdentityStore(): IdentityStore {
       const tx = (await db()).transaction(HANDSHAKE, "readonly");
       const keys = await asPromise(tx.objectStore(HANDSHAKE).getAllKeys());
       return keys.map(String);
+    },
+
+    async reciprocationHandled() {
+      return (await read<boolean>(UX, RECIPROCATION_KEY)) === true;
+    },
+
+    async markReciprocationHandled() {
+      await write(UX, RECIPROCATION_KEY, true);
     },
   };
 }

@@ -56,8 +56,8 @@ data class HomeUiState(
     val huskWarning: Boolean = false,
     /** The first-login prompt (auth.md "Reciprocation is the joiner's own act"). */
     val reciprocationTarget: ActorRef? = null,
-    val pDirected: Double = 0.5,
-    val pInterest: Double = 0.5,
+    val pDirected: Double = 0.1,
+    val pInterest: Double = 0.1,
     val signing: Boolean = false,
     val reciprocated: Boolean = false,
     val signingFailed: Boolean = false,

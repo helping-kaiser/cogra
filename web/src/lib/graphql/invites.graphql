@@ -1,0 +1,73 @@
+# The inviter's side: issue and revoke link capabilities, read the
+# approval queue, and approve — approveApplicants returns the
+# inviter's own Opinion records to sign; the vouch is the inviter's
+# signature, not a server write (api-spec.md "Auth and accounts").
+
+query InviteLinks {
+  me {
+    id
+    inviteLinks(first: 50) {
+      nodes {
+        id
+        prefillPDirected
+        prefillPInterest
+        singleUse
+        createdAt
+        expiresAt
+        revokedAt
+        applications(first: 50) {
+          nodes {
+            id
+            handle
+            emailVerified
+            keyAttached
+            approvedAt
+            landedAt
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation CreateInviteLink($input: CreateInviteLinkInput!) {
+  createInviteLink(input: $input) {
+    inviteLink {
+      id
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation RevokeInviteLink($input: RevokeInviteLinkInput!) {
+  revokeInviteLink(input: $input) {
+    inviteLink {
+      id
+      revokedAt
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ApproveApplicants($input: ApproveApplicantsInput!) {
+  approveApplicants(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}

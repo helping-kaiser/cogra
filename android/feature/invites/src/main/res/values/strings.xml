@@ -20,5 +20,10 @@
     <string name="applicant_approve">Approve and vouch</string>
     <string name="stance_p_directed">Directed weight</string>
     <string name="stance_p_interest">Interest weight</string>
-    <string name="error_transport">Something went wrong. Try again.</string>
+    <string name="invites_cant_fund">Your account can\'t fund this approval right now.</string>
+    <string name="invites_bad_input">That didn\'t go through — the application or link may have expired or already been handled.</string>
+    <string name="invites_link_gone">That link is already gone.</string>
+    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
 </resources>

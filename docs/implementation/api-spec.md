@@ -3014,6 +3014,10 @@ type CreateInviteLinkPayload {
 }
 
 input RevokeInviteLinkInput { inviteLink: UUID! }
+"An unknown, foreign, or already-revoked link refuses with a
+ NOT_FOUND userError — the one place NOT_FOUND rides the userError
+ tier rather than the transport tier, because a stale share sheet
+ makes it an expected outcome, not a client bug."
 type RevokeInviteLinkPayload { inviteLink: InviteLink }
 
 "The anonymous pre-registration view of an invite link (the

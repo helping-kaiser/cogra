@@ -16,6 +16,7 @@ import { extractInviteId } from "@/lib/onboarding/invite-input";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
+import { Card } from "@/lib/ui/card";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
   const [waitingHintDismissed, setWaitingHintDismissed] = useState(false);
@@ -74,14 +75,6 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
       );
     }
   }
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3 rounded-md border border-zinc-300 p-4 dark:border-zinc-700">
-      {children}
-    </section>
-  );
 }
 
 function VerifyCard() {
@@ -155,7 +148,7 @@ function CeremonyCard() {
   );
 }
 
-function RestoreCard() {
+export function RestoreCard() {
   return (
     <Card>
       <h2 className="font-medium">Your key isn&apos;t on this browser</h2>

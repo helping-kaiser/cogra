@@ -23,8 +23,8 @@ data class InvitesUiState(
     val links: List<InviteLinkInfo> = emptyList(),
     val creating: Boolean = false,
     val singleUse: Boolean = false,
-    val prefillPDirected: Double = 0.5,
-    val prefillPInterest: Double = 0.5,
+    val prefillPDirected: Double = 0.1,
+    val prefillPInterest: Double = 0.1,
     /** The application currently being approved, if any. */
     val approvingId: String? = null,
     val error: ErrorCode? = null,
@@ -101,8 +101,14 @@ class InvitesViewModel @Inject constructor(
 
     fun onRevoke(linkId: String) {
         viewModelScope.launch {
-            account.revokeInviteLink(linkId)
+            val outcome = account.revokeInviteLink(linkId)
             refresh()
+            when (outcome) {
+                is Outcome.Success -> Unit
+                is Outcome.Refused ->
+                    _state.update { it.copy(error = outcome.errors.first().code) }
+                is Outcome.Failed -> _state.update { it.copy(transportFailed = true) }
+            }
         }
     }
 
