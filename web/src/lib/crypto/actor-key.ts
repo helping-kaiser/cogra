@@ -44,12 +44,31 @@ function fromBase64Url(s: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
+/**
+ * Imports a seed as a signing pair fit for custody (web.md "Key
+ * custody"): the private key is non-extractable — IndexedDB persists the
+ * CryptoKey object itself, so script injection can use but never export
+ * it. The public half comes out of a throwaway extractable import (`x`
+ * is a required OKP member, RFC 8037); the throwaway is never stored.
+ */
+export async function importActorKeyPair(
+  seed: Uint8Array,
+): Promise<{ privateKey: CryptoKey; publicKey: Uint8Array<ArrayBuffer> }> {
+  if (seed.length !== 32) throw new RangeError("an actor seed is 32 bytes");
+  const pkcs8 = concat(PKCS8_PREFIX, seed);
+  const throwaway = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", true, ["sign"]);
+  const jwk = await crypto.subtle.exportKey("jwk", throwaway);
+  if (jwk.x === undefined) throw new Error("Ed25519 JWK export is missing the public key");
+  const privateKey = await crypto.subtle.importKey("pkcs8", pkcs8, "Ed25519", false, ["sign"]);
+  return { privateKey, publicKey: fromBase64Url(jwk.x) };
+}
+
 /** An actor keypair under the interim realization. */
 export class ActorKey {
   private constructor(
     private readonly privateKey: CryptoKey,
     private readonly publicKey: Uint8Array,
-    private readonly seedBytes: Uint8Array,
+    private readonly seedBytes: Uint8Array | null,
   ) {}
 
   static async generate(): Promise<ActorKey> {
@@ -57,21 +76,22 @@ export class ActorKey {
   }
 
   static async fromSeed(seed: Uint8Array): Promise<ActorKey> {
-    if (seed.length !== 32) throw new RangeError("an actor seed is 32 bytes");
-    const privateKey = await crypto.subtle.importKey(
-      "pkcs8",
-      concat(PKCS8_PREFIX, seed),
-      "Ed25519",
-      true,
-      ["sign"],
-    );
-    const jwk = await crypto.subtle.exportKey("jwk", privateKey);
-    if (jwk.x === undefined) throw new Error("Ed25519 JWK export is missing the public key");
-    return new ActorKey(privateKey, fromBase64Url(jwk.x), seed.slice());
+    const pair = await importActorKeyPair(seed);
+    return new ActorKey(pair.privateKey, pair.publicKey, seed.slice());
   }
 
-  /** The 32-byte seed — what the key-backup blob carries. */
+  /** A key loaded back from custody — the seed is not retained there. */
+  static stored(privateKey: CryptoKey, publicKey: Uint8Array): ActorKey {
+    return new ActorKey(privateKey, publicKey.slice(), null);
+  }
+
+  /**
+   * The 32-byte seed — what the key-backup blob carries. Present only on
+   * a freshly minted or restored key; custody drops it once a backup
+   * blob exists (web.md "Key custody").
+   */
   seed(): Uint8Array<ArrayBuffer> {
+    if (this.seedBytes === null) throw new Error("the seed is not retained on a stored key");
     return this.seedBytes.slice();
   }
 
