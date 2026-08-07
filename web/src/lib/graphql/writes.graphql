@@ -1,0 +1,61 @@
+# The client legs of the write path this slice signs: submit → approve →
+# observe, plus the seal key the device verifies against (api-spec.md
+# "The write flow"). Prepare arrives with the first prepared surface
+# (member reciprocation, next PR).
+
+query HostPublicKey {
+  hostPublicKey
+}
+
+mutation SubmitProposals($input: SubmitProposalsInput!) {
+  submitProposals(input: $input) {
+    stagedWrites {
+      id
+      state
+      family
+      canonicalProposal
+      verifiedAct
+      record {
+        id
+      }
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ApproveActs($input: ApproveActsInput!) {
+  approveActs(input: $input) {
+    stagedWrites {
+      id
+      state
+      family
+      canonicalProposal
+      verifiedAct
+      record {
+        id
+      }
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+query StagedWrite($id: UUID!) {
+  stagedWrite(id: $id) {
+    id
+    state
+    family
+    canonicalProposal
+    verifiedAct
+    record {
+      id
+    }
+  }
+}

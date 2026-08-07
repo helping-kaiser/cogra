@@ -8,6 +8,15 @@ const config: CodegenConfig = {
   generates: {
     "src/__generated__/": {
       preset: "client",
+      config: {
+        // The JSON wire form of both scalars is a string; without the
+        // mapping the preset emits `unknown` (client preset docs,
+        // config.scalars).
+        scalars: {
+          UUID: "string",
+          DateTime: "string",
+        },
+      },
     },
   },
 };

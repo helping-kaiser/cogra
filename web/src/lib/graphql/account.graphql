@@ -32,3 +32,21 @@ mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
     }
   }
 }
+
+query KeyBackup {
+  me {
+    id
+    keyBackup
+  }
+}
+
+mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
+  uploadKeyBackup(input: $input) {
+    ok
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}

@@ -1,0 +1,102 @@
+# The joining flow (auth.md "Application (the applicant state)";
+# api-spec.md "Auth and accounts"): invite check → register (account +
+# session) → the logged-in key attach and email verification → the
+# me-driven status poll. The staged Registration rides the ordinary
+# staged-write surface in writes.graphql.
+# resendVerificationEmail is a silent verb: no userErrors by design —
+# surfacing a failure would reveal whether an application exists.
+
+query InviteLinkCheck($id: UUID!) {
+  inviteLinkCheck(id: $id) {
+    usable
+    inviterHandle
+    expiresAt
+  }
+}
+
+mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    auth {
+      accessToken
+      refreshToken
+    }
+    expiresAt
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation VerifyEmail($input: VerifyEmailInput!) {
+  verifyEmail(input: $input) {
+    ok
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ResendVerificationEmail($input: ResendVerificationEmailInput!) {
+  resendVerificationEmail(input: $input) {
+    ok
+  }
+}
+
+mutation AttachActorKey($input: AttachActorKeyInput!) {
+  attachActorKey(input: $input) {
+    user {
+      id
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ApplyWithInvite($input: ApplyWithInviteInput!) {
+  applyWithInvite(input: $input) {
+    application {
+      id
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+query ApplicationStatus {
+  me {
+    id
+    accountState
+    application {
+      id
+      handle
+      emailVerified
+      keyAttached
+      approvedAt
+      landedAt
+      createdAt
+      expiresAt
+    }
+    stagedWrites(first: 10) {
+      nodes {
+        id
+        state
+        family
+        canonicalProposal
+        verifiedAct
+        record {
+          id
+        }
+      }
+    }
+  }
+}
