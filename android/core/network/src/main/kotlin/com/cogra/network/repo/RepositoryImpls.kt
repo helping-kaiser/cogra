@@ -395,6 +395,8 @@ class AccountRepositoryImpl @Inject constructor(
                     links.map { link ->
                         InviteLinkInfo(
                             id = link.id,
+                            prefillPDirected = link.prefillPDirected,
+                            prefillPInterest = link.prefillPInterest,
                             singleUse = link.singleUse,
                             createdAt = link.createdAt,
                             expiresAt = link.expiresAt,
@@ -430,6 +432,8 @@ class AccountRepositoryImpl @Inject constructor(
             it.createInviteLink.inviteLink?.let { link ->
                 InviteLinkInfo(
                     id = link.id,
+                    prefillPDirected = link.prefillPDirected,
+                    prefillPInterest = link.prefillPInterest,
                     singleUse = link.singleUse,
                     createdAt = link.createdAt,
                     expiresAt = link.expiresAt,

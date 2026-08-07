@@ -119,6 +119,9 @@ data class PreparedWriteView(
 /** An invite link as its issuer sees it. */
 data class InviteLinkInfo(
     val id: String,
+    /** A suggestion, never a commitment — seeds the approval form. */
+    val prefillPDirected: Double,
+    val prefillPInterest: Double,
     val singleUse: Boolean,
     val createdAt: Instant,
     val expiresAt: Instant,
