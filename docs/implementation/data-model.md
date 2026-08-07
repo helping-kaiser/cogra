@@ -321,6 +321,14 @@ CREATE TABLE actors (
     CHECK (kind = 'user' OR (actor_pubkey IS NOT NULL AND l0_address IS NOT NULL))
 );
 
+-- An address binds at most one account (auth.md §Application):
+-- the unique indexes are the race-proof enforcement behind
+-- attachActorKey's ACTOR_KEY_IN_USE refusal. Key and address are
+-- 1:1 (the address derives from the key), so both columns carry
+-- the invariant; NULLs (a user before the ceremony) never collide.
+CREATE UNIQUE INDEX actors_actor_pubkey_key ON actors (actor_pubkey);
+CREATE UNIQUE INDEX actors_l0_address_key ON actors (l0_address);
+
 -- User credentials: the account half of a user-kind actor — rows
 -- exist only for kind = 'user', created at registration together
 -- with the actor row (auth.md §Application). account_state is the

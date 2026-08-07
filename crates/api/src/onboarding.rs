@@ -73,6 +73,10 @@ pub enum OnboardingError {
     /// "Authentication").
     #[error("the account state does not permit this")]
     Forbidden,
+    /// The submitted key is already bound to a different account — an
+    /// address binds at most one account (auth.md §Application step 3).
+    #[error("the key already belongs to another account")]
+    ActorKeyInUse,
     #[error("verification token invalid or expired")]
     VerificationTokenInvalid,
     #[error("write rule: balance {balance} below the act price {theta}")]
@@ -253,6 +257,10 @@ pub async fn resend_verification(
 /// (auth.md §Application step 3). Replaceable while the application is
 /// unapproved; Forbidden once approval has bound the address — a device
 /// lost before approval costs nothing but a re-run of the ceremony.
+/// An address binds at most one account: a key already bound to a
+/// different account refuses with ActorKeyInUse — a duplicate
+/// Registration would wedge the second admission behind an unlandable
+/// record.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
@@ -274,10 +282,10 @@ pub async fn attach_actor_key(
             message: "address does not belong to the submitted key".into(),
         });
     }
-    if store::attach_actor_key(pool, account_id, &actor_pubkey, &l0_address).await? {
-        Ok(())
-    } else {
-        Err(OnboardingError::Forbidden)
+    match store::attach_actor_key(pool, account_id, &actor_pubkey, &l0_address).await? {
+        store::AttachOutcome::Attached => Ok(()),
+        store::AttachOutcome::KeyInUse => Err(OnboardingError::ActorKeyInUse),
+        store::AttachOutcome::Refused => Err(OnboardingError::Forbidden),
     }
 }
 

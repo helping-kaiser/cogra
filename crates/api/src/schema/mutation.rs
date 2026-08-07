@@ -521,7 +521,9 @@ impl Mutation {
     /// Attaches the device-minted actor identity to the viewer's account
     /// — the key ceremony's server half. Replaceable while the viewer's
     /// application is unapproved; FORBIDDEN once approval has bound the
-    /// address.
+    /// address. An address binds at most one account: a key already
+    /// bound to a different account refuses with an ACTOR_KEY_IN_USE
+    /// userError.
     async fn attach_actor_key(
         &self,
         ctx: &Context<'_>,
