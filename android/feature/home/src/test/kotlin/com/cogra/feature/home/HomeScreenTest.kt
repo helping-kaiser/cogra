@@ -47,7 +47,7 @@ class HomeScreenTest {
         HomeUiState(
             loading = false,
             applicant = true,
-            profile = UserProfile("u", "joiner", null, AccountState.APPLICANT, null),
+            profile = UserProfile("u", "joiner", null, AccountState.APPLICANT, false, null),
             progress = progress,
             waitingHintDismissed = dismissed,
         )
@@ -70,7 +70,7 @@ class HomeScreenTest {
         render(
             HomeUiState(
                 loading = false,
-                profile = UserProfile("u", "joiner", null, AccountState.MEMBER, ActorRef("i", "inviter")),
+                profile = UserProfile("u", "joiner", null, AccountState.MEMBER, false, ActorRef("i", "inviter")),
                 reciprocationTarget = ActorRef("i", "inviter"),
             ),
         )

@@ -17,10 +17,12 @@ const invited: MeUser = {
   handle: "ada",
   displayName: null,
   accountState: "MEMBER",
+  hasReciprocated: false,
   invitedBy: { id: "u0", handle: "grace" },
 };
 
-const genesis: MeUser = { ...invited, invitedBy: null };
+// Vacuously reciprocated, as the server answers without an inviter.
+const genesis: MeUser = { ...invited, invitedBy: null, hasReciprocated: true };
 
 function signedInStore() {
   const store = createTokenStore();
@@ -89,8 +91,8 @@ describe("MemberStatus", () => {
     expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
   });
 
-  it("shows no prompt once the device remembers an answer", async () => {
-    const store = fakeIdentityStore({ keyOnDevice: true, reciprocationHandled: true });
+  it("shows no prompt once the device remembers a dismissal", async () => {
+    const store = fakeIdentityStore({ keyOnDevice: true, reciprocationDismissed: true });
     renderWithProviders(<MemberStatus me={invited} store={store} />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
@@ -100,7 +102,20 @@ describe("MemberStatus", () => {
     );
   });
 
-  it("reciprocating prepares the stance, signs, and remembers", async () => {
+  it("the server's answer silences the prompt on a fresh device", async () => {
+    // Reciprocated elsewhere: no local bit, still no prompt.
+    const store = fakeIdentityStore({ keyOnDevice: true });
+    renderWithProviders(
+      <MemberStatus me={{ ...invited, hasReciprocated: true }} store={store} />,
+      { store: signedInStore(), writeSigner: fakeWriteSigner() },
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
+    );
+    await expect(store.reciprocationDismissed()).resolves.toBe(false);
+  });
+
+  it("reciprocating prepares the stance and signs without touching the device bit", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(prepareStanceHandler((v) => (variables = v)));
     const store = fakeIdentityStore({ keyOnDevice: true });
@@ -119,7 +134,9 @@ describe("MemberStatus", () => {
     expect(variables).toEqual({
       input: { target: "u0", pDirected: 0.1, pInterest: 0.1 },
     });
-    await expect(store.reciprocationHandled()).resolves.toBe(true);
+    // The graph knows (the staged write is in flight); the device bit
+    // is dismissal memory only.
+    await expect(store.reciprocationDismissed()).resolves.toBe(false);
   });
 
   it("keeps the prompt and surfaces the failure when signing does not finish", async () => {
@@ -138,7 +155,7 @@ describe("MemberStatus", () => {
     fireEvent.click(await screen.findByTestId("home_reciprocate"));
     expect(await screen.findByTestId("home_signing_failed")).toBeInTheDocument();
     expect(screen.getByTestId("home_reciprocation")).toBeInTheDocument();
-    await expect(store.reciprocationHandled()).resolves.toBe(false);
+    await expect(store.reciprocationDismissed()).resolves.toBe(false);
   });
 
   it("keeps the prompt when the prepare itself fails", async () => {
@@ -151,7 +168,7 @@ describe("MemberStatus", () => {
 
     fireEvent.click(await screen.findByTestId("home_reciprocate"));
     expect(await screen.findByTestId("home_signing_failed")).toBeInTheDocument();
-    await expect(store.reciprocationHandled()).resolves.toBe(false);
+    await expect(store.reciprocationDismissed()).resolves.toBe(false);
   });
 
   it("dismissal is remembered too", async () => {
@@ -166,7 +183,7 @@ describe("MemberStatus", () => {
       expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
     );
     expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument();
-    await expect(store.reciprocationHandled()).resolves.toBe(true);
+    await expect(store.reciprocationDismissed()).resolves.toBe(true);
   });
 
   it("offers to resume parked handshakes", async () => {

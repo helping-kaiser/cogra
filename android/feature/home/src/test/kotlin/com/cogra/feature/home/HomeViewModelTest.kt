@@ -34,10 +34,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-private fun member(invitedBy: ActorRef? = ActorRef("inv1", "inviter")) =
-    UserProfile("u1", "joiner", "joiner", AccountState.MEMBER, invitedBy)
+private fun member(
+    invitedBy: ActorRef? = ActorRef("inv1", "inviter"),
+    hasReciprocated: Boolean = false,
+) = UserProfile("u1", "joiner", "joiner", AccountState.MEMBER, hasReciprocated, invitedBy)
 
-private fun applicant() = UserProfile("u1", "joiner", "joiner", AccountState.APPLICANT, invitedBy = null)
+private fun applicant() =
+    UserProfile("u1", "joiner", "joiner", AccountState.APPLICANT, false, invitedBy = null)
 
 private class ScriptedAccount : ThrowingAccountRepository() {
     var profile: UserProfile? = member()
@@ -156,19 +159,32 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun reciprocatingSignsAndRemembers() = homeTest {
+    fun reciprocatingSignsWithoutTouchingTheDeviceBit() = homeTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onReciprocate()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.reciprocated).isTrue()
         assertThat(vm.state.value.reciprocationTarget).isNull()
-        assertThat(identity.reciprocationDone).isTrue()
+        // The graph knows (the staged write is in flight); the device
+        // bit is dismissal memory only.
+        assertThat(identity.dismissedReciprocation).isFalse()
 
-        // A fresh view model never prompts again.
+        // The next profile read carries the server's answer.
+        account.profile = member(hasReciprocated = true)
         val next = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(next.state.value.reciprocationTarget).isNull()
+    }
+
+    @Test
+    fun theServerAnswerSilencesThePromptAcrossDevices() = homeTest {
+        // A reciprocated pair, fresh device: no local bit, no prompt.
+        account.profile = member(hasReciprocated = true)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.dismissedReciprocation).isFalse()
+        assertThat(vm.state.value.reciprocationTarget).isNull()
     }
 
     @Test
@@ -177,8 +193,13 @@ class HomeViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDismissReciprocation()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(identity.reciprocationDone).isTrue()
+        assertThat(identity.dismissedReciprocation).isTrue()
         assertThat(vm.state.value.reciprocationTarget).isNull()
+
+        // Dismissed locally, still unreciprocated: no prompt on reload.
+        val next = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(next.state.value.reciprocationTarget).isNull()
     }
 
     @Test
@@ -326,7 +347,7 @@ class HomeViewModelTest {
         vm.onDismissWaitingHint()
         assertThat(vm.state.value.waitingHintDismissed).isTrue()
         // Nothing was persisted — the hint returns with the next app run.
-        assertThat(identity.reciprocationDone).isFalse()
+        assertThat(identity.dismissedReciprocation).isFalse()
     }
 
     @Test

@@ -504,6 +504,43 @@ async fn the_attach_refuses_a_key_bound_elsewhere(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn the_reciprocation_latch_waits_for_landing(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, false).await;
+    let account = rig
+        .register(rig.form(link, "newbie", "n@example.com"))
+        .await
+        .expect("registers");
+
+    // No landed application: nothing latched, nothing to latch — the
+    // update's landed_at guard refuses (auth.md "Reciprocation is the
+    // joiner's own act": the latch lives on the landed row).
+    assert!(
+        !store::reciprocation_latched(&rig.pool, account)
+            .await
+            .expect("query")
+    );
+    assert!(
+        !store::latch_reciprocated(&rig.pool, account)
+            .await
+            .expect("update")
+    );
+
+    // An account with no application trace at all behaves the same.
+    assert!(
+        !store::reciprocation_latched(&rig.pool, inviter)
+            .await
+            .expect("query")
+    );
+    assert!(
+        !store::latch_reciprocated(&rig.pool, inviter)
+            .await
+            .expect("update")
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn approval_guards_hold(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let inviter = rig.inviter("inviter").await;

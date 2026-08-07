@@ -15,8 +15,11 @@ use uuid::Uuid;
 
 async fn actor(pool: &PgPool, handle: &str, address: &str) -> Uuid {
     let id = Uuid::new_v4();
+    // Distinct per actor — a key binds at most one account
+    // (data-model.md "Actors").
+    let pubkey = format!("pk-{handle}");
     let mut conn = pool.acquire().await.expect("conn");
-    genesis::insert_actor(&mut conn, id, "user", handle, &[1u8; 32], address)
+    genesis::insert_actor(&mut conn, id, "user", handle, pubkey.as_bytes(), address)
         .await
         .expect("actor row");
     id
@@ -372,5 +375,37 @@ async fn a_record_landing_after_collection_still_promotes(pool: PgPool) {
     assert_eq!(
         staged::load(&pool, id).await.expect("loads").state,
         StagedState::Landed
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let other_id = actor(&pool, "carol", "carol").await;
+    let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+
+    // The staged Opinion toward prof:bob is live for its actor alone,
+    // and only at its target.
+    let hit = staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
+        .await
+        .expect("query");
+    assert!(hit);
+    assert!(
+        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:carol")
+            .await
+            .expect("query")
+    );
+    assert!(
+        !staged::has_live_targeting(&pool, other_id, Family::Opinion, "prof:bob")
+            .await
+            .expect("query")
+    );
+
+    // Expired stagings are tombstones — they no longer answer.
+    staged::expire_one(&pool, id, 0).await.expect("expires");
+    assert!(
+        !staged::has_live_targeting(&pool, actor_id, Family::Opinion, "prof:bob")
+            .await
+            .expect("query")
     );
 }
