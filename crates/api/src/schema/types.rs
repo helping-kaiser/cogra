@@ -76,6 +76,8 @@ pub enum ErrorCode {
     WeakPassword,
     /// The email already belongs to an account.
     EmailInUse,
+    /// The actor key is already bound to a different account.
+    ActorKeyInUse,
     /// The email-verification token is invalid or expired.
     VerificationTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
@@ -149,6 +151,11 @@ impl UserError {
                 message: e.to_string(),
                 code: ErrorCode::EmailInUse,
                 field: path("email"),
+            },
+            OnboardingError::ActorKeyInUse => UserError {
+                message: e.to_string(),
+                code: ErrorCode::ActorKeyInUse,
+                field: path("actorPubkey"),
             },
             OnboardingError::VerificationTokenInvalid => {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
