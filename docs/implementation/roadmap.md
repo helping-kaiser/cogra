@@ -56,8 +56,8 @@ surfaces (onboarding, auth, home, invites, settings) with
 auth-driven navigation. Web: the same surface at parity
 ([web.md](web.md)) — the crypto core, WebCrypto key custody, the
 onboarding handshake, and the member surfaces. What remains of
-slice 1 is `User.hasReciprocated` and the end-to-end hand test's
-browser-restore leg. The client-crypto groundwork both cuts build
+slice 1 is the end-to-end hand test's browser-restore leg. The
+client-crypto groundwork both cuts build
 on is in place — the key-backup blob format
 ([auth.md](auth.md#blob-format-v1)) and the golden vectors
 (`client-crypto-vectors.json`, `make vectors`).

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM auth_applications\n               WHERE account_id = $1 AND landed_at IS NOT NULL\n                 AND reciprocated_at IS NOT NULL\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3272b7b3b66270d015adad38a80be29f213d7fb4a522c00c1208b986ce4a0013"
+}

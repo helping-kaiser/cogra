@@ -21,7 +21,7 @@ import { RestoreCard } from "./applicant-status";
 
 type DeviceState = {
   keyOnDevice: boolean;
-  reciprocationHandled: boolean;
+  reciprocationDismissed: boolean;
   pendingCount: number;
 };
 
@@ -48,12 +48,12 @@ export function MemberStatus({
   const readDevice = useCallback(() => {
     return Promise.all([
       store.actorKey(),
-      store.reciprocationHandled(),
+      store.reciprocationDismissed(),
       store.handshakeIds(),
-    ]).then(([key, handled, pending]) => {
+    ]).then(([key, dismissed, pending]) => {
       setDevice({
         keyOnDevice: key !== null,
-        reciprocationHandled: handled,
+        reciprocationDismissed: dismissed,
         pendingCount: pending.length,
       });
     });
@@ -65,9 +65,15 @@ export function MemberStatus({
 
   if (device === null) return null;
 
+  // The pair's state is the graph's (hasReciprocated); the device
+  // remembers only a dismissal.
   const inviter = me.invitedBy;
   const prompt =
-    inviter !== null && device.keyOnDevice && !device.reciprocationHandled && !reciprocated;
+    inviter !== null &&
+    device.keyOnDevice &&
+    !me.hasReciprocated &&
+    !device.reciprocationDismissed &&
+    !reciprocated;
 
   const onReciprocate = async () => {
     if (signing || inviter === null) return;
@@ -84,7 +90,8 @@ export function MemberStatus({
       results.push(await signer.signStaged(staged));
     }
     if (results.every((result) => result.kind === "done")) {
-      await store.markReciprocationHandled();
+      // No device mark: the in-flight staged write already answers
+      // hasReciprocated on the next profile read.
       setReciprocated(true);
     } else {
       setSigningFailed(true);
@@ -94,7 +101,7 @@ export function MemberStatus({
   };
 
   const onSkip = async () => {
-    await store.markReciprocationHandled();
+    await store.markReciprocationDismissed();
     await readDevice();
   };
 

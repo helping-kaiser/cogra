@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM mirror_record_legs\n               WHERE family = 'opinion' AND leg = 'binary'\n                 AND source = $1 AND target = $2\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d1f359392c0a033a4fd20850ba6f2e9b21d0da59c6c0e8a8ab8831d3107ca6b2"
+}
