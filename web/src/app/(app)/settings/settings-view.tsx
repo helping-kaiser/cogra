@@ -39,11 +39,15 @@ type SettingsAction =
   | "sessionRevoked"
   | "othersRevoked";
 
-type Feedback =
+/** Where a feedback line renders — beside the controls that acted. */
+type Section = "backup" | "sessions" | "password" | "handle" | "email";
+
+type Feedback = { section: Section } & (
   | { kind: "done"; action: SettingsAction }
   | { kind: "refused"; code: ErrorCode }
   | { kind: "backup"; result: "malformedCode" | "wrongCode" | "noBackup" }
-  | { kind: "transport" };
+  | { kind: "transport" }
+);
 
 /** Enable-late from the retained seed, replace via the current code, or nothing to back up here. */
 type BackupMode = "create" | "rekey" | "none";
@@ -59,9 +63,11 @@ function doneMessage(action: SettingsAction): string {
     case "emailConfirmed":
       return "Email updated.";
     case "sessionRevoked":
-      return "Session revoked.";
+      // Revocation kills the refresh token; the access token cannot be
+      // invalidated mid-TTL (auth.md "Sessions") — say so.
+      return "Session revoked. That device may stay signed in for up to 15 minutes.";
     case "othersRevoked":
-      return "All other sessions signed out.";
+      return "All other sessions signed out. Devices may stay signed in for up to 15 minutes.";
   }
 }
 
@@ -156,6 +162,7 @@ export function SettingsView({
 
   /** The one busy mutex: runs the call, maps the outcome, clears fields on success. */
   const act = async (
+    section: Section,
     call: () => Promise<Outcome<unknown>>,
     action: SettingsAction,
     onSuccess?: () => void,
@@ -167,17 +174,29 @@ export function SettingsView({
     setBusy(false);
     switch (outcome.kind) {
       case "success":
-        setFeedback({ kind: "done", action });
+        setFeedback({ section, kind: "done", action });
         onSuccess?.();
         return true;
       case "refused":
-        setFeedback({ kind: "refused", code: outcome.errors[0].code });
+        setFeedback({ section, kind: "refused", code: outcome.errors[0].code });
         return false;
       case "failed":
-        setFeedback({ kind: "transport" });
+        setFeedback({ section, kind: "transport" });
         return false;
     }
   };
+
+  /** The section's feedback line, rendered beside the controls that acted. */
+  const feedbackLine = (section: Section) =>
+    feedback !== null && feedback.section === section ? (
+      <p
+        role={feedback.kind === "done" ? "status" : "alert"}
+        data-testid="settings_feedback"
+        className={feedback.kind === "done" ? "text-sm" : "text-sm text-red-600 dark:text-red-400"}
+      >
+        {feedbackMessage(feedback)}
+      </p>
+    ) : null;
 
   const onCreateBackup = async () => {
     if (busy) return;
@@ -188,10 +207,10 @@ export function SettingsView({
     if (result.kind === "created") {
       setNewBackupCode(result.code);
     } else if (result.kind === "refused") {
-      setFeedback({ kind: "refused", code: result.errors[0].code });
+      setFeedback({ section: "backup", kind: "refused", code: result.errors[0].code });
     } else if (result.kind === "failed" || result.kind === "noSeed") {
       // noSeed means custody moved under us; re-reading flips the mode.
-      setFeedback({ kind: "transport" });
+      setFeedback({ section: "backup", kind: "transport" });
       await readCustody();
     }
   };
@@ -211,13 +230,13 @@ export function SettingsView({
       case "malformedCode":
       case "wrongCode":
       case "noBackup":
-        setFeedback({ kind: "backup", result: result.kind });
+        setFeedback({ section: "backup", kind: "backup", result: result.kind });
         break;
       case "refused":
-        setFeedback({ kind: "refused", code: result.errors[0].code });
+        setFeedback({ section: "backup", kind: "refused", code: result.errors[0].code });
         break;
       default:
-        setFeedback({ kind: "transport" });
+        setFeedback({ section: "backup", kind: "transport" });
         break;
     }
   };
@@ -228,26 +247,31 @@ export function SettingsView({
   };
 
   const onRevokeSession = async (id: string) => {
-    await act(() => revokeSession(client, id), "sessionRevoked");
+    await act("sessions", () => revokeSession(client, id), "sessionRevoked");
     await refresh();
   };
 
   const onRevokeOthers = async () => {
-    await act(() => revokeOtherSessions(client), "othersRevoked");
+    await act("sessions", () => revokeOtherSessions(client), "othersRevoked");
     await refresh();
   };
 
   const onChangePassword = async (event: React.FormEvent) => {
     event.preventDefault();
-    await act(() => changePassword(client, currentPassword, newPassword), "passwordChanged", () => {
-      setCurrentPassword("");
-      setNewPassword("");
-    });
+    await act(
+      "password",
+      () => changePassword(client, currentPassword, newPassword),
+      "passwordChanged",
+      () => {
+        setCurrentPassword("");
+        setNewPassword("");
+      },
+    );
   };
 
   const onChangeHandle = async (event: React.FormEvent) => {
     event.preventDefault();
-    await act(() => changeHandle(client, newHandle.trim()), "handleChanged", () => {
+    await act("handle", () => changeHandle(client, newHandle.trim()), "handleChanged", () => {
       setNewHandle("");
     });
   };
@@ -255,6 +279,7 @@ export function SettingsView({
   const onRequestEmailChange = async (event: React.FormEvent) => {
     event.preventDefault();
     const requested = await act(
+      "email",
       () => requestEmailChange(client, newEmail.trim(), emailChangePassword),
       "emailChangeRequested",
       () => setEmailChangePassword(""),
@@ -264,7 +289,7 @@ export function SettingsView({
 
   const onConfirmEmailChange = async (event: React.FormEvent) => {
     event.preventDefault();
-    await act(() => confirmEmailChange(client, emailChangeCode), "emailConfirmed", () => {
+    await act("email", () => confirmEmailChange(client, emailChangeCode), "emailConfirmed", () => {
       setNewEmail("");
       setEmailChangeCode("");
       setEmailChangeRequested(false);
@@ -292,19 +317,7 @@ export function SettingsView({
       </Link>
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
-      {feedback !== null && (
-        <p
-          role={feedback.kind === "done" ? "status" : "alert"}
-          data-testid="settings_feedback"
-          className={
-            feedback.kind === "done" ? "text-sm" : "text-sm text-red-600 dark:text-red-400"
-          }
-        >
-          {feedbackMessage(feedback)}
-        </p>
-      )}
-
-      <Card>
+      <Card testId="settings_backup_card">
         <h2 className="font-medium">Key backup</h2>
         {newBackupCode !== null ? (
           <>
@@ -388,9 +401,10 @@ export function SettingsView({
             </Link>
           </>
         ) : null}
+        {feedbackLine("backup")}
       </Card>
 
-      <Card>
+      <Card testId="settings_sessions_card">
         <h2 className="font-medium">Sessions</h2>
         <ul className="flex flex-col gap-2">
           {sessions.map((session) => (
@@ -426,9 +440,10 @@ export function SettingsView({
         >
           Sign out everywhere else
         </button>
+        {feedbackLine("sessions")}
       </Card>
 
-      <Card>
+      <Card testId="settings_credentials_card">
         <h2 className="font-medium">Credentials</h2>
         <form onSubmit={onChangePassword} className="flex flex-col gap-3" noValidate>
           <PasswordField
@@ -453,6 +468,7 @@ export function SettingsView({
             autoComplete="new-password"
             testId="settings_new_password"
           />
+          {feedbackLine("password")}
           <button
             type="submit"
             data-testid="settings_change_password"
@@ -482,6 +498,7 @@ export function SettingsView({
               className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
             />
           </div>
+          {feedbackLine("handle")}
           <button
             type="submit"
             data-testid="settings_change_handle"
@@ -521,6 +538,7 @@ export function SettingsView({
             autoComplete="current-password"
             testId="settings_email_password"
           />
+          {feedbackLine("email")}
           <button
             type="submit"
             data-testid="settings_request_email"
