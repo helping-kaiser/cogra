@@ -52,10 +52,12 @@ class FakeTokenStore : TokenStore {
     }
 }
 
+/** Account-implicit like the interface: one active account's slot. */
 class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
     var pendingBlob: ByteArray? = null
     var dismissedReciprocation = false
+    var forgetOnSignOut = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
 
     override suspend fun actorSeed(): ByteArray? = seed
@@ -90,6 +92,20 @@ class FakeIdentityStore : IdentityStore {
 
     override suspend fun markReciprocationDismissed() {
         dismissedReciprocation = true
+    }
+
+    override suspend fun forgetOnSignOut(): Boolean = forgetOnSignOut
+
+    override suspend fun setForgetOnSignOut(value: Boolean) {
+        forgetOnSignOut = value
+    }
+
+    override suspend fun purge() {
+        seed = null
+        pendingBlob = null
+        dismissedReciprocation = false
+        forgetOnSignOut = false
+        handshakes.clear()
     }
 }
 

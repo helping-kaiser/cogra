@@ -119,8 +119,8 @@ class HomeScreenTest {
 
     @Test
     fun aForeignDeviceKeyGetsItsOwnCardNotTheWaitingHint() {
-        // keyOnDevice without keyAttached: another account's key sits on
-        // the device and the silent repair-attach was refused.
+        // keyOnDevice without keyAttached: this account's slot holds a
+        // key the server refused to accept on the repair-attach.
         render(applicant(awaiting(keyAttached = false, keyOnDevice = true)))
         compose.onNodeWithTag("home_key_elsewhere").assertExists()
         compose.onNodeWithTag("home_fresh_key").assertExists()

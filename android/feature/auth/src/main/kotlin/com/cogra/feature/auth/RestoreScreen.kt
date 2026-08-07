@@ -39,6 +39,7 @@ fun RestoreRoute(
     RestoreScreen(
         state = state,
         onCodeChange = viewModel::onCodeChange,
+        onForgetOnSignOutChange = viewModel::onForgetOnSignOutChange,
         onSubmit = viewModel::onSubmit,
     )
 }
@@ -47,6 +48,7 @@ fun RestoreRoute(
 fun RestoreScreen(
     state: RestoreUiState,
     onCodeChange: (String) -> Unit,
+    onForgetOnSignOutChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
 ) {
     Scaffold { padding ->
@@ -73,6 +75,11 @@ fun RestoreScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("restore_code"),
+            )
+            ForgetOnSignOutRow(
+                checked = state.forgetOnSignOut,
+                onCheckedChange = onForgetOnSignOutChange,
+                testTag = "restore_dont_remember",
             )
             when (state.result) {
                 is RestoreResult.MalformedCode -> ErrorLine("restore_error", R.string.restore_malformed)

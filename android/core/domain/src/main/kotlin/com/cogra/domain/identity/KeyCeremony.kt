@@ -142,7 +142,13 @@ class ActorRestorer @Inject constructor(
     private val identity: IdentityStore,
     private val account: AccountRepository,
 ) {
-    suspend fun restore(codeInput: String): RestoreResult {
+    /**
+     * [forgetOnSignOut] is the restore form's "don't remember me"
+     * opt-in (auth.md "Sign-out"). Checked, it flags the account;
+     * unchecked, it leaves the login-time choice standing — restore is
+     * an extra chance to opt out, not a silent revocation.
+     */
+    suspend fun restore(codeInput: String, forgetOnSignOut: Boolean): RestoreResult {
         val code = try {
             RecoveryCode.fromInput(codeInput)
         } catch (e: KeyBackupException) {
@@ -161,21 +167,41 @@ class ActorRestorer @Inject constructor(
             return RestoreResult.WrongCode
         }
         identity.saveActorSeed(seed)
+        if (forgetOnSignOut) identity.setForgetOnSignOut(true)
         return RestoreResult.Restored
+    }
+}
+
+/**
+ * The local half of ending a session, shared by sign-out and the
+ * refresh machinery's reuse-detected token clear: purge the account's
+ * identity material when it opted out of being remembered (auth.md
+ * "Sign-out"), then forget the tokens — in that order, because the
+ * purge needs the tokens to know which account's slot to clear.
+ */
+class EndLocalSession @Inject constructor(
+    private val identity: IdentityStore,
+    private val tokens: TokenStore,
+) {
+    suspend fun end() {
+        if (identity.forgetOnSignOut()) identity.purge()
+        tokens.clear()
     }
 }
 
 /**
  * Sign-out: revoke the current session server-side (best effort — a
  * dead network must not trap the user signed in) and forget the local
- * tokens. The actor key stays: signing out is not losing the actor.
+ * tokens. The actor key stays in its account's slot — signing out is
+ * not losing the actor — unless the account opted into "don't remember
+ * me", which purges its material.
  */
 class SignOut @Inject constructor(
     private val sessions: SessionRepository,
-    private val tokens: TokenStore,
+    private val endLocalSession: EndLocalSession,
 ) {
     suspend fun signOut() {
         sessions.revokeSession(null)
-        tokens.clear()
+        endLocalSession.end()
     }
 }

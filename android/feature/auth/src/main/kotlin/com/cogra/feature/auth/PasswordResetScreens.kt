@@ -209,7 +209,7 @@ fun PasswordResetScreen(
 }
 
 private fun ErrorCode.resetMessage(): Int = when (this) {
-    ErrorCode.VERIFICATION_TOKEN_INVALID -> R.string.reset_token_invalid
+    ErrorCode.RESET_TOKEN_INVALID -> R.string.reset_token_invalid
     ErrorCode.WEAK_PASSWORD -> R.string.error_weak_password
     ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
     else -> R.string.error_generic

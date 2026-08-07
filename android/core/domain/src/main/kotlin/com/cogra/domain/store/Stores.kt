@@ -11,8 +11,10 @@ import com.cogra.domain.AuthTokens
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Session tokens. The refresh token rotates on every use — [save]
- * overwrites the stored pair each refresh.
+ * Session tokens — one slot, one active session at a time. The refresh
+ * token rotates on every use — [save] overwrites the stored pair each
+ * refresh. The pair carries the account it authenticates
+ * ([AuthTokens.accountId]); that is what scopes the [IdentityStore].
  */
 interface TokenStore {
     /** The current pair; null when signed out. Drives auth-state navigation. */
@@ -34,6 +36,15 @@ interface TokenStore {
  * (the private nonce and pre-signature exist only on the device —
  * trusting the server's echo would weaken "the device verifies what it
  * signs").
+ *
+ * Every value is bound to the account it belongs to, never to a
+ * device-global slot (auth.md "Multi-account device custody"). The
+ * interface stays account-implicit: every consumer acts for the
+ * signed-in account, so the implementation resolves the active account
+ * from the token store — an explicit account parameter would push
+ * session plumbing into every use-case and fake for no caller that
+ * needs it. With no active account, reads return null/empty and writes
+ * are dropped.
  */
 interface IdentityStore {
     suspend fun actorSeed(): ByteArray?
@@ -67,4 +78,19 @@ interface IdentityStore {
     suspend fun reciprocationDismissed(): Boolean
 
     suspend fun markReciprocationDismissed()
+
+    /**
+     * The "don't remember me" opt-in (auth.md "Sign-out"): whether the
+     * active account's material is purged when its session ends.
+     */
+    suspend fun forgetOnSignOut(): Boolean
+
+    suspend fun setForgetOnSignOut(value: Boolean)
+
+    /**
+     * The opt-in's teeth: remove ALL of the active account's material —
+     * seed, pending blob, handshake material, and flags. Other
+     * accounts' slots are untouched.
+     */
+    suspend fun purge()
 }

@@ -36,7 +36,7 @@ import org.junit.Test
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
     var check: Outcome<InviteCheck?> =
         Outcome.Success(InviteCheck(usable = true, inviterHandle = "inviter", expiresAt = Instant.MAX))
-    var registerOutcome: Outcome<AuthTokens> = Outcome.Success(AuthTokens("access", "refresh"))
+    var registerOutcome: Outcome<AuthTokens> = Outcome.Success(AuthTokens("access", "refresh", "u1"))
     var lastRegisteredHandle: String? = null
     var attachOutcome: Outcome<Unit> = Outcome.Success(Unit)
     val attachedKeys = mutableListOf<Pair<String, String>>()
@@ -63,7 +63,7 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
     // Terminal at once, so a kicked flow loop stops after one pass.
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> {
         statusPolls += 1
-        return Outcome.Success(ApplicationStatus(AccountState.MEMBER, null, null))
+        return Outcome.Success(ApplicationStatus(AccountState.MEMBER, null, null, null))
     }
 }
 
@@ -163,7 +163,7 @@ class OnboardingViewModelsTest {
         assertThat(vm.state.value.handle).isEqualTo("joiner")
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(tokens.current()).isEqualTo(AuthTokens("access", "refresh"))
+        assertThat(tokens.current()).isEqualTo(AuthTokens("access", "refresh", "u1"))
         assertThat(onboarding.lastRegisteredHandle).isEqualTo("joiner")
     }
 

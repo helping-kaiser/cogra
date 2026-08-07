@@ -78,13 +78,13 @@ class PasswordResetViewModelTest {
     @Test
     fun anInvalidTokenRefusalSurfacesItsCodeAndTypingClearsIt() = runTest(dispatcher) {
         account.confirmOutcome =
-            Outcome.Refused(listOf(UserError(ErrorCode.VERIFICATION_TOKEN_INVALID, "bad token")))
+            Outcome.Refused(listOf(UserError(ErrorCode.RESET_TOKEN_INVALID, "bad token")))
         val vm = viewModel()
         vm.onTokenChange("stale")
         vm.onNewPasswordChange("a strong password")
         vm.onConfirm()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.error).isEqualTo(ErrorCode.VERIFICATION_TOKEN_INVALID)
+        assertThat(vm.state.value.error).isEqualTo(ErrorCode.RESET_TOKEN_INVALID)
         assertThat(vm.state.value.confirmed).isFalse()
         vm.onTokenChange("stale2")
         assertThat(vm.state.value.error).isNull()

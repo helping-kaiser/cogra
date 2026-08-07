@@ -8,6 +8,8 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.network.InMemoryTokenStore
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.google.common.truth.Truth.assertThat
@@ -27,6 +29,10 @@ class RefreshTest {
     private lateinit var server: MockWebServer
     private lateinit var client: ApolloClient
     private val tokenStore = InMemoryTokenStore()
+    private val identity = FakeIdentityStore()
+
+    private fun refresher() =
+        SessionRefresher(tokenStore, EndLocalSession(identity, tokenStore), Provider { client })
 
     @Before
     fun setUp() {
@@ -50,7 +56,8 @@ class RefreshTest {
 
     private fun refreshSuccess(access: String, refresh: String) =
         """{"data":{"refreshSession":{"__typename":"RefreshPayload",
-           "auth":{"__typename":"AuthSession","accessToken":"$access","refreshToken":"$refresh"},
+           "auth":{"__typename":"AuthSession","accessToken":"$access","refreshToken":"$refresh",
+           "user":{"__typename":"User","id":"u1"}},
            "userErrors":[]}}}"""
 
     /**
@@ -65,10 +72,10 @@ class RefreshTest {
 
     @Test
     fun anExpiredAccessTokenRefreshesAndReplaysOnce() = runTest {
-        tokenStore.save(AuthTokens("stale-access", "refresh-1"))
+        tokenStore.save(AuthTokens("stale-access", "refresh-1", "u1"))
         val sessions = SessionRepositoryImpl(
             client,
-            AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client })),
+            AuthGuard(tokenStore, refresher()),
         )
         enqueue(unauthenticated())
         enqueue(refreshSuccess("access-2", "refresh-2"))
@@ -81,7 +88,7 @@ class RefreshTest {
         assertThat((outcome as Outcome.Success).value).isEqualTo(3)
         assertThat(server.requestCount).isEqualTo(3)
         // The rotated pair replaced the stored one.
-        assertThat(tokenStore.current()).isEqualTo(AuthTokens("access-2", "refresh-2"))
+        assertThat(tokenStore.current()).isEqualTo(AuthTokens("access-2", "refresh-2", "u1"))
         // The replay carried the fresh access token.
         server.takeRequest()
         server.takeRequest()
@@ -91,10 +98,10 @@ class RefreshTest {
 
     @Test
     fun aStillUnauthenticatedReplayGivesUp() = runTest {
-        tokenStore.save(AuthTokens("stale", "refresh-1"))
+        tokenStore.save(AuthTokens("stale", "refresh-1", "u1"))
         val sessions = SessionRepositoryImpl(
             client,
-            AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client })),
+            AuthGuard(tokenStore, refresher()),
         )
         enqueue(unauthenticated())
         enqueue(refreshSuccess("access-2", "refresh-2"))
@@ -110,8 +117,9 @@ class RefreshTest {
 
     @Test
     fun reuseDetectionSignsTheDeviceOut() = runTest {
-        tokenStore.save(AuthTokens("access", "stolen-refresh"))
-        val refresher = SessionRefresher(tokenStore, Provider { client })
+        tokenStore.save(AuthTokens("access", "stolen-refresh", "u1"))
+        identity.seed = byteArrayOf(1, 2, 3)
+        val refresher = refresher()
         enqueue(
             """{"data":{"refreshSession":{"__typename":"RefreshPayload","auth":null,
                "userErrors":[{"__typename":"UserError","message":"reuse detected",
@@ -119,12 +127,32 @@ class RefreshTest {
         )
         assertThat(refresher.refresh("access")).isFalse()
         assertThat(tokenStore.current()).isNull()
+        // Not opted out: the identity material stays.
+        assertThat(identity.seed).isNotNull()
+    }
+
+    @Test
+    fun reuseDetectionPurgesAnAccountThatOptedOut() = runTest {
+        // The refresh-failure token clear honors "don't remember me"
+        // exactly like sign-out (auth.md "Sign-out").
+        tokenStore.save(AuthTokens("access", "stolen-refresh", "u1"))
+        identity.seed = byteArrayOf(1, 2, 3)
+        identity.forgetOnSignOut = true
+        val refresher = refresher()
+        enqueue(
+            """{"data":{"refreshSession":{"__typename":"RefreshPayload","auth":null,
+               "userErrors":[{"__typename":"UserError","message":"reuse detected",
+               "code":"REFRESH_TOKEN_INVALID","field":null}]}}}""",
+        )
+        assertThat(refresher.refresh("access")).isFalse()
+        assertThat(tokenStore.current()).isNull()
+        assertThat(identity.seed).isNull()
     }
 
     @Test
     fun concurrentCallersShareOneRefresh() = runTest {
-        tokenStore.save(AuthTokens("stale", "refresh-1"))
-        val refresher = SessionRefresher(tokenStore, Provider { client })
+        tokenStore.save(AuthTokens("stale", "refresh-1", "u1"))
+        val refresher = refresher()
         enqueue(refreshSuccess("access-2", "refresh-2"))
 
         val results = listOf(
@@ -135,12 +163,12 @@ class RefreshTest {
         assertThat(results).containsExactly(true, true)
         // The second caller found fresh tokens and never hit the server.
         assertThat(server.requestCount).isEqualTo(1)
-        assertThat(tokenStore.current()).isEqualTo(AuthTokens("access-2", "refresh-2"))
+        assertThat(tokenStore.current()).isEqualTo(AuthTokens("access-2", "refresh-2", "u1"))
     }
 
     @Test
     fun refreshingWhileSignedOutIsANoOp() = runTest {
-        val refresher = SessionRefresher(tokenStore, Provider { client })
+        val refresher = refresher()
         assertThat(refresher.refresh(null)).isFalse()
         assertThat(server.requestCount).isEqualTo(0)
     }
