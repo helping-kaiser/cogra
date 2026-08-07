@@ -105,14 +105,14 @@ class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) :
     override suspend fun handshakeIds(): Set<String> =
         store.names(HS_PREFIX).map { it.removePrefix(HS_PREFIX) }.toSet()
 
-    override suspend fun reciprocationHandled(): Boolean = store.get(RECIPROCATION) != null
+    override suspend fun reciprocationDismissed(): Boolean = store.get(RECIPROCATION) != null
 
-    override suspend fun markReciprocationHandled() = store.put(RECIPROCATION, byteArrayOf(1))
+    override suspend fun markReciprocationDismissed() = store.put(RECIPROCATION, byteArrayOf(1))
 
     private companion object {
         const val SEED = "actor_seed"
         const val PENDING_BLOB = "pending_backup_blob"
-        const val RECIPROCATION = "reciprocation_handled"
+        const val RECIPROCATION = "reciprocation_dismissed"
         const val HS_PREFIX = "handshake:"
     }
 }

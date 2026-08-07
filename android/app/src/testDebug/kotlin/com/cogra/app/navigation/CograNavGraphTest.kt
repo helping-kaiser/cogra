@@ -82,9 +82,9 @@ class CograNavGraphTest {
         tokens.save(AuthTokens(accessToken = "access", refreshToken = "refresh"))
     }
 
-    private fun member() = UserProfile("u1", "jakob", null, AccountState.MEMBER, invitedBy = null)
+    private fun member() = UserProfile("u1", "jakob", null, AccountState.MEMBER, true, invitedBy = null)
 
-    private fun applicant() = UserProfile("u1", "joiner", null, AccountState.APPLICANT, invitedBy = null)
+    private fun applicant() = UserProfile("u1", "joiner", null, AccountState.APPLICANT, false, invitedBy = null)
 
     private fun applicantStatus(keyAttached: Boolean) = ApplicationStatus(
         accountState = AccountState.APPLICANT,

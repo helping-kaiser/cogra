@@ -138,10 +138,13 @@ class HomeViewModel @Inject constructor(
                     // poked) for an applicant, never for a member.
                     if (applicant) registration.ensureAdvancing()
                     val member = profile?.accountState == AccountState.MEMBER
+                    // The pair's state is the graph's (hasReciprocated);
+                    // the device remembers only a dismissal.
                     val prompt = member &&
                         profile?.invitedBy != null &&
                         seedOnDevice &&
-                        !identity.reciprocationHandled()
+                        profile?.hasReciprocated == false &&
+                        !identity.reciprocationDismissed()
                     _state.update {
                         it.copy(
                             loading = false,
@@ -253,7 +256,8 @@ class HomeViewModel @Inject constructor(
             }
             val results = signer.sign(prepared)
             if (results.all { it is WriteResult.Done }) {
-                identity.markReciprocationHandled()
+                // No device mark: the in-flight staged write already
+                // answers hasReciprocated on the next profile read.
                 _state.update {
                     it.copy(signing = false, reciprocated = true, reciprocationTarget = null)
                 }
@@ -266,7 +270,7 @@ class HomeViewModel @Inject constructor(
     /** Dismissal is remembered — the prompt is an offer, not a nag. */
     fun onDismissReciprocation() {
         viewModelScope.launch {
-            identity.markReciprocationHandled()
+            identity.markReciprocationDismissed()
             _state.update { it.copy(reciprocationTarget = null) }
         }
     }

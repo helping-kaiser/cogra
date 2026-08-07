@@ -47,6 +47,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER") {
           handle: "ada",
           displayName: null,
           accountState,
+          hasReciprocated: true,
           invitedBy: null,
         },
       },
