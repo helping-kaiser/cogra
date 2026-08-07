@@ -98,6 +98,16 @@ describe("ApplicantStatus", () => {
     expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
   });
 
+  it("names the foreign key when the browser's key was refused at the attach", () => {
+    // keyOnDevice without keyAttached: another account's key sits in the
+    // store and the silent repair-attach was refused (ACTOR_KEY_IN_USE).
+    renderStatus(approval({ emailVerified: true, keyOnDevice: true }));
+    expect(screen.getByTestId("home_key_elsewhere")).toBeInTheDocument();
+    expect(screen.getByTestId("home_fresh_key")).toHaveAttribute("href", "/key");
+    expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("home_waiting")).not.toBeInTheDocument();
+  });
+
   it("shows the dismissible waiting hint once both proofs are in", () => {
     renderStatus(approval({ emailVerified: true, keyAttached: true, keyOnDevice: true }));
     expect(screen.getByTestId("home_waiting")).toBeInTheDocument();
