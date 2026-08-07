@@ -55,7 +55,7 @@ class FakeTokenStore : TokenStore {
 class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
     var pendingBlob: ByteArray? = null
-    var reciprocationDone = false
+    var dismissedReciprocation = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
 
     override suspend fun actorSeed(): ByteArray? = seed
@@ -86,10 +86,10 @@ class FakeIdentityStore : IdentityStore {
 
     override suspend fun handshakeIds(): Set<String> = handshakes.keys.toSet()
 
-    override suspend fun reciprocationHandled(): Boolean = reciprocationDone
+    override suspend fun reciprocationDismissed(): Boolean = dismissedReciprocation
 
-    override suspend fun markReciprocationHandled() {
-        reciprocationDone = true
+    override suspend fun markReciprocationDismissed() {
+        dismissedReciprocation = true
     }
 }
 

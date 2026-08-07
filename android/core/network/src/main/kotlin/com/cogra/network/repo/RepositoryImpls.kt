@@ -320,6 +320,7 @@ class AccountRepositoryImpl @Inject constructor(
                         handle = me.handle,
                         displayName = me.displayName,
                         accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
+                        hasReciprocated = me.hasReciprocated,
                         invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
                     ),
                 )

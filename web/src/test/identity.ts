@@ -9,12 +9,12 @@ import type { IdentityStore } from "@/lib/identity/store";
 export function fakeIdentityStore(initial: {
   keyOnDevice?: boolean;
   seed?: Uint8Array | null;
-  reciprocationHandled?: boolean;
+  reciprocationDismissed?: boolean;
   handshakeIds?: string[];
 } = {}): IdentityStore {
   let keyOnDevice = initial.keyOnDevice ?? false;
   let seed = initial.seed ?? null;
-  let handled = initial.reciprocationHandled ?? false;
+  let dismissed = initial.reciprocationDismissed ?? false;
   let pendingBlob: Uint8Array | null = null;
   const handshakes = new Set(initial.handshakeIds ?? []);
   // The UI only checks key presence; the marker object stands in for a
@@ -52,9 +52,9 @@ export function fakeIdentityStore(initial: {
       return Promise.resolve();
     },
     handshakeIds: () => Promise.resolve([...handshakes]),
-    reciprocationHandled: () => Promise.resolve(handled),
-    markReciprocationHandled() {
-      handled = true;
+    reciprocationDismissed: () => Promise.resolve(dismissed),
+    markReciprocationDismissed() {
+      dismissed = true;
       return Promise.resolve();
     },
   };

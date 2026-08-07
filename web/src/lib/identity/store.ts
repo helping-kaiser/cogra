@@ -18,7 +18,7 @@ const BACKUP = "pendingBackup";
 const HANDSHAKE = "handshake";
 const UX = "ux";
 const SINGLETON_KEY = "current";
-const RECIPROCATION_KEY = "reciprocationHandled";
+const RECIPROCATION_KEY = "reciprocationDismissed";
 
 type ActorRecord = {
   privateKey: CryptoKey;
@@ -54,14 +54,14 @@ export type IdentityStore = {
   clearHandshake(stagedWriteId: string): Promise<void>;
   handshakeIds(): Promise<string[]>;
   /**
-   * Device-local UX state, the slice-1 interim for the absent
-   * User.hasReciprocated: whether the first-login reciprocation prompt
-   * was answered — signed or dismissed — on this device. One-way; the
-   * prompt legitimately reappears on a new device (auth.md "Approval
-   * and landing").
+   * Device-local UX state: whether the first-login reciprocation
+   * prompt was dismissed on this device. Dismissal memory only —
+   * whether the pair is complete is the graph-derived
+   * User.hasReciprocated (auth.md "Reciprocation is the joiner's own
+   * act"); the offer legitimately reappears on a new device.
    */
-  reciprocationHandled(): Promise<boolean>;
-  markReciprocationHandled(): Promise<void>;
+  reciprocationDismissed(): Promise<boolean>;
+  markReciprocationDismissed(): Promise<void>;
 };
 
 function asPromise<T>(req: IDBRequest<T>): Promise<T> {
@@ -185,11 +185,11 @@ export function createIdentityStore(): IdentityStore {
       return keys.map(String);
     },
 
-    async reciprocationHandled() {
+    async reciprocationDismissed() {
       return (await read<boolean>(UX, RECIPROCATION_KEY)) === true;
     },
 
-    async markReciprocationHandled() {
+    async markReciprocationDismissed() {
       await write(UX, RECIPROCATION_KEY, true);
     },
   };
