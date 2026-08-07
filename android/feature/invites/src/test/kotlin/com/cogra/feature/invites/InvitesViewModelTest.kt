@@ -33,6 +33,7 @@ class InvitesViewModelTest {
     private val account = object : ThrowingAccountRepository() {
         val links = mutableListOf<InviteLinkInfo>()
         var approveOutcome: Outcome<List<PreparedWriteView>>? = null
+        var revokeOutcome: Outcome<Unit>? = null
 
         override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = Outcome.Success(links.toList())
 
@@ -42,12 +43,22 @@ class InvitesViewModelTest {
             prefillPInterest: Double,
             singleUse: Boolean,
         ): Outcome<InviteLinkInfo> {
-            val link = InviteLinkInfo("link-${links.size}", singleUse, Instant.EPOCH, expiresAt, null, emptyList())
+            val link = InviteLinkInfo(
+                "link-${links.size}",
+                prefillPDirected,
+                prefillPInterest,
+                singleUse,
+                Instant.EPOCH,
+                expiresAt,
+                null,
+                emptyList(),
+            )
             links += link
             return Outcome.Success(link)
         }
 
         override suspend fun revokeInviteLink(id: String): Outcome<Unit> {
+            revokeOutcome?.let { return it }
             val index = links.indexOfFirst { it.id == id }
             links[index] = links[index].copy(revokedAt = Instant.EPOCH)
             return Outcome.Success(Unit)
@@ -105,6 +116,17 @@ class InvitesViewModelTest {
         assertThat(writes.staged.values.single().state)
             .isEqualTo(com.cogra.domain.WriteState.RELAYING)
         assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aRefusedRevocationSurfaces() = runTest(dispatcher) {
+        account.revokeOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such live invite link")))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onRevoke("link-0")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.error).isEqualTo(ErrorCode.NOT_FOUND)
     }
 
     @Test
