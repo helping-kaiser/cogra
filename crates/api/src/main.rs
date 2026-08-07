@@ -6,9 +6,11 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use api::auth::AuthConfig;
+use api::breach::{BreachCorpus, DisabledCorpus, HibpCorpus};
 use api::l1::StandInBoundary;
 use api::mailer::{DevMailer, WebOrigin};
 use api::onboarding::OnboardingConfig;
+use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
 use l1_standin::{StandIn, StandInConfig};
 use tracing_subscriber::EnvFilter;
@@ -107,6 +109,34 @@ async fn main() -> anyhow::Result<()> {
     .parse()
     .context("ADMISSION_BURN_MICRO must be an integer of micro-units")?;
 
+    // The auth-endpoint throttle state's GC sweep (auth.md "Rate
+    // limiting").
+    let rate_limit_gc_interval: u64 = env_or("RATE_LIMIT_GC_INTERVAL_SECS", "3600")
+        .parse()
+        .context("RATE_LIMIT_GC_INTERVAL_SECS must be a number of seconds")?;
+    tokio::spawn(api::ratelimit::gc_loop(
+        pool.clone(),
+        rate_limit_gc_interval,
+    ));
+
+    // The breach corpus (auth.md "Password requirements"): the live HIBP
+    // range API unless explicitly switched off for offline dev.
+    let breach: Arc<dyn BreachCorpus> = match env_or("BREACH_CHECK", "hibp").as_str() {
+        "hibp" => Arc::new(HibpCorpus::new().context("building the HIBP client")?),
+        "off" => {
+            tracing::warn!("BREACH_CHECK=off: passwords are not breach-checked");
+            Arc::new(DisabledCorpus)
+        }
+        other => anyhow::bail!("BREACH_CHECK must be 'hibp' or 'off', got '{other}'"),
+    };
+
+    // Client-IP derivation (auth.md "Rate limiting"): the socket peer by
+    // default; a forwarded-header source only when a trusted reverse
+    // proxy is the sole ingress.
+    let ip_source: axum_client_ip::ClientIpSource = env_or("CLIENT_IP_SOURCE", "ConnectInfo")
+        .parse()
+        .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
+
     let auth = auth_config()?;
     let schema = api::schema::build(ApiContext {
         pool,
@@ -121,6 +151,8 @@ async fn main() -> anyhow::Result<()> {
             admission_burn_micro,
             gc_after_epochs,
         },
+        rate_limits: RateLimitConfig::from_env()?,
+        breach,
     });
     let addr = format!(
         "{}:{}",
@@ -131,6 +163,11 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| format!("binding {addr}"))?;
     tracing::info!("listening on http://{addr} — /graphql, /health, /playground (dev)");
-    axum::serve(listener, api::app(schema, auth)).await?;
+    axum::serve(
+        listener,
+        api::app(schema, auth, ip_source)
+            .into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await?;
     Ok(())
 }
