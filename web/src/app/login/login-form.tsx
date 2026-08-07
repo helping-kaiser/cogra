@@ -11,6 +11,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
 import { logIn } from "@/lib/api/auth-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { PasswordField } from "@/lib/ui/password-field";
@@ -26,7 +27,12 @@ function loginMessage(code: ErrorCode): string {
   }
 }
 
-export function LoginForm() {
+export function LoginForm({
+  identity = identityStore,
+}: {
+  /** Test injection, as SessionProvider's store. */
+  identity?: IdentityStore;
+} = {}) {
   const client = useApolloClient();
   const store = useTokenStore();
   const phase = useAuthPhase();
@@ -34,6 +40,7 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dontRemember, setDontRemember] = useState(false);
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
@@ -59,6 +66,10 @@ export function LoginForm() {
     switch (outcome.kind) {
       case "success":
         store.save(outcome.value);
+        // Recorded per account, after save() sets the active account
+        // custody resolves by — always written, so an unchecked login
+        // clears an earlier flag (auth.md "Sign-out").
+        await identity.setEphemeral(dontRemember);
         break;
       case "refused":
         setError(outcome.errors[0].code);
@@ -101,6 +112,17 @@ export function LoginForm() {
           autoComplete="current-password"
           testId="login_password"
         />
+        <label htmlFor="dont-remember" className="flex items-center gap-2 text-sm">
+          <input
+            id="dont-remember"
+            data-testid="login_dont_remember"
+            type="checkbox"
+            checked={dontRemember}
+            onChange={(event) => setDontRemember(event.target.checked)}
+            className="h-4 w-4 accent-zinc-900 dark:accent-zinc-100"
+          />
+          Don&apos;t remember this account on this device
+        </label>
         {error !== null && (
           <p role="alert" data-testid="login_error" className="text-sm text-red-600 dark:text-red-400">
             {loginMessage(error)}

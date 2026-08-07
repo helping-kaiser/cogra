@@ -11,10 +11,12 @@ export function fakeIdentityStore(initial: {
   seed?: Uint8Array | null;
   reciprocationDismissed?: boolean;
   handshakeIds?: string[];
+  ephemeral?: boolean;
 } = {}): IdentityStore {
   let keyOnDevice = initial.keyOnDevice ?? false;
   let seed = initial.seed ?? null;
   let dismissed = initial.reciprocationDismissed ?? false;
+  let ephemeral = initial.ephemeral ?? false;
   let pendingBlob: Uint8Array | null = null;
   const handshakes = new Set(initial.handshakeIds ?? []);
   // The UI only checks key presence; the marker object stands in for a
@@ -55,6 +57,21 @@ export function fakeIdentityStore(initial: {
     reciprocationDismissed: () => Promise.resolve(dismissed),
     markReciprocationDismissed() {
       dismissed = true;
+      return Promise.resolve();
+    },
+    setEphemeral(value) {
+      ephemeral = value;
+      return Promise.resolve();
+    },
+    purgeIfEphemeral() {
+      if (ephemeral) {
+        keyOnDevice = false;
+        seed = null;
+        pendingBlob = null;
+        handshakes.clear();
+        dismissed = false;
+        ephemeral = false;
+      }
       return Promise.resolve();
     },
   };

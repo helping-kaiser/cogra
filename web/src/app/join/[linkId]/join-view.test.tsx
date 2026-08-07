@@ -33,7 +33,7 @@ const usableCheck = graphql.query("InviteLinkCheck", () =>
 
 function signedInStore() {
   const store = createTokenStore();
-  store.save({ accessToken: "access-1", refreshToken: "refresh-1" });
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
   return store;
 }
 
@@ -121,6 +121,7 @@ describe("JoinView", () => {
                 __typename: "AuthSession",
                 accessToken: "access-1",
                 refreshToken: "refresh-1",
+                user: { __typename: "User", id: "acct-1" },
               },
               expiresAt: "2026-08-08T00:00:00Z",
               userErrors: [],

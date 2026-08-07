@@ -78,11 +78,11 @@ describe("auth guard", () => {
 
   it("hands the refresher the access token from before the first call", async () => {
     const store = createTokenStore();
-    store.save({ accessToken: "before", refreshToken: "r" });
+    store.save({ accessToken: "before", refreshToken: "r", accountId: "acct-1" });
     const { refresher, refresh } = refresherReturning(false);
     const guard = createGuard(store, refresher);
     await guard.run(async () => {
-      store.save({ accessToken: "after", refreshToken: "r2" });
+      store.save({ accessToken: "after", refreshToken: "r2", accountId: "acct-1" });
       return unauthenticated();
     });
     expect(refresh).toHaveBeenCalledWith("before");

@@ -98,7 +98,12 @@ describe("register", () => {
           data: {
             register: {
               __typename: "RegisterPayload",
-              auth: { __typename: "AuthSession", accessToken: "access", refreshToken: "refresh" },
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access",
+                refreshToken: "refresh",
+                user: { __typename: "User", id: "acct-1" },
+              },
               expiresAt: "2026-08-08T00:00:00Z",
               userErrors: [],
             },
@@ -109,7 +114,7 @@ describe("register", () => {
     const outcome = await register(client(), input);
     expect(outcome).toEqual({
       kind: "success",
-      value: { __typename: "AuthSession", accessToken: "access", refreshToken: "refresh" },
+      value: { accessToken: "access", refreshToken: "refresh", accountId: "acct-1" },
     });
   });
 

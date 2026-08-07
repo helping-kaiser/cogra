@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { identityStore } from "@/lib/identity/store";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { restoreActor, type RestoreResult } from "@/lib/identity/restorer";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
@@ -29,13 +29,19 @@ function restoreMessage(result: RestoreResult): string | null {
   }
 }
 
-export function RestoreForm() {
+export function RestoreForm({
+  store = identityStore,
+}: {
+  /** Test injection, as SessionProvider's store. */
+  store?: IdentityStore;
+} = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const flow = useRegistrationFlow();
   const router = useRouter();
 
   const [code, setCode] = useState("");
+  const [dontRemember, setDontRemember] = useState(false);
   const [inProgress, setInProgress] = useState(false);
   const [result, setResult] = useState<RestoreResult | null>(null);
 
@@ -47,7 +53,13 @@ export function RestoreForm() {
     if (!canSubmit) return;
     setInProgress(true);
     setResult(null);
-    const outcome = await restoreActor({ client, guard, store: identityStore }, code);
+    const outcome = await restoreActor({ client, guard, store }, code);
+    if (outcome.kind === "restored") {
+      // The restore offers the same "don't remember me" opt-in as login
+      // (auth.md "Sign-out") — always written, so an unchecked restore
+      // clears an earlier flag.
+      await store.setEphemeral(dontRemember);
+    }
     setInProgress(false);
     setResult(outcome);
     if (outcome.kind === "restored") {
@@ -81,6 +93,17 @@ export function RestoreForm() {
             className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 font-mono dark:border-zinc-700"
           />
         </div>
+        <label htmlFor="restore-dont-remember" className="flex items-center gap-2 text-sm">
+          <input
+            id="restore-dont-remember"
+            data-testid="restore_dont_remember"
+            type="checkbox"
+            checked={dontRemember}
+            onChange={(event) => setDontRemember(event.target.checked)}
+            className="h-4 w-4 accent-zinc-900 dark:accent-zinc-100"
+          />
+          Don&apos;t remember this account on this device
+        </label>
         {errorMessage !== null && (
           <p role="alert" data-testid="restore_error" className="text-sm text-red-600 dark:text-red-400">
             {errorMessage}

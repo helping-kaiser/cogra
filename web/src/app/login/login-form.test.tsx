@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
 import { createTokenStore } from "@/lib/session/token-store";
+import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { LoginForm } from "./login-form";
@@ -26,6 +27,7 @@ const loginSuccess = (capture?: (variables: LogInMutationVariables) => void) =>
             __typename: "AuthSession",
             accessToken: "access-1",
             refreshToken: "refresh-1",
+            user: { __typename: "User", id: "acct-1" },
           },
           userErrors: [],
         },
@@ -74,16 +76,47 @@ describe("LoginForm", () => {
     expect(submit).toBeEnabled();
   });
 
-  it("saves the pair on success; the phase flip navigates home", async () => {
+  it("saves the session on success; the phase flip navigates home", async () => {
     let seen: LogInMutationVariables | undefined;
     server.use(loginSuccess((variables) => (seen = variables)));
     const { store } = renderWithProviders(<LoginForm />);
     fillAndSubmit("  user@example.com  ");
     await waitFor(() => expect(store.hasSession()).toBe(true));
     expect(store.accessToken()).toBe("access-1");
+    expect(store.activeAccountId()).toBe("acct-1");
     expect(seen?.input.email).toBe("user@example.com");
     expect(seen?.input.deviceLabel).toEqual(expect.any(String));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+  });
+
+  it("flags the account ephemeral when don't-remember is checked", async () => {
+    server.use(loginSuccess());
+    const identity = fakeIdentityStore();
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<LoginForm identity={identity} />);
+    // The checkbox is reachable by its label (web.md § Accessibility).
+    fireEvent.click(screen.getByLabelText(/don't remember this account/i));
+    fillAndSubmit();
+    await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(true));
+  });
+
+  it("clears any earlier ephemeral flag on a default login", async () => {
+    server.use(loginSuccess());
+    const identity = fakeIdentityStore({ ephemeral: true });
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<LoginForm identity={identity} />);
+    fillAndSubmit();
+    await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(false));
+  });
+
+  it("leaves custody untouched on a refused login", async () => {
+    server.use(loginRefused);
+    const identity = fakeIdentityStore();
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<LoginForm identity={identity} />);
+    fillAndSubmit();
+    await screen.findByTestId("login_error");
+    expect(setEphemeral).not.toHaveBeenCalled();
   });
 
   it("renders a refusal distinctly from a transport failure", async () => {
@@ -113,7 +146,7 @@ describe("LoginForm", () => {
 
   it("redirects an already-signed-in visit home", async () => {
     const store = createTokenStore();
-    store.save({ accessToken: "a", refreshToken: "r" });
+    store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });
     renderWithProviders(<LoginForm />, { store });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });

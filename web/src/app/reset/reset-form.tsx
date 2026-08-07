@@ -14,11 +14,9 @@ import type { ErrorCode } from "@/__generated__/graphql";
 import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
 import { PasswordField } from "@/lib/ui/password-field";
 
-// The backend reuses VERIFICATION_TOKEN_INVALID for a bad reset token
-// (api-spec.md § Auth and accounts).
 function resetMessage(code: ErrorCode): string {
   switch (code) {
-    case "VERIFICATION_TOKEN_INVALID":
+    case "RESET_TOKEN_INVALID":
       return "The reset token is invalid or expired.";
     case "WEAK_PASSWORD":
       return "Passwords need at least 12 characters and can't be a known breached password.";

@@ -101,11 +101,13 @@ describe("ResetForm", () => {
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/login"));
   });
 
-  it("renders the backend's VERIFICATION_TOKEN_INVALID refusal", async () => {
-    server.use(confirmRefused("VERIFICATION_TOKEN_INVALID"));
+  it("renders the backend's RESET_TOKEN_INVALID refusal", async () => {
+    server.use(confirmRefused("RESET_TOKEN_INVALID"));
     renderWithProviders(<ResetForm />);
     fillConfirm();
-    expect(await screen.findByTestId("reset_error")).toBeInTheDocument();
+    expect(await screen.findByTestId("reset_error")).toHaveTextContent(
+      "The reset token is invalid or expired.",
+    );
     expect(nav.replace).not.toHaveBeenCalled();
   });
 

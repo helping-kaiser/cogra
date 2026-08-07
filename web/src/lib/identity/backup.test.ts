@@ -52,7 +52,7 @@ describe("backup manager", () => {
 
   beforeEach(() => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    store = createIdentityStore({ activeAccountId: () => "acct-1" });
     manager = createBackupManager({ client: client(), guard: passThroughGuard, store });
   });
 
