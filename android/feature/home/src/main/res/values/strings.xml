@@ -38,6 +38,9 @@
     <string name="home_create_key_title">Create your key</string>
     <string name="home_create_key_body">Your identity on the graph is a key minted on this phone. Create it now — your inviter can only approve you once it exists.</string>
     <string name="home_create_key_button">Create my key</string>
+    <string name="home_key_elsewhere_title">This phone\'s key belongs to another account</string>
+    <string name="home_key_elsewhere_body">A signing key can only ever back one account, so this account needs its own. Creating a fresh key replaces the stored one — the other account\'s key stays restorable with its recovery code.</string>
+    <string name="home_key_elsewhere_button">Create a fresh key</string>
 
     <string name="home_rearm_title">Your application expired</string>
     <string name="home_rearm_body">Your login is fine, but the application ran out before approval. Paste a fresh invite link to re-apply.</string>

@@ -118,6 +118,17 @@ class HomeScreenTest {
     }
 
     @Test
+    fun aForeignDeviceKeyGetsItsOwnCardNotTheWaitingHint() {
+        // keyOnDevice without keyAttached: another account's key sits on
+        // the device and the silent repair-attach was refused.
+        render(applicant(awaiting(keyAttached = false, keyOnDevice = true)))
+        compose.onNodeWithTag("home_key_elsewhere").assertExists()
+        compose.onNodeWithTag("home_fresh_key").assertExists()
+        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
+        compose.onNodeWithTag("home_create_key").assertDoesNotExist()
+    }
+
+    @Test
     fun anApplicantsSettingsButtonNavigates() {
         var opened = false
         render(applicant(awaiting()), onOpenSettings = { opened = true })

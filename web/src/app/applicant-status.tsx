@@ -67,6 +67,7 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
         <div className="flex flex-col gap-4">
           {!emailVerified && <VerifyCard />}
           {!keyAttached && !keyOnDevice && <CeremonyCard />}
+          {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
           {keyAttached && !keyOnDevice && <RestoreCard />}
           {keyAttached && keyOnDevice && emailVerified && !waitingHintDismissed && (
             <WaitingHint onDismiss={() => setWaitingHintDismissed(true)} />
@@ -143,6 +144,26 @@ function CeremonyCard() {
         className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
       >
         Create the key
+      </Link>
+    </Card>
+  );
+}
+
+function KeyElsewhereCard() {
+  return (
+    <Card>
+      <h2 className="font-medium">This browser&apos;s key belongs to another account</h2>
+      <p data-testid="home_key_elsewhere" className="text-sm text-zinc-600 dark:text-zinc-400">
+        A signing key can only ever back one account, so this account needs its own. Creating a
+        fresh key replaces the stored one — the other account&apos;s key stays restorable with its
+        recovery code.
+      </p>
+      <Link
+        href="/key"
+        data-testid="home_fresh_key"
+        className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        Create a fresh key
       </Link>
     </Card>
   );

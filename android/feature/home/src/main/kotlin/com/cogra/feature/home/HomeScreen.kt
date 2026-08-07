@@ -356,6 +356,9 @@ private fun ApplicantStatus(
             when {
                 // The two proofs are independent — both cards can show.
                 !progress.keyAttached && !progress.keyOnDevice -> CeremonyCard(onStartKeyCeremony)
+                // A key sits on the device but the attach was refused —
+                // it belongs to another account (ACTOR_KEY_IN_USE).
+                !progress.keyAttached && progress.keyOnDevice -> KeyElsewhereCard(onStartKeyCeremony)
                 progress.keyAttached && !progress.keyOnDevice -> RestoreCard(onRestoreActor)
                 else -> if (progress.emailVerified && !state.waitingHintDismissed) {
                     WaitingHint(onDismissWaitingHint)
@@ -419,6 +422,33 @@ private fun CeremonyCard(onStartKeyCeremony: () -> Unit) {
                 modifier = Modifier.testTag("home_create_key"),
             ) {
                 Text(stringResource(R.string.home_create_key_button))
+            }
+        }
+    }
+}
+
+/**
+ * The device's key backs another account, so this account needs its own
+ * — the ceremony's fresh mint replaces the stored key (the other
+ * account's stays restorable with its recovery code).
+ */
+@Composable
+private fun KeyElsewhereCard(onStartKeyCeremony: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.home_key_elsewhere_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.home_key_elsewhere_body),
+                modifier = Modifier.testTag("home_key_elsewhere"),
+            )
+            Button(
+                onClick = onStartKeyCeremony,
+                modifier = Modifier.testTag("home_fresh_key"),
+            ) {
+                Text(stringResource(R.string.home_key_elsewhere_button))
             }
         }
     }
