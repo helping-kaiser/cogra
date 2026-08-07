@@ -249,7 +249,11 @@ them).
    The attached key is replaceable while the application is
    unapproved — a device lost before approval costs nothing but
    a re-run of the ceremony — and immutable from approval on,
-   when the funding burn binds the address.
+   when the funding burn binds the address. An address binds at
+   most one account: attaching a key already bound to a
+   different account is refused, because the address's
+   Registration can exist on the graph only once — a duplicate
+   would wedge the second admission behind an unlandable record.
 4. **Email verification.** The applicant clicks the link,
    proving the login channel.
 
