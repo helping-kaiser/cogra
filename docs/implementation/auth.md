@@ -98,7 +98,9 @@ Rules the posture hangs on:
   when the key is created. Declining is not final: backup can
   be enabled, or the code replaced, from settings at any time —
   a new code re-encrypts and re-uploads, and recovery serves
-  the newest blob.
+  the newest blob. Where custody wipes the raw seed after
+  upload (web — [web.md "Key custody"](web.md#key-custody--webcrypto)),
+  replacing re-proves the current code first.
 - **Theft needs both factors.** The code alone is useless
   without the blob behind the user's login; the blob is useless
   without the code. Users can therefore keep redundant copies
