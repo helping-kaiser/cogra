@@ -23,16 +23,35 @@ import {
   type Outcome,
 } from "./outcome";
 import type { RefreshExecutor } from "@/lib/session/refresher";
-import type { TokenPair } from "@/lib/session/token-store";
+import type { SessionAuth } from "@/lib/session/token-store";
 
 export type MeUser = NonNullable<MeQuery["me"]>;
+
+/**
+ * Lifts a payload's `AuthSession` into the stored shape. A non-null auth
+ * without its user is a server-contract break — the null feeds `payload`'s
+ * null-without-userErrors failure.
+ */
+export function sessionAuthOf(
+  auth:
+    | { accessToken: string; refreshToken: string; user: { id: string } | null }
+    | null
+    | undefined,
+): SessionAuth | null {
+  if (auth == null || auth.user === null) return null;
+  return {
+    accessToken: auth.accessToken,
+    refreshToken: auth.refreshToken,
+    accountId: auth.user.id,
+  };
+}
 
 export function logIn(
   client: ApolloClient,
   email: string,
   password: string,
   deviceLabel: string | null,
-): Promise<Outcome<TokenPair>> {
+): Promise<Outcome<SessionAuth>> {
   return payloadOutcome(
     () =>
       client.mutate({
@@ -40,7 +59,7 @@ export function logIn(
         variables: { input: { email, password, deviceLabel } },
       }),
     (data) => data.logIn.userErrors,
-    (data) => data.logIn.auth,
+    (data) => sessionAuthOf(data.logIn.auth),
   );
 }
 
@@ -53,7 +72,7 @@ export function refreshExecutor(client: ApolloClient): RefreshExecutor {
           variables: { input: { refreshToken } },
         }),
       (data) => data.refreshSession.userErrors,
-      (data) => data.refreshSession.auth,
+      (data) => sessionAuthOf(data.refreshSession.auth),
     );
 }
 

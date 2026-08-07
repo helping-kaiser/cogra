@@ -303,6 +303,14 @@ export function SettingsView({
     // signing out (auth.md "Sign-out"). Clearing tokens flips the
     // phase; the (app) gate replaces the location.
     await guard.run(() => revokeSession(client, null));
+    // The "don't remember me" purge runs before the clear removes the
+    // active account the custody store resolves by; a failed purge
+    // must never block signing out.
+    try {
+      await store.purgeIfEphemeral();
+    } catch {
+      // sign-out proceeds regardless
+    }
     tokens.clear();
   };
 
