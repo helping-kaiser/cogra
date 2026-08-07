@@ -69,6 +69,28 @@ describe("KeyCeremonyView", () => {
     await waitFor(() => expect(ceremony.createActorKey).toHaveBeenCalledTimes(2));
   });
 
+  it("a key bound to another account gets its own explanation", async () => {
+    const ceremony = fakeCeremony({
+      attachActorKey: vi.fn(() =>
+        Promise.resolve({
+          kind: "refused" as const,
+          errors: [
+            {
+              message: "the key already belongs to another account",
+              code: "ACTOR_KEY_IN_USE" as const,
+              field: ["actorPubkey"],
+            },
+          ],
+        }),
+      ),
+    });
+    renderWithProviders(<KeyCeremonyView />, { store: signedInStore(), ceremony });
+    fireEvent.click(screen.getByTestId("backup_accept"));
+    expect(await screen.findByTestId("ceremony_key_in_use")).toBeInTheDocument();
+    expect(screen.queryByTestId("ceremony_attach_error")).not.toBeInTheDocument();
+    expect(ceremony.createPendingBackup).not.toHaveBeenCalled();
+  });
+
   it("decline asks for confirmation, then still mints and attaches", async () => {
     const ceremony = fakeCeremony();
     const { flow } = fakeFlow();
