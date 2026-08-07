@@ -21,7 +21,7 @@ pub use query::Query;
 
 use crate::auth::AuthConfig;
 use crate::l1::StandInBoundary;
-use crate::mailer::Mailer;
+use crate::mailer::{Mailer, WebOrigin};
 use crate::onboarding::OnboardingConfig;
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
@@ -35,6 +35,7 @@ pub struct ApiContext {
     pub funding: StandIn,
     pub auth: AuthConfig,
     pub mailer: Arc<dyn Mailer>,
+    pub web_origin: WebOrigin,
     pub onboarding: OnboardingConfig,
 }
 
@@ -46,6 +47,7 @@ pub fn build(ctx: ApiContext) -> ApiSchema {
         .data(ctx.funding)
         .data(ctx.auth)
         .data(ctx.mailer)
+        .data(ctx.web_origin)
         .data(ctx.onboarding)
         .finish()
 }
