@@ -1,7 +1,8 @@
-# Account reads and credential recovery.
-# requestPasswordReset is a silent verb: no userErrors by design —
-# surfacing a failure would reintroduce account enumeration
-# (api-spec.md § Mutations → Conventions → Errors).
+# Account reads, credential recovery, and credential changes.
+# requestPasswordReset and requestEmailChange are silent verbs: no
+# userErrors by design — surfacing a failure would reintroduce
+# account enumeration (api-spec.md § Mutations → Conventions →
+# Errors).
 
 query Me {
   me {
@@ -43,6 +44,50 @@ query KeyBackup {
 mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
   uploadKeyBackup(input: $input) {
     ok
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ChangePassword($input: ChangePasswordInput!) {
+  changePassword(input: $input) {
+    ok
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation ChangeHandle($input: ChangeHandleInput!) {
+  changeHandle(input: $input) {
+    user {
+      id
+      handle
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation RequestEmailChange($input: RequestEmailChangeInput!) {
+  requestEmailChange(input: $input) {
+    ok
+  }
+}
+
+mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
+  confirmEmailChange(input: $input) {
+    user {
+      id
+    }
     userErrors {
       message
       code

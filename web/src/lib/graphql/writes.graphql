@@ -1,10 +1,24 @@
-# The client legs of the write path this slice signs: submit → approve →
-# observe, plus the seal key the device verifies against (api-spec.md
-# "The write flow"). Prepare arrives with the first prepared surface
-# (member reciprocation, next PR).
+# The client legs of the write path this slice signs: prepare →
+# submit → approve → observe, plus the seal key the device verifies
+# against (api-spec.md "The write flow").
 
 query HostPublicKey {
   hostPublicKey
+}
+
+mutation PrepareStance($input: PrepareStanceInput!) {
+  prepareStance(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
 }
 
 mutation SubmitProposals($input: SubmitProposalsInput!) {

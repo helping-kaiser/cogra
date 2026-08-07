@@ -3,7 +3,13 @@ import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
-import { approveAct, fetchStagedWrite, hostPublicKey, submitProposal } from "./writes-api";
+import {
+  approveAct,
+  fetchStagedWrite,
+  hostPublicKey,
+  prepareStance,
+  submitProposal,
+} from "./writes-api";
 import { startMswServer } from "@/test/msw";
 
 const server = startMswServer();
@@ -152,6 +158,69 @@ describe("approveAct", () => {
       ),
     );
     expect(hasCode(await approveAct(client(), "sw-1", "c2ln"), "STAGED_WRITE_EXPIRED")).toBe(true);
+  });
+});
+
+describe("prepareStance", () => {
+  it("adapts the prepared writes for the signer", async () => {
+    server.use(
+      graphql.mutation("PrepareStance", ({ variables }) => {
+        expect(variables).toEqual({ input: { target: "u0", pDirected: 0.1, pInterest: 0.1 } });
+        return HttpResponse.json({
+          data: {
+            prepareStance: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "OPINION",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareStance(client(), "u0", 0.1, 0.1);
+    expect(outcome).toEqual({
+      kind: "success",
+      value: [
+        {
+          id: "w1",
+          family: "OPINION",
+          canonicalProposal: "cHJvcG9zYWw=",
+          state: "AWAITING_PRE_SIGN",
+          verifiedAct: null,
+        },
+      ],
+    });
+  });
+
+  it("surfaces a write-rule refusal", async () => {
+    server.use(
+      graphql.mutation("PrepareStance", () =>
+        HttpResponse.json({
+          data: {
+            prepareStance: {
+              __typename: "PreparePayload",
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "insolvent",
+                  code: "WRITE_RULE_FAILED",
+                  field: null,
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    expect(hasCode(await prepareStance(client(), "u0", 0.1, 0.1), "WRITE_RULE_FAILED")).toBe(true);
   });
 });
 
