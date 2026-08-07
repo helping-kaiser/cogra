@@ -53,10 +53,15 @@ class RefreshTest {
            "auth":{"__typename":"AuthSession","accessToken":"$access","refreshToken":"$refresh"},
            "userErrors":[]}}}"""
 
-    private fun unauthenticated(op: String, resultField: String) =
-        """{"data":{"$op":{"__typename":"x","$resultField":null,
-           "userErrors":[{"__typename":"UserError","message":"no viewer",
-           "code":"UNAUTHENTICATED","field":null}]}}}"""
+    /**
+     * The real wire shape for a guarded mutation with a bad access
+     * token: a GraphQL errors-array entry with `extensions.code`, null
+     * data — never a payload userError (api-spec.md "Errors are
+     * tiered"; crates/api extend_with).
+     */
+    private fun unauthenticated() =
+        """{"data":null,"errors":[{"message":"authentication required",
+           "extensions":{"code":"UNAUTHENTICATED"}}]}"""
 
     @Test
     fun anExpiredAccessTokenRefreshesAndReplaysOnce() = runTest {
@@ -65,7 +70,7 @@ class RefreshTest {
             client,
             AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client })),
         )
-        enqueue(unauthenticated("revokeOtherSessions", "revokedCount"))
+        enqueue(unauthenticated())
         enqueue(refreshSuccess("access-2", "refresh-2"))
         enqueue(
             """{"data":{"revokeOtherSessions":{"__typename":"RevokeSessionsPayload",
@@ -91,9 +96,9 @@ class RefreshTest {
             client,
             AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client })),
         )
-        enqueue(unauthenticated("revokeOtherSessions", "revokedCount"))
+        enqueue(unauthenticated())
         enqueue(refreshSuccess("access-2", "refresh-2"))
-        enqueue(unauthenticated("revokeOtherSessions", "revokedCount"))
+        enqueue(unauthenticated())
 
         val outcome = sessions.revokeOtherSessions()
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)

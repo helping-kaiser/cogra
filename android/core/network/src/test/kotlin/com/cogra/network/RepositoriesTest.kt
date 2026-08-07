@@ -188,6 +188,19 @@ class RepositoriesTest {
     }
 
     @Test
+    fun anErrorsArrayUnauthenticatedBecomesARefusal() = runTest {
+        val writes = WriteRepositoryImpl(client, guard())
+        enqueue(
+            """{"data":null,"errors":[{"message":"authentication required",
+               "extensions":{"code":"UNAUTHENTICATED"}}]}""",
+        )
+        val refused = writes.stagedWrite("id") as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
+        // Signed out → no refresh, no replay.
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    @Test
     fun stagedWriteFieldsMapToTheDomainView() = runTest {
         val writes = WriteRepositoryImpl(client, guard())
         tokenStore.save(AuthTokens("a", "r"))
