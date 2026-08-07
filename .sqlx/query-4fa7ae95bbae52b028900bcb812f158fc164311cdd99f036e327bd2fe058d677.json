@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications\n         SET reciprocated_at = NOW()\n         WHERE account_id = $1 AND landed_at IS NOT NULL\n           AND reciprocated_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4fa7ae95bbae52b028900bcb812f158fc164311cdd99f036e327bd2fe058d677"
+}

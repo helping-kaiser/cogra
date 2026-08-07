@@ -653,6 +653,39 @@ pub async fn inviter_of(
     }))
 }
 
+/// Whether the reciprocation latch is set on the account's landed
+/// application row (auth.md "Reciprocation is the joiner's own act") —
+/// once true, the mirror is not queried again.
+pub async fn reciprocation_latched(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_applications
+               WHERE account_id = $1 AND landed_at IS NOT NULL
+                 AND reciprocated_at IS NOT NULL
+           ) AS "exists!""#,
+        account_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// Sets the reciprocation latch — the derived cache of the mirror's
+/// permanent back-edge (auth.md "Reciprocation is the joiner's own
+/// act"); idempotent, the `IS NULL` predicate is the concurrency gate.
+pub async fn latch_reciprocated(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications
+         SET reciprocated_at = NOW()
+         WHERE account_id = $1 AND landed_at IS NOT NULL
+           AND reciprocated_at IS NULL",
+        account_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
 /// The reaper (auth.md "Reaper"): deletes never-verified accounts past
 /// their bound, whole — freeing handle and email. Verified accounts are
 /// never reaped; deletion is legitimate exactly because nothing has

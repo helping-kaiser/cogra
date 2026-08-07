@@ -197,6 +197,27 @@ pub async fn net_opinion(
     Ok((row.p_d, row.p_i))
 }
 
+/// Whether any accepted Opinion by the author toward the node is in the
+/// mirror — existence, not net: a bundle netting to zero still holds the
+/// gesture (auth.md "Reciprocation is the joiner's own act").
+pub async fn has_opinion_toward(
+    pool: &PgPool,
+    author_source: &str,
+    target: &str,
+) -> Result<bool, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM mirror_record_legs
+               WHERE family = 'opinion' AND leg = 'binary'
+                 AND source = $1 AND target = $2
+           ) AS "exists!""#,
+        author_source,
+        target,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
 /// Wipes the mirror and resets the cursor. The mirror is a rebuildable
 /// projection — this is the documented recovery path (re-ingest from the
 /// published sequence), used by the dev CLI's rebuild command and tests.
