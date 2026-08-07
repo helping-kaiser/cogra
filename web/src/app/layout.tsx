@@ -5,6 +5,7 @@ import "./globals.css";
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
+import { RegistrationProvider } from "@/lib/signing/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <ApolloWrapper>
-            <AuthRuntimeProvider>{children}</AuthRuntimeProvider>
+            <AuthRuntimeProvider>
+              <RegistrationProvider>{children}</RegistrationProvider>
+            </AuthRuntimeProvider>
           </ApolloWrapper>
         </SessionProvider>
       </body>

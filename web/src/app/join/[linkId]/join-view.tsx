@@ -1,0 +1,368 @@
+"use client";
+
+// Invite check + apply (Android's InviteEntry/Apply screens folded into
+// the link route: the route carries the id, so the paste box lives on
+// the front door instead). Signed out: the registration form. Signed in:
+// the invite is a re-arm capability for an expired application
+// (auth.md "Expiry"; web.md routes table).
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
+
+import type { ErrorCode } from "@/__generated__/graphql";
+import {
+  applyWithInvite,
+  checkInviteLink,
+  register,
+  type InviteCheck,
+} from "@/lib/api/onboarding-api";
+import { extractInviteId } from "@/lib/onboarding/invite-input";
+import { deviceLabel } from "@/lib/session/device-label";
+import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
+import { useAuthGuard } from "@/lib/session/runtime";
+import { useRegistrationFlow } from "@/lib/signing/provider";
+import { PasswordField } from "@/lib/ui/password-field";
+
+function applyMessage(code: ErrorCode): string {
+  switch (code) {
+    case "INVITE_UNUSABLE":
+      return "This invite can't be used — it may have expired or been revoked.";
+    case "HANDLE_TAKEN":
+      return "That handle is taken.";
+    case "EMAIL_IN_USE":
+      return "That email already has an account.";
+    case "WEAK_PASSWORD":
+      return "That password is too easy to guess — pick a longer or less common one.";
+    case "BAD_INPUT":
+      return "Check the highlighted field.";
+    case "RATE_LIMITED":
+      return "Too many attempts — wait a moment and try again.";
+    default:
+      return "Something went wrong. Try again.";
+  }
+}
+
+function rearmMessage(code: ErrorCode): string {
+  switch (code) {
+    case "INVITE_UNUSABLE":
+      return "This invite can't be used — it may have expired or been revoked.";
+    case "BAD_INPUT":
+      return "Your application is still live — it doesn't need a fresh invite.";
+    default:
+      return "Something went wrong. Try again.";
+  }
+}
+
+type CheckState =
+  | { status: "checking" }
+  | { status: "found"; check: InviteCheck }
+  | { status: "notFound" }
+  | { status: "transportFailed" };
+
+export function JoinView({ linkId }: { linkId: string }) {
+  const client = useApolloClient();
+  const phase = useAuthPhase();
+
+  const inviteId = extractInviteId(linkId);
+
+  const [checkState, setCheckState] = useState<CheckState>({ status: "checking" });
+  // Reset during render when the route param changes — the App Router
+  // reuses this component across /join/<id> navigations.
+  const [checkedId, setCheckedId] = useState(inviteId);
+  if (checkedId !== inviteId) {
+    setCheckedId(inviteId);
+    setCheckState({ status: "checking" });
+  }
+
+  useEffect(() => {
+    if (inviteId === null) return;
+    let cancelled = false;
+    void checkInviteLink(client, inviteId).then((outcome) => {
+      if (cancelled) return;
+      if (outcome.kind === "success") {
+        setCheckState(outcome.value === null ? { status: "notFound" } : { status: "found", check: outcome.value });
+      } else if (outcome.kind === "failed") {
+        setCheckState({ status: "transportFailed" });
+      } else {
+        setCheckState({ status: "notFound" });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, inviteId]);
+
+  const check = checkState.status === "found" ? checkState.check : null;
+  const usable = check?.usable === true;
+
+  return (
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
+      <h1 className="text-2xl font-semibold tracking-tight">Join CoGra</h1>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        CoGra is invite-only: a member vouches for you, and their approval brings you in.
+      </p>
+
+      {inviteId === null && (
+        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+          This isn&apos;t an invite link.
+        </p>
+      )}
+      {inviteId !== null && checkState.status === "notFound" && (
+        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+          This invite doesn&apos;t exist. Ask your inviter for a fresh link.
+        </p>
+      )}
+      {check !== null && !check.usable && (
+        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+          This invite can&apos;t be used — it may have expired or been revoked.
+        </p>
+      )}
+      {checkState.status === "transportFailed" && (
+        <p
+          role="alert"
+          data-testid="invite_transport_error"
+          className="text-sm text-red-600 dark:text-red-400"
+        >
+          Can&apos;t reach the server. Check your connection and try again.
+        </p>
+      )}
+      {inviteId !== null && checkState.status === "checking" && (
+        <p role="status" data-testid="invite_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+          Checking the invite…
+        </p>
+      )}
+
+      {usable && (
+        <p data-testid="invite_inviter" className="text-sm">
+          @{check?.inviterHandle} is vouching for you.
+        </p>
+      )}
+
+      {usable && inviteId !== null && phase === "signedOut" && <ApplyForm inviteId={inviteId} />}
+      {usable && inviteId !== null && phase === "signedIn" && <RearmPanel inviteId={inviteId} />}
+
+      {phase === "signedOut" && (
+        <Link
+          href="/login"
+          data-testid="invite_login"
+          className="text-sm text-zinc-600 underline dark:text-zinc-400"
+        >
+          Already a member? Sign in
+        </Link>
+      )}
+    </main>
+  );
+}
+
+function ApplyForm({ inviteId }: { inviteId: string }) {
+  const client = useApolloClient();
+  const store = useTokenStore();
+  const router = useRouter();
+
+  const [handle, setHandle] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [inProgress, setInProgress] = useState(false);
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const [errorField, setErrorField] = useState<string | null>(null);
+  const [transportFailed, setTransportFailed] = useState(false);
+
+  const formValid = handle.length >= 3 && email.includes("@") && password.length >= 12;
+  const canSubmit = formValid && !inProgress;
+
+  const clearErrors = () => {
+    setError(null);
+    setErrorField(null);
+    setTransportFailed(false);
+  };
+
+  const onSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canSubmit) return;
+    setInProgress(true);
+    clearErrors();
+    const outcome = await register(client, {
+      inviteLink: inviteId,
+      handle: handle.trim(),
+      email: email.trim(),
+      password,
+      deviceLabel: deviceLabel(),
+    });
+    setInProgress(false);
+    switch (outcome.kind) {
+      case "success":
+        store.save(outcome.value);
+        router.replace("/");
+        break;
+      case "refused": {
+        setError(outcome.errors[0].code);
+        setErrorField(outcome.errors[0].field?.at(-1) ?? null);
+        break;
+      }
+      case "failed":
+        setTransportFailed(true);
+        break;
+    }
+  };
+
+  const fieldClass = (name: string) =>
+    `rounded-md border bg-transparent px-3 py-2 ${
+      errorField === name
+        ? "border-red-600 dark:border-red-400"
+        : "border-zinc-300 dark:border-zinc-700"
+    }`;
+
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="handle" className="text-sm font-medium">
+          Handle
+        </label>
+        <input
+          id="handle"
+          data-testid="apply_handle"
+          type="text"
+          value={handle}
+          onChange={(event) => {
+            setHandle(event.target.value.toLowerCase());
+            clearErrors();
+          }}
+          autoComplete="username"
+          className={fieldClass("handle")}
+          aria-describedby="handle-rules"
+        />
+        <p id="handle-rules" className="text-xs text-zinc-600 dark:text-zinc-400">
+          3–30 characters: a–z, 0–9, _
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="email" className="text-sm font-medium">
+          Email
+        </label>
+        <input
+          id="email"
+          data-testid="apply_email"
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearErrors();
+          }}
+          autoComplete="email"
+          className={fieldClass("email")}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <PasswordField
+          id="password"
+          label="Password"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            clearErrors();
+          }}
+          autoComplete="new-password"
+          testId="apply_password"
+        />
+        <p className="text-xs text-zinc-600 dark:text-zinc-400">At least 12 characters.</p>
+      </div>
+      {error !== null && (
+        <p role="alert" data-testid="apply_error" className="text-sm text-red-600 dark:text-red-400">
+          {applyMessage(error)}
+        </p>
+      )}
+      {transportFailed && (
+        <p
+          role="alert"
+          data-testid="apply_transport_error"
+          className="text-sm text-red-600 dark:text-red-400"
+        >
+          Can&apos;t reach the server. Check your connection and try again.
+        </p>
+      )}
+      {inProgress && (
+        <p role="status" data-testid="apply_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+          Creating your account…
+        </p>
+      )}
+      <button
+        type="submit"
+        data-testid="apply_continue"
+        disabled={!canSubmit}
+        className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        Create account
+      </button>
+    </form>
+  );
+}
+
+function RearmPanel({ inviteId }: { inviteId: string }) {
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const flow = useRegistrationFlow();
+  const router = useRouter();
+
+  const [inProgress, setInProgress] = useState(false);
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const [transportFailed, setTransportFailed] = useState(false);
+
+  const onRearm = async () => {
+    if (inProgress) return;
+    setInProgress(true);
+    setError(null);
+    setTransportFailed(false);
+    const outcome = await guard.run(() => applyWithInvite(client, inviteId));
+    setInProgress(false);
+    switch (outcome.kind) {
+      case "success":
+        flow.ensureAdvancing();
+        router.replace("/");
+        break;
+      case "refused":
+        setError(outcome.errors[0].code);
+        break;
+      case "failed":
+        setTransportFailed(true);
+        break;
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm">
+        You&apos;re signed in. If your application expired, this invite re-arms it.
+      </p>
+      {error !== null && (
+        <p role="alert" data-testid="rearm_error" className="text-sm text-red-600 dark:text-red-400">
+          {rearmMessage(error)}
+        </p>
+      )}
+      {transportFailed && (
+        <p
+          role="alert"
+          data-testid="rearm_transport_error"
+          className="text-sm text-red-600 dark:text-red-400"
+        >
+          Can&apos;t reach the server. Check your connection and try again.
+        </p>
+      )}
+      {inProgress && (
+        <p role="status" data-testid="rearm_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+          Applying the invite…
+        </p>
+      )}
+      <button
+        type="button"
+        data-testid="rearm_submit"
+        onClick={onRearm}
+        disabled={inProgress}
+        className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        Use this invite
+      </button>
+    </div>
+  );
+}
