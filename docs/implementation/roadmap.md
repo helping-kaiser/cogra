@@ -125,6 +125,17 @@ write needs a landed, funded actor with a device-held key.
   second device — login plus recovery code
   ([auth.md](auth.md#key-recovery)) — and the backup settings
   surface (enable late, replace the code).
+- `User.hasReciprocated` in the contract, with the reciprocation
+  prompt gated on it in both clients (decided 2026-08-07,
+  superseding the earlier deferral to slice 2: the field is
+  invite/auth-flow state, so it ships with the flow). The
+  device-local answered-bit stays only as the dismissal memory.
+- Actor-identity uniqueness at the attach: one account per L0
+  address — `attachActorKey` refuses a key already bound to a
+  different account ([auth.md](auth.md#application-the-applicant-state)).
+  Surfaced by the slice-1 hand test: a second account on a device
+  silently repair-attached the device's existing key and wedged
+  its admission behind an unlandable duplicate Registration.
 - **Hand test:** take an invite link all the way to a landed, funded
   actor; sign a write from the phone; restore the actor in the
   browser with the recovery code.
@@ -138,9 +149,15 @@ write needs a landed, funded actor with a device-held key.
 - GraphQL query depth and complexity budgets — a single nested
   query can fetch N objects without tripping any per-endpoint
   limit.
+- Multi-account device custody: several accounts on one device is
+  a supported pattern, so the client identity stores bind key
+  material to the account it belongs to instead of one
+  device-global singleton, and the repair-attach verifies the
+  device key against the account's attached key before offering
+  it. Build to the platforms' documented custody idioms.
 - Sequenced directly behind slice 1: it hardens the auth surface
   slice 1 rebuilds and the API that protects it.
-- **Surfaces:** backend, API.
+- **Surfaces:** backend, API, Android, web.
 
 ### Slice 2 — Content
 
