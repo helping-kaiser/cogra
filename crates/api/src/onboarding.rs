@@ -61,7 +61,7 @@ pub enum OnboardingError {
     #[error("the email already belongs to an account")]
     EmailInUse,
     #[error("{0}")]
-    WeakPassword(&'static str),
+    WeakPassword(String),
     /// A `BAD_INPUT` refusal pinned to a field path.
     #[error("{message}")]
     BadInput {
@@ -149,6 +149,7 @@ pub async fn register(
     pool: &PgPool,
     auth_cfg: &AuthConfig,
     mailer: &dyn Mailer,
+    corpus: &dyn crate::breach::BreachCorpus,
     web_origin: &str,
     input: RegistrationInput,
 ) -> Result<RegisteredAccount, OnboardingError> {
@@ -160,7 +161,9 @@ pub async fn register(
         field: "email",
         message: m.to_string(),
     })?;
-    auth::check_password(&input.password).map_err(OnboardingError::WeakPassword)?;
+    auth::validate_new_password(corpus, &input.password)
+        .await
+        .map_err(OnboardingError::WeakPassword)?;
     if !store::invite_link_usable(pool, input.invite_link).await? {
         return Err(OnboardingError::InviteUnusable);
     }

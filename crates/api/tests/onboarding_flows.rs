@@ -114,6 +114,7 @@ impl Rig {
             &self.pool,
             &self.auth_cfg,
             &self.mailer,
+            &api::breach::DisabledCorpus,
             "http://localhost:3000",
             input,
         )
@@ -180,6 +181,41 @@ async fn the_registration_form_refuses_each_named_failure(pool: PgPool) {
         rig.register(input).await,
         Err(OnboardingError::WeakPassword(_))
     ));
+
+    // A breached password refuses at the form with the reason — the
+    // corpus answer, not the floor, drives the message (auth.md
+    // "Password requirements").
+    struct AlwaysBreached;
+    impl api::breach::BreachCorpus for AlwaysBreached {
+        fn is_breached<'a>(
+            &'a self,
+            _password: &'a str,
+        ) -> std::pin::Pin<
+            Box<
+                dyn std::future::Future<Output = Result<bool, api::breach::BreachError>>
+                    + Send
+                    + 'a,
+            >,
+        > {
+            Box::pin(async { Ok(true) })
+        }
+    }
+    match onboarding::register(
+        &rig.pool,
+        &rig.auth_cfg,
+        &rig.mailer,
+        &AlwaysBreached,
+        "http://localhost:3000",
+        rig.form(link, "fine_handle", "a@example.com"),
+    )
+    .await
+    {
+        Err(OnboardingError::WeakPassword(m)) => {
+            assert!(m.contains("breach"), "the reason names the breach: {m}")
+        }
+        Err(other) => panic!("expected WeakPassword, got {other:?}"),
+        Ok(_) => panic!("a breached password must refuse"),
+    }
 
     // Unknown, revoked, and expired links are one refusal: unusable.
     let unknown = rig.form(Uuid::new_v4(), "someone", "s@example.com");

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM auth_rate_limits\n        WHERE window_start < now() - make_interval(secs => $1)\n          AND (blocked_until IS NULL OR blocked_until < now())\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "87d08afe02025e59667e00e08bce170fb12ea5df792677fc6cf55715f8277f4f"
+}

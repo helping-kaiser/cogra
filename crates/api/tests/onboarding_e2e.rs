@@ -76,9 +76,22 @@ impl Rig {
             mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
             web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
             onboarding: api::onboarding::OnboardingConfig::default(),
+            // Unbounded: the limits are rate_limits.rs's subject; this
+            // rig's flows must never trip them incidentally.
+            rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
+            breach: Arc::new(api::breach::DisabledCorpus),
         });
         Self {
-            app: api::app(schema, auth),
+            // A fixed ConnectInfo stands in for the socket peer —
+            // axum-client-ip reads the extension directly, so axum's
+            // MockConnectInfo fallback (which only axum's own extractor
+            // consults) does not apply here.
+            app: api::app(schema, auth, axum_client_ip::ClientIpSource::ConnectInfo).layer(
+                axum::Extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
+                    [127, 0, 0, 1],
+                    9999,
+                )))),
+            ),
             pool,
             standin,
             mailer,
@@ -108,7 +121,12 @@ impl Rig {
             .await
             .expect("body")
             .to_bytes();
-        serde_json::from_slice(&bytes).expect("json")
+        serde_json::from_slice(&bytes).unwrap_or_else(|e| {
+            panic!(
+                "non-JSON response ({e}): {}",
+                String::from_utf8_lossy(&bytes)
+            )
+        })
     }
 
     /// Executes one GraphQL request, asserting no transport-tier errors.
