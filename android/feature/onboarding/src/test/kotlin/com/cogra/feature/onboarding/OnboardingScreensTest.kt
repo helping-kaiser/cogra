@@ -116,7 +116,7 @@ class OnboardingScreensTest {
     fun aFailedAttachRendersItsError() {
         compose.setContent {
             KeyCeremonyScreen(
-                state = KeyCeremonyUiState(attachFailed = true),
+                state = KeyCeremonyUiState(attachError = AttachError.NETWORK),
                 onAcceptBackup = {},
                 onCodeSaved = {},
                 onDeclineBackup = {},
@@ -126,5 +126,21 @@ class OnboardingScreensTest {
         }
         compose.onNodeWithTag("ceremony_attach_error").assertExists()
         compose.onNodeWithTag("backup_accept").assertExists()
+    }
+
+    @Test
+    fun aKeyBoundElsewhereRendersItsOwnError() {
+        compose.setContent {
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(attachError = AttachError.KEY_IN_USE),
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
+            )
+        }
+        compose.onNodeWithTag("ceremony_key_in_use").assertExists()
+        compose.onNodeWithTag("ceremony_attach_error").assertDoesNotExist()
     }
 }

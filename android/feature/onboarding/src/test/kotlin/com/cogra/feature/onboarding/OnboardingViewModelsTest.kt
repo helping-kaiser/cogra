@@ -256,14 +256,40 @@ class OnboardingViewModelsTest {
         val vm = KeyCeremonyViewModel(ceremony, flow())
         vm.onAcceptBackup()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.attachFailed).isTrue()
+        assertThat(vm.state.value.attachError).isEqualTo(AttachError.NETWORK)
         assertThat(vm.state.value.recoveryCode).isNull()
 
         onboarding.attachOutcome = Outcome.Success(Unit)
         vm.onAcceptBackup()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.attachFailed).isFalse()
+        assertThat(vm.state.value.attachError).isNull()
         assertThat(vm.state.value.recoveryCode).isNotNull()
+    }
+
+    @Test
+    fun aKeyBoundElsewhereIsItsOwnRefusal() = runTest(dispatcher) {
+        onboarding.attachOutcome = Outcome.Refused(
+            listOf(
+                UserError(
+                    code = ErrorCode.ACTOR_KEY_IN_USE,
+                    message = "the key already belongs to another account",
+                    field = listOf("actorPubkey"),
+                ),
+            ),
+        )
+        val vm = KeyCeremonyViewModel(ceremony, flow())
+        vm.onAcceptBackup()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.attachError).isEqualTo(AttachError.KEY_IN_USE)
+        assertThat(vm.state.value.recoveryCode).isNull()
+
+        // Any other refusal stays the transient story.
+        onboarding.attachOutcome = Outcome.Refused(
+            listOf(UserError(code = ErrorCode.BAD_INPUT, message = "bad", field = null)),
+        )
+        vm.onAcceptBackup()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.attachError).isEqualTo(AttachError.NETWORK)
     }
 
     @Test

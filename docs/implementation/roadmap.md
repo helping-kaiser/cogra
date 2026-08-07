@@ -49,14 +49,16 @@ Slice 0 and slice 1's backend halves are landed: the seam, the
 stand-in, the record mirror with its epoch cursor, the genesis
 bootstrap, the staged write path, and the onboarding/session
 surface — the exported GraphQL contract is the full slice-1
-surface. The **Android client cut is built**: the vector-pinned
-crypto (`core:crypto`), the signing orchestration and stores
-(`core:domain` + `core:network`), and the five feature surfaces
-(onboarding, auth, home, invites, settings) with auth-driven
-navigation. What remains of slice 1 is the **web client** at
-parity ([web.md](web.md) — the app is a scaffold) and the
-end-to-end hand test of the slice. The client-crypto groundwork
-both cuts build on is in place — the key-backup blob format
+surface. **Both client cuts are built.** Android: the
+vector-pinned crypto (`core:crypto`), the signing orchestration
+and stores (`core:domain` + `core:network`), and the five feature
+surfaces (onboarding, auth, home, invites, settings) with
+auth-driven navigation. Web: the same surface at parity
+([web.md](web.md)) — the crypto core, WebCrypto key custody, the
+onboarding handshake, and the member surfaces. What remains of
+slice 1 is `User.hasReciprocated` and the end-to-end hand test's
+browser-restore leg. The client-crypto groundwork both cuts build
+on is in place — the key-backup blob format
 ([auth.md](auth.md#blob-format-v1)) and the golden vectors
 (`client-crypto-vectors.json`, `make vectors`).
 

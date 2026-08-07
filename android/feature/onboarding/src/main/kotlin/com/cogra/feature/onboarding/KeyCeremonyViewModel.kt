@@ -2,7 +2,9 @@ package com.cogra.feature.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.has
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.signing.RegistrationFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,14 +14,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** Why the attach did not land; the same choice retries it. */
+enum class AttachError {
+    /** Transport failed or the server refused for a transient reason. */
+    NETWORK,
+
+    /**
+     * ACTOR_KEY_IN_USE: the key is bound to a different account — an
+     * address binds at most one account (auth.md §Application).
+     */
+    KEY_IN_USE,
+}
+
 data class KeyCeremonyUiState(
     val inProgress: Boolean = false,
     /** The recovery code, displayed exactly once; never persisted. */
     val recoveryCode: String? = null,
     /** The decline path asks for an explicit confirmation of the price. */
     val confirmingDecline: Boolean = false,
-    /** The attach did not land; the same choice retries it. */
-    val attachFailed: Boolean = false,
+    val attachError: AttachError? = null,
     val done: Boolean = false,
 )
 
@@ -42,11 +55,12 @@ class KeyCeremonyViewModel @Inject constructor(
 
     fun onAcceptBackup() {
         if (_state.value.inProgress || _state.value.recoveryCode != null) return
-        _state.update { it.copy(inProgress = true, attachFailed = false) }
+        _state.update { it.copy(inProgress = true, attachError = null) }
         viewModelScope.launch {
             ceremony.createActorKey()
-            if (ceremony.attachActorKey() !is Outcome.Success) {
-                _state.update { it.copy(inProgress = false, attachFailed = true) }
+            val attached = ceremony.attachActorKey()
+            if (attached !is Outcome.Success) {
+                _state.update { it.copy(inProgress = false, attachError = attached.asAttachError()) }
                 return@launch
             }
             val code = ceremony.createPendingBackup()
@@ -65,11 +79,12 @@ class KeyCeremonyViewModel @Inject constructor(
     /** The stated price accepted: no backup, the key exists only here. */
     fun onConfirmDecline() {
         if (_state.value.inProgress) return
-        _state.update { it.copy(inProgress = true, confirmingDecline = false, attachFailed = false) }
+        _state.update { it.copy(inProgress = true, confirmingDecline = false, attachError = null) }
         viewModelScope.launch {
             ceremony.createActorKey()
-            if (ceremony.attachActorKey() !is Outcome.Success) {
-                _state.update { it.copy(inProgress = false, attachFailed = true) }
+            val attached = ceremony.attachActorKey()
+            if (attached !is Outcome.Success) {
+                _state.update { it.copy(inProgress = false, attachError = attached.asAttachError()) }
                 return@launch
             }
             _state.update { it.copy(inProgress = false) }
@@ -82,4 +97,11 @@ class KeyCeremonyViewModel @Inject constructor(
         registration.ensureAdvancing()
         _state.update { it.copy(done = true) }
     }
+
+    private fun Outcome<*>.asAttachError(): AttachError =
+        if (this is Outcome.Refused && has(ErrorCode.ACTOR_KEY_IN_USE)) {
+            AttachError.KEY_IN_USE
+        } else {
+            AttachError.NETWORK
+        }
 }
