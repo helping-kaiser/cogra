@@ -1,9 +1,11 @@
 // The session-token machinery (android/CLAUDE.md "Auth / tokens"): the
-// access token rides as a Bearer header; an UNAUTHENTICATED payload
-// triggers a single-flight refresh-and-replay. The backend resolves an
-// invalid token to "no viewer" silently, so UNAUTHENTICATED arrives as
-// a userError (or a null `me`), never a transport error — the retry
-// lives at the repository tier, not in an HTTP interceptor.
+// access token rides as a Bearer header; an UNAUTHENTICATED refusal
+// triggers a single-flight refresh-and-replay. UNAUTHENTICATED arrives
+// two ways — a null `me` on a viewer read, and an errors-array entry
+// with `extensions.code` on a guarded mutation (api-spec.md "Errors are
+// tiered") — and the outcome mapping synthesizes both into the same
+// refusal shape, so the retry lives at the repository tier, not in an
+// HTTP interceptor.
 
 package com.cogra.network.auth
 

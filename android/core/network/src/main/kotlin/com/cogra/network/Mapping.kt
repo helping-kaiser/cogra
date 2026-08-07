@@ -2,6 +2,11 @@
 // (api-spec.md "Errors are tiered"): the GraphQL errors array and
 // transport faults become Outcome.Failed; payload userErrors become
 // Outcome.Refused; everything else is Success.
+//
+// One deliberate translation: the backend emits UNAUTHENTICATED only as
+// an errors-array entry (transport tier per api-spec.md), but AuthGuard
+// must be able to refresh-and-replay on it, so it is synthesized into a
+// refusal here — the same shape a null viewer read maps to.
 
 package com.cogra.network
 
@@ -29,15 +34,24 @@ import java.util.Base64
 class GraphQlFaultException(messages: List<String>) :
     Exception("GraphQL fault: ${messages.joinToString("; ")}")
 
+/** The refusal a null viewer read and an errors-array UNAUTHENTICATED share. */
+internal fun unauthenticatedRefusal(): Outcome.Refused = Outcome.Refused(
+    listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer for this request")),
+)
+
 /**
  * Executes the call and splits the transport tier off: Failed for
- * exceptions and the errors array, Success(data) otherwise.
+ * exceptions and the errors array — except an errors-array
+ * UNAUTHENTICATED, which becomes a Refused — Success(data) otherwise.
  */
 internal suspend fun <D : Operation.Data> ApolloCall<D>.fetch(): Outcome<D> {
     val response = execute()
     response.exception?.let { return Outcome.Failed(it) }
     val errors = response.errors
-    if (!errors.isNullOrEmpty()) return Outcome.Failed(GraphQlFaultException(errors.map { it.message }))
+    if (!errors.isNullOrEmpty()) {
+        if (errors.any { it.extensions?.get("code") == "UNAUTHENTICATED" }) return unauthenticatedRefusal()
+        return Outcome.Failed(GraphQlFaultException(errors.map { it.message }))
+    }
     val data = response.data ?: return Outcome.Failed(IllegalStateException("response carried no data"))
     return Outcome.Success(data)
 }
