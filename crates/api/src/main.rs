@@ -7,7 +7,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use api::auth::AuthConfig;
 use api::l1::StandInBoundary;
-use api::mailer::DevMailer;
+use api::mailer::{DevMailer, WebOrigin};
 use api::onboarding::OnboardingConfig;
 use api::schema::ApiContext;
 use l1_standin::{StandIn, StandInConfig};
@@ -116,6 +116,7 @@ async fn main() -> anyhow::Result<()> {
         mailer: Arc::new(DevMailer::new(
             std::env::var_os("DEV_MAILER_LOG").map(std::path::PathBuf::from),
         )),
+        web_origin: WebOrigin(env_or("WEB_ORIGIN", "http://localhost:3000")),
         onboarding: OnboardingConfig {
             admission_burn_micro,
             gc_after_epochs,

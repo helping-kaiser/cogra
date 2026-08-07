@@ -18,6 +18,12 @@ pub struct Mail {
     pub body: String,
 }
 
+/// The per-environment web origin every emailed link rides on
+/// (auth.md "Link URLs") — `https://<web-origin>/verify?token=`,
+/// `/reset?token=`, `/join/<link-id>`.
+#[derive(Debug, Clone)]
+pub struct WebOrigin(pub String);
+
 /// The delivery seam. Sending is best-effort from the caller's view — a
 /// flow never fails because mail did; the user path for a lost message
 /// is the resend verb.

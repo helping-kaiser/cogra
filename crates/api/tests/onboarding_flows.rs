@@ -110,9 +110,15 @@ impl Rig {
 
     /// Registers, returning the new account's id.
     async fn register(&self, input: RegistrationInput) -> Result<Uuid, OnboardingError> {
-        onboarding::register(&self.pool, &self.auth_cfg, &self.mailer, input)
-            .await
-            .map(|r| r.session.user_id)
+        onboarding::register(
+            &self.pool,
+            &self.auth_cfg,
+            &self.mailer,
+            "http://localhost:3000",
+            input,
+        )
+        .await
+        .map(|r| r.session.user_id)
     }
 
     /// Marks the account's email verified through the store directly —
@@ -271,15 +277,17 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
         Err(OnboardingError::VerificationTokenInvalid)
     ));
 
-    // The real token verifies (read from the captured mail).
+    // The real token verifies (read from the captured mail, whose body
+    // carries the web link URL per auth.md "Link URLs").
     let token = {
         let mails = rig.mailer.0.lock().expect("mailbox");
-        mails
-            .last()
-            .expect("mail")
-            .body
-            .lines()
-            .find_map(|l| l.split(": ").nth(1))
+        let body = &mails.last().expect("mail").body;
+        assert!(
+            body.contains("/verify?token="),
+            "verification mail must carry the link URL"
+        );
+        body.lines()
+            .find_map(|l| l.split("token=").nth(1))
             .expect("token")
             .trim()
             .to_string()
