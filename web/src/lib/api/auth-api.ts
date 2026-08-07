@@ -6,16 +6,19 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   ConfirmPasswordResetDocument,
+  KeyBackupDocument,
   LogInDocument,
   MeDocument,
   RefreshSessionDocument,
   RequestPasswordResetDocument,
+  UploadKeyBackupDocument,
   type MeQuery,
 } from "@/__generated__/graphql";
 import {
   fetchOutcome,
   payload,
   payloadOutcome,
+  success,
   unauthenticated,
   type Outcome,
 } from "./outcome";
@@ -83,6 +86,27 @@ export function confirmPasswordReset(
       }),
     (data) => data.confirmPasswordReset.userErrors,
     (data) => (data.confirmPasswordReset.ok === true ? true : null),
+  );
+}
+
+/**
+ * The viewer's newest backup blob (base64), null when none was ever
+ * uploaded. Guarded by the caller.
+ */
+export async function fetchKeyBackup(client: ApolloClient): Promise<Outcome<string | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({ query: KeyBackupDocument, fetchPolicy: "network-only" }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  if (fetched.value.me === null) return unauthenticated();
+  return success(fetched.value.me.keyBackup);
+}
+
+export function uploadKeyBackup(client: ApolloClient, blob: string): Promise<Outcome<true>> {
+  return payloadOutcome(
+    () => client.mutate({ mutation: UploadKeyBackupDocument, variables: { input: { blob } } }),
+    (data) => data.uploadKeyBackup.userErrors,
+    (data) => (data.uploadKeyBackup.ok === true ? true : null),
   );
 }
 

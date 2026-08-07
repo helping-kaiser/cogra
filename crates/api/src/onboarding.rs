@@ -145,6 +145,7 @@ pub async fn register(
     pool: &PgPool,
     auth_cfg: &AuthConfig,
     mailer: &dyn Mailer,
+    web_origin: &str,
     input: RegistrationInput,
 ) -> Result<RegisteredAccount, OnboardingError> {
     let handle = auth::normalize_handle(&input.handle).map_err(|m| OnboardingError::BadInput {
@@ -191,9 +192,11 @@ pub async fn register(
         .send(Mail {
             to: email,
             subject: "Verify your CoGra email".into(),
+            // The link URL (auth.md "Link URLs") plus the bare token —
+            // the universal fallback native apps accept as a paste.
             body: format!(
-                "Your verification token: {}\n\nThe account expires in {UNVERIFIED_TTL_HOURS} hours if unverified.",
-                verification.token
+                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_HOURS} hours if unverified.",
+                token = verification.token
             ),
         })
         .await;
@@ -217,6 +220,7 @@ pub async fn verify_email(pool: &PgPool, token: &str) -> Result<(), OnboardingEr
 pub async fn resend_verification(
     pool: &PgPool,
     mailer: &dyn Mailer,
+    web_origin: &str,
     email: &str,
 ) -> Result<(), OnboardingError> {
     let Ok(email) = auth::normalize_email(email) else {
@@ -231,7 +235,10 @@ pub async fn resend_verification(
             .send(Mail {
                 to: email,
                 subject: "Verify your CoGra email".into(),
-                body: format!("Your verification token: {}", fresh.token),
+                body: format!(
+                    "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}",
+                    token = fresh.token
+                ),
             })
             .await;
     }

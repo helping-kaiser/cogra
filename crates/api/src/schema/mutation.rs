@@ -26,7 +26,7 @@ use super::types::{
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::l1::StandInBoundary;
-use crate::mailer::{Mail, Mailer};
+use crate::mailer::{Mail, Mailer, WebOrigin};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::relay::{self, RelayError};
 use crate::stance::{self, StanceError};
@@ -468,10 +468,12 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let auth_cfg = ctx.data::<AuthConfig>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let web_origin = ctx.data::<WebOrigin>()?;
         match onboarding::register(
             pool,
             auth_cfg,
             mailer.as_ref(),
+            &web_origin.0,
             onboarding::RegistrationInput {
                 invite_link: input.invite_link,
                 handle: input.handle,
@@ -582,7 +584,11 @@ impl Mutation {
     ) -> async_graphql::Result<ResendVerificationEmailPayload> {
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
-        if let Err(e) = onboarding::resend_verification(pool, mailer.as_ref(), &input.email).await {
+        let web_origin = ctx.data::<WebOrigin>()?;
+        if let Err(e) =
+            onboarding::resend_verification(pool, mailer.as_ref(), &web_origin.0, &input.email)
+                .await
+        {
             tracing::error!(error = %e, "resend failed silently by design");
         }
         Ok(ResendVerificationEmailPayload { ok: true })
@@ -787,13 +793,17 @@ impl Mutation {
                 Utc::now() + Duration::minutes(PASSWORD_RESET_TTL_MINUTES),
             )
             .await?;
+            let web_origin = ctx.data::<WebOrigin>()?;
             mailer
                 .send(Mail {
                     to: email,
                     subject: "Reset your CoGra password".into(),
+                    // The link URL (auth.md "Link URLs") plus the bare
+                    // token native apps accept as a paste.
                     body: format!(
-                        "Your password-reset token (valid {PASSWORD_RESET_TTL_MINUTES} minutes): {}",
-                        secret.token
+                        "Reset your password: {origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes.",
+                        origin = web_origin.0,
+                        token = secret.token
                     ),
                 })
                 .await;
