@@ -50,7 +50,9 @@ chosen so the schema reads as prose under introspection. The
 target consumer is a human exploring through a GraphQL IDE **with
 no frontend in front of them** — the schema must be navigable and
 self-explaining on its own. When a name and a shorter name both
-fit, the clearer one wins.
+fit, the clearer one wins. The exploration surfaces are dev
+builds' playground and the checked-in `schema.graphql`; release
+builds serve no introspection ("Query budgets" below).
 
 ### Idiomatic GraphQL, not REST with selectable fields
 
@@ -188,6 +190,29 @@ consumer fetches the first page with `first:` alone and follows
 > stay apart by construction: `edges` inside a `*Connection` is
 > always the pagination wrapper, and the substrate concept is
 > always `Record`. The Relay spelling is kept throughout.
+
+**Page sizes are budgeted.** `first`/`last` accept at most 100
+(over-asking refuses with a validation error rather than silently
+clamping); a connection read with neither argument serves 20. The
+caps are part of the query-budget posture below.
+
+### Query budgets
+
+Every request is priced in validation, before any resolver runs
+(roadmap.md slice 1.1): query **depth** is capped at 15 levels,
+and total **complexity** at 1000 fields, with connection fields
+costing their requested (or default) page size times the per-item
+cost — so a nested full-page-connections query prices
+multiplicatively and refuses. A tripped budget is a message-only
+GraphQL validation error ("Query is nested too deep." / "Query is
+too complex."), with no `extensions.code` — clients treat it as a
+generic transport failure, and the budgets are sized so no real
+client query ever meets it. **Introspection is disabled in release
+builds** (OWASP GraphQL guidance): the contract travels as the
+checked-in `schema.graphql`, which both clients generate from;
+dev builds keep introspection on (with a loose complexity ceiling
+— the limits apply to introspection queries too) for the
+playground.
 
 **Feed ranking and cursors.** The backend does not rank
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)): it serves the
