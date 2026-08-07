@@ -8,6 +8,8 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.WriteState
+import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.OnboardingRepositoryImpl
@@ -63,7 +65,10 @@ class RepositoriesTest {
         server.enqueue(MockResponse().setBody(json).addHeader("Content-Type", "application/json"))
     }
 
-    private fun guard() = AuthGuard(tokenStore, SessionRefresher(tokenStore, Provider { client }))
+    private fun guard() = AuthGuard(
+        tokenStore,
+        SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+    )
 
     @Test
     fun inviteCheckMapsBothBranches() = runTest {
@@ -86,11 +91,13 @@ class RepositoriesTest {
         val onboarding = OnboardingRepositoryImpl(client, guard())
         enqueue(
             """{"data":{"register":{"__typename":"RegisterPayload",
-               "auth":{"__typename":"AuthSession","accessToken":"a","refreshToken":"r"},
+               "auth":{"__typename":"AuthSession","accessToken":"a","refreshToken":"r",
+               "user":{"__typename":"User","id":"u1"}},
                "expiresAt":"2026-08-07T12:00:00+00:00","userErrors":[]}}}""",
         )
         val tokens = (onboarding.register("l", "h", "e@x.com", "p".repeat(12), "phone") as Outcome.Success).value
-        assertThat(tokens).isEqualTo(AuthTokens("a", "r"))
+        // The pair carries the account it authenticates.
+        assertThat(tokens).isEqualTo(AuthTokens("a", "r", "u1"))
     }
 
     @Test
@@ -126,10 +133,10 @@ class RepositoriesTest {
     @Test
     fun applicationStatusMapsTheViewerAndPicksTheLiveRegistration() = runTest {
         val onboarding = OnboardingRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r"))
+        tokenStore.save(AuthTokens("a", "r", "u1"))
         val proposal = Base64.getEncoder().encodeToString(byteArrayOf(1))
         enqueue(
-            """{"data":{"me":{"__typename":"User","id":"u1","accountState":"APPLICANT",
+            """{"data":{"me":{"__typename":"User","id":"u1","accountState":"APPLICANT","actorPubkey":"attached-key",
                "application":{"__typename":"Application","id":"app1","handle":"joiner",
                  "emailVerified":true,"keyAttached":false,"approvedAt":null,"landedAt":null,
                  "createdAt":"2026-08-06T12:00:00+00:00","expiresAt":"2026-08-07T12:00:00+00:00"},
@@ -144,6 +151,7 @@ class RepositoriesTest {
         val application = checkNotNull(status.application)
         assertThat(application.emailVerified).isTrue()
         assertThat(application.keyAttached).isFalse()
+        assertThat(status.actorPubkey).isEqualTo("attached-key")
         // The expired staging is dead; the live one is served.
         assertThat(checkNotNull(status.stagedRegistration).id).isEqualTo("reg")
         assertThat(status.stagedRegistration?.state).isEqualTo(WriteState.AWAITING_PRE_SIGN)
@@ -160,7 +168,7 @@ class RepositoriesTest {
     @Test
     fun attachActorKeyMapsSuccessAndRefusal() = runTest {
         val onboarding = OnboardingRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r"))
+        tokenStore.save(AuthTokens("a", "r", "u1"))
         enqueue(
             """{"data":{"attachActorKey":{"__typename":"AttachActorKeyPayload",
                "user":{"__typename":"User","id":"u1"},"userErrors":[]}}}""",
@@ -203,7 +211,7 @@ class RepositoriesTest {
     @Test
     fun stagedWriteFieldsMapToTheDomainView() = runTest {
         val writes = WriteRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r"))
+        tokenStore.save(AuthTokens("a", "r", "u1"))
         val proposal = Base64.getEncoder().encodeToString(byteArrayOf(1, 2, 3))
         enqueue(
             """{"data":{"stagedWrite":{"__typename":"StagedWrite","id":"w1",
@@ -241,7 +249,7 @@ class RepositoriesTest {
     @Test
     fun sessionsMapWithInstants() = runTest {
         val sessions = SessionRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r"))
+        tokenStore.save(AuthTokens("a", "r", "u1"))
         enqueue(
             """{"data":{"me":{"__typename":"User","sessions":[
                {"__typename":"Session","id":"s1","deviceLabel":"phone",

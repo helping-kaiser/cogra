@@ -633,3 +633,99 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
         joiner_key.address()
     );
 }
+
+/// The attached-identity read (roadmap.md slice 1.1): `actorPubkey` /
+/// `l0Address` carry the account's own attached key for its viewer,
+/// null before the ceremony — and never resolve for anyone else, keyed
+/// key or not.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, inviter_key) = rig
+        .seed_member("inviter", "inviter@example.com", "inviter password")
+        .await;
+
+    let login = rig
+        .gql(
+            None,
+            "mutation($input: LogInInput!) {
+                logIn(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": { "email": "inviter@example.com", "password": "inviter password" } }),
+        )
+        .await;
+    let inviter_token = login["logIn"]["auth"]["accessToken"]
+        .as_str()
+        .expect("session")
+        .to_string();
+
+    // The viewer reads their own attached identity.
+    let me = rig
+        .gql(
+            Some(&inviter_token),
+            "{ me { actorPubkey l0Address } }",
+            json!({}),
+        )
+        .await;
+    assert_eq!(
+        me["me"]["actorPubkey"].as_str().expect("pubkey"),
+        B64.encode(inviter_key.public_key_bytes())
+    );
+    assert_eq!(
+        me["me"]["l0Address"].as_str().expect("address"),
+        inviter_key.address()
+    );
+
+    // An applicant before the ceremony reads null for both.
+    let link = rig
+        .gql(
+            Some(&inviter_token),
+            "mutation($input: CreateInviteLinkInput!) {
+                createInviteLink(input: $input) { inviteLink { id } userErrors { code } }
+            }",
+            json!({ "input": {
+                "expiresAt": "2027-01-01T00:00:00Z",
+                "prefillPDirected": 0.1,
+                "prefillPInterest": 0.1,
+            }}),
+        )
+        .await;
+    let link_id = link["createInviteLink"]["inviteLink"]["id"]
+        .as_str()
+        .expect("link")
+        .to_string();
+    let registered = rig
+        .gql(
+            None,
+            "mutation($input: RegisterInput!) {
+                register(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": {
+                "inviteLink": link_id,
+                "handle": "joiner",
+                "email": "joiner@example.com",
+                "password": "a strong password",
+            }}),
+        )
+        .await;
+    let joiner_token = registered["register"]["auth"]["accessToken"]
+        .as_str()
+        .expect("session")
+        .to_string();
+    let me = rig
+        .gql(
+            Some(&joiner_token),
+            "{ me { actorPubkey l0Address invitedBy { ... on User { actorPubkey l0Address } } } }",
+            json!({}),
+        )
+        .await;
+    assert!(
+        me["me"]["actorPubkey"].is_null(),
+        "no key before the ceremony"
+    );
+    assert!(me["me"]["l0Address"].is_null());
+    // The inviter HAS a key, but read as someone else's User both
+    // fields stay null.
+    assert!(me["me"]["invitedBy"]["actorPubkey"].is_null());
+    assert!(me["me"]["invitedBy"]["l0Address"].is_null());
+}

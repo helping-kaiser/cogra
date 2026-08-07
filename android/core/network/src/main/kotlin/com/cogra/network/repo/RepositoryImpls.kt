@@ -90,8 +90,10 @@ import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private fun authOf(fields: com.cogra.network.graphql.fragment.AuthSessionFields): AuthTokens =
-    AuthTokens(fields.accessToken, fields.refreshToken)
+// Null when the payload omits the viewer — the convention makes that a
+// server fault, and the payload mapping surfaces it as Failed.
+private fun authOf(fields: com.cogra.network.graphql.fragment.AuthSessionFields): AuthTokens? =
+    fields.user?.let { AuthTokens(fields.accessToken, fields.refreshToken, it.id) }
 
 @Singleton
 class OnboardingRepositoryImpl @Inject constructor(
@@ -174,6 +176,7 @@ class OnboardingRepositoryImpl @Inject constructor(
                             .firstOrNull {
                                 it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
                             },
+                        actorPubkey = me.actorPubkey,
                     ),
                 )
             }

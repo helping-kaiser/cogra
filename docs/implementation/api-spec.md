@@ -396,6 +396,7 @@ enum ErrorCode {
   EMAIL_IN_USE                 # the email already belongs to an account
   ACTOR_KEY_IN_USE             # the actor key is bound to a different account
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
+  RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
   WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
@@ -743,6 +744,13 @@ type User implements Node & Actor {
    ciphertext under the recovery code; the server cannot decrypt it
    (auth.md \"Key recovery\")."
   keyBackup: String
+  "The account's attached actor public key (base64), null before the
+   key ceremony. The client's repair-attach verifies the device-held
+   key against this before offering it, so a device carrying another
+   account's key never blind-fires the attach (roadmap.md slice 1.1)."
+  actorPubkey: String
+  "The account's attached L0 address, null before the key ceremony."
+  l0Address: String
   "The account's service state — gates acting through CoGra
    (auth.md \"Account states\")."
   accountState: AccountState
@@ -2977,7 +2985,7 @@ input ConfirmPasswordResetInput {
   newPassword: String!
 }
 "An invalid, expired, or already-used reset token is a
- VERIFICATION_TOKEN_INVALID userError pinned to resetToken; a weak
+ RESET_TOKEN_INVALID userError pinned to resetToken; a weak
  newPassword is WEAK_PASSWORD."
 type ConfirmPasswordResetPayload { ok: Boolean }
 

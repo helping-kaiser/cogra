@@ -8,6 +8,7 @@ import com.cogra.domain.UserError
 import com.cogra.domain.identity.LogIn
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.testing.FakeIdentityStore
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +34,7 @@ class InMemoryTokens : TokenStore {
 }
 
 private class ScriptedSessions : SessionRepository {
-    var logInOutcome: Outcome<AuthTokens> = Outcome.Success(AuthTokens("a", "r"))
+    var logInOutcome: Outcome<AuthTokens> = Outcome.Success(AuthTokens("a", "r", "u1"))
     var lastDeviceLabel: String? = null
 
     override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<AuthTokens> {
@@ -53,6 +54,7 @@ class LoginViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val sessions = ScriptedSessions()
     private val tokens = InMemoryTokens()
+    private val identity = FakeIdentityStore()
 
     @Before
     fun setUp() {
@@ -64,7 +66,7 @@ class LoginViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = LoginViewModel(LogIn(sessions, tokens))
+    private fun viewModel() = LoginViewModel(LogIn(sessions, tokens, identity))
 
     @Test
     fun successStoresTheTokens() = runTest(dispatcher) {
@@ -73,7 +75,7 @@ class LoginViewModelTest {
         vm.onPasswordChange("a strong password")
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(tokens.current()).isEqualTo(AuthTokens("a", "r"))
+        assertThat(tokens.current()).isEqualTo(AuthTokens("a", "r", "u1"))
         assertThat(vm.state.value.inProgress).isFalse()
         assertThat(vm.state.value.error).isNull()
     }
@@ -112,5 +114,42 @@ class LoginViewModelTest {
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(sessions.lastDeviceLabel).isNull()
+    }
+
+    @Test
+    fun theDontRememberOptInIsPersistedAtLogin() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onEmailChange("user@example.com")
+        vm.onPasswordChange("a strong password")
+        vm.onForgetOnSignOutChange(true)
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.forgetOnSignOut).isTrue()
+    }
+
+    @Test
+    fun anUncheckedLoginClearsAnEarlierOptIn() = runTest(dispatcher) {
+        // Each login records the checkbox as the account's current
+        // choice (auth.md "Sign-out": default off).
+        identity.forgetOnSignOut = true
+        val vm = viewModel()
+        vm.onEmailChange("user@example.com")
+        vm.onPasswordChange("a strong password")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.forgetOnSignOut).isFalse()
+    }
+
+    @Test
+    fun aRefusedLoginRecordsNoOptIn() = runTest(dispatcher) {
+        sessions.logInOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.INVALID_CREDENTIALS, "no match")))
+        val vm = viewModel()
+        vm.onEmailChange("user@example.com")
+        vm.onPasswordChange("wrong")
+        vm.onForgetOnSignOutChange(true)
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.forgetOnSignOut).isFalse()
     }
 }

@@ -9,6 +9,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserError
 import com.cogra.domain.identity.BackupManager
+import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -93,7 +94,7 @@ class SettingsViewModelTest {
         sessionRepo,
         account,
         BackupManager(identity, account),
-        SignOut(sessionRepo, tokens),
+        SignOut(sessionRepo, EndLocalSession(identity, tokens)),
         identity,
     )
 
@@ -203,12 +204,24 @@ class SettingsViewModelTest {
 
     @Test
     fun signOutClearsTokensButKeepsTheActor() = runTest(dispatcher) {
-        tokens.save(AuthTokens("a", "r"))
+        tokens.save(AuthTokens("a", "r", "u1"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onSignOut()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNotNull()
+    }
+
+    @Test
+    fun signOutPurgesAnAccountThatOptedOutOfBeingRemembered() = runTest(dispatcher) {
+        tokens.save(AuthTokens("a", "r", "u1"))
+        identity.forgetOnSignOut = true
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSignOut()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(tokens.current()).isNull()
+        assertThat(identity.seed).isNull()
     }
 }

@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 
 function signedInStore() {
   const store = createTokenStore();
-  store.save({ accessToken: "access-1", refreshToken: "refresh-1" });
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
   return store;
 }
 

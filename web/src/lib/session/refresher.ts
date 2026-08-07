@@ -9,9 +9,9 @@
 // holds and multi-tab safety degrades gracefully.
 
 import { hasCode, type Outcome } from "@/lib/api/outcome";
-import type { TokenPair, TokenStore } from "./token-store";
+import type { SessionAuth, TokenStore } from "./token-store";
 
-export type RefreshExecutor = (refreshToken: string) => Promise<Outcome<TokenPair>>;
+export type RefreshExecutor = (refreshToken: string) => Promise<Outcome<SessionAuth>>;
 
 export type Refresher = {
   /**
@@ -31,7 +31,17 @@ async function withWebLock<T>(fn: () => Promise<T>): Promise<T> {
   return fn();
 }
 
-export function createRefresher(store: TokenStore, exec: RefreshExecutor): Refresher {
+export function createRefresher(
+  store: TokenStore,
+  exec: RefreshExecutor,
+  /**
+   * Runs before the sign-out clear, while the dying session's account is
+   * still active — the "don't remember me" purge hook (auth.md
+   * "Sign-out": flagged accounts are purged on a session invalidation
+   * that clears the tokens).
+   */
+  onSessionInvalidated?: () => Promise<void>,
+): Refresher {
   let chain: Promise<unknown> = Promise.resolve();
 
   const withMutex = <T,>(fn: () => Promise<T>): Promise<T> => {
@@ -58,7 +68,14 @@ export function createRefresher(store: TokenStore, exec: RefreshExecutor): Refre
               store.save(outcome.value);
               return true;
             case "refused":
-              if (hasCode(outcome, "REFRESH_TOKEN_INVALID")) store.clear();
+              if (hasCode(outcome, "REFRESH_TOKEN_INVALID")) {
+                try {
+                  await onSessionInvalidated?.();
+                } catch {
+                  // A failed purge must never keep a dead session alive.
+                }
+                store.clear();
+              }
               return false;
             case "failed":
               return false;

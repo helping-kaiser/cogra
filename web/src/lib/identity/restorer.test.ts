@@ -42,7 +42,7 @@ describe("restoreActor", () => {
 
   beforeEach(() => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    store = createIdentityStore({ activeAccountId: () => "acct-1" });
   });
 
   it("restores the actor from the blob, seed not retained", async () => {

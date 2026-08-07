@@ -81,6 +81,8 @@ pub enum ErrorCode {
     ActorKeyInUse,
     /// The email-verification token is invalid or expired.
     VerificationTokenInvalid,
+    /// The password-reset token is invalid, expired, or already used.
+    ResetTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
     RefreshTokenInvalid,
     /// The prepare pre-check: W1 solvency or W2 stamps.
@@ -665,6 +667,27 @@ impl User {
         Ok(store::latest_key_backup(pool, self.identity.id)
             .await?
             .map(|blob| B64.encode(blob)))
+    }
+
+    /// The account's attached actor public key (base64), null before
+    /// the key ceremony. The client's repair-attach verifies the
+    /// device-held key against this before offering it, so a device
+    /// carrying another account's key never blind-fires the attach
+    /// (roadmap.md slice 1.1). Field-level: viewer-only.
+    async fn actor_pubkey(&self, ctx: &Context<'_>) -> Option<String> {
+        if !self.is_viewer(ctx) {
+            return None;
+        }
+        self.identity.actor_pubkey.as_ref().map(|k| B64.encode(k))
+    }
+
+    /// The account's attached L0 address, null before the key ceremony.
+    /// Field-level: viewer-only.
+    async fn l0_address(&self, ctx: &Context<'_>) -> Option<String> {
+        if !self.is_viewer(ctx) {
+            return None;
+        }
+        self.identity.l0_address.clone()
     }
 
     /// The actor whose invite this account came through — landing
