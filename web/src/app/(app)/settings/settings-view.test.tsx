@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -199,15 +199,19 @@ describe("SettingsView sessions", () => {
     await waitFor(() => expect(screen.queryByTestId("session_s2")).not.toBeInTheDocument());
   });
 
-  it("signs out everywhere else", async () => {
+  it("signs out everywhere else, with the feedback in the sessions card", async () => {
     server.use(
       okMutation("RevokeOtherSessions", "RevokeSessionsPayload", { revokedCount: 2 }),
     );
     renderSettings();
     fireEvent.click(await screen.findByTestId("settings_revoke_others"));
-    expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(
-      "All other sessions signed out.",
-    );
+    const feedback = await screen.findByTestId("settings_feedback");
+    expect(feedback).toHaveTextContent("All other sessions signed out.");
+    // Access tokens survive their TTL by design (auth.md "Sessions") — the copy says so.
+    expect(feedback).toHaveTextContent("up to 15 minutes");
+    expect(
+      within(screen.getByTestId("settings_sessions_card")).getByTestId("settings_feedback"),
+    ).toBe(feedback);
   });
 });
 
@@ -228,9 +232,12 @@ describe("SettingsView credentials", () => {
       target: { value: "new-password-12" },
     });
     fireEvent.click(screen.getByTestId("settings_change_password"));
-    expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(
-      "Password changed. Other sessions were signed out.",
-    );
+    const feedback = await screen.findByTestId("settings_feedback");
+    expect(feedback).toHaveTextContent("Password changed. Other sessions were signed out.");
+    // Feedback renders beside the fields that acted, not at the page top.
+    expect(
+      within(screen.getByTestId("settings_credentials_card")).getByTestId("settings_feedback"),
+    ).toBe(feedback);
     expect(screen.getByTestId("settings_current_password")).toHaveValue("");
     expect(screen.getByTestId("settings_new_password")).toHaveValue("");
   });
