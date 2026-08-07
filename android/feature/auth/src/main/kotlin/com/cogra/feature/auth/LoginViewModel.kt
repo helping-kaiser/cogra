@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val email: String = "",
     val password: String = "",
+    /** The "don't remember me" opt-in (auth.md "Sign-out"); default off. */
+    val forgetOnSignOut: Boolean = false,
     val inProgress: Boolean = false,
     /** The refusal to render; null when none. */
     val error: ErrorCode? = null,
@@ -36,12 +38,20 @@ class LoginViewModel @Inject constructor(private val logIn: LogIn) : ViewModel()
 
     fun onPasswordChange(value: String) = _state.update { it.copy(password = value, error = null, transportFailed = false) }
 
+    fun onForgetOnSignOutChange(value: Boolean) = _state.update { it.copy(forgetOnSignOut = value) }
+
     fun onSubmit() {
         val current = _state.value
         if (!current.canSubmit) return
         _state.update { it.copy(inProgress = true, error = null, transportFailed = false) }
         viewModelScope.launch {
-            when (val outcome = logIn.logIn(current.email.trim(), current.password, Build.MODEL)) {
+            val outcome = logIn.logIn(
+                current.email.trim(),
+                current.password,
+                Build.MODEL,
+                forgetOnSignOut = current.forgetOnSignOut,
+            )
+            when (outcome) {
                 is Outcome.Success -> _state.update { it.copy(inProgress = false) }
                 is Outcome.Refused -> _state.update {
                     it.copy(inProgress = false, error = outcome.errors.first().code)

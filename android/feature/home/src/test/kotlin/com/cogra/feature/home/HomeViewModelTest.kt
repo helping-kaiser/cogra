@@ -49,7 +49,7 @@ private class ScriptedAccount : ThrowingAccountRepository() {
 }
 
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
-    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null)
+    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     var verify: Outcome<Unit> = Outcome.Success(Unit)
     var rearm: Outcome<Unit> = Outcome.Success(Unit)
     var polls = 0
@@ -135,7 +135,7 @@ class HomeViewModelTest {
     )
 
     private fun applicantStatus(application: ApplicationView? = applicationView()) =
-        ApplicationStatus(AccountState.APPLICANT, application, null)
+        ApplicationStatus(AccountState.APPLICANT, application, null, null)
 
     // ----------------------------------------------------------------
     // Member shape
@@ -392,7 +392,7 @@ class HomeViewModelTest {
         // The Registration confirmed: the account state flips, the
         // session never changes, and the shell greets once.
         account.profile = member(invitedBy = null)
-        onboarding.status = ApplicationStatus(AccountState.MEMBER, null, null)
+        onboarding.status = ApplicationStatus(AccountState.MEMBER, null, null, null)
         dispatcher.scheduler.advanceTimeBy(registration.fastDelayMs)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.applicant).isFalse()

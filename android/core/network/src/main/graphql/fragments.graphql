@@ -28,6 +28,9 @@ fragment PreparedWriteFields on PreparedWrite {
 fragment AuthSessionFields on AuthSession {
   accessToken
   refreshToken
+  user {
+    id
+  }
 }
 
 fragment SessionFields on Session {
