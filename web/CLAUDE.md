@@ -29,9 +29,13 @@ get agreement before building it.
 `schema.graphql` at the repo root is the single source of truth
 for the API surface; `npm run codegen` (GraphQL Code Generator,
 client preset) generates typed operations from it into
-`src/__generated__/` — gitignored, regenerated in CI, **never
-hand-edited**, and never a second schema copy. Operation documents
-live in `src/lib/graphql/` or as `graphql()` calls in components.
+`src/__generated__/` — gitignored, regenerated in CI and by the
+`predev` hook on every `npm run dev`, **never hand-edited**, and
+never a second schema copy. The predev hook exists because the
+gitignored artifacts silently go stale after a pull — a compiled
+query then omits fields the source `.graphql` asks for. Operation
+documents live in `src/lib/graphql/` or as `graphql()` calls in
+components.
 
 ## Layout
 
