@@ -21,7 +21,7 @@ export function KeyCeremonyView() {
   const [inProgress, setInProgress] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
   const [confirmingDecline, setConfirmingDecline] = useState(false);
-  const [attachFailed, setAttachFailed] = useState(false);
+  const [attachError, setAttachError] = useState<"network" | "keyInUse" | null>(null);
 
   // Already attached and not mid-ceremony: nothing to do here.
   const attached = progress?.kind === "awaitingApproval" && progress.keyAttached;
@@ -37,12 +37,16 @@ export function KeyCeremonyView() {
 
   const mintAndAttach = async (): Promise<boolean> => {
     setInProgress(true);
-    setAttachFailed(false);
+    setAttachError(null);
     await ceremony.createActorKey();
     const outcome = await ceremony.attachActorKey();
     if (outcome.kind !== "success") {
       setInProgress(false);
-      setAttachFailed(true);
+      setAttachError(
+        outcome.kind === "refused" && outcome.errors.some((e) => e.code === "ACTOR_KEY_IN_USE")
+          ? "keyInUse"
+          : "network",
+      );
       return false;
     }
     return true;
@@ -78,13 +82,23 @@ export function KeyCeremonyView() {
             devices — CoGra never holds it. A recovery code lets you restore that key if this
             browser is lost. We recommend creating one now.
           </p>
-          {attachFailed && (
+          {attachError === "network" && (
             <p
               role="alert"
               data-testid="ceremony_attach_error"
               className="text-sm text-red-600 dark:text-red-400"
             >
               Can&apos;t reach the server. Check your connection and try again.
+            </p>
+          )}
+          {attachError === "keyInUse" && (
+            <p
+              role="alert"
+              data-testid="ceremony_key_in_use"
+              className="text-sm text-red-600 dark:text-red-400"
+            >
+              This device&apos;s signing key already belongs to another account. Sign in to that
+              account to use it — a key can only ever back one account.
             </p>
           )}
           {inProgress && (
