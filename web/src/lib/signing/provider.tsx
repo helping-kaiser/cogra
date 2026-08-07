@@ -26,11 +26,12 @@ import {
   createRegistrationSigner,
   type RegistrationProgress,
 } from "./registration-signer";
-import { createWriteSigner } from "./write-signer";
+import { createWriteSigner, type WriteSigner } from "./write-signer";
 
 type RegistrationRuntime = {
   flow: RegistrationFlow;
   ceremony: KeyCeremony;
+  writeSigner: WriteSigner;
 };
 
 const RegistrationContext = createContext<RegistrationRuntime | null>(null);
@@ -39,11 +40,13 @@ export function RegistrationProvider({
   children,
   ceremony: injectedCeremony,
   flow: injectedFlow,
+  writeSigner: injectedWriteSigner,
 }: {
   children: ReactNode;
   /** Test injection, as SessionProvider's store. */
   ceremony?: KeyCeremony;
   flow?: RegistrationFlow;
+  writeSigner?: WriteSigner;
 }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -55,9 +58,11 @@ export function RegistrationProvider({
   );
   const ceremony = injectedCeremony ?? builtCeremony;
 
-  // One flow per provider mount; deps are app-stable (the Apollo client
-  // and guard never change identity within a session).
-  const [builtFlow] = useState(() => {
+  // One flow and one signer per provider mount; deps are app-stable
+  // (the Apollo client and guard never change identity within a
+  // session). The signer is shared app-wide because resume() spans
+  // every persisted handshake, whichever surface started it.
+  const [built] = useState(() => {
     const writeSigner = createWriteSigner({ client, guard, store: identityStore });
     const signer = createRegistrationSigner({
       client,
@@ -66,15 +71,19 @@ export function RegistrationProvider({
       ceremony,
       writeSigner,
     });
-    return createRegistrationFlow({ signer });
+    return { writeSigner, flow: createRegistrationFlow({ signer }) };
   });
-  const flow = injectedFlow ?? builtFlow;
+  const flow = injectedFlow ?? built.flow;
+  const writeSigner = injectedWriteSigner ?? built.writeSigner;
 
   useEffect(() => {
     if (phase === "signedOut") flow.reset();
   }, [phase, flow]);
 
-  const value = useMemo(() => ({ flow, ceremony }), [flow, ceremony]);
+  const value = useMemo(
+    () => ({ flow, ceremony, writeSigner }),
+    [flow, ceremony, writeSigner],
+  );
   return <RegistrationContext.Provider value={value}>{children}</RegistrationContext.Provider>;
 }
 
@@ -92,6 +101,11 @@ export function useRegistrationFlow(): RegistrationFlow {
 
 export function useKeyCeremony(): KeyCeremony {
   return useRegistrationRuntime().ceremony;
+}
+
+/** The app's one write signer — member surfaces sign through it. */
+export function useWriteSigner(): WriteSigner {
+  return useRegistrationRuntime().writeSigner;
 }
 
 /** The loop's latest report, live — null until the first pass. */
