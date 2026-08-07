@@ -38,11 +38,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.annotation.StringRes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.ErrorCode
 
 @Composable
 fun InvitesRoute(
@@ -116,7 +118,10 @@ fun InvitesScreen(
         ) {
             if (state.error != null || state.transportFailed) {
                 Text(
-                    text = stringResource(R.string.error_transport),
+                    text = stringResource(
+                        if (state.transportFailed) R.string.error_transport
+                        else errorRes(state.error),
+                    ),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("invites_error"),
                 )
@@ -195,6 +200,15 @@ private fun CreateCard(
     }
 }
 
+@StringRes
+private fun errorRes(code: ErrorCode?): Int = when (code) {
+    ErrorCode.WRITE_RULE_FAILED -> R.string.invites_cant_fund
+    ErrorCode.BAD_INPUT -> R.string.invites_bad_input
+    ErrorCode.NOT_FOUND -> R.string.invites_link_gone
+    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
+    else -> R.string.error_generic
+}
+
 @Composable
 private fun LinkCard(
     link: InviteLinkInfo,
@@ -233,7 +247,7 @@ private fun LinkCard(
                 }
             }
             link.applications.forEach { application ->
-                ApplicationRow(application, approvingId, onApprove)
+                ApplicationRow(application, link, approvingId, onApprove)
             }
         }
     }
@@ -242,11 +256,14 @@ private fun LinkCard(
 @Composable
 private fun ApplicationRow(
     application: ApplicationInfo,
+    link: InviteLinkInfo,
     approvingId: String?,
     onApprove: (String, Double, Double) -> Unit,
 ) {
-    var pDirected by remember { mutableStateOf(0.5) }
-    var pInterest by remember { mutableStateOf(0.5) }
+    // The link's prefill seeds the form; the commitment happens at
+    // approval (schema: ApplicationApprovalInput).
+    var pDirected by remember { mutableStateOf(link.prefillPDirected) }
+    var pInterest by remember { mutableStateOf(link.prefillPInterest) }
     // Approvable = both proofs (auth.md "Application"): email verified
     // and the device key attached; the server enforces both at approval.
     val approvable = application.emailVerified && application.keyAttached

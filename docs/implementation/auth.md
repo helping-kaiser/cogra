@@ -98,7 +98,9 @@ Rules the posture hangs on:
   when the key is created. Declining is not final: backup can
   be enabled, or the code replaced, from settings at any time —
   a new code re-encrypts and re-uploads, and recovery serves
-  the newest blob.
+  the newest blob. Where custody wipes the raw seed after
+  upload (web — [web.md "Key custody"](web.md#key-custody--webcrypto)),
+  replacing re-proves the current code first.
 - **Theft needs both factors.** The code alone is useless
   without the blob behind the user's login; the blob is useless
   without the code. Users can therefore keep redundant copies
@@ -247,7 +249,11 @@ them).
    The attached key is replaceable while the application is
    unapproved — a device lost before approval costs nothing but
    a re-run of the ceremony — and immutable from approval on,
-   when the funding burn binds the address.
+   when the funding burn binds the address. An address binds at
+   most one account: attaching a key already bound to a
+   different account is refused, because the address's
+   Registration can exist on the graph only once — a duplicate
+   would wedge the second admission behind an unlandable record.
 4. **Email verification.** The applicant clicks the link,
    proving the login channel.
 

@@ -3,6 +3,7 @@ package com.cogra.feature.invites
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 import com.google.common.truth.Truth.assertThat
@@ -18,13 +19,17 @@ class InvitesScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: InvitesUiState, onBack: () -> Unit = {}) {
+    private fun render(
+        state: InvitesUiState,
+        onBack: () -> Unit = {},
+        onApprove: (String, Double, Double) -> Unit = { _, _, _ -> },
+    ) {
         compose.setContent {
             InvitesScreen(
                 state = state,
                 onBack = onBack,
                 onSingleUseChange = {}, onPrefillPDirectedChange = {}, onPrefillPInterestChange = {},
-                onCreate = {}, onRevoke = {}, onApprove = { _, _, _ -> }, onShare = {},
+                onCreate = {}, onRevoke = {}, onApprove = onApprove, onShare = {},
             )
         }
     }
@@ -39,6 +44,8 @@ class InvitesScreenTest {
 
     private fun link(application: ApplicationInfo?) = InviteLinkInfo(
         id = "l1",
+        prefillPDirected = 0.4,
+        prefillPInterest = 0.2,
         singleUse = false,
         createdAt = Instant.EPOCH,
         expiresAt = Instant.MAX,
@@ -71,6 +78,19 @@ class InvitesScreenTest {
         render(InvitesUiState(loading = false, links = listOf(link(application(emailVerified = false)))))
         compose.onNodeWithTag("application_a1").assertExists()
         compose.onNodeWithTag("approve_a1").assertDoesNotExist()
+    }
+
+    @Test
+    fun theApprovalFormSeedsFromTheLinkPrefill() {
+        // The link's suggestion is the starting point; the approval
+        // commits it (schema: ApplicationApprovalInput).
+        var committed: Pair<Double, Double>? = null
+        render(
+            InvitesUiState(loading = false, links = listOf(link(application()))),
+            onApprove = { _, pDirected, pInterest -> committed = pDirected to pInterest },
+        )
+        compose.onNodeWithTag("approve_a1").performScrollTo().performClick()
+        assertThat(committed).isEqualTo(0.4 to 0.2)
     }
 
     @Test
