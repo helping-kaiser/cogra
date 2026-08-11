@@ -7,8 +7,10 @@ import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -31,6 +33,12 @@ data class InvitesUiState(
     val transportFailed: Boolean = false,
     /** One-shot: the vouch landed in the relay after on-device signing. */
     val vouchSigned: Boolean = false,
+    /**
+     * False in the husk state — the actor key is not on this device, so
+     * approving (which must sign the vouch here) is gated until restore
+     * (auth.md "Multi-account device custody").
+     */
+    val seedOnDevice: Boolean = true,
 )
 
 /**
@@ -42,6 +50,7 @@ data class InvitesUiState(
 class InvitesViewModel @Inject constructor(
     private val account: AccountRepository,
     private val signer: WriteSigner,
+    private val identity: IdentityStore,
     @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
@@ -63,14 +72,22 @@ class InvitesViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
+            val seedOnDevice = identity.actorSeed() != null
             when (val outcome = account.inviteLinks()) {
                 is Outcome.Success -> _state.update {
-                    it.copy(loading = false, links = outcome.value, transportFailed = false)
+                    it.copy(
+                        loading = false,
+                        links = outcome.value,
+                        transportFailed = false,
+                        seedOnDevice = seedOnDevice,
+                    )
                 }
                 is Outcome.Refused -> _state.update {
-                    it.copy(loading = false, error = outcome.errors.first().code)
+                    it.copy(loading = false, error = outcome.errors.first().code, seedOnDevice = seedOnDevice)
                 }
-                is Outcome.Failed -> _state.update { it.copy(loading = false, transportFailed = true) }
+                is Outcome.Failed -> _state.update {
+                    it.copy(loading = false, transportFailed = true, seedOnDevice = seedOnDevice)
+                }
             }
         }
     }
@@ -121,6 +138,13 @@ class InvitesViewModel @Inject constructor(
         if (_state.value.approvingId != null) return
         _state.update { it.copy(approvingId = applicationId, error = null, vouchSigned = false) }
         viewModelScope.launch {
+            // The vouch is this device's signature, so the gate sits
+            // BEFORE the priced approval: without the key the approval
+            // must not land only to strand the unsigned vouch.
+            if (identity.actorSeed() == null) {
+                _state.update { it.copy(approvingId = null, seedOnDevice = false) }
+                return@launch
+            }
             val prepared = when (val outcome = account.approveApplication(applicationId, pDirected, pInterest)) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> {
@@ -134,7 +158,15 @@ class InvitesViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared)
+            val results = try {
+                signer.sign(prepared)
+            } catch (_: NoActorKeyException) {
+                // The seed vanished between the gate and signing (a
+                // concurrent purge): the approval landed, the vouch
+                // waits on the expiry re-stage after restore.
+                _state.update { it.copy(approvingId = null, seedOnDevice = false) }
+                return@launch
+            }
             val signed = results.all { it is WriteResult.Done }
             _state.update { it.copy(approvingId = null, vouchSigned = signed) }
             refresh()

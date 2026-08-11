@@ -30,6 +30,7 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.UserProfile
 import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import java.time.Instant
 import com.google.common.truth.Truth.assertThat
@@ -63,6 +64,8 @@ class CograNavGraphTest {
     @Inject lateinit var onboarding: ScriptedOnboardingRepository
 
     @Inject lateinit var notices: SecurityNotices
+
+    @Inject lateinit var storageHealth: FakeStorageHealth
 
     private lateinit var navController: TestNavHostController
 
@@ -128,6 +131,19 @@ class CograNavGraphTest {
         compose.onNodeWithTag("security_notice_dismiss").performClick()
         compose.waitForIdle()
         assertThat(compose.onAllNodesWithTag("security_notice").fetchSemanticsNodes()).isEmpty()
+    }
+
+    @Test
+    fun theStorageLossNoticeShowsAboveTheGraphAndAcknowledges() {
+        // Secure-store data loss is surfaced, never silent; the
+        // acknowledgement clears the persisted mark.
+        render()
+        storageHealth.lost.value = true
+        waitForTag("storage_notice")
+        compose.onNodeWithTag("storage_notice_dismiss").performClick()
+        compose.waitForIdle()
+        assertThat(compose.onAllNodesWithTag("storage_notice").fetchSemanticsNodes()).isEmpty()
+        assertThat(storageHealth.lost.value).isFalse()
     }
 
     @Test

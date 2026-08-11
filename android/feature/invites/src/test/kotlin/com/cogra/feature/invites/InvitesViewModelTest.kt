@@ -34,6 +34,7 @@ class InvitesViewModelTest {
         val links = mutableListOf<InviteLinkInfo>()
         var approveOutcome: Outcome<List<PreparedWriteView>>? = null
         var revokeOutcome: Outcome<Unit>? = null
+        var approveCalls = 0
 
         override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = Outcome.Success(links.toList())
 
@@ -68,8 +69,10 @@ class InvitesViewModelTest {
             applicationId: String,
             pDirected: Double,
             pInterest: Double,
-        ): Outcome<List<PreparedWriteView>> =
-            approveOutcome ?: writes.prepareStance(applicationId, pDirected, pInterest)
+        ): Outcome<List<PreparedWriteView>> {
+            approveCalls += 1
+            return approveOutcome ?: writes.prepareStance(applicationId, pDirected, pInterest)
+        }
     }
 
     @Before
@@ -85,6 +88,7 @@ class InvitesViewModelTest {
     private fun viewModel() = InvitesViewModel(
         account,
         WriteSigner(writes, identity),
+        identity,
         "https://cogra.example",
     )
 
@@ -138,6 +142,31 @@ class InvitesViewModelTest {
         vm.onApprove("application-1", 0.4, 0.2)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.error).isEqualTo(ErrorCode.BAD_INPUT)
+        assertThat(vm.state.value.vouchSigned).isFalse()
+    }
+
+    @Test
+    fun theHuskStateIsReflectedOnRefresh() = runTest(dispatcher) {
+        identity.seed = null
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.seedOnDevice).isFalse()
+    }
+
+    @Test
+    fun approvingWithoutTheActorKeyIsGatedBeforeThePricedAct() = runTest(dispatcher) {
+        // The husk state (signed in, key not restored): the priced
+        // approval must not land only to strand the unsigned vouch —
+        // and the process must not die (audit android M3).
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        identity.seed = null
+        vm.onApprove("application-1", 0.4, 0.2)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.approveCalls).isEqualTo(0)
+        assertThat(writes.staged).isEmpty()
+        assertThat(vm.state.value.approvingId).isNull()
+        assertThat(vm.state.value.seedOnDevice).isFalse()
         assertThat(vm.state.value.vouchSigned).isFalse()
     }
 }

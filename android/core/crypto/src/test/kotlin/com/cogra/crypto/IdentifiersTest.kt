@@ -22,10 +22,17 @@ class IdentifiersTest {
 
     @Test
     fun everyFamilyNameRoundTrips() {
-        for (family in Family.entries) {
+        for (family in Family.entries - Family.UNKNOWN) {
             assertThat(Family.parse(family.wireName)).isEqualTo(family)
         }
         assertThrows(IdentifierException::class.java) { Family.parse("nope") }
+    }
+
+    @Test
+    fun theUnknownFamilyNeverEntersTheAlgebra() {
+        assertThrows(IdentifierException::class.java) { Family.UNKNOWN.wireName }
+        assertThrows(IdentifierException::class.java) { ActId("alice", 1u, Family.UNKNOWN) }
+        assertThrows(IdentifierException::class.java) { Family.parse("UNKNOWN") }
     }
 
     @Test

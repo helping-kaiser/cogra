@@ -277,6 +277,45 @@ class WriteSignerTest {
     }
 
     @Test
+    fun anUnknownStagedStateIsRefusedWithMaterialKept() = runTest {
+        // A server state this build does not know: refuse, but keep the
+        // material — an updated build resumes it.
+        val repo = FakeWriteRepository(actor)
+        val signer = WriteSigner(repo, identity)
+        val pre = actor.preSign(com.cogra.crypto.decodeProposal(testProposalBytes(actor)))
+        identity.saveHandshake("reg-1", pre)
+        val staged = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.UNKNOWN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        val refused = signer.signStaged(staged) as WriteResult.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
+        assertThat(identity.handshakes.keys).containsExactly("reg-1")
+
+        repo.staged["reg-1"] = staged
+        val resumed = signer.resume().single() as WriteResult.Refused
+        assertThat(resumed.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
+        assertThat(identity.handshakes.keys).containsExactly("reg-1")
+    }
+
+    @Test
+    fun anUnknownFamilyIsNeverSigned() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val results = WriteSigner(repo, identity).sign(
+            listOf(prepared("w1").copy(family = com.cogra.crypto.Family.UNKNOWN)),
+        )
+        val refused = results.single() as WriteResult.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
+        // Nothing was pre-signed, submitted, or persisted.
+        assertThat(identity.handshakes).isEmpty()
+        assertThat(repo.staged).isEmpty()
+    }
+
+    @Test
     fun signingWithoutAKeyThrows() = runTest {
         val bare = FakeIdentityStore()
         assertThrows(NoActorKeyException::class.java) {

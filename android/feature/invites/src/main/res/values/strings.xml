@@ -11,6 +11,7 @@
     <string name="invites_revoke">Revoke</string>
     <string name="invites_revoked">Revoked</string>
     <string name="invites_vouch_signed">Approved — your vouch is signed and on its way.</string>
+    <string name="invites_husk_hint">Your actor key isn\'t on this device, so approving is off until you restore it — the restore option is on the Home screen.</string>
     <string name="applicant_ready">@%1$s applied and proved their email and key — ready for your approval.</string>
     <string name="applicant_unverified">@%1$s applied; waiting on their email verification.</string>
     <string name="applicant_no_key">@%1$s applied; waiting on their device key.</string>

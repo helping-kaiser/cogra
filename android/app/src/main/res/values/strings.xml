@@ -3,4 +3,6 @@
     <string name="security_notice_title">Security notice</string>
     <string name="security_notice_reuse">A signed-out session token for your account was re-used on %1$s — likely token theft. All sessions were signed out as a precaution. If this wasn\'t you, consider changing your password.</string>
     <string name="security_notice_confirm">Got it</string>
+    <string name="storage_notice_title">Secure storage problem</string>
+    <string name="storage_notice_body">Some of this device\'s securely stored data could not be read and was treated as lost. You may have been signed out. If your actor key is missing after signing in, restore it from your backup.</string>
 </resources>

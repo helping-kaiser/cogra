@@ -115,7 +115,17 @@ data class ApplicationStatus(
 )
 
 /** Handshake progress of a staged write (api-spec.md "The write flow"). */
-enum class WriteState { AWAITING_PRE_SIGN, SEALING, AWAITING_APPROVAL, RELAYING, LANDED, EXPIRED }
+enum class WriteState {
+    AWAITING_PRE_SIGN,
+    SEALING,
+    AWAITING_APPROVAL,
+    RELAYING,
+    LANDED,
+    EXPIRED,
+
+    /** A state this client version does not know — refuse to act, keep material. */
+    UNKNOWN,
+}
 
 /** One staged write mid-handshake, as the API serves it. */
 data class StagedWriteView(

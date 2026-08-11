@@ -10,8 +10,13 @@ package com.cogra.crypto
 /** An identifier that does not parse under the algebra. */
 class IdentifierException(message: String) : Exception(message)
 
-/** The record families of the L1 edge census, by census wire name. */
-enum class Family(val wireName: String) {
+/**
+ * The record families of the L1 edge census, by census wire name — plus
+ * [UNKNOWN], the stand-in for a family this client version does not
+ * know. UNKNOWN is not a census member: it never parses, and asking for
+ * its wire name throws, so it can never be encoded or signed.
+ */
+enum class Family(private val wire: String?) {
     REGISTRATION("registration"),
     PUBLISH("publish"),
     OPINION("opinion"),
@@ -30,11 +35,18 @@ enum class Family(val wireName: String) {
     INVITATION("invitation"),
     DE_INVITE("de-invite"),
     SEND("send"),
-    REFERENCE("reference");
+    REFERENCE("reference"),
+
+    /** A family this client version does not know — never sign it. */
+    UNKNOWN(null),
+    ;
+
+    val wireName: String
+        get() = wire ?: throw IdentifierException("UNKNOWN family has no wire name")
 
     companion object {
         fun parse(s: String): Family =
-            entries.find { it.wireName == s }
+            entries.find { it.wire == s }
                 ?: throw IdentifierException("unknown family `$s`")
     }
 }
@@ -59,6 +71,7 @@ private fun requireAtom(s: String): String {
 data class ActId(val author: String, val seq: ULong, val family: Family) {
     init {
         requireAtom(author)
+        if (family == Family.UNKNOWN) throw IdentifierException("act identifier cannot carry the UNKNOWN family")
     }
 
     override fun toString(): String = "act:$author:$seq:${family.wireName}"

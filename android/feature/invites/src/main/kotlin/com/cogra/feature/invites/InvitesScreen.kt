@@ -132,6 +132,13 @@ fun InvitesScreen(
                     modifier = Modifier.testTag("invites_vouch_signed"),
                 )
             }
+            if (!state.seedOnDevice) {
+                Text(
+                    text = stringResource(R.string.invites_husk_hint),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("invites_husk_hint"),
+                )
+            }
             CreateCard(
                 state,
                 onSingleUseChange,
@@ -143,7 +150,7 @@ fun InvitesScreen(
                 CircularProgressIndicator(modifier = Modifier.testTag("invites_loading"))
             }
             state.links.forEach { link ->
-                LinkCard(link, state.approvingId, onRevoke, onApprove, onShare)
+                LinkCard(link, state.approvingId, state.seedOnDevice, onRevoke, onApprove, onShare)
             }
         }
     }
@@ -213,6 +220,7 @@ private fun errorRes(code: ErrorCode?): Int = when (code) {
 private fun LinkCard(
     link: InviteLinkInfo,
     approvingId: String?,
+    seedOnDevice: Boolean,
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
@@ -247,7 +255,7 @@ private fun LinkCard(
                 }
             }
             link.applications.forEach { application ->
-                ApplicationRow(application, link, approvingId, onApprove)
+                ApplicationRow(application, link, approvingId, seedOnDevice, onApprove)
             }
         }
     }
@@ -258,6 +266,7 @@ private fun ApplicationRow(
     application: ApplicationInfo,
     link: InviteLinkInfo,
     approvingId: String?,
+    seedOnDevice: Boolean,
     onApprove: (String, Double, Double) -> Unit,
 ) {
     // The link's prefill seeds the form; the commitment happens at
@@ -295,7 +304,9 @@ private fun ApplicationRow(
             )
             Button(
                 onClick = { onApprove(application.id, pDirected, pInterest) },
-                enabled = approvingId == null,
+                // Approving signs the vouch on THIS device — gated in the
+                // husk state until the actor key is restored.
+                enabled = approvingId == null && seedOnDevice,
                 modifier = Modifier.testTag("approve_${application.id}"),
             ) {
                 Text(stringResource(R.string.applicant_approve))
