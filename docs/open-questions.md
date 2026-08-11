@@ -24,10 +24,9 @@ within a phase, order is flexible.
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
-| 2. Next auth contract change | 1 | **Q32** | Two small gaps the web session/auth port surfaced: a dedicated reset-token error code, and a contract carrier for the promised reuse-detection security event. Bundle with whatever next touches the auth schema. |
-| 3. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
-| 4. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
-| 5. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
+| 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
+| 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
+| 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -62,6 +61,7 @@ questions are closed.
 - Q27 — see [collectives.md §6 "Example configurations"](instances/collectives.md#example-configurations) and ["Action keys"](instances/collectives.md#action-keys-and-dispatch). Resolved as a hybrid split on how binding one member's gesture is: `actas:vote:Proposal` stays — the Collective's vote in someone else's tally is re-castable by any eligible member while that tally is live — but Item transfer routes through a new `decision:transfer:Item` entry (household unanimous, co-op ≥ 2/3), because the owner's transfer signature is the sole gate on the asset and irrevocable once the counterparty signs ([items.md §4](instances/items.md#4-transfer-the-settlement-handshake)). The `decision:` namespace gains the outward-gesture form `decision:<gesture>:<target_type>`, whose cascade performs the gesture the matching `actas:` key would execute immediately — the only expressible concurrence on an outgoing gesture, act-as rules being eligibility-only per [governance.md "Co-signed acts"](primitive/governance.md#co-signed-acts-threshold--1).
 - Q29 — see [auth.md "Key recovery"](implementation/auth.md#key-recovery) (user posture) and [collectives.md §2](instances/collectives.md#2-custody) (Collective custody). **Users:** email recovery restores the login only; the actor is restored by an opt-in client-encrypted key backup — the device generates a high-entropy recovery code alongside the signing key, encrypts the key locally, and CoGra stores only ciphertext it cannot decrypt (zero-custody preserved; theft needs code *and* login, so redundant copies of the code are safe against loss in a way raw-key copies never are). Generated codes only — a user-chosen passphrase over a stored blob is the offline-crackable failure mode, viable only behind guess-limited secure hardware this posture avoids depending on. Declining backup keeps husk semantics (device loss = actor loss, stated at key creation); a passkey-wrapped (WebAuthn PRF) second unlock is a foreseen extension. **Collectives:** the creator holds the full key (full custody from founding, censorship escape, same recovery posture); every other act-as-eligible member signs via a per-member 2-of-2 split — member device holds one half, the backend the other, the full key never assembled — so the backend alone can sign nothing (no operator custody) and a member cannot sign around the contract: the backend co-signs only after checking the member's user-key-signed instruction against the governance map (action-key eligibility, passed decision where required). Removal = the backend deletes its half; no membership event forces a re-key. Rejected: member-threshold signatures (human-quorum ceremony weight, resharing on every membership change) and per-member L1-registered full keys (any holder could sign decision-gated acts unilaterally); the per-member device+server split is the standard embedded-wallet architecture. The two L1 dependencies (signature scheme, actor key rotation) split off as Q30.
 - Q31 — see [nodes.md §1](primitive/nodes.md#1-l1-node-types-the-shared-graph). The L1 team's Edition-5 draft rules genesis **per record** (*Artifact Update Semantics*, Ruling 1): `mint` takes an *act* identifier, so a per-family reading would falsify the identifier algebra's arity. An act of a mint-capable family whose target equals the mint of its own identifier is the genesis act and mints; an act of the same family toward an existing node mints nothing — it is an update record, the formation footing under [substrate.md §9](primitive/substrate.md#9-node-values-and-updates)'s per-family carriers. [layer1-interface.md](primitive/layer1-interface.md) mirrors the ruling when the published edition lands.
+- Q32 — see [auth.md "Tokens"](implementation/auth.md#tokens) ("Reuse detection" and "The security notice"). The promise gained its carrier as a narrow field: refresh-token reuse stamps `user_credentials.reuse_detected_at`, and the first successful login after detection carries the stamp as `LogInPayload.reuseDetectedAt` — read-and-cleared atomically behind the verified password, delivered exactly once, never on a refusal. Refresh-time codes stay collapsed into `REFRESH_TOKEN_INVALID` so the presenter — possibly the thief — never learns detection fired. Clients render a dismissible alert on the signed-in shell via an in-memory hand-off; a client death before rendering loses the notice, the accepted narrow-carrier trade-off. If more security-event kinds ever arise, the narrow field is removed in favor of a general security-event surface, not extended field-by-field. (The other gap the web port surfaced — a dedicated `RESET_TOKEN_INVALID` code — had already shipped with slice 1.1's custody change.)
 - Q28 — closed on both sides with the L1 author. **Standing:** v0.23's initiator-owned rebase compiles a Reference into standing only as a complete act through the source's view of its *author*, and self-reference is compiler-excluded. **Feed:** [feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)'s two-channel rule — for a jailed reference author, the content-intrinsic channel never opens (author ≠ carrier author) and the initiator-owned channel crosses at the viewer's forward weight to the jailed author, which is dead. **Self-invitation is an accepted residual:** a confederate account reproduces the geometry legally, so no self-guard closes it; CoGra declines to render such interactions as read-side policy, and the earnings side is closed by economics.md's exclusion rules ([economics.md §8.2](primitive/economics.md#82-players-exclusions-sign)). Accepted leftover geometry, on record: the Invitation T-leg twin persists in the feed (hyper-edge legs traverse ordinarily; Marginal tier; severance cannot net the inviter's own leg) — covered by the same read-side policy, with extending the two-channel rule to Invitation T-legs available if it ever matters — and a jailed author's minted Comments stay reachable via Review T-legs (commentary visibility, moderation's domain).
 
 ---
@@ -117,33 +117,6 @@ already records, chosen so slice work can sign records today.
 A stand-in-scoped deployment choice, not a Q30 resolution: the
 real substrate's schemes replace it at the swap, and rotation
 remains unaddressed.
-
----
-
-## Q32 — Surfacing refresh-token reuse detection
-
-**Where it shows up:**
-[auth.md "Tokens"](implementation/auth.md#tokens) (reuse
-detection), [api-spec.md "Auth and accounts"](implementation/api-spec.md#auth-and-accounts)
-**Status:** open (small; resolve with a schema-touching auth change
-that has room for the design work)
-
-### Context
-
-Porting the session surface to web forced a close read of the
-auth contract against the backend. One gap remains (the other —
-a dedicated `RESET_TOKEN_INVALID` code — shipped with slice 1.1's
-custody change).
-
-### The question
-
-auth.md promises that refresh-token reuse "surfaces a security
-event on next login," but the contract has no carrier:
-`RefreshError::Invalid` and `::Reuse` collapse to one
-`REFRESH_TOKEN_INVALID` code, and `LogInPayload` carries no
-security-event field. As specified, the promise is
-unimplementable; either the contract grows a carrier or auth.md
-drops the promise.
 
 ---
 
