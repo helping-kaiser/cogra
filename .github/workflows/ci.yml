@@ -46,7 +46,7 @@ jobs:
       # so a frontend-only PR skips the Rust lint/test jobs; a schema.graphql
       # change is NOT excluded, so it still trips the Rust jobs (and, below,
       # the frontend ones) since all sides of the contract depend on it.
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           predicate-quantifier: 'every'
@@ -63,7 +63,7 @@ jobs:
       # contract artifacts are listed for the same reason schema.graphql is:
       # the frontend golden-vector tests pin to client-crypto-vectors.json,
       # so a vector regeneration must run them, not just the Rust jobs.
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: frontends
         with:
           filters: |
