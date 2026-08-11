@@ -25,9 +25,11 @@ use super::types::{
     StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
+use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
+use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
 use crate::relay::{self, RelayError};
 use crate::stance::{self, StanceError};
 
@@ -53,6 +55,39 @@ fn viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         .as_ref()
         .copied()
         .ok_or_else(unauthenticated)
+}
+
+/// The transport-tier refusal for a throttled auth attempt (auth.md
+/// "Rate limiting"). RATE_LIMITED rides the `errors` array, never the
+/// payload — which also keeps the silent verbs' payloads shapeless.
+fn rate_limited() -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new("rate limited; retry later").extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "RATE_LIMITED");
+        },
+    )
+}
+
+/// Counts the attempt against a per-IP or per-key window and refuses
+/// over budget. Storage faults propagate — a broken limiter store must
+/// not silently disable the limits.
+async fn guard_window(
+    ctx: &Context<'_>,
+    scope: &str,
+    key: &str,
+    window: Window,
+) -> async_graphql::Result<()> {
+    let pool = ctx.data::<PgPool>()?;
+    if !ratelimit::within(pool, scope, key, window).await? {
+        return Err(rate_limited());
+    }
+    Ok(())
+}
+
+/// The request's derived client IP as a limiter key.
+fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
+    Ok(ctx.data::<RequestIp>()?.0.to_string())
 }
 
 /// The transport-tier refusal for an acting request from a non-member
@@ -469,10 +504,29 @@ impl Mutation {
         let auth_cfg = ctx.data::<AuthConfig>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
+        // Application submits are limited per IP and per invite link
+        // (auth.md "Rate limiting").
+        guard_window(
+            ctx,
+            scope::REGISTER_IP,
+            &request_ip(ctx)?,
+            limits.register_ip,
+        )
+        .await?;
+        guard_window(
+            ctx,
+            scope::REGISTER_LINK,
+            &input.invite_link.to_string(),
+            limits.register_link,
+        )
+        .await?;
         match onboarding::register(
             pool,
             auth_cfg,
             mailer.as_ref(),
+            corpus.as_ref(),
             &web_origin.0,
             onboarding::RegistrationInput {
                 invite_link: input.invite_link,
@@ -506,6 +560,9 @@ impl Mutation {
         input: VerifyEmailInput,
     ) -> async_graphql::Result<VerifyEmailPayload> {
         let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // Token confirmations share the per-IP guessing budget.
+        guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         match onboarding::verify_email(pool, &input.verification_token).await {
             Ok(()) => Ok(VerifyEmailPayload {
                 ok: true,
@@ -564,6 +621,23 @@ impl Mutation {
     ) -> async_graphql::Result<ApplyWithInvitePayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // A re-arm is an application submit: the same budgets as register
+        // (auth.md "Rate limiting").
+        guard_window(
+            ctx,
+            scope::REGISTER_IP,
+            &request_ip(ctx)?,
+            limits.register_ip,
+        )
+        .await?;
+        guard_window(
+            ctx,
+            scope::REGISTER_LINK,
+            &input.invite_link.to_string(),
+            limits.register_link,
+        )
+        .await?;
         match onboarding::apply_with_invite(pool, v.user_id, input.invite_link).await {
             Ok(application) => Ok(ApplyWithInvitePayload {
                 application: Some(Application(application)),
@@ -587,6 +661,16 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // Per-account resend budget (auth.md "Rate limiting"), keyed by
+        // the submitted email so an unknown address spends budget exactly
+        // like a known one — and tripping it stays silent, because a
+        // visible refusal would leak what the verb is built to hide.
+        if let Ok(email) = auth::normalize_email(&input.email)
+            && !ratelimit::within(pool, scope::RESEND_EMAIL, &email, limits.resend_email).await?
+        {
+            return Ok(ResendVerificationEmailPayload { ok: true });
+        }
         if let Err(e) =
             onboarding::resend_verification(pool, mailer.as_ref(), &web_origin.0, &input.email)
                 .await
@@ -662,6 +746,12 @@ impl Mutation {
     ) -> async_graphql::Result<LogInPayload> {
         let pool = ctx.data::<PgPool>()?;
         let auth_cfg = ctx.data::<AuthConfig>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // Per-IP window first, then the per-email consecutive-failure
+        // backoff (auth.md "Rate limiting") — keyed by the submitted
+        // email whether or not an account exists, so the refusal never
+        // becomes an account-existence oracle.
+        guard_window(ctx, scope::LOGIN_IP, &request_ip(ctx)?, limits.login_ip).await?;
         let refused = || {
             Ok(LogInPayload {
                 auth: None,
@@ -674,6 +764,9 @@ impl Mutation {
         let Ok(email) = auth::normalize_email(&input.email) else {
             return refused();
         };
+        if ratelimit::login_blocked(pool, &email).await?.is_some() {
+            return Err(rate_limited());
+        }
         let Some(credentials) = store::credentials_by_email(pool, &email).await? else {
             // Hash anyway so a missing account costs the same time as a
             // wrong password.
@@ -681,11 +774,14 @@ impl Mutation {
                 "$argon2id$v=19$m=19456,t=2,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
                 &input.password,
             );
+            ratelimit::login_failed(pool, limits, &email).await?;
             return refused();
         };
         if !auth::verify_password(&credentials.password_hash, &input.password) {
+            ratelimit::login_failed(pool, limits, &email).await?;
             return refused();
         }
+        ratelimit::login_succeeded(pool, &email).await?;
         let issued = auth::issue_session(
             pool,
             auth_cfg,
@@ -783,7 +879,14 @@ impl Mutation {
     ) -> async_graphql::Result<RequestPasswordResetPayload> {
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // Per-IP visibly; per-email silently (auth.md "Rate limiting").
+        // The email budget is spent by the submitted address whether or
+        // not an account exists, and tripping it returns the same
+        // `ok: true` — no differential to enumerate accounts with.
+        guard_window(ctx, scope::RESET_IP, &request_ip(ctx)?, limits.reset_ip).await?;
         if let Ok(email) = auth::normalize_email(&input.email)
+            && ratelimit::within(pool, scope::RESET_EMAIL, &email, limits.reset_email).await?
             && let Some(credentials) = store::credentials_by_email(pool, &email).await?
         {
             let secret = auth::new_secret();
@@ -821,7 +924,12 @@ impl Mutation {
         input: ConfirmPasswordResetInput,
     ) -> async_graphql::Result<ConfirmPasswordResetPayload> {
         let pool = ctx.data::<PgPool>()?;
-        if let Err(m) = auth::check_password(&input.new_password) {
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
+        // The reset token is guessable material: the confirmation shares
+        // the per-IP token budget.
+        guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
+        if let Err(m) = auth::validate_new_password(corpus.as_ref(), &input.new_password).await {
             return Ok(ConfirmPasswordResetPayload {
                 ok: None,
                 user_errors: vec![UserError::at(
@@ -875,7 +983,8 @@ impl Mutation {
                 )],
             });
         }
-        if let Err(m) = auth::check_password(&input.new_password) {
+        let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
+        if let Err(m) = auth::validate_new_password(corpus.as_ref(), &input.new_password).await {
             return Ok(ChangePasswordPayload {
                 ok: None,
                 user_errors: vec![UserError::at(
@@ -963,6 +1072,10 @@ impl Mutation {
     ) -> async_graphql::Result<ConfirmEmailChangePayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        // A change code is guessable material: the confirmation shares
+        // the per-IP token budget.
+        guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         let hash = auth::hash_of(&input.code);
         // Either side's proof may arrive first; the change applies only
         // once both stand.

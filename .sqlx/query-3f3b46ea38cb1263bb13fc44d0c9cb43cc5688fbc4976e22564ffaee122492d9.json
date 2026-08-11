@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO auth_rate_limits AS r (scope, key, window_start, failures, blocked_until)\n        VALUES (\n            $1, $2, now(), 1,\n            CASE WHEN 1 >= $3\n                THEN now() + make_interval(secs => least($5, $4 * power(2, (1 - $3)::float8)))\n            END\n        )\n        ON CONFLICT (scope, key) DO UPDATE SET\n            failures = r.failures + 1,\n            window_start = now(),\n            blocked_until = CASE WHEN r.failures + 1 >= $3\n                THEN now() + make_interval(secs => least($5, $4 * power(2, (r.failures + 1 - $3)::float8)))\n            END\n        RETURNING failures\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "failures",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3f3b46ea38cb1263bb13fc44d0c9cb43cc5688fbc4976e22564ffaee122492d9"
+}

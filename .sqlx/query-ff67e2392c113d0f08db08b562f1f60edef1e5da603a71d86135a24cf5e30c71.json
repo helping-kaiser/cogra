@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO auth_rate_limits AS r (scope, key, window_start, count)\n        VALUES ($1, $2, now(), 1)\n        ON CONFLICT (scope, key) DO UPDATE SET\n            count = CASE\n                WHEN r.window_start <= now() - make_interval(secs => $3)\n                THEN 1 ELSE r.count + 1 END,\n            window_start = CASE\n                WHEN r.window_start <= now() - make_interval(secs => $3)\n                THEN now() ELSE r.window_start END\n        RETURNING count\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ff67e2392c113d0f08db08b562f1f60edef1e5da603a71d86135a24cf5e30c71"
+}

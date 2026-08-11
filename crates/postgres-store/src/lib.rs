@@ -7,6 +7,7 @@ pub mod auth;
 pub mod genesis;
 pub mod mirror;
 pub mod params;
+pub mod rate_limit;
 pub mod staged;
 
 /// Re-exported so callers don't need a direct sqlx dependency.

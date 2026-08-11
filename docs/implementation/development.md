@@ -62,6 +62,16 @@ over file values.
 | `WEB_ORIGIN` | `http://localhost:3000` | The per-environment web origin emailed links ride on ([auth.md "Link URLs"](auth.md#link-urls)) |
 | `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
 | `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 24-hour bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
+| `RATE_LIMIT_LOGIN_PER_IP` | `30` | Login attempts per IP per 15 min ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
+| `RATE_LIMIT_REGISTER_PER_IP` | `5` | Application submits per IP per hour |
+| `RATE_LIMIT_REGISTER_PER_LINK` | `20` | Application submits per invite link per day |
+| `RATE_LIMIT_RESET_PER_IP` | `10` | Password-reset requests per IP per hour |
+| `RATE_LIMIT_RESET_PER_EMAIL` | `3` | Password-reset requests per submitted email per hour (trips silently) |
+| `RATE_LIMIT_RESEND_PER_EMAIL` | `5` | Verification resends per submitted email per hour (trips silently) |
+| `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
+| `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) changes in code, not env |
+| `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
+| `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
 | `GENESIS_DISPLAY_NAME` | `Genesis Moderator` | The Genesis Moderator's display name |
 | `RUST_LOG` | `debug` | Log level filter (`trace`, `debug`, `info`, `warn`, `error`) |
