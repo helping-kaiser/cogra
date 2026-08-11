@@ -1,22 +1,22 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT pubkey FROM l1_accounts WHERE address = $1",
+  "query": "SELECT blob FROM auth_key_backups WHERE user_id = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "pubkey",
+        "name": "blob",
         "type_info": "Bytea"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
-      true
+      false
     ]
   },
-  "hash": "7c0ff909cd0ac5f8ac8ee5aae51751b2198c2e6412a643fce249700255b19946"
+  "hash": "b9a1fecf2666f13617073f766a2ce6d06e14b0cb681194f347d4a936ca6766aa"
 }
