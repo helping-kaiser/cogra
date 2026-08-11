@@ -165,13 +165,34 @@ pub fn verify_password(hash: &str, password: &str) -> bool {
 }
 
 /// The password floor (auth.md "Password requirements"): minimum 12
-/// characters, no maximum, no composition rules. The breach-corpus check
-/// is the slice 1.1 hardening workstream.
+/// characters, no maximum, no composition rules.
 pub fn check_password(password: &str) -> Result<(), &'static str> {
     if password.chars().count() < 12 {
         return Err("password must be at least 12 characters");
     }
     Ok(())
+}
+
+/// The full new-password gate (auth.md "Password requirements"): the
+/// floor, then the breach corpus. A corpus lookup failure fails OPEN —
+/// logged and allowed; the corpus bounds online guessing that rate
+/// limiting already throttles, and a provider outage must not block
+/// registration or a reset.
+pub async fn validate_new_password(
+    corpus: &dyn crate::breach::BreachCorpus,
+    password: &str,
+) -> Result<(), String> {
+    check_password(password).map_err(str::to_string)?;
+    match corpus.is_breached(password).await {
+        Ok(false) => Ok(()),
+        Ok(true) => {
+            Err("this password appears in a known data breach; choose a different one".to_string())
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "breach-corpus lookup failed; allowing the password");
+            Ok(())
+        }
+    }
 }
 
 /// Handle normalization (auth.md "Handle and email format"): case-folded
@@ -333,6 +354,63 @@ mod tests {
         assert!(check_password("elevenchars").is_err());
         assert!(check_password("twelve chars").is_ok());
         assert!(check_password("all lowercase no digits works").is_ok());
+    }
+
+    /// A corpus with a scripted answer, standing in for HIBP.
+    struct ScriptedCorpus(Result<bool, ()>);
+
+    impl crate::breach::BreachCorpus for ScriptedCorpus {
+        fn is_breached<'a>(
+            &'a self,
+            _password: &'a str,
+        ) -> std::pin::Pin<
+            Box<dyn Future<Output = Result<bool, crate::breach::BreachError>> + Send + 'a>,
+        > {
+            let answer = self.0;
+            Box::pin(async move {
+                answer.map_err(|()| {
+                    crate::breach::BreachError::Status(reqwest::StatusCode::INTERNAL_SERVER_ERROR)
+                })
+            })
+        }
+    }
+
+    use std::future::Future;
+
+    #[tokio::test]
+    async fn breached_passwords_are_rejected_with_the_reason() {
+        let err = validate_new_password(&ScriptedCorpus(Ok(true)), "long enough password")
+            .await
+            .expect_err("breached must refuse");
+        assert!(err.contains("data breach"), "the reason names the breach");
+    }
+
+    #[tokio::test]
+    async fn clean_passwords_pass_the_corpus() {
+        assert!(
+            validate_new_password(&ScriptedCorpus(Ok(false)), "long enough password")
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn a_corpus_failure_fails_open() {
+        assert!(
+            validate_new_password(&ScriptedCorpus(Err(())), "long enough password")
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn the_floor_refuses_before_the_corpus_runs() {
+        // A breached-everything corpus never sees an under-floor password:
+        // the refusal is the floor's message, not the breach message.
+        let err = validate_new_password(&ScriptedCorpus(Ok(true)), "short")
+            .await
+            .expect_err("under the floor");
+        assert!(err.contains("12 characters"));
     }
 
     #[test]

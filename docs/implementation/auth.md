@@ -407,9 +407,16 @@ logged, and never returned by the API.
 - No composition rules (forced uppercase / digit / symbol).
   Composition rules reduce entropy by predictable means without
   improving real strength.
-- Checked against a known-breach corpus (haveibeenpwned-style
-  hash-prefix lookup) at registration and password change.
-  Breached passwords are rejected with a message indicating why.
+- Checked against a known-breach corpus at registration and
+  password change (the reset applies the same requirements): the
+  HIBP Pwned Passwords range API, a k-anonymity hash-prefix
+  lookup — only the first five hex characters of the SHA-1 leave
+  the instance, with response padding on. Any corpus occurrence
+  rejects, with a message indicating why. A corpus outage fails
+  open, logged: the floor still applies, and the corpus bounds
+  online guessing that rate limiting already throttles
+  (`BREACH_CHECK=off` disables the lookup for offline dev —
+  [development.md](development.md)).
 
 ### Handle and email format
 
@@ -599,13 +606,37 @@ expiry, re-arm).
 Per-IP and per-account limits on auth endpoints to bound
 credential stuffing, application spam, and reset abuse. The
 spec commits to *which* endpoints are limited; specific
-thresholds are an implementation choice.
+thresholds are an implementation choice — the defaults are the
+`RATE_LIMIT_*` knobs in [development.md](development.md). Limiter
+state lives in Postgres (one atomic upsert per attempt), so
+limits survive restarts and hold across instances.
 
 - Login attempts — limited per IP and per account, with
-  exponential backoff on consecutive failures.
-- Registrations — limited per IP and per invite link.
+  exponential backoff on consecutive failures; a successful
+  login ends the run.
+- Application submits (`register`, `applyWithInvite`) — limited
+  per IP and per invite link.
 - Password-reset requests — limited per IP and per account.
 - Verification-email resend — limited per account.
+- Token confirmations (`verifyEmail`, `confirmPasswordReset`,
+  `confirmEmailChange`) — limited per IP. The tokens are
+  high-entropy; the budget bounds guessing anyway.
+
+A tripped limit is a transport-tier `RATE_LIMITED` fault
+(api-spec.md "Errors are tiered") — with one deliberate
+exception: **per-account budgets never answer visibly.** They
+are keyed by the submitted email whether or not an account
+exists, and on the silent verbs a tripped budget returns the
+same `ok: true` and just stops sending — a visible refusal would
+reopen the enumeration channel those verbs exist to close. The
+login backoff refuses visibly, but arms identically for unknown
+emails.
+
+The client IP is the socket peer address by default. Behind a
+reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`
+switches derivation to the proxy-set header (rightmost
+`X-Forwarded-For` hop — [development.md](development.md));
+forwarded headers are never trusted otherwise.
 
 Abuse mitigation lives at the API edge, not in the graph primitives — same
 framing as [moderation.md](../instances/moderation.md).

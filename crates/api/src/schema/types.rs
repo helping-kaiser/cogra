@@ -139,7 +139,7 @@ impl UserError {
                 field: path("handle"),
             },
             OnboardingError::WeakPassword(m) => UserError {
-                message: (*m).to_string(),
+                message: m.clone(),
                 code: ErrorCode::WeakPassword,
                 field: path("password"),
             },
