@@ -89,4 +89,16 @@ describe("restoreActor", () => {
     const result = await restoreActor(deps(store), RecoveryCode.generate().display());
     expect(result.kind).toBe("failed");
   });
+
+  it("maps a rate-limited backup read to rateLimited, not a transport fault", async () => {
+    server.use(
+      graphql.query("KeyBackup", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    const result = await restoreActor(deps(store), RecoveryCode.generate().display());
+    expect(result).toEqual({ kind: "rateLimited" });
+  });
 });

@@ -46,12 +46,24 @@ export function ResetForm() {
   const onRequest = async () => {
     if (!canRequest) return;
     setInProgress(true);
+    setError(null);
     setTransportFailed(false);
     const outcome = await requestPasswordReset(client, email.trim());
     setInProgress(false);
-    // Success and refusal collapse to the same message — anti-enumeration.
-    if (outcome.kind === "failed") setTransportFailed(true);
-    else setRequested(true);
+    switch (outcome.kind) {
+      case "success":
+        setRequested(true);
+        break;
+      case "refused":
+        // The verb is silent by design (no userErrors — anti-enumeration),
+        // so the only refusal here is the synthesized RATE_LIMITED backoff:
+        // neither connectivity copy nor a claimed sent email fits it.
+        setError(outcome.errors[0].code);
+        break;
+      case "failed":
+        setTransportFailed(true);
+        break;
+    }
   };
 
   const onConfirm = async (event: React.FormEvent) => {

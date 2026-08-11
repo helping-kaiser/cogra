@@ -94,6 +94,41 @@ describe("ResetForm", () => {
     expect(screen.queryByTestId("reset_requested")).not.toBeInTheDocument();
   });
 
+  it("renders a rate-limited request as a backoff — no sent-email claim, no connectivity copy", async () => {
+    server.use(
+      graphql.mutation("RequestPasswordReset", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<ResetForm />);
+    fireEvent.change(screen.getByTestId("reset_email"), { target: { value: "a@b.c" } });
+    fireEvent.click(screen.getByTestId("reset_request"));
+    expect(await screen.findByTestId("reset_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+    expect(screen.queryByTestId("reset_requested")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("reset_transport_error")).not.toBeInTheDocument();
+  });
+
+  it("renders a rate-limited confirm as a backoff, not a connectivity failure", async () => {
+    server.use(
+      graphql.mutation("ConfirmPasswordReset", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<ResetForm />);
+    fillConfirm();
+    expect(await screen.findByTestId("reset_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+    expect(screen.queryByTestId("reset_transport_error")).not.toBeInTheDocument();
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
+
   it("routes to login after a confirmed reset — every session was revoked", async () => {
     server.use(confirmOk);
     renderWithProviders(<ResetForm />);

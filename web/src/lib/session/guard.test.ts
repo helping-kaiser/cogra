@@ -33,6 +33,17 @@ describe("auth guard", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  it("never treats a RATE_LIMITED refusal like UNAUTHENTICATED — no refresh, no replay", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+    const refusal = refused([{ code: "RATE_LIMITED", message: "backoff", field: null }]);
+    const block = vi.fn<() => Promise<Outcome<string>>>().mockResolvedValue(refusal);
+    expect(await guard.run(block)).toBe(refusal);
+    expect(block).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it("never refreshes on a transport failure", async () => {
     const store = createTokenStore();
     const { refresher, refresh } = refresherReturning(true);

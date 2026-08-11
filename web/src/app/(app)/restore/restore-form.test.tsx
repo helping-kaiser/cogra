@@ -95,6 +95,15 @@ describe("RestoreForm", () => {
     expect(await screen.findByTestId("restore_error")).toHaveTextContent(/reach the server/);
   });
 
+  it("renders a rate-limited restore as a backoff, not a connectivity failure", async () => {
+    restoreResult.value = { kind: "rateLimited" };
+    renderWithProviders(<RestoreForm />, { store: signedInStore() });
+    submit();
+    expect(await screen.findByTestId("restore_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+  });
+
   it("disables submit while the code is empty", () => {
     renderWithProviders(<RestoreForm />, { store: signedInStore() });
     expect(screen.getByTestId("restore_submit")).toBeDisabled();
