@@ -11,14 +11,12 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // An App-Link open (auth.md "Link URLs": /join/<id>) carries the
-        // invite id into the signed-out root.
-        val deepLinkedInviteId = intent?.data
-            ?.takeIf { it.pathSegments.firstOrNull() == "join" }
-            ?.lastPathSegment
+        // App Links (cold and warm) are the nav graph's concern: the
+        // NavController reads the launch intent, and the graph listens
+        // for onNewIntent deliveries.
         setContent {
             CograTheme {
-                CograNavGraph(deepLinkedInviteId = deepLinkedInviteId)
+                CograNavGraph()
             }
         }
     }

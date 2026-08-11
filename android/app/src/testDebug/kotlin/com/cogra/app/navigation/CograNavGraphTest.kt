@@ -4,6 +4,8 @@
 
 package com.cogra.app.navigation
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasTestTag
@@ -17,6 +19,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
+import androidx.navigation.toRoute
+import com.cogra.app.BuildConfig
 import com.cogra.app.HiltTestActivity
 import com.cogra.app.di.ScriptedAccountRepository
 import com.cogra.app.di.ScriptedOnboardingRepository
@@ -79,7 +83,7 @@ class CograNavGraphTest {
             navController = TestNavHostController(LocalContext.current).apply {
                 navigatorProvider.addNavigator(ComposeNavigator())
             }
-            CograNavGraph(deepLinkedInviteId = null, navController = navController)
+            CograNavGraph(navController = navController)
         }
         compose.waitForIdle()
     }
@@ -105,6 +109,17 @@ class CograNavGraphTest {
         stagedRegistration = null,
         actorPubkey = null,
     )
+
+    /** A real UUID: the entry's paste-fallback extraction demands one. */
+    private val inviteId = "0b54c8ea-9f10-4c4e-8d67-2a1f3f6de901"
+
+    private fun joinIntent(path: String) =
+        Intent(Intent.ACTION_VIEW, Uri.parse("${BuildConfig.WEB_ORIGIN}$path"))
+
+    private fun currentInviteEntry(): InviteEntry? =
+        navController.currentBackStackEntry
+            ?.takeIf { it.destination.hasRoute<InviteEntry>() }
+            ?.toRoute<InviteEntry>()
 
     private fun waitForTag(tag: String) {
         // Generous: the first Robolectric + Hilt test in a JVM pays a
@@ -276,5 +291,87 @@ class CograNavGraphTest {
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
         }
+    }
+
+    // Cold-start deep links ride the same NavController.handleDeepLink
+    // call the framework makes on the launch intent at graph-set time;
+    // the tests invoke it directly because replacing the scenario's
+    // launch intent deadlocks ActivityScenario.close under Robolectric.
+    // The true launch-intent plumbing is covered by the on-device link
+    // check (hand-test notes).
+
+    @Test
+    fun aJoinDeepLinkCarriesTheIdIntoTheEntry() {
+        render()
+        val handled = navController.handleDeepLink(joinIntent("/join/$inviteId"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            onboarding.checkedInviteIds.isNotEmpty()
+        }
+        assertThat(handled).isTrue()
+        assertThat(currentInviteEntry()?.inviteId).isEqualTo(inviteId)
+        // The entry auto-checked exactly the linked id.
+        assertThat(onboarding.checkedInviteIds).containsExactly(inviteId)
+    }
+
+    @Test
+    fun aBareJoinLinkLandsOnTheEntryWithNoId() {
+        // /join with no id segment must not forward a phantom id
+        // (the old parse forwarded the literal "join").
+        render()
+        val handled = navController.handleDeepLink(joinIntent("/join"))
+        compose.waitForIdle()
+        assertThat(handled).isTrue()
+        assertThat(currentInviteEntry()?.inviteId).isNull()
+        assertThat(onboarding.checkedInviteIds).isEmpty()
+    }
+
+    @Test
+    fun aWarmStartJoinLinkReachesTheEntry() {
+        // singleTask delivers a link tap on a running app via
+        // onNewIntent; the graph's listener forwards it.
+        render()
+        compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            onboarding.checkedInviteIds.isNotEmpty()
+        }
+        assertThat(currentInviteEntry()?.inviteId).isEqualTo(inviteId)
+    }
+
+    @Test
+    fun aSignedInSessionIgnoresAWarmJoinLink() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("home_greeting")
+
+        compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
+        assertThat(onboarding.checkedInviteIds).isEmpty()
+    }
+
+    @Test
+    fun aDeepLinkedInviteDoesNotResurrectAfterSignOut() {
+        // The deep-linked id must not be retained anywhere: signing in
+        // and back out lands on a clean entry.
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        navController.handleDeepLink(joinIntent("/join/$inviteId"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            onboarding.checkedInviteIds.isNotEmpty()
+        }
+
+        signIn()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+        }
+
+        runBlocking { tokens.clear() }
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+        }
+        assertThat(currentInviteEntry()?.inviteId).isNull()
     }
 }
