@@ -41,4 +41,6 @@ jobs:
             --no-progress
             'docs/**/*.md'
             '*.md'
+            'android/*.md'
+            'web/*.md'
           fail: true
