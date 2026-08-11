@@ -6,7 +6,7 @@
 //! account and the session up front; every later step is `me`-driven —
 //! no applicant token exists anywhere in this file.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::Request;
@@ -15,46 +15,14 @@ use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
 use common::l1::wire;
 use http_body_util::BodyExt;
-use l1_standin::{StandIn, StandInConfig};
+use l1_standin::StandIn;
 use postgres_store::{PgPool, auth as store};
 use serde_json::{Value, json};
 use tower::ServiceExt;
 use uuid::Uuid;
 
-/// Captures outbound mail so the test can read tokens like a user reads
-/// their inbox.
-#[derive(Default)]
-struct TestMailer(Mutex<Vec<api::mailer::Mail>>);
-
-impl api::mailer::Mailer for TestMailer {
-    fn send(
-        &self,
-        mail: api::mailer::Mail,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
-        Box::pin(async move {
-            self.0.lock().expect("mailbox").push(mail);
-        })
-    }
-}
-
-impl TestMailer {
-    /// The token out of the newest message to `to` — read from the
-    /// link's `token=` parameter (auth.md "Link URLs").
-    fn latest_token_for(&self, to: &str) -> String {
-        let mails = self.0.lock().expect("mailbox");
-        let mail = mails
-            .iter()
-            .rev()
-            .find(|m| m.to == to)
-            .unwrap_or_else(|| panic!("no mail for {to}"));
-        mail.body
-            .lines()
-            .find_map(|l| l.split("token=").nth(1))
-            .expect("token line")
-            .trim()
-            .to_string()
-    }
-}
+mod rig;
+use rig::TestMailer;
 
 struct Rig {
     app: axum::Router,
@@ -65,33 +33,16 @@ struct Rig {
 
 impl Rig {
     async fn new(pool: PgPool) -> Self {
-        let standin = StandIn::new(pool.clone(), StandInConfig::default());
-        let auth = api::auth::AuthConfig::ephemeral().expect("auth config");
         let mailer = Arc::new(TestMailer::default());
-        let schema = api::schema::build(api::schema::ApiContext {
-            pool: pool.clone(),
-            boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin.clone(),
-            auth: auth.clone(),
-            mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
-            web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
-            onboarding: api::onboarding::OnboardingConfig::default(),
-            // Unbounded: the limits are rate_limits.rs's subject; this
-            // rig's flows must never trip them incidentally.
-            rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
-            breach: Arc::new(api::breach::DisabledCorpus),
-        });
+        // Unbounded: the limits are rate_limits.rs's subject; this
+        // rig's flows must never trip them incidentally.
+        let (app, standin) = rig::connect_info_app_with_standin(
+            pool.clone(),
+            mailer.clone(),
+            api::ratelimit::RateLimitConfig::unlimited(),
+        );
         Self {
-            // A fixed ConnectInfo stands in for the socket peer —
-            // axum-client-ip reads the extension directly, so axum's
-            // MockConnectInfo fallback (which only axum's own extractor
-            // consults) does not apply here.
-            app: api::app(schema, auth, axum_client_ip::ClientIpSource::ConnectInfo).layer(
-                axum::Extension(axum::extract::ConnectInfo(std::net::SocketAddr::from((
-                    [127, 0, 0, 1],
-                    9999,
-                )))),
-            ),
+            app,
             pool,
             standin,
             mailer,

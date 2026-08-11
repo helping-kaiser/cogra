@@ -83,6 +83,7 @@ pub async fn ingest_loop<B: L1Boundary>(
     gc_after_epochs: i64,
 ) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
         if let Err(e) = ingest_pending(&boundary, &pool, gc_after_epochs).await {
