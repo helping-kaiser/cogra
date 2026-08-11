@@ -297,17 +297,20 @@ explicitly closes the discussion.
   the action alongside the answer reads as steamrolling, even when
   the answer is correct.
 
-### Research artifacts go to `tmp_research_files/`
+### Working artifacts go to `tmp_research_files/` or `tmp_dev/`
 
-Audit findings, best-practices reviews, PR-prompt files, and other
-working notes live in the gitignored `tmp_research_files/` at the
-repo root, in a dated subfolder (e.g.
-`tmp_research_files/2026-06-19-best-practices-audit/`) — never
-committed. The repo holds decisions and docs, not the notes that
-produced them. For an audit, write a README (overview + decisions
-table grounded in official sources) plus one self-contained
-`pr-*.md` prompt per bundled change. `tmp_research_files/README.md`
-indexes the decision records worth keeping.
+Two gitignored folders at the repo root hold working notes — never
+committed; the repo holds decisions and docs, not the notes that
+produced them. The split is by artifact kind:
+`tmp_research_files/` holds research on documentation and design
+decisions (best-practices reviews, PR-prompt files);
+`tmp_dev/` holds dev audits and dev working state (code audits,
+hand-test notes, dev-account state). Use a dated subfolder (e.g.
+`tmp_research_files/2026-06-19-best-practices-audit/`). For an
+audit, write a README (overview + decisions table grounded in
+official sources) plus one self-contained `pr-*.md` prompt per
+bundled change. `tmp_research_files/README.md` indexes the
+decision records worth keeping.
 
 ### Refer to "the L1 team", never a name
 
