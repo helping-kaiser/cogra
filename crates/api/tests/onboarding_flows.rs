@@ -671,6 +671,66 @@ async fn approval_guards_hold(pool: PgPool) {
     );
 }
 
+/// The approving mutation and the applicant's status poll both run
+/// `ensure_admission_staged` after the approval mark is set; the row
+/// lock serializes them so the burn credits once and one Registration
+/// stages (auth.md "Approval and landing" step 1).
+#[sqlx::test(migrations = "../../migrations")]
+async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, false).await;
+    let account = rig
+        .ceremony_done_account(link, "newbie", "n@example.com")
+        .await;
+    let application = rig.application_of(account).await;
+
+    // The approval mark set directly — the race under test starts after
+    // it, between the approving request's staging and the poll's repair.
+    let mut conn = rig.pool.acquire().await.expect("conn");
+    store::approve_application(&mut conn, application.id)
+        .await
+        .expect("query")
+        .expect("approvable");
+    drop(conn);
+    let approved = rig.application_of(account).await;
+
+    let stage = || {
+        onboarding::ensure_admission_staged(
+            &rig.pool,
+            &rig.boundary,
+            &rig.standin,
+            &rig.cfg,
+            &approved,
+        )
+    };
+    let (first, second) = tokio::join!(stage(), stage());
+    let (first, second) = (first.expect("stages"), second.expect("stages"));
+
+    // The loser found the winner's staged row; nothing doubled.
+    assert_eq!(first.id, second.id);
+    let staged_rows: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM staged_writes
+         WHERE actor_id = $1 AND family = 'registration'",
+    )
+    .bind(account)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("count");
+    assert_eq!(staged_rows, 1);
+    let address = store::actor_identity(&rig.pool, account)
+        .await
+        .expect("query")
+        .expect("actor")
+        .l0_address
+        .expect("attached");
+    let balance = rig.standin.balance(&address).await.expect("balance");
+    assert_eq!(
+        (balance.burned_total * 1e6).round() as i64,
+        rig.cfg.admission_burn_micro
+    );
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_fresh_invite_rearms_an_expired_application(pool: PgPool) {
     let rig = Rig::new(pool).await;

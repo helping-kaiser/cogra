@@ -594,6 +594,21 @@ pub async fn approve_application(
     .await
 }
 
+/// Locks the application row for the caller's transaction — the
+/// serialization point of the admission staging sequence (auth.md
+/// "Approval and landing" step 1): the approving mutation and the
+/// status-poll repair hook queue here instead of racing the funding
+/// burn. False when the row is gone.
+pub async fn lock_application(conn: &mut PgConnection, id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query_scalar!(
+        "SELECT id FROM auth_applications WHERE id = $1 FOR UPDATE",
+        id,
+    )
+    .fetch_optional(conn)
+    .await?
+    .is_some())
+}
+
 /// Lands an account whose Registration confirmed (auth.md "Approval and
 /// landing" step 4): flips the account state to member and marks the
 /// approved application landed. Nothing moves — the credentials have
