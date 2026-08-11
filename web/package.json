@@ -15,10 +15,10 @@
   "dependencies": {
     "@apollo/client": "^4.2.8",
     "@apollo/client-integration-nextjs": "^0.14.5",
-    "graphql": "^16.14.2",
+    "graphql": "^17.0.2",
     "next": "16.2.11",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.2.0",
@@ -29,11 +29,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "fake-indexeddb": "^6.2.5",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "msw": "^2.15.0",
     "tailwindcss": "^4",
     "typescript": "^5",
