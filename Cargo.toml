@@ -27,7 +27,7 @@ async-graphql = { version = "7" }
 async-graphql-axum = { version = "7" }
 
 # PostgreSQL
-sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "migrate"] }
+sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "migrate"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
