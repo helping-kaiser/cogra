@@ -16,6 +16,8 @@ import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeyTemplates
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
+import java.io.IOException
+import java.security.GeneralSecurityException
 import java.util.Base64
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -64,15 +66,39 @@ class EncryptedStore(
         dataStore.edit { it[stringPreferencesKey(name)] = sealed }
     }
 
-    suspend fun get(name: String): ByteArray? =
-        dataStore.data.first()[stringPreferencesKey(name)]?.let { cipher.open(Base64.getDecoder().decode(it)) }
+    suspend fun get(name: String): ByteArray? = openOrMark(dataStore.data.first(), name)
 
     suspend fun remove(name: String) {
         dataStore.edit { it.remove(stringPreferencesKey(name)) }
     }
 
-    fun watch(name: String): Flow<ByteArray?> = dataStore.data.map { prefs ->
-        prefs[stringPreferencesKey(name)]?.let { cipher.open(Base64.getDecoder().decode(it)) }
+    fun watch(name: String): Flow<ByteArray?> = dataStore.data.map { prefs -> openOrMark(prefs, name) }
+
+    /**
+     * A value that cannot be opened (master-key loss, tampering) reads
+     * as absent, never fatal: the ciphertext stays in place in case the
+     * failure is transient, and the loss is marked for the shell to
+     * surface ([markStorageLost]).
+     */
+    private suspend fun openOrMark(prefs: Preferences, name: String): ByteArray? {
+        val sealed = prefs[stringPreferencesKey(name)] ?: return null
+        return try {
+            cipher.open(Base64.getDecoder().decode(sealed))
+        } catch (_: GeneralSecurityException) {
+            markStorageLost()
+            null
+        } catch (_: IOException) {
+            markStorageLost()
+            null
+        } catch (_: IllegalArgumentException) {
+            markStorageLost()
+            null
+        }
+    }
+
+    /** Also the domain stores' mark for a value that decodes to garbage. */
+    suspend fun markStorageLost() {
+        dataStore.edit { if (it[STORAGE_LOST_KEY] != true) it[STORAGE_LOST_KEY] = true }
     }
 
     suspend fun names(prefix: String): Set<String> =

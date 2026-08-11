@@ -35,6 +35,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,6 +108,16 @@ class FakeIdentityStore : IdentityStore {
         dismissedReciprocation = false
         forgetOnSignOut = false
         handshakes.clear()
+    }
+}
+
+class FakeStorageHealth : StorageHealth {
+    val lost = MutableStateFlow(false)
+
+    override val storageLost = lost
+
+    override suspend fun acknowledge() {
+        lost.value = false
     }
 }
 

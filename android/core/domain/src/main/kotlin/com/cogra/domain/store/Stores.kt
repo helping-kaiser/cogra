@@ -94,3 +94,16 @@ interface IdentityStore {
      */
     suspend fun purge()
 }
+
+/**
+ * Visibility of secure-store data loss — the store-side echo of "never
+ * erase silently". Marked when the store file was replaced after
+ * corruption or a stored value could not be opened or decoded; the app
+ * shell surfaces the mark once, and it persists until acknowledged.
+ */
+interface StorageHealth {
+    /** Whether an unacknowledged storage-loss mark exists. */
+    val storageLost: Flow<Boolean>
+
+    suspend fun acknowledge()
+}

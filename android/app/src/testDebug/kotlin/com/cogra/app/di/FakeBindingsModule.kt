@@ -17,8 +17,10 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -92,6 +94,13 @@ object FakeBindingsModule {
 
     @Provides
     fun identityStore(fake: FakeIdentityStore): IdentityStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeStorageHealth(): FakeStorageHealth = FakeStorageHealth()
+
+    @Provides
+    fun storageHealth(fake: FakeStorageHealth): StorageHealth = fake
 
     @Provides
     @Singleton

@@ -9,6 +9,7 @@
 package com.cogra.network.store
 
 import com.cogra.crypto.PreSignedProposal
+import com.cogra.crypto.WireException
 import com.cogra.crypto.decodeProposal
 import com.cogra.crypto.encodeProposal
 import com.cogra.domain.AuthTokens
@@ -19,6 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.map
 
@@ -46,20 +48,26 @@ private fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(b
 
 private fun unb64(s: String): ByteArray = Base64.getDecoder().decode(s)
 
-private fun decodeTokens(bytes: ByteArray): AuthTokens? {
-    val stored = json.decodeFromString<StoredTokens>(bytes.decodeToString())
-    val account = stored.account ?: return null
-    return AuthTokens(stored.access, stored.refresh, account)
-}
-
 @Singleton
 class TokenStoreImpl @Inject constructor(private val store: EncryptedStore) : TokenStore {
 
     override val tokens: Flow<AuthTokens?> = store.watch(KEY).map { bytes ->
-        bytes?.let(::decodeTokens)
+        bytes?.let { decodeTokens(it) }
     }
 
-    override suspend fun current(): AuthTokens? = store.get(KEY)?.let(::decodeTokens)
+    override suspend fun current(): AuthTokens? = store.get(KEY)?.let { decodeTokens(it) }
+
+    /** A record that decodes to garbage is no session — marked, never fatal. */
+    private suspend fun decodeTokens(bytes: ByteArray): AuthTokens? {
+        val stored = try {
+            json.decodeFromString<StoredTokens>(bytes.decodeToString())
+        } catch (_: SerializationException) {
+            store.markStorageLost()
+            return null
+        }
+        val account = stored.account ?: return null
+        return AuthTokens(stored.access, stored.refresh, account)
+    }
 
     override suspend fun save(tokens: AuthTokens) {
         val stored = StoredTokens(tokens.accessToken, tokens.refreshToken, tokens.accountId)
@@ -136,13 +144,26 @@ class IdentityStoreImpl @Inject constructor(
 
     override suspend fun handshake(stagedWriteId: String): PreSignedProposal? =
         handshakePrefix()?.let { prefix -> store.get(prefix + stagedWriteId) }?.let { bytes ->
-            val stored = json.decodeFromString<StoredHandshake>(bytes.decodeToString())
-            PreSignedProposal(
-                proposal = decodeProposal(unb64(stored.proposal)),
-                authorPubkey = unb64(stored.authorPubkey),
-                nonce = unb64(stored.nonce),
-                preSignature = unb64(stored.preSignature),
-            )
+            // Garbage material reads as absent — marked, never fatal; the
+            // signer treats a missing handshake as its own degraded case.
+            try {
+                val stored = json.decodeFromString<StoredHandshake>(bytes.decodeToString())
+                PreSignedProposal(
+                    proposal = decodeProposal(unb64(stored.proposal)),
+                    authorPubkey = unb64(stored.authorPubkey),
+                    nonce = unb64(stored.nonce),
+                    preSignature = unb64(stored.preSignature),
+                )
+            } catch (_: SerializationException) {
+                store.markStorageLost()
+                null
+            } catch (_: WireException) {
+                store.markStorageLost()
+                null
+            } catch (_: IllegalArgumentException) {
+                store.markStorageLost()
+                null
+            }
         }
 
     override suspend fun saveHandshake(stagedWriteId: String, pre: PreSignedProposal) {
