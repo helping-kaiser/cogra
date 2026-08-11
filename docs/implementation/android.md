@@ -70,7 +70,11 @@ while it is on a human (verification, approval), and an immediate
 pass on app entry and after any user action that changes server
 state. Auto-polling is onboarding-only — the loop stops for good
 at membership; from then on every fetch is event-driven, a user
-action with an outcome to collect or an explicit refresh.
+action with an outcome to collect or an explicit refresh. The
+loop is also session-bound: it watches the token store, and the
+end of the session — sign-out, the reuse-detected token clear, an
+account switch — cancels it and resets the flow's state, so a
+signed-out device never polls and a new session starts clean.
 
 ## Degrade, never crash
 
