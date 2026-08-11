@@ -29,7 +29,7 @@ hilt = "2.53.1"
 hiltNavigationCompose = "1.2.0"
 
 # GraphQL
-apollo = "4.1.1"
+apollo = "5.0.1"
 
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
