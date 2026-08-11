@@ -33,7 +33,10 @@ sealed interface WriteResult {
     /** Sealing hadn't returned within the polling budget; `resume` continues it. */
     data class AwaitingSeal(override val stagedWriteId: String) : WriteResult
 
-    /** The API refused; the handshake is over. */
+    /**
+     * The API refused. Material is cleared only when every code is
+     * terminal; a backoff/fault refusal keeps it and `resume` retries.
+     */
     data class Refused(override val stagedWriteId: String, val errors: List<UserError>) : WriteResult
 
     /** The device refused to sign — the sealed act failed verification. */
@@ -45,6 +48,20 @@ sealed interface WriteResult {
 
 /** Thrown when signing is requested with no actor key on the device. */
 class NoActorKeyException : Exception("no actor key on this device")
+
+/**
+ * Refusal codes that end a handshake for good — the material is spent.
+ * Anything else (RATE_LIMITED backoff, INTERNAL fault, UNAUTHENTICATED,
+ * a code this build does not know) keeps the material for `resume`.
+ */
+private val TERMINAL_REFUSALS = setOf(
+    ErrorCode.SIGNATURE_INVALID,
+    ErrorCode.STAGED_WRITE_EXPIRED,
+    ErrorCode.NOT_FOUND,
+    ErrorCode.BAD_INPUT,
+    ErrorCode.FORBIDDEN,
+    ErrorCode.WRITE_RULE_FAILED,
+)
 
 class WriteSigner @Inject constructor(
     private val writes: WriteRepository,
@@ -155,7 +172,7 @@ class WriteSigner @Inject constructor(
         val pre = identity.handshake(id) ?: return WriteResult.Failed(id, IllegalStateException("no material"))
         return when (val read = writes.stagedWrite(id)) {
             is Outcome.Failed -> WriteResult.Failed(id, read.cause)
-            is Outcome.Refused -> refused(id, read.errors)
+            is Outcome.Refused -> refusedKeeping(id, read.errors)
             is Outcome.Success -> when (val staged = read.value) {
                 // Gone entirely — collected long ago; nothing to continue.
                 null -> {
@@ -213,7 +230,7 @@ class WriteSigner @Inject constructor(
                     current.id,
                     IllegalStateException("staged write vanished mid-seal"),
                 )
-                is Outcome.Refused -> return refused(current.id, read.errors)
+                is Outcome.Refused -> return refusedKeeping(current.id, read.errors)
                 is Outcome.Failed -> return WriteResult.Failed(current.id, read.cause)
             }
         }
@@ -244,11 +261,17 @@ class WriteSigner @Inject constructor(
         }
     }
 
-    /** A refusal ends the handshake; spent material never resumes. */
+    /** A write-leg refusal: clears the material only when it is spent. */
     private suspend fun refused(id: String, errors: List<UserError>): WriteResult {
-        identity.clearHandshake(id)
+        if (errors.isNotEmpty() && errors.all { it.code in TERMINAL_REFUSALS }) {
+            identity.clearHandshake(id)
+        }
         return WriteResult.Refused(id, errors)
     }
+
+    /** A read-leg refusal: the handshake is intact server-side — keep the material. */
+    private fun refusedKeeping(id: String, errors: List<UserError>): WriteResult =
+        WriteResult.Refused(id, errors)
 
     /**
      * A server value this app version does not know — refused WITHOUT
