@@ -79,7 +79,7 @@ class CograNavGraphTest {
     }
 
     private fun signIn() = runBlocking {
-        tokens.save(AuthTokens(accessToken = "access", refreshToken = "refresh"))
+        tokens.save(AuthTokens(accessToken = "access", refreshToken = "refresh", accountId = "u1"))
     }
 
     private fun member() = UserProfile("u1", "jakob", null, AccountState.MEMBER, true, invitedBy = null)
@@ -97,6 +97,7 @@ class CograNavGraphTest {
             expiresAt = Instant.MAX,
         ),
         stagedRegistration = null,
+        actorPubkey = null,
     )
 
     private fun waitForTag(tag: String) {

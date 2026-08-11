@@ -599,6 +599,29 @@ There is no separate "abandon application" act: a signed-out
 application keeps following its lifecycle ("Application" —
 expiry, re-arm).
 
+The one exception is the **"don't remember me" opt-in**, offered
+at login and restore: an account flagged with it has its key
+material — seed, pending backup blob, handshake material, and
+device-local flags — purged from the device at sign-out (and on
+a session invalidation that clears the tokens). For a shared or
+public device; default off.
+
+### Multi-account device custody
+
+Several accounts on one device is a supported pattern
+(roadmap.md slice 1.1). The client identity stores bind every
+piece of key material — actor seed (Android) / non-extractable
+key pair (web), pending backup blob, per-write handshake
+material, and device-local UX flags — to the account it belongs
+to, never to a device-global slot; sign-out keeps each account's
+material in its own slot. The repair-attach verifies before
+offering: it re-attaches only a key held in the signed-in
+account's own slot, and treats a mismatch between the slot key
+and the account's attached key (`User.actorPubkey`, viewer-only)
+as key-not-on-device — the restore path, never a blind attach.
+Material stored by earlier single-account builds is adopted by
+the first account that signs in after the update.
+
 ---
 
 ## Rate limiting

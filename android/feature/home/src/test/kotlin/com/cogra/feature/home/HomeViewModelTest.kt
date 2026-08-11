@@ -49,8 +49,9 @@ private class ScriptedAccount : ThrowingAccountRepository() {
 }
 
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
-    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null)
+    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     var verify: Outcome<Unit> = Outcome.Success(Unit)
+    var resend: Outcome<Unit> = Outcome.Success(Unit)
     var rearm: Outcome<Unit> = Outcome.Success(Unit)
     var polls = 0
 
@@ -61,7 +62,7 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
 
     override suspend fun verifyEmail(verificationToken: String): Outcome<Unit> = verify
 
-    override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = Outcome.Success(Unit)
+    override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = resend
 
     override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = rearm
 }
@@ -135,7 +136,7 @@ class HomeViewModelTest {
     )
 
     private fun applicantStatus(application: ApplicationView? = applicationView()) =
-        ApplicationStatus(AccountState.APPLICANT, application, null)
+        ApplicationStatus(AccountState.APPLICANT, application, null, null)
 
     // ----------------------------------------------------------------
     // Member shape
@@ -308,12 +309,12 @@ class HomeViewModelTest {
         onboarding.verify = Outcome.Refused(emptyList())
         vm.onVerify()
         dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.verifyFailed).isTrue()
+        assertThat(vm.state.value.verifyError).isEqualTo(ErrorCode.INTERNAL)
 
         // Editing the field clears the refusal; a good token verifies
         // and pokes the loop instead of waiting out its delay.
         vm.onTokenChange("token-2")
-        assertThat(vm.state.value.verifyFailed).isFalse()
+        assertThat(vm.state.value.verifyError).isNull()
         onboarding.verify = Outcome.Success(Unit)
         onboarding.status = applicantStatus(applicationView(verified = true))
         vm.onVerify()
@@ -333,6 +334,41 @@ class HomeViewModelTest {
         vm.onResend()
         dispatcher.scheduler.runCurrent()
         assertThat(vm.state.value.resent).isTrue()
+        assertThat(vm.state.value.resendError).isNull()
+    }
+
+    @Test
+    fun aRateLimitedVerifySurfacesTheCode() = homeTest {
+        account.profile = applicant()
+        onboarding.status = applicantStatus(applicationView(verified = false))
+        onboarding.verify = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        val vm = viewModel()
+        dispatcher.scheduler.runCurrent()
+
+        vm.onTokenChange("token-1")
+        vm.onVerify()
+        dispatcher.scheduler.runCurrent()
+        assertThat(vm.state.value.verifyError).isEqualTo(ErrorCode.RATE_LIMITED)
+        assertThat(vm.state.value.verified).isFalse()
+    }
+
+    @Test
+    fun aRateLimitedResendShowsTheRefusalNotTheOnItsWayNote() = homeTest {
+        account.profile = applicant()
+        onboarding.status = applicantStatus(applicationView(verified = false))
+        onboarding.resend = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        val vm = viewModel()
+        dispatcher.scheduler.runCurrent()
+
+        vm.onResendEmailChange("joiner@example.com")
+        vm.onResend()
+        dispatcher.scheduler.runCurrent()
+        assertThat(vm.state.value.resent).isFalse()
+        assertThat(vm.state.value.resendError).isEqualTo(ErrorCode.RATE_LIMITED)
+
+        // Editing the address clears the refusal.
+        vm.onResendEmailChange("other@example.com")
+        assertThat(vm.state.value.resendError).isNull()
     }
 
     @Test
@@ -392,7 +428,7 @@ class HomeViewModelTest {
         // The Registration confirmed: the account state flips, the
         // session never changes, and the shell greets once.
         account.profile = member(invitedBy = null)
-        onboarding.status = ApplicationStatus(AccountState.MEMBER, null, null)
+        onboarding.status = ApplicationStatus(AccountState.MEMBER, null, null, null)
         dispatcher.scheduler.advanceTimeBy(registration.fastDelayMs)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.applicant).isFalse()

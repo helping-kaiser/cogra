@@ -13,9 +13,16 @@ import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { resendVerificationEmail, verifyEmail } from "@/lib/api/onboarding-api";
+import { hasCode } from "@/lib/api/outcome";
 import { useRegistrationFlow } from "@/lib/signing/provider";
 
-type VerifyState = "missingToken" | "verifying" | "verified" | "invalid" | "transportFailed";
+type VerifyState =
+  | "missingToken"
+  | "verifying"
+  | "verified"
+  | "invalid"
+  | "rateLimited"
+  | "transportFailed";
 
 export function VerifyView() {
   const client = useApolloClient();
@@ -44,7 +51,9 @@ export function VerifyView() {
         setState("verified");
         flow.ensureAdvancing();
       } else if (outcome.kind === "refused") {
-        setState("invalid");
+        // A backoff is neither an invalid link nor a connectivity
+        // failure — the token may still be good on a later retry.
+        setState(hasCode(outcome, "RATE_LIMITED") ? "rateLimited" : "invalid");
       } else {
         setState("transportFailed");
       }
@@ -122,6 +131,26 @@ export function VerifyView() {
               </p>
             )}
           </form>
+        </>
+      )}
+
+      {state === "rateLimited" && (
+        <>
+          <p
+            role="alert"
+            data-testid="verify_rate_limited"
+            className="text-sm text-red-600 dark:text-red-400"
+          >
+            Too many attempts — wait a moment and try again.
+          </p>
+          <button
+            type="button"
+            data-testid="verify_retry"
+            onClick={() => setAttempt((n) => n + 1)}
+            className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            Try again
+          </button>
         </>
       )}
 

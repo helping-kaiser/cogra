@@ -945,7 +945,7 @@ impl Mutation {
             return Ok(ConfirmPasswordResetPayload {
                 ok: None,
                 user_errors: vec![UserError::at(
-                    ErrorCode::VerificationTokenInvalid,
+                    ErrorCode::ResetTokenInvalid,
                     "reset token invalid, expired, or used",
                     vec!["resetToken".to_string()],
                 )],
