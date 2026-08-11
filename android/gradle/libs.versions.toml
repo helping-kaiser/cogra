@@ -25,7 +25,7 @@ navigationCompose = "2.8.5"
 datastore = "1.1.1"
 
 # DI
-hilt = "2.53.1"
+hilt = "2.60.1"
 hiltNavigationCompose = "1.2.0"
 
 # GraphQL
