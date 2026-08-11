@@ -16,6 +16,7 @@ use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
 use common::l1::wire;
 use l1_standin::StandIn;
+use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
@@ -293,8 +294,9 @@ struct RefreshSessionInput {
 #[derive(SimpleObject)]
 struct RefreshPayload {
     /// A rotated session; null with a REFRESH_TOKEN_INVALID userError
-    /// when the token is invalid, expired, or was already rotated —
-    /// reuse also revokes every session.
+    /// when the token is invalid, expired, or revoked. A just-rotated
+    /// token's replay inside the grace window returns the same
+    /// successor; outside it, reuse detection revokes every session.
     auth: Option<AuthSession>,
     user_errors: Vec<UserError>,
 }
@@ -807,8 +809,9 @@ impl Mutation {
     }
 
     /// A rotated session; `auth` is null with a REFRESH_TOKEN_INVALID
-    /// userError when the refresh token is invalid, expired, or was
-    /// already rotated (reuse) — a reuse-detected token also revokes
+    /// userError when the refresh token is invalid, expired, or
+    /// revoked. A just-rotated token's replay inside the grace window
+    /// returns the same successor; outside it, reuse detection revokes
     /// every session.
     async fn refresh_session(
         &self,
@@ -873,7 +876,9 @@ impl Mutation {
     ) -> async_graphql::Result<RevokeSessionsPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
-        let revoked = store::revoke_sessions(pool, v.user_id, Some(v.session_id)).await?;
+        let revoked =
+            store::revoke_sessions(pool, v.user_id, Some(v.session_id), RevokedReason::Owner)
+                .await?;
         Ok(RevokeSessionsPayload {
             revoked_count: Some(revoked as i32),
             user_errors: vec![],
@@ -964,7 +969,7 @@ impl Mutation {
         let hash = auth::hash_password(&input.new_password)
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         store::update_password_hash(pool, user_id, &hash).await?;
-        store::revoke_sessions(pool, user_id, None).await?;
+        store::revoke_sessions(pool, user_id, None, RevokedReason::Security).await?;
         Ok(ConfirmPasswordResetPayload {
             ok: Some(true),
             user_errors: vec![],
@@ -1007,7 +1012,8 @@ impl Mutation {
         let hash = auth::hash_password(&input.new_password)
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         store::update_password_hash(pool, v.user_id, &hash).await?;
-        store::revoke_sessions(pool, v.user_id, Some(v.session_id)).await?;
+        store::revoke_sessions(pool, v.user_id, Some(v.session_id), RevokedReason::Security)
+            .await?;
         Ok(ChangePasswordPayload {
             ok: Some(true),
             user_errors: vec![],

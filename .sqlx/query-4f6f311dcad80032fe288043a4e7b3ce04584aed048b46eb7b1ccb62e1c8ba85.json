@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE auth_refresh_tokens\n         SET revoked_at = NOW(), last_used_at = NOW()\n         WHERE id = $1 AND revoked_at IS NULL\n         RETURNING user_id, device_label",
+  "query": "UPDATE auth_refresh_tokens\n         SET revoked_at = NOW(), last_used_at = NOW(),\n             revoked_reason = 'rotated'\n         WHERE id = $1 AND revoked_at IS NULL\n         RETURNING user_id, device_label",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       true
     ]
   },
-  "hash": "f00e8fa77be130e283fdb0d9d6306468249e4ec8dcdb9a48819dcc851abef9ef"
+  "hash": "4f6f311dcad80032fe288043a4e7b3ce04584aed048b46eb7b1ccb62e1c8ba85"
 }
