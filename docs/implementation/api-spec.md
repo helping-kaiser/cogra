@@ -1717,6 +1717,19 @@ type Query {
     query: String!
     first: Int, after: String, last: Int, before: String
   ): ChatMessageConnection
+
+  "Connectivity report for the API process and its store."
+  health: Health!
+}
+
+type Health {
+  "Version of the backend serving this schema."
+  backendVersion: String!
+  "True when PostgreSQL answers a round-trip probe."
+  postgresConnected: Boolean!
+  "The last L1 epoch fully ingested into the record mirror; -1 until
+   the first epoch lands, null when the cursor could not be read."
+  mirrorEpoch: Int
 }
 ```
 
@@ -2109,7 +2122,9 @@ extend type Mutation {
    Verification failures surface as SIGNATURE_INVALID userErrors
    per proposal. When the seal returns synchronously the payload's
    staged writes are already AWAITING_APPROVAL, verified act
-   included; otherwise observe via stagedWrite."
+   included; otherwise observe via stagedWrite. Resubmitting a
+   sealed proposal is idempotent only for the exact signature that
+   was sealed; differing bytes refuse as BAD_INPUT."
   submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
   "Relay approval witnesses — only an approved act is orderable.
    Landing stays asynchronous; observe via stagedWrite."
@@ -3038,7 +3053,8 @@ type ChangeHandlePayload { user: User }
 
 "Upload (or replace) the client-encrypted key-backup blob —
  ciphertext under the device-generated recovery code; the server
- stores what it cannot decrypt (auth.md \"Key recovery\").
+ stores what it cannot decrypt (auth.md \"Key recovery\"). One
+ blob per account; blobs over 4 KiB refuse as BAD_INPUT.
  Retrieval is the User.keyBackup field: login + code is the
  recovery."
 input UploadKeyBackupInput { blob: String! }
