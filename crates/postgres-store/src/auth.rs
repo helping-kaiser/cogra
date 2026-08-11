@@ -1046,21 +1046,26 @@ pub async fn create_email_change(
     Ok(())
 }
 
-/// Marks the new address verified via its link. Returns the change's
-/// account when the token matched a live change.
+/// Marks the new address verified via its link. Scoped to the account
+/// that requested the change — another account's token never matches,
+/// and never consumes the owner's proof. Returns whether a live change
+/// matched.
 pub async fn confirm_email_change_new_side(
     pool: &PgPool,
+    user_id: Uuid,
     new_email_token_hash: &[u8],
-) -> Result<Option<Uuid>, sqlx::Error> {
-    sqlx::query_scalar!(
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
         "UPDATE auth_email_changes SET new_verified_at = NOW()
-         WHERE new_email_token_hash = $1 AND new_verified_at IS NULL
-           AND expires_at > NOW()
-         RETURNING user_id",
+         WHERE user_id = $1 AND new_email_token_hash = $2
+           AND new_verified_at IS NULL AND expires_at > NOW()",
+        user_id,
         new_email_token_hash,
     )
-    .fetch_optional(pool)
-    .await
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
 }
 
 /// Submits the original-address code, marking that side proven. Returns
@@ -1084,14 +1089,28 @@ pub async fn confirm_email_change_original_side(
         == 1)
 }
 
+/// The outcome of attempting to apply a fully-proven email change
+/// against the email uniqueness constraint (auth.md "Email change").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EmailChangeApply {
+    Applied,
+    /// No fully-proven, unexpired change is pending — or it already
+    /// applied.
+    NotReady,
+    /// The proven change collides with another account's email; the
+    /// change row stays live, so a retry within the TTL can still apply
+    /// if the address frees up.
+    EmailInUse,
+}
+
 /// Applies the account's newest fully-proven, unexpired email change —
 /// `user_credentials.email` updates only when both sides hold (auth.md
-/// "Email change"). Idempotent; true when the credentials row changed.
+/// "Email change"). Idempotent.
 pub async fn apply_email_change_if_complete(
     pool: &PgPool,
     user_id: Uuid,
-) -> Result<bool, sqlx::Error> {
-    Ok(sqlx::query!(
+) -> Result<EmailChangeApply, sqlx::Error> {
+    let result = sqlx::query!(
         "UPDATE user_credentials c
          SET email = ec.new_email
          FROM (
@@ -1106,9 +1125,17 @@ pub async fn apply_email_change_if_complete(
         user_id,
     )
     .execute(pool)
-    .await?
-    .rows_affected()
-        == 1)
+    .await;
+    match result {
+        Ok(done) if done.rows_affected() == 1 => Ok(EmailChangeApply::Applied),
+        Ok(_) => Ok(EmailChangeApply::NotReady),
+        Err(sqlx::Error::Database(e))
+            if e.is_unique_violation() && e.constraint() == Some("user_credentials_email_key") =>
+        {
+            Ok(EmailChangeApply::EmailInUse)
+        }
+        Err(e) => Err(e),
+    }
 }
 
 // ---------------------------------------------------------------------
