@@ -57,7 +57,7 @@ coroutinesTest = "1.9.0"
 turbine = "1.2.0"
 truth = "1.4.4"
 mockwebserver = "4.12.0"
-robolectric = "4.14.1"
+robolectric = "4.16.1"
 androidxTestExt = "1.2.1"
 androidxTestCore = "1.6.1"
 
