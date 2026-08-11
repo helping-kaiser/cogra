@@ -133,6 +133,213 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     );
 }
 
+/// The recorded L0 address of a cast member, for building act identifiers.
+async fn address_of(pool: &PgPool, handle: &str) -> String {
+    genesis::actor_by_handle(pool, handle)
+        .await
+        .expect("query")
+        .expect("cast row")
+        .l0_address
+        .expect("keyed")
+}
+
+/// Rewinds a bootstrapped substrate to the state a run interrupted inside
+/// the L1 sequence leaves behind: only `keep` of the genesis acts stand
+/// (approved, unordered), no epoch is closed, nothing is published or
+/// mirrored, and balances are back at their post-burn values. The L2 half
+/// is untouched — the crash window under test is inside the sequence.
+async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
+    sqlx::query("DELETE FROM l1_act_legs")
+        .execute(pool)
+        .await
+        .expect("wipe");
+    sqlx::query("DELETE FROM l1_acts WHERE NOT (act_id = ANY($1))")
+        .bind(keep)
+        .execute(pool)
+        .await
+        .expect("wipe");
+    sqlx::query(
+        "UPDATE l1_acts SET status = 'approved', epoch = NULL, act_time = NULL, position = NULL",
+    )
+    .execute(pool)
+    .await
+    .expect("unorder");
+    for table in [
+        "l1_epochs",
+        "l1_node_state",
+        "mirror_record_legs",
+        "mirror_records",
+    ] {
+        sqlx::query(&format!("DELETE FROM {table}"))
+            .execute(pool)
+            .await
+            .expect("wipe");
+    }
+    sqlx::query("UPDATE l1_accounts SET balance_micro = burned_total_micro, action_count = 0")
+        .execute(pool)
+        .await
+        .expect("undebit");
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+        .execute(pool)
+        .await
+        .expect("cursor reset");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
+    let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
+
+    // The crash window: burns landed, the four Registrations and the
+    // first endorsement Opinion approved, then nothing more.
+    rewind_to_partial_genesis(
+        &pool,
+        &[
+            format!("act:{operator}:0:registration"),
+            format!("act:{publisher}:0:registration"),
+            format!("act:{moderator}:0:registration"),
+            format!("act:{treasury}:0:registration"),
+            format!("act:{operator}:1:opinion"),
+        ],
+    )
+    .await;
+
+    let outcome = run(&host, &pool, input()).await.expect("repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
+    assert_eq!(
+        mirror::record_ids_in_epoch(&pool, 0)
+            .await
+            .expect("ids")
+            .len(),
+        8
+    );
+    assert!(
+        mirror::has_record_by(&pool, &publisher, Family::Publish)
+            .await
+            .expect("gate")
+    );
+    // The genesis burn was credited at most once per cast member.
+    for address in [&operator, &publisher, &moderator, &treasury] {
+        let balance = host.balance(address).await.expect("balance");
+        assert_eq!(balance.burned_total, 10.0);
+    }
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
+    let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
+
+    rewind_to_partial_genesis(
+        &pool,
+        &[
+            format!("act:{operator}:0:registration"),
+            format!("act:{publisher}:0:registration"),
+            format!("act:{moderator}:0:registration"),
+            format!("act:{treasury}:0:registration"),
+        ],
+    )
+    .await;
+    // The narrowest window: The Treasury's Registration was sealed but the
+    // crash hit before its approval was recorded.
+    sqlx::query(
+        "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL
+         WHERE act_id = $1",
+    )
+    .bind(format!("act:{treasury}:0:registration"))
+    .execute(&pool)
+    .await
+    .expect("unapprove");
+
+    let outcome = run(&host, &pool, input()).await.expect("repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
+    assert_eq!(
+        mirror::record_ids_in_epoch(&pool, 0)
+            .await
+            .expect("ids")
+            .len(),
+        8
+    );
+    assert!(
+        mirror::has_record_by(&pool, &treasury, Family::Registration)
+            .await
+            .expect("gate"),
+        "the recovered approval must land the sealed Registration"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
+    let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
+
+    rewind_to_partial_genesis(
+        &pool,
+        &[
+            format!("act:{operator}:0:registration"),
+            format!("act:{publisher}:0:registration"),
+            format!("act:{moderator}:0:registration"),
+            format!("act:{treasury}:0:registration"),
+        ],
+    )
+    .await;
+    // Same identifier, different content — as a re-run with changed
+    // genesis input would produce.
+    sqlx::query("UPDATE l1_acts SET p_d = 0.5 WHERE act_id = $1")
+        .bind(format!("act:{operator}:0:registration"))
+        .execute(&pool)
+        .await
+        .expect("tamper");
+
+    let err = run(&host, &pool, input()).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let operator = address_of(&pool, "operator").await;
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
+    let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
+
+    rewind_to_partial_genesis(
+        &pool,
+        &[
+            format!("act:{operator}:0:registration"),
+            format!("act:{publisher}:0:registration"),
+            format!("act:{moderator}:0:registration"),
+            format!("act:{treasury}:0:registration"),
+        ],
+    )
+    .await;
+    // A different act holds the author-local sequence: the identifier the
+    // genesis sequence needs does not exist, and the seal conflicts.
+    sqlx::query("UPDATE l1_acts SET act_id = $2, family = 'opinion' WHERE act_id = $1")
+        .bind(format!("act:{treasury}:0:registration"))
+        .bind(format!("act:{treasury}:0:opinion"))
+        .execute(&pool)
+        .await
+        .expect("morph");
+
+    let err = run(&host, &pool, input()).await.expect_err("occupied");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     let host = standin(&pool);
