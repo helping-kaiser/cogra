@@ -857,6 +857,23 @@ CREATE TABLE auth_account_deletions (
 CREATE INDEX auth_account_deletions_due_idx
     ON auth_account_deletions (scheduled_for)
     WHERE cancelled_at IS NULL AND executed_at IS NULL;
+
+-- Auth-endpoint throttle state (auth.md "Rate limiting"): one row per
+-- (scope, key). Counted limits use window_start + count as a fixed
+-- window; the login backoff uses failures + blocked_until, with
+-- window_start doubling as the last-activity mark the GC sweep reads.
+-- Postgres rather than a cache tier: auth attempts are low-volume,
+-- every attempt already reaches the store, and a single atomic upsert
+-- makes concurrent attempts race-proof.
+CREATE TABLE auth_rate_limits (
+    scope         TEXT        NOT NULL,
+    key           TEXT        NOT NULL,
+    window_start  TIMESTAMPTZ NOT NULL,
+    count         INTEGER     NOT NULL DEFAULT 0,
+    failures      INTEGER     NOT NULL DEFAULT 0,
+    blocked_until TIMESTAMPTZ,
+    PRIMARY KEY (scope, key)
+);
 ```
 
 ---

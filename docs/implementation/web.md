@@ -71,6 +71,15 @@ final" needs the seed to enable or re-key a backup later — and is
 wiped the moment a blob is uploaded; from then on custody is the
 non-extractable key alone.
 
+Every IndexedDB identity record — key pair, retained seed,
+pending backup blob, per-write handshake material, UX flags — is
+keyed by the account it belongs to, never held in a
+device-global slot
+([auth.md "Multi-account device custody"](auth.md#multi-account-device-custody));
+sign-out keeps each account's material in its own slot, and the
+repair-attach re-attaches only from the signed-in account's slot
+after verifying it against the account's attached key.
+
 That wipe shapes the settings backup surface. While the seed is
 retained (backup declined earlier), enabling is one step: seal,
 upload, wipe. Once a blob exists, replacing the code re-proves
