@@ -208,11 +208,15 @@ GraphQL validation error ("Query is nested too deep." / "Query is
 too complex."), with no `extensions.code` — clients treat it as a
 generic transport failure, and the budgets are sized so no real
 client query ever meets it. **Introspection is disabled in release
-builds** (OWASP GraphQL guidance): the contract travels as the
-checked-in `schema.graphql`, which both clients generate from;
-dev builds keep introspection on (with a loose complexity ceiling
-— the limits apply to introspection queries too) for the
-playground.
+builds** — not secrecy (the repo is public; the contract travels
+as the checked-in `schema.graphql`, which both clients generate
+from) but cost-benefit: the budgets apply to introspection
+queries too, and admitting the standard introspection query
+would take a ~50× looser complexity ceiling, which under
+multiplicative connection pricing admits genuinely expensive
+queries. Live introspection buys nothing the checked-in SDL
+doesn't already give. Dev builds keep introspection on, with
+that loose ceiling, for the playground.
 
 **Feed ranking and cursors.** The backend does not rank
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)): it serves the
