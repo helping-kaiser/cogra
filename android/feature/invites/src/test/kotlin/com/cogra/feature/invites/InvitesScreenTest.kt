@@ -19,85 +19,72 @@ class InvitesScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private fun readyLink() = InviteLinkInfo(
+        id = "link-1",
+        prefillPDirected = 0.1,
+        prefillPInterest = 0.1,
+        singleUse = false,
+        createdAt = Instant.EPOCH,
+        expiresAt = Instant.MAX,
+        revokedAt = null,
+        applications = listOf(
+            ApplicationInfo(
+                id = "app-1",
+                handle = "joiner",
+                emailVerified = true,
+                keyAttached = true,
+                approvedAt = null,
+                landedAt = null,
+            ),
+        ),
+    )
+
     private fun render(
         state: InvitesUiState,
-        onBack: () -> Unit = {},
         onApprove: (String, Double, Double) -> Unit = { _, _, _ -> },
     ) {
         compose.setContent {
             InvitesScreen(
                 state = state,
-                onBack = onBack,
-                onSingleUseChange = {}, onPrefillPDirectedChange = {}, onPrefillPInterestChange = {},
-                onCreate = {}, onRevoke = {}, onApprove = onApprove, onShare = {},
+                onBack = {},
+                onSingleUseChange = {},
+                onPrefillPDirectedChange = {},
+                onPrefillPInterestChange = {},
+                onCreate = {},
+                onRevoke = {},
+                onApprove = onApprove,
+                onVouchSignedShown = {},
+                onShare = {},
             )
         }
     }
 
     @Test
-    fun theTopBarBackArrowReportsUp() {
-        var back = false
-        render(InvitesUiState(), onBack = { back = true })
-        compose.onNodeWithTag("invites_back").performClick()
-        assertThat(back).isTrue()
-    }
-
-    private fun link(application: ApplicationInfo?) = InviteLinkInfo(
-        id = "l1",
-        prefillPDirected = 0.4,
-        prefillPInterest = 0.2,
-        singleUse = false,
-        createdAt = Instant.EPOCH,
-        expiresAt = Instant.MAX,
-        revokedAt = null,
-        applications = listOfNotNull(application),
-    )
-
-    private fun application(
-        emailVerified: Boolean = true,
-        keyAttached: Boolean = true,
-    ) = ApplicationInfo("a1", "joiner", emailVerified, keyAttached, approvedAt = null, landedAt = null)
-
-    @Test
-    fun anApprovableApplicationGetsApprovalControls() {
-        render(InvitesUiState(loading = false, links = listOf(link(application()))))
-        compose.onNodeWithTag("approve_a1").assertExists()
-        compose.onNodeWithTag("share_l1").assertExists()
-    }
-
-    @Test
-    fun aRevokedLinkLosesItsActions() {
-        val revoked = link(null).copy(revokedAt = Instant.EPOCH)
-        render(InvitesUiState(loading = false, links = listOf(revoked)))
-        compose.onNodeWithTag("share_l1").assertDoesNotExist()
-        compose.onNodeWithTag("revoke_l1").assertDoesNotExist()
-    }
-
-    @Test
-    fun anUnverifiedApplicantCannotBeApproved() {
-        render(InvitesUiState(loading = false, links = listOf(link(application(emailVerified = false)))))
-        compose.onNodeWithTag("application_a1").assertExists()
-        compose.onNodeWithTag("approve_a1").assertDoesNotExist()
-    }
-
-    @Test
-    fun theApprovalFormSeedsFromTheLinkPrefill() {
-        // The link's suggestion is the starting point; the approval
-        // commits it (schema: ApplicationApprovalInput).
-        var committed: Pair<Double, Double>? = null
+    fun aHuskTapExplainsInsteadOfActing() {
+        var approved = false
         render(
-            InvitesUiState(loading = false, links = listOf(link(application()))),
-            onApprove = { _, pDirected, pInterest -> committed = pDirected to pInterest },
+            InvitesUiState(loading = false, links = listOf(readyLink()), seedOnDevice = false),
+            onApprove = { _, _, _ -> approved = true },
         )
-        compose.onNodeWithTag("approve_a1").performScrollTo().performClick()
-        assertThat(committed).isEqualTo(0.4 to 0.2)
+        compose.onNodeWithTag("approve_app-1").performScrollTo().performClick()
+        compose.onNodeWithTag("invites_snackbar").assertExists()
+        assertThat(approved).isFalse()
     }
 
     @Test
-    fun aMissingKeyBlocksApprovalToo() {
-        // Approvable needs both proofs (auth.md "Application").
-        render(InvitesUiState(loading = false, links = listOf(link(application(keyAttached = false)))))
-        compose.onNodeWithTag("application_a1").assertExists()
-        compose.onNodeWithTag("approve_a1").assertDoesNotExist()
+    fun withTheKeyOnDeviceTheTapApproves() {
+        var approved = false
+        render(
+            InvitesUiState(loading = false, links = listOf(readyLink())),
+            onApprove = { _, _, _ -> approved = true },
+        )
+        compose.onNodeWithTag("approve_app-1").performScrollTo().performClick()
+        assertThat(approved).isTrue()
+    }
+
+    @Test
+    fun theVouchConfirmationRidesTheSnackbar() {
+        render(InvitesUiState(loading = false, vouchSigned = true))
+        compose.onNodeWithTag("invites_snackbar").assertExists()
     }
 }

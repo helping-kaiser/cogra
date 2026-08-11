@@ -123,6 +123,17 @@ class InvitesViewModelTest {
     }
 
     @Test
+    fun theVouchConfirmationIsConsumedAfterShowing() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onApprove("application-1", 0.4, 0.2)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchSigned).isTrue()
+        vm.onVouchSignedShown()
+        assertThat(vm.state.value.vouchSigned).isFalse()
+    }
+
+    @Test
     fun aRefusedRevocationSurfaces() = runTest(dispatcher) {
         account.revokeOutcome =
             Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such live invite link")))
