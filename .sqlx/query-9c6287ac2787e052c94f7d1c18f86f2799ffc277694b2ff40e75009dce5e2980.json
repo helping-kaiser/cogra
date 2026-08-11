@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps, payload,\n                nonce, pre_signature, content_salt, deps_salt,\n                content_commitment, deps_commitment, host_seal, status\n         FROM l1_acts WHERE act_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "seq",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "middle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "settlement_ref",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "asserted_parents",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 11,
+        "name": "deps",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "payload",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 13,
+        "name": "nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 14,
+        "name": "pre_signature",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 15,
+        "name": "content_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 16,
+        "name": "deps_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 17,
+        "name": "content_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 18,
+        "name": "deps_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 19,
+        "name": "host_seal",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 20,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9c6287ac2787e052c94f7d1c18f86f2799ffc277694b2ff40e75009dce5e2980"
+}
