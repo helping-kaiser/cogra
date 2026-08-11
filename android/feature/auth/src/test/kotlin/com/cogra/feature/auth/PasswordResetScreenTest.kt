@@ -39,8 +39,8 @@ class PasswordResetScreenTest {
     @Test
     fun anInvalidTokenRefusalShowsItsSpecificMessage() {
         // The backend refuses a bad reset token with
-        // VERIFICATION_TOKEN_INVALID (api-spec.md "confirmPasswordReset").
-        render(ResetUiState(token = "stale", newPassword = "x", error = ErrorCode.VERIFICATION_TOKEN_INVALID))
+        // RESET_TOKEN_INVALID (api-spec.md "confirmPasswordReset").
+        render(ResetUiState(token = "stale", newPassword = "x", error = ErrorCode.RESET_TOKEN_INVALID))
         compose.onNodeWithTag("reset_error")
             .assertTextEquals(context.getString(R.string.reset_token_invalid))
     }

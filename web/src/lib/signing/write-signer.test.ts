@@ -127,7 +127,7 @@ describe("write signer", () => {
 
   beforeEach(async () => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    store = createIdentityStore({ activeAccountId: () => "acct-1" });
     const seed = randomBytes(32);
     const saved = await store.saveActor(seed, true);
     actorPub = saved.publicKeyBytes();
@@ -468,7 +468,7 @@ describe("write signer", () => {
 
   it("fails without an actor key on this device", async () => {
     globalThis.indexedDB = new IDBFactory();
-    const emptyStore = createIdentityStore();
+    const emptyStore = createIdentityStore({ activeAccountId: () => "acct-1" });
     const keyless = createWriteSigner({
       client: client(),
       guard: passthroughGuard,

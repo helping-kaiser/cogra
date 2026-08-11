@@ -76,6 +76,24 @@ describe("VerifyView", () => {
     expect(await screen.findByTestId("verify_resent")).toBeInTheDocument();
   });
 
+  it("renders a rate-limited verify as a backoff — not an invalid link, not connectivity", async () => {
+    server.use(
+      graphql.mutation("VerifyEmail", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<VerifyView />);
+    expect(await screen.findByTestId("verify_rate_limited")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+    expect(screen.queryByTestId("verify_error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("verify_transport_error")).not.toBeInTheDocument();
+    // The token may still be good — the retry stays available.
+    expect(screen.getByTestId("verify_retry")).toBeInTheDocument();
+  });
+
   it("treats a missing token as a dead link", () => {
     params.delete("token");
     renderWithProviders(<VerifyView />);

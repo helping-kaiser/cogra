@@ -7,6 +7,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import { fetchKeyBackup } from "@/lib/api/auth-api";
+import { hasCode } from "@/lib/api/outcome";
 import { fromBase64 } from "@/lib/crypto/bytes";
 import { KeyBackupError, openKeyBackup, RecoveryCode } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -17,6 +18,8 @@ export type RestoreResult =
   | { kind: "malformedCode" }
   | { kind: "wrongCode" }
   | { kind: "noBackup" }
+  /** A deliberate backoff — retry later, nothing is wrong with the connection. */
+  | { kind: "rateLimited" }
   | { kind: "failed"; cause: unknown };
 
 export async function restoreActor(
@@ -33,6 +36,7 @@ export async function restoreActor(
 
   const fetched = await deps.guard.run(() => fetchKeyBackup(deps.client));
   if (fetched.kind === "refused") {
+    if (hasCode(fetched, "RATE_LIMITED")) return { kind: "rateLimited" };
     return { kind: "failed", cause: new Error("keyBackup read was refused") };
   }
   if (fetched.kind === "failed") return { kind: "failed", cause: fetched.cause };

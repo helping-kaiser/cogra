@@ -1,8 +1,10 @@
 // The domain stores over the encrypted layer. Tokens overwrite in
-// place (the refresh token rotates on every use); the identity store
-// keeps the actor seed, the pending backup blob, and the per-write
-// handshake material that must survive process death (the approve step
-// verifies against what THIS device pre-signed).
+// place (the refresh token rotates on every use) and carry the account
+// they authenticate; the identity store keys every value — actor seed,
+// pending backup blob, per-write handshake material, and flags — by
+// that account (auth.md "Multi-account device custody"), and adopts
+// records left by earlier single-account builds into the first
+// signed-in account's slots.
 
 package com.cogra.network.store
 
@@ -21,7 +23,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.map
 
 @Serializable
-private data class StoredTokens(val access: String, val refresh: String)
+private data class StoredTokens(
+    val access: String,
+    val refresh: String,
+    // Absent in records written before multi-account custody; such a
+    // record is treated as no session at all (the next login
+    // overwrites it) — the accepted one-time re-login.
+    val account: String? = null,
+)
 
 @Serializable
 private data class StoredHandshake(
@@ -37,20 +46,23 @@ private fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(b
 
 private fun unb64(s: String): ByteArray = Base64.getDecoder().decode(s)
 
+private fun decodeTokens(bytes: ByteArray): AuthTokens? {
+    val stored = json.decodeFromString<StoredTokens>(bytes.decodeToString())
+    val account = stored.account ?: return null
+    return AuthTokens(stored.access, stored.refresh, account)
+}
+
 @Singleton
 class TokenStoreImpl @Inject constructor(private val store: EncryptedStore) : TokenStore {
 
     override val tokens: Flow<AuthTokens?> = store.watch(KEY).map { bytes ->
-        bytes?.let { json.decodeFromString<StoredTokens>(it.decodeToString()) }
-            ?.let { AuthTokens(it.access, it.refresh) }
+        bytes?.let(::decodeTokens)
     }
 
-    override suspend fun current(): AuthTokens? =
-        store.get(KEY)?.let { json.decodeFromString<StoredTokens>(it.decodeToString()) }
-            ?.let { AuthTokens(it.access, it.refresh) }
+    override suspend fun current(): AuthTokens? = store.get(KEY)?.let(::decodeTokens)
 
     override suspend fun save(tokens: AuthTokens) {
-        val stored = StoredTokens(tokens.accessToken, tokens.refreshToken)
+        val stored = StoredTokens(tokens.accessToken, tokens.refreshToken, tokens.accountId)
         store.put(KEY, json.encodeToString(StoredTokens.serializer(), stored).encodeToByteArray())
     }
 
@@ -64,20 +76,66 @@ class TokenStoreImpl @Inject constructor(private val store: EncryptedStore) : To
 }
 
 @Singleton
-class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) : IdentityStore {
+class IdentityStoreImpl @Inject constructor(
+    private val store: EncryptedStore,
+    private val tokens: TokenStore,
+) : IdentityStore {
 
-    override suspend fun actorSeed(): ByteArray? = store.get(SEED)
+    private suspend fun account(): String? = tokens.current()?.accountId
 
-    override suspend fun saveActorSeed(seed: ByteArray) = store.put(SEED, seed)
+    private fun scoped(account: String, name: String) = "$ACCT_PREFIX$account:$name"
 
-    override suspend fun pendingBackupBlob(): ByteArray? = store.get(PENDING_BLOB)
+    /**
+     * Adopt-on-sign-in (auth.md "Multi-account device custody"): a
+     * record left under the flat pre-multi-account key moves into the
+     * active account's slot on its first scoped access, read or write —
+     * a write consumes it too, so no later account can adopt material
+     * that already belongs to someone. One-shot per key kind: the move
+     * removes the legacy record. An occupied slot is unreachable while
+     * a legacy record still exists (nothing writes flat keys anymore),
+     * so the value is only dropped where it is already superseded.
+     */
+    private suspend fun adopt(legacyName: String, scopedName: String) {
+        val legacy = store.get(legacyName) ?: return
+        if (store.get(scopedName) == null) store.put(scopedName, legacy)
+        store.remove(legacyName)
+    }
 
-    override suspend fun savePendingBackupBlob(blob: ByteArray) = store.put(PENDING_BLOB, blob)
+    /** Resolves the active account's key for [name], adopting a legacy record. */
+    private suspend fun key(name: String): String? {
+        val account = account() ?: return null
+        val scoped = scoped(account, name)
+        adopt(name, scoped)
+        return scoped
+    }
 
-    override suspend fun clearPendingBackupBlob() = store.remove(PENDING_BLOB)
+    override suspend fun actorSeed(): ByteArray? = key(SEED)?.let { store.get(it) }
+
+    override suspend fun saveActorSeed(seed: ByteArray) {
+        key(SEED)?.let { store.put(it, seed) }
+    }
+
+    override suspend fun pendingBackupBlob(): ByteArray? = key(PENDING_BLOB)?.let { store.get(it) }
+
+    override suspend fun savePendingBackupBlob(blob: ByteArray) {
+        key(PENDING_BLOB)?.let { store.put(it, blob) }
+    }
+
+    override suspend fun clearPendingBackupBlob() {
+        key(PENDING_BLOB)?.let { store.remove(it) }
+    }
+
+    /** The handshake set adopts as a whole: every legacy id moves at once. */
+    private suspend fun handshakePrefix(): String? {
+        val account = account() ?: return null
+        for (legacyName in store.names(HS_PREFIX)) {
+            adopt(legacyName, scoped(account, legacyName))
+        }
+        return scoped(account, HS_PREFIX)
+    }
 
     override suspend fun handshake(stagedWriteId: String): PreSignedProposal? =
-        store.get(HS_PREFIX + stagedWriteId)?.let { bytes ->
+        handshakePrefix()?.let { prefix -> store.get(prefix + stagedWriteId) }?.let { bytes ->
             val stored = json.decodeFromString<StoredHandshake>(bytes.decodeToString())
             PreSignedProposal(
                 proposal = decodeProposal(unb64(stored.proposal)),
@@ -88,6 +146,7 @@ class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) :
         }
 
     override suspend fun saveHandshake(stagedWriteId: String, pre: PreSignedProposal) {
+        val prefix = handshakePrefix() ?: return
         val stored = StoredHandshake(
             proposal = b64(encodeProposal(pre.proposal)),
             authorPubkey = b64(pre.authorPubkey),
@@ -95,24 +154,50 @@ class IdentityStoreImpl @Inject constructor(private val store: EncryptedStore) :
             preSignature = b64(pre.preSignature),
         )
         store.put(
-            HS_PREFIX + stagedWriteId,
+            prefix + stagedWriteId,
             json.encodeToString(StoredHandshake.serializer(), stored).encodeToByteArray(),
         )
     }
 
-    override suspend fun clearHandshake(stagedWriteId: String) = store.remove(HS_PREFIX + stagedWriteId)
+    override suspend fun clearHandshake(stagedWriteId: String) {
+        handshakePrefix()?.let { store.remove(it + stagedWriteId) }
+    }
 
-    override suspend fun handshakeIds(): Set<String> =
-        store.names(HS_PREFIX).map { it.removePrefix(HS_PREFIX) }.toSet()
+    override suspend fun handshakeIds(): Set<String> {
+        val prefix = handshakePrefix() ?: return emptySet()
+        return store.names(prefix).map { it.removePrefix(prefix) }.toSet()
+    }
 
-    override suspend fun reciprocationDismissed(): Boolean = store.get(RECIPROCATION) != null
+    override suspend fun reciprocationDismissed(): Boolean =
+        key(RECIPROCATION)?.let { store.get(it) } != null
 
-    override suspend fun markReciprocationDismissed() = store.put(RECIPROCATION, byteArrayOf(1))
+    override suspend fun markReciprocationDismissed() {
+        key(RECIPROCATION)?.let { store.put(it, byteArrayOf(1)) }
+    }
+
+    // No adoption: the flag arrived with multi-account custody, so no
+    // legacy record can exist.
+    override suspend fun forgetOnSignOut(): Boolean =
+        account()?.let { store.get(scoped(it, FORGET)) } != null
+
+    override suspend fun setForgetOnSignOut(value: Boolean) {
+        val account = account() ?: return
+        val name = scoped(account, FORGET)
+        if (value) store.put(name, byteArrayOf(1)) else store.remove(name)
+    }
+
+    override suspend fun purge() {
+        val account = account() ?: return
+        // The whole slot goes: every key of this account, no other's.
+        for (name in store.names(scoped(account, ""))) store.remove(name)
+    }
 
     private companion object {
+        const val ACCT_PREFIX = "acct:"
         const val SEED = "actor_seed"
         const val PENDING_BLOB = "pending_backup_blob"
         const val RECIPROCATION = "reciprocation_dismissed"
+        const val FORGET = "forget_on_sign_out"
         const val HS_PREFIX = "handshake:"
     }
 }

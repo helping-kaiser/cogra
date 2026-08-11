@@ -42,7 +42,7 @@ describe("restoreActor", () => {
 
   beforeEach(() => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    store = createIdentityStore({ activeAccountId: () => "acct-1" });
   });
 
   it("restores the actor from the blob, seed not retained", async () => {
@@ -88,5 +88,17 @@ describe("restoreActor", () => {
     server.use(graphql.query("KeyBackup", () => HttpResponse.error()));
     const result = await restoreActor(deps(store), RecoveryCode.generate().display());
     expect(result.kind).toBe("failed");
+  });
+
+  it("maps a rate-limited backup read to rateLimited, not a transport fault", async () => {
+    server.use(
+      graphql.query("KeyBackup", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    const result = await restoreActor(deps(store), RecoveryCode.generate().display());
+    expect(result).toEqual({ kind: "rateLimited" });
   });
 });

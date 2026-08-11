@@ -120,36 +120,30 @@ remains unaddressed.
 
 ---
 
-## Q32 — Auth-contract gaps surfaced by the web session/auth port
+## Q32 — Surfacing refresh-token reuse detection
 
 **Where it shows up:**
 [auth.md "Tokens"](implementation/auth.md#tokens) (reuse
 detection), [api-spec.md "Auth and accounts"](implementation/api-spec.md#auth-and-accounts)
-**Status:** open (small; resolve with the next schema-touching auth change)
+**Status:** open (small; resolve with a schema-touching auth change
+that has room for the design work)
 
 ### Context
 
 Porting the session surface to web forced a close read of the
-auth contract against the backend and turned up two gaps. Neither
-blocks slice 1 — both clients work against the contract as it is.
+auth contract against the backend. One gap remains (the other —
+a dedicated `RESET_TOKEN_INVALID` code — shipped with slice 1.1's
+custody change).
 
-### The questions
+### The question
 
-- **A dedicated reset-token error code.** `confirmPasswordReset`
-  reports an invalid, expired, or already-used reset token as
-  `VERIFICATION_TOKEN_INVALID` — the email-verification code,
-  whose enum doc describes email verification. Both clients
-  switch on it (now documented in api-spec.md), but the
-  vocabulary is misleading. Adding `RESET_TOKEN_INVALID` is a
-  schema + backend + both-clients change; decide whether the
-  cleaner vocabulary is worth the contract churn.
-- **Surfacing reuse detection.** auth.md promises that
-  refresh-token reuse "surfaces a security event on next login,"
-  but the contract has no carrier: `RefreshError::Invalid` and
-  `::Reuse` collapse to one `REFRESH_TOKEN_INVALID` code, and
-  `LogInPayload` carries no security-event field. As specified,
-  the promise is unimplementable; either the contract grows a
-  carrier or auth.md drops the promise.
+auth.md promises that refresh-token reuse "surfaces a security
+event on next login," but the contract has no carrier:
+`RefreshError::Invalid` and `::Reuse` collapse to one
+`REFRESH_TOKEN_INVALID` code, and `LogInPayload` carries no
+security-event field. As specified, the promise is
+unimplementable; either the contract grows a carrier or auth.md
+drops the promise.
 
 ---
 

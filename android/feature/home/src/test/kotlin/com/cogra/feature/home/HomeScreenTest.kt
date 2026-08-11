@@ -1,11 +1,15 @@
 package com.cogra.feature.home
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.core.app.ApplicationProvider
 import com.cogra.domain.AccountState
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.ActorRef
 import com.cogra.domain.UserProfile
 import com.cogra.domain.signing.RegistrationProgress
@@ -118,9 +122,44 @@ class HomeScreenTest {
     }
 
     @Test
+    fun aRateLimitedVerifyShowsTheDeliberateRefusalCopy() {
+        // Never the connectivity copy: the server refused on purpose.
+        val context: Context = ApplicationProvider.getApplicationContext()
+        render(
+            applicant(awaiting(emailVerified = false))
+                .copy(verifyError = ErrorCode.RATE_LIMITED),
+        )
+        compose.onNodeWithTag("verify_error")
+            .assertTextEquals(context.getString(R.string.error_rate_limited))
+    }
+
+    @Test
+    fun anUnknownVerifyRefusalFallsBackToTheTokenCopy() {
+        val context: Context = ApplicationProvider.getApplicationContext()
+        render(
+            applicant(awaiting(emailVerified = false))
+                .copy(verifyError = ErrorCode.INTERNAL),
+        )
+        compose.onNodeWithTag("verify_error")
+            .assertTextEquals(context.getString(R.string.home_verify_failed))
+    }
+
+    @Test
+    fun aRateLimitedResendShowsTheDeliberateRefusalCopy() {
+        val context: Context = ApplicationProvider.getApplicationContext()
+        render(
+            applicant(awaiting(emailVerified = false))
+                .copy(resendError = ErrorCode.RATE_LIMITED),
+        )
+        compose.onNodeWithTag("resend_error")
+            .assertTextEquals(context.getString(R.string.error_rate_limited))
+        compose.onNodeWithTag("verify_resent").assertDoesNotExist()
+    }
+
+    @Test
     fun aForeignDeviceKeyGetsItsOwnCardNotTheWaitingHint() {
-        // keyOnDevice without keyAttached: another account's key sits on
-        // the device and the silent repair-attach was refused.
+        // keyOnDevice without keyAttached: this account's slot holds a
+        // key the server refused to accept on the repair-attach.
         render(applicant(awaiting(keyAttached = false, keyOnDevice = true)))
         compose.onNodeWithTag("home_key_elsewhere").assertExists()
         compose.onNodeWithTag("home_fresh_key").assertExists()

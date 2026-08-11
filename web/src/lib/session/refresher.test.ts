@@ -4,7 +4,11 @@ import { failed, refused, success } from "@/lib/api/outcome";
 import { createRefresher, type RefreshExecutor } from "./refresher";
 import { createTokenStore } from "./token-store";
 
-const pair = (n: number) => ({ accessToken: `access-${n}`, refreshToken: `refresh-${n}` });
+const pair = (n: number) => ({
+  accessToken: `access-${n}`,
+  refreshToken: `refresh-${n}`,
+  accountId: "acct-1",
+});
 
 const refreshTokenInvalid = () =>
   refused([{ code: "REFRESH_TOKEN_INVALID", message: "rotated", field: null }]);
@@ -71,6 +75,49 @@ describe("refresher", () => {
     store.save(pair(1));
     const exec = vi.fn<RefreshExecutor>().mockResolvedValue(refreshTokenInvalid());
     const refresher = createRefresher(store, exec);
+    expect(await refresher.refresh("access-1")).toBe(false);
+    expect(store.hasSession()).toBe(false);
+  });
+
+  it("runs the invalidation hook before the clear, account still active", async () => {
+    const store = createTokenStore();
+    store.save(pair(1));
+    const seen: (string | null)[] = [];
+    const onInvalidated = vi.fn(() => {
+      seen.push(store.activeAccountId());
+      return Promise.resolve();
+    });
+    const exec = vi.fn<RefreshExecutor>().mockResolvedValue(refreshTokenInvalid());
+    const refresher = createRefresher(store, exec, onInvalidated);
+    expect(await refresher.refresh("access-1")).toBe(false);
+    // The "don't remember me" purge resolves custody by the active
+    // account — it must still be readable inside the hook.
+    expect(seen).toEqual(["acct-1"]);
+    expect(store.hasSession()).toBe(false);
+    expect(store.activeAccountId()).toBeNull();
+  });
+
+  it("skips the invalidation hook on other refusals and failures", async () => {
+    const store = createTokenStore();
+    store.save(pair(1));
+    const onInvalidated = vi.fn(() => Promise.resolve());
+    const exec = vi
+      .fn<RefreshExecutor>()
+      .mockResolvedValueOnce(refused([{ code: "RATE_LIMITED", message: "backoff", field: null }]))
+      .mockResolvedValueOnce(failed(new Error("offline")));
+    const refresher = createRefresher(store, exec, onInvalidated);
+    await refresher.refresh("access-1");
+    await refresher.refresh("access-1");
+    expect(onInvalidated).not.toHaveBeenCalled();
+    expect(store.hasSession()).toBe(true);
+  });
+
+  it("clears the dead session even when the invalidation hook fails", async () => {
+    const store = createTokenStore();
+    store.save(pair(1));
+    const onInvalidated = vi.fn(() => Promise.reject(new Error("idb broke")));
+    const exec = vi.fn<RefreshExecutor>().mockResolvedValue(refreshTokenInvalid());
+    const refresher = createRefresher(store, exec, onInvalidated);
     expect(await refresher.refresh("access-1")).toBe(false);
     expect(store.hasSession()).toBe(false);
   });

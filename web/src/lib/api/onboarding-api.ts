@@ -27,7 +27,8 @@ import {
   type Outcome,
 } from "./outcome";
 import type { StagedWriteView } from "./writes-api";
-import type { TokenPair } from "@/lib/session/token-store";
+import { sessionAuthOf } from "./auth-api";
+import type { SessionAuth } from "@/lib/session/token-store";
 
 export type InviteCheck = NonNullable<InviteLinkCheckQuery["inviteLinkCheck"]>;
 
@@ -38,6 +39,8 @@ export type ApplicationView = NonNullable<
 /** The one status shape a poll pass branches on (Android's ApplicationStatus). */
 export type ApplicationStatus = {
   accountState: "GUEST" | "APPLICANT" | "MEMBER" | null;
+  /** The attached actor public key (base64), null before the ceremony. */
+  actorPubkey: string | null;
   application: ApplicationView | null;
   stagedRegistration: StagedWriteView | null;
 };
@@ -65,11 +68,11 @@ export type RegisterInputFields = {
 export function register(
   client: ApolloClient,
   input: RegisterInputFields,
-): Promise<Outcome<TokenPair>> {
+): Promise<Outcome<SessionAuth>> {
   return payloadOutcome(
     () => client.mutate({ mutation: RegisterDocument, variables: { input } }),
     (data) => data.register.userErrors,
-    (data) => data.register.auth,
+    (data) => sessionAuthOf(data.register.auth),
   );
 }
 
@@ -148,6 +151,7 @@ export async function fetchApplicationStatus(
     null;
   return payload([], {
     accountState: me.accountState,
+    actorPubkey: me.actorPubkey ?? null,
     application: me.application,
     stagedRegistration:
       staged === null

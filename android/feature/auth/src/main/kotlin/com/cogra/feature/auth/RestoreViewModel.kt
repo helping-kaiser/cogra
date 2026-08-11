@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 
 data class RestoreUiState(
     val code: String = "",
+    /** The "don't remember me" opt-in (auth.md "Sign-out"); default off. */
+    val forgetOnSignOut: Boolean = false,
     val inProgress: Boolean = false,
     val result: RestoreResult? = null,
 ) {
@@ -33,12 +35,14 @@ class RestoreViewModel @Inject constructor(private val restorer: ActorRestorer) 
 
     fun onCodeChange(value: String) = _state.update { it.copy(code = value, result = null) }
 
+    fun onForgetOnSignOutChange(value: Boolean) = _state.update { it.copy(forgetOnSignOut = value) }
+
     fun onSubmit() {
         val current = _state.value
         if (!current.canSubmit) return
         _state.update { it.copy(inProgress = true, result = null) }
         viewModelScope.launch {
-            val result = restorer.restore(current.code)
+            val result = restorer.restore(current.code, forgetOnSignOut = current.forgetOnSignOut)
             _state.update { it.copy(inProgress = false, result = result) }
         }
     }

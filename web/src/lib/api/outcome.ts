@@ -2,11 +2,14 @@
 // transport faults and the GraphQL errors array become `failed`, payload
 // userErrors become `refused`, everything else is `success`.
 //
-// One deliberate translation: the backend emits UNAUTHENTICATED only as a
-// GraphQL errors-array entry (transport tier per api-spec.md § Errors are
-// tiered), but the auth guard must be able to refresh-and-replay on it, so
-// it is synthesized into a refusal here — the same shape a null viewer
-// read maps to.
+// Two deliberate translations out of the errors array (transport tier per
+// api-spec.md § Errors are tiered): UNAUTHENTICATED, because the auth
+// guard must be able to refresh-and-replay on it — synthesized into the
+// same refusal shape a null viewer read maps to; and RATE_LIMITED,
+// because a deliberate backoff rendered as a connectivity failure
+// ("can't reach the server") misleads — surfaces already know the code
+// from payload userErrors. The guard replays only on UNAUTHENTICATED, so
+// a rate-limited call is never replayed.
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -47,11 +50,15 @@ export function hasCode(outcome: Outcome<unknown>, code: ErrorCode): boolean {
 }
 
 function classify(error: unknown): Outcome<never> {
-  if (
-    CombinedGraphQLErrors.is(error) &&
-    error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED")
-  ) {
-    return unauthenticated();
+  if (CombinedGraphQLErrors.is(error)) {
+    if (error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED")) {
+      return unauthenticated();
+    }
+    if (error.errors.some((e) => e.extensions?.code === "RATE_LIMITED")) {
+      return refused([
+        { code: "RATE_LIMITED", message: "too many attempts, wait before retrying", field: null },
+      ]);
+    }
   }
   return failed(error);
 }

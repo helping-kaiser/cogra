@@ -28,7 +28,7 @@ function renderGate(store = createTokenStore()) {
 describe("(app) gate", () => {
   it("renders children for a signed-in session", () => {
     const store = createTokenStore();
-    store.save({ accessToken: "a", refreshToken: "r" });
+    store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });
     renderGate(store);
     expect(screen.getByTestId("gated-child")).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();

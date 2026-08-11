@@ -40,6 +40,7 @@ fun LoginRoute(
         state = state,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
+        onForgetOnSignOutChange = viewModel::onForgetOnSignOutChange,
         onSubmit = viewModel::onSubmit,
         onForgotPassword = onForgotPassword,
     )
@@ -50,6 +51,7 @@ fun LoginScreen(
     state: LoginUiState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onForgetOnSignOutChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onForgotPassword: () -> Unit,
 ) {
@@ -84,6 +86,11 @@ fun LoginScreen(
                 label = stringResource(R.string.login_password),
                 testTag = "login_password",
                 modifier = Modifier.fillMaxWidth(),
+            )
+            ForgetOnSignOutRow(
+                checked = state.forgetOnSignOut,
+                onCheckedChange = onForgetOnSignOutChange,
+                testTag = "login_dont_remember",
             )
             state.error?.let {
                 Text(
