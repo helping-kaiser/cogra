@@ -10,6 +10,7 @@ mutation LogIn($input: LogInInput!) {
         id
       }
     }
+    reuseDetectedAt
     userErrors {
       message
       code

@@ -8,16 +8,29 @@
 // (screens never self-navigate on auth failure).
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
 
-export function HomeShell() {
+function noticeDate(detectedAt: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(detectedAt));
+}
+
+export function HomeShell({
+  notices = securityNotices,
+}: {
+  /** Test injection, as SessionProvider's store. */
+  notices?: SecurityNotices;
+} = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const flow = useRegistrationFlow();
@@ -27,6 +40,14 @@ export function HomeShell() {
   const [loading, setLoading] = useState(true);
   const [transportFailed, setTransportFailed] = useState(false);
   const [welcome, setWelcome] = useState(false);
+
+  // The login security notice rides the per-tab store because login
+  // redirects here on the phase flip (auth.md "Reuse detection").
+  const reuseDetectedAt = useSyncExternalStore(
+    notices.subscribe,
+    notices.reuseDetectedAt,
+    () => null,
+  );
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -70,6 +91,28 @@ export function HomeShell() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">CoGra</h1>
+      {reuseDetectedAt !== null && (
+        <div
+          role="alert"
+          data-testid="security_notice"
+          className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+        >
+          <p className="font-medium">Security notice</p>
+          <p>
+            A signed-out session token for your account was re-used on{" "}
+            {noticeDate(reuseDetectedAt)} — likely token theft. All sessions were signed out
+            as a precaution. If this wasn&apos;t you, consider changing your password.
+          </p>
+          <button
+            type="button"
+            data-testid="security_notice_dismiss"
+            onClick={notices.dismiss}
+            className="self-start rounded-md border border-red-300 px-3 py-1 font-medium dark:border-red-800"
+          >
+            Got it
+          </button>
+        </div>
+      )}
       {loading && (
         <p role="status" data-testid="home_loading" className="text-sm text-zinc-600 dark:text-zinc-400">
           Loading…
