@@ -334,9 +334,9 @@ type Health {
 	postgresConnected: Boolean!
 	"""
 	The last L1 epoch fully ingested into the record mirror; -1 until
-	the first epoch lands.
+	the first epoch lands, null when the cursor could not be read.
 	"""
-	mirrorEpoch: Int!
+	mirrorEpoch: Int
 }
 
 type InviteLink {

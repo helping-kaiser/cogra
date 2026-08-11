@@ -63,6 +63,32 @@ async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
     assert_eq!(health["backendVersion"], env!("CARGO_PKG_VERSION"));
 }
 
+#[sqlx::test(migrations = "../../migrations")]
+async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
+    // Break the cursor out from under the resolver: a failed read must
+    // surface as null, never as the legitimate "-1, nothing ingested".
+    sqlx::query("DROP TABLE mirror_epoch_cursor")
+        .execute(&pool)
+        .await
+        .expect("drop");
+    let app = test_app(pool);
+    let query = r#"{"query":"{ health { postgresConnected mirrorEpoch } }"}"#;
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header("content-type", "application/json")
+                .body(Body::from(query))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    let health = &body_json(response).await["data"]["health"];
+    assert_eq!(health["postgresConnected"], true);
+    assert!(health["mirrorEpoch"].is_null());
+}
+
 /// Executes one anonymous GraphQL query and returns the `data` object.
 async fn gql(app: axum::Router, query: String) -> serde_json::Value {
     let body = serde_json::json!({ "query": query }).to_string();
