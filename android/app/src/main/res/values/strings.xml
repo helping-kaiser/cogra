@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="security_notice_title">Security notice</string>
+    <string name="security_notice_reuse">A signed-out session token for your account was re-used on %1$s — likely token theft. All sessions were signed out as a precaution. If this wasn\'t you, consider changing your password.</string>
+    <string name="security_notice_confirm">Got it</string>
+</resources>

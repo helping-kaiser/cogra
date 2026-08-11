@@ -24,6 +24,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
@@ -191,7 +192,7 @@ open class ThrowingAccountRepository : AccountRepository {
 }
 
 open class ThrowingSessionRepository : SessionRepository {
-    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<AuthTokens> =
+    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant> =
         throw UnsupportedOperationException()
     override suspend fun refresh(refreshToken: String): Outcome<AuthTokens> = throw UnsupportedOperationException()
     override suspend fun sessions(): Outcome<List<SessionInfo>> = throw UnsupportedOperationException()

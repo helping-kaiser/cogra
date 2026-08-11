@@ -934,6 +934,48 @@ pub async fn revoke_sessions(
     .rows_affected())
 }
 
+/// Stamps the account's reuse-detection mark (auth.md "Reuse
+/// detection"). A later detection overwrites an undelivered one — the
+/// notice carries the latest incident. No-op for a vanished account.
+pub async fn mark_reuse_detected(pool: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE user_credentials SET reuse_detected_at = NOW() WHERE actor_id = $1",
+        user_id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Takes the account's pending reuse-detection mark: returns the
+/// detection time and clears it, so the notice is delivered exactly
+/// once. Lock-then-clear in one transaction — a concurrent taker
+/// blocks on the row lock and re-evaluates the IS NOT NULL predicate
+/// after commit (READ COMMITTED), so it takes nothing.
+pub async fn take_reuse_detected(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let pending = sqlx::query_scalar!(
+        r#"SELECT reuse_detected_at AS "reuse_detected_at!" FROM user_credentials
+           WHERE actor_id = $1 AND reuse_detected_at IS NOT NULL FOR UPDATE"#,
+        user_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
+    if pending.is_some() {
+        sqlx::query!(
+            "UPDATE user_credentials SET reuse_detected_at = NULL WHERE actor_id = $1",
+            user_id,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(pending)
+}
+
 // ---------------------------------------------------------------------
 // Password reset
 // ---------------------------------------------------------------------

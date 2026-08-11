@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials SET reuse_detected_at = NOW() WHERE actor_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6e736ebd8700c8ae1a88260e5685a344d48915a92fb93c8ddc983054b8563ed3"
+}

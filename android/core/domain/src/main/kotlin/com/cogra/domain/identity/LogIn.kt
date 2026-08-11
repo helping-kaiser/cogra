@@ -13,6 +13,7 @@ class LogIn @Inject constructor(
     private val sessions: SessionRepository,
     private val tokens: TokenStore,
     private val identity: IdentityStore,
+    private val notices: SecurityNotices,
 ) {
     /**
      * [forgetOnSignOut] is the login form's "don't remember me" opt-in
@@ -28,9 +29,15 @@ class LogIn @Inject constructor(
     ): Outcome<Unit> =
         when (val outcome = sessions.logIn(email, password, deviceLabel)) {
             is Outcome.Success -> {
+                // The notice posts before the token save: saving flips
+                // auth-driven navigation, and the shell dialog must
+                // already be pending when Home renders (auth.md "Reuse
+                // detection" — delivered exactly once, so a dropped
+                // notice never comes back).
+                outcome.value.reuseDetectedAt?.let(notices::post)
                 // Saving first makes the account active, so the flag
                 // lands in the right slot.
-                tokens.save(outcome.value)
+                tokens.save(outcome.value.tokens)
                 identity.setForgetOnSignOut(forgetOnSignOut)
                 Outcome.Success(Unit)
             }

@@ -12,6 +12,7 @@ import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ActorRef
@@ -192,11 +193,12 @@ class SessionRepositoryImpl @Inject constructor(
     private val guard: AuthGuard,
 ) : SessionRepository {
 
-    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<AuthTokens> =
+    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant> =
         client.mutation(
             LogInMutation(LogInInput(email, password, Optional.presentIfNotNull(deviceLabel))),
-        ).payloadOutcome({ it.logIn.userErrors.map { e -> e.userErrorFields } }) {
-            it.logIn.auth?.authSessionFields?.let(::authOf)
+        ).payloadOutcome({ it.logIn.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.logIn.auth?.authSessionFields?.let(::authOf)
+                ?.let { LoginGrant(it, data.logIn.reuseDetectedAt) }
         }
 
     override suspend fun refresh(refreshToken: String): Outcome<AuthTokens> = client.mutation(

@@ -304,6 +304,7 @@ pub async fn refresh_session(
         .ok_or(RefreshError::Invalid)?;
     if session.revoked_at.is_some() {
         store::revoke_sessions(pool, session.user_id, None).await?;
+        store::mark_reuse_detected(pool, session.user_id).await?;
         tracing::warn!(user = %session.user_id, "refresh-token reuse detected; all sessions revoked");
         return Err(RefreshError::Reuse);
     }

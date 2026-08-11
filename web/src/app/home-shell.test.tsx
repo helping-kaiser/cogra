@@ -1,7 +1,8 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -84,5 +85,26 @@ describe("HomeShell", () => {
     server.use(graphql.query("Me", () => HttpResponse.error()));
     renderWithProviders(<HomeShell />, { store: signedInStore() });
     expect(await screen.findByTestId("home_transport_error")).toBeInTheDocument();
+  });
+
+  it("renders a pending security notice and dismisses it for good", async () => {
+    server.use(meHandler("MEMBER"));
+    const notices = createSecurityNotices();
+    notices.post("2026-08-10T09:30:00Z");
+    renderWithProviders(<HomeShell notices={notices} />, { store: signedInStore() });
+    expect(await screen.findByTestId("security_notice")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("security_notice_dismiss"));
+    expect(screen.queryByTestId("security_notice")).not.toBeInTheDocument();
+    expect(notices.reuseDetectedAt()).toBeNull();
+  });
+
+  it("shows no security notice when none is pending", async () => {
+    server.use(meHandler("MEMBER"));
+    renderWithProviders(<HomeShell notices={createSecurityNotices()} />, {
+      store: signedInStore(),
+    });
+    await screen.findByTestId("home_greeting");
+    expect(screen.queryByTestId("security_notice")).not.toBeInTheDocument();
   });
 });
