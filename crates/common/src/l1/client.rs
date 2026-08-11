@@ -89,6 +89,65 @@ impl ActorKey {
                 "host returned a different act than was pre-signed".into(),
             ));
         }
+        // Both commitment openings recompute from the returned salts and
+        // the bytes the client itself holds — equal to the sealed act's
+        // own bytes by the equality check above.
+        self.verify_host_additions(sealed, host_pubkey)?;
+        Ok(self.sign_approval(sealed))
+    }
+
+    /// Crash-recovery approve, for custody-held keys (the genesis
+    /// bootstrap): step 4 over an act this key sealed in an earlier run,
+    /// whose in-memory pre-signed proposal is gone. Authorship is proven
+    /// instead of matched — the stored pre-commitment must verify under
+    /// this very key over the act's own bytes and nonce — then the host
+    /// seal and both commitment openings are checked as in `approve`. The
+    /// caller confirms the act is the one it means to approve; this
+    /// method proves it is authentically this key's own sealed act.
+    pub fn approve_recovered(
+        &self,
+        sealed: &VerifiedAct,
+        host_pubkey: &[u8],
+    ) -> Result<ApprovalWitness, L1Error> {
+        let body = &sealed.proposal.body;
+        if body.author != self.address() {
+            return Err(L1Error::Authentication(
+                "the sealed act is not this actor's".into(),
+            ));
+        }
+        let digest_content = crypto::pre_digest(
+            tags::PRE_DIGEST_CONTENT,
+            &sealed.nonce,
+            &sealed.proposal.payload,
+        );
+        let digest_deps = crypto::pre_digest(
+            tags::PRE_DIGEST_DEPS,
+            &sealed.nonce,
+            &canonical_deps(&sealed.proposal.deps),
+        );
+        let msg = pre_commitment_msg(body, &digest_content, &digest_deps);
+        if !crypto::verify(
+            &self.key.verifying_key(),
+            tags::PRE_COMMITMENT,
+            &msg,
+            &sealed.pre_signature,
+        ) {
+            return Err(L1Error::Authentication(
+                "the stored pre-commitment is not this key's signature over the act".into(),
+            ));
+        }
+        self.verify_host_additions(sealed, host_pubkey)?;
+        Ok(self.sign_approval(sealed))
+    }
+
+    /// The host-added parts of a sealed act: the host seal over the exact
+    /// sealed message, and both commitment openings against the act's
+    /// payload and dependency bytes.
+    fn verify_host_additions(
+        &self,
+        sealed: &VerifiedAct,
+        host_pubkey: &[u8],
+    ) -> Result<(), L1Error> {
         let host_key = crypto::verifying_key_from_bytes(host_pubkey)
             .ok_or_else(|| L1Error::Authentication("malformed host key".into()))?;
         if !crypto::verify(
@@ -99,33 +158,34 @@ impl ActorKey {
         ) {
             return Err(L1Error::Authentication("invalid host seal".into()));
         }
-        // Both commitment openings: recompute from the returned salts and
-        // the bytes the client itself holds.
         let content = crypto::commitment(
             tags::COMMIT_CONTENT,
             &sealed.content_salt,
-            &sent.proposal.payload,
+            &sealed.proposal.payload,
         );
         if content.as_slice() != sealed.content_commitment.as_slice() {
             return Err(L1Error::Authentication(
-                "content commitment does not open over the sent payload".into(),
+                "content commitment does not open over the payload".into(),
             ));
         }
         let deps = crypto::commitment(
             tags::COMMIT_DEPS,
             &sealed.deps_salt,
-            &canonical_deps(&sent.proposal.deps),
+            &canonical_deps(&sealed.proposal.deps),
         );
         if deps.as_slice() != sealed.deps_commitment.as_slice() {
             return Err(L1Error::Authentication(
-                "dependency commitment does not open over the sent list".into(),
+                "dependency commitment does not open over the dependency list".into(),
             ));
         }
-        let approval_signature = crypto::sign(&self.key, tags::APPROVAL, &sealed.seal_msg());
-        Ok(ApprovalWitness {
-            act_id: sent.proposal.body.act_id(),
-            approval_signature,
-        })
+        Ok(())
+    }
+
+    fn sign_approval(&self, sealed: &VerifiedAct) -> ApprovalWitness {
+        ApprovalWitness {
+            act_id: sealed.proposal.body.act_id(),
+            approval_signature: crypto::sign(&self.key, tags::APPROVAL, &sealed.seal_msg()),
+        }
     }
 }
 
@@ -235,6 +295,81 @@ mod tests {
         assert!(
             actor
                 .approve(&pre, &sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn approve_recovered_happy_path() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal(&pre, &host);
+        // The pre is dropped — recovery works from the sealed act alone.
+        let witness = actor
+            .approve_recovered(&sealed, host.verifying_key().as_bytes())
+            .expect("approves");
+        assert_eq!(witness.act_id, sealed.proposal.body.act_id());
+        // Same message signed as the ordinary step 4.
+        let ordinary = actor
+            .approve(&pre, &sealed, host.verifying_key().as_bytes())
+            .expect("approves");
+        assert_eq!(witness.approval_signature, ordinary.approval_signature);
+    }
+
+    #[test]
+    fn approve_recovered_rejects_a_foreign_act() {
+        let actor = ActorKey::generate();
+        let other = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = other.pre_sign(proposal(&other.address()));
+        let sealed = seal(&pre, &host);
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn approve_recovered_rejects_a_tampered_payload() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let mut sealed = seal(&pre, &host);
+        // A payload the key never pre-signed fails the authorship proof.
+        sealed.proposal.payload = b"tampered".to_vec();
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn approve_recovered_rejects_a_bad_seal() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let impostor = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal(&pre, &impostor);
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn approve_recovered_rejects_a_wrong_commitment_opening() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let mut sealed = seal(&pre, &host);
+        sealed.content_salt = vec![9u8; crypto::SALT_LEN];
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
                 .is_err()
         );
     }

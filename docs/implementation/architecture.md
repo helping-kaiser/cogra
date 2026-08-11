@@ -377,7 +377,12 @@ It is idempotent and gated on **both** sides — an instance counts
 as bootstrapped only when the Charter record is in the mirror
 *and* the operator's service rows exist; a re-run completes the
 missing half keyed on the recorded identities and writes nothing
-once both halves stand.
+once both halves stand. A run interrupted inside the genesis
+sequence resumes rather than replays: acts the substrate already
+holds are verified identical and skipped (a sealed act's approval
+is recovered from the custodied key), burns are credited at most
+once, and a substrate whose stored acts differ from the genesis
+input is refused as diverged.
 
 ---
 

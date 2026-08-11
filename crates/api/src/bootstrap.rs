@@ -10,7 +10,10 @@
 // Idempotent and gated on both sides: bootstrapped iff the Charter record
 // is in the mirror AND the operator's service rows exist. The L2 half
 // runs first because the signing keys live in it — a re-run after a crash
-// completes the L1 half keyed on the recorded identities. Out-of-graph
+// completes the L1 half keyed on the recorded identities, resuming
+// mid-sequence past acts the substrate already holds (burns credited at
+// most once, a sealed act's approval recovered from the custodied key, a
+// substrate that differs from the genesis input refused). Out-of-graph
 // authority is confined to this bootstrap; there is no runtime genesis
 // flow.
 //
@@ -64,6 +67,8 @@ pub enum BootstrapError {
              the custodied keys are gone and the instance cannot be repaired"
     )]
     Unrepairable,
+    #[error("genesis diverged: {0}")]
+    Diverged(String),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
     #[error(transparent)]
@@ -178,9 +183,16 @@ pub async fn run(
     // every record's preconditions already stand (network.md §2). ---
     let [gm, publisher, moderator, treasury] = &cast;
     for member in &cast {
-        standin
-            .credit_burn(&member.key.address(), input.burn_per_account_micro)
-            .await?;
+        // Credited at most once across re-runs: `credit_burn` is additive
+        // and B_i is monotone from exactly zero, so a non-zero burned
+        // total means this member's genesis burn already landed. (Integer
+        // micro-units divide by 1e6; zero is exactly 0.0.)
+        let address = member.key.address();
+        if standin.balance(&address).await?.burned_total == 0.0 {
+            standin
+                .credit_burn(&address, input.burn_per_account_micro)
+                .await?;
+        }
     }
 
     let host_key = standin.host_public_key().await?;
@@ -189,7 +201,16 @@ pub async fn run(
         let host_key = host_key.clone();
         async move {
             let pre = actor.pre_sign(proposal);
-            let sealed = standin.seal(pre.clone()).await?;
+            let sealed = match standin.seal(pre.clone()).await {
+                Ok(sealed) => sealed,
+                // An act already stored under this identifier is an
+                // interrupted earlier run (or a diverged substrate):
+                // resume instead of replaying into the same Conflict.
+                Err(l1_standin::StandInError::Conflict(_)) => {
+                    return resume_act(standin, &actor, &pre.proposal, &host_key).await;
+                }
+                Err(e) => return Err(e.into()),
+            };
             let witness = actor.approve(&pre, &sealed, &host_key)?;
             standin.approve(witness).await?;
             Ok::<(), BootstrapError>(())
@@ -300,6 +321,37 @@ pub async fn run(
         ));
     }
     Ok(outcome)
+}
+
+/// Resumes one genesis act past a seal Conflict. An identical act sealed
+/// by an interrupted earlier run is skipped when its approval stands, or
+/// completed by recovering the approval from the custodied key; anything
+/// else on the substrate is divergence — a different act occupying the
+/// author sequence, or the same identifier with different content (e.g. a
+/// re-run with changed genesis input) — and is refused truthfully rather
+/// than replayed into the same Conflict forever.
+async fn resume_act(
+    standin: &StandIn,
+    actor: &ActorKey,
+    proposal: &Proposal,
+    host_key: &[u8],
+) -> Result<(), BootstrapError> {
+    let act_id = proposal.body.act_id();
+    let stored = standin.sealed_act(&act_id).await?.ok_or_else(|| {
+        BootstrapError::Diverged(format!(
+            "the author sequence of {act_id} is occupied by a different act"
+        ))
+    })?;
+    if stored.act.proposal != *proposal {
+        return Err(BootstrapError::Diverged(format!(
+            "the act stored at {act_id} does not match the genesis input"
+        )));
+    }
+    if !stored.approved {
+        let witness = actor.approve_recovered(&stored.act, host_key)?;
+        standin.approve(witness).await?;
+    }
+    Ok(())
 }
 
 fn registration(actor: &ActorKey) -> Proposal {
