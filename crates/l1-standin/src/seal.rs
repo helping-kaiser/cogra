@@ -216,6 +216,62 @@ pub(crate) async fn seal(
     Ok(act)
 }
 
+/// Reads back the act stored under an identifier, rebuilt as the exact
+/// sealed object the host returned to its author, with whether its
+/// approval is recorded (crate::StandIn::sealed_act).
+pub(crate) async fn sealed_act(
+    standin: &StandIn,
+    act_id: &ActId,
+) -> Result<Option<crate::StoredAct>, StandInError> {
+    let row = sqlx::query!(
+        "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
+                settlement_ref, license, asserted_parents, deps, payload,
+                nonce, pre_signature, content_salt, deps_salt,
+                content_commitment, deps_commitment, host_seal, status
+         FROM l1_acts WHERE act_id = $1",
+        act_id.to_string(),
+    )
+    .fetch_optional(standin.pool())
+    .await?;
+    let Some(row) = row else { return Ok(None) };
+    let body = rebuild_body(
+        &row.author,
+        row.seq,
+        &row.family,
+        row.middle.as_deref(),
+        &row.target,
+        row.p_d,
+        row.p_i,
+        row.settlement_ref.as_deref(),
+        row.license.as_deref(),
+        &row.asserted_parents,
+    )?;
+    let deps = row
+        .deps
+        .iter()
+        .map(|d| ActId::parse(d))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| StandInError::Formation(e.to_string()))?;
+    Ok(Some(crate::StoredAct {
+        act: VerifiedAct {
+            proposal: common::l1::handshake::Proposal {
+                body,
+                payload: row.payload,
+                deps,
+            },
+            author_pubkey: row.author_pubkey,
+            nonce: row.nonce,
+            pre_signature: row.pre_signature,
+            content_salt: row.content_salt,
+            deps_salt: row.deps_salt,
+            content_commitment: row.content_commitment,
+            deps_commitment: row.deps_commitment,
+            host_seal: row.host_seal,
+        },
+        approved: row.status != "sealed",
+    }))
+}
+
 pub(crate) async fn approve(
     standin: &StandIn,
     witness: ApprovalWitness,

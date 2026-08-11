@@ -20,6 +20,7 @@ mod close;
 mod seal;
 
 use common::l1::handshake::{AccountBalance, ApprovalWitness, EpochPackage};
+use common::l1::identifier::ActId;
 use common::l1::{PreSignedProposal, VerifiedAct};
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
@@ -67,6 +68,15 @@ pub enum StandInError {
     UnknownAct(String),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
+}
+
+/// An act read back from the host's store: the exact sealed object as
+/// returned to its author at seal time, and whether an approval witness
+/// has been recorded for it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StoredAct {
+    pub act: VerifiedAct,
+    pub approved: bool,
 }
 
 /// The stand-in host. Cheap to clone; all state lives in Postgres so every
@@ -162,6 +172,15 @@ impl StandIn {
     /// commitments, seal the verified act (seal.rs).
     pub async fn seal(&self, pre: PreSignedProposal) -> Result<VerifiedAct, StandInError> {
         seal::seal(self, pre).await
+    }
+
+    /// Crash-recovery read (a substrate-side surface like `credit_burn`
+    /// and `close_epoch` — the seam deliberately does not carry it): the
+    /// act stored under an identifier, so the genesis bootstrap can resume
+    /// past acts an interrupted run already landed instead of replaying
+    /// them into a Conflict.
+    pub async fn sealed_act(&self, act_id: &ActId) -> Result<Option<StoredAct>, StandInError> {
+        seal::sealed_act(self, act_id).await
     }
 
     /// Relay leg 2 — approve: verify the approval witness; the act becomes
