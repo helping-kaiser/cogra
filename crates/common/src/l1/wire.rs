@@ -26,33 +26,6 @@ pub enum WireError {
     Shape(&'static str),
 }
 
-fn encode_body_fields(e: &mut Encoder, body: &StructuralBody) {
-    // Byte-identical to StructuralBody::canonical_bytes — the wire carries
-    // the signing base itself.
-    e.array(9);
-    e.text(&body.act_id().to_string());
-    match &body.middle {
-        Some(m) => e.text(&m.to_string()),
-        None => e.null(),
-    };
-    e.text(&body.target.to_string());
-    e.float(body.p_d);
-    e.float(body.p_i);
-    match &body.settlement_ref {
-        Some(r) => e.text(&r.to_string()),
-        None => e.null(),
-    };
-    match &body.license {
-        Some(l) => e.text(l),
-        None => e.null(),
-    };
-    e.array(body.asserted_parents.len() as u64);
-    for p in &body.asserted_parents {
-        e.text(&p.to_string());
-    }
-    e.uint(1);
-}
-
 fn decode_body(bytes: &[u8]) -> Result<StructuralBody, WireError> {
     let mut d = Decoder::new(bytes);
     if d.array()? != 9 {
@@ -106,12 +79,10 @@ fn decode_deps(d: &mut Decoder) -> Result<Vec<ActId>, WireError> {
 
 /// The prepared proposal, as `PreparedWrite.canonicalProposal` carries it.
 pub fn encode_proposal(p: &Proposal) -> Vec<u8> {
-    let mut body = Encoder::new();
-    encode_body_fields(&mut body, &p.body);
     let mut e = Encoder::new();
     e.array(4);
     e.uint(WIRE_VERSION);
-    e.bytes(&body.finish());
+    e.bytes(&p.body.canonical_bytes());
     e.bytes(&p.payload);
     encode_deps(&mut e, &p.deps);
     e.finish()
@@ -141,12 +112,10 @@ pub fn decode_proposal(bytes: &[u8]) -> Result<Proposal, WireError> {
 /// every host-added field visible to the device before approval
 /// (realization transparency, layer1-interface.md §8.2).
 pub fn encode_verified_act(act: &VerifiedAct) -> Vec<u8> {
-    let mut body = Encoder::new();
-    encode_body_fields(&mut body, &act.proposal.body);
     let mut e = Encoder::new();
     e.array(12);
     e.uint(WIRE_VERSION);
-    e.bytes(&body.finish());
+    e.bytes(&act.proposal.body.canonical_bytes());
     e.bytes(&act.proposal.payload);
     encode_deps(&mut e, &act.proposal.deps);
     e.bytes(&act.author_pubkey);
