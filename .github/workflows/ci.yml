@@ -53,7 +53,10 @@ jobs:
               - '!web/**'
       # The frontend gates. Default (OR) quantifier: any of these paths fires
       # them. Kept in their own step because the OR semantics are incompatible
-      # with the `every` quantifier the Rust gate above depends on.
+      # with the `every` quantifier the Rust gate above depends on. Both
+      # contract artifacts are listed for the same reason schema.graphql is:
+      # the frontend golden-vector tests pin to client-crypto-vectors.json,
+      # so a vector regeneration must run them, not just the Rust jobs.
       - uses: dorny/paths-filter@v3
         id: frontends
         with:
@@ -61,9 +64,11 @@ jobs:
             android:
               - 'android/**'
               - 'schema.graphql'
+              - 'client-crypto-vectors.json'
             web:
               - 'web/**'
               - 'schema.graphql'
+              - 'client-crypto-vectors.json'
 
   lint:
     name: Lint
