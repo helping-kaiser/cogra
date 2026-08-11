@@ -337,8 +337,11 @@ CREATE UNIQUE INDEX actors_l0_address_key ON actors (l0_address);
 -- carry the registration verification proof; the reaper deletes
 -- never-verified accounts whole, and a registration may replace a
 -- dead (never-verified, past-bound) account in place (auth.md
--- "Registration collision"). Nothing references this row; it is a
--- pure bolt-on keyed by the actor.
+-- "Registration collision"). reuse_detected_at is the pending
+-- security notice — stamped by refresh-token reuse detection,
+-- read-and-cleared by the next successful login (auth.md "Reuse
+-- detection"). Nothing references this row; it is a pure bolt-on
+-- keyed by the actor.
 CREATE TABLE user_credentials (
     actor_id                      UUID        PRIMARY KEY REFERENCES actors(id),
     email                         TEXT        NOT NULL UNIQUE,
@@ -346,6 +349,7 @@ CREATE TABLE user_credentials (
     account_state                 TEXT        NOT NULL CHECK (account_state IN ('guest', 'applicant', 'member')),
     email_verified_at             TIMESTAMPTZ,
     email_verification_token_hash BYTEA       UNIQUE,
+    reuse_detected_at             TIMESTAMPTZ,
     created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

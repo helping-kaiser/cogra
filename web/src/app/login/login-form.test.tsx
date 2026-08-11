@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
+import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
@@ -17,6 +18,12 @@ vi.mock("next/navigation", () => ({
 const server = startMswServer();
 
 const loginSuccess = (capture?: (variables: LogInMutationVariables) => void) =>
+  loginSuccessWithNotice(null, capture);
+
+const loginSuccessWithNotice = (
+  reuseDetectedAt: string | null,
+  capture?: (variables: LogInMutationVariables) => void,
+) =>
   graphql.mutation("LogIn", ({ variables }) => {
     capture?.(variables as LogInMutationVariables);
     return HttpResponse.json({
@@ -29,6 +36,7 @@ const loginSuccess = (capture?: (variables: LogInMutationVariables) => void) =>
             refreshToken: "refresh-1",
             user: { __typename: "User", id: "acct-1" },
           },
+          reuseDetectedAt,
           userErrors: [],
         },
       },
@@ -41,6 +49,7 @@ const loginRefused = graphql.mutation("LogIn", () =>
       logIn: {
         __typename: "LogInPayload",
         auth: null,
+        reuseDetectedAt: null,
         userErrors: [
           {
             __typename: "UserError",
@@ -87,6 +96,24 @@ describe("LoginForm", () => {
     expect(seen?.input.email).toBe("user@example.com");
     expect(seen?.input.deviceLabel).toEqual(expect.any(String));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+  });
+
+  it("posts a delivered reuse notice to the store before navigating", async () => {
+    server.use(loginSuccessWithNotice("2026-08-10T09:30:00Z"));
+    const notices = createSecurityNotices();
+    const { store } = renderWithProviders(<LoginForm notices={notices} />);
+    fillAndSubmit();
+    await waitFor(() => expect(store.hasSession()).toBe(true));
+    expect(notices.reuseDetectedAt()).toBe("2026-08-10T09:30:00Z");
+  });
+
+  it("posts nothing on a clean login", async () => {
+    server.use(loginSuccess());
+    const notices = createSecurityNotices();
+    const { store } = renderWithProviders(<LoginForm notices={notices} />);
+    fillAndSubmit();
+    await waitFor(() => expect(store.hasSession()).toBe(true));
+    expect(notices.reuseDetectedAt()).toBeNull();
   });
 
   it("flags the account ephemeral when don't-remember is checked", async () => {

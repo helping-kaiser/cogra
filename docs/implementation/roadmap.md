@@ -45,7 +45,7 @@ or the plan shifts.
 
 ## Where the code stands
 
-**Slices 0 and 1 are closed.** Backend: the seam, the stand-in,
+**Slices 0, 1, and 1.1 are closed.** Backend: the seam, the stand-in,
 the record mirror with its epoch cursor, the genesis bootstrap,
 the staged write path, and the onboarding/session surface — the
 exported GraphQL contract is the full slice-1 surface. Android:
@@ -60,10 +60,13 @@ write, browser restore via recovery code — passed 2026-08-07.
 The client-crypto groundwork both cuts build on is in place —
 the key-backup blob format ([auth.md](auth.md#blob-format-v1))
 and the golden vectors (`client-crypto-vectors.json`,
-`make vectors`). Slice 1.1 is built on all three fronts — the
+`make vectors`). Slice 1.1 shipped on all three fronts — the
 auth-edge rate limits with the breach-corpus check, the query
 budgets, and the account-keyed client custody with the verified
-repair-attach — awaiting its hand test.
+repair-attach — and passed its hand test. The auth contract has
+since grown the reuse-detection security notice
+([auth.md](auth.md) "The security notice"), closing
+open-questions Q32.
 
 ## The stand-in and the swap
 

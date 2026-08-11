@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -115,6 +116,10 @@ fun CograNavGraph(
             popUpTo(0) { inclusive = true }
         }
     }
+
+    // Above the NavHost so the login security notice shows wherever
+    // the post-login navigation lands (auth.md "Reuse detection").
+    SecurityNoticeHost()
 
     NavHost(
         navController = navController,

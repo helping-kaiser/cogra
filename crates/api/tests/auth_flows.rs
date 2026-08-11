@@ -97,6 +97,69 @@ async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
+    let cfg = AuthConfig::ephemeral().expect("cfg");
+    let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+
+    // No mark before any detection.
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+
+    let first = auth::issue_session(&pool, &cfg, user, None)
+        .await
+        .expect("issues");
+    auth::refresh_session(&pool, &cfg, &first.refresh_token)
+        .await
+        .expect("rotates");
+    assert!(matches!(
+        auth::refresh_session(&pool, &cfg, &first.refresh_token).await,
+        Err(RefreshError::Reuse)
+    ));
+
+    // Detection stamped the account; the take returns and clears it.
+    let taken = store::take_reuse_detected(&pool, user)
+        .await
+        .expect("take")
+        .expect("mark");
+    assert!(Utc::now() - taken < Duration::minutes(1));
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+
+    // A later detection overwrites an undelivered mark with its own
+    // time — the notice carries the latest incident.
+    let stale = Utc::now() - Duration::days(3);
+    sqlx::query("UPDATE user_credentials SET reuse_detected_at = $1 WHERE actor_id = $2")
+        .bind(stale)
+        .bind(user)
+        .execute(&pool)
+        .await
+        .expect("seed stale mark");
+    let second = auth::issue_session(&pool, &cfg, user, None)
+        .await
+        .expect("issues");
+    auth::refresh_session(&pool, &cfg, &second.refresh_token)
+        .await
+        .expect("rotates");
+    assert!(matches!(
+        auth::refresh_session(&pool, &cfg, &second.refresh_token).await,
+        Err(RefreshError::Reuse)
+    ));
+    let overwritten = store::take_reuse_detected(&pool, user)
+        .await
+        .expect("take")
+        .expect("mark");
+    assert!(overwritten > stale + Duration::days(1));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn revocations_scope_to_their_target(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
     let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;

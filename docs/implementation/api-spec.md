@@ -2961,7 +2961,14 @@ type AuthSession {
 
 "A session from credentials; auth is null with an INVALID_CREDENTIALS
  userError when the email / password pair did not match."
-type LogInPayload { auth: AuthSession }
+type LogInPayload {
+  auth: AuthSession
+  "The pending refresh-token-reuse security event (auth.md 'Reuse
+   detection'), delivered exactly once: the detection time on the
+   first successful login after a reuse-detected revocation, null
+   otherwise and on every refusal."
+  reuseDetectedAt: DateTime
+}
 
 "A rotated session; auth is null with a REFRESH_TOKEN_INVALID userError
  when the refresh token is invalid, expired, or was already rotated

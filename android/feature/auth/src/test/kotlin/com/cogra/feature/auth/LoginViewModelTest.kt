@@ -2,15 +2,18 @@ package com.cogra.feature.auth
 
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserError
 import com.cogra.domain.identity.LogIn
+import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.testing.FakeIdentityStore
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,10 +37,11 @@ class InMemoryTokens : TokenStore {
 }
 
 private class ScriptedSessions : SessionRepository {
-    var logInOutcome: Outcome<AuthTokens> = Outcome.Success(AuthTokens("a", "r", "u1"))
+    var logInOutcome: Outcome<LoginGrant> =
+        Outcome.Success(LoginGrant(AuthTokens("a", "r", "u1"), reuseDetectedAt = null))
     var lastDeviceLabel: String? = null
 
-    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<AuthTokens> {
+    override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant> {
         lastDeviceLabel = deviceLabel
         return logInOutcome
     }
@@ -55,6 +59,7 @@ class LoginViewModelTest {
     private val sessions = ScriptedSessions()
     private val tokens = InMemoryTokens()
     private val identity = FakeIdentityStore()
+    private val notices = SecurityNotices()
 
     @Before
     fun setUp() {
@@ -66,7 +71,7 @@ class LoginViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = LoginViewModel(LogIn(sessions, tokens, identity))
+    private fun viewModel() = LoginViewModel(LogIn(sessions, tokens, identity, notices))
 
     @Test
     fun successStoresTheTokens() = runTest(dispatcher) {
@@ -78,6 +83,24 @@ class LoginViewModelTest {
         assertThat(tokens.current()).isEqualTo(AuthTokens("a", "r", "u1"))
         assertThat(vm.state.value.inProgress).isFalse()
         assertThat(vm.state.value.error).isNull()
+        // A clean grant posts no security notice.
+        assertThat(notices.reuseDetectedAt.value).isNull()
+    }
+
+    @Test
+    fun aReuseNoticePostsToTheHolderBeforeTheTokensLand() = runTest(dispatcher) {
+        val detectedAt = Instant.parse("2026-08-10T09:30:00Z")
+        sessions.logInOutcome =
+            Outcome.Success(LoginGrant(AuthTokens("a", "r", "u1"), detectedAt))
+        val vm = viewModel()
+        vm.onEmailChange("user@example.com")
+        vm.onPasswordChange("a strong password")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        // The shell dialog reads the holder after auth-driven navigation;
+        // the login succeeded normally alongside it.
+        assertThat(notices.reuseDetectedAt.value).isEqualTo(detectedAt)
+        assertThat(tokens.current()).isEqualTo(AuthTokens("a", "r", "u1"))
     }
 
     @Test
