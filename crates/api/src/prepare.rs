@@ -90,6 +90,16 @@ pub async fn prepare<B: L1Boundary>(
         .family
         .params_check(gesture.p_d, gesture.p_i)
         .map_err(PrepareError::Formation)?;
+    // Envelope conformance (architecture.md "The write path" step 1): an
+    // oversized payload would only fail at seal, leaving a staged row for
+    // the GC — the whole point of prepare-side checks is failing first.
+    let max_payload = boundary.max_payload_bytes().await?;
+    if gesture.payload.len() > max_payload {
+        return Err(PrepareError::Formation(format!(
+            "payload exceeds M_payload ({} > {max_payload})",
+            gesture.payload.len(),
+        )));
+    }
 
     // The two-gate write rule, as an L2 estimate from the last published
     // values (substrate.md §6). W1 — solvency — is real under the
