@@ -575,6 +575,8 @@ type Mutation {
 	seal returns synchronously the payload's staged writes are
 	already AWAITING_APPROVAL, verified act included. Verification
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
+	Resubmitting a sealed proposal is idempotent only for the exact
+	signature that was sealed; differing bytes refuse as BAD_INPUT.
 	"""
 	submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
 	"""
