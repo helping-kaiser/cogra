@@ -6,8 +6,16 @@
 
 package com.cogra.app
 
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class HiltTestActivity : ComponentActivity()
+class HiltTestActivity : ComponentActivity() {
+    /**
+     * Drives the real androidx onNewIntent dispatch (listener fan-out
+     * included) from tests — Robolectric has no public driver for the
+     * protected method.
+     */
+    fun dispatchNewIntent(intent: Intent) = onNewIntent(intent)
+}

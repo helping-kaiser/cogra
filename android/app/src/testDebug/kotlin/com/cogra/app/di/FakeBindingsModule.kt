@@ -9,6 +9,7 @@ package com.cogra.app.di
 
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.InviteCheck
 import com.cogra.domain.Outcome
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserProfile
@@ -65,8 +66,15 @@ class ScriptedSessionRepository : ThrowingSessionRepository() {
 class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
     var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     val attachedKeys = mutableListOf<String>()
+    var inviteCheck: Outcome<InviteCheck?> = Outcome.Success(null)
+    val checkedInviteIds = mutableListOf<String>()
 
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> = Outcome.Success(status)
+
+    override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> {
+        checkedInviteIds += id
+        return inviteCheck
+    }
 
     override suspend fun attachActorKey(actorPubkeyBase64: String, l0Address: String): Outcome<Unit> {
         attachedKeys += actorPubkeyBase64
