@@ -687,12 +687,10 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
 
     // The approval mark set directly — the race under test starts after
     // it, between the approving request's staging and the poll's repair.
-    let mut conn = rig.pool.acquire().await.expect("conn");
-    store::approve_application(&mut conn, application.id)
+    store::approve_application(&rig.pool, application.id)
         .await
         .expect("query")
         .expect("approvable");
-    drop(conn);
     let approved = rig.application_of(account).await;
 
     let stage = || {

@@ -7,14 +7,12 @@
 //! its own address — varying the socket peer is impossible through
 //! `oneshot`.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::Request;
-use axum_client_ip::ClientIpSource;
 use chrono::Utc;
 use http_body_util::BodyExt;
-use l1_standin::{StandIn, StandInConfig};
 use postgres_store::{PgPool, auth as store, rate_limit};
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -22,25 +20,8 @@ use uuid::Uuid;
 
 use api::ratelimit::{RateLimitConfig, Window};
 
-#[derive(Default)]
-struct TestMailer(Mutex<Vec<api::mailer::Mail>>);
-
-impl TestMailer {
-    fn count(&self) -> usize {
-        self.0.lock().expect("mailbox").len()
-    }
-}
-
-impl api::mailer::Mailer for TestMailer {
-    fn send(
-        &self,
-        mail: api::mailer::Mail,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
-        Box::pin(async move {
-            self.0.lock().expect("mailbox").push(mail);
-        })
-    }
-}
+mod rig;
+use rig::TestMailer;
 
 struct Rig {
     app: axum::Router,
@@ -50,22 +31,9 @@ struct Rig {
 
 impl Rig {
     fn new(pool: PgPool, rate_limits: RateLimitConfig) -> Self {
-        let standin = StandIn::new(pool.clone(), StandInConfig::default());
-        let auth = api::auth::AuthConfig::ephemeral().expect("auth config");
         let mailer = Arc::new(TestMailer::default());
-        let schema = api::schema::build(api::schema::ApiContext {
-            pool: pool.clone(),
-            boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin,
-            auth: auth.clone(),
-            mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
-            web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
-            onboarding: api::onboarding::OnboardingConfig::default(),
-            rate_limits,
-            breach: Arc::new(api::breach::DisabledCorpus),
-        });
         Self {
-            app: api::app(schema, auth, ClientIpSource::XRealIp),
+            app: rig::x_real_ip_app(pool.clone(), mailer.clone(), rate_limits),
             pool,
             mailer,
         }
