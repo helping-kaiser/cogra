@@ -10,6 +10,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
@@ -51,7 +52,7 @@ interface OnboardingRepository {
 
 /** Login, refresh, and session management — the L2 half of auth. */
 interface SessionRepository {
-    suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<AuthTokens>
+    suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant>
 
     /** Consumes the current refresh token; the caller replaces the stored pair. */
     suspend fun refresh(refreshToken: String): Outcome<AuthTokens>
