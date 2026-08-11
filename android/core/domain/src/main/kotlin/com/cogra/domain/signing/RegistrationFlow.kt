@@ -4,11 +4,16 @@
 // cannot belong to any one screen: it runs here, above navigation.
 // Auto-polling is an onboarding-only mechanism — the loop stops for
 // good at membership; from then on every fetch is event-driven (a user
-// action with an outcome to collect, or an explicit refresh).
+// action with an outcome to collect, or an explicit refresh). The loop
+// is also session-bound: the end of the session that started it — or a
+// switch to another account — stops it and resets the flow's state, so
+// a signed-out device never polls and a new session starts clean.
 
 package com.cogra.domain.signing
 
 import com.cogra.domain.di.ApplicationScope
+import com.cogra.domain.store.TokenStore
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -29,30 +34,57 @@ import kotlinx.coroutines.withTimeoutOrNull
  * into an immediate pass — call it on entry, on user actions that
  * change server state, and on a manual refresh. The loop ends at
  * [RegistrationProgress.Member] (and on a device rejection, which no
- * amount of polling repairs).
+ * amount of polling repairs) — and with its session: watching the
+ * token store, the flow cancels the loop and drops its state the
+ * moment the session ends or changes account, so nothing outlives the
+ * account it belongs to. A refusal keeps the loop alive — transient
+ * refusals (a rate limit) self-heal on a later pass, and the one that
+ * cannot (the ended session's UNAUTHENTICATED) is exactly what the
+ * session watch cancels.
  */
 @Singleton
-class RegistrationFlow @Inject constructor(
+class RegistrationFlow(
     private val signer: RegistrationSigner,
-    @ApplicationScope private val scope: CoroutineScope,
+    private val scope: CoroutineScope,
+    tokens: TokenStore,
+    private val fastDelayMs: Long = 3_000,
+    private val slowDelayMs: Long = 30_000,
 ) {
+    @Inject constructor(
+        signer: RegistrationSigner,
+        @ApplicationScope scope: CoroutineScope,
+        tokens: TokenStore,
+    ) : this(signer, scope, tokens, fastDelayMs = 3_000, slowDelayMs = 30_000)
+
     private val _progress = MutableStateFlow<RegistrationProgress?>(null)
 
     /** Null until the first pass of a loop reports. */
     val progress: StateFlow<RegistrationProgress?> = _progress.asStateFlow()
 
-    /** Injectable for tests; the two cadences of the poll. */
-    var fastDelayMs: Long = 3_000
-    var slowDelayMs: Long = 30_000
-
     private val pokes = Channel<Unit>(Channel.CONFLATED)
     private var loop: Job? = null
-    private var landed = false
+    private val landed = AtomicBoolean(false)
+
+    init {
+        // Session end and account switch reset the flow. Signing IN
+        // never resets: a loop can only have been started by the new
+        // session's own surfaces, and every switch passes through the
+        // sign-out (or reuse-detected) token clear first.
+        scope.launch {
+            var current: String? = null
+            tokens.tokens.collect { pair ->
+                val previous = current
+                current = pair?.accountId
+                if (previous != null && current != previous) reset()
+            }
+        }
+    }
 
     /**
      * Starts the loop unless one is already running; a running loop is
      * poked into an immediate pass instead of waiting out its delay.
      */
+    @Synchronized
     fun ensureAdvancing() {
         if (loop?.isActive == true) {
             pokes.trySend(Unit)
@@ -68,7 +100,7 @@ class RegistrationFlow @Inject constructor(
                         // The one-shot fires only on a landing this loop
                         // watched happen — a cold open as member greets
                         // nobody.
-                        if (wasApplicant) landed = true
+                        if (wasApplicant) landed.set(true)
                         return@launch
                     }
                     is RegistrationProgress.RejectedByDevice -> return@launch
@@ -77,6 +109,15 @@ class RegistrationFlow @Inject constructor(
                 withTimeoutOrNull(delayFor(progress)) { pokes.receive() }
             }
         }
+    }
+
+    @Synchronized
+    private fun reset() {
+        loop?.cancel()
+        loop = null
+        pokes.tryReceive()
+        _progress.value = null
+        landed.set(false)
     }
 
     private fun delayFor(progress: RegistrationProgress): Long = when (progress) {
@@ -91,9 +132,5 @@ class RegistrationFlow @Inject constructor(
      * greets the new member on the strength of this, then the signal is
      * spent.
      */
-    fun consumeLanded(): Boolean {
-        val result = landed
-        landed = false
-        return result
-    }
+    fun consumeLanded(): Boolean = landed.getAndSet(false)
 }
