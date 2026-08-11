@@ -40,6 +40,10 @@ use crate::stance::{self, StanceError};
 const EMAIL_CHANGE_TTL_HOURS: i64 = 1;
 /// Password-reset tokens stay live this long (auth.md default).
 const PASSWORD_RESET_TTL_MINUTES: i64 = 15;
+/// Key-backup blob cap (auth.md "Blob format (v1)"): the v1 container is
+/// tens of bytes, so 4 KiB leaves format headroom while denying a
+/// hostile client unbounded rows.
+const MAX_KEY_BACKUP_BYTES: usize = 4096;
 
 /// The transport-tier refusal for a request that needed a session.
 fn unauthenticated() -> async_graphql::Error {
@@ -140,6 +144,11 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
         RelayError::Wedged(_) => UserError::at(
             ErrorCode::StagedWriteExpired,
             "the staged write lost its seal; re-prepare",
+            path,
+        ),
+        RelayError::ReplayMismatch(_) => UserError::at(
+            ErrorCode::BadInput,
+            "resubmission does not match the sealed pre-commitment",
             path,
         ),
         RelayError::Staged(staged::StagedError::NotFound(_)) => {
@@ -1171,7 +1180,8 @@ impl Mutation {
 
     /// Upload (or replace) the client-encrypted key-backup blob —
     /// ciphertext under the device-generated recovery code; the server
-    /// stores what it cannot decrypt. Retrieval is the `User.keyBackup`
+    /// stores what it cannot decrypt. One blob per account; blobs over
+    /// 4 KiB refuse as BAD_INPUT. Retrieval is the `User.keyBackup`
     /// field: login + code is the recovery.
     async fn upload_key_backup(
         &self,
@@ -1189,6 +1199,16 @@ impl Mutation {
                 });
             }
         };
+        if blob.len() > MAX_KEY_BACKUP_BYTES {
+            return Ok(UploadKeyBackupPayload {
+                ok: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::BadInput,
+                    format!("blob exceeds {MAX_KEY_BACKUP_BYTES} bytes"),
+                    vec!["blob".to_string()],
+                )],
+            });
+        }
         store::upload_key_backup(pool, v.user_id, &blob).await?;
         Ok(UploadKeyBackupPayload {
             ok: Some(true),
@@ -1309,6 +1329,8 @@ impl Mutation {
     /// seal returns synchronously the payload's staged writes are
     /// already AWAITING_APPROVAL, verified act included. Verification
     /// failures surface as SIGNATURE_INVALID userErrors per proposal.
+    /// Resubmitting a sealed proposal is idempotent only for the exact
+    /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     async fn submit_proposals(
         &self,
         ctx: &Context<'_>,

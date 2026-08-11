@@ -148,15 +148,33 @@ impl VerifiedAct {
     /// verified act including the host-added commitments (§8.2 — the
     /// witness signs no epoch index, position, or logical time).
     pub fn seal_msg(&self) -> Vec<u8> {
-        let mut e = Encoder::new();
-        e.array(5);
-        e.bytes(&self.proposal.body.canonical_bytes());
-        e.bytes(&self.pre_signature);
-        e.bytes(&self.content_commitment);
-        e.bytes(&self.deps_commitment);
-        e.uint(1);
-        e.finish()
+        seal_message(
+            &self.proposal.body,
+            &self.pre_signature,
+            &self.content_commitment,
+            &self.deps_commitment,
+        )
     }
+}
+
+/// The seal frame from its parts — the one encoding of the message
+/// `VerifiedAct::seal_msg` covers, callable where only stored columns
+/// exist rather than an assembled act.
+pub fn seal_message(
+    body: &StructuralBody,
+    pre_signature: &[u8],
+    content_commitment: &[u8],
+    deps_commitment: &[u8],
+) -> Vec<u8> {
+    let mut e = Encoder::new();
+    e.array(5);
+    e.bytes(&body.canonical_bytes());
+    e.bytes(pre_signature);
+    e.bytes(content_commitment);
+    e.bytes(deps_commitment);
+    // Trailing schema version for forward evolution of the frame shape.
+    e.uint(1);
+    e.finish()
 }
 
 /// The client's approval: the act identifier plus the approval-witness

@@ -334,9 +334,9 @@ type Health {
 	postgresConnected: Boolean!
 	"""
 	The last L1 epoch fully ingested into the record mirror; -1 until
-	the first epoch lands.
+	the first epoch lands, null when the cursor could not be read.
 	"""
-	mirrorEpoch: Int!
+	mirrorEpoch: Int
 }
 
 type InviteLink {
@@ -549,7 +549,8 @@ type Mutation {
 	"""
 	Upload (or replace) the client-encrypted key-backup blob —
 	ciphertext under the device-generated recovery code; the server
-	stores what it cannot decrypt. Retrieval is the `User.keyBackup`
+	stores what it cannot decrypt. One blob per account; blobs over
+	4 KiB refuse as BAD_INPUT. Retrieval is the `User.keyBackup`
 	field: login + code is the recovery.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
@@ -575,6 +576,8 @@ type Mutation {
 	seal returns synchronously the payload's staged writes are
 	already AWAITING_APPROVAL, verified act included. Verification
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
+	Resubmitting a sealed proposal is idempotent only for the exact
+	signature that was sealed; differing bytes refuse as BAD_INPUT.
 	"""
 	submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
 	"""
