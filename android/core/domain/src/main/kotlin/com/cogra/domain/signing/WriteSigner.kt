@@ -8,6 +8,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.Family
 import com.cogra.crypto.HandshakeException
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.crypto.WireException
@@ -72,6 +73,7 @@ class WriteSigner @Inject constructor(
      * ordinary session-authorized legs.
      */
     suspend fun signStaged(staged: StagedWriteView): WriteResult {
+        if (staged.family == Family.UNKNOWN) return unsupported(staged.id, "record family")
         val key = actorKey()
         return when (staged.state) {
             WriteState.AWAITING_PRE_SIGN -> when (val pre = identity.handshake(staged.id)) {
@@ -116,6 +118,7 @@ class WriteSigner @Inject constructor(
                     listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
                 )
             }
+            WriteState.UNKNOWN -> unsupported(staged.id, "staged-write state")
         }
     }
 
@@ -134,6 +137,7 @@ class WriteSigner @Inject constructor(
         ActorKey.fromSeed(identity.actorSeed() ?: throw NoActorKeyException())
 
     private suspend fun signOne(key: ActorKey, write: PreparedWriteView): WriteResult {
+        if (write.family == Family.UNKNOWN) return unsupported(write.id, "record family")
         val step = try {
             preSignStep(key, write.canonicalProposal)
         } catch (e: WireException) {
@@ -158,7 +162,9 @@ class WriteSigner @Inject constructor(
                     identity.clearHandshake(id)
                     WriteResult.Refused(id, listOf(UserError(ErrorCode.NOT_FOUND, "staged write is gone")))
                 }
-                else -> when (staged.state) {
+                else -> if (staged.family == Family.UNKNOWN) {
+                    unsupported(id, "record family")
+                } else when (staged.state) {
                     // The submit response was lost before the server saw it.
                     WriteState.AWAITING_PRE_SIGN -> {
                         val sig = preCommitmentSignature(pre)
@@ -181,6 +187,7 @@ class WriteSigner @Inject constructor(
                             listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
                         )
                     }
+                    WriteState.UNKNOWN -> unsupported(id, "staged-write state")
                 }
             }
         }
@@ -191,6 +198,7 @@ class WriteSigner @Inject constructor(
         var current = staged
         var attempts = 0
         while (current.verifiedAct == null) {
+            if (current.state == WriteState.UNKNOWN) return unsupported(current.id, "staged-write state")
             if (current.state == WriteState.EXPIRED) {
                 identity.clearHandshake(current.id)
                 return WriteResult.Refused(
@@ -241,6 +249,15 @@ class WriteSigner @Inject constructor(
         identity.clearHandshake(id)
         return WriteResult.Refused(id, errors)
     }
+
+    /**
+     * A server value this app version does not know — refused WITHOUT
+     * clearing the handshake material, so an updated build can resume.
+     */
+    private fun unsupported(id: String, what: String): WriteResult = WriteResult.Refused(
+        id,
+        listOf(UserError(ErrorCode.UNKNOWN, "$what this app version does not know — update the app")),
+    )
 
     private fun preCommitmentSignature(pre: PreSignedProposal): String =
         java.util.Base64.getEncoder().encodeToString(com.cogra.crypto.encodePreCommitmentOf(pre))
