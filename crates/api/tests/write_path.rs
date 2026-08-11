@@ -201,7 +201,15 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         Err(PrepareError::Formation(_))
     ));
 
-    // Nothing was staged by either refusal.
+    // A payload past the published carriage bound M_payload.
+    let mut oversized = rig.registration(&key);
+    oversized.payload = vec![0; StandInConfig::default().max_payload_bytes + 1];
+    assert!(matches!(
+        prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, oversized).await,
+        Err(PrepareError::Formation(_))
+    ));
+
+    // Nothing was staged by any refusal.
     let staged_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
         .fetch_one(&rig.pool)
         .await
