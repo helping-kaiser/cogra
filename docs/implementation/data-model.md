@@ -776,13 +776,15 @@ CREATE INDEX auth_applications_account_idx
 -- Key backups: client-encrypted signing-key blobs (auth.md §Key
 -- recovery). Ciphertext under the device-generated recovery code —
 -- the server cannot decrypt, verify, or reconstruct anything from
--- a row. Opt-in; one current blob per account, replacement
--- appends; recovery on a new device is login + code.
+-- a row. Opt-in; one row per account, replacement overwrites —
+-- recovery serves only the newest blob, so replaced rows were
+-- never readable again. Blobs are capped at 4 KiB at the API;
+-- recovery on a new device is login + code.
 CREATE TABLE auth_key_backups (
     user_id    UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     blob       BYTEA       NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, created_at)
+    PRIMARY KEY (user_id)
 );
 
 -- System-actor key custody: the backend-custodied signing seeds of
