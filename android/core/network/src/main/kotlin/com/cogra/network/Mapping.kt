@@ -3,10 +3,15 @@
 // transport faults become Outcome.Failed; payload userErrors become
 // Outcome.Refused; everything else is Success.
 //
-// One deliberate translation: the backend emits UNAUTHENTICATED only as
-// an errors-array entry (transport tier per api-spec.md), but AuthGuard
-// must be able to refresh-and-replay on it, so it is synthesized into a
-// refusal here — the same shape a null viewer read maps to.
+// Two deliberate translations: the backend emits UNAUTHENTICATED and
+// RATE_LIMITED only as errors-array entries (transport tier per
+// api-spec.md), but both are deliberate refusals the client must act
+// on — AuthGuard refresh-and-replays on UNAUTHENTICATED, and a
+// rate-limited verb needs the "too many attempts" copy, never the
+// connectivity error — so each is synthesized into a refusal here.
+// RATE_LIMITED deliberately does NOT share UNAUTHENTICATED's code:
+// AuthGuard matches the code, so a rate limit never triggers a
+// refresh-and-replay.
 
 package com.cogra.network
 
@@ -39,10 +44,16 @@ internal fun unauthenticatedRefusal(): Outcome.Refused = Outcome.Refused(
     listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer for this request")),
 )
 
+/** The refusal an errors-array RATE_LIMITED maps to. */
+internal fun rateLimitedRefusal(): Outcome.Refused = Outcome.Refused(
+    listOf(UserError(ErrorCode.RATE_LIMITED, "too many attempts")),
+)
+
 /**
  * Executes the call and splits the transport tier off: Failed for
  * exceptions and the errors array — except an errors-array
- * UNAUTHENTICATED, which becomes a Refused — Success(data) otherwise.
+ * UNAUTHENTICATED or RATE_LIMITED, each of which becomes a Refused —
+ * Success(data) otherwise.
  */
 internal suspend fun <D : Operation.Data> ApolloCall<D>.fetch(): Outcome<D> {
     val response = execute()
@@ -50,6 +61,7 @@ internal suspend fun <D : Operation.Data> ApolloCall<D>.fetch(): Outcome<D> {
     val errors = response.errors
     if (!errors.isNullOrEmpty()) {
         if (errors.any { it.extensions?.get("code") == "UNAUTHENTICATED" }) return unauthenticatedRefusal()
+        if (errors.any { it.extensions?.get("code") == "RATE_LIMITED" }) return rateLimitedRefusal()
         return Outcome.Failed(GraphQlFaultException(errors.map { it.message }))
     }
     val data = response.data ?: return Outcome.Failed(IllegalStateException("response carried no data"))

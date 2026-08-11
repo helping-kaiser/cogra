@@ -35,6 +35,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -74,9 +75,19 @@ class PasswordResetViewModel @Inject constructor(
         if (email.isBlank() || _state.value.inProgress) return
         _state.update { it.copy(inProgress = true, transportFailed = false) }
         viewModelScope.launch {
-            when (account.requestPasswordReset(email)) {
+            when (val outcome = account.requestPasswordReset(email)) {
                 is Outcome.Success -> _state.update { it.copy(inProgress = false, requested = true) }
-                is Outcome.Refused -> _state.update { it.copy(inProgress = false, requested = true) }
+                // The silent verb still reads as "check your mail" on a
+                // refusal (no account enumeration) — except a rate
+                // limit, which sent nothing and reveals nothing about
+                // the account, so it shows its own message.
+                is Outcome.Refused -> _state.update {
+                    if (outcome.has(ErrorCode.RATE_LIMITED)) {
+                        it.copy(inProgress = false, error = ErrorCode.RATE_LIMITED)
+                    } else {
+                        it.copy(inProgress = false, requested = true)
+                    }
+                }
                 is Outcome.Failed -> _state.update { it.copy(inProgress = false, transportFailed = true) }
             }
         }

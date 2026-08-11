@@ -209,6 +209,23 @@ class RepositoriesTest {
     }
 
     @Test
+    fun anErrorsArrayRateLimitedBecomesARefusalWithoutReplay() = runTest {
+        // The rate limiter refuses at the transport tier; the client
+        // must render "too many attempts", not a connectivity error —
+        // and, unlike UNAUTHENTICATED, never refresh-and-replay.
+        val writes = WriteRepositoryImpl(client, guard())
+        tokenStore.save(AuthTokens("a", "r", "u1"))
+        enqueue(
+            """{"data":null,"errors":[{"message":"too many attempts",
+               "extensions":{"code":"RATE_LIMITED"}}]}""",
+        )
+        val refused = writes.stagedWrite("id") as Outcome.Refused
+        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.RATE_LIMITED)
+        // Even signed in: one request — no refresh, no replay.
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    @Test
     fun stagedWriteFieldsMapToTheDomainView() = runTest {
         val writes = WriteRepositoryImpl(client, guard())
         tokenStore.save(AuthTokens("a", "r", "u1"))
