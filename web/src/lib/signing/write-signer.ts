@@ -4,7 +4,10 @@
 // verifies against that persisted copy, never the server's echo — the
 // user never signs blind bytes, at either step, across page reloads.
 // Verification failure clears the material and refuses: it is spent, and
-// the unapproved staging garbage-collects server-side.
+// the unapproved staging garbage-collects server-side. An API refusal
+// clears only when the handshake is genuinely dead — a backoff or fault
+// refusal (RATE_LIMITED, INTERNAL, UNAUTHENTICATED) and every read-leg
+// refusal keep the material so resume() can finish the handshake.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -29,7 +32,10 @@ export type WriteResult =
   | { kind: "done"; id: string; state: StagedWriteState }
   /** Seal-poll budget exhausted; material kept, resume() continues. */
   | { kind: "awaitingSeal"; id: string }
-  /** The API refused; the handshake is over, material cleared. */
+  /**
+   * The API refused. Material is cleared only when every code is
+   * terminal; a backoff/fault refusal keeps it and resume() retries.
+   */
   | { kind: "refused"; id: string; errors: readonly UserError[] }
   /** The device refused to sign a failing verification; material cleared. */
   | { kind: "rejectedByDevice"; id: string; reason: string }
@@ -50,6 +56,20 @@ export type WriteSigner = {
 const SEAL_POLL_ATTEMPTS = 5;
 const SEAL_POLL_DELAY_MS = 1_000;
 
+/**
+ * Refusal codes that end a handshake for good — the material is spent.
+ * Anything else (RATE_LIMITED backoff, INTERNAL fault, UNAUTHENTICATED,
+ * a code this build does not know) keeps the material for resume().
+ */
+const TERMINAL_REFUSALS: ReadonlySet<UserError["code"]> = new Set([
+  "SIGNATURE_INVALID",
+  "STAGED_WRITE_EXPIRED",
+  "NOT_FOUND",
+  "BAD_INPUT",
+  "FORBIDDEN",
+  "WRITE_RULE_FAILED",
+]);
+
 function synthesized(code: UserError["code"], message: string): UserError {
   return { code, message, field: null };
 }
@@ -64,9 +84,16 @@ export function createWriteSigner(deps: {
   const { client, guard, store } = deps;
   const sleep = deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
-  /** A refusal ends the handshake — the material is spent. */
+  /** A write-leg refusal: clears the material only when it is spent. */
   async function refuse(id: string, errors: readonly UserError[]): Promise<WriteResult> {
-    await store.clearHandshake(id);
+    if (errors.length > 0 && errors.every((e) => TERMINAL_REFUSALS.has(e.code))) {
+      await store.clearHandshake(id);
+    }
+    return { kind: "refused", id, errors };
+  }
+
+  /** A read-leg refusal: the handshake is intact server-side — keep the material. */
+  function refuseKeeping(id: string, errors: readonly UserError[]): WriteResult {
     return { kind: "refused", id, errors };
   }
 
@@ -105,7 +132,7 @@ export function createWriteSigner(deps: {
       attempts += 1;
       await sleep(SEAL_POLL_DELAY_MS);
       const read = await guard.run(() => fetchStagedWrite(client, id));
-      if (read.kind === "refused") return refuse(id, read.errors);
+      if (read.kind === "refused") return refuseKeeping(id, read.errors);
       if (read.kind === "failed") return { kind: "failed", id, cause: read.cause };
       if (read.value === null) {
         return { kind: "failed", id, cause: new Error("staged write vanished mid-seal") };
@@ -114,7 +141,7 @@ export function createWriteSigner(deps: {
     }
 
     const hostKey = await hostPublicKey(client);
-    if (hostKey.kind === "refused") return { kind: "refused", id, errors: hostKey.errors };
+    if (hostKey.kind === "refused") return refuseKeeping(id, hostKey.errors);
     if (hostKey.kind === "failed") return { kind: "failed", id, cause: hostKey.cause };
 
     let approvalSignature: string;
@@ -180,6 +207,13 @@ export function createWriteSigner(deps: {
         return done(id, staged.state);
       case "EXPIRED":
         return refuse(id, [synthesized("STAGED_WRITE_EXPIRED", "garbage-collected unlanded")]);
+      default:
+        // A state this build does not know (the generated union lags the
+        // server): refuse without spending the material — an updated
+        // build resumes it. Android's WriteState.UNKNOWN twin.
+        return refuseKeeping(id, [
+          synthesized("INTERNAL", "staged-write state this app version does not know"),
+        ]);
     }
   }
 
@@ -189,7 +223,7 @@ export function createWriteSigner(deps: {
       return { kind: "failed", id, cause: new Error("no handshake material for this id") };
     }
     const read = await guard.run(() => fetchStagedWrite(client, id));
-    if (read.kind === "refused") return refuse(id, read.errors);
+    if (read.kind === "refused") return refuseKeeping(id, read.errors);
     if (read.kind === "failed") return { kind: "failed", id, cause: read.cause };
     if (read.value === null) {
       // Collected long ago — the handshake can never finish.
