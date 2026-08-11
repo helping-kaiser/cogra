@@ -17,6 +17,7 @@ import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
+import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.graphql.RefreshSessionMutation
 import com.cogra.network.graphql.type.RefreshSessionInput
@@ -47,6 +48,7 @@ class BearerInterceptor(private val tokens: TokenStore) : HttpInterceptor {
 @Singleton
 class SessionRefresher @Inject constructor(
     private val tokens: TokenStore,
+    private val endLocalSession: EndLocalSession,
     // Provider breaks the construction cycle: the client's interceptor
     // reads the token store, and this refresher calls the client.
     private val client: Provider<ApolloClient>,
@@ -69,11 +71,23 @@ class SessionRefresher @Inject constructor(
             )
         return when (outcome) {
             is Outcome.Success -> {
-                tokens.save(AuthTokens(outcome.value.authSessionFields.accessToken, outcome.value.authSessionFields.refreshToken))
+                val fields = outcome.value.authSessionFields
+                // The rotated pair authenticates the same account; the
+                // response's viewer re-asserts it, the stored id backs
+                // a response that omits it.
+                tokens.save(
+                    AuthTokens(
+                        fields.accessToken,
+                        fields.refreshToken,
+                        fields.user?.id ?: current.accountId,
+                    ),
+                )
                 true
             }
             is Outcome.Refused -> {
-                if (outcome.has(ErrorCode.REFRESH_TOKEN_INVALID)) tokens.clear()
+                // Ending the session locally honors the account's
+                // "don't remember me" opt-in, exactly like sign-out.
+                if (outcome.has(ErrorCode.REFRESH_TOKEN_INVALID)) endLocalSession.end()
                 false
             }
             is Outcome.Failed -> false

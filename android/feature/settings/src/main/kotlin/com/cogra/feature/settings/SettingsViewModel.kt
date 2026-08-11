@@ -207,7 +207,11 @@ class SettingsViewModel @Inject constructor(
 
     // ---------------------------------------------------------- sign out
 
-    /** Clears the session; the actor key stays on the device. */
+    /**
+     * Clears the session; the actor key stays in its account's slot,
+     * unless the account opted into "don't remember me" — then its
+     * material is purged (auth.md "Sign-out").
+     */
     fun onSignOut() {
         viewModelScope.launch { signOut.signOut() }
     }

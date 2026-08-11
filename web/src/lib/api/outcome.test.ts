@@ -21,6 +21,11 @@ const forbiddenError = () =>
     errors: [{ message: "forbidden", extensions: { code: "FORBIDDEN" } }],
   });
 
+const rateLimitedError = () =>
+  new CombinedGraphQLErrors({
+    errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+  });
+
 describe("fetchOutcome", () => {
   it("lifts data into success", async () => {
     const outcome = await fetchOutcome(async () => ({ data: { ok: true } }));
@@ -38,6 +43,22 @@ describe("fetchOutcome", () => {
       error: unauthenticatedError(),
     }));
     expect(hasCode(outcome, "UNAUTHENTICATED")).toBe(true);
+  });
+
+  it("synthesizes an errors-array RATE_LIMITED into a refusal, not a transport fault", async () => {
+    const outcome = await fetchOutcome(async () => ({
+      data: undefined,
+      error: rateLimitedError(),
+    }));
+    expect(outcome.kind).toBe("refused");
+    expect(hasCode(outcome, "RATE_LIMITED")).toBe(true);
+  });
+
+  it("classifies a thrown RATE_LIMITED the same as a returned one", async () => {
+    const outcome = await fetchOutcome(async () => {
+      throw rateLimitedError();
+    });
+    expect(hasCode(outcome, "RATE_LIMITED")).toBe(true);
   });
 
   it("keeps other GraphQL errors in the transport tier", async () => {

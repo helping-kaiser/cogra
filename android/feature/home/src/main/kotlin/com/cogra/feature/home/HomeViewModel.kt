@@ -40,8 +40,11 @@ data class HomeUiState(
     val resendEmail: String = "",
     val verifying: Boolean = false,
     val verified: Boolean = false,
-    val verifyFailed: Boolean = false,
+    /** The verify refusal to render; null when none. */
+    val verifyError: ErrorCode? = null,
     val resent: Boolean = false,
+    /** The resend refusal to render; null when none. */
+    val resendError: ErrorCode? = null,
     /** The re-arm card's fresh-invite input (a dead application). */
     val rearmInput: String = "",
     val rearming: Boolean = false,
@@ -172,22 +175,30 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onTokenChange(v: String) = _state.update { it.copy(verificationToken = v, verifyFailed = false) }
+    fun onTokenChange(v: String) = _state.update { it.copy(verificationToken = v, verifyError = null) }
 
-    fun onResendEmailChange(v: String) = _state.update { it.copy(resendEmail = v, resent = false) }
+    fun onResendEmailChange(v: String) = _state.update { it.copy(resendEmail = v, resent = false, resendError = null) }
 
     fun onVerify() {
         val token = _state.value.verificationToken.trim()
         if (token.isBlank() || _state.value.verifying) return
-        _state.update { it.copy(verifying = true, verifyFailed = false) }
+        _state.update { it.copy(verifying = true, verifyError = null) }
         viewModelScope.launch {
-            when (onboarding.verifyEmail(token)) {
+            when (val outcome = onboarding.verifyEmail(token)) {
                 is Outcome.Success -> {
                     _state.update { it.copy(verifying = false, verified = true) }
                     // The proof just changed server-side: poll now.
                     registration.ensureAdvancing()
                 }
-                else -> _state.update { it.copy(verifying = false, verifyFailed = true) }
+                is Outcome.Refused -> _state.update {
+                    it.copy(
+                        verifying = false,
+                        verifyError = outcome.errors.firstOrNull()?.code ?: ErrorCode.INTERNAL,
+                    )
+                }
+                is Outcome.Failed -> _state.update {
+                    it.copy(verifying = false, verifyError = ErrorCode.INTERNAL)
+                }
             }
         }
     }
@@ -196,8 +207,16 @@ class HomeViewModel @Inject constructor(
         val email = _state.value.resendEmail.trim()
         if (email.isBlank()) return
         viewModelScope.launch {
-            onboarding.resendVerificationEmail(email)
-            _state.update { it.copy(resent = true) }
+            when (val outcome = onboarding.resendVerificationEmail(email)) {
+                is Outcome.Success -> _state.update { it.copy(resent = true) }
+                // The rate limiter is the one refusal this silent verb
+                // can produce — say so instead of claiming the mail is
+                // on its way.
+                is Outcome.Refused -> _state.update {
+                    it.copy(resendError = outcome.errors.firstOrNull()?.code ?: ErrorCode.INTERNAL)
+                }
+                is Outcome.Failed -> _state.update { it.copy(resendError = ErrorCode.INTERNAL) }
+            }
         }
     }
 

@@ -112,9 +112,10 @@ class KeyCeremonyTest {
         val seed = ActorKey.generate().seed()
         val code = RecoveryCode.generate()
         account.served = sealKeyBackup(seed, code)
-        val result = ActorRestorer(identity, account).restore(code.display())
+        val result = ActorRestorer(identity, account).restore(code.display(), forgetOnSignOut = false)
         assertThat(result).isEqualTo(RestoreResult.Restored)
         assertThat(identity.seed).isEqualTo(seed)
+        assertThat(identity.forgetOnSignOut).isFalse()
     }
 
     @Test
@@ -122,26 +123,66 @@ class KeyCeremonyTest {
         val restorer = ActorRestorer(identity, account)
 
         // Not a code at all.
-        assertThat(restorer.restore("nope")).isInstanceOf(RestoreResult.MalformedCode::class.java)
+        assertThat(restorer.restore("nope", forgetOnSignOut = false))
+            .isInstanceOf(RestoreResult.MalformedCode::class.java)
 
         // No backup uploaded.
         val valid = RecoveryCode.generate()
-        assertThat(restorer.restore(valid.display())).isEqualTo(RestoreResult.NoBackup)
+        assertThat(restorer.restore(valid.display(), forgetOnSignOut = false))
+            .isEqualTo(RestoreResult.NoBackup)
 
         // A well-formed but wrong code.
         account.served = sealKeyBackup(ActorKey.generate().seed(), RecoveryCode.generate())
-        assertThat(restorer.restore(valid.display())).isEqualTo(RestoreResult.WrongCode)
+        assertThat(restorer.restore(valid.display(), forgetOnSignOut = false))
+            .isEqualTo(RestoreResult.WrongCode)
         assertThat(identity.seed).isNull()
     }
 
     @Test
+    fun restoreCheckedFlagsTheAccountUncheckedLeavesTheChoiceStanding() = runTest {
+        val seed = ActorKey.generate().seed()
+        val code = RecoveryCode.generate()
+        account.served = sealKeyBackup(seed, code)
+        val restorer = ActorRestorer(identity, account)
+
+        // The login-time opt-in survives an unchecked restore.
+        identity.forgetOnSignOut = true
+        restorer.restore(code.display(), forgetOnSignOut = false)
+        assertThat(identity.forgetOnSignOut).isTrue()
+
+        // Checked, it opts the account out.
+        identity.forgetOnSignOut = false
+        restorer.restore(code.display(), forgetOnSignOut = true)
+        assertThat(identity.forgetOnSignOut).isTrue()
+    }
+
+    private fun offlineSessions() = object : ThrowingSessionRepository() {
+        override suspend fun revokeSession(id: String?): Outcome<Unit> =
+            Outcome.Failed(IOException("offline"))
+    }
+
+    @Test
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
-        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r")) }
-        val sessions = object : ThrowingSessionRepository() {
-            override suspend fun revokeSession(id: String?): Outcome<Unit> =
-                Outcome.Failed(IOException("offline"))
-        }
-        SignOut(sessions, tokens).signOut()
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        identity.seed = ActorKey.generate().seed()
+        SignOut(offlineSessions(), EndLocalSession(identity, tokens)).signOut()
         assertThat(tokens.current()).isNull()
+        // Not opted out: the actor stays in its slot.
+        assertThat(identity.seed).isNotNull()
+    }
+
+    @Test
+    fun signOutPurgesTheAccountThatOptedOut() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        identity.seed = ActorKey.generate().seed()
+        identity.pendingBlob = byteArrayOf(7)
+        identity.dismissedReciprocation = true
+        identity.forgetOnSignOut = true
+        SignOut(offlineSessions(), EndLocalSession(identity, tokens)).signOut()
+        assertThat(tokens.current()).isNull()
+        assertThat(identity.seed).isNull()
+        assertThat(identity.pendingBlob).isNull()
+        assertThat(identity.dismissedReciprocation).isFalse()
+        assertThat(identity.handshakes).isEmpty()
     }
 }

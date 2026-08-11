@@ -51,6 +51,8 @@ function rearmMessage(code: ErrorCode): string {
       return "This invite can't be used — it may have expired or been revoked.";
     case "BAD_INPUT":
       return "Your application is still live — it doesn't need a fresh invite.";
+    case "RATE_LIMITED":
+      return "Too many attempts — wait a moment and try again.";
     default:
       return "Something went wrong. Try again.";
   }

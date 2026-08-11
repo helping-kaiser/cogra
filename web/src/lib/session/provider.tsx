@@ -59,3 +59,13 @@ export function useAuthPhase(): AuthPhase {
 export function useTokenStore(): TokenStore {
   return useSession().store;
 }
+
+/** The signed-in account's id, live; null while signed out or resolving. */
+export function useActiveAccountId(): string | null {
+  const { store } = useSession();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => store.activeAccountId(),
+    () => null,
+  );
+}

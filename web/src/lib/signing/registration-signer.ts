@@ -9,6 +9,7 @@ import type { ApolloClient } from "@apollo/client";
 
 import type { UserError } from "@/lib/api/outcome";
 import { fetchApplicationStatus } from "@/lib/api/onboarding-api";
+import { toBase64 } from "@/lib/crypto/bytes";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import type { IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -51,12 +52,28 @@ export function createRegistrationSigner(deps: {
   const { client, guard, store, ceremony, writeSigner } = deps;
   const now = deps.now ?? (() => Date.now());
 
+  /** base64 of the account slot's public key half; null when the slot is empty. */
+  async function devicePubkey(): Promise<string | null> {
+    const key = await store.actorKey();
+    return key === null ? null : toBase64(key.publicKeyBytes());
+  }
+
+  /**
+   * The slot key counts as this account's only while the account's
+   * attached key doesn't contradict it (roadmap.md slice 1.1) — a
+   * mismatch reads as key-not-on-device, so the UI offers restore
+   * instead of signing with a foreign key.
+   */
+  function keyUsable(devicePub: string | null, attachedPub: string | null): boolean {
+    return devicePub !== null && (attachedPub === null || attachedPub === devicePub);
+  }
+
   /**
    * Silent crash healing for the gap between minting and attaching:
-   * reached only when the server reports no key attached.
+   * reached only when the server reports no key attached AND this
+   * account's slot holds a key — never a blind fire across accounts.
    */
   async function repairAttach(): Promise<boolean> {
-    if ((await store.actorKey()) === null) return false;
     return (await ceremony.attachActorKey()).kind === "success";
   }
 
@@ -70,11 +87,13 @@ export function createRegistrationSigner(deps: {
       // waits on a milestone — flush every pass, result ignored.
       await ceremony.uploadPendingBackup();
 
-      const { accountState, application, stagedRegistration } = status.value;
+      const { accountState, actorPubkey, application, stagedRegistration } = status.value;
       if (accountState === "MEMBER") return { kind: "member" };
 
       if (stagedRegistration !== null) {
-        if ((await store.actorKey()) === null) return { kind: "awaitingSigningKey" };
+        if (!keyUsable(await devicePubkey(), actorPubkey)) {
+          return { kind: "awaitingSigningKey" };
+        }
         const result = await writeSigner.signStaged(stagedRegistration);
         switch (result.kind) {
           case "done":
@@ -93,11 +112,12 @@ export function createRegistrationSigner(deps: {
       if (application.approvedAt !== null) return { kind: "awaitingLanding" };
       if (Date.parse(application.expiresAt) < now()) return { kind: "needsInvite" };
 
+      const devicePub = await devicePubkey();
       return {
         kind: "awaitingApproval",
         emailVerified: application.emailVerified,
-        keyAttached: application.keyAttached || (await repairAttach()),
-        keyOnDevice: (await store.actorKey()) !== null,
+        keyAttached: application.keyAttached || (devicePub !== null && (await repairAttach())),
+        keyOnDevice: keyUsable(devicePub, actorPubkey),
       };
     },
   };

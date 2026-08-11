@@ -29,7 +29,7 @@ function approval(overrides: Partial<{
 
 function signedInStore() {
   const store = createTokenStore();
-  store.save({ accessToken: "access-1", refreshToken: "refresh-1" });
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
   return store;
 }
 
@@ -166,5 +166,21 @@ describe("ApplicantStatus", () => {
     fireEvent.change(screen.getByTestId("rearm_input"), { target: { value: ID } });
     fireEvent.click(screen.getByTestId("rearm_submit"));
     expect(await screen.findByTestId("rearm_error")).toHaveTextContent(/can't be used/);
+  });
+
+  it("renders a rate-limited re-arm as a backoff", async () => {
+    server.use(
+      graphql.mutation("ApplyWithInvite", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderStatus({ kind: "needsInvite" });
+    fireEvent.change(screen.getByTestId("rearm_input"), { target: { value: ID } });
+    fireEvent.click(screen.getByTestId("rearm_submit"));
+    expect(await screen.findByTestId("rearm_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
   });
 });

@@ -6,6 +6,9 @@ mutation LogIn($input: LogInInput!) {
     auth {
       accessToken
       refreshToken
+      user {
+        id
+      }
     }
     userErrors {
       message
@@ -20,6 +23,9 @@ mutation RefreshSession($input: RefreshSessionInput!) {
     auth {
       accessToken
       refreshToken
+      user {
+        id
+      }
     }
     userErrors {
       message

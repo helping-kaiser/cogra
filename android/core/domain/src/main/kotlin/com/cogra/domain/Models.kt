@@ -13,6 +13,12 @@ data class AuthTokens(
     val accessToken: String,
     /** Rotates on every use — the stored copy is replaced each refresh. */
     val refreshToken: String,
+    /**
+     * The account the pair authenticates (`AuthSession.user.id`) — the
+     * custody key the identity store scopes its material by (auth.md
+     * "Multi-account device custody").
+     */
+    val accountId: String,
 )
 
 /** An active authentication session — one per refresh token. */
@@ -90,6 +96,12 @@ data class ApplicationStatus(
     val application: ApplicationView?,
     /** The unexpired staged Registration; null when none is staged. */
     val stagedRegistration: StagedWriteView?,
+    /**
+     * The account's attached actor public key (base64), null before the
+     * ceremony — what the repair-attach verifies the device slot
+     * against (auth.md "Multi-account device custody").
+     */
+    val actorPubkey: String?,
 )
 
 /** Handshake progress of a staged write (api-spec.md "The write flow"). */

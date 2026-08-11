@@ -14,11 +14,9 @@ import type { ErrorCode } from "@/__generated__/graphql";
 import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
 import { PasswordField } from "@/lib/ui/password-field";
 
-// The backend reuses VERIFICATION_TOKEN_INVALID for a bad reset token
-// (api-spec.md § Auth and accounts).
 function resetMessage(code: ErrorCode): string {
   switch (code) {
-    case "VERIFICATION_TOKEN_INVALID":
+    case "RESET_TOKEN_INVALID":
       return "The reset token is invalid or expired.";
     case "WEAK_PASSWORD":
       return "Passwords need at least 12 characters and can't be a known breached password.";
@@ -48,12 +46,24 @@ export function ResetForm() {
   const onRequest = async () => {
     if (!canRequest) return;
     setInProgress(true);
+    setError(null);
     setTransportFailed(false);
     const outcome = await requestPasswordReset(client, email.trim());
     setInProgress(false);
-    // Success and refusal collapse to the same message — anti-enumeration.
-    if (outcome.kind === "failed") setTransportFailed(true);
-    else setRequested(true);
+    switch (outcome.kind) {
+      case "success":
+        setRequested(true);
+        break;
+      case "refused":
+        // The verb is silent by design (no userErrors — anti-enumeration),
+        // so the only refusal here is the synthesized RATE_LIMITED backoff:
+        // neither connectivity copy nor a claimed sent email fits it.
+        setError(outcome.errors[0].code);
+        break;
+      case "failed":
+        setTransportFailed(true);
+        break;
+    }
   };
 
   const onConfirm = async (event: React.FormEvent) => {

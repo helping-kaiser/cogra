@@ -57,7 +57,7 @@ describe("key ceremony", () => {
 
   beforeEach(() => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    store = createIdentityStore({ activeAccountId: () => "acct-1" });
     ceremony = createKeyCeremony({ client: client(), guard: passthroughGuard, store });
   });
 

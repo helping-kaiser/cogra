@@ -11,6 +11,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -19,7 +20,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { createKeyCeremony, type KeyCeremony } from "@/lib/identity/key-ceremony";
 import { identityStore } from "@/lib/identity/store";
-import { useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { createRegistrationFlow, type RegistrationFlow } from "./registration-flow";
 import {
@@ -51,6 +52,7 @@ export function RegistrationProvider({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
+  const accountId = useActiveAccountId();
 
   const builtCeremony = useMemo(
     () => createKeyCeremony({ client, guard, store: identityStore }),
@@ -60,8 +62,10 @@ export function RegistrationProvider({
 
   // One flow and one signer per provider mount; deps are app-stable
   // (the Apollo client and guard never change identity within a
-  // session). The signer is shared app-wide because resume() spans
-  // every persisted handshake, whichever surface started it.
+  // session, and the custody store resolves the active account per
+  // call — an account switch never leaves a signer holding stale
+  // key material). The signer is shared app-wide because resume()
+  // spans every persisted handshake, whichever surface started it.
   const [built] = useState(() => {
     const writeSigner = createWriteSigner({ client, guard, store: identityStore });
     const signer = createRegistrationSigner({
@@ -79,6 +83,17 @@ export function RegistrationProvider({
   useEffect(() => {
     if (phase === "signedOut") flow.reset();
   }, [phase, flow]);
+
+  // The flow's progress belongs to the account whose poll produced it.
+  // A cross-tab account switch can skip the signedOut phase entirely,
+  // so any change of the active account also tears the loop down; the
+  // next ensureAdvancing() polls as the new account.
+  const lastAccount = useRef(accountId);
+  useEffect(() => {
+    if (lastAccount.current === accountId) return;
+    lastAccount.current = accountId;
+    flow.reset();
+  }, [accountId, flow]);
 
   const value = useMemo(
     () => ({ flow, ceremony, writeSigner }),
