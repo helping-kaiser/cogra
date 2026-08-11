@@ -14,6 +14,7 @@ import { logIn } from "@/lib/api/auth-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
+import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { PasswordField } from "@/lib/ui/password-field";
 
 function loginMessage(code: ErrorCode): string {
@@ -29,9 +30,11 @@ function loginMessage(code: ErrorCode): string {
 
 export function LoginForm({
   identity = identityStore,
+  notices = securityNotices,
 }: {
   /** Test injection, as SessionProvider's store. */
   identity?: IdentityStore;
+  notices?: SecurityNotices;
 } = {}) {
   const client = useApolloClient();
   const store = useTokenStore();
@@ -65,7 +68,14 @@ export function LoginForm({
     setInProgress(false);
     switch (outcome.kind) {
       case "success":
-        store.save(outcome.value);
+        // The notice posts before the token save: saving flips the auth
+        // phase and this form unmounts on the redirect, so the shell's
+        // banner must already be pending (auth.md "Reuse detection" —
+        // delivered exactly once, a dropped notice never comes back).
+        if (outcome.value.reuseDetectedAt !== null) {
+          notices.post(outcome.value.reuseDetectedAt);
+        }
+        store.save(outcome.value.auth);
         // Recorded per account, after save() sets the active account
         // custody resolves by — always written, so an unchecked login
         // clears an earlier flag (auth.md "Sign-out").

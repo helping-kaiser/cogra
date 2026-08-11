@@ -46,12 +46,22 @@ export function sessionAuthOf(
   };
 }
 
+/**
+ * A successful login's payload: the token pair plus the pending
+ * refresh-token-reuse security event, delivered exactly once by the
+ * first login after detection (auth.md "Reuse detection").
+ */
+export type LoginGrant = {
+  readonly auth: SessionAuth;
+  readonly reuseDetectedAt: string | null;
+};
+
 export function logIn(
   client: ApolloClient,
   email: string,
   password: string,
   deviceLabel: string | null,
-): Promise<Outcome<SessionAuth>> {
+): Promise<Outcome<LoginGrant>> {
   return payloadOutcome(
     () =>
       client.mutate({
@@ -59,7 +69,10 @@ export function logIn(
         variables: { input: { email, password, deviceLabel } },
       }),
     (data) => data.logIn.userErrors,
-    (data) => sessionAuthOf(data.logIn.auth),
+    (data) => {
+      const auth = sessionAuthOf(data.logIn.auth);
+      return auth === null ? null : { auth, reuseDetectedAt: data.logIn.reuseDetectedAt ?? null };
+    },
   );
 }
 
