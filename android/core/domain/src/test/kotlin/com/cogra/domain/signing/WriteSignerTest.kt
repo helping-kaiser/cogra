@@ -27,6 +27,8 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     val host = TestHost()
     val staged = mutableMapOf<String, StagedWriteView>()
     var refuseSubmit: List<UserError>? = null
+    var refuseApprove: List<UserError>? = null
+    var refuseRead: List<UserError>? = null
     var failSubmit = false
     var failApprove = false
     var sealLater = false
@@ -62,6 +64,7 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     }
 
     override suspend fun approveAct(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
+        refuseApprove?.let { return Outcome.Refused(it) }
         if (failApprove) return Outcome.Failed(IOException("approve lost"))
         approveCount += 1
         val current = staged.getValue(stagedWriteId).copy(state = WriteState.RELAYING)
@@ -69,7 +72,10 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
         return Outcome.Success(current)
     }
 
-    override suspend fun stagedWrite(id: String): Outcome<StagedWriteView?> = Outcome.Success(staged[id])
+    override suspend fun stagedWrite(id: String): Outcome<StagedWriteView?> {
+        refuseRead?.let { return Outcome.Refused(it) }
+        return Outcome.Success(staged[id])
+    }
 }
 
 class WriteSignerTest {
@@ -109,6 +115,37 @@ class WriteSignerTest {
         val refused = results.single() as WriteResult.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.WRITE_RULE_FAILED)
         assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aRateLimitedApproveKeepsMaterialForResume() = runTest {
+        val repo = FakeWriteRepository(actor).apply {
+            refuseApprove = listOf(UserError(ErrorCode.RATE_LIMITED, "slow down"))
+        }
+        val signer = WriteSigner(repo, identity)
+        val first = signer.sign(listOf(prepared("w1"))).single() as WriteResult.Refused
+        assertThat(first.errors.single().code).isEqualTo(ErrorCode.RATE_LIMITED)
+        assertThat(identity.handshakes.keys).containsExactly("w1")
+
+        // The backoff passes; the same material finishes the handshake.
+        repo.refuseApprove = null
+        val resumed = signer.resume()
+        assertThat(resumed).containsExactly(WriteResult.Done("w1", WriteState.RELAYING))
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aRefusedReadLegKeepsMaterial() = runTest {
+        val repo = FakeWriteRepository(actor).apply { failApprove = true }
+        val signer = WriteSigner(repo, identity)
+        signer.sign(listOf(prepared("w1")))
+        assertThat(identity.handshakes.keys).containsExactly("w1")
+
+        repo.failApprove = false
+        repo.refuseRead = listOf(UserError(ErrorCode.RATE_LIMITED, "slow down"))
+        val resumed = signer.resume().single() as WriteResult.Refused
+        assertThat(resumed.errors.single().code).isEqualTo(ErrorCode.RATE_LIMITED)
+        assertThat(identity.handshakes.keys).containsExactly("w1")
     }
 
     @Test
