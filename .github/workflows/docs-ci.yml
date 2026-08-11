@@ -18,6 +18,12 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege (GitHub's hardening guide): checkout needs contents,
+# paths-filter reads PR file lists via the API on pull_request events.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   link-check:
     name: Markdown link check
@@ -41,4 +47,6 @@ jobs:
             --no-progress
             'docs/**/*.md'
             '*.md'
+            'android/*.md'
+            'web/*.md'
           fail: true
