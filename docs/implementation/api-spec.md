@@ -3040,7 +3040,8 @@ type ChangeHandlePayload { user: User }
 
 "Upload (or replace) the client-encrypted key-backup blob —
  ciphertext under the device-generated recovery code; the server
- stores what it cannot decrypt (auth.md \"Key recovery\").
+ stores what it cannot decrypt (auth.md \"Key recovery\"). One
+ blob per account; blobs over 4 KiB refuse as BAD_INPUT.
  Retrieval is the User.keyBackup field: login + code is the
  recovery."
 input UploadKeyBackupInput { blob: String! }

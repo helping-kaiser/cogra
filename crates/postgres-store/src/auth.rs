@@ -1280,15 +1280,17 @@ pub async fn change_handle(
     }
 }
 
-/// Stores a client-encrypted key-backup blob — replacement appends, the
-/// newest row is the current backup (data-model.md `auth_key_backups`).
+/// Stores a client-encrypted key-backup blob — one row per account,
+/// replacement overwrites (data-model.md `auth_key_backups`).
 pub async fn upload_key_backup(
     pool: &PgPool,
     user_id: Uuid,
     blob: &[u8],
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        "INSERT INTO auth_key_backups (user_id, blob) VALUES ($1, $2)",
+        "INSERT INTO auth_key_backups (user_id, blob) VALUES ($1, $2)
+         ON CONFLICT (user_id)
+         DO UPDATE SET blob = EXCLUDED.blob, created_at = NOW()",
         user_id,
         blob,
     )
@@ -1302,8 +1304,7 @@ pub async fn latest_key_backup(
     user_id: Uuid,
 ) -> Result<Option<Vec<u8>>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT blob FROM auth_key_backups WHERE user_id = $1
-         ORDER BY created_at DESC LIMIT 1",
+        "SELECT blob FROM auth_key_backups WHERE user_id = $1",
         user_id,
     )
     .fetch_optional(pool)
