@@ -109,7 +109,11 @@ class RegistrationSignerTest {
         accountState: AccountState = AccountState.APPLICANT,
         application: ApplicationView? = null,
         staged: StagedWriteView? = null,
-    ) = Outcome.Success(ApplicationStatus(accountState, application, staged))
+        actorPubkey: String? = null,
+    ) = Outcome.Success(ApplicationStatus(accountState, application, staged, actorPubkey))
+
+    private fun pubkeyOf(key: ActorKey): String =
+        Base64.getEncoder().encodeToString(key.publicKeyBytes())
 
     @Test
     fun theFlowAdvancesStageByStage() = runTest {
@@ -173,11 +177,57 @@ class RegistrationSignerTest {
     }
 
     @Test
+    fun anEmptySlotNeverRepairAttaches() = runTest {
+        // The wrong-account case under per-account keying: another
+        // account's key may sit on the device, but THIS account's slot
+        // is empty — the repair-attach must not fire.
+        identity.seed = null
+        onboarding.status = status(application = application(keyAttached = false))
+        signer.advance()
+        assertThat(onboarding.attachedKeys).isEmpty()
+    }
+
+    @Test
+    fun keyOnDeviceIsFalseWhenTheSlotKeyIsNotTheAttachedOne() = runTest {
+        // The account runs on a key attached from another device; the
+        // slot holds a stale or foreign key. Not-on-device → the UI
+        // offers the restore path, never a blind attach.
+        onboarding.status = status(
+            application = application(),
+            actorPubkey = pubkeyOf(ActorKey.generate()),
+        )
+        assertThat(signer.advance()).isEqualTo(
+            RegistrationProgress.AwaitingApproval(emailVerified = true, keyAttached = true, keyOnDevice = false),
+        )
+        assertThat(onboarding.attachedKeys).isEmpty()
+    }
+
+    @Test
+    fun keyOnDeviceIsTrueWhenTheSlotKeyMatchesTheAttachedOne() = runTest {
+        onboarding.status = status(application = application(), actorPubkey = pubkeyOf(actor))
+        assertThat(signer.advance()).isEqualTo(
+            RegistrationProgress.AwaitingApproval(emailVerified = true, keyAttached = true, keyOnDevice = true),
+        )
+    }
+
+    @Test
     fun aStagedWriteWithoutTheSeedAwaitsTheSigningKey() = runTest {
         identity.seed = null
         onboarding.status = status(
             application = application(approved = true),
             staged = writes.stagedView(WriteState.AWAITING_PRE_SIGN),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.AwaitingSigningKey)
+    }
+
+    @Test
+    fun aStagedWriteWithAMismatchedSlotKeyAwaitsTheSigningKey() = runTest {
+        // Signing with the wrong key would only fail server-side; the
+        // mismatch reads as awaiting-the-key — the restore path.
+        onboarding.status = status(
+            application = application(approved = true),
+            staged = writes.stagedView(WriteState.AWAITING_PRE_SIGN),
+            actorPubkey = pubkeyOf(ActorKey.generate()),
         )
         assertThat(signer.advance()).isEqualTo(RegistrationProgress.AwaitingSigningKey)
     }

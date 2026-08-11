@@ -81,6 +81,8 @@ pub enum ErrorCode {
     ActorKeyInUse,
     /// The email-verification token is invalid or expired.
     VerificationTokenInvalid,
+    /// The password-reset token is invalid, expired, or already used.
+    ResetTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
     RefreshTokenInvalid,
     /// The prepare pre-check: W1 solvency or W2 stamps.
@@ -633,6 +635,7 @@ impl User {
 
     /// Acts mid-handshake — awaiting a signature, the host seal, or
     /// confirmation — across devices. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn staged_writes(
         &self,
         ctx: &Context<'_>,
@@ -664,6 +667,27 @@ impl User {
         Ok(store::latest_key_backup(pool, self.identity.id)
             .await?
             .map(|blob| B64.encode(blob)))
+    }
+
+    /// The account's attached actor public key (base64), null before
+    /// the key ceremony. The client's repair-attach verifies the
+    /// device-held key against this before offering it, so a device
+    /// carrying another account's key never blind-fires the attach
+    /// (roadmap.md slice 1.1). Field-level: viewer-only.
+    async fn actor_pubkey(&self, ctx: &Context<'_>) -> Option<String> {
+        if !self.is_viewer(ctx) {
+            return None;
+        }
+        self.identity.actor_pubkey.as_ref().map(|k| B64.encode(k))
+    }
+
+    /// The account's attached L0 address, null before the key ceremony.
+    /// Field-level: viewer-only.
+    async fn l0_address(&self, ctx: &Context<'_>) -> Option<String> {
+        if !self.is_viewer(ctx) {
+            return None;
+        }
+        self.identity.l0_address.clone()
     }
 
     /// The actor whose invite this account came through — landing
@@ -777,6 +801,7 @@ impl User {
     /// The account's invite links — service-side staging state, not
     /// graph structure. Field-level: each link's id is the link
     /// capability, so this resolves only for the issuing actor.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn invite_links(
         &self,
         ctx: &Context<'_>,
@@ -865,6 +890,7 @@ impl InviteLink {
 
     /// The inviter's approval queue: applications staged through this
     /// link, with their status.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn applications(
         &self,
         ctx: &Context<'_>,
@@ -929,9 +955,31 @@ impl Application {
     }
 }
 
+/// The page-size ceiling every connection enforces (api-spec.md
+/// "Pagination"): `first`/`last` above it refuse rather than silently
+/// clamp, so a client asking for more than it can get finds out.
+pub const MAX_PAGE_SIZE: i32 = 100;
+/// The page size when neither `first` nor `last` is given — an
+/// unqualified list read stays cheap.
+pub const DEFAULT_PAGE_SIZE: i32 = 20;
+
+/// The complexity a connection field charges (schema/mod.rs
+/// `QueryBudgets`): the requested — or default — page size times the
+/// per-item cost, plus one for the field itself. Out-of-range arguments
+/// price at the cap; the resolver's own validation refuses them.
+pub fn connection_cost(first: Option<i32>, last: Option<i32>, child_complexity: usize) -> usize {
+    let requested = first
+        .or(last)
+        .unwrap_or(DEFAULT_PAGE_SIZE)
+        .clamp(0, MAX_PAGE_SIZE);
+    requested as usize * child_complexity + 1
+}
+
 /// Builds an offset-cursor connection over an already-loaded, ordered
 /// list. Slice-1 lists are small; keyset pagination arrives with the
-/// content slice's read surfaces.
+/// content slice's read surfaces. Pages are budgeted: `first`/`last`
+/// at most [`MAX_PAGE_SIZE`], [`DEFAULT_PAGE_SIZE`] when neither is
+/// given.
 pub async fn offset_connection<T, G>(
     items: Vec<T>,
     after: Option<String>,
@@ -944,6 +992,15 @@ where
     G: async_graphql::OutputType,
 {
     use async_graphql::connection::query;
+    if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
+        return Err(async_graphql::Error::new(format!(
+            "first/last may be at most {MAX_PAGE_SIZE}"
+        )));
+    }
+    let first = match (first, last) {
+        (None, None) => Some(DEFAULT_PAGE_SIZE),
+        (first, _) => first,
+    };
     query(
         after,
         before,

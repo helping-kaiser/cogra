@@ -6,10 +6,21 @@
 // pre-signature, keyed by staged-write id) lets the approve step verify
 // against what THIS device pre-signed across page reloads. The recovery
 // code is never here — displayed once, held only by the user.
+//
+// Several accounts on one device is a supported pattern (roadmap.md
+// slice 1.1; auth.md "Multi-account device custody"), so every record
+// is keyed by the account it belongs to — resolved per call from the
+// active session, never a device-global singleton. Records written
+// before custody was account-keyed sat under singleton keys; the first
+// account-scoped access adopts them into the signed-in account's slot,
+// one-shot per record kind. The per-account ux record also carries the
+// "don't remember me" opt-in (auth.md "Sign-out"): a flagged account's
+// material is purged when its session ends.
 
 import { ActorKey, importActorKeyPair } from "@/lib/crypto/actor-key";
 import { PreSignedProposal } from "@/lib/crypto/handshake";
 import { decodeProposal, encodeProposal } from "@/lib/crypto/wire";
+import { tokenStore } from "@/lib/session/token-store";
 
 const DB_NAME = "cogra.identity";
 const DB_VERSION = 2;
@@ -17,8 +28,10 @@ const ACTOR = "actor";
 const BACKUP = "pendingBackup";
 const HANDSHAKE = "handshake";
 const UX = "ux";
-const SINGLETON_KEY = "current";
-const RECIPROCATION_KEY = "reciprocationDismissed";
+// Account ids are UUIDs, so the separator can never appear inside one.
+const KEY_SEPARATOR = "/";
+const LEGACY_SINGLETON_KEY = "current";
+const LEGACY_RECIPROCATION_KEY = "reciprocationDismissed";
 
 type ActorRecord = {
   privateKey: CryptoKey;
@@ -33,8 +46,13 @@ type HandshakeRecord = {
   preSignature: Uint8Array;
 };
 
+type UxRecord = {
+  reciprocationDismissed: boolean;
+  ephemeral: boolean;
+};
+
 export type IdentityStore = {
-  /** The custody key, or null before the ceremony ran on this device. */
+  /** The account's custody key, or null before the ceremony ran on this device. */
   actorKey(): Promise<ActorKey | null>;
   /** The raw seed — present only while no backup blob exists. */
   actorSeed(): Promise<Uint8Array | null>;
@@ -62,6 +80,20 @@ export type IdentityStore = {
    */
   reciprocationDismissed(): Promise<boolean>;
   markReciprocationDismissed(): Promise<void>;
+  /**
+   * The "don't remember me" opt-in (auth.md "Sign-out"), recorded at
+   * login and restore for the active account — always written, so an
+   * unchecked login clears an earlier flag.
+   */
+  setEphemeral(value: boolean): Promise<void>;
+  /**
+   * The sign-out (and session-invalidation) custody step: when the
+   * active account is flagged ephemeral, purge its records — actor,
+   * parked blob, handshake material, ux. Unflagged accounts keep
+   * everything; signing out is an auth act, not an identity act
+   * (auth.md "Sign-out"). Runs while the account is still active.
+   */
+  purgeIfEphemeral(): Promise<void>;
 };
 
 function asPromise<T>(req: IDBRequest<T>): Promise<T> {
@@ -86,8 +118,13 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-export function createIdentityStore(): IdentityStore {
+export function createIdentityStore(deps: {
+  /** The signed-in account custody resolves to — per call, never captured. */
+  activeAccountId: () => string | null;
+}): IdentityStore {
+  const { activeAccountId } = deps;
   let dbPromise: Promise<IDBDatabase> | null = null;
+  const adoptions = new Map<string, Promise<void>>();
 
   function db(): Promise<IDBDatabase> {
     dbPromise ??= openDb().catch((e: unknown) => {
@@ -115,21 +152,119 @@ export function createIdentityStore(): IdentityStore {
     await asPromise(tx.objectStore(store).delete(key));
   }
 
+  async function allKeys(store: string): Promise<string[]> {
+    const tx = (await db()).transaction(store, "readonly");
+    const keys = await asPromise(tx.objectStore(store).getAllKeys());
+    return keys.map(String);
+  }
+
+  function handshakeKey(account: string, stagedWriteId: string): string {
+    return `${account}${KEY_SEPARATOR}${stagedWriteId}`;
+  }
+
+  async function handshakeIdsOf(account: string): Promise<string[]> {
+    const prefix = account + KEY_SEPARATOR;
+    return (await allKeys(HANDSHAKE))
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => key.slice(prefix.length));
+  }
+
+  /** Moves a legacy singleton record into the account's slot — only when vacant. */
+  async function adoptSlot(store: string, account: string): Promise<void> {
+    const legacy = await read(store, LEGACY_SINGLETON_KEY);
+    if (legacy === null) return;
+    // An occupied slot keeps its own record; the legacy one stays put
+    // for a later account whose slot is still empty.
+    if ((await read(store, account)) !== null) return;
+    await write(store, account, legacy);
+    await remove(store, LEGACY_SINGLETON_KEY);
+  }
+
+  async function adoptUx(account: string): Promise<void> {
+    const legacy = await read<boolean>(UX, LEGACY_RECIPROCATION_KEY);
+    if (legacy === null) return;
+    if ((await read(UX, account)) !== null) return;
+    await write(UX, account, {
+      reciprocationDismissed: legacy === true,
+      ephemeral: false,
+    } satisfies UxRecord);
+    await remove(UX, LEGACY_RECIPROCATION_KEY);
+  }
+
+  async function adoptHandshakes(account: string): Promise<void> {
+    const bare = (await allKeys(HANDSHAKE)).filter((key) => !key.includes(KEY_SEPARATOR));
+    for (const stagedWriteId of bare) {
+      const record = await read(HANDSHAKE, stagedWriteId);
+      if (record === null) continue;
+      const target = handshakeKey(account, stagedWriteId);
+      if ((await read(HANDSHAKE, target)) !== null) continue;
+      await write(HANDSHAKE, target, record);
+      await remove(HANDSHAKE, stagedWriteId);
+    }
+  }
+
+  async function runAdoption(account: string): Promise<void> {
+    await adoptSlot(ACTOR, account);
+    await adoptSlot(BACKUP, account);
+    await adoptUx(account);
+    await adoptHandshakes(account);
+  }
+
+  /** One-shot per account and page: later calls await the first pass. */
+  function adopted(account: string): Promise<void> {
+    let run = adoptions.get(account);
+    if (run === undefined) {
+      run = runAdoption(account).catch((e: unknown) => {
+        adoptions.delete(account);
+        throw e;
+      });
+      adoptions.set(account, run);
+    }
+    return run;
+  }
+
+  /** Reads without an account read as empty — never as another account's. */
+  async function forRead(): Promise<string | null> {
+    const account = activeAccountId();
+    if (account === null) return null;
+    await adopted(account);
+    return account;
+  }
+
+  /** A custody write with nobody signed in has no slot to land in — a bug. */
+  async function forWrite(): Promise<string> {
+    const account = activeAccountId();
+    if (account === null) throw new Error("custody write without an active account");
+    await adopted(account);
+    return account;
+  }
+
+  async function readUx(account: string): Promise<UxRecord> {
+    return (
+      (await read<UxRecord>(UX, account)) ?? { reciprocationDismissed: false, ephemeral: false }
+    );
+  }
+
   return {
     async actorKey() {
-      const record = await read<ActorRecord>(ACTOR, SINGLETON_KEY);
+      const account = await forRead();
+      if (account === null) return null;
+      const record = await read<ActorRecord>(ACTOR, account);
       if (record === null) return null;
       return ActorKey.stored(record.privateKey, record.publicKey);
     },
 
     async actorSeed() {
-      const record = await read<ActorRecord>(ACTOR, SINGLETON_KEY);
+      const account = await forRead();
+      if (account === null) return null;
+      const record = await read<ActorRecord>(ACTOR, account);
       return record?.seed ?? null;
     },
 
     async saveActor(seed, retainSeed) {
+      const account = await forWrite();
       const pair = await importActorKeyPair(seed);
-      await write(ACTOR, SINGLETON_KEY, {
+      await write(ACTOR, account, {
         privateKey: pair.privateKey,
         publicKey: pair.publicKey,
         seed: retainSeed ? seed.slice() : null,
@@ -138,25 +273,31 @@ export function createIdentityStore(): IdentityStore {
     },
 
     async clearActorSeed() {
-      const record = await read<ActorRecord>(ACTOR, SINGLETON_KEY);
+      const account = await forWrite();
+      const record = await read<ActorRecord>(ACTOR, account);
       if (record === null || record.seed === null) return;
-      await write(ACTOR, SINGLETON_KEY, { ...record, seed: null } satisfies ActorRecord);
+      await write(ACTOR, account, { ...record, seed: null } satisfies ActorRecord);
     },
 
     async savePendingBackupBlob(blob) {
-      await write(BACKUP, SINGLETON_KEY, blob.slice());
+      const account = await forWrite();
+      await write(BACKUP, account, blob.slice());
     },
 
     async pendingBackupBlob() {
-      return read<Uint8Array>(BACKUP, SINGLETON_KEY);
+      const account = await forRead();
+      if (account === null) return null;
+      return read<Uint8Array>(BACKUP, account);
     },
 
     async clearPendingBackupBlob() {
-      await remove(BACKUP, SINGLETON_KEY);
+      const account = await forWrite();
+      await remove(BACKUP, account);
     },
 
     async saveHandshake(stagedWriteId, pre) {
-      await write(HANDSHAKE, stagedWriteId, {
+      const account = await forWrite();
+      await write(HANDSHAKE, handshakeKey(account, stagedWriteId), {
         proposal: encodeProposal(pre.proposal),
         authorPubkey: pre.authorPubkey.slice(),
         nonce: pre.nonce.slice(),
@@ -165,7 +306,9 @@ export function createIdentityStore(): IdentityStore {
     },
 
     async handshake(stagedWriteId) {
-      const record = await read<HandshakeRecord>(HANDSHAKE, stagedWriteId);
+      const account = await forRead();
+      if (account === null) return null;
+      const record = await read<HandshakeRecord>(HANDSHAKE, handshakeKey(account, stagedWriteId));
       if (record === null) return null;
       return new PreSignedProposal({
         proposal: decodeProposal(record.proposal),
@@ -176,24 +319,49 @@ export function createIdentityStore(): IdentityStore {
     },
 
     async clearHandshake(stagedWriteId) {
-      await remove(HANDSHAKE, stagedWriteId);
+      const account = await forWrite();
+      await remove(HANDSHAKE, handshakeKey(account, stagedWriteId));
     },
 
     async handshakeIds() {
-      const tx = (await db()).transaction(HANDSHAKE, "readonly");
-      const keys = await asPromise(tx.objectStore(HANDSHAKE).getAllKeys());
-      return keys.map(String);
+      const account = await forRead();
+      if (account === null) return [];
+      return handshakeIdsOf(account);
     },
 
     async reciprocationDismissed() {
-      return (await read<boolean>(UX, RECIPROCATION_KEY)) === true;
+      const account = await forRead();
+      if (account === null) return false;
+      return (await readUx(account)).reciprocationDismissed;
     },
 
     async markReciprocationDismissed() {
-      await write(UX, RECIPROCATION_KEY, true);
+      const account = await forWrite();
+      const ux = await readUx(account);
+      await write(UX, account, { ...ux, reciprocationDismissed: true } satisfies UxRecord);
+    },
+
+    async setEphemeral(value) {
+      const account = await forWrite();
+      const ux = await readUx(account);
+      await write(UX, account, { ...ux, ephemeral: value } satisfies UxRecord);
+    },
+
+    async purgeIfEphemeral() {
+      const account = await forRead();
+      if (account === null) return;
+      if (!(await readUx(account)).ephemeral) return;
+      await remove(ACTOR, account);
+      await remove(BACKUP, account);
+      for (const stagedWriteId of await handshakeIdsOf(account)) {
+        await remove(HANDSHAKE, handshakeKey(account, stagedWriteId));
+      }
+      await remove(UX, account);
     },
   };
 }
 
-/** The one custody store of the running page. */
-export const identityStore: IdentityStore = createIdentityStore();
+/** The one custody store of the running page, scoped to the active session's account. */
+export const identityStore: IdentityStore = createIdentityStore({
+  activeAccountId: () => tokenStore.activeAccountId(),
+});

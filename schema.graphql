@@ -299,6 +299,10 @@ enum ErrorCode {
 	"""
 	VERIFICATION_TOKEN_INVALID
 	"""
+	The password-reset token is invalid, expired, or already used.
+	"""
+	RESET_TOKEN_INVALID
+	"""
 	Refresh token invalid, expired, or reuse-detected.
 	"""
 	REFRESH_TOKEN_INVALID
@@ -1013,6 +1017,19 @@ type User implements Actor {
 	Field-level: viewer-only.
 	"""
 	keyBackup: String
+	"""
+	The account's attached actor public key (base64), null before
+	the key ceremony. The client's repair-attach verifies the
+	device-held key against this before offering it, so a device
+	carrying another account's key never blind-fires the attach
+	(roadmap.md slice 1.1). Field-level: viewer-only.
+	"""
+	actorPubkey: String
+	"""
+	The account's attached L0 address, null before the key ceremony.
+	Field-level: viewer-only.
+	"""
+	l0Address: String
 	"""
 	The actor whose invite this account came through — landing
 	provenance for the reciprocation gesture; the graph's own record

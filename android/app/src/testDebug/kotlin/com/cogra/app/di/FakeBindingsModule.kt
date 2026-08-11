@@ -61,7 +61,7 @@ class ScriptedSessionRepository : ThrowingSessionRepository() {
 
 /** Scriptable applicant state: tests set the me-driven status. */
 class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
-    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null)
+    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     val attachedKeys = mutableListOf<String>()
 
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> = Outcome.Success(status)

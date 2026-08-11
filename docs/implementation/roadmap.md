@@ -60,7 +60,10 @@ write, browser restore via recovery code — passed 2026-08-07.
 The client-crypto groundwork both cuts build on is in place —
 the key-backup blob format ([auth.md](auth.md#blob-format-v1))
 and the golden vectors (`client-crypto-vectors.json`,
-`make vectors`). Next in sequence: slice 1.1.
+`make vectors`). Slice 1.1 is built on all three fronts — the
+auth-edge rate limits with the breach-corpus check, the query
+budgets, and the account-keyed client custody with the verified
+repair-attach — awaiting its hand test.
 
 ## The stand-in and the swap
 

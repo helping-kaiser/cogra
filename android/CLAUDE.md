@@ -144,7 +144,10 @@ non-extractable Keystore key is impossible), the applicant token, the
 pending backup blob awaiting its first-session upload, and the
 per-write handshake material (private nonce + pre-signature, keyed by
 staged-write id) that lets the approve step verify against what THIS
-device pre-signed across process death. The **recovery code is never
+device pre-signed across process death. Every identity value is bound
+to the account it belongs to — the stored token pair carries the
+account id, and the identity store scopes by it
+([auth.md §Multi-account device custody](../docs/implementation/auth.md#multi-account-device-custody)). The **recovery code is never
 persisted** — displayed once at ceremony time, held only by the user.
 The signing steps themselves live in `core:domain`'s `WriteSigner` /
 `RegistrationSigner`; UI never touches `core:crypto` directly.
