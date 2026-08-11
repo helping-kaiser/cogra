@@ -277,6 +277,11 @@ struct LogInPayload {
     /// Null with an INVALID_CREDENTIALS userError when the email /
     /// password pair did not match.
     auth: Option<AuthSession>,
+    /// The pending refresh-token-reuse security event (auth.md "Reuse
+    /// detection"), delivered exactly once: set to the detection time
+    /// on the first successful login after a reuse-detected revocation,
+    /// null otherwise and on every refusal.
+    reuse_detected_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
 }
 
@@ -755,6 +760,7 @@ impl Mutation {
         let refused = || {
             Ok(LogInPayload {
                 auth: None,
+                reuse_detected_at: None,
                 user_errors: vec![UserError::new(
                     ErrorCode::InvalidCredentials,
                     "email / password pair did not match",
@@ -782,6 +788,9 @@ impl Mutation {
             return refused();
         }
         ratelimit::login_succeeded(pool, &email).await?;
+        // Take-and-clear only behind a verified password: the pending
+        // mark must never leak through a refusal.
+        let reuse_detected_at = store::take_reuse_detected(pool, credentials.actor_id).await?;
         let issued = auth::issue_session(
             pool,
             auth_cfg,
@@ -792,6 +801,7 @@ impl Mutation {
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(LogInPayload {
             auth: Some(AuthSession::from_issued(issued)),
+            reuse_detected_at,
             user_errors: vec![],
         })
     }
