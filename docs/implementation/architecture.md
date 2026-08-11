@@ -77,7 +77,8 @@ ever what a record *is* — that is always the L1 record itself.
 | Admission balance | Layer 0 export `B_i`, consume-only |
 | Money store | CGT rail — on-chain ledger ([ledger.md](ledger.md)) |
 | Android app | Kotlin + Jetpack Compose ([android.md](android.md)) |
-| API contract | exported `schema.graphql` → Apollo Kotlin codegen |
+| Web app | Next.js + React + TypeScript ([web.md](web.md)) |
+| API contract | exported `schema.graphql` → Apollo Kotlin and GraphQL Code Generator codegen |
 | Ranking core | `ranker` crate — one implementation for backend, miner, and device |
 | Local dev | Docker Compose |
 | CI | GitHub Actions |
@@ -87,9 +88,9 @@ ever what a record *is* — that is always the L1 record itself.
 ## Repository layout
 
 One repository holds everything: `crates/` (the Rust backend),
-`android/` (the Android app — [android.md](android.md)), `docs/`
-(the design docs), plus `migrations/` and `docker/`. The monorepo
-is deliberate:
+`android/` (the Android app — [android.md](android.md)), `web/`
+(the web app — [web.md](web.md)), `docs/` (the design docs), plus
+`migrations/` and `docker/`. The monorepo is deliberate:
 
 - **One docs source.** The design docs govern backend and frontend
   alike; a second repo would mean copies that drift.
@@ -102,8 +103,8 @@ is deliberate:
   update land in one PR.
 
 Assistant rules are nested: the root [CLAUDE.md](../../CLAUDE.md)
-holds the shared and backend rules; `android/CLAUDE.md` holds the
-Android-specific ones.
+holds the shared and backend rules; `android/CLAUDE.md` and
+`web/CLAUDE.md` hold the platform-specific ones.
 
 ---
 
@@ -241,6 +242,15 @@ GraphQL client generated from `schema.graphql`. It holds the
 member's actor key and performs both signing steps of every
 write — pre-commitment and approval ([android.md](android.md)). Stack reasoning, module layout, the
 UniFFI binding, and the test story live there.
+
+### `web/`
+
+The second frontend — Next.js + React + TypeScript, with typed
+operations generated from the same `schema.graphql`. It serves
+everyone the Android app doesn't reach and gives CoGra linkable,
+server-rendered pages; the actor key is held in WebCrypto custody
+and performs the same two signing steps ([web.md](web.md)). Stack
+reasoning, contract mechanics, and the test story live there.
 
 ---
 
