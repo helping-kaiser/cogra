@@ -21,14 +21,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ErrorCode
+import kotlinx.coroutines.launch
 
 @Composable
 fun InvitesRoute(
@@ -62,6 +68,7 @@ fun InvitesRoute(
         onCreate = viewModel::onCreate,
         onRevoke = viewModel::onRevoke,
         onApprove = viewModel::onApprove,
+        onVouchSignedShown = viewModel::onVouchSignedShown,
         onShare = { link ->
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -83,8 +90,24 @@ fun InvitesScreen(
     onCreate: () -> Unit,
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
+    onVouchSignedShown: () -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val vouchSignedMessage = stringResource(R.string.invites_vouch_signed)
+    val huskHint = stringResource(R.string.invites_husk_hint)
+    // Consumed only after the snackbar is done: clearing first would
+    // flip the LaunchedEffect key and cancel the showing coroutine.
+    LaunchedEffect(state.vouchSigned) {
+        if (state.vouchSigned) {
+            snackbarHostState.showSnackbar(vouchSignedMessage)
+            onVouchSignedShown()
+        }
+    }
+    // The husk gate explains itself on tap — a disabled button would
+    // swallow the tap and leave the gate unexplained.
+    val onHuskHint: () -> Unit = { scope.launch { snackbarHostState.showSnackbar(huskHint) } }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -107,6 +130,11 @@ fun InvitesScreen(
                 },
             )
         },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(snackbarData = data, modifier = Modifier.testTag("invites_snackbar"))
+            }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -124,12 +152,6 @@ fun InvitesScreen(
                     ),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("invites_error"),
-                )
-            }
-            if (state.vouchSigned) {
-                Text(
-                    text = stringResource(R.string.invites_vouch_signed),
-                    modifier = Modifier.testTag("invites_vouch_signed"),
                 )
             }
             if (!state.seedOnDevice) {
@@ -150,7 +172,7 @@ fun InvitesScreen(
                 CircularProgressIndicator(modifier = Modifier.testTag("invites_loading"))
             }
             state.links.forEach { link ->
-                LinkCard(link, state.approvingId, state.seedOnDevice, onRevoke, onApprove, onShare)
+                LinkCard(link, state.approvingId, state.seedOnDevice, onRevoke, onApprove, onHuskHint, onShare)
             }
         }
     }
@@ -223,6 +245,7 @@ private fun LinkCard(
     seedOnDevice: Boolean,
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
+    onHuskHint: () -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -255,7 +278,7 @@ private fun LinkCard(
                 }
             }
             link.applications.forEach { application ->
-                ApplicationRow(application, link, approvingId, seedOnDevice, onApprove)
+                ApplicationRow(application, link, approvingId, seedOnDevice, onApprove, onHuskHint)
             }
         }
     }
@@ -268,6 +291,7 @@ private fun ApplicationRow(
     approvingId: String?,
     seedOnDevice: Boolean,
     onApprove: (String, Double, Double) -> Unit,
+    onHuskHint: () -> Unit,
 ) {
     // The link's prefill seeds the form; the commitment happens at
     // approval (schema: ApplicationApprovalInput).
@@ -303,10 +327,12 @@ private fun ApplicationRow(
                 "approve_p_interest_${application.id}",
             )
             Button(
-                onClick = { onApprove(application.id, pDirected, pInterest) },
-                // Approving signs the vouch on THIS device — gated in the
-                // husk state until the actor key is restored.
-                enabled = approvingId == null && seedOnDevice,
+                // Approving signs the vouch on THIS device — in the husk
+                // state the tap explains the gate instead of acting.
+                onClick = {
+                    if (seedOnDevice) onApprove(application.id, pDirected, pInterest) else onHuskHint()
+                },
+                enabled = approvingId == null,
                 modifier = Modifier.testTag("approve_${application.id}"),
             ) {
                 Text(stringResource(R.string.applicant_approve))

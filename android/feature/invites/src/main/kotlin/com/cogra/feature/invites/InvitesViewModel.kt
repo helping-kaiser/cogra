@@ -31,7 +31,8 @@ data class InvitesUiState(
     val approvingId: String? = null,
     val error: ErrorCode? = null,
     val transportFailed: Boolean = false,
-    /** One-shot: the vouch landed in the relay after on-device signing. */
+    /** One-shot, consumed after its snackbar: the vouch landed in the
+     *  relay after on-device signing. */
     val vouchSigned: Boolean = false,
     /**
      * False in the husk state — the actor key is not on this device, so
@@ -63,6 +64,8 @@ class InvitesViewModel @Inject constructor(
 
     /** The canonical shareable URL (auth.md "Link URLs"). */
     fun shareUrl(link: InviteLinkInfo): String = "$webOrigin/join/${link.id}"
+
+    fun onVouchSignedShown() = _state.update { it.copy(vouchSigned = false) }
 
     fun onSingleUseChange(v: Boolean) = _state.update { it.copy(singleUse = v) }
 
