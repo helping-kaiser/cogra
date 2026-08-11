@@ -142,6 +142,11 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             "the staged write lost its seal; re-prepare",
             path,
         ),
+        RelayError::ReplayMismatch(_) => UserError::at(
+            ErrorCode::BadInput,
+            "resubmission does not match the sealed pre-commitment",
+            path,
+        ),
         RelayError::Staged(staged::StagedError::NotFound(_)) => {
             UserError::at(ErrorCode::NotFound, "unknown staged write", path)
         }
@@ -1309,6 +1314,8 @@ impl Mutation {
     /// seal returns synchronously the payload's staged writes are
     /// already AWAITING_APPROVAL, verified act included. Verification
     /// failures surface as SIGNATURE_INVALID userErrors per proposal.
+    /// Resubmitting a sealed proposal is idempotent only for the exact
+    /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     async fn submit_proposals(
         &self,
         ctx: &Context<'_>,

@@ -81,7 +81,7 @@ pub struct StagedWrite {
     pub sealed: Option<SealedParts>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreSignedParts {
     pub author_pubkey: Vec<u8>,
     pub nonce: Vec<u8>,

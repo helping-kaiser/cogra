@@ -25,6 +25,12 @@ pub enum RelayError {
     /// fresh sequence value.
     #[error("staged write {0} lost its seal; re-prepare")]
     Wedged(Uuid),
+    /// A resubmission whose pre-commitment differs from the sealed one —
+    /// returning the stored act would tell a re-signing client its new
+    /// bytes were sealed. Refused; only a byte-identical replay is
+    /// answered idempotently.
+    #[error("staged write {0}: resubmitted pre-commitment differs from the sealed one")]
+    ReplayMismatch(Uuid),
     #[error(transparent)]
     Staged(#[from] staged::StagedError),
     #[error(transparent)]
@@ -42,7 +48,9 @@ fn wrong_state(id: Uuid, expected: &'static str, actual: StagedState) -> RelayEr
 /// Relay leg 1 — seal: store the device's pre-commitment, submit through
 /// the boundary, and store the host-sealed verified act. Returns the
 /// sealed act for the device's approval step. Re-submission after a lost
-/// response is idempotent: an already-sealed write returns its stored act.
+/// response is idempotent: an already-sealed write returns its stored act
+/// — but only for the exact pre-commitment that was sealed; differing
+/// bytes are refused (`ReplayMismatch`).
 pub async fn submit_pre_signed<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -53,6 +61,9 @@ pub async fn submit_pre_signed<B: L1Boundary>(
     match write.state {
         StagedState::AwaitingPreSign | StagedState::Sealing => {}
         StagedState::AwaitingApproval | StagedState::Relaying => {
+            if write.pre_signed.as_ref() != Some(&pre) {
+                return Err(RelayError::ReplayMismatch(id));
+            }
             return write.verified_act().ok_or(RelayError::Wedged(id));
         }
         other => return Err(wrong_state(id, "awaiting_pre_sign", other)),

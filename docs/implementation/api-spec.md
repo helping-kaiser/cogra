@@ -2109,7 +2109,9 @@ extend type Mutation {
    Verification failures surface as SIGNATURE_INVALID userErrors
    per proposal. When the seal returns synchronously the payload's
    staged writes are already AWAITING_APPROVAL, verified act
-   included; otherwise observe via stagedWrite."
+   included; otherwise observe via stagedWrite. Resubmitting a
+   sealed proposal is idempotent only for the exact signature that
+   was sealed; differing bytes refuse as BAD_INPUT."
   submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
   "Relay approval witnesses — only an approved act is orderable.
    Landing stays asynchronous; observe via stagedWrite."
