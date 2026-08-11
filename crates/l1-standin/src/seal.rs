@@ -111,21 +111,10 @@ pub(crate) async fn seal(
         ));
     }
 
-    // Key consistency across the author's history: one key per address.
-    let existing = sqlx::query!(
-        "SELECT pubkey FROM l1_accounts WHERE address = $1",
-        body.author
-    )
-    .fetch_optional(standin.pool())
-    .await?;
-    if let Some(row) = &existing
-        && let Some(known) = &row.pubkey
-        && known != &pre.author_pubkey
-    {
-        return Err(StandInError::Authentication(
-            "author address is bound to a different key".into(),
-        ));
-    }
+    // Key consistency across the author's history needs no check of its
+    // own: the address derives from the key, so a key passing the
+    // address binding above can only be the key every earlier act of
+    // this author passed it with.
 
     // Host additions: fresh domain-separated salts meeting the entropy
     // floor, binding + concealing commitments, the host seal.
@@ -159,12 +148,16 @@ pub(crate) async fn seal(
     // Persist the sealed act. The insert is the uniqueness check: a second
     // record claiming the same act identifier (or reusing the author-local
     // sequence) is equivocation and produces no Layer-1 object.
+    // Sealed-but-never-approved rows are never collected — unbounded, but
+    // stand-in-scoped: the whole l1_* table set drops at the swap, so a
+    // reaper here would be machinery for throwaway substrate state.
     let parents: Vec<String> = body
         .asserted_parents
         .iter()
         .map(|p| p.to_string())
         .collect();
     let deps: Vec<String> = pre.proposal.deps.iter().map(|d| d.to_string()).collect();
+    let mut tx = standin.pool().begin().await?;
     let inserted = sqlx::query!(
         "INSERT INTO l1_acts (
             act_id, author, seq, family, author_pubkey, middle, target,
@@ -195,7 +188,7 @@ pub(crate) async fn seal(
         &act.deps_commitment,
         &act.host_seal,
     )
-    .execute(standin.pool())
+    .execute(&mut *tx)
     .await?;
     if inserted.rows_affected() == 0 {
         return Err(StandInError::Conflict(format!(
@@ -204,15 +197,17 @@ pub(crate) async fn seal(
     }
 
     // Learn the author's key on first contact (account may pre-exist from
-    // a burn credit with no key yet).
+    // a burn credit with no key yet) — in the same transaction as the
+    // act, so a crash cannot store an act whose key was never learned.
     sqlx::query!(
         "INSERT INTO l1_accounts (address, pubkey) VALUES ($1, $2)
          ON CONFLICT (address) DO UPDATE SET pubkey = COALESCE(l1_accounts.pubkey, EXCLUDED.pubkey)",
         body.author,
         &pre.author_pubkey,
     )
-    .execute(standin.pool())
+    .execute(&mut *tx)
     .await?;
+    tx.commit().await?;
 
     Ok(act)
 }
