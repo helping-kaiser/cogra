@@ -547,8 +547,25 @@ pattern; rationale for this project below.
 - **Reuse detection.** If a refresh token marked `revoked_at` is
   presented — i.e. someone tried to use a token that was already
   rotated — the server revokes **all** of that user's refresh
-  tokens and surfaces a security event on next login. Standard
+  tokens and stamps the account
+  (`user_credentials.reuse_detected_at`; a later detection
+  overwrites an undelivered stamp). The refusal itself stays
+  indistinguishable from a plain invalid token — one collapsed
+  `REFRESH_TOKEN_INVALID` code — because the presenter may be the
+  thief, and is never told detection fired. Standard
   refresh-rotation hygiene; signals likely token theft.
+- **The security notice.** The first successful login after a
+  detection carries the stamp as `LogInPayload.reuseDetectedAt`,
+  read-and-cleared atomically behind the verified password —
+  delivered exactly once, and never on a refusal, so the field
+  leaks nothing to an unauthenticated caller. Clients surface it
+  as a dismissible alert on the signed-in shell: login navigates
+  away the moment the tokens land, so the value rides an
+  in-memory hand-off, and a client that dies between login and
+  rendering loses the notice — an accepted trade-off of this
+  narrow carrier. If more security-event kinds ever arise, the
+  narrow field is removed in favor of a general security-event
+  surface, not extended field-by-field.
 
 ### Why split formats
 
