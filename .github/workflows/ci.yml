@@ -63,6 +63,8 @@ jobs:
       # contract artifacts are listed for the same reason schema.graphql is:
       # the frontend golden-vector tests pin to client-crypto-vectors.json,
       # so a vector regeneration must run them, not just the Rust jobs.
+      # `.github/workflows/**` is listed because these jobs' own setup steps
+      # live there — an action bump must run them, or its green is vacuous.
       - uses: dorny/paths-filter@v3
         id: frontends
         with:
@@ -71,10 +73,12 @@ jobs:
               - 'android/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - '.github/workflows/**'
             web:
               - 'web/**'
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
+              - '.github/workflows/**'
 
   lint:
     name: Lint
@@ -161,12 +165,12 @@ jobs:
         working-directory: android
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Unit tests
         run: ./gradlew test
       - name: Assemble debug APK
@@ -184,7 +188,7 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: web/.nvmrc
           cache: npm
