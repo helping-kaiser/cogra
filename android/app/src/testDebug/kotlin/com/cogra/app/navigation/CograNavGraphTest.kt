@@ -28,6 +28,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.UserProfile
+import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import java.time.Instant
@@ -60,6 +61,8 @@ class CograNavGraphTest {
     @Inject lateinit var account: ScriptedAccountRepository
 
     @Inject lateinit var onboarding: ScriptedOnboardingRepository
+
+    @Inject lateinit var notices: SecurityNotices
 
     private lateinit var navController: TestNavHostController
 
@@ -113,6 +116,18 @@ class CograNavGraphTest {
         render()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>())
             .isTrue()
+    }
+
+    @Test
+    fun theSecurityNoticeShowsAboveTheGraphAndDismissesOnce() {
+        // The shell renders the notice wherever navigation stands
+        // (auth.md "Reuse detection"); dismissal consumes it for good.
+        render()
+        notices.post(Instant.parse("2026-08-10T09:30:00Z"))
+        waitForTag("security_notice")
+        compose.onNodeWithTag("security_notice_dismiss").performClick()
+        compose.waitForIdle()
+        assertThat(compose.onAllNodesWithTag("security_notice").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test

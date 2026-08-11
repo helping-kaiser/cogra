@@ -18,6 +18,7 @@ import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.store.TokenStore
 import com.google.common.truth.Truth.assertThat
+import java.time.Instant
 import java.util.Base64
 import javax.inject.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,6 +99,28 @@ class RepositoriesTest {
         val tokens = (onboarding.register("l", "h", "e@x.com", "p".repeat(12), "phone") as Outcome.Success).value
         // The pair carries the account it authenticates.
         assertThat(tokens).isEqualTo(AuthTokens("a", "r", "u1"))
+    }
+
+    @Test
+    fun logInMapsTheGrantWithAndWithoutTheNotice() = runTest {
+        val sessions = SessionRepositoryImpl(client, guard())
+        enqueue(
+            """{"data":{"logIn":{"__typename":"LogInPayload",
+               "auth":{"__typename":"AuthSession","accessToken":"a","refreshToken":"r",
+               "user":{"__typename":"User","id":"u1"}},
+               "reuseDetectedAt":"2026-08-10T09:30:00+00:00","userErrors":[]}}}""",
+        )
+        val notified = (sessions.logIn("e@x.com", "pw", null) as Outcome.Success).value
+        assertThat(notified.tokens).isEqualTo(AuthTokens("a", "r", "u1"))
+        assertThat(notified.reuseDetectedAt).isEqualTo(Instant.parse("2026-08-10T09:30:00Z"))
+        enqueue(
+            """{"data":{"logIn":{"__typename":"LogInPayload",
+               "auth":{"__typename":"AuthSession","accessToken":"a","refreshToken":"r",
+               "user":{"__typename":"User","id":"u1"}},
+               "reuseDetectedAt":null,"userErrors":[]}}}""",
+        )
+        val clean = (sessions.logIn("e@x.com", "pw", null) as Outcome.Success).value
+        assertThat(clean.reuseDetectedAt).isNull()
     }
 
     @Test

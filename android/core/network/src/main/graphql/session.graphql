@@ -6,6 +6,7 @@ mutation LogIn($input: LogInInput!) {
     auth {
       ...AuthSessionFields
     }
+    reuseDetectedAt
     userErrors {
       ...UserErrorFields
     }

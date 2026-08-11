@@ -21,6 +21,16 @@ data class AuthTokens(
     val accountId: String,
 )
 
+/**
+ * A successful login's payload: the token pair plus the pending
+ * refresh-token-reuse security event, delivered exactly once by the
+ * first login after detection (auth.md "Reuse detection").
+ */
+data class LoginGrant(
+    val tokens: AuthTokens,
+    val reuseDetectedAt: Instant?,
+)
+
 /** An active authentication session — one per refresh token. */
 data class SessionInfo(
     val id: String,
