@@ -492,6 +492,15 @@ login-recovery channel.
 3. On success the new address becomes the verified email; reset and
    notifications follow it from that point.
 
+If the new address gets registered by someone else before both sides
+land, the confirm that would apply the change surfaces `EMAIL_IN_USE`
+instead — and keeps doing so on retries until the change expires, so
+the owner always learns the real reason. The change row stays live for
+its TTL: should the address free up in that window, a retry applies
+the change. No enumeration channel opens here — the error is only
+visible after proving control of the account, and `requestEmailChange`
+stays silent.
+
 The two-sided proof is deliberate: the original-address code blocks a
 hijacker holding only a live session from redirecting recovery, and
 the new-address verification blocks a typo from silently stranding the

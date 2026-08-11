@@ -533,7 +533,10 @@ type Mutation {
 	"""
 	Submits either side's proof; the change applies — and the account
 	email updates — only once both the original-address code and the
-	new-address verification have been confirmed.
+	new-address verification have been confirmed. A fully-proven
+	change whose new address was registered by someone else in the
+	meantime surfaces EMAIL_IN_USE, on this call and on retries,
+	until the change expires.
 	"""
 	confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
 	"""
