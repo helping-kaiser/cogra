@@ -54,7 +54,7 @@ chrono = { version = "0.4", features = ["serde"] }
 # The interim act-authentication realization for the L1 stand-in
 # (open-questions.md Q30 — stand-in-scoped choices, not a Q30 resolution):
 # Ed25519 signatures, SHA-256 salted hash commitments.
-ed25519-dalek = { version = "2", features = ["rand_core", "pkcs8", "pem"] }
+ed25519-dalek = { version = "3", features = ["rand_core", "pkcs8", "pem"] }
 sha2 = { version = "0.10" }
 rand = { version = "0.8" }
 hex = { version = "0.4" }
