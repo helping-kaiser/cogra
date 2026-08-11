@@ -283,6 +283,91 @@ describe("write signer", () => {
     expect(await store.handshake(ID)).toBeNull();
   });
 
+  it("a rate-limited approve keeps the material and resume completes", async () => {
+    let sealedB64: string | null = null;
+    let rateLimit = true;
+    server.use(
+      hostHandler,
+      graphql.mutation("SubmitProposals", async ({ variables }) => {
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const pre = submittedPre(input.proposals[0].signature, actorPub);
+        sealedB64 = toBase64(encodeVerifiedAct(await sealOver(host, pre)));
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [stagedJson(ID, "AWAITING_APPROVAL", sealedB64)],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+      graphql.query("StagedWrite", () =>
+        HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "AWAITING_APPROVAL", sealedB64) } }),
+      ),
+      graphql.mutation("ApproveActs", () =>
+        HttpResponse.json({
+          data: {
+            approveActs: {
+              __typename: "ApproveActsPayload",
+              stagedWrites: rateLimit ? null : [stagedJson(ID, "RELAYING", null)],
+              userErrors: rateLimit
+                ? [{ __typename: "UserError", message: "slow down", code: "RATE_LIMITED", field: null }]
+                : [],
+            },
+          },
+        }),
+      ),
+    );
+
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    expect(first.kind).toBe("refused");
+    if (first.kind === "refused") expect(first.errors[0].code).toBe("RATE_LIMITED");
+    expect(await store.handshake(ID)).not.toBeNull();
+
+    rateLimit = false;
+    const results = await signer.resume();
+    expect(results).toEqual([{ kind: "done", id: ID, state: "RELAYING" }]);
+    expect(await store.handshake(ID)).toBeNull();
+  });
+
+  it("a refused read leg during the seal wait keeps the material", async () => {
+    server.use(
+      graphql.mutation("SubmitProposals", () =>
+        HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [stagedJson(ID, "SEALING", null)],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      graphql.query("StagedWrite", () =>
+        HttpResponse.json({
+          errors: [{ message: "slow down", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    expect(result.kind).toBe("refused");
+    if (result.kind === "refused") expect(result.errors[0].code).toBe("RATE_LIMITED");
+    expect(await store.handshake(ID)).not.toBeNull();
+  });
+
+  it("refuses an unknown staged state without spending the material", async () => {
+    const key = await store.actorKey();
+    if (key === null) throw new Error("expected a key");
+    await store.saveHandshake(ID, await key.preSign(PROPOSAL));
+
+    const result = await signer.signStaged(view(ID, "SOMETHING_NEW" as StagedWriteState, null));
+    expect(result.kind).toBe("refused");
+    if (result.kind === "refused") expect(result.errors[0].message).toMatch(/does not know/);
+    expect(await store.handshake(ID)).not.toBeNull();
+  });
+
   it("a transport fault keeps the material and resume re-sends the same nonce", async () => {
     server.use(graphql.mutation("SubmitProposals", () => HttpResponse.error()));
     const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
