@@ -8,6 +8,7 @@ use common::l1::census::FamilyKind;
 use common::l1::crypto::{self, tags};
 use common::l1::handshake::{
     ApprovalWitness, PreSignedProposal, VerifiedAct, canonical_deps, pre_commitment_msg,
+    seal_message,
 };
 use common::l1::identifier::{ActId, NodeId};
 use rand::RngCore;
@@ -382,25 +383,6 @@ pub(crate) fn rebuild_body(
         license: license.map(str::to_string),
         asserted_parents,
     })
-}
-
-/// The seal message from stored parts — must match
-/// `VerifiedAct::seal_msg` byte for byte.
-pub(crate) fn seal_message(
-    body: &common::l1::StructuralBody,
-    pre_signature: &[u8],
-    content_commitment: &[u8],
-    deps_commitment: &[u8],
-) -> Vec<u8> {
-    use common::l1::encoding::Encoder;
-    let mut e = Encoder::new();
-    e.array(5);
-    e.bytes(&body.canonical_bytes());
-    e.bytes(pre_signature);
-    e.bytes(content_commitment);
-    e.bytes(deps_commitment);
-    e.uint(1);
-    e.finish()
 }
 
 /// The legs of an act's graph projection, as (role, source, target) with
