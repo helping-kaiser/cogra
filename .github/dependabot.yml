@@ -1,21 +1,68 @@
 # One file covers all four ecosystems (Dependabot docs: per-ecosystem
 # entries keyed on the manifest's directory; github-actions always
 # scans .github/workflows from "/").
+#
+# Groups batch compatible bumps into one weekly PR per ecosystem
+# instead of one PR per dependency; majors still arrive solo so a
+# breaking change is never buried in a batch. First matching group
+# wins, so the react group (all update types) precedes the catch-all.
 version: 2
 updates:
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
+    groups:
+      rust-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # sha2 0.11 is the digest-0.11 RustCrypto generation; the
+      # workspace's hkdf/hmac/aes-gcm are still digest-0.10. Take the
+      # whole stack in one move when it lands (queued in the audit
+      # fix plan).
+      - dependency-name: sha2
+        versions: [">=0.11"]
   - package-ecosystem: gradle
     directory: /android
     schedule:
       interval: weekly
+    groups:
+      android-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # All four gated on the AGP 9 migration (queued in the audit fix
+      # plan): AGP 8.x rejects Gradle >= 9.6, and these versions demand
+      # AGP >= 9 / compileSdk 37.
+      - dependency-name: gradle-wrapper
+        versions: ["[9,)"]
+      - dependency-name: "androidx.core:core-ktx"
+        versions: ["[1.19,)"]
+      - dependency-name: "androidx.lifecycle:*"
+        versions: ["[2.11,)"]
+      - dependency-name: "com.google.dagger*"
+        versions: ["[2.60,)"]
   - package-ecosystem: npm
     directory: /web
     schedule:
       interval: weekly
+    groups:
+      # react and react-dom refuse to run at mismatched versions, so
+      # they and their @types move as one PR at every update type.
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react"
+          - "@types/react-dom"
+      web-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
