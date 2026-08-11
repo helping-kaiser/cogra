@@ -492,8 +492,9 @@ type Mutation {
 	logIn(input: LogInInput!): LogInPayload!
 	"""
 	A rotated session; `auth` is null with a REFRESH_TOKEN_INVALID
-	userError when the refresh token is invalid, expired, or was
-	already rotated (reuse) — a reuse-detected token also revokes
+	userError when the refresh token is invalid, expired, or
+	revoked. A just-rotated token's replay inside the grace window
+	returns the same successor; outside it, reuse detection revokes
 	every session.
 	"""
 	refreshSession(input: RefreshSessionInput!): RefreshPayload!
@@ -750,8 +751,9 @@ enum RecordFamily {
 type RefreshPayload {
 	"""
 	A rotated session; null with a REFRESH_TOKEN_INVALID userError
-	when the token is invalid, expired, or was already rotated —
-	reuse also revokes every session.
+	when the token is invalid, expired, or revoked. A just-rotated
+	token's replay inside the grace window returns the same
+	successor; outside it, reuse detection revokes every session.
 	"""
 	auth: AuthSession
 	userErrors: [UserError!]!

@@ -5,6 +5,7 @@
 
 use chrono::{Duration, Utc};
 use common::l1::client::ActorKey;
+use postgres_store::auth::RevokedReason;
 use postgres_store::{PgPool, auth as store};
 use uuid::Uuid;
 
@@ -38,6 +39,19 @@ async fn seed_user(pool: &PgPool, handle: &str, email: &str, password: &str) -> 
     id
 }
 
+/// Shifts a consumed row's rotation time behind the grace window, so a
+/// replay reads as theft rather than the benign refresh race.
+async fn backdate_rotation(pool: &PgPool, session_id: Uuid) {
+    sqlx::query(
+        "UPDATE auth_refresh_tokens
+         SET revoked_at = revoked_at - INTERVAL '11 seconds' WHERE id = $1",
+    )
+    .bind(session_id)
+    .execute(pool)
+    .await
+    .expect("backdate");
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
@@ -60,10 +74,12 @@ async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
         .expect("row");
     assert_eq!(row.device_label.as_deref(), Some("phone"));
 
-    // Presenting the consumed token again is reuse: every session dies.
+    // Replaying the consumed token past the grace window is reuse:
+    // every session dies.
     let other = auth::issue_session(&pool, &cfg, user, Some("laptop"))
         .await
         .expect("issues");
+    backdate_rotation(&pool, first.session_id).await;
     assert!(matches!(
         auth::refresh_session(&pool, &cfg, &first.refresh_token).await,
         Err(RefreshError::Reuse)
@@ -97,6 +113,145 @@ async fn sessions_rotate_and_reuse_revokes_everything(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn a_grace_window_replay_returns_the_same_successor(pool: PgPool) {
+    let cfg = AuthConfig::ephemeral().expect("cfg");
+    let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+
+    let first = auth::issue_session(&pool, &cfg, user, Some("phone"))
+        .await
+        .expect("issues");
+    let second = auth::refresh_session(&pool, &cfg, &first.refresh_token)
+        .await
+        .expect("rotates");
+
+    // The immediate replay — the retry that lost its response — gets
+    // the same successor back, not an error and not a fork.
+    let replayed = auth::refresh_session(&pool, &cfg, &first.refresh_token)
+        .await
+        .expect("answers the replay");
+    assert_eq!(replayed.session_id, second.session_id);
+    assert_eq!(replayed.refresh_token, second.refresh_token);
+    assert!(auth::verify_access_token(&cfg, &replayed.access_token).is_some());
+
+    // No detection fired, and the successor still refreshes normally.
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+    auth::refresh_session(&pool, &cfg, &second.refresh_token)
+        .await
+        .expect("successor rotates");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_grace_replay_with_a_consumed_successor_is_theft(pool: PgPool) {
+    let cfg = AuthConfig::ephemeral().expect("cfg");
+    let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+
+    let first = auth::issue_session(&pool, &cfg, user, None)
+        .await
+        .expect("issues");
+    let second = auth::refresh_session(&pool, &cfg, &first.refresh_token)
+        .await
+        .expect("rotates");
+    // The chain moved on: the successor was itself consumed, so the
+    // idempotent answer no longer exists even inside the window.
+    auth::refresh_session(&pool, &cfg, &second.refresh_token)
+        .await
+        .expect("successor rotates");
+    assert!(matches!(
+        auth::refresh_session(&pool, &cfg, &first.refresh_token).await,
+        Err(RefreshError::Reuse)
+    ));
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_some()
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn concurrent_refreshes_of_one_token_converge_on_one_successor(pool: PgPool) {
+    let cfg = AuthConfig::ephemeral().expect("cfg");
+    let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+
+    let first = auth::issue_session(&pool, &cfg, user, None)
+        .await
+        .expect("issues");
+    // The double-fire race: whichever request loses the rotation must
+    // still come back with the winner's successor, not an error.
+    let (a, b) = tokio::join!(
+        auth::refresh_session(&pool, &cfg, &first.refresh_token),
+        auth::refresh_session(&pool, &cfg, &first.refresh_token),
+    );
+    let a = a.expect("one racer");
+    let b = b.expect("other racer");
+    assert_eq!(a.session_id, b.session_id);
+    assert_eq!(a.refresh_token, b.refresh_token);
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+    // Exactly one live session remains: the shared successor.
+    let sessions = store::sessions_for(&pool, user).await.expect("list");
+    assert_eq!(sessions.len(), 1);
+    assert_eq!(sessions[0].id, a.session_id);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn owner_and_security_revoked_tokens_replay_benignly(pool: PgPool) {
+    let cfg = AuthConfig::ephemeral().expect("cfg");
+    let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+
+    // "Sign out everywhere else": the signed-out device's next launch
+    // replays its revoked token — a benign, owner-initiated state.
+    let signed_out = auth::issue_session(&pool, &cfg, user, Some("phone"))
+        .await
+        .expect("issues");
+    let kept = auth::issue_session(&pool, &cfg, user, Some("laptop"))
+        .await
+        .expect("issues");
+    store::revoke_sessions(&pool, user, Some(kept.session_id), RevokedReason::Owner)
+        .await
+        .expect("revokes others");
+    assert!(matches!(
+        auth::refresh_session(&pool, &cfg, &signed_out.refresh_token).await,
+        Err(RefreshError::Invalid)
+    ));
+    // No alarm, no collateral: the kept session survives, unstamped.
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+    let kept = auth::refresh_session(&pool, &cfg, &kept.refresh_token)
+        .await
+        .expect("kept session refreshes");
+
+    // Security-initiated revocation (password change/reset) replays
+    // just as benignly.
+    store::revoke_sessions(&pool, user, None, RevokedReason::Security)
+        .await
+        .expect("revokes all");
+    assert!(matches!(
+        auth::refresh_session(&pool, &cfg, &kept.refresh_token).await,
+        Err(RefreshError::Invalid)
+    ));
+    assert!(
+        store::take_reuse_detected(&pool, user)
+            .await
+            .expect("take")
+            .is_none()
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
     let cfg = AuthConfig::ephemeral().expect("cfg");
     let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
@@ -115,6 +270,7 @@ async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
     auth::refresh_session(&pool, &cfg, &first.refresh_token)
         .await
         .expect("rotates");
+    backdate_rotation(&pool, first.session_id).await;
     assert!(matches!(
         auth::refresh_session(&pool, &cfg, &first.refresh_token).await,
         Err(RefreshError::Reuse)
@@ -148,6 +304,7 @@ async fn reuse_detection_stamps_the_account_and_take_clears(pool: PgPool) {
     auth::refresh_session(&pool, &cfg, &second.refresh_token)
         .await
         .expect("rotates");
+    backdate_rotation(&pool, second.session_id).await;
     assert!(matches!(
         auth::refresh_session(&pool, &cfg, &second.refresh_token).await,
         Err(RefreshError::Reuse)
@@ -190,7 +347,7 @@ async fn revocations_scope_to_their_target(pool: PgPool) {
     let kept = auth::issue_session(&pool, &cfg, user, Some("kept"))
         .await
         .expect("issues");
-    let revoked = store::revoke_sessions(&pool, user, Some(kept.session_id))
+    let revoked = store::revoke_sessions(&pool, user, Some(kept.session_id), RevokedReason::Owner)
         .await
         .expect("revokes");
     assert_eq!(revoked, 1); // mine_too — mine was already gone
@@ -262,7 +419,7 @@ async fn password_resets_are_single_use_and_revoke_all_sessions(pool: PgPool) {
     store::update_password_hash(&pool, user, &new_hash)
         .await
         .expect("updates");
-    store::revoke_sessions(&pool, user, None)
+    store::revoke_sessions(&pool, user, None, RevokedReason::Security)
         .await
         .expect("revokes");
     assert!(

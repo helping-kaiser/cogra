@@ -116,8 +116,9 @@ const REFRESH: &str = "mutation($input: RefreshSessionInput!) {
     refreshSession(input: $input) { auth { refreshToken } userErrors { code } }
 }";
 
-/// Rotates once and re-presents the consumed token, arming the
-/// reuse-detection mark; asserts the collapsed refresh-time code.
+/// Rotates once and re-presents the consumed token past the grace
+/// window, arming the reuse-detection mark; asserts the collapsed
+/// refresh-time code.
 async fn detect_reuse(rig: &Rig, refresh_token: &str) {
     let rotated = rig
         .gql(
@@ -126,6 +127,17 @@ async fn detect_reuse(rig: &Rig, refresh_token: &str) {
         )
         .await;
     assert!(rotated["data"]["refreshSession"]["auth"]["refreshToken"].is_string());
+    // Shift the rotation behind the grace window: an immediate replay
+    // would be answered idempotently, not read as theft.
+    let hash = api::auth::hash_of(refresh_token);
+    sqlx::query(
+        "UPDATE auth_refresh_tokens
+         SET revoked_at = revoked_at - INTERVAL '11 seconds' WHERE token_hash = $1",
+    )
+    .bind(&hash[..])
+    .execute(&rig.pool)
+    .await
+    .expect("backdate");
     let reused = rig
         .gql(
             REFRESH,

@@ -74,7 +74,44 @@ pub struct Application {
     pub expires_at: DateTime<Utc>,
 }
 
-/// One refresh-token session row (auth.md "Sessions").
+/// Why a session was revoked (auth.md "Reuse detection"): only a
+/// `Rotated` token's replay can signal theft — `Owner` and `Security`
+/// revocations replay benignly from signed-out devices.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RevokedReason {
+    Rotated,
+    Owner,
+    Security,
+}
+
+impl RevokedReason {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RevokedReason::Rotated => "rotated",
+            RevokedReason::Owner => "owner",
+            RevokedReason::Security => "security",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "rotated" => RevokedReason::Rotated,
+            "owner" => RevokedReason::Owner,
+            "security" => RevokedReason::Security,
+            _ => return None,
+        })
+    }
+}
+
+fn decode_revoked_reason(s: &str) -> Result<RevokedReason, sqlx::Error> {
+    RevokedReason::parse(s)
+        .ok_or_else(|| sqlx::Error::Decode(format!("unknown revoked_reason {s:?}").into()))
+}
+
+/// One refresh-token session row (auth.md "Sessions"). A rotated row
+/// links its successor and carries the successor's token sealed under
+/// the consumed token — openable only by presenting that raw token,
+/// never from the database alone.
 #[derive(Debug, Clone)]
 pub struct Session {
     pub id: Uuid,
@@ -84,6 +121,9 @@ pub struct Session {
     pub expires_at: DateTime<Utc>,
     pub device_label: Option<String>,
     pub revoked_at: Option<DateTime<Utc>>,
+    pub revoked_reason: Option<RevokedReason>,
+    pub successor_id: Option<Uuid>,
+    pub successor_enc: Option<Vec<u8>>,
 }
 
 /// The account half of a user-kind actor (data-model.md
@@ -817,65 +857,99 @@ pub async fn session_by_token_hash(
     pool: &PgPool,
     token_hash: &[u8],
 ) -> Result<Option<Session>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query!(
         "SELECT id, user_id, created_at, last_used_at, expires_at,
-                device_label, revoked_at
+                device_label, revoked_at, revoked_reason,
+                successor_id, successor_enc
          FROM auth_refresh_tokens WHERE token_hash = $1",
         token_hash,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| Session {
-        id: r.id,
-        user_id: r.user_id,
-        created_at: r.created_at,
-        last_used_at: r.last_used_at,
-        expires_at: r.expires_at,
-        device_label: r.device_label,
-        revoked_at: r.revoked_at,
-    }))
+    .map(|r| {
+        Ok(Session {
+            id: r.id,
+            user_id: r.user_id,
+            created_at: r.created_at,
+            last_used_at: r.last_used_at,
+            expires_at: r.expires_at,
+            device_label: r.device_label,
+            revoked_at: r.revoked_at,
+            revoked_reason: r
+                .revoked_reason
+                .as_deref()
+                .map(decode_revoked_reason)
+                .transpose()?,
+            successor_id: r.successor_id,
+            successor_enc: r.successor_enc,
+        })
+    })
+    .transpose()
 }
 
 pub async fn session(pool: &PgPool, id: Uuid) -> Result<Option<Session>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query!(
         "SELECT id, user_id, created_at, last_used_at, expires_at,
-                device_label, revoked_at
+                device_label, revoked_at, revoked_reason,
+                successor_id, successor_enc
          FROM auth_refresh_tokens WHERE id = $1",
         id,
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| Session {
-        id: r.id,
-        user_id: r.user_id,
-        created_at: r.created_at,
-        last_used_at: r.last_used_at,
-        expires_at: r.expires_at,
-        device_label: r.device_label,
-        revoked_at: r.revoked_at,
-    }))
+    .map(|r| {
+        Ok(Session {
+            id: r.id,
+            user_id: r.user_id,
+            created_at: r.created_at,
+            last_used_at: r.last_used_at,
+            expires_at: r.expires_at,
+            device_label: r.device_label,
+            revoked_at: r.revoked_at,
+            revoked_reason: r
+                .revoked_reason
+                .as_deref()
+                .map(decode_revoked_reason)
+                .transpose()?,
+            successor_id: r.successor_id,
+            successor_enc: r.successor_enc,
+        })
+    })
+    .transpose()
 }
 
 /// Rotation (auth.md "Refresh token"): consumes the presented row and
 /// mints its successor in one transaction — every successful refresh
 /// invalidates the old token, bounding a stolen token to a single use.
+/// The consumed row links the successor and stores it sealed under the
+/// consumed token (`successor_enc`), so a grace-window replay can be
+/// answered idempotently. Returns false when a concurrent refresh
+/// consumed the row first — the caller re-reads and takes the replay
+/// path instead of erroring.
 pub async fn rotate_session(
     pool: &PgPool,
     old_id: Uuid,
     new_id: Uuid,
     new_token_hash: &[u8],
     new_expires_at: DateTime<Utc>,
-) -> Result<(), sqlx::Error> {
+    successor_enc: &[u8],
+) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    let row = sqlx::query!(
+    // Consume first; the successor link lands after the insert because
+    // the FK needs the successor row to exist.
+    let Some(row) = sqlx::query!(
         "UPDATE auth_refresh_tokens
-         SET revoked_at = NOW(), last_used_at = NOW()
+         SET revoked_at = NOW(), last_used_at = NOW(),
+             revoked_reason = 'rotated'
          WHERE id = $1 AND revoked_at IS NULL
          RETURNING user_id, device_label",
         old_id,
     )
-    .fetch_one(&mut *tx)
-    .await?;
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(false);
+    };
     sqlx::query!(
         "INSERT INTO auth_refresh_tokens
              (id, user_id, token_hash, expires_at, device_label)
@@ -888,15 +962,26 @@ pub async fn rotate_session(
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!(
+        "UPDATE auth_refresh_tokens
+         SET successor_id = $2, successor_enc = $3
+         WHERE id = $1",
+        old_id,
+        new_id,
+        successor_enc,
+    )
+    .execute(&mut *tx)
+    .await?;
     tx.commit().await?;
-    Ok(())
+    Ok(true)
 }
 
 /// Active sessions for the session list — unexpired and unrevoked.
 pub async fn sessions_for(pool: &PgPool, user_id: Uuid) -> Result<Vec<Session>, sqlx::Error> {
-    Ok(sqlx::query!(
+    sqlx::query!(
         "SELECT id, user_id, created_at, last_used_at, expires_at,
-                device_label, revoked_at
+                device_label, revoked_at, revoked_reason,
+                successor_id, successor_enc
          FROM auth_refresh_tokens
          WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > NOW()
          ORDER BY created_at DESC",
@@ -905,22 +990,34 @@ pub async fn sessions_for(pool: &PgPool, user_id: Uuid) -> Result<Vec<Session>, 
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| Session {
-        id: r.id,
-        user_id: r.user_id,
-        created_at: r.created_at,
-        last_used_at: r.last_used_at,
-        expires_at: r.expires_at,
-        device_label: r.device_label,
-        revoked_at: r.revoked_at,
+    .map(|r| {
+        Ok(Session {
+            id: r.id,
+            user_id: r.user_id,
+            created_at: r.created_at,
+            last_used_at: r.last_used_at,
+            expires_at: r.expires_at,
+            device_label: r.device_label,
+            revoked_at: r.revoked_at,
+            revoked_reason: r
+                .revoked_reason
+                .as_deref()
+                .map(decode_revoked_reason)
+                .transpose()?,
+            successor_id: r.successor_id,
+            successor_enc: r.successor_enc,
+        })
     })
-    .collect())
+    .collect()
 }
 
 /// Revokes one of the user's sessions; false when it is not theirs.
+/// Always owner-initiated — sign-out and the session list are the only
+/// callers.
 pub async fn revoke_session(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
-        "UPDATE auth_refresh_tokens SET revoked_at = NOW()
+        "UPDATE auth_refresh_tokens
+         SET revoked_at = NOW(), revoked_reason = 'owner'
          WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL",
         id,
         user_id,
@@ -933,16 +1030,21 @@ pub async fn revoke_session(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<bo
 
 /// Revokes every session except `keep` (password change, "revoke all
 /// others"). Pass None to revoke all (reset, reuse detection, deletion).
+/// The reason decides how a later replay of the revoked tokens is read
+/// (auth.md "Reuse detection").
 pub async fn revoke_sessions(
     pool: &PgPool,
     user_id: Uuid,
     keep: Option<Uuid>,
+    reason: RevokedReason,
 ) -> Result<u64, sqlx::Error> {
     Ok(sqlx::query!(
-        "UPDATE auth_refresh_tokens SET revoked_at = NOW()
+        "UPDATE auth_refresh_tokens
+         SET revoked_at = NOW(), revoked_reason = $3
          WHERE user_id = $1 AND revoked_at IS NULL AND ($2::uuid IS NULL OR id <> $2)",
         user_id,
         keep,
+        reason.as_str(),
     )
     .execute(pool)
     .await?
