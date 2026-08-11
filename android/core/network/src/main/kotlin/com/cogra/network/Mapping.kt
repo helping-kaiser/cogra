@@ -97,18 +97,17 @@ internal fun List<UserErrorFields>.toDomain(): List<UserError> = map {
     )
 }
 
+/** An unknown state is not actionable by this build; the signer refuses it. */
 internal fun StagedWriteState.toDomain(): WriteState =
-    runCatching { WriteState.valueOf(rawValue) }
-        .getOrElse { error("unknown staged-write state $rawValue") }
+    runCatching { WriteState.valueOf(rawValue) }.getOrDefault(WriteState.UNKNOWN)
 
 /** An unknown state gates acting, like every non-member state. */
 internal fun com.cogra.network.graphql.type.AccountState.toDomain(): AccountState =
     runCatching { AccountState.valueOf(rawValue) }.getOrDefault(AccountState.UNKNOWN)
 
-/** The census names match by construction; an unknown family is a contract break. */
+/** An unknown family is never signed; the signer refuses it. */
 internal fun RecordFamily.toDomain(): Family =
-    runCatching { Family.valueOf(rawValue) }
-        .getOrElse { error("unknown record family $rawValue") }
+    runCatching { Family.valueOf(rawValue) }.getOrDefault(Family.UNKNOWN)
 
 internal fun StagedWriteFields.toDomain(): StagedWriteView = StagedWriteView(
     id = id,
