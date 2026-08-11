@@ -467,14 +467,12 @@ async fn approve_one<B: L1Boundary>(
 ) -> Result<prepare::Prepared, OnboardingError> {
     // The approved_at guard is the concurrency gate: a concurrent
     // duplicate approval loses here, before any burn.
-    let mut conn = pool.acquire().await?;
-    let account_id = store::approve_application(&mut conn, application.id)
+    let account_id = store::approve_application(pool, application.id)
         .await?
         .ok_or(OnboardingError::BadInput {
             field: "application",
             message: "already approved".into(),
         })?;
-    drop(conn);
 
     let approved = store::application(pool, application.id)
         .await?
@@ -649,6 +647,7 @@ pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
 /// Verified accounts are never reaped.
 pub async fn reaper_loop(pool: PgPool, interval_secs: u64) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
         match store::reap_unverified_accounts(&pool, dead_before()).await {

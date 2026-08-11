@@ -141,6 +141,23 @@ pub struct Credentials {
 // Invite links
 // ---------------------------------------------------------------------
 
+/// Maps one auth_invite_links row (a sqlx anonymous record) onto the
+/// struct — the queries all select the same field set.
+macro_rules! invite_link_from_row {
+    ($r:expr) => {
+        InviteLink {
+            id: $r.id,
+            inviter_id: $r.inviter_id,
+            prefill_p_d: f64::from($r.prefill_dim1),
+            prefill_p_i: f64::from($r.prefill_dim2),
+            single_use: $r.single_use,
+            created_at: $r.created_at,
+            expires_at: $r.expires_at,
+            revoked_at: $r.revoked_at,
+        }
+    };
+}
+
 pub async fn create_invite_link(
     pool: &PgPool,
     id: Uuid,
@@ -153,7 +170,9 @@ pub async fn create_invite_link(
     sqlx::query!(
         "INSERT INTO auth_invite_links
              (id, inviter_id, prefill_dim1, prefill_dim2, single_use, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6)",
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, inviter_id, prefill_dim1, prefill_dim2, single_use,
+                   created_at, expires_at, revoked_at",
         id,
         inviter_id,
         prefill_p_d as f32,
@@ -161,9 +180,9 @@ pub async fn create_invite_link(
         single_use,
         expires_at,
     )
-    .execute(pool)
-    .await?;
-    invite_link(pool, id).await?.ok_or(sqlx::Error::RowNotFound)
+    .fetch_one(pool)
+    .await
+    .map(|r| invite_link_from_row!(r))
 }
 
 pub async fn invite_link(pool: &PgPool, id: Uuid) -> Result<Option<InviteLink>, sqlx::Error> {
@@ -175,16 +194,7 @@ pub async fn invite_link(pool: &PgPool, id: Uuid) -> Result<Option<InviteLink>, 
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| InviteLink {
-        id: r.id,
-        inviter_id: r.inviter_id,
-        prefill_p_d: f64::from(r.prefill_dim1),
-        prefill_p_i: f64::from(r.prefill_dim2),
-        single_use: r.single_use,
-        created_at: r.created_at,
-        expires_at: r.expires_at,
-        revoked_at: r.revoked_at,
-    }))
+    .map(|r| invite_link_from_row!(r)))
 }
 
 pub async fn invite_links_for(
@@ -201,16 +211,7 @@ pub async fn invite_links_for(
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| InviteLink {
-        id: r.id,
-        inviter_id: r.inviter_id,
-        prefill_p_d: f64::from(r.prefill_dim1),
-        prefill_p_i: f64::from(r.prefill_dim2),
-        single_use: r.single_use,
-        created_at: r.created_at,
-        expires_at: r.expires_at,
-        revoked_at: r.revoked_at,
-    })
+    .map(|r| invite_link_from_row!(r))
     .collect())
 }
 
@@ -613,10 +614,7 @@ pub async fn attach_actor_key(
 /// Refused (None) unless the application is live and approvable: email
 /// verified and key attached, both enforced here as well as validated by
 /// the caller (auth.md §Application).
-pub async fn approve_application(
-    conn: &mut PgConnection,
-    id: Uuid,
-) -> Result<Option<Uuid>, sqlx::Error> {
+pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
         "UPDATE auth_applications ap
          SET approved_at = NOW()
@@ -630,7 +628,7 @@ pub async fn approve_application(
          RETURNING ap.account_id",
         id,
     )
-    .fetch_optional(conn)
+    .fetch_optional(pool)
     .await
 }
 
@@ -853,6 +851,30 @@ pub async fn insert_session(
     Ok(())
 }
 
+/// Maps one auth_refresh_tokens row (a sqlx anonymous record) onto the
+/// struct — the queries all select the same field set. Fallible: the
+/// stored revoked_reason must decode.
+macro_rules! session_from_row {
+    ($r:expr) => {
+        Ok(Session {
+            id: $r.id,
+            user_id: $r.user_id,
+            created_at: $r.created_at,
+            last_used_at: $r.last_used_at,
+            expires_at: $r.expires_at,
+            device_label: $r.device_label,
+            revoked_at: $r.revoked_at,
+            revoked_reason: $r
+                .revoked_reason
+                .as_deref()
+                .map(decode_revoked_reason)
+                .transpose()?,
+            successor_id: $r.successor_id,
+            successor_enc: $r.successor_enc,
+        })
+    };
+}
+
 pub async fn session_by_token_hash(
     pool: &PgPool,
     token_hash: &[u8],
@@ -866,24 +888,7 @@ pub async fn session_by_token_hash(
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Session {
-            id: r.id,
-            user_id: r.user_id,
-            created_at: r.created_at,
-            last_used_at: r.last_used_at,
-            expires_at: r.expires_at,
-            device_label: r.device_label,
-            revoked_at: r.revoked_at,
-            revoked_reason: r
-                .revoked_reason
-                .as_deref()
-                .map(decode_revoked_reason)
-                .transpose()?,
-            successor_id: r.successor_id,
-            successor_enc: r.successor_enc,
-        })
-    })
+    .map(|r| session_from_row!(r))
     .transpose()
 }
 
@@ -897,24 +902,7 @@ pub async fn session(pool: &PgPool, id: Uuid) -> Result<Option<Session>, sqlx::E
     )
     .fetch_optional(pool)
     .await?
-    .map(|r| {
-        Ok(Session {
-            id: r.id,
-            user_id: r.user_id,
-            created_at: r.created_at,
-            last_used_at: r.last_used_at,
-            expires_at: r.expires_at,
-            device_label: r.device_label,
-            revoked_at: r.revoked_at,
-            revoked_reason: r
-                .revoked_reason
-                .as_deref()
-                .map(decode_revoked_reason)
-                .transpose()?,
-            successor_id: r.successor_id,
-            successor_enc: r.successor_enc,
-        })
-    })
+    .map(|r| session_from_row!(r))
     .transpose()
 }
 
@@ -990,24 +978,7 @@ pub async fn sessions_for(pool: &PgPool, user_id: Uuid) -> Result<Vec<Session>, 
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| {
-        Ok(Session {
-            id: r.id,
-            user_id: r.user_id,
-            created_at: r.created_at,
-            last_used_at: r.last_used_at,
-            expires_at: r.expires_at,
-            device_label: r.device_label,
-            revoked_at: r.revoked_at,
-            revoked_reason: r
-                .revoked_reason
-                .as_deref()
-                .map(decode_revoked_reason)
-                .transpose()?,
-            successor_id: r.successor_id,
-            successor_enc: r.successor_enc,
-        })
-    })
+    .map(|r| session_from_row!(r))
     .collect()
 }
 
