@@ -1717,6 +1717,19 @@ type Query {
     query: String!
     first: Int, after: String, last: Int, before: String
   ): ChatMessageConnection
+
+  "Connectivity report for the API process and its store."
+  health: Health!
+}
+
+type Health {
+  "Version of the backend serving this schema."
+  backendVersion: String!
+  "True when PostgreSQL answers a round-trip probe."
+  postgresConnected: Boolean!
+  "The last L1 epoch fully ingested into the record mirror; -1 until
+   the first epoch lands, null when the cursor could not be read."
+  mirrorEpoch: Int
 }
 ```
 
