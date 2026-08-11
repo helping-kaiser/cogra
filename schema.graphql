@@ -549,7 +549,8 @@ type Mutation {
 	"""
 	Upload (or replace) the client-encrypted key-backup blob —
 	ciphertext under the device-generated recovery code; the server
-	stores what it cannot decrypt. Retrieval is the `User.keyBackup`
+	stores what it cannot decrypt. One blob per account; blobs over
+	4 KiB refuse as BAD_INPUT. Retrieval is the `User.keyBackup`
 	field: login + code is the recovery.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
