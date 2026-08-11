@@ -37,10 +37,10 @@ pub enum RelayError {
     Boundary(BoundaryError),
 }
 
-fn wrong_state(id: Uuid, expected: &'static str, actual: StagedState) -> RelayError {
+fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
     RelayError::Staged(staged::StagedError::WrongState {
         id,
-        expected,
+        expected: expected.to_string(),
         actual: actual.as_str().to_string(),
     })
 }
