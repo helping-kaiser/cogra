@@ -304,10 +304,11 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
             .await
             .expect("marks")
     );
-    assert!(
-        !store::apply_email_change_if_complete(&pool, user)
+    assert_eq!(
+        store::apply_email_change_if_complete(&pool, user)
             .await
-            .expect("applies nothing")
+            .expect("applies nothing"),
+        store::EmailChangeApply::NotReady
     );
     let unchanged = store::credentials_by_actor(&pool, user)
         .await
@@ -317,21 +318,20 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
 
     // New side lands: the change applies. A wrong token matches nothing.
     assert!(
-        store::confirm_email_change_new_side(&pool, &auth::new_secret().hash)
+        !store::confirm_email_change_new_side(&pool, user, &auth::new_secret().hash)
             .await
             .expect("query")
-            .is_none()
     );
     assert!(
-        store::confirm_email_change_new_side(&pool, &new_side.hash)
+        store::confirm_email_change_new_side(&pool, user, &new_side.hash)
             .await
             .expect("marks")
-            .is_some()
     );
-    assert!(
+    assert_eq!(
         store::apply_email_change_if_complete(&pool, user)
             .await
-            .expect("applies")
+            .expect("applies"),
+        store::EmailChangeApply::Applied
     );
     let changed = store::credentials_by_actor(&pool, user)
         .await
@@ -339,10 +339,98 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
         .expect("row");
     assert_eq!(changed.email, "new@example.com");
     // Idempotent: re-applying changes nothing further.
-    assert!(
-        !store::apply_email_change_if_complete(&pool, user)
+    assert_eq!(
+        store::apply_email_change_if_complete(&pool, user)
             .await
-            .expect("no-op")
+            .expect("no-op"),
+        store::EmailChangeApply::NotReady
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_new_side_token_is_scoped_to_its_account(pool: PgPool) {
+    let owner = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
+    let intruder = seed_user(&pool, "mallory", "m@example.com", "a strong password").await;
+    let new_side = auth::new_secret();
+    store::create_email_change(
+        &pool,
+        Uuid::new_v4(),
+        owner,
+        "moved@example.com",
+        &auth::new_secret().hash,
+        &new_side.hash,
+        Utc::now() + Duration::hours(1),
+    )
+    .await
+    .expect("creates");
+
+    // Another authenticated account presenting the owner's token matches
+    // nothing — and does not consume the owner's proof.
+    assert!(
+        !store::confirm_email_change_new_side(&pool, intruder, &new_side.hash)
+            .await
+            .expect("query")
+    );
+    assert!(
+        store::confirm_email_change_new_side(&pool, owner, &new_side.hash)
+            .await
+            .expect("marks")
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_proven_email_change_colliding_with_a_registered_address_reports_in_use(pool: PgPool) {
+    let user = seed_user(&pool, "alice", "old@example.com", "a strong password").await;
+    let original = auth::new_secret();
+    let new_side = auth::new_secret();
+    store::create_email_change(
+        &pool,
+        Uuid::new_v4(),
+        user,
+        "wanted@example.com",
+        &original.hash,
+        &new_side.hash,
+        Utc::now() + Duration::hours(1),
+    )
+    .await
+    .expect("creates");
+    assert!(
+        store::confirm_email_change_original_side(&pool, user, &original.hash)
+            .await
+            .expect("marks")
+    );
+    assert!(
+        store::confirm_email_change_new_side(&pool, user, &new_side.hash)
+            .await
+            .expect("marks")
+    );
+
+    // The address got registered before the change completed.
+    let squatter = seed_user(&pool, "bob", "wanted@example.com", "a strong password").await;
+    assert_eq!(
+        store::apply_email_change_if_complete(&pool, user)
+            .await
+            .expect("collides cleanly"),
+        store::EmailChangeApply::EmailInUse
+    );
+    let unchanged = store::credentials_by_actor(&pool, user)
+        .await
+        .expect("query")
+        .expect("row");
+    assert_eq!(unchanged.email, "old@example.com");
+
+    // The change row stays live: once the address frees up, a retry
+    // within the TTL applies it.
+    sqlx::query("UPDATE user_credentials SET email = 'elsewhere@example.com' WHERE actor_id = $1")
+        .bind(squatter)
+        .execute(&pool)
+        .await
+        .expect("frees");
+    assert_eq!(
+        store::apply_email_change_if_complete(&pool, user)
+            .await
+            .expect("applies"),
+        store::EmailChangeApply::Applied
     );
 }
 
