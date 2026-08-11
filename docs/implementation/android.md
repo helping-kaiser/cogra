@@ -72,6 +72,26 @@ state. Auto-polling is onboarding-only — the loop stops for good
 at membership; from then on every fetch is event-driven, a user
 action with an outcome to collect or an explicit refresh.
 
+## Degrade, never crash
+
+Two failure classes the app absorbs instead of dying:
+
+- **Unknown server vocabulary.** The server's enums can grow before
+  the app updates. Every generated enum maps into the domain with an
+  explicit `UNKNOWN` fallback, never an exception. An unknown account
+  state gates acting; an unknown staged-write state or record family
+  is refused by the signer *without* clearing its handshake material,
+  so an updated build can resume the write. A family the client
+  cannot name is never signed and never enters the identifier
+  algebra.
+- **Secure-store loss.** The encrypted DataStore (tokens, identity
+  material) never crash-loops the app: a corrupt file is replaced via
+  the DataStore corruption handler, and a value that fails to decrypt
+  or decode reads as absent — signed out, or the husk state — with
+  the ciphertext left in place in case the failure is transient.
+  Either loss sets a persistent mark that the app shell surfaces as a
+  one-time dialog: data loss is visible, never silent.
+
 ## Accessibility
 
 Part of the bar from day one, never retrofitted: every screen
