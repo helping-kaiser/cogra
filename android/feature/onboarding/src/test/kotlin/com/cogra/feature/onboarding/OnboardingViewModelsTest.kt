@@ -217,6 +217,7 @@ class OnboardingViewModelsTest {
             ceremony,
         ),
         scope,
+        FakeTokenStore(),
     )
 
     @Test

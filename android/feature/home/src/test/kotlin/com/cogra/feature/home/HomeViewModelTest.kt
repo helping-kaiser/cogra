@@ -15,6 +15,7 @@ import com.cogra.domain.signing.RegistrationProgress
 import com.cogra.domain.signing.RegistrationSigner
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -33,6 +34,9 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+
+private const val FAST_DELAY_MS = 1_000L
+private const val SLOW_DELAY_MS = 10_000L
 
 private fun member(
     invitedBy: ActorRef? = ActorRef("inv1", "inviter"),
@@ -116,6 +120,9 @@ class HomeViewModelTest {
             KeyCeremony(identity, onboarding, account),
         ),
         loopScope,
+        FakeTokenStore(),
+        fastDelayMs = FAST_DELAY_MS,
+        slowDelayMs = SLOW_DELAY_MS,
     )
 
     private fun viewModel(registration: RegistrationFlow = registrationFlow()) =
@@ -397,7 +404,7 @@ class HomeViewModelTest {
 
         // The inviter approved; landing is now the server's move.
         onboarding.status = applicantStatus(applicationView(approved = true))
-        dispatcher.scheduler.advanceTimeBy(registration.slowDelayMs)
+        dispatcher.scheduler.advanceTimeBy(SLOW_DELAY_MS)
         dispatcher.scheduler.runCurrent()
         assertThat(vm.state.value.progress).isEqualTo(RegistrationProgress.AwaitingLanding)
         assertThat(vm.state.value.approved).isTrue()
@@ -429,7 +436,7 @@ class HomeViewModelTest {
         // session never changes, and the shell greets once.
         account.profile = member(invitedBy = null)
         onboarding.status = ApplicationStatus(AccountState.MEMBER, null, null, null)
-        dispatcher.scheduler.advanceTimeBy(registration.fastDelayMs)
+        dispatcher.scheduler.advanceTimeBy(FAST_DELAY_MS)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.applicant).isFalse()
         assertThat(vm.state.value.welcome).isTrue()
