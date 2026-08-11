@@ -58,6 +58,10 @@ export function createTokenStore(): TokenStore {
     window.addEventListener("storage", (event) => {
       if (event.key !== REFRESH_KEY && event.key !== ACCOUNT_KEY && event.key !== null) return;
       if (stored(REFRESH_KEY) === null) accessToken = null;
+      // An account switch in another tab: this tab's access token still
+      // authenticates the OLD account while everything else resolves to
+      // the new one — drop it; the guard refreshes as the new account.
+      if (event.key === ACCOUNT_KEY && event.oldValue !== event.newValue) accessToken = null;
       notify();
     });
   }
