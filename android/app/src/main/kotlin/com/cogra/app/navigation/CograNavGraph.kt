@@ -8,9 +8,18 @@
 
 package com.cogra.app.navigation
 
+import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.core.util.Consumer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -96,25 +105,52 @@ class AuthStateViewModel @Inject constructor(
 
 @Composable
 fun CograNavGraph(
-    deepLinkedInviteId: String?,
     navController: NavHostController = rememberNavController(),
 ) {
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
 
-    // Auth drives navigation: every phase flip lands on that phase's
-    // root with a cleared stack (android/CLAUDE.md "Navigation"). An
-    // applicant lands on Home too — the read shell with the application
-    // riding along as cards, never a wall (auth.md "Application").
+    // Auth drives navigation: a genuine phase flip lands on the new
+    // phase's root with a cleared stack (android/CLAUDE.md
+    // "Navigation"). An applicant lands on Home too — the read shell
+    // with the application riding along as cards, never a wall
+    // (auth.md "Application"). Two arrivals must NOT navigate: the
+    // same phase re-resolving after recreation (the restored stack is
+    // already right), and the cold LOADING → SIGNED_OUT resolution —
+    // the start destination already IS the signed-out root, carrying
+    // any invite deep link the NavController applied from the launch
+    // intent, which clearing here would drop.
+    var navigatedPhase by rememberSaveable { mutableStateOf(AuthPhase.LOADING) }
     LaunchedEffect(phase) {
-        val root: Any = when (phase) {
-            AuthPhase.LOADING -> return@LaunchedEffect
-            AuthPhase.SIGNED_IN -> Home
-            AuthPhase.SIGNED_OUT -> InviteEntry(deepLinkedInviteId)
+        if (phase == AuthPhase.LOADING) return@LaunchedEffect
+        val from = navigatedPhase
+        navigatedPhase = phase
+        val root: Any = when {
+            from == phase -> return@LaunchedEffect
+            phase == AuthPhase.SIGNED_IN -> Home
+            from == AuthPhase.LOADING -> return@LaunchedEffect
+            else -> InviteEntry()
         }
         navController.navigate(root) {
             popUpTo(0) { inclusive = true }
         }
+    }
+
+    // Warm-start App Links: launchMode="singleTask" delivers them via
+    // onNewIntent, which Navigation does not observe by itself — the
+    // deep-link docs require forwarding to handleDeepLink. Gated on
+    // signed-out: a signed-in session ignores join links, cold and
+    // warm alike.
+    val phaseNow by rememberUpdatedState(phase)
+    val activity = LocalActivity.current as? ComponentActivity
+    DisposableEffect(activity, navController) {
+        val listener = Consumer<Intent> { newIntent ->
+            if (phaseNow == AuthPhase.SIGNED_OUT) {
+                navController.handleDeepLink(newIntent)
+            }
+        }
+        activity?.addOnNewIntentListener(listener)
+        onDispose { activity?.removeOnNewIntentListener(listener) }
     }
 
     // Above the NavHost so the login security notice shows wherever
@@ -123,11 +159,17 @@ fun CograNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = InviteEntry(deepLinkedInviteId),
+        startDestination = InviteEntry(),
     ) {
         composable<InviteEntry>(
             deepLinks = listOf(
-                navDeepLink<InviteEntry>(basePath = "${BuildConfig.WEB_ORIGIN}/join"),
+                // The canonical /join/<id> URL (auth.md "Link URLs")
+                // carries the id as a path segment, which the
+                // route-derived pattern cannot express (defaulted args
+                // encode as query parameters) — so the patterns are
+                // explicit, plus the bare /join landing.
+                navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join/{inviteId}" },
+                navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join" },
             ),
         ) { entry ->
             val route = entry.toRoute<InviteEntry>()
