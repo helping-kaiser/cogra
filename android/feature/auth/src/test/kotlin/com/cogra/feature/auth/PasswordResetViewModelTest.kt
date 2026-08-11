@@ -55,13 +55,28 @@ class PasswordResetViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.requested).isTrue()
 
-        // The silent verb: even a refusal reads as "check your mail".
+        // The silent verb: a refusal still reads as "check your mail"
+        // (no account enumeration).
         account.requestOutcome =
-            Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+            Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "malformed")))
         vm.onRequest()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.requested).isTrue()
         assertThat(vm.state.value.error).isNull()
+    }
+
+    @Test
+    fun aRateLimitedRequestShowsItsRefusalNotTheCheckMailNote() = runTest(dispatcher) {
+        // The one exception to the silent posture: a rate limit sent
+        // nothing and reveals nothing about the account.
+        account.requestOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        val vm = viewModel()
+        vm.onEmailChange("user@example.com")
+        vm.onRequest()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.requested).isFalse()
+        assertThat(vm.state.value.error).isEqualTo(ErrorCode.RATE_LIMITED)
     }
 
     @Test

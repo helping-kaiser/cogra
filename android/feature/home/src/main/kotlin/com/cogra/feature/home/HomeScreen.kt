@@ -516,6 +516,7 @@ private fun RearmCard(
 private fun ErrorCode.rearmMessage(): Int = when (this) {
     ErrorCode.INVITE_UNUSABLE -> R.string.home_rearm_unusable
     ErrorCode.BAD_INPUT -> R.string.home_rearm_live
+    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
     else -> R.string.error_generic
 }
 
@@ -542,8 +543,8 @@ private fun VerifyCard(
                     .fillMaxWidth()
                     .testTag("verify_token"),
             )
-            if (state.verifyFailed) {
-                ApplicantError("verify_error", R.string.home_verify_failed)
+            state.verifyError?.let {
+                ApplicantError("verify_error", it.verifyMessage())
             }
             Button(
                 onClick = onVerify,
@@ -577,8 +578,21 @@ private fun VerifyCard(
                     modifier = Modifier.testTag("verify_resent"),
                 )
             }
+            state.resendError?.let {
+                ApplicantError("resend_error", it.resendMessage())
+            }
         }
     }
+}
+
+private fun ErrorCode.verifyMessage(): Int = when (this) {
+    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
+    else -> R.string.home_verify_failed
+}
+
+private fun ErrorCode.resendMessage(): Int = when (this) {
+    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
+    else -> R.string.error_generic
 }
 
 @Composable
