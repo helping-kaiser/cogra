@@ -294,10 +294,12 @@ backend then runs the admission sequence:
 
 1. **Funding** — the community-funded L0 burn to the applicant's
    address ([economics.md](../primitive/economics.md)). Funding and
-   the staging below run inside the approval, guarded by the
-   approval mark so a retried or concurrent approval never
-   double-funds; a crash between the steps heals on the
-   applicant's next status poll.
+   the staging below run inside the approval; a crash between the
+   steps heals on the applicant's next status poll. The sequence
+   is serialized per application — the approving request and the
+   poll's repair queue rather than race — and the burn is guarded
+   by the fresh address's zero burn history, so no path
+   double-funds.
 2. **Registration** — the backend prepares the staged
    Registration; the applicant's device **runs the full signing
    handshake on next app open** — pre-commitment, then approval

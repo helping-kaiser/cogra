@@ -534,6 +534,9 @@ fn registration_payload(handle: &str) -> Vec<u8> {
 /// and the staged Registration, staged under the applicant's own actor
 /// row. Also the repair path — a crash between approval and staging
 /// heals on the applicant's next status poll (`User.application`).
+/// Reachable concurrently from the approving mutation and that poll;
+/// serialized on the application row so the sequence runs at most once
+/// at a time.
 pub async fn ensure_admission_staged<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -547,11 +550,24 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             message: "not approved".into(),
         });
     }
+
+    // The transaction exists only to hold the row lock; the writes below
+    // commit on their own connections. A loser queues here and then finds
+    // the winner's work: the staged row via `live_for_actor`, the burn
+    // via the B_i read.
+    let mut lock = pool.begin().await?;
+    if !store::lock_application(&mut lock, application.id).await? {
+        return Err(OnboardingError::Internal(
+            "application vanished at staging".into(),
+        ));
+    }
+
     if let Some(existing) =
         staged::live_for_actor(pool, application.account_id, Family::Registration)
             .await
             .map_err(|e| OnboardingError::Internal(e.to_string()))?
     {
+        lock.commit().await?;
         return Ok(prepare::Prepared {
             id: existing.id,
             proposal: existing.proposal,
@@ -562,7 +578,11 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
     let address = actor_address(pool, application.account_id).await?;
     // The applicant's address is fresh — minted at the key ceremony and
     // funded only by this flow — so a zero burn history is the funding
-    // idempotency guard (no double-fund on repair).
+    // idempotency guard (no double-fund on repair): the burn atomically
+    // writes the very fact guarding it, so a crash on either side of it
+    // heals correctly on the next poll. Exact comparison is sound — the
+    // guard only ever compares against zero, which f64 represents
+    // exactly.
     let balance = boundary
         .balance(&address)
         .await
@@ -574,7 +594,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             .map_err(|e| OnboardingError::Internal(e.to_string()))?;
     }
 
-    Ok(prepare::prepare(
+    let prepared = prepare::prepare(
         boundary,
         pool,
         cfg.gc_after_epochs,
@@ -593,7 +613,9 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             payload: registration_payload(&application.handle),
         },
     )
-    .await?)
+    .await?;
+    lock.commit().await?;
+    Ok(prepared)
 }
 
 // ---------------------------------------------------------------------
