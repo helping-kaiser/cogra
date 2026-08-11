@@ -95,6 +95,12 @@ Full make-target list, environment variables, and the dev
 workflow live in
 [docs/implementation/development.md](docs/implementation/development.md).
 
+## License
+
+Dual-licensed by content kind: all code is
+[AGPL-3.0-only](LICENSE-CODE); the design docs (`docs/` and the
+other markdown) are [CC-BY-4.0](LICENSE-DOCS).
+
 ## Where to go next
 
 - **Design docs** — [docs/README.md](docs/README.md) (start here for the
