@@ -56,7 +56,7 @@ chrono = { version = "0.4", features = ["serde"] }
 # Ed25519 signatures, SHA-256 salted hash commitments.
 ed25519-dalek = { version = "2", features = ["rand_core", "pkcs8", "pem"] }
 sha2 = { version = "0.10" }
-rand = { version = "0.8" }
+rand = { version = "0.10" }
 hex = { version = "0.4" }
 
 # Service-side auth (auth.md): Argon2id password hashing, Ed25519-signed
