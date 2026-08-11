@@ -614,7 +614,7 @@ async fn handle_changes_respect_the_one_namespace(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
-async fn key_backups_append_and_the_newest_wins(pool: PgPool) {
+async fn key_backup_replacement_overwrites_the_one_row(pool: PgPool) {
     let user = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
     assert!(
         store::latest_key_backup(&pool, user)
@@ -627,7 +627,7 @@ async fn key_backups_append_and_the_newest_wins(pool: PgPool) {
         .expect("uploads");
     store::upload_key_backup(&pool, user, b"ciphertext two")
         .await
-        .expect("replaces by appending");
+        .expect("replaces");
     assert_eq!(
         store::latest_key_backup(&pool, user)
             .await
@@ -635,4 +635,9 @@ async fn key_backups_append_and_the_newest_wins(pool: PgPool) {
             .expect("blob"),
         b"ciphertext two"
     );
+    let rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM auth_key_backups")
+        .fetch_one(&pool)
+        .await
+        .expect("count");
+    assert_eq!(rows, 1);
 }
