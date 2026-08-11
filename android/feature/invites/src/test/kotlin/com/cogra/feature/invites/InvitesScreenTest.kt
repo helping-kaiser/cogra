@@ -54,6 +54,7 @@ class InvitesScreenTest {
                 onRevoke = {},
                 onApprove = onApprove,
                 onVouchSignedShown = {},
+                onSigningFailedShown = {},
                 onShare = {},
             )
         }
@@ -85,6 +86,12 @@ class InvitesScreenTest {
     @Test
     fun theVouchConfirmationRidesTheSnackbar() {
         render(InvitesUiState(loading = false, vouchSigned = true))
+        compose.onNodeWithTag("invites_snackbar").assertExists()
+    }
+
+    @Test
+    fun anUnfinishedVouchSigningRidesTheSnackbar() {
+        render(InvitesUiState(loading = false, signingFailed = true))
         compose.onNodeWithTag("invites_snackbar").assertExists()
     }
 }

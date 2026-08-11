@@ -34,6 +34,10 @@ data class InvitesUiState(
     /** One-shot, consumed after its snackbar: the vouch landed in the
      *  relay after on-device signing. */
     val vouchSigned: Boolean = false,
+    /** One-shot, consumed after its snackbar: the approval landed but
+     *  the vouch's signing did not finish — silence would hide a
+     *  priced act's incomplete half. */
+    val signingFailed: Boolean = false,
     /**
      * False in the husk state — the actor key is not on this device, so
      * approving (which must sign the vouch here) is gated until restore
@@ -66,6 +70,8 @@ class InvitesViewModel @Inject constructor(
     fun shareUrl(link: InviteLinkInfo): String = "$webOrigin/join/${link.id}"
 
     fun onVouchSignedShown() = _state.update { it.copy(vouchSigned = false) }
+
+    fun onSigningFailedShown() = _state.update { it.copy(signingFailed = false) }
 
     fun onSingleUseChange(v: Boolean) = _state.update { it.copy(singleUse = v) }
 
@@ -139,7 +145,9 @@ class InvitesViewModel @Inject constructor(
      */
     fun onApprove(applicationId: String, pDirected: Double, pInterest: Double) {
         if (_state.value.approvingId != null) return
-        _state.update { it.copy(approvingId = applicationId, error = null, vouchSigned = false) }
+        _state.update {
+            it.copy(approvingId = applicationId, error = null, vouchSigned = false, signingFailed = false)
+        }
         viewModelScope.launch {
             // The vouch is this device's signature, so the gate sits
             // BEFORE the priced approval: without the key the approval
@@ -170,8 +178,11 @@ class InvitesViewModel @Inject constructor(
                 _state.update { it.copy(approvingId = null, seedOnDevice = false) }
                 return@launch
             }
+            // A priced act must never end in silence: the approval
+            // landed either way, so an unfinished vouch is said out
+            // loud — parked material resumes from Home.
             val signed = results.all { it is WriteResult.Done }
-            _state.update { it.copy(approvingId = null, vouchSigned = signed) }
+            _state.update { it.copy(approvingId = null, vouchSigned = signed, signingFailed = !signed) }
             refresh()
         }
     }

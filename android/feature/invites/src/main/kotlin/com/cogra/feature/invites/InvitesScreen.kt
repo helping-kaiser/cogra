@@ -69,6 +69,7 @@ fun InvitesRoute(
         onRevoke = viewModel::onRevoke,
         onApprove = viewModel::onApprove,
         onVouchSignedShown = viewModel::onVouchSignedShown,
+        onSigningFailedShown = viewModel::onSigningFailedShown,
         onShare = { link ->
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -91,11 +92,13 @@ fun InvitesScreen(
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
     onVouchSignedShown: () -> Unit,
+    onSigningFailedShown: () -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val vouchSignedMessage = stringResource(R.string.invites_vouch_signed)
+    val signingFailedMessage = stringResource(R.string.invites_signing_failed)
     val huskHint = stringResource(R.string.invites_husk_hint)
     // Consumed only after the snackbar is done: clearing first would
     // flip the LaunchedEffect key and cancel the showing coroutine.
@@ -103,6 +106,12 @@ fun InvitesScreen(
         if (state.vouchSigned) {
             snackbarHostState.showSnackbar(vouchSignedMessage)
             onVouchSignedShown()
+        }
+    }
+    LaunchedEffect(state.signingFailed) {
+        if (state.signingFailed) {
+            snackbarHostState.showSnackbar(signingFailedMessage)
+            onSigningFailedShown()
         }
     }
     // The husk gate explains itself on tap — a disabled button would

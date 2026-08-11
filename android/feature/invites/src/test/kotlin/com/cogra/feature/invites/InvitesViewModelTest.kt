@@ -5,11 +5,14 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
+import com.cogra.domain.testing.ThrowingWriteRepository
 import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -85,9 +88,9 @@ class InvitesViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = InvitesViewModel(
+    private fun viewModel(signerWrites: WriteRepository = writes) = InvitesViewModel(
         account,
-        WriteSigner(writes, identity),
+        WriteSigner(signerWrites, identity),
         identity,
         "https://cogra.example",
     )
@@ -154,6 +157,29 @@ class InvitesViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.error).isEqualTo(ErrorCode.BAD_INPUT)
         assertThat(vm.state.value.vouchSigned).isFalse()
+    }
+
+    @Test
+    fun anUnfinishedVouchSigningSurfacesInsteadOfSilence() = runTest(dispatcher) {
+        // The approval landed but the vouch's handshake died on
+        // transport: a priced act must not end in silence.
+        val offline = object : ThrowingWriteRepository() {
+            override suspend fun submitProposal(
+                stagedWriteId: String,
+                signatureBase64: String,
+            ): Outcome<StagedWriteView> = Outcome.Failed(Exception("offline"))
+        }
+        val vm = viewModel(signerWrites = offline)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onApprove("application-1", 0.4, 0.2)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.approveCalls).isEqualTo(1)
+        assertThat(vm.state.value.vouchSigned).isFalse()
+        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(vm.state.value.approvingId).isNull()
+
+        vm.onSigningFailedShown()
+        assertThat(vm.state.value.signingFailed).isFalse()
     }
 
     @Test
