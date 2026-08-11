@@ -144,6 +144,24 @@ describe("LoginForm", () => {
     expect(screen.queryByTestId("login_error")).not.toBeInTheDocument();
   });
 
+  it("renders an errors-array rate limit as a backoff, not a connectivity failure", async () => {
+    // The backend rate-limits logIn on the transport tier; the outcome
+    // layer synthesizes it into a refusal so this copy is reachable.
+    server.use(
+      graphql.mutation("LogIn", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<LoginForm />);
+    fillAndSubmit();
+    expect(await screen.findByTestId("login_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+    expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
+  });
+
   it("redirects an already-signed-in visit home", async () => {
     const store = createTokenStore();
     store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });

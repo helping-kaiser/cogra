@@ -190,6 +190,29 @@ describe("JoinView", () => {
     expect(await screen.findByTestId("apply_error")).toHaveTextContent("taken");
   });
 
+  it("renders a rate-limited registration as a backoff, not a connectivity failure", async () => {
+    server.use(
+      usableCheck,
+      graphql.mutation("Register", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<JoinView linkId={ID} />);
+    await screen.findByTestId("apply_handle");
+    fireEvent.change(screen.getByTestId("apply_handle"), { target: { value: "ada" } });
+    fireEvent.change(screen.getByTestId("apply_email"), { target: { value: "ada@example.org" } });
+    fireEvent.change(screen.getByTestId("apply_password"), {
+      target: { value: "correct horse battery" },
+    });
+    fireEvent.click(screen.getByTestId("apply_continue"));
+    expect(await screen.findByTestId("apply_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+    expect(screen.queryByTestId("apply_transport_error")).not.toBeInTheDocument();
+  });
+
   it("offers re-arm instead of the form to a signed-in applicant", async () => {
     server.use(usableCheck, meHandler("APPLICANT"));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });

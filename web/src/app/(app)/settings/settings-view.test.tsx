@@ -303,6 +303,37 @@ describe("SettingsView credentials", () => {
     );
   });
 
+  it("renders a rate-limited email confirm as a backoff, not a connectivity failure", async () => {
+    server.use(
+      graphql.mutation("RequestEmailChange", () =>
+        HttpResponse.json({
+          data: { requestEmailChange: { __typename: "RequestEmailChangePayload", ok: true } },
+        }),
+      ),
+      graphql.mutation("ConfirmEmailChange", () =>
+        HttpResponse.json({
+          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderSettings();
+
+    fireEvent.change(await screen.findByTestId("settings_new_email"), {
+      target: { value: "new@example.com" },
+    });
+    fireEvent.change(screen.getByTestId("settings_email_password"), {
+      target: { value: "password-123" },
+    });
+    fireEvent.click(screen.getByTestId("settings_request_email"));
+    fireEvent.change(await screen.findByTestId("settings_email_code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByTestId("settings_confirm_email"));
+    expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
+  });
+
   it("the email change needs its own password field", async () => {
     renderSettings();
     fireEvent.change(await screen.findByTestId("settings_new_email"), {

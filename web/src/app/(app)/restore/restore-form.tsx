@@ -22,6 +22,8 @@ function restoreMessage(result: RestoreResult): string | null {
       return "That code doesn't open your backup. Check it and try again.";
     case "noBackup":
       return "This account has no key backup to restore from.";
+    case "rateLimited":
+      return "Too many attempts — wait a moment and try again.";
     case "failed":
       return "Can't reach the server. Check your connection and try again.";
     case "restored":
