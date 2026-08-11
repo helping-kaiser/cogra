@@ -546,25 +546,49 @@ pattern; rationale for this project below.
 - **Row shape.** `id`, `user_id`, `token_hash`, `created_at`,
   `last_used_at`, `expires_at`, `device_label` (short
   user-readable string for the session list, e.g. derived from
-  User-Agent), `revoked_at` (nullable).
+  User-Agent), `revoked_at` (nullable), `revoked_reason`
+  (`rotated | owner | security`, set with `revoked_at`), and — on
+  rotated rows — the successor link: `successor_id` plus
+  `successor_enc`, the successor's token sealed under the
+  consumed token ("Rotation" below).
 - **Lifetime.** 30 days (default), sliding — each successful use
   extends `expires_at` by 30 days from the use time. Inactive
   sessions age out.
 - **Rotation.** Every successful refresh consumes the current
-  token (sets `revoked_at`) and issues a new one. The client
-  must replace its stored refresh token on every refresh. This
-  bounds the exposure of a stolen refresh token to a single
-  use.
-- **Reuse detection.** If a refresh token marked `revoked_at` is
-  presented — i.e. someone tried to use a token that was already
-  rotated — the server revokes **all** of that user's refresh
+  token (sets `revoked_at`, reason `rotated`) and issues a new
+  one. The client must replace its stored refresh token on every
+  refresh. This bounds the exposure of a stolen refresh token to
+  a single use. The consumed row links its successor and stores
+  the successor's token encrypted under the consumed token
+  itself — only a caller presenting that raw token can open it,
+  so a database read still yields nothing usable.
+- **Rotation grace.** For 10 seconds after a rotation, replaying
+  the consumed token returns the same successor while the
+  successor is still active — the idempotent answer to the
+  benign refresh races (a client retrying a refresh whose
+  response was lost, or double-firing it), which would otherwise
+  read as theft. One chain per session is preserved: the replayer
+  joins the winner's successor rather than forking a token line
+  of its own, so a thief who slips into the window still collides
+  with the owner's chain and trips detection at the next reuse.
+  Past the window, or once the successor is consumed, a replay is
+  reuse (below).
+- **Reuse detection.** Replaying a revoked token dispatches on
+  its `revoked_reason`. Only a `rotated` token outside the grace
+  window signals likely theft — the legitimate client replaced
+  that token, so whoever presents it now is holding a dead
+  original: the server revokes **all** of that user's refresh
   tokens and stamps the account
   (`user_credentials.reuse_detected_at`; a later detection
-  overwrites an undelivered stamp). The refusal itself stays
-  indistinguishable from a plain invalid token — one collapsed
-  `REFRESH_TOKEN_INVALID` code — because the presenter may be the
-  thief, and is never told detection fired. Standard
-  refresh-rotation hygiene; signals likely token theft.
+  overwrites an undelivered stamp). An `owner`- or
+  `security`-revoked token replays benignly — after "sign out
+  everywhere else" or a password change, every signed-out device
+  still holds its dead token and presents it on next launch; that
+  is the owner's own action echoing back, not theft, so it earns
+  a plain refusal with no revocation and no stamp. Every refusal
+  stays indistinguishable from a plain invalid token — one
+  collapsed `REFRESH_TOKEN_INVALID` code — because the presenter
+  may be the thief, and is never told detection fired.
 - **The security notice.** The first successful login after a
   detection carries the stamp as `LogInPayload.reuseDetectedAt`,
   read-and-cleared atomically behind the verified password —
@@ -609,6 +633,12 @@ Server-initiated revocations:
 - Password reset → revoke all.
 - Account-deletion completion → revoke all.
 - Refresh-token reuse detected → revoke all.
+
+Every revocation records its reason: `owner` for the user's own
+acts (sign-out, the session list, "revoke all others",
+deletion), `security` for the server-initiated set above,
+`rotated` for rotation. The reason decides how a later replay of
+the dead token is read ("Reuse detection").
 
 A revoked session says nothing about the actor: the signing key
 lives on the device, and no session state can author, block, or
