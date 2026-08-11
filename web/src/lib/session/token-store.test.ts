@@ -81,17 +81,34 @@ describe("token store", () => {
     expect(listener).toHaveBeenCalled();
   });
 
-  it("notifies when another tab switches the active account", () => {
+  it("drops the access token when another tab switches the active account", () => {
     const store = createTokenStore();
     store.save(auth);
     const listener = vi.fn();
     store.subscribe(listener);
     window.localStorage.setItem(ACCOUNT_KEY, "acct-2");
-    window.dispatchEvent(new StorageEvent("storage", { key: ACCOUNT_KEY, newValue: "acct-2" }));
+    window.localStorage.setItem(REFRESH_KEY, "refresh-2");
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: ACCOUNT_KEY, oldValue: "acct-1", newValue: "acct-2" }),
+    );
     expect(listener).toHaveBeenCalled();
     expect(store.activeAccountId()).toBe("acct-2");
-    // The session itself is intact — only the account observation moved.
+    // Account A's token must never authenticate calls made as account B;
+    // the guard refreshes with account B's refresh token instead.
+    expect(store.accessToken()).toBeNull();
+    expect(store.hasSession()).toBe(true);
+  });
+
+  it("keeps the access token when another tab only rotates the refresh token", () => {
+    const store = createTokenStore();
+    store.save(auth);
+    window.localStorage.setItem(REFRESH_KEY, "refresh-2");
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: REFRESH_KEY, oldValue: "refresh-1", newValue: "refresh-2" }),
+    );
+    // Same account, rotated session — the access token is still valid.
     expect(store.accessToken()).toBe("access-1");
+    expect(store.refreshToken()).toBe("refresh-2");
   });
 
   it("ignores storage events for unrelated keys", () => {
