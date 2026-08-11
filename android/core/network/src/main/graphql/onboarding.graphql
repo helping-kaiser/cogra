@@ -65,6 +65,7 @@ query ApplicationStatus {
   me {
     id
     accountState
+    actorPubkey
     application {
       ...ApplicationFields
     }

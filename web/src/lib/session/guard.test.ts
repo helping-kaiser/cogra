@@ -33,6 +33,17 @@ describe("auth guard", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  it("never treats a RATE_LIMITED refusal like UNAUTHENTICATED — no refresh, no replay", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+    const refusal = refused([{ code: "RATE_LIMITED", message: "backoff", field: null }]);
+    const block = vi.fn<() => Promise<Outcome<string>>>().mockResolvedValue(refusal);
+    expect(await guard.run(block)).toBe(refusal);
+    expect(block).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it("never refreshes on a transport failure", async () => {
     const store = createTokenStore();
     const { refresher, refresh } = refresherReturning(true);
@@ -78,11 +89,11 @@ describe("auth guard", () => {
 
   it("hands the refresher the access token from before the first call", async () => {
     const store = createTokenStore();
-    store.save({ accessToken: "before", refreshToken: "r" });
+    store.save({ accessToken: "before", refreshToken: "r", accountId: "acct-1" });
     const { refresher, refresh } = refresherReturning(false);
     const guard = createGuard(store, refresher);
     await guard.run(async () => {
-      store.save({ accessToken: "after", refreshToken: "r2" });
+      store.save({ accessToken: "after", refreshToken: "r2", accountId: "acct-1" });
       return unauthenticated();
     });
     expect(refresh).toHaveBeenCalledWith("before");

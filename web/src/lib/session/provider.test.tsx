@@ -24,7 +24,7 @@ describe("SessionProvider", () => {
 
   it("derives signedIn from token presence alone", () => {
     const store = createTokenStore();
-    store.save({ accessToken: "a", refreshToken: "r" });
+    store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });
     render(
       <SessionProvider store={store}>
         <Probe />
@@ -40,7 +40,7 @@ describe("SessionProvider", () => {
         <Probe />
       </SessionProvider>,
     );
-    act(() => store.save({ accessToken: "a", refreshToken: "r" }));
+    act(() => store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" }));
     expect(screen.getByTestId("phase")).toHaveTextContent("signedIn");
     act(() => store.clear());
     expect(screen.getByTestId("phase")).toHaveTextContent("signedOut");

@@ -9,7 +9,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
-import { randomBytes } from "@/lib/crypto/bytes";
+import { ActorKey } from "@/lib/crypto/actor-key";
+import { randomBytes, toBase64 } from "@/lib/crypto/bytes";
 import type { AuthGuard } from "@/lib/session/guard";
 import { startMswServer } from "@/test/msw";
 import { createRegistrationSigner, type RegistrationSigner } from "./registration-signer";
@@ -107,6 +108,7 @@ function me(fields: Record<string, unknown>) {
     __typename: "User",
     id: "u1",
     accountState: "APPLICANT",
+    actorPubkey: null,
     application: application(),
     stagedWrites: { __typename: "StagedWriteConnection", nodes: [] },
     ...fields,
@@ -115,10 +117,12 @@ function me(fields: Record<string, unknown>) {
 
 describe("registration signer", () => {
   let store: IdentityStore;
+  let activeAccount: string;
 
   beforeEach(() => {
     globalThis.indexedDB = new IDBFactory();
-    store = createIdentityStore();
+    activeAccount = "u1";
+    store = createIdentityStore({ activeAccountId: () => activeAccount });
   });
 
   function signer(deps: {
@@ -259,5 +263,82 @@ describe("registration signer", () => {
       keyOnDevice: false,
     });
     expect(ceremony.attaches).toBe(0);
+  });
+
+  it("does not repair-attach with only another account's key on the device", async () => {
+    server.use(statusHandler(me({})));
+    activeAccount = "other-account";
+    await store.saveActor(randomBytes(32), true);
+    activeAccount = "u1";
+    const ceremony = fakeCeremony();
+    const progress = await signer({ ceremony }).advance();
+    expect(progress).toEqual({
+      kind: "awaitingApproval",
+      emailVerified: false,
+      keyAttached: false,
+      keyOnDevice: false,
+    });
+    expect(ceremony.attaches).toBe(0);
+  });
+
+  it("reads keyOnDevice false when the slot key mismatches the attached key", async () => {
+    // A legacy-adopted foreign key: the account's attached key is a
+    // different one, so the slot key must not count as on-device — the
+    // UI offers restore instead (roadmap.md slice 1.1).
+    const foreign = await ActorKey.generate();
+    server.use(
+      statusHandler(
+        me({
+          actorPubkey: toBase64(foreign.publicKeyBytes()),
+          application: application({ keyAttached: true }),
+        }),
+      ),
+    );
+    await store.saveActor(randomBytes(32), true);
+    const ceremony = fakeCeremony();
+    const progress = await signer({ ceremony }).advance();
+    expect(progress).toEqual({
+      kind: "awaitingApproval",
+      emailVerified: false,
+      keyAttached: true,
+      keyOnDevice: false,
+    });
+    expect(ceremony.attaches).toBe(0);
+  });
+
+  it("reads keyOnDevice true when the slot key matches the attached key", async () => {
+    const saved = await store.saveActor(randomBytes(32), true);
+    server.use(
+      statusHandler(
+        me({
+          actorPubkey: toBase64(saved.publicKeyBytes()),
+          application: application({ emailVerified: true, keyAttached: true }),
+        }),
+      ),
+    );
+    expect(await signer({}).advance()).toEqual({
+      kind: "awaitingApproval",
+      emailVerified: true,
+      keyAttached: true,
+      keyOnDevice: true,
+    });
+  });
+
+  it("asks for the signing key when the staged Registration meets a mismatched slot key", async () => {
+    const foreign = await ActorKey.generate();
+    server.use(
+      statusHandler(
+        me({
+          actorPubkey: toBase64(foreign.publicKeyBytes()),
+          application: application({ keyAttached: true, approvedAt: PAST }),
+          stagedWrites: { __typename: "StagedWriteConnection", nodes: [stagedRegistration()] },
+        }),
+      ),
+    );
+    await store.saveActor(randomBytes(32), true);
+    const writeSigner = fakeWriteSigner({ kind: "done", id: "sw-1", state: "RELAYING" });
+    const progress = await signer({ writeSigner }).advance();
+    expect(progress).toEqual({ kind: "awaitingSigningKey" });
+    expect(writeSigner.calls).toBe(0);
   });
 });

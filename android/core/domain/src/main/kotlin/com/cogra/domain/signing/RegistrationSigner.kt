@@ -22,7 +22,8 @@ sealed interface RegistrationProgress {
     /**
      * Unapproved, with the two approvability proofs as the server sees
      * them; [keyOnDevice] distinguishes "run the ceremony here" from
-     * "the key lives on another device".
+     * "the key lives on another device" — a slot key that does not
+     * match the account's attached key counts as not-on-device.
      */
     data class AwaitingApproval(
         val emailVerified: Boolean,
@@ -75,7 +76,10 @@ class RegistrationSigner @Inject constructor(
         if (status.accountState == AccountState.MEMBER) return RegistrationProgress.Member
         val staged = status.stagedRegistration
         if (staged != null) {
-            if (identity.actorSeed() == null) return RegistrationProgress.AwaitingSigningKey
+            // The same predicate as keyOnDevice: signing with a
+            // mismatched slot key would only fail server-side — a
+            // mismatch reads as awaiting-the-key, i.e. the restore path.
+            if (!keyOnDevice(status.actorPubkey)) return RegistrationProgress.AwaitingSigningKey
             return when (val result = writeSigner.signStaged(staged)) {
                 is WriteResult.Done, is WriteResult.AwaitingSeal -> RegistrationProgress.AwaitingLanding
                 is WriteResult.Refused -> RegistrationProgress.Refused(result.errors)
@@ -89,14 +93,29 @@ class RegistrationSigner @Inject constructor(
         return RegistrationProgress.AwaitingApproval(
             emailVerified = application.emailVerified,
             keyAttached = application.keyAttached || repairAttach(),
-            keyOnDevice = identity.actorSeed() != null,
+            keyOnDevice = keyOnDevice(status.actorPubkey),
         )
     }
 
     /**
+     * Whether the key in this account's slot is the one the account
+     * runs on: a key is held AND (none is attached yet OR the slot key
+     * IS the attached one). A mismatch reads as key-not-on-device, so
+     * the UI offers the restore path (auth.md "Multi-account device
+     * custody").
+     */
+    private suspend fun keyOnDevice(attachedPubkey: String?): Boolean {
+        val slot = ceremony.publicIdentity() ?: return false
+        return attachedPubkey == null || attachedPubkey == slot.publicKeyBase64
+    }
+
+    /**
      * Crash healing for the gap between minting and attaching: a key
-     * that exists only on this device is re-attached silently. False
-     * when there is nothing to repair or the attach did not land.
+     * that exists only on this device is re-attached silently. It fires
+     * only when the server reports no key attached (the call site's
+     * gate) and this account's own slot holds one — per-account keying
+     * is what keeps another account's key out of reach. False when
+     * there is nothing to repair or the attach did not land.
      */
     private suspend fun repairAttach(): Boolean {
         if (identity.actorSeed() == null) return false

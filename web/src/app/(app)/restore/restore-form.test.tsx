@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RestoreResult } from "@/lib/identity/restorer";
 import { createTokenStore } from "@/lib/session/token-store";
+import { fakeIdentityStore } from "@/test/identity";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
 import { RestoreForm } from "./restore-form";
@@ -22,7 +23,7 @@ vi.mock("@/lib/identity/restorer", () => ({
 
 function signedInStore() {
   const store = createTokenStore();
-  store.save({ accessToken: "access-1", refreshToken: "refresh-1" });
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
   return store;
 }
 
@@ -46,6 +47,35 @@ describe("RestoreForm", () => {
     expect(flow.ensureAdvancing).toHaveBeenCalled();
   });
 
+  it("flags the account ephemeral when don't-remember is checked", async () => {
+    const identity = fakeIdentityStore();
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<RestoreForm store={identity} />, { store: signedInStore() });
+    // The checkbox is reachable by its label (web.md § Accessibility).
+    fireEvent.click(screen.getByLabelText(/don't remember this account/i));
+    submit();
+    await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(true));
+  });
+
+  it("clears any earlier ephemeral flag on a default restore", async () => {
+    const identity = fakeIdentityStore({ ephemeral: true });
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<RestoreForm store={identity} />, { store: signedInStore() });
+    submit();
+    await waitFor(() => expect(setEphemeral).toHaveBeenCalledWith(false));
+  });
+
+  it("records no choice when the restore fails", async () => {
+    restoreResult.value = { kind: "wrongCode" };
+    const identity = fakeIdentityStore();
+    const setEphemeral = vi.spyOn(identity, "setEphemeral");
+    renderWithProviders(<RestoreForm store={identity} />, { store: signedInStore() });
+    fireEvent.click(screen.getByLabelText(/don't remember this account/i));
+    submit();
+    await screen.findByTestId("restore_error");
+    expect(setEphemeral).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["malformedCode", /doesn't look like a recovery code/],
     ["wrongCode", /doesn't open your backup/],
@@ -63,6 +93,15 @@ describe("RestoreForm", () => {
     renderWithProviders(<RestoreForm />, { store: signedInStore() });
     submit();
     expect(await screen.findByTestId("restore_error")).toHaveTextContent(/reach the server/);
+  });
+
+  it("renders a rate-limited restore as a backoff, not a connectivity failure", async () => {
+    restoreResult.value = { kind: "rateLimited" };
+    renderWithProviders(<RestoreForm />, { store: signedInStore() });
+    submit();
+    expect(await screen.findByTestId("restore_error")).toHaveTextContent(
+      "Too many attempts — wait a moment and try again.",
+    );
   });
 
   it("disables submit while the code is empty", () => {

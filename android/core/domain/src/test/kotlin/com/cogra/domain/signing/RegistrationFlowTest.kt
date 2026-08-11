@@ -23,7 +23,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
-    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null)
+    var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     var polls = 0
 
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> {
@@ -61,11 +61,11 @@ class RegistrationFlowTest {
         expiresAt = Instant.MAX,
     )
 
-    private fun waiting() = ApplicationStatus(AccountState.APPLICANT, application(), null)
+    private fun waiting() = ApplicationStatus(AccountState.APPLICANT, application(), null, null)
 
-    private fun landingWait() = ApplicationStatus(AccountState.APPLICANT, application(approved = true), null)
+    private fun landingWait() = ApplicationStatus(AccountState.APPLICANT, application(approved = true), null, null)
 
-    private fun member() = ApplicationStatus(AccountState.MEMBER, application(landed = true), null)
+    private fun member() = ApplicationStatus(AccountState.MEMBER, application(landed = true), null, null)
 
     @Test
     fun theCadenceIsSlowOnHumanWaitsAndFastOnLanding() = runTest {
@@ -207,6 +207,7 @@ class RegistrationFlowTest {
                 verifiedAct = null,
                 recordId = null,
             ),
+            actorPubkey = null,
         )
         val flow = flow(backgroundScope, tamperingWrites)
         flow.ensureAdvancing()

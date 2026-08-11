@@ -19,6 +19,9 @@ mutation Register($input: RegisterInput!) {
     auth {
       accessToken
       refreshToken
+      user {
+        id
+      }
     }
     expiresAt
     userErrors {
@@ -76,6 +79,7 @@ query ApplicationStatus {
   me {
     id
     accountState
+    actorPubkey
     application {
       id
       handle
