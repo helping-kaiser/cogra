@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, user_id, created_at, last_used_at, expires_at,\n                device_label, revoked_at\n         FROM auth_refresh_tokens WHERE token_hash = $1",
+  "query": "SELECT id, user_id, created_at, last_used_at, expires_at,\n                device_label, revoked_at, revoked_reason,\n                successor_id, successor_enc\n         FROM auth_refresh_tokens WHERE token_hash = $1",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,21 @@
         "ordinal": 6,
         "name": "revoked_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "revoked_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "successor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "successor_enc",
+        "type_info": "Bytea"
       }
     ],
     "parameters": {
@@ -51,8 +66,11 @@
       true,
       false,
       true,
+      true,
+      true,
+      true,
       true
     ]
   },
-  "hash": "34b62a36ef6076895ccf8129d0b3d710212c52b3e1982813977c7848f156bbfa"
+  "hash": "a6f0217168a1d5b3a4643413234d77b492a2d342461648f315369b7cd7f71558"
 }

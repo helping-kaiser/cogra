@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_refresh_tokens\n         SET successor_id = $2, successor_enc = $3\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "263a134f052c54ba380bdc87051aa515f3bb867c34788ee30673f944da1ad6a4"
+}
