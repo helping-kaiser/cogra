@@ -8,9 +8,7 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::Request;
-use axum_client_ip::ClientIpSource;
 use http_body_util::BodyExt;
-use l1_standin::{StandIn, StandInConfig};
 use postgres_store::PgPool;
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -18,16 +16,7 @@ use uuid::Uuid;
 
 use api::ratelimit::RateLimitConfig;
 
-struct SilentMailer;
-
-impl api::mailer::Mailer for SilentMailer {
-    fn send(
-        &self,
-        _mail: api::mailer::Mail,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + '_>> {
-        Box::pin(async {})
-    }
-}
+mod rig;
 
 struct Rig {
     app: axum::Router,
@@ -36,21 +25,12 @@ struct Rig {
 
 impl Rig {
     fn new(pool: PgPool) -> Self {
-        let standin = StandIn::new(pool.clone(), StandInConfig::default());
-        let auth = api::auth::AuthConfig::ephemeral().expect("auth config");
-        let schema = api::schema::build(api::schema::ApiContext {
-            pool: pool.clone(),
-            boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin,
-            auth: auth.clone(),
-            mailer: Arc::new(SilentMailer),
-            web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
-            onboarding: api::onboarding::OnboardingConfig::default(),
-            rate_limits: RateLimitConfig::default(),
-            breach: Arc::new(api::breach::DisabledCorpus),
-        });
         Self {
-            app: api::app(schema, auth, ClientIpSource::XRealIp),
+            app: rig::x_real_ip_app(
+                pool.clone(),
+                Arc::new(rig::TestMailer::default()),
+                RateLimitConfig::default(),
+            ),
             pool,
         }
     }

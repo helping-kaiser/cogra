@@ -72,8 +72,18 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
             let (domain, mask, tier) = match spec {
                 Some(s) => (s.domain.as_str(), s.mask, s.tier.as_str()),
                 // Unreachable for census-valid packages; keep the append
-                // total rather than dropping a published record.
-                None => ("minimal", [false, false, false, true], "marginal"),
+                // total rather than dropping a published record — but a
+                // fabricated census row is exactly the divergence the
+                // mirror contract forbids leaving unmarked.
+                None => {
+                    tracing::error!(
+                        record = %record.act_id,
+                        family = record.family.as_str(),
+                        role = leg.role.as_str(),
+                        "no census leg spec; ingesting with minimal fallback metadata"
+                    );
+                    ("minimal", [false, false, false, true], "marginal")
+                }
             };
             sqlx::query!(
                 "INSERT INTO mirror_record_legs

@@ -18,7 +18,7 @@ pub enum StagedError {
     #[error("staged write {id} is {actual}, not {expected}")]
     WrongState {
         id: Uuid,
-        expected: &'static str,
+        expected: String,
         actual: String,
     },
     /// A stored row no longer parses into seam types — operationally
@@ -81,7 +81,7 @@ pub struct StagedWrite {
     pub sealed: Option<SealedParts>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreSignedParts {
     pub author_pubkey: Vec<u8>,
     pub nonce: Vec<u8>,
@@ -342,6 +342,8 @@ pub async fn has_live_targeting(
 }
 
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
+/// Loads one by one — N+1 by choice: an actor holds a handful of live
+/// stagings at slice-1 scale, and `load` owns the row-to-seam parse.
 pub async fn list_for_actor(
     pool: &PgPool,
     actor_id: Uuid,
@@ -387,7 +389,7 @@ async fn transition(
         .ok_or(StagedError::NotFound(id))?;
     Err(StagedError::WrongState {
         id,
-        expected: from[0].as_str(),
+        expected: from_strs.join(" or "),
         actual,
     })
 }
@@ -422,7 +424,7 @@ pub async fn record_pre_signed(
         .ok_or(StagedError::NotFound(id))?;
     Err(StagedError::WrongState {
         id,
-        expected: "awaiting_pre_sign",
+        expected: "awaiting_pre_sign or sealing".to_string(),
         actual,
     })
 }
@@ -455,7 +457,7 @@ pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result
         .ok_or(StagedError::NotFound(id))?;
     Err(StagedError::WrongState {
         id,
-        expected: "sealing",
+        expected: "sealing".to_string(),
         actual,
     })
 }
