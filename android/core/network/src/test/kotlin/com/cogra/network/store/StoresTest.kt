@@ -306,4 +306,68 @@ class StoresTest {
         stores.signIn("account-b")
         assertThat(stores.identity.handshakeIds()).isEmpty()
     }
+
+    @Test
+    fun anUnopenableValueReadsAsAbsentAndMarksTheLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val health = StorageHealthImpl(dataStore)
+        // Sealed by a working cipher, opened by one whose key is gone.
+        EncryptedStore(dataStore, FakeCipher()).put("k", byteArrayOf(1))
+        val broken = EncryptedStore(dataStore, BrokenCipher())
+        assertThat(broken.get("k")).isNull()
+        assertThat(broken.watch("k").first()).isNull()
+        assertThat(health.storageLost.first()).isTrue()
+        // The ciphertext stays in place in case the failure is transient.
+        assertThat(dataStore.data.first().asMap().keys.map { it.name }).contains("k")
+        health.acknowledge()
+        assertThat(health.storageLost.first()).isFalse()
+    }
+
+    @Test
+    fun aGarbageTokenRecordIsNoSessionAndMarksTheLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        encrypted.put("session_tokens", "not json".encodeToByteArray())
+        val tokens = TokenStoreImpl(encrypted)
+        assertThat(tokens.current()).isNull()
+        assertThat(tokens.tokens.first()).isNull()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
+    }
+
+    @Test
+    fun garbageHandshakeMaterialReadsAsAbsentAndMarksTheLoss() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        val stores = Stores(encrypted)
+        stores.signIn("u1")
+        encrypted.put("acct:u1:handshake:w1", "not json".encodeToByteArray())
+        assertThat(stores.identity.handshake("w1")).isNull()
+        assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
+    }
+
+    @Test
+    fun aCorruptFileIsReplacedWithTheLossMark() = runTest {
+        // Not a preferences proto: the serializer throws
+        // CorruptionException and the handler replaces the file with the
+        // marked contents (NetworkModule wires the same factory).
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        file.writeBytes("garbage".encodeToByteArray())
+        val dataStore = secureDataStore(scope = scope) { file }
+        val health = StorageHealthImpl(dataStore)
+        assertThat(health.storageLost.first()).isTrue()
+        assertThat(EncryptedStore(dataStore, FakeCipher()).get("k")).isNull()
+        health.acknowledge()
+        assertThat(health.storageLost.first()).isFalse()
+    }
+}
+
+/** Throws like Tink does when the master key can no longer open a value. */
+private class BrokenCipher : StoreCipher {
+    override fun seal(plaintext: ByteArray): ByteArray = plaintext
+
+    override fun open(sealed: ByteArray): ByteArray =
+        throw java.security.GeneralSecurityException("decryption failed")
 }

@@ -6,7 +6,6 @@ package com.cogra.network.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
@@ -15,6 +14,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.repo.AccountRepositoryImpl
@@ -23,9 +23,11 @@ import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
+import com.cogra.network.store.StorageHealthImpl
 import com.cogra.network.store.StoreCipher
 import com.cogra.network.store.TinkStoreCipher
 import com.cogra.network.store.TokenStoreImpl
+import com.cogra.network.store.secureDataStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -55,7 +57,7 @@ internal object NetworkProvidesModule {
     @Provides
     @Singleton
     fun dataStore(@ApplicationContext context: Context): DataStore<Preferences> =
-        PreferenceDataStoreFactory.create {
+        secureDataStore {
             context.preferencesDataStoreFile("cogra_secure")
         }
 
@@ -80,6 +82,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun identityStore(impl: IdentityStoreImpl): IdentityStore
+
+    @Binds
+    abstract fun storageHealth(impl: StorageHealthImpl): StorageHealth
 
     @Binds
     abstract fun onboardingRepository(impl: OnboardingRepositoryImpl): OnboardingRepository
