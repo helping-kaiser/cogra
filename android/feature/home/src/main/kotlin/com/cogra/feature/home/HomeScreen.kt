@@ -567,7 +567,7 @@ private fun VerifyCard(
             )
             TextButton(
                 onClick = onResend,
-                enabled = state.resendEmail.isNotBlank(),
+                enabled = state.resendEmail.isNotBlank() && !state.resending,
                 modifier = Modifier.testTag("verify_resend"),
             ) {
                 Text(stringResource(R.string.home_verify_resend))

@@ -30,6 +30,8 @@ data class InvitesUiState(
     val prefillPInterest: Double = DEFAULT_STANCE,
     /** The application currently being approved, if any. */
     val approvingId: String? = null,
+    /** The link currently being revoked, if any. */
+    val revokingId: String? = null,
     val error: ErrorCode? = null,
     val transportFailed: Boolean = false,
     /** One-shot, consumed after its snackbar: the vouch landed in the
@@ -131,14 +133,17 @@ class InvitesViewModel @Inject constructor(
     }
 
     fun onRevoke(linkId: String) {
+        if (_state.value.revokingId != null) return
+        _state.update { it.copy(revokingId = linkId, error = null, transportFailed = false) }
         viewModelScope.launch {
             val outcome = account.revokeInviteLink(linkId)
             refresh()
             when (outcome) {
-                is Outcome.Success -> Unit
+                is Outcome.Success -> _state.update { it.copy(revokingId = null) }
                 is Outcome.Refused ->
-                    _state.update { it.copy(error = outcome.errors.first().code) }
-                is Outcome.Failed -> _state.update { it.copy(transportFailed = true) }
+                    _state.update { it.copy(revokingId = null, error = outcome.errors.first().code) }
+                is Outcome.Failed ->
+                    _state.update { it.copy(revokingId = null, transportFailed = true) }
             }
         }
     }
