@@ -102,6 +102,37 @@ Part of the bar from day one, never retrofitted: every screen
 lands with its Compose semantics — content descriptions, roles,
 touch-target sizes — alongside its UI tests.
 
+## Screens
+
+The destination map — type-safe destinations, one NavHost
+(`CograNavGraph.kt`). Auth drives navigation: a phase flip lands
+on the new phase's root — `InviteEntry` signed out, `Home` signed
+in — with a cleared stack, so which stack reaches a destination is
+its access gate. Every inner screen carries a top-bar back arrow
+over `navigateUp()`.
+
+| Destination | Stack | Web counterpart ([web.md "Routes"](web.md#routes)) |
+|---|---|---|
+| `InviteEntry` (start; `/join` App Links land here) | signed out | `/` front door + `/join/<link-id>` |
+| `Apply(inviteId)` | signed out | the apply step of `/join/<link-id>` |
+| `Login` | signed out | `/login` |
+| `PasswordReset` | signed out | `/reset` |
+| `Home` (signed-in root) | signed in | `/` signed in |
+| `Feed` | signed in | `/feed` |
+| `PostDetail(postId)` | signed in | `/posts/<id>` |
+| `ComposePost(postId?)` | signed in | `/compose` (+`?post=<id>`) |
+| `Invites` | signed in | `/invites` |
+| `Settings` | signed in | `/settings` |
+| `KeyCeremony` | signed in | `/key` |
+| `Restore` | signed in | `/restore` |
+
+Web delta: the web's read surfaces are public, while the app
+reaches `Feed` and `PostDetail` only from the signed-in stack —
+in-app anonymous browsing is parked in
+[open-questions.md Q35](../open-questions.md#q35--anonymous-browsing-in-the-android-app).
+Email-carried surfaces (`/verify`, the `/reset?token=` arrival)
+have no destinations: those links open in the browser.
+
 ## Module layout
 
 Gradle modules mirror the backend's crate discipline — every module
