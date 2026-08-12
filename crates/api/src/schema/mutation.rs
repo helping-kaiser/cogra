@@ -275,6 +275,127 @@ struct PreparePayload {
     user_errors: Vec<UserError>,
 }
 
+/// License qualifiers, mandatory at authoring time and immutable
+/// (platform-guidelines.md §5): they ride the structural record as
+/// public protocol references, surviving every payload state.
+#[derive(InputObject)]
+struct LicenseInput {
+    /// Credit requirement: the creator is credited on every display,
+    /// quote, and reference surface.
+    attribution_required: bool,
+    oversight: super::types::OversightLevel,
+}
+
+impl LicenseInput {
+    fn to_content(&self) -> crate::content::License {
+        crate::content::License {
+            attribution: self.attribution_required,
+            oversight: self.oversight.to_content(),
+        }
+    }
+}
+
+/// A new Post: one genesis Publish whose envelope carries the display
+/// fields (post.md §1). Fields are raw scalars; moderation is
+/// server-assigned.
+#[derive(InputObject)]
+struct PreparePostInput {
+    title: Option<String>,
+    description: Option<String>,
+    content: String,
+    license: LicenseInput,
+    /// The author's attachment; defaults to the low-defaults policy
+    /// value (+0.1). `pInterest` is census-fixed at 1 for Publish.
+    p_directed: Option<Dimension>,
+}
+
+/// A Post edit: omitted fields are untouched (newest-wins fold per
+/// field, post.md §4); an explicit null clears the field. Identity,
+/// creator, and license never edit.
+#[derive(InputObject)]
+struct PreparePostEditInput {
+    id: Uuid,
+    title: async_graphql::MaybeUndefined<String>,
+    description: async_graphql::MaybeUndefined<String>,
+    content: async_graphql::MaybeUndefined<String>,
+}
+
+/// A new Comment: one genesis Review — A leg to the target, terminal
+/// leg minting the Comment (comment.md §1). This slice offers the
+/// comment box on Posts and Comments.
+#[derive(InputObject)]
+struct PrepareCommentInput {
+    target: Uuid,
+    content: String,
+    license: LicenseInput,
+    /// Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
+    p_directed: Option<Dimension>,
+    p_interest: Option<Dimension>,
+}
+
+/// A Comment edit: an omitted body is refused (nothing would change);
+/// an explicit null clears to empty.
+#[derive(InputObject)]
+struct PrepareCommentEditInput {
+    id: Uuid,
+    content: async_graphql::MaybeUndefined<String>,
+}
+
+/// A prepared content write: the staged handshake plus `node` — the L2
+/// id the envelope binds to the minted node, and the id the content
+/// reads serve once the record lands. Null when `userErrors` is
+/// non-empty.
+#[derive(SimpleObject)]
+struct PrepareContentPayload {
+    node: Option<Uuid>,
+    writes: Option<Vec<PreparedWrite>>,
+    user_errors: Vec<UserError>,
+}
+
+impl PrepareContentPayload {
+    fn ok(prepared: crate::content::PreparedContent) -> Self {
+        Self {
+            node: Some(prepared.node),
+            writes: Some(vec![PreparedWrite::from_prepared(prepared.prepared)]),
+            user_errors: vec![],
+        }
+    }
+
+    fn refused(errors: Vec<UserError>) -> Self {
+        Self {
+            node: None,
+            writes: None,
+            user_errors: errors,
+        }
+    }
+
+    fn from_error(e: crate::content::ContentError) -> Self {
+        use crate::content::ContentError;
+        Self::refused(vec![match e {
+            ContentError::BadInput { field, message } => {
+                UserError::at(ErrorCode::BadInput, message, vec![field.to_string()])
+            }
+            ContentError::NotFound => UserError::new(ErrorCode::NotFound, "content not found"),
+            ContentError::NotCreator => UserError::new(
+                ErrorCode::Forbidden,
+                "only the creator's edits win the fold",
+            ),
+            ContentError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
+            e @ ContentError::Internal(_) => internal(e),
+        }])
+    }
+}
+
+/// An edit field from the wire: undefined = untouched, null = cleared,
+/// a value = replaced (post.md §4 — empty is a value).
+fn edit_field(v: async_graphql::MaybeUndefined<String>) -> Option<String> {
+    match v {
+        async_graphql::MaybeUndefined::Undefined => None,
+        async_graphql::MaybeUndefined::Null => Some(String::new()),
+        async_graphql::MaybeUndefined::Value(s) => Some(s),
+    }
+}
+
 #[derive(InputObject)]
 struct LogInInput {
     email: String,
@@ -1311,6 +1432,123 @@ impl Mutation {
                 writes: None,
                 user_errors: vec![internal(e)],
             }),
+        }
+    }
+
+    /// Prepares a new Post: one genesis Publish through the ordinary
+    /// write path — the returned write pre-signs, seals, and approves
+    /// like any other; `node` is the id the post serves under once the
+    /// record lands (post.md §1).
+    async fn prepare_post(
+        &self,
+        ctx: &Context<'_>,
+        input: PreparePostInput,
+    ) -> async_graphql::Result<PrepareContentPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        let draft = crate::content::PostDraft {
+            title: input.title,
+            description: input.description,
+            content: input.content,
+            license: input.license.to_content(),
+            p_directed: input.p_directed.map(|d| d.0),
+        };
+        match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
+            .await
+        {
+            Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
+            Err(e) => Ok(PrepareContentPayload::from_error(e)),
+        }
+    }
+
+    /// Prepares a Post edit: an ordinary-role Publish at attachment 0
+    /// toward the existing node, chained behind the current head.
+    /// Creator-only; one in-flight edit per post and author
+    /// (post.md §4).
+    async fn prepare_post_edit(
+        &self,
+        ctx: &Context<'_>,
+        input: PreparePostEditInput,
+    ) -> async_graphql::Result<PrepareContentPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        let draft = crate::content::PostEditDraft {
+            id: input.id,
+            title: edit_field(input.title),
+            description: edit_field(input.description),
+            content: edit_field(input.content),
+        };
+        match crate::content::prepare_post_edit(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            draft,
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
+            Err(e) => Ok(PrepareContentPayload::from_error(e)),
+        }
+    }
+
+    /// Prepares a new Comment: one genesis Review whose terminal leg
+    /// mints the Comment on the target (comment.md §1).
+    async fn prepare_comment(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareCommentInput,
+    ) -> async_graphql::Result<PrepareContentPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        let draft = crate::content::CommentDraft {
+            target: input.target,
+            content: input.content,
+            license: input.license.to_content(),
+            p_directed: input.p_directed.map(|d| d.0),
+            p_interest: input.p_interest.map(|d| d.0),
+        };
+        match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
+            .await
+        {
+            Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
+            Err(e) => Ok(PrepareContentPayload::from_error(e)),
+        }
+    }
+
+    /// Prepares a Comment edit: an ordinary-role Review at (0,0) — A
+    /// leg to the genesis parent, terminal leg to the existing Comment
+    /// (comment.md §4).
+    async fn prepare_comment_edit(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareCommentEditInput,
+    ) -> async_graphql::Result<PrepareContentPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        let draft = crate::content::CommentEditDraft {
+            id: input.id,
+            content: edit_field(input.content),
+        };
+        match crate::content::prepare_comment_edit(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            draft,
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
+            Err(e) => Ok(PrepareContentPayload::from_error(e)),
         }
     }
 

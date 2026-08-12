@@ -10,7 +10,7 @@ use postgres_store::{PgPool, auth as store, mirror};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
-use crate::prepare::{self, Gesture, PrepareError};
+use crate::prepare::{self, Gesture, PrepareError, Target};
 
 #[derive(Debug, thiserror::Error)]
 pub enum StanceError {
@@ -95,7 +95,7 @@ pub async fn prepare_stance<B: L1Boundary>(
             author: author_address,
             family: Family::Opinion,
             middle: None,
-            target: NodeId::Prof(target_address),
+            target: Target::Node(NodeId::Prof(target_address)),
             p_d: delta_d,
             p_i: delta_i,
             settlement_ref: None,

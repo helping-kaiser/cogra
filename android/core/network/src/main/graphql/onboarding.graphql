@@ -70,8 +70,10 @@ query ApplicationStatus {
       ...ApplicationFields
     }
     stagedWrites(first: 10) {
-      nodes {
-        ...StagedWriteFields
+      edges {
+        node {
+          ...StagedWriteFields
+        }
       }
     }
   }

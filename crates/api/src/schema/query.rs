@@ -1,16 +1,20 @@
-//! The slice-1 query root: the health probe, the viewer (`me`), and the
-//! staged-write observation read. Reads need no authentication — the
-//! shared graph is public; the private fields are field-level authorized
-//! on their types. Application progress is `me`-driven
-//! (`User.application`) — there is no applicant-token surface.
+//! The query root: the health probe, the viewer (`me`), the staged-write
+//! observation read, and — from slice 2 — the content reads: typed
+//! nodes, the chronological listing, and the generic record chronicle.
+//! Reads need no authentication — the shared graph is public; the
+//! private fields are field-level authorized on their types.
 
 use async_graphql::{Context, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::{PgPool, auth as store, staged};
+use common::l1::identifier::NodeId;
+use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
 use uuid::Uuid;
 
-use super::types::{InviteLinkCheck, StagedWriteType, User};
+use super::types::{
+    CommentType, InviteLinkCheck, KeysetConnection, Node, PostType, Record, RecordFamily, RecordId,
+    StagedWriteType, User, connection_cost, keyset_connection, keyset_page,
+};
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
 
@@ -114,5 +118,226 @@ impl Query {
             Ok(_) | Err(staged::StagedError::NotFound(_)) => Ok(None),
             Err(e) => Err(async_graphql::Error::new(e.to_string())),
         }
+    }
+
+    /// One post by id; null for an unknown id.
+    async fn post(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<PostType>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(content_store::post(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(PostType))
+    }
+
+    /// One comment by id; null for an unknown id.
+    async fn comment(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+    ) -> async_graphql::Result<Option<CommentType>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(content_store::comment(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(CommentType))
+    }
+
+    /// Any node by its L2 id, typed. Coverage grows with the slices —
+    /// content nodes resolve here today; null for an unknown id.
+    async fn node(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Node>> {
+        let pool = ctx.data::<PgPool>()?;
+        match content_store::content_kind(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        {
+            Some("post") => Ok(content_store::post(pool, id)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                .map(|p| Node::Post(PostType(p)))),
+            Some("comment") => Ok(content_store::comment(pool, id)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                .map(|c| Node::Comment(CommentType(c)))),
+            _ => Ok(None),
+        }
+    }
+
+    /// Batch node lookup — order preserved; an unknown id yields null
+    /// in its slot.
+    #[graphql(complexity = "ids.len() * child_complexity + 1")]
+    async fn nodes(
+        &self,
+        ctx: &Context<'_>,
+        ids: Vec<Uuid>,
+    ) -> async_graphql::Result<Vec<Option<Node>>> {
+        if ids.len() > super::types::MAX_PAGE_SIZE as usize {
+            return Err(async_graphql::Error::new(format!(
+                "at most {} ids per lookup",
+                super::types::MAX_PAGE_SIZE
+            )));
+        }
+        let mut out = Vec::with_capacity(ids.len());
+        for id in ids {
+            out.push(self.node(ctx, id).await?);
+        }
+        Ok(out)
+    }
+
+    /// One L1 record by its own identifier — the unit of the chronicle.
+    async fn record(
+        &self,
+        ctx: &Context<'_>,
+        id: RecordId,
+    ) -> async_graphql::Result<Option<Record>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(mirror::record_full(pool, &id.0)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(Record))
+    }
+
+    /// Generic record lookup over the mirror — the public chronicle,
+    /// filterable along the mirror's own indexes, newest-first in
+    /// landing order. `target` matches a record's target (the middle
+    /// node on hyper families); `terminal` matches the terminal leg —
+    /// a comment's revision chain is `records(terminal: <comment>)`.
+    /// An id that resolves to no known node yields an empty page.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[allow(clippy::too_many_arguments)]
+    async fn records(
+        &self,
+        ctx: &Context<'_>,
+        author: Option<Uuid>,
+        target: Option<Uuid>,
+        terminal: Option<Uuid>,
+        family: Option<RecordFamily>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        let pool = ctx.data::<PgPool>()?;
+        let page = keyset_page(first, after, last, before)?;
+        let mut filter = mirror::RecordFilter {
+            family: family.map(|f| f.as_family().as_str().to_string()),
+            payload_marked,
+            since_epoch,
+            until_epoch,
+            ..Default::default()
+        };
+        // UUID filters translate to the mirror's own identifiers; an
+        // unresolvable id matches nothing rather than erroring — the
+        // same contract as a null slot in `nodes`.
+        if let Some(author) = author {
+            match store::actor_identity(pool, author)
+                .await?
+                .and_then(|i| i.l0_address)
+            {
+                Some(address) => filter.author = Some(address),
+                None => {
+                    return Ok(keyset_connection(
+                        vec![],
+                        &page,
+                        |_: &Record| (0, 0, 0),
+                        |r| r,
+                    ));
+                }
+            }
+        }
+        if let Some(target) = target {
+            match uuid_to_node_string(pool, target).await? {
+                Some(node) => filter.target = Some(node),
+                None => {
+                    return Ok(keyset_connection(
+                        vec![],
+                        &page,
+                        |_: &Record| (0, 0, 0),
+                        |r| r,
+                    ));
+                }
+            }
+        }
+        if let Some(terminal) = terminal {
+            match uuid_to_node_string(pool, terminal).await? {
+                Some(node) => filter.terminal = Some(node),
+                None => {
+                    return Ok(keyset_connection(
+                        vec![],
+                        &page,
+                        |_: &Record| (0, 0, 0),
+                        |r| r,
+                    ));
+                }
+            }
+        }
+        let rows = mirror::records(pool, &filter, page.cursor, page.backward, page.limit + 1)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(keyset_connection(
+            rows,
+            &page,
+            |r| (r.epoch, r.act_time, r.position),
+            Record,
+        ))
+    }
+
+    /// The chronological listing (roadmap "Slice 2"): every post,
+    /// newest-first in landing order — the record set's own order,
+    /// never wall clock (graph-model.md §2). Deliberately not the
+    /// ranked feed.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn posts(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> async_graphql::Result<KeysetConnection<PostType>> {
+        let pool = ctx.data::<PgPool>()?;
+        let page = keyset_page(first, after, last, before)?;
+        let rows = content_store::list_posts(
+            pool,
+            page.cursor.map(|(e, a, p)| content_store::LandingOrder {
+                landed_epoch: e,
+                act_time: a,
+                position: p,
+            }),
+            page.backward,
+            page.limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(keyset_connection(
+            rows,
+            &page,
+            |p| (p.order.landed_epoch, p.order.act_time, p.order.position),
+            PostType,
+        ))
+    }
+}
+
+/// A UUID as a mirror identifier: a content node's mint id, or an
+/// actor's Profile node — the two shapes records target this slice.
+async fn uuid_to_node_string(pool: &PgPool, id: Uuid) -> async_graphql::Result<Option<String>> {
+    match content_store::content_kind(pool, id)
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    {
+        Some("post") => Ok(content_store::post(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(|p| p.l1_node_id)),
+        Some("comment") => Ok(content_store::comment(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .map(|c| c.l1_node_id)),
+        _ => Ok(store::actor_identity(pool, id)
+            .await?
+            .and_then(|i| i.l0_address)
+            .map(|address| NodeId::Prof(address).to_string())),
     }
 }

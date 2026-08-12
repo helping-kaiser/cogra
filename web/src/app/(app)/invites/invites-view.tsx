@@ -337,7 +337,7 @@ function LinkCard({
           )}
         </div>
       )}
-      {link.applications.nodes.map((application) => (
+      {link.applications.edges.map(({ node: application }) => (
         <ApplicationRow
           key={application.id}
           application={application}

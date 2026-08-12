@@ -181,6 +181,240 @@ pub async fn record_meta(
     }))
 }
 
+/// One accepted record as the public chronicle serves it (api-spec "The
+/// record"): the mirror row plus its legs.
+#[derive(Debug, Clone)]
+pub struct RecordFull {
+    pub record_id: String,
+    pub family: String,
+    pub author: String,
+    pub epoch: i64,
+    pub act_time: i64,
+    pub position: i64,
+    pub payload_marked: bool,
+    pub payload_witness: Vec<u8>,
+    pub legs: Vec<RecordLeg>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RecordLeg {
+    pub leg: String,
+    pub source: String,
+    pub target: String,
+    pub p_d: f64,
+    pub p_i: f64,
+}
+
+impl RecordFull {
+    /// The far end of a binary act, or the middle node the A leg enters
+    /// on a hyper act (api-spec `Record.target`).
+    pub fn target(&self) -> Option<&RecordLeg> {
+        self.legs.iter().find(|l| l.leg == "binary" || l.leg == "a")
+    }
+
+    /// The terminal leg's node — hyper acts only.
+    pub fn terminal(&self) -> Option<&RecordLeg> {
+        self.legs.iter().find(|l| l.leg == "t")
+    }
+}
+
+/// Filters for the `records` chronicle query — each is conjunctive;
+/// None means unfiltered. `target` matches the binary/A leg (the
+/// record's target in the api-spec sense); `terminal` matches the T leg.
+#[derive(Debug, Clone, Default)]
+pub struct RecordFilter {
+    pub author: Option<String>,
+    pub target: Option<String>,
+    pub terminal: Option<String>,
+    pub family: Option<String>,
+    pub payload_marked: Option<bool>,
+    pub since_epoch: Option<i64>,
+    pub until_epoch: Option<i64>,
+}
+
+/// One record by its identifier, with legs; None when the mirror does
+/// not hold it.
+pub async fn record_full(
+    pool: &PgPool,
+    record_id: &str,
+) -> Result<Option<RecordFull>, MirrorError> {
+    let Some(row) = sqlx::query!(
+        "SELECT record_id, family, author, epoch, act_time, position,
+                payload_marked, payload_witness
+         FROM mirror_records WHERE record_id = $1",
+        record_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    else {
+        return Ok(None);
+    };
+    let legs = legs_for(pool, std::slice::from_ref(&row.record_id))
+        .await?
+        .into_iter()
+        .map(|l| l.leg)
+        .collect();
+    Ok(Some(RecordFull {
+        record_id: row.record_id,
+        family: row.family,
+        author: row.author,
+        epoch: row.epoch,
+        act_time: row.act_time,
+        position: row.position,
+        payload_marked: row.payload_marked,
+        payload_witness: row.payload_witness,
+        legs,
+    }))
+}
+
+/// The chronicle read (api-spec `records`): filterable along the
+/// mirror's own indexes, newest-first in landing order — keyset cursor
+/// on the authoritative causal key `(epoch, act_time, position)`.
+/// `backward` serves `last`/`before`; results always come back
+/// newest-first.
+pub async fn records(
+    pool: &PgPool,
+    filter: &RecordFilter,
+    cursor: Option<(i64, i64, i64)>,
+    backward: bool,
+    limit: i64,
+) -> Result<Vec<RecordFull>, MirrorError> {
+    let (ce, ca, cp) = match cursor {
+        Some((e, a, p)) => (Some(e), Some(a), Some(p)),
+        None => (None, None, None),
+    };
+    let rows = sqlx::query!(
+        r#"SELECT * FROM (
+               SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,
+                      r.position, r.payload_marked, r.payload_witness
+               FROM mirror_records r
+               WHERE ($1::text IS NULL OR r.author = $1)
+                 AND ($2::text IS NULL OR r.family = $2)
+                 AND ($3::boolean IS NULL OR r.payload_marked = $3)
+                 AND ($4::bigint IS NULL OR r.epoch >= $4)
+                 AND ($5::bigint IS NULL OR r.epoch <= $5)
+                 AND ($6::text IS NULL OR EXISTS (
+                         SELECT 1 FROM mirror_record_legs l
+                         WHERE l.record_id = r.record_id
+                           AND l.leg IN ('binary', 'a') AND l.target = $6))
+                 AND ($7::text IS NULL OR EXISTS (
+                         SELECT 1 FROM mirror_record_legs l
+                         WHERE l.record_id = r.record_id
+                           AND l.leg = 't' AND l.target = $7))
+                 AND ($8::bigint IS NULL
+                      OR ($11 AND (r.epoch, r.act_time, r.position) > ($8, $9, $10))
+                      OR (NOT $11 AND (r.epoch, r.act_time, r.position) < ($8, $9, $10)))
+               ORDER BY
+                   CASE WHEN $11 THEN r.epoch END ASC,
+                   CASE WHEN $11 THEN r.act_time END ASC,
+                   CASE WHEN $11 THEN r.position END ASC,
+                   r.epoch DESC, r.act_time DESC, r.position DESC
+               LIMIT $12
+           ) page
+           ORDER BY epoch DESC, act_time DESC, position DESC"#,
+        filter.author.as_deref(),
+        filter.family.as_deref(),
+        filter.payload_marked,
+        filter.since_epoch,
+        filter.until_epoch,
+        filter.target.as_deref(),
+        filter.terminal.as_deref(),
+        ce,
+        ca,
+        cp,
+        backward,
+        limit,
+    )
+    .fetch_all(pool)
+    .await?;
+    let ids: Vec<String> = rows.iter().map(|r| r.record_id.clone()).collect();
+    let mut legs = legs_for(pool, &ids).await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| RecordFull {
+            legs: {
+                let mut own: Vec<RecordLeg> = Vec::new();
+                legs.retain(|l| {
+                    if l.record_id == r.record_id {
+                        own.push(l.leg.clone());
+                        false
+                    } else {
+                        true
+                    }
+                });
+                own
+            },
+            record_id: r.record_id,
+            family: r.family,
+            author: r.author,
+            epoch: r.epoch,
+            act_time: r.act_time,
+            position: r.position,
+            payload_marked: r.payload_marked,
+            payload_witness: r.payload_witness,
+        })
+        .collect())
+}
+
+struct LegOwned {
+    record_id: String,
+    leg: RecordLeg,
+}
+
+async fn legs_for(pool: &PgPool, record_ids: &[String]) -> Result<Vec<LegOwned>, MirrorError> {
+    if record_ids.is_empty() {
+        return Ok(vec![]);
+    }
+    Ok(sqlx::query!(
+        "SELECT record_id, leg, source, target, p_d, p_i
+         FROM mirror_record_legs WHERE record_id = ANY($1)",
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|l| LegOwned {
+        record_id: l.record_id,
+        leg: RecordLeg {
+            leg: l.leg,
+            source: l.source,
+            target: l.target,
+            p_d: l.p_d,
+            p_i: l.p_i,
+        },
+    })
+    .collect())
+}
+
+/// The newest accepted record of one family by one author toward one
+/// node, by causal order — the edit-chain head (post.md §4). CoGra's
+/// API is the only author path and serializes edits per (node, author)
+/// while always asserting the previous head, so no branch can be
+/// authored through it and newest-by-causal-key IS the chain head; a
+/// chain walk over asserted parents adds nothing until foreign authors
+/// exist (the client-direct transport workstream).
+pub async fn chain_head(
+    pool: &PgPool,
+    author: &str,
+    family: Family,
+    node: &str,
+) -> Result<Option<String>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        "SELECT r.record_id
+         FROM mirror_records r
+         JOIN mirror_record_legs l ON l.record_id = r.record_id
+         WHERE r.author = $1 AND r.family = $2
+           AND l.leg IN ('binary', 't') AND l.target = $3
+         ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
+         LIMIT 1",
+        author,
+        family.as_str(),
+        node,
+    )
+    .fetch_optional(pool)
+    .await?)
+}
+
 /// The net of one author's Opinion bundle toward one node — the sum of
 /// the authored parameters across their accepted Opinion records
 /// (api-spec "The generic stance": the client states intent as the net;

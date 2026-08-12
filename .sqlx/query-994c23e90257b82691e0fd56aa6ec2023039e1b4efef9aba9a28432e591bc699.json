@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,\n                  c.landed_epoch, c.act_time, c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "target_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "l1_node_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "content!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "version_created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "994c23e90257b82691e0fd56aa6ec2023039e1b4efef9aba9a28432e591bc699"
+}

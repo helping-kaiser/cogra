@@ -341,6 +341,31 @@ pub async fn has_live_targeting(
     .await?)
 }
 
+/// Whether the actor has an unlanded, unexpired staged write of the
+/// family toward the target — the edit-serialization guard (post.md §4:
+/// the backend serializes edits per (node, author)). Unlike
+/// `has_live_targeting`, a landed row does not count: its record is in
+/// the mirror and the next edit chains behind it.
+pub async fn has_pending_targeting(
+    pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+) -> Result<bool, StagedError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM staged_writes
+               WHERE actor_id = $1 AND family = $2 AND target = $3
+                 AND state NOT IN ('expired', 'landed')
+           ) AS "exists!""#,
+        actor_id,
+        family.as_str(),
+        target,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
 /// Loads one by one — N+1 by choice: an actor holds a handful of live
 /// stagings at slice-1 scale, and `load` owns the row-to-seam parse.

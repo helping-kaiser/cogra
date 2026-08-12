@@ -7,22 +7,26 @@ query InviteLinks {
   me {
     id
     inviteLinks(first: 50) {
-      nodes {
-        id
-        prefillPDirected
-        prefillPInterest
-        singleUse
-        createdAt
-        expiresAt
-        revokedAt
-        applications(first: 50) {
-          nodes {
-            id
-            handle
-            emailVerified
-            keyAttached
-            approvedAt
-            landedAt
+      edges {
+        node {
+          id
+          prefillPDirected
+          prefillPInterest
+          singleUse
+          createdAt
+          expiresAt
+          revokedAt
+          applications(first: 50) {
+            edges {
+              node {
+                id
+                handle
+                emailVerified
+                keyAttached
+                approvedAt
+                landedAt
+              }
+            }
           }
         }
       }

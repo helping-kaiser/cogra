@@ -122,6 +122,13 @@ export function HomeShell({
           </p>
           <nav className="flex gap-4">
             <Link
+              href="/feed"
+              data-testid="home_feed"
+              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            >
+              Feed
+            </Link>
+            <Link
               href="/invites"
               data-testid="home_invites"
               className="text-sm text-zinc-600 underline dark:text-zinc-400"
