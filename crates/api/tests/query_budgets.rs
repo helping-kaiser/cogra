@@ -6,28 +6,20 @@
 
 use std::sync::Arc;
 
-use l1_standin::{StandIn, StandInConfig};
 use sqlx::PgPool;
 
 use api::schema::types::{DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, connection_cost, offset_connection};
-use api::schema::{ApiContext, ApiSchema, QueryBudgets, build_with};
+use api::schema::{ApiSchema, QueryBudgets, build_with};
+
+mod rig;
 
 fn schema(pool: PgPool, budgets: QueryBudgets) -> ApiSchema {
-    let standin = StandIn::new(pool.clone(), StandInConfig::default());
-    build_with(
-        ApiContext {
-            pool,
-            boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin,
-            auth: api::auth::AuthConfig::ephemeral().expect("auth config"),
-            mailer: Arc::new(api::mailer::DevMailer::new(None)),
-            web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
-            onboarding: api::onboarding::OnboardingConfig::default(),
-            rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
-            breach: Arc::new(api::breach::DisabledCorpus),
-        },
-        budgets,
-    )
+    let (ctx, _auth) = rig::api_context(
+        pool,
+        Arc::new(api::mailer::DevMailer::new(None)),
+        api::ratelimit::RateLimitConfig::unlimited(),
+    );
+    build_with(ctx, budgets)
 }
 
 async fn execute(schema: &ApiSchema, query: &str) -> async_graphql::Response {

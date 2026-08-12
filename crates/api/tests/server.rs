@@ -7,44 +7,21 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use http_body_util::BodyExt;
-use l1_standin::{StandIn, StandInConfig};
 use sqlx::PgPool;
 use tower::ServiceExt;
 
-/// The full router over a test pool, with an ephemeral session key. The
-/// rig mocks the socket peer and unbounds the auth limits — the limits
-/// themselves are rate_limits.rs's subject.
-fn test_app(pool: PgPool) -> axum::Router {
-    let standin = StandIn::new(pool.clone(), StandInConfig::default());
-    let auth = api::auth::AuthConfig::ephemeral().expect("auth config");
-    let schema = api::schema::build(api::schema::ApiContext {
-        pool,
-        boundary: api::l1::StandInBoundary(standin.clone()),
-        funding: standin,
-        auth: auth.clone(),
-        mailer: Arc::new(api::mailer::DevMailer::new(None)),
-        web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
-        onboarding: api::onboarding::OnboardingConfig::default(),
-        rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
-        breach: Arc::new(api::breach::DisabledCorpus),
-    });
-    // A fixed ConnectInfo stands in for the socket peer — axum-client-ip
-    // reads the extension directly, so axum's MockConnectInfo fallback
-    // (which only axum's own extractor consults) does not apply here.
-    api::app(schema, auth, axum_client_ip::ClientIpSource::ConnectInfo).layer(axum::Extension(
-        axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 9999))),
-    ))
-}
+mod rig;
+use l1_standin::{StandIn, StandInConfig};
+use rig::body_json;
 
-async fn body_json(response: axum::response::Response) -> serde_json::Value {
-    let bytes = response
-        .into_body()
-        .collect()
-        .await
-        .expect("body")
-        .to_bytes();
-    serde_json::from_slice(&bytes).expect("json body")
+/// The full router over a test pool — the auth limits unbounded, since
+/// the limits themselves are rate_limits.rs's subject.
+fn test_app(pool: PgPool) -> axum::Router {
+    rig::connect_info_app(
+        pool,
+        Arc::new(api::mailer::DevMailer::new(None)),
+        api::ratelimit::RateLimitConfig::unlimited(),
+    )
 }
 
 #[sqlx::test(migrations = "../../migrations")]
@@ -84,6 +61,32 @@ async fn graphql_health_reports_store_and_mirror(pool: PgPool) {
     assert_eq!(health["postgresConnected"], true);
     assert_eq!(health["mirrorEpoch"], -1);
     assert_eq!(health["backendVersion"], env!("CARGO_PKG_VERSION"));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn health_reports_a_failed_cursor_read_as_null(pool: PgPool) {
+    // Break the cursor out from under the resolver: a failed read must
+    // surface as null, never as the legitimate "-1, nothing ingested".
+    sqlx::query("DROP TABLE mirror_epoch_cursor")
+        .execute(&pool)
+        .await
+        .expect("drop");
+    let app = test_app(pool);
+    let query = r#"{"query":"{ health { postgresConnected mirrorEpoch } }"}"#;
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header("content-type", "application/json")
+                .body(Body::from(query))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    let health = &body_json(response).await["data"]["health"];
+    assert_eq!(health["postgresConnected"], true);
+    assert!(health["mirrorEpoch"].is_null());
 }
 
 /// Executes one anonymous GraphQL query and returns the `data` object.
