@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { logIn } from "@/lib/api/auth-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
@@ -24,10 +25,8 @@ function loginMessage(code: ErrorCode): string {
   switch (code) {
     case "INVALID_CREDENTIALS":
       return "That email and password don't match.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 

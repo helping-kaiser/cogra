@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import {
   approveApplicant,
@@ -39,10 +40,8 @@ function invitesMessage(code: ErrorCode): string {
       return "That didn't go through — the application or link may have expired or already been handled.";
     case "NOT_FOUND":
       return "That link is already gone.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 
