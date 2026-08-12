@@ -27,6 +27,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
+import com.cogra.domain.flatMap
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
@@ -83,11 +84,7 @@ internal fun <T> payload(errors: List<UserError>, value: () -> T?): Outcome<T> {
 internal suspend fun <D : Operation.Data, T> ApolloCall<D>.payloadOutcome(
     errorsOf: (D) -> List<UserErrorFields>,
     valueOf: (D) -> T?,
-): Outcome<T> = when (val fetched = fetch()) {
-    is Outcome.Success -> payload(errorsOf(fetched.value).toDomain()) { valueOf(fetched.value) }
-    is Outcome.Refused -> fetched
-    is Outcome.Failed -> fetched
-}
+): Outcome<T> = fetch().flatMap { data -> payload(errorsOf(data).toDomain()) { valueOf(data) } }
 
 internal fun List<UserErrorFields>.toDomain(): List<UserError> = map {
     UserError(

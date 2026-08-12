@@ -15,6 +15,7 @@ import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
 import com.cogra.domain.Outcome
+import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
@@ -109,11 +110,7 @@ class BackupManager @Inject constructor(
         val seed = identity.actorSeed()
             ?: return Outcome.Failed(IllegalStateException("no actor key on this device"))
         val code = RecoveryCode.generate()
-        return when (val uploaded = account.uploadKeyBackup(sealKeyBackup(seed, code))) {
-            is Outcome.Success -> Outcome.Success(code.display())
-            is Outcome.Refused -> uploaded
-            is Outcome.Failed -> uploaded
-        }
+        return account.uploadKeyBackup(sealKeyBackup(seed, code)).map { code.display() }
     }
 }
 

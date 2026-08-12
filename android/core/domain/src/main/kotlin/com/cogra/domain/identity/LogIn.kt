@@ -4,6 +4,7 @@
 package com.cogra.domain.identity
 
 import com.cogra.domain.Outcome
+import com.cogra.domain.map
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
@@ -27,21 +28,16 @@ class LogIn @Inject constructor(
         deviceLabel: String?,
         forgetOnSignOut: Boolean,
     ): Outcome<Unit> =
-        when (val outcome = sessions.logIn(email, password, deviceLabel)) {
-            is Outcome.Success -> {
-                // The notice posts before the token save: saving flips
-                // auth-driven navigation, and the shell dialog must
-                // already be pending when Home renders (auth.md "Reuse
-                // detection" — delivered exactly once, so a dropped
-                // notice never comes back).
-                outcome.value.reuseDetectedAt?.let(notices::post)
-                // Saving first makes the account active, so the flag
-                // lands in the right slot.
-                tokens.save(outcome.value.tokens)
-                identity.setForgetOnSignOut(forgetOnSignOut)
-                Outcome.Success(Unit)
-            }
-            is Outcome.Refused -> outcome
-            is Outcome.Failed -> outcome
+        sessions.logIn(email, password, deviceLabel).map { grant ->
+            // The notice posts before the token save: saving flips
+            // auth-driven navigation, and the shell dialog must
+            // already be pending when Home renders (auth.md "Reuse
+            // detection" — delivered exactly once, so a dropped
+            // notice never comes back).
+            grant.reuseDetectedAt?.let(notices::post)
+            // Saving first makes the account active, so the flag
+            // lands in the right slot.
+            tokens.save(grant.tokens)
+            identity.setForgetOnSignOut(forgetOnSignOut)
         }
 }
