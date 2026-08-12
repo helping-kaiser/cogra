@@ -15,6 +15,7 @@ import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { useRegistrationFlow, useRegistrationProgress } from "@/lib/signing/provider";
+import { TransportError } from "@/lib/ui/transport-error";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
 
@@ -148,15 +149,7 @@ export function HomeShell({
       )}
       {isApplicant && <ApplicantStatus progress={progress} />}
       {me?.accountState === "MEMBER" && <MemberStatus me={me} />}
-      {transportFailed && (
-        <p
-          role="alert"
-          data-testid="home_transport_error"
-          className="text-sm text-red-600 dark:text-red-400"
-        >
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
-      )}
+      {transportFailed && <TransportError testId="home_transport_error" />}
     </main>
   );
 }

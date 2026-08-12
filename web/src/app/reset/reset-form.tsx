@@ -11,8 +11,12 @@ import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
+import { Button } from "@/lib/ui/button";
 import { PasswordField } from "@/lib/ui/password-field";
+import { TextField } from "@/lib/ui/text-field";
+import { TransportError } from "@/lib/ui/transport-error";
 
 function resetMessage(code: ErrorCode): string {
   switch (code) {
@@ -20,10 +24,8 @@ function resetMessage(code: ErrorCode): string {
       return "The reset token is invalid or expired.";
     case "WEAK_PASSWORD":
       return "Passwords need at least 12 characters and can't be a known breached password.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 
@@ -90,55 +92,36 @@ export function ResetForm() {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Reset your password</h1>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          data-testid="reset_email"
-          type="email"
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            setError(null);
-          }}
-          autoComplete="email"
-          className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-        />
-      </div>
-      <button
-        type="button"
-        data-testid="reset_request"
-        disabled={!canRequest}
-        onClick={onRequest}
-        className="rounded-md border border-zinc-300 px-4 py-2 font-medium disabled:opacity-40 dark:border-zinc-700"
-      >
+      <TextField
+        label="Email"
+        value={email}
+        onChange={(value) => {
+          setEmail(value);
+          setError(null);
+        }}
+        type="email"
+        autoComplete="email"
+        testId="reset_email"
+      />
+      <Button testId="reset_request" variant="outline" disabled={!canRequest} onClick={onRequest}>
         Email me a reset token
-      </button>
+      </Button>
       {requested && (
         <p role="status" data-testid="reset_requested" className="text-sm text-zinc-600 dark:text-zinc-400">
           If that address has an account, a reset token is on its way.
         </p>
       )}
       <form onSubmit={onConfirm} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="token" className="text-sm font-medium">
-            Reset token
-          </label>
-          <input
-            id="token"
-            data-testid="reset_token"
-            type="text"
-            value={token}
-            onChange={(event) => {
-              setToken(event.target.value);
-              setError(null);
-            }}
-            autoComplete="off"
-            className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-          />
-        </div>
+        <TextField
+          label="Reset token"
+          value={token}
+          onChange={(value) => {
+            setToken(value);
+            setError(null);
+          }}
+          autoComplete="off"
+          testId="reset_token"
+        />
         <PasswordField
           id="new-password"
           label="New password"
@@ -155,23 +138,10 @@ export function ResetForm() {
             {resetMessage(error)}
           </p>
         )}
-        {transportFailed && (
-          <p
-            role="alert"
-            data-testid="reset_transport_error"
-            className="text-sm text-red-600 dark:text-red-400"
-          >
-            Can&apos;t reach the server. Check your connection and try again.
-          </p>
-        )}
-        <button
-          type="submit"
-          data-testid="reset_confirm"
-          disabled={!canConfirm}
-          className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        {transportFailed && <TransportError testId="reset_transport_error" />}
+        <Button type="submit" testId="reset_confirm" disabled={!canConfirm}>
           Set new password
-        </button>
+        </Button>
       </form>
     </main>
   );

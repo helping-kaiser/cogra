@@ -15,11 +15,9 @@ import {
   type MeQuery,
 } from "@/__generated__/graphql";
 import {
-  fetchOutcome,
-  payload,
   payloadOutcome,
   success,
-  unauthenticated,
+  viewerField,
   type Outcome,
 } from "./outcome";
 import type { RefreshExecutor } from "@/lib/session/refresher";
@@ -126,12 +124,12 @@ export function confirmPasswordReset(
  * uploaded. Guarded by the caller.
  */
 export async function fetchKeyBackup(client: ApolloClient): Promise<Outcome<string | null>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: KeyBackupDocument, fetchPolicy: "network-only" }),
+  const me = await viewerField(
+    () => client.query({ query: KeyBackupDocument, fetchPolicy: "network-only" }),
+    (data) => data.me,
   );
-  if (fetched.kind !== "success") return fetched;
-  if (fetched.value.me === null) return unauthenticated();
-  return success(fetched.value.me.keyBackup);
+  if (me.kind !== "success") return me;
+  return success(me.value.keyBackup);
 }
 
 export function uploadKeyBackup(client: ApolloClient, blob: string): Promise<Outcome<true>> {
@@ -146,11 +144,9 @@ export function uploadKeyBackup(client: ApolloClient, blob: string): Promise<Out
  * The viewer, live — a null `me` is an UNAUTHENTICATED refusal so the
  * guard treats a stale access token and an explicit refusal the same way.
  */
-export async function fetchMe(client: ApolloClient): Promise<Outcome<MeUser>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: MeDocument, fetchPolicy: "network-only" }),
+export function fetchMe(client: ApolloClient): Promise<Outcome<MeUser>> {
+  return viewerField(
+    () => client.query({ query: MeDocument, fetchPolicy: "network-only" }),
+    (data) => data.me,
   );
-  if (fetched.kind !== "success") return fetched;
-  if (fetched.value.me === null) return unauthenticated();
-  return payload([], fetched.value.me);
 }
