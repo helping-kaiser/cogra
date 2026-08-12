@@ -1,10 +1,5 @@
-// The domain stores over the encrypted layer. Tokens overwrite in
-// place (the refresh token rotates on every use) and carry the account
-// they authenticate; the identity store keys every value — actor seed,
-// pending backup blob, per-write handshake material, and flags — by
-// that account (auth.md "Multi-account device custody"), and adopts
-// records left by earlier single-account builds into the first
-// signed-in account's slots.
+// The domain stores (com.cogra.domain.store contracts) over the
+// encrypted layer.
 
 package com.cogra.network.store
 
