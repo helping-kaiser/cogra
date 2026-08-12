@@ -16,7 +16,9 @@ import { extractInviteId } from "@/lib/onboarding/invite-input";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
+import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { TransportError } from "@/lib/ui/transport-error";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
   const [waitingHintDismissed, setWaitingHintDismissed] = useState(false);
@@ -57,9 +59,10 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
       );
     case "failed":
       return (
-        <p role="alert" data-testid="home_application_offline" className="text-sm text-red-600 dark:text-red-400">
-          Can&apos;t reach the server. Your application resumes when the connection is back.
-        </p>
+        <TransportError
+          testId="home_application_offline"
+          message="Can't reach the server. Your application resumes when the connection is back."
+        />
       );
     case "awaitingApproval": {
       const { emailVerified, keyAttached, keyOnDevice } = progress;
@@ -113,14 +116,16 @@ function VerifyCard() {
           autoComplete="email"
           className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
         />
-        <button
+        <Button
           type="submit"
-          data-testid="verify_resend"
+          testId="verify_resend"
+          variant="outline"
+          size="sm"
+          selfStart
           disabled={email.trim() === "" || resending}
-          className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:opacity-40 dark:border-zinc-700"
         >
           Resend the link
-        </button>
+        </Button>
         {resent && (
           <p role="status" data-testid="verify_resent" className="text-sm text-zinc-600 dark:text-zinc-400">
             If that email has a pending application, a fresh link is on its way.
@@ -141,7 +146,7 @@ function CeremonyCard() {
       <Link
         href="/key"
         data-testid="home_create_key"
-        className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+        className={buttonClassName({ size: "sm", selfStart: true })}
       >
         Create the key
       </Link>
@@ -161,7 +166,7 @@ function KeyElsewhereCard() {
       <Link
         href="/key"
         data-testid="home_fresh_key"
-        className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+        className={buttonClassName({ size: "sm", selfStart: true })}
       >
         Create a fresh key
       </Link>
@@ -180,7 +185,7 @@ export function RestoreCard() {
       <Link
         href="/restore"
         data-testid="home_restore"
-        className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
+        className={buttonClassName({ size: "sm", selfStart: true })}
       >
         Restore the key
       </Link>
@@ -197,14 +202,9 @@ function WaitingHint({ onDismiss }: { onDismiss: () => void }) {
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Both proofs are in. Your inviter approves your application next; meanwhile, look around.
       </p>
-      <button
-        type="button"
-        data-testid="home_waiting_dismiss"
-        onClick={onDismiss}
-        className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium dark:border-zinc-700"
-      >
+      <Button testId="home_waiting_dismiss" variant="outline" size="sm" selfStart onClick={onDismiss}>
         Got it
-      </button>
+      </Button>
     </Card>
   );
 }
@@ -295,14 +295,15 @@ function RearmCard() {
             Applying the invite…
           </p>
         )}
-        <button
+        <Button
           type="submit"
-          data-testid="rearm_submit"
+          testId="rearm_submit"
+          size="sm"
+          selfStart
           disabled={input.trim() === "" || rearming}
-          className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
         >
           Re-arm my application
-        </button>
+        </Button>
       </form>
     </Card>
   );

@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useRegistrationFlow, useKeyCeremony, useRegistrationProgress } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
+import { TransportError } from "@/lib/ui/transport-error";
 
 export function KeyCeremonyView() {
   const ceremony = useKeyCeremony();
@@ -82,15 +84,7 @@ export function KeyCeremonyView() {
             devices — CoGra never holds it. A recovery code lets you restore that key if this
             browser is lost. We recommend creating one now.
           </p>
-          {attachError === "network" && (
-            <p
-              role="alert"
-              data-testid="ceremony_attach_error"
-              className="text-sm text-red-600 dark:text-red-400"
-            >
-              Can&apos;t reach the server. Check your connection and try again.
-            </p>
-          )}
+          {attachError === "network" && <TransportError testId="ceremony_attach_error" />}
           {attachError === "keyInUse" && (
             <p
               role="alert"
@@ -108,24 +102,17 @@ export function KeyCeremonyView() {
           )}
           {!confirmingDecline && (
             <>
-              <button
-                type="button"
-                data-testid="backup_accept"
-                onClick={onAccept}
-                disabled={inProgress}
-                className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-              >
+              <Button testId="backup_accept" onClick={onAccept} disabled={inProgress}>
                 Create my recovery code
-              </button>
-              <button
-                type="button"
-                data-testid="backup_decline"
+              </Button>
+              <Button
+                testId="backup_decline"
+                variant="outline"
                 onClick={() => setConfirmingDecline(true)}
                 disabled={inProgress}
-                className="rounded-md border border-zinc-300 px-4 py-2 font-medium disabled:opacity-40 dark:border-zinc-700"
               >
                 Not now
-              </button>
+              </Button>
             </>
           )}
           {confirmingDecline && (
@@ -147,22 +134,16 @@ export function KeyCeremonyView() {
                 permanently lost with it. Your login would survive, but the actor behind it can
                 never be restored. You can create a backup later in Settings.
               </p>
-              <button
-                type="button"
-                data-testid="backup_decline_confirm"
-                onClick={onConfirmDecline}
-                className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
-              >
+              <Button testId="backup_decline_confirm" onClick={onConfirmDecline}>
                 I accept the risk
-              </button>
-              <button
-                type="button"
-                data-testid="backup_decline_cancel"
+              </Button>
+              <Button
+                testId="backup_decline_cancel"
+                variant="outline"
                 onClick={() => setConfirmingDecline(false)}
-                className="rounded-md border border-zinc-300 px-4 py-2 font-medium dark:border-zinc-700"
               >
                 Go back
-              </button>
+              </Button>
             </div>
           )}
         </>
@@ -178,14 +159,9 @@ export function KeyCeremonyView() {
             Write this code down and keep it somewhere safe. It is shown only this once — CoGra
             cannot recover it for you.
           </p>
-          <button
-            type="button"
-            data-testid="backup_code_saved"
-            onClick={finish}
-            className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <Button testId="backup_code_saved" onClick={finish}>
             I&apos;ve written it down
-          </button>
+          </Button>
         </>
       )}
     </main>
