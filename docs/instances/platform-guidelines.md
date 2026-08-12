@@ -195,7 +195,7 @@ witnessed on the shared graph via the platform-document anchor.
 
 Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
-thereafter: **attribution** `a ∈ {0, 1}` (credit requirement) and
+thereafter: **attribution** `attr ∈ {0, 1}` (credit requirement) and
 **oversight** `o ∈ {0, 0.5, 1}` (AI provenance). They are
 content-governance metadata of the Publish record
 (`def:content:license-qualifiers`); no L1 formula consumes

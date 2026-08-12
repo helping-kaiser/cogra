@@ -1,0 +1,154 @@
+# The content surface (api-spec.md "Content authoring", roadmap
+# "Slice 2"): the four prepare verbs, the chronological listing, and
+# the post-with-thread read. Reads are anonymous-capable; prepares are
+# member-session writes signed in this browser. Field selections are
+# inlined — the codegen client preset masks fragments, and the house
+# style keeps documents flat.
+
+mutation PreparePost($input: PreparePostInput!) {
+  preparePost(input: $input) {
+    node
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation PreparePostEdit($input: PreparePostEditInput!) {
+  preparePostEdit(input: $input) {
+    node
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation PrepareComment($input: PrepareCommentInput!) {
+  prepareComment(input: $input) {
+    node
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
+  prepareCommentEdit(input: $input) {
+    node
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
+query Posts($first: Int!, $after: String) {
+  posts(first: $first, after: $after) {
+    edges {
+      node {
+    id
+        title {
+          value
+          status
+        }
+        description {
+          value
+          status
+        }
+        content {
+          value
+          status
+        }
+        author {
+          id
+          handle
+        }
+        createdAt
+        updatedAt
+        moderationStatus
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
+  post(id: $id) {
+    id
+    title {
+      value
+      status
+    }
+    description {
+      value
+      status
+    }
+    content {
+      value
+      status
+    }
+    author {
+      id
+      handle
+    }
+    createdAt
+    updatedAt
+    moderationStatus
+    comments(first: $commentsFirst, after: $commentsAfter) {
+      edges {
+        node {
+          id
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+          }
+          createdAt
+          updatedAt
+          moderationStatus
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

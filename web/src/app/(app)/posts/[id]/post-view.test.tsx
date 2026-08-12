@@ -1,0 +1,157 @@
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { graphql, HttpResponse } from "msw";
+import { describe, expect, it } from "vitest";
+
+import { createTokenStore } from "@/lib/session/token-store";
+import { startMswServer } from "@/test/msw";
+import { renderWithProviders } from "@/test/providers";
+import { fakeWriteSigner } from "@/test/registration";
+import { PostView } from "./post-view";
+
+const server = startMswServer();
+
+function moderated(value: string | null) {
+  return { __typename: "ModeratedText", value, status: "NORMAL" };
+}
+
+function detail(authorId: string, comments: { id: string; body: string }[]) {
+  return {
+    post: {
+      __typename: "Post",
+      id: "p1",
+      title: moderated("The title"),
+      description: moderated(null),
+      content: moderated("The body"),
+      author: { __typename: "User", id: authorId, handle: "alice" },
+      createdAt: "2026-08-12T10:00:00Z",
+      updatedAt: "2026-08-12T10:00:00Z",
+      moderationStatus: "NORMAL",
+      comments: {
+        __typename: "CommentConnection",
+        edges: comments.map((comment) => ({
+          __typename: "CommentEdge",
+          node: {
+            __typename: "Comment",
+            id: comment.id,
+            content: moderated(comment.body),
+            author: { __typename: "User", id: "u2", handle: "bob" },
+            createdAt: "2026-08-12T10:05:00Z",
+            updatedAt: "2026-08-12T10:05:00Z",
+            moderationStatus: "NORMAL",
+          },
+        })),
+        pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      },
+    },
+  };
+}
+
+function storeFor(accountId: string) {
+  const store = createTokenStore();
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId });
+  return store;
+}
+
+describe("PostView", () => {
+  it("renders the post with its thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+    expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
+    expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
+  });
+
+  it("offers the edit link to the creator only", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("post-edit")).toHaveAttribute("href", "/compose?post=p1");
+  });
+
+  it("hides the edit link from non-creators", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("someone-else", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-edit")).not.toBeInTheDocument();
+  });
+
+  it("serves not-found for an unknown id", async () => {
+    server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })));
+    renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
+  });
+
+  it("signs a comment and confirms it is in flight", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      graphql.mutation("PrepareComment", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c-node",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: signer,
+    });
+
+    fireEvent.change(await screen.findByTestId("comment-draft"), {
+      target: { value: "Nice one" },
+    });
+    fireEvent.click(screen.getByTestId("comment-license-attribution"));
+    fireEvent.click(screen.getByTestId("comment-submit"));
+
+    expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
+    expect(signer.signStaged).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(variables).toEqual({
+        input: {
+          target: "p1",
+          content: "Nice one",
+          license: { attributionRequired: true, oversight: "NONE" },
+        },
+      }),
+    );
+    expect(screen.getByTestId("comment-draft")).toHaveValue("");
+  });
+
+  it("keeps the comment button disabled without a draft", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("comment-submit")).toBeDisabled();
+  });
+});

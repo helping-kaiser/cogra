@@ -19,8 +19,9 @@ import {
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
 type InviteLinksUser = NonNullable<InviteLinksQuery["me"]>;
-export type InviteLinkView = NonNullable<InviteLinksUser["inviteLinks"]>["nodes"][number];
-export type ApplicationView = InviteLinkView["applications"]["nodes"][number];
+export type InviteLinkView =
+  NonNullable<InviteLinksUser["inviteLinks"]>["edges"][number]["node"];
+export type ApplicationView = InviteLinkView["applications"]["edges"][number]["node"];
 
 export type CreateInviteLinkFields = {
   expiresAt: string;
@@ -41,7 +42,7 @@ export async function fetchInviteLinks(
     (data) => data.me?.inviteLinks,
   );
   if (links.kind !== "success") return links;
-  return success(links.value.nodes);
+  return success(links.value.edges.map((edge) => edge.node));
 }
 
 /** The operational default lifetime of a fresh link; links are revocable any time. */

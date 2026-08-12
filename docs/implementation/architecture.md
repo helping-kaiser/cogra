@@ -265,7 +265,8 @@ steps:
    and envelope conformance, pre-check the write rule (below),
    assemble the canonical proposal — act body, payload envelope,
    dependency list — and store it as a **staged write** (Postgres
-   row; payload bytes staged in the carriage tables). Return the
+   row; payload bytes ride the row until confirm promotes them
+   into carriage). Return the
    proposal with its pre-digests to the client so it recomputes
    what it commits to before signing.
 2. **Pre-sign** (client). The device signs the proposal

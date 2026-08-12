@@ -39,11 +39,15 @@ The Publish record carries:
   ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)) —
   headroom stays for deliberately strong attachment; the default
   is a fallback, never the recommendation.
-- **License qualifiers.** Attribution `a ∈ {0, 1}` and oversight
-  `o ∈ {0, 0.5, 1}` are structural metadata of the Publish
-  record — declared at authoring time (mandatory in every
-  content-creation flow), immutable thereafter, out of reach of
-  any edit. Enforcement is CoGra's, per the four planks in
+- **License qualifiers.** Attribution `attr ∈ {0, 1}` and
+  oversight `o ∈ {0, 0.5, 1}` — `attr` here, keeping the symbol
+  apart from the attachment parameter `a` above — are structural
+  metadata of the Publish record — declared at authoring time
+  (mandatory in every content-creation flow), immutable
+  thereafter, out of reach of any edit. CoGra publishes them as
+  the canonical license string
+  ([data-model.md "The payload envelope"](../implementation/data-model.md#the-payload-envelope)).
+  Enforcement is CoGra's, per the four planks in
   [platform-guidelines.md §5](platform-guidelines.md#5-license-and-provenance-obligations).
 - **The payload envelope.** The Peer Content Envelope carries the
   Post's structured fields — title, description, body — and the

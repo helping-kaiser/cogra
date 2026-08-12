@@ -34,6 +34,17 @@ pub enum PrepareError {
     Storage(#[from] sqlx::Error),
 }
 
+/// A gesture's target: a named node, or the mint of the gesture's own
+/// act — the genesis shape (nodes.md §1: an act of a mint-capable
+/// family whose target equals the mint of its own identifier is the
+/// genesis act). Own-mint targets resolve after prepare allocates the
+/// sequence value, because the act identifier contains it.
+#[derive(Debug, Clone)]
+pub enum Target {
+    Node(NodeId),
+    OwnMint,
+}
+
 /// One gesture to prepare: the author-asserted fields of the canonical
 /// proposal, minus the sequence value prepare allocates.
 #[derive(Debug, Clone)]
@@ -43,7 +54,7 @@ pub struct Gesture {
     pub family: Family,
     /// Middle node for hyper-edge families; None for binary.
     pub middle: Option<NodeId>,
-    pub target: NodeId,
+    pub target: Target,
     pub p_d: f64,
     pub p_i: f64,
     pub settlement_ref: Option<ActId>,
@@ -77,15 +88,8 @@ pub async fn prepare<B: L1Boundary>(
 ) -> Result<Prepared, PrepareError> {
     // Formation, pre-checked on the same census surface the host enforces
     // (common::l1::census) so a malformed gesture fails before staging.
-    gesture
-        .family
-        .endpoint_check(
-            &gesture.author,
-            &NodeId::Addr(gesture.author.clone()),
-            gesture.middle.as_ref(),
-            &gesture.target,
-        )
-        .map_err(PrepareError::Formation)?;
+    // The endpoint check runs after the target resolves — an own-mint
+    // target needs the allocated sequence value first.
     gesture
         .family
         .params_check(gesture.p_d, gesture.p_i)
@@ -118,14 +122,32 @@ pub async fn prepare<B: L1Boundary>(
     let prepared_epoch = mirror::last_ingested_epoch(pool).await?;
     let mut tx = pool.begin().await?;
     let seq = staged::allocate_seq(&mut tx, &gesture.author).await?;
+    // Non-negative by construction: the counter starts at zero.
+    let seq = seq.max(0) as u64;
+    let target = match gesture.target {
+        Target::Node(node) => node,
+        Target::OwnMint => NodeId::Mint(ActId {
+            author: gesture.author.clone(),
+            seq,
+            family: gesture.family,
+        }),
+    };
+    gesture
+        .family
+        .endpoint_check(
+            &gesture.author,
+            &NodeId::Addr(gesture.author.clone()),
+            gesture.middle.as_ref(),
+            &target,
+        )
+        .map_err(PrepareError::Formation)?;
     let proposal = Proposal {
         body: StructuralBody {
             author: gesture.author,
-            // Non-negative by construction: the counter starts at zero.
-            seq: seq.max(0) as u64,
+            seq,
             family: gesture.family,
             middle: gesture.middle,
-            target: gesture.target,
+            target,
             p_d: gesture.p_d,
             p_i: gesture.p_i,
             settlement_ref: gesture.settlement_ref,

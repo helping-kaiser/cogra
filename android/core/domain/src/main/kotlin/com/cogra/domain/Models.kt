@@ -183,3 +183,86 @@ const val MIN_HANDLE_LENGTH = 3
 /** The house prefill for a stance dimension — sliders and link prefills start here. */
 const val DEFAULT_STANCE = 0.1
 
+
+// ---------------------------------------------------------------------
+// Content (slice 2 — api-spec.md "Content nodes", "Content authoring")
+// ---------------------------------------------------------------------
+
+/** Per-field moderation state; UNKNOWN renders like REDACTED (hide). */
+enum class FieldStatus {
+    NORMAL,
+    SENSITIVE,
+    REDACTED,
+    UNKNOWN,
+}
+
+/**
+ * Text carrying its own moderation status. `value` is null when the
+ * field is redacted or unset — `status` disambiguates; empty is a
+ * value, null never is.
+ */
+data class ModeratedField(
+    val value: String?,
+    val status: FieldStatus,
+)
+
+/** One post with its current display version. */
+data class PostView(
+    val id: String,
+    val title: ModeratedField,
+    val description: ModeratedField,
+    val content: ModeratedField,
+    /** Null when no account fronts the author (system actors). */
+    val author: ActorRef?,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+)
+
+/** One comment with its current display version. */
+data class CommentView(
+    val id: String,
+    val content: ModeratedField,
+    val author: ActorRef?,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+)
+
+/** One forward page of a keyset connection. */
+data class Page<T>(
+    val items: List<T>,
+    /** The cursor to continue from; null when the page is empty. */
+    val endCursor: String?,
+    val hasNextPage: Boolean,
+)
+
+/** A post with its first page of comments — the detail read. */
+data class PostDetail(
+    val post: PostView,
+    val comments: Page<CommentView>,
+)
+
+/**
+ * AI-provenance oversight, three-valued
+ * (platform-guidelines.md §5): the declaration is mandatory at
+ * authoring time.
+ */
+enum class OversightChoice {
+    NONE,
+    CONDITIONAL,
+    FULL,
+}
+
+/** License qualifiers, declared at authoring and immutable. */
+data class LicenseChoice(
+    val attributionRequired: Boolean,
+    val oversight: OversightChoice,
+)
+
+/**
+ * A prepared content write: the node id the content will serve under
+ * once landed, plus the writes for this device to sign.
+ */
+data class PreparedContentView(
+    val node: String,
+    val writes: List<PreparedWriteView>,
+)

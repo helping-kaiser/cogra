@@ -298,11 +298,11 @@ describe("fetchApplicationStatus", () => {
         application,
         stagedWrites: {
           __typename: "StagedWriteConnection",
-          nodes: [
+          edges: [
             stagedNode("sw-0", "REGISTRATION", "EXPIRED"),
             stagedNode("sw-1", "OPINION", "AWAITING_PRE_SIGN"),
             stagedNode("sw-2", "REGISTRATION", "AWAITING_PRE_SIGN"),
-          ],
+          ].map((node) => ({ __typename: "StagedWriteEdge", node })),
         },
       }),
     );
@@ -321,7 +321,7 @@ describe("fetchApplicationStatus", () => {
         id: "u1",
         accountState: "APPLICANT",
         application,
-        stagedWrites: { __typename: "StagedWriteConnection", nodes: [] },
+        stagedWrites: { __typename: "StagedWriteConnection", edges: [] },
       }),
     );
     const outcome = await fetchApplicationStatus(client());

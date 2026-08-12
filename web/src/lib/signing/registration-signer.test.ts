@@ -110,7 +110,7 @@ function me(fields: Record<string, unknown>) {
     accountState: "APPLICANT",
     actorPubkey: null,
     application: application(),
-    stagedWrites: { __typename: "StagedWriteConnection", nodes: [] },
+    stagedWrites: { __typename: "StagedWriteConnection", edges: [] },
     ...fields,
   };
 }
@@ -164,7 +164,10 @@ describe("registration signer", () => {
     server.use(
       statusHandler(
         me({
-          stagedWrites: { __typename: "StagedWriteConnection", nodes: [stagedRegistration()] },
+          stagedWrites: {
+            __typename: "StagedWriteConnection",
+            edges: [{ __typename: "StagedWriteEdge", node: stagedRegistration() }],
+          },
         }),
       ),
     );
@@ -184,7 +187,10 @@ describe("registration signer", () => {
     server.use(
       statusHandler(
         me({
-          stagedWrites: { __typename: "StagedWriteConnection", nodes: [stagedRegistration()] },
+          stagedWrites: {
+            __typename: "StagedWriteConnection",
+            edges: [{ __typename: "StagedWriteEdge", node: stagedRegistration() }],
+          },
         }),
       ),
     );
@@ -331,7 +337,10 @@ describe("registration signer", () => {
         me({
           actorPubkey: toBase64(foreign.publicKeyBytes()),
           application: application({ keyAttached: true, approvedAt: PAST }),
-          stagedWrites: { __typename: "StagedWriteConnection", nodes: [stagedRegistration()] },
+          stagedWrites: {
+            __typename: "StagedWriteConnection",
+            edges: [{ __typename: "StagedWriteEdge", node: stagedRegistration() }],
+          },
         }),
       ),
     );

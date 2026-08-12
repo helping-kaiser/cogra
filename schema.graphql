@@ -67,10 +67,6 @@ type ApplicationConnection {
 	A list of edges.
 	"""
 	edges: [ApplicationEdge!]!
-	"""
-	A list of nodes.
-	"""
-	nodes: [Application!]!
 }
 
 """
@@ -189,6 +185,62 @@ type ChangePasswordPayload {
 	ok: Boolean
 	userErrors: [UserError!]!
 }
+
+type Comment implements Node {
+	id: UUID!
+	"""
+	The minting record's confirmation.
+	"""
+	createdAt: DateTime!
+	"""
+	The most recent fold-winning update's promotion; equals
+	`createdAt` if never changed.
+	"""
+	updatedAt: DateTime!
+	content: ModeratedText!
+	author: User
+	"""
+	The node this comment is on — the genesis Review's parent.
+	"""
+	target: CommentTarget
+	moderationStatus: ModerationStatus!
+	"""
+	This comment's direct replies, oldest-first in landing order.
+	"""
+	replies(after: String, before: String, first: Int, last: Int): CommentConnection!
+}
+
+type CommentConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [CommentEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type CommentEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Comment!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+What a Review can respond to (comment.md §1). Every passive node
+type is Reviewable on the substrate; the variants grow with the
+slices that carry them — slice 2 offers Posts and Comments.
+"""
+union CommentTarget = Post | Comment
 
 input ConfirmEmailChangeInput {
 	"""
@@ -321,6 +373,18 @@ enum ErrorCode {
 }
 
 """
+Per-field moderation state (api-spec.md "Per-field moderation").
+SENSITIVE is the read-side flag; REDACTED means the value is gone
+and the mark remains — record-granular, so every field carried by a
+removed payload goes REDACTED together.
+"""
+enum FieldModerationStatus {
+	NORMAL
+	SENSITIVE
+	REDACTED
+}
+
+"""
 Connectivity report for the API process and its store.
 """
 type Health {
@@ -399,10 +463,6 @@ type InviteLinkConnection {
 	A list of edges.
 	"""
 	edges: [InviteLinkEdge!]!
-	"""
-	A list of nodes.
-	"""
-	nodes: [InviteLink!]!
 }
 
 """
@@ -417,6 +477,20 @@ type InviteLinkEdge {
 	A cursor for use in pagination
 	"""
 	cursor: String!
+}
+
+"""
+License qualifiers, mandatory at authoring time and immutable
+(platform-guidelines.md §5): they ride the structural record as
+public protocol references, surviving every payload state.
+"""
+input LicenseInput {
+	"""
+	Credit requirement: the creator is credited on every display,
+	quote, and reference surface.
+	"""
+	attributionRequired: Boolean!
+	oversight: Oversight!
 }
 
 input LogInInput {
@@ -439,6 +513,28 @@ type LogInPayload {
 	"""
 	reuseDetectedAt: DateTime
 	userErrors: [UserError!]!
+}
+
+"""
+Text carrying its own moderation status. `value` is null when the
+field is redacted, or unset where the field is optional — `status`
+disambiguates; empty is a value, null never is.
+"""
+type ModeratedText {
+	value: String
+	status: FieldModerationStatus!
+}
+
+"""
+Node-level moderation cache — the cheap "is anything wrong here"
+check; the substrate-visible verdict is the Tag record behind it
+(moderation.md). Constant NORMAL until the moderation slice stores
+verdicts (api-spec.md "Content nodes").
+"""
+enum ModerationStatus {
+	NORMAL
+	SENSITIVE
+	ILLEGAL
 }
 
 type Mutation {
@@ -572,6 +668,31 @@ type Mutation {
 	"""
 	prepareStance(input: PrepareStanceInput!): PreparePayload!
 	"""
+	Prepares a new Post: one genesis Publish through the ordinary
+	write path — the returned write pre-signs, seals, and approves
+	like any other; `node` is the id the post serves under once the
+	record lands (post.md §1).
+	"""
+	preparePost(input: PreparePostInput!): PrepareContentPayload!
+	"""
+	Prepares a Post edit: an ordinary-role Publish at attachment 0
+	toward the existing node, chained behind the current head.
+	Creator-only; one in-flight edit per post and author
+	(post.md §4).
+	"""
+	preparePostEdit(input: PreparePostEditInput!): PrepareContentPayload!
+	"""
+	Prepares a new Comment: one genesis Review whose terminal leg
+	mints the Comment on the target (comment.md §1).
+	"""
+	prepareComment(input: PrepareCommentInput!): PrepareContentPayload!
+	"""
+	Prepares a Comment edit: an ordinary-role Review at (0,0) — A
+	leg to the genesis parent, terminal leg to the existing Comment
+	(comment.md §4).
+	"""
+	prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
+	"""
 	Relays the pre-signed proposals to L1's seal round trip. When the
 	seal returns synchronously the payload's staged writes are
 	already AWAITING_APPROVAL, verified act included. Verification
@@ -586,6 +707,39 @@ type Mutation {
 	asynchronous; observe via `stagedWrite`.
 	"""
 	approveActs(input: ApproveActsInput!): ApproveActsPayload!
+}
+
+"""
+Every graph-backed thing with an identity and a lifecycle
+(api-spec.md "Identity and actor interfaces"). Coverage grows with
+the slices; slice 2 carries the content nodes.
+"""
+interface Node {
+	"""
+	The node's L2 id.
+	"""
+	id: UUID!
+	"""
+	The minting record's confirmation.
+	"""
+	createdAt: DateTime!
+	"""
+	The most recent fold-winning update's promotion; equals createdAt if never changed.
+	"""
+	updatedAt: DateTime!
+}
+
+"""
+AI-provenance oversight, three-valued (platform-guidelines.md §5;
+layer1-interface.md §10 `def:content:license-qualifiers`): NONE — no
+AI disclosure required; CONDITIONAL — generation details disclosed
+on query; FULL — the complete provenance chain published alongside
+the record.
+"""
+enum Oversight {
+	NONE
+	CONDITIONAL
+	FULL
 }
 
 """
@@ -611,6 +765,101 @@ type PageInfo {
 }
 
 """
+An act payload's one-way state (layer1-interface.md §8.4): FULL
+until the controller removes, REDUCED forever after.
+"""
+enum PayloadState {
+	FULL
+	REDUCED
+}
+
+type Post implements Node {
+	id: UUID!
+	"""
+	The minting record's confirmation.
+	"""
+	createdAt: DateTime!
+	"""
+	The most recent fold-winning update's promotion; equals
+	`createdAt` if never changed.
+	"""
+	updatedAt: DateTime!
+	title: ModeratedText!
+	description: ModeratedText!
+	content: ModeratedText!
+	author: User
+	moderationStatus: ModerationStatus!
+	"""
+	This post's direct comments — genesis Reviews whose A leg
+	enters here — oldest-first in landing order (conversation
+	order), keyset-paginated.
+	"""
+	comments(after: String, before: String, first: Int, last: Int): CommentConnection!
+}
+
+type PostConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [PostEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type PostEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Post!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+A Comment edit: an omitted body is refused (nothing would change);
+an explicit null clears to empty.
+"""
+input PrepareCommentEditInput {
+	id: UUID!
+	content: String
+}
+
+"""
+A new Comment: one genesis Review — A leg to the target, terminal
+leg minting the Comment (comment.md §1). This slice offers the
+comment box on Posts and Comments.
+"""
+input PrepareCommentInput {
+	target: UUID!
+	content: String!
+	license: LicenseInput!
+	"""
+	Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
+	"""
+	pDirected: Dimension
+	pInterest: Dimension
+}
+
+"""
+A prepared content write: the staged handshake plus `node` — the L2
+id the envelope binds to the minted node, and the id the content
+reads serve once the record lands. Null when `userErrors` is
+non-empty.
+"""
+type PrepareContentPayload {
+	node: UUID
+	writes: [PreparedWrite!]
+	userErrors: [UserError!]!
+}
+
+"""
 Staged proposals to pre-sign, in relay order. Each is its own priced
 act running its own two-signature handshake; null when `userErrors`
 is non-empty.
@@ -618,6 +867,35 @@ is non-empty.
 type PreparePayload {
 	writes: [PreparedWrite!]
 	userErrors: [UserError!]!
+}
+
+"""
+A Post edit: omitted fields are untouched (newest-wins fold per
+field, post.md §4); an explicit null clears the field. Identity,
+creator, and license never edit.
+"""
+input PreparePostEditInput {
+	id: UUID!
+	title: String
+	description: String
+	content: String
+}
+
+"""
+A new Post: one genesis Publish whose envelope carries the display
+fields (post.md §1). Fields are raw scalars; moderation is
+server-assigned.
+"""
+input PreparePostInput {
+	title: String
+	description: String
+	content: String!
+	license: LicenseInput!
+	"""
+	The author's attachment; defaults to the low-defaults policy
+	value (+0.1). `pInterest` is census-fixed at 1 for Publish.
+	"""
+	pDirected: Dimension
 }
 
 input PrepareStanceInput {
@@ -704,18 +982,89 @@ type Query {
 	the staging actor's session; null otherwise.
 	"""
 	stagedWrite(id: UUID!): StagedWrite
+	"""
+	One post by id; null for an unknown id.
+	"""
+	post(id: UUID!): Post
+	"""
+	One comment by id; null for an unknown id.
+	"""
+	comment(id: UUID!): Comment
+	"""
+	Any node by its L2 id, typed. Coverage grows with the slices —
+	content nodes resolve here today; null for an unknown id.
+	"""
+	node(id: UUID!): Node
+	"""
+	Batch node lookup — order preserved; an unknown id yields null
+	in its slot.
+	"""
+	nodes(ids: [UUID!]!): [Node]!
+	"""
+	One L1 record by its own identifier — the unit of the chronicle.
+	"""
+	record(id: RecordId!): Record
+	"""
+	Generic record lookup over the mirror — the public chronicle,
+	filterable along the mirror's own indexes, newest-first in
+	landing order. `target` matches a record's target (the middle
+	node on hyper families); `terminal` matches the terminal leg —
+	a comment's revision chain is `records(terminal: <comment>)`.
+	An id that resolves to no known node yields an empty page.
+	"""
+	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
+	"""
+	The chronological listing (roadmap "Slice 2"): every post,
+	newest-first in landing order — the record set's own order,
+	never wall clock (graph-model.md §2). Deliberately not the
+	ranked feed.
+	"""
+	posts(after: String, before: String, first: Int, last: Int): PostConnection!
 }
 
 type Record {
 	"""
 	L1's own record identifier, verbatim.
 	"""
-	id: String!
+	id: RecordId!
 	family: RecordFamily!
+	"""
+	The authoring account. Null when no account fronts the author's
+	address — system actors, until the actor surface grows.
+	"""
+	author: User
+	"""
+	The far end of a binary act, or the middle node the actor's leg
+	enters on a hyper act (a Review's parent). Resolved as a typed
+	node when CoGra carries one for it; `targetId` is always the raw
+	identifier.
+	"""
+	target: Node
+	"""
+	The raw L1 identifier of `target`.
+	"""
+	targetId: String
+	"""
+	The terminal leg's node — hyper acts only; minted by the act
+	when the record is a genesis (a Review's Comment).
+	"""
+	terminal: Node
+	"""
+	The raw L1 identifier of `terminal`; null on binary families.
+	"""
+	terminalId: String
+	"""
+	The authored directed parameter, as the actor's leg renders it.
+	"""
+	pDirected: Dimension!
+	"""
+	The authored interest parameter, as the actor's leg renders it.
+	"""
+	pInterest: Dimension!
 	"""
 	The landing epoch.
 	"""
-	epoch: Int!
+	landingEpoch: Int!
 	"""
 	Authoritative act time — the first component of the causal key.
 	"""
@@ -724,6 +1073,45 @@ type Record {
 	Position within the epoch's authoritative order.
 	"""
 	position: Int!
+	"""
+	Whether the act committed a non-empty payload.
+	"""
+	payloadMarked: Boolean!
+	"""
+	FULL until the payload controller removes; a reduced record
+	keeps its structure and witness forever (layers.md §5).
+	"""
+	payloadState: PayloadState!
+	"""
+	The content commitment (base64) — the payload bytes in carriage
+	verify against it.
+	"""
+	payloadWitness: String!
+}
+
+type RecordConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [RecordEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type RecordEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Record!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
 }
 
 """
@@ -750,6 +1138,8 @@ enum RecordFamily {
 	SEND
 	REFERENCE
 }
+
+scalar RecordId
 
 type RefreshPayload {
 	"""
@@ -912,10 +1302,6 @@ type StagedWriteConnection {
 	A list of edges.
 	"""
 	edges: [StagedWriteEdge!]!
-	"""
-	A list of nodes.
-	"""
-	nodes: [StagedWrite!]!
 }
 
 """

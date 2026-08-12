@@ -8,12 +8,18 @@ import com.apollographql.apollo.api.Optional
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.CommentView
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ActorRef
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
@@ -22,6 +28,7 @@ import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
 import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
@@ -43,6 +50,12 @@ import com.cogra.network.graphql.InviteLinksQuery
 import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
+import com.cogra.network.graphql.PostDetailQuery
+import com.cogra.network.graphql.PostsQuery
+import com.cogra.network.graphql.PrepareCommentEditMutation
+import com.cogra.network.graphql.PrepareCommentMutation
+import com.cogra.network.graphql.PreparePostEditMutation
+import com.cogra.network.graphql.PreparePostMutation
 import com.cogra.network.graphql.PrepareStanceMutation
 import com.cogra.network.graphql.RegisterMutation
 import com.cogra.network.graphql.RequestEmailChangeMutation
@@ -58,6 +71,10 @@ import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApplyWithInviteInput
+import com.cogra.network.graphql.type.PrepareCommentEditInput
+import com.cogra.network.graphql.type.PrepareCommentInput
+import com.cogra.network.graphql.type.PreparePostEditInput
+import com.cogra.network.graphql.type.PreparePostInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
 import com.cogra.network.graphql.type.ApproveApplicantsInput
@@ -83,6 +100,7 @@ import com.cogra.network.payload
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
 import com.cogra.network.toInfo
+import com.cogra.network.toInput
 import com.cogra.network.toView
 import com.cogra.network.unauthenticatedRefusal
 import java.time.Instant
@@ -164,8 +182,8 @@ class OnboardingRepositoryImpl @Inject constructor(
                 ApplicationStatus(
                     accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
                     application = me.application?.applicationFields?.toView(),
-                    stagedRegistration = me.stagedWrites?.nodes.orEmpty()
-                        .map { it.stagedWriteFields.toDomain() }
+                    stagedRegistration = me.stagedWrites?.edges.orEmpty()
+                        .map { it.node.stagedWriteFields.toDomain() }
                         .firstOrNull {
                             it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
                         },
@@ -361,7 +379,7 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = guard.run {
         client.query(InviteLinksQuery()).fetch().flatMap { data ->
             val me = data.me ?: return@flatMap unauthenticatedRefusal()
-            val links = me.inviteLinks?.nodes ?: return@flatMap unauthenticatedRefusal()
+            val links = me.inviteLinks?.edges?.map { it.node } ?: return@flatMap unauthenticatedRefusal()
             Outcome.Success(
                 links.map { link ->
                     InviteLinkInfo(
@@ -372,8 +390,8 @@ class AccountRepositoryImpl @Inject constructor(
                         createdAt = link.createdAt,
                         expiresAt = link.expiresAt,
                         revokedAt = link.revokedAt,
-                        applications = link.applications.nodes.map { node ->
-                            node.applicationFields.toInfo()
+                        applications = link.applications.edges.map { edge ->
+                            edge.node.applicationFields.toInfo()
                         },
                     )
                 },
@@ -432,4 +450,146 @@ class AccountRepositoryImpl @Inject constructor(
             it.approveApplicants.writes?.map { w -> w.preparedWriteFields.toDomain() }
         }
     }
+}
+
+@Singleton
+class ContentRepositoryImpl @Inject constructor(
+    private val client: ApolloClient,
+    private val guard: AuthGuard,
+) : ContentRepository {
+
+    // Reads are public-graph queries; they still ride the guard so a
+    // signed-in viewer's stale token refreshes rather than erroring.
+    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> = guard.run {
+        client.query(PostsQuery(first = first, after = Optional.presentIfNotNull(after)))
+            .fetch()
+            .map { data ->
+                Page(
+                    items = data.posts.edges.map { it.node.postFields.toDomain() },
+                    endCursor = data.posts.pageInfo.endCursor,
+                    hasNextPage = data.posts.pageInfo.hasNextPage,
+                )
+            }
+    }
+
+    override suspend fun post(
+        id: String,
+        commentsFirst: Int,
+        commentsAfter: String?,
+    ): Outcome<PostDetail?> = guard.run {
+        client.query(
+            PostDetailQuery(
+                id = id,
+                commentsFirst = commentsFirst,
+                commentsAfter = Optional.presentIfNotNull(commentsAfter),
+            ),
+        ).fetch().map { data ->
+            data.post?.let { post ->
+                PostDetail(
+                    post = post.postFields.toDomain(),
+                    comments = Page(
+                        items = post.comments.edges.map { it.node.commentFields.toDomain() },
+                        endCursor = post.comments.pageInfo.endCursor,
+                        hasNextPage = post.comments.pageInfo.hasNextPage,
+                    ),
+                )
+            }
+        }
+    }
+
+    override suspend fun comments(
+        postId: String,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<CommentView>> =
+        post(postId, first, after).flatMap { detail ->
+            when (detail) {
+                null -> Outcome.Failed(IllegalStateException("post vanished under its thread"))
+                else -> Outcome.Success(detail.comments)
+            }
+        }
+
+    override suspend fun preparePost(
+        title: String?,
+        description: String?,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView> = guard.run {
+        client.mutation(
+            PreparePostMutation(
+                PreparePostInput(
+                    title = Optional.presentIfNotNull(title),
+                    description = Optional.presentIfNotNull(description),
+                    content = content,
+                    license = license.toInput(),
+                ),
+            ),
+        ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.preparePost.node?.let { node ->
+                data.preparePost.writes?.let { writes ->
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                }
+            }
+        }
+    }
+
+    override suspend fun preparePostEdit(
+        id: String,
+        title: String?,
+        description: String?,
+        content: String,
+    ): Outcome<PreparedContentView> = guard.run {
+        client.mutation(
+            PreparePostEditMutation(
+                // The edit form holds the full field set, so every field
+                // rides as present; a present null clears (api-spec.md
+                // "Content authoring").
+                PreparePostEditInput(
+                    id = id,
+                    title = Optional.present(title),
+                    description = Optional.present(description),
+                    content = Optional.present(content),
+                ),
+            ),
+        ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.preparePostEdit.node?.let { node ->
+                data.preparePostEdit.writes?.let { writes ->
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                }
+            }
+        }
+    }
+
+    override suspend fun prepareComment(
+        target: String,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView> = guard.run {
+        client.mutation(
+            PrepareCommentMutation(
+                PrepareCommentInput(target = target, content = content, license = license.toInput()),
+            ),
+        ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.prepareComment.node?.let { node ->
+                data.prepareComment.writes?.let { writes ->
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                }
+            }
+        }
+    }
+
+    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
+        guard.run {
+            client.mutation(
+                PrepareCommentEditMutation(
+                    PrepareCommentEditInput(id = id, content = Optional.present(content)),
+                ),
+            ).payloadOutcome({ it.prepareCommentEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
+                data.prepareCommentEdit.node?.let { node ->
+                    data.prepareCommentEdit.writes?.let { writes ->
+                        PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                    }
+                }
+            }
+        }
 }

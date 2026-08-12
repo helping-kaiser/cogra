@@ -11,9 +11,13 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
@@ -24,6 +28,7 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
+import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
@@ -53,6 +58,21 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
         profile = profile?.copy(handle = handle)
         return Outcome.Success(Unit)
     }
+}
+
+/** Scriptable feed state: tests set the listing and detail pages. */
+class ScriptedContentRepository : ThrowingContentRepository() {
+    var listing: List<PostView> = emptyList()
+    var details: MutableMap<String, PostDetail> = mutableMapOf()
+
+    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> =
+        Outcome.Success(Page(listing, endCursor = null, hasNextPage = false))
+
+    override suspend fun post(
+        id: String,
+        commentsFirst: Int,
+        commentsAfter: String?,
+    ): Outcome<PostDetail?> = Outcome.Success(details[id])
 }
 
 /** Sessions enough for the Settings destination to render and sign out. */
@@ -131,4 +151,11 @@ object FakeBindingsModule {
     @Provides
     @Singleton
     fun writeRepository(): WriteRepository = ThrowingWriteRepository()
+
+    @Provides
+    @Singleton
+    fun scriptedContentRepository(): ScriptedContentRepository = ScriptedContentRepository()
+
+    @Provides
+    fun contentRepository(fake: ScriptedContentRepository): ContentRepository = fake
 }

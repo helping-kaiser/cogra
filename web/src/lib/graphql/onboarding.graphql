@@ -91,14 +91,16 @@ query ApplicationStatus {
       expiresAt
     }
     stagedWrites(first: 10) {
-      nodes {
-        id
-        state
-        family
-        canonicalProposal
-        verifiedAct
-        record {
+      edges {
+        node {
           id
+          state
+          family
+          canonicalProposal
+          verifiedAct
+          record {
+            id
+          }
         }
       }
     }

@@ -1,0 +1,215 @@
+"use client";
+
+// The composer, in create and edit mode (post.md §1, §4): create is a
+// genesis Publish carrying the mandatory license declaration; edit
+// (?post=<id>) is the ordinary-role Publish behind the chain head and
+// never shows the immutable license. The backend prepares; this browser
+// signs.
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useApolloClient } from "@apollo/client/react";
+
+import type { Oversight } from "@/__generated__/graphql";
+import {
+  fetchPostDetail,
+  preparePost,
+  preparePostEdit,
+} from "@/lib/api/content-api";
+import { useAuthGuard } from "@/lib/session/runtime";
+import { useWriteSigner } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
+import { TextField } from "@/lib/ui/text-field";
+import { TransportError } from "@/lib/ui/transport-error";
+
+const OVERSIGHT_OPTIONS: readonly { value: Oversight; label: string }[] = [
+  { value: "NONE", label: "No AI" },
+  { value: "CONDITIONAL", label: "AI-assisted" },
+  { value: "FULL", label: "AI-generated" },
+];
+
+export function ComposeForm() {
+  return (
+    <Suspense>
+      <ComposeFormInner />
+    </Suspense>
+  );
+}
+
+function ComposeFormInner() {
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const signer = useWriteSigner();
+  const router = useRouter();
+  const editingId = useSearchParams().get("post");
+
+  const [loading, setLoading] = useState(editingId !== null);
+  const [notFound, setNotFound] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [body, setBody] = useState("");
+  const [attributionRequired, setAttributionRequired] = useState(false);
+  const [oversight, setOversight] = useState<Oversight>("NONE");
+  const [submitting, setSubmitting] = useState(false);
+  const [emptyBody, setEmptyBody] = useState(false);
+  const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
+  const [signIncomplete, setSignIncomplete] = useState(false);
+  const [transportFailed, setTransportFailed] = useState(false);
+
+  useEffect(() => {
+    if (editingId === null) return;
+    let cancelled = false;
+    void fetchPostDetail(client, editingId).then((outcome) => {
+      if (cancelled) return;
+      setLoading(false);
+      if (outcome.kind !== "success") {
+        setTransportFailed(true);
+      } else if (outcome.value === null) {
+        setNotFound(true);
+      } else {
+        setTitle(outcome.value.post.title.value ?? "");
+        setDescription(outcome.value.post.description.value ?? "");
+        setBody(outcome.value.post.content.value ?? "");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, editingId]);
+
+  const onSubmit = async () => {
+    if (submitting) return;
+    if (body.trim() === "" && editingId === null) {
+      setEmptyBody(true);
+      return;
+    }
+    setSubmitting(true);
+    setRefusedMessage(null);
+    setSignIncomplete(false);
+    setTransportFailed(false);
+    const prepared = await guard.run(() =>
+      editingId === null
+        ? preparePost(client, {
+            title: title.trim() === "" ? null : title,
+            description: description.trim() === "" ? null : description,
+            content: body,
+            license: { attributionRequired, oversight },
+          })
+        : preparePostEdit(client, {
+            id: editingId,
+            title: title.trim() === "" ? null : title,
+            description: description.trim() === "" ? null : description,
+            content: body,
+          }),
+    );
+    if (prepared.kind === "refused") {
+      setSubmitting(false);
+      setRefusedMessage(prepared.errors[0]?.message ?? "The server refused this write.");
+      return;
+    }
+    if (prepared.kind === "failed") {
+      setSubmitting(false);
+      setTransportFailed(true);
+      return;
+    }
+    const results = [];
+    for (const staged of prepared.value.writes) {
+      results.push(await signer.signStaged(staged));
+    }
+    setSubmitting(false);
+    if (results.every((result) => result.kind === "done")) {
+      router.push(editingId === null ? "/feed" : `/posts/${editingId}`);
+    } else {
+      setSignIncomplete(true);
+    }
+  };
+
+  if (loading) return <main className="p-6">Loading…</main>;
+  if (notFound) {
+    return (
+      <main className="p-6">
+        <p role="alert" data-testid="compose-not-found">
+          This post no longer resolves.
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <h1 className="text-2xl font-semibold">
+        {editingId === null ? "New post" : "Edit post"}
+      </h1>
+      <TextField label="Title" value={title} onChange={setTitle} testId="compose-title" />
+      <TextField
+        label="Description"
+        value={description}
+        onChange={setDescription}
+        testId="compose-description"
+      />
+      <div className="flex flex-col gap-1">
+        <label htmlFor="compose-body" className="text-sm font-medium">
+          What do you want to publish?
+        </label>
+        <textarea
+          id="compose-body"
+          data-testid="compose-body"
+          value={body}
+          onChange={(event) => {
+            setBody(event.target.value);
+            setEmptyBody(false);
+          }}
+          rows={8}
+          className="rounded-md border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+        />
+        {emptyBody && (
+          <p role="alert" data-testid="compose-empty-body" className="text-sm text-red-600">
+            The post needs a body.
+          </p>
+        )}
+      </div>
+      {editingId === null && (
+        <fieldset className="flex flex-col gap-2" data-testid="compose-license">
+          <legend className="text-sm font-medium">License</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              data-testid="license-attribution"
+              checked={attributionRequired}
+              onChange={(event) => setAttributionRequired(event.target.checked)}
+            />
+            Require attribution
+          </label>
+          <div className="flex gap-3" role="radiogroup" aria-label="AI provenance">
+            {OVERSIGHT_OPTIONS.map((option) => (
+              <label key={option.value} className="flex items-center gap-1 text-sm">
+                <input
+                  type="radio"
+                  name="oversight"
+                  data-testid={`license-oversight-${option.value.toLowerCase()}`}
+                  checked={oversight === option.value}
+                  onChange={() => setOversight(option.value)}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      {refusedMessage && (
+        <p role="alert" data-testid="compose-refused" className="text-sm text-red-600">
+          {refusedMessage}
+        </p>
+      )}
+      {signIncomplete && (
+        <p role="alert" data-testid="compose-signing-failed" className="text-sm text-red-600">
+          Signing did not finish — the write stays pending.
+        </p>
+      )}
+      {transportFailed && <TransportError testId="compose-transport-error" />}
+      <Button testId="compose-submit" onClick={() => void onSubmit()} disabled={submitting}>
+        {editingId === null ? "Sign and publish" : "Sign the edit"}
+      </Button>
+    </main>
+  );
+}

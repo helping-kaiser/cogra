@@ -148,11 +148,13 @@ class RepositoriesTest {
                "application":{"__typename":"Application","id":"app1","handle":"joiner",
                  "emailVerified":true,"keyAttached":false,"approvedAt":null,"landedAt":null,
                  "createdAt":"2026-08-06T12:00:00+00:00","expiresAt":"2026-08-07T12:00:00+00:00"},
-               "stagedWrites":{"__typename":"StagedWriteConnection","nodes":[
-                 {"__typename":"StagedWrite","id":"old","state":"EXPIRED","family":"REGISTRATION",
-                  "canonicalProposal":"$proposal","verifiedAct":null,"record":null},
-                 {"__typename":"StagedWrite","id":"reg","state":"AWAITING_PRE_SIGN","family":"REGISTRATION",
-                  "canonicalProposal":"$proposal","verifiedAct":null,"record":null}]}}}}""",
+               "stagedWrites":{"__typename":"StagedWriteConnection","edges":[
+                 {"__typename":"StagedWriteEdge","node":
+                  {"__typename":"StagedWrite","id":"old","state":"EXPIRED","family":"REGISTRATION",
+                   "canonicalProposal":"$proposal","verifiedAct":null,"record":null}},
+                 {"__typename":"StagedWriteEdge","node":
+                  {"__typename":"StagedWrite","id":"reg","state":"AWAITING_PRE_SIGN","family":"REGISTRATION",
+                   "canonicalProposal":"$proposal","verifiedAct":null,"record":null}}]}}}}""",
         )
         val status = (onboarding.applicationStatus() as Outcome.Success).value
         assertThat(status.accountState).isEqualTo(com.cogra.domain.AccountState.APPLICANT)

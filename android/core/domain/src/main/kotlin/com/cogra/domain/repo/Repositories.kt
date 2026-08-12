@@ -6,10 +6,16 @@ package com.cogra.domain.repo
 
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.CommentView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
@@ -119,4 +125,46 @@ interface AccountRepository {
         pDirected: Double,
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>>
+}
+
+/**
+ * The content surface (api-spec.md "Content authoring"; roadmap
+ * "Slice 2"): prepare verbs stage device-signed writes; reads serve
+ * the display store.
+ */
+interface ContentRepository {
+    /** The chronological listing, newest first. */
+    suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>>
+
+    /** One post with its first comments page; null for an unknown id. */
+    suspend fun post(id: String, commentsFirst: Int, commentsAfter: String?): Outcome<PostDetail?>
+
+    /** A further comments page of one post. */
+    suspend fun comments(postId: String, first: Int, after: String?): Outcome<Page<CommentView>>
+
+    suspend fun preparePost(
+        title: String?,
+        description: String?,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView>
+
+    /**
+     * The full intended field set — the edit form holds every field, so
+     * all three ride as present values; a null title/description clears.
+     */
+    suspend fun preparePostEdit(
+        id: String,
+        title: String?,
+        description: String?,
+        content: String,
+    ): Outcome<PreparedContentView>
+
+    suspend fun prepareComment(
+        target: String,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView>
+
+    suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
 }

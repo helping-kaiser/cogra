@@ -32,6 +32,9 @@ import com.cogra.app.BuildConfig
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
+import com.cogra.feature.content.ComposePostRoute
+import com.cogra.feature.content.FeedRoute
+import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.home.HomeRoute
@@ -71,6 +74,15 @@ data object KeyCeremony
 data object Home
 
 @Serializable
+data object Feed
+
+@Serializable
+data class ComposePost(val postId: String? = null)
+
+@Serializable
+data class PostDetail(val postId: String)
+
+@Serializable
 data object Invites
 
 @Serializable
@@ -90,6 +102,9 @@ private const val ACTOR_RESTORED_RESULT = "actor_restored"
 /** The Settings→Home result key: the handle changed, re-read the profile. */
 private const val HANDLE_CHANGED_RESULT = "handle_changed"
 
+/** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
+private const val CONTENT_SIGNED_RESULT = "content_signed"
+
 /** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
@@ -99,6 +114,11 @@ class AuthStateViewModel @Inject constructor(
         tokens.tokens.map { pair ->
             if (pair != null) AuthPhase.SIGNED_IN else AuthPhase.SIGNED_OUT
         }.stateIn(viewModelScope, SharingStarted.Eagerly, AuthPhase.LOADING)
+
+    /** The signed-in account id; gates creator-only affordances. */
+    val accountId: StateFlow<String?> =
+        tokens.tokens.map { pair -> pair?.accountId }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 }
 
 @Composable
@@ -217,10 +237,53 @@ fun CograNavGraph(
                 onHandleChangedResultConsumed = {
                     entry.savedStateHandle[HANDLE_CHANGED_RESULT] = false
                 },
+                onOpenFeed = { navController.navigate(Feed) },
                 onOpenInvites = { navController.navigate(Invites) },
                 onOpenSettings = { navController.navigate(Settings) },
                 onRestoreActor = { navController.navigate(Restore) },
                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
+            )
+        }
+        composable<Feed> { entry ->
+            val signedResult by entry.savedStateHandle
+                .getStateFlow(CONTENT_SIGNED_RESULT, false)
+                .collectAsStateWithLifecycle()
+            FeedRoute(
+                onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+                onCompose = { navController.navigate(ComposePost()) },
+                onBack = { navController.navigateUp() },
+                refreshSignal = signedResult,
+                onRefreshSignalConsumed = {
+                    entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
+                },
+            )
+        }
+        composable<ComposePost> { entry ->
+            ComposePostRoute(
+                postId = entry.toRoute<ComposePost>().postId,
+                onSaved = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(CONTENT_SIGNED_RESULT, true)
+                    navController.popBackStack()
+                },
+                onBack = { navController.navigateUp() },
+            )
+        }
+        composable<PostDetail> { entry ->
+            val signedResult by entry.savedStateHandle
+                .getStateFlow(CONTENT_SIGNED_RESULT, false)
+                .collectAsStateWithLifecycle()
+            val accountId by authState.accountId.collectAsStateWithLifecycle()
+            PostDetailRoute(
+                postId = entry.toRoute<PostDetail>().postId,
+                viewerId = accountId,
+                onEdit = { id -> navController.navigate(ComposePost(id)) },
+                onBack = { navController.navigateUp() },
+                refreshSignal = signedResult,
+                onRefreshSignalConsumed = {
+                    entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
+                },
             )
         }
         composable<Invites> {

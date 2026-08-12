@@ -59,9 +59,11 @@ pub async fn ingest_pending<B: L1Boundary>(
     }
     // Flow state advances on confirmation (architecture.md "The write
     // path" step 5): landed applicant Registrations create their account
-    // rows here, on every ingestion path — the live loop, the dev CLI,
-    // and rebuilds alike.
+    // rows and landed content records promote their payload into
+    // carriage and their display rows into view — on every ingestion
+    // path: the live loop, the dev CLI, and rebuilds alike.
     crate::onboarding::land_promoted(pool, &outcome.promoted).await;
+    crate::content::land_promoted(pool, &outcome.promoted).await;
     if let Some(last) = packages.last() {
         let expired = staged::expire_due(pool, last.epoch, gc_after_epochs).await?;
         let reaped = staged::reap_expired(pool, last.epoch, gc_after_epochs).await?;

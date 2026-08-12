@@ -4,6 +4,7 @@
 // which owns its own L1-side tables behind the seam.
 
 pub mod auth;
+pub mod content;
 pub mod genesis;
 pub mod mirror;
 pub mod params;
