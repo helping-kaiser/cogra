@@ -87,6 +87,11 @@ pub trait L1Boundary: Send + Sync {
     /// (`def:epoch:safety-threshold`; substrate.md §6 "an L2 estimate from
     /// the last published certificate").
     fn current_theta(&self) -> impl Future<Output = Result<f64, BoundaryError>> + Send;
+
+    /// The published per-act carriage bound M_payload the prepare
+    /// pre-check reads — consume-only, like every binding constant
+    /// (layer1-interface.md "Payload envelope convention (L2)").
+    fn max_payload_bytes(&self) -> impl Future<Output = Result<usize, BoundaryError>> + Send;
 }
 
 /// The stand-in behind the seam.
@@ -116,5 +121,9 @@ impl L1Boundary for StandInBoundary {
 
     async fn current_theta(&self) -> Result<f64, BoundaryError> {
         Ok(self.0.config().theta_micro as f64 / 1e6)
+    }
+
+    async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
+        Ok(self.0.config().max_payload_bytes)
     }
 }

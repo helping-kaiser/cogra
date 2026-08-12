@@ -12,7 +12,7 @@ use uuid::Uuid;
 ///
 /// Fixed forever: changing it would invalidate every previously minted
 /// hashtag UUID. The same literal appears in the `hashtags` table's CHECK
-/// constraint (migrations/20260612201452_foundation_schema.sql); a
+/// constraint (migrations/20260724000001_foundation_schema.sql); a
 /// postgres-store test asserts the two derivations agree.
 pub const HASHTAG_NAMESPACE: Uuid = uuid::uuid!("7c844aef-fe5c-4849-90c2-196cbd8d47c6");
 

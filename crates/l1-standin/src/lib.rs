@@ -225,6 +225,7 @@ impl StandIn {
 /// tests.
 pub async fn close_loop(standin: StandIn, interval_secs: u64) {
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
         match standin.close_epoch().await {

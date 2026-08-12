@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_key_backups (user_id, blob) VALUES ($1, $2)\n         ON CONFLICT (user_id)\n         DO UPDATE SET blob = EXCLUDED.blob, created_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3bba21e8526f9c99433c59a92b79ae49fa920784f02a694d1725a08435796fb3"
+}

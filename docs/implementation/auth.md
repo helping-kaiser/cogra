@@ -138,6 +138,11 @@ platform ships natively (WebCrypto, Android Keystore/Tink):
   container", concretely.
 - **Wire form.** The blob crosses the API base64-encoded — into
   `uploadKeyBackup`, out of `User.keyBackup`.
+- **Size bound.** Uploads over 4 KiB refuse as `BAD_INPUT`. The
+  v1 container is tens of bytes; 4 KiB leaves room for the
+  container to grow while denying a hostile client unbounded
+  storage. The server keeps one blob per account — replacement
+  overwrites, since recovery serves only the newest blob.
 
 Golden vectors for every step live in
 `client-crypto-vectors.json` at the repo root, exported from the

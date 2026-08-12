@@ -201,7 +201,15 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         Err(PrepareError::Formation(_))
     ));
 
-    // Nothing was staged by either refusal.
+    // A payload past the published carriage bound M_payload.
+    let mut oversized = rig.registration(&key);
+    oversized.payload = vec![0; StandInConfig::default().max_payload_bytes + 1];
+    assert!(matches!(
+        prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, oversized).await,
+        Err(PrepareError::Formation(_))
+    ));
+
+    // Nothing was staged by any refusal.
     let staged_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
         .fetch_one(&rig.pool)
         .await
@@ -322,6 +330,49 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     )
     .await
     .expect("relays again");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor_id, key) = rig.funded_actor("alice").await;
+    let prepared = prepare::prepare(
+        &rig.boundary,
+        &rig.pool,
+        GC,
+        actor_id,
+        rig.registration(&key),
+    )
+    .await
+    .expect("prepares");
+
+    let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal);
+    let parts = PreSignedParts {
+        author_pubkey: pre.author_pubkey.clone(),
+        nonce: pre.nonce.clone(),
+        pre_signature: pre.pre_signature.clone(),
+    };
+    let sealed = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts.clone())
+        .await
+        .expect("seals");
+
+    // A re-signing client submits different bytes: answering with the
+    // stored act would claim the new bytes were sealed, so it refuses.
+    let differing = PreSignedParts {
+        nonce: vec![9; 32],
+        ..parts.clone()
+    };
+    assert!(matches!(
+        relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, differing).await,
+        Err(RelayError::ReplayMismatch(id)) if id == prepared.id
+    ));
+
+    // The sealed handshake is untouched: the exact replay still answers.
+    let replayed = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts)
+        .await
+        .expect("replays");
+    assert_eq!(sealed, replayed);
 }
 
 #[sqlx::test(migrations = "../../migrations")]

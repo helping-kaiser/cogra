@@ -41,12 +41,12 @@ jobs:
       android: ${{ steps.frontends.outputs.android }}
       web: ${{ steps.frontends.outputs.web }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The Rust gate. `android/**` and `web/**` are subtracted alongside docs
       # so a frontend-only PR skips the Rust lint/test jobs; a schema.graphql
       # change is NOT excluded, so it still trips the Rust jobs (and, below,
       # the frontend ones) since all sides of the contract depend on it.
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           predicate-quantifier: 'every'
@@ -65,7 +65,7 @@ jobs:
       # so a vector regeneration must run them, not just the Rust jobs.
       # `.github/workflows/**` is listed because these jobs' own setup steps
       # live there — an action bump must run them, or its green is vacuous.
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: frontends
         with:
           filters: |
@@ -92,7 +92,7 @@ jobs:
     env:
       SQLX_OFFLINE: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -125,7 +125,7 @@ jobs:
       DATABASE_URL: postgres://gnp:gnp_secret@localhost:5432/gnp_db
       RUST_LOG: debug
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Install sqlx-cli
@@ -164,7 +164,7 @@ jobs:
       run:
         working-directory: android
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -187,7 +187,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version-file: web/.nvmrc
