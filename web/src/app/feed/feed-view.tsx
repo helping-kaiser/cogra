@@ -2,20 +2,24 @@
 
 // The chronological listing (roadmap "Slice 2"): every post,
 // newest-first in the graph's own landing order — deliberately not the
-// ranked feed. Reading needs no session; the surface lives in the
-// signed-in shell alongside the composer it links to.
+// ranked feed. Reading needs no session (web.md "Routes"), so the
+// surface lives outside the (app) gate; only the write affordance
+// swaps on the auth phase.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
+import { useAuthPhase } from "@/lib/session/provider";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function FeedView() {
   const client = useApolloClient();
+  const phase = useAuthPhase();
   const [posts, setPosts] = useState<readonly PostView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -61,16 +65,31 @@ export function FeedView() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Feed</h1>
-        <Link
-          href="/compose"
-          data-testid="feed-compose"
-          className={buttonClassName({ size: "sm" })}
-        >
-          Write a post
-        </Link>
-      </div>
+      <PageHeader
+        title="Feed"
+        backHref="/"
+        backLabel="Back to home"
+        backTestId="feed-back"
+        action={
+          phase === "signedIn" ? (
+            <Link
+              href="/compose"
+              data-testid="feed-compose"
+              className={buttonClassName({ size: "sm" })}
+            >
+              Write a post
+            </Link>
+          ) : phase === "signedOut" ? (
+            <Link
+              href="/"
+              data-testid="feed-signin"
+              className={buttonClassName({ variant: "outline", size: "sm" })}
+            >
+              Sign in or join
+            </Link>
+          ) : undefined
+        }
+      />
       {transportFailed && (
         <div className="flex items-center gap-3">
           <TransportError testId="feed-transport-error" />

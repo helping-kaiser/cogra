@@ -1,12 +1,19 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { FeedView } from "./feed-view";
 
 const server = startMswServer();
+
+function signedInStore() {
+  const store = createTokenStore();
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
+  return store;
+}
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -37,15 +44,38 @@ function postsPage(nodes: ReturnType<typeof post>[], endCursor: string | null, h
 }
 
 describe("FeedView", () => {
-  it("lists posts newest-first as served and links the composer", async () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("lists posts newest-first as served and links the composer when signed in", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
+    expect(screen.getByTestId("feed-compose")).toHaveAttribute("href", "/compose");
+    expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
+    expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
+  });
+
+  it("reads without a session and swaps the composer for the sign-in entry", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
-    expect(screen.getByTestId("feed-compose")).toHaveAttribute("href", "/compose");
-    expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
-    expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-compose")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/");
+  });
+
+  it("backs to home", () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    renderWithProviders(<FeedView />);
+    expect(screen.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
   });
 
   it("shows the empty copy when nothing has landed", async () => {

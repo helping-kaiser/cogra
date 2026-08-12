@@ -5,7 +5,6 @@
 // handshake on this device (auth.md "Approval and landing"; the in-page
 // applicant lock: web.md "Routes").
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -25,6 +24,7 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { PageHeader } from "@/lib/ui/page-header";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -190,14 +190,12 @@ export function InvitesView() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
-      <Link
-        href="/"
-        data-testid="invites_back"
-        className="self-start text-sm text-zinc-600 underline dark:text-zinc-400"
-      >
-        ← Home
-      </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Invites</h1>
+      <PageHeader
+        title="Invites"
+        backHref="/"
+        backLabel="Back to home"
+        backTestId="invites_back"
+      />
 
       {loading && (
         <p role="status" data-testid="invites_loading" className="text-sm text-zinc-600 dark:text-zinc-400">

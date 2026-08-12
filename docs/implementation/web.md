@@ -132,15 +132,18 @@ public endpoint variable exist.
 
 ## Routes
 
-The slice-1 route map (Android parity per surface):
+The route map (Android parity per surface):
 
 | Route | Access | Surface (Android counterpart) |
 |---|---|---|
-| `/` | public | signed out: invite front door (InviteEntry); signed in: Home |
+| `/` | public | signed out: front door — invite entry, sign-in, feed browsing (InviteEntry); signed in: Home |
 | `/login` | public; signed-in → redirect `/` | Login |
 | `/reset` (+`?token=` pre-fills the confirm form) | public | PasswordReset |
 | `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply; signed in: re-arm |
 | `/verify?token=` | public, sessionless | email-verification result |
+| `/feed` | public | Feed — the chronological listing |
+| `/posts/<id>` | public | PostDetail |
+| `/compose` (+`?post=<id>` opens edit mode) | gated | ComposePost |
 | `/key` | gated; key attached → redirect `/` | KeyCeremony |
 | `/invites` | gated | Invites |
 | `/settings` | gated | Settings |
@@ -149,17 +152,29 @@ The slice-1 route map (Android parity per surface):
 Everything else 404. `/join`, `/verify`, and `/reset` are the
 doc-fixed link URLs ([auth.md "Link URLs"](auth.md#link-urls)).
 
+Content reads are public — the per-surface decision "Links
+unfurl" above defers: the graph is continuously readable by
+anyone, without an account
+([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)),
+so `/feed` and `/posts/<id>` render for anonymous visitors, with
+the write affordances (composer link, comment box) swapped for
+sign-in entries. Every write surface stays gated; the front door
+carries the browse entry so an anonymous visitor finds the public
+read without an account.
+
 Gating is client-side — tokens are client-held, so the server
 never knows the auth state. The `(app)` route group's layout
 guards the gated routes and replaces a signed-out visit to
-`/login`; `/` branches in place on the phase. Phase flips replace
-the location, never push — the Android navigation parity. Web
-deltas from Android: `/invites` renders the applicant lock
-in-page (the URL is directly addressable), `/reset?token=` and
-`/verify?token=` arrive as links where Android pastes the token
-in-app, and re-arm lives in two places — the Home card (Android
-parity) and a context action on `/join/<link-id>` for a signed-in
-visitor, since the link itself is directly addressable.
+`/login`; a route's membership in the group is the gate, so the
+public read surfaces live outside it. `/` branches in place on
+the phase. Phase flips replace the location, never push — the
+Android navigation parity. Web deltas from Android: `/invites`
+renders the applicant lock in-page (the URL is directly
+addressable), `/reset?token=` and `/verify?token=` arrive as
+links where Android pastes the token in-app, and re-arm lives in
+two places — the Home card (Android parity) and a context action
+on `/join/<link-id>` for a signed-in visitor, since the link
+itself is directly addressable.
 
 ## The onboarding poll loop
 
