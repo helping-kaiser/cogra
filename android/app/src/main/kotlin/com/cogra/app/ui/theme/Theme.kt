@@ -17,11 +17,9 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
- * The app theme. A minimal token scaffold for slice 1: brand colors
- * ([Color.kt]) and a typography handle ([Type.kt]) seeded here and consumed by
- * screens only through `MaterialTheme`, so the eventual design pass is a
- * token edit rather than a screen-by-screen rewrite. Shared UI components wait
- * for a `core:ui` module (roadmap) rather than living in `app`.
+ * The app theme. Screens consume the color and typography tokens only
+ * through `MaterialTheme`, so the eventual design pass is a token edit
+ * rather than a screen-by-screen rewrite.
  */
 @Composable
 fun CograTheme(

@@ -9,9 +9,7 @@ import java.time.Instant
 
 /** A fresh access + refresh token pair (auth.md "Tokens"). */
 data class AuthTokens(
-    /** Bearer token, 15-minute lifetime. */
     val accessToken: String,
-    /** Rotates on every use — the stored copy is replaced each refresh. */
     val refreshToken: String,
     /**
      * The account the pair authenticates (`AuthSession.user.id`) — the
