@@ -87,7 +87,7 @@ export function refreshExecutor(client: ApolloClient): RefreshExecutor {
     );
 }
 
-/** Silent verb: no userErrors by design — success and refusal are one. */
+/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
 export function requestPasswordReset(
   client: ApolloClient,
   email: string,

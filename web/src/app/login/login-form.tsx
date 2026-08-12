@@ -34,7 +34,7 @@ export function LoginForm({
   identity = identityStore,
   notices = securityNotices,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   identity?: IdentityStore;
   notices?: SecurityNotices;
 } = {}) {

@@ -31,7 +31,7 @@ export function MemberStatus({
   store = identityStore,
 }: {
   me: MeUser;
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   store?: IdentityStore;
 }) {
   const client = useApolloClient();

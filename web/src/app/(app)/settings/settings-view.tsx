@@ -113,7 +113,7 @@ export function SettingsView({
   store = identityStore,
   backup: injectedBackup,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   store?: IdentityStore;
   backup?: BackupManager;
 } = {}) {

@@ -87,7 +87,7 @@ export function verifyEmail(
   );
 }
 
-/** Silent verb: no userErrors by design — success and refusal are one. */
+/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
 export function resendVerificationEmail(
   client: ApolloClient,
   email: string,

@@ -1,21 +1,6 @@
-// Device-held identity custody (web.md "Key custody", android/CLAUDE.md
-// "Auth / tokens" for the Android mirror): the actor key persists as a
-// non-extractable CryptoKey in IndexedDB with the raw seed beside it
-// only while no backup blob exists; the parked backup blob awaits its
-// upload; and the per-write handshake material (private nonce +
-// pre-signature, keyed by staged-write id) lets the approve step verify
-// against what THIS device pre-signed across page reloads. The recovery
-// code is never here — displayed once, held only by the user.
-//
-// Several accounts on one device is a supported pattern (roadmap.md
-// slice 1.1; auth.md "Multi-account device custody"), so every record
-// is keyed by the account it belongs to — resolved per call from the
-// active session, never a device-global singleton. Records written
-// before custody was account-keyed sat under singleton keys; the first
-// account-scoped access adopts them into the signed-in account's slot,
-// one-shot per record kind. The per-account ux record also carries the
-// "don't remember me" opt-in (auth.md "Sign-out"): a flagged account's
-// material is purged when its session ends.
+// Account-keyed IndexedDB custody — actor key, parked backup blob,
+// per-write handshake material, ux flags (web.md "Key custody",
+// auth.md "Multi-account device custody").
 
 import { ActorKey, importActorKeyPair } from "@/lib/crypto/actor-key";
 import { PreSignedProposal } from "@/lib/crypto/handshake";
