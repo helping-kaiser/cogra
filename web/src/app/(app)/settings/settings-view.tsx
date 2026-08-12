@@ -28,6 +28,7 @@ import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { PageHeader } from "@/lib/ui/page-header";
 import { PasswordField } from "@/lib/ui/password-field";
 import { TextField } from "@/lib/ui/text-field";
 
@@ -314,14 +315,12 @@ export function SettingsView({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
-      <Link
-        href="/"
-        data-testid="settings_back"
-        className="self-start text-sm text-zinc-600 underline dark:text-zinc-400"
-      >
-        ← Home
-      </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <PageHeader
+        title="Settings"
+        backHref="/"
+        backLabel="Back to home"
+        backTestId="settings_back"
+      />
 
       <Card testId="settings_backup_card">
         <h2 className="font-medium">Key backup</h2>
