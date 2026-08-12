@@ -92,7 +92,7 @@ class KeyCeremonyViewModel @Inject constructor(
         }
     }
 
-    /** The proof just changed server-side: poll now, not in 30 seconds. */
+    /** The proof just changed server-side: poll now instead of waiting out the slow delay. */
     private fun finish() {
         registration.ensureAdvancing()
         _state.update { it.copy(done = true) }
