@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { extractInviteId } from "@/lib/onboarding/invite-input";
+import { Button } from "@/lib/ui/button";
 
 export function FrontDoor() {
   const router = useRouter();
@@ -55,14 +56,9 @@ export function FrontDoor() {
             That doesn&apos;t look like an invite — paste the whole link or its code.
           </p>
         )}
-        <button
-          type="submit"
-          data-testid="invite_continue"
-          disabled={input.trim() === ""}
-          className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Button type="submit" testId="invite_continue" disabled={input.trim() === ""}>
           Continue
-        </button>
+        </Button>
       </form>
       <Link
         href="/login"

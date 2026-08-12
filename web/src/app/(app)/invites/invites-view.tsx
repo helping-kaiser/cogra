@@ -13,21 +13,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import {
   approveApplicant,
   createInviteLink,
   fetchInviteLinks,
   revokeInviteLink,
+  LINK_LIFETIME_MS,
   type ApplicationView,
   type InviteLinkView,
 } from "@/lib/api/invites-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
-
-const LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+import { TransportError } from "@/lib/ui/transport-error";
 
 function invitesMessage(code: ErrorCode): string {
   switch (code) {
@@ -37,10 +39,8 @@ function invitesMessage(code: ErrorCode): string {
       return "That didn't go through — the application or link may have expired or already been handled.";
     case "NOT_FOUND":
       return "That link is already gone.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 
@@ -57,11 +57,13 @@ export function InvitesView() {
   const [prefillPDirected, setPrefillPDirected] = useState(0.1);
   const [prefillPInterest, setPrefillPInterest] = useState(0.1);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [vouchSigned, setVouchSigned] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyFailedId, setCopyFailedId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     return guard
@@ -130,15 +132,28 @@ export function InvitesView() {
   };
 
   const onRevoke = async (linkId: string) => {
+    if (revokingId !== null) return;
+    setRevokingId(linkId);
+    setError(null);
+    setTransportFailed(false);
     const outcome = await guard.run(() => revokeInviteLink(client, linkId));
     await refresh();
+    setRevokingId(null);
     if (outcome.kind === "refused") setError(outcome.errors[0].code);
     if (outcome.kind === "failed") setTransportFailed(true);
   };
 
   const onShare = async (linkId: string) => {
-    await navigator.clipboard.writeText(`${window.location.origin}/join/${linkId}`);
-    setCopiedId(linkId);
+    // writeText rejects on denied permission or a non-secure context —
+    // silence would leave the Share button looking dead.
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/join/${linkId}`);
+      setCopiedId(linkId);
+      setCopyFailedId(null);
+    } catch {
+      setCopiedId(null);
+      setCopyFailedId(linkId);
+    }
   };
 
   const onApprove = async (applicationId: string, pDirected: number, pInterest: number) => {
@@ -202,11 +217,7 @@ export function InvitesView() {
         </Card>
       )}
 
-      {transportFailed && (
-        <p role="alert" data-testid="invites_error" className="text-sm text-red-600 dark:text-red-400">
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
-      )}
+      {transportFailed && <TransportError testId="invites_error" />}
       {!transportFailed && error !== null && (
         <p role="alert" data-testid="invites_error" className="text-sm text-red-600 dark:text-red-400">
           {invitesMessage(error)}
@@ -254,14 +265,9 @@ export function InvitesView() {
                 onChange={setPrefillPInterest}
                 testId="invites_p_interest"
               />
-              <button
-                type="submit"
-                data-testid="invites_create"
-                disabled={creating}
-                className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-              >
+              <Button type="submit" testId="invites_create" size="sm" selfStart disabled={creating}>
                 Create link
-              </button>
+              </Button>
             </form>
           </Card>
 
@@ -270,7 +276,9 @@ export function InvitesView() {
               key={link.id}
               link={link}
               approvingId={approvingId}
+              revoking={revokingId !== null}
               copied={copiedId === link.id}
+              copyFailed={copyFailedId === link.id}
               onShare={onShare}
               onRevoke={onRevoke}
               onApprove={onApprove}
@@ -285,14 +293,18 @@ export function InvitesView() {
 function LinkCard({
   link,
   approvingId,
+  revoking,
   copied,
+  copyFailed,
   onShare,
   onRevoke,
   onApprove,
 }: {
   link: InviteLinkView;
   approvingId: string | null;
+  revoking: boolean;
   copied: boolean;
+  copyFailed: boolean;
   onShare: (linkId: string) => void;
   onRevoke: (linkId: string) => void;
   onApprove: (applicationId: string, pDirected: number, pInterest: number) => void;
@@ -304,25 +316,26 @@ function LinkCard({
       <p className="text-sm">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
       {!revoked && (
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            data-testid={`share_${link.id}`}
-            onClick={() => onShare(link.id)}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium dark:border-zinc-700"
-          >
+          <Button testId={`share_${link.id}`} variant="outline" size="sm" onClick={() => onShare(link.id)}>
             Share
-          </button>
+          </Button>
           <button
             type="button"
             data-testid={`revoke_${link.id}`}
             onClick={() => onRevoke(link.id)}
-            className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            disabled={revoking}
+            className="text-sm text-zinc-600 underline disabled:opacity-40 dark:text-zinc-400"
           >
             Revoke
           </button>
           {copied && (
             <p role="status" data-testid={`copied_${link.id}`} className="text-sm text-zinc-600 dark:text-zinc-400">
               Copied
+            </p>
+          )}
+          {copyFailed && (
+            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-sm text-red-600 dark:text-red-400">
+              Couldn&apos;t copy — copy the page address instead.
             </p>
           )}
         </div>
@@ -393,15 +406,15 @@ function ApplicationRow({
             onChange={setPInterest}
             testId={`approve_p_interest_${application.id}`}
           />
-          <button
-            type="button"
-            data-testid={`approve_${application.id}`}
+          <Button
+            testId={`approve_${application.id}`}
+            size="sm"
+            selfStart
             onClick={() => onApprove(application.id, pDirected, pInterest)}
             disabled={approvingId !== null}
-            className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
           >
             Approve and vouch
-          </button>
+          </Button>
         </>
       )}
     </div>

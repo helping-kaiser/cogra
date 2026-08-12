@@ -45,6 +45,22 @@ export function unauthenticated(): Outcome<never> {
   ]);
 }
 
+/**
+ * A viewer-scoped read: run the query and unwrap the picked field — a
+ * null viewer field is the shared UNAUTHENTICATED refusal, so the guard
+ * treats a stale access token and an explicit refusal the same way.
+ */
+export async function viewerField<D, T>(
+  call: () => Promise<{ data: D | undefined; error?: unknown }>,
+  pick: (data: D) => T | null | undefined,
+): Promise<Outcome<T>> {
+  const fetched = await fetchOutcome(call);
+  if (fetched.kind !== "success") return fetched;
+  const value = pick(fetched.value);
+  if (value === null || value === undefined) return unauthenticated();
+  return success(value);
+}
+
 export function hasCode(outcome: Outcome<unknown>, code: ErrorCode): boolean {
   return outcome.kind === "refused" && outcome.errors.some((e) => e.code === code);
 }
