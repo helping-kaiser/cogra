@@ -47,6 +47,9 @@ export async function fetchInviteLinks(
   return success(links.value.nodes);
 }
 
+/** The operational default lifetime of a fresh link; links are revocable any time. */
+export const LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+
 export async function createInviteLink(
   client: ApolloClient,
   input: CreateInviteLinkFields,

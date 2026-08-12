@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -336,5 +336,79 @@ describe("InvitesView", () => {
     expect(await screen.findByTestId("invites_error")).toHaveTextContent(
       "That link is already gone.",
     );
+  });
+
+  it("a double-click revokes once", async () => {
+    let revokeCalls = 0;
+    server.use(
+      meHandler("MEMBER"),
+      linksHandler([link({ id: "l1" })]),
+      graphql.mutation("RevokeInviteLink", () => {
+        revokeCalls += 1;
+        return HttpResponse.json({
+          data: {
+            revokeInviteLink: {
+              __typename: "RevokeInviteLinkPayload",
+              inviteLink: { __typename: "InviteLink", id: "l1" },
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    const revoke = await screen.findByTestId("revoke_l1");
+    fireEvent.click(revoke);
+    fireEvent.click(revoke);
+    await waitFor(() => expect(revokeCalls).toBe(1));
+  });
+
+  it("a successful revoke clears a stale refusal line", async () => {
+    let refuse = true;
+    server.use(
+      meHandler("MEMBER"),
+      linksHandler([link({ id: "l1" })]),
+      graphql.mutation("RevokeInviteLink", () =>
+        HttpResponse.json({
+          data: {
+            revokeInviteLink: refuse
+              ? {
+                  __typename: "RevokeInviteLinkPayload",
+                  inviteLink: null,
+                  userErrors: [
+                    { __typename: "UserError", message: "gone", code: "NOT_FOUND", field: null },
+                  ],
+                }
+              : {
+                  __typename: "RevokeInviteLinkPayload",
+                  inviteLink: { __typename: "InviteLink", id: "l1" },
+                  userErrors: [],
+                },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.click(await screen.findByTestId("revoke_l1"));
+    expect(await screen.findByTestId("invites_error")).toHaveTextContent(
+      "That link is already gone.",
+    );
+
+    refuse = false;
+    fireEvent.click(screen.getByTestId("revoke_l1"));
+    await waitFor(() => expect(screen.queryByTestId("invites_error")).not.toBeInTheDocument());
+  });
+
+  it("a failed copy says so instead of staying silent", async () => {
+    const writeText = vi.fn(() => Promise.reject(new Error("denied")));
+    Object.assign(navigator, { clipboard: { writeText } });
+    server.use(meHandler("MEMBER"), linksHandler([link({ id: "l1" })]));
+    renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
+
+    fireEvent.click(await screen.findByTestId("share_l1"));
+    expect(await screen.findByTestId("copy_failed_l1")).toBeInTheDocument();
+    expect(screen.queryByTestId("copied_l1")).not.toBeInTheDocument();
   });
 });
