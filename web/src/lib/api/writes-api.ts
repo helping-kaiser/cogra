@@ -43,7 +43,8 @@ export function stagedFromPrepared(prepared: {
   };
 }
 
-function toView(fields: StagedWriteView): StagedWriteView {
+/** Projects any staged-write-shaped payload node down to the view. */
+export function toView(fields: StagedWriteView): StagedWriteView {
   return {
     id: fields.id,
     state: fields.state,
