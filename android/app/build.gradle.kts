@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    id("cogra.android.module")
 }
 
 // The backend endpoint (android/README.md "Pointing the app at a
@@ -19,27 +20,11 @@ val webOrigin: String = (findProperty("cogra.webOrigin") as String?)
     ?: "https://cogra.example"
 val webHost: String = webOrigin.substringAfter("://").substringBefore("/")
 
-// Unit tests run once, on the debug variant: the release variant would
-// re-compile and re-run every suite for no extra signal.
-androidComponents {
-    beforeVariants(selector().withBuildType("release")) {
-        it.enableUnitTest = false
-    }
-}
-
-// Robolectric suites pay a per-class sandbox warmup; run test classes
-// in parallel forks instead of one core at a time.
-tasks.withType<Test>().configureEach {
-    maxParallelForks = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
-}
-
 android {
     namespace = "com.cogra.app"
-    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.cogra.app"
-        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
@@ -68,15 +53,6 @@ android {
             isIncludeAndroidResources = true
         }
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
