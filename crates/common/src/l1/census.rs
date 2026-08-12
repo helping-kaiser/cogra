@@ -475,14 +475,9 @@ impl Family {
             }
             // Tag: relevance r ∈ [-1,1], confidence c ∈ [0,1].
             // Bid: generosity g ∈ [-1,1], urgency u ∈ [0,1].
-            // Participant: A-leg stance signed; the second component is the
-            //   T-leg's forced-positive rendering (the transposed first
-            //   slot), so a movement leg can never flip a walk's parity.
-            // Invitation: A-leg params signed; terminal relevance r ∈ [0,1]
-            //   rides the tuple's second slot rendering — the stored tuple
-            //   here is (u, f); r is carried as a third family field only in
-            //   payload renderings, so no extra check applies. Tag, Bid, and
-            //   Participant constrain the second component.
+            // Participant: second slot is the T-leg's forced-positive rendering.
+            // Invitation needs no arm — its stored tuple is (u, f); terminal
+            //   relevance rides payload renderings only.
             Family::Tag | Family::Bid | Family::Participant => {
                 if (0.0..=1.0).contains(&p_i) {
                     Ok(())
