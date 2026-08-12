@@ -5,8 +5,8 @@ import {
   registerApolloClient,
 } from "@apollo/client-integration-nextjs";
 
-// Server-component client. Client-component wiring (ApolloNextAppProvider)
-// is added by the first surface that needs client-side data.
+// Server-component client; the client-component wiring lives in
+// apollo-wrapper.tsx.
 export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
   return new ApolloClient({
     cache: new InMemoryCache(),

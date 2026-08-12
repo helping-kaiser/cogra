@@ -1,10 +1,8 @@
 "use client";
 
-// Invite check + apply (Android's InviteEntry/Apply screens folded into
-// the link route: the route carries the id, so the paste box lives on
-// the front door instead). Signed out: the registration form. Signed in:
-// the invite is a re-arm capability for an expired application
-// (auth.md "Expiry"; web.md routes table).
+// Invite check + apply (Android's InviteEntry/Apply folded into the
+// link route — the route carries the id, so the paste box lives on the
+// front door; auth.md "Expiry", web.md "Routes").
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";

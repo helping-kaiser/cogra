@@ -1,12 +1,9 @@
 "use client";
 
 // Account management (Android's SettingsScreen), never gated on account
-// state — the applicant is an ordinary logged-in account (auth.md "The
-// applicant experience"). Four blocks: key backup (enable late from the
-// retained seed, or replace with the current code once the seed is
-// wiped — web.md "Key custody"), sessions, credentials, sign-out. One
-// global busy mutex, one feedback line at a time, cleared when the next
-// action starts.
+// state (auth.md "The applicant experience"; backup modes: web.md "Key
+// custody"). One global busy mutex, one feedback line at a time,
+// cleared when the next action starts.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";

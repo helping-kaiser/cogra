@@ -1,11 +1,9 @@
-// The settings backup surface (auth.md "Key recovery": enable late,
-// replace the code; Android mirror: BackupManager). Web custody wipes
-// the raw seed once a blob is uploaded (web.md "Key custody"), so the
-// two legs differ: enable() re-seals from the retained seed in one
-// step, while rekey() first re-proves the current code — the fetched
-// blob opens in memory, the seed is re-sealed under a fresh code and
-// never persisted. Uploads are direct, not parked: a failure changes
-// nothing server-side and the freshly generated code is discarded.
+// The settings backup surface (auth.md "Key recovery"; Android mirror:
+// BackupManager). The two legs differ: enable() re-seals from the
+// retained seed in one step, while rekey() first re-proves the current
+// code — the fetched blob opens in memory, the seed is re-sealed under
+// a fresh code and never persisted. Uploads are direct, not parked: a
+// failure changes nothing server-side and the fresh code is discarded.
 
 import type { ApolloClient } from "@apollo/client";
 

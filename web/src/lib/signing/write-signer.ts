@@ -26,10 +26,7 @@ export type WriteResult =
   | { kind: "done"; id: string; state: StagedWriteState }
   /** Seal-poll budget exhausted; material kept, resume() continues. */
   | { kind: "awaitingSeal"; id: string }
-  /**
-   * The API refused. Material is cleared only when every code is
-   * terminal; a backoff/fault refusal keeps it and resume() retries.
-   */
+  /** The API refused; TERMINAL_REFUSALS decides whether material is cleared. */
   | { kind: "refused"; id: string; errors: readonly UserError[] }
   /** The device refused to sign a failing verification; material cleared. */
   | { kind: "rejectedByDevice"; id: string; reason: string }

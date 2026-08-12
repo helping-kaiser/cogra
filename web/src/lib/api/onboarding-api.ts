@@ -1,9 +1,7 @@
 // The joining-flow calls, lifted into outcomes (auth.md "Application").
-// inviteLinkCheck, register, verifyEmail, and the resend are anonymous
-// entry gestures; attachActorKey, applyWithInvite, and the status poll
-// are guarded by the caller. The staged Registration is selected
-// client-side from the viewer's staged writes — the me read is the
-// admission flow's repair hook (schema `User.application`).
+// The status read is the admission flow's repair hook: an approved
+// application whose staged Registration was lost re-stages on it
+// (schema `User.application`).
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -133,8 +131,7 @@ export function applyWithInvite(
 
 /**
  * One status read for the poll pass. The staged Registration is the
- * first unexpired REGISTRATION node (Android parity); a null viewer is
- * the shared UNAUTHENTICATED refusal so the guard can replay.
+ * first unexpired REGISTRATION node (Android parity).
  */
 export async function fetchApplicationStatus(
   client: ApolloClient,

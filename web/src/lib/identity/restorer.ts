@@ -1,8 +1,6 @@
 // Actor restore from the recovery code (auth.md "Key recovery"): parse
 // the code, fetch the newest blob, open it on device, persist the seed
-// as a non-extractable key. The blob it came from exists, so the raw
-// seed is not retained (web.md "Key custody"). The AES-GCM tag is the
-// wrong-code detector — there is no check digit.
+// as a non-extractable key.
 
 import type { ApolloClient } from "@apollo/client";
 

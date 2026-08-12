@@ -1,9 +1,6 @@
-// Account-management calls (auth.md "Sessions", "Password change",
-// "Email change", api-spec.md "Auth and accounts"), lifted into
-// outcomes. requestEmailChange is a silent verb: no userErrors by
-// design — surfacing a failure would reveal whether the new address is
-// registered. Every call here is authenticated-only, never
-// member-gated: the applicant manages their account like anyone else.
+// Account-management calls, lifted into outcomes (auth.md "Sessions",
+// "Password change", "Email change") — authenticated-only, never
+// member-gated.
 
 import type { ApolloClient } from "@apollo/client";
 
