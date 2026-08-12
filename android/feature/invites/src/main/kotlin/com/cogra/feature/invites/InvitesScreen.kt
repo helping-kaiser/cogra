@@ -174,7 +174,16 @@ fun InvitesScreen(
                 CircularProgressIndicator(modifier = Modifier.testTag("invites_loading"))
             }
             state.links.forEach { link ->
-                LinkCard(link, state.approvingId, state.seedOnDevice, onRevoke, onApprove, onHuskHint, onShare)
+                LinkCard(
+                    link,
+                    state.approvingId,
+                    state.revokingId,
+                    state.seedOnDevice,
+                    onRevoke,
+                    onApprove,
+                    onHuskHint,
+                    onShare,
+                )
             }
         }
     }
@@ -244,6 +253,7 @@ private fun errorRes(code: ErrorCode?): Int = when (code) {
 private fun LinkCard(
     link: InviteLinkInfo,
     approvingId: String?,
+    revokingId: String?,
     seedOnDevice: Boolean,
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
@@ -273,6 +283,7 @@ private fun LinkCard(
                     }
                     TextButton(
                         onClick = { onRevoke(link.id) },
+                        enabled = revokingId == null,
                         modifier = Modifier.testTag("revoke_${link.id}"),
                     ) {
                         Text(stringResource(R.string.invites_revoke))
