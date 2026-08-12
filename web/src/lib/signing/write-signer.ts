@@ -1,13 +1,7 @@
-// The device's half of the write handshake (architecture.md "The write
-// path"; api-spec.md "The write flow"; Android mirror: WriteSigner.kt).
-// Handshake material persists BEFORE the submit and the approve step
-// verifies against that persisted copy, never the server's echo — the
-// user never signs blind bytes, at either step, across page reloads.
-// Verification failure clears the material and refuses: it is spent, and
-// the unapproved staging garbage-collects server-side. An API refusal
-// clears only when the handshake is genuinely dead — a backoff or fault
-// refusal (RATE_LIMITED, INTERNAL, UNAUTHENTICATED) and every read-leg
-// refusal keep the material so resume() can finish the handshake.
+// The device's half of the write handshake (api-spec.md "The write
+// flow"; Android mirror: WriteSigner.kt): material persists BEFORE the
+// submit, and the approve step verifies against that persisted copy,
+// never the server's echo — the user never signs blind bytes.
 
 import type { ApolloClient } from "@apollo/client";
 

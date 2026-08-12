@@ -29,7 +29,7 @@ function noticeDate(detectedAt: string): string {
 export function HomeShell({
   notices = securityNotices,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   notices?: SecurityNotices;
 } = {}) {
   const client = useApolloClient();
@@ -42,8 +42,6 @@ export function HomeShell({
   const [transportFailed, setTransportFailed] = useState(false);
   const [welcome, setWelcome] = useState(false);
 
-  // The login security notice rides the per-tab store because login
-  // redirects here on the phase flip (auth.md "Reuse detection").
   const reuseDetectedAt = useSyncExternalStore(
     notices.subscribe,
     notices.reuseDetectedAt,

@@ -1,12 +1,6 @@
-// The app-scoped poll/sign loop that advances an application (auth.md
-// "the poll/sign loop … runs app-scoped, above any one screen"; the
-// cadence and poke semantics mirror Android's RegistrationFlow — an
-// implementation choice recorded in web.md "The onboarding poll loop").
-// Auto-polling is an onboarding-only mechanism: the loop ends for good
-// at member — from then on every fetch is event-driven — and at a
-// device rejection, which no amount of polling repairs. One web
-// addition: reset() tears the loop down on sign-out; the next session's
-// ensureAdvancing() starts clean.
+// The app-scoped, onboarding-only poll/sign loop that advances an
+// application (web.md "The onboarding poll loop"; Android mirror:
+// RegistrationFlow).
 
 import type { RegistrationProgress, RegistrationSigner } from "./registration-signer";
 
@@ -22,7 +16,7 @@ export type RegistrationFlow = {
   /**
    * Starts the loop, or pokes a running one into an immediate pass —
    * never a second loop. Call whenever a proof just changed server-side:
-   * poll now, not in 30 seconds.
+   * poll now, not at the next slow-cadence tick.
    */
   ensureAdvancing(): void;
   /**
