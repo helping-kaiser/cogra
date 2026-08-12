@@ -126,12 +126,16 @@ over `navigateUp()`.
 | `KeyCeremony` | signed in | `/key` |
 | `Restore` | signed in | `/restore` |
 
-Web delta: the web's read surfaces are public, while the app
-reaches `Feed` and `PostDetail` only from the signed-in stack —
-in-app anonymous browsing is parked in
-[open-questions.md Q35](../open-questions.md#q35--anonymous-browsing-in-the-android-app).
-Email-carried surfaces (`/verify`, the `/reset?token=` arrival)
-have no destinations: those links open in the browser.
+The read surfaces are public on every client — accounts gate
+participation, never viewing
+([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
+The web already serves guests; the app's guest read shell —
+`Feed` and `PostDetail` on the signed-out stack, write
+affordances swapped for join entries — is a staged slice-2
+follow-up ([roadmap.md](roadmap.md#slice-2--content)). No guest
+session exists anywhere: an anonymous read simply carries no
+token. Email-carried surfaces (`/verify`, the `/reset?token=`
+arrival) have no destinations: those links open in the browser.
 
 ## Module layout
 

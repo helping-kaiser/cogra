@@ -26,7 +26,6 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
-| 2c. When app-side browsing matters | 1 | **Q35** | Anonymous browsing in the Android app — the web exposes the public read surfaces without a session; the app's signed-out stack offers only onboarding. A product decision about the app's front door, not a technical gap. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -183,35 +182,6 @@ topics, and what gesture un-tags? Candidates: newest-wins per
 removed; or a net-over-bundle read like Opinions. The answer
 gates the tag inputs already specced on the content-authoring
 surface.
-
----
-
-## Q35 — Anonymous browsing in the Android app
-
-**Where it shows up:**
-[android.md "Screens"](implementation/android.md#screens),
-[web.md "Routes"](implementation/web.md#routes),
-[graph-model.md "Core principles"](primitive/graph-model.md#1-core-principles)
-**Status:** open (deferred — until app-side browsing matters)
-
-### Context
-
-The graph is continuously readable without an account — accounts
-gate participation, never viewing. The web honors this per
-surface: `/feed` and `/posts/<id>` are public, and the front door
-offers browsing before any commitment. The Android app's
-signed-out stack offers only onboarding (invite entry, apply,
-login); `Feed` and `PostDetail` are reachable from the signed-in
-stack alone. The API serves anonymous reads either way — this is
-purely a client-exposure question.
-
-### The question
-
-Should the app's signed-out root offer a browse entry
-(web-parity), and if so what does the signed-out read shell look
-like — which write affordances swap to join entries, and where
-does the join hand-off land? A product decision about the app's
-front door; nothing technical blocks it.
 
 ---
 
