@@ -14,8 +14,7 @@ mod rig;
 use l1_standin::{StandIn, StandInConfig};
 use rig::body_json;
 
-/// The full router over a test pool — the auth limits unbounded, since
-/// the limits themselves are rate_limits.rs's subject.
+/// The full router over a test pool.
 fn test_app(pool: PgPool) -> axum::Router {
     rig::connect_info_app(
         pool,

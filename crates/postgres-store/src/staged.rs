@@ -567,8 +567,7 @@ pub async fn expire_due(
 }
 
 /// GC, second phase: deletes expired rows another `gc_after_epochs` epochs
-/// after expiry. Staged state leaves no trace once collected
-/// (data-model.md "Staged writes").
+/// after expiry.
 pub async fn reap_expired(
     pool: &PgPool,
     current_epoch: i64,

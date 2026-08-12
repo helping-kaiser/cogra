@@ -2,13 +2,6 @@
 // actor seed sealed under a generated recovery code. One format across
 // every client — this module is the reference the golden vectors pin,
 // and the bootstrap's operator-account seeding seals with it.
-//
-// Code: 16 CSPRNG bytes, displayed as 26 Crockford base32 characters in
-// dash-separated groups of 5-5-5-5-6. Key: HKDF-SHA-256(salt, ikm=code
-// bytes, info "cogra:key-backup:v1") → 32 bytes. Sealing: AES-256-GCM;
-// blob = 0x01 ‖ salt(16) ‖ nonce(12) ‖ ciphertext, the 29 header bytes
-// riding as the associated data. Plaintext: deterministic CBOR
-// array(2)[seed bytes, container version 1].
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};

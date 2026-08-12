@@ -69,8 +69,6 @@ impl Mailer for DevMailer {
     }
 }
 
-/// One entry: a `timestamp | to | subject` header line, the body, a
-/// blank separator line.
 async fn append(path: &Path, mail: &Mail) -> std::io::Result<()> {
     use tokio::io::AsyncWriteExt;
 

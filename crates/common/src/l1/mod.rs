@@ -1,14 +1,6 @@
 // The L1 seam data model — the shared vocabulary of the Layer 1 → Layer 2
 // interface (docs/primitive/layer1-interface.md). Everything here is
-// substrate contract, not CoGra state: identifiers (§8.1), the edge census
-// (§9), the canonical structural body and its encoding (§8.4), the
-// admission-handshake objects (§8.2), and the epoch package the mirror
-// ingests (§11.6).
-//
-// The cryptographic realization (crypto.rs) is the stand-in-scoped interim
-// choice recorded under open-questions.md Q30: Ed25519 signatures, SHA-256
-// salted hash commitments, canonical CBOR serialization. L1 prescribes
-// properties, not schemes (`rem:graph:authentication-realization-out-of-scope`).
+// substrate contract, not CoGra state.
 
 pub mod census;
 pub mod client;
