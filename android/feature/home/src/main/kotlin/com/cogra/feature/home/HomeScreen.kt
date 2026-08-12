@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -34,7 +33,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -42,6 +40,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.StanceSlider
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
 import kotlinx.coroutines.launch
@@ -215,17 +215,17 @@ fun HomeScreen(
                                     modifier = Modifier.testTag("home_reciprocation"),
                                 )
                                 Text(stringResource(R.string.home_reciprocate_body))
-                                LabeledSlider(
+                                StanceSlider(
                                     label = stringResource(R.string.stance_p_directed),
                                     value = state.pDirected,
                                     onChange = onPDirectedChange,
-                                    tag = "home_p_directed",
+                                    testTag = "home_p_directed",
                                 )
-                                LabeledSlider(
+                                StanceSlider(
                                     label = stringResource(R.string.stance_p_interest),
                                     value = state.pInterest,
                                     onChange = onPInterestChange,
-                                    tag = "home_p_interest",
+                                    testTag = "home_p_interest",
                                 )
                                 if (state.signingFailed) {
                                     Text(
@@ -379,11 +379,11 @@ private fun ApplicantStatus(
                 modifier = Modifier.testTag("home_landed"),
             )
         is RegistrationProgress.RejectedByDevice ->
-            ApplicantError("home_application_rejected", R.string.home_application_rejected)
+            ErrorLine(R.string.home_application_rejected, testTag = "home_application_rejected")
         is RegistrationProgress.Refused ->
-            ApplicantError("home_application_refused", R.string.error_generic)
+            ErrorLine(R.string.error_generic, testTag = "home_application_refused")
         is RegistrationProgress.Failed ->
-            ApplicantError("home_application_offline", R.string.error_transport)
+            ErrorLine(R.string.error_transport, testTag = "home_application_offline")
     }
 }
 
@@ -499,8 +499,8 @@ private fun RearmCard(
                     .testTag("rearm_input"),
             )
             when {
-                state.rearmMalformed -> ApplicantError("rearm_error", R.string.home_rearm_invalid)
-                state.rearmError != null -> ApplicantError("rearm_error", state.rearmError.rearmMessage())
+                state.rearmMalformed -> ErrorLine(R.string.home_rearm_invalid, testTag = "rearm_error")
+                state.rearmError != null -> ErrorLine(state.rearmError.rearmMessage(), testTag = "rearm_error")
             }
             Button(
                 onClick = onRearm,
@@ -544,7 +544,7 @@ private fun VerifyCard(
                     .testTag("verify_token"),
             )
             state.verifyError?.let {
-                ApplicantError("verify_error", it.verifyMessage())
+                ErrorLine(it.verifyMessage(), testTag = "verify_error")
             }
             Button(
                 onClick = onVerify,
@@ -579,7 +579,7 @@ private fun VerifyCard(
                 )
             }
             state.resendError?.let {
-                ApplicantError("resend_error", it.resendMessage())
+                ErrorLine(it.resendMessage(), testTag = "resend_error")
             }
         }
     }
@@ -595,27 +595,3 @@ private fun ErrorCode.resendMessage(): Int = when (this) {
     else -> R.string.error_generic
 }
 
-@Composable
-private fun ApplicantError(tag: String, text: Int) {
-    Text(
-        text = stringResource(text),
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.testTag(tag),
-    )
-}
-
-/** A stance dimension slider over [-1, +1], labeled for TalkBack. */
-@Composable
-fun LabeledSlider(label: String, value: Double, onChange: (Double) -> Unit, tag: String) {
-    Column {
-        Text("$label: ${"%.2f".format(value)}")
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onChange(it.toDouble()) },
-            valueRange = -1f..1f,
-            modifier = Modifier
-                .testTag(tag)
-                .semantics { contentDescription = label },
-        )
-    }
-}

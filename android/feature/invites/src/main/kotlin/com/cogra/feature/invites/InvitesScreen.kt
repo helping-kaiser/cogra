@@ -20,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -47,6 +46,8 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.StanceSlider
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ErrorCode
@@ -154,21 +155,13 @@ fun InvitesScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (state.error != null || state.transportFailed) {
-                Text(
-                    text = stringResource(
-                        if (state.transportFailed) R.string.error_transport
-                        else errorRes(state.error),
-                    ),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("invites_error"),
+                ErrorLine(
+                    text = if (state.transportFailed) R.string.error_transport else errorRes(state.error),
+                    testTag = "invites_error",
                 )
             }
             if (!state.seedOnDevice) {
-                Text(
-                    text = stringResource(R.string.invites_husk_hint),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("invites_husk_hint"),
-                )
+                ErrorLine(R.string.invites_husk_hint, testTag = "invites_husk_hint")
             }
             CreateCard(
                 state,
@@ -350,17 +343,3 @@ private fun ApplicationRow(
     }
 }
 
-@Composable
-private fun StanceSlider(label: String, value: Double, onChange: (Double) -> Unit, tag: String) {
-    Column {
-        Text("$label: ${"%.2f".format(value)}")
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onChange(it.toDouble()) },
-            valueRange = -1f..1f,
-            modifier = Modifier
-                .testTag(tag)
-                .semantics { contentDescription = label },
-        )
-    }
-}
