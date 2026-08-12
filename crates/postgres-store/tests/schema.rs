@@ -81,8 +81,8 @@ async fn genesis_seed_round_trips(pool: PgPool) {
         genesis::TREASURY_HANDLE,
     ] {
         let id = Uuid::new_v4();
-        // Distinct per actor — a key binds at most one account
-        // (data-model.md "Actors"), as the real bootstrap does.
+        // Distinct per actor (data-model.md "Actors"), as the real
+        // bootstrap does.
         let pk = format!("pk-{handle}");
         let addr = format!("addr-{handle}");
         genesis::insert_actor(&mut tx, id, "system", handle, pk.as_bytes(), &addr)

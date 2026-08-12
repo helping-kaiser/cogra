@@ -16,7 +16,8 @@ use crate::l1::{BoundaryError, L1Boundary};
 pub enum RelayError {
     /// The submitted signature (or the proposal it covers) did not verify
     /// on the substrate — surfaced per act (api-spec.md
-    /// `SIGNATURE_INVALID`).
+    /// `SIGNATURE_INVALID`). Nothing was sealed (`def:graph:verified-act`),
+    /// so the device may fix and retry.
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
     /// The staged write lost its sealed act (a relay crash between seal
@@ -81,16 +82,11 @@ pub async fn submit_pre_signed<B: L1Boundary>(
             Ok(act)
         }
         Err(BoundaryError::Formation(m)) | Err(BoundaryError::Authentication(m)) => {
-            // No Layer-1 object exists for the refused submission
-            // (`def:graph:verified-act`); the device may fix and retry.
             staged::revert_to_pre_sign(pool, id).await?;
             Err(RelayError::SignatureInvalid(m))
         }
         Err(BoundaryError::Conflict(_)) => {
-            // The act is sealed on the substrate but the sealed form was
-            // lost before it could be stored — the salts are gone, so no
-            // approval can ever be produced. Terminal: expire now; the
-            // device re-prepares under a fresh sequence value.
+            // Sealed on the substrate, but the sealed form is gone (`Wedged`).
             staged::expire_one(pool, id, write.prepared_epoch).await?;
             Err(RelayError::Wedged(id))
         }

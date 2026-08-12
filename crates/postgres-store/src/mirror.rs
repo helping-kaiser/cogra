@@ -61,8 +61,7 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
         .execute(&mut *tx)
         .await?;
         for leg in &record.legs {
-            // Domain, mask, and tier are family-fixed by the census —
-            // resolved here from (family, role), never a per-edge choice.
+            // Domain, mask, and tier are family-fixed (common::l1::census).
             let spec = record
                 .family
                 .legs()
