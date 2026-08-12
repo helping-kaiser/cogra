@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM staged_writes\n               WHERE actor_id = $1 AND family = $2 AND target = $3\n                 AND state NOT IN ('expired', 'landed')\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "00cff243e9c79ecf35900adb4a9e5f0ee8d103b57e211368a945620c1a7b2abf"
+}

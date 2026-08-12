@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,\n                      p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.created_at AS \"version_created_at!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason, created_at\n                   FROM post_versions WHERE post_id = p.id\n                   ORDER BY created_at DESC LIMIT 1\n               ) v ON TRUE\n               WHERE ($1::bigint IS NULL\n                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))\n               ORDER BY\n                   CASE WHEN $4 THEN p.landed_epoch END ASC,\n                   CASE WHEN $4 THEN p.act_time END ASC,\n                   CASE WHEN $4 THEN p.position END ASC,\n                   p.landed_epoch DESC, p.act_time DESC, p.position DESC\n               LIMIT $5\n           ) page\n           ORDER BY landed_epoch DESC, act_time DESC, position DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "l1_node_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "content!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "version_created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "e7ae58da7871b60356f0668d2659b1dba98431d3e4380e64507a8a1ec31671fe"
+}

@@ -1328,3 +1328,26 @@ pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdent
         realization_address: r.realization_address,
     }))
 }
+
+/// The actor fronting an address atom — the mirror's author strings
+/// resolve to accounts through this (None for system actors and
+/// unknown addresses).
+pub async fn actor_identity_by_address(
+    pool: &PgPool,
+    realization_address: &str,
+) -> Result<Option<ActorIdentity>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT id, kind, handle, actor_pubkey, realization_address
+         FROM actors WHERE realization_address = $1",
+        realization_address,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| ActorIdentity {
+        id: r.id,
+        kind: r.kind,
+        handle: r.handle,
+        actor_pubkey: r.actor_pubkey,
+        realization_address: r.realization_address,
+    }))
+}

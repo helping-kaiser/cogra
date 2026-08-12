@@ -62,7 +62,7 @@ impl Rig {
             author: key.address(),
             family: Family::Registration,
             middle: None,
-            target: NodeId::Prof(key.address()),
+            target: prepare::Target::Node(NodeId::Prof(key.address())),
             p_d: 1.0,
             p_i: 1.0,
             settlement_ref: None,
@@ -195,7 +195,7 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     // An Opinion cannot target a raw address atom.
     let mut bad_target = rig.registration(&key);
     bad_target.family = Family::Opinion;
-    bad_target.target = NodeId::Addr(key.address());
+    bad_target.target = prepare::Target::Node(NodeId::Addr(key.address()));
     assert!(matches!(
         prepare::prepare(&rig.boundary, &rig.pool, GC, actor_id, bad_target).await,
         Err(PrepareError::Formation(_))
