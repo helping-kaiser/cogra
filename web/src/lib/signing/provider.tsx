@@ -44,7 +44,7 @@ export function RegistrationProvider({
   writeSigner: injectedWriteSigner,
 }: {
   children: ReactNode;
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   ceremony?: KeyCeremony;
   flow?: RegistrationFlow;
   writeSigner?: WriteSigner;

@@ -1,8 +1,8 @@
 "use client";
 
 // Login (Android's LoginScreen/LoginViewModel). Success only writes the
-// token store; the phase flip navigates — the signed-in redirect below
-// covers both a fresh login and an already-signed-in visit.
+// token store (phase flips navigate: web.md "Routes") — the signed-in
+// redirect below covers a fresh login and an already-signed-in visit.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export function LoginForm({
   identity = identityStore,
   notices = securityNotices,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   identity?: IdentityStore;
   notices?: SecurityNotices;
 } = {}) {

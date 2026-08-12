@@ -1,10 +1,8 @@
 "use client";
 
 // The applicant's cards in the member shell (auth.md "The applicant
-// experience": the application rides along as cards and dismissible
-// hints — waiting is never a wall). Rendering mirrors Android's
-// ApplicantStatus: per progress state, the one thing that moves the
-// application forward.
+// experience"; Android's ApplicantStatus): per progress state, the one
+// thing that moves the application forward.
 
 import Link from "next/link";
 import { useState } from "react";

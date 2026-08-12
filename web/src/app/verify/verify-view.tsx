@@ -1,7 +1,7 @@
 "use client";
 
 // The verification result. One token outcome covers three realities —
-// invalid link, expired token, and a 24h-reaped account ride the same
+// invalid link, expired token, and an expiry-reaped account ride the same
 // VERIFICATION_TOKEN_INVALID (schema verifyEmail doc) — so the failure
 // copy covers all of them, with the resend as the recovery path. A
 // success pokes the poll loop when a session is live: the proof just

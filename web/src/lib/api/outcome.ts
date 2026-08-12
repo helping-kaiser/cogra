@@ -1,15 +1,5 @@
-// The three outcome tiers of every API call (Android's Outcome.kt):
-// transport faults and the GraphQL errors array become `failed`, payload
-// userErrors become `refused`, everything else is `success`.
-//
-// Two deliberate translations out of the errors array (transport tier per
-// api-spec.md § Errors are tiered): UNAUTHENTICATED, because the auth
-// guard must be able to refresh-and-replay on it — synthesized into the
-// same refusal shape a null viewer read maps to; and RATE_LIMITED,
-// because a deliberate backoff rendered as a connectivity failure
-// ("can't reach the server") misleads — surfaces already know the code
-// from payload userErrors. The guard replays only on UNAUTHENTICATED, so
-// a rate-limited call is never replayed.
+// The three outcome tiers of every API call — `failed` / `refused` /
+// `success` (api-spec.md § Errors are tiered; Android's Outcome.kt twin).
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -65,6 +55,10 @@ export function hasCode(outcome: Outcome<unknown>, code: ErrorCode): boolean {
   return outcome.kind === "refused" && outcome.errors.some((e) => e.code === code);
 }
 
+// Two deliberate lifts out of the transport tier: UNAUTHENTICATED, so
+// the auth guard can refresh-and-replay on it; RATE_LIMITED, because a
+// deliberate backoff rendered as "can't reach the server" misleads. The
+// guard replays only on UNAUTHENTICATED.
 function classify(error: unknown): Outcome<never> {
   if (CombinedGraphQLErrors.is(error)) {
     if (error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED")) {

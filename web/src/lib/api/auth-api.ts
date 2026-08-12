@@ -1,6 +1,5 @@
-// Session and account calls, lifted into outcomes. logIn, refreshSession,
-// and the password-reset pair are unauthenticated entry gestures
-// (api-spec.md § Mutations → Conventions); Me is guarded by the caller.
+// Session and account calls, lifted into outcomes (api-spec.md
+// § Mutations → Conventions).
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -87,7 +86,7 @@ export function refreshExecutor(client: ApolloClient): RefreshExecutor {
     );
 }
 
-/** Silent verb: no userErrors by design — success and refusal are one. */
+/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
 export function requestPasswordReset(
   client: ApolloClient,
   email: string,
@@ -140,10 +139,7 @@ export function uploadKeyBackup(client: ApolloClient, blob: string): Promise<Out
   );
 }
 
-/**
- * The viewer, live — a null `me` is an UNAUTHENTICATED refusal so the
- * guard treats a stale access token and an explicit refusal the same way.
- */
+/** The viewer, live. */
 export function fetchMe(client: ApolloClient): Promise<Outcome<MeUser>> {
   return viewerField(
     () => client.query({ query: MeDocument, fetchPolicy: "network-only" }),

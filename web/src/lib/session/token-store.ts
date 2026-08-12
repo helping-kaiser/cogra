@@ -1,10 +1,7 @@
-// Session tokens per web.md § Session tokens in the browser: the rotating
-// refresh token in persistent storage, the access token in per-tab memory —
-// the accepted XSS blast radius is a session, never the actor key.
-// localStorage is the persistent half because its `storage` event propagates
-// sign-out and rotation to other tabs for free. The signed-in account's id
-// is stored beside the refresh token: custody is account-keyed
-// (roadmap.md slice 1.1), so the device must know whose session this is.
+// Session tokens per web.md § Session tokens in the browser: rotating
+// refresh token in persistent storage, access token in per-tab memory.
+// localStorage is the persistent half because its `storage` event
+// propagates sign-out and rotation to other tabs for free.
 
 export type SessionAuth = {
   readonly accessToken: string;
@@ -20,7 +17,7 @@ export type TokenStore = {
   accessToken(): string | null;
   /** The signed-in account's id; null when signed out. */
   activeAccountId(): string | null;
-  /** Token presence is the auth phase — no `me` bootstrap (Android parity). */
+  /** Token presence — what the auth phase derives from (provider.tsx). */
   hasSession(): boolean;
   /** Overwrite everything; rotation replaces the stored refresh token. */
   save(auth: SessionAuth): void;

@@ -1,8 +1,8 @@
 "use client";
 
-// The signed-out front door: paste an invite (a /join URL or a bare id —
-// auth.md "Link URLs": the paste is the universal fallback) or sign in.
-// The /join route does the actual check; the door only finds the id.
+// The signed-out front door: paste an invite (auth.md "Link URLs") or
+// sign in. The /join route does the actual check; the door only finds
+// the id.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";

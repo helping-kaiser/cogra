@@ -1,5 +1,4 @@
-// The invite front door (auth.md "Link URLs": /join/<link-id> on the web
-// origin — Android App Links point here too). Server-rendered so the
+// The invite link route (auth.md "Link URLs"). Server-rendered so the
 // link unfurls; the inviter's handle rides the OpenGraph description
 // when the backend is reachable at render time.
 

@@ -1,12 +1,9 @@
 "use client";
 
 // The inviter's surface (Android's InvitesScreen): issue and revoke
-// links, work the approval queue. Approving drives the full write
-// handshake on this device — the vouch is the inviter's signature
-// (auth.md "Approval and landing"). The applicant lock renders in-page:
-// the URL is directly addressable, and a gated surface stays visible
-// but locked, with the lock explaining itself (auth.md "The applicant
-// experience", web.md "Routes").
+// links, work the approval queue — approving drives the full write
+// handshake on this device (auth.md "Approval and landing"; the in-page
+// applicant lock: web.md "Routes").
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";

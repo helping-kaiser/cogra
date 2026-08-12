@@ -1,11 +1,9 @@
 "use client";
 
-// The signed-in shell (Android's Home). An applicant is simply signed in
-// — the applicant/member distinction lives inside this shell as cards,
-// never in navigation (auth.md "The applicant experience"). The guarded
-// Me read exercises the refresh-and-replay path; a refused read means a
-// dead session — the phase flip handles it, the shell just stops loading
-// (screens never self-navigate on auth failure).
+// The signed-in shell (Android's Home): applicant vs member is cards,
+// never navigation (auth.md "The applicant experience"). The guarded Me
+// read exercises refresh-and-replay; a refused read is a dead session —
+// the phase flip handles it, the shell just stops loading.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
@@ -29,7 +27,7 @@ function noticeDate(detectedAt: string): string {
 export function HomeShell({
   notices = securityNotices,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   notices?: SecurityNotices;
 } = {}) {
   const client = useApolloClient();
@@ -42,8 +40,6 @@ export function HomeShell({
   const [transportFailed, setTransportFailed] = useState(false);
   const [welcome, setWelcome] = useState(false);
 
-  // The login security notice rides the per-tab store because login
-  // redirects here on the phase flip (auth.md "Reuse detection").
   const reuseDetectedAt = useSyncExternalStore(
     notices.subscribe,
     notices.reuseDetectedAt,

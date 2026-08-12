@@ -35,7 +35,7 @@ function restoreMessage(result: RestoreResult): string | null {
 export function RestoreForm({
   store = identityStore,
 }: {
-  /** Test injection, as SessionProvider's store. */
+  /** Test injection. */
   store?: IdentityStore;
 } = {}) {
   const client = useApolloClient();
