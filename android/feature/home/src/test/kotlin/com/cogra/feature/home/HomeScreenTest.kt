@@ -28,6 +28,7 @@ class HomeScreenTest {
     private fun render(
         state: HomeUiState,
         onActorRestoredShown: () -> Unit = {},
+        onOpenFeed: () -> Unit = {},
         onOpenInvites: () -> Unit = {},
         onOpenSettings: () -> Unit = {},
     ) {
@@ -41,6 +42,7 @@ class HomeScreenTest {
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
                 onActorRestoredShown = onActorRestoredShown,
+                onOpenFeed = onOpenFeed,
                 onOpenInvites = onOpenInvites, onOpenSettings = onOpenSettings, onRestoreActor = {},
                 onStartKeyCeremony = {},
             )
@@ -265,5 +267,13 @@ class HomeScreenTest {
     fun theWelcomeOneShotShowsTheSnackbarInTheMemberShell() {
         render(HomeUiState(loading = false, welcome = true))
         compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun theFeedButtonNavigates() {
+        var opened = false
+        render(HomeUiState(loading = false), onOpenFeed = { opened = true })
+        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
+        assertThat(opened).isTrue()
     }
 }

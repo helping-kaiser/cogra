@@ -20,17 +20,27 @@ import com.cogra.crypto.decodePreCommitment
 import com.cogra.crypto.decodeProposal
 import com.cogra.crypto.encodeProposal
 import com.cogra.crypto.encodeVerifiedAct
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.CommentView
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
@@ -257,16 +267,24 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
         targetId: String,
         pDirected: Double,
         pInterest: Double,
-    ): Outcome<List<PreparedWriteView>> {
+    ): Outcome<List<PreparedWriteView>> = Outcome.Success(listOf(stage()))
+
+    /**
+     * Stages one signable write — the generic entry content fakes
+     * delegate to, so any prepare verb's result runs the real signing
+     * chain. The family is display metadata; the proposal bytes are the
+     * fixture's canonical test proposal either way.
+     */
+    fun stage(family: Family = Family.OPINION): PreparedWriteView {
         val id = "w${nextSeq}"
         val view = PreparedWriteView(
             id = id,
-            family = Family.OPINION,
+            family = family,
             canonicalProposal = testProposalBytes(actor, nextSeq),
             gcAfterEpochs = 8,
         )
         nextSeq += 1u
-        return Outcome.Success(listOf(view))
+        return view
     }
 
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
@@ -297,3 +315,64 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
 
     override suspend fun stagedWrite(id: String): Outcome<StagedWriteView?> = Outcome.Success(staged[id])
 }
+
+/** Content-repository base: every call throws until overridden. */
+open class ThrowingContentRepository : ContentRepository {
+    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> =
+        throw UnsupportedOperationException()
+    override suspend fun post(
+        id: String,
+        commentsFirst: Int,
+        commentsAfter: String?,
+    ): Outcome<PostDetail?> = throw UnsupportedOperationException()
+    override suspend fun comments(postId: String, first: Int, after: String?): Outcome<Page<CommentView>> =
+        throw UnsupportedOperationException()
+    override suspend fun preparePost(
+        title: String?,
+        description: String?,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun preparePostEdit(
+        id: String,
+        title: String?,
+        description: String?,
+        content: String,
+    ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun prepareComment(
+        target: String,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
+    override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
+        throw UnsupportedOperationException()
+}
+
+fun testModeratedField(value: String?) = ModeratedField(value, FieldStatus.NORMAL)
+
+fun testPost(
+    id: String,
+    title: String? = "Title $id",
+    body: String = "Body $id",
+    author: ActorRef? = ActorRef("author-1", "author"),
+): PostView = PostView(
+    id = id,
+    title = testModeratedField(title),
+    description = testModeratedField(null),
+    content = testModeratedField(body),
+    author = author,
+    createdAt = Instant.EPOCH,
+    updatedAt = Instant.EPOCH,
+)
+
+fun testComment(
+    id: String,
+    body: String = "Comment $id",
+    author: ActorRef? = ActorRef("author-2", "commenter"),
+): CommentView = CommentView(
+    id = id,
+    content = testModeratedField(body),
+    author = author,
+    createdAt = Instant.EPOCH,
+    updatedAt = Instant.EPOCH,
+)

@@ -52,6 +52,7 @@ fun HomeRoute(
     onActorRestoredResultConsumed: () -> Unit,
     handleChangedResult: Boolean,
     onHandleChangedResultConsumed: () -> Unit,
+    onOpenFeed: () -> Unit,
     onOpenInvites: () -> Unit,
     onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
@@ -91,6 +92,7 @@ fun HomeRoute(
         onDismissReciprocation = viewModel::onDismissReciprocation,
         onResumePending = viewModel::onResumePending,
         onActorRestoredShown = viewModel::onActorRestoredShown,
+        onOpenFeed = onOpenFeed,
         onOpenInvites = onOpenInvites,
         onOpenSettings = onOpenSettings,
         onRestoreActor = onRestoreActor,
@@ -118,6 +120,7 @@ fun HomeScreen(
     onDismissReciprocation: () -> Unit,
     onResumePending: () -> Unit,
     onActorRestoredShown: () -> Unit,
+    onOpenFeed: () -> Unit,
     onOpenInvites: () -> Unit,
     onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
@@ -274,6 +277,14 @@ fun HomeScreen(
                             }
                         }
                     }
+                }
+                OutlinedButton(
+                    onClick = onOpenFeed,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_feed"),
+                ) {
+                    Text(stringResource(R.string.home_open_feed))
                 }
                 val invitesLockedMessage = stringResource(R.string.home_invites_locked_message)
                 InvitesButton(

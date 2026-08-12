@@ -1,0 +1,121 @@
+# The content surface (api-spec.md "Content authoring", roadmap
+# "Slice 2"): the four prepare verbs, the chronological listing, and
+# the post-with-thread read. Reads are anonymous-capable; prepares are
+# member-session writes signed on this device.
+
+fragment PostFields on Post {
+  id
+  title {
+    value
+    status
+  }
+  description {
+    value
+    status
+  }
+  content {
+    value
+    status
+  }
+  author {
+    id
+    handle
+  }
+  createdAt
+  updatedAt
+  moderationStatus
+}
+
+fragment CommentFields on Comment {
+  id
+  content {
+    value
+    status
+  }
+  author {
+    id
+    handle
+  }
+  createdAt
+  updatedAt
+  moderationStatus
+}
+
+mutation PreparePost($input: PreparePostInput!) {
+  preparePost(input: $input) {
+    node
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation PreparePostEdit($input: PreparePostEditInput!) {
+  preparePostEdit(input: $input) {
+    node
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation PrepareComment($input: PrepareCommentInput!) {
+  prepareComment(input: $input) {
+    node
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
+  prepareCommentEdit(input: $input) {
+    node
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+query Posts($first: Int!, $after: String) {
+  posts(first: $first, after: $after) {
+    edges {
+      node {
+        ...PostFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
+  post(id: $id) {
+    ...PostFields
+    comments(first: $commentsFirst, after: $commentsAfter) {
+      edges {
+        node {
+          ...CommentFields
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

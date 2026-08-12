@@ -58,6 +58,7 @@ android {
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":feature:auth"))
+    implementation(project(":feature:content"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:home"))
     implementation(project(":feature:invites"))
