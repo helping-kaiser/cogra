@@ -24,8 +24,10 @@ import {
 } from "@/lib/api/invites-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
+import { TransportError } from "@/lib/ui/transport-error";
 
 const LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -202,11 +204,7 @@ export function InvitesView() {
         </Card>
       )}
 
-      {transportFailed && (
-        <p role="alert" data-testid="invites_error" className="text-sm text-red-600 dark:text-red-400">
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
-      )}
+      {transportFailed && <TransportError testId="invites_error" />}
       {!transportFailed && error !== null && (
         <p role="alert" data-testid="invites_error" className="text-sm text-red-600 dark:text-red-400">
           {invitesMessage(error)}
@@ -254,14 +252,9 @@ export function InvitesView() {
                 onChange={setPrefillPInterest}
                 testId="invites_p_interest"
               />
-              <button
-                type="submit"
-                data-testid="invites_create"
-                disabled={creating}
-                className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-              >
+              <Button type="submit" testId="invites_create" size="sm" selfStart disabled={creating}>
                 Create link
-              </button>
+              </Button>
             </form>
           </Card>
 
@@ -304,14 +297,9 @@ function LinkCard({
       <p className="text-sm">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
       {!revoked && (
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            data-testid={`share_${link.id}`}
-            onClick={() => onShare(link.id)}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium dark:border-zinc-700"
-          >
+          <Button testId={`share_${link.id}`} variant="outline" size="sm" onClick={() => onShare(link.id)}>
             Share
-          </button>
+          </Button>
           <button
             type="button"
             data-testid={`revoke_${link.id}`}
@@ -393,15 +381,15 @@ function ApplicationRow({
             onChange={setPInterest}
             testId={`approve_p_interest_${application.id}`}
           />
-          <button
-            type="button"
-            data-testid={`approve_${application.id}`}
+          <Button
+            testId={`approve_${application.id}`}
+            size="sm"
+            selfStart
             onClick={() => onApprove(application.id, pDirected, pInterest)}
             disabled={approvingId !== null}
-            className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
           >
             Approve and vouch
-          </button>
+          </Button>
         </>
       )}
     </div>

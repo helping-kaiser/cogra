@@ -28,8 +28,10 @@ import { createBackupManager, type BackupManager } from "@/lib/identity/backup";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PasswordField } from "@/lib/ui/password-field";
+import { TextField } from "@/lib/ui/text-field";
 
 type SettingsAction =
   | "passwordChanged"
@@ -339,14 +341,9 @@ export function SettingsView({
               Write this code down somewhere safe. It is shown only this once; any older code stops
               working.
             </p>
-            <button
-              type="button"
-              data-testid="settings_backup_saved"
-              onClick={onBackupCodeSaved}
-              className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
-            >
+            <Button testId="settings_backup_saved" size="sm" selfStart onClick={onBackupCodeSaved}>
               I&apos;ve written it down
-            </button>
+            </Button>
           </>
         ) : backupMode === "create" ? (
           <>
@@ -354,15 +351,9 @@ export function SettingsView({
               Create your recovery code. It re-encrypts your key on this browser and backs it up —
               without one, losing this browser loses the actor.
             </p>
-            <button
-              type="button"
-              data-testid="settings_backup_create"
-              onClick={onCreateBackup}
-              disabled={busy}
-              className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-            >
+            <Button testId="settings_backup_create" size="sm" selfStart onClick={onCreateBackup} disabled={busy}>
               Create a recovery code
-            </button>
+            </Button>
           </>
         ) : backupMode === "rekey" ? (
           <form onSubmit={onRekey} className="flex flex-col gap-3" noValidate>
@@ -385,14 +376,15 @@ export function SettingsView({
                 className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 font-mono dark:border-zinc-700"
               />
             </div>
-            <button
+            <Button
               type="submit"
-              data-testid="settings_backup_rekey"
+              testId="settings_backup_rekey"
+              size="sm"
+              selfStart
               disabled={rekeyCode.trim() === "" || busy}
-              className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
             >
               Replace the recovery code
-            </button>
+            </Button>
           </form>
         ) : backupMode === "none" ? (
           <>
@@ -439,15 +431,16 @@ export function SettingsView({
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          data-testid="settings_revoke_others"
+        <Button
+          testId="settings_revoke_others"
+          variant="outline"
+          size="sm"
+          selfStart
           onClick={onRevokeOthers}
           disabled={busy}
-          className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:opacity-40 dark:border-zinc-700"
         >
           Sign out everywhere else
-        </button>
+        </Button>
         {feedbackLine("sessions")}
       </Card>
 
@@ -477,14 +470,15 @@ export function SettingsView({
             testId="settings_new_password"
           />
           {feedbackLine("password")}
-          <button
+          <Button
             type="submit"
-            data-testid="settings_change_password"
+            testId="settings_change_password"
+            size="sm"
+            selfStart
             disabled={currentPassword === "" || newPassword === "" || busy}
-            className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
           >
             Change password
-          </button>
+          </Button>
         </form>
 
         <form onSubmit={onChangeHandle} className="flex flex-col gap-3" noValidate>
@@ -507,34 +501,29 @@ export function SettingsView({
             />
           </div>
           {feedbackLine("handle")}
-          <button
+          <Button
             type="submit"
-            data-testid="settings_change_handle"
+            testId="settings_change_handle"
+            size="sm"
+            selfStart
             disabled={newHandle.trim().length < 3 || busy}
-            className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
           >
             Change handle
-          </button>
+          </Button>
         </form>
 
         <form onSubmit={onRequestEmailChange} className="flex flex-col gap-3" noValidate>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="settings-new-email" className="text-sm font-medium">
-              New email
-            </label>
-            <input
-              id="settings-new-email"
-              data-testid="settings_new_email"
-              type="email"
-              value={newEmail}
-              onChange={(event) => {
-                setNewEmail(event.target.value);
-                setFeedback(null);
-              }}
-              autoComplete="email"
-              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </div>
+          <TextField
+            label="New email"
+            value={newEmail}
+            onChange={(value) => {
+              setNewEmail(value);
+              setFeedback(null);
+            }}
+            type="email"
+            autoComplete="email"
+            testId="settings_new_email"
+          />
           <PasswordField
             id="settings-email-password"
             label="Current password"
@@ -547,14 +536,15 @@ export function SettingsView({
             testId="settings_email_password"
           />
           {feedbackLine("email")}
-          <button
+          <Button
             type="submit"
-            data-testid="settings_request_email"
+            testId="settings_request_email"
+            size="sm"
+            selfStart
             disabled={!newEmail.includes("@") || emailChangePassword === "" || busy}
-            className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
           >
             Change email
-          </button>
+          </Button>
         </form>
 
         {emailChangeRequested && (
@@ -580,27 +570,22 @@ export function SettingsView({
                 className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 font-mono dark:border-zinc-700"
               />
             </div>
-            <button
+            <Button
               type="submit"
-              data-testid="settings_confirm_email"
+              testId="settings_confirm_email"
+              size="sm"
+              selfStart
               disabled={emailChangeCode.trim() === "" || busy}
-              className="self-start rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
             >
               Confirm email change
-            </button>
+            </Button>
           </form>
         )}
       </Card>
 
-      <button
-        type="button"
-        data-testid="settings_sign_out"
-        onClick={onSignOut}
-        disabled={busy}
-        className="rounded-md border border-zinc-300 px-4 py-2 font-medium disabled:opacity-40 dark:border-zinc-700"
-      >
+      <Button testId="settings_sign_out" variant="outline" onClick={onSignOut} disabled={busy}>
         Sign out
-      </button>
+      </Button>
     </main>
   );
 }

@@ -15,6 +15,9 @@ import { useApolloClient } from "@apollo/client/react";
 import { resendVerificationEmail, verifyEmail } from "@/lib/api/onboarding-api";
 import { hasCode } from "@/lib/api/outcome";
 import { useRegistrationFlow } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
+import { TextField } from "@/lib/ui/text-field";
+import { TransportError } from "@/lib/ui/transport-error";
 
 type VerifyState =
   | "missingToken"
@@ -103,28 +106,21 @@ export function VerifyView() {
             and we&apos;ll send a fresh link; if the account is gone, register again with your invite.
           </p>
           <form onSubmit={onResend} className="flex flex-col gap-3" noValidate>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="resend-email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="resend-email"
-                data-testid="resend_email"
-                type="email"
-                value={resendEmail}
-                onChange={(event) => setResendEmail(event.target.value)}
-                autoComplete="email"
-                className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-              />
-            </div>
-            <button
+            <TextField
+              label="Email"
+              value={resendEmail}
+              onChange={setResendEmail}
+              type="email"
+              autoComplete="email"
+              testId="resend_email"
+            />
+            <Button
               type="submit"
-              data-testid="verify_resend"
+              testId="verify_resend"
               disabled={resendEmail.trim() === "" || resending}
-              className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
             >
               Send a fresh link
-            </button>
+            </Button>
             {resent && (
               <p role="status" data-testid="verify_resent" className="text-sm text-zinc-600 dark:text-zinc-400">
                 If that email has a pending application, a fresh link is on its way.
@@ -143,34 +139,18 @@ export function VerifyView() {
           >
             Too many attempts — wait a moment and try again.
           </p>
-          <button
-            type="button"
-            data-testid="verify_retry"
-            onClick={() => setAttempt((n) => n + 1)}
-            className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <Button testId="verify_retry" onClick={() => setAttempt((n) => n + 1)}>
             Try again
-          </button>
+          </Button>
         </>
       )}
 
       {state === "transportFailed" && (
         <>
-          <p
-            role="alert"
-            data-testid="verify_transport_error"
-            className="text-sm text-red-600 dark:text-red-400"
-          >
-            Can&apos;t reach the server. Check your connection and try again.
-          </p>
-          <button
-            type="button"
-            data-testid="verify_retry"
-            onClick={() => setAttempt((n) => n + 1)}
-            className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900"
-          >
+          <TransportError testId="verify_transport_error" />
+          <Button testId="verify_retry" onClick={() => setAttempt((n) => n + 1)}>
             Try again
-          </button>
+          </Button>
         </>
       )}
     </main>
