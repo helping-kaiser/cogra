@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
+import com.cogra.domain.extractInviteId
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.WriteRepository
@@ -43,6 +45,7 @@ data class HomeUiState(
     /** The verify refusal to render; null when none. */
     val verifyError: ErrorCode? = null,
     val resent: Boolean = false,
+    val resending: Boolean = false,
     /** The resend refusal to render; null when none. */
     val resendError: ErrorCode? = null,
     /** The re-arm card's fresh-invite input (a dead application). */
@@ -59,8 +62,8 @@ data class HomeUiState(
     val huskWarning: Boolean = false,
     /** The first-login prompt (auth.md "Reciprocation is the joiner's own act"). */
     val reciprocationTarget: ActorRef? = null,
-    val pDirected: Double = 0.1,
-    val pInterest: Double = 0.1,
+    val pDirected: Double = DEFAULT_STANCE,
+    val pInterest: Double = DEFAULT_STANCE,
     val signing: Boolean = false,
     val reciprocated: Boolean = false,
     val signingFailed: Boolean = false,
@@ -205,17 +208,23 @@ class HomeViewModel @Inject constructor(
 
     fun onResend() {
         val email = _state.value.resendEmail.trim()
-        if (email.isBlank()) return
+        if (email.isBlank() || _state.value.resending) return
+        _state.update { it.copy(resending = true, resent = false, resendError = null) }
         viewModelScope.launch {
             when (val outcome = onboarding.resendVerificationEmail(email)) {
-                is Outcome.Success -> _state.update { it.copy(resent = true) }
+                is Outcome.Success -> _state.update { it.copy(resending = false, resent = true) }
                 // The rate limiter is the one refusal this silent verb
                 // can produce — say so instead of claiming the mail is
                 // on its way.
                 is Outcome.Refused -> _state.update {
-                    it.copy(resendError = outcome.errors.firstOrNull()?.code ?: ErrorCode.INTERNAL)
+                    it.copy(
+                        resending = false,
+                        resendError = outcome.errors.firstOrNull()?.code ?: ErrorCode.INTERNAL,
+                    )
                 }
-                is Outcome.Failed -> _state.update { it.copy(resendError = ErrorCode.INTERNAL) }
+                is Outcome.Failed -> _state.update {
+                    it.copy(resending = false, resendError = ErrorCode.INTERNAL)
+                }
             }
         }
     }
@@ -304,14 +313,5 @@ class HomeViewModel @Inject constructor(
 
     fun onActorRestoredShown() {
         _state.update { it.copy(actorRestored = false) }
-    }
-
-    private companion object {
-        val INVITE_ID = Regex(
-            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-        )
-
-        /** Accepts the full URL or the bare id, like the invite entry. */
-        fun extractInviteId(input: String): String? = INVITE_ID.find(input.trim())?.value
     }
 }

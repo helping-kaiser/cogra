@@ -10,18 +10,17 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.WriteState
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.store.TokenStore
 import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import java.util.Base64
 import javax.inject.Provider
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -29,25 +28,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class InMemoryTokenStore : TokenStore {
-    override val tokens = MutableStateFlow<AuthTokens?>(null)
-
-    override suspend fun current(): AuthTokens? = tokens.value
-
-    override suspend fun save(tokens: AuthTokens) {
-        this.tokens.value = tokens
-    }
-
-    override suspend fun clear() {
-        tokens.value = null
-    }
-}
-
 class RepositoriesTest {
 
     private lateinit var server: MockWebServer
     private lateinit var client: ApolloClient
-    private val tokenStore = InMemoryTokenStore()
+    private val tokenStore = FakeTokenStore()
 
     @Before
     fun setUp() {

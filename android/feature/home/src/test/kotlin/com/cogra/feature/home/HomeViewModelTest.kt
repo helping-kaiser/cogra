@@ -58,6 +58,7 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
     var resend: Outcome<Unit> = Outcome.Success(Unit)
     var rearm: Outcome<Unit> = Outcome.Success(Unit)
     var polls = 0
+    var resendCalls = 0
 
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> {
         polls += 1
@@ -66,7 +67,10 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
 
     override suspend fun verifyEmail(verificationToken: String): Outcome<Unit> = verify
 
-    override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = resend
+    override suspend fun resendVerificationEmail(email: String): Outcome<Unit> {
+        resendCalls += 1
+        return resend
+    }
 
     override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = rearm
 }
@@ -342,6 +346,22 @@ class HomeViewModelTest {
         dispatcher.scheduler.runCurrent()
         assertThat(vm.state.value.resent).isTrue()
         assertThat(vm.state.value.resendError).isNull()
+    }
+
+    @Test
+    fun aDoubleTapResendsOnce() = homeTest {
+        account.profile = applicant()
+        onboarding.status = applicantStatus(applicationView(verified = false))
+        val vm = viewModel()
+        dispatcher.scheduler.runCurrent()
+
+        vm.onResendEmailChange("joiner@example.com")
+        vm.onResend()
+        vm.onResend()
+        dispatcher.scheduler.runCurrent()
+        assertThat(onboarding.resendCalls).isEqualTo(1)
+        assertThat(vm.state.value.resending).isFalse()
+        assertThat(vm.state.value.resent).isTrue()
     }
 
     @Test

@@ -1,4 +1,7 @@
 pluginManagement {
+    // The convention plugins (cogra.android.module) live in an included
+    // build so they compile against AGP once, not per module.
+    includeBuild("build-logic")
     repositories {
         google {
             content {
