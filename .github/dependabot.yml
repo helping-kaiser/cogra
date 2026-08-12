@@ -2,10 +2,14 @@
 # entries keyed on the manifest's directory; github-actions always
 # scans .github/workflows from "/").
 #
-# Groups batch compatible bumps into one weekly PR per ecosystem
-# instead of one PR per dependency; majors still arrive solo so a
-# breaking change is never buried in a batch. First matching group
-# wins, so the react group (all update types) precedes the catch-all.
+# Groups batch bumps into at most two weekly PRs per ecosystem — one
+# minors/patches, one majors — instead of one PR per dependency, so a
+# run never floods the PR list. Majors ride apart from the compatible
+# batch so a breaking change never blocks the green minors, and the
+# ignore gates hold back majors that are queued migrations (audit fix
+# plan). Weekly stays: the point is to keep current and surface
+# breakage fast. First matching group wins, so the react group (all
+# update types) precedes the catch-alls.
 version: 2
 updates:
   - package-ecosystem: cargo
@@ -16,13 +20,34 @@ updates:
       rust-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      rust-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
-      # sha2 0.11 is the digest-0.11 RustCrypto generation; the
-      # workspace's hkdf/hmac/aes-gcm are still digest-0.10. Take the
-      # whole stack in one move when it lands (queued in the audit
-      # fix plan).
+      # The digest-0.11 RustCrypto generation: the whole stack moves in
+      # one move when compatible releases exist (queued in the audit
+      # fix plan) — mixing digest lines splits the trait ecosystem.
       - dependency-name: sha2
         versions: [">=0.11"]
+      - dependency-name: sha1
+        versions: [">=0.11"]
+      - dependency-name: hkdf
+        versions: [">=0.13"]
+      - dependency-name: aes-gcm
+        versions: [">=0.11"]
+      # rand 0.10 and ed25519-dalek 3 are an interlocked pair (dalek 3
+      # moves to the rand_core 0.9 line; rand 0.9+ drops the OsRng/
+      # RngCore paths the workspace uses) — one coordinated bump,
+      # queued in the audit fix plan.
+      - dependency-name: rand
+        versions: [">=0.9"]
+      - dependency-name: ed25519-dalek
+        versions: [">=3"]
+      # sqlx 0.9 changes the macro surface and offline metadata, and
+      # CI's sqlx-cli must move with it — its own migration, queued in
+      # the audit fix plan.
+      - dependency-name: sqlx
+        versions: [">=0.9"]
   - package-ecosystem: gradle
     directory: /android
     schedule:
@@ -31,18 +56,33 @@ updates:
       android-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      android-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
-      # All four gated on the AGP 9 migration (queued in the audit fix
+      # All gated on the AGP 9 migration (queued in the audit fix
       # plan): AGP 8.x rejects Gradle >= 9.6, and these versions demand
-      # AGP >= 9 / compileSdk 37.
+      # AGP >= 9 / compileSdk 37 — including AGP 9 itself, which needs
+      # the Gradle 9.5 wrapper first.
+      - dependency-name: "com.android.*"
+        versions: ["[9,)"]
       - dependency-name: gradle-wrapper
         versions: ["[9,)"]
       - dependency-name: "androidx.core:core-ktx"
         versions: ["[1.19,)"]
       - dependency-name: "androidx.lifecycle:*"
         versions: ["[2.11,)"]
+      # Hilt requires AGP 9 from 2.59.2, not 2.60 as first bounded.
       - dependency-name: "com.google.dagger*"
-        versions: ["[2.60,)"]
+        versions: ["[2.59,)"]
+      # Compose BOM 2025+ breaks Compose APIs and rides compileSdk
+      # bumps — part of the same coordinated move.
+      - dependency-name: "androidx.compose:compose-bom"
+        versions: ["[2025,)"]
+      # Apollo Kotlin 5 is a breaking client migration (codegen +
+      # runtime together) — queued in the audit fix plan.
+      - dependency-name: "com.apollographql.apollo*"
+        versions: ["[5,)"]
   - package-ecosystem: npm
     directory: /web
     schedule:
@@ -59,6 +99,22 @@ updates:
       web-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      web-majors:
+        patterns: ["*"]
+        update-types: ["major"]
+    ignore:
+      # @types/node tracks the runtime major (Node 24 LTS) — newer
+      # majors typecheck against APIs the runtime does not have
+      # (DefinitelyTyped guidance). Lift at the Node LTS bump.
+      - dependency-name: "@types/node"
+        versions: [">=25"]
+      # eslint 10 and typescript 7 both crash inside eslint-config-next
+      # today — blocked until Next ships compatible tooling; nothing to
+      # migrate on our side.
+      - dependency-name: eslint
+        versions: [">=10"]
+      - dependency-name: typescript
+        versions: [">=7"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
