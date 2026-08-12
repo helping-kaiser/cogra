@@ -17,7 +17,7 @@ use uuid::Uuid;
 use crate::auth::{self, AuthConfig, IssuedSession};
 use crate::l1::L1Boundary;
 use crate::mailer::{Mail, Mailer};
-use crate::prepare::{self, Gesture, PrepareError};
+use crate::prepare::{self, Gesture, PrepareError, Target};
 use crate::relay::RelayError;
 
 /// A never-verified account expires this long after registration
@@ -489,7 +489,7 @@ async fn approve_one<B: L1Boundary>(
             author: inviter_address,
             family: Family::Opinion,
             middle: None,
-            target: NodeId::Prof(applicant_address),
+            target: Target::Node(NodeId::Prof(applicant_address)),
             p_d: approval.p_d,
             p_i: approval.p_i,
             settlement_ref: None,
@@ -597,7 +597,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             author: address.clone(),
             family: Family::Registration,
             middle: None,
-            target: NodeId::Prof(address),
+            target: Target::Node(NodeId::Prof(address)),
             p_d: 1.0,
             p_i: 1.0,
             settlement_ref: None,
