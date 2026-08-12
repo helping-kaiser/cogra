@@ -7,37 +7,14 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-}
-
-// Unit tests run once, on the debug variant: the release variant would
-// re-compile and re-run every suite for no extra signal.
-androidComponents {
-    beforeVariants(selector().withBuildType("release")) {
-        it.enableUnitTest = false
-    }
-}
-
-// Robolectric suites pay a per-class sandbox warmup; run test classes
-// in parallel forks instead of one core at a time.
-tasks.withType<Test>().configureEach {
-    maxParallelForks = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+    id("cogra.android.module")
 }
 
 android {
     namespace = "com.cogra.feature.settings"
-    compileSdk = libs.versions.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
-    }
 
     buildFeatures {
         compose = true
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     testOptions {
@@ -45,10 +22,6 @@ android {
             isIncludeAndroidResources = true
         }
     }
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
