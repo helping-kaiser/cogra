@@ -20,6 +20,7 @@ import {
   createInviteLink,
   fetchInviteLinks,
   revokeInviteLink,
+  LINK_LIFETIME_MS,
   type ApplicationView,
   type InviteLinkView,
 } from "@/lib/api/invites-api";
@@ -29,8 +30,6 @@ import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
-
-const LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
 function invitesMessage(code: ErrorCode): string {
   switch (code) {
@@ -58,11 +57,13 @@ export function InvitesView() {
   const [prefillPDirected, setPrefillPDirected] = useState(0.1);
   const [prefillPInterest, setPrefillPInterest] = useState(0.1);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [vouchSigned, setVouchSigned] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyFailedId, setCopyFailedId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     return guard
@@ -131,15 +132,28 @@ export function InvitesView() {
   };
 
   const onRevoke = async (linkId: string) => {
+    if (revokingId !== null) return;
+    setRevokingId(linkId);
+    setError(null);
+    setTransportFailed(false);
     const outcome = await guard.run(() => revokeInviteLink(client, linkId));
     await refresh();
+    setRevokingId(null);
     if (outcome.kind === "refused") setError(outcome.errors[0].code);
     if (outcome.kind === "failed") setTransportFailed(true);
   };
 
   const onShare = async (linkId: string) => {
-    await navigator.clipboard.writeText(`${window.location.origin}/join/${linkId}`);
-    setCopiedId(linkId);
+    // writeText rejects on denied permission or a non-secure context —
+    // silence would leave the Share button looking dead.
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/join/${linkId}`);
+      setCopiedId(linkId);
+      setCopyFailedId(null);
+    } catch {
+      setCopiedId(null);
+      setCopyFailedId(linkId);
+    }
   };
 
   const onApprove = async (applicationId: string, pDirected: number, pInterest: number) => {
@@ -262,7 +276,9 @@ export function InvitesView() {
               key={link.id}
               link={link}
               approvingId={approvingId}
+              revoking={revokingId !== null}
               copied={copiedId === link.id}
+              copyFailed={copyFailedId === link.id}
               onShare={onShare}
               onRevoke={onRevoke}
               onApprove={onApprove}
@@ -277,14 +293,18 @@ export function InvitesView() {
 function LinkCard({
   link,
   approvingId,
+  revoking,
   copied,
+  copyFailed,
   onShare,
   onRevoke,
   onApprove,
 }: {
   link: InviteLinkView;
   approvingId: string | null;
+  revoking: boolean;
   copied: boolean;
+  copyFailed: boolean;
   onShare: (linkId: string) => void;
   onRevoke: (linkId: string) => void;
   onApprove: (applicationId: string, pDirected: number, pInterest: number) => void;
@@ -303,13 +323,19 @@ function LinkCard({
             type="button"
             data-testid={`revoke_${link.id}`}
             onClick={() => onRevoke(link.id)}
-            className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            disabled={revoking}
+            className="text-sm text-zinc-600 underline disabled:opacity-40 dark:text-zinc-400"
           >
             Revoke
           </button>
           {copied && (
             <p role="status" data-testid={`copied_${link.id}`} className="text-sm text-zinc-600 dark:text-zinc-400">
               Copied
+            </p>
+          )}
+          {copyFailed && (
+            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-sm text-red-600 dark:text-red-400">
+              Couldn&apos;t copy — copy the page address instead.
             </p>
           )}
         </div>
