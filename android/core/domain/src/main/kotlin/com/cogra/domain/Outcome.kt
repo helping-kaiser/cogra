@@ -56,4 +56,18 @@ sealed interface Outcome<out T> {
 /** The success value, or null on any refusal or failure. */
 fun <T> Outcome<T>.valueOrNull(): T? = (this as? Outcome.Success)?.value
 
+/** Transforms the success value; refusals and failures pass through. */
+inline fun <T, R> Outcome<T>.map(transform: (T) -> R): Outcome<R> = when (this) {
+    is Outcome.Success -> Outcome.Success(transform(value))
+    is Outcome.Refused -> this
+    is Outcome.Failed -> this
+}
+
+/** Chains an outcome-producing step; refusals and failures pass through. */
+inline fun <T, R> Outcome<T>.flatMap(transform: (T) -> Outcome<R>): Outcome<R> = when (this) {
+    is Outcome.Success -> transform(value)
+    is Outcome.Refused -> this
+    is Outcome.Failed -> this
+}
+
 fun Outcome.Refused.has(code: ErrorCode): Boolean = errors.any { it.code == code }

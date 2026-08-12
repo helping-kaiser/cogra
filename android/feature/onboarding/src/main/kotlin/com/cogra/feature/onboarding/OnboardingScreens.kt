@@ -40,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
 
@@ -101,10 +102,10 @@ fun InviteEntryScreen(
                     .testTag("invite_input"),
             )
             when {
-                state.malformed -> Refusal("invite_error", R.string.invite_malformed)
-                state.notFound -> Refusal("invite_error", R.string.invite_not_found)
-                state.check?.usable == false -> Refusal("invite_error", R.string.invite_unusable)
-                state.transportFailed -> Refusal("invite_error", R.string.error_transport)
+                state.malformed -> ErrorLine(R.string.invite_malformed, testTag = "invite_error")
+                state.notFound -> ErrorLine(R.string.invite_not_found, testTag = "invite_error")
+                state.check?.usable == false -> ErrorLine(R.string.invite_unusable, testTag = "invite_error")
+                state.transportFailed -> ErrorLine(R.string.error_transport, testTag = "invite_error")
             }
             state.check?.takeIf { it.usable }?.let {
                 Text(
@@ -216,18 +217,10 @@ fun ApplyScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
-                Text(
-                    text = stringResource(it.applyMessage()),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("apply_error"),
-                )
+                ErrorLine(it.applyMessage(), testTag = "apply_error")
             }
             if (state.transportFailed) {
-                Text(
-                    text = stringResource(R.string.error_transport),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("apply_transport_error"),
-                )
+                ErrorLine(R.string.error_transport, testTag = "apply_transport_error")
             }
             if (state.inProgress) {
                 CircularProgressIndicator(modifier = Modifier.testTag("apply_progress"))
@@ -303,16 +296,8 @@ fun KeyCeremonyScreen(
             )
             Text(stringResource(R.string.backup_explainer))
             when (state.attachError) {
-                AttachError.NETWORK -> Text(
-                    text = stringResource(R.string.error_transport),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("ceremony_attach_error"),
-                )
-                AttachError.KEY_IN_USE -> Text(
-                    text = stringResource(R.string.error_key_in_use),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.testTag("ceremony_key_in_use"),
-                )
+                AttachError.NETWORK -> ErrorLine(R.string.error_transport, testTag = "ceremony_attach_error")
+                AttachError.KEY_IN_USE -> ErrorLine(R.string.error_key_in_use, testTag = "ceremony_key_in_use")
                 null -> Unit
             }
             if (state.inProgress) {
@@ -390,11 +375,3 @@ fun KeyCeremonyScreen(
     }
 }
 
-@Composable
-private fun Refusal(tag: String, text: Int) {
-    Text(
-        text = stringResource(text),
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.testTag(tag),
-    )
-}

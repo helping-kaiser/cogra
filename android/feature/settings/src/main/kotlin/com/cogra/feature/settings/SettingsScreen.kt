@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MIN_HANDLE_LENGTH
 
 @Composable
 fun SettingsRoute(
@@ -315,7 +316,7 @@ private fun CredentialsSection(
             )
             Button(
                 onClick = onChangeHandle,
-                enabled = state.newHandle.length >= 3 && !state.busy,
+                enabled = state.newHandle.length >= MIN_HANDLE_LENGTH && !state.busy,
                 modifier = Modifier.testTag("settings_change_handle"),
             ) {
                 Text(stringResource(R.string.settings_change_handle))

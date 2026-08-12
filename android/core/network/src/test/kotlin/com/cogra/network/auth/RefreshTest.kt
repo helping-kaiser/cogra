@@ -10,7 +10,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
-import com.cogra.network.InMemoryTokenStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.google.common.truth.Truth.assertThat
 import javax.inject.Provider
@@ -28,7 +28,7 @@ class RefreshTest {
 
     private lateinit var server: MockWebServer
     private lateinit var client: ApolloClient
-    private val tokenStore = InMemoryTokenStore()
+    private val tokenStore = FakeTokenStore()
     private val identity = FakeIdentityStore()
 
     private fun refresher() =

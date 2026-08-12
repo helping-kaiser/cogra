@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.domain.identity.RestoreResult
 
 @Composable
@@ -82,10 +83,10 @@ fun RestoreScreen(
                 testTag = "restore_dont_remember",
             )
             when (state.result) {
-                is RestoreResult.MalformedCode -> ErrorLine("restore_error", R.string.restore_malformed)
-                RestoreResult.WrongCode -> ErrorLine("restore_error", R.string.restore_wrong_code)
-                RestoreResult.NoBackup -> ErrorLine("restore_error", R.string.restore_no_backup)
-                is RestoreResult.Failed -> ErrorLine("restore_error", R.string.error_transport)
+                is RestoreResult.MalformedCode -> ErrorLine(R.string.restore_malformed, testTag = "restore_error")
+                RestoreResult.WrongCode -> ErrorLine(R.string.restore_wrong_code, testTag = "restore_error")
+                RestoreResult.NoBackup -> ErrorLine(R.string.restore_no_backup, testTag = "restore_error")
+                is RestoreResult.Failed -> ErrorLine(R.string.error_transport, testTag = "restore_error")
                 RestoreResult.Restored, null -> Unit
             }
             if (state.inProgress) {
@@ -104,11 +105,3 @@ fun RestoreScreen(
     }
 }
 
-@Composable
-private fun ErrorLine(tag: String, text: Int) {
-    Text(
-        text = stringResource(text),
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.testTag(tag),
-    )
-}
