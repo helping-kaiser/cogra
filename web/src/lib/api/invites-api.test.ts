@@ -29,7 +29,7 @@ const linkNode = {
   createdAt: "2026-08-07T00:00:00Z",
   expiresAt: "2026-08-14T00:00:00Z",
   revokedAt: null,
-  applications: { __typename: "ApplicationConnection", nodes: [] },
+  applications: { __typename: "ApplicationConnection", edges: [] },
 };
 
 describe("fetchInviteLinks", () => {
@@ -41,7 +41,10 @@ describe("fetchInviteLinks", () => {
             me: {
               __typename: "User",
               id: "u1",
-              inviteLinks: { __typename: "InviteLinkConnection", nodes: [linkNode] },
+              inviteLinks: {
+                __typename: "InviteLinkConnection",
+                edges: [{ __typename: "InviteLinkEdge", node: linkNode }],
+              },
             },
           },
         }),
