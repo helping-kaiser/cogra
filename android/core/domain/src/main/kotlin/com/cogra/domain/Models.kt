@@ -178,3 +178,10 @@ data class ApplicationInfo(
     val approvedAt: Instant?,
     val landedAt: Instant?,
 )
+
+/** Client mirror of the server's minimum handle length (auth.md "Application"). */
+const val MIN_HANDLE_LENGTH = 3
+
+/** The house prefill for a stance dimension — sliders and link prefills start here. */
+const val DEFAULT_STANCE = 0.1
+

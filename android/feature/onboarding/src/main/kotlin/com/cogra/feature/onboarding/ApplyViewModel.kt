@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MIN_HANDLE_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.Register
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,7 @@ data class ApplyUiState(
     val transportFailed: Boolean = false,
 ) {
     val formValid: Boolean
-        get() = handle.length >= 3 && email.contains('@') && password.length >= 12
+        get() = handle.length >= MIN_HANDLE_LENGTH && email.contains('@') && password.length >= 12
 }
 
 /**
