@@ -6,6 +6,7 @@
 package com.cogra.domain.identity
 
 import com.cogra.domain.Outcome
+import com.cogra.domain.map
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.store.TokenStore
 import javax.inject.Inject
@@ -21,12 +22,6 @@ class Register @Inject constructor(
         password: String,
         deviceLabel: String?,
     ): Outcome<Unit> =
-        when (val outcome = onboarding.register(inviteLink, handle, email, password, deviceLabel)) {
-            is Outcome.Success -> {
-                tokens.save(outcome.value)
-                Outcome.Success(Unit)
-            }
-            is Outcome.Refused -> outcome
-            is Outcome.Failed -> outcome
-        }
+        onboarding.register(inviteLink, handle, email, password, deviceLabel)
+            .map { tokens.save(it) }
 }
