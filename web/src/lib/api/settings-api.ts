@@ -1,9 +1,6 @@
-// Account-management calls (auth.md "Sessions", "Password change",
-// "Email change", api-spec.md "Auth and accounts"), lifted into
-// outcomes. requestEmailChange is a silent verb: no userErrors by
-// design — surfacing a failure would reveal whether the new address is
-// registered. Every call here is authenticated-only, never
-// member-gated: the applicant manages their account like anyone else.
+// Account-management calls, lifted into outcomes (auth.md "Sessions",
+// "Password change", "Email change") — authenticated-only, never
+// member-gated.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -89,7 +86,7 @@ export async function changeHandle(client: ApolloClient, handle: string): Promis
   return success(outcome.value.handle);
 }
 
-/** Silent verb: no userErrors by design — success and refusal are one. */
+/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
 export function requestEmailChange(
   client: ApolloClient,
   newEmail: string,

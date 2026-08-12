@@ -1,10 +1,8 @@
-// The key ceremony (auth.md "Application" steps 3; Android mirror:
+// The key ceremony (auth.md "Application" step 3; Android mirror:
 // KeyCeremony.kt): mint the actor locally, attach only the public
 // halves, seal the backup blob on device. The blob uploads immediately
-// after the attach; a failed upload parks the blob and every poll pass
-// retries. Once a blob is uploaded the raw seed is wiped — from then on
-// custody is the non-extractable CryptoKey alone (web.md "Key custody").
-// The recovery code is displayed exactly once and never persisted.
+// after the attach; a failed upload parks it and every poll pass
+// retries.
 
 import type { ApolloClient } from "@apollo/client";
 
