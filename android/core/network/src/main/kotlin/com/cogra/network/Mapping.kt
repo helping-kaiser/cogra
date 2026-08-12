@@ -40,7 +40,11 @@ import java.util.Base64
 class GraphQlFaultException(messages: List<String>) :
     Exception("GraphQL fault: ${messages.joinToString("; ")}")
 
-/** The refusal a null viewer read and an errors-array UNAUTHENTICATED share. */
+/**
+ * The refusal a null viewer read and an errors-array UNAUTHENTICATED
+ * share — AuthGuard treats a stale access token and an explicit
+ * refusal the same way.
+ */
 internal fun unauthenticatedRefusal(): Outcome.Refused = Outcome.Refused(
     listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer for this request")),
 )

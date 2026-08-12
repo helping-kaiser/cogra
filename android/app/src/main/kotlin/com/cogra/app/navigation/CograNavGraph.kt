@@ -1,7 +1,5 @@
 // The single NavHost with type-safe routes (android/CLAUDE.md
-// "Navigation"): auth state drives navigation — signed-out vs.
-// signed-in is a conditional-navigation concern observed from one
-// activity-scoped holder, and every phase flip clears the back stack.
+// "Navigation").
 // Registration returns an ordinary session, so an applicant is simply
 // signed in: the applicant/member distinction lives inside the Home
 // shell, not in navigation (auth.md "Application").

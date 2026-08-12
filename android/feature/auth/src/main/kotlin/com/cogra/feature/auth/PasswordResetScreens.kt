@@ -1,8 +1,5 @@
-// The password-reset pair (auth.md "Password reset"): the request
-// always reports success (no account enumeration); the confirm takes
-// the emailed token — pasted in-app, per the dev-mailer posture
-// (auth.md "Link URLs") — and a new password, then routes back to login
-// (every session was revoked).
+// The password-reset pair (auth.md "Password reset"); the token is
+// pasted in-app per the dev-mailer posture (auth.md "Link URLs").
 
 package com.cogra.feature.auth
 

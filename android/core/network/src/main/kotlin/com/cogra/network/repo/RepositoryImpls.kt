@@ -1,8 +1,5 @@
-// The domain repositories over the generated Apollo client. Anonymous
-// flows call straight through; viewer-authorized calls ride the
-// AuthGuard's refresh-and-replay. Viewer reads that come back with a
-// null `me` are translated to an UNAUTHENTICATED refusal so the guard
-// treats a stale access token and an explicit refusal the same way.
+// The domain repositories over the generated Apollo client;
+// Mapping.kt owns the response-tier translation.
 
 package com.cogra.network.repo
 

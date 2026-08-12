@@ -1,13 +1,5 @@
-// The app-scoped applicant flow. An applicant browses the read
-// surfaces while the application advances (auth.md "Application":
-// approval latency is a UX cost, not a wall), so the poll/sign loop
-// cannot belong to any one screen: it runs here, above navigation.
-// Auto-polling is an onboarding-only mechanism — the loop stops for
-// good at membership; from then on every fetch is event-driven (a user
-// action with an outcome to collect, or an explicit refresh). The loop
-// is also session-bound: the end of the session that started it — or a
-// switch to another account — stops it and resets the flow's state, so
-// a signed-out device never polls and a new session starts clean.
+// The app-scoped applicant poll/sign loop (android.md "The actor key
+// — the device is the signer").
 
 package com.cogra.domain.signing
 
