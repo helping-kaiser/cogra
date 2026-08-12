@@ -522,8 +522,7 @@ impl Mutation {
         let web_origin = ctx.data::<WebOrigin>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
-        // Application submits are limited per IP and per invite link
-        // (auth.md "Rate limiting").
+        // auth.md "Rate limiting".
         guard_window(
             ctx,
             scope::REGISTER_IP,
@@ -577,7 +576,6 @@ impl Mutation {
     ) -> async_graphql::Result<VerifyEmailPayload> {
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Token confirmations share the per-IP guessing budget.
         guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         match onboarding::verify_email(pool, &input.verification_token).await {
             Ok(()) => Ok(VerifyEmailPayload {
@@ -678,10 +676,9 @@ impl Mutation {
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let web_origin = ctx.data::<WebOrigin>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Per-account resend budget (auth.md "Rate limiting"), keyed by
-        // the submitted email so an unknown address spends budget exactly
-        // like a known one — and tripping it stays silent, because a
-        // visible refusal would leak what the verb is built to hide.
+        // Per-account resend budget (auth.md "Rate limiting") — tripping
+        // it stays silent, because a visible refusal would leak what the
+        // verb is built to hide.
         if let Ok(email) = auth::normalize_email(&input.email)
             && !ratelimit::within(pool, scope::RESEND_EMAIL, &email, limits.resend_email).await?
         {
@@ -764,9 +761,7 @@ impl Mutation {
         let auth_cfg = ctx.data::<AuthConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         // Per-IP window first, then the per-email consecutive-failure
-        // backoff (auth.md "Rate limiting") — keyed by the submitted
-        // email whether or not an account exists, so the refusal never
-        // becomes an account-existence oracle.
+        // backoff (auth.md "Rate limiting").
         guard_window(ctx, scope::LOGIN_IP, &request_ip(ctx)?, limits.login_ip).await?;
         let refused = || {
             Ok(LogInPayload {
@@ -904,10 +899,8 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Per-IP visibly; per-email silently (auth.md "Rate limiting").
-        // The email budget is spent by the submitted address whether or
-        // not an account exists, and tripping it returns the same
-        // `ok: true` — no differential to enumerate accounts with.
+        // Per-IP visibly; per-email silently (auth.md "Rate limiting"):
+        // tripping the email budget returns the same `ok: true`.
         guard_window(ctx, scope::RESET_IP, &request_ip(ctx)?, limits.reset_ip).await?;
         if let Ok(email) = auth::normalize_email(&input.email)
             && ratelimit::within(pool, scope::RESET_EMAIL, &email, limits.reset_email).await?
@@ -950,8 +943,6 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
-        // The reset token is guessable material: the confirmation shares
-        // the per-IP token budget.
         guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         if let Err(m) = auth::validate_new_password(corpus.as_ref(), &input.new_password).await {
             return Ok(ConfirmPasswordResetPayload {
@@ -1101,8 +1092,6 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // A change code is guessable material: the confirmation shares
-        // the per-IP token budget.
         guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         let hash = auth::hash_of(&input.code);
         // Either side's proof may arrive first; the change applies only

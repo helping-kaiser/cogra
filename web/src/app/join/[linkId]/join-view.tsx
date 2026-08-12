@@ -24,7 +24,10 @@ import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
+import { fallbackMessage, rearmMessage } from "@/lib/ui/error-messages";
 import { PasswordField } from "@/lib/ui/password-field";
+import { TransportError } from "@/lib/ui/transport-error";
 
 function applyMessage(code: ErrorCode): string {
   switch (code) {
@@ -38,23 +41,8 @@ function applyMessage(code: ErrorCode): string {
       return "That password is too easy to guess — pick a longer or less common one.";
     case "BAD_INPUT":
       return "Check the highlighted field.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
-  }
-}
-
-function rearmMessage(code: ErrorCode): string {
-  switch (code) {
-    case "INVITE_UNUSABLE":
-      return "This invite can't be used — it may have expired or been revoked.";
-    case "BAD_INPUT":
-      return "Your application is still live — it doesn't need a fresh invite.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
-    default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 
@@ -144,13 +132,7 @@ export function JoinView({ linkId }: { linkId: string }) {
         </p>
       )}
       {checkState.status === "transportFailed" && (
-        <p
-          role="alert"
-          data-testid="invite_transport_error"
-          className="text-sm text-red-600 dark:text-red-400"
-        >
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
+        <TransportError testId="invite_transport_error" />
       )}
       {inviteId !== null && checkState.status === "checking" && (
         <p role="status" data-testid="invite_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -314,28 +296,15 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
           {applyMessage(error)}
         </p>
       )}
-      {transportFailed && (
-        <p
-          role="alert"
-          data-testid="apply_transport_error"
-          className="text-sm text-red-600 dark:text-red-400"
-        >
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
-      )}
+      {transportFailed && <TransportError testId="apply_transport_error" />}
       {inProgress && (
         <p role="status" data-testid="apply_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
           Creating your account…
         </p>
       )}
-      <button
-        type="submit"
-        data-testid="apply_continue"
-        disabled={!canSubmit}
-        className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <Button type="submit" testId="apply_continue" disabled={!canSubmit}>
         Create account
-      </button>
+      </Button>
     </form>
   );
 }
@@ -381,29 +350,15 @@ function RearmPanel({ inviteId }: { inviteId: string }) {
           {rearmMessage(error)}
         </p>
       )}
-      {transportFailed && (
-        <p
-          role="alert"
-          data-testid="rearm_transport_error"
-          className="text-sm text-red-600 dark:text-red-400"
-        >
-          Can&apos;t reach the server. Check your connection and try again.
-        </p>
-      )}
+      {transportFailed && <TransportError testId="rearm_transport_error" />}
       {inProgress && (
         <p role="status" data-testid="rearm_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
           Applying the invite…
         </p>
       )}
-      <button
-        type="button"
-        data-testid="rearm_submit"
-        onClick={onRearm}
-        disabled={inProgress}
-        className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <Button testId="rearm_submit" onClick={onRearm} disabled={inProgress}>
         Use this invite
-      </button>
+      </Button>
     </div>
   );
 }

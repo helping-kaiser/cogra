@@ -74,7 +74,6 @@ async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
 
 #[sqlx::test(migrations = "../../migrations")]
 async fn ingestion_is_strictly_sequential(pool: PgPool) {
-    // Skipping an epoch is refused: the mirror may lag, never diverge.
     let p1 = package(1, vec![registration("alice", 1, 0)]);
     let err = mirror::ingest_epoch(&pool, &p1).await.expect_err("refused");
     assert!(matches!(

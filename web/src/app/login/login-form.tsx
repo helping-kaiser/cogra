@@ -10,21 +10,23 @@ import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { logIn } from "@/lib/api/auth-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
+import { Button } from "@/lib/ui/button";
 import { PasswordField } from "@/lib/ui/password-field";
+import { TextField } from "@/lib/ui/text-field";
+import { TransportError } from "@/lib/ui/transport-error";
 
 function loginMessage(code: ErrorCode): string {
   switch (code) {
     case "INVALID_CREDENTIALS":
       return "That email and password don't match.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 
@@ -94,23 +96,17 @@ export function LoginForm({
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Sign in to CoGra</h1>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="email" className="text-sm font-medium">
-            Email
-          </label>
-          <input
-            id="email"
-            data-testid="login_email"
-            type="email"
-            value={email}
-            onChange={(event) => {
-              setEmail(event.target.value);
-              clearErrors();
-            }}
-            autoComplete="email"
-            className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-          />
-        </div>
+        <TextField
+          label="Email"
+          value={email}
+          onChange={(value) => {
+            setEmail(value);
+            clearErrors();
+          }}
+          type="email"
+          autoComplete="email"
+          testId="login_email"
+        />
         <PasswordField
           id="password"
           label="Password"
@@ -138,28 +134,15 @@ export function LoginForm({
             {loginMessage(error)}
           </p>
         )}
-        {transportFailed && (
-          <p
-            role="alert"
-            data-testid="login_transport_error"
-            className="text-sm text-red-600 dark:text-red-400"
-          >
-            Can&apos;t reach the server. Check your connection and try again.
-          </p>
-        )}
+        {transportFailed && <TransportError testId="login_transport_error" />}
         {inProgress && (
           <p role="status" data-testid="login_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
             Signing in…
           </p>
         )}
-        <button
-          type="submit"
-          data-testid="login_submit"
-          disabled={!canSubmit}
-          className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Button type="submit" testId="login_submit" disabled={!canSubmit}>
           Sign in
-        </button>
+        </Button>
       </form>
       <Link
         href="/reset"

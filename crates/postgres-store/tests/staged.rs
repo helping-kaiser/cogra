@@ -15,8 +15,7 @@ use uuid::Uuid;
 
 async fn actor(pool: &PgPool, handle: &str, address: &str) -> Uuid {
     let id = Uuid::new_v4();
-    // Distinct per actor — a key binds at most one account
-    // (data-model.md "Actors").
+    // Distinct per actor (data-model.md "Actors").
     let pubkey = format!("pk-{handle}");
     let mut conn = pool.acquire().await.expect("conn");
     genesis::insert_actor(&mut conn, id, "user", handle, pubkey.as_bytes(), address)

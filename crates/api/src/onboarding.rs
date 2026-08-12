@@ -257,13 +257,9 @@ pub async fn resend_verification(
 // ---------------------------------------------------------------------
 
 /// Attaches the device-minted actor identity to the viewer's account
-/// (auth.md §Application step 3). Replaceable while the application is
-/// unapproved; Forbidden once approval has bound the address — a device
-/// lost before approval costs nothing but a re-run of the ceremony.
-/// An address binds at most one account: a key already bound to a
-/// different account refuses with ActorKeyInUse — a duplicate
-/// Registration would wedge the second admission behind an unlandable
-/// record.
+/// (auth.md §Application step 3; the mutation doc carries the contract).
+/// ActorKeyInUse guards against a duplicate Registration wedging the
+/// second admission behind an unlandable record.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,

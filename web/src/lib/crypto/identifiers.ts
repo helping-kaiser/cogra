@@ -5,6 +5,8 @@
 // form: `addr:<a>`, `prof:<a>`, `name:<s>`, `mint:<act>` with
 // `<act> = act:<author-addr>:<seq>:<family>`.
 
+import { U64_MAX } from "./cbor";
+
 /** An identifier that does not parse under the algebra. */
 export class IdentifierError extends Error {
   constructor(message: string) {
@@ -44,7 +46,6 @@ export function parseFamily(s: string): Family {
   return family;
 }
 
-const U64_MAX = 0xffff_ffff_ffff_ffffn;
 
 /**
  * Charset for L0 addresses and Type names inside identifiers: ASCII

@@ -3,8 +3,7 @@
 // the seam and append it to the mirror, advancing the stored epoch
 // cursor. Ingestion state is never precious — a crash between epochs
 // resumes from the cursor; the mirror is rebuildable from the published
-// sequence at any time. Confirmation of staged writes and their GC are
-// driven off the same pass (architecture.md "The write path" step 5).
+// sequence at any time.
 
 use postgres_store::PgPool;
 use postgres_store::{mirror, staged};

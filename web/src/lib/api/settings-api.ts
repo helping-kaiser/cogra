@@ -18,26 +18,22 @@ import {
   type SessionsQuery,
 } from "@/__generated__/graphql";
 import {
-  fetchOutcome,
   payloadOutcome,
   success,
-  unauthenticated,
+  viewerField,
   type Outcome,
 } from "./outcome";
 
 type SessionsUser = NonNullable<SessionsQuery["me"]>;
 export type SessionView = NonNullable<SessionsUser["sessions"]>[number];
 
-export async function fetchSessions(
+export function fetchSessions(
   client: ApolloClient,
 ): Promise<Outcome<readonly SessionView[]>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: SessionsDocument, fetchPolicy: "network-only" }),
+  return viewerField(
+    () => client.query({ query: SessionsDocument, fetchPolicy: "network-only" }),
+    (data) => data.me?.sessions,
   );
-  if (fetched.kind !== "success") return fetched;
-  const sessions = fetched.value.me?.sessions;
-  if (sessions === null || sessions === undefined) return unauthenticated();
-  return success(sessions);
 }
 
 /** Revokes one session — the current one when `session` is null. */
