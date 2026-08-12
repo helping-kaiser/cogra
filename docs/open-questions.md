@@ -25,6 +25,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
+| 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -152,6 +153,35 @@ signed" to "what SOME holder of this key signed", so it is a
 deliberate design change, not an implementation shortcut. The
 whole interim handshake is stand-in-scoped (Q30); decide only if
 the wait proves painful before the substrate swap.
+
+---
+
+## Q34 — Topic un-tagging and the current-topics fold
+
+**Where it shows up:**
+[post.md §3](instances/post.md#3-acts-around-a-post),
+[hashtag.md §3](instances/hashtag.md),
+[api-spec.md "Content authoring"](implementation/api-spec.md#content-authoring)
+**Status:** open (deferred — blocks the tag sub-surface staged behind slice 2)
+
+### Context
+
+A topic tag is a Tag hyper-record (Actor → content → Type), each
+its own priced act, authorable at creation or later. The census
+bounds Tag confidence to `[0, 1]`, so the `(0, 0)` severance shape
+other families use for withdrawal is only partially expressible —
+relevance can go to zero, confidence cannot go negative. No doc
+declares a fold for "this content's current topics", and no
+removal gesture is specified.
+
+### The question
+
+What is the declared read fold for a content node's current
+topics, and what gesture un-tags? Candidates: newest-wins per
+(author, content, Type) bundle with relevance 0 reading as
+removed; or a net-over-bundle read like Opinions. The answer
+gates the tag inputs already specced on the content-authoring
+surface.
 
 ---
 

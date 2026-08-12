@@ -111,6 +111,74 @@ CREATE TABLE network_parameter_versions (
 
 ---
 
+## The payload envelope
+
+Every content-bearing act's payload is a **Peer Content Envelope**
+(PCE v0.1.0, the L1 team's draft spec — the adopted normative
+format): one deterministic CBOR map in CDE form wrapped in
+self-describe tag 55799 (`D9 D9F7`), an integer keyspace, a
+four-axis version vector `[package, body, extension-floor,
+extension-ceiling]` at key 0 — CoGra produces `[1,1,1,1]` — a
+validated text body at key 1, and an extension map at key 2 whose
+keys ≥ 100 belong to guilds. The envelope never carries the node's
+type (the L1 act fixes it) and conformance is a binary L2 admission
+gate at prepare, never a scoring input.
+
+CoGra's fields ride **guild key 49258** (`0xC06A`) as a nested
+integer-keyed map — the guild schema:
+
+| Key | Field | Type |
+|---|---|---|
+| 0 | schema version (`1`) | uint |
+| 1 | node id — the L2 UUID the display row shares with the graph | 16-byte bstr |
+| 2 | title | tstr |
+| 3 | description | tstr |
+| 4 | body | tstr |
+| 5 | media manifest — **reserved**, arrives with media | — |
+| 6 | provenance chain — **reserved** ([platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations) plank 4) | — |
+
+The rules: CoGra sets the PCE body (key 1) to `""` — everything
+CoGra renders lives in the guild map. A genesis act carries every
+supplied field; an **edit carries only the changed fields** —
+absent means untouched, present-and-empty means cleared — matching
+the per-field newest-wins fold ([post.md §4](../instances/post.md#4-editing)).
+License qualifiers never ride the envelope: they are structural
+fields of the record (public protocol references,
+[layer1-interface.md §8.2](../primitive/layer1-interface.md)),
+published as the canonical string `a=<0|1>;o=<0|0.5|1>` in the
+record's license field, so they survive every payload state.
+Because the L1 payload witness covers the envelope bytes and the
+envelope carries the node UUID, the witness is proof of the display
+row's binding to its minted node. The spec's §3 text pipeline
+(Unicode validation for non-empty PCE bodies) is deliberately not
+implemented while the body stays `""`; adopting non-empty bodies
+later is a producer-side additive change.
+
+## Act payload carriage
+
+Carriage is the payload bytes' only home — Layer 1 tracks the
+witness, never the bytes ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+At confirm, promotion moves the envelope and the seal's private
+value from the staged row into `act_payloads`, keyed by the L1 act
+identifier verbatim:
+
+```sql
+CREATE TABLE act_payloads (
+    act_id        TEXT        PRIMARY KEY,  -- L1 act identifier, verbatim
+    payload       BYTEA       NOT NULL,     -- the envelope bytes
+    content_salt  BYTEA       NOT NULL,     -- the commitment's private value
+    payload_state TEXT        NOT NULL DEFAULT 'full'
+        CHECK (payload_state IN ('full', 'reduced')),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+Anyone holding a row can verify it against the record's published
+witness. `payload_state` moves toward `'reduced'` only; removal
+(the erasure slice) empties `payload` and `content_salt`
+atomically and the row itself is never deleted. A full-empty
+payload (an act with no bytes) has no carriage row.
+
 ## Staged writes
 
 The write path stages before it lands
@@ -118,9 +186,9 @@ The write path stages before it lands
 a staged act — the canonical proposal, joined by the device's
 pre-commitment and the host-sealed verified act as the handshake
 advances — is one `staged_writes` row from **prepare** until
-**confirm**. Staged payload bytes ride the row; the carriage
-tables arrive with the content slice and take over permanent
-payload storage then. Promotion on confirm makes the display rows
+**confirm**. Staged payload bytes ride the row; promotion at
+confirm copies them into the carriage tables, which own permanent
+payload storage. Promotion on confirm makes the display rows
 visible and drives the flows built on landing (an applicant's
 Registration confirming flips their account to member —
 [auth.md](auth.md)). Staged state is L2-operational: it is exempt
@@ -373,13 +441,29 @@ CREATE TABLE actor_profile_versions (
 
 ### Content nodes
 
+Every content entity row binds to its minted L1 node through
+`l1_node_id` — the mint identifier stored verbatim, written at
+confirm. The row's UUID also rides the payload envelope's guild
+map, so the L1 witness attests the binding; the column is a
+verified cache of a graph fact, same class as `target_id`. The
+landing-order columns (`landed_epoch`, `act_time`, `position`)
+cache the genesis record's authoritative causal key and are the
+chronological listings' sort key — the record set's own order,
+never wall clock ([graph-model.md §2](../primitive/graph-model.md));
+like every mirror-derived column they are rebuildable and never
+authoritative.
+
 ```sql
 -- Posts: one immutable entity row per post; display fields live on
 -- post_versions.
 CREATE TABLE posts (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id   UUID        NOT NULL REFERENCES actors(id),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id    UUID        NOT NULL REFERENCES actors(id),
+    l1_node_id   TEXT        NOT NULL UNIQUE,
+    landed_epoch BIGINT      NOT NULL,
+    act_time     BIGINT      NOT NULL,
+    position     BIGINT      NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Post versions: append-only display content. One row per edit;
@@ -401,12 +485,16 @@ CREATE TABLE post_versions (
 -- "target_id + target_type — discriminator, not foreign key" below for
 -- why there is no SQL FK on this column.
 CREATE TABLE comments (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    target_id   UUID        NOT NULL,
-    target_type TEXT        NOT NULL CHECK (target_type IN
-                            ('post', 'comment', 'chat', 'chat_message', 'item')),
-    author_id   UUID        NOT NULL REFERENCES actors(id),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    target_id    UUID        NOT NULL,
+    target_type  TEXT        NOT NULL CHECK (target_type IN
+                             ('post', 'comment', 'chat', 'chat_message', 'item')),
+    author_id    UUID        NOT NULL REFERENCES actors(id),
+    l1_node_id   TEXT        NOT NULL UNIQUE,
+    landed_epoch BIGINT      NOT NULL,
+    act_time     BIGINT      NOT NULL,
+    position     BIGINT      NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE comment_versions (
@@ -1211,8 +1299,13 @@ creation is its own node.
 - **Overlay rows** (Proposal): a machinery instance brought into
   existence by one creation act.
 
-UUIDs for these types are **random**. There is no UNIQUE constraint on
-any user-facing field; identity is the UUID alone.
+UUIDs for these types are **random**, minted in the API layer at
+prepare and carried in the payload envelope's guild map — that is
+how the graph and Postgres share them, and the L1 witness over the
+envelope is what proves the binding ("The payload envelope"
+above). There is no UNIQUE constraint on any user-facing field;
+identity is the UUID alone. The entity row's `l1_node_id` column
+joins the two worlds in the other direction.
 
 Federation across separated instances requires reconciliation only for
 *cross-references* (e.g. a post in instance A referenced by content in

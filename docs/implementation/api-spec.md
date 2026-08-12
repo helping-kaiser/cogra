@@ -196,6 +196,15 @@ consumer fetches the first page with `first:` alone and follows
 clamping); a connection read with neither argument serves 20. The
 caps are part of the query-budget posture below.
 
+**Mirror-ordered reads use keyset cursors.** A cursor over a
+record-backed connection encodes the landing-order key
+`(epoch, act time, position)`; pages walk forward with
+`first`/`after` or backward with `last`/`before` (one direction
+per request), and results always come back in the connection's
+declared order. The chronicle and the post listing serve
+newest-first; thread reads serve oldest-first (conversation
+order).
+
 ### Query budgets
 
 Every request is priced in validation, before any resolver runs
@@ -514,17 +523,30 @@ type Record {
   id: RecordId!
   family: RecordFamily!
   "The authoring actor — intrinsic to the signed record, never a
-   separate edge (authorship.md)."
-  author: Actor!
+   separate edge (authorship.md). Null when no account fronts the
+   author's address (system actors), until the actor surface
+   grows."
+  author: Actor
   "The record's target: the far end of a binary family, or the
    middle node the actor's leg enters on a hyper-edge (a Review's
-   parent, a Send's Chat, a Tag's content)."
-  target: Node!
+   parent, a Send's Chat, a Tag's content). Typed when CoGra
+   carries a display row for it; targetId always serves the raw
+   identifier."
+  target: Node
+  "The raw L1 identifier of target — always present; the chronicle
+   never depends on typed coverage."
+  targetId: String!
   "Hyper-edge only: the terminal leg's node — minted by the act
    (Review's Comment, Send's Message, Bid's Offer) or pre-existing
    (Tag's Type, Invitation's Profile, Reference's cited target).
    Null on binary families."
   terminal: Node
+  "The raw L1 identifier of terminal; null on binary families."
+  terminalId: String
+  "Authoritative act time — the causal key's first component."
+  actTime: Int!
+  "Position within the epoch's authoritative order."
+  position: Int!
   "The authored directional / valence parameter p_d (frontend
    labels vary by gesture; the math role does not — edges.md §1)."
   pDirected: Dimension!
@@ -549,6 +571,26 @@ type Record {
 
 "Payload carriage state — moves one way, full to reduced."
 enum PayloadState { FULL REDUCED }
+
+"A page of posts, newest-first in landing order."
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+"A page of comments, oldest-first in landing order."
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+type CommentEdge {
+  cursor: String!
+  node: Comment!
+}
 
 "A page of records."
 type RecordConnection {
@@ -818,6 +860,10 @@ type Post implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "This post's direct comments — genesis Reviews whose actor leg
+   enters here — oldest-first in landing order (conversation
+   order). The named view over records(target:, family: REVIEW)."
+  comments(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
 "A threaded response — minted by a Review record targeting whatever
@@ -833,11 +879,25 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "This comment's direct replies, oldest-first in landing order."
+  replies(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
 "What a Review can respond to — root content, another Comment, a
  conversation, a good, or a person's profile (edges.md §3)."
 union CommentTarget = Post | Comment | Chat | ChatMessage | Item | User | Collective
+```
+
+Coverage is staged by slice: the exported SDL carries each union
+variant, `Node` implementor, and interface field from the slice
+that builds its type — the content slice ships Post and Comment
+with the id/createdAt/updatedAt core of `Node`, and serves
+`Comment.target`, `Record.author`, and record node resolutions as
+nullable until the remaining types exist. `moderationStatus` and
+the per-field statuses serve constant NORMAL until the moderation
+slice stores verdicts.
+
+```graphql
 
 "A conversation container — a first-class public node, minted by
  its founder's own Participant record (the founding payload carries
@@ -1618,19 +1678,30 @@ type Query {
 
   "Generic record lookup over the mirror — the public chronicle,
    filterable along the mirror's own indexes: by author, by target,
-   by family, payload-marked state, and/or a landing-epoch window
-   (data-model.md \"The record mirror\"). The raw material behind
-   every fold this schema serves — any consumer can replay any fold
-   from here."
+   by terminal leg (a comment's revision chain), by family,
+   payload-marked state, and/or a landing-epoch window
+   (data-model.md \"The record mirror\"). Served newest-first in
+   landing order — the authoritative causal key (epoch, act time,
+   position) — with keyset cursors; target matches the binary/actor
+   leg's far end. A UUID that resolves to no known node matches
+   nothing. The raw material behind every fold this schema serves —
+   any consumer can replay any fold from here."
   records(
     author: UUID
     target: UUID
+    terminal: UUID
     family: RecordFamily
     payloadMarked: Boolean
     sinceEpoch: Int
     untilEpoch: Int
     first: Int, after: String, last: Int, before: String
   ): RecordConnection!
+
+  "The chronological listing (roadmap Slice 2): every post,
+   newest-first in landing order — the record set's own order,
+   never wall clock (graph-model.md §2). Deliberately not the
+   ranked feed."
+  posts(first: Int, after: String, last: Int, before: String): PostConnection!
 
   "One staged write by id — the confirm-side observation point of
    the write path. Field-level: resolves only for the staging
@@ -2067,7 +2138,6 @@ type StagedWrite {
 type StagedWriteConnection {
   pageInfo: PageInfo!
   edges: [StagedWriteEdge!]!
-  nodes: [StagedWrite!]!
 }
 type StagedWriteEdge {
   cursor: String!
@@ -2190,8 +2260,13 @@ digests, plus one Tag record per declared topic and one Reference
 record per citation — each its own priced act. The license
 declaration is mandatory in every content-creation flow
 ([platform-guidelines.md](../instances/platform-guidelines.md)):
-authoring-time attribution and AI-origin declarations ride the
-envelope and drive the render obligations.
+the qualifiers are structural fields of the minting record —
+public protocol references, never envelope content — so they
+survive every payload state and drive the render obligations.
+Attachments, tags, references, and `actAs` are staged
+sub-surfaces: the inputs below are the target contract, and each
+arrives with the work that carries it (media with the media
+follow-up, `actAs` with collectives).
 
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
@@ -2222,12 +2297,20 @@ input ReferenceInput {
   pInterest: Dimension!
 }
 
+"AI-provenance oversight, three-valued
+ (layer1-interface.md §10 def:content:license-qualifiers): NONE —
+ no disclosure required; CONDITIONAL — generation details
+ disclosed on query; FULL — the complete provenance chain
+ published alongside the record."
+enum Oversight { NONE CONDITIONAL FULL }
+
 "The mandatory authoring-time declaration (platform-guidelines.md):
  whether attribution is required on reuse surfaces, and the
- AI-origin degree driving the AI badge and provenance obligations."
+ oversight degree driving the AI badge and provenance obligations.
+ Immutable — genesis-only; edits never carry a license."
 input LicenseInput {
   attributionRequired: Boolean!
-  aiOrigin: Float!
+  oversight: Oversight!
 }
 
 "Author a Post — stages the Publish plus the Tag and Reference
@@ -2316,15 +2399,30 @@ input UploadMediaInput {
 }
 type UploadMediaPayload { media: MediaAttachment! }
 
+"A prepared content write: the staged handshake plus `node` — the
+ L2 id the envelope binds to the minted node, and the id the
+ content reads serve once the record lands. The client needs it to
+ read its own write back; hydrating it through the record chain
+ would be hostile. Null when userErrors is non-empty."
+type PrepareContentPayload {
+  node: UUID
+  writes: [PreparedWrite!]
+}
+
 extend type Mutation {
-  preparePost(input: PreparePostInput!): PreparePayload!
-  preparePostEdit(input: PreparePostEditInput!): PreparePayload!
-  prepareComment(input: PrepareCommentInput!): PreparePayload!
-  prepareCommentEdit(input: PrepareCommentEditInput!): PreparePayload!
+  preparePost(input: PreparePostInput!): PrepareContentPayload!
+  preparePostEdit(input: PreparePostEditInput!): PrepareContentPayload!
+  prepareComment(input: PrepareCommentInput!): PrepareContentPayload!
+  prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 }
 ```
+
+An edit input's optional text fields ride three-valued: omitted =
+untouched, explicit null = cleared, a value = replaced — the wire
+form of the per-field newest-wins fold. `isCover` applies to post
+galleries only; comment galleries ignore it.
 
 A media gallery on a create/edit input is the **full intended
 gallery** for that write: the new current arrangement, referencing
