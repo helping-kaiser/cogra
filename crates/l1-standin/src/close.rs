@@ -1,17 +1,12 @@
-// Epoch close and publication (layer1-interface.md §11.6, §8.3): fix the
-// authoritative ordered act sequence 𝒬_k, assign each act its Lamport
-// time and position (the authoritative causal key), compute edge-
-// projection maturities in the authoritative replay, consummate θ-debits
-// (§11.7), and publish the epoch package the mirror ingests.
+// Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
 //
 // Selection among valid ordered sequences is host discretion (§11.6): this
 // host takes approved acts in approval order, defers any act whose
 // declared dependencies or asserted parents are not yet in history, defers
 // any act whose author cannot pay θ (W1 — the author stays free to burn
-// and land later), and caps the epoch at the act budget. W2a/W2b hold
-// trivially under the stand-in's simplified standing (stamps ≡ 1); the
+// and land later), and caps the epoch at the act budget. The W2a/W2b
 // evaluation points are here so the real substrate's verdicts slot in at
-// the swap.
+// the swap (stamps ≡ 1 — see the crate header).
 
 use std::collections::{HashMap, HashSet};
 

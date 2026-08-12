@@ -377,7 +377,7 @@ impl PreparedWrite {
 }
 
 /// An act mid-handshake, from prepare until confirm or collection.
-/// Field-authorized to the staging actor's session (or applicant token).
+/// Field-authorized to the staging actor's session.
 pub struct StagedWriteType(pub staged::StagedWrite);
 
 #[Object(name = "StagedWrite")]

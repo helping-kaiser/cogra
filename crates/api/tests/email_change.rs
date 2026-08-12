@@ -69,8 +69,6 @@ impl Rig {
             mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
             web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),
             onboarding: api::onboarding::OnboardingConfig::default(),
-            // Unbounded: the limits are rate_limits.rs's subject; this
-            // rig's flows must never trip them incidentally.
             rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
             breach: Arc::new(api::breach::DisabledCorpus),
         });

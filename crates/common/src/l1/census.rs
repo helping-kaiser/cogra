@@ -396,8 +396,7 @@ impl Family {
                 NodeId::Mint(_) => Ok(()),
                 _ => class_err("target", "a Chat (minted node)", target),
             },
-            // Both endpoints are Chats — whence (middle) and whither
-            // (target); a found or join self-loops (A = T).
+            // Both endpoints are Chats.
             Family::Participant => match (middle, target) {
                 (Some(NodeId::Mint(_)), NodeId::Mint(_)) => Ok(()),
                 (Some(NodeId::Mint(_)), _) => {
@@ -709,7 +708,6 @@ mod tests {
         let c1 = NodeId::Mint(ActId::new("other", 3, Family::Participant).expect("ok"));
         let profile = NodeId::parse("prof:alice").expect("ok");
 
-        // Join / found self-loop (A = T) and a move (A ≠ T) are both legal.
         assert!(
             Family::Participant
                 .endpoint_check("alice", &src, Some(&c0), &c0)
@@ -737,9 +735,7 @@ mod tests {
                 .is_err()
         );
 
-        // A-leg stance is signed; the T-leg's forced-positive rendering
-        // pins the second component to [0, 1] — the system actor's inert
-        // (0, 0) passes.
+        // The system actor's inert (0, 0) passes.
         assert!(Family::Participant.params_check(-0.5, 0.5).is_ok());
         assert!(Family::Participant.params_check(0.0, 0.0).is_ok());
         assert!(Family::Participant.params_check(0.5, -0.1).is_err());

@@ -32,8 +32,7 @@ use sqlx::PgPool;
 /// epoch act budget N_epoch, and the payload carriage bound M_payload.
 #[derive(Debug, Clone)]
 pub struct StandInConfig {
-    /// θ in integer micro-units (1e-6). Default is the §6 reference value
-    /// θ ≈ 0.05281.
+    /// θ in integer micro-units (1e-6).
     pub theta_micro: i64,
     /// N_epoch — the epoch target act budget (`def:epoch:epoch-act-budget`).
     pub epoch_target_acts: i64,

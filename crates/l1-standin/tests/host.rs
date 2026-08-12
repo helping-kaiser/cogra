@@ -236,10 +236,6 @@ async fn seal_rejects_identifier_reuse_and_key_change(pool: PgPool) {
         host.seal(actor.pre_sign(prop)).await,
         Err(StandInError::Conflict(_))
     ));
-
-    // A different key claiming the same address cannot exist by
-    // construction (address is key-derived), so key consistency is
-    // enforced the other way: the address stays bound to its first key.
 }
 
 #[sqlx::test(migrations = "../../migrations")]
@@ -387,8 +383,8 @@ async fn hyper_acts_project_two_legs_at_one_key(pool: PgPool) {
         .iter()
         .find(|l| l.role == LegRole::T)
         .expect("T leg");
-    // A: Actor → middle; T: middle → terminal target; T renders the tuple
-    // transposed. Both legs share the one act (one record, one key).
+    // A: Actor → middle; T: middle → terminal target; both legs share the
+    // one act (one record, one key).
     assert_eq!(a.source, NodeId::Addr(publisher.address()));
     assert_eq!(a.target, NodeId::Prof(subject.address()));
     assert_eq!(t.source, NodeId::Prof(subject.address()));
@@ -425,8 +421,7 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
         deps: vec![],
     };
 
-    // A Bid toward an existing Offer would hang a second Item's incidence
-    // on it — rejected at formation.
+    // Bid/T is fresh-mint-only — rejected at formation (seal.rs).
     let item = NodeId::Mint(ActId::new("lister", 0, Family::Owner).expect("ok"));
     let foreign_offer = NodeId::Mint(ActId::new("other", 1, Family::Bid).expect("ok"));
     assert!(matches!(
@@ -460,9 +455,8 @@ async fn publish_toward_an_existing_mint_revises_rather_than_mints(pool: PgPool)
     let host = standin(pool);
     let author = funded_actor(&host, 10 * THETA).await;
 
-    // Genesis identity is per record: a Publish toward an existing Content
-    // node is the revise gesture, well-formed at the substrate — the L2
-    // fold, not formation, decides whether it wins.
+    // The revise gesture: a Publish toward an existing Content node is
+    // well-formed at the substrate (seal.rs).
     let existing = NodeId::Mint(ActId::new("other", 1, Family::Publish).expect("ok"));
     let revise = Proposal {
         body: StructuralBody {
@@ -533,8 +527,7 @@ async fn founding_participant_self_loops_at_its_own_mint(pool: PgPool) {
     assert_eq!(a.target, own_mint);
     assert_eq!(t.source, own_mint);
     assert_eq!(t.target, own_mint);
-    // The T-leg renders the tuple transposed: the forced-positive
-    // component leads.
+    // Transposed rendering (census.rs `leg_params`).
     assert_eq!((t.p_d, t.p_i), (0.0, 1.0));
 }
 
