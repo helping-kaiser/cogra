@@ -22,6 +22,8 @@ import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.WriteState
+import com.cogra.domain.flatMap
+import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
@@ -103,14 +105,8 @@ class OnboardingRepositoryImpl @Inject constructor(
 ) : OnboardingRepository {
 
     override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> =
-        when (val fetched = client.query(InviteLinkCheckQuery(id)).fetch()) {
-            is Outcome.Success -> Outcome.Success(
-                fetched.value.inviteLinkCheck?.let {
-                    InviteCheck(it.usable, it.inviterHandle, it.expiresAt)
-                },
-            )
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(InviteLinkCheckQuery(id)).fetch().map { data ->
+            data.inviteLinkCheck?.let { InviteCheck(it.usable, it.inviterHandle, it.expiresAt) }
         }
 
     override suspend fun register(
@@ -165,24 +161,20 @@ class OnboardingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> = guard.run {
-        when (val fetched = client.query(ApplicationStatusQuery()).fetch()) {
-            is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
-                Outcome.Success(
-                    ApplicationStatus(
-                        accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
-                        application = me.application?.applicationFields?.toView(),
-                        stagedRegistration = me.stagedWrites?.nodes.orEmpty()
-                            .map { it.stagedWriteFields.toDomain() }
-                            .firstOrNull {
-                                it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
-                            },
-                        actorPubkey = me.actorPubkey,
-                    ),
-                )
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(ApplicationStatusQuery()).fetch().flatMap { data ->
+            val me = data.me ?: return@flatMap unauthenticatedRefusal()
+            Outcome.Success(
+                ApplicationStatus(
+                    accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
+                    application = me.application?.applicationFields?.toView(),
+                    stagedRegistration = me.stagedWrites?.nodes.orEmpty()
+                        .map { it.stagedWriteFields.toDomain() }
+                        .firstOrNull {
+                            it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
+                        },
+                    actorPubkey = me.actorPubkey,
+                ),
+            )
         }
     }
 }
@@ -210,18 +202,14 @@ class SessionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sessions(): Outcome<List<SessionInfo>> = guard.run {
-        when (val fetched = client.query(SessionsQuery()).fetch()) {
-            is Outcome.Success -> {
-                val sessions = fetched.value.me?.sessions ?: return@run unauthenticatedRefusal()
-                Outcome.Success(
-                    sessions.map {
-                        val s = it.sessionFields
-                        SessionInfo(s.id, s.deviceLabel, s.createdAt, s.lastUsedAt, s.expiresAt, s.isCurrent)
-                    },
-                )
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(SessionsQuery()).fetch().flatMap { data ->
+            val sessions = data.me?.sessions ?: return@flatMap unauthenticatedRefusal()
+            Outcome.Success(
+                sessions.map {
+                    val s = it.sessionFields
+                    SessionInfo(s.id, s.deviceLabel, s.createdAt, s.lastUsedAt, s.expiresAt, s.isCurrent)
+                },
+            )
         }
     }
 
@@ -252,14 +240,8 @@ class WriteRepositoryImpl @Inject constructor(
 
     override suspend fun hostPublicKey(): Outcome<ByteArray> {
         cachedHostKey?.let { return Outcome.Success(it) }
-        return when (val fetched = client.query(HostPublicKeyQuery()).fetch()) {
-            is Outcome.Success -> {
-                val key = Base64.getDecoder().decode(fetched.value.hostPublicKey)
-                cachedHostKey = key
-                Outcome.Success(key)
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        return client.query(HostPublicKeyQuery()).fetch().map { data ->
+            Base64.getDecoder().decode(data.hostPublicKey).also { cachedHostKey = it }
         }
     }
 
@@ -300,12 +282,7 @@ class WriteRepositoryImpl @Inject constructor(
         }
 
     override suspend fun stagedWrite(id: String): Outcome<StagedWriteView?> = guard.run {
-        when (val fetched = client.query(StagedWriteQuery(id)).fetch()) {
-            is Outcome.Success ->
-                Outcome.Success(fetched.value.stagedWrite?.stagedWriteFields?.toDomain())
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
-        }
+        client.query(StagedWriteQuery(id)).fetch().map { it.stagedWrite?.stagedWriteFields?.toDomain() }
     }
 }
 
@@ -316,33 +293,25 @@ class AccountRepositoryImpl @Inject constructor(
 ) : AccountRepository {
 
     override suspend fun me(): Outcome<UserProfile?> = guard.run {
-        when (val fetched = client.query(MeQuery()).fetch()) {
-            is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
-                Outcome.Success(
-                    UserProfile(
-                        id = me.id,
-                        handle = me.handle,
-                        displayName = me.displayName,
-                        accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
-                        hasReciprocated = me.hasReciprocated,
-                        invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
-                    ),
-                )
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(MeQuery()).fetch().flatMap { data ->
+            val me = data.me ?: return@flatMap unauthenticatedRefusal()
+            Outcome.Success(
+                UserProfile(
+                    id = me.id,
+                    handle = me.handle,
+                    displayName = me.displayName,
+                    accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
+                    hasReciprocated = me.hasReciprocated,
+                    invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
+                ),
+            )
         }
     }
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = guard.run {
-        when (val fetched = client.query(KeyBackupQuery()).fetch()) {
-            is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
-                Outcome.Success(me.keyBackup?.let { Base64.getDecoder().decode(it) })
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(KeyBackupQuery()).fetch().flatMap { data ->
+            val me = data.me ?: return@flatMap unauthenticatedRefusal()
+            Outcome.Success(me.keyBackup?.let { Base64.getDecoder().decode(it) })
         }
     }
 
@@ -393,29 +362,25 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = guard.run {
-        when (val fetched = client.query(InviteLinksQuery()).fetch()) {
-            is Outcome.Success -> {
-                val me = fetched.value.me ?: return@run unauthenticatedRefusal()
-                val links = me.inviteLinks?.nodes ?: return@run unauthenticatedRefusal()
-                Outcome.Success(
-                    links.map { link ->
-                        InviteLinkInfo(
-                            id = link.id,
-                            prefillPDirected = link.prefillPDirected,
-                            prefillPInterest = link.prefillPInterest,
-                            singleUse = link.singleUse,
-                            createdAt = link.createdAt,
-                            expiresAt = link.expiresAt,
-                            revokedAt = link.revokedAt,
-                            applications = link.applications.nodes.map { node ->
-                                node.applicationFields.toInfo()
-                            },
-                        )
-                    },
-                )
-            }
-            is Outcome.Refused -> fetched
-            is Outcome.Failed -> fetched
+        client.query(InviteLinksQuery()).fetch().flatMap { data ->
+            val me = data.me ?: return@flatMap unauthenticatedRefusal()
+            val links = me.inviteLinks?.nodes ?: return@flatMap unauthenticatedRefusal()
+            Outcome.Success(
+                links.map { link ->
+                    InviteLinkInfo(
+                        id = link.id,
+                        prefillPDirected = link.prefillPDirected,
+                        prefillPInterest = link.prefillPInterest,
+                        singleUse = link.singleUse,
+                        createdAt = link.createdAt,
+                        expiresAt = link.expiresAt,
+                        revokedAt = link.revokedAt,
+                        applications = link.applications.nodes.map { node ->
+                            node.applicationFields.toInfo()
+                        },
+                    )
+                },
+            )
         }
     }
 
