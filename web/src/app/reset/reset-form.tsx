@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
 import { Button } from "@/lib/ui/button";
 import { PasswordField } from "@/lib/ui/password-field";
@@ -23,10 +24,8 @@ function resetMessage(code: ErrorCode): string {
       return "The reset token is invalid or expired.";
     case "WEAK_PASSWORD":
       return "Passwords need at least 12 characters and can't be a known breached password.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 

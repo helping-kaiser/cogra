@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import type { ErrorCode } from "@/__generated__/graphql";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import type { Outcome } from "@/lib/api/outcome";
 import {
   changeHandle,
@@ -83,10 +84,8 @@ function refusedMessage(code: ErrorCode): string {
       return "That handle is taken.";
     case "BAD_INPUT":
       return "Check the entered value.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 

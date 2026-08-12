@@ -25,6 +25,7 @@ import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
+import { fallbackMessage, rearmMessage } from "@/lib/ui/error-messages";
 import { PasswordField } from "@/lib/ui/password-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -40,23 +41,8 @@ function applyMessage(code: ErrorCode): string {
       return "That password is too easy to guess — pick a longer or less common one.";
     case "BAD_INPUT":
       return "Check the highlighted field.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
     default:
-      return "Something went wrong. Try again.";
-  }
-}
-
-function rearmMessage(code: ErrorCode): string {
-  switch (code) {
-    case "INVITE_UNUSABLE":
-      return "This invite can't be used — it may have expired or been revoked.";
-    case "BAD_INPUT":
-      return "Your application is still live — it doesn't need a fresh invite.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
-    default:
-      return "Something went wrong. Try again.";
+      return fallbackMessage(code);
   }
 }
 

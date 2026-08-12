@@ -18,6 +18,7 @@ import { useRegistrationFlow } from "@/lib/signing/provider";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { rearmMessage as sharedRearmMessage } from "@/lib/ui/error-messages";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
@@ -210,18 +211,10 @@ function WaitingHint({ onDismiss }: { onDismiss: () => void }) {
 }
 
 function rearmMessage(code: ErrorCode | "MALFORMED"): string {
-  switch (code) {
-    case "MALFORMED":
-      return "That doesn't look like an invite — paste the whole link or its code.";
-    case "INVITE_UNUSABLE":
-      return "This invite can't be used — it may have expired or been revoked.";
-    case "BAD_INPUT":
-      return "Your application is still live — it doesn't need a fresh invite.";
-    case "RATE_LIMITED":
-      return "Too many attempts — wait a moment and try again.";
-    default:
-      return "Something went wrong. Try again.";
+  if (code === "MALFORMED") {
+    return "That doesn't look like an invite — paste the whole link or its code.";
   }
+  return sharedRearmMessage(code);
 }
 
 function RearmCard() {
