@@ -14,8 +14,7 @@ pub const PUBLISHER_HANDLE: &str = "publisher";
 pub const MODERATOR_HANDLE: &str = "moderator";
 pub const TREASURY_HANDLE: &str = "treasury";
 
-/// The reserved Types seeded into the naming service (network.md §2):
-/// moderation's verdict Types, the role Type, and bot-defense.
+/// The reserved Types seeded into the naming service (network.md §2).
 pub const RESERVED_TYPES: [&str; 4] = ["moderator", "illegal", "sensitive", "bot-defense"];
 
 pub struct ActorRow {
@@ -26,10 +25,9 @@ pub struct ActorRow {
     pub l0_address: Option<String>,
 }
 
-/// The L2-half gate: the operator's service rows exist when every system
-/// actor row stands (the Genesis Moderator's row is created alongside —
-/// checked via its key custody being unnecessary: its handle is runtime
-/// input, so the stable gate is the reserved system handles).
+/// The L2-half gate, keyed on the reserved system handles: the Genesis
+/// Moderator's handle is runtime input, so its row (created alongside)
+/// cannot serve as the gate.
 pub async fn system_actors_present(pool: &PgPool) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COUNT(*) = 3 AS "all!" FROM actors

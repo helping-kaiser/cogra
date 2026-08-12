@@ -34,8 +34,6 @@ struct Rig {
 impl Rig {
     async fn new(pool: PgPool) -> Self {
         let mailer = Arc::new(TestMailer::default());
-        // Unbounded: the limits are rate_limits.rs's subject; this
-        // rig's flows must never trip them incidentally.
         let (app, standin) = rig::connect_info_app_with_standin(
             pool.clone(),
             mailer.clone(),

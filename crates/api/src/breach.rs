@@ -4,9 +4,7 @@
 // is the HIBP Pwned Passwords range API — k-anonymity, so only the
 // first five hex characters of the SHA-1 ever leave the process, with
 // Add-Padding defeating response-size analysis. Lookups fail OPEN at
-// the call site (auth.rs validate_new_password): the corpus bounds
-// online guessing that rate limiting already throttles, and a provider
-// outage must not block registration.
+// the call site (auth.rs `validate_new_password`).
 
 use std::future::Future;
 use std::pin::Pin;

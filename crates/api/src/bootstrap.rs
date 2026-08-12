@@ -1,26 +1,6 @@
-// Genesis bootstrap (architecture.md "Genesis bootstrap"; network.md §2):
-// the one-shot instance creation. The CoGra-side half seeds the reserved
-// Type keys, the parameter carrier (from the Charter's genesis payload),
-// and the operator/system-actor service rows; the L1-side half lands the
-// genesis records — the cast's Registrations, the endorsement Opinions,
-// the Charter, and the genesis role Tag — as the instance's first
-// accepted acts, through the ordinary admission handshake against the
-// stand-in.
-//
-// Idempotent and gated on both sides: bootstrapped iff the Charter record
-// is in the mirror AND the operator's service rows exist. The L2 half
-// runs first because the signing keys live in it — a re-run after a crash
-// completes the L1 half keyed on the recorded identities, resuming
-// mid-sequence past acts the substrate already holds (burns credited at
-// most once, a sealed act's approval recovered from the custodied key, a
-// substrate that differs from the genesis input refused). Out-of-graph
-// authority is confined to this bootstrap; there is no runtime genesis
-// flow.
-//
-// Custody note: the Genesis Moderator's seed is stored beside the system
-// actors' for slice 0 — the operator's own account on the operator's own
-// server, needed for crash-repair re-runs. The device-held key ceremony
-// arrives with slice 1's onboarding; real users never get this treatment.
+// Genesis bootstrap — the one-shot instance creation (architecture.md
+// "Genesis bootstrap"; network.md §2). Out-of-graph authority is confined
+// to this bootstrap; there is no runtime genesis flow.
 
 use common::l1::Family;
 use common::l1::client::ActorKey;
@@ -183,10 +163,8 @@ pub async fn run(
     // every record's preconditions already stand (network.md §2). ---
     let [gm, publisher, moderator, treasury] = &cast;
     for member in &cast {
-        // Credited at most once across re-runs: `credit_burn` is additive
-        // and B_i is monotone from exactly zero, so a non-zero burned
-        // total means this member's genesis burn already landed. (Integer
-        // micro-units divide by 1e6; zero is exactly 0.0.)
+        // Credited at most once across re-runs — the zero-burn funding-
+        // idempotency guard (onboarding.rs `ensure_admission_staged`).
         let address = member.key.address();
         if standin.balance(&address).await?.burned_total == 0.0 {
             standin
@@ -309,7 +287,6 @@ pub async fn run(
     };
     submit(&publisher.key, role_tag).await?;
 
-    // Close the genesis epoch and land the records in the mirror.
     standin.close_epoch().await?;
     crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
 
