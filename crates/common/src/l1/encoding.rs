@@ -3,9 +3,12 @@
 // `rem:graph:authentication-realization-out-of-scope`); this deployment
 // uses a small deterministic subset of CBOR (RFC 8949): definite lengths
 // only, shortest-form integer heads, IEEE 754 double-precision floats,
-// fixed field order fixed by the encoder — no maps, so no key-ordering
-// ambiguity exists. Hand-rolled so determinism is by construction, not by
-// library configuration; golden tests pin the byte layout.
+// field order fixed by the encoder. Maps and tags exist for the Peer
+// Content Envelope (common::envelope); key ordering there is the
+// caller's obligation — the encoder writes entries in call order, and
+// the envelope feeds it from sorted collections. Hand-rolled so
+// determinism is by construction, not by library configuration; golden
+// tests pin the byte layout.
 
 /// Deterministic CBOR writer over the subset the seam needs.
 #[derive(Default)]
@@ -64,6 +67,20 @@ impl Encoder {
 
     pub fn array(&mut self, len: u64) -> &mut Self {
         self.head(4, len);
+        self
+    }
+
+    /// Definite-length map head; the caller writes `len` key/value pairs
+    /// next, in bytewise-ascending key order (for uint keys: numeric
+    /// order).
+    pub fn map(&mut self, len: u64) -> &mut Self {
+        self.head(5, len);
+        self
+    }
+
+    /// A tag head (major type 6); the caller writes the tagged item next.
+    pub fn tag(&mut self, value: u64) -> &mut Self {
+        self.head(6, value);
         self
     }
 
@@ -185,6 +202,28 @@ impl<'a> Decoder<'a> {
         self.head(4, "array")
     }
 
+    /// Definite-length map head; returns the pair count.
+    pub fn map(&mut self) -> Result<u64, DecodeError> {
+        self.head(5, "map")
+    }
+
+    /// A tag head; returns the tag value.
+    pub fn tag(&mut self) -> Result<u64, DecodeError> {
+        self.head(6, "tag")
+    }
+
+    /// Major type of the next item, without consuming it; None at end of
+    /// input. The envelope's `any`-typed guild values dispatch on this.
+    pub fn peek_major(&self) -> Option<u8> {
+        self.input.get(self.pos).map(|b| b >> 5)
+    }
+
+    /// Byte offset of the next unread item (envelope Gate C2 re-encodes
+    /// from decoded values and compares against the input span).
+    pub fn position(&self) -> usize {
+        self.pos
+    }
+
     pub fn float(&mut self) -> Result<f64, DecodeError> {
         let at = self.pos;
         let b = self.byte()?;
@@ -304,6 +343,31 @@ mod tests {
             }),
             [0xF6]
         );
+    }
+
+    #[test]
+    fn golden_map_and_tag() {
+        assert_eq!(
+            enc(|e| {
+                e.map(1).uint(0).text("x");
+            }),
+            [0xA1, 0x00, 0x61, b'x']
+        );
+        // Tag 55799 is the envelope magic: D9 D9F7 (RFC 8949 §3.4.6).
+        assert_eq!(
+            enc(|e| {
+                e.tag(55799);
+            }),
+            [0xD9, 0xD9, 0xF7]
+        );
+        let mut d = Decoder::new(&[0xD9, 0xD9, 0xF7, 0xA1, 0x00, 0x61, b'x']);
+        assert_eq!(d.tag().expect("valid"), 55799);
+        assert_eq!(d.map().expect("valid"), 1);
+        assert_eq!(d.peek_major(), Some(0));
+        assert_eq!(d.uint().expect("valid"), 0);
+        assert_eq!(d.text().expect("valid"), "x");
+        assert_eq!(d.peek_major(), None);
+        d.finish().expect("valid");
     }
 
     #[test]
