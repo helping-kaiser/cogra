@@ -7,13 +7,13 @@
 # Build tooling — AGP/Kotlin/KSP must move together; the Compose compiler
 # ships with Kotlin 2.x via the `kotlin.plugin.compose` plugin.
 agp = "8.13.2"
-kotlin = "2.4.10"
+kotlin = "2.3.21"
 ksp = "2.3.11"
 
 # SDK levels. minSdk 26 gives a clean Android Keystore story for the
 # encrypted token store; compile/target track the current stable platform.
 minSdk = "26"
-compileSdk = "35"
+compileSdk = "36"
 targetSdk = "35"
 
 # AndroidX / Compose
@@ -26,7 +26,7 @@ datastore = "1.1.1"
 
 # DI
 hilt = "2.58"
-hiltNavigationCompose = "1.4.0"
+hiltNavigationCompose = "1.3.0"
 
 # GraphQL
 apollo = "4.4.3"
