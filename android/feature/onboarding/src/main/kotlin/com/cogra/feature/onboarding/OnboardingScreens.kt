@@ -1,10 +1,5 @@
 // The onboarding destinations: invite entry, the registration form,
-// and the key ceremony. Registering logs the applicant in and drops
-// them into the Home shell, where the application rides along as cards
-// (feature:home); the ceremony is a logged-in step reached from its
-// card. Stateless screens + thin routes (android/CLAUDE.md
-// "Architecture"); semantics land with the UI (android.md
-// "Accessibility").
+// and the key ceremony (auth.md "Application").
 
 package com.cogra.feature.onboarding
 

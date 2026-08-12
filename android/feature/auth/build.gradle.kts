@@ -1,6 +1,5 @@
 // The signed-out surface: login, actor restore, and the password-reset
-// flows. Compose screens + ViewModels over core:domain
-// (android/CLAUDE.md "Module discipline").
+// flows.
 
 plugins {
     alias(libs.plugins.android.library)

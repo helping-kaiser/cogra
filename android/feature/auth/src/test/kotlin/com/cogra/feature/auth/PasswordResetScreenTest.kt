@@ -1,6 +1,3 @@
-// Compose tests under Robolectric, bound to testTags (android/CLAUDE.md
-// "Tests ship with the code").
-
 package com.cogra.feature.auth
 
 import androidx.compose.ui.test.assertIsNotEnabled

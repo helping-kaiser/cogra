@@ -1,8 +1,6 @@
 // The slice-1 API surface as repository interfaces (api-spec.md "Auth
 // and accounts", "The write flow"). core:network implements them over
-// the generated Apollo client; authenticated calls carry the Bearer
-// token and single-flight refresh-and-replay on UNAUTHENTICATED
-// (android/CLAUDE.md "Auth / tokens").
+// the generated Apollo client (android/CLAUDE.md "Auth / tokens").
 
 package com.cogra.domain.repo
 

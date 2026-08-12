@@ -4,8 +4,7 @@
 // burn to the applicant's own address, so the address must exist before
 // approval — and the backup offer rides the same step. The sealed blob
 // uploads immediately after the attach; a failed upload parks it for a
-// retried flush. The recovery code is returned for display exactly once
-// and never stored (auth.md "Key recovery").
+// retried flush.
 
 package com.cogra.domain.identity
 
