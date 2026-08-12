@@ -2,10 +2,14 @@
 # entries keyed on the manifest's directory; github-actions always
 # scans .github/workflows from "/").
 #
-# Groups batch compatible bumps into one weekly PR per ecosystem
-# instead of one PR per dependency; majors still arrive solo so a
-# breaking change is never buried in a batch. First matching group
-# wins, so the react group (all update types) precedes the catch-all.
+# Groups batch bumps into at most two weekly PRs per ecosystem — one
+# minors/patches, one majors — instead of one PR per dependency, so a
+# run never floods the PR list. Majors ride apart from the compatible
+# batch so a breaking change never blocks the green minors, and the
+# ignore gates hold back majors that are queued migrations (audit fix
+# plan). Weekly stays: the point is to keep current and surface
+# breakage fast. First matching group wins, so the react group (all
+# update types) precedes the catch-alls.
 version: 2
 updates:
   - package-ecosystem: cargo
@@ -16,6 +20,9 @@ updates:
       rust-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      rust-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
       # The digest-0.11 RustCrypto generation: the whole stack moves in
       # one move when compatible releases exist (queued in the audit
@@ -49,6 +56,9 @@ updates:
       android-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      android-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
       # All gated on the AGP 9 migration (queued in the audit fix
       # plan): AGP 8.x rejects Gradle >= 9.6, and these versions demand
@@ -89,6 +99,9 @@ updates:
       web-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      web-majors:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
       # @types/node tracks the runtime major (Node 24 LTS) — newer
       # majors typecheck against APIs the runtime does not have
