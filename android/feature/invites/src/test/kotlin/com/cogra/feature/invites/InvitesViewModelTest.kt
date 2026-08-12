@@ -38,6 +38,7 @@ class InvitesViewModelTest {
         var approveOutcome: Outcome<List<PreparedWriteView>>? = null
         var revokeOutcome: Outcome<Unit>? = null
         var approveCalls = 0
+        var revokeCalls = 0
 
         override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = Outcome.Success(links.toList())
 
@@ -62,6 +63,7 @@ class InvitesViewModelTest {
         }
 
         override suspend fun revokeInviteLink(id: String): Outcome<Unit> {
+            revokeCalls += 1
             revokeOutcome?.let { return it }
             val index = links.indexOfFirst { it.id == id }
             links[index] = links[index].copy(revokedAt = Instant.EPOCH)
@@ -134,6 +136,42 @@ class InvitesViewModelTest {
         assertThat(vm.state.value.vouchSigned).isTrue()
         vm.onVouchSignedShown()
         assertThat(vm.state.value.vouchSigned).isFalse()
+    }
+
+    @Test
+    fun aDoubleTapRevokesOnce() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onCreate()
+        dispatcher.scheduler.advanceUntilIdle()
+        val link = vm.state.value.links.single()
+
+        vm.onRevoke(link.id)
+        vm.onRevoke(link.id)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.revokeCalls).isEqualTo(1)
+        assertThat(vm.state.value.revokingId).isNull()
+    }
+
+    @Test
+    fun aSuccessfulRevokeClearsTheStaleError() = runTest(dispatcher) {
+        account.revokeOutcome =
+            Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such live invite link")))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onCreate()
+        dispatcher.scheduler.advanceUntilIdle()
+        val link = vm.state.value.links.single()
+
+        vm.onRevoke(link.id)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.error).isEqualTo(ErrorCode.NOT_FOUND)
+
+        account.revokeOutcome = null
+        vm.onRevoke(link.id)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.error).isNull()
+        assertThat(vm.state.value.links.single().revokedAt).isNotNull()
     }
 
     @Test
