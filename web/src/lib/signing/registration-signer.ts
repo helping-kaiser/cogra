@@ -1,9 +1,7 @@
 // One pass of the application poll (auth.md "Approval and landing";
 // Android mirror: RegistrationSigner.kt): read the status, flush the
 // parked backup, then branch — member, staged Registration to sign,
-// re-arm needed, landing awaited, or the applicant cards. Reading the
-// status is the admission flow's repair hook: an approved application
-// whose staged Registration was lost re-stages on this read.
+// re-arm needed, landing awaited, or the applicant cards.
 
 import type { ApolloClient } from "@apollo/client";
 

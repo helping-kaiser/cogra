@@ -1,11 +1,7 @@
 "use client";
 
 // The key ceremony (auth.md "Application" step 3; Android's
-// KeyCeremonyScreen): accept mints, attaches, seals and uploads the
-// backup, then shows the recovery code exactly once; decline still mints
-// and attaches — it only skips the backup, after an explicit
-// confirmation of the stated price. A key already attached redirects
-// home (web.md routes table).
+// KeyCeremonyScreen).
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -32,7 +28,6 @@ export function KeyCeremonyView() {
   }, [attached, recoveryCode, inProgress, router]);
 
   const finish = () => {
-    // The proof just changed server-side: poll now, not in 30 seconds.
     flow.ensureAdvancing();
     router.replace("/");
   };

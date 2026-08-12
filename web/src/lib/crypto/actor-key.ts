@@ -1,10 +1,8 @@
 // The device side of the admission handshake (reference:
 // crates/common/src/l1/client.rs; substrate.md §6 — client-signed,
 // backend-relayed). The signing side of a write is always this object;
-// the backend relays, never signs. The key rides WebCrypto (web.md "Key
-// custody"): the seed imports as an Ed25519 CryptoKey, and the public
-// half comes back out of the JWK export (`x` is a required OKP member,
-// RFC 8037).
+// the backend relays, never signs. The key rides WebCrypto (web.md
+// "Key custody").
 
 import { concat, equalBytes, fromHex, randomBytes } from "./bytes";
 import {
@@ -86,9 +84,8 @@ export class ActorKey {
   }
 
   /**
-   * The 32-byte seed — what the key-backup blob carries. Present only on
-   * a freshly minted or restored key; custody drops it once a backup
-   * blob exists (web.md "Key custody").
+   * The 32-byte seed — what the key-backup blob carries. Present only
+   * on a freshly minted or restored key.
    */
   seed(): Uint8Array<ArrayBuffer> {
     if (this.seedBytes === null) throw new Error("the seed is not retained on a stored key");

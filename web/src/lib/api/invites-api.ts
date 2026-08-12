@@ -1,8 +1,5 @@
-// The inviter's side of admission (auth.md "Invite-link generation",
-// "Approval and landing"), lifted into outcomes. approveApplicants
-// returns the inviter's own Opinion records — the vouch is the
-// inviter's signature, so the caller drives the write handshake over
-// the adapted staged writes.
+// The inviter's side of admission, lifted into outcomes (auth.md
+// "Invite-link generation", "Approval and landing").
 
 import type { ApolloClient } from "@apollo/client";
 

@@ -1,11 +1,8 @@
 "use client";
 
 // The member's cards in the shell (Android's Home member branch): the
-// husk warning when the actor key lives elsewhere, the first-login
-// reciprocation prompt (auth.md "Approval and landing": the joiner's
-// own signed Opinion completes the mutual pair; the prompt is an
-// offer, not a nag — sign and dismiss both settle it, device-locally),
-// and the resume card for handshakes with parked material.
+// husk warning, the first-login reciprocation prompt (auth.md "Approval
+// and landing"), and the resume card for parked handshake material.
 
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
