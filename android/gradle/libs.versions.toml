@@ -7,29 +7,29 @@
 # Build tooling — AGP/Kotlin/KSP must move together; the Compose compiler
 # ships with Kotlin 2.x via the `kotlin.plugin.compose` plugin.
 agp = "8.13.2"
-kotlin = "2.1.0"
-ksp = "2.1.0-1.0.29"
+kotlin = "2.3.21"
+ksp = "2.3.11"
 
 # SDK levels. minSdk 26 gives a clean Android Keystore story for the
 # encrypted token store; compile/target track the current stable platform.
 minSdk = "26"
-compileSdk = "35"
+compileSdk = "36"
 targetSdk = "35"
 
 # AndroidX / Compose
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
-activityCompose = "1.10.1"
+activityCompose = "1.13.0"
 composeBom = "2024.12.01"
 navigationCompose = "2.8.5"
 datastore = "1.1.1"
 
 # DI
-hilt = "2.53.1"
-hiltNavigationCompose = "1.2.0"
+hilt = "2.58"
+hiltNavigationCompose = "1.3.0"
 
 # GraphQL
-apollo = "4.1.1"
+apollo = "4.4.3"
 
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
@@ -37,29 +37,29 @@ apollo = "4.1.1"
 # Ed25519 lives in its `subtle` package, which Tink documents as internal
 # and subject to removal, and its keyset API cannot import a raw seed —
 # which key recovery requires.
-tink = "1.15.0"
-bouncycastle = "1.85"
+tink = "1.23.0"
+bouncycastle = "1.85.2"
 
 # Type-safe Navigation Compose routes are @Serializable, so the build needs
 # the kotlinx-serialization plugin (versioned with Kotlin) and its JSON runtime.
-kotlinxSerialization = "1.7.3"
+kotlinxSerialization = "1.11.0"
 
 # DI annotations usable from the pure-Kotlin domain module (javax.inject is
 # plain Java, not an Android dependency).
 javaxInject = "1"
 
 # Async
-coroutines = "1.9.0"
+coroutines = "1.11.0"
 
 # Test
 junit = "4.13.2"
-coroutinesTest = "1.9.0"
-turbine = "1.2.0"
-truth = "1.4.4"
+coroutinesTest = "1.11.0"
+turbine = "1.2.1"
+truth = "1.4.5"
 mockwebserver = "5.4.0"
 robolectric = "4.16.1"
-androidxTestExt = "1.2.1"
-androidxTestCore = "1.6.1"
+androidxTestExt = "1.3.0"
+androidxTestCore = "1.7.0"
 
 [libraries]
 # Build-logic only: the plugin artifacts the convention plugins compile against
