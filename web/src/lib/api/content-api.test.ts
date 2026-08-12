@@ -1,0 +1,256 @@
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { graphql, HttpResponse } from "msw";
+import { describe, expect, it } from "vitest";
+
+import {
+  fetchPostDetail,
+  fetchPosts,
+  prepareComment,
+  preparePost,
+  preparePostEdit,
+} from "./content-api";
+import { startMswServer } from "@/test/msw";
+
+const server = startMswServer();
+
+function client() {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new HttpLink({ uri: "http://localhost/graphql" }),
+  });
+}
+
+function moderated(value: string | null, status = "NORMAL") {
+  return { __typename: "ModeratedText", value, status };
+}
+
+function post(id: string, overrides: Record<string, unknown> = {}) {
+  return {
+    __typename: "Post",
+    id,
+    title: moderated("Hello"),
+    description: moderated(null),
+    content: moderated("body"),
+    author: { __typename: "User", id: "u1", handle: "alice" },
+    createdAt: "2026-08-12T10:00:00Z",
+    updatedAt: "2026-08-12T10:00:00Z",
+    moderationStatus: "NORMAL",
+    ...overrides,
+  };
+}
+
+function pageInfo(hasNextPage: boolean, endCursor: string | null) {
+  return { __typename: "PageInfo", hasNextPage, endCursor };
+}
+
+describe("fetchPosts", () => {
+  it("maps the page and its cursor", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({
+          data: {
+            posts: {
+              __typename: "PostConnection",
+              edges: [{ __typename: "PostEdge", node: post("p1") }],
+              pageInfo: pageInfo(true, "c1"),
+            },
+          },
+        }),
+      ),
+    );
+    const outcome = await fetchPosts(client());
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    expect(outcome.value.items.map((p) => p.id)).toEqual(["p1"]);
+    expect(outcome.value.items[0].title.value).toBe("Hello");
+    expect(outcome.value.endCursor).toBe("c1");
+    expect(outcome.value.hasNextPage).toBe(true);
+  });
+
+  it("fails on a transport fault", async () => {
+    server.use(graphql.query("Posts", () => HttpResponse.error()));
+    expect((await fetchPosts(client())).kind).toBe("failed");
+  });
+});
+
+describe("fetchPostDetail", () => {
+  it("maps the thread and serves null for an unknown id", async () => {
+    server.use(
+      graphql.query("PostDetail", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            post:
+              variables.id === "p1"
+                ? {
+                    ...post("p1", { author: null }),
+                    comments: {
+                      __typename: "CommentConnection",
+                      edges: [
+                        {
+                          __typename: "CommentEdge",
+                          node: {
+                            __typename: "Comment",
+                            id: "c1",
+                            content: moderated("hi"),
+                            author: { __typename: "User", id: "u2", handle: "bob" },
+                            createdAt: "2026-08-12T10:05:00Z",
+                            updatedAt: "2026-08-12T10:05:00Z",
+                            moderationStatus: "NORMAL",
+                          },
+                        },
+                      ],
+                      pageInfo: pageInfo(false, null),
+                    },
+                  }
+                : null,
+          },
+        }),
+      ),
+    );
+    const c = client();
+    const found = await fetchPostDetail(c, "p1");
+    expect(found.kind).toBe("success");
+    if (found.kind !== "success") return;
+    expect(found.value?.post.author).toBeNull();
+    expect(found.value?.comments.items.map((x) => x.id)).toEqual(["c1"]);
+
+    const missing = await fetchPostDetail(c, "gone");
+    expect(missing.kind).toBe("success");
+    if (missing.kind !== "success") return;
+    expect(missing.value).toBeNull();
+  });
+});
+
+describe("preparePost", () => {
+  const license = { attributionRequired: true, oversight: "NONE" as const };
+
+  it("lifts the node and the staged writes", async () => {
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "node-1",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "PUBLISH",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const outcome = await preparePost(client(), {
+      title: "T",
+      description: null,
+      content: "B",
+      license,
+    });
+    expect(outcome.kind).toBe("success");
+    if (outcome.kind !== "success") return;
+    expect(outcome.value.node).toBe("node-1");
+    expect(outcome.value.writes[0]).toMatchObject({ id: "w1", state: "AWAITING_PRE_SIGN" });
+  });
+
+  it("refuses with the payload's userErrors", async () => {
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                { __typename: "UserError", message: "not a member", code: "FORBIDDEN", field: null },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const outcome = await preparePost(client(), {
+      title: null,
+      description: null,
+      content: "B",
+      license,
+    });
+    expect(outcome.kind).toBe("refused");
+    if (outcome.kind !== "refused") return;
+    expect(outcome.errors[0].code).toBe("FORBIDDEN");
+  });
+});
+
+describe("preparePostEdit", () => {
+  it("sends explicit nulls for cleared fields", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: "p1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePostEdit(client(), { id: "p1", title: null, description: null, content: "B" });
+    expect(variables).toEqual({
+      input: { id: "p1", title: null, description: null, content: "B" },
+    });
+  });
+});
+
+describe("prepareComment", () => {
+  it("targets the post and carries the license", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PrepareComment", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c-node",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const outcome = await prepareComment(client(), {
+      target: "p1",
+      content: "First!",
+      license: { attributionRequired: false, oversight: "CONDITIONAL" },
+    });
+    expect(outcome.kind).toBe("success");
+    expect(variables).toEqual({
+      input: {
+        target: "p1",
+        content: "First!",
+        license: { attributionRequired: false, oversight: "CONDITIONAL" },
+      },
+    });
+  });
+});

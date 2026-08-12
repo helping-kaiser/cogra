@@ -74,9 +74,9 @@ function link(overrides: {
     revokedAt: overrides.revokedAt ?? null,
     applications: {
       __typename: "ApplicationConnection",
-      nodes: (overrides.applications ?? []).map((fields) => ({
-        __typename: "Application",
-        ...fields,
+      edges: (overrides.applications ?? []).map((fields) => ({
+        __typename: "ApplicationEdge",
+        node: { __typename: "Application", ...fields },
       })),
     },
   };
@@ -89,7 +89,10 @@ function linksHandler(links: ReturnType<typeof link>[]) {
         me: {
           __typename: "User",
           id: "u1",
-          inviteLinks: { __typename: "InviteLinkConnection", nodes: links },
+          inviteLinks: {
+            __typename: "InviteLinkConnection",
+            edges: links.map((node) => ({ __typename: "InviteLinkEdge", node })),
+          },
         },
       },
     }),
@@ -165,7 +168,9 @@ describe("InvitesView", () => {
               id: "u1",
               inviteLinks: {
                 __typename: "InviteLinkConnection",
-                nodes: created ? [link()] : [],
+                edges: created
+                  ? [{ __typename: "InviteLinkEdge", node: link() }]
+                  : [],
               },
             },
           },

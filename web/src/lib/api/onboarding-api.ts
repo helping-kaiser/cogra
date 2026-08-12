@@ -143,8 +143,9 @@ export async function fetchApplicationStatus(
   if (fetched.kind !== "success") return fetched;
   const me = fetched.value;
   const staged =
-    me.stagedWrites?.nodes.find((n) => n.family === "REGISTRATION" && n.state !== "EXPIRED") ??
-    null;
+    me.stagedWrites?.edges
+      .map((edge) => edge.node)
+      .find((n) => n.family === "REGISTRATION" && n.state !== "EXPIRED") ?? null;
   return success({
     accountState: me.accountState,
     actorPubkey: me.actorPubkey ?? null,
