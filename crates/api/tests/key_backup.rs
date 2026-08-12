@@ -1,5 +1,5 @@
 //! The key-backup surface through the API (auth.md "Key recovery"):
-//! upload, the 4 KiB cap, replacement, and viewer-scoped retrieval.
+//! upload, the size cap, replacement, and viewer-scoped retrieval.
 //! Requires a live Postgres (`make up`).
 
 use std::sync::Arc;

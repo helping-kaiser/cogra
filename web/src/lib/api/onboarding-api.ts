@@ -20,13 +20,12 @@ import {
 } from "@/__generated__/graphql";
 import {
   fetchOutcome,
-  payload,
   payloadOutcome,
   success,
-  unauthenticated,
+  viewerField,
   type Outcome,
 } from "./outcome";
-import type { StagedWriteView } from "./writes-api";
+import { toView, type StagedWriteView } from "./writes-api";
 import { sessionAuthOf } from "./auth-api";
 import type { SessionAuth } from "@/lib/session/token-store";
 
@@ -140,28 +139,19 @@ export function applyWithInvite(
 export async function fetchApplicationStatus(
   client: ApolloClient,
 ): Promise<Outcome<ApplicationStatus>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: ApplicationStatusDocument, fetchPolicy: "network-only" }),
+  const fetched = await viewerField(
+    () => client.query({ query: ApplicationStatusDocument, fetchPolicy: "network-only" }),
+    (data) => data.me,
   );
   if (fetched.kind !== "success") return fetched;
-  const me = fetched.value.me;
-  if (me === null) return unauthenticated();
+  const me = fetched.value;
   const staged =
     me.stagedWrites?.nodes.find((n) => n.family === "REGISTRATION" && n.state !== "EXPIRED") ??
     null;
-  return payload([], {
+  return success({
     accountState: me.accountState,
     actorPubkey: me.actorPubkey ?? null,
     application: me.application,
-    stagedRegistration:
-      staged === null
-        ? null
-        : {
-            id: staged.id,
-            state: staged.state,
-            family: staged.family,
-            canonicalProposal: staged.canonicalProposal,
-            verifiedAct: staged.verifiedAct,
-          },
+    stagedRegistration: staged === null ? null : toView(staged),
   });
 }

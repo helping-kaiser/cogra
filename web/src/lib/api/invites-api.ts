@@ -14,10 +14,9 @@ import {
   type InviteLinksQuery,
 } from "@/__generated__/graphql";
 import {
-  fetchOutcome,
   payloadOutcome,
   success,
-  unauthenticated,
+  viewerField,
   type Outcome,
 } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
@@ -40,14 +39,16 @@ export type CreateInviteLinkFields = {
 export async function fetchInviteLinks(
   client: ApolloClient,
 ): Promise<Outcome<readonly InviteLinkView[]>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({ query: InviteLinksDocument, fetchPolicy: "network-only" }),
+  const links = await viewerField(
+    () => client.query({ query: InviteLinksDocument, fetchPolicy: "network-only" }),
+    (data) => data.me?.inviteLinks,
   );
-  if (fetched.kind !== "success") return fetched;
-  const links = fetched.value.me?.inviteLinks;
-  if (links === null || links === undefined) return unauthenticated();
-  return success(links.nodes);
+  if (links.kind !== "success") return links;
+  return success(links.value.nodes);
 }
+
+/** The operational default lifetime of a fresh link; links are revocable any time. */
+export const LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function createInviteLink(
   client: ApolloClient,

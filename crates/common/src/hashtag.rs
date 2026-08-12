@@ -19,8 +19,6 @@ pub const HASHTAG_NAMESPACE: Uuid = uuid::uuid!("7c844aef-fe5c-4849-90c2-196cbd8
 /// Derives the content-addressed UUID for a canonical hashtag name.
 ///
 /// The caller must pass the canonical form — lowercase, no leading `#`.
-/// The normalization is load-bearing schema, not a UI affordance: it
-/// defines what counts as "the same" hashtag.
 pub fn hashtag_uuid(canonical_name: &str) -> Uuid {
     Uuid::new_v5(&HASHTAG_NAMESPACE, canonical_name.as_bytes())
 }
@@ -41,10 +39,8 @@ mod tests {
 
     #[test]
     fn derivation_is_case_sensitive() {
-        // The caller must pass the canonical (lowercase) form: the v5 hash is
-        // over the raw bytes, so a non-canonical casing derives a *different*
-        // id. This is why normalization is load-bearing schema, not cosmetics —
-        // `Bot-Defense` and `bot-defense` would otherwise be distinct hashtags.
+        // The v5 hash is over the raw bytes, so a non-canonical casing
+        // derives a *different* id.
         assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
     }
 

@@ -15,6 +15,7 @@ import { prepareStance } from "@/lib/api/writes-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { RestoreCard } from "./applicant-status";
@@ -141,24 +142,18 @@ export function MemberStatus({
             </p>
           )}
           <div className="flex gap-3">
-            <button
-              type="button"
-              data-testid="home_reciprocate"
-              onClick={onReciprocate}
-              disabled={signing}
-              className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-            >
+            <Button testId="home_reciprocate" size="sm" onClick={onReciprocate} disabled={signing}>
               Vouch back
-            </button>
-            <button
-              type="button"
-              data-testid="home_reciprocate_skip"
+            </Button>
+            <Button
+              testId="home_reciprocate_skip"
+              variant="outline"
+              size="sm"
               onClick={onSkip}
               disabled={signing}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:opacity-40 dark:border-zinc-700"
             >
               Not now
-            </button>
+            </Button>
           </div>
         </Card>
       )}
@@ -172,15 +167,9 @@ export function MemberStatus({
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {device.pendingCount} signed act(s) waiting to finish their handshake.
           </p>
-          <button
-            type="button"
-            data-testid="home_resume"
-            onClick={onResume}
-            disabled={resuming}
-            className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:opacity-40 dark:border-zinc-700"
-          >
+          <Button testId="home_resume" variant="outline" size="sm" selfStart onClick={onResume} disabled={resuming}>
             Resume
-          </button>
+          </Button>
         </Card>
       )}
     </div>

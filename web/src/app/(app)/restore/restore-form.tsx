@@ -13,6 +13,7 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { restoreActor, type RestoreResult } from "@/lib/identity/restorer";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
+import { Button } from "@/lib/ui/button";
 
 function restoreMessage(result: RestoreResult): string | null {
   switch (result.kind) {
@@ -121,14 +122,9 @@ export function RestoreForm({
             Your key is back on this browser.
           </p>
         )}
-        <button
-          type="submit"
-          data-testid="restore_submit"
-          disabled={!canSubmit}
-          className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-        >
+        <Button type="submit" testId="restore_submit" disabled={!canSubmit}>
           Restore
-        </button>
+        </Button>
       </form>
     </main>
   );

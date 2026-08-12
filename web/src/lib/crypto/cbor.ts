@@ -7,7 +7,7 @@
 
 import { concat } from "./bytes";
 
-const U64_MAX = 0xffff_ffff_ffff_ffffn;
+export const U64_MAX = 0xffff_ffff_ffff_ffffn;
 
 /** A decode failure over the deterministic subset. */
 export class CborDecodeError extends Error {
