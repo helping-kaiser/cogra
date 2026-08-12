@@ -1,8 +1,5 @@
 // Build-specific bindings the shell owns (android/CLAUDE.md "Module
-// discipline"): the GraphQL endpoint comes from the build config
-// (`cogra.graphqlUrl`), and the platform-flavored values core:domain
-// declares as qualifiers — the app-lifetime scope, the web origin —
-// are provided here.
+// discipline").
 
 package com.cogra.app.di
 
