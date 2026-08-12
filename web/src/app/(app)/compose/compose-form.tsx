@@ -19,6 +19,7 @@ import {
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
+import { PageHeader } from "@/lib/ui/page-header";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -124,10 +125,30 @@ function ComposeFormInner() {
     }
   };
 
-  if (loading) return <main className="p-6">Loading…</main>;
+  // Leaving is plain back navigation, no discard confirm — the Android
+  // composer's behavior. A post that no longer resolves backs to the
+  // feed instead of the dead detail page.
+  const header = (
+    <PageHeader
+      title={editingId === null ? "New post" : "Edit post"}
+      backHref={editingId === null || notFound ? "/feed" : `/posts/${editingId}`}
+      backLabel={editingId === null || notFound ? "Back to feed" : "Back to post"}
+      backTestId="compose-back"
+    />
+  );
+
+  if (loading) {
+    return (
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+        {header}
+        <p>Loading…</p>
+      </main>
+    );
+  }
   if (notFound) {
     return (
-      <main className="p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+        {header}
         <p role="alert" data-testid="compose-not-found">
           This post no longer resolves.
         </p>
@@ -137,9 +158,7 @@ function ComposeFormInner() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
-      <h1 className="text-2xl font-semibold">
-        {editingId === null ? "New post" : "Edit post"}
-      </h1>
+      {header}
       <TextField label="Title" value={title} onChange={setTitle} testId="compose-title" />
       <TextField
         label="Description"

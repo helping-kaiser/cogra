@@ -48,6 +48,33 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams();
   });
 
+  it("backs to the feed when composing fresh", () => {
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(screen.getByTestId("compose-back")).toHaveAttribute("href", "/feed");
+    expect(screen.getByRole("link", { name: "Back to feed" })).toBeInTheDocument();
+  });
+
+  it("backs to the post when editing", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(screen.getByRole("link", { name: "Back to post" })).toHaveAttribute(
+      "href",
+      "/posts/p1",
+    );
+    // A post that no longer resolves backs to the feed instead.
+    expect(await screen.findByTestId("compose-not-found")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to feed" })).toHaveAttribute("href", "/feed");
+  });
+
   it("signs a new post and returns to the feed", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(

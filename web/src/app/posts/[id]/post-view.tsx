@@ -16,11 +16,12 @@ import {
   type CommentView,
   type PostDetail,
 } from "@/lib/api/content-api";
-import { useActiveAccountId } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function PostView({ postId }: { postId: string }) {
@@ -28,6 +29,7 @@ export function PostView({ postId }: { postId: string }) {
   const guard = useAuthGuard();
   const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
+  const phase = useAuthPhase();
 
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [comments, setComments] = useState<readonly CommentView[]>([]);
@@ -116,10 +118,39 @@ export function PostView({ postId }: { postId: string }) {
     }
   };
 
-  if (loading) return <main className="p-6">Loading…</main>;
+  // The header rides every branch — a dead end (not found, transport
+  // fault) is exactly where the back arrow matters most.
+  const header = (isCreator: boolean) => (
+    <PageHeader
+      backHref="/feed"
+      backLabel="Back to feed"
+      backTestId="post-back"
+      action={
+        isCreator ? (
+          <Link
+            href={`/compose?post=${postId}`}
+            data-testid="post-edit"
+            className={buttonClassName({ variant: "outline", size: "sm" })}
+          >
+            Edit
+          </Link>
+        ) : undefined
+      }
+    />
+  );
+
+  if (loading) {
+    return (
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+        {header(false)}
+        <p>Loading…</p>
+      </main>
+    );
+  }
   if (notFound) {
     return (
-      <main className="p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+        {header(false)}
         <p role="alert" data-testid="post-not-found">
           This post no longer resolves.
         </p>
@@ -128,36 +159,26 @@ export function PostView({ postId }: { postId: string }) {
   }
   if (detail === null) {
     return (
-      <main className="p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+        {header(false)}
         <TransportError testId="post-transport-error" />
       </main>
     );
   }
 
   const post = detail.post;
-  const isCreator = viewerId !== null && post.author?.id === viewerId;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          {post.title.value && (
-            <h1 className="text-2xl font-semibold" data-testid="post-title">
-              {post.title.value}
-            </h1>
-          )}
-          {post.description.value && (
-            <p className="text-sm text-zinc-600 dark:text-zinc-300">{post.description.value}</p>
-          )}
-        </div>
-        {isCreator && (
-          <Link
-            href={`/compose?post=${post.id}`}
-            data-testid="post-edit"
-            className={buttonClassName({ variant: "outline", size: "sm" })}
-          >
-            Edit
-          </Link>
+      {header(viewerId !== null && post.author?.id === viewerId)}
+      <div>
+        {post.title.value && (
+          <h1 className="text-2xl font-semibold" data-testid="post-title">
+            {post.title.value}
+          </h1>
+        )}
+        {post.description.value && (
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">{post.description.value}</p>
         )}
       </div>
       <p className="whitespace-pre-wrap" data-testid="post-body">
@@ -189,68 +210,79 @@ export function PostView({ postId }: { postId: string }) {
           Load more
         </Button>
       )}
-      <div className="flex flex-col gap-2">
-        <label htmlFor="comment-draft" className="text-sm font-medium">
-          Add a comment
-        </label>
-        <textarea
-          id="comment-draft"
-          data-testid="comment-draft"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          rows={3}
-          className="rounded-md border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
-        />
-        <fieldset className="flex flex-wrap items-center gap-3 text-sm" data-testid="comment-license">
-          <legend className="sr-only">License</legend>
-          <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              data-testid="comment-license-attribution"
-              checked={attributionRequired}
-              onChange={(event) => setAttributionRequired(event.target.checked)}
-            />
-            Require attribution
-          </label>
-          <span aria-hidden>·</span>
-          <div className="flex gap-2" role="radiogroup" aria-label="AI provenance">
-            {(["NONE", "CONDITIONAL", "FULL"] as const).map((value) => (
-              <label key={value} className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="comment-oversight"
-                  data-testid={`comment-oversight-${value.toLowerCase()}`}
-                  checked={oversight === value}
-                  onChange={() => setOversight(value)}
-                />
-                {value === "NONE" ? "No AI" : value === "CONDITIONAL" ? "AI-assisted" : "AI-generated"}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        {refusedMessage && (
-          <p role="alert" data-testid="comment-refused" className="text-sm text-red-600">
-            {refusedMessage}
-          </p>
-        )}
-        {signIncomplete && (
-          <p role="alert" data-testid="comment-signing-failed" className="text-sm text-red-600">
-            Signing did not finish — the write stays pending.
-          </p>
-        )}
-        {commentSigned && (
-          <p data-testid="comment-signed" className="text-sm text-green-700 dark:text-green-400">
-            Signed — your comment appears once its record lands. Refresh to check.
-          </p>
-        )}
-        <Button
-          testId="comment-submit"
-          onClick={() => void onSubmitComment()}
-          disabled={submitting || draft.trim() === ""}
+      {phase === "signedOut" && (
+        <Link
+          href="/"
+          data-testid="comment-signin"
+          className="self-start text-sm text-zinc-600 underline dark:text-zinc-400"
         >
-          Sign comment
-        </Button>
-      </div>
+          Sign in or join to comment
+        </Link>
+      )}
+      {phase === "signedIn" && (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="comment-draft" className="text-sm font-medium">
+            Add a comment
+          </label>
+          <textarea
+            id="comment-draft"
+            data-testid="comment-draft"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            rows={3}
+            className="rounded-md border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          <fieldset className="flex flex-wrap items-center gap-3 text-sm" data-testid="comment-license">
+            <legend className="sr-only">License</legend>
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                data-testid="comment-license-attribution"
+                checked={attributionRequired}
+                onChange={(event) => setAttributionRequired(event.target.checked)}
+              />
+              Require attribution
+            </label>
+            <span aria-hidden>·</span>
+            <div className="flex gap-2" role="radiogroup" aria-label="AI provenance">
+              {(["NONE", "CONDITIONAL", "FULL"] as const).map((value) => (
+                <label key={value} className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="comment-oversight"
+                    data-testid={`comment-oversight-${value.toLowerCase()}`}
+                    checked={oversight === value}
+                    onChange={() => setOversight(value)}
+                  />
+                  {value === "NONE" ? "No AI" : value === "CONDITIONAL" ? "AI-assisted" : "AI-generated"}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {refusedMessage && (
+            <p role="alert" data-testid="comment-refused" className="text-sm text-red-600">
+              {refusedMessage}
+            </p>
+          )}
+          {signIncomplete && (
+            <p role="alert" data-testid="comment-signing-failed" className="text-sm text-red-600">
+              Signing did not finish — the write stays pending.
+            </p>
+          )}
+          {commentSigned && (
+            <p data-testid="comment-signed" className="text-sm text-green-700 dark:text-green-400">
+              Signed — your comment appears once its record lands. Refresh to check.
+            </p>
+          )}
+          <Button
+            testId="comment-submit"
+            onClick={() => void onSubmitComment()}
+            disabled={submitting || draft.trim() === ""}
+          >
+            Sign comment
+          </Button>
+        </div>
+      )}
     </main>
   );
 }

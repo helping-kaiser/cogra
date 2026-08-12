@@ -102,6 +102,41 @@ Part of the bar from day one, never retrofitted: every screen
 lands with its Compose semantics — content descriptions, roles,
 touch-target sizes — alongside its UI tests.
 
+## Screens
+
+The destination map — type-safe destinations, one NavHost
+(`CograNavGraph.kt`). Auth drives navigation: a phase flip lands
+on the new phase's root — `InviteEntry` signed out, `Home` signed
+in — with a cleared stack, so which stack reaches a destination is
+its access gate. Every inner screen carries a top-bar back arrow
+over `navigateUp()`.
+
+| Destination | Stack | Web counterpart ([web.md "Routes"](web.md#routes)) |
+|---|---|---|
+| `InviteEntry` (start; `/join` App Links land here) | signed out | `/` front door + `/join/<link-id>` |
+| `Apply(inviteId)` | signed out | the apply step of `/join/<link-id>` |
+| `Login` | signed out | `/login` |
+| `PasswordReset` | signed out | `/reset` |
+| `Home` (signed-in root) | signed in | `/` signed in |
+| `Feed` | signed in | `/feed` |
+| `PostDetail(postId)` | signed in | `/posts/<id>` |
+| `ComposePost(postId?)` | signed in | `/compose` (+`?post=<id>`) |
+| `Invites` | signed in | `/invites` |
+| `Settings` | signed in | `/settings` |
+| `KeyCeremony` | signed in | `/key` |
+| `Restore` | signed in | `/restore` |
+
+The read surfaces are public on every client — accounts gate
+participation, never viewing
+([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
+The web already serves guests; the app's guest read shell —
+`Feed` and `PostDetail` on the signed-out stack, write
+affordances swapped for join entries — is a staged slice-2
+follow-up ([roadmap.md](roadmap.md#slice-2--content)). No guest
+session exists anywhere: an anonymous read simply carries no
+token. Email-carried surfaces (`/verify`, the `/reset?token=`
+arrival) have no destinations: those links open in the browser.
+
 ## Module layout
 
 Gradle modules mirror the backend's crate discipline — every module

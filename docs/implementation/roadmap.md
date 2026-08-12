@@ -179,9 +179,11 @@ write needs a landed, funded actor with a device-held key.
   doesn't block on the ranker.
 - Text-first cut: posts (title/description/body) and comments,
   create and edit. Media upload (blob storage is new
-  infrastructure), topic tags, references, and `actAs` are staged
-  behind it as follow-ups, and the search index arrives with a
-  search surface — api-spec.md keeps the full target contract.
+  infrastructure), topic tags, references, `actAs`, and the app's
+  guest read shell ([android.md "Screens"](android.md#screens))
+  are staged behind it as follow-ups, and the search index arrives
+  with a search surface — api-spec.md keeps the full target
+  contract.
 - **Hand test:** post from the phone, read it back.
 - **Surfaces:** backend, API, Android, web.
 
