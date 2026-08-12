@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
@@ -53,6 +53,10 @@ function storeFor(accountId: string) {
 }
 
 describe("PostView", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("renders the post with its thread", async () => {
     server.use(
       graphql.query("PostDetail", () =>
@@ -151,7 +155,31 @@ describe("PostView", () => {
     server.use(
       graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
     );
-    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
     expect(await screen.findByTestId("comment-submit")).toBeDisabled();
+  });
+
+  it("reads without a session and swaps the comment box for the sign-in entry", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
+    expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
+    expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/");
+  });
+
+  it("backs to the feed from every branch", async () => {
+    server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })));
+    renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back to feed" })).toHaveAttribute("href", "/feed");
   });
 });

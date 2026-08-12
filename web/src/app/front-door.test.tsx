@@ -39,4 +39,9 @@ describe("FrontDoor", () => {
     expect(screen.getByTestId("invite_continue")).toBeDisabled();
     expect(screen.getByTestId("invite_login")).toHaveAttribute("href", "/login");
   });
+
+  it("offers anonymous browsing before any commitment", () => {
+    renderWithProviders(<FrontDoor />);
+    expect(screen.getByTestId("front_door_browse")).toHaveAttribute("href", "/feed");
+  });
 });

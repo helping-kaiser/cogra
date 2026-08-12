@@ -1,8 +1,9 @@
 "use client";
 
-// The signed-out front door: paste an invite (auth.md "Link URLs") or
-// sign in. The /join route does the actual check; the door only finds
-// the id.
+// The signed-out front door: paste an invite (auth.md "Link URLs"),
+// sign in, or browse the public feed without an account (web.md
+// "Routes"). The /join route does the actual check; the door only
+// finds the id.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,6 +67,13 @@ export function FrontDoor() {
         className="text-sm text-zinc-600 underline dark:text-zinc-400"
       >
         Already a member? Sign in
+      </Link>
+      <Link
+        href="/feed"
+        data-testid="front_door_browse"
+        className="text-sm text-zinc-600 underline dark:text-zinc-400"
+      >
+        Just looking? Browse the feed →
       </Link>
     </main>
   );
