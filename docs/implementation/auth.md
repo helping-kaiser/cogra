@@ -355,6 +355,16 @@ the prompt is a device-local preference, never account state: the
 prompt is an offer, and it legitimately reappears on a new device
 until the pair is complete.
 
+**Reads may repair, never decide.** The poll's re-staging and the
+reciprocation latch are writes inside query resolvers — a
+deliberate deviation from GraphQL's rule that non-mutation fields
+stay side-effect-free. Both writes are idempotent, serialized on
+the application row, and convergent: they push stored state toward
+what the approval or the permanent back-edge already committed —
+a read never creates new intent. A failed repair only logs; the
+next poll retries, and failing the read would turn a transient
+repair problem into a fetch error.
+
 **Reaper.** A periodic background job deletes never-verified
 accounts past their 24-hour bound — actor row, credentials,
 application, any key backup — freeing the handle and email.
