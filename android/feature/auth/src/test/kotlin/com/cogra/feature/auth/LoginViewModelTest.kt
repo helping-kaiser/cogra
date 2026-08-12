@@ -9,14 +9,13 @@ import com.cogra.domain.UserError
 import com.cogra.domain.identity.LogIn
 import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.repo.SessionRepository
-import com.cogra.domain.store.TokenStore
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -24,17 +23,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
-class InMemoryTokens : TokenStore {
-    override val tokens = MutableStateFlow<AuthTokens?>(null)
-    override suspend fun current(): AuthTokens? = tokens.value
-    override suspend fun save(tokens: AuthTokens) {
-        this.tokens.value = tokens
-    }
-    override suspend fun clear() {
-        tokens.value = null
-    }
-}
 
 private class ScriptedSessions : SessionRepository {
     var logInOutcome: Outcome<LoginGrant> =
@@ -57,7 +45,7 @@ class LoginViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val sessions = ScriptedSessions()
-    private val tokens = InMemoryTokens()
+    private val tokens = FakeTokenStore()
     private val identity = FakeIdentityStore()
     private val notices = SecurityNotices()
 
