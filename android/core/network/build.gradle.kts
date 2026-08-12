@@ -28,6 +28,7 @@ apollo {
         // The API's custom scalars: ids stay strings (the wire form),
         // Dimension is a bounded Double, DateTime parses to Instant.
         mapScalar("UUID", "kotlin.String", "com.apollographql.apollo.api.StringAdapter")
+        mapScalar("RecordId", "kotlin.String", "com.apollographql.apollo.api.StringAdapter")
         mapScalar("Dimension", "kotlin.Double", "com.apollographql.apollo.api.DoubleAdapter")
         mapScalar("DateTime", "java.time.Instant", "com.cogra.network.InstantAdapter")
     }

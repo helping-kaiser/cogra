@@ -1,0 +1,31 @@
+<resources>
+    <string name="content_feed_title">Feed</string>
+    <string name="content_feed_empty">Nothing here yet — write the first post.</string>
+    <string name="content_feed_compose">Write a post</string>
+    <string name="content_feed_load_more">Load more</string>
+    <string name="content_compose_title">New post</string>
+    <string name="content_compose_edit_title">Edit post</string>
+    <string name="content_field_title">Title</string>
+    <string name="content_field_description">Description</string>
+    <string name="content_field_body">What do you want to publish?</string>
+    <string name="content_license_heading">License</string>
+    <string name="content_license_attribution">Require attribution</string>
+    <string name="content_license_oversight_none">No AI</string>
+    <string name="content_license_oversight_conditional">AI-assisted</string>
+    <string name="content_license_oversight_full">AI-generated</string>
+    <string name="content_submit">Sign and publish</string>
+    <string name="content_save_edit">Sign the edit</string>
+    <string name="content_post_saved">Signed — landing on the graph</string>
+    <string name="content_comment_hint">Add a comment</string>
+    <string name="content_comment_submit">Sign comment</string>
+    <string name="content_comments_heading">Comments</string>
+    <string name="content_comments_empty">No comments yet.</string>
+    <string name="content_edit">Edit</string>
+    <string name="content_error_empty_body">The post needs a body.</string>
+    <string name="content_error_refused">The server refused this write.</string>
+    <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
+    <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
+    <string name="content_error_not_found">This post no longer resolves.</string>
+    <string name="content_retry">Retry</string>
+    <string name="content_back">Back</string>
+</resources>

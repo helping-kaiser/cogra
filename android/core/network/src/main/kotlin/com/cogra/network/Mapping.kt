@@ -19,9 +19,16 @@ import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Operation
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.ApplicationView
+import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.FieldStatus
+import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ModeratedField
+import com.cogra.domain.OversightChoice
+import com.cogra.domain.PostView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
@@ -29,9 +36,13 @@ import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
 import com.cogra.network.graphql.fragment.ApplicationFields
+import com.cogra.network.graphql.fragment.CommentFields
+import com.cogra.network.graphql.fragment.PostFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
+import com.cogra.network.graphql.type.LicenseInput
+import com.cogra.network.graphql.type.Oversight
 import com.cogra.network.graphql.type.RecordFamily
 import com.cogra.network.graphql.type.StagedWriteState
 import java.util.Base64
@@ -144,4 +155,40 @@ internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
     keyAttached = keyAttached,
     approvedAt = approvedAt,
     landedAt = landedAt,
+)
+
+/** An unknown status hides the value, like REDACTED. */
+internal fun com.cogra.network.graphql.type.FieldModerationStatus.toDomain(): FieldStatus =
+    runCatching { FieldStatus.valueOf(rawValue) }.getOrDefault(FieldStatus.UNKNOWN)
+
+internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())
+internal fun PostFields.Description.toDomain() = ModeratedField(value, status.toDomain())
+internal fun PostFields.Content.toDomain() = ModeratedField(value, status.toDomain())
+internal fun CommentFields.Content.toDomain() = ModeratedField(value, status.toDomain())
+
+internal fun PostFields.toDomain(): PostView = PostView(
+    id = id,
+    title = title.toDomain(),
+    description = description.toDomain(),
+    content = content.toDomain(),
+    author = author?.let { ActorRef(it.id, it.handle) },
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+internal fun CommentFields.toDomain(): CommentView = CommentView(
+    id = id,
+    content = content.toDomain(),
+    author = author?.let { ActorRef(it.id, it.handle) },
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
+    attributionRequired = attributionRequired,
+    oversight = when (oversight) {
+        OversightChoice.NONE -> Oversight.NONE
+        OversightChoice.CONDITIONAL -> Oversight.CONDITIONAL
+        OversightChoice.FULL -> Oversight.FULL
+    },
 )

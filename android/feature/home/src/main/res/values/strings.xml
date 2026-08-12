@@ -17,6 +17,7 @@
     <string name="home_open_invites">Invites</string>
     <string name="home_invites_locked">Locked until your inviter approves you</string>
     <string name="home_invites_locked_message">Inviting unlocks once your inviter approves you.</string>
+    <string name="home_open_feed">Feed</string>
     <string name="home_open_settings">Settings</string>
     <string name="stance_p_directed">Directed weight</string>
     <string name="stance_p_interest">Interest weight</string>

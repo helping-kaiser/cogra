@@ -23,6 +23,7 @@ import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
 import com.cogra.app.HiltTestActivity
 import com.cogra.app.di.ScriptedAccountRepository
+import com.cogra.app.di.ScriptedContentRepository
 import com.cogra.app.di.ScriptedOnboardingRepository
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
@@ -66,6 +67,8 @@ class CograNavGraphTest {
     @Inject lateinit var account: ScriptedAccountRepository
 
     @Inject lateinit var onboarding: ScriptedOnboardingRepository
+
+    @Inject lateinit var content: ScriptedContentRepository
 
     @Inject lateinit var notices: SecurityNotices
 
@@ -159,6 +162,45 @@ class CograNavGraphTest {
         compose.waitForIdle()
         assertThat(compose.onAllNodesWithTag("storage_notice").fetchSemanticsNodes()).isEmpty()
         assertThat(storageHealth.lost.value).isFalse()
+    }
+
+    @Test
+    fun theFeedOpensAPostAndItsThread() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost("p1"),
+            comments = com.cogra.domain.Page(
+                listOf(com.cogra.domain.testing.testComment("c1")),
+                endCursor = null,
+                hasNextPage = false,
+            ),
+        )
+        render()
+        waitForTag("home_feed")
+        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+
+        compose.onNodeWithTag("feed_post_p1").performClick()
+        waitForTag("detail_comment_c1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+    }
+
+    @Test
+    fun theComposerOpensFromTheFeed() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("home_feed")
+        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
+        waitForTag("feed_compose")
+        compose.onNodeWithTag("feed_compose").performClick()
+        waitForTag("compose_body")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
     }
 
     @Test
