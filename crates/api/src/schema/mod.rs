@@ -59,9 +59,7 @@ pub struct QueryBudgets {
 impl QueryBudgets {
     /// The production posture: budgets sized for the real clients'
     /// queries, introspection off — the schema is already public as
-    /// the checked-in `schema.graphql`, and admitting the
-    /// introspection query would take the dev posture's ~50× looser
-    /// complexity ceiling.
+    /// the checked-in `schema.graphql`.
     pub fn release() -> Self {
         Self {
             depth: 15,

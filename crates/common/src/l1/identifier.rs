@@ -6,10 +6,6 @@
 // deployment's verbatim record-identifier form — the mirror stores it
 // unchanged (data-model.md "The record mirror": the mirror never re-mints
 // identity).
-//
-// Encoding: `addr:<a>`, `prof:<a>`, `name:<s>`, `mint:<act>` with
-// `<act> = act:<author-addr>:<seq>:<family>`. Addresses and Type names are
-// restricted to a URL-safe charset so `:` stays an unambiguous separator.
 
 use std::fmt;
 

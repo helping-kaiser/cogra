@@ -1,17 +1,7 @@
 //! Instance bootstrap — the one-shot setup step that brings a CoGra
-//! instance into existence (network.md §2, architecture.md "Genesis
-//! bootstrap"). Not a request path; run once, by hand, when an instance
-//! is created:
-//!
-//! 1. applies the store schema;
-//! 2. seeds the CoGra-side half — operator + system-actor service rows
-//!    with custodied keys, the reserved Types, the parameter carrier;
-//! 3. lands the L1-side genesis sequence against the stand-in — the
-//!    cast's Registrations, the endorsement Opinions, The Charter, the
-//!    genesis role Tag — and ingests the genesis epoch into the mirror.
-//!
-//! Re-running is safe: a fully-bootstrapped instance writes nothing; a
-//! half-failed run completes its missing half (api::bootstrap).
+//! instance into existence (api::bootstrap; architecture.md "Genesis
+//! bootstrap"). Not a request path; run once, by hand. Re-running is
+//! safe: a half-failed run completes its missing half.
 
 use anyhow::Context;
 use api::bootstrap::{BootstrapOutcome, GenesisInput, run};
@@ -80,10 +70,7 @@ async fn main() -> anyhow::Result<()> {
         println!("  Genesis Moderator : {id} (@{handle}, L0 address {address})");
     }
 
-    // The operator's way in (bootstrap.rs `ensure_operator_login`): the
-    // genesis account gets login credentials and its custodied seed
-    // sealed as a standard key-backup blob; from here the operator uses
-    // only product flows — sign in, restore with the code.
+    // The operator's way in (bootstrap.rs `ensure_operator_login`).
     let email = env_or("GENESIS_EMAIL", "genesis@cogra.local");
     let password = env_or("GENESIS_PASSWORD", "genesis-dev-password");
     let login = api::bootstrap::ensure_operator_login(&pool, &handle, &email, &password).await?;

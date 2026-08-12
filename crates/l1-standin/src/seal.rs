@@ -112,9 +112,7 @@ pub(crate) async fn seal(
     }
 
     // Key consistency across the author's history needs no check of its
-    // own: the address derives from the key, so a key passing the
-    // address binding above can only be the key every earlier act of
-    // this author passed it with.
+    // own: the address derives from the key, so the binding above pins it.
 
     // Host additions: fresh domain-separated salts meeting the entropy
     // floor, binding + concealing commitments, the host seal.

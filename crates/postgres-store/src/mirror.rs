@@ -70,10 +70,8 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
                 .copied();
             let (domain, mask, tier) = match spec {
                 Some(s) => (s.domain.as_str(), s.mask, s.tier.as_str()),
-                // Unreachable for census-valid packages; keep the append
-                // total rather than dropping a published record — but a
-                // fabricated census row is exactly the divergence the
-                // mirror contract forbids leaving unmarked.
+                // Unreachable for census-valid packages; log the divergence
+                // loudly rather than drop a published record.
                 None => {
                     tracing::error!(
                         record = %record.act_id,
@@ -227,9 +225,8 @@ pub async fn has_opinion_toward(
     .await?)
 }
 
-/// Wipes the mirror and resets the cursor. The mirror is a rebuildable
-/// projection — this is the documented recovery path (re-ingest from the
-/// published sequence), used by the dev CLI's rebuild command and tests.
+/// Wipes the mirror and resets the cursor; used by the dev CLI's rebuild
+/// command and tests (re-ingest from the published sequence).
 pub async fn reset(pool: &PgPool) -> Result<(), MirrorError> {
     let mut tx = pool.begin().await?;
     sqlx::query!("DELETE FROM mirror_record_legs")
