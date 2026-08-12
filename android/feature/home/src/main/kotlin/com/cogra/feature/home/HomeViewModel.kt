@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
+import com.cogra.domain.extractInviteId
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.WriteRepository
@@ -59,8 +61,8 @@ data class HomeUiState(
     val huskWarning: Boolean = false,
     /** The first-login prompt (auth.md "Reciprocation is the joiner's own act"). */
     val reciprocationTarget: ActorRef? = null,
-    val pDirected: Double = 0.1,
-    val pInterest: Double = 0.1,
+    val pDirected: Double = DEFAULT_STANCE,
+    val pInterest: Double = DEFAULT_STANCE,
     val signing: Boolean = false,
     val reciprocated: Boolean = false,
     val signingFailed: Boolean = false,
@@ -304,14 +306,5 @@ class HomeViewModel @Inject constructor(
 
     fun onActorRestoredShown() {
         _state.update { it.copy(actorRestored = false) }
-    }
-
-    private companion object {
-        val INVITE_ID = Regex(
-            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-        )
-
-        /** Accepts the full URL or the bare id, like the invite entry. */
-        fun extractInviteId(input: String): String? = INVITE_ID.find(input.trim())?.value
     }
 }

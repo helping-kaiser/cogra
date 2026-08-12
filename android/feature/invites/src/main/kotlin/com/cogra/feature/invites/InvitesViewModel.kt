@@ -2,6 +2,7 @@ package com.cogra.feature.invites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
@@ -25,8 +26,8 @@ data class InvitesUiState(
     val links: List<InviteLinkInfo> = emptyList(),
     val creating: Boolean = false,
     val singleUse: Boolean = false,
-    val prefillPDirected: Double = 0.1,
-    val prefillPInterest: Double = 0.1,
+    val prefillPDirected: Double = DEFAULT_STANCE,
+    val prefillPInterest: Double = DEFAULT_STANCE,
     /** The application currently being approved, if any. */
     val approvingId: String? = null,
     val error: ErrorCode? = null,
@@ -61,6 +62,11 @@ class InvitesViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(InvitesUiState())
     val state = _state.asStateFlow()
+
+    private companion object {
+        /** The operational default; links are revocable any time. */
+        const val LINK_LIFETIME_DAYS = 7L
+    }
 
     init {
         refresh()
@@ -106,8 +112,7 @@ class InvitesViewModel @Inject constructor(
         _state.update { it.copy(creating = true, error = null, transportFailed = false) }
         viewModelScope.launch {
             val outcome = account.createInviteLink(
-                // The operational default; links are revocable any time.
-                expiresAt = Instant.now().plus(7, ChronoUnit.DAYS),
+                expiresAt = Instant.now().plus(LINK_LIFETIME_DAYS, ChronoUnit.DAYS),
                 prefillPDirected = _state.value.prefillPDirected,
                 prefillPInterest = _state.value.prefillPInterest,
                 singleUse = _state.value.singleUse,

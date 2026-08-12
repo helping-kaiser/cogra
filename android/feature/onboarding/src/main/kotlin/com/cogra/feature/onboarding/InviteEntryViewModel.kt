@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.Outcome
+import com.cogra.domain.extractInviteId
 import com.cogra.domain.repo.OnboardingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -51,7 +52,7 @@ class InviteEntryViewModel @Inject constructor(
     }
 
     fun onCheck() {
-        val id = extractId(_state.value.input) ?: run {
+        val id = extractInviteId(_state.value.input) ?: run {
             _state.update { it.copy(malformed = true) }
             return
         }
@@ -68,14 +69,5 @@ class InviteEntryViewModel @Inject constructor(
                 is Outcome.Failed -> _state.update { it.copy(inProgress = false, transportFailed = true) }
             }
         }
-    }
-
-    companion object {
-        private val UUID_PATTERN =
-            Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-
-        /** The last UUID in the input — handles `/join/<id>` URLs and bare ids. */
-        fun extractId(input: String): String? =
-            UUID_PATTERN.findAll(input.trim()).lastOrNull()?.value?.lowercase()
     }
 }

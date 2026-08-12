@@ -103,15 +103,6 @@ class OnboardingViewModelsTest {
     }
 
     @Test
-    fun inviteIdsExtractFromUrlsAndBareIds() {
-        val id = "0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1"
-        assertThat(InviteEntryViewModel.extractId("https://cogra.example/join/$id")).isEqualTo(id)
-        assertThat(InviteEntryViewModel.extractId("  $id  ")).isEqualTo(id)
-        assertThat(InviteEntryViewModel.extractId(id.uppercase())).isEqualTo(id)
-        assertThat(InviteEntryViewModel.extractId("no id here")).isNull()
-    }
-
-    @Test
     fun aUsableCheckEnablesContinue() = runTest(dispatcher) {
         val vm = InviteEntryViewModel(onboarding)
         vm.onInputChange("0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1")
