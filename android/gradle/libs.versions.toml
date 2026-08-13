@@ -12,9 +12,12 @@ ksp = "2.3.11"
 
 # SDK levels. minSdk 26 gives a clean Android Keystore story for the
 # encrypted token store; compile/target track the current stable platform.
+# targetSdk 36 is also Play's floor for new apps and updates from
+# 2026-08-31. Raising it moves Robolectric onto the API 36 sandbox,
+# which is why tests launch on Java 21 (AndroidModuleConventionPlugin).
 minSdk = "26"
 compileSdk = "36"
-targetSdk = "35"
+targetSdk = "36"
 
 # AndroidX / Compose
 coreKtx = "1.15.0"
