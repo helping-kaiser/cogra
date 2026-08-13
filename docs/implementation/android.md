@@ -78,7 +78,7 @@ signed-out device never polls and a new session starts clean.
 
 ## Degrade, never crash
 
-Two failure classes the app absorbs instead of dying:
+Three failure classes the app absorbs instead of dying:
 
 - **Unknown server vocabulary.** The server's enums can grow before
   the app updates. Every generated enum maps into the domain with an
@@ -95,6 +95,11 @@ Two failure classes the app absorbs instead of dying:
   the ciphertext left in place in case the failure is transient.
   Either loss sets a persistent mark that the app shell surfaces as a
   one-time dialog: data loss is visible, never silent.
+- **Transport faults never blank loaded content.** A read surface
+  that already holds content keeps showing it when a refresh or
+  page fetch fails; the fault rides a non-blocking banner with a
+  retry. The full-screen transport error is reserved for the
+  nothing-loaded state.
 
 ## Accessibility
 
