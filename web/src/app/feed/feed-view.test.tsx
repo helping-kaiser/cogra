@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -111,5 +111,57 @@ describe("FeedView", () => {
     server.use(graphql.query("Posts", () => HttpResponse.error()));
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-transport-error")).toBeInTheDocument();
+  });
+
+  it("keeps loaded posts readable when a page fetch fails", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("Posts", () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ data: postsPage([post("p1", "First")], "c1", true) })
+          : HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    const banner = await screen.findByTestId("feed-transport-error");
+    expect(banner).toHaveTextContent(/new posts/);
+    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+  });
+
+  it("holds the banner through a failed retry instead of flashing", async () => {
+    server.use(graphql.query("Posts", () => HttpResponse.error()));
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-transport-error");
+    fireEvent.click(screen.getByTestId("feed-retry"));
+    // The flag reflects the last completed fetch: still set the moment
+    // the retry starts, still set once the retry has also failed.
+    expect(screen.getByTestId("feed-transport-error")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("feed-loading")).not.toBeInTheDocument());
+    expect(screen.getByTestId("feed-transport-error")).toBeInTheDocument();
+  });
+
+  it("clears the banner when a later page fetch succeeds", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("Posts", () => {
+        calls += 1;
+        if (calls === 2) return HttpResponse.error();
+        return HttpResponse.json({
+          data:
+            calls === 1
+              ? postsPage([post("p1", "First")], "c1", true)
+              : postsPage([post("p2", "Second")], null, false),
+        });
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-transport-error");
+    fireEvent.click(screen.getByTestId("feed-load-more"));
+    expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+    expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
   });
 });
