@@ -23,7 +23,7 @@ export function PasswordField({
   const [visible, setVisible] = useState(false);
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-label-large">
         {label}
       </label>
       <div className="flex gap-2">
@@ -41,7 +41,7 @@ export function PasswordField({
           data-testid={`${testId}_toggle`}
           aria-label={visible ? "Hide password" : "Show password"}
           onClick={() => setVisible((v) => !v)}
-          className="rounded-md border border-outline px-3 text-sm text-on-surface-variant"
+          className="rounded-md border border-outline px-3 text-label-large text-on-surface-variant"
         >
           {visible ? "Hide" : "Show"}
         </button>

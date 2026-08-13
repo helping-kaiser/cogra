@@ -79,20 +79,20 @@ export function VerifyView() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Email verification</h1>
+      <h1 className="text-headline-small">Email verification</h1>
 
       {state === "verifying" && (
-        <p role="status" data-testid="verify_progress" className="text-sm text-on-surface-variant">
+        <p role="status" data-testid="verify_progress" className="text-body-medium text-on-surface-variant">
           Verifying…
         </p>
       )}
 
       {state === "verified" && (
         <>
-          <p role="status" data-testid="verify_success" className="text-sm">
+          <p role="status" data-testid="verify_success" className="text-body-medium">
             Your email is verified. Your application moves ahead as soon as your inviter approves.
           </p>
-          <Link href="/" data-testid="verify_continue" className="text-sm underline">
+          <Link href="/" data-testid="verify_continue" className="text-body-medium underline">
             Go to CoGra
           </Link>
         </>
@@ -100,7 +100,7 @@ export function VerifyView() {
 
       {(state === "invalid" || state === "missingToken") && (
         <>
-          <p role="alert" data-testid="verify_error" className="text-sm text-error">
+          <p role="alert" data-testid="verify_error" className="text-body-medium text-error">
             This verification link doesn&apos;t work. It may have been used already, expired, or the
             application it belonged to ran out — unverified accounts last 24 hours. Enter your email
             and we&apos;ll send a fresh link; if the account is gone, register again with your invite.
@@ -122,7 +122,7 @@ export function VerifyView() {
               Send a fresh link
             </Button>
             {resent && (
-              <p role="status" data-testid="verify_resent" className="text-sm text-on-surface-variant">
+              <p role="status" data-testid="verify_resent" className="text-body-medium text-on-surface-variant">
                 If that email has a pending application, a fresh link is on its way.
               </p>
             )}
@@ -135,7 +135,7 @@ export function VerifyView() {
           <p
             role="alert"
             data-testid="verify_rate_limited"
-            className="text-sm text-error"
+            className="text-body-medium text-error"
           >
             Too many attempts — wait a moment and try again.
           </p>

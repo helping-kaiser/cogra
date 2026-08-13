@@ -87,14 +87,14 @@ export function HomeShell({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">CoGra</h1>
+      <h1 className="text-headline-small">CoGra</h1>
       {reuseDetectedAt !== null && (
         <div
           role="alert"
           data-testid="security_notice"
-          className="flex flex-col gap-2 rounded-md border border-error bg-error-container p-4 text-sm text-on-error-container"
+          className="flex flex-col gap-2 rounded-md border border-error bg-error-container p-4 text-body-medium text-on-error-container"
         >
-          <p className="font-medium">Security notice</p>
+          <p className="text-title-medium">Security notice</p>
           <p>
             A signed-out session token for your account was re-used on{" "}
             {noticeDate(reuseDetectedAt)} — likely token theft. All sessions were signed out
@@ -104,41 +104,41 @@ export function HomeShell({
             type="button"
             data-testid="security_notice_dismiss"
             onClick={notices.dismiss}
-            className="self-start rounded-md border border-error px-3 py-1 font-medium"
+            className="self-start rounded-md border border-error px-3 py-1 text-label-large"
           >
             Got it
           </button>
         </div>
       )}
       {loading && (
-        <p role="status" data-testid="home_loading" className="text-sm text-on-surface-variant">
+        <p role="status" data-testid="home_loading" className="text-body-medium text-on-surface-variant">
           Loading…
         </p>
       )}
       {me !== null && (
         <>
-          <p data-testid="home_greeting" className="text-lg">
+          <p data-testid="home_greeting" className="text-body-large">
             Hello, @{me.handle}
           </p>
           <nav className="flex gap-4">
             <Link
               href="/feed"
               data-testid="home_feed"
-              className="text-sm text-on-surface-variant underline"
+              className="text-body-medium text-on-surface-variant underline"
             >
               Feed
             </Link>
             <Link
               href="/invites"
               data-testid="home_invites"
-              className="text-sm text-on-surface-variant underline"
+              className="text-body-medium text-on-surface-variant underline"
             >
               Invites
             </Link>
             <Link
               href="/settings"
               data-testid="home_settings"
-              className="text-sm text-on-surface-variant underline"
+              className="text-body-medium text-on-surface-variant underline"
             >
               Settings
             </Link>
@@ -146,7 +146,7 @@ export function HomeShell({
         </>
       )}
       {welcome && (
-        <p role="status" data-testid="home_welcome" className="text-sm">
+        <p role="status" data-testid="home_welcome" className="text-body-medium">
           Welcome — you&apos;re in. Your registration landed.
         </p>
       )}

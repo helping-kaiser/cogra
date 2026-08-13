@@ -73,13 +73,13 @@ export function RestoreForm({
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Restore your key</h1>
-      <p className="text-sm text-on-surface-variant">
+      <h1 className="text-headline-small">Restore your key</h1>
+      <p className="text-body-medium text-on-surface-variant">
         Enter your recovery code to bring your signing key onto this browser.
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1">
-          <label htmlFor="restore-code" className="text-sm font-medium">
+          <label htmlFor="restore-code" className="text-label-large">
             Recovery code
           </label>
           <input
@@ -96,7 +96,7 @@ export function RestoreForm({
             className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
           />
         </div>
-        <label htmlFor="restore-dont-remember" className="flex items-center gap-2 text-sm">
+        <label htmlFor="restore-dont-remember" className="flex items-center gap-2 text-body-medium">
           <input
             id="restore-dont-remember"
             data-testid="restore_dont_remember"
@@ -108,17 +108,17 @@ export function RestoreForm({
           Don&apos;t remember this account on this device
         </label>
         {errorMessage !== null && (
-          <p role="alert" data-testid="restore_error" className="text-sm text-error">
+          <p role="alert" data-testid="restore_error" className="text-body-medium text-error">
             {errorMessage}
           </p>
         )}
         {inProgress && (
-          <p role="status" data-testid="restore_progress" className="text-sm text-on-surface-variant">
+          <p role="status" data-testid="restore_progress" className="text-body-medium text-on-surface-variant">
             Restoring…
           </p>
         )}
         {result?.kind === "restored" && (
-          <p role="status" data-testid="restore_success" className="text-sm">
+          <p role="status" data-testid="restore_success" className="text-body-medium">
             Your key is back on this browser.
           </p>
         )}
