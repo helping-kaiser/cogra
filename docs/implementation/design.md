@@ -407,7 +407,9 @@ failure. What it does instead is explain, and confirm when it
 matters:
 
 - Always show where the pick lands the bundle, not only the
-  value being written.
+  value being written. This costs nothing to fetch: the bundle
+  is already loaded by the read that rendered the thing being
+  rated.
 - If the result is inert on either axis, say the stance will
   carry nothing.
 - If the result is `(0, 0)`, name it as severance, say what it
@@ -436,10 +438,15 @@ mysterious.
 ### 8.4 The emoji readout
 
 The committed value is the exact continuous pair. The emoji is
-a **lossy readout** of where you are — decoupling the two is
-what lets the value stay continuous while the feedback stays
-legible. Emoji count controls readability only, never
-precision.
+a **lossy readout of the edge being authored** — this pick,
+not the bundle it joins. Where the bundle ends up is shown
+separately (§8.2); conflating the two would make the face
+mean something different depending on history, which is
+exactly what a readout must not do.
+
+Decoupling the readout from the value is what lets the value
+stay continuous while the feedback stays legible. Emoji count
+controls readability only, never precision.
 
 **The readout sits just above the pad**, never under the knob:
 a thumb on the control covers exactly the spot where feedback
