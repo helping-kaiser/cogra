@@ -203,6 +203,69 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
     }
 
+    // The guest read shell: Feed and PostDetail live on the signed-out
+    // stack too, write affordances swapped for join entries
+    // (android.md "Screens").
+
+    @Test
+    fun aGuestBrowsesTheFeedFromTheFrontDoor() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("invite_browse")
+        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        assertThat(compose.onAllNodesWithTag("feed_compose").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("feed_signin").fetchSemanticsNodes()).isNotEmpty()
+    }
+
+    @Test
+    fun aGuestReadsAPostAndItsJoinEntryKeepsTheReadingContext() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost("p1"),
+            comments = com.cogra.domain.Page(
+                listOf(com.cogra.domain.testing.testComment("c1")),
+                endCursor = null,
+                hasNextPage = false,
+            ),
+        )
+        render()
+        waitForTag("invite_browse")
+        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("feed_post_p1").performClick()
+        waitForTag("detail_comment_signin")
+        // The composer is absent for the anonymous reader, swapped —
+        // never merely disabled.
+        assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
+
+        // The join entry pushes the front door, so back returns to the
+        // post (web parity: the guest entries link to "/").
+        compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+    }
+
+    @Test
+    fun signingInWhileBrowsingLandsOnHomeWithAClearedStack() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("invite_browse")
+        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("feed_signin")
+
+        signIn()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+        }
+        // The phase flip cleared the browsing stack.
+        assertThat(navController.previousBackStackEntry).isNull()
+    }
+
     @Test
     fun aSignedInSessionLandsOnHome() {
         signIn()
