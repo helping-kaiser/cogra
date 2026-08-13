@@ -102,4 +102,28 @@ class FeedViewModelTest {
         assertThat(vm.state.value.transportFailed).isFalse()
         assertThat(vm.state.value.posts).hasSize(1)
     }
+
+    @Test
+    fun aFailedRetryHoldsTheFaultAndThePostsSteady() = runTest(dispatcher) {
+        content.pages[null] =
+            Outcome.Success(Page(listOf(testPost("p1")), null, hasNextPage = false))
+        val vm = FeedViewModel(content)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        content.pages[null] = Outcome.Failed(IOException("offline"))
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.posts).hasSize(1)
+
+        // The flag reflects the last completed fetch: it must not
+        // clear while the retry is still in flight (the banner flash),
+        // nor after the retry fails again.
+        vm.refresh()
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.loading).isTrue()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.posts).hasSize(1)
+    }
 }

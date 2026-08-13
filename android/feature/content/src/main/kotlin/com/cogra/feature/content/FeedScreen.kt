@@ -41,8 +41,11 @@ import com.cogra.feature.content.R
 
 @Composable
 fun FeedRoute(
+    /** Null while the auth phase resolves; the write/join affordances wait. */
+    signedIn: Boolean?,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
@@ -55,10 +58,12 @@ fun FeedRoute(
     }
     FeedScreen(
         state = state,
+        signedIn = signedIn,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onOpenPost = onOpenPost,
         onCompose = onCompose,
+        onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
     )
 }
@@ -67,10 +72,12 @@ fun FeedRoute(
 @Composable
 fun FeedScreen(
     state: FeedUiState,
+    signedIn: Boolean?,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -85,20 +92,32 @@ fun FeedScreen(
                         )
                     }
                 },
+                actions = {
+                    if (signedIn == false) {
+                        TextButton(
+                            onClick = onSignInOrJoin,
+                            modifier = Modifier.testTag("feed_signin"),
+                        ) {
+                            Text(stringResource(R.string.content_feed_signin))
+                        }
+                    }
+                },
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onCompose,
-                modifier = Modifier.testTag("feed_compose"),
-                icon = {
-                    Icon(
-                        Icons.Filled.Edit,
-                        contentDescription = null,
-                    )
-                },
-                text = { Text(stringResource(R.string.content_feed_compose)) },
-            )
+            if (signedIn == true) {
+                ExtendedFloatingActionButton(
+                    onClick = onCompose,
+                    modifier = Modifier.testTag("feed_compose"),
+                    icon = {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = null,
+                        )
+                    },
+                    text = { Text(stringResource(R.string.content_feed_compose)) },
+                )
+            }
         },
     ) { padding ->
         PullToRefreshBox(
@@ -109,7 +128,7 @@ fun FeedScreen(
                 .fillMaxSize(),
         ) {
             when {
-                state.transportFailed -> Column(
+                state.transportFailed && state.posts.isEmpty() -> Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
@@ -132,30 +151,53 @@ fun FeedScreen(
                         modifier = Modifier.testTag("feed_empty"),
                     )
                 }
-                else -> LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("feed_list"),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(state.posts, key = { it.id }) { post ->
-                        PostCard(post = post, onClick = { onOpenPost(post.id) })
-                    }
-                    if (state.hasNextPage) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // A transport fault never blanks content already on
+                    // screen: the loaded posts stay readable and the
+                    // fault rides this banner; the full-screen error is
+                    // reserved for the nothing-loaded state
+                    // (android.md "Degrade, never crash").
+                    if (state.transportFailed) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            ErrorLine(R.string.content_feed_stale, "feed_transport_banner")
+                            TextButton(
+                                onClick = onRefresh,
+                                modifier = Modifier.testTag("feed_retry"),
                             ) {
-                                if (state.loadingMore) {
-                                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                                } else {
-                                    TextButton(
-                                        onClick = onLoadMore,
-                                        modifier = Modifier.testTag("feed_load_more"),
-                                    ) {
-                                        Text(stringResource(R.string.content_feed_load_more))
+                                Text(stringResource(R.string.content_retry))
+                            }
+                        }
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("feed_list"),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(state.posts, key = { it.id }) { post ->
+                            PostCard(post = post, onClick = { onOpenPost(post.id) })
+                        }
+                        if (state.hasNextPage) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (state.loadingMore) {
+                                        CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                                    } else {
+                                        TextButton(
+                                            onClick = onLoadMore,
+                                            modifier = Modifier.testTag("feed_load_more"),
+                                        ) {
+                                            Text(stringResource(R.string.content_feed_load_more))
+                                        }
                                     }
                                 }
                             }

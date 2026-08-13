@@ -41,13 +41,17 @@ class FeedViewModel @Inject constructor(
         refresh()
     }
 
+    // The fault flag reflects the last COMPLETED fetch: clearing it
+    // eagerly at fetch start made the error surface vanish and
+    // reappear — a visible flash — on every failed retry.
     fun refresh() {
-        _state.update { it.copy(loading = true, transportFailed = false) }
+        _state.update { it.copy(loading = true) }
         viewModelScope.launch {
             when (val outcome = content.posts(FEED_PAGE_SIZE, after = null)) {
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loading = false,
+                        transportFailed = false,
                         posts = outcome.value.items,
                         endCursor = outcome.value.endCursor,
                         hasNextPage = outcome.value.hasNextPage,
@@ -69,6 +73,7 @@ class FeedViewModel @Inject constructor(
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loadingMore = false,
+                        transportFailed = false,
                         posts = it.posts + outcome.value.items,
                         endCursor = outcome.value.endCursor,
                         hasNextPage = outcome.value.hasNextPage,

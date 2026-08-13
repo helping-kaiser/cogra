@@ -3,6 +3,8 @@ package com.cogra.feature.onboarding
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,10 +28,28 @@ class OnboardingScreensTest {
                 onCheck = {},
                 onContinue = {},
                 onLogInInstead = {},
+                onBrowseFeed = {},
             )
         }
         compose.onNodeWithTag("invite_error").assertExists()
         compose.onNodeWithTag("invite_continue").assertDoesNotExist()
+    }
+
+    @Test
+    fun theFrontDoorOffersBrowsingBeforeAnyCommitment() {
+        var browsing = false
+        compose.setContent {
+            InviteEntryScreen(
+                state = InviteEntryUiState(),
+                onInputChange = {},
+                onCheck = {},
+                onContinue = {},
+                onLogInInstead = {},
+                onBrowseFeed = { browsing = true },
+            )
+        }
+        compose.onNodeWithTag("invite_browse").performClick()
+        assertThat(browsing).isTrue()
     }
 
     @Test
