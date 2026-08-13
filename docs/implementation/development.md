@@ -102,7 +102,7 @@ make sqlx-check   Verify .sqlx/ matches the queries (needs a live, migrated DB)
 make docs-link-check  Check markdown link targets + anchors (needs lychee)
 make build        cargo build --all
 make logs         Follow docker compose logs (Ctrl+C to stop)
-make android-ci   Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + Android SDK)
+make android-ci   Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
 make android-test Run Android unit tests; scope to one module with m=feature:home
 make android-build  Assemble the debug APK
 make android-lint Run Android lint (not a CI gate, convenience only)
