@@ -132,10 +132,10 @@ export function FeedView() {
           <li key={post.id}>
             <Link href={`/posts/${post.id}`} data-testid={`feed-post-${post.id}`}>
               <Card>
-                {post.title.value && <h2 className="font-medium">{post.title.value}</h2>}
-                <p className="line-clamp-4 text-sm">{post.content.value}</p>
+                {post.title.value && <h2 className="text-title-medium">{post.title.value}</h2>}
+                <p className="line-clamp-4 text-body-medium">{post.content.value}</p>
                 {post.author && (
-                  <p className="text-xs text-on-surface-variant">
+                  <p className="text-body-small text-on-surface-variant">
                     @{post.author.handle}
                   </p>
                 )}

@@ -21,7 +21,7 @@ export function StanceSlider({
   const id = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-label-large">
         {label}: {value.toFixed(2)}
       </label>
       <input

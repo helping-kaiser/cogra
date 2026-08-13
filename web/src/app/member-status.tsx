@@ -116,8 +116,8 @@ export function MemberStatus({
       {!device.keyOnDevice && <RestoreCard />}
       {prompt && (
         <Card testId="home_reciprocation">
-          <h2 className="font-medium">@{inviter.handle} vouched you in</h2>
-          <p className="text-sm text-on-surface-variant">
+          <h2 className="text-title-medium">@{inviter.handle} vouched you in</h2>
+          <p className="text-body-medium text-on-surface-variant">
             Membership completes when you point back. Choose your stance — it&apos;s your own signed
             act, and you can change it any time.
           </p>
@@ -134,7 +134,7 @@ export function MemberStatus({
             testId="home_p_interest"
           />
           {signingFailed && (
-            <p role="alert" data-testid="home_signing_failed" className="text-sm text-error">
+            <p role="alert" data-testid="home_signing_failed" className="text-body-medium text-error">
               Signing didn&apos;t complete — check your connection and try again.
             </p>
           )}
@@ -155,13 +155,13 @@ export function MemberStatus({
         </Card>
       )}
       {reciprocated && (
-        <p role="status" data-testid="home_reciprocated" className="text-sm">
+        <p role="status" data-testid="home_reciprocated" className="text-body-medium">
           Your vouch is on its way onto the graph.
         </p>
       )}
       {device.pendingCount > 0 && (
         <Card testId="home_pending">
-          <p className="text-sm text-on-surface-variant">
+          <p className="text-body-medium text-on-surface-variant">
             {device.pendingCount} signed act(s) waiting to finish their handshake.
           </p>
           <Button testId="home_resume" variant="outline" size="sm" selfStart onClick={onResume} disabled={resuming}>

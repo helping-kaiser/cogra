@@ -94,7 +94,7 @@ export function LoginForm({
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in to CoGra</h1>
+      <h1 className="text-headline-small">Sign in to CoGra</h1>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <TextField
           label="Email"
@@ -118,7 +118,7 @@ export function LoginForm({
           autoComplete="current-password"
           testId="login_password"
         />
-        <label htmlFor="dont-remember" className="flex items-center gap-2 text-sm">
+        <label htmlFor="dont-remember" className="flex items-center gap-2 text-body-medium">
           <input
             id="dont-remember"
             data-testid="login_dont_remember"
@@ -130,13 +130,13 @@ export function LoginForm({
           Don&apos;t remember this account on this device
         </label>
         {error !== null && (
-          <p role="alert" data-testid="login_error" className="text-sm text-error">
+          <p role="alert" data-testid="login_error" className="text-body-medium text-error">
             {loginMessage(error)}
           </p>
         )}
         {transportFailed && <TransportError testId="login_transport_error" />}
         {inProgress && (
-          <p role="status" data-testid="login_progress" className="text-sm text-on-surface-variant">
+          <p role="status" data-testid="login_progress" className="text-body-medium text-on-surface-variant">
             Signing in…
           </p>
         )}
@@ -147,7 +147,7 @@ export function LoginForm({
       <Link
         href="/reset"
         data-testid="login_forgot"
-        className="text-sm text-on-surface-variant underline"
+        className="text-body-medium text-on-surface-variant underline"
       >
         Forgot password?
       </Link>

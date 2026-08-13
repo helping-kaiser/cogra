@@ -29,13 +29,13 @@ export function FrontDoor() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-24">
-      <h1 className="text-3xl font-semibold tracking-tight">CoGra</h1>
-      <p className="text-sm text-on-surface-variant">
+      <h1 className="text-headline-medium">CoGra</h1>
+      <p className="text-body-medium text-on-surface-variant">
         CoGra is invite-only. Paste your invite link to get started.
       </p>
       <form onSubmit={onContinue} className="flex flex-col gap-3" noValidate>
         <div className="flex flex-col gap-1">
-          <label htmlFor="invite" className="text-sm font-medium">
+          <label htmlFor="invite" className="text-label-large">
             Invite link
           </label>
           <input
@@ -53,7 +53,7 @@ export function FrontDoor() {
           />
         </div>
         {malformed && (
-          <p role="alert" data-testid="invite_error" className="text-sm text-error">
+          <p role="alert" data-testid="invite_error" className="text-body-medium text-error">
             That doesn&apos;t look like an invite — paste the whole link or its code.
           </p>
         )}
@@ -64,14 +64,14 @@ export function FrontDoor() {
       <Link
         href="/login"
         data-testid="invite_login"
-        className="text-sm text-on-surface-variant underline"
+        className="text-body-medium text-on-surface-variant underline"
       >
         Already a member? Sign in
       </Link>
       <Link
         href="/feed"
         data-testid="front_door_browse"
-        className="text-sm text-on-surface-variant underline"
+        className="text-body-medium text-on-surface-variant underline"
       >
         Just looking? Browse the feed →
       </Link>

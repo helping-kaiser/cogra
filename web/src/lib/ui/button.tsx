@@ -7,13 +7,15 @@ import type { ReactNode } from "react";
 // primary, not primaryContainer: design.md §2.4 reserves the loudest surface
 // for the compose FAB and a committed stance, one place per screen.
 const VARIANTS = {
-  primary: "bg-primary font-medium text-on-primary disabled:opacity-40",
-  outline: "border border-outline font-medium disabled:opacity-40",
+  primary: "bg-primary text-on-primary disabled:opacity-40",
+  outline: "border border-outline disabled:opacity-40",
 } as const;
 
+// label-large is Material's button role, so both sizes carry the same type and
+// differ only in padding (design.md §3).
 const SIZES = {
-  sm: "rounded-md px-3 py-1.5 text-sm",
-  lg: "rounded-md px-4 py-2",
+  sm: "rounded-md px-3 py-1.5 text-label-large",
+  lg: "rounded-md px-4 py-2 text-label-large",
 } as const;
 
 // selfStart is layout, not look: buttons in a flex column pass it so
