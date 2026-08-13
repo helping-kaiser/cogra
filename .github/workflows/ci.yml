@@ -168,7 +168,12 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          # Both toolchains: 17 compiles the app, 21 launches the tests
+          # (Robolectric's API 36 sandbox requires it). Gradle picks each
+          # by language version, so the order here does not matter.
+          java-version: |
+            17
+            21
       - uses: android-actions/setup-android@v4
       - uses: gradle/actions/setup-gradle@v6
       - name: Unit tests

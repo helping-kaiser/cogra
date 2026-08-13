@@ -94,7 +94,7 @@ docs-link-check: ## Check markdown link targets + anchors (mirrors docs-ci.yml; 
 build: ## Build all crates
 	$(CARGO) build --all
 
-android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + Android SDK)
+android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
 
 android-test: ## Run Android unit tests; scope to one module with m=feature:home
 	cd android && ./gradlew $(if $(m),:$(m):test,test)
