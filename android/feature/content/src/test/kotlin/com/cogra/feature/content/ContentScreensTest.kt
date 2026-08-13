@@ -24,18 +24,22 @@ class ContentScreensTest {
 
     private fun renderFeed(
         state: FeedUiState,
+        signedIn: Boolean? = true,
         onOpenPost: (String) -> Unit = {},
         onCompose: () -> Unit = {},
+        onSignInOrJoin: () -> Unit = {},
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
     ) {
         compose.setContent {
             FeedScreen(
                 state = state,
+                signedIn = signedIn,
                 onRefresh = onRefresh,
                 onLoadMore = onLoadMore,
                 onOpenPost = onOpenPost,
                 onCompose = onCompose,
+                onSignInOrJoin = onSignInOrJoin,
                 onBack = {},
             )
         }
@@ -74,6 +78,26 @@ class ContentScreensTest {
     }
 
     @Test
+    fun theComposeAffordanceSwapsForTheSignInEntryForAGuest() {
+        var joining = false
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            signedIn = false,
+            onSignInOrJoin = { joining = true },
+        )
+        compose.onNodeWithTag("feed_compose").assertDoesNotExist()
+        compose.onNodeWithTag("feed_signin").performClick()
+        assertThat(joining).isTrue()
+    }
+
+    @Test
+    fun aResolvingPhaseShowsNeitherFeedAffordance() {
+        renderFeed(FeedUiState(loading = false), signedIn = null)
+        compose.onNodeWithTag("feed_compose").assertDoesNotExist()
+        compose.onNodeWithTag("feed_signin").assertDoesNotExist()
+    }
+
+    @Test
     fun aTransportFaultOffersRetry() {
         var retried = false
         renderFeed(
@@ -81,6 +105,20 @@ class ContentScreensTest {
             onRefresh = { retried = true },
         )
         compose.onNodeWithTag("feed_transport_error").assertExists()
+        compose.onNodeWithTag("feed_retry").performClick()
+        assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun aTransportFaultKeepsTheLoadedPostsReadable() {
+        var retried = false
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1")), transportFailed = true),
+            onRefresh = { retried = true },
+        )
+        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed_transport_error").assertDoesNotExist()
+        compose.onNodeWithTag("feed_transport_banner").assertExists()
         compose.onNodeWithTag("feed_retry").performClick()
         assertThat(retried).isTrue()
     }
@@ -140,13 +178,16 @@ class ContentScreensTest {
     private fun renderDetail(
         state: PostDetailUiState,
         viewerId: String? = null,
+        signedIn: Boolean? = true,
         onEdit: (String) -> Unit = {},
         onSubmitComment: () -> Unit = {},
+        onSignInOrJoin: () -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
                 state = state,
                 viewerId = viewerId,
+                signedIn = signedIn,
                 onRefresh = {},
                 onLoadMoreComments = {},
                 onDraftChange = {},
@@ -155,6 +196,7 @@ class ContentScreensTest {
                 onSubmitComment = onSubmitComment,
                 onCommentSignedShown = {},
                 onEdit = onEdit,
+                onSignInOrJoin = onSignInOrJoin,
                 onBack = {},
             )
         }
@@ -210,6 +252,30 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("detail_comment_submit").performScrollTo().performClick()
         assertThat(submitted).isTrue()
+    }
+
+    @Test
+    fun theCommentComposerSwapsForTheSignInEntryForAGuest() {
+        var joining = false
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            signedIn = false,
+            onSignInOrJoin = { joining = true },
+        )
+        compose.onNodeWithTag("detail_comment_input").assertDoesNotExist()
+        compose.onNodeWithTag("detail_comment_submit").assertDoesNotExist()
+        compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
+        assertThat(joining).isTrue()
+    }
+
+    @Test
+    fun aResolvingPhaseShowsNeitherCommentAffordance() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            signedIn = null,
+        )
+        compose.onNodeWithTag("detail_comment_input").assertDoesNotExist()
+        compose.onNodeWithTag("detail_comment_signin").assertDoesNotExist()
     }
 
     @Test

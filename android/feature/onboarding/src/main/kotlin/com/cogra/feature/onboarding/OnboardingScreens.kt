@@ -48,6 +48,7 @@ fun InviteEntryRoute(
     deepLinkedInviteId: String?,
     onUsableLink: (String) -> Unit,
     onLogInInstead: () -> Unit,
+    onBrowseFeed: () -> Unit,
     viewModel: InviteEntryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,6 +61,7 @@ fun InviteEntryRoute(
         onCheck = viewModel::onCheck,
         onContinue = { state.inviteId?.let(onUsableLink) },
         onLogInInstead = onLogInInstead,
+        onBrowseFeed = onBrowseFeed,
     )
 }
 
@@ -70,6 +72,7 @@ fun InviteEntryScreen(
     onCheck: () -> Unit,
     onContinue: () -> Unit,
     onLogInInstead: () -> Unit,
+    onBrowseFeed: () -> Unit,
 ) {
     Scaffold { padding ->
         Column(
@@ -133,6 +136,11 @@ fun InviteEntryScreen(
             }
             TextButton(onClick = onLogInInstead, modifier = Modifier.testTag("invite_login")) {
                 Text(stringResource(R.string.invite_login_instead))
+            }
+            // The front door carries the browse entry: reading is public,
+            // only participation needs the invite (android.md "Screens").
+            TextButton(onClick = onBrowseFeed, modifier = Modifier.testTag("invite_browse")) {
+                Text(stringResource(R.string.invite_browse))
             }
         }
     }

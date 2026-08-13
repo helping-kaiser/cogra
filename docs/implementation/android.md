@@ -78,7 +78,7 @@ signed-out device never polls and a new session starts clean.
 
 ## Degrade, never crash
 
-Two failure classes the app absorbs instead of dying:
+Three failure classes the app absorbs instead of dying:
 
 - **Unknown server vocabulary.** The server's enums can grow before
   the app updates. Every generated enum maps into the domain with an
@@ -95,6 +95,11 @@ Two failure classes the app absorbs instead of dying:
   the ciphertext left in place in case the failure is transient.
   Either loss sets a persistent mark that the app shell surfaces as a
   one-time dialog: data loss is visible, never silent.
+- **Transport faults never blank loaded content.** A read surface
+  that already holds content keeps showing it when a refresh or
+  page fetch fails; the fault rides a non-blocking banner with a
+  retry. The full-screen transport error is reserved for the
+  nothing-loaded state.
 
 ## Accessibility
 
@@ -118,8 +123,8 @@ over `navigateUp()`.
 | `Login` | signed out | `/login` |
 | `PasswordReset` | signed out | `/reset` |
 | `Home` (signed-in root) | signed in | `/` signed in |
-| `Feed` | signed in | `/feed` |
-| `PostDetail(postId)` | signed in | `/posts/<id>` |
+| `Feed` | both (public read) | `/feed` |
+| `PostDetail(postId)` | both (public read) | `/posts/<id>` |
 | `ComposePost(postId?)` | signed in | `/compose` (+`?post=<id>`) |
 | `Invites` | signed in | `/invites` |
 | `Settings` | signed in | `/settings` |
@@ -129,11 +134,11 @@ over `navigateUp()`.
 The read surfaces are public on every client — accounts gate
 participation, never viewing
 ([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
-The web already serves guests; the app's guest read shell —
-`Feed` and `PostDetail` on the signed-out stack, write
-affordances swapped for join entries — is a staged slice-2
-follow-up ([roadmap.md](roadmap.md#slice-2--content)). No guest
-session exists anywhere: an anonymous read simply carries no
+`Feed` and `PostDetail` sit on both stacks, write affordances
+swapped for join entries; the front door carries the browse
+entry, and the join entries on the read surfaces push the front
+door, so back returns to the reading context. No guest session
+exists anywhere: an anonymous read simply carries no
 token. Email-carried surfaces (`/verify`, the `/reset?token=`
 arrival) have no destinations: those links open in the browser.
 
@@ -153,7 +158,7 @@ unit-tests in isolation:
 - `core:ranker` — UniFFI bindings to the `ranker` crate (the
   device rollout stage).
 - `feature:*` — one module per surface (`feature:auth`,
-  `feature:feed`, …): Compose screens plus their ViewModels.
+  `feature:content`, …): Compose screens plus their ViewModels.
 
 ## Tests
 

@@ -16,6 +16,8 @@
     <string name="content_submit">Sign and publish</string>
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
+    <string name="content_feed_signin">Sign in or join</string>
+    <string name="content_comment_signin">Sign in or join to comment</string>
     <string name="content_comment_hint">Add a comment</string>
     <string name="content_comment_submit">Sign comment</string>
     <string name="content_comments_heading">Comments</string>
@@ -25,6 +27,7 @@
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
+    <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
     <string name="content_error_not_found">This post no longer resolves.</string>
     <string name="content_retry">Retry</string>
     <string name="content_back">Back</string>

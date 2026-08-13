@@ -128,6 +128,16 @@ fun CograNavGraph(
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
 
+    // The read shells (Feed, PostDetail) live on both stacks and swap
+    // their write affordances for join entries when anonymous
+    // (android.md "Screens"). Null while the cold phase resolves:
+    // neither affordance shows, the web twin's "resolving" branch.
+    val signedIn = when (phase) {
+        AuthPhase.LOADING -> null
+        AuthPhase.SIGNED_IN -> true
+        AuthPhase.SIGNED_OUT -> false
+    }
+
     // Auth drives navigation: a genuine phase flip lands on the new
     // phase's root with a cleared stack (android/CLAUDE.md
     // "Navigation"). An applicant lands on Home too — the read shell
@@ -195,6 +205,7 @@ fun CograNavGraph(
                 deepLinkedInviteId = route.inviteId,
                 onUsableLink = { id -> navController.navigate(Apply(id)) },
                 onLogInInstead = { navController.navigate(Login) },
+                onBrowseFeed = { navController.navigate(Feed) },
             )
         }
         composable<Apply> { entry ->
@@ -249,8 +260,12 @@ fun CograNavGraph(
                 .getStateFlow(CONTENT_SIGNED_RESULT, false)
                 .collectAsStateWithLifecycle()
             FeedRoute(
+                signedIn = signedIn,
                 onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                 onCompose = { navController.navigate(ComposePost()) },
+                // Pushes the front door (the web guest entries link to
+                // "/"), so back returns to the reading context.
+                onSignInOrJoin = { navController.navigate(InviteEntry()) },
                 onBack = { navController.navigateUp() },
                 refreshSignal = signedResult,
                 onRefreshSignalConsumed = {
@@ -278,7 +293,9 @@ fun CograNavGraph(
             PostDetailRoute(
                 postId = entry.toRoute<PostDetail>().postId,
                 viewerId = accountId,
+                signedIn = signedIn,
                 onEdit = { id -> navController.navigate(ComposePost(id)) },
+                onSignInOrJoin = { navController.navigate(InviteEntry()) },
                 onBack = { navController.navigateUp() },
                 refreshSignal = signedResult,
                 onRefreshSignalConsumed = {
