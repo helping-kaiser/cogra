@@ -33,6 +33,16 @@ the build at your Android SDK with `android/local.properties` (gitignored):
 sdk.dir=/path/to/Android/Sdk
 ```
 
+The build needs **two JDKs**: 17 compiles the app, and 21 launches the unit
+tests — Robolectric takes its sandbox SDK from `targetSdk`, and the API 36
+sandbox will not start below Java 21. Gradle picks each by language version
+from the JDKs it auto-detects, so both simply have to be installed; Android
+Studio's bundled JBR is a 21. Check what Gradle can see with:
+
+```bash
+./gradlew -q javaToolchains
+```
+
 ## Build, test, run
 
 ```bash
