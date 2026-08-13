@@ -27,6 +27,7 @@
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
+    <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
     <string name="content_error_not_found">This post no longer resolves.</string>
     <string name="content_retry">Retry</string>
     <string name="content_back">Back</string>

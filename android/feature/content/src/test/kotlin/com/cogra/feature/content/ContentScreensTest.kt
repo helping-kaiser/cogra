@@ -109,6 +109,20 @@ class ContentScreensTest {
         assertThat(retried).isTrue()
     }
 
+    @Test
+    fun aTransportFaultKeepsTheLoadedPostsReadable() {
+        var retried = false
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1")), transportFailed = true),
+            onRefresh = { retried = true },
+        )
+        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed_transport_error").assertDoesNotExist()
+        compose.onNodeWithTag("feed_transport_banner").assertExists()
+        compose.onNodeWithTag("feed_retry").performClick()
+        assertThat(retried).isTrue()
+    }
+
     // -- Composer --
 
     private fun renderComposer(

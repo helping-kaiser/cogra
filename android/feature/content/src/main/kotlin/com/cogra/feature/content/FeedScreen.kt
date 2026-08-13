@@ -128,7 +128,7 @@ fun FeedScreen(
                 .fillMaxSize(),
         ) {
             when {
-                state.transportFailed -> Column(
+                state.transportFailed && state.posts.isEmpty() -> Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
@@ -151,30 +151,53 @@ fun FeedScreen(
                         modifier = Modifier.testTag("feed_empty"),
                     )
                 }
-                else -> LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("feed_list"),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(state.posts, key = { it.id }) { post ->
-                        PostCard(post = post, onClick = { onOpenPost(post.id) })
-                    }
-                    if (state.hasNextPage) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // A transport fault never blanks content already on
+                    // screen: the loaded posts stay readable and the
+                    // fault rides this banner; the full-screen error is
+                    // reserved for the nothing-loaded state
+                    // (android.md "Degrade, never crash").
+                    if (state.transportFailed) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            ErrorLine(R.string.content_feed_stale, "feed_transport_banner")
+                            TextButton(
+                                onClick = onRefresh,
+                                modifier = Modifier.testTag("feed_retry"),
                             ) {
-                                if (state.loadingMore) {
-                                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                                } else {
-                                    TextButton(
-                                        onClick = onLoadMore,
-                                        modifier = Modifier.testTag("feed_load_more"),
-                                    ) {
-                                        Text(stringResource(R.string.content_feed_load_more))
+                                Text(stringResource(R.string.content_retry))
+                            }
+                        }
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("feed_list"),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(state.posts, key = { it.id }) { post ->
+                            PostCard(post = post, onClick = { onOpenPost(post.id) })
+                        }
+                        if (state.hasNextPage) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (state.loadingMore) {
+                                        CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                                    } else {
+                                        TextButton(
+                                            onClick = onLoadMore,
+                                            modifier = Modifier.testTag("feed_load_more"),
+                                        ) {
+                                            Text(stringResource(R.string.content_feed_load_more))
+                                        }
                                     }
                                 }
                             }
