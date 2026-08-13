@@ -28,7 +28,7 @@ export function PageHeader({
           href={backHref}
           aria-label={backLabel}
           data-testid={backTestId}
-          className="rounded-md text-xl text-zinc-600 dark:text-zinc-400"
+          className="rounded-md text-xl text-on-surface-variant"
         >
           <span aria-hidden>←</span>
         </Link>

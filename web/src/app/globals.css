@@ -1,26 +1,157 @@
 @import "tailwindcss";
 
+/*
+ * The palette of design.md §2.3, orange-led from the #EF6C1A seed. Values are
+ * generated, never hand-picked — the repo-root design-tokens.json is the
+ * contract both clients pin to (`make tokens`), and palette.test.ts fails if
+ * these drift from it.
+ *
+ * Roles are plain custom properties so a single definition carries both themes;
+ * @theme inline then exposes each as a Tailwind colour, which is what lets a
+ * component write `text-on-surface-variant` once instead of a
+ * `text-zinc-600 dark:text-zinc-400` pair. Screens read roles, never colours.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #9f4100;
+  --on-primary: #ffffff;
+  --primary-container: #ef6c1a;
+  --on-primary-container: #4f1d00;
+  --inverse-primary: #ffb692;
+  --secondary: #8e4d2b;
+  --on-secondary: #ffffff;
+  --secondary-container: #feaa81;
+  --on-secondary-container: #783c1c;
+  --tertiary: #666000;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #b7af26;
+  --on-tertiary-container: #454100;
+  --background: #fff8f6;
+  --on-background: #251913;
+  --surface: #fff8f6;
+  --on-surface: #251913;
+  --surface-variant: #fddccd;
+  --on-surface-variant: #584237;
+  --surface-tint: #9f4100;
+  --inverse-surface: #3b2d27;
+  --inverse-on-surface: #ffede6;
+  --error: #a5004a;
+  --on-error: #ffffff;
+  --error-container: #ffd9df;
+  --on-error-container: #8f003f;
+  --outline: #8c7165;
+  --outline-variant: #e0c0b2;
+  --scrim: #000000;
+  --surface-bright: #fff8f6;
+  --surface-dim: #edd5cb;
+  --surface-container: #ffeae1;
+  --surface-container-high: #fbe3d9;
+  --surface-container-highest: #f5ded4;
+  --surface-container-low: #fff1eb;
+  --surface-container-lowest: #ffffff;
+  --success: #006c4f;
+  --on-success: #ffffff;
+  --success-container: #98f5ce;
+  --on-success-container: #002116;
+}
+
+/*
+ * Both themes are designed, not derived by inversion (design.md §10) — the dark
+ * neutrals are rebuilt at low chroma and dark `primary` is taken a tone lighter
+ * than Material's default, so none of this follows from the light values.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #ff8d50;
+    --on-primary: #341100;
+    --primary-container: #ef6c1a;
+    --on-primary-container: #4f1d00;
+    --inverse-primary: #9f4100;
+    --secondary: #ffb692;
+    --on-secondary: #542103;
+    --secondary-container: #743918;
+    --on-secondary-container: #f8a57b;
+    --tertiary: #d3cb42;
+    --on-tertiary: #343200;
+    --tertiary-container: #b7af26;
+    --on-tertiary-container: #454100;
+    --background: #151312;
+    --on-background: #e8e1df;
+    --surface: #151312;
+    --on-surface: #e8e1df;
+    --surface-variant: #4b4644;
+    --on-surface-variant: #cdc5c2;
+    --surface-tint: #ff8d50;
+    --inverse-surface: #e8e1df;
+    --inverse-on-surface: #33302f;
+    --error: #ff6b95;
+    --on-error: #66002b;
+    --error-container: #8f003f;
+    --on-error-container: #ffd9df;
+    --outline: #968f8d;
+    --outline-variant: #4b4644;
+    --scrim: #000000;
+    --surface-bright: #3c3837;
+    --surface-dim: #151312;
+    --surface-container: #221f1e;
+    --surface-container-high: #2c2928;
+    --surface-container-highest: #373433;
+    --surface-container-low: #1e1b1a;
+    --surface-container-lowest: #100e0d;
+    --success: #7cd8b3;
+    --on-success: #003828;
+    --success-container: #00513b;
+    --on-success-container: #98f5ce;
+  }
 }
 
 @theme inline {
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-on-background: var(--on-background);
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-surface-tint: var(--surface-tint);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-scrim: var(--scrim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-success: var(--success);
+  --color-on-success: var(--on-success);
+  --color-success-container: var(--success-container);
+  --color-on-success-container: var(--on-success-container);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface);
+  color: var(--on-surface);
   font-family: var(--font-sans), sans-serif;
 }

@@ -198,7 +198,7 @@ export function InvitesView() {
       />
 
       {loading && (
-        <p role="status" data-testid="invites_loading" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="invites_loading" className="text-sm text-on-surface-variant">
           Loading…
         </p>
       )}
@@ -206,7 +206,7 @@ export function InvitesView() {
       {me !== null && me.accountState !== "MEMBER" && (
         <Card testId="invites_locked">
           <h2 className="font-medium">Locked until your inviter approves you</h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             Inviting unlocks once your inviter approves you.
           </p>
         </Card>
@@ -214,7 +214,7 @@ export function InvitesView() {
 
       {transportFailed && <TransportError testId="invites_error" />}
       {!transportFailed && error !== null && (
-        <p role="alert" data-testid="invites_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="invites_error" className="text-sm text-error">
           {invitesMessage(error)}
         </p>
       )}
@@ -224,7 +224,7 @@ export function InvitesView() {
         </p>
       )}
       {signIncomplete && (
-        <p role="alert" data-testid="invites_sign_incomplete" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="invites_sign_incomplete" className="text-sm text-error">
           The approval went through, but the vouch didn&apos;t finish signing. It&apos;s saved on
           this device — resume it from Home.
         </p>
@@ -234,7 +234,7 @@ export function InvitesView() {
         <>
           <Card>
             <h2 className="font-medium">Invite someone you know</h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-on-surface-variant">
               The stance values are a pre-filled suggestion — you commit them at approval, and
               approving is your priced vouch.
             </p>
@@ -243,6 +243,7 @@ export function InvitesView() {
                 <input
                   type="checkbox"
                   data-testid="invites_single_use"
+                  className="accent-primary"
                   checked={singleUse}
                   onChange={(event) => setSingleUse(event.target.checked)}
                 />
@@ -307,7 +308,7 @@ function LinkCard({
   const revoked = link.revokedAt !== null;
   return (
     <Card testId={`link_${link.id}`}>
-      <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">{link.id}</p>
+      <p className="font-mono text-xs text-on-surface-variant">{link.id}</p>
       <p className="text-sm">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
       {!revoked && (
         <div className="flex items-center gap-3">
@@ -319,17 +320,17 @@ function LinkCard({
             data-testid={`revoke_${link.id}`}
             onClick={() => onRevoke(link.id)}
             disabled={revoking}
-            className="text-sm text-zinc-600 underline disabled:opacity-40 dark:text-zinc-400"
+            className="text-sm text-on-surface-variant underline disabled:opacity-40"
           >
             Revoke
           </button>
           {copied && (
-            <p role="status" data-testid={`copied_${link.id}`} className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p role="status" data-testid={`copied_${link.id}`} className="text-sm text-on-surface-variant">
               Copied
             </p>
           )}
           {copyFailed && (
-            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-sm text-red-600 dark:text-red-400">
+            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-sm text-error">
               Couldn&apos;t copy — copy the page address instead.
             </p>
           )}
@@ -383,7 +384,7 @@ function ApplicationRow({
 
   const approvable = application.emailVerified && application.keyAttached;
   return (
-    <div className="flex flex-col gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+    <div className="flex flex-col gap-2 border-t border-outline-variant pt-3">
       <p data-testid={`application_${application.id}`} className="text-sm">
         {applicantStatus(application)}
       </p>

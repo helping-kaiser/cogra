@@ -4,10 +4,11 @@
 
 import type { ReactNode } from "react";
 
+// primary, not primaryContainer: design.md §2.4 reserves the loudest surface
+// for the compose FAB and a committed stance, one place per screen.
 const VARIANTS = {
-  primary:
-    "bg-zinc-900 font-medium text-zinc-50 disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900",
-  outline: "border border-zinc-300 font-medium disabled:opacity-40 dark:border-zinc-700",
+  primary: "bg-primary font-medium text-on-primary disabled:opacity-40",
+  outline: "border border-outline font-medium disabled:opacity-40",
 } as const;
 
 const SIZES = {
