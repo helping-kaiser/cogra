@@ -42,7 +42,6 @@ tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # Config
-config = { version = "0.14" }
 # Loads .env into the process environment at binary startup (runtime
 # counterpart of the .env convention sqlx's macros use at compile time).
 dotenvy = { version = "0.15" }
