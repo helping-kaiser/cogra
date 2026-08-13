@@ -58,12 +58,15 @@ class PostDetailViewModelTest {
             after: String?,
         ): Outcome<Page<CommentView>> = nextComments
 
+        var prepareFails = false
+
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
         ): Outcome<PreparedContentView> {
             commentPrepared += 1
+            if (prepareFails) return Outcome.Failed(IOException("offline"))
             return Outcome.Success(
                 PreparedContentView("comment-node", listOf(sealer.stage(Family.REVIEW))),
             )
@@ -156,7 +159,7 @@ class PostDetailViewModelTest {
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
 
         content.detail = Outcome.Success(
             PostDetail(
@@ -166,7 +169,50 @@ class PostDetailViewModelTest {
         )
         vm.refresh()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.transportFault).isNull()
         assertThat(vm.state.value.post).isNotNull()
+    }
+
+    @Test
+    fun aFailedCommentsPageFaultsAtTheAppendSlot() = runTest(dispatcher) {
+        content.nextComments = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.loadMoreComments()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.APPEND)
+        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1")
+        assertThat(vm.state.value.commentsHaveMore).isTrue()
+
+        // A later successful page clears the fault and appends.
+        content.nextComments =
+            Outcome.Success(Page(listOf(testComment("c2")), null, hasNextPage = false))
+        vm.loadMoreComments()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFault).isNull()
+        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1", "c2").inOrder()
+    }
+
+    @Test
+    fun aFailedSubmitIsAComposerErrorNotAReadFault() = runTest(dispatcher) {
+        content.prepareFails = true
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.submitTransportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isNull()
+
+        // The next submit clears the composer error before retrying.
+        content.prepareFails = false
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.submitTransportFailed).isFalse()
+        assertThat(vm.state.value.commentSigned).isTrue()
     }
 }

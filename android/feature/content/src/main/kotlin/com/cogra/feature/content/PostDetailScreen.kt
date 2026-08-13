@@ -145,7 +145,7 @@ fun PostDetailScreen(
                     "detail_not_found",
                     modifier = Modifier.padding(24.dp),
                 )
-                state.transportFailed && state.post == null -> Column(
+                state.transportFault != null && state.post == null -> Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
@@ -157,17 +157,40 @@ fun PostDetailScreen(
                         Text(stringResource(R.string.content_retry))
                     }
                 }
-                state.post != null -> PostWithThread(
-                    state = state,
-                    post = state.post,
-                    signedIn = signedIn,
-                    onLoadMoreComments = onLoadMoreComments,
-                    onDraftChange = onDraftChange,
-                    onAttributionChange = onAttributionChange,
-                    onOversightChange = onOversightChange,
-                    onSubmitComment = onSubmitComment,
-                    onSignInOrJoin = onSignInOrJoin,
-                )
+                state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
+                    // A transport fault never blanks content already on
+                    // screen, and it surfaces where the failed fetch was
+                    // requested: a failed refresh on this banner, a
+                    // failed comments page at the load-more slot in the
+                    // thread (android.md "Degrade, never crash").
+                    if (state.transportFault == TransportFault.REFRESH) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            ErrorLine(R.string.content_error_transport, "detail_transport_banner")
+                            TextButton(
+                                onClick = onRefresh,
+                                modifier = Modifier.testTag("detail_retry"),
+                            ) {
+                                Text(stringResource(R.string.content_retry))
+                            }
+                        }
+                    }
+                    PostWithThread(
+                        state = state,
+                        post = state.post,
+                        signedIn = signedIn,
+                        onLoadMoreComments = onLoadMoreComments,
+                        onDraftChange = onDraftChange,
+                        onAttributionChange = onAttributionChange,
+                        onOversightChange = onOversightChange,
+                        onSubmitComment = onSubmitComment,
+                        onSignInOrJoin = onSignInOrJoin,
+                    )
+                }
             }
         }
     }
@@ -229,10 +252,20 @@ private fun PostWithThread(
         }
         if (state.commentsHaveMore) {
             item {
-                if (state.loadingMore) {
-                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                } else {
-                    TextButton(
+                when {
+                    state.loadingMore -> CircularProgressIndicator(
+                        modifier = Modifier.padding(8.dp),
+                    )
+                    state.transportFault == TransportFault.APPEND -> Column {
+                        ErrorLine(R.string.content_thread_stale, "detail_more_comments_error")
+                        TextButton(
+                            onClick = onLoadMoreComments,
+                            modifier = Modifier.testTag("detail_more_comments_retry"),
+                        ) {
+                            Text(stringResource(R.string.content_retry))
+                        }
+                    }
+                    else -> TextButton(
                         onClick = onLoadMoreComments,
                         modifier = Modifier.testTag("detail_more_comments"),
                     ) {
@@ -276,7 +309,7 @@ private fun PostWithThread(
                 if (state.signingFailed) {
                     ErrorLine(R.string.content_error_signing, "detail_signing_failed")
                 }
-                if (state.transportFailed) {
+                if (state.submitTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "detail_comment_transport")
                 }
                 Button(
