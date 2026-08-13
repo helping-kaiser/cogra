@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- primaryContainer, the loudest surface in the app (design.md 2.3). -->
+    <color name="ic_launcher_background">#EF6C1A</color>
+</resources>
