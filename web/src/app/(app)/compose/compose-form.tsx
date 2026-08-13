@@ -179,10 +179,10 @@ function ComposeFormInner() {
             setEmptyBody(false);
           }}
           rows={8}
-          className="rounded-md border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="rounded-md border border-outline p-2"
         />
         {emptyBody && (
-          <p role="alert" data-testid="compose-empty-body" className="text-sm text-red-600">
+          <p role="alert" data-testid="compose-empty-body" className="text-sm text-error">
             The post needs a body.
           </p>
         )}
@@ -216,12 +216,12 @@ function ComposeFormInner() {
         </fieldset>
       )}
       {refusedMessage && (
-        <p role="alert" data-testid="compose-refused" className="text-sm text-red-600">
+        <p role="alert" data-testid="compose-refused" className="text-sm text-error">
           {refusedMessage}
         </p>
       )}
       {signIncomplete && (
-        <p role="alert" data-testid="compose-signing-failed" className="text-sm text-red-600">
+        <p role="alert" data-testid="compose-signing-failed" className="text-sm text-error">
           Signing did not finish — the write stays pending.
         </p>
       )}

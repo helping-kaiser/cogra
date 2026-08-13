@@ -107,7 +107,7 @@ export function ResetForm() {
         Email me a reset token
       </Button>
       {requested && (
-        <p role="status" data-testid="reset_requested" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="reset_requested" className="text-sm text-on-surface-variant">
           If that address has an account, a reset token is on its way.
         </p>
       )}
@@ -134,7 +134,7 @@ export function ResetForm() {
           testId="reset_password"
         />
         {error !== null && (
-          <p role="alert" data-testid="reset_error" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" data-testid="reset_error" className="text-sm text-error">
             {resetMessage(error)}
           </p>
         )}

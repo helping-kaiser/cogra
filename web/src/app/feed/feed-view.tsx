@@ -135,7 +135,7 @@ export function FeedView() {
                 {post.title.value && <h2 className="font-medium">{post.title.value}</h2>}
                 <p className="line-clamp-4 text-sm">{post.content.value}</p>
                 {post.author && (
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs text-on-surface-variant">
                     @{post.author.handle}
                   </p>
                 )}
