@@ -72,9 +72,23 @@ updates:
         versions: ["[1.19,)"]
       - dependency-name: "androidx.lifecycle:*"
         versions: ["[2.11,)"]
+      # androidx.hilt 1.4 pulls lifecycle 2.11 and its own
+      # hilt-lifecycle-viewmodel-compose, both AGP 9 / compileSdk 37.
+      - dependency-name: "androidx.hilt:*"
+        versions: ["[1.4,)"]
       # Hilt requires AGP 9 from 2.59.2, not 2.60 as first bounded.
       - dependency-name: "com.google.dagger*"
         versions: ["[2.59,)"]
+      # Kotlin and KSP move as one: KSP's first two components track the
+      # Kotlin minor and no KSP 2.4 line exists yet. Hilt 2.58's
+      # processor also reads Kotlin metadata only to 2.3, and every Hilt
+      # past it demands AGP 9. Lift the three together.
+      - dependency-name: "org.jetbrains.kotlin:*"
+        versions: ["[2.4,)"]
+      - dependency-name: "org.jetbrains.kotlin.*"
+        versions: ["[2.4,)"]
+      - dependency-name: "com.google.devtools.ksp*"
+        versions: ["[2.4,)"]
       # Compose BOM 2025+ breaks Compose APIs and rides compileSdk
       # bumps — part of the same coordinated move.
       - dependency-name: "androidx.compose:compose-bom"
