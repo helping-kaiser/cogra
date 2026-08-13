@@ -9,6 +9,8 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
@@ -16,8 +18,9 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 /**
  * The configuration every android-variant module shares: SDK levels
- * from the catalog, Java 17, the release-variant unit-test skip, and
- * parallel test forks. Applied after the module's own
+ * from the catalog, Java 17 for compilation, a Java 21 launcher for
+ * tests, the release-variant unit-test skip, and parallel test forks.
+ * Applied after the module's own
  * android.application/android.library plugin.
  */
 class AndroidModuleConventionPlugin : Plugin<Project> {
@@ -46,8 +49,18 @@ class AndroidModuleConventionPlugin : Plugin<Project> {
 
         // Robolectric suites pay a per-class sandbox warmup; run test
         // classes in parallel forks instead of one core at a time.
+        //
+        // Tests launch on a newer JVM than the app compiles against:
+        // Robolectric derives its sandbox SDK from targetSdk, and the
+        // API 36 sandbox refuses to start on anything below Java 21.
+        // Only the launcher moves — compilation stays on 17, which is
+        // the Java level Android actually supports.
+        val launcher21 = extensions.getByType<JavaToolchainService>().launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
         tasks.withType<Test>().configureEach {
             maxParallelForks = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+            javaLauncher.set(launcher21)
         }
 
         extensions.configure<KotlinAndroidProjectExtension> {
