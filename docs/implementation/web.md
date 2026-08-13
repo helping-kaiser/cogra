@@ -230,11 +230,14 @@ adopting one is a deliberate decision, not a drift.
 **Transport faults never blank loaded content** (the shared rule —
 [android.md "Degrade, never crash"](android.md#degrade-never-crash)):
 a read surface that already holds content keeps showing it when a
-refresh or page fetch fails; the fault rides a non-blocking banner,
-and the full transport error is reserved for the nothing-loaded
-state. The fault flag reflects the last *completed* fetch — it
-clears on success, never eagerly at fetch start, so a failed retry
-never flashes the error surface.
+refresh or page fetch fails; the full transport error is reserved
+for the nothing-loaded state. The fault surfaces where the failed
+fetch was requested — a failed refresh on a non-blocking banner
+above the content, a failed page fetch in place of the load-more
+control, message plus retry; a failed submit is a composer error
+beside its button, never a read fault. The fault reflects the
+last *completed* fetch — it clears on success, never eagerly at
+fetch start, so a failed retry never flashes the error surface.
 
 ## Accessibility
 
