@@ -194,6 +194,7 @@ function ComposeFormInner() {
             <input
               type="checkbox"
               data-testid="license-attribution"
+              className="accent-primary"
               checked={attributionRequired}
               onChange={(event) => setAttributionRequired(event.target.checked)}
             />
@@ -205,6 +206,7 @@ function ComposeFormInner() {
                 <input
                   type="radio"
                   name="oversight"
+                  className="accent-primary"
                   data-testid={`license-oversight-${option.value.toLowerCase()}`}
                   checked={oversight === option.value}
                   onChange={() => setOversight(option.value)}
