@@ -222,10 +222,13 @@ whichever surface started it.
 
 ## Design guidelines
 
-Styling starts minimal: Tailwind's default scales — spacing,
-type, color — are the design tokens. No component library or
-fuller design language until real screens exist to justify one;
-adopting one is a deliberate decision, not a drift.
+[design.md](design.md) is the design system both clients
+implement — colour tokens, type, shape, motion, components,
+copy rules, and the stance control. Read it before writing UI.
+Web-side: the Material 3 roles land as CSS custom properties in
+`globals.css`, shared components live in `src/lib/ui/`, and a
+raw Tailwind palette class in a component is a bug — screens
+read roles, never colours.
 
 **Transport faults never blank loaded content** (the shared rule —
 [android.md "Degrade, never crash"](android.md#degrade-never-crash)):
