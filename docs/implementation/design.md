@@ -329,6 +329,32 @@ On web, `next/font/google` downloads and self-hosts at build
 time, so no request reaches Google from the browser. Pass
 `subsets: ['latin', 'latin-ext']` explicitly.
 
+The fifteen roles are Tailwind font-size utilities: `--text-title-medium`
+with its `--line-height`, `--letter-spacing`, and `--font-weight`
+companions, so a screen writes `text-title-medium` once and gets the
+whole role. The values are `@material/web`'s generated typescale
+tokens — the web counterpart of the Compose tokens Android reads —
+and `type.test.ts` pins the stylesheet to that package, so a
+hand-edited number cannot survive. The same test fails on a
+`text-sm`, `font-medium`, or `tracking-*` left in a screen: an
+ad-hoc size is what makes the next scale change a rewrite instead
+of a token edit, exactly as §2.3 says of a literal hex. Unclassed
+text lands on `body-large`.
+
+Which role a surface takes: page titles are `headline-small`,
+card and section headings `title-medium`, form labels and buttons
+`label-large`, body and status copy `body-medium`, captions and
+bylines `body-small`, reading content `body-large`. A displayed
+recovery code takes `title-large` in the platform monospace with
+wider tracking — it is transcribed by hand, so it is the largest
+thing on its surface.
+
+The two token sets round three trackings differently —
+`display-large`, `body-medium`, and `title-medium`, by at most
+0.05px at their own size. Each client takes its own platform's
+value; the difference is under a pixel and does not earn a shared
+contract file the way the palette does.
+
 ---
 
 ## 4. Shape, spacing, motion

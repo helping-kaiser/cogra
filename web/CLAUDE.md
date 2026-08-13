@@ -58,5 +58,9 @@ Per the shared rule, tests land with the change:
   `design-tokens.json` (`make tokens`) and `palette.test.ts` pins
   `globals.css` to it. Never transcribe a colour, and never write a
   raw Tailwind palette class in a component — screens read roles.
+- Type: `type.test.ts` pins the fifteen M3 roles in `globals.css` to
+  `@material/web`'s typescale tokens, and fails on a `text-sm`,
+  `font-medium`, or `tracking-*` left in a screen. Screens read type
+  roles (`text-body-medium`) the same way they read colour roles.
 - Bind assertions to roles/test ids, not display copy, where copy
   is still in flux.
