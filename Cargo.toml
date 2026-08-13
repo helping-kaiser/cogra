@@ -59,9 +59,12 @@ rand = { version = "0.8" }
 hex = { version = "0.4" }
 
 # Service-side auth (auth.md): Argon2id password hashing, Ed25519-signed
-# JWT access tokens, url-safe token material.
+# JWT access tokens, url-safe token material. jsonwebtoken 10+ has no
+# built-in backend — one crypto-provider feature must be picked, and
+# `rust_crypto` signs EdDSA through the same ed25519-dalek the rest of
+# the workspace uses (`aws_lc_rs` would add a C toolchain to every build).
 argon2 = { version = "0.5" }
-jsonwebtoken = { version = "11" }
+jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 base64 = { version = "0.23" }
 
 # API-edge hardening (auth.md "Rate limiting", "Password requirements"):
