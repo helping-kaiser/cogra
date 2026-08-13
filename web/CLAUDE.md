@@ -54,5 +54,9 @@ Per the shared rule, tests land with the change:
 - Crypto: golden-vector tests that read the repo-root
   `client-crypto-vectors.json` — never copy vector values into
   test code.
+- Colour: `src/lib/ui/design-tokens.test.ts` generates the repo-root
+  `design-tokens.json` (`make tokens`) and `palette.test.ts` pins
+  `globals.css` to it. Never transcribe a colour, and never write a
+  raw Tailwind palette class in a component — screens read roles.
 - Bind assertions to roles/test ids, not display copy, where copy
   is still in flux.

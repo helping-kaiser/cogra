@@ -4,7 +4,7 @@ export function Card({ children, testId }: { children: ReactNode; testId?: strin
   return (
     <section
       data-testid={testId}
-      className="flex flex-col gap-3 rounded-md border border-zinc-300 p-4 dark:border-zinc-700"
+      className="flex flex-col gap-3 rounded-md border border-outline-variant p-4"
     >
       {children}
     </section>

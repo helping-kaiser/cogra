@@ -34,14 +34,14 @@ export function PasswordField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           autoComplete={autoComplete}
-          className="min-w-0 flex-1 rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
+          className="min-w-0 flex-1 rounded-md border border-outline bg-transparent px-3 py-2"
         />
         <button
           type="button"
           data-testid={`${testId}_toggle`}
           aria-label={visible ? "Hide password" : "Show password"}
           onClick={() => setVisible((v) => !v)}
-          className="rounded-md border border-zinc-300 px-3 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
+          className="rounded-md border border-outline px-3 text-sm text-on-surface-variant"
         >
           {visible ? "Hide" : "Show"}
         </button>

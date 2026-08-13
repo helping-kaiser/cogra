@@ -70,6 +70,11 @@ tone.** Two separate fixes:
   Material's default is more conservative than this palette
   needs.
 
+The error palette departs in hue and tone for the same underlying
+reason — Material's placement assumes an accent less saturated and
+further from red than this one. That departure is recorded with the
+Error table in §2.3, where its numbers belong.
+
 Every `on`-colour pair in both themes is verified against WCAG
 AA (4.5:1) at generation time. A palette change that fails
 that check does not ship.
@@ -88,6 +93,15 @@ then override `primary` with `primaryPalette.tone(70)` and
 Contrast level is `0.0` throughout. Raising it is a real dial
 if the palette ever needs more separation, but it changes
 every token, so it is a decision, not a tweak.
+
+The generator lives in `web/src/lib/ui/design-tokens.test.ts` and
+writes **`design-tokens.json`** at the repo root — the contract both
+clients pin their themes to, the same arrangement the client crypto
+has with `client-crypto-vectors.json`. `make tokens` regenerates it;
+every other run asserts it is not stale, and the AA check of §2.1
+runs there, so a palette that fails cannot be generated. Neither
+client transcribes a value: Android's `ColorSchemeTest` and web's
+`palette.test.ts` read the file.
 
 ### 2.3 Tokens
 
@@ -127,10 +141,62 @@ palette change a rewrite instead of a token edit.
 
 | Role | Light | Dark |
 |---|---|---|
-| `error` | `#BA1A1A` | `#FFB4AB` |
-| `onError` | `#FFFFFF` | `#690005` |
-| `errorContainer` | `#FFDAD6` | `#93000A` |
-| `onErrorContainer` | `#93000A` | `#FFDAD6` |
+| `error` | `#A5004A` | `#FF6B95` |
+| `onError` | `#FFFFFF` | `#66002B` |
+| `errorContainer` | `#FFD9DF` | `#8F003F` |
+| `onErrorContainer` | `#8F003F` | `#FFD9DF` |
+
+The error palette departs from Material's stock output twice, in **hue**
+and in **tone**, because an orange-led palette collides with a stock
+error in both.
+
+**Hue 5, not Material's fixed 25.** Material's error hue is far from a
+typical blue or purple primary, but this palette's `primary` sits at
+hue 44.6. At hue 25 the two landed 19.6° apart at the same tone,
+measuring 6.16:1 and 6.19:1 against `surface` — identical weight and a
+neighbouring hue, so the error read as another brand colour rather than
+as an alarm. Hue 5 doubles the separation while staying unmistakably a
+warning colour. Chroma is Material's own.
+
+**Tones 35 and 65, not Material's 40 and 80.** Tone 80 holds only
+chroma 32.6 of the palette's 84, so the dark error came out pastel
+whatever its hue — and *brighter* against the dark surface than
+`primary` is, which reads as gentle where it should read as urgent.
+Tone 65 more than doubles the saturation to chroma 67.6, and taking
+light to tone 35 does the same job there. In both themes the error is
+now heavier than the brand colour rather than level with it or lighter.
+This is the same trade §2.1 already makes for dark `primary`: Material's
+tone placement is tuned for a palette whose accent is not this
+saturated.
+
+**Success** — a CoGra role, outside Material's set
+
+| Role | Light | Dark |
+|---|---|---|
+| `success` | `#006C4F` | `#7CD8B3` |
+| `onSuccess` | `#FFFFFF` | `#003828` |
+| `successContainer` | `#98F5CE` | `#00513B` |
+| `onSuccessContainer` | `#002116` | `#98F5CE` |
+
+Material has no success role, so this one is generated the way
+Material Theme Builder generates a custom colour: `Blend.harmonize`
+the design colour `#00897B` toward the seed, then read the resulting
+palette at Material's own error tones — light 40/100/90/10, dark
+80/20/30/90 — so success carries exactly the weight error does.
+
+It is a teal rather than a true green for two reasons. Harmonizing a
+green into an orange-led palette lands it within 23° of `tertiary`,
+which is already an olive; and red/green is the pair colour-blind
+readers lose, where teal keeps a blue component that survives. `error`
+and `success` must stay distinguishable by more than their label, even
+though §10 requires the label too.
+
+`ColorScheme` has no slot for these, so on Android they ride the
+CompositionLocal pattern Android documents for extending Material
+(`CograTheme.colors.success`) rather than a `ColorScheme` extension
+property, which would read `isSystemInDarkTheme()` at the call site and
+disagree with any caller passing `darkTheme` explicitly — as previews
+and Robolectric tests do.
 
 **Surface**
 
@@ -168,7 +234,11 @@ palette change a rewrite instead of a token edit.
 | `inverseOnSurface` | `#FFEDE6` | `#33302F` |
 | `inversePrimary` | `#FFB692` | `#9F4100` |
 
-`scrim` and `shadow` are `#000000` in both themes.
+`scrim` and `shadow` are `#000000` in both themes. `background` and
+`onBackground` mirror `surface` and `onSurface` exactly — Material
+carries both pairs, and the generator gives them the same values.
+`surfaceTint` follows `primary`, so dark tonal elevation cannot
+reintroduce the tone-80 orange §2.1 rejects.
 
 ### 2.4 Applying the roles
 
@@ -185,6 +255,10 @@ palette change a rewrite instead of a token edit.
 - `error` is for failure, never for negative stance. A
   negative stance is an ordinary, legitimate opinion (§8) and
   colouring it as an error editorialises it.
+- `success` marks a completed action — a signed write landing, a
+  saved edit. It never carries the meaning alone: the words say what
+  happened and the colour agrees with them (§10). It is not a stance
+  colour either; a positive stance is an opinion, not an outcome.
 
 ### 2.5 Dynamic colour
 

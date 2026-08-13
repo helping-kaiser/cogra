@@ -7,5 +7,13 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
+    server: {
+      deps: {
+        // material-color-utilities ships ESM with extensionless relative
+        // imports, which Node cannot resolve; inlining hands it to Vite's
+        // resolver instead. Only the token generator imports it.
+        inline: ["@material/material-color-utilities"],
+      },
+    },
   },
 });

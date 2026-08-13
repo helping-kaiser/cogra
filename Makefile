@@ -4,7 +4,7 @@ export
 DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-ci
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-ci
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -55,6 +55,9 @@ schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schem
 
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
 	UPDATE_CLIENT_VECTORS=1 $(CARGO) test -p common --test client_vectors
+
+tokens: ## Regenerate design-tokens.json (the colour contract both clients pin to) from design.md §2.2
+	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
 
 sqlx-prepare: ## Regenerate the committed .sqlx/ offline metadata (needs a live, migrated DB)
 	$(CARGO) sqlx prepare --workspace --database-url $(DATABASE_URL)

@@ -117,7 +117,7 @@ export function MemberStatus({
       {prompt && (
         <Card testId="home_reciprocation">
           <h2 className="font-medium">@{inviter.handle} vouched you in</h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             Membership completes when you point back. Choose your stance — it&apos;s your own signed
             act, and you can change it any time.
           </p>
@@ -134,7 +134,7 @@ export function MemberStatus({
             testId="home_p_interest"
           />
           {signingFailed && (
-            <p role="alert" data-testid="home_signing_failed" className="text-sm text-red-600 dark:text-red-400">
+            <p role="alert" data-testid="home_signing_failed" className="text-sm text-error">
               Signing didn&apos;t complete — check your connection and try again.
             </p>
           )}
@@ -161,7 +161,7 @@ export function MemberStatus({
       )}
       {device.pendingCount > 0 && (
         <Card testId="home_pending">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             {device.pendingCount} signed act(s) waiting to finish their handshake.
           </p>
           <Button testId="home_resume" variant="outline" size="sm" selfStart onClick={onResume} disabled={resuming}>
