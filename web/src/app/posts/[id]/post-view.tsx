@@ -22,7 +22,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
-import { TransportError } from "@/lib/ui/transport-error";
+import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 export function PostView({ postId }: { postId: string }) {
   const client = useApolloClient();
@@ -36,8 +36,9 @@ export function PostView({ postId }: { postId: string }) {
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [transportFailed, setTransportFailed] = useState(false);
+  const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
   const [draft, setDraft] = useState("");
   const [attributionRequired, setAttributionRequired] = useState(false);
@@ -45,25 +46,28 @@ export function PostView({ postId }: { postId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
+  // A submit that never reached the server; a composer error, not a read fault.
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [commentSigned, setCommentSigned] = useState(false);
 
   // Effect-invoked, so no synchronous setState here (the lint's
   // cascading-render guard); submit paths reset the flags themselves.
-  // As in FeedView: the fault flag reflects the last COMPLETED fetch —
-  // it clears only on an outcome, never eagerly, so a failed retry
-  // never flashes the error surface.
+  // As in FeedView: the fault reflects the last COMPLETED fetch — it
+  // clears only on an outcome, never eagerly, so a failed retry never
+  // flashes the error surface — and carries which fetch failed, so it
+  // surfaces where that fetch was requested.
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
       if (outcome.kind !== "success") {
-        setTransportFailed(true);
+        setTransportFault("refresh");
       } else if (outcome.value === null) {
-        setTransportFailed(false);
+        setTransportFault(null);
         setNotFound(true);
       } else {
-        setTransportFailed(false);
+        setTransportFault(null);
         setDetail(outcome.value);
         setComments(outcome.value.comments.items);
         setEndCursor(outcome.value.comments.endCursor);
@@ -78,16 +82,18 @@ export function PostView({ postId }: { postId: string }) {
   useEffect(() => refresh(), [refresh]);
 
   const onLoadMore = async () => {
-    if (!hasMore) return;
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
     const outcome = await fetchPostDetail(client, postId, endCursor);
+    setLoadingMore(false);
     // A failed page is a fault, not a no-op: the loaded thread stays
-    // and the banner above it says why nothing new arrived.
+    // and the load-more slot says why nothing new arrived.
     if (outcome.kind !== "success") {
-      setTransportFailed(true);
+      setTransportFault("append");
       return;
     }
     if (outcome.value === null) return;
-    setTransportFailed(false);
+    setTransportFault(null);
     const next = outcome.value.comments;
     setComments((current) => [...current, ...next.items]);
     setEndCursor(next.endCursor);
@@ -99,6 +105,7 @@ export function PostView({ postId }: { postId: string }) {
     setSubmitting(true);
     setRefusedMessage(null);
     setSignIncomplete(false);
+    setSubmitFailed(false);
     setCommentSigned(false);
     const prepared = await guard.run(() =>
       prepareComment(client, {
@@ -114,7 +121,7 @@ export function PostView({ postId }: { postId: string }) {
     }
     if (prepared.kind === "failed") {
       setSubmitting(false);
-      setTransportFailed(true);
+      setSubmitFailed(true);
       return;
     }
     const results = [];
@@ -173,7 +180,20 @@ export function PostView({ postId }: { postId: string }) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
         {header(false)}
-        <TransportError testId="post-transport-error" />
+        <div className="flex items-center gap-3">
+          <TransportError testId="post-transport-error" />
+          <Button
+            testId="post-retry"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setLoading(true);
+              refresh();
+            }}
+          >
+            Retry
+          </Button>
+        </div>
       </main>
     );
   }
@@ -201,7 +221,10 @@ export function PostView({ postId }: { postId: string }) {
       )}
       <hr className="border-zinc-200 dark:border-zinc-800" />
       <h2 className="text-lg font-medium">Comments</h2>
-      {transportFailed && <TransportError testId="post-thread-transport-error" />}
+      {/* A failed whole-post refresh; a failed comments page surfaces
+          at the load-more slot below instead (web.md "Design
+          guidelines", the Android twin). */}
+      {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
       {comments.length === 0 && <p data-testid="post-no-comments">No comments yet.</p>}
       <ul className="flex flex-col gap-3">
         {comments.map((comment) => (
@@ -217,11 +240,33 @@ export function PostView({ postId }: { postId: string }) {
           </li>
         ))}
       </ul>
-      {hasMore && (
-        <Button testId="post-more-comments" variant="outline" onClick={() => void onLoadMore()}>
-          Load more
-        </Button>
-      )}
+      {hasMore &&
+        (transportFault === "append" ? (
+          <div className="flex items-center gap-3">
+            <TransportError
+              testId="post-more-comments-error"
+              message="Can't reach the server — more comments can't load right now."
+            />
+            <Button
+              testId="post-more-comments-retry"
+              variant="outline"
+              size="sm"
+              onClick={() => void onLoadMore()}
+              disabled={loadingMore}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <Button
+            testId="post-more-comments"
+            variant="outline"
+            onClick={() => void onLoadMore()}
+            disabled={loadingMore}
+          >
+            Load more
+          </Button>
+        ))}
       {phase === "signedOut" && (
         <Link
           href="/"
@@ -281,6 +326,7 @@ export function PostView({ postId }: { postId: string }) {
               Signing did not finish — the write stays pending.
             </p>
           )}
+          {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (
             <p data-testid="comment-signed" className="text-sm text-green-700 dark:text-green-400">
               Signed — your comment appears once its record lands. Refresh to check.

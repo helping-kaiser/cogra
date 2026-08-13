@@ -187,7 +187,7 @@ describe("PostView", () => {
     expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/");
   });
 
-  it("keeps the thread readable when a comments page fails", async () => {
+  it("keeps the thread readable and faults at the load-more slot when a comments page fails", async () => {
     let calls = 0;
     server.use(
       graphql.query("PostDetail", () => {
@@ -204,12 +204,16 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     fireEvent.click(await screen.findByTestId("post-more-comments"));
-    expect(await screen.findByTestId("post-thread-transport-error")).toBeInTheDocument();
+    expect(await screen.findByTestId("post-more-comments-error")).toBeInTheDocument();
+    // The fault surfaces where the failed fetch was requested — at the
+    // load-more slot, not the banner above the thread.
+    expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-more-comments")).not.toBeInTheDocument();
     expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
   });
 
-  it("clears the thread banner when a later comments page succeeds", async () => {
+  it("clears the load-more error when a retried comments page succeeds", async () => {
     let calls = 0;
     server.use(
       graphql.query("PostDetail", () => {
@@ -228,11 +232,46 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     fireEvent.click(await screen.findByTestId("post-more-comments"));
-    await screen.findByTestId("post-thread-transport-error");
-    fireEvent.click(screen.getByTestId("post-more-comments"));
+    await screen.findByTestId("post-more-comments-error");
+    fireEvent.click(screen.getByTestId("post-more-comments-retry"));
     expect(await screen.findByTestId("post-comment-c2")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-more-comments-error")).not.toBeInTheDocument();
     expect(screen.getByTestId("post-comment-c1")).toBeInTheDocument();
+  });
+
+  it("offers a retry on the nothing-loaded transport error and heals from it", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.error()
+          : HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) });
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-transport-error")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-retry"));
+    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.queryByTestId("post-transport-error")).not.toBeInTheDocument();
+  });
+
+  it("surfaces a failed comment submit in the composer, not on the thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      graphql.mutation("PrepareComment", () => HttpResponse.error()),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(await screen.findByTestId("comment-draft"), {
+      target: { value: "Nice one" },
+    });
+    fireEvent.click(screen.getByTestId("comment-submit"));
+    expect(await screen.findByTestId("comment-transport-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
   });
 
   it("backs to the feed from every branch", async () => {
