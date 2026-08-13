@@ -198,15 +198,15 @@ export function InvitesView() {
       />
 
       {loading && (
-        <p role="status" data-testid="invites_loading" className="text-sm text-on-surface-variant">
+        <p role="status" data-testid="invites_loading" className="text-body-medium text-on-surface-variant">
           Loading…
         </p>
       )}
 
       {me !== null && me.accountState !== "MEMBER" && (
         <Card testId="invites_locked">
-          <h2 className="font-medium">Locked until your inviter approves you</h2>
-          <p className="text-sm text-on-surface-variant">
+          <h2 className="text-title-medium">Locked until your inviter approves you</h2>
+          <p className="text-body-medium text-on-surface-variant">
             Inviting unlocks once your inviter approves you.
           </p>
         </Card>
@@ -214,17 +214,17 @@ export function InvitesView() {
 
       {transportFailed && <TransportError testId="invites_error" />}
       {!transportFailed && error !== null && (
-        <p role="alert" data-testid="invites_error" className="text-sm text-error">
+        <p role="alert" data-testid="invites_error" className="text-body-medium text-error">
           {invitesMessage(error)}
         </p>
       )}
       {vouchSigned && (
-        <p role="status" data-testid="invites_vouch_signed" className="text-sm">
+        <p role="status" data-testid="invites_vouch_signed" className="text-body-medium">
           Approved — your vouch is signed and on its way.
         </p>
       )}
       {signIncomplete && (
-        <p role="alert" data-testid="invites_sign_incomplete" className="text-sm text-error">
+        <p role="alert" data-testid="invites_sign_incomplete" className="text-body-medium text-error">
           The approval went through, but the vouch didn&apos;t finish signing. It&apos;s saved on
           this device — resume it from Home.
         </p>
@@ -233,13 +233,13 @@ export function InvitesView() {
       {me?.accountState === "MEMBER" && (
         <>
           <Card>
-            <h2 className="font-medium">Invite someone you know</h2>
-            <p className="text-sm text-on-surface-variant">
+            <h2 className="text-title-medium">Invite someone you know</h2>
+            <p className="text-body-medium text-on-surface-variant">
               The stance values are a pre-filled suggestion — you commit them at approval, and
               approving is your priced vouch.
             </p>
             <form onSubmit={onCreate} className="flex flex-col gap-3" noValidate>
-              <label className="flex items-center gap-2 text-sm font-medium">
+              <label className="flex items-center gap-2 text-label-large">
                 <input
                   type="checkbox"
                   data-testid="invites_single_use"
@@ -308,8 +308,8 @@ function LinkCard({
   const revoked = link.revokedAt !== null;
   return (
     <Card testId={`link_${link.id}`}>
-      <p className="font-mono text-xs text-on-surface-variant">{link.id}</p>
-      <p className="text-sm">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
+      <p className="font-mono text-body-small text-on-surface-variant">{link.id}</p>
+      <p className="text-body-medium">{revoked ? "Revoked" : link.singleUse ? "Single-use" : "Multi-use"}</p>
       {!revoked && (
         <div className="flex items-center gap-3">
           <Button testId={`share_${link.id}`} variant="outline" size="sm" onClick={() => onShare(link.id)}>
@@ -320,17 +320,17 @@ function LinkCard({
             data-testid={`revoke_${link.id}`}
             onClick={() => onRevoke(link.id)}
             disabled={revoking}
-            className="text-sm text-on-surface-variant underline disabled:opacity-40"
+            className="text-label-large text-on-surface-variant underline disabled:opacity-40"
           >
             Revoke
           </button>
           {copied && (
-            <p role="status" data-testid={`copied_${link.id}`} className="text-sm text-on-surface-variant">
+            <p role="status" data-testid={`copied_${link.id}`} className="text-body-medium text-on-surface-variant">
               Copied
             </p>
           )}
           {copyFailed && (
-            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-sm text-error">
+            <p role="alert" data-testid={`copy_failed_${link.id}`} className="text-body-medium text-error">
               Couldn&apos;t copy — copy the page address instead.
             </p>
           )}
@@ -385,7 +385,7 @@ function ApplicationRow({
   const approvable = application.emailVerified && application.keyAttached;
   return (
     <div className="flex flex-col gap-2 border-t border-outline-variant pt-3">
-      <p data-testid={`application_${application.id}`} className="text-sm">
+      <p data-testid={`application_${application.id}`} className="text-body-medium">
         {applicantStatus(application)}
       </p>
       {application.approvedAt === null && approvable && (

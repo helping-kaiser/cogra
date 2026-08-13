@@ -205,22 +205,22 @@ export function PostView({ postId }: { postId: string }) {
       {header(viewerId !== null && post.author?.id === viewerId)}
       <div>
         {post.title.value && (
-          <h1 className="text-2xl font-semibold" data-testid="post-title">
+          <h1 className="text-headline-small" data-testid="post-title">
             {post.title.value}
           </h1>
         )}
         {post.description.value && (
-          <p className="text-sm text-on-surface-variant">{post.description.value}</p>
+          <p className="text-body-medium text-on-surface-variant">{post.description.value}</p>
         )}
       </div>
       <p className="whitespace-pre-wrap" data-testid="post-body">
         {post.content.value}
       </p>
       {post.author && (
-        <p className="text-xs text-on-surface-variant">@{post.author.handle}</p>
+        <p className="text-body-small text-on-surface-variant">@{post.author.handle}</p>
       )}
       <hr className="border-outline-variant" />
-      <h2 className="text-lg font-medium">Comments</h2>
+      <h2 className="text-title-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
           at the load-more slot below instead (web.md "Design
           guidelines", the Android twin). */}
@@ -230,9 +230,9 @@ export function PostView({ postId }: { postId: string }) {
         {comments.map((comment) => (
           <li key={comment.id} data-testid={`post-comment-${comment.id}`}>
             <Card>
-              <p className="text-sm">{comment.content.value}</p>
+              <p className="text-body-medium">{comment.content.value}</p>
               {comment.author && (
-                <p className="text-xs text-on-surface-variant">
+                <p className="text-body-small text-on-surface-variant">
                   @{comment.author.handle}
                 </p>
               )}
@@ -271,14 +271,14 @@ export function PostView({ postId }: { postId: string }) {
         <Link
           href="/"
           data-testid="comment-signin"
-          className="self-start text-sm text-on-surface-variant underline"
+          className="self-start text-body-medium text-on-surface-variant underline"
         >
           Sign in or join to comment
         </Link>
       )}
       {phase === "signedIn" && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="comment-draft" className="text-sm font-medium">
+          <label htmlFor="comment-draft" className="text-label-large">
             Add a comment
           </label>
           <textarea
@@ -289,7 +289,7 @@ export function PostView({ postId }: { postId: string }) {
             rows={3}
             className="rounded-md border border-outline p-2"
           />
-          <fieldset className="flex flex-wrap items-center gap-3 text-sm" data-testid="comment-license">
+          <fieldset className="flex flex-wrap items-center gap-3 text-body-medium" data-testid="comment-license">
             <legend className="sr-only">License</legend>
             <label className="flex items-center gap-1">
               <input
@@ -319,18 +319,18 @@ export function PostView({ postId }: { postId: string }) {
             </div>
           </fieldset>
           {refusedMessage && (
-            <p role="alert" data-testid="comment-refused" className="text-sm text-error">
+            <p role="alert" data-testid="comment-refused" className="text-body-medium text-error">
               {refusedMessage}
             </p>
           )}
           {signIncomplete && (
-            <p role="alert" data-testid="comment-signing-failed" className="text-sm text-error">
+            <p role="alert" data-testid="comment-signing-failed" className="text-body-medium text-error">
               Signing did not finish — the write stays pending.
             </p>
           )}
           {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (
-            <p data-testid="comment-signed" className="text-sm text-success">
+            <p data-testid="comment-signed" className="text-body-medium text-success">
               Signed — your comment appears once its record lands. Refresh to check.
             </p>
           )}

@@ -9,7 +9,7 @@ export type TransportFault = "refresh" | "append";
 
 export function TransportError({ testId, message }: { testId: string; message?: string }) {
   return (
-    <p role="alert" data-testid={testId} className="text-sm text-error">
+    <p role="alert" data-testid={testId} className="text-body-medium text-error">
       {message ?? "Can't reach the server. Check your connection and try again."}
     </p>
   );

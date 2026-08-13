@@ -167,7 +167,7 @@ function ComposeFormInner() {
         testId="compose-description"
       />
       <div className="flex flex-col gap-1">
-        <label htmlFor="compose-body" className="text-sm font-medium">
+        <label htmlFor="compose-body" className="text-label-large">
           What do you want to publish?
         </label>
         <textarea
@@ -182,15 +182,15 @@ function ComposeFormInner() {
           className="rounded-md border border-outline p-2"
         />
         {emptyBody && (
-          <p role="alert" data-testid="compose-empty-body" className="text-sm text-error">
+          <p role="alert" data-testid="compose-empty-body" className="text-body-medium text-error">
             The post needs a body.
           </p>
         )}
       </div>
       {editingId === null && (
         <fieldset className="flex flex-col gap-2" data-testid="compose-license">
-          <legend className="text-sm font-medium">License</legend>
-          <label className="flex items-center gap-2 text-sm">
+          <legend className="text-label-large">License</legend>
+          <label className="flex items-center gap-2 text-body-medium">
             <input
               type="checkbox"
               data-testid="license-attribution"
@@ -202,7 +202,7 @@ function ComposeFormInner() {
           </label>
           <div className="flex gap-3" role="radiogroup" aria-label="AI provenance">
             {OVERSIGHT_OPTIONS.map((option) => (
-              <label key={option.value} className="flex items-center gap-1 text-sm">
+              <label key={option.value} className="flex items-center gap-1 text-body-medium">
                 <input
                   type="radio"
                   name="oversight"
@@ -218,12 +218,12 @@ function ComposeFormInner() {
         </fieldset>
       )}
       {refusedMessage && (
-        <p role="alert" data-testid="compose-refused" className="text-sm text-error">
+        <p role="alert" data-testid="compose-refused" className="text-body-medium text-error">
           {refusedMessage}
         </p>
       )}
       {signIncomplete && (
-        <p role="alert" data-testid="compose-signing-failed" className="text-sm text-error">
+        <p role="alert" data-testid="compose-signing-failed" className="text-body-medium text-error">
           Signing did not finish — the write stays pending.
         </p>
       )}
