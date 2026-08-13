@@ -581,12 +581,55 @@ rule the platform docs already carry ([android.md
 
 ---
 
-## 11. Open decisions
+## 11. The mark
 
-- **Launcher icon and wordmark.** Android currently ships no
-  launcher icon at all and falls back to the system default;
-  web still carries the `create-next-app` favicon. The one
-  asset that cannot be generated from tokens.
+CoGra's mark is a **lowercase g**. The bowl is the stance pad and
+the dot inside it is a committed pick sitting in the
+for-it-and-want-it quadrant — the letterform and the signature
+interaction (§8) are the same drawing.
+
+The obvious alternative, a rounded square holding an offset
+circle, is not available: that is Instagram's glyph in silhouette,
+corner radius, and dot placement. The g keeps the field and the
+pick inside a shape nobody owns.
+
+**It is drawn on Figtree's own `g`**, not freehand — bowl 524
+units across, x-height 500, overshoot 12, descender 213 below the
+baseline, advance 601, left sidebearing 30. The stroke is matched
+to weight 700 so the mark sits in the wordmark without reading as
+a lighter letter dropped between the others. The tail is the
+font's descender centreline, extracted from the glyph outline
+rather than approximated, trimmed so the round terminal stops
+short of where the font's flat cut lands.
+
+`docs/assets/cogra-mark.svg` is the source of truth. Every other
+asset is generated from it and **never redrawn** — a second
+drawing is how a mark starts to drift.
+
+**Colour.** Standing alone, the letter takes `primary` and the
+pick takes `primaryContainer`. As an app icon or favicon the mark
+sits on a `primaryContainer` ground with `onPrimaryContainer` ink
+and a `surface` pick, so a browser tab and a home screen show the
+same tile.
+
+**Android.** An adaptive icon: `primaryContainer` background
+layer, the mark as the foreground, and a monochrome layer for
+themed icons. Content is scaled so the mark's enclosing circle
+matches the 66dp keyline on the 108dp layer, which no launcher
+mask can clip.
+
+**Web.** The same tile as `favicon.ico` (16/32/48), `icon.svg`,
+and `apple-icon.png`, placed by Next.js's file conventions rather
+than hand-written `<link>` tags.
+
+**Wordmark.** "cogra" set in Figtree. The mark may stand in for
+the `g`, taking the real glyph's advance and left sidebearing so
+the spacing matches rather than approximates it.
+
+---
+
+## 12. Open decisions
+
 - **Drawn faces** as a replacement for system emoji (§8.4).
 - **Cyrillic or Greek support**, which would force the
   typeface choice open again (§3).
