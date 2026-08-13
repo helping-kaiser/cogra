@@ -173,6 +173,9 @@ pieces").
 - Keep crypto behind an interface so the token store tests with a fake; the
   real Keystore-backed path carries only a thin smoke test (it needs a
   device).
+- Theme: `app`'s `ColorSchemeTest` pins the palette to the repo-root
+  `design-tokens.json` (`make tokens`). Never transcribe a colour into test
+  code or invent one in a screen — screens read roles.
 
 CI runs `./gradlew test` and `./gradlew :app:assembleDebug`, path-filtered to
 `android/**` and `schema.graphql`.
