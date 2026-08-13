@@ -92,7 +92,7 @@ export function HomeShell({
         <div
           role="alert"
           data-testid="security_notice"
-          className="flex flex-col gap-2 rounded-md border border-error bg-error-container p-4 text-body-medium text-on-error-container"
+          className="flex flex-col gap-2 rounded-medium bg-error-container p-4 text-body-medium text-on-error-container"
         >
           <p className="text-title-medium">Security notice</p>
           <p>
@@ -104,7 +104,7 @@ export function HomeShell({
             type="button"
             data-testid="security_notice_dismiss"
             onClick={notices.dismiss}
-            className="self-start rounded-md border border-error px-3 py-1 text-label-large"
+            className="self-start rounded-full px-3 py-1.5 text-label-large text-on-error-container"
           >
             Got it
           </button>

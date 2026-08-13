@@ -315,15 +315,15 @@ function LinkCard({
           <Button testId={`share_${link.id}`} variant="outline" size="sm" onClick={() => onShare(link.id)}>
             Share
           </Button>
-          <button
-            type="button"
-            data-testid={`revoke_${link.id}`}
-            onClick={() => onRevoke(link.id)}
+          <Button
+            testId={`revoke_${link.id}`}
+            variant="text"
+            size="sm"
             disabled={revoking}
-            className="text-label-large text-on-surface-variant underline disabled:opacity-40"
+            onClick={() => onRevoke(link.id)}
           >
             Revoke
-          </button>
+          </Button>
           {copied && (
             <p role="status" data-testid={`copied_${link.id}`} className="text-body-medium text-on-surface-variant">
               Copied

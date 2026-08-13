@@ -229,7 +229,7 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
   };
 
   const fieldClass = (name: string) =>
-    `rounded-md border bg-transparent px-3 py-2 ${
+    `rounded-extra-small border bg-transparent px-3 py-2 ${
       errorField === name
         ? "border-error"
         : "border-outline"

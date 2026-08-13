@@ -113,7 +113,7 @@ function VerifyCard() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           autoComplete="email"
-          className="rounded-md border border-outline bg-transparent px-3 py-2"
+          className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
         />
         <Button
           type="submit"
@@ -274,7 +274,7 @@ function RearmCard() {
           }}
           autoComplete="off"
           spellCheck={false}
-          className="rounded-md border border-outline bg-transparent px-3 py-2"
+          className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
         />
         {error !== null && (
           <p role="alert" data-testid="rearm_error" className="text-body-medium text-error">

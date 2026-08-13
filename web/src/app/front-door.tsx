@@ -49,7 +49,7 @@ export function FrontDoor() {
             }}
             autoComplete="off"
             spellCheck={false}
-            className="rounded-md border border-outline bg-transparent px-3 py-2"
+            className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
           />
         </div>
         {malformed && (
