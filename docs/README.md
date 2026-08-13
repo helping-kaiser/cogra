@@ -155,6 +155,11 @@ an `instances/` doc is a sign the mechanism belongs in
 - [auth](implementation/auth.md) — server-side credentials,
   invitation-based registration, JWT access + Postgres refresh
   tokens, sessions.
+- [design](implementation/design.md) — the design system both
+  clients implement: the orange-led Material 3 palette and how
+  it is generated, Figtree and the type scale, shape, motion,
+  the shared component inventory, copy rules, and the stance
+  control.
 - [android](implementation/android.md) — the Android app: Kotlin +
   Jetpack Compose, Apollo Kotlin codegen off the exported
   `schema.graphql`, the `ranker` core via UniFFI, module and test

@@ -7,7 +7,7 @@ sharing this repository with the backend
 | Concern | Choice |
 |---|---|
 | Language / UI | Kotlin + Jetpack Compose |
-| Design language | [Material 3](https://m3.material.io) — what Compose's component library implements |
+| Design language | [Material 3](https://m3.material.io) — what Compose's component library implements; the system built on it is [design.md](design.md) |
 | GraphQL client | Apollo Kotlin, generated from the exported `schema.graphql` |
 | Ranking core | the `ranker` crate, bound via UniFFI |
 | Build | Gradle, multi-module |
