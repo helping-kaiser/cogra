@@ -74,7 +74,7 @@ export function KeyCeremonyView() {
 
       {recoveryCode === null ? (
         <>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             Your posts, relationships, and standing belong to a signing key that lives only on your
             devices — CoGra never holds it. A recovery code lets you restore that key if this
             browser is lost. We recommend creating one now.
@@ -84,14 +84,14 @@ export function KeyCeremonyView() {
             <p
               role="alert"
               data-testid="ceremony_key_in_use"
-              className="text-sm text-red-600 dark:text-red-400"
+              className="text-sm text-error"
             >
               This device&apos;s signing key already belongs to another account. Sign in to that
               account to use it — a key can only ever back one account.
             </p>
           )}
           {inProgress && (
-            <p role="status" data-testid="backup_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p role="status" data-testid="backup_progress" className="text-sm text-on-surface-variant">
               Working…
             </p>
           )}
@@ -115,7 +115,7 @@ export function KeyCeremonyView() {
               role="alertdialog"
               aria-labelledby="decline-title"
               aria-describedby="decline-consequence"
-              className="flex flex-col gap-3 rounded-md border border-zinc-300 p-4 dark:border-zinc-700"
+              className="flex flex-col gap-3 rounded-md border border-outline-variant p-4"
             >
               <h2 id="decline-title" className="font-medium">
                 Continue without a backup?
@@ -123,7 +123,7 @@ export function KeyCeremonyView() {
               <p
                 id="decline-consequence"
                 data-testid="backup_decline_consequence"
-                className="text-sm text-zinc-600 dark:text-zinc-400"
+                className="text-sm text-on-surface-variant"
               >
                 If this browser&apos;s data is lost, your posts, relationships, and standing are
                 permanently lost with it. Your login would survive, but the actor behind it can
@@ -146,11 +146,11 @@ export function KeyCeremonyView() {
         <>
           <p
             data-testid="backup_code"
-            className="rounded-md border border-zinc-300 p-4 text-center font-mono text-lg tracking-wider dark:border-zinc-700"
+            className="rounded-md border border-outline-variant p-4 text-center font-mono text-lg tracking-wider"
           >
             {recoveryCode}
           </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             Write this code down and keep it somewhere safe. It is shown only this once — CoGra
             cannot recover it for you.
           </p>

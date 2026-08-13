@@ -210,16 +210,16 @@ export function PostView({ postId }: { postId: string }) {
           </h1>
         )}
         {post.description.value && (
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">{post.description.value}</p>
+          <p className="text-sm text-on-surface-variant">{post.description.value}</p>
         )}
       </div>
       <p className="whitespace-pre-wrap" data-testid="post-body">
         {post.content.value}
       </p>
       {post.author && (
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">@{post.author.handle}</p>
+        <p className="text-xs text-on-surface-variant">@{post.author.handle}</p>
       )}
-      <hr className="border-zinc-200 dark:border-zinc-800" />
+      <hr className="border-outline-variant" />
       <h2 className="text-lg font-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
           at the load-more slot below instead (web.md "Design
@@ -232,7 +232,7 @@ export function PostView({ postId }: { postId: string }) {
             <Card>
               <p className="text-sm">{comment.content.value}</p>
               {comment.author && (
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-on-surface-variant">
                   @{comment.author.handle}
                 </p>
               )}
@@ -271,7 +271,7 @@ export function PostView({ postId }: { postId: string }) {
         <Link
           href="/"
           data-testid="comment-signin"
-          className="self-start text-sm text-zinc-600 underline dark:text-zinc-400"
+          className="self-start text-sm text-on-surface-variant underline"
         >
           Sign in or join to comment
         </Link>
@@ -287,7 +287,7 @@ export function PostView({ postId }: { postId: string }) {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             rows={3}
-            className="rounded-md border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+            className="rounded-md border border-outline p-2"
           />
           <fieldset className="flex flex-wrap items-center gap-3 text-sm" data-testid="comment-license">
             <legend className="sr-only">License</legend>
@@ -317,18 +317,18 @@ export function PostView({ postId }: { postId: string }) {
             </div>
           </fieldset>
           {refusedMessage && (
-            <p role="alert" data-testid="comment-refused" className="text-sm text-red-600">
+            <p role="alert" data-testid="comment-refused" className="text-sm text-error">
               {refusedMessage}
             </p>
           )}
           {signIncomplete && (
-            <p role="alert" data-testid="comment-signing-failed" className="text-sm text-red-600">
+            <p role="alert" data-testid="comment-signing-failed" className="text-sm text-error">
               Signing did not finish — the write stays pending.
             </p>
           )}
           {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (
-            <p data-testid="comment-signed" className="text-sm text-green-700 dark:text-green-400">
+            <p data-testid="comment-signed" className="text-sm text-success">
               Signed — your comment appears once its record lands. Refresh to check.
             </p>
           )}

@@ -110,22 +110,22 @@ export function JoinView({ linkId }: { linkId: string }) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Join CoGra</h1>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-on-surface-variant">
         CoGra is invite-only: a member vouches for you, and their approval brings you in.
       </p>
 
       {inviteId === null && (
-        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="invite_error" className="text-sm text-error">
           This isn&apos;t an invite link.
         </p>
       )}
       {inviteId !== null && checkState.status === "notFound" && (
-        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="invite_error" className="text-sm text-error">
           This invite doesn&apos;t exist. Ask your inviter for a fresh link.
         </p>
       )}
       {check !== null && !check.usable && (
-        <p role="alert" data-testid="invite_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="invite_error" className="text-sm text-error">
           This invite can&apos;t be used — it may have expired or been revoked.
         </p>
       )}
@@ -133,7 +133,7 @@ export function JoinView({ linkId }: { linkId: string }) {
         <TransportError testId="invite_transport_error" />
       )}
       {inviteId !== null && checkState.status === "checking" && (
-        <p role="status" data-testid="invite_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="invite_progress" className="text-sm text-on-surface-variant">
           Checking the invite…
         </p>
       )}
@@ -157,7 +157,7 @@ export function JoinView({ linkId }: { linkId: string }) {
           <Link
             href="/invites"
             data-testid="join_member_invites"
-            className="text-sm text-zinc-600 underline dark:text-zinc-400"
+            className="text-sm text-on-surface-variant underline"
           >
             Invite someone from your own Invites page
           </Link>
@@ -168,7 +168,7 @@ export function JoinView({ linkId }: { linkId: string }) {
         <Link
           href="/login"
           data-testid="invite_login"
-          className="text-sm text-zinc-600 underline dark:text-zinc-400"
+          className="text-sm text-on-surface-variant underline"
         >
           Already a member? Sign in
         </Link>
@@ -231,8 +231,8 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
   const fieldClass = (name: string) =>
     `rounded-md border bg-transparent px-3 py-2 ${
       errorField === name
-        ? "border-red-600 dark:border-red-400"
-        : "border-zinc-300 dark:border-zinc-700"
+        ? "border-error"
+        : "border-outline"
     }`;
 
   return (
@@ -254,7 +254,7 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
           className={fieldClass("handle")}
           aria-describedby="handle-rules"
         />
-        <p id="handle-rules" className="text-xs text-zinc-600 dark:text-zinc-400">
+        <p id="handle-rules" className="text-xs text-on-surface-variant">
           3–30 characters: a–z, 0–9, _
         </p>
       </div>
@@ -287,16 +287,16 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
           autoComplete="new-password"
           testId="apply_password"
         />
-        <p className="text-xs text-zinc-600 dark:text-zinc-400">At least 12 characters.</p>
+        <p className="text-xs text-on-surface-variant">At least 12 characters.</p>
       </div>
       {error !== null && (
-        <p role="alert" data-testid="apply_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="apply_error" className="text-sm text-error">
           {applyMessage(error)}
         </p>
       )}
       {transportFailed && <TransportError testId="apply_transport_error" />}
       {inProgress && (
-        <p role="status" data-testid="apply_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="apply_progress" className="text-sm text-on-surface-variant">
           Creating your account…
         </p>
       )}
@@ -344,13 +344,13 @@ function RearmPanel({ inviteId }: { inviteId: string }) {
         You&apos;re signed in. If your application expired, this invite re-arms it.
       </p>
       {error !== null && (
-        <p role="alert" data-testid="rearm_error" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" data-testid="rearm_error" className="text-sm text-error">
           {rearmMessage(error)}
         </p>
       )}
       {transportFailed && <TransportError testId="rearm_transport_error" />}
       {inProgress && (
-        <p role="status" data-testid="rearm_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="rearm_progress" className="text-sm text-on-surface-variant">
           Applying the invite…
         </p>
       )}

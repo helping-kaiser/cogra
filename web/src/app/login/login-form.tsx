@@ -125,18 +125,18 @@ export function LoginForm({
             type="checkbox"
             checked={dontRemember}
             onChange={(event) => setDontRemember(event.target.checked)}
-            className="h-4 w-4 accent-zinc-900 dark:accent-zinc-100"
+            className="h-4 w-4 accent-primary"
           />
           Don&apos;t remember this account on this device
         </label>
         {error !== null && (
-          <p role="alert" data-testid="login_error" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" data-testid="login_error" className="text-sm text-error">
             {loginMessage(error)}
           </p>
         )}
         {transportFailed && <TransportError testId="login_transport_error" />}
         {inProgress && (
-          <p role="status" data-testid="login_progress" className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p role="status" data-testid="login_progress" className="text-sm text-on-surface-variant">
             Signing in…
           </p>
         )}
@@ -147,7 +147,7 @@ export function LoginForm({
       <Link
         href="/reset"
         data-testid="login_forgot"
-        className="text-sm text-zinc-600 underline dark:text-zinc-400"
+        className="text-sm text-on-surface-variant underline"
       >
         Forgot password?
       </Link>

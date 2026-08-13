@@ -92,7 +92,7 @@ export function HomeShell({
         <div
           role="alert"
           data-testid="security_notice"
-          className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+          className="flex flex-col gap-2 rounded-md border border-error bg-error-container p-4 text-sm text-on-error-container"
         >
           <p className="font-medium">Security notice</p>
           <p>
@@ -104,14 +104,14 @@ export function HomeShell({
             type="button"
             data-testid="security_notice_dismiss"
             onClick={notices.dismiss}
-            className="self-start rounded-md border border-red-300 px-3 py-1 font-medium dark:border-red-800"
+            className="self-start rounded-md border border-error px-3 py-1 font-medium"
           >
             Got it
           </button>
         </div>
       )}
       {loading && (
-        <p role="status" data-testid="home_loading" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" data-testid="home_loading" className="text-sm text-on-surface-variant">
           Loading…
         </p>
       )}
@@ -124,21 +124,21 @@ export function HomeShell({
             <Link
               href="/feed"
               data-testid="home_feed"
-              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+              className="text-sm text-on-surface-variant underline"
             >
               Feed
             </Link>
             <Link
               href="/invites"
               data-testid="home_invites"
-              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+              className="text-sm text-on-surface-variant underline"
             >
               Invites
             </Link>
             <Link
               href="/settings"
               data-testid="home_settings"
-              className="text-sm text-zinc-600 underline dark:text-zinc-400"
+              className="text-sm text-on-surface-variant underline"
             >
               Settings
             </Link>

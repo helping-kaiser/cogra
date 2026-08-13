@@ -191,7 +191,7 @@ export function SettingsView({
       <p
         role={feedback.kind === "done" ? "status" : "alert"}
         data-testid="settings_feedback"
-        className={feedback.kind === "done" ? "text-sm" : "text-sm text-red-600 dark:text-red-400"}
+        className={feedback.kind === "done" ? "text-sm" : "text-sm text-error"}
       >
         {feedbackMessage(feedback)}
       </p>
@@ -328,11 +328,11 @@ export function SettingsView({
           <>
             <p
               data-testid="settings_backup_code"
-              className="rounded-md border border-zinc-300 p-4 text-center font-mono text-lg tracking-wider dark:border-zinc-700"
+              className="rounded-md border border-outline-variant p-4 text-center font-mono text-lg tracking-wider"
             >
               {newBackupCode}
             </p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-on-surface-variant">
               Write this code down somewhere safe. It is shown only this once; any older code stops
               working.
             </p>
@@ -342,7 +342,7 @@ export function SettingsView({
           </>
         ) : backupMode === "create" ? (
           <>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-on-surface-variant">
               Create your recovery code. It re-encrypts your key on this browser and backs it up —
               without one, losing this browser loses the actor.
             </p>
@@ -352,7 +352,7 @@ export function SettingsView({
           </>
         ) : backupMode === "rekey" ? (
           <form onSubmit={onRekey} className="flex flex-col gap-3" noValidate>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-on-surface-variant">
               A new code re-encrypts your key and replaces the old backup — recovery always uses
               the newest one. Enter your current code to replace it.
             </p>
@@ -368,7 +368,7 @@ export function SettingsView({
                 onChange={(event) => setRekeyCode(event.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 font-mono dark:border-zinc-700"
+                className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
               />
             </div>
             <Button
@@ -383,14 +383,14 @@ export function SettingsView({
           </form>
         ) : backupMode === "none" ? (
           <>
-            <p data-testid="settings_backup_no_actor" className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p data-testid="settings_backup_no_actor" className="text-sm text-on-surface-variant">
               Your actor key isn&apos;t on this browser, so there&apos;s nothing to back up.
               Restore it first with your recovery code.
             </p>
             <Link
               href="/restore"
               data-testid="settings_backup_restore"
-              className="self-start text-sm text-zinc-600 underline dark:text-zinc-400"
+              className="self-start text-sm text-on-surface-variant underline"
             >
               Restore the key
             </Link>
@@ -418,7 +418,7 @@ export function SettingsView({
                   data-testid={`revoke_${session.id}`}
                   onClick={() => onRevokeSession(session.id)}
                   disabled={busy}
-                  className="text-sm text-zinc-600 underline disabled:opacity-40 dark:text-zinc-400"
+                  className="text-sm text-on-surface-variant underline disabled:opacity-40"
                 >
                   Revoke
                 </button>
@@ -492,7 +492,7 @@ export function SettingsView({
               }}
               autoComplete="off"
               spellCheck={false}
-              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
+              className="rounded-md border border-outline bg-transparent px-3 py-2"
             />
           </div>
           {feedbackLine("handle")}
@@ -544,7 +544,7 @@ export function SettingsView({
 
         {emailChangeRequested && (
           <form onSubmit={onConfirmEmailChange} className="flex flex-col gap-3" noValidate>
-            <p data-testid="settings_email_requested" className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p data-testid="settings_email_requested" className="text-sm text-on-surface-variant">
               Check both inboxes — either message&apos;s code confirms the change.
             </p>
             <div className="flex flex-col gap-1">
@@ -562,7 +562,7 @@ export function SettingsView({
                 }}
                 autoComplete="off"
                 spellCheck={false}
-                className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 font-mono dark:border-zinc-700"
+                className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
               />
             </div>
             <Button
