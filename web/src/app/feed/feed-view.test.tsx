@@ -113,7 +113,7 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("feed-transport-error")).toBeInTheDocument();
   });
 
-  it("keeps loaded posts readable when a page fetch fails", async () => {
+  it("keeps loaded posts readable and faults at the load-more slot when a page fetch fails", async () => {
     let calls = 0;
     server.use(
       graphql.query("Posts", () => {
@@ -125,9 +125,31 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />);
     fireEvent.click(await screen.findByTestId("feed-load-more"));
-    const banner = await screen.findByTestId("feed-transport-error");
-    expect(banner).toHaveTextContent(/new posts/);
+    expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
+    // The fault surfaces where the failed fetch was requested — at the
+    // load-more slot, not the top-of-page banner.
+    expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+  });
+
+  it("holds the load-more error through a failed retry instead of flashing", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("Posts", () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ data: postsPage([post("p1", "First")], "c1", true) })
+          : HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-load-more-error");
+    fireEvent.click(screen.getByTestId("feed-load-more-retry"));
+    expect(screen.getByTestId("feed-load-more-error")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("feed-load-more-retry")).toBeEnabled());
+    expect(screen.getByTestId("feed-load-more-error")).toBeInTheDocument();
   });
 
   it("holds the banner through a failed retry instead of flashing", async () => {
@@ -142,7 +164,7 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-transport-error")).toBeInTheDocument();
   });
 
-  it("clears the banner when a later page fetch succeeds", async () => {
+  it("clears the load-more error when a retried page fetch succeeds", async () => {
     let calls = 0;
     server.use(
       graphql.query("Posts", () => {
@@ -158,10 +180,10 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />);
     fireEvent.click(await screen.findByTestId("feed-load-more"));
-    await screen.findByTestId("feed-transport-error");
-    fireEvent.click(screen.getByTestId("feed-load-more"));
+    await screen.findByTestId("feed-load-more-error");
+    fireEvent.click(screen.getByTestId("feed-load-more-retry"));
     expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
-    expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-load-more-error")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
   });
 });

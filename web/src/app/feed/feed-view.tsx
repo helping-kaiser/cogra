@@ -15,7 +15,7 @@ import { useAuthPhase } from "@/lib/session/provider";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
-import { TransportError } from "@/lib/ui/transport-error";
+import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 export function FeedView() {
   const client = useApolloClient();
@@ -25,24 +25,26 @@ export function FeedView() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [transportFailed, setTransportFailed] = useState(false);
+  const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
   // Effect-invoked, so no synchronous setState here; the retry button
-  // resets the loading state in its own handler. The fault flag
-  // reflects the last COMPLETED fetch — clearing it eagerly at fetch
-  // start made the banner vanish and reappear on every failed retry.
+  // resets the loading state in its own handler. The fault reflects
+  // the last COMPLETED fetch — clearing it eagerly at fetch start
+  // made the banner vanish and reappear on every failed retry. It
+  // also carries which fetch failed, so the fault can surface where
+  // that fetch was requested.
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPosts(client).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
       if (outcome.kind === "success") {
-        setTransportFailed(false);
+        setTransportFault(null);
         setPosts(outcome.value.items);
         setEndCursor(outcome.value.endCursor);
         setHasNextPage(outcome.value.hasNextPage);
       } else {
-        setTransportFailed(true);
+        setTransportFault("refresh");
       }
     });
     return () => {
@@ -58,12 +60,12 @@ export function FeedView() {
     const outcome = await fetchPosts(client, endCursor);
     setLoadingMore(false);
     if (outcome.kind === "success") {
-      setTransportFailed(false);
+      setTransportFault(null);
       setPosts((current) => [...current, ...outcome.value.items]);
       setEndCursor(outcome.value.endCursor);
       setHasNextPage(outcome.value.hasNextPage);
     } else {
-      setTransportFailed(true);
+      setTransportFault("append");
     }
   };
 
@@ -94,11 +96,12 @@ export function FeedView() {
           ) : undefined
         }
       />
-      {transportFailed && (
+      {transportFault === "refresh" && (
         <div className="flex items-center gap-3">
           {/* With posts on screen the fault means "stale", not "gone":
-              the loaded posts stay readable under this banner
-              (web.md "Design guidelines", the Android twin). */}
+              the loaded posts stay readable under this banner. A failed
+              page fetch surfaces at the load-more slot instead (web.md
+              "Design guidelines", the Android twin). */}
           <TransportError
             testId="feed-transport-error"
             message={
@@ -121,7 +124,7 @@ export function FeedView() {
         </div>
       )}
       {loading && <p data-testid="feed-loading">Loading…</p>}
-      {!loading && !transportFailed && posts.length === 0 && (
+      {!loading && transportFault === null && posts.length === 0 && (
         <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
       )}
       <ul className="flex flex-col gap-3" data-testid="feed-list">
@@ -141,16 +144,33 @@ export function FeedView() {
           </li>
         ))}
       </ul>
-      {hasNextPage && (
-        <Button
-          testId="feed-load-more"
-          variant="outline"
-          onClick={() => void onLoadMore()}
-          disabled={loadingMore}
-        >
-          Load more
-        </Button>
-      )}
+      {hasNextPage &&
+        (transportFault === "append" ? (
+          <div className="flex items-center justify-center gap-3">
+            <TransportError
+              testId="feed-load-more-error"
+              message="Can't reach the server — new posts can't load right now."
+            />
+            <Button
+              testId="feed-load-more-retry"
+              variant="outline"
+              size="sm"
+              onClick={() => void onLoadMore()}
+              disabled={loadingMore}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <Button
+            testId="feed-load-more"
+            variant="outline"
+            onClick={() => void onLoadMore()}
+            disabled={loadingMore}
+          >
+            Load more
+          </Button>
+        ))}
     </main>
   );
 }

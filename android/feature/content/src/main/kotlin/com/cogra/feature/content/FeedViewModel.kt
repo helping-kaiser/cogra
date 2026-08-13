@@ -21,7 +21,7 @@ data class FeedUiState(
     val endCursor: String? = null,
     val hasNextPage: Boolean = false,
     val loadingMore: Boolean = false,
-    val transportFailed: Boolean = false,
+    val transportFault: TransportFault? = null,
 )
 
 /**
@@ -41,9 +41,11 @@ class FeedViewModel @Inject constructor(
         refresh()
     }
 
-    // The fault flag reflects the last COMPLETED fetch: clearing it
+    // The fault reflects the last COMPLETED fetch: clearing it
     // eagerly at fetch start made the error surface vanish and
-    // reappear — a visible flash — on every failed retry.
+    // reappear — a visible flash — on every failed retry. It also
+    // carries which fetch failed, so the fault can surface where
+    // that fetch was requested.
     fun refresh() {
         _state.update { it.copy(loading = true) }
         viewModelScope.launch {
@@ -51,7 +53,7 @@ class FeedViewModel @Inject constructor(
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loading = false,
-                        transportFailed = false,
+                        transportFault = null,
                         posts = outcome.value.items,
                         endCursor = outcome.value.endCursor,
                         hasNextPage = outcome.value.hasNextPage,
@@ -59,7 +61,9 @@ class FeedViewModel @Inject constructor(
                 }
                 // The listing is anonymous-capable; a refusal here is a
                 // transport-shaped surprise, rendered the same way.
-                else -> _state.update { it.copy(loading = false, transportFailed = true) }
+                else -> _state.update {
+                    it.copy(loading = false, transportFault = TransportFault.REFRESH)
+                }
             }
         }
     }
@@ -73,13 +77,15 @@ class FeedViewModel @Inject constructor(
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loadingMore = false,
-                        transportFailed = false,
+                        transportFault = null,
                         posts = it.posts + outcome.value.items,
                         endCursor = outcome.value.endCursor,
                         hasNextPage = outcome.value.hasNextPage,
                     )
                 }
-                else -> _state.update { it.copy(loadingMore = false, transportFailed = true) }
+                else -> _state.update {
+                    it.copy(loadingMore = false, transportFault = TransportFault.APPEND)
+                }
             }
         }
     }

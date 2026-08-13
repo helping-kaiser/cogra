@@ -128,7 +128,7 @@ fun FeedScreen(
                 .fillMaxSize(),
         ) {
             when {
-                state.transportFailed && state.posts.isEmpty() -> Column(
+                state.transportFault != null && state.posts.isEmpty() -> Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
@@ -153,11 +153,11 @@ fun FeedScreen(
                 }
                 else -> Column(modifier = Modifier.fillMaxSize()) {
                     // A transport fault never blanks content already on
-                    // screen: the loaded posts stay readable and the
-                    // fault rides this banner; the full-screen error is
-                    // reserved for the nothing-loaded state
+                    // screen, and it surfaces where the failed fetch was
+                    // requested: a failed refresh on this banner, a
+                    // failed page fetch at the load-more slot below
                     // (android.md "Degrade, never crash").
-                    if (state.transportFailed) {
+                    if (state.transportFault == TransportFault.REFRESH) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -185,14 +185,27 @@ fun FeedScreen(
                         }
                         if (state.hasNextPage) {
                             item {
-                                Box(
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
-                                    if (state.loadingMore) {
-                                        CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                                    } else {
-                                        TextButton(
+                                    when {
+                                        state.loadingMore -> CircularProgressIndicator(
+                                            modifier = Modifier.padding(8.dp),
+                                        )
+                                        state.transportFault == TransportFault.APPEND -> {
+                                            ErrorLine(
+                                                R.string.content_feed_stale,
+                                                "feed_load_more_error",
+                                            )
+                                            TextButton(
+                                                onClick = onLoadMore,
+                                                modifier = Modifier.testTag("feed_load_more_retry"),
+                                            ) {
+                                                Text(stringResource(R.string.content_retry))
+                                            }
+                                        }
+                                        else -> TextButton(
                                             onClick = onLoadMore,
                                             modifier = Modifier.testTag("feed_load_more"),
                                         ) {

@@ -97,9 +97,17 @@ Three failure classes the app absorbs instead of dying:
   one-time dialog: data loss is visible, never silent.
 - **Transport faults never blank loaded content.** A read surface
   that already holds content keeps showing it when a refresh or
-  page fetch fails; the fault rides a non-blocking banner with a
-  retry. The full-screen transport error is reserved for the
-  nothing-loaded state.
+  page fetch fails; the full-screen transport error is reserved
+  for the nothing-loaded state. The fault surfaces where the
+  failed fetch was requested: a failed refresh rides a
+  non-blocking banner above the content, a failed page fetch
+  replaces the load-more control in place with the same message
+  and a retry — the platform's
+  [Paging load-state pattern](https://developer.android.com/topic/libraries/architecture/paging/load-state).
+  A failed submit is a composer error beside its button, never a
+  read fault. The fault reflects the last *completed* fetch — it
+  clears on success, never eagerly at fetch start, so a failed
+  retry never flashes the error surface.
 
 ## Accessibility
 
