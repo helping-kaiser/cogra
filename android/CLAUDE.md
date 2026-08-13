@@ -32,9 +32,10 @@ Gradle modules mirror the backend's crate discipline; each unit-tests in
 isolation. Today's modules: `app` (shell, navigation, theme, the
 endpoint/web-origin build config), `core:crypto`, `core:designsystem`,
 `core:domain` (with shared test fixtures under `testFixtures/`),
-`core:network`, and the slice-1 feature surfaces `feature:onboarding`,
+`core:network`, the slice-1 feature surfaces `feature:onboarding`,
 `feature:auth`, `feature:home`, `feature:invites`,
-`feature:settings`. `core:ranker` arrives with slice 3.
+`feature:settings`, and slice 2's `feature:content`. `core:ranker`
+arrives with slice 3.
 
 The split:
 

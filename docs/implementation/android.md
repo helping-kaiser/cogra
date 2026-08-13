@@ -153,7 +153,7 @@ unit-tests in isolation:
 - `core:ranker` — UniFFI bindings to the `ranker` crate (the
   device rollout stage).
 - `feature:*` — one module per surface (`feature:auth`,
-  `feature:feed`, …): Compose screens plus their ViewModels.
+  `feature:content`, …): Compose screens plus their ViewModels.
 
 ## Tests
 
