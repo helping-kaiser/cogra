@@ -89,6 +89,15 @@ Contrast level is `0.0` throughout. Raising it is a real dial
 if the palette ever needs more separation, but it changes
 every token, so it is a decision, not a tweak.
 
+The generator lives in `web/src/lib/ui/design-tokens.test.ts` and
+writes **`design-tokens.json`** at the repo root — the contract both
+clients pin their themes to, the same arrangement the client crypto
+has with `client-crypto-vectors.json`. `make tokens` regenerates it;
+every other run asserts it is not stale, and the AA check of §2.1
+runs there, so a palette that fails cannot be generated. Neither
+client transcribes a value: Android's `ColorSchemeTest` and web's
+`palette.test.ts` read the file.
+
 ### 2.3 Tokens
 
 These are the Material 3 roles. **Screens never name a colour
@@ -132,6 +141,35 @@ palette change a rewrite instead of a token edit.
 | `errorContainer` | `#FFDAD6` | `#93000A` |
 | `onErrorContainer` | `#93000A` | `#FFDAD6` |
 
+**Success** — a CoGra role, outside Material's set
+
+| Role | Light | Dark |
+|---|---|---|
+| `success` | `#006C4F` | `#7CD8B3` |
+| `onSuccess` | `#FFFFFF` | `#003828` |
+| `successContainer` | `#98F5CE` | `#00513B` |
+| `onSuccessContainer` | `#002116` | `#98F5CE` |
+
+Material has no success role, so this one is generated the way
+Material Theme Builder generates a custom colour: `Blend.harmonize`
+the design colour `#00897B` toward the seed, then read the resulting
+palette at Material's own error tones — light 40/100/90/10, dark
+80/20/30/90 — so success carries exactly the weight error does.
+
+It is a teal rather than a true green for two reasons. Harmonizing a
+green into an orange-led palette lands it within 23° of `tertiary`,
+which is already an olive; and red/green is the pair colour-blind
+readers lose, where teal keeps a blue component that survives. `error`
+and `success` must stay distinguishable by more than their label, even
+though §10 requires the label too.
+
+`ColorScheme` has no slot for these, so on Android they ride the
+CompositionLocal pattern Android documents for extending Material
+(`CograTheme.colors.success`) rather than a `ColorScheme` extension
+property, which would read `isSystemInDarkTheme()` at the call site and
+disagree with any caller passing `darkTheme` explicitly — as previews
+and Robolectric tests do.
+
 **Surface**
 
 | Role | Light | Dark |
@@ -168,7 +206,11 @@ palette change a rewrite instead of a token edit.
 | `inverseOnSurface` | `#FFEDE6` | `#33302F` |
 | `inversePrimary` | `#FFB692` | `#9F4100` |
 
-`scrim` and `shadow` are `#000000` in both themes.
+`scrim` and `shadow` are `#000000` in both themes. `background` and
+`onBackground` mirror `surface` and `onSurface` exactly — Material
+carries both pairs, and the generator gives them the same values.
+`surfaceTint` follows `primary`, so dark tonal elevation cannot
+reintroduce the tone-80 orange §2.1 rejects.
 
 ### 2.4 Applying the roles
 
@@ -185,6 +227,10 @@ palette change a rewrite instead of a token edit.
 - `error` is for failure, never for negative stance. A
   negative stance is an ordinary, legitimate opinion (§8) and
   colouring it as an error editorialises it.
+- `success` marks a completed action — a signed write landing, a
+  saved edit. It never carries the meaning alone: the words say what
+  happened and the colour agrees with them (§10). It is not a stance
+  colour either; a positive stance is an opinion, not an outcome.
 
 ### 2.5 Dynamic colour
 
