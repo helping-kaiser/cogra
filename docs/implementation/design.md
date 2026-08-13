@@ -326,17 +326,6 @@ The docs' internal vocabulary — *valence*, *connection*,
 frontend labels free: "CoGra's frontend labels surface
 whichever aspect fits the gesture."
 
-Two pieces of copy the protocol requires and neither client
-currently has:
-
-- Blocking does not lift the effect your own live records have
-  on other people's feeds; only netting your stance to nothing
-  does ([feed-ranking.md
-  §Severance](../primitive/feed-ranking.md)). The cut-ties
-  flow (§8.5) must say this in plain words.
-- Hop-distance guidance on a cut: a near cut is clean, a
-  distant one carries collateral.
-
 Write from the reader's side. Active voice. A control says
 what will happen; the confirmation says what happened.
 
@@ -344,8 +333,7 @@ what will happen; the confirmation says what happened.
 
 ## 8. The stance control
 
-CoGra's signature interaction, and its one genuinely novel UX
-problem.
+CoGra's signature interaction.
 
 ### 8.1 What is being authored
 
@@ -374,50 +362,68 @@ family-fixed by the census and are never UI choices
 ([edges.md §1](../primitive/edges.md)); the family follows
 from the target.
 
-**A stance is the intended net state, not an overwrite.** The
-control opens showing your current net position and authors
-the delta needed to reach the new one
-([api-spec.md](api-spec.md)). Nothing implicit ever becomes a
-record: scrolling, dwell, opening, and sharing are not
-stances ([graph-model.md
+**Each gesture authors one edge.** The pad writes a single
+record carrying exactly the values picked, both in `[−1, +1]`.
+It never computes a delta against your history and never
+rewrites what is already there. One new edge against a
+years-long bundle is a real, visible signal without erasing
+the years — a bad week with an old friend should not undo the
+friendship, and their weight in your world should come out
+roughly where it was, a little lower, not negative.
+
+Everything about the bundle is **read-side**: your current
+standing toward someone, what a pick will add to it, and what
+reaching severance would take. The picker surfaces that
+information; it never folds it into the value it writes.
+Current standing ships with the control; richer neighbourhood
+context arrives with feed ranking.
+
+Nothing implicit ever becomes a record: scrolling, dwell,
+opening, and sharing are not stances ([graph-model.md
 §Stances, not events](../primitive/graph-model.md)).
 
-### 8.2 Zero is not neutral
+### 8.2 Zero contributes nothing
 
-**Either parameter at zero makes the record inert**, and a net
-of `(0, 0)` is severance — a deliberate cut with consequences
-ordinary stances do not have: no feed presence, no attribution
-earnings, no vouch propagation, and it is burn-priced
-([feed-ranking.md](../primitive/feed-ranking.md)).
+An edge with either parameter at zero is routing-inert — it
+adds nothing to the bundle ([edges.md
+§1](../primitive/edges.md)). Authoring one is pointless, not
+dangerous.
 
-The centre of a two-axis field is therefore the most
-destructive point on it, and the two centre-lines are a cross
-of dead values running through the middle of the control. Two
-rules follow:
+Severance is a different act: netting a *whole* bundle toward
+someone to `(0, 0)`. That is deliberate and burn-priced, and
+carries consequences ordinary stances do not — no feed
+presence, no attribution earnings, no vouch propagation
+([feed-ranking.md](../primitive/feed-ranking.md)). Because one
+edge never nets a bundle, no single pick can reach it by
+accident, and it has its own flow (§8.5).
 
-- **The everyday control cannot emit zero.** Values within
-  **±0.05** of either axis snap outward to ±0.05. The full
-  four-quadrant range stays available; only the dead cross is
-  unreachable. This is a floor, not an authoring bar.
-- **Severance is not a drift target** (§8.5).
+So the control **never prevents a choice**. The whole square is
+reachable, corners included — someone dragging to the far
+corner means it, and refusing to give them `(−1, −1)` would be
+the worse failure. What the control does instead is explain,
+and confirm when it matters:
+
+- Land on an inert value and it says the pick will do nothing.
+- Pick something drastic and it says what that means before it
+  commits.
 
 ### 8.3 The gesture
 
-A single tap target at rest. Tap commits a modest positive —
-the default is **`(+0.1, +0.1)`**, per the repo-wide
-low-defaults policy: defaults sit low so stronger stances stay
-expressible ([invitations.md
-§3](../primitive/invitations.md)).
+A single tap target at rest. A plain tap commits a modest
+positive — **`(+0.1, +0.1)`**, per the repo-wide low-defaults
+policy: defaults sit low so stronger stances stay expressible
+([invitations.md §3](../primitive/invitations.md)).
 
 Press and hold, and a soft circular pad blooms under the
 thumb. Drift to position; release to commit. Horizontal is
-valence, vertical is connection. The pad opens centred on your
-current net stance, not on the origin.
+valence, vertical is connection. **The pad opens at the
+origin**, untilted toward either direction — the low default
+belongs to the tap, not to the considered gesture.
 
 The pad shows words and a face, never numbers, axes, or
-gridlines. The dead cross is drawn as visibly inert ground
-rather than hidden, because a control that quietly refuses a
-region teaches nothing.
+gridlines. The inert centre-lines are drawn as visibly dead
+ground rather than hidden, so the model reads as legible
+rather than mysterious.
 
 ### 8.4 The emoji readout
 
@@ -442,13 +448,13 @@ continuous field.
 | +0.90 | +0.25 | 😍 | Love this |
 | +0.20 | +0.60 | 👀 | Show me more |
 | +0.60 | +0.65 | 🤩 | Really into this |
-| +0.25 | +0.95 | 🔔 | Tell me everything |
+| +0.25 | +0.95 | 🍿 | Tell me everything |
 | +0.95 | +0.90 | 🔥 | All in |
 | −0.15 | +0.15 | 😕 | Not for me |
 | −0.55 | +0.25 | 🙁 | Don't like this |
 | −0.90 | +0.30 | 😠 | Really against this |
 | −0.45 | +0.75 | 😤 | Against, but keep me posted |
-| −0.90 | +0.90 | 🗣️ | Against, and I want all of it |
+| −0.90 | +0.90 | 🤬 | Against, and I want all of it |
 | +0.20 | −0.20 | 😶 | Fine, just not for me |
 | +0.70 | −0.30 | 😌 | Good, but not in my world |
 | +0.30 | −0.80 | 🙈 | Rather not see this |
@@ -468,13 +474,15 @@ the upgrade path if that inconsistency becomes a problem.
 
 ### 8.5 Severance
 
-Netting to `(0, 0)` is reachable **from** the open pad but is
-never a drift target: a quiet affordance in the expanded
-state, leading to a separate, explicitly confirmed flow. A
-gesture performed a hundred times a day does not share a
-release target with an irreversible, burn-priced one.
+Netting a whole bundle to `(0, 0)` is its own flow with its
+own confirmation — never something a pick on the pad performs.
+It stays **findable from the open pad**, because someone who
+has decided they need it has to be able to discover how: a
+quiet affordance in the expanded state, leading to the
+separate flow.
 
-That flow carries the two mandated pieces of copy from §7.
+That flow is where the read-side guidance belongs — current
+standing, and what reaching zero would actually take.
 
 ### 8.6 Alternate inputs
 
