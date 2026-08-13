@@ -382,30 +382,36 @@ Nothing implicit ever becomes a record: scrolling, dwell,
 opening, and sharing are not stances ([graph-model.md
 §Stances, not events](../primitive/graph-model.md)).
 
-### 8.2 Zero contributes nothing
+### 8.2 What a pick lands you at
 
-An edge with either parameter at zero is routing-inert — it
-adds nothing to the bundle ([edges.md
-§1](../primitive/edges.md)). Authoring one is pointless, not
-dangerous.
+The value written is one edge; what matters is where the
+bundle lands once that edge folds in. Those are two different
+numbers, and the control has to show the second one.
 
-Severance is a different act: netting a *whole* bundle toward
-someone to `(0, 0)`. That is deliberate and burn-priced, and
-carries consequences ordinary stances do not — no feed
-presence, no attribution earnings, no vouch propagation
-([feed-ranking.md](../primitive/feed-ranking.md)). Because one
-edge never nets a bundle, no single pick can reach it by
-accident, and it has its own flow (§8.5).
+A bundle whose folded parameter is zero is routing-inert — it
+carries nothing ([feed-ranking.md](../primitive/feed-ranking.md)).
+A bundle netting to `(0, 0)` is severance: deliberate,
+burn-priced, and carrying consequences ordinary stances do not
+— no feed presence, no attribution earnings, no vouch
+propagation.
+
+**A single pick can reach severance.** Against a short history
+it is easy: one `(+1, +1)` edge plus a new `(−1, −1)` nets to
+exactly zero. The protection is not arithmetic and cannot be —
+it is telling people where they are about to land.
 
 So the control **never prevents a choice**. The whole square is
-reachable, corners included — someone dragging to the far
-corner means it, and refusing to give them `(−1, −1)` would be
-the worse failure. What the control does instead is explain,
-and confirm when it matters:
+reachable, corners included; someone dragging to the far
+corner means it, and withholding `(−1, −1)` would be the worse
+failure. What it does instead is explain, and confirm when it
+matters:
 
-- Land on an inert value and it says the pick will do nothing.
-- Pick something drastic and it says what that means before it
-  commits.
+- Always show where the pick lands the bundle, not only the
+  value being written.
+- If the result is inert on either axis, say the stance will
+  carry nothing.
+- If the result is `(0, 0)`, name it as severance, say what it
+  costs, and ask whether that was the intent (§8.5).
 
 ### 8.3 The gesture
 
@@ -420,10 +426,12 @@ valence, vertical is connection. **The pad opens at the
 origin**, untilted toward either direction — the low default
 belongs to the tap, not to the considered gesture.
 
-The pad shows words and a face, never numbers, axes, or
-gridlines. The inert centre-lines are drawn as visibly dead
-ground rather than hidden, so the model reads as legible
-rather than mysterious.
+By default the pad shows words and a face — no numbers, axes,
+or gridlines. Exact values stay available to anyone who wants
+them (§8.6); they are simply not the default reading. The
+inert centre-lines are drawn as visibly dead ground rather
+than hidden, so the model reads as legible rather than
+mysterious.
 
 ### 8.4 The emoji readout
 
@@ -432,6 +440,11 @@ a **lossy readout** of where you are — decoupling the two is
 what lets the value stay continuous while the feedback stays
 legible. Emoji count controls readability only, never
 precision.
+
+**The readout sits just above the pad**, never under the knob:
+a thumb on the control covers exactly the spot where feedback
+would otherwise appear, so it has to live clear of the finger
+to be worth anything.
 
 Twenty anchors are placed in the field; the readout is the
 **nearest anchor by Euclidean distance**. They are deliberately
@@ -474,15 +487,18 @@ the upgrade path if that inconsistency becomes a problem.
 
 ### 8.5 Severance
 
-Netting a whole bundle to `(0, 0)` is its own flow with its
-own confirmation — never something a pick on the pad performs.
-It stays **findable from the open pad**, because someone who
-has decided they need it has to be able to discover how: a
-quiet affordance in the expanded state, leading to the
-separate flow.
+Severance — a bundle netted to `(0, 0)` — has its own flow for
+the case where it is the goal: an explicit route with its own
+confirmation, **findable from the open pad**, because someone
+who has decided they need it has to be able to discover how.
 
-That flow is where the read-side guidance belongs — current
-standing, and what reaching zero would actually take.
+It can also arrive as the result of an ordinary pick (§8.2).
+That case is handled by the same confirmation rather than by
+refusing the pick: the user is told what the choice nets to,
+what it costs, and asked whether that was the intent.
+
+Either way, this is where the read-side guidance belongs —
+current standing, and what reaching zero would actually take.
 
 ### 8.6 Alternate inputs
 
