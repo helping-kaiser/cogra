@@ -104,6 +104,12 @@ function roles(isDark: boolean): Record<string, string> {
   }
   out.surfaceTint = out.primary;
 
+  // Material's error tones are 40 light / 80 dark, and tone 80 holds only
+  // chroma 32.6 of the palette's 84 — a pastel, whatever the hue. Taken deeper
+  // the same hue more than doubles its saturation, and error stops being
+  // *brighter* than primary on a dark screen and becomes heavier than it.
+  out.error = hex(s.errorPalette.tone(isDark ? 65 : 35));
+
   // Harmonized toward the seed the way Material Theme Builder builds custom
   // colours, so the role is generated rather than picked.
   const harmonized = Hct.fromInt(Blend.harmonize(SUCCESS_DESIGN_COLOR, SEED));

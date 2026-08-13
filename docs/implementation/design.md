@@ -70,6 +70,11 @@ tone.** Two separate fixes:
   Material's default is more conservative than this palette
   needs.
 
+The error palette departs in hue and tone for the same underlying
+reason — Material's placement assumes an accent less saturated and
+further from red than this one. That departure is recorded with the
+Error table in §2.3, where its numbers belong.
+
 Every `on`-colour pair in both themes is verified against WCAG
 AA (4.5:1) at generation time. A palette change that fails
 that check does not ship.
@@ -136,21 +141,33 @@ palette change a rewrite instead of a token edit.
 
 | Role | Light | Dark |
 |---|---|---|
-| `error` | `#BA0455` | `#FFB1C2` |
+| `error` | `#A5004A` | `#FF6B95` |
 | `onError` | `#FFFFFF` | `#66002B` |
 | `errorContainer` | `#FFD9DF` | `#8F003F` |
 | `onErrorContainer` | `#8F003F` | `#FFD9DF` |
 
-The error palette is taken at **hue 5**, not Material's fixed hue 25.
-Material's error hue is far from a typical blue or purple primary, but
-this palette's `primary` sits at hue 44.6 — and at hue 25 the two
-landed 19.6° apart at the same tone 40, measuring 6.16:1 and 6.19:1
-against `surface`. Identical weight and a neighbouring hue meant the
-error read as another brand colour rather than as an alarm. Hue 5
-doubles the separation while staying unmistakably a warning colour;
-chroma is Material's own. Tone is not the lever here — separating in
-light means going darker and in dark means going lighter, which turns
-the dark error pastel.
+The error palette departs from Material's stock output twice, in **hue**
+and in **tone**, because an orange-led palette collides with a stock
+error in both.
+
+**Hue 5, not Material's fixed 25.** Material's error hue is far from a
+typical blue or purple primary, but this palette's `primary` sits at
+hue 44.6. At hue 25 the two landed 19.6° apart at the same tone,
+measuring 6.16:1 and 6.19:1 against `surface` — identical weight and a
+neighbouring hue, so the error read as another brand colour rather than
+as an alarm. Hue 5 doubles the separation while staying unmistakably a
+warning colour. Chroma is Material's own.
+
+**Tones 35 and 65, not Material's 40 and 80.** Tone 80 holds only
+chroma 32.6 of the palette's 84, so the dark error came out pastel
+whatever its hue — and *brighter* against the dark surface than
+`primary` is, which reads as gentle where it should read as urgent.
+Tone 65 more than doubles the saturation to chroma 67.6, and taking
+light to tone 35 does the same job there. In both themes the error is
+now heavier than the brand colour rather than level with it or lighter.
+This is the same trade §2.1 already makes for dark `primary`: Material's
+tone placement is tuned for a palette whose accent is not this
+saturated.
 
 **Success** — a CoGra role, outside Material's set
 
