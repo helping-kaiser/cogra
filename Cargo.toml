@@ -61,8 +61,8 @@ hex = { version = "0.4" }
 # Service-side auth (auth.md): Argon2id password hashing, Ed25519-signed
 # JWT access tokens, url-safe token material.
 argon2 = { version = "0.5" }
-jsonwebtoken = { version = "9" }
-base64 = { version = "0.22" }
+jsonwebtoken = { version = "11" }
+base64 = { version = "0.23" }
 
 # API-edge hardening (auth.md "Rate limiting", "Password requirements"):
 # client-IP derivation behind the CLIENT_IP_SOURCE knob, the HIBP
