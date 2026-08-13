@@ -284,9 +284,17 @@ a product-scope decision rather than a typographic one.
 
 One family for everything — headers included, with weight
 doing the work a second face would. Figtree's variable file is
-~24 KB as a subset woff2 and ~54 KB as TTF, so the whole type
-budget is smaller than a single static weight of most
-alternatives.
+~30 KB as subset woff2 (20 KB latin, 10 KB latin-ext) and
+~61 KB as the upstream TTF, so the whole type budget is smaller
+than a single static weight of most alternatives.
+
+Codes and identifiers — recovery codes, key ids, seed entry —
+are the one exception, set in the platform's own monospace
+(`FontFamily.Monospace`, `ui-monospace`). That is a legibility
+device for strings read character by character, where `0/O` and
+`l/1` have to separate and a mistyped recovery code is
+unrecoverable. It is never UI chrome (§1), and it ships no
+bytes.
 
 There is no italic axis: roman and italic are two files on
 both platforms. Figtree's italic is a slant with a redrawn
@@ -305,6 +313,17 @@ variable file means declaring several `Font(...)` entries
 against the same resource with different
 `FontVariation.Settings` — a pattern Google's own docs never
 show but which is the only way to avoid shipping static cuts.
+Four entries carry it: 400 and 500 are what the scale itself
+asks for, 600 and 700 carry emphasis, and declaring them keeps
+the platform from synthesising a fake bold. `variationSettings`
+is opt-in API in current Compose, and the opt-in is Android's
+own documented route to the axis.
+
+The TTF ships unmodified — Figtree carries only latin and
+latin-ext, so the subset is the whole font. The OFL requires
+the licence travel with the font it covers, so
+`app/src/main/assets/figtree-ofl.txt` rides in the APK; it
+belongs on an open-source-licences screen once one exists.
 
 On web, `next/font/google` downloads and self-hosts at build
 time, so no request reaches Google from the browser. Pass
