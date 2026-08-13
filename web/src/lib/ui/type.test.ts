@@ -13,7 +13,7 @@
 // material-color-utilities: the official package is the source, this is the
 // enforcement. It is a devDependency and nothing imports it at runtime.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -74,6 +74,14 @@ function themeBlock(): string {
   const block = CSS.match(/@theme\s*\{([^}]*)\}/);
   if (block === null) throw new Error("no @theme block");
   return block[1];
+}
+
+/** Every .ts/.tsx under src that is not a test — where a stray utility would hide. */
+function sourceFiles(): string[] {
+  const root = new URL("../../", import.meta.url).pathname;
+  return readdirSync(root, { recursive: true, encoding: "utf-8" })
+    .filter((name) => /\.tsx?$/.test(name) && !name.includes(".test."))
+    .map((name) => `${root}${name}`);
 }
 
 describe("type", () => {
@@ -142,5 +150,24 @@ describe("type", () => {
       const declared = property === "font-size" ? "--text-body-large" : `--text-body-large--${property}`;
       expect(body![1], property).toContain(`${property}: var(${declared})`);
     }
+  });
+
+  it("leaves no ad-hoc size, weight, or tracking in any screen", () => {
+    // The analogue of palette.test.ts's no-raw-hex rule: a screen that sets its
+    // own size is what makes the next scale change a rewrite instead of a token
+    // edit. `tracking-wider` survives in one place — it is the recovery code's
+    // legibility device (§3), not styling.
+    const adHoc = /\btext-(?:xs|sm|base|lg|[2-9]?xl)\b|\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b|\bleading-|\btracking-/;
+    const offenders: string[] = [];
+    const files = sourceFiles();
+    expect(files.length, "scanned nothing — the walk is broken").toBeGreaterThan(20);
+    for (const file of files) {
+      const source = readFileSync(file, "utf-8");
+      const stripped = file.endsWith("recovery-code.tsx")
+        ? source.replaceAll("tracking-wider", "")
+        : source;
+      if (adHoc.test(stripped)) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
   });
 });

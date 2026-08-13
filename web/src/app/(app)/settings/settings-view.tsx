@@ -30,6 +30,7 @@ import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PasswordField } from "@/lib/ui/password-field";
+import { RecoveryCode } from "@/lib/ui/recovery-code";
 import { TextField } from "@/lib/ui/text-field";
 
 type SettingsAction =
@@ -191,7 +192,7 @@ export function SettingsView({
       <p
         role={feedback.kind === "done" ? "status" : "alert"}
         data-testid="settings_feedback"
-        className={feedback.kind === "done" ? "text-sm" : "text-sm text-error"}
+        className={feedback.kind === "done" ? "text-body-medium" : "text-body-medium text-error"}
       >
         {feedbackMessage(feedback)}
       </p>
@@ -323,16 +324,11 @@ export function SettingsView({
       />
 
       <Card testId="settings_backup_card">
-        <h2 className="font-medium">Key backup</h2>
+        <h2 className="text-title-medium">Key backup</h2>
         {newBackupCode !== null ? (
           <>
-            <p
-              data-testid="settings_backup_code"
-              className="rounded-md border border-outline-variant p-4 text-center font-mono text-lg tracking-wider"
-            >
-              {newBackupCode}
-            </p>
-            <p className="text-sm text-on-surface-variant">
+            <RecoveryCode testId="settings_backup_code" code={newBackupCode} />
+            <p className="text-body-medium text-on-surface-variant">
               Write this code down somewhere safe. It is shown only this once; any older code stops
               working.
             </p>
@@ -342,7 +338,7 @@ export function SettingsView({
           </>
         ) : backupMode === "create" ? (
           <>
-            <p className="text-sm text-on-surface-variant">
+            <p className="text-body-medium text-on-surface-variant">
               Create your recovery code. It re-encrypts your key on this browser and backs it up —
               without one, losing this browser loses the actor.
             </p>
@@ -352,12 +348,12 @@ export function SettingsView({
           </>
         ) : backupMode === "rekey" ? (
           <form onSubmit={onRekey} className="flex flex-col gap-3" noValidate>
-            <p className="text-sm text-on-surface-variant">
+            <p className="text-body-medium text-on-surface-variant">
               A new code re-encrypts your key and replaces the old backup — recovery always uses
               the newest one. Enter your current code to replace it.
             </p>
             <div className="flex flex-col gap-1">
-              <label htmlFor="rekey-code" className="text-sm font-medium">
+              <label htmlFor="rekey-code" className="text-label-large">
                 Current recovery code
               </label>
               <input
@@ -383,14 +379,14 @@ export function SettingsView({
           </form>
         ) : backupMode === "none" ? (
           <>
-            <p data-testid="settings_backup_no_actor" className="text-sm text-on-surface-variant">
+            <p data-testid="settings_backup_no_actor" className="text-body-medium text-on-surface-variant">
               Your actor key isn&apos;t on this browser, so there&apos;s nothing to back up.
               Restore it first with your recovery code.
             </p>
             <Link
               href="/restore"
               data-testid="settings_backup_restore"
-              className="self-start text-sm text-on-surface-variant underline"
+              className="self-start text-body-medium text-on-surface-variant underline"
             >
               Restore the key
             </Link>
@@ -400,13 +396,13 @@ export function SettingsView({
       </Card>
 
       <Card testId="settings_sessions_card">
-        <h2 className="font-medium">Sessions</h2>
+        <h2 className="text-title-medium">Sessions</h2>
         <ul className="flex flex-col gap-2">
           {sessions.map((session) => (
             <li
               key={session.id}
               data-testid={`session_${session.id}`}
-              className="flex items-center justify-between gap-3 text-sm"
+              className="flex items-center justify-between gap-3 text-body-medium"
             >
               <span>
                 {session.deviceLabel ?? "Unnamed device"}
@@ -418,7 +414,7 @@ export function SettingsView({
                   data-testid={`revoke_${session.id}`}
                   onClick={() => onRevokeSession(session.id)}
                   disabled={busy}
-                  className="text-sm text-on-surface-variant underline disabled:opacity-40"
+                  className="text-label-large text-on-surface-variant underline disabled:opacity-40"
                 >
                   Revoke
                 </button>
@@ -440,7 +436,7 @@ export function SettingsView({
       </Card>
 
       <Card testId="settings_credentials_card">
-        <h2 className="font-medium">Credentials</h2>
+        <h2 className="text-title-medium">Credentials</h2>
         <form onSubmit={onChangePassword} className="flex flex-col gap-3" noValidate>
           <PasswordField
             id="settings-current-password"
@@ -478,7 +474,7 @@ export function SettingsView({
 
         <form onSubmit={onChangeHandle} className="flex flex-col gap-3" noValidate>
           <div className="flex flex-col gap-1">
-            <label htmlFor="settings-new-handle" className="text-sm font-medium">
+            <label htmlFor="settings-new-handle" className="text-label-large">
               New handle
             </label>
             <input
@@ -544,11 +540,11 @@ export function SettingsView({
 
         {emailChangeRequested && (
           <form onSubmit={onConfirmEmailChange} className="flex flex-col gap-3" noValidate>
-            <p data-testid="settings_email_requested" className="text-sm text-on-surface-variant">
+            <p data-testid="settings_email_requested" className="text-body-medium text-on-surface-variant">
               Check both inboxes — either message&apos;s code confirms the change.
             </p>
             <div className="flex flex-col gap-1">
-              <label htmlFor="settings-email-code" className="text-sm font-medium">
+              <label htmlFor="settings-email-code" className="text-label-large">
                 Confirmation code
               </label>
               <input

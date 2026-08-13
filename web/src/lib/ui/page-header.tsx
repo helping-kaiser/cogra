@@ -24,16 +24,18 @@ export function PageHeader({
   return (
     <header className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
+        {/* The arrow is a glyph, so it takes a type role like any other text;
+            it becomes a Material Symbol when the icon set arrives (§5). */}
         <Link
           href={backHref}
           aria-label={backLabel}
           data-testid={backTestId}
-          className="rounded-md text-xl text-on-surface-variant"
+          className="rounded-md text-title-large text-on-surface-variant"
         >
           <span aria-hidden>←</span>
         </Link>
         {title !== undefined && (
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-headline-small">{title}</h1>
         )}
       </div>
       {action}
