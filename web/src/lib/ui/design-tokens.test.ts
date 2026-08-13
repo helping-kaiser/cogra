@@ -55,25 +55,37 @@ const hex = (argb: number): string =>
     .toUpperCase();
 
 /**
- * design.md §2.2. Light is stock `SchemeContent`. Dark keeps Content's accent
- * palettes but rebuilds the neutrals at chroma 1.5/2.5 — Content derives them
- * from the seed hard enough to tint every dark surface brown — and takes
+ * Material pins the error palette at hue 25 whatever the seed. That is far from
+ * a typical blue or purple primary but a near-neighbour of this one at hue 44.6
+ * — same tone 40, and identical contrast against `surface` — so the error read
+ * as another brand colour rather than as an alarm. Moving it to hue 5 doubles
+ * the separation while staying unmistakably a warning colour. Chroma is
+ * Material's own.
+ */
+const ERROR_HUE = 5;
+
+/**
+ * design.md §2.2. Dark rebuilds the neutrals at chroma 1.5/2.5 — Content derives
+ * them from the seed hard enough to tint every dark surface brown — and takes
  * `primary` from tone 70, where Material's tone 80 reads as peach.
  */
 function scheme(isDark: boolean): DynamicScheme {
   const base = new SchemeContent(Hct.fromInt(SEED), isDark, 0.0);
-  if (!isDark) return base;
   return new DynamicScheme({
     sourceColorHct: Hct.fromInt(SEED),
     variant: Variant.CONTENT,
     contrastLevel: 0.0,
-    isDark: true,
+    isDark,
     primaryPalette: base.primaryPalette,
     secondaryPalette: base.secondaryPalette,
     tertiaryPalette: base.tertiaryPalette,
-    errorPalette: base.errorPalette,
-    neutralPalette: TonalPalette.fromHueAndChroma(base.neutralPalette.hue, 1.5),
-    neutralVariantPalette: TonalPalette.fromHueAndChroma(base.neutralVariantPalette.hue, 2.5),
+    errorPalette: TonalPalette.fromHueAndChroma(ERROR_HUE, base.errorPalette.chroma),
+    neutralPalette: isDark
+      ? TonalPalette.fromHueAndChroma(base.neutralPalette.hue, 1.5)
+      : base.neutralPalette,
+    neutralVariantPalette: isDark
+      ? TonalPalette.fromHueAndChroma(base.neutralVariantPalette.hue, 2.5)
+      : base.neutralVariantPalette,
   });
 }
 

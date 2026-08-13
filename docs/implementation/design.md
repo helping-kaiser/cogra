@@ -136,10 +136,21 @@ palette change a rewrite instead of a token edit.
 
 | Role | Light | Dark |
 |---|---|---|
-| `error` | `#BA1A1A` | `#FFB4AB` |
-| `onError` | `#FFFFFF` | `#690005` |
-| `errorContainer` | `#FFDAD6` | `#93000A` |
-| `onErrorContainer` | `#93000A` | `#FFDAD6` |
+| `error` | `#BA0455` | `#FFB1C2` |
+| `onError` | `#FFFFFF` | `#66002B` |
+| `errorContainer` | `#FFD9DF` | `#8F003F` |
+| `onErrorContainer` | `#8F003F` | `#FFD9DF` |
+
+The error palette is taken at **hue 5**, not Material's fixed hue 25.
+Material's error hue is far from a typical blue or purple primary, but
+this palette's `primary` sits at hue 44.6 — and at hue 25 the two
+landed 19.6° apart at the same tone 40, measuring 6.16:1 and 6.19:1
+against `surface`. Identical weight and a neighbouring hue meant the
+error read as another brand colour rather than as an alarm. Hue 5
+doubles the separation while staying unmistakably a warning colour;
+chroma is Material's own. Tone is not the lever here — separating in
+light means going darker and in dark means going lighter, which turns
+the dark error pastel.
 
 **Success** — a CoGra role, outside Material's set
 
