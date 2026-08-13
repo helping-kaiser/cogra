@@ -35,10 +35,10 @@ updates:
         versions: [">=0.13"]
       - dependency-name: aes-gcm
         versions: [">=0.11"]
-      # rand 0.10 and ed25519-dalek 3 are an interlocked pair (dalek 3
-      # moves to the rand_core 0.9 line; rand 0.9+ drops the OsRng/
-      # RngCore paths the workspace uses) — one coordinated bump,
-      # queued in the audit fix plan.
+      # rand 0.10 and ed25519-dalek 3 are an interlocked pair (both land
+      # on the rand_core 0.10 line; rand 0.9+ drops the OsRng/RngCore
+      # paths the workspace uses) — one coordinated bump, queued in the
+      # audit fix plan.
       - dependency-name: rand
         versions: [">=0.9"]
       - dependency-name: ed25519-dalek
