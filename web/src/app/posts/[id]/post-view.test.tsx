@@ -14,7 +14,14 @@ function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
 
-function detail(authorId: string, comments: { id: string; body: string }[]) {
+function detail(
+  authorId: string,
+  comments: { id: string; body: string }[],
+  page: { hasNextPage: boolean; endCursor: string | null } = {
+    hasNextPage: false,
+    endCursor: null,
+  },
+) {
   return {
     post: {
       __typename: "Post",
@@ -40,7 +47,11 @@ function detail(authorId: string, comments: { id: string; body: string }[]) {
             moderationStatus: "NORMAL",
           },
         })),
-        pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        pageInfo: {
+          __typename: "PageInfo",
+          hasNextPage: page.hasNextPage,
+          endCursor: page.endCursor,
+        },
       },
     },
   };
@@ -174,6 +185,54 @@ describe("PostView", () => {
     expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
     expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/");
+  });
+
+  it("keeps the thread readable when a comments page fails", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({
+              data: detail("u1", [{ id: "c1", body: "First!" }], {
+                hasNextPage: true,
+                endCursor: "cur1",
+              }),
+            })
+          : HttpResponse.error();
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("post-more-comments"));
+    expect(await screen.findByTestId("post-thread-transport-error")).toBeInTheDocument();
+    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
+  });
+
+  it("clears the thread banner when a later comments page succeeds", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        calls += 1;
+        if (calls === 2) return HttpResponse.error();
+        return HttpResponse.json({
+          data:
+            calls === 1
+              ? detail("u1", [{ id: "c1", body: "First!" }], {
+                  hasNextPage: true,
+                  endCursor: "cur1",
+                })
+              : detail("u1", [{ id: "c2", body: "Second!" }]),
+        });
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId("post-more-comments"));
+    await screen.findByTestId("post-thread-transport-error");
+    fireEvent.click(screen.getByTestId("post-more-comments"));
+    expect(await screen.findByTestId("post-comment-c2")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-comment-c1")).toBeInTheDocument();
   });
 
   it("backs to the feed from every branch", async () => {

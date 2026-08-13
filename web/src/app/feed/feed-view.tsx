@@ -28,13 +28,16 @@ export function FeedView() {
   const [transportFailed, setTransportFailed] = useState(false);
 
   // Effect-invoked, so no synchronous setState here; the retry button
-  // resets loading/transport state in its own handler.
+  // resets the loading state in its own handler. The fault flag
+  // reflects the last COMPLETED fetch — clearing it eagerly at fetch
+  // start made the banner vanish and reappear on every failed retry.
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPosts(client).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
       if (outcome.kind === "success") {
+        setTransportFailed(false);
         setPosts(outcome.value.items);
         setEndCursor(outcome.value.endCursor);
         setHasNextPage(outcome.value.hasNextPage);
@@ -55,6 +58,7 @@ export function FeedView() {
     const outcome = await fetchPosts(client, endCursor);
     setLoadingMore(false);
     if (outcome.kind === "success") {
+      setTransportFailed(false);
       setPosts((current) => [...current, ...outcome.value.items]);
       setEndCursor(outcome.value.endCursor);
       setHasNextPage(outcome.value.hasNextPage);
@@ -92,14 +96,23 @@ export function FeedView() {
       />
       {transportFailed && (
         <div className="flex items-center gap-3">
-          <TransportError testId="feed-transport-error" />
+          {/* With posts on screen the fault means "stale", not "gone":
+              the loaded posts stay readable under this banner
+              (web.md "Design guidelines", the Android twin). */}
+          <TransportError
+            testId="feed-transport-error"
+            message={
+              posts.length > 0
+                ? "Can't reach the server — new posts can't load right now."
+                : undefined
+            }
+          />
           <Button
             testId="feed-retry"
             variant="outline"
             size="sm"
             onClick={() => {
               setLoading(true);
-              setTransportFailed(false);
               refresh();
             }}
           >

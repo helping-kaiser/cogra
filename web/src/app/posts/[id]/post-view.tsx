@@ -49,6 +49,9 @@ export function PostView({ postId }: { postId: string }) {
 
   // Effect-invoked, so no synchronous setState here (the lint's
   // cascading-render guard); submit paths reset the flags themselves.
+  // As in FeedView: the fault flag reflects the last COMPLETED fetch —
+  // it clears only on an outcome, never eagerly, so a failed retry
+  // never flashes the error surface.
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
@@ -57,8 +60,10 @@ export function PostView({ postId }: { postId: string }) {
       if (outcome.kind !== "success") {
         setTransportFailed(true);
       } else if (outcome.value === null) {
+        setTransportFailed(false);
         setNotFound(true);
       } else {
+        setTransportFailed(false);
         setDetail(outcome.value);
         setComments(outcome.value.comments.items);
         setEndCursor(outcome.value.comments.endCursor);
@@ -75,7 +80,14 @@ export function PostView({ postId }: { postId: string }) {
   const onLoadMore = async () => {
     if (!hasMore) return;
     const outcome = await fetchPostDetail(client, postId, endCursor);
-    if (outcome.kind !== "success" || outcome.value === null) return;
+    // A failed page is a fault, not a no-op: the loaded thread stays
+    // and the banner above it says why nothing new arrived.
+    if (outcome.kind !== "success") {
+      setTransportFailed(true);
+      return;
+    }
+    if (outcome.value === null) return;
+    setTransportFailed(false);
     const next = outcome.value.comments;
     setComments((current) => [...current, ...next.items]);
     setEndCursor(next.endCursor);
