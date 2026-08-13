@@ -60,19 +60,24 @@ class PostDetailViewModel @Inject constructor(
         refresh()
     }
 
+    // As in FeedViewModel: the fault flag reflects the last COMPLETED
+    // fetch, so a failed retry never flashes the error surface.
     fun refresh() {
         val id = postId ?: return
-        _state.update { it.copy(loading = true, transportFailed = false) }
+        _state.update { it.copy(loading = true) }
         viewModelScope.launch {
             when (val outcome = content.post(id, FEED_PAGE_SIZE, commentsAfter = null)) {
                 is Outcome.Success -> {
                     val detail = outcome.value
                     if (detail == null) {
-                        _state.update { it.copy(loading = false, notFound = true) }
+                        _state.update {
+                            it.copy(loading = false, notFound = true, transportFailed = false)
+                        }
                     } else {
                         _state.update {
                             it.copy(
                                 loading = false,
+                                transportFailed = false,
                                 post = detail.post,
                                 comments = detail.comments.items,
                                 commentsEndCursor = detail.comments.endCursor,
@@ -97,6 +102,7 @@ class PostDetailViewModel @Inject constructor(
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loadingMore = false,
+                        transportFailed = false,
                         comments = it.comments + outcome.value.items,
                         commentsEndCursor = outcome.value.endCursor,
                         commentsHaveMore = outcome.value.hasNextPage,
