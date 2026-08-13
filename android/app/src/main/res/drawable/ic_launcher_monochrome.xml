@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from docs/assets/cogra-mark.svg. Content is scaled so the mark's
+     enclosing circle matches the 66dp adaptive-icon keyline, centred on the
+     108dp layer, so no launcher mask can clip it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M31.921 45.042 A16.752 16.752 0 1 0 65.424 45.042 A16.752 16.752 0 1 0 31.921 45.042 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="11.648" />
+    <path
+        android:pathData="M65.424 29.324 L65.424 63.051 C65.372 63.587 65.290 65.208 65.104 66.257 C64.911 67.313 64.651 68.370 64.279 69.366 C63.899 70.363 63.423 71.353 62.850 72.245 C62.270 73.145 61.586 74.001 60.820 74.737 C60.054 75.481 59.168 76.136 58.253 76.686 C57.346 77.229 56.342 77.668 55.330 78.025 C54.326 78.382 53.270 78.628 52.213 78.806 C51.157 78.985 50.078 79.059 49.007 79.104 C47.936 79.148 46.857 79.126 45.786 79.066 C44.715 79.014 43.108 78.821 42.580 78.769"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="11.648"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M44.961 42.416 A6.338 6.338 0 1 0 57.636 42.416 A6.338 6.338 0 1 0 44.961 42.416 Z"
+        android:fillColor="#FFFFFF" />
+</vector>
