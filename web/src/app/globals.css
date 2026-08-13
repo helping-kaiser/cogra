@@ -146,8 +146,15 @@
   --color-on-success: var(--on-success);
   --color-success-container: var(--success-container);
   --color-on-success-container: var(--on-success-container);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /*
+   * Figtree carries the whole UI (design.md §3); the variable is set by
+   * next/font in layout.tsx. `font-mono` is the platform's own monospace and
+   * ships no bytes — it dresses recovery codes and identifiers, where
+   * character-by-character legibility is the point, and matches Android's
+   * FontFamily.Monospace on the same surfaces. It is never UI chrome (§1).
+   */
+  --font-sans: var(--font-figtree);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 body {
