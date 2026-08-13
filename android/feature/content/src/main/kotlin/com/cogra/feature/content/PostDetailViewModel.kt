@@ -25,7 +25,7 @@ data class PostDetailUiState(
     val commentsHaveMore: Boolean = false,
     val loadingMore: Boolean = false,
     val notFound: Boolean = false,
-    val transportFailed: Boolean = false,
+    val transportFault: TransportFault? = null,
     /** The comment box. */
     val draft: String = "",
     val attributionRequired: Boolean = false,
@@ -33,6 +33,8 @@ data class PostDetailUiState(
     val submitting: Boolean = false,
     val refused: Boolean = false,
     val signingFailed: Boolean = false,
+    /** A submit that never reached the server; a composer error, not a read fault. */
+    val submitTransportFailed: Boolean = false,
     /** One-shot: the comment signed; shown once, then consumed. */
     val commentSigned: Boolean = false,
 )
@@ -60,8 +62,10 @@ class PostDetailViewModel @Inject constructor(
         refresh()
     }
 
-    // As in FeedViewModel: the fault flag reflects the last COMPLETED
-    // fetch, so a failed retry never flashes the error surface.
+    // As in FeedViewModel: the fault reflects the last COMPLETED
+    // fetch — so a failed retry never flashes the error surface —
+    // and carries which fetch failed, so it surfaces where that
+    // fetch was requested.
     fun refresh() {
         val id = postId ?: return
         _state.update { it.copy(loading = true) }
@@ -71,13 +75,13 @@ class PostDetailViewModel @Inject constructor(
                     val detail = outcome.value
                     if (detail == null) {
                         _state.update {
-                            it.copy(loading = false, notFound = true, transportFailed = false)
+                            it.copy(loading = false, notFound = true, transportFault = null)
                         }
                     } else {
                         _state.update {
                             it.copy(
                                 loading = false,
-                                transportFailed = false,
+                                transportFault = null,
                                 post = detail.post,
                                 comments = detail.comments.items,
                                 commentsEndCursor = detail.comments.endCursor,
@@ -87,7 +91,9 @@ class PostDetailViewModel @Inject constructor(
                     }
                 }
                 is Outcome.Refused -> _state.update { it.copy(loading = false, notFound = true) }
-                is Outcome.Failed -> _state.update { it.copy(loading = false, transportFailed = true) }
+                is Outcome.Failed -> _state.update {
+                    it.copy(loading = false, transportFault = TransportFault.REFRESH)
+                }
             }
         }
     }
@@ -102,13 +108,15 @@ class PostDetailViewModel @Inject constructor(
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loadingMore = false,
-                        transportFailed = false,
+                        transportFault = null,
                         comments = it.comments + outcome.value.items,
                         commentsEndCursor = outcome.value.endCursor,
                         commentsHaveMore = outcome.value.hasNextPage,
                     )
                 }
-                else -> _state.update { it.copy(loadingMore = false, transportFailed = true) }
+                else -> _state.update {
+                    it.copy(loadingMore = false, transportFault = TransportFault.APPEND)
+                }
             }
         }
     }
@@ -123,7 +131,12 @@ class PostDetailViewModel @Inject constructor(
         val s = _state.value
         if (s.submitting || s.draft.isBlank()) return
         _state.update {
-            it.copy(submitting = true, refused = false, signingFailed = false, transportFailed = false)
+            it.copy(
+                submitting = true,
+                refused = false,
+                signingFailed = false,
+                submitTransportFailed = false,
+            )
         }
         viewModelScope.launch {
             val prepared = when (
@@ -139,7 +152,7 @@ class PostDetailViewModel @Inject constructor(
                     return@launch
                 }
                 is Outcome.Failed -> {
-                    _state.update { it.copy(submitting = false, transportFailed = true) }
+                    _state.update { it.copy(submitting = false, submitTransportFailed = true) }
                     return@launch
                 }
             }

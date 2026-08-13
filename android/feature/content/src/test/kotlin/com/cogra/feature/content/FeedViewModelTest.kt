@@ -92,15 +92,38 @@ class FeedViewModelTest {
         val vm = FeedViewModel(content)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
 
         // Retry heals.
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1")), null, hasNextPage = false))
         vm.refresh()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.transportFault).isNull()
         assertThat(vm.state.value.posts).hasSize(1)
+    }
+
+    @Test
+    fun aFailedPageFetchFaultsAtTheAppendSlot() = runTest(dispatcher) {
+        content.pages[null] =
+            Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = true))
+        content.pages["c1"] = Outcome.Failed(IOException("offline"))
+        val vm = FeedViewModel(content)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.loadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.APPEND)
+        assertThat(vm.state.value.posts).hasSize(1)
+        assertThat(vm.state.value.hasNextPage).isTrue()
+
+        // A later successful page clears the fault and appends.
+        content.pages["c1"] =
+            Outcome.Success(Page(listOf(testPost("p2")), null, hasNextPage = false))
+        vm.loadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFault).isNull()
+        assertThat(vm.state.value.posts.map { it.id }).containsExactly("p1", "p2").inOrder()
     }
 
     @Test
@@ -113,17 +136,17 @@ class FeedViewModelTest {
         content.pages[null] = Outcome.Failed(IOException("offline"))
         vm.refresh()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
         assertThat(vm.state.value.posts).hasSize(1)
 
-        // The flag reflects the last completed fetch: it must not
+        // The fault reflects the last completed fetch: it must not
         // clear while the retry is still in flight (the banner flash),
         // nor after the retry fails again.
         vm.refresh()
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
         assertThat(vm.state.value.loading).isTrue()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFailed).isTrue()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
         assertThat(vm.state.value.posts).hasSize(1)
     }
 }
