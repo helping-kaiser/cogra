@@ -30,8 +30,7 @@ vocabulary.
 Anti-goals, stated because they are the failure modes this
 product is most likely to drift into: nothing that reads as
 crypto, fintech, trading, enterprise, or a developer tool. No
-dense dashboards, no monospace UI, no dark "hacker" aesthetic,
-no raw numbers presented as scores.
+dense dashboards, no monospace UI, no dark "hacker" aesthetic.
 
 ---
 
@@ -310,11 +309,25 @@ platforms, fired once per event.
 
 ## 7. Copy
 
-The product is a social network, not a graph. **These words
-never appear in user-facing copy:** graph, node, edge, tensor,
-vertex, weight, parameter, decentralized, protocol, token,
-crypto, algorithm, score, ranking. Nor do raw numeric values
-of any stance.
+**Numbers are in scope.** CoGra's ranking is not a black box,
+and the UI must not behave as though it were. A post can show
+what it scored and why it sits where it does, opening into the
+actual paths behind it. Showing the number is the honest move;
+withholding it would be the opacity this product exists to
+refuse.
+
+Two rules keep that from becoming noise. **Every number shown
+is explainable** — traceable, on demand, to what produced it;
+a figure with no path behind it is exactly the black box again,
+just smaller. And **detail is layered**: a calm surface by
+default, the arithmetic a tap away, with the density partly
+the reader's own choice to opt into or out of.
+
+What stays out of user-facing copy is the *implementation
+vocabulary* — words describing how the thing is built rather
+than what the reader is doing: graph, node, edge, vertex,
+tensor, weight, parameter, decentralized, protocol, token,
+crypto.
 
 This is greppable and should be enforced as a check over
 Android's `strings.xml` files and the web copy rather than
