@@ -295,6 +295,7 @@ export function PostView({ postId }: { postId: string }) {
               <input
                 type="checkbox"
                 data-testid="comment-license-attribution"
+                className="accent-primary"
                 checked={attributionRequired}
                 onChange={(event) => setAttributionRequired(event.target.checked)}
               />
@@ -307,6 +308,7 @@ export function PostView({ postId }: { postId: string }) {
                   <input
                     type="radio"
                     name="comment-oversight"
+                    className="accent-primary"
                     data-testid={`comment-oversight-${value.toLowerCase()}`}
                     checked={oversight === value}
                     onChange={() => setOversight(value)}

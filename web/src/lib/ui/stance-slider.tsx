@@ -33,7 +33,7 @@ export function StanceSlider({
         step={0.01}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full"
+        className="w-full accent-primary"
       />
     </div>
   );

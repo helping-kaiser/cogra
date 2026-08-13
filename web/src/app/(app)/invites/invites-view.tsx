@@ -243,6 +243,7 @@ export function InvitesView() {
                 <input
                   type="checkbox"
                   data-testid="invites_single_use"
+                  className="accent-primary"
                   checked={singleUse}
                   onChange={(event) => setSingleUse(event.target.checked)}
                 />
