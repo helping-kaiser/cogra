@@ -101,7 +101,7 @@ class ContentScreensTest {
     fun aTransportFaultOffersRetry() {
         var retried = false
         renderFeed(
-            FeedUiState(loading = false, transportFailed = true),
+            FeedUiState(loading = false, transportFault = TransportFault.REFRESH),
             onRefresh = { retried = true },
         )
         compose.onNodeWithTag("feed_transport_error").assertExists()
@@ -113,7 +113,11 @@ class ContentScreensTest {
     fun aTransportFaultKeepsTheLoadedPostsReadable() {
         var retried = false
         renderFeed(
-            FeedUiState(loading = false, posts = listOf(testPost("p1")), transportFailed = true),
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1")),
+                transportFault = TransportFault.REFRESH,
+            ),
             onRefresh = { retried = true },
         )
         compose.onNodeWithTag("feed_post_p1").assertExists()
@@ -121,6 +125,26 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_transport_banner").assertExists()
         compose.onNodeWithTag("feed_retry").performClick()
         assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun aFailedPageFetchSurfacesAtTheLoadMoreSlot() {
+        var more = false
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1")),
+                hasNextPage = true,
+                transportFault = TransportFault.APPEND,
+            ),
+            onLoadMore = { more = true },
+        )
+        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed_transport_banner").assertDoesNotExist()
+        compose.onNodeWithTag("feed_load_more").assertDoesNotExist()
+        compose.onNodeWithTag("feed_load_more_error").performScrollTo().assertExists()
+        compose.onNodeWithTag("feed_load_more_retry").performClick()
+        assertThat(more).isTrue()
     }
 
     // -- Composer --
@@ -182,14 +206,16 @@ class ContentScreensTest {
         onEdit: (String) -> Unit = {},
         onSubmitComment: () -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
+        onRefresh: () -> Unit = {},
+        onLoadMoreComments: () -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
                 state = state,
                 viewerId = viewerId,
                 signedIn = signedIn,
-                onRefresh = {},
-                onLoadMoreComments = {},
+                onRefresh = onRefresh,
+                onLoadMoreComments = onLoadMoreComments,
                 onDraftChange = {},
                 onAttributionChange = {},
                 onOversightChange = {},
@@ -282,5 +308,62 @@ class ContentScreensTest {
     fun anUnknownPostRendersNotFound() {
         renderDetail(PostDetailUiState(loading = false, notFound = true))
         compose.onNodeWithTag("detail_not_found").assertExists()
+    }
+
+    @Test
+    fun aRefreshFaultKeepsTheThreadReadable() {
+        var retried = false
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+                transportFault = TransportFault.REFRESH,
+            ),
+            onRefresh = { retried = true },
+        )
+        compose.onNodeWithTag("detail_body").assertExists()
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("detail_transport_error").assertDoesNotExist()
+        compose.onNodeWithTag("detail_transport_banner").assertExists()
+        compose.onNodeWithTag("detail_retry").performClick()
+        assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun aFailedCommentsPageSurfacesAtItsLoadMoreSlot() {
+        var more = false
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+                commentsHaveMore = true,
+                transportFault = TransportFault.APPEND,
+            ),
+            onLoadMoreComments = { more = true },
+        )
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
+        compose.onNodeWithTag("detail_more_comments").assertDoesNotExist()
+        // A read fault never lights the composer's error line.
+        compose.onNodeWithTag("detail_comment_transport").assertDoesNotExist()
+        compose.onNodeWithTag("detail_more_comments_error").performScrollTo().assertExists()
+        compose.onNodeWithTag("detail_more_comments_retry").performClick()
+        assertThat(more).isTrue()
+    }
+
+    @Test
+    fun aSubmitTransportFaultRendersInTheComposer() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                submitTransportFailed = true,
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_transport").performScrollTo().assertExists()
+        compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
+        compose.onNodeWithTag("detail_more_comments_error").assertDoesNotExist()
     }
 }
