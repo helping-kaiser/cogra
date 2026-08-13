@@ -287,7 +287,7 @@ export function PostView({ postId }: { postId: string }) {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             rows={3}
-            className="rounded-md border border-outline p-2"
+            className="rounded-extra-small border border-outline p-2"
           />
           <fieldset className="flex flex-wrap items-center gap-3 text-body-medium" data-testid="comment-license">
             <legend className="sr-only">License</legend>

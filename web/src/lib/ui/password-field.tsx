@@ -5,6 +5,8 @@
 
 import { useState } from "react";
 
+import { buttonClassName } from "./button";
+
 export function PasswordField({
   id,
   label,
@@ -34,14 +36,17 @@ export function PasswordField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           autoComplete={autoComplete}
-          className="min-w-0 flex-1 rounded-md border border-outline bg-transparent px-3 py-2"
+          className="min-w-0 flex-1 rounded-extra-small border border-outline bg-transparent px-3 py-2"
         />
+        {/* Android puts this in the field's trailing-icon slot, where it is a
+            transparent IconButton; text is the matching variant until the icon
+            set arrives (§5). */}
         <button
           type="button"
           data-testid={`${testId}_toggle`}
           aria-label={visible ? "Hide password" : "Show password"}
           onClick={() => setVisible((v) => !v)}
-          className="rounded-md border border-outline px-3 text-label-large text-on-surface-variant"
+          className={buttonClassName({ variant: "text", size: "sm" })}
         >
           {visible ? "Hide" : "Show"}
         </button>

@@ -36,7 +36,7 @@ export function TextField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         autoComplete={autoComplete}
-        className={`rounded-md border border-outline bg-transparent px-3 py-2${
+        className={`rounded-extra-small border border-outline bg-transparent px-3 py-2${
           mono ? " font-mono" : ""
         }`}
       />

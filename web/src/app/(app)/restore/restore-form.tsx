@@ -93,7 +93,7 @@ export function RestoreForm({
             }}
             autoComplete="off"
             spellCheck={false}
-            className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
+            className="rounded-extra-small border border-outline bg-transparent px-3 py-2 font-mono"
           />
         </div>
         <label htmlFor="restore-dont-remember" className="flex items-center gap-2 text-body-medium">
