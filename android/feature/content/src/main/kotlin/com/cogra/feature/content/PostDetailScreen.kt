@@ -48,7 +48,10 @@ fun PostDetailRoute(
     postId: String,
     /** The viewer's account id; gates the edit affordance to the creator. */
     viewerId: String?,
+    /** Null while the auth phase resolves; the comment/join affordances wait. */
+    signedIn: Boolean?,
     onEdit: (String) -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
@@ -63,6 +66,7 @@ fun PostDetailRoute(
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
+        signedIn = signedIn,
         onRefresh = viewModel::refresh,
         onLoadMoreComments = viewModel::loadMoreComments,
         onDraftChange = viewModel::onDraftChange,
@@ -71,6 +75,7 @@ fun PostDetailRoute(
         onSubmitComment = viewModel::onSubmitComment,
         onCommentSignedShown = viewModel::onCommentSignedShown,
         onEdit = onEdit,
+        onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
     )
 }
@@ -80,6 +85,7 @@ fun PostDetailRoute(
 fun PostDetailScreen(
     state: PostDetailUiState,
     viewerId: String?,
+    signedIn: Boolean?,
     onRefresh: () -> Unit,
     onLoadMoreComments: () -> Unit,
     onDraftChange: (String) -> Unit,
@@ -88,6 +94,7 @@ fun PostDetailScreen(
     onSubmitComment: () -> Unit,
     onCommentSignedShown: () -> Unit,
     onEdit: (String) -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -153,11 +160,13 @@ fun PostDetailScreen(
                 state.post != null -> PostWithThread(
                     state = state,
                     post = state.post,
+                    signedIn = signedIn,
                     onLoadMoreComments = onLoadMoreComments,
                     onDraftChange = onDraftChange,
                     onAttributionChange = onAttributionChange,
                     onOversightChange = onOversightChange,
                     onSubmitComment = onSubmitComment,
+                    onSignInOrJoin = onSignInOrJoin,
                 )
             }
         }
@@ -168,11 +177,13 @@ fun PostDetailScreen(
 private fun PostWithThread(
     state: PostDetailUiState,
     post: PostView,
+    signedIn: Boolean?,
     onLoadMoreComments: () -> Unit,
     onDraftChange: (String) -> Unit,
     onAttributionChange: (Boolean) -> Unit,
     onOversightChange: (OversightChoice) -> Unit,
     onSubmitComment: () -> Unit,
+    onSignInOrJoin: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -230,7 +241,20 @@ private fun PostWithThread(
                 }
             }
         }
-        item {
+        // The write affordance swaps, never merely disables: a member
+        // gets the composer, an anonymous reader gets the join entry
+        // (android.md "Screens"); while the phase resolves, neither.
+        if (signedIn == false) {
+            item {
+                TextButton(
+                    onClick = onSignInOrJoin,
+                    modifier = Modifier.testTag("detail_comment_signin"),
+                ) {
+                    Text(stringResource(R.string.content_comment_signin))
+                }
+            }
+        }
+        if (signedIn == true) item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = state.draft,

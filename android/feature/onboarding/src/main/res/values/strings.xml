@@ -10,6 +10,7 @@
     <string name="invite_not_found">This invite doesn\'t exist. Check the link with the person who sent it.</string>
     <string name="invite_unusable">This invite can\'t be used any more — it expired, was revoked, or its slot is taken. Ask your inviter for a new one.</string>
     <string name="invite_login_instead">Already a member? Sign in</string>
+    <string name="invite_browse">Just looking? Browse the feed</string>
 
     <string name="apply_title">Your account</string>
     <string name="apply_handle">Handle</string>

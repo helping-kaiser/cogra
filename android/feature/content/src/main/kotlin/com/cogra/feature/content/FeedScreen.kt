@@ -41,8 +41,11 @@ import com.cogra.feature.content.R
 
 @Composable
 fun FeedRoute(
+    /** Null while the auth phase resolves; the write/join affordances wait. */
+    signedIn: Boolean?,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
@@ -55,10 +58,12 @@ fun FeedRoute(
     }
     FeedScreen(
         state = state,
+        signedIn = signedIn,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onOpenPost = onOpenPost,
         onCompose = onCompose,
+        onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
     )
 }
@@ -67,10 +72,12 @@ fun FeedRoute(
 @Composable
 fun FeedScreen(
     state: FeedUiState,
+    signedIn: Boolean?,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
+    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -85,20 +92,32 @@ fun FeedScreen(
                         )
                     }
                 },
+                actions = {
+                    if (signedIn == false) {
+                        TextButton(
+                            onClick = onSignInOrJoin,
+                            modifier = Modifier.testTag("feed_signin"),
+                        ) {
+                            Text(stringResource(R.string.content_feed_signin))
+                        }
+                    }
+                },
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onCompose,
-                modifier = Modifier.testTag("feed_compose"),
-                icon = {
-                    Icon(
-                        Icons.Filled.Edit,
-                        contentDescription = null,
-                    )
-                },
-                text = { Text(stringResource(R.string.content_feed_compose)) },
-            )
+            if (signedIn == true) {
+                ExtendedFloatingActionButton(
+                    onClick = onCompose,
+                    modifier = Modifier.testTag("feed_compose"),
+                    icon = {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = null,
+                        )
+                    },
+                    text = { Text(stringResource(R.string.content_feed_compose)) },
+                )
+            }
         },
     ) { padding ->
         PullToRefreshBox(
