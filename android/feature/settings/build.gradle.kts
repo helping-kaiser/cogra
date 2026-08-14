@@ -1,5 +1,5 @@
 // Settings: sessions, the key-backup surface (enable late, replace the
-// code), credentials, and sign-out (auth.md).
+// code), key export, credentials, and sign-out (auth.md).
 
 plugins {
     alias(libs.plugins.android.library)
@@ -33,6 +33,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // LocalActivity: the export window is FLAG_SECURE.
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.navigation.compose)

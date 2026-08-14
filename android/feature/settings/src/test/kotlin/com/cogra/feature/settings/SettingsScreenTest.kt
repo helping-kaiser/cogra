@@ -5,6 +5,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.cogra.core.designsystem.KeyGate
+import com.cogra.core.designsystem.KeyGateResult
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.SessionInfo
 import com.google.common.truth.Truth.assertThat
@@ -24,12 +26,16 @@ class SettingsScreenTest {
         state: SettingsUiState,
         onFeedbackShown: () -> Unit = {},
         onBack: () -> Unit = {},
+        onCreateBackup: () -> Unit = {},
+        onExportKey: () -> Unit = {},
+        keyGate: KeyGate = FakeKeyGate(KeyGateResult.Granted),
     ) {
         compose.setContent {
             SettingsScreen(
                 state = state,
                 onBack = onBack,
-                onCreateBackup = {}, onBackupCodeSaved = {},
+                onCreateBackup = onCreateBackup, onBackupCodeSaved = {},
+                onExportKey = onExportKey,
                 onRevokeSession = {}, onRevokeOthers = {},
                 onCurrentPasswordChange = {}, onNewPasswordChange = {}, onChangePassword = {},
                 onNewHandleChange = {}, onChangeHandle = {},
@@ -37,6 +43,7 @@ class SettingsScreenTest {
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
                 onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
+                keyGate = keyGate,
             )
         }
     }
@@ -114,6 +121,83 @@ class SettingsScreenTest {
     fun noActorMeansNoBackupButton() {
         render(SettingsUiState(actorPresent = false))
         compose.onNodeWithTag("settings_backup_create").assertIsNotEnabled()
+        compose.onNodeWithTag("settings_export_key").assertDoesNotExist()
+    }
+
+    // ------------------------------------------------------- the key gate
+
+    @Test
+    fun replacingTheCodeRunsOnlyAfterTheDeviceConfirms() {
+        var replaced = false
+        render(
+            SettingsUiState(actorPresent = true),
+            onCreateBackup = { replaced = true },
+            keyGate = FakeKeyGate(KeyGateResult.Granted),
+        )
+        compose.onNodeWithTag("settings_backup_create").performClick()
+        compose.waitForIdle()
+        assertThat(replaced).isTrue()
+    }
+
+    @Test
+    fun aRefusedConfirmationLeavesTheBackupAlone() {
+        var replaced = false
+        render(
+            SettingsUiState(actorPresent = true),
+            onCreateBackup = { replaced = true },
+            keyGate = FakeKeyGate(KeyGateResult.Denied),
+        )
+        compose.onNodeWithTag("settings_backup_create").performClick()
+        compose.waitForIdle()
+        assertThat(replaced).isFalse()
+        compose.onNodeWithTag("key_gate_no_lock").assertDoesNotExist()
+    }
+
+    @Test
+    fun aPhoneThatCannotAskWarnsInsteadOfBlocking() {
+        var replaced = false
+        render(
+            SettingsUiState(actorPresent = true),
+            onCreateBackup = { replaced = true },
+            keyGate = FakeKeyGate(KeyGateResult.Unavailable),
+        )
+        compose.onNodeWithTag("settings_backup_create").performClick()
+        compose.waitForIdle()
+        assertThat(replaced).isFalse()
+
+        compose.onNodeWithTag("key_gate_continue").performClick()
+        compose.waitForIdle()
+        assertThat(replaced).isTrue()
+    }
+
+    @Test
+    fun theWarningsOtherAnswerLeavesTheActionUnrun() {
+        var replaced = false
+        render(
+            SettingsUiState(actorPresent = true),
+            onCreateBackup = { replaced = true },
+            keyGate = FakeKeyGate(KeyGateResult.Unavailable),
+        )
+        compose.onNodeWithTag("settings_backup_create").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("key_gate_set_lock").performClick()
+        compose.waitForIdle()
+        assertThat(replaced).isFalse()
+        compose.onNodeWithTag("key_gate_no_lock").assertDoesNotExist()
+    }
+
+    @Test
+    fun theExportEntryNavigatesWithoutAGate() {
+        var exported = false
+        render(
+            SettingsUiState(actorPresent = true),
+            onExportKey = { exported = true },
+            keyGate = FakeKeyGate(KeyGateResult.Denied),
+        )
+        compose.onNodeWithTag("settings_export_key").performClick()
+        compose.waitForIdle()
+        // Arriving reveals nothing — the export screen carries its own gate.
+        assertThat(exported).isTrue()
     }
 
     @Test

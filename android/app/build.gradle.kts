@@ -92,6 +92,8 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    // MainActivity is a FragmentActivity — BiometricPrompt's contract.
+    implementation(libs.androidx.fragment)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
