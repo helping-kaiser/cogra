@@ -110,6 +110,23 @@ make web-dev      Start the web app dev server (needs Node from web/.nvmrc)
 make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
 ```
 
+### Reaching the web dev server from the phone
+
+Hand testing runs in the phone's browser. `make web-dev` binds every
+interface, but Next blocks cross-origin requests for `/_next/*` in
+development, so a phone loading the LAN address gets the HTML and none
+of the chunks — a blank black screen. Name the host's LAN address so
+the dev server accepts it:
+
+```bash
+WEB_DEV_ORIGINS=192.168.0.5 make web-dev
+```
+
+`GRAPHQL_URL` is the matching escape hatch for the API the dev server
+proxies `/graphql` to; it defaults to `http://localhost:8080/graphql`,
+which is right whenever the API runs beside the dev server. The phone
+never talks to the API directly.
+
 ---
 
 ## Database Tools
