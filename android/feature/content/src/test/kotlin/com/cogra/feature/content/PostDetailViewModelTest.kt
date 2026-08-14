@@ -59,12 +59,34 @@ class PostDetailViewModelTest {
         ): Outcome<Page<CommentView>> = nextComments
 
         var prepareFails = false
+        var editPrepared = 0
+        var replyTargets = mutableListOf<String>()
+        var repliesPage: Outcome<Page<CommentView>> =
+            Outcome.Success(Page(listOf(testComment("r1")), "rc1", hasNextPage = false))
+
+        override suspend fun prepareCommentEdit(
+            id: String,
+            content: String,
+        ): Outcome<PreparedContentView> {
+            if (prepareFails) return Outcome.Failed(java.io.IOException("offline"))
+            editPrepared += 1
+            return Outcome.Success(
+                PreparedContentView("node-e", listOf(sealer.stage(Family.REVIEW))),
+            )
+        }
+
+        override suspend fun commentReplies(
+            commentId: String,
+            first: Int,
+            after: String?,
+        ): Outcome<Page<CommentView>> = repliesPage
 
         override suspend fun prepareComment(
             target: String,
             content: String,
             license: LicenseChoice,
         ): Outcome<PreparedContentView> {
+            replyTargets += target
             commentPrepared += 1
             if (prepareFails) return Outcome.Failed(IOException("offline"))
             return Outcome.Success(
@@ -214,5 +236,78 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.submitTransportFailed).isFalse()
         assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    @Test
+    fun aCommentEditSignsAndClearsTheEditor() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onStartEditComment(testComment("c1"))
+        vm.onEditDraftChange("better words")
+        vm.onSubmitCommentEdit()
+        dispatcher.scheduler.advanceUntilIdle()
+        val s = vm.state.value
+        assertThat(content.editPrepared).isEqualTo(1)
+        assertThat(s.editingCommentId).isNull()
+        assertThat(s.commentSigned).isTrue()
+    }
+
+    @Test
+    fun aReplyTargetsItsCommentAndSigns() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onStartReply("c1")
+        vm.onReplyDraftChange("me too")
+        vm.onSubmitReply()
+        dispatcher.scheduler.advanceUntilIdle()
+        // The reply is a genesis Review targeting the comment, not the
+        // post (comment.md §1).
+        assertThat(content.replyTargets).containsExactly("c1")
+        assertThat(vm.state.value.replyingToId).isNull()
+        assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    @Test
+    fun aRefusedReplySurfacesWithoutClosingTheComposer() = runTest(dispatcher) {
+        content.prepareFails = true
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onStartReply("c1")
+        vm.onReplyDraftChange("me too")
+        vm.onSubmitReply()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.replyTransportFailed).isTrue()
+        assertThat(vm.state.value.replyingToId).isEqualTo("c1")
+    }
+
+    @Test
+    fun expandingRepliesAppendsPastThePrefetch() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        val comment = testComment("c1").copy(
+            replies = Page(listOf(testComment("r0")), "rc0", hasNextPage = true),
+        )
+        vm.onLoadMoreReplies(comment)
+        dispatcher.scheduler.advanceUntilIdle()
+        val thread = vm.state.value.replyThreads["c1"]
+        checkNotNull(thread)
+        // Seeded from the prefetch, extended by the fetched page.
+        assertThat(thread.items.map { it.id }).containsExactly("r0", "r1").inOrder()
+        assertThat(thread.hasMore).isFalse()
+    }
+
+    @Test
+    fun aFailedReplyPageOffersRetryInPlace() = runTest(dispatcher) {
+        content.repliesPage = Outcome.Failed(java.io.IOException("offline"))
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onLoadMoreReplies(testComment("c1"))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
     }
 }
