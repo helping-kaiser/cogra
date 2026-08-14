@@ -4,9 +4,12 @@
 
 package com.cogra.domain.repo
 
+import com.cogra.crypto.Family
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.LicenseChoice
@@ -174,4 +177,42 @@ interface ContentRepository {
     ): Outcome<PreparedContentView>
 
     suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
+
+    /** A further page of one comment's direct replies (expand). */
+    suspend fun commentReplies(commentId: String, first: Int, after: String?): Outcome<Page<CommentView>>
+}
+
+/**
+ * The profile surface (api-spec.md "Actors"; roadmap "Slice 2.1"):
+ * public reads by handle, the viewer's own profile, the authored
+ * chronicle, and the parallel-Registration update.
+ */
+interface ProfileRepository {
+    /** Null when the handle resolves to no user. */
+    suspend fun profileByHandle(handle: String): Outcome<ProfileView?>
+
+    /** The viewer's own profile; null when the session is gone. */
+    suspend fun myProfile(): Outcome<ProfileView?>
+
+    /**
+     * The actor's chronicle, newest first — every record, or one
+     * family's when [family] is set (the profile filter chips).
+     */
+    suspend fun authorRecords(
+        authorId: String,
+        family: Family?,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<RecordRow>>
+
+    /**
+     * The full intended field set — the edit form holds every field.
+     * The display name always carries a value (the clear is refused
+     * server-side); a null bio/websiteUrl clears.
+     */
+    suspend fun prepareProfileUpdate(
+        displayName: String,
+        bio: String?,
+        websiteUrl: String?,
+    ): Outcome<List<PreparedWriteView>>
 }

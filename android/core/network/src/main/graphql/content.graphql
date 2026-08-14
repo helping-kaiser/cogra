@@ -20,6 +20,9 @@ fragment PostFields on Post {
   author {
     id
     handle
+    displayName {
+      value
+    }
   }
   createdAt
   updatedAt
@@ -35,6 +38,9 @@ fragment CommentFields on Comment {
   author {
     id
     handle
+    displayName {
+      value
+    }
   }
   createdAt
   updatedAt
@@ -103,13 +109,54 @@ query Posts($first: Int!, $after: String) {
   }
 }
 
-query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!) {
   post(id: $id) {
     ...PostFields
     comments(first: $commentsFirst, after: $commentsAfter) {
       edges {
         node {
           ...CommentFields
+          replies(first: $repliesFirst) {
+            edges {
+              node {
+                ...CommentFields
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The expand read: a further page of one comment's direct replies,
+# each carrying its own first reply page so nesting can continue.
+query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!) {
+  comment(id: $id) {
+    id
+    replies(first: $first, after: $after) {
+      edges {
+        node {
+          ...CommentFields
+          replies(first: $repliesFirst) {
+            edges {
+              node {
+                ...CommentFields
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
         }
       }
       pageInfo {
