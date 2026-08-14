@@ -19,16 +19,27 @@ import {
   signUpload,
 } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
+import { secretsFromSeed, type ExportedSecret } from "./key-export";
 import type { IdentityStore } from "./store";
 
-export type BackupResult =
-  | { kind: "created"; code: string }
-  | { kind: "noSeed" }
+/** How opening the stored blob under the current code can fail. */
+type OpenFailure =
   | { kind: "malformedCode" }
   | { kind: "wrongCode" }
   | { kind: "noBackup" }
   | { kind: "refused"; errors: readonly UserError[] }
   | { kind: "failed"; cause: unknown };
+
+export type BackupResult = { kind: "created"; code: string } | { kind: "noSeed" } | OpenFailure;
+
+/**
+ * A reveal never writes: no upload, no re-seal, and the seed is not
+ * re-persisted — it lives in memory for the render alone.
+ */
+export type RevealResult =
+  | { kind: "revealed"; secrets: readonly ExportedSecret[] }
+  | { kind: "noSeed" }
+  | OpenFailure;
 
 export type BackupManager = {
   /**
@@ -43,6 +54,19 @@ export type BackupManager = {
    * seed lives only in memory for the exchange.
    */
   rekey(currentCodeInput: string): Promise<BackupResult>;
+  /**
+   * Show the secrets from the retained seed — the state where no blob
+   * exists yet. Nothing gates it: the seed already sits in this
+   * browser's store, so a code prompt would prove nothing and would
+   * lock out exactly the person who declined the backup.
+   */
+  revealRetained(): Promise<RevealResult>;
+  /**
+   * Show the secrets once the seed is gone: the current code opens the
+   * stored blob, the same proof rekey demands, because custody left the
+   * browser with a non-extractable key alone (web.md "Key custody").
+   */
+  revealFromBackup(currentCodeInput: string): Promise<RevealResult>;
 };
 
 export function createBackupManager(deps: {
@@ -73,6 +97,35 @@ export function createBackupManager(deps: {
     return { kind: "created", code: code.display() };
   }
 
+  /**
+   * The current code, re-proved: parse it, fetch the blob, open it in
+   * memory. Both post-wipe paths — replacing the code and revealing the
+   * key — start here, and neither re-persists the seed.
+   */
+  async function openCurrent(
+    currentCodeInput: string,
+  ): Promise<{ kind: "opened"; seed: Uint8Array } | OpenFailure> {
+    let currentCode: RecoveryCode;
+    try {
+      currentCode = RecoveryCode.fromInput(currentCodeInput);
+    } catch (e) {
+      if (e instanceof KeyBackupError) return { kind: "malformedCode" };
+      throw e;
+    }
+
+    const fetched = await guard.run(() => fetchKeyBackup(client));
+    if (fetched.kind === "refused") return { kind: "refused", errors: fetched.errors };
+    if (fetched.kind === "failed") return { kind: "failed", cause: fetched.cause };
+    if (fetched.value === null) return { kind: "noBackup" };
+
+    try {
+      return { kind: "opened", seed: await openKeyBackup(fromBase64(fetched.value), currentCode) };
+    } catch (e) {
+      if (e instanceof KeyBackupError) return { kind: "wrongCode" };
+      throw e;
+    }
+  }
+
   return {
     async enable() {
       const seed = await store.actorSeed();
@@ -86,28 +139,21 @@ export function createBackupManager(deps: {
     },
 
     async rekey(currentCodeInput) {
-      let currentCode: RecoveryCode;
-      try {
-        currentCode = RecoveryCode.fromInput(currentCodeInput);
-      } catch (e) {
-        if (e instanceof KeyBackupError) return { kind: "malformedCode" };
-        throw e;
-      }
+      const opened = await openCurrent(currentCodeInput);
+      if (opened.kind !== "opened") return opened;
+      return sealAndUpload(opened.seed);
+    },
 
-      const fetched = await guard.run(() => fetchKeyBackup(client));
-      if (fetched.kind === "refused") return { kind: "refused", errors: fetched.errors };
-      if (fetched.kind === "failed") return { kind: "failed", cause: fetched.cause };
-      if (fetched.value === null) return { kind: "noBackup" };
+    async revealRetained() {
+      const seed = await store.actorSeed();
+      if (seed === null) return { kind: "noSeed" };
+      return { kind: "revealed", secrets: secretsFromSeed(seed) };
+    },
 
-      let seed: Uint8Array;
-      try {
-        seed = await openKeyBackup(fromBase64(fetched.value), currentCode);
-      } catch (e) {
-        if (e instanceof KeyBackupError) return { kind: "wrongCode" };
-        throw e;
-      }
-
-      return sealAndUpload(seed);
+    async revealFromBackup(currentCodeInput) {
+      const opened = await openCurrent(currentCodeInput);
+      if (opened.kind !== "opened") return opened;
+      return { kind: "revealed", secrets: secretsFromSeed(opened.seed) };
     },
   };
 }

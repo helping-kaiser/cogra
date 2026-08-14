@@ -12,7 +12,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { AuthGuard } from "@/lib/session/guard";
-import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
+import { fromBase64, randomBytes, toBase64, toHex } from "@/lib/crypto/bytes";
 import { sha256Tagged, verify } from "@/lib/crypto/hashing";
 import {
   openKeyBackup,
@@ -215,6 +215,57 @@ describe("backup manager", () => {
   it("rekey reports a missing server blob", async () => {
     server.use(keyBackupHandler(null));
     expect(await manager.rekey(RecoveryCode.generate().display())).toEqual({ kind: "noBackup" });
+  });
+
+  it("reveals the retained seed without a code or a round trip", async () => {
+    const seed = randomBytes(32);
+    await store.saveActor(seed, true);
+
+    const result = await manager.revealRetained();
+    expect(result.kind).toBe("revealed");
+    if (result.kind !== "revealed") return;
+    expect(result.secrets.map((s) => s.kind)).toEqual(["actorKey"]);
+    expect(result.secrets[0].hex).toBe(toHex(seed));
+    // A reveal is a read: custody is exactly as it was.
+    expect(await store.actorSeed()).toEqual(seed);
+  });
+
+  it("reveals nothing when no seed is retained", async () => {
+    await store.saveActor(randomBytes(32), false);
+    expect(await manager.revealRetained()).toEqual({ kind: "noSeed" });
+  });
+
+  it("reveals from the backup under the current code, persisting nothing", async () => {
+    const seed = randomBytes(32);
+    const currentCode = RecoveryCode.generate();
+    await store.saveActor(seed, false);
+    server.use(keyBackupHandler(toBase64(await sealKeyBackup(seed, currentCode))));
+
+    const result = await manager.revealFromBackup(currentCode.display());
+    expect(result.kind).toBe("revealed");
+    if (result.kind !== "revealed") return;
+    expect(result.secrets[0].hex).toBe(toHex(seed));
+    expect(result.secrets[0].pem).toContain("-----BEGIN PRIVATE KEY-----");
+    // The seed came back for the render alone (web.md "Key custody").
+    expect(await store.actorSeed()).toBeNull();
+  });
+
+  it("a wrong code reveals nothing", async () => {
+    server.use(keyBackupHandler(toBase64(await sealKeyBackup(randomBytes(32), RecoveryCode.generate()))));
+    expect(await manager.revealFromBackup(RecoveryCode.generate().display())).toEqual({
+      kind: "wrongCode",
+    });
+  });
+
+  it("a malformed code reveals nothing and never asks the server", async () => {
+    expect(await manager.revealFromBackup("not a code")).toEqual({ kind: "malformedCode" });
+  });
+
+  it("reveal reports a missing server blob", async () => {
+    server.use(keyBackupHandler(null));
+    expect(await manager.revealFromBackup(RecoveryCode.generate().display())).toEqual({
+      kind: "noBackup",
+    });
   });
 
   it("rekey surfaces an upload refusal", async () => {

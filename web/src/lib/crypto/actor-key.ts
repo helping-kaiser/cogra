@@ -32,8 +32,9 @@ export class HandshakeError extends Error {
 }
 
 // The RFC 8410 PKCS#8 wrapper of a raw Ed25519 seed — the only private
-// import format WebCrypto accepts.
-const PKCS8_PREFIX = fromHex("302e020100300506032b657004220420");
+// import format WebCrypto accepts, and the export encoding other tools
+// read (key-export.ts).
+export const PKCS8_PREFIX = fromHex("302e020100300506032b657004220420");
 
 function fromBase64Url(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));

@@ -9,6 +9,23 @@
     <string name="settings_backup_create">Create a new recovery code</string>
     <string name="settings_backup_code_explainer">Write this code down somewhere safe. It is shown only this once; any older code stops working.</string>
     <string name="settings_backup_saved">I\'ve written it down</string>
+    <string name="settings_export_key">Show my key</string>
+
+    <string name="key_gate_title">Confirm it\'s you</string>
+    <string name="key_gate_replace">Unlock to create a new recovery code</string>
+    <string name="key_gate_export">Unlock to show your key</string>
+    <string name="key_gate_no_lock_title">This phone has no lock</string>
+    <string name="key_gate_no_lock_body">With no screen lock or fingerprint, anyone holding this phone can reveal or replace your key. Set a lock up first — or continue if you\'re sure this phone is safe.</string>
+    <string name="key_gate_no_lock_set">Set a lock</string>
+    <string name="key_gate_no_lock_continue">Continue anyway</string>
+
+    <string name="key_export_title">Your key</string>
+    <string name="key_export_body">This key is what signs everything you publish, and it lives only on this phone. Write it down or store it somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.</string>
+    <string name="key_export_reveal">Show my key</string>
+    <string name="key_export_no_actor">This phone doesn\'t hold your key. Restore it first from the home screen.</string>
+    <string name="key_export_actor_key">Your actor key</string>
+    <string name="key_export_pem">PEM (PKCS#8)</string>
+    <string name="key_export_hex">Raw hex — Ed25519 private key</string>
 
     <string name="settings_sessions_title">Sessions</string>
     <string name="settings_session_unnamed">Unnamed device</string>

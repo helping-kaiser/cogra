@@ -392,6 +392,16 @@ export function SettingsView({
             </Link>
           </>
         ) : null}
+        {/* Not while a fresh code is on screen — that surface has one job. */}
+        {newBackupCode === null && backupMode !== null && backupMode !== "none" && (
+          <Link
+            href="/settings/key"
+            data-testid="settings_export_key"
+            className="self-start text-body-medium text-on-surface-variant underline"
+          >
+            Show my key
+          </Link>
+        )}
         {feedbackLine("backup")}
       </Card>
 

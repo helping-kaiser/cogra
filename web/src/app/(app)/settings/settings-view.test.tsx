@@ -71,6 +71,8 @@ function fakeBackup(overrides: Partial<BackupManager> = {}): BackupManager {
   return {
     enable: vi.fn(() => Promise.resolve({ kind: "created" as const, code: CODE })),
     rekey: vi.fn(() => Promise.resolve({ kind: "created" as const, code: CODE })),
+    revealRetained: vi.fn(() => Promise.resolve({ kind: "noSeed" as const })),
+    revealFromBackup: vi.fn(() => Promise.resolve({ kind: "noSeed" as const })),
     ...overrides,
   };
 }
@@ -141,6 +143,26 @@ describe("SettingsView backup", () => {
     expect(screen.getByTestId("settings_backup_restore")).toHaveAttribute("href", "/restore");
     expect(screen.queryByTestId("settings_backup_create")).not.toBeInTheDocument();
     expect(screen.queryByTestId("settings_rekey_code")).not.toBeInTheDocument();
+    // Nothing to export either.
+    expect(screen.queryByTestId("settings_export_key")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["retained", { seed: new Uint8Array(32), keyOnDevice: true }],
+    ["sealed", { keyOnDevice: true }],
+  ])("offers the export surface while the key is %s", async (_custody, custody) => {
+    renderSettings(custody);
+    expect(await screen.findByTestId("settings_export_key")).toHaveAttribute(
+      "href",
+      "/settings/key",
+    );
+  });
+
+  it("keeps the export entry off the screen showing a fresh code", async () => {
+    renderSettings({ seed: new Uint8Array(32), keyOnDevice: true });
+    fireEvent.click(await screen.findByTestId("settings_backup_create"));
+    await screen.findByTestId("settings_backup_code");
+    expect(screen.queryByTestId("settings_export_key")).not.toBeInTheDocument();
   });
 });
 
