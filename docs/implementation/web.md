@@ -89,6 +89,14 @@ seed is never re-persisted. A browser that lost the code
 therefore cannot re-key; that adds no loss mode, since without
 the code the actor could never reach another device anyway.
 
+Both surfaces that show a fresh code — the ceremony and settings
+— render it through one component, which also carries the
+write-it-down gate: the code is dismissed only by being typed or
+pasted back ([auth.md "Key recovery"](auth.md#key-recovery)).
+Its copy button needs a secure context, so on a LAN dev build
+reached over plain http the copy fails visibly rather than
+silently.
+
 The same wipe is what gates `/settings/key`
 ([auth.md "Key export"](auth.md#key-export)). With a blob in
 place the export opens it under the current code and shows the

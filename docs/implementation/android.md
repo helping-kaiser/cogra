@@ -59,7 +59,12 @@ The key leaves the device only when its holder asks it to — the
 credential, over a `FLAG_SECURE` window
 ([auth.md "Key export"](auth.md#key-export)) — and never over the
 wire. The same gate stands in front of replacing the recovery
-code, so a single hasty tap can no longer destroy a backup.
+code, so no single tap destroys a backup. A displayed code is
+dismissed only by being typed or pasted back, and the copy button
+beside it flags its clip sensitive
+([auth.md "Key recovery"](auth.md#key-recovery)); both live in
+`core:designsystem`, since the ceremony and settings show the
+same code the same way.
 Before each signature the app verifies what it signs — the recomputed pre-digests at pre-sign;
 the host seal, exact body, and both commitment openings at
 approval — so the user never signs blind bytes. The concrete signing crypto follows the L1 key model, which
