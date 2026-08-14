@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
@@ -44,11 +45,13 @@ fun FeedRoute(
     /** Null while the auth phase resolves; the write/join affordances wait. */
     signedIn: Boolean?,
     onOpenPost: (String) -> Unit,
-    onCompose: () -> Unit,
+    onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
-    onBack: () -> Unit,
+    /** Null when the feed is the shell's root tab — no back arrow. */
+    onBack: (() -> Unit)?,
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
+    banners: @Composable () -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -62,9 +65,10 @@ fun FeedRoute(
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onOpenPost = onOpenPost,
-        onCompose = onCompose,
+        onOpenActor = onOpenActor,
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
+        banners = banners,
     )
 }
 
@@ -76,20 +80,23 @@ fun FeedScreen(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onOpenPost: (String) -> Unit,
-    onCompose: () -> Unit,
+    onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
+    banners: @Composable () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.content_feed_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("feed_back")) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_back),
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("feed_back")) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.content_back),
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -104,21 +111,6 @@ fun FeedScreen(
                 },
             )
         },
-        floatingActionButton = {
-            if (signedIn == true) {
-                ExtendedFloatingActionButton(
-                    onClick = onCompose,
-                    modifier = Modifier.testTag("feed_compose"),
-                    icon = {
-                        Icon(
-                            Icons.Filled.Edit,
-                            contentDescription = null,
-                        )
-                    },
-                    text = { Text(stringResource(R.string.content_feed_compose)) },
-                )
-            }
-        },
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = state.loading,
@@ -127,25 +119,32 @@ fun FeedScreen(
                 .padding(padding)
                 .fillMaxSize(),
         ) {
+            // The status banners ride every branch — an applicant with an
+            // empty feed still sees their application cards.
             when {
                 state.transportFault != null && state.posts.isEmpty() -> Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    banners()
                     ErrorLine(R.string.content_error_transport, "feed_transport_error")
                     TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
                         Text(stringResource(R.string.content_retry))
                     }
                 }
-                !state.loading && state.posts.isEmpty() -> Box(
+                !state.loading && state.posts.isEmpty() -> Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center,
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    banners()
                     Text(
                         stringResource(R.string.content_feed_empty),
                         modifier = Modifier.testTag("feed_empty"),
@@ -180,8 +179,13 @@ fun FeedScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        item(key = "feed_banners") { banners() }
                         items(state.posts, key = { it.id }) { post ->
-                            PostCard(post = post, onClick = { onOpenPost(post.id) })
+                            PostCard(
+                                post = post,
+                                onClick = { onOpenPost(post.id) },
+                                onOpenActor = onOpenActor,
+                            )
                         }
                         if (state.hasNextPage) {
                             item {
@@ -223,7 +227,7 @@ fun FeedScreen(
 }
 
 @Composable
-private fun PostCard(post: PostView, onClick: () -> Unit) {
+private fun PostCard(post: PostView, onClick: () -> Unit, onOpenActor: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -236,6 +240,14 @@ private fun PostCard(post: PostView, onClick: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            post.author?.let { author ->
+                ActorChip(
+                    handle = author.handle,
+                    displayName = author.displayName,
+                    onOpen = { onOpenActor(author.handle) },
+                    testTag = "feed_author_${post.id}",
+                )
+            }
             post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
                 Text(title, style = MaterialTheme.typography.titleMedium)
             }
@@ -245,13 +257,6 @@ private fun PostCard(post: PostView, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
-                )
-            }
-            post.author?.let { author ->
-                Text(
-                    "@${author.handle}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
