@@ -729,6 +729,95 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
     );
 }
 
+/// A chained Registration (a profile update, slice 2.1) shares the
+/// admission's family and target, but only the unchained Registration
+/// is the admission one: the idempotency check must keep finding the
+/// admission row even when a chained one is newer — never returning
+/// the chained row, and never staging a duplicate admission.
+#[sqlx::test(migrations = "../../migrations")]
+async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
+    use api::prepare::{Gesture, Target};
+    use common::l1::census::Family;
+    use common::l1::identifier::{ActId, NodeId};
+
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, false).await;
+    let account = rig
+        .ceremony_done_account(link, "newbie", "n@example.com")
+        .await;
+    let application = rig.application_of(account).await;
+    store::approve_application(&rig.pool, application.id)
+        .await
+        .expect("query")
+        .expect("approvable");
+    let approved = rig.application_of(account).await;
+    let admission = onboarding::ensure_admission_staged(
+        &rig.pool,
+        &rig.boundary,
+        &rig.standin,
+        &rig.cfg,
+        &approved,
+    )
+    .await
+    .expect("stages");
+
+    // A chained Registration toward the same Profile, newer than the
+    // admission row — the shape a profile update stages.
+    let address = store::actor_identity(&rig.pool, account)
+        .await
+        .expect("query")
+        .expect("actor")
+        .l0_address
+        .expect("attached");
+    let chained = api::prepare::prepare(
+        &rig.boundary,
+        &rig.pool,
+        rig.cfg.gc_after_epochs,
+        account,
+        Gesture {
+            author: address.clone(),
+            family: Family::Registration,
+            middle: None,
+            target: Target::Node(NodeId::Prof(address.clone())),
+            p_d: 1.0,
+            p_i: 1.0,
+            settlement_ref: None,
+            license: None,
+            asserted_parents: vec![ActId {
+                author: address,
+                seq: admission.proposal.body.seq,
+                family: Family::Registration,
+            }],
+            deps: vec![],
+            payload: vec![],
+        },
+    )
+    .await
+    .expect("stages chained");
+
+    let again = onboarding::ensure_admission_staged(
+        &rig.pool,
+        &rig.boundary,
+        &rig.standin,
+        &rig.cfg,
+        &approved,
+    )
+    .await
+    .expect("finds admission");
+    assert_eq!(again.id, admission.id);
+    assert_ne!(again.id, chained.id);
+    let staged_rows: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM staged_writes
+         WHERE actor_id = $1 AND family = 'registration'",
+    )
+    .bind(account)
+    .fetch_one(&rig.pool)
+    .await
+    .expect("count");
+    assert_eq!(staged_rows, 2);
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_fresh_invite_rearms_an_expired_application(pool: PgPool) {
     let rig = Rig::new(pool).await;

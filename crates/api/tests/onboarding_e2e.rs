@@ -440,14 +440,15 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     let landed = rig
         .gql(
             Some(&joiner_token),
-            r#"query { me { accountState handle displayName
+            r#"query { me { accountState handle displayName { value status }
                  application { landedAt } } }"#,
             json!({}),
         )
         .await;
     assert_eq!(landed["me"]["accountState"], "MEMBER");
     assert_eq!(landed["me"]["handle"], "joiner");
-    assert_eq!(landed["me"]["displayName"], "joiner");
+    assert_eq!(landed["me"]["displayName"]["value"], "joiner");
+    assert_eq!(landed["me"]["displayName"]["status"], "NORMAL");
     assert!(landed["me"]["application"]["landedAt"].is_string());
 
     // Reciprocation — the joiner's own act toward the account that

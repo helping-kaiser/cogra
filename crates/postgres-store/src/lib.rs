@@ -8,6 +8,7 @@ pub mod content;
 pub mod genesis;
 pub mod mirror;
 pub mod params;
+pub mod profile;
 pub mod rate_limit;
 pub mod staged;
 

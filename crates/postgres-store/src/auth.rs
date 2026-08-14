@@ -1354,25 +1354,33 @@ pub struct ActorIdentity {
     pub l0_address: Option<String>,
 }
 
-/// The newest profile version's display name (data-model.md
-/// "Display-content versioning" — newest row wins).
-pub async fn current_display_name(
-    pool: &PgPool,
-    actor_id: Uuid,
-) -> Result<Option<String>, sqlx::Error> {
-    sqlx::query_scalar!(
-        "SELECT display_name FROM actor_profile_versions
-         WHERE actor_id = $1 ORDER BY created_at DESC LIMIT 1",
-        actor_id,
-    )
-    .fetch_optional(pool)
-    .await
-}
-
 pub async fn actor_identity(pool: &PgPool, id: Uuid) -> Result<Option<ActorIdentity>, sqlx::Error> {
     Ok(sqlx::query!(
         "SELECT id, kind, handle, actor_pubkey, l0_address FROM actors WHERE id = $1",
         id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| ActorIdentity {
+        id: r.id,
+        kind: r.kind,
+        handle: r.handle,
+        actor_pubkey: r.actor_pubkey,
+        l0_address: r.l0_address,
+    }))
+}
+
+/// Handle lookup — one namespace across kinds, so a handle resolves to
+/// exactly one actor (api-spec.md "Queries"). The caller normalizes
+/// (handles are stored case-folded, auth.md "Handle and email format").
+pub async fn actor_identity_by_handle(
+    pool: &PgPool,
+    handle: &str,
+) -> Result<Option<ActorIdentity>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT id, kind, handle, actor_pubkey, l0_address
+         FROM actors WHERE handle = $1",
+        handle,
     )
     .fetch_optional(pool)
     .await?

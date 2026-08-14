@@ -24,7 +24,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER") {
           __typename: "User",
           id: "u1",
           handle: "ada",
-          displayName: null,
+          displayName: { __typename: "ModeratedText", value: null },
           accountState,
           hasReciprocated: true,
           invitedBy: null,
