@@ -136,6 +136,20 @@ integer-keyed map — the guild schema:
 | 4 | body | tstr |
 | 5 | media manifest — **reserved**, arrives with media | — |
 | 6 | provenance chain — **reserved** ([platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations) plank 4) | — |
+| 7 | display name (profile) | tstr |
+| 8 | bio (profile) | tstr |
+| 9 | website URL (profile) | tstr |
+| 10 | payout address (profile) — **assigned**, arrives with the rail ([ledger.md](ledger.md)) | tstr |
+
+Keys 2–6 ride Publish/Review payloads; keys 7–10 ride the
+parallel-Registration profile payload ([user.md §4](../primitive/user.md#4-postgres-side-content),
+[substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
+For a profile payload, key 1 carries the actor's UUID — the key
+`actor_profile_versions` shares with the graph's Profile node.
+The admission Registration keeps its interim pre-PCE payload
+(`[1, handle]` — crates/api `onboarding.rs`): update records are
+read individually, never through the chain root, so the anchoring
+record's payload format constrains nothing.
 
 The rules: CoGra sets the PCE body (key 1) to `""` — everything
 CoGra renders lives in the guild map. A genesis act carries every
@@ -423,9 +437,14 @@ CREATE TABLE user_credentials (
 
 -- Actor profiles: append-only versions of the profile display
 -- fields, one shape for every kind (see "Display-content
--- versioning"). A user edits their own; a Collective's changes
--- land through its governed edit flow (substrate.md §9); system
--- actors get theirs at bootstrap.
+-- versioning"). A user edits their own via the parallel
+-- Registration (prepareProfileUpdate) — the version row is
+-- written at confirm, in the same flow as the record that
+-- witnesses it (user.md §4), with the envelope carried in
+-- act_payloads. Registration seeds the first row with
+-- display_name = handle; genesis seeds the system actors'. A
+-- Collective's changes land through its governed edit flow
+-- (substrate.md §9).
 CREATE TABLE actor_profile_versions (
     actor_id         UUID        NOT NULL REFERENCES actors(id),
     display_name     TEXT        NOT NULL,

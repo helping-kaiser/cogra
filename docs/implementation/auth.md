@@ -531,7 +531,11 @@ pinned to the offending field (`handle` / `email`).
   account rather than admitting a distinct `Alice`. The charset
   excludes `-`, which leaves the `redacted-user-{uuid}` redaction
   sentinel ([api-spec.md](api-spec.md)) unreachable by any real
-  registration.
+  registration. `changeHandle` applies the same rules — an
+  ordinary authenticated mutation, no rate limit beyond the
+  session it rides. A freed handle is immediately claimable
+  (plain UNIQUE semantics), and links to the old handle resolve
+  to nothing — or to whoever claims it — honestly.
 - **Email.** Trimmed and **lowercased** to a canonical form used
   for both the stored `user_credentials.email` and the login
   lookup, so the
