@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,16 +10,28 @@ plugins {
     id("cogra.android.module")
 }
 
+// Gradle exposes gradle.properties and -P as project properties, but
+// reads local.properties only for the SDK location — so the file
+// android/README.md points hand testers at has to be loaded by hand.
+// A -P on the command line still wins.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun configured(name: String, default: String): String {
+    val fromFile: String? = localProperties.getProperty(name)
+    return (findProperty(name) as String?) ?: fromFile ?: default
+}
+
 // The backend endpoint (android/README.md "Pointing the app at a
 // backend"): `cogra.graphqlUrl` from local.properties or -P, defaulting
 // to the emulator's host loopback.
-val graphqlUrl: String = (findProperty("cogra.graphqlUrl") as String?)
-    ?: "http://10.0.2.2:8080/graphql"
+val graphqlUrl: String = configured("cogra.graphqlUrl", "http://10.0.2.2:8080/graphql")
 
 // The per-environment web origin behind every shareable link (auth.md
 // "Link URLs"); its host doubles as the App Links host.
-val webOrigin: String = (findProperty("cogra.webOrigin") as String?)
-    ?: "https://cogra.example"
+val webOrigin: String = configured("cogra.webOrigin", "https://cogra.example")
 val webHost: String = webOrigin.substringAfter("://").substringBefore("/")
 
 android {
