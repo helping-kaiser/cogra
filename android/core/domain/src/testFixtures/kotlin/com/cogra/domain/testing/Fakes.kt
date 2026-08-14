@@ -187,7 +187,12 @@ fun testProposalBytes(author: ActorKey, seq: ULong = 1u): ByteArray {
 open class ThrowingAccountRepository : AccountRepository {
     override suspend fun me(): Outcome<UserProfile?> = throw UnsupportedOperationException()
     override suspend fun keyBackup(): Outcome<ByteArray?> = throw UnsupportedOperationException()
-    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> = throw UnsupportedOperationException()
+    override suspend fun keyBackupChallenge(): Outcome<ByteArray> = throw UnsupportedOperationException()
+    override suspend fun uploadKeyBackup(
+        blob: ByteArray,
+        challenge: ByteArray,
+        signature: ByteArray,
+    ): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun changePassword(currentPassword: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()
     override suspend fun changeHandle(handle: String): Outcome<Unit> = throw UnsupportedOperationException()

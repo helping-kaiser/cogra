@@ -49,7 +49,13 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(backupBlob)
 
-    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
+    override suspend fun keyBackupChallenge(): Outcome<ByteArray> = Outcome.Success(ByteArray(32) { 0x71 })
+
+    override suspend fun uploadKeyBackup(
+        blob: ByteArray,
+        challenge: ByteArray,
+        signature: ByteArray,
+    ): Outcome<Unit> {
         uploadedBackup = blob
         return Outcome.Success(Unit)
     }

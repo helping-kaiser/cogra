@@ -91,6 +91,8 @@ pub enum ErrorCode {
     StagedWriteExpired,
     /// A submitted signature does not verify the record.
     SignatureInvalid,
+    /// The key-backup upload challenge is unknown, expired, or spent.
+    ChallengeExpired,
 }
 
 /// An expected business outcome, carried as data on the mutation payload
