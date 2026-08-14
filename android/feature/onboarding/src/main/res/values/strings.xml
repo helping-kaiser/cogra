@@ -26,7 +26,6 @@
     <string name="backup_accept">Create my recovery code</string>
     <string name="backup_decline">Not now</string>
     <string name="backup_code_explainer">Write this code down somewhere safe — on paper is best. It is shown only this once, and we can never recover it for you.</string>
-    <string name="backup_code_saved">I\'ve written it down</string>
     <string name="backup_decline_title">Continue without a backup?</string>
     <string name="backup_decline_consequence">If this phone is lost or broken, your posts, relationships, and standing are permanently lost with it. Your login would survive, but the actor behind it can never be restored. You can create a backup later in Settings.</string>
     <string name="backup_decline_confirm">I accept the risk</string>

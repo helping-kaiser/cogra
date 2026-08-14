@@ -149,15 +149,13 @@ export function KeyCeremonyView() {
       ) : (
         <>
           <Card>
-            <RecoveryCode testId="backup_code" code={recoveryCode} />
+            <RecoveryCode
+              testId="backup_code"
+              code={recoveryCode}
+              explainer="Write this code down and keep it somewhere safe. It is shown only this once — CoGra cannot recover it for you."
+              onConfirmed={finish}
+            />
           </Card>
-          <p className="text-body-medium text-on-surface-variant">
-            Write this code down and keep it somewhere safe. It is shown only this once — CoGra
-            cannot recover it for you.
-          </p>
-          <Button testId="backup_code_saved" onClick={finish}>
-            I&apos;ve written it down
-          </Button>
         </>
       )}
     </main>

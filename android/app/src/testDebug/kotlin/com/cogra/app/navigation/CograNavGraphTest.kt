@@ -7,6 +7,7 @@ package com.cogra.app.navigation
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -409,13 +410,19 @@ class CograNavGraphTest {
 
         // Accept the backup: mint, attach, seal, show the code once.
         compose.onNodeWithTag("backup_accept").performClick()
-        waitForTag("backup_code")
+        waitForTag("recovery_code")
         assertThat(identity.seed).isNotNull()
         assertThat(onboarding.attachedKeys).hasSize(1)
         assertThat(account.uploadedBackup).isNotNull()
 
-        // Confirming the code pops back into the Home shell.
-        compose.onNodeWithTag("backup_code_saved").performClick()
+        // Confirming the code — by typing it back — pops into the Home shell.
+        val shown = compose.onNodeWithTag("recovery_code")
+            .fetchSemanticsNode()
+            .config[SemanticsProperties.Text]
+            .single()
+            .text
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(shown)
+        compose.onNodeWithTag("recovery_code_saved").performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
         }
