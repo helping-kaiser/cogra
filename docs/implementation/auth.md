@@ -106,6 +106,28 @@ Rules the posture hangs on:
   without the code. Users can therefore keep redundant copies
   of the code — redundancy against loss is safe in a way copies
   of a raw key never are.
+- **Uploading is authorized by the actor key, not by the
+  session.** A live session alone could otherwise overwrite the
+  stored blob — learning nothing, but destroying the account's
+  only recovery path, silently and unrecoverably. So the upload
+  carries a proof: `createKeyBackupChallenge` issues a 32-byte
+  challenge, live five minutes, one per account, spent on use;
+  the client signs `sha256Tagged("cogra:key-backup-upload:v1",
+  [challenge, blob])` with the actor key and the server verifies
+  against the attached public key. Binding the blob stops a
+  captured signature authorizing other ciphertext; binding the
+  server's challenge stops the pair being replayed. Every client
+  can satisfy it — the phone holds the seed, and the browser
+  keeps a usable non-extractable pair even after the wipe. An
+  attacker on a fresh device has neither. The challenge is not
+  an L1 act, so it carries the `cogra:key-backup:*` prefix, not
+  a `cogra-l1:` act tag.
+- **Replacement mails a notice.** Overwriting an existing blob
+  mails the account address; enabling backup for the first time
+  does not, since nothing is destroyed. The notice protects the
+  account, not the actor: once someone holds an unlocked device
+  the key is theirs regardless, but the owner still learns of it
+  in time to revoke sessions and change the password.
 - **The blob is a container.** Further client-held secrets — a
   Collective creator's key, a member's co-signing half
   ([collectives.md §2](../instances/collectives.md#2-custody)) —
