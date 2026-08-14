@@ -26,6 +26,7 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
+| 2c. Profile surface (with slice 2.2) | 2 | **Q35, Q36** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real) and the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?). Slice 2.1 ships without both. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -182,6 +183,65 @@ topics, and what gesture un-tags? Candidates: newest-wins per
 removed; or a net-over-bundle read like Opinions. The answer
 gates the tag inputs already specced on the content-authoring
 surface.
+
+---
+
+## Q35 — The profile connection count: which fold counts
+
+**Where it shows up:**
+[design.md §6](implementation/design.md#6-components) (profile
+header), [api-spec.md "Actors"](implementation/api-spec.md)
+**Status:** open (deferred — the profile header ships without the
+count in slice 2.1)
+
+### Context
+
+design.md's profile-header inventory names a **connection
+count**, and the profile screen will eventually show direct
+connections both ways (who this actor connects to, who connects
+to them). No doc defines the fold behind the number: which
+families count as a "connection" (Affinity toward a Profile?
+any non-`(0,0)` Opinion bundle? reciprocated only?), whether a
+severed bundle subtracts, and whether the two directions are one
+number or two. A math-shaped claim with no math is not
+implementable ([CLAUDE.md](../CLAUDE.md) — trace claims to the
+docs).
+
+### The question
+
+What is the declared fold for an actor's connection count (and
+the connection *lists* behind it)? The natural moment to answer
+is slice 2.2, when the stance control makes Affinity bundles
+real. Display-only either way: inbound connections never shape
+the holder's feed.
+
+---
+
+## Q36 — Owner-chosen default filter for the profile chronicle
+
+**Where it shows up:**
+[design.md §6](implementation/design.md#6-components),
+[api-spec.md "Queries"](implementation/api-spec.md) (`records`)
+**Status:** open (deferred — slice 2.1 ships a fixed default)
+
+### Context
+
+The profile screen lists everything an actor did — the
+`records(author:)` chronicle with filter chips (posts, comments,
+everything; more kinds as slices land). Slice 2.1 lands every
+visitor on the posts filter. The idea on the table: the profile's
+owner chooses which filter visitors land on — "people coming to
+my profile start at my posts, but they can check out everything
+else."
+
+### The question
+
+Is the default-filter choice worth carrying, and if so where does
+it live? It is public display state, which suggests a
+`actor_profile_versions` column plus a guild-key field on the
+profile payload (witnessed like the other display fields) — but
+it could also stay a pure L2 preference. Decide when profile
+usage is real.
 
 ---
 
