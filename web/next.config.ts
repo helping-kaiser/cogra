@@ -7,16 +7,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  // Hand testing runs in the phone's browser against this dev server
-  // over the LAN (CLAUDE.md "Hand test and session hand-off"), and dev
-  // blocks cross-origin requests for `/_next/*` by default — the page
-  // loads but every chunk and stylesheet is refused, which renders as a
-  // blank screen. The LAN address changes, so it comes from the
-  // environment; unset keeps the localhost-only default.
-  allowedDevOrigins: (process.env.WEB_DEV_ORIGINS ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin !== ""),
+  // No `allowedDevOrigins`: the phone reaches this server through
+  // `adb reverse` as localhost, never as a LAN address. A plain-http LAN
+  // origin is not a secure context, so WebCrypto is absent and the app
+  // cannot hydrate — allowing the origin would only turn a blank page
+  // into a differently blank page (development.md).
+  //
   // The browser talks GraphQL same-origin; the rewrite proxies to the API
   // so no CORS and no public endpoint env var are needed.
   async rewrites() {
