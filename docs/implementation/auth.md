@@ -128,6 +128,18 @@ Rules the posture hangs on:
   account, not the actor: once someone holds an unlocked device
   the key is theirs regardless, but the owner still learns of it
   in time to revoke sessions and change the password.
+- **Revealing or replacing key material re-authenticates on the
+  device — never with the account password.** The password
+  authenticates the account; it never authorizes the actor, and it
+  is the factor that leaks. Android asks `BiometricPrompt` with
+  `DEVICE_CREDENTIAL` as the fallback, the platform's documented
+  gate for revealing a stored secret; a phone with neither a
+  biometric nor a screen lock is warned and may continue, since
+  locking the holder out of their own key is the worse failure.
+  Web needs no equivalent where a blob exists: custody wiped the
+  seed, so the current recovery code is already the gate. While
+  web still retains the seed, nothing gates it — the seed sits in
+  that browser's own store, where a prompt would prove nothing.
 - **The blob is a container.** Further client-held secrets — a
   Collective creator's key, a member's co-signing half
   ([collectives.md §2](../instances/collectives.md#2-custody)) —
@@ -170,6 +182,32 @@ Golden vectors for every step live in
 `client-crypto-vectors.json` at the repo root, exported from the
 reference implementation in `common` (`make vectors`); each
 client's crypto tests consume them.
+
+### Key export
+
+Your crypto, your keys: the holder must be able to act as their
+L0 address on L1 even if CoGra disappears. So settings reveals
+what the device holds, on demand, behind the gate above.
+
+- **Every secret in the container, each in its own portable
+  form.** Today the actor key alone, shown two ways: PEM (RFC
+  8410 PKCS#8 — what `openssl pkey` reads) and raw hex labelled
+  with its algorithm. A second secret in the container grows a
+  second labelled block; the CBOR container itself is never
+  dumped, since nothing outside our own clients reads it. Both
+  clients pin their encoding to RFC 8410 §10.3's vector.
+- **The 32-byte Ed25519 seed *is* the private key** (RFC 8032):
+  the two forms are two encodings of the same bytes, not two
+  secrets.
+- **Purely client-side.** No API call, no schema surface — the
+  seed never crosses the wire. Android's export window is
+  `FLAG_SECURE`, keeping the key out of screenshots and the
+  recents thumbnail; web re-opens the blob and re-persists
+  nothing.
+- **The holder who lost their code is who export is for.** Any
+  gate that locks them out is the wrong gate — which is why the
+  device credential, not the recovery code, guards it wherever
+  the device can still produce the key itself.
 
 ---
 
