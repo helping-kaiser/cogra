@@ -82,17 +82,26 @@ export class RecoveryCode {
   }
 
   /**
-   * Parses user input: uppercase, `I`/`L` → `1`, `O` → `0`, separators
-   * stripped. No check digit — AES-GCM's tag detects a mistyped code at
-   * unlock.
+   * The reading rule for anything a user typed: uppercase, `I`/`L` →
+   * `1`, `O` → `0`, separators stripped. Applies to a fragment as much
+   * as to a whole code, which is what lets the write-it-down
+   * confirmation compare a typed code against the one on screen.
    */
-  static fromInput(input: string): RecoveryCode {
-    const normalized = input
+  static normalize(input: string): string {
+    return input
       .toUpperCase()
       .replaceAll("I", "1")
       .replaceAll("L", "1")
       .replaceAll("O", "0")
       .replace(/-|\s/g, "");
+  }
+
+  /**
+   * Parses user input under {@link RecoveryCode.normalize}. No check
+   * digit — AES-GCM's tag detects a mistyped code at unlock.
+   */
+  static fromInput(input: string): RecoveryCode {
+    const normalized = RecoveryCode.normalize(input);
     if (normalized.length !== 26) {
       throw new RecoveryCodeLengthError("a recovery code has 26 characters");
     }

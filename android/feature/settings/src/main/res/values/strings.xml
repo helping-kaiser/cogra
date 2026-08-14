@@ -8,7 +8,6 @@
     <string name="settings_backup_no_actor">Your actor key isn\'t on this phone, so there\'s nothing to back up. Restore it first from the home screen.</string>
     <string name="settings_backup_create">Create a new recovery code</string>
     <string name="settings_backup_code_explainer">Write this code down somewhere safe. It is shown only this once; any older code stops working.</string>
-    <string name="settings_backup_saved">I\'ve written it down</string>
     <string name="settings_export_key">Show my key</string>
 
     <string name="key_gate_title">Confirm it\'s you</string>

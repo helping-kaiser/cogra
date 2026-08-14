@@ -30,14 +30,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.RecoveryCodeConfirm
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.identity.recoveryCodeTypedBack
 
 // --------------------------------------------------------------------
 // Invite entry
@@ -329,23 +330,13 @@ fun KeyCeremonyScreen(
                 }
                 else -> {
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = code,
-                            style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .testTag("backup_code"),
+                        RecoveryCodeConfirm(
+                            code = code,
+                            explainer = stringResource(R.string.backup_code_explainer),
+                            matches = { recoveryCodeTypedBack(code, it) },
+                            onConfirmed = onCodeSaved,
+                            modifier = Modifier.padding(16.dp),
                         )
-                    }
-                    Text(stringResource(R.string.backup_code_explainer))
-                    Button(
-                        onClick = onCodeSaved,
-                        enabled = !state.inProgress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("backup_code_saved"),
-                    ) {
-                        Text(stringResource(R.string.backup_code_saved))
                     }
                 }
             }

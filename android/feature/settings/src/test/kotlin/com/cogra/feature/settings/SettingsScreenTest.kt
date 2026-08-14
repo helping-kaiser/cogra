@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.KeyGateResult
 import com.cogra.domain.ErrorCode
@@ -15,6 +16,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+
+private const val BACKUP_CODE = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"
 
 @RunWith(RobolectricTestRunner::class)
 class SettingsScreenTest {
@@ -27,6 +30,7 @@ class SettingsScreenTest {
         onFeedbackShown: () -> Unit = {},
         onBack: () -> Unit = {},
         onCreateBackup: () -> Unit = {},
+        onBackupCodeSaved: () -> Unit = {},
         onExportKey: () -> Unit = {},
         keyGate: KeyGate = FakeKeyGate(KeyGateResult.Granted),
     ) {
@@ -34,7 +38,7 @@ class SettingsScreenTest {
             SettingsScreen(
                 state = state,
                 onBack = onBack,
-                onCreateBackup = onCreateBackup, onBackupCodeSaved = {},
+                onCreateBackup = onCreateBackup, onBackupCodeSaved = onBackupCodeSaved,
                 onExportKey = onExportKey,
                 onRevokeSession = {}, onRevokeOthers = {},
                 onCurrentPasswordChange = {}, onNewPasswordChange = {}, onChangePassword = {},
@@ -112,9 +116,24 @@ class SettingsScreenTest {
 
     @Test
     fun aFreshBackupCodeShowsOnceWithItsWarning() {
-        render(SettingsUiState(actorPresent = true, newBackupCode = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"))
-        compose.onNodeWithTag("settings_backup_code").assertExists()
+        render(SettingsUiState(actorPresent = true, newBackupCode = BACKUP_CODE))
+        compose.onNodeWithTag("recovery_code").assertExists()
         compose.onNodeWithTag("settings_backup_create").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFreshBackupCodeIsDismissedOnlyByTypingItBack() {
+        var saved = false
+        render(
+            SettingsUiState(actorPresent = true, newBackupCode = BACKUP_CODE),
+            onBackupCodeSaved = { saved = true },
+        )
+
+        compose.onNodeWithTag("recovery_code_saved").assertIsNotEnabled()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(BACKUP_CODE)
+        compose.onNodeWithTag("recovery_code_saved").performClick()
+
+        assertThat(saved).isTrue()
     }
 
     @Test
