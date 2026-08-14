@@ -68,6 +68,19 @@ since grown the reuse-detection security notice
 ([auth.md](auth.md) "The security notice"), closing
 open-questions Q32.
 
+**Slice 2's text core is closed** (hand-tested 2026-08-12):
+Publish and Review authoring through the write path, the Peer
+Content Envelope, carriage and display content in Postgres,
+per-field newest-wins edits, chronicle and node reads, and the
+chronological `posts` listing — with the compose, feed, and
+post-detail surfaces on both clients, public reads included.
+Behind it landed two hardening passes: key custody (the signed
+key-backup upload, the on-device key gate, key export, the
+recovery-code confirm — [auth.md](auth.md)) and the design
+system ([design.md](design.md)): palette, type, shape, and
+components, with web brought to parity. The rest of the content
+era is sliced below (2.1–2.7).
+
 ## The stand-in and the swap
 
 Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
@@ -178,11 +191,116 @@ write needs a landed, funded actor with a device-held key.
   listing — deliberately **not** the ranked feed, so this slice
   doesn't block on the ranker.
 - Text-first cut: posts (title/description/body) and comments,
-  create and edit. Media upload (blob storage is new
-  infrastructure), topic tags, references, and `actAs` are staged
-  behind it as follow-ups, and the search index arrives with a
-  search surface — api-spec.md keeps the full target contract.
+  create and edit. The rest of the content era is the 2.x
+  sub-slices below — api-spec.md keeps the full target contract.
+  `actAs` moved to slice 5 with the Collectives that need it: a
+  Collective is the only non-User actor there is.
 - **Hand test:** post from the phone, read it back.
+- **Surfaces:** backend, API, Android, web.
+
+Sub-slice order is dependency-driven, not a strict sequence:
+each names what it builds on, and one whose dependencies are met
+can land in any order — 2.3 (topics) needs only the text core.
+
+### Slice 2.1 — The shell and profiles
+
+- The app shell from the [design.md §6](design.md) inventory —
+  bottom navigation, top app bars, the compose FAB, bottom
+  sheets, snackbars — the frame every content-era surface hangs
+  from.
+- Profile reads: `actor` / `user` by id or handle, the profile
+  screen (avatar, cover, bio, authored content via
+  `records(author:)`), and actor chips linking every @handle
+  ([api-spec.md](api-spec.md)).
+- Profile editing: `prepareProfileUpdate` — a parallel
+  Registration, L1's own profile-update idiom — and the
+  service-side `changeHandle` ([api-spec.md](api-spec.md)).
+- Content-UI gaps the same screens close: the comment edit
+  affordance and nested reply rendering.
+- **Hand test:** navigate by the bottom bar; open an author from
+  a post card; edit your bio from your own profile.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.2 — The stance control
+
+- Opinion toward any passive node — posts, comments, profiles —
+  through the one generic `prepareStance`
+  ([edges.md](../primitive/edges.md), [api-spec.md](api-spec.md)
+  "The generic stance").
+- The raw-edge semantic (decided 2026-08-14, superseding the
+  slice-1 intended-net-state prepare): a stance record carries
+  exactly the picked values — the client never computes, and
+  the backend never derives, a delta against the author's
+  bundle ([design.md §8.1](design.md)). Severance is the one
+  explicit gesture that does net the bundle to `(0, 0)`. The
+  shipped `prepareStance` is reworked to match.
+- The read-side bundle fold: current standing toward a target
+  and where a pick lands it — what the pad's readout shows.
+- The pad on both clients ([design.md §8](design.md)): tap for
+  the `(+0.1, +0.1)` default, the press-and-hold pad, the face
+  readout, the severance confirm.
+- **Hand test:** stance a post and a person; watch the bundle
+  reading move; sever a test actor and meet the confirm.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.3 — Topics
+
+- Tag hyper-edges — in the creation batch and standalone — the
+  hashtag registry (the UUIDv5 naming service),
+  `hashtag(name)`, and topic chips
+  ([post.md §3](../instances/post.md),
+  [hashtag.md](../instances/hashtag.md)).
+- Affinity toward a Hashtag — the follow-topic gesture — rides
+  the same `prepareStance`; the tap default suffices until the
+  pad (2.2) reaches it.
+- Settles the un-tag read: Tag confidence is bounded `[0, 1]`,
+  so `(0, 0)` severance is only partially expressible there.
+- **Hand test:** tag a post at creation; open the topic from
+  its chip; follow it.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.4 — References
+
+- Reference hyper-edges: citations declared at creation,
+  quote/embed, and mentions — a mention targets the Profile;
+  nothing minted ([post.md §3](../instances/post.md),
+  [edges.md §3](../primitive/edges.md)).
+- Structured inputs only — never parsed from the body
+  ([api-spec.md](api-spec.md)).
+- **Hand test:** cite a post from a post; mention a person and
+  land on their profile from the render.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.5 — Media
+
+- `uploadMedia` and blob storage — the slice's new
+  infrastructure — envelope media digests, the attachment
+  junctions, and the gallery surfaces
+  ([data-model.md](data-model.md),
+  [post.md](../instances/post.md)).
+- **Hand test:** post a photo from the phone; see it in the
+  feed on the web.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.6 — Private viewer state
+
+- Bookmarks, hidden actors, `markSeen` / view history, and
+  cross-device preferences ([api-spec.md](api-spec.md) "Private
+  viewer state") — L2-only rows, no graph records.
+- Sequenced before slice 3: `markSeen` feeds the ranked feed's
+  de-duplication.
+- **Hand test:** bookmark on the phone, find it on the web;
+  hide an actor and watch their posts drop out.
+- **Surfaces:** backend, API, Android, web.
+
+### Slice 2.7 — Search
+
+- The global `search` surface and the indexes behind it — post
+  titles and the name-class fields ([api-spec.md](api-spec.md)
+  "Search"). Kinds grow with later slices: collectives, chats,
+  and items index when their slices land.
+- **Hand test:** find a post by a title word; find a person by
+  handle.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 3 — The ranker and the feed
@@ -198,10 +316,25 @@ write needs a landed, funded actor with a device-held key.
   container (a delegated service), then on-device via UniFFI — the
   decentralized end state. No stage changes the slice-in,
   ordered-list-out shape.
+- The score readout — [design.md §7](design.md) "numbers are in
+  scope": a post can show what it scored and why it sits where
+  it does, opening into the actual paths behind it.
 - **Hand test:** ranked feed on the device; later, the same feed
   ranked by the container and on-device (web ranks backend-direct
   until the Wasm stage — [web.md](web.md)).
 - **Surfaces:** backend, API, miner transport, Android, web.
+
+### Slice 3.1 — Notifications
+
+- Design first: notifications have no doc anywhere, so the slice
+  opens by writing one — what notifies, delivery channels,
+  storage, read state — and then builds against it.
+- Sequenced behind the ranker: the feed is the product's core
+  surfacing channel and ships first; notifications are the
+  second.
+- **Hand test:** get commented on, see the notification on the
+  phone.
+- **Surfaces:** backend, API, Android, web.
 
 ### Slice 4 — Governance
 
@@ -211,6 +344,9 @@ write needs a landed, funded actor with a device-held key.
   [governance.md](../primitive/governance.md)).
 - Fold caches: Proposal state, the network parameter carrier, role
   marks ([data-model.md](data-model.md)).
+- The `networkParameters` read — the operational carrier's
+  catalog surfaced ([api-spec.md](api-spec.md),
+  [network.md](../primitive/network.md)).
 - **Hand test:** raise a proposal, vote, watch it finalize and the
   parameter change land.
 - **Surfaces:** backend, API.
@@ -223,6 +359,10 @@ write needs a landed, funded actor with a device-held key.
   member-held splits are the Q30-gated workstream below.
 - Chats: creation, membership flows, messaging, E2EE with client-side
   keys ([chats.md](../instances/chats.md)).
+- `actAs` across the write surface — posting, tagging, and
+  stancing as a Collective ([api-spec.md](api-spec.md)
+  "Conventions") — moved here from slice 2: a Collective is the
+  only non-User actor there is.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 6 — The CGT rail
@@ -297,6 +437,11 @@ On the roadmap but outside the slice order; each names its gate.
 - **Passkey-wrapped second unlock** — the WebAuthn-PRF unlock of the
   key-backup blob; a foreseen extension of the recovery-code posture,
   not a posture change ([auth.md](auth.md)).
+- **The application registry** — `appVersions` and the release
+  rows behind it ([api-spec.md](api-spec.md),
+  [data-model.md](data-model.md)); operational metadata any slice
+  can carry. Gate: the first release whose patch notes someone
+  needs to find.
 - **Delegated-miner standing + incentives** — parked
   ([open-questions.md Q25](../open-questions.md),
   [miner-api.md](miner-api.md)); revisit when someone actually wants
