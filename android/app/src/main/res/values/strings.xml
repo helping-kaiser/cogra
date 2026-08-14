@@ -5,4 +5,7 @@
     <string name="security_notice_confirm">Got it</string>
     <string name="storage_notice_title">Secure storage problem</string>
     <string name="storage_notice_body">Some of this device\'s securely stored data could not be read and was treated as lost. You may have been signed out. If your actor key is missing after signing in, restore it from your backup.</string>
+    <string name="bar_feed">Feed</string>
+    <string name="bar_compose">New post</string>
+    <string name="bar_profile">Profile</string>
 </resources>
