@@ -327,14 +327,15 @@ export function SettingsView({
         <h2 className="text-title-medium">Key backup</h2>
         {newBackupCode !== null ? (
           <>
-            <RecoveryCode testId="settings_backup_code" code={newBackupCode} />
             <p className="text-body-medium text-on-surface-variant">
               Write this code down somewhere safe. It is shown only this once; any older code stops
               working.
             </p>
-            <Button testId="settings_backup_saved" size="sm" selfStart onClick={onBackupCodeSaved}>
-              I&apos;ve written it down
-            </Button>
+            <RecoveryCode
+              testId="settings_backup_code"
+              code={newBackupCode}
+              onConfirmed={onBackupCodeSaved}
+            />
           </>
         ) : backupMode === "create" ? (
           <>

@@ -2,4 +2,8 @@
 <resources>
     <string name="password_show">Show password</string>
     <string name="password_hide">Hide password</string>
+    <string name="recovery_code_copy">Copy</string>
+    <string name="recovery_code_copied">Copied</string>
+    <string name="recovery_code_type_back">Type or paste the code to confirm</string>
+    <string name="recovery_code_saved">I\'ve written it down</string>
 </resources>

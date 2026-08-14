@@ -35,16 +35,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.RecoveryCodeConfirm
 import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
+import com.cogra.domain.identity.recoveryCodeTypedBack
 
 @Composable
 fun SettingsRoute(
@@ -221,18 +222,12 @@ private fun BackupSection(
                     }
                 }
                 else -> {
-                    Text(
-                        text = code,
-                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
-                        modifier = Modifier.testTag("settings_backup_code"),
+                    RecoveryCodeConfirm(
+                        code = code,
+                        explainer = stringResource(R.string.settings_backup_code_explainer),
+                        matches = { recoveryCodeTypedBack(code, it) },
+                        onConfirmed = onBackupCodeSaved,
                     )
-                    Text(stringResource(R.string.settings_backup_code_explainer))
-                    Button(
-                        onClick = onBackupCodeSaved,
-                        modifier = Modifier.testTag("settings_backup_saved"),
-                    ) {
-                        Text(stringResource(R.string.settings_backup_saved))
-                    }
                 }
             }
         }

@@ -43,7 +43,7 @@ describe("KeyCeremonyView", () => {
     expect(await screen.findByTestId("backup_code")).toBeInTheDocument();
   });
 
-  it("code-saved pokes the loop and goes home", async () => {
+  it("code-saved pokes the loop and goes home, once the code is typed back", async () => {
     const { flow } = fakeFlow();
     renderWithProviders(<KeyCeremonyView />, {
       store: signedInStore(),
@@ -51,7 +51,16 @@ describe("KeyCeremonyView", () => {
       flow,
     });
     fireEvent.click(screen.getByTestId("backup_accept"));
-    fireEvent.click(await screen.findByTestId("backup_code_saved"));
+
+    // Nothing is dismissed until the code has left the screen.
+    expect(await screen.findByTestId("backup_code_saved")).toBeDisabled();
+    fireEvent.click(screen.getByTestId("backup_code_saved"));
+    expect(replace).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByTestId("backup_code_typed_back"), {
+      target: { value: "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE" },
+    });
+    fireEvent.click(screen.getByTestId("backup_code_saved"));
     expect(flow.ensureAdvancing).toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/");
   });

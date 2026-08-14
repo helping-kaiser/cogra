@@ -60,16 +60,25 @@ class RecoveryCode(val bytes: ByteArray) {
         fun generate(): RecoveryCode = RecoveryCode(ActorKey.randomBytes(CODE_LEN))
 
         /**
-         * Parses user input: uppercase, `I`/`L` → `1`, `O` → `0`,
-         * separators stripped. No check digit — AES-GCM's tag detects a
-         * mistyped code at unlock.
+         * The reading rule for anything a user typed: uppercase,
+         * `I`/`L` → `1`, `O` → `0`, separators stripped. Applies to a
+         * fragment as much as to a whole code, which is what lets the
+         * write-it-down confirmation compare a typed code against the
+         * one on screen.
          */
-        fun fromInput(input: String): RecoveryCode {
-            val normalized = input.uppercase()
+        fun normalize(input: String): String =
+            input.uppercase()
                 .replace("I", "1")
                 .replace("L", "1")
                 .replace("O", "0")
                 .filter { it != '-' && !it.isWhitespace() }
+
+        /**
+         * Parses user input under [normalize]. No check digit —
+         * AES-GCM's tag detects a mistyped code at unlock.
+         */
+        fun fromInput(input: String): RecoveryCode {
+            val normalized = normalize(input)
             if (normalized.length != 26) {
                 throw RecoveryCodeLengthException("a recovery code has 26 characters")
             }

@@ -4,11 +4,14 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+
+private const val CEREMONY_CODE = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingScreensTest {
@@ -102,18 +105,21 @@ class OnboardingScreensTest {
 
     @Test
     fun theCeremonyShowsTheCodeExactlyWhenCreated() {
-        compose.setContent {
-            KeyCeremonyScreen(
-                state = KeyCeremonyUiState(recoveryCode = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"),
-                onAcceptBackup = {},
-                onCodeSaved = {},
-                onDeclineBackup = {},
-                onCancelDecline = {},
-                onConfirmDecline = {},
-            )
-        }
-        compose.onNodeWithTag("backup_code").assertExists()
+        showCeremonyCode()
+        compose.onNodeWithTag("recovery_code").assertExists()
         compose.onNodeWithTag("backup_accept").assertDoesNotExist()
+    }
+
+    @Test
+    fun theCeremonyCodeIsDismissedOnlyByTypingItBack() {
+        var saved = false
+        showCeremonyCode(onCodeSaved = { saved = true })
+
+        compose.onNodeWithTag("recovery_code_saved").assertIsNotEnabled()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(CEREMONY_CODE)
+        compose.onNodeWithTag("recovery_code_saved").performClick()
+
+        assertThat(saved).isTrue()
     }
 
     @Test
@@ -162,5 +168,18 @@ class OnboardingScreensTest {
         }
         compose.onNodeWithTag("ceremony_key_in_use").assertExists()
         compose.onNodeWithTag("ceremony_attach_error").assertDoesNotExist()
+    }
+
+    private fun showCeremonyCode(onCodeSaved: () -> Unit = {}) {
+        compose.setContent {
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(recoveryCode = CEREMONY_CODE),
+                onAcceptBackup = {},
+                onCodeSaved = onCodeSaved,
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
+            )
+        }
     }
 }
