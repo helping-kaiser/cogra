@@ -414,6 +414,7 @@ enum ErrorCode {
   WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
   SIGNATURE_INVALID            # a submitted signature does not verify the record
+  CHALLENGE_EXPIRED            # the key-backup upload challenge is unknown, expired, or spent
 }
 ```
 
@@ -3149,13 +3150,37 @@ type ConfirmEmailChangePayload { user: User }
 input ChangeHandleInput { handle: String! }
 type ChangeHandlePayload { user: User }
 
+"Issue the challenge an upload must spend (auth.md \"Key
+ recovery\"). Server-chosen, 32 bytes, live five minutes, one per
+ account, spent on use — a client-chosen nonce would let a
+ captured upload be replayed verbatim. FORBIDDEN with no actor
+ key attached; asking again discards the previous one."
+type KeyBackupChallengePayload {
+  "The challenge to sign (base64); null with a refusal."
+  challenge: String
+  expiresAt: DateTime
+}
+
 "Upload (or replace) the client-encrypted key-backup blob —
  ciphertext under the device-generated recovery code; the server
  stores what it cannot decrypt (auth.md \"Key recovery\"). One
  blob per account; blobs over 4 KiB refuse as BAD_INPUT.
  Retrieval is the User.keyBackup field: login + code is the
- recovery."
-input UploadKeyBackupInput { blob: String! }
+ recovery.
+
+ Authorized by the actor key, not the session: the signature is
+ over the challenge bound to these exact blob bytes, verified
+ against the account's attached public key. A bad proof is
+ SIGNATURE_INVALID and does not spend the challenge; an unknown,
+ expired, or already-spent one is CHALLENGE_EXPIRED. Replacing an
+ existing blob mails a notice."
+input UploadKeyBackupInput {
+  blob: String!
+  "The challenge this upload spends, from createKeyBackupChallenge."
+  challenge: String!
+  "The actor key's signature over the challenge and these blob bytes."
+  signature: String!
+}
 type UploadKeyBackupPayload { ok: Boolean }
 
 "Issue a time-gated invite link — single-use or multi-use, the
@@ -3256,6 +3281,7 @@ extend type Mutation {
   requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
   confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
   changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
+  createKeyBackupChallenge: KeyBackupChallengePayload!
   uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!

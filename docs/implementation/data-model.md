@@ -875,6 +875,20 @@ CREATE TABLE auth_key_backups (
     PRIMARY KEY (user_id)
 );
 
+-- The upload proof's challenge (auth.md "Key recovery"): storing a
+-- blob is authorized by the actor key, not by the session, so the
+-- server issues the nonce the client signs. One live challenge per
+-- account — issuing replaces, consuming deletes, which is what makes
+-- it single-use. Stored in the clear: unlike a reset token it is not
+-- a bearer secret, since holding it authorizes nothing without the
+-- key, and its properties — freshness and single use — survive
+-- disclosure.
+CREATE TABLE auth_key_backup_challenges (
+    user_id    UUID        PRIMARY KEY REFERENCES actors(id) ON DELETE CASCADE,
+    challenge  BYTEA       NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
 -- System-actor key custody: the backend-custodied signing seeds of
 -- the system actors (substrate.md §8 — custody by design), seeded
 -- at genesis (network.md §2). The Genesis Moderator's seed sits
@@ -1105,7 +1119,8 @@ different concern from per-asset cover.
 
 Every user-scoped table (`auth_refresh_tokens`,
 `auth_password_resets`, `auth_email_changes`,
-`auth_account_deletions`, `auth_key_backups`, `user_view_log`,
+`auth_account_deletions`, `auth_key_backups`,
+`auth_key_backup_challenges`, `user_view_log`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
 `user_preferences`) carries
 `user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
