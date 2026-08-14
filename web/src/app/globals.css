@@ -234,6 +234,23 @@
 }
 
 /*
+ * The Material 3 shape scale (design.md §4), the same five corner sizes
+ * Compose's default `Shapes()` gives Android. Tailwind's own t-shirt radii are
+ * cleared so the only names available are the scale's — a `rounded-md` here
+ * meant nothing in particular, which is how one radius ended up on every
+ * surface. `rounded-full` and `rounded-none` are static utilities and survive
+ * the reset; the pill is what Material's buttons use.
+ */
+@theme {
+  --radius-*: initial;
+  --radius-extra-small: 4px;
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-extra-large: 28px;
+}
+
+/*
  * `body-large` is Material's role for reading content, so it is what unclassed
  * text lands on rather than the browser's 16px/normal default.
  */

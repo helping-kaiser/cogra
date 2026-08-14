@@ -244,8 +244,12 @@ reintroduce the tone-80 orange §2.1 rejects.
 
 - Page and screen ground is `surface`. Cards and raised
   regions step up through `surfaceContainerLow` →
-  `surfaceContainer` → `surfaceContainerHigh`; never invent an
-  intermediate.
+  `surfaceContainer` → `surfaceContainerHigh` →
+  `surfaceContainerHighest`; never invent an intermediate. A card
+  is Material's **filled** card at `surfaceContainerHighest` and
+  carries no outline: the fill is what makes it read as a card,
+  and an outline on the page colour is the *outlined* card, a
+  different component. Dialogs sit on `surfaceContainerHigh`.
 - `primaryContainer` is the loudest surface in the app. It
   belongs to the compose FAB and to a committed stance — not
   to every button. Spend it in one place per screen.
@@ -363,9 +367,16 @@ These follow Material 3 as documented. Where this doc is
 silent, M3 is the answer, and the M3 default is the decision —
 not a placeholder awaiting taste.
 
-- **Shape.** The M3 shape scale. Cards and sheets sit at the
-  generous end of it; the direction is rounded and soft, and a
-  square corner should look like a mistake.
+- **Shape.** The M3 shape scale — 4 / 8 / 12 / 16 / 28dp, plus
+  the full pill. Text fields take the 4dp rung, cards and inline
+  containers 12dp, dialogs 28dp; buttons take the pill at every
+  size, which is Material's button shape rather than a rung.
+  Cards and sheets sit at the generous end of the scale; the
+  direction is rounded and soft, and a square corner should look
+  like a mistake. On web the five rungs are the only radius names
+  that exist — Tailwind's own are cleared, and `shape.test.ts`
+  fails on an off-scale corner. One radius on every surface is
+  how the two clients drift apart without anyone deciding to.
 - **Spacing.** A 4dp/4px base grid. Screen gutters and list
   spacing follow M3 defaults.
 - **Elevation.** Tonal elevation through the surface-container
@@ -397,6 +408,17 @@ Shared components live in `core:designsystem` on Android and
 `web/src/lib/ui/` on web. **The moment a piece appears on a
 second surface it moves into the shared module** — a copy is
 never the answer.
+
+**Buttons are Material's three**, and no others: filled
+(`primary` on `onPrimary`) for the one committing action on a
+surface, outlined for a secondary action, text for a tertiary
+one. Both unfilled variants put `primary` on the *label* — the
+label carries the emphasis, not the border, and a body-coloured
+label on an outlined button reads as disabled. What separates a
+button from a link is what the control does: performing an
+action is a button, going somewhere is a link. A button dressed
+as an underlined link is neither, and it is the form a
+destructive action is most likely to arrive in.
 
 The inventory both platforms implement, with equivalent
 behaviour and matching names:

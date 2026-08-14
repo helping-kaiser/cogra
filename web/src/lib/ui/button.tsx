@@ -6,16 +6,23 @@ import type { ReactNode } from "react";
 
 // primary, not primaryContainer: design.md §2.4 reserves the loudest surface
 // for the compose FAB and a committed stance, one place per screen.
+// Material's three button vocabularies, matching what Compose gives Android:
+// filled (`primary`/`onPrimary`), outlined (transparent, `outline` border, and
+// a *`primary`* label — the label carries the emphasis, not the border), and
+// text (transparent, `primary`, no border). A control that performs an action
+// is one of these three; a control that navigates stays a link.
 const VARIANTS = {
   primary: "bg-primary text-on-primary disabled:opacity-40",
-  outline: "border border-outline disabled:opacity-40",
+  outline: "border border-outline text-primary disabled:opacity-40",
+  text: "text-primary disabled:opacity-40",
 } as const;
 
 // label-large is Material's button role, so both sizes carry the same type and
-// differ only in padding (design.md §3).
+// differ only in padding (design.md §3). The pill is Material's button shape at
+// every size — `CornerFull`, not a rung of the shape scale.
 const SIZES = {
-  sm: "rounded-md px-3 py-1.5 text-label-large",
-  lg: "rounded-md px-4 py-2 text-label-large",
+  sm: "rounded-full px-3 py-1.5 text-label-large",
+  lg: "rounded-full px-4 py-2 text-label-large",
 } as const;
 
 // selfStart is layout, not look: buttons in a flex column pass it so

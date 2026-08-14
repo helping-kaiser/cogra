@@ -30,7 +30,7 @@ export function PageHeader({
           href={backHref}
           aria-label={backLabel}
           data-testid={backTestId}
-          className="rounded-md text-title-large text-on-surface-variant"
+          className="rounded-full text-title-large text-on-surface-variant"
         >
           <span aria-hidden>←</span>
         </Link>
