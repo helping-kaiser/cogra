@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { useRegistrationFlow, useKeyCeremony, useRegistrationProgress } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
+import { Card } from "@/lib/ui/card";
 import { RecoveryCode } from "@/lib/ui/recovery-code";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -112,11 +113,13 @@ export function KeyCeremonyView() {
             </>
           )}
           {confirmingDecline && (
+            /* Material's dialog surface and shape (§2.4, §4): a step above the
+               card tier, since it interrupts rather than sits in the flow. */
             <div
               role="alertdialog"
               aria-labelledby="decline-title"
               aria-describedby="decline-consequence"
-              className="flex flex-col gap-3 rounded-md border border-outline-variant p-4"
+              className="flex flex-col gap-3 rounded-extra-large bg-surface-container-high p-4"
             >
               <h2 id="decline-title" className="text-title-medium">
                 Continue without a backup?
@@ -145,7 +148,9 @@ export function KeyCeremonyView() {
         </>
       ) : (
         <>
-          <RecoveryCode testId="backup_code" code={recoveryCode} />
+          <Card>
+            <RecoveryCode testId="backup_code" code={recoveryCode} />
+          </Card>
           <p className="text-body-medium text-on-surface-variant">
             Write this code down and keep it somewhere safe. It is shown only this once — CoGra
             cannot recover it for you.

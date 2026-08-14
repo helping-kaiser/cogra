@@ -179,7 +179,7 @@ function ComposeFormInner() {
             setEmptyBody(false);
           }}
           rows={8}
-          className="rounded-md border border-outline p-2"
+          className="rounded-extra-small border border-outline p-2"
         />
         {emptyBody && (
           <p role="alert" data-testid="compose-empty-body" className="text-body-medium text-error">

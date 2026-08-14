@@ -364,7 +364,7 @@ export function SettingsView({
                 onChange={(event) => setRekeyCode(event.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
+                className="rounded-extra-small border border-outline bg-transparent px-3 py-2 font-mono"
               />
             </div>
             <Button
@@ -409,15 +409,15 @@ export function SettingsView({
                 {session.isCurrent && " (this browser)"}
               </span>
               {!session.isCurrent && (
-                <button
-                  type="button"
-                  data-testid={`revoke_${session.id}`}
-                  onClick={() => onRevokeSession(session.id)}
+                <Button
+                  testId={`revoke_${session.id}`}
+                  variant="text"
+                  size="sm"
                   disabled={busy}
-                  className="text-label-large text-on-surface-variant underline disabled:opacity-40"
+                  onClick={() => onRevokeSession(session.id)}
                 >
                   Revoke
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -488,7 +488,7 @@ export function SettingsView({
               }}
               autoComplete="off"
               spellCheck={false}
-              className="rounded-md border border-outline bg-transparent px-3 py-2"
+              className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
             />
           </div>
           {feedbackLine("handle")}
@@ -558,7 +558,7 @@ export function SettingsView({
                 }}
                 autoComplete="off"
                 spellCheck={false}
-                className="rounded-md border border-outline bg-transparent px-3 py-2 font-mono"
+                className="rounded-extra-small border border-outline bg-transparent px-3 py-2 font-mono"
               />
             </div>
             <Button
