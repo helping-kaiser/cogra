@@ -99,7 +99,7 @@ function feedbackMessage(feedback: Feedback): string {
     case "backup":
       switch (feedback.result) {
         case "malformedCode":
-          return "That doesn't look like a recovery code — check for missing characters.";
+          return "A recovery code is 26 letters and digits — check for missing ones.";
         case "wrongCode":
           return "That code doesn't open your backup. Check it and try again.";
         case "noBackup":

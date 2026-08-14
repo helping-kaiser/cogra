@@ -122,7 +122,7 @@ describe("SettingsView backup", () => {
   });
 
   it.each([
-    ["malformedCode" as const, "doesn't look like a recovery code"],
+    ["malformedCode" as const, "26 letters and digits"],
     ["wrongCode" as const, "doesn't open your backup"],
     ["noBackup" as const, "no backup on the server"],
   ])("maps a %s re-key result", async (kind, expected) => {

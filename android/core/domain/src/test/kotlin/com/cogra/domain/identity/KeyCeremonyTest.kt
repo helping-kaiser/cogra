@@ -213,6 +213,12 @@ class KeyCeremonyTest {
         assertThat(restorer.restore(valid.display(), forgetOnSignOut = false))
             .isEqualTo(RestoreResult.WrongCode)
         assertThat(identity.seed).isNull()
+
+        // One mistyped character — including the last, which the pad
+        // bits refuse before the blob is fetched — is a wrong code, not
+        // an input the reader should be told isn't a code at all.
+        assertThat(restorer.restore(valid.display().dropLast(1) + "Z", forgetOnSignOut = false))
+            .isEqualTo(RestoreResult.WrongCode)
     }
 
     @Test
