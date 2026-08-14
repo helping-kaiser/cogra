@@ -3,7 +3,13 @@
 
 import { expect, it } from "vitest";
 import { randomBytes, toHex } from "./bytes";
-import { KeyBackupError, openKeyBackup, RecoveryCode, sealKeyBackup } from "./key-backup";
+import {
+  KeyBackupError,
+  openKeyBackup,
+  RecoveryCode,
+  RecoveryCodeLengthError,
+  sealKeyBackup,
+} from "./key-backup";
 
 it("seal and open round-trip", async () => {
   const seed = randomBytes(32);
@@ -74,7 +80,7 @@ it("the display groups and input normalizes", () => {
 
 it("input refuses wrong lengths and bad characters", () => {
   expect(() => RecoveryCode.fromInput("TOO-SHORT")).toThrow(
-    new KeyBackupError("a recovery code has 26 characters"),
+    new RecoveryCodeLengthError("a recovery code has 26 characters"),
   );
   expect(() => RecoveryCode.fromInput("U".repeat(26))).toThrow(
     new KeyBackupError("invalid recovery-code character `U`"),
@@ -82,4 +88,18 @@ it("input refuses wrong lengths and bad characters", () => {
   const display = RecoveryCode.generate().display();
   const nonzeroPad = display.slice(0, display.length - 1) + "Z";
   expect(() => RecoveryCode.fromInput(nonzeroPad)).toThrow(new KeyBackupError("invalid recovery code"));
+});
+
+// Only the length is a shape complaint the reader can act on; a
+// full-length input that will not decode is a wrong code, and saying
+// "that isn't a code" about a one-character typo misleads.
+it("only a wrong length reports as a shape problem", () => {
+  expect(() => RecoveryCode.fromInput("TOO-SHORT")).toThrow(RecoveryCodeLengthError);
+
+  const display = RecoveryCode.generate().display();
+  const nonzeroPad = display.slice(0, display.length - 1) + "Z";
+  for (const input of [nonzeroPad, "U".repeat(26)]) {
+    expect(() => RecoveryCode.fromInput(input)).toThrow(KeyBackupError);
+    expect(() => RecoveryCode.fromInput(input)).not.toThrow(RecoveryCodeLengthError);
+  }
 });

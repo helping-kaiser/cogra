@@ -96,4 +96,21 @@ class KeyBackupTest {
             RecoveryCode.fromInput(display.dropLast(1) + "Z")
         }
     }
+
+    // Only the length is a shape complaint the reader can act on; a
+    // full-length input that will not decode is a wrong code, and
+    // saying "that isn't a code" about a one-character typo misleads.
+    @Test
+    fun onlyAWrongLengthReportsAsAShapeProblem() {
+        assertThrows(RecoveryCodeLengthException::class.java) {
+            RecoveryCode.fromInput("TOO-SHORT")
+        }
+        val display = RecoveryCode(ByteArray(16)).display()
+        for (input in listOf(display.dropLast(1) + "Z", "U".repeat(26))) {
+            val thrown = assertThrows(KeyBackupException::class.java) {
+                RecoveryCode.fromInput(input)
+            }
+            assertThat(thrown).isNotInstanceOf(RecoveryCodeLengthException::class.java)
+        }
+    }
 }

@@ -89,6 +89,14 @@ seed is never re-persisted. A browser that lost the code
 therefore cannot re-key; that adds no loss mode, since without
 the code the actor could never reach another device anyway.
 
+The same wipe is what gates `/settings/key`
+([auth.md "Key export"](auth.md#key-export)). With a blob in
+place the export opens it under the current code and shows the
+secrets from the in-memory seed, re-persisting nothing; while the
+seed is still retained it simply shows them, since the seed
+already sits in this browser's store and a prompt would prove
+nothing.
+
 ## Session tokens in the browser
 
 The contract keeps tokens client-held (`refreshSession` takes
@@ -147,6 +155,7 @@ The route map (Android parity per surface):
 | `/key` | gated; key attached → redirect `/` | KeyCeremony |
 | `/invites` | gated | Invites |
 | `/settings` | gated | Settings |
+| `/settings/key` | gated | KeyExport |
 | `/restore` | gated | Restore |
 
 Everything else 404. `/join`, `/verify`, and `/reset` are the

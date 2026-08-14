@@ -470,6 +470,14 @@ than what the reader is doing: graph, node, edge, vertex,
 tensor, weight, parameter, decentralized, protocol, token,
 crypto.
 
+The rule is "as little as possible, as much as needed", not a
+word ban: where the format *is* the content, name it exactly. A
+key export that won't say PEM, PKCS#8, hex, or Ed25519 is an
+export nobody can feed to another tool
+([auth.md "Key export"](auth.md#key-export)), and codes, keys,
+and recovery are the reader's own vocabulary on those surfaces.
+Plain language frames the block; the precise label sits on it.
+
 This is greppable and should be enforced as a check over
 Android's `strings.xml` files and the web copy rather than
 left to review.

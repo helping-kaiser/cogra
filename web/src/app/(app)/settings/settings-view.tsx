@@ -99,7 +99,7 @@ function feedbackMessage(feedback: Feedback): string {
     case "backup":
       switch (feedback.result) {
         case "malformedCode":
-          return "That doesn't look like a recovery code — check for missing characters.";
+          return "A recovery code is 26 letters and digits — check for missing ones.";
         case "wrongCode":
           return "That code doesn't open your backup. Check it and try again.";
         case "noBackup":
@@ -392,6 +392,16 @@ export function SettingsView({
             </Link>
           </>
         ) : null}
+        {/* Not while a fresh code is on screen — that surface has one job. */}
+        {newBackupCode === null && backupMode !== null && backupMode !== "none" && (
+          <Link
+            href="/settings/key"
+            data-testid="settings_export_key"
+            className="self-start text-body-medium text-on-surface-variant underline"
+          >
+            Show my key
+          </Link>
+        )}
         {feedbackLine("backup")}
       </Card>
 

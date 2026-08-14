@@ -40,7 +40,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
 
@@ -48,6 +50,7 @@ import com.cogra.domain.MIN_HANDLE_LENGTH
 fun SettingsRoute(
     onBack: () -> Unit,
     onHandleChanged: () -> Unit,
+    onExportKey: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -63,6 +66,7 @@ fun SettingsRoute(
         onBack = onBack,
         onCreateBackup = viewModel::onCreateBackup,
         onBackupCodeSaved = viewModel::onBackupCodeSaved,
+        onExportKey = onExportKey,
         onRevokeSession = viewModel::onRevokeSession,
         onRevokeOthers = viewModel::onRevokeOthers,
         onCurrentPasswordChange = viewModel::onCurrentPasswordChange,
@@ -87,6 +91,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onCreateBackup: () -> Unit,
     onBackupCodeSaved: () -> Unit,
+    onExportKey: () -> Unit,
     onRevokeSession: (String) -> Unit,
     onRevokeOthers: () -> Unit,
     onCurrentPasswordChange: (String) -> Unit,
@@ -101,6 +106,7 @@ fun SettingsScreen(
     onConfirmEmailChange: () -> Unit,
     onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
+    keyGate: KeyGate = rememberKeyGate(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val feedbackMessage = state.feedback?.let { stringResource(it.message()) }
@@ -148,7 +154,7 @@ fun SettingsScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            BackupSection(state, onCreateBackup, onBackupCodeSaved)
+            BackupSection(state, onCreateBackup, onBackupCodeSaved, onExportKey, keyGate)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(
                 state,
@@ -175,7 +181,14 @@ private fun BackupSection(
     state: SettingsUiState,
     onCreateBackup: () -> Unit,
     onBackupCodeSaved: () -> Unit,
+    onExportKey: () -> Unit,
+    keyGate: KeyGate,
 ) {
+    // Replacing the code destroys the old backup and reveals a new
+    // secret, so the phone confirms who is holding it first.
+    val gate = rememberKeyGateRunner(keyGate)
+    val replaceSubtitle = stringResource(R.string.key_gate_replace)
+    KeyGateWarning(gate)
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -192,11 +205,19 @@ private fun BackupSection(
                         ),
                     )
                     Button(
-                        onClick = onCreateBackup,
+                        onClick = { gate.run(replaceSubtitle, onCreateBackup) },
                         enabled = state.actorPresent && !state.busy,
                         modifier = Modifier.testTag("settings_backup_create"),
                     ) {
                         Text(stringResource(R.string.settings_backup_create))
+                    }
+                    if (state.actorPresent) {
+                        TextButton(
+                            onClick = onExportKey,
+                            modifier = Modifier.testTag("settings_export_key"),
+                        ) {
+                            Text(stringResource(R.string.settings_export_key))
+                        }
                     }
                 }
                 else -> {
