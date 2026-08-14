@@ -54,8 +54,13 @@ sealed blob uploads immediately after the attach;
 steps of every write — the proposal pre-commitment, then the
 approval witness over the host-sealed verified act
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-The key never leaves the device; before each signature the app
-verifies what it signs — the recomputed pre-digests at pre-sign;
+The key leaves the device only when its holder asks it to — the
+`KeyExport` screen, gated on `BiometricPrompt` with the device
+credential, over a `FLAG_SECURE` window
+([auth.md "Key export"](auth.md#key-export)) — and never over the
+wire. The same gate stands in front of replacing the recovery
+code, so a single hasty tap can no longer destroy a backup.
+Before each signature the app verifies what it signs — the recomputed pre-digests at pre-sign;
 the host seal, exact body, and both commitment openings at
 approval — so the user never signs blind bytes. The concrete signing crypto follows the L1 key model, which
 is open with the L1 team
@@ -136,6 +141,7 @@ over `navigateUp()`.
 | `ComposePost(postId?)` | signed in | `/compose` (+`?post=<id>`) |
 | `Invites` | signed in | `/invites` |
 | `Settings` | signed in | `/settings` |
+| `KeyExport` | signed in | `/settings/key` |
 | `KeyCeremony` | signed in | `/key` |
 | `Restore` | signed in | `/restore` |
 
