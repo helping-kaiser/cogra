@@ -1989,14 +1989,18 @@ These bind every mutation below.
   runs. The Network-scope ballot gestures take no `actAs` where
   the scope's rules make them per-User
   ([governance.md](../primitive/governance.md)).
-- **Stance prepares take the intended net state.** The graph
-  stores chronicles: a bundle's current stance is the per-author
-  net fold, so "changing a like" means appending the parallel
-  record that moves the fold to the intended values. The client
-  states intent (`pDirected`, `pInterest` as the desired net
-  state); the backend assembles the delta record; the device
-  verifies and signs it. Severance is the same gesture with intent
-  `(0, 0)` — netting, never removal.
+- **Stance prepares write the picked values; severance alone is
+  net-state.** A stance record carries exactly the two values the
+  author picked — one new edge against the bundle, never a
+  derived delta ([design.md §8.1](design.md)). The bundle is a
+  read-side per-author fold: current standing and where a pick
+  lands it are shown, never folded into what is written. The one
+  exception is the explicitly named severance gesture ("sever
+  X"): there the client states the intent and the backend
+  assembles the delta record that nets the author's bundle to
+  `(0, 0)` — netting, never removal. Severance's wire shape is
+  settled with the stance slice ([roadmap.md](roadmap.md) slice
+  2.2).
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
@@ -2235,8 +2239,10 @@ authorizes the backend's stopgap signing.
  Opinion toward everything else — toward a Profile it is the
  interpersonal stance (and the reciprocation gesture that
  completes the CoGra-join mutual pair — invitations.md §2).
- pDirected / pInterest are the INTENDED NET STATE of the author's
- bundle (conventions): (0,0) is severance. Valid toward any
+ pDirected / pInterest are written as picked — one new edge
+ carrying exactly these values; the bundle is a read-side fold
+ (conventions, design.md §8.1). Severance is its own explicit
+ gesture, not a value these fields reach. Valid toward any
  passive node; ballots go through prepareBallot."
 input PrepareStanceInput {
   target: UUID!
