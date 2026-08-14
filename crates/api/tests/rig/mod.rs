@@ -116,6 +116,17 @@ impl TestMailer {
         self.0.lock().expect("mailbox").len()
     }
 
+    /// Every subject sent to an address, in send order.
+    pub fn subjects_for(&self, to: &str) -> Vec<String> {
+        self.0
+            .lock()
+            .expect("mailbox")
+            .iter()
+            .filter(|m| m.to == to)
+            .map(|m| m.subject.clone())
+            .collect()
+    }
+
     /// The token out of the newest message to `to` — read from the
     /// link's `token=` parameter (auth.md "Link URLs").
     pub fn latest_token_for(&self, to: &str) -> String {

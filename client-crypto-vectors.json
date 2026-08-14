@@ -141,7 +141,10 @@
     "hkdfSaltHex": "5152535455565758595a5b5c5d5e5f60",
     "plaintextHex": "8258200102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2001",
     "recoveryCodeBytesHex": "000102030405060708090a0b0c0d0e0f",
-    "recoveryCodeDisplay": "000G4-0R40M-30E20-9185G-R38E1W"
+    "recoveryCodeDisplay": "000G4-0R40M-30E20-9185G-R38E1W",
+    "uploadChallengeHex": "7172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f90",
+    "uploadProofTagUtf8": "cogra:key-backup-upload:v1",
+    "uploadSignatureHex": "d3b6999b2d50c88e8c68c209eae8096484b6334e4696feb0783e235907ea5ca61eb997934e655bf3319415480c1aef52470a6f65f3622f6011805d34af3b6c0c"
   },
   "sha256Tagged": [
     {

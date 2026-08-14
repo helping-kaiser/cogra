@@ -7,11 +7,11 @@
 import type { ApolloClient } from "@apollo/client";
 
 import { attachActorKey } from "@/lib/api/onboarding-api";
-import { uploadKeyBackup } from "@/lib/api/auth-api";
+import { createKeyBackupChallenge, uploadKeyBackup } from "@/lib/api/auth-api";
 import type { Outcome } from "@/lib/api/outcome";
-import { randomBytes, toBase64 } from "@/lib/crypto/bytes";
+import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
 import { addressOf } from "@/lib/crypto/hashing";
-import { RecoveryCode, sealKeyBackup } from "@/lib/crypto/key-backup";
+import { RecoveryCode, sealKeyBackup, signUpload } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "./store";
 
@@ -60,6 +60,9 @@ export function createKeyCeremony(deps: {
   return {
     async createActorKey() {
       const key = await store.saveActor(randomBytes(32), true);
+      // A blob parked under the superseded key would never upload: its
+      // proof verifies against the key the account now has attached.
+      await store.clearPendingBackupBlob();
       const publicKey = key.publicKeyBytes();
       return { publicKeyBase64: toBase64(publicKey), l0Address: await addressOf(publicKey) };
     },
@@ -84,7 +87,14 @@ export function createKeyCeremony(deps: {
     async uploadPendingBackup() {
       const blob = await store.pendingBackupBlob();
       if (blob === null) return true;
-      const outcome = await guard.run(() => uploadKeyBackup(client, toBase64(blob)));
+      const key = await store.actorKey();
+      if (key === null) return false;
+      const challenge = await guard.run(() => createKeyBackupChallenge(client));
+      if (challenge.kind !== "success") return false;
+      const signature = await signUpload(key, fromBase64(challenge.value), blob);
+      const outcome = await guard.run(() =>
+        uploadKeyBackup(client, toBase64(blob), challenge.value, toBase64(signature)),
+      );
       if (outcome.kind !== "success") return false;
       await store.clearPendingBackupBlob();
       await store.clearActorSeed();

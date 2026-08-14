@@ -370,6 +370,10 @@ enum ErrorCode {
 	A submitted signature does not verify the record.
 	"""
 	SIGNATURE_INVALID
+	"""
+	The key-backup upload challenge is unknown, expired, or spent.
+	"""
+	CHALLENGE_EXPIRED
 }
 
 """
@@ -477,6 +481,15 @@ type InviteLinkEdge {
 	A cursor for use in pagination
 	"""
 	cursor: String!
+}
+
+type KeyBackupChallengePayload {
+	"""
+	The challenge to sign (base64); null with a refusal.
+	"""
+	challenge: String
+	expiresAt: DateTime
+	userErrors: [UserError!]!
 }
 
 """
@@ -643,11 +656,23 @@ type Mutation {
 	"""
 	changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
 	"""
+	Issues the challenge an upload must spend (auth.md "Key
+	recovery"). The server picks it: a client-chosen nonce would let
+	a captured upload be replayed verbatim, which is the whole attack
+	the proof exists to stop. Asking again discards the previous one.
+	"""
+	createKeyBackupChallenge: KeyBackupChallengePayload!
+	"""
 	Upload (or replace) the client-encrypted key-backup blob —
 	ciphertext under the device-generated recovery code; the server
 	stores what it cannot decrypt. One blob per account; blobs over
 	4 KiB refuse as BAD_INPUT. Retrieval is the `User.keyBackup`
 	field: login + code is the recovery.
+	
+	The upload is signed by the actor key over a server-issued
+	challenge (auth.md "Key recovery"): a session alone could
+	otherwise overwrite the blob and silently destroy the account's
+	recovery path. Replacing an existing blob mails a notice.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
 	"""
@@ -1383,6 +1408,16 @@ input UploadKeyBackupInput {
 	cannot decrypt.
 	"""
 	blob: String!
+	"""
+	The challenge this upload spends (base64), from
+	`createKeyBackupChallenge`.
+	"""
+	challenge: String!
+	"""
+	The actor key's signature (base64) over the challenge bound to
+	these exact blob bytes.
+	"""
+	signature: String!
 }
 
 type UploadKeyBackupPayload {

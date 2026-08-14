@@ -7,10 +7,17 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import { fetchKeyBackup, uploadKeyBackup } from "@/lib/api/auth-api";
+import { createKeyBackupChallenge, fetchKeyBackup, uploadKeyBackup } from "@/lib/api/auth-api";
 import type { UserError } from "@/lib/api/outcome";
+import { ActorKey } from "@/lib/crypto/actor-key";
 import { fromBase64, toBase64 } from "@/lib/crypto/bytes";
-import { KeyBackupError, openKeyBackup, RecoveryCode, sealKeyBackup } from "@/lib/crypto/key-backup";
+import {
+  KeyBackupError,
+  openKeyBackup,
+  RecoveryCode,
+  sealKeyBackup,
+  signUpload,
+} from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "./store";
 
@@ -48,7 +55,19 @@ export function createBackupManager(deps: {
   async function sealAndUpload(seed: Uint8Array): Promise<BackupResult> {
     const code = RecoveryCode.generate();
     const blob = await sealKeyBackup(seed, code);
-    const uploaded = await guard.run(() => uploadKeyBackup(client, toBase64(blob)));
+    // The proof of actor possession the server demands: a session alone
+    // must not be able to overwrite the blob (auth.md "Key recovery").
+    const challenge = await guard.run(() => createKeyBackupChallenge(client));
+    if (challenge.kind === "refused") return { kind: "refused", errors: challenge.errors };
+    if (challenge.kind === "failed") return { kind: "failed", cause: challenge.cause };
+    const signature = await signUpload(
+      await ActorKey.fromSeed(seed),
+      fromBase64(challenge.value),
+      blob,
+    );
+    const uploaded = await guard.run(() =>
+      uploadKeyBackup(client, toBase64(blob), challenge.value, toBase64(signature)),
+    );
     if (uploaded.kind === "refused") return { kind: "refused", errors: uploaded.errors };
     if (uploaded.kind === "failed") return { kind: "failed", cause: uploaded.cause };
     return { kind: "created", code: code.display() };
