@@ -14,11 +14,13 @@ use async_graphql::{Context, InputObject, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
-use common::l1::wire;
+use common::l1::{crypto, key_backup, wire};
 use l1_standin::StandIn;
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
+use rand::RngCore;
+use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
@@ -44,6 +46,9 @@ const PASSWORD_RESET_TTL_MINUTES: i64 = 15;
 /// tens of bytes, so 4 KiB leaves format headroom while denying a
 /// hostile client unbounded rows.
 const MAX_KEY_BACKUP_BYTES: usize = 4096;
+/// An upload challenge stays live this long (auth.md "Key recovery") —
+/// one signing round trip on the device, not a window worth parking in.
+const KEY_BACKUP_CHALLENGE_TTL_MINUTES: i64 = 5;
 
 /// The transport-tier refusal for a request that needed a session.
 fn unauthenticated() -> async_graphql::Error {
@@ -88,6 +93,14 @@ async fn guard_window(
         return Err(rate_limited());
     }
     Ok(())
+}
+
+/// The account's attached actor public key — None between registration
+/// and the key ceremony's attach (auth.md §Application).
+async fn actor_pubkey(pool: &PgPool, user_id: Uuid) -> async_graphql::Result<Option<Vec<u8>>> {
+    Ok(store::actor_identity(pool, user_id)
+        .await?
+        .and_then(|identity| identity.actor_pubkey))
 }
 
 /// The request's derived client IP as a limiter key.
@@ -531,11 +544,25 @@ struct UploadKeyBackupInput {
     /// the device-generated recovery code; the server stores what it
     /// cannot decrypt.
     blob: String,
+    /// The challenge this upload spends (base64), from
+    /// `createKeyBackupChallenge`.
+    challenge: String,
+    /// The actor key's signature (base64) over the challenge bound to
+    /// these exact blob bytes.
+    signature: String,
 }
 
 #[derive(SimpleObject)]
 struct UploadKeyBackupPayload {
     ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(SimpleObject)]
+struct KeyBackupChallengePayload {
+    /// The challenge to sign (base64); null with a refusal.
+    challenge: Option<String>,
+    expires_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
 }
 
@@ -1288,11 +1315,40 @@ impl Mutation {
         })
     }
 
+    /// Issues the challenge an upload must spend (auth.md "Key
+    /// recovery"). The server picks it: a client-chosen nonce would let
+    /// a captured upload be replayed verbatim, which is the whole attack
+    /// the proof exists to stop. Asking again discards the previous one.
+    async fn create_key_backup_challenge(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<KeyBackupChallengePayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        if actor_pubkey(pool, v.user_id).await?.is_none() {
+            return Err(forbidden());
+        }
+        let mut challenge = vec![0u8; key_backup::CHALLENGE_LEN];
+        OsRng.fill_bytes(&mut challenge);
+        let expires_at = Utc::now() + Duration::minutes(KEY_BACKUP_CHALLENGE_TTL_MINUTES);
+        store::issue_key_backup_challenge(pool, v.user_id, &challenge, expires_at).await?;
+        Ok(KeyBackupChallengePayload {
+            challenge: Some(B64.encode(&challenge)),
+            expires_at: Some(expires_at),
+            user_errors: vec![],
+        })
+    }
+
     /// Upload (or replace) the client-encrypted key-backup blob —
     /// ciphertext under the device-generated recovery code; the server
     /// stores what it cannot decrypt. One blob per account; blobs over
     /// 4 KiB refuse as BAD_INPUT. Retrieval is the `User.keyBackup`
     /// field: login + code is the recovery.
+    ///
+    /// The upload is signed by the actor key over a server-issued
+    /// challenge (auth.md "Key recovery"): a session alone could
+    /// otherwise overwrite the blob and silently destroy the account's
+    /// recovery path. Replacing an existing blob mails a notice.
     async fn upload_key_backup(
         &self,
         ctx: &Context<'_>,
@@ -1300,26 +1356,74 @@ impl Mutation {
     ) -> async_graphql::Result<UploadKeyBackupPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
-        let blob = match decode_b64("blob", &input.blob) {
-            Ok(b) => b,
-            Err(e) => {
-                return Ok(UploadKeyBackupPayload {
-                    ok: None,
-                    user_errors: vec![e],
-                });
-            }
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let refuse = |e: UserError| {
+            Ok(UploadKeyBackupPayload {
+                ok: None,
+                user_errors: vec![e],
+            })
+        };
+
+        let (blob, challenge, signature) = match (
+            decode_b64("blob", &input.blob),
+            decode_b64("challenge", &input.challenge),
+            decode_b64("signature", &input.signature),
+        ) {
+            (Ok(blob), Ok(challenge), Ok(signature)) => (blob, challenge, signature),
+            (Err(e), _, _) | (_, Err(e), _) | (_, _, Err(e)) => return refuse(e),
         };
         if blob.len() > MAX_KEY_BACKUP_BYTES {
-            return Ok(UploadKeyBackupPayload {
-                ok: None,
-                user_errors: vec![UserError::at(
-                    ErrorCode::BadInput,
-                    format!("blob exceeds {MAX_KEY_BACKUP_BYTES} bytes"),
-                    vec!["blob".to_string()],
-                )],
-            });
+            return refuse(UserError::at(
+                ErrorCode::BadInput,
+                format!("blob exceeds {MAX_KEY_BACKUP_BYTES} bytes"),
+                vec!["blob".to_string()],
+            ));
         }
+
+        // No attached key means nothing to verify against, and no
+        // legitimate caller — the ceremony attaches before it uploads.
+        let Some(pubkey) = actor_pubkey(pool, v.user_id).await? else {
+            return Err(forbidden());
+        };
+        let Some(verifying) = crypto::verifying_key_from_bytes(&pubkey) else {
+            return refuse(internal("the stored actor pubkey is not an Ed25519 key"));
+        };
+        // Verify before spending: a bad signature must not burn the
+        // challenge, or a wrong-key client would need a fresh round trip
+        // per attempt for no security gain.
+        if !key_backup::verify_upload(&verifying, &challenge, &blob, &signature) {
+            return refuse(UserError::at(
+                ErrorCode::SignatureInvalid,
+                "the upload proof does not verify under the account's actor key",
+                vec!["signature".to_string()],
+            ));
+        }
+        if !store::consume_key_backup_challenge(pool, v.user_id, &challenge, Utc::now()).await? {
+            return refuse(UserError::at(
+                ErrorCode::ChallengeExpired,
+                "the challenge is unknown, expired, or already spent",
+                vec!["challenge".to_string()],
+            ));
+        }
+
+        let replaced = store::has_key_backup(pool, v.user_id).await?;
         store::upload_key_backup(pool, v.user_id, &blob).await?;
+        if replaced && let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? {
+            mailer
+                .send(Mail {
+                    to: credentials.email,
+                    subject: "Your CoGra recovery code was replaced".into(),
+                    body: "Someone replaced the recovery code on your CoGra \
+                           account just now. Your previous code no longer opens \
+                           your key backup.\n\n\
+                           If that was you, nothing to do — keep the new code safe.\n\n\
+                           If it wasn't, someone has access to a device holding \
+                           your actor key. Sign out every session and change your \
+                           password from Settings."
+                        .into(),
+                })
+                .await;
+        }
         Ok(UploadKeyBackupPayload {
             ok: Some(true),
             user_errors: vec![],

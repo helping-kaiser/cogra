@@ -149,3 +149,20 @@ fun openKeyBackup(blob: ByteArray, code: RecoveryCode): ByteArray {
         throw KeyBackupException("malformed blob container: ${e.message}")
     }
 }
+
+/**
+ * The upload proof's domain tag. Storing a blob is an L2 operation, not
+ * an L1 act, so it carries this file's `cogra:key-backup:*` prefix
+ * rather than one of the `cogra-l1:` act tags.
+ */
+const val UPLOAD_PROOF_TAG = "cogra:key-backup-upload:v1"
+
+/**
+ * The upload proof (auth.md "Key recovery"): the actor key signs the
+ * server's challenge bound to the exact blob bytes. Binding the blob is
+ * what stops a captured signature from authorizing different
+ * ciphertext; binding the challenge is what stops the whole pair from
+ * being replayed.
+ */
+fun signUpload(key: ActorKey, challenge: ByteArray, blob: ByteArray): ByteArray =
+    key.signTagged(UPLOAD_PROOF_TAG, sha256Tagged(UPLOAD_PROOF_TAG, listOf(challenge, blob)))

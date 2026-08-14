@@ -225,6 +225,21 @@ fn build_vectors() -> Value {
         e.finish()
     };
 
+    // The upload proof (auth.md "Key recovery"): the actor key signs the
+    // server's challenge bound to these exact blob bytes.
+    let upload_challenge: [u8; key_backup::CHALLENGE_LEN] =
+        seq_bytes(0x71, key_backup::CHALLENGE_LEN)
+            .try_into()
+            .expect("challenge bytes");
+    let actor_signing = SigningKey::from_bytes(&actor_seed);
+    let upload_signature = key_backup::sign_upload(&actor_signing, &upload_challenge, &blob);
+    assert!(key_backup::verify_upload(
+        &actor_signing.verifying_key(),
+        &upload_challenge,
+        &blob,
+        &upload_signature
+    ));
+
     json!({
         "version": 1,
         "encoding": encoding_vectors(),
@@ -279,6 +294,9 @@ fn build_vectors() -> Value {
             "plaintextHex": hx(&plaintext),
             "blobHex": hx(&blob),
             "blobBase64": B64.encode(&blob),
+            "uploadProofTagUtf8": "cogra:key-backup-upload:v1",
+            "uploadChallengeHex": hx(&upload_challenge),
+            "uploadSignatureHex": hx(&upload_signature),
         },
     })
 }

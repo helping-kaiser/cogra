@@ -72,7 +72,13 @@ private class FakeAccount : ThrowingAccountRepository() {
     var uploaded: ByteArray? = null
     var failUpload = false
 
-    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
+    override suspend fun keyBackupChallenge(): Outcome<ByteArray> = Outcome.Success(ByteArray(32) { 0x71 })
+
+    override suspend fun uploadKeyBackup(
+        blob: ByteArray,
+        challenge: ByteArray,
+        signature: ByteArray,
+    ): Outcome<Unit> {
         if (failUpload) return Outcome.Failed(IOException("upload lost"))
         uploaded = blob
         return Outcome.Success(Unit)

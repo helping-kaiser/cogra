@@ -13,7 +13,9 @@ import com.cogra.crypto.KeyBackupException
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
+import com.cogra.crypto.signUpload
 import com.cogra.domain.Outcome
+import com.cogra.domain.flatMap
 import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
@@ -22,6 +24,19 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
 import javax.inject.Inject
+
+/**
+ * The signed upload both backup surfaces share (auth.md "Key
+ * recovery"): take the server's challenge, prove possession of the
+ * actor key over these exact bytes, upload. A session alone must not be
+ * able to overwrite the blob.
+ */
+private suspend fun AccountRepository.uploadSigned(
+    seed: ByteArray,
+    blob: ByteArray,
+): Outcome<Unit> = keyBackupChallenge().flatMap { challenge ->
+    uploadKeyBackup(blob, challenge, signUpload(ActorKey.fromSeed(seed), challenge, blob))
+}
 
 /** The public outputs of the ceremony — what `attachActorKey` carries. */
 data class ActorPublicIdentity(val publicKeyBase64: String, val l0Address: String)
@@ -40,6 +55,9 @@ class KeyCeremony @Inject constructor(
     suspend fun createActorKey(): ActorPublicIdentity {
         val key = ActorKey.generate()
         identity.saveActorSeed(key.seed())
+        // A blob parked under the superseded key would never upload:
+        // its proof verifies against the key the account now has.
+        identity.clearPendingBackupBlob()
         return ActorPublicIdentity(
             publicKeyBase64 = Base64.getEncoder().encodeToString(key.publicKeyBytes()),
             l0Address = key.address(),
@@ -85,7 +103,8 @@ class KeyCeremony @Inject constructor(
      */
     suspend fun uploadPendingBackup(): Boolean {
         val blob = identity.pendingBackupBlob() ?: return true
-        return when (account.uploadKeyBackup(blob)) {
+        val seed = identity.actorSeed() ?: return false
+        return when (account.uploadSigned(seed, blob)) {
             is Outcome.Success -> {
                 identity.clearPendingBackupBlob()
                 true
@@ -109,7 +128,7 @@ class BackupManager @Inject constructor(
         val seed = identity.actorSeed()
             ?: return Outcome.Failed(IllegalStateException("no actor key on this device"))
         val code = RecoveryCode.generate()
-        return account.uploadKeyBackup(sealKeyBackup(seed, code)).map { code.display() }
+        return account.uploadSigned(seed, sealKeyBackup(seed, code)).map { code.display() }
     }
 }
 

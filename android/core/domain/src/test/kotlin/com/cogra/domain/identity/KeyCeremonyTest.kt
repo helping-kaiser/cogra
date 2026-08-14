@@ -2,8 +2,11 @@ package com.cogra.domain.identity
 
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
+import com.cogra.crypto.UPLOAD_PROOF_TAG
 import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
+import com.cogra.crypto.sha256Tagged
+import com.cogra.crypto.verify
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.testing.FakeIdentityStore
@@ -18,15 +21,28 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 private class StubAccount : ThrowingAccountRepository() {
+    val challenge = ByteArray(32) { 0x71 }
     var uploaded: ByteArray? = null
+    var uploadedChallenge: ByteArray? = null
+    var uploadedSignature: ByteArray? = null
     var served: ByteArray? = null
     var failUpload = false
+    var failChallenge = false
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(served)
 
-    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
+    override suspend fun keyBackupChallenge(): Outcome<ByteArray> =
+        if (failChallenge) Outcome.Failed(IOException("challenge lost")) else Outcome.Success(challenge)
+
+    override suspend fun uploadKeyBackup(
+        blob: ByteArray,
+        challenge: ByteArray,
+        signature: ByteArray,
+    ): Outcome<Unit> {
         if (failUpload) return Outcome.Failed(IOException("upload lost"))
         uploaded = blob
+        uploadedChallenge = challenge
+        uploadedSignature = signature
         return Outcome.Success(Unit)
     }
 }
@@ -81,6 +97,7 @@ class KeyCeremonyTest {
         // Nothing parked: trivially done.
         assertThat(ceremony.uploadPendingBackup()).isTrue()
 
+        identity.seed = ActorKey.generate().seed()
         identity.pendingBlob = byteArrayOf(7)
         account.failUpload = true
         assertThat(ceremony.uploadPendingBackup()).isFalse()
@@ -93,12 +110,72 @@ class KeyCeremonyTest {
     }
 
     @Test
+    fun theFlushProvesPossessionOfTheActorKey() = runTest {
+        ceremony.createActorKey()
+        ceremony.createPendingBackup()
+        val blob = checkNotNull(identity.pendingBlob)
+
+        assertThat(ceremony.uploadPendingBackup()).isTrue()
+
+        assertThat(account.uploadedChallenge).isEqualTo(account.challenge)
+        val proof = sha256Tagged(UPLOAD_PROOF_TAG, listOf(account.challenge, blob))
+        assertThat(
+            verify(
+                ActorKey.fromSeed(checkNotNull(identity.seed)).publicKeyBytes(),
+                UPLOAD_PROOF_TAG,
+                proof,
+                checkNotNull(account.uploadedSignature),
+            ),
+        ).isTrue()
+    }
+
+    @Test
+    fun aRefusedChallengeKeepsTheBlobParked() = runTest {
+        ceremony.createActorKey()
+        ceremony.createPendingBackup()
+        account.failChallenge = true
+
+        assertThat(ceremony.uploadPendingBackup()).isFalse()
+        assertThat(identity.pendingBlob).isNotNull()
+    }
+
+    @Test
+    fun mintingAReplacementKeyDropsABlobParkedUnderTheOldOne() = runTest {
+        ceremony.createActorKey()
+        ceremony.createPendingBackup()
+        assertThat(identity.pendingBlob).isNotNull()
+
+        // Pre-approval the attached key is replaceable; the parked
+        // blob's proof would never verify against the new key.
+        ceremony.createActorKey()
+        assertThat(identity.pendingBlob).isNull()
+    }
+
+    @Test
     fun enableOrReplaceUploadsABlobTheNewCodeOpens() = runTest {
         identity.seed = ActorKey.generate().seed()
         val outcome = BackupManager(identity, account).enableOrReplace()
         val display = (outcome as Outcome.Success).value
         val opened = openKeyBackup(checkNotNull(account.uploaded), RecoveryCode.fromInput(display))
         assertThat(opened).isEqualTo(identity.seed)
+
+        val proof = sha256Tagged(UPLOAD_PROOF_TAG, listOf(account.challenge, account.uploaded!!))
+        assertThat(
+            verify(
+                ActorKey.fromSeed(checkNotNull(identity.seed)).publicKeyBytes(),
+                UPLOAD_PROOF_TAG,
+                proof,
+                checkNotNull(account.uploadedSignature),
+            ),
+        ).isTrue()
+    }
+
+    @Test
+    fun enableOrReplaceSurfacesAChallengeFailure() = runTest {
+        identity.seed = ActorKey.generate().seed()
+        account.failChallenge = true
+        assertThat(BackupManager(identity, account).enableOrReplace())
+            .isInstanceOf(Outcome.Failed::class.java)
     }
 
     @Test

@@ -92,8 +92,15 @@ interface AccountRepository {
     /** The uploaded backup blob (decoded from base64); null when none. */
     suspend fun keyBackup(): Outcome<ByteArray?>
 
-    /** Uploads (or replaces) the client-encrypted blob. */
-    suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit>
+    /** The challenge an upload must spend (auth.md "Key recovery"). */
+    suspend fun keyBackupChallenge(): Outcome<ByteArray>
+
+    /**
+     * Uploads (or replaces) the client-encrypted blob. The signature is
+     * the actor key's proof over the challenge and these exact bytes —
+     * a session alone must not be able to overwrite the blob.
+     */
+    suspend fun uploadKeyBackup(blob: ByteArray, challenge: ByteArray, signature: ByteArray): Outcome<Unit>
 
     suspend fun changePassword(currentPassword: String, newPassword: String): Outcome<Unit>
 

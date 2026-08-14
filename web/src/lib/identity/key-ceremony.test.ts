@@ -41,6 +41,20 @@ function attachOk() {
   );
 }
 
+function challengeOk() {
+  return graphql.mutation("CreateKeyBackupChallenge", () =>
+    HttpResponse.json({
+      data: {
+        createKeyBackupChallenge: {
+          __typename: "KeyBackupChallengePayload",
+          challenge: toBase64(new Uint8Array(32).fill(0x71)),
+          userErrors: [],
+        },
+      },
+    }),
+  );
+}
+
 function uploadOk() {
   return graphql.mutation("UploadKeyBackup", () =>
     HttpResponse.json({
@@ -118,7 +132,7 @@ describe("key ceremony", () => {
   });
 
   it("upload success clears the parked blob and wipes the seed", async () => {
-    server.use(attachOk(), uploadOk());
+    server.use(attachOk(), challengeOk(), uploadOk());
     await ceremony.createActorKey();
     await ceremony.createPendingBackup();
     expect(await ceremony.uploadPendingBackup()).toBe(true);
@@ -128,7 +142,7 @@ describe("key ceremony", () => {
   });
 
   it("a failed upload keeps the blob parked and the seed intact", async () => {
-    server.use(graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
+    server.use(challengeOk(), graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
     await ceremony.createActorKey();
     await ceremony.createPendingBackup();
     expect(await ceremony.uploadPendingBackup()).toBe(false);
@@ -138,6 +152,28 @@ describe("key ceremony", () => {
 
   it("upload with nothing parked is trivially done", async () => {
     expect(await ceremony.uploadPendingBackup()).toBe(true);
+  });
+
+  it("a refused challenge keeps the blob parked", async () => {
+    server.use(
+      graphql.mutation("CreateKeyBackupChallenge", () => HttpResponse.error()),
+    );
+    await ceremony.createActorKey();
+    await ceremony.createPendingBackup();
+    expect(await ceremony.uploadPendingBackup()).toBe(false);
+    expect(await store.pendingBackupBlob()).not.toBeNull();
+    expect(await store.actorSeed()).not.toBeNull();
+  });
+
+  it("minting a replacement key drops a blob parked under the old one", async () => {
+    await ceremony.createActorKey();
+    await ceremony.createPendingBackup();
+    expect(await store.pendingBackupBlob()).not.toBeNull();
+
+    // Pre-approval the attached key is replaceable; the parked blob's
+    // proof would never verify against the new key.
+    await ceremony.createActorKey();
+    expect(await store.pendingBackupBlob()).toBeNull();
   });
 
   it("declining is just never parking — the seed stays for a later backup", async () => {

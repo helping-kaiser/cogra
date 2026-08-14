@@ -1270,6 +1270,62 @@ pub async fn upload_key_backup(
     Ok(())
 }
 
+/// Whether a blob is already stored — the difference between enabling
+/// backup and destroying the previous one, which is what the
+/// replacement notice hangs on (auth.md "Key recovery").
+pub async fn has_key_backup(pool: &PgPool, user_id: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM auth_key_backups WHERE user_id = $1) AS "exists!""#,
+        user_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// Issues the upload challenge, replacing any live one — a client that
+/// asks twice keeps only the newest.
+pub async fn issue_key_backup_challenge(
+    pool: &PgPool,
+    user_id: Uuid,
+    challenge: &[u8],
+    expires_at: DateTime<Utc>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO auth_key_backup_challenges (user_id, challenge, expires_at)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id)
+         DO UPDATE SET challenge = EXCLUDED.challenge, expires_at = EXCLUDED.expires_at",
+        user_id,
+        challenge,
+        expires_at,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Spends the challenge: true only if this exact one was live for the
+/// account. The delete is the single-use guarantee, and doing it in one
+/// statement is what keeps two concurrent uploads from both spending it.
+pub async fn consume_key_backup_challenge(
+    pool: &PgPool,
+    user_id: Uuid,
+    challenge: &[u8],
+    now: DateTime<Utc>,
+) -> Result<bool, sqlx::Error> {
+    let spent = sqlx::query_scalar!(
+        "DELETE FROM auth_key_backup_challenges
+          WHERE user_id = $1 AND challenge = $2 AND expires_at > $3
+          RETURNING user_id",
+        user_id,
+        challenge,
+        now,
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(spent.is_some())
+}
+
 pub async fn latest_key_backup(
     pool: &PgPool,
     user_id: Uuid,

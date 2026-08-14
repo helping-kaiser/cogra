@@ -13,7 +13,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { AuthGuard } from "@/lib/session/guard";
 import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
-import { openKeyBackup, RecoveryCode, sealKeyBackup } from "@/lib/crypto/key-backup";
+import { sha256Tagged, verify } from "@/lib/crypto/hashing";
+import {
+  openKeyBackup,
+  RecoveryCode,
+  sealKeyBackup,
+  UPLOAD_PROOF_TAG,
+} from "@/lib/crypto/key-backup";
 import { createIdentityStore, type IdentityStore } from "./store";
 import { createBackupManager, type BackupManager } from "./backup";
 import { startMswServer } from "@/test/msw";
@@ -29,13 +35,48 @@ function client() {
   });
 }
 
-function uploadHandler(sink: { blob: string | null }) {
+/** What the server sees of one upload — the proof included. */
+type UploadSink = { blob: string | null; challenge?: string; signature?: string };
+
+const CHALLENGE = toBase64(new Uint8Array(32).fill(0x71));
+
+function challengeHandler() {
+  return graphql.mutation("CreateKeyBackupChallenge", () =>
+    HttpResponse.json({
+      data: {
+        createKeyBackupChallenge: {
+          __typename: "KeyBackupChallengePayload",
+          challenge: CHALLENGE,
+          userErrors: [],
+        },
+      },
+    }),
+  );
+}
+
+function uploadHandler(sink: UploadSink) {
   return graphql.mutation("UploadKeyBackup", ({ variables }) => {
-    sink.blob = (variables as { input: { blob: string } }).input.blob;
+    const input = (variables as { input: { blob: string; challenge: string; signature: string } })
+      .input;
+    sink.blob = input.blob;
+    sink.challenge = input.challenge;
+    sink.signature = input.signature;
     return HttpResponse.json({
       data: { uploadKeyBackup: { __typename: "UploadKeyBackupPayload", ok: true, userErrors: [] } },
     });
   });
+}
+
+/** The server's check, run client-side: does the proof bind these bytes? */
+async function proofVerifies(sink: UploadSink, publicKey: Uint8Array): Promise<boolean> {
+  const challenge = fromBase64(sink.challenge as string);
+  const blob = fromBase64(sink.blob as string);
+  return verify(
+    publicKey,
+    UPLOAD_PROOF_TAG,
+    await sha256Tagged(UPLOAD_PROOF_TAG, [challenge, blob]),
+    fromBase64(sink.signature as string),
+  );
 }
 
 function keyBackupHandler(blob: string | null) {
@@ -59,8 +100,8 @@ describe("backup manager", () => {
   it("enable seals the retained seed, uploads, and wipes it", async () => {
     const seed = randomBytes(32);
     await store.saveActor(seed, true);
-    const sink = { blob: null as string | null };
-    server.use(uploadHandler(sink));
+    const sink: UploadSink = { blob: null };
+    server.use(challengeHandler(), uploadHandler(sink));
 
     const result = await manager.enable();
     expect(result.kind).toBe("created");
@@ -77,13 +118,19 @@ describe("backup manager", () => {
     // Custody is the CryptoKey alone now (web.md "Key custody").
     expect(await store.actorSeed()).toBeNull();
     expect(await store.pendingBackupBlob()).toBeNull();
-    expect(await store.actorKey()).not.toBeNull();
+    const key = await store.actorKey();
+    expect(key).not.toBeNull();
+
+    // The upload carried a proof binding the server's challenge to
+    // exactly these bytes (auth.md "Key recovery").
+    expect(sink.challenge).toBe(CHALLENGE);
+    expect(await proofVerifies(sink, key!.publicKeyBytes())).toBe(true);
   });
 
   it("enable drops a stale parked ceremony blob on success", async () => {
     await store.saveActor(randomBytes(32), true);
     await store.savePendingBackupBlob(randomBytes(64));
-    server.use(uploadHandler({ blob: null }));
+    server.use(challengeHandler(), uploadHandler({ blob: null }));
 
     expect((await manager.enable()).kind).toBe("created");
     expect(await store.pendingBackupBlob()).toBeNull();
@@ -97,7 +144,7 @@ describe("backup manager", () => {
   it("a failed upload keeps the seed — nothing changed server-side", async () => {
     const seed = randomBytes(32);
     await store.saveActor(seed, true);
-    server.use(graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
+    server.use(challengeHandler(), graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
 
     expect((await manager.enable()).kind).toBe("failed");
     expect(await store.actorSeed()).toEqual(seed);
@@ -108,8 +155,8 @@ describe("backup manager", () => {
     const currentCode = RecoveryCode.generate();
     const currentBlob = toBase64(await sealKeyBackup(seed, currentCode));
     await store.saveActor(seed, false);
-    const sink = { blob: null as string | null };
-    server.use(keyBackupHandler(currentBlob), uploadHandler(sink));
+    const sink: UploadSink = { blob: null };
+    server.use(challengeHandler(), keyBackupHandler(currentBlob), uploadHandler(sink));
 
     const result = await manager.rekey(currentCode.display());
     expect(result.kind).toBe("created");
@@ -126,6 +173,33 @@ describe("backup manager", () => {
       openKeyBackup(fromBase64(sink.blob as string), currentCode),
     ).rejects.toThrow();
     expect(await store.actorSeed()).toBeNull();
+
+    // Rekey signs with the key recovered from the blob, not a stored seed.
+    const key = await store.actorKey();
+    expect(await proofVerifies(sink, key!.publicKeyBytes())).toBe(true);
+  });
+
+  it("a refused challenge stops the upload and keeps the seed", async () => {
+    const seed = randomBytes(32);
+    await store.saveActor(seed, true);
+    server.use(
+      graphql.mutation("CreateKeyBackupChallenge", () =>
+        HttpResponse.json({
+          data: {
+            createKeyBackupChallenge: {
+              __typename: "KeyBackupChallengePayload",
+              challenge: null,
+              userErrors: [
+                { __typename: "UserError", message: "no", code: "FORBIDDEN", field: null },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+
+    expect((await manager.enable()).kind).toBe("refused");
+    expect(await store.actorSeed()).toEqual(seed);
   });
 
   it("rekey rejects a malformed code before touching the network", async () => {
@@ -147,6 +221,7 @@ describe("backup manager", () => {
     const seed = randomBytes(32);
     const currentCode = RecoveryCode.generate();
     server.use(
+      challengeHandler(),
       keyBackupHandler(toBase64(await sealKeyBackup(seed, currentCode))),
       graphql.mutation("UploadKeyBackup", () =>
         HttpResponse.json({

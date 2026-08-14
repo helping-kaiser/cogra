@@ -3,8 +3,10 @@
 // format across every client — a blob sealed on the phone must open in
 // the browser; the golden vectors pin every byte.
 
+import type { ActorKey } from "./actor-key";
 import { concat, randomBytes } from "./bytes";
 import { CborDecodeError, CborDecoder, CborEncoder } from "./cbor";
+import { sha256Tagged } from "./hashing";
 
 /** A blob that will not open: wrong code, tampered bytes, or bad format. */
 export class KeyBackupError extends Error {
@@ -20,6 +22,12 @@ const HKDF_SALT_LEN = 16;
 const AES_NONCE_LEN = 12;
 const HKDF_INFO = "cogra:key-backup:v1";
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+/**
+ * The upload proof's domain tag. Storing a blob is an L2 operation, not
+ * an L1 act, so it carries this module's `cogra:key-backup:*` prefix
+ * rather than one of the `cogra-l1:` act tags.
+ */
+export const UPLOAD_PROOF_TAG = "cogra:key-backup-upload:v1";
 
 /** A 16-byte recovery code and its display/normalization rules. */
 export class RecoveryCode {
@@ -173,4 +181,19 @@ export async function openKeyBackup(
     }
     throw e;
   }
+}
+
+/**
+ * The upload proof (auth.md "Key recovery"): the actor key signs the
+ * server's challenge bound to the exact blob bytes. Binding the blob is
+ * what stops a captured signature from authorizing different
+ * ciphertext; binding the challenge is what stops the whole pair from
+ * being replayed.
+ */
+export async function signUpload(
+  key: ActorKey,
+  challenge: Uint8Array,
+  blob: Uint8Array,
+): Promise<Uint8Array> {
+  return key.signTagged(UPLOAD_PROOF_TAG, await sha256Tagged(UPLOAD_PROOF_TAG, [challenge, blob]));
 }
