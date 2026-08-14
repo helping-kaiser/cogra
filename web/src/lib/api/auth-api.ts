@@ -6,6 +6,7 @@ import type { ApolloClient } from "@apollo/client";
 import {
   ConfirmPasswordResetDocument,
   KeyBackupDocument,
+  CreateKeyBackupChallengeDocument,
   LogInDocument,
   MeDocument,
   RefreshSessionDocument,
@@ -131,9 +132,27 @@ export async function fetchKeyBackup(client: ApolloClient): Promise<Outcome<stri
   return success(me.value.keyBackup);
 }
 
-export function uploadKeyBackup(client: ApolloClient, blob: string): Promise<Outcome<true>> {
+/** The challenge an upload must spend (auth.md "Key recovery"). */
+export function createKeyBackupChallenge(client: ApolloClient): Promise<Outcome<string>> {
   return payloadOutcome(
-    () => client.mutate({ mutation: UploadKeyBackupDocument, variables: { input: { blob } } }),
+    () => client.mutate({ mutation: CreateKeyBackupChallengeDocument }),
+    (data) => data.createKeyBackupChallenge.userErrors,
+    (data) => data.createKeyBackupChallenge.challenge,
+  );
+}
+
+export function uploadKeyBackup(
+  client: ApolloClient,
+  blob: string,
+  challenge: string,
+  signature: string,
+): Promise<Outcome<true>> {
+  return payloadOutcome(
+    () =>
+      client.mutate({
+        mutation: UploadKeyBackupDocument,
+        variables: { input: { blob, challenge, signature } },
+      }),
     (data) => data.uploadKeyBackup.userErrors,
     (data) => (data.uploadKeyBackup.ok === true ? true : null),
   );

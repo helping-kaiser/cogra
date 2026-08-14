@@ -40,7 +40,13 @@ class SettingsViewModelTest {
         var emailRequestOutcome: Outcome<Unit> = Outcome.Success(Unit)
         var emailRequestPassword: String? = null
 
-        override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> {
+        override suspend fun keyBackupChallenge(): Outcome<ByteArray> = Outcome.Success(ByteArray(32) { 0x71 })
+
+        override suspend fun uploadKeyBackup(
+            blob: ByteArray,
+            challenge: ByteArray,
+            signature: ByteArray,
+        ): Outcome<Unit> {
             uploaded = blob
             return Outcome.Success(Unit)
         }

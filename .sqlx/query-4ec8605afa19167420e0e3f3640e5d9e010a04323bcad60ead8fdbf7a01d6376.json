@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM auth_key_backup_challenges\n          WHERE user_id = $1 AND challenge = $2 AND expires_at > $3\n          RETURNING user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4ec8605afa19167420e0e3f3640e5d9e010a04323bcad60ead8fdbf7a01d6376"
+}

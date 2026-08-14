@@ -42,6 +42,17 @@ query KeyBackup {
   }
 }
 
+mutation CreateKeyBackupChallenge {
+  createKeyBackupChallenge {
+    challenge
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
+
 mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
   uploadKeyBackup(input: $input) {
     ok

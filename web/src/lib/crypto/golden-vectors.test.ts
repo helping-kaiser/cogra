@@ -15,7 +15,7 @@ import { ActId, NodeId, parseFamily } from "./identifiers";
 import { canonicalDeps, preCommitmentMsg, Proposal, StructuralBody, VerifiedAct } from "./handshake";
 import { ActorKey } from "./actor-key";
 import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, encodeProposal, encodeVerifiedAct } from "./wire";
-import { openKeyBackup, RecoveryCode, sealKeyBackup } from "./key-backup";
+import { openKeyBackup, RecoveryCode, sealKeyBackup, signUpload, UPLOAD_PROOF_TAG } from "./key-backup";
 
 interface BodyVector {
   actId: string;
@@ -74,6 +74,9 @@ interface Vectors {
     plaintextHex: string;
     recoveryCodeBytesHex: string;
     recoveryCodeDisplay: string;
+    uploadChallengeHex: string;
+    uploadProofTagUtf8: string;
+    uploadSignatureHex: string;
   };
 }
 
@@ -245,4 +248,17 @@ it("key backup vectors match", async () => {
     256,
   );
   expect(toHex(new Uint8Array(contentKey))).toBe(k.contentKeyHex);
+});
+
+it("key-backup upload proof vectors match", async () => {
+  const k = vectors.keyBackup;
+  expect(UPLOAD_PROOF_TAG).toBe(k.uploadProofTagUtf8);
+
+  const actor = await ActorKey.fromSeed(fromHex(vectors.signing.seedHex));
+  const signature = await signUpload(
+    actor,
+    fromHex(k.uploadChallengeHex),
+    fromHex(k.blobHex),
+  );
+  expect(toHex(signature)).toBe(k.uploadSignatureHex);
 });

@@ -25,6 +25,7 @@ enum class ErrorCode {
     WRITE_RULE_FAILED,
     STAGED_WRITE_EXPIRED,
     SIGNATURE_INVALID,
+    CHALLENGE_EXPIRED,
 
     /** A code this client version does not know — treat as INTERNAL. */
     UNKNOWN,

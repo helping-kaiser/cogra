@@ -110,6 +110,28 @@ make web-dev      Start the web app dev server (needs Node from web/.nvmrc)
 make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
 ```
 
+### Reaching the web dev server from the phone
+
+Hand testing runs in the phone's browser, and it must arrive over
+**`localhost`**, tunnelled — never a LAN address:
+
+```bash
+adb reverse tcp:3000 tcp:3000    # then browse http://localhost:3000
+```
+
+A LAN URL like `http://192.168.0.5:3000` reaches the server and renders
+a blank page. Plain http on a non-loopback host is not a
+[secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts),
+so `crypto.subtle` is undefined, the key-custody code throws on first
+paint, and nothing hydrates. `localhost` is trusted as secure regardless
+of scheme, which is what makes the tunnel the only workable route. This
+also disposes of Next's dev-only cross-origin block on `/_next/*`, since
+the origin is then the one the server started on.
+
+The phone never talks to the API directly: the dev server proxies
+`/graphql` to `GRAPHQL_URL`, default `http://localhost:8080/graphql`,
+which is right whenever the API runs beside it.
+
 ---
 
 ## Database Tools

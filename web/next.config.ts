@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // No `allowedDevOrigins`: the phone reaches this server through
+  // `adb reverse` as localhost, never as a LAN address. A plain-http LAN
+  // origin is not a secure context, so WebCrypto is absent and the app
+  // cannot hydrate — allowing the origin would only turn a blank page
+  // into a differently blank page (development.md).
+  //
   // The browser talks GraphQL same-origin; the rewrite proxies to the API
   // so no CORS and no public endpoint env var are needed.
   async rewrites() {

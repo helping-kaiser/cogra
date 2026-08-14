@@ -5,17 +5,25 @@
 
 use aes_gcm::aead::{Aead, Payload};
 use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
+use ed25519_dalek::{SigningKey, VerifyingKey};
 use hkdf::Hkdf;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use sha2::Sha256;
 
+use super::crypto;
 use super::encoding::{Decoder, Encoder};
 
 pub const CODE_LEN: usize = 16;
 pub const HKDF_SALT_LEN: usize = 16;
 pub const AES_NONCE_LEN: usize = 12;
 pub const HKDF_INFO: &[u8] = b"cogra:key-backup:v1";
+/// Server-issued challenge length, matching the stand-in's entropy floor.
+pub const CHALLENGE_LEN: usize = crypto::SALT_LEN;
+/// The upload proof's domain tag. Storing a blob is an L2 operation, not
+/// an L1 act, so it carries this module's `cogra:key-backup:*` prefix
+/// rather than one of the `cogra-l1:` act tags.
+pub const UPLOAD_PROOF_TAG: &[u8] = b"cogra:key-backup-upload:v1";
 const VERSION: u8 = 0x01;
 const HEADER_LEN: usize = 1 + HKDF_SALT_LEN + AES_NONCE_LEN;
 const CROCKFORD: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -160,6 +168,28 @@ pub fn open(blob: &[u8], code: &RecoveryCode) -> Result<[u8; 32], KeyBackupError
     Ok(seed)
 }
 
+/// What the actor key signs to authorize an upload: the server's
+/// challenge bound to the exact blob bytes, length-framed under the
+/// upload tag. Binding the blob is what stops a captured signature from
+/// authorizing different ciphertext; binding the challenge is what stops
+/// the whole pair from being replayed.
+fn upload_proof_msg(challenge: &[u8], blob: &[u8]) -> [u8; 32] {
+    crypto::sha256_tagged(UPLOAD_PROOF_TAG, &[challenge, blob])
+}
+
+pub fn sign_upload(key: &SigningKey, challenge: &[u8], blob: &[u8]) -> Vec<u8> {
+    crypto::sign(key, UPLOAD_PROOF_TAG, &upload_proof_msg(challenge, blob))
+}
+
+pub fn verify_upload(key: &VerifyingKey, challenge: &[u8], blob: &[u8], signature: &[u8]) -> bool {
+    crypto::verify(
+        key,
+        UPLOAD_PROOF_TAG,
+        &upload_proof_msg(challenge, blob),
+        signature,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,5 +243,50 @@ mod tests {
                 .chars()
                 .all(|c| c == '-' || CROCKFORD.contains(&(c as u8)))
         );
+    }
+
+    #[test]
+    fn an_upload_proof_binds_both_the_challenge_and_the_blob() {
+        let key = SigningKey::from_bytes(&[3u8; 32]);
+        let challenge = [9u8; CHALLENGE_LEN];
+        let blob = seal(&[7u8; 32], &RecoveryCode::generate());
+        let signature = sign_upload(&key, &challenge, &blob);
+        let public = key.verifying_key();
+
+        assert!(verify_upload(&public, &challenge, &blob, &signature));
+        // Replayed against a different challenge: the whole point.
+        assert!(!verify_upload(
+            &public,
+            &[8u8; CHALLENGE_LEN],
+            &blob,
+            &signature
+        ));
+        // Same challenge, swapped blob: a captured signature must not
+        // authorize different ciphertext.
+        let other = seal(&[6u8; 32], &RecoveryCode::generate());
+        assert!(!verify_upload(&public, &challenge, &other, &signature));
+        // A different actor's signature.
+        let stranger = SigningKey::from_bytes(&[4u8; 32]);
+        assert!(!verify_upload(
+            &stranger.verifying_key(),
+            &challenge,
+            &blob,
+            &signature
+        ));
+        // Garbage signature bytes refuse rather than panic.
+        assert!(!verify_upload(&public, &challenge, &blob, b"xx"));
+    }
+
+    #[test]
+    fn the_upload_tag_is_domain_separated_from_the_l1_act_tags() {
+        let key = SigningKey::from_bytes(&[3u8; 32]);
+        let msg = upload_proof_msg(&[9u8; CHALLENGE_LEN], b"blob");
+        let signature = sign_upload(&key, &[9u8; CHALLENGE_LEN], b"blob");
+        assert!(!crypto::verify(
+            &key.verifying_key(),
+            crypto::tags::APPROVAL,
+            &msg,
+            &signature
+        ));
     }
 }

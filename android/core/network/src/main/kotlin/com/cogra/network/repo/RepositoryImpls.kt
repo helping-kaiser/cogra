@@ -44,6 +44,7 @@ import com.cogra.network.graphql.ChangePasswordMutation
 import com.cogra.network.graphql.ConfirmEmailChangeMutation
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
+import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
 import com.cogra.network.graphql.HostPublicKeyQuery
 import com.cogra.network.graphql.InviteLinkCheckQuery
 import com.cogra.network.graphql.InviteLinksQuery
@@ -330,10 +331,26 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadKeyBackup(blob: ByteArray): Outcome<Unit> = guard.run {
+    override suspend fun keyBackupChallenge(): Outcome<ByteArray> = guard.run {
+        client.mutation(CreateKeyBackupChallengeMutation())
+            .payloadOutcome({ it.createKeyBackupChallenge.userErrors.map { e -> e.userErrorFields } }) {
+                it.createKeyBackupChallenge.challenge?.let { c -> Base64.getDecoder().decode(c) }
+            }
+    }
+
+    override suspend fun uploadKeyBackup(
+        blob: ByteArray,
+        challenge: ByteArray,
+        signature: ByteArray,
+    ): Outcome<Unit> = guard.run {
+        val encoder = Base64.getEncoder()
         client.mutation(
             UploadKeyBackupMutation(
-                UploadKeyBackupInput(Base64.getEncoder().encodeToString(blob)),
+                UploadKeyBackupInput(
+                    blob = encoder.encodeToString(blob),
+                    challenge = encoder.encodeToString(challenge),
+                    signature = encoder.encodeToString(signature),
+                ),
             ),
         ).payloadOutcome({ it.uploadKeyBackup.userErrors.map { e -> e.userErrorFields } }) {
             if (it.uploadKeyBackup.ok == true) Unit else null

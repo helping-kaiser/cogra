@@ -216,4 +216,18 @@ class GoldenVectorsTest {
         assertThat(retyped.bytes).isEqualTo(code.bytes)
         assertThat(openKeyBackup(kb.str("blobHex").unhex(), retyped)).isEqualTo(seed)
     }
+
+    @Test
+    fun keyBackupUploadProofVectorsMatch() {
+        val kb = vectors.jsonObject.getValue("keyBackup")
+        assertThat(UPLOAD_PROOF_TAG).isEqualTo(kb.str("uploadProofTagUtf8"))
+
+        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").unhex())
+        val signature = signUpload(
+            key = actor,
+            challenge = kb.str("uploadChallengeHex").unhex(),
+            blob = kb.str("blobHex").unhex(),
+        )
+        assertThat(signature.hex()).isEqualTo(kb.str("uploadSignatureHex"))
+    }
 }
