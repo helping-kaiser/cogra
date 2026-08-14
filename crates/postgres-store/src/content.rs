@@ -409,9 +409,10 @@ pub async fn comment_by_node(
 }
 
 /// A target's comments — the thread read (comment.md §2): direct
-/// children only, oldest-first in landing order (conversation order).
-/// `backward` serves `last`/`before`; results always come back
-/// oldest-first.
+/// children only, newest-first in landing order (a comment's landing
+/// position is its genesis, so edits never reorder the thread —
+/// api-spec.md "Pagination"). `backward` serves `last`/`before`;
+/// results always come back newest-first.
 pub async fn comments_for_target(
     pool: &PgPool,
     target_id: Uuid,
@@ -439,16 +440,16 @@ pub async fn comments_for_target(
                ) v ON TRUE
                WHERE c.target_id = $6
                  AND ($1::bigint IS NULL
-                      OR ($4 AND (c.landed_epoch, c.act_time, c.position) < ($1, $2, $3))
-                      OR (NOT $4 AND (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3)))
+                      OR ($4 AND (c.landed_epoch, c.act_time, c.position) > ($1, $2, $3))
+                      OR (NOT $4 AND (c.landed_epoch, c.act_time, c.position) < ($1, $2, $3)))
                ORDER BY
-                   CASE WHEN $4 THEN c.landed_epoch END DESC,
-                   CASE WHEN $4 THEN c.act_time END DESC,
-                   CASE WHEN $4 THEN c.position END DESC,
-                   c.landed_epoch ASC, c.act_time ASC, c.position ASC
+                   CASE WHEN $4 THEN c.landed_epoch END ASC,
+                   CASE WHEN $4 THEN c.act_time END ASC,
+                   CASE WHEN $4 THEN c.position END ASC,
+                   c.landed_epoch DESC, c.act_time DESC, c.position DESC
                LIMIT $5
            ) page
-           ORDER BY landed_epoch ASC, act_time ASC, position ASC"#,
+           ORDER BY landed_epoch DESC, act_time DESC, position DESC"#,
         ce,
         ca,
         cp,
