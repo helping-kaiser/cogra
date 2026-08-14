@@ -149,11 +149,12 @@ export function KeyCeremonyView() {
       ) : (
         <>
           <Card>
-            <p className="text-body-medium text-on-surface-variant">
-              Write this code down and keep it somewhere safe. It is shown only this once — CoGra
-              cannot recover it for you.
-            </p>
-            <RecoveryCode testId="backup_code" code={recoveryCode} onConfirmed={finish} />
+            <RecoveryCode
+              testId="backup_code"
+              code={recoveryCode}
+              explainer="Write this code down and keep it somewhere safe. It is shown only this once — CoGra cannot recover it for you."
+              onConfirmed={finish}
+            />
           </Card>
         </>
       )}

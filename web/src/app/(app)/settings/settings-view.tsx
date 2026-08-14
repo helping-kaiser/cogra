@@ -327,13 +327,10 @@ export function SettingsView({
         <h2 className="text-title-medium">Key backup</h2>
         {newBackupCode !== null ? (
           <>
-            <p className="text-body-medium text-on-surface-variant">
-              Write this code down somewhere safe. It is shown only this once; any older code stops
-              working.
-            </p>
             <RecoveryCode
               testId="settings_backup_code"
               code={newBackupCode}
+              explainer="Write this code down somewhere safe. It is shown only this once; any older code stops working."
               onConfirmed={onBackupCodeSaved}
             />
           </>

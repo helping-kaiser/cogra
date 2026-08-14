@@ -26,10 +26,12 @@ import { TextField } from "@/lib/ui/text-field";
 
 export function RecoveryCode({
   code,
+  explainer,
   testId,
   onConfirmed,
 }: {
   code: string;
+  explainer: string;
   testId: string;
   onConfirmed: () => void;
 }) {
@@ -53,6 +55,7 @@ export function RecoveryCode({
       <p data-testid={testId} className="text-center font-mono text-title-large tracking-wider">
         {code}
       </p>
+      <p className="text-body-medium text-on-surface-variant">{explainer}</p>
       <Button testId={`${testId}_copy`} variant="text" size="sm" selfStart onClick={onCopy}>
         Copy
       </Button>

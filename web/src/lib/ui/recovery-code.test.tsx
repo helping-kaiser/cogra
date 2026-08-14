@@ -6,7 +6,14 @@ import { RecoveryCode } from "./recovery-code";
 const CODE = "ABCDE-FGHJK-MNPQR-STVWX-YZ0123";
 
 function show(onConfirmed = vi.fn()) {
-  render(<RecoveryCode code={CODE} testId="code" onConfirmed={onConfirmed} />);
+  render(
+    <RecoveryCode
+      code={CODE}
+      explainer="keep it somewhere safe"
+      testId="code"
+      onConfirmed={onConfirmed}
+    />,
+  );
   return onConfirmed;
 }
 
