@@ -33,9 +33,10 @@ isolation. Today's modules: `app` (shell, navigation, theme, the
 endpoint/web-origin build config), `core:crypto`, `core:designsystem`,
 `core:domain` (with shared test fixtures under `testFixtures/`),
 `core:network`, the slice-1 feature surfaces `feature:onboarding`,
-`feature:auth`, `feature:home`, `feature:invites`,
-`feature:settings`, and slice 2's `feature:content`. `core:ranker`
-arrives with slice 3.
+`feature:auth`, `feature:home` (the shell's account-status
+banners), `feature:invites`, `feature:settings`, slice 2's
+`feature:content`, and slice 2.1's `feature:profile`.
+`core:ranker` arrives with slice 3.
 
 The split:
 

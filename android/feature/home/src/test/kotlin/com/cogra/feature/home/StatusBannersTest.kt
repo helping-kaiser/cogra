@@ -1,16 +1,19 @@
 package com.cogra.feature.home
 
 import android.content.Context
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.cogra.domain.AccountState
-import com.cogra.domain.ErrorCode
 import com.cogra.domain.ActorRef
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.UserProfile
 import com.cogra.domain.signing.RegistrationProgress
 import com.google.common.truth.Truth.assertThat
@@ -20,32 +23,37 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class HomeScreenTest {
+class StatusBannersTest {
 
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(
-        state: HomeUiState,
-        onActorRestoredShown: () -> Unit = {},
-        onOpenFeed: () -> Unit = {},
-        onOpenInvites: () -> Unit = {},
-        onOpenSettings: () -> Unit = {},
-    ) {
+    private fun render(state: HomeUiState) {
         compose.setContent {
-            HomeScreen(
+            StatusBanners(
                 state = state,
-                onPullRefresh = {},
                 onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
                 onRearmInputChange = {}, onRearm = {},
-                onDismissWaitingHint = {}, onApprovedShown = {}, onWelcomeShown = {},
+                onDismissWaitingHint = {},
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
-                onActorRestoredShown = onActorRestoredShown,
-                onOpenFeed = onOpenFeed,
-                onOpenInvites = onOpenInvites, onOpenSettings = onOpenSettings, onRestoreActor = {},
-                onStartKeyCeremony = {},
+                onStartKeyCeremony = {}, onRestoreActor = {},
             )
+        }
+    }
+
+    /** The one-shots ride the shell's host; the harness stands in for it. */
+    private fun renderOneShots(state: HomeUiState, onShown: () -> Unit = {}) {
+        compose.setContent {
+            val host = remember { SnackbarHostState() }
+            StatusBannerOneShots(
+                state = state,
+                snackbarHostState = host,
+                onActorRestoredShown = onShown,
+                onApprovedShown = onShown,
+                onWelcomeShown = onShown,
+            )
+            SnackbarHost(host, modifier = Modifier.testTag("home_snackbar"))
         }
     }
 
@@ -63,6 +71,12 @@ class HomeScreenTest {
         keyAttached: Boolean = true,
         keyOnDevice: Boolean = true,
     ) = RegistrationProgress.AwaitingApproval(emailVerified, keyAttached, keyOnDevice)
+
+    @Test
+    fun aLoadingStateRendersNothing() {
+        render(HomeUiState(loading = true, huskWarning = true))
+        compose.onNodeWithTag("home_restore").assertDoesNotExist()
+    }
 
     @Test
     fun theHuskStateOffersRestore() {
@@ -87,22 +101,27 @@ class HomeScreenTest {
 
     @Test
     fun aFreshRestoreShowsTheConfirmationSnackbar() {
-        render(HomeUiState(loading = false, actorRestored = true))
+        renderOneShots(HomeUiState(loading = false, actorRestored = true))
         compose.onNodeWithTag("home_snackbar").assertExists()
     }
 
     @Test
     fun theSnackbarConsumesItsOneShotAfterShowing() {
         var shown = false
-        render(
+        renderOneShots(
             HomeUiState(loading = false, actorRestored = true),
-            onActorRestoredShown = { shown = true },
+            onShown = { shown = true },
         )
-        compose.onNodeWithTag("home_snackbar").assertExists()
         // Consumption happens only after the snackbar's display run ends.
         assertThat(shown).isFalse()
         compose.mainClock.advanceTimeBy(10_000)
         assertThat(shown).isTrue()
+    }
+
+    @Test
+    fun theApprovalAndWelcomeOneShotsShowTheSnackbar() {
+        renderOneShots(HomeUiState(loading = false, approved = true))
+        compose.onNodeWithTag("home_snackbar").assertExists()
     }
 
     @Test
@@ -113,14 +132,10 @@ class HomeScreenTest {
     }
 
     @Test
-    fun anApplicantAwaitingVerificationGetsTheTokenCardAndTheShellButtons() {
+    fun anApplicantAwaitingVerificationGetsTheTokenCard() {
         render(applicant(awaiting(emailVerified = false)))
         compose.onNodeWithTag("verify_token").assertExists()
         compose.onNodeWithTag("verify_submit").assertIsNotEnabled()
-        // Only acting is gated (auth.md "Application"): the shell buttons
-        // stay — Settings live, Invites visible but locked.
-        compose.onNodeWithTag("home_invites").assertExists()
-        compose.onNodeWithTag("home_settings").assertExists()
     }
 
     @Test
@@ -170,32 +185,6 @@ class HomeScreenTest {
     }
 
     @Test
-    fun anApplicantsSettingsButtonNavigates() {
-        var opened = false
-        render(applicant(awaiting()), onOpenSettings = { opened = true })
-        compose.onNodeWithTag("home_settings").performScrollTo().performClick()
-        assertThat(opened).isTrue()
-    }
-
-    @Test
-    fun anApplicantsInvitesTapExplainsInsteadOfNavigating() {
-        var opened = false
-        render(applicant(awaiting()), onOpenInvites = { opened = true })
-        compose.onNodeWithTag("home_invites").performScrollTo().performClick()
-        assertThat(opened).isFalse()
-        compose.onNodeWithTag("home_snackbar").assertExists()
-    }
-
-    @Test
-    fun aMembersInvitesTapNavigates() {
-        var opened = false
-        render(HomeUiState(loading = false), onOpenInvites = { opened = true })
-        compose.onNodeWithTag("home_invites").performScrollTo().performClick()
-        assertThat(opened).isTrue()
-        compose.onNodeWithTag("home_snackbar").assertDoesNotExist()
-    }
-
-    @Test
     fun aMissingKeyShowsTheCeremonyCardAlongsideTheVerifyCard() {
         // The two proofs are independent (auth.md "Application"): both
         // cards can show at once.
@@ -219,11 +208,9 @@ class HomeScreenTest {
     }
 
     @Test
-    fun aDismissedWaitingHintLeavesTheShellButtons() {
+    fun aDismissedWaitingHintLeavesTheBannerAreaQuiet() {
         render(applicant(awaiting(), dismissed = true))
         compose.onNodeWithTag("home_waiting").assertDoesNotExist()
-        compose.onNodeWithTag("home_invites").assertExists()
-        compose.onNodeWithTag("home_settings").assertExists()
     }
 
     @Test
@@ -245,7 +232,7 @@ class HomeScreenTest {
         render(
             applicant(RegistrationProgress.NeedsInvite).copy(
                 rearmInput = "x",
-                rearmError = com.cogra.domain.ErrorCode.INVITE_UNUSABLE,
+                rearmError = ErrorCode.INVITE_UNUSABLE,
             ),
         )
         compose.onNodeWithTag("rearm_error").assertExists()
@@ -255,25 +242,5 @@ class HomeScreenTest {
     fun applicantErrorsRender() {
         render(applicant(RegistrationProgress.RejectedByDevice("seal mismatch")))
         compose.onNodeWithTag("home_application_rejected").assertExists()
-    }
-
-    @Test
-    fun theApprovalOneShotShowsTheSnackbar() {
-        render(applicant(RegistrationProgress.AwaitingLanding).copy(approved = true))
-        compose.onNodeWithTag("home_snackbar").assertExists()
-    }
-
-    @Test
-    fun theWelcomeOneShotShowsTheSnackbarInTheMemberShell() {
-        render(HomeUiState(loading = false, welcome = true))
-        compose.onNodeWithTag("home_snackbar").assertExists()
-    }
-
-    @Test
-    fun theFeedButtonNavigates() {
-        var opened = false
-        render(HomeUiState(loading = false), onOpenFeed = { opened = true })
-        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
-        assertThat(opened).isTrue()
     }
 }
