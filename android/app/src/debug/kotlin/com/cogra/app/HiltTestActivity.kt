@@ -7,11 +7,12 @@
 package com.cogra.app
 
 import android.content.Intent
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import dagger.hilt.android.AndroidEntryPoint
 
+// Mirrors MainActivity's base class so tests host what production hosts.
 @AndroidEntryPoint
-class HiltTestActivity : ComponentActivity() {
+class HiltTestActivity : FragmentActivity() {
     /**
      * Drives the real androidx onNewIntent dispatch (listener fan-out
      * included) from tests — Robolectric has no public driver for the

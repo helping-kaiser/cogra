@@ -7,7 +7,12 @@ import type { ApolloClient } from "@apollo/client";
 import { fetchKeyBackup } from "@/lib/api/auth-api";
 import { hasCode } from "@/lib/api/outcome";
 import { fromBase64 } from "@/lib/crypto/bytes";
-import { KeyBackupError, openKeyBackup, RecoveryCode } from "@/lib/crypto/key-backup";
+import {
+  KeyBackupError,
+  openKeyBackup,
+  RecoveryCode,
+  RecoveryCodeLengthError,
+} from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "./store";
 
@@ -28,7 +33,10 @@ export async function restoreActor(
   try {
     code = RecoveryCode.fromInput(codeInput);
   } catch (e) {
-    if (e instanceof KeyBackupError) return { kind: "malformedCode" };
+    // A length complaint is the only one the reader can act on; a
+    // full-length code that will not decode is simply a wrong code.
+    if (e instanceof RecoveryCodeLengthError) return { kind: "malformedCode" };
+    if (e instanceof KeyBackupError) return { kind: "wrongCode" };
     throw e;
   }
 

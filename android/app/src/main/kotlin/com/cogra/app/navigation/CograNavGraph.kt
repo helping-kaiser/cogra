@@ -42,6 +42,7 @@ import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -87,6 +88,9 @@ data object Invites
 
 @Serializable
 data object Settings
+
+@Serializable
+data object KeyExport
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
@@ -314,7 +318,12 @@ fun CograNavGraph(
                         ?.savedStateHandle
                         ?.set(HANDLE_CHANGED_RESULT, true)
                 },
+                onExportKey = { navController.navigate(KeyExport) },
             )
+        }
+        composable<KeyExport> {
+            // Arriving reveals nothing; the screen's own gate does.
+            KeyExportRoute(onBack = { navController.navigateUp() })
         }
     }
 }

@@ -333,6 +333,29 @@ class CograNavGraphTest {
     }
 
     @Test
+    fun settingsReachesTheKeyExportScreen() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+
+        waitForTag("home_settings")
+        compose.onNodeWithTag("home_settings").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("settings_export_key").performScrollTo().performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<KeyExport>()).isTrue()
+        // Arriving reveals nothing: the screen's own gate stands first.
+        compose.onNodeWithTag("key_export_reveal").assertExists()
+        compose.onNodeWithTag("key_export_pem").assertDoesNotExist()
+
+        compose.onNodeWithTag("key_export_back").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
+    }
+
+    @Test
     fun anApplicantLandsInTheHomeShellWithTheWaitingHint() {
         // Registration returned an ordinary session: the applicant is
         // simply signed in, and Home is the root — never a wall.

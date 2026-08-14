@@ -77,7 +77,7 @@ describe("RestoreForm", () => {
   });
 
   it.each([
-    ["malformedCode", /doesn't look like a recovery code/],
+    ["malformedCode", /26 letters and digits/],
     ["wrongCode", /doesn't open your backup/],
     ["noBackup", /no key backup/],
   ] as const)("surfaces %s", async (kind, message) => {

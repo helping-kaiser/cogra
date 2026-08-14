@@ -13,7 +13,16 @@ import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
 
 /** A blob that will not open: wrong code, tampered bytes, or bad format. */
-class KeyBackupException(message: String) : Exception(message)
+open class KeyBackupException(message: String) : Exception(message)
+
+/**
+ * The input is not a recovery code's length. It is the one parse
+ * failure a reader can act on — characters are missing or spare. Every
+ * other rejection of a full-length input, an unusable character or the
+ * trailing pad bits, is a code that will not open, which is what the
+ * GCM tag would have said a moment later.
+ */
+class RecoveryCodeLengthException(message: String) : KeyBackupException(message)
 
 private const val VERSION: Byte = 0x01
 private const val CODE_LEN = 16
@@ -62,7 +71,7 @@ class RecoveryCode(val bytes: ByteArray) {
                 .replace("O", "0")
                 .filter { it != '-' && !it.isWhitespace() }
             if (normalized.length != 26) {
-                throw KeyBackupException("a recovery code has 26 characters")
+                throw RecoveryCodeLengthException("a recovery code has 26 characters")
             }
             var bits = 0L
             var nbits = 0

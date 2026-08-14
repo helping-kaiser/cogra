@@ -11,6 +11,7 @@ package com.cogra.domain.identity
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.KeyBackupException
 import com.cogra.crypto.RecoveryCode
+import com.cogra.crypto.RecoveryCodeLengthException
 import com.cogra.crypto.openKeyBackup
 import com.cogra.crypto.sealKeyBackup
 import com.cogra.crypto.signUpload
@@ -143,7 +144,7 @@ sealed interface RestoreResult {
     /** The blob would not open — mistyped code (or a tampered blob). */
     data object WrongCode : RestoreResult
 
-    /** The input is not a recovery code at all. */
+    /** The input is not a recovery code's length — characters missing. */
     data class MalformedCode(val reason: String) : RestoreResult
 
     data class Failed(val cause: Exception) : RestoreResult
@@ -166,8 +167,12 @@ class ActorRestorer @Inject constructor(
     suspend fun restore(codeInput: String, forgetOnSignOut: Boolean): RestoreResult {
         val code = try {
             RecoveryCode.fromInput(codeInput)
-        } catch (e: KeyBackupException) {
+        } catch (e: RecoveryCodeLengthException) {
             return RestoreResult.MalformedCode(e.message ?: "invalid recovery code")
+        } catch (e: KeyBackupException) {
+            // A full-length code that will not decode is a wrong code,
+            // which is what the GCM tag would have said anyway.
+            return RestoreResult.WrongCode
         }
         val blob = when (val read = account.keyBackup()) {
             is Outcome.Success -> read.value ?: return RestoreResult.NoBackup
