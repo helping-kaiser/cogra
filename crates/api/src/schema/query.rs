@@ -12,8 +12,8 @@ use postgres_store::{PgPool, auth as store, content as content_store, mirror, st
 use uuid::Uuid;
 
 use super::types::{
-    CommentType, InviteLinkCheck, KeysetConnection, Node, PostType, Record, RecordFamily, RecordId,
-    StagedWriteType, User, connection_cost, keyset_connection, keyset_page,
+    Actor, CommentType, InviteLinkCheck, KeysetConnection, Node, PostType, Record, RecordFamily,
+    RecordId, StagedWriteType, User, connection_cost, keyset_connection, keyset_page,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -100,6 +100,47 @@ impl Query {
         Ok(store::actor_identity(pool, viewer.user_id)
             .await?
             .map(|identity| User::from_viewer(identity, viewer)))
+    }
+
+    /// One user by id or unique handle — exactly one argument
+    /// (api-spec.md "Queries"). Handles resolve case-insensitively
+    /// (auth.md "Handle and email format"); null for no match.
+    async fn user(
+        &self,
+        ctx: &Context<'_>,
+        id: Option<Uuid>,
+        handle: Option<String>,
+    ) -> async_graphql::Result<Option<User>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(lookup_actor(pool, id, handle)
+            .await?
+            .filter(|identity| identity.kind == "user")
+            .map(|identity| User {
+                identity,
+                viewer_session: None,
+            }))
+    }
+
+    /// Any actor by id or unique handle — one namespace across kinds, so
+    /// a handle resolves to exactly one actor; exactly one argument.
+    /// Kinds resolve as their types arrive with the slices — users
+    /// today; null for no match.
+    async fn actor(
+        &self,
+        ctx: &Context<'_>,
+        id: Option<Uuid>,
+        handle: Option<String>,
+    ) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(lookup_actor(pool, id, handle)
+            .await?
+            .filter(|identity| identity.kind == "user")
+            .map(|identity| {
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }))
     }
 
     /// One staged write mid-handshake. Field-level: resolves only for
@@ -317,6 +358,27 @@ impl Query {
             |p| (p.order.landed_epoch, p.order.act_time, p.order.position),
             PostType,
         ))
+    }
+}
+
+/// The shared id-or-handle resolution behind `user` and `actor`:
+/// exactly one argument required; a handle folds before lookup
+/// (auth.md), and one that could never register resolves to no actor
+/// rather than erroring.
+async fn lookup_actor(
+    pool: &PgPool,
+    id: Option<Uuid>,
+    handle: Option<String>,
+) -> async_graphql::Result<Option<store::ActorIdentity>> {
+    match (id, handle) {
+        (Some(id), None) => Ok(store::actor_identity(pool, id).await?),
+        (None, Some(handle)) => match crate::auth::normalize_handle(&handle) {
+            Ok(folded) => Ok(store::actor_identity_by_handle(pool, &folded).await?),
+            Err(_) => Ok(None),
+        },
+        _ => Err(async_graphql::Error::new(
+            "provide exactly one of id or handle",
+        )),
     }
 }
 

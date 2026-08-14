@@ -315,7 +315,7 @@ class AccountRepositoryImpl @Inject constructor(
                 UserProfile(
                     id = me.id,
                     handle = me.handle,
-                    displayName = me.displayName,
+                    displayName = me.displayName.value,
                     accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
                     hasReciprocated = me.hasReciprocated,
                     invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },

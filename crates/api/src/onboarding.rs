@@ -547,7 +547,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
 
     // The transaction exists only to hold the row lock; the writes below
     // commit on their own connections. A loser queues here and then finds
-    // the winner's work: the staged row via `live_for_actor`, the burn
+    // the winner's work: the staged admission row, the burn
     // via the B_i read.
     let mut lock = pool.begin().await?;
     if !store::lock_application(&mut lock, application.id).await? {
@@ -556,10 +556,19 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         ));
     }
 
-    if let Some(existing) =
-        staged::live_for_actor(pool, application.account_id, Family::Registration)
-            .await
-            .map_err(|e| OnboardingError::Internal(e.to_string()))?
+    // Only the unchained Registration is the admission one: a profile
+    // update is also Family::Registration but always asserts its chain
+    // parent (substrate.md §9), so it must neither satisfy this check
+    // nor hide the admission row behind it.
+    if let Some(existing) = staged::list_for_actor(pool, application.account_id)
+        .await
+        .map_err(|e| OnboardingError::Internal(e.to_string()))?
+        .into_iter()
+        .find(|w| {
+            w.proposal.body.family == Family::Registration
+                && w.state != staged::StagedState::Expired
+                && w.proposal.body.asserted_parents.is_empty()
+        })
     {
         lock.commit().await?;
         return Ok(prepare::Prepared {

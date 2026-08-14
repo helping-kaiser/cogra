@@ -8,7 +8,9 @@ query Me {
   me {
     id
     handle
-    displayName
+    displayName {
+      value
+    }
     accountState
     hasReciprocated
     invitedBy {

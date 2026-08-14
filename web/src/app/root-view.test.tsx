@@ -21,7 +21,7 @@ const meMember = graphql.query("Me", () =>
         __typename: "User",
         id: "user-1",
         handle: "tester",
-        displayName: null,
+        displayName: { __typename: "ModeratedText", value: null },
         accountState: "MEMBER",
         hasReciprocated: true,
         invitedBy: null,
