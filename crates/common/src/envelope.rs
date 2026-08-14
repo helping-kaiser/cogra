@@ -45,6 +45,13 @@ const COGRA_KEY_BODY: u64 = 4;
 // Keys 5 (media manifest) and 6 (provenance chain,
 // platform-guidelines.md §5 plank 4) are reserved: never produced yet,
 // rejected on read until their slices define them.
+const COGRA_KEY_DISPLAY_NAME: u64 = 7;
+const COGRA_KEY_BIO: u64 = 8;
+const COGRA_KEY_WEBSITE_URL: u64 = 9;
+// Key 10 (payout address) is assigned but arrives with the rail
+// (ledger.md); rejected on read until then. Keys 2–6 ride
+// Publish/Review payloads, 7–10 the parallel-Registration profile
+// payload — each family's reader rejects the other's keys.
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum EnvelopeError {
@@ -259,6 +266,50 @@ impl Envelope {
     }
 }
 
+/// The shared guild admission both CoGra payload families run first
+/// (a tightening of the PCE gates, permitted by PCE §10): version
+/// `[1,1,1,1]`, empty key-1 body, exactly the CoGra guild key, and
+/// schema version 1. Returns the inner guild map.
+fn cogra_guild_map(envelope: &Envelope) -> Result<&BTreeMap<u64, Value>, EnvelopeError> {
+    if envelope.version != VERSION_V1 {
+        return Err(EnvelopeError::Guild("unsupported version vector"));
+    }
+    if !envelope.body.is_empty() {
+        return Err(EnvelopeError::Guild("key-1 body must be empty"));
+    }
+    if envelope.extensions.len() != 1 {
+        return Err(EnvelopeError::Guild("exactly one guild key expected"));
+    }
+    let Some(Value::Map(cogra)) = envelope.extensions.get(&COGRA_GUILD_KEY) else {
+        return Err(EnvelopeError::Guild("missing cogra guild map"));
+    };
+    match cogra.get(&COGRA_KEY_VERSION) {
+        Some(Value::Uint(v)) if *v == COGRA_SCHEMA_V1 => {}
+        _ => return Err(EnvelopeError::Guild("unsupported cogra schema version")),
+    }
+    Ok(cogra)
+}
+
+fn guild_node_id(cogra: &BTreeMap<u64, Value>) -> Result<Uuid, EnvelopeError> {
+    match cogra.get(&COGRA_KEY_NODE) {
+        Some(Value::Bytes(b)) => {
+            Uuid::from_slice(b).map_err(|_| EnvelopeError::Guild("node id must be 16 bytes"))
+        }
+        _ => Err(EnvelopeError::Guild("missing node id")),
+    }
+}
+
+fn guild_text_field(
+    cogra: &BTreeMap<u64, Value>,
+    key: u64,
+) -> Result<Option<String>, EnvelopeError> {
+    match cogra.get(&key) {
+        None => Ok(None),
+        Some(Value::Text(s)) => Ok(Some(s.clone())),
+        Some(_) => Err(EnvelopeError::Guild("text field with non-text value")),
+    }
+}
+
 /// CoGra's guild fields, as carried under `COGRA_GUILD_KEY`
 /// (data-model.md "CoGra's guild schema"). Field presence is meaningful:
 /// on a genesis act every supplied field is present; on an edit only the
@@ -304,50 +355,102 @@ impl CograContent {
         self.into_envelope().encode()
     }
 
-    /// CoGra's guild admission over a decoded envelope (a tightening of
-    /// the PCE gates, permitted by PCE §10): version `[1,1,1,1]`, empty
-    /// key-1 body, exactly the CoGra guild key, schema version 1, a
-    /// 16-byte node id, and no reserved guild fields.
+    /// The content family's guild admission over a decoded envelope: the
+    /// shared checks (`cogra_guild_map`), a 16-byte node id, and only the
+    /// content keys — reserved and profile keys are rejected.
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
-        if envelope.version != VERSION_V1 {
-            return Err(EnvelopeError::Guild("unsupported version vector"));
-        }
-        if !envelope.body.is_empty() {
-            return Err(EnvelopeError::Guild("key-1 body must be empty"));
-        }
-        if envelope.extensions.len() != 1 {
-            return Err(EnvelopeError::Guild("exactly one guild key expected"));
-        }
-        let Some(Value::Map(cogra)) = envelope.extensions.get(&COGRA_GUILD_KEY) else {
-            return Err(EnvelopeError::Guild("missing cogra guild map"));
-        };
-        match cogra.get(&COGRA_KEY_VERSION) {
-            Some(Value::Uint(v)) if *v == COGRA_SCHEMA_V1 => {}
-            _ => return Err(EnvelopeError::Guild("unsupported cogra schema version")),
-        }
-        let node = match cogra.get(&COGRA_KEY_NODE) {
-            Some(Value::Bytes(b)) => {
-                Uuid::from_slice(b).map_err(|_| EnvelopeError::Guild("node id must be 16 bytes"))?
-            }
-            _ => return Err(EnvelopeError::Guild("missing node id")),
-        };
-        let text_field = |key: u64| -> Result<Option<String>, EnvelopeError> {
-            match cogra.get(&key) {
-                None => Ok(None),
-                Some(Value::Text(s)) => Ok(Some(s.clone())),
-                Some(_) => Err(EnvelopeError::Guild("text field with non-text value")),
-            }
-        };
+        let cogra = cogra_guild_map(envelope)?;
         for key in cogra.keys() {
             if *key > COGRA_KEY_BODY {
                 return Err(EnvelopeError::Guild("unknown cogra field"));
             }
         }
         Ok(Self {
-            node,
-            title: text_field(COGRA_KEY_TITLE)?,
-            description: text_field(COGRA_KEY_DESCRIPTION)?,
-            body: text_field(COGRA_KEY_BODY)?,
+            node: guild_node_id(cogra)?,
+            title: guild_text_field(cogra, COGRA_KEY_TITLE)?,
+            description: guild_text_field(cogra, COGRA_KEY_DESCRIPTION)?,
+            body: guild_text_field(cogra, COGRA_KEY_BODY)?,
+        })
+    }
+
+    /// Decode + guild admission in one step — the read used at prepare
+    /// (self-check of our own construction) and at confirm (promotion
+    /// parses the staged payload back out).
+    pub fn decode_payload(bytes: &[u8]) -> Result<Self, EnvelopeError> {
+        Self::from_envelope(&Envelope::decode(bytes)?)
+    }
+}
+
+/// The profile payload a parallel Registration carries — guild keys 7–9
+/// (data-model.md "CoGra's guild schema"; substrate.md §9, user.md §4).
+/// Same presence semantics as content: a genesis-shaped payload carries
+/// every supplied field, an edit only the changed ones, and a
+/// present-but-empty text clears (the API refuses the display-name
+/// clear before it ever reaches an envelope). `node` is the actor's
+/// UUID — the key `actor_profile_versions` shares with the graph's
+/// Profile node.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CograProfile {
+    pub node: Uuid,
+    pub display_name: Option<String>,
+    pub bio: Option<String>,
+    pub website_url: Option<String>,
+}
+
+impl CograProfile {
+    /// Wraps the fields into a full envelope (empty PCE body — CoGra's
+    /// key-1 policy; data-model.md "The payload envelope").
+    pub fn into_envelope(self) -> Envelope {
+        let mut cogra = BTreeMap::new();
+        cogra.insert(COGRA_KEY_VERSION, Value::Uint(COGRA_SCHEMA_V1));
+        cogra.insert(COGRA_KEY_NODE, Value::Bytes(self.node.as_bytes().to_vec()));
+        if let Some(display_name) = self.display_name {
+            cogra.insert(COGRA_KEY_DISPLAY_NAME, Value::Text(display_name));
+        }
+        if let Some(bio) = self.bio {
+            cogra.insert(COGRA_KEY_BIO, Value::Text(bio));
+        }
+        if let Some(website_url) = self.website_url {
+            cogra.insert(COGRA_KEY_WEBSITE_URL, Value::Text(website_url));
+        }
+        let mut extensions = BTreeMap::new();
+        extensions.insert(COGRA_GUILD_KEY, Value::Map(cogra));
+        Envelope {
+            version: VERSION_V1,
+            body: String::new(),
+            extensions,
+        }
+    }
+
+    /// Serialized payload bytes for the canonical proposal.
+    pub fn encode_payload(self) -> Vec<u8> {
+        self.into_envelope().encode()
+    }
+
+    /// The profile family's guild admission: the shared checks
+    /// (`cogra_guild_map`), a 16-byte node id, and only the profile
+    /// keys — content keys, reserved keys, and the assigned-but-unbuilt
+    /// payout key are rejected.
+    pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
+        let cogra = cogra_guild_map(envelope)?;
+        for key in cogra.keys() {
+            let known = matches!(
+                *key,
+                COGRA_KEY_VERSION
+                    | COGRA_KEY_NODE
+                    | COGRA_KEY_DISPLAY_NAME
+                    | COGRA_KEY_BIO
+                    | COGRA_KEY_WEBSITE_URL
+            );
+            if !known {
+                return Err(EnvelopeError::Guild("unknown cogra profile field"));
+            }
+        }
+        Ok(Self {
+            node: guild_node_id(cogra)?,
+            display_name: guild_text_field(cogra, COGRA_KEY_DISPLAY_NAME)?,
+            bio: guild_text_field(cogra, COGRA_KEY_BIO)?,
+            website_url: guild_text_field(cogra, COGRA_KEY_WEBSITE_URL)?,
         })
     }
 
@@ -706,6 +809,87 @@ mod tests {
         assert_eq!(
             CograContent::decode_payload(&envelope("", ext).encode()),
             Err(EnvelopeError::Guild("unknown cogra field"))
+        );
+    }
+
+    // CoGra profile guild schema (keys 7–9).
+
+    fn profile(
+        display_name: Option<&str>,
+        bio: Option<&str>,
+        website_url: Option<&str>,
+    ) -> CograProfile {
+        CograProfile {
+            node: Uuid::from_bytes([9; 16]),
+            display_name: display_name.map(Into::into),
+            bio: bio.map(Into::into),
+            website_url: website_url.map(Into::into),
+        }
+    }
+
+    #[test]
+    fn profile_round_trips_edit_shapes() {
+        for content in [
+            profile(Some("Ada"), Some("Curious."), Some("https://ada.example")),
+            // Edit carrying one changed field.
+            profile(None, Some("New bio"), None),
+            // Edit clearing bio and website: present-and-empty.
+            profile(None, Some(""), Some("")),
+        ] {
+            let bytes = content.clone().encode_payload();
+            assert_eq!(
+                CograProfile::decode_payload(&bytes).expect("valid"),
+                content
+            );
+        }
+    }
+
+    #[test]
+    fn profile_and_content_readers_reject_each_other() {
+        let profile_bytes = profile(Some("Ada"), None, None).encode_payload();
+        assert_eq!(
+            CograContent::decode_payload(&profile_bytes),
+            Err(EnvelopeError::Guild("unknown cogra field"))
+        );
+        let content_bytes = cogra(Some("Title"), None, Some("Body")).encode_payload();
+        assert_eq!(
+            CograProfile::decode_payload(&content_bytes),
+            Err(EnvelopeError::Guild("unknown cogra profile field"))
+        );
+    }
+
+    #[test]
+    fn profile_rejects_assigned_but_unbuilt_payout_key() {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![9; 16]));
+        inner.insert(10, Value::Text("lq1qq…".into()));
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        assert_eq!(
+            CograProfile::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild("unknown cogra profile field"))
+        );
+    }
+
+    #[test]
+    fn profile_rejects_missing_node_and_non_text_field() {
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_BIO, Value::Text("bio".into()));
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner.clone()));
+        assert_eq!(
+            CograProfile::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild("missing node id"))
+        );
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![9; 16]));
+        inner.insert(COGRA_KEY_BIO, Value::Uint(3));
+        let mut ext = BTreeMap::new();
+        ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+        assert_eq!(
+            CograProfile::decode_payload(&envelope("", ext).encode()),
+            Err(EnvelopeError::Guild("text field with non-text value"))
         );
     }
 }
