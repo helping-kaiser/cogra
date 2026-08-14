@@ -89,6 +89,27 @@ seed is never re-persisted. A browser that lost the code
 therefore cannot re-key; that adds no loss mode, since without
 the code the actor could never reach another device anyway.
 
+Both surfaces that show a fresh code — the ceremony and settings
+— render it through one component, which also carries the
+write-it-down gate: the code is dismissed only by being typed or
+pasted back ([auth.md "Key recovery"](auth.md#key-recovery)).
+Its copy button needs a secure context, so on a LAN dev build
+reached over plain http the copy fails visibly rather than
+silently.
+
+**A page cannot mark a clip sensitive**, so on Android the
+browser's own copy confirmation shows the code where the app
+masks it. The Clipboard API exposes no sensitivity hint —
+[w3c/clipboard-apis#154](https://github.com/w3c/clipboard-apis/issues/154)
+has asked for one since 2021 — and Chromium's flag is reachable
+only from the browser's password UI, never from page script.
+Copying from a password input does not reach it either; Blink
+refuses to copy an unrevealed password field at all. The
+exposure is bounded: the confirmation reveals the code at the
+moment the code is already on screen, and what it costs is the
+masking of the clipboard preview afterwards, not secrecy at the
+copy itself.
+
 The same wipe is what gates `/settings/key`
 ([auth.md "Key export"](auth.md#key-export)). With a blob in
 place the export opens it under the current code and shows the

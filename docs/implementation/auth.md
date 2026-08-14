@@ -106,6 +106,21 @@ Rules the posture hangs on:
   without the code. Users can therefore keep redundant copies
   of the code — redundancy against loss is safe in a way copies
   of a raw key never are.
+- **A displayed code is dismissed by the code itself.** Every
+  display — the ceremony, enabling late, replacing — is the one
+  time the code exists on screen, so "I've written it down"
+  unlocks only on the code typed or pasted back, read under the
+  same normalization every code input uses ("Blob format"
+  below). A copy button sits alongside it; the copy fills the
+  clipboard, the paste is the answer. Android flags that clip
+  `EXTRA_IS_SENSITIVE`, so the system's copy confirmation masks
+  the code instead of rendering it. The browser has no such
+  reach ([web.md "Key custody"](web.md#key-custody--webcrypto)).
+  What this proves is that the code
+  left the screen intact, not that it is stored anywhere durable
+  — a clipboard is not a backup. It is checked client-side and
+  no code is ever persisted, so the confirmation is a UX gate,
+  not a security boundary.
 - **Uploading is authorized by the actor key, not by the
   session.** A live session alone could otherwise overwrite the
   stored blob — learning nothing, but destroying the account's

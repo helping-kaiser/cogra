@@ -103,8 +103,12 @@ describe("SettingsView backup", () => {
     fireEvent.click(await screen.findByTestId("settings_backup_create"));
     expect(await screen.findByTestId("settings_backup_code")).toHaveTextContent(CODE);
     expect(backup.enable).toHaveBeenCalled();
-    // The code shows once; acknowledging clears it.
-    fireEvent.click(screen.getByTestId("settings_backup_saved"));
+    // The code shows once, and only the code itself dismisses it.
+    expect(screen.getByTestId("settings_backup_code_saved")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("settings_backup_code_typed_back"), {
+      target: { value: CODE },
+    });
+    fireEvent.click(screen.getByTestId("settings_backup_code_saved"));
     await waitFor(() =>
       expect(screen.queryByTestId("settings_backup_code")).not.toBeInTheDocument(),
     );
