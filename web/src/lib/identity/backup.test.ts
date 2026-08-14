@@ -261,6 +261,15 @@ describe("backup manager", () => {
     expect(await manager.revealFromBackup("not a code")).toEqual({ kind: "malformedCode" });
   });
 
+  // A full-length code that will not decode is a wrong code, not a
+  // shapeless input — the reader changed one character, not the shape.
+  it("a one-character typo reads as a wrong code, not a malformed one", async () => {
+    const display = RecoveryCode.generate().display();
+    const lastCharTypo = display.slice(0, display.length - 1) + "Z";
+    expect(await manager.revealFromBackup(lastCharTypo)).toEqual({ kind: "wrongCode" });
+    expect(await manager.rekey(lastCharTypo)).toEqual({ kind: "wrongCode" });
+  });
+
   it("reveal reports a missing server blob", async () => {
     server.use(keyBackupHandler(null));
     expect(await manager.revealFromBackup(RecoveryCode.generate().display())).toEqual({

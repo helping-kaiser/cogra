@@ -156,7 +156,12 @@ platform ships natively (WebCrypto, Android Keystore/Tink):
   base32 characters in dash-separated groups of 5-5-5-5-6.
   Input is normalized before decoding: uppercase, `I`/`L` → `1`,
   `O` → `0`, separators stripped. No check digit — AES-GCM's
-  tag is what detects a mistyped code, at unlock.
+  tag is what detects a mistyped code, at unlock. The last
+  character carries the two pad bits of the 130th bit, so most
+  typos there are refused at parse time instead; both reach the
+  reader as the same message, that the code does not open the
+  backup. Only a wrong *length* is reported as a shape problem,
+  since that is the only one they can act on.
 - **Key derivation.** HKDF-SHA-256 over the 16 code bytes with
   the blob's random 16-byte salt and info `cogra:key-backup:v1`
   yields the 32-byte content key. The code is full-entropy, so

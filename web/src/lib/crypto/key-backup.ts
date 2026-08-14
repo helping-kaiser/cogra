@@ -16,6 +16,20 @@ export class KeyBackupError extends Error {
   }
 }
 
+/**
+ * The input is not a recovery code's length. It is the one parse
+ * failure a reader can act on — characters are missing or spare. Every
+ * other rejection of a full-length input, an unusable character or the
+ * trailing pad bits, is a code that will not open, which is what the
+ * GCM tag would have said a moment later.
+ */
+export class RecoveryCodeLengthError extends KeyBackupError {
+  constructor(message: string) {
+    super(message);
+    this.name = "RecoveryCodeLengthError";
+  }
+}
+
 const VERSION = 0x01;
 const CODE_LEN = 16;
 const HKDF_SALT_LEN = 16;
@@ -80,7 +94,7 @@ export class RecoveryCode {
       .replaceAll("O", "0")
       .replace(/-|\s/g, "");
     if (normalized.length !== 26) {
-      throw new KeyBackupError("a recovery code has 26 characters");
+      throw new RecoveryCodeLengthError("a recovery code has 26 characters");
     }
     let bits = 0;
     let nbits = 0;

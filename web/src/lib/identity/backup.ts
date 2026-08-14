@@ -15,6 +15,7 @@ import {
   KeyBackupError,
   openKeyBackup,
   RecoveryCode,
+  RecoveryCodeLengthError,
   sealKeyBackup,
   signUpload,
 } from "@/lib/crypto/key-backup";
@@ -109,7 +110,11 @@ export function createBackupManager(deps: {
     try {
       currentCode = RecoveryCode.fromInput(currentCodeInput);
     } catch (e) {
-      if (e instanceof KeyBackupError) return { kind: "malformedCode" };
+      // Only a length complaint is a shape complaint; a full-length
+      // code that will not decode is a wrong code, which is what the
+      // GCM tag would have said anyway.
+      if (e instanceof RecoveryCodeLengthError) return { kind: "malformedCode" };
+      if (e instanceof KeyBackupError) return { kind: "wrongCode" };
       throw e;
     }
 

@@ -12,7 +12,7 @@
     <string name="restore_explainer">Enter your recovery code to bring your actor key onto this device. Your posts and relationships all flow from it.</string>
     <string name="restore_code">Recovery code</string>
     <string name="restore_submit">Restore</string>
-    <string name="restore_malformed">That doesn\'t look like a recovery code — it has 26 letters and digits.</string>
+    <string name="restore_malformed">A recovery code is 26 letters and digits — check for missing ones.</string>
     <string name="restore_wrong_code">The code doesn\'t open your backup. Check it character by character.</string>
     <string name="restore_no_backup">This account has no key backup. Without one, the actor can\'t be restored.</string>
 

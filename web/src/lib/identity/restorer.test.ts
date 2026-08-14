@@ -70,6 +70,15 @@ describe("restoreActor", () => {
     expect(await restoreActor(deps(store), "not-a-code")).toEqual({ kind: "malformedCode" });
   });
 
+  // One mistyped character is a wrong code, not a shapeless input —
+  // even when it is the last one, where the pad bits refuse it before
+  // the blob is ever fetched.
+  it("reports a one-character typo as a wrong code", async () => {
+    const display = RecoveryCode.generate().display();
+    const lastCharTypo = display.slice(0, display.length - 1) + "Z";
+    expect(await restoreActor(deps(store), lastCharTypo)).toEqual({ kind: "wrongCode" });
+  });
+
   it("reports a wrong code — the GCM tag refuses", async () => {
     const blob = await sealKeyBackup(randomBytes(32), RecoveryCode.generate());
     server.use(serveBackup(toBase64(blob)));
