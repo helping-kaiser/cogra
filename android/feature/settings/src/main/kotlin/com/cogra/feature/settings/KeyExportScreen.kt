@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.rememberKeyGate
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.identity.ExportedSecret
 import com.cogra.domain.identity.SecretKind
 
@@ -72,6 +73,7 @@ fun KeyExportScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(

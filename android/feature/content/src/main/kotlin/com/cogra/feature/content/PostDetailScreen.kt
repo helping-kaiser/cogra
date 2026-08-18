@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
@@ -136,6 +137,7 @@ fun PostDetailScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = { Text(state.post?.title?.value.orEmpty()) },
                 navigationIcon = {

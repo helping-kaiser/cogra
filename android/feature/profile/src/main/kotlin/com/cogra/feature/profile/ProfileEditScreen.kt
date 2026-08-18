@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 
 @Composable
 fun ProfileEditRoute(
@@ -69,6 +70,7 @@ fun ProfileEditScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.profile_edit_title)) },
                 navigationIcon = {

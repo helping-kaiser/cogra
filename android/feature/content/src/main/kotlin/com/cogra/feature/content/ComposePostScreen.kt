@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.OversightChoice
 import com.cogra.feature.content.R
 
@@ -83,6 +84,7 @@ fun ComposePostScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(
