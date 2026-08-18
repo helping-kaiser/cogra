@@ -22,6 +22,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
  * a short correction toward a post's top summons nothing. Any downward
  * scroll resets the tally.
  *
+ * Reaching the top reveals regardless of the tally: upward scroll the
+ * list could not consume means it sits at its boundary, and a reader
+ * at the top always gets the header.
+ *
  * M3's `enterAlways` re-enters on the first upward pixel, so the gate
  * holds the bar's `canScroll` closed until the tally crosses the
  * threshold; hiding stays fully stock. The gate observes and never
@@ -71,6 +75,19 @@ fun rememberCollapsingTop(): CollapsingTop {
                     } else if (!showTop.value) {
                         barMayMove.value = false
                     }
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                // Unconsumed upward scroll: the list is at its top.
+                if (available.y > SCROLL_JITTER) {
+                    barMayMove.value = true
+                    showTop.value = true
                 }
                 return Offset.Zero
             }
