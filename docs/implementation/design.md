@@ -451,10 +451,16 @@ toward five. The center slot is the compose *action*, not a
 destination — a deliberate deviation from M3's destinations-only
 navigation-bar guidance, accepted for the reach of the one
 gesture the product lives on; it wears `primaryContainer`
-(§2.4). Signed-in and applicant viewers get the bar; anonymous
-viewers browse the public read surfaces without it. Settings
-hangs off the profile screen's top-bar gear; invite management
-is a standalone entry on one's own profile. The application and
+(§2.4). Every viewer gets the same shell: the bar shows for
+signed-in, applicant, and anonymous viewers alike, and a slot
+that needs an account (the compose action, the profile tab)
+routes an anonymous tap to the front door, back returning to
+the reading context. The bars are compact — the 64dp short
+navigation bar and 48dp top app bars, the heights popular apps
+sit at rather than the taller classic M3 defaults; the web
+mirrors them (≈57px bar, 48px header band). Settings hangs off
+the profile screen's top-bar gear; invite management is a
+standalone entry on one's own profile. The application and
 reciprocation cards are shell-scoped banners — they ride above
 whichever tab is active until resolved.
 

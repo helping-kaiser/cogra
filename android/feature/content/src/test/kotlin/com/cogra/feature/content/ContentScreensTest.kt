@@ -40,7 +40,6 @@ class ContentScreensTest {
                 onOpenPost = onOpenPost,
                 onOpenActor = onOpenActor,
                 onSignInOrJoin = onSignInOrJoin,
-                onBack = null,
             )
         }
     }
@@ -82,15 +81,13 @@ class ContentScreensTest {
             signedIn = false,
             onSignInOrJoin = { joining = true },
         )
-        compose.onNodeWithTag("feed_compose").assertDoesNotExist()
         compose.onNodeWithTag("feed_signin").performClick()
         assertThat(joining).isTrue()
     }
 
     @Test
-    fun aResolvingPhaseShowsNeitherFeedAffordance() {
+    fun aResolvingPhaseWithholdsTheSignInEntry() {
         renderFeed(FeedUiState(loading = false), signedIn = null)
-        compose.onNodeWithTag("feed_compose").assertDoesNotExist()
         compose.onNodeWithTag("feed_signin").assertDoesNotExist()
     }
 

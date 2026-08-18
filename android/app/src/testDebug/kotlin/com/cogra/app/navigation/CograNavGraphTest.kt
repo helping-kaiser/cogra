@@ -292,7 +292,8 @@ class CograNavGraphTest {
         compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        assertThat(compose.onAllNodesWithTag("feed_compose").fetchSemanticsNodes()).isEmpty()
+        // One shell for every viewer: the guest keeps the bar.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("feed_signin").fetchSemanticsNodes()).isNotEmpty()
     }
 
@@ -326,6 +327,33 @@ class CograNavGraphTest {
     }
 
     @Test
+    fun aGuestsComposeSlotPromptsAtTheFrontDoor() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("invite_browse")
+        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("bar_compose").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
+        // Pushed, not replaced: back returns to the reading context.
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
+    fun aGuestsProfileSlotPromptsAtTheFrontDoor() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("invite_browse")
+        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("bar_profile").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
     fun signingInWhileBrowsingLandsOnTheFeedTabWithAClearedStack() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         identity.seed = ActorKey.generate().seed()
@@ -350,8 +378,6 @@ class CograNavGraphTest {
         render()
         waitForTag("bottom_bar")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        // No back arrow on the root tab.
-        assertThat(compose.onAllNodesWithTag("feed_back").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
