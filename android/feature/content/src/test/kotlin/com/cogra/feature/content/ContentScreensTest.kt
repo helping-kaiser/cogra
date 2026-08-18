@@ -110,6 +110,42 @@ class ContentScreensTest {
         compose.onNodeWithTag("key_banner").assertExists()
     }
 
+    // Reaching the top reveals without the tally — and on the feed the
+    // gate must sit inside the pull-to-refresh box, whose gesture
+    // would otherwise swallow the at-the-top leftover that carries
+    // the signal.
+    @Test
+    fun reachingTheFeedTopRevealsTheBanner() {
+        renderFeed(
+            FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        // A short hop down from the top hides the banner…
+        compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -60f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // …and coming back to the top brings it straight back, far
+        // below the third-of-a-screen gate.
+        compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, 100f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("key_banner").assertExists()
+    }
+
     @Test
     fun theNextPageLoadsOnDemand() {
         var more = false

@@ -91,7 +91,6 @@ fun FeedScreen(
     // follows the reader.
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             Column {
                 TopAppBar(
@@ -122,101 +121,113 @@ fun FeedScreen(
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-            // The status banners ride every branch — an applicant with an
-            // empty feed still sees their application cards.
-            when {
-                state.transportFault != null && state.posts.isEmpty() -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Box(Modifier.padding(horizontal = 16.dp)) { banners() }
-                    ErrorLine(R.string.content_error_transport, "feed_transport_error")
-                    TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
-                        Text(stringResource(R.string.content_retry))
-                    }
-                }
-                !state.loading && state.posts.isEmpty() -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Box(Modifier.padding(horizontal = 16.dp)) { banners() }
-                    Text(
-                        stringResource(R.string.content_feed_empty),
-                        modifier = Modifier.testTag("feed_empty"),
-                    )
-                }
-                else -> Column(modifier = Modifier.fillMaxSize()) {
-                    // A transport fault never blanks content already on
-                    // screen, and it surfaces where the failed fetch was
-                    // requested: a failed refresh on this banner, a
-                    // failed page fetch at the load-more slot below
-                    // (android.md "Degrade, never crash").
-                    if (state.transportFault == TransportFault.REFRESH) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            ErrorLine(R.string.content_feed_stale, "feed_transport_banner")
-                            TextButton(
-                                onClick = onRefresh,
-                                modifier = Modifier.testTag("feed_retry"),
-                            ) {
-                                Text(stringResource(R.string.content_retry))
-                            }
-                        }
-                    }
-                    LazyColumn(
+            // The collapsing top wires up inside the pull-to-refresh
+            // box, not on the Scaffold: post-scroll flows innermost
+            // first, and the refresh gesture would swallow the
+            // unconsumed at-the-top leftover — the gate's signal that
+            // the reader is back at the top — before an outer gate
+            // ever saw it.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .collapsingTop(collapsingTop),
+            ) {
+                // The status banners ride every branch — an applicant with an
+                // empty feed still sees their application cards.
+                when {
+                    state.transportFault != null && state.posts.isEmpty() -> Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .testTag("feed_list"),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                            .verticalScroll(rememberScrollState())
+                            .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        item(key = "feed_banners") { banners() }
-                        items(state.posts, key = { it.id }) { post ->
-                            PostCard(
-                                post = post,
-                                onClick = { onOpenPost(post.id) },
-                                onOpenActor = onOpenActor,
-                            )
+                        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        ErrorLine(R.string.content_error_transport, "feed_transport_error")
+                        TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
+                            Text(stringResource(R.string.content_retry))
                         }
-                        if (state.hasNextPage) {
-                            item {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+                    }
+                    !state.loading && state.posts.isEmpty() -> Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        Text(
+                            stringResource(R.string.content_feed_empty),
+                            modifier = Modifier.testTag("feed_empty"),
+                        )
+                    }
+                    else -> Column(modifier = Modifier.fillMaxSize()) {
+                        // A transport fault never blanks content already on
+                        // screen, and it surfaces where the failed fetch was
+                        // requested: a failed refresh on this banner, a
+                        // failed page fetch at the load-more slot below
+                        // (android.md "Degrade, never crash").
+                        if (state.transportFault == TransportFault.REFRESH) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                ErrorLine(R.string.content_feed_stale, "feed_transport_banner")
+                                TextButton(
+                                    onClick = onRefresh,
+                                    modifier = Modifier.testTag("feed_retry"),
                                 ) {
-                                    when {
-                                        state.loadingMore -> CircularProgressIndicator(
-                                            modifier = Modifier.padding(8.dp),
-                                        )
-                                        state.transportFault == TransportFault.APPEND -> {
-                                            ErrorLine(
-                                                R.string.content_feed_stale,
-                                                "feed_load_more_error",
+                                    Text(stringResource(R.string.content_retry))
+                                }
+                            }
+                        }
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("feed_list"),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            item(key = "feed_banners") { banners() }
+                            items(state.posts, key = { it.id }) { post ->
+                                PostCard(
+                                    post = post,
+                                    onClick = { onOpenPost(post.id) },
+                                    onOpenActor = onOpenActor,
+                                )
+                            }
+                            if (state.hasNextPage) {
+                                item {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        when {
+                                            state.loadingMore -> CircularProgressIndicator(
+                                                modifier = Modifier.padding(8.dp),
                                             )
-                                            TextButton(
-                                                onClick = onLoadMore,
-                                                modifier = Modifier.testTag("feed_load_more_retry"),
-                                            ) {
-                                                Text(stringResource(R.string.content_retry))
+                                            state.transportFault == TransportFault.APPEND -> {
+                                                ErrorLine(
+                                                    R.string.content_feed_stale,
+                                                    "feed_load_more_error",
+                                                )
+                                                TextButton(
+                                                    onClick = onLoadMore,
+                                                    modifier = Modifier.testTag("feed_load_more_retry"),
+                                                ) {
+                                                    Text(stringResource(R.string.content_retry))
+                                                }
                                             }
-                                        }
-                                        else -> TextButton(
-                                            onClick = onLoadMore,
-                                            modifier = Modifier.testTag("feed_load_more"),
-                                        ) {
-                                            Text(stringResource(R.string.content_feed_load_more))
+                                            else -> TextButton(
+                                                onClick = onLoadMore,
+                                                modifier = Modifier.testTag("feed_load_more"),
+                                            ) {
+                                                Text(stringResource(R.string.content_feed_load_more))
+                                            }
                                         }
                                     }
                                 }

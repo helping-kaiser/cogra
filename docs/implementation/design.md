@@ -475,11 +475,13 @@ downward scroll resets the tally. Android gates M3's
 `enterAlways` behind that tally (`rememberCollapsingTop` in the
 design system), with the bar pinned to `surface` instead of
 M3's on-scroll container tint — the collapsing region reads as
-one plane with the key banner riding it. The web mirrors the
-motion with a sticky region that hides once half of its own
+one plane with the key banner riding it. Reaching the top always
+reveals it regardless of the tally — Android reads the upward
+scroll the list could not consume at its boundary, the web the
+region's own slot returning to view. The web otherwise mirrors
+the motion with a sticky region that hides once half of its own
 flow slot has scrolled past (early enough to feel prompt, late
-enough that the exit motion covers the vacated slot) and also
-pins back whenever its slot returns to view near the top. A must-act
+enough that the exit motion covers the vacated slot). A must-act
 card — the key-restore banner, shown whenever the account's
 actor key is attached but absent on this device, member and
 applicant alike — rides the collapsing region on the feed and

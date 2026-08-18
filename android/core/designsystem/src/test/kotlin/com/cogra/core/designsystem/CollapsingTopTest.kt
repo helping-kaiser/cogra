@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
@@ -26,6 +28,7 @@ class CollapsingTopTest {
     @get:Rule
     val compose = createComposeRule()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     private fun renderTop() {
         compose.setContent {
             val top = rememberCollapsingTop()
@@ -34,6 +37,11 @@ class CollapsingTopTest {
                     .fillMaxSize()
                     .collapsingTop(top),
             ) {
+                // A real bar, as on every screen: it sets the finite
+                // height-offset limit the enterAlways state consumes
+                // against — without it the bar state would swallow all
+                // downward scroll and the list would never move.
+                TopAppBar(title = {}, scrollBehavior = top.scrollBehavior)
                 AnimatedVisibility(visible = top.showTop) {
                     Box(
                         Modifier
@@ -85,6 +93,25 @@ class CollapsingTopTest {
         dragUpBy(80f)
         dragUpBy(80f)
         dragUpBy(80f)
+        compose.onNodeWithTag("top_region").assertExists()
+    }
+
+    @Test
+    fun reachingTheTopRevealsWithoutTheTally() {
+        renderTop()
+        // A short hop down from the top hides the region…
+        compose.onNodeWithTag("list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -60f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("top_region").assertDoesNotExist()
+        // …and scrolling back to the top reveals it even though the
+        // run (~90px) stays far below the third-of-a-screen gate: the
+        // list stops consuming at its boundary, and that leftover is
+        // the signal.
+        dragUpBy(100f)
         compose.onNodeWithTag("top_region").assertExists()
     }
 
