@@ -72,16 +72,13 @@ export function FeedView() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       <PageHeader
         title="Feed"
-        backHref={phase === "signedIn" ? undefined : "/"}
-        backLabel="Back to home"
-        backTestId="feed-back"
         action={
           phase === "signedOut" ? (
             <Link
-              href="/"
+              href="/login"
               data-testid="feed-signin"
               className={buttonClassName({ variant: "outline", size: "sm" })}
             >

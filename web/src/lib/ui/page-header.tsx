@@ -32,13 +32,13 @@ export function PageHeader({
             href={backHref}
             aria-label={backLabel}
             data-testid={backTestId}
-            className="rounded-full text-title-large text-on-surface-variant"
+            className="-m-2.5 rounded-full p-2.5 text-title-large text-on-surface-variant"
           >
             <span aria-hidden>←</span>
           </Link>
         )}
         {title !== undefined && (
-          <h1 className="text-headline-small">{title}</h1>
+          <h1 className="text-title-large">{title}</h1>
         )}
       </div>
       {action}

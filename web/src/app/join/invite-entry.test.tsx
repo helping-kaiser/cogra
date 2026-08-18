@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/providers";
-import { FrontDoor } from "./front-door";
+import { InviteEntry } from "./invite-entry";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -11,14 +11,14 @@ vi.mock("next/navigation", () => ({
 
 const ID = "0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
 
-describe("FrontDoor", () => {
+describe("InviteEntry", () => {
   beforeEach(() => {
     window.localStorage.clear();
     push.mockClear();
   });
 
   it("routes a pasted invite to /join", () => {
-    renderWithProviders(<FrontDoor />);
+    renderWithProviders(<InviteEntry />);
     fireEvent.change(screen.getByTestId("invite_input"), {
       target: { value: `https://cogra.example/join/${ID}` },
     });
@@ -27,7 +27,7 @@ describe("FrontDoor", () => {
   });
 
   it("flags input with no invite in it", () => {
-    renderWithProviders(<FrontDoor />);
+    renderWithProviders(<InviteEntry />);
     fireEvent.change(screen.getByTestId("invite_input"), { target: { value: "hello" } });
     fireEvent.click(screen.getByTestId("invite_continue"));
     expect(screen.getByTestId("invite_error")).toBeInTheDocument();
@@ -35,13 +35,13 @@ describe("FrontDoor", () => {
   });
 
   it("disables continue while empty and keeps the sign-in path", () => {
-    renderWithProviders(<FrontDoor />);
+    renderWithProviders(<InviteEntry />);
     expect(screen.getByTestId("invite_continue")).toBeDisabled();
     expect(screen.getByTestId("invite_login")).toHaveAttribute("href", "/login");
   });
 
   it("offers anonymous browsing before any commitment", () => {
-    renderWithProviders(<FrontDoor />);
-    expect(screen.getByTestId("front_door_browse")).toHaveAttribute("href", "/feed");
+    renderWithProviders(<InviteEntry />);
+    expect(screen.getByTestId("invite_browse")).toHaveAttribute("href", "/feed");
   });
 });

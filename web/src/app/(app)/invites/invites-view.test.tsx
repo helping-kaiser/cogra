@@ -154,6 +154,8 @@ describe("InvitesView", () => {
     renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("invites_create")).toBeInTheDocument();
     expect(screen.queryByTestId("invites_locked")).not.toBeInTheDocument();
+    // The entry lives on the own profile, so back returns there.
+    expect(screen.getByTestId("invites_back")).toHaveAttribute("href", "/profile");
   });
 
   it("creates a link and refreshes the list", async () => {
