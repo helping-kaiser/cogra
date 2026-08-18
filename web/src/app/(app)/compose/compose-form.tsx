@@ -16,10 +16,12 @@ import {
   preparePost,
   preparePostEdit,
 } from "@/lib/api/content-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
+import { SigningPending } from "@/lib/ui/signing-pending";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -29,15 +31,20 @@ const OVERSIGHT_OPTIONS: readonly { value: Oversight; label: string }[] = [
   { value: "FULL", label: "AI-generated" },
 ];
 
-export function ComposeForm() {
+export function ComposeForm({
+  store = identityStore,
+}: {
+  /** Test injection. */
+  store?: IdentityStore;
+}) {
   return (
     <Suspense>
-      <ComposeFormInner />
+      <ComposeFormInner store={store} />
     </Suspense>
   );
 }
 
-function ComposeFormInner() {
+function ComposeFormInner({ store }: { store: IdentityStore }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
@@ -55,6 +62,7 @@ function ComposeFormInner() {
   const [emptyBody, setEmptyBody] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
+  const [signingNeedsKey, setSigningNeedsKey] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
 
   useEffect(() => {
@@ -121,6 +129,7 @@ function ComposeFormInner() {
     if (results.every((result) => result.kind === "done")) {
       router.push(editingId === null ? "/feed" : `/posts/${editingId}`);
     } else {
+      setSigningNeedsKey((await store.actorKey()) === null);
       setSignIncomplete(true);
     }
   };
@@ -223,9 +232,7 @@ function ComposeFormInner() {
         </p>
       )}
       {signIncomplete && (
-        <p role="alert" data-testid="compose-signing-failed" className="text-body-medium text-error">
-          Signing did not finish — the write stays pending.
-        </p>
+        <SigningPending needsKey={signingNeedsKey} testIdPrefix="compose" />
       )}
       {transportFailed && <TransportError testId="compose-transport-error" />}
       <Button testId="compose-submit" onClick={() => void onSubmit()} disabled={submitting}>
