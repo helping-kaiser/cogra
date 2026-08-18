@@ -15,8 +15,6 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
-import { StickyReveal } from "@/lib/ui/sticky-reveal";
-import { RestoreCard } from "./applicant-status";
 
 type DeviceState = {
   keyOnDevice: boolean;
@@ -114,13 +112,8 @@ export function MemberStatus({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Must-act, so it follows the reader: away on scroll-down,
-          back the moment they scroll up. */}
-      {!device.keyOnDevice && (
-        <StickyReveal>
-          <RestoreCard />
-        </StickyReveal>
-      )}
+      {/* The husk warning rides the screen's collapsing top, not this
+          stack — it must follow the reader (feed-view/profile-view). */}
       {prompt && (
         <Card testId="home_reciprocation">
           <h2 className="text-title-medium">@{inviter.handle} vouched you in</h2>

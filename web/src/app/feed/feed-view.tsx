@@ -11,15 +11,25 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
+import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
-export function FeedView() {
+export function FeedView({
+  store = identityStore,
+}: {
+  /** Test injection. */
+  store?: IdentityStore;
+} = {}) {
+  const keyOnDevice = useKeyOnDevice(store);
   const client = useApolloClient();
   const phase = useAuthPhase();
   const [posts, setPosts] = useState<readonly PostView[]>([]);
@@ -73,20 +83,25 @@ export function FeedView() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      <PageHeader
-        title="Feed"
-        action={
-          phase === "signedOut" ? (
-            <Link
-              href="/login"
-              data-testid="feed-signin"
-              className={buttonClassName({ variant: "outline", size: "sm" })}
-            >
-              Sign in or join
-            </Link>
-          ) : undefined
-        }
-      />
+      <CollapsingTop>
+        <PageHeader
+          title="Feed"
+          action={
+            phase === "signedOut" ? (
+              <Link
+                href="/login"
+                data-testid="feed-signin"
+                className={buttonClassName({ variant: "outline", size: "sm" })}
+              >
+                Sign in or join
+              </Link>
+            ) : undefined
+          }
+        />
+        {/* Must-act, so it collapses into the header and follows the
+            reader back up instead of living only at the top. */}
+        {phase === "signedIn" && keyOnDevice === false && <RestoreCard />}
+      </CollapsingTop>
       {/* The account-status banners ride the active tab (design.md §6). */}
       {phase === "signedIn" && <StatusBanners />}
       {transportFault === "refresh" && (
