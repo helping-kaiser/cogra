@@ -40,7 +40,9 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
         </p>
       );
     case "awaitingSigningKey":
-      return <RestoreCard />;
+      // The restore card rides the screen's collapsing top (the
+      // keyless read from the identity store covers this state).
+      return null;
     case "needsInvite":
       return <RearmCard />;
     case "rejectedByDevice":
@@ -70,7 +72,8 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
           {!emailVerified && <VerifyCard />}
           {!keyAttached && !keyOnDevice && <CeremonyCard />}
           {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
-          {keyAttached && !keyOnDevice && <RestoreCard />}
+          {/* keyAttached && !keyOnDevice: the restore ask rides the
+              screen's collapsing top, not this stack. */}
           {keyAttached && keyOnDevice && emailVerified && !waitingHintDismissed && (
             <WaitingHint onDismiss={() => setWaitingHintDismissed(true)} />
           )}

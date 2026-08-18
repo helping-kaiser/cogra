@@ -22,6 +22,7 @@ import {
   type PostDetail,
   type ReplyView,
 } from "@/lib/api/content-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
@@ -29,6 +30,7 @@ import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
+import { SigningPending } from "@/lib/ui/signing-pending";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /** Any node of the thread tree — a comment or a nested reply. */
@@ -59,7 +61,14 @@ function prefetchedReplies(comment: ThreadComment): {
   };
 }
 
-export function PostView({ postId }: { postId: string }) {
+export function PostView({
+  postId,
+  store = identityStore,
+}: {
+  postId: string;
+  /** Test injection. */
+  store?: IdentityStore;
+}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
@@ -81,6 +90,7 @@ export function PostView({ postId }: { postId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
+  const [signingNeedsKey, setSigningNeedsKey] = useState(false);
   // A submit that never reached the server; a composer error, not a read fault.
   const [submitFailed, setSubmitFailed] = useState(false);
   const [commentSigned, setCommentSigned] = useState(false);
@@ -206,6 +216,7 @@ export function PostView({ postId }: { postId: string }) {
       setDraft("");
       setCommentSigned(true);
     } else {
+      setSigningNeedsKey((await store.actorKey()) === null);
       setSignIncomplete(true);
     }
   };
@@ -609,9 +620,7 @@ export function PostView({ postId }: { postId: string }) {
             </p>
           )}
           {signIncomplete && (
-            <p role="alert" data-testid="comment-signing-failed" className="text-body-medium text-error">
-              Signing did not finish — the write stays pending.
-            </p>
+            <SigningPending needsKey={signingNeedsKey} testIdPrefix="comment" />
           )}
           {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (

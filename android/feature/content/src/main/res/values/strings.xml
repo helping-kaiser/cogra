@@ -26,6 +26,7 @@
     <string name="content_error_empty_body">The post needs a body.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
+    <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>
     <string name="content_error_transport">Can\'t reach the server. Check the connection and retry.</string>
     <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
     <string name="content_thread_stale">Can\'t reach the server — more comments can\'t load right now.</string>

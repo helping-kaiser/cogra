@@ -42,7 +42,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.rememberKeyGate
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
 import com.cogra.domain.identity.recoveryCodeTypedBack
@@ -119,9 +122,13 @@ fun SettingsScreen(
             onFeedbackShown()
         }
     }
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = {
                     Text(
                         text = stringResource(R.string.settings_title),
