@@ -93,6 +93,9 @@ query Posts($first: Int!, $after: String) {
         author {
           id
           handle
+          displayName {
+            value
+          }
         }
         createdAt
         updatedAt
@@ -106,7 +109,7 @@ query Posts($first: Int!, $after: String) {
   }
 }
 
-query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!) {
   post(id: $id) {
     id
     title {
@@ -124,6 +127,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
     author {
       id
       handle
+      displayName {
+        value
+      }
     }
     createdAt
     updatedAt
@@ -139,10 +145,96 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String) {
           author {
             id
             handle
+            displayName {
+              value
+            }
           }
           createdAt
           updatedAt
           moderationStatus
+          replies(first: $repliesFirst) {
+            edges {
+              node {
+                id
+                content {
+                  value
+                  status
+                }
+                author {
+                  id
+                  handle
+                  displayName {
+                    value
+                  }
+                }
+                createdAt
+                updatedAt
+                moderationStatus
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The expand read: a further page of one comment's direct replies,
+# each carrying its own first reply page so nesting can continue.
+query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!) {
+  comment(id: $id) {
+    id
+    replies(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+          }
+          createdAt
+          updatedAt
+          moderationStatus
+          replies(first: $repliesFirst) {
+            edges {
+              node {
+                id
+                content {
+                  value
+                  status
+                }
+                author {
+                  id
+                  handle
+                  displayName {
+                    value
+                  }
+                }
+                createdAt
+                updatedAt
+                moderationStatus
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
         }
       }
       pageInfo {

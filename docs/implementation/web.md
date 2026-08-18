@@ -165,13 +165,16 @@ The route map (Android parity per surface):
 
 | Route | Access | Surface (Android counterpart) |
 |---|---|---|
-| `/` | public | signed out: front door — invite entry, sign-in, feed browsing (InviteEntry); signed in: Home |
+| `/` | public | signed out: front door — invite entry, sign-in, feed browsing (InviteEntry); signed in: redirect `/feed` |
 | `/login` | public; signed-in → redirect `/` | Login |
 | `/reset` (+`?token=` pre-fills the confirm form) | public | PasswordReset |
 | `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply; signed in: re-arm |
 | `/verify?token=` | public, sessionless | email-verification result |
-| `/feed` | public | Feed — the chronological listing |
+| `/feed` | public | Feed — the chronological listing; the shell's root tab |
 | `/posts/<id>` | public | PostDetail |
+| `/u/<handle>` | public, SSR for unfurl | Profile(handle) |
+| `/profile` | gated | Profile (the viewer's own — the shell's profile tab) |
+| `/profile/edit` | gated | ProfileEdit |
 | `/compose` (+`?post=<id>` opens edit mode) | gated | ComposePost |
 | `/key` | gated; key attached → redirect `/` | KeyCeremony |
 | `/invites` | gated | Invites |
@@ -186,11 +189,20 @@ Content reads are public — the per-surface decision "Links
 unfurl" above defers: the graph is continuously readable by
 anyone, without an account
 ([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)),
-so `/feed` and `/posts/<id>` render for anonymous visitors, with
-the write affordances (composer link, comment box) swapped for
-sign-in entries. Every write surface stays gated; the front door
-carries the browse entry so an anonymous visitor finds the public
-read without an account.
+so `/feed`, `/posts/<id>`, and `/u/<handle>` render for anonymous
+visitors, with the write affordances (comment box, reply, edit)
+swapped for sign-in entries. Every write surface stays gated; the
+front door carries the browse entry so an anonymous visitor finds
+the public read without an account.
+
+The signed-in shell is the bottom bar
+([design.md §6](design.md#6-components)), rendered from the root
+layout so it frames the public tier and the `(app)` group alike;
+anonymous viewers browse without it. The account-status banners
+(the security notice, the application cards, the member status)
+ride the feed and the own profile. Settings hangs off the
+profile's gear; invites is a standalone entry on the own
+profile.
 
 Gating is client-side — tokens are client-held, so the server
 never knows the auth state. The `(app)` route group's layout

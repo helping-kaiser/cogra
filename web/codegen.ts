@@ -14,6 +14,7 @@ const config: CodegenConfig = {
         // config.scalars).
         scalars: {
           UUID: "string",
+            RecordId: "string",
           DateTime: "string",
           // A float in the closed interval [-1.0, +1.0] on the wire
           // (api-spec.md § Scalars).
