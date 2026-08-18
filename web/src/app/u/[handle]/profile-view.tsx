@@ -12,6 +12,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe } from "@/lib/api/auth-api";
+import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
+import { RestoreCard } from "@/app/applicant-status";
+import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import {
   fetchAuthorRecords,
   fetchMyProfile,
@@ -35,7 +39,15 @@ const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
   { key: "everything", label: "Everything" },
 ];
 
-export function ProfileScreen({ handle }: { handle: string | null }) {
+export function ProfileScreen({
+  handle,
+  store = identityStore,
+}: {
+  handle: string | null;
+  /** Test injection. */
+  store?: IdentityStore;
+}) {
+  const keyOnDevice = useKeyOnDevice(store);
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
@@ -128,24 +140,27 @@ export function ProfileScreen({ handle }: { handle: string | null }) {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      <PageHeader
-        title={profile ? `@${profile.handle}` : "Profile"}
-        backHref={handle === null ? undefined : "/feed"}
-        backLabel="Back to feed"
-        backTestId="profile-back"
-        action={
-          own ? (
-            <Link
-              href="/settings"
-              aria-label="Settings"
-              data-testid="profile-settings"
-              className={buttonClassName({ variant: "text", size: "sm" })}
-            >
-              Settings
-            </Link>
-          ) : undefined
-        }
-      />
+      <CollapsingTop>
+        <PageHeader
+          title={profile ? `@${profile.handle}` : "Profile"}
+          backHref={handle === null ? undefined : "/feed"}
+          backLabel="Back to feed"
+          backTestId="profile-back"
+          action={
+            own ? (
+              <Link
+                href="/settings"
+                aria-label="Settings"
+                data-testid="profile-settings"
+                className={buttonClassName({ variant: "text", size: "sm" })}
+              >
+                Settings
+              </Link>
+            ) : undefined
+          }
+        />
+        {own && keyOnDevice === false && <RestoreCard />}
+      </CollapsingTop>
       {own && <StatusBanners />}
       {loading && <p data-testid="profile-loading">Loading…</p>}
       {notFound && (

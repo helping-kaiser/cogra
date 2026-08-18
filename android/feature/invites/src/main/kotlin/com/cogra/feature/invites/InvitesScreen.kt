@@ -48,6 +48,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ErrorCode
@@ -118,9 +121,13 @@ fun InvitesScreen(
     // The husk gate explains itself on tap — a disabled button would
     // swallow the tap and leave the gate unexplained.
     val onHuskHint: () -> Unit = { scope.launch { snackbarHostState.showSnackbar(huskHint) } }
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = {
                     Text(
                         text = stringResource(R.string.invites_title),

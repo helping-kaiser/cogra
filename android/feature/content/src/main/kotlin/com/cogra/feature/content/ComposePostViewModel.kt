@@ -6,6 +6,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,8 @@ data class ComposePostUiState(
     val emptyBody: Boolean = false,
     val refused: Boolean = false,
     val signingFailed: Boolean = false,
+    /** The device held no key when signing failed — restore, don't wait. */
+    val signingNeedsKey: Boolean = false,
     val transportFailed: Boolean = false,
     val notFound: Boolean = false,
     /** One-shot: the write signed; the caller pops back and refreshes. */
@@ -91,7 +94,13 @@ class ComposePostViewModel @Inject constructor(
             return
         }
         _state.update {
-            it.copy(submitting = true, refused = false, signingFailed = false, transportFailed = false)
+            it.copy(
+                submitting = true,
+                refused = false,
+                signingFailed = false,
+                signingNeedsKey = false,
+                transportFailed = false,
+            )
         }
         viewModelScope.launch {
             val outcome = if (s.editingId == null) {
@@ -120,7 +129,17 @@ class ComposePostViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared.writes)
+            val results = try {
+                signer.sign(prepared.writes)
+            } catch (_: NoActorKeyException) {
+                // A husk device: the write waits on the reader restoring
+                // the key, not on time passing (the invites twin) —
+                // without the catch the coroutine would die unreported.
+                _state.update {
+                    it.copy(submitting = false, signingFailed = true, signingNeedsKey = true)
+                }
+                return@launch
+            }
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {

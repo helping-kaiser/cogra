@@ -6,6 +6,7 @@
 
 package com.cogra.feature.profile
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.MonogramAvatar
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
@@ -63,6 +67,7 @@ fun ProfileRoute(
     onOpenInvites: () -> Unit,
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
+    keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -91,6 +96,7 @@ fun ProfileRoute(
         onOpenInvites = onOpenInvites,
         onOpenPost = onOpenPost,
         onBack = onBack,
+        keyBanner = keyBanner,
         banners = banners,
     )
 }
@@ -109,6 +115,7 @@ fun ProfileScreen(
     onOpenInvites: () -> Unit,
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
+    keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -131,41 +138,52 @@ fun ProfileScreen(
             onOpenInvites()
         }
     }
+    // The collapsing top — the FeedScreen twin: the shared bar-plus-
+    // banner region with the reveal gate.
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = {
             SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.profile?.let { "@${it.handle}" }
-                            ?: stringResource(R.string.profile_title),
-                    )
-                },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack, modifier = Modifier.testTag("profile_back")) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.profile_back),
-                            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = state.profile?.let { "@${it.handle}" }
+                                ?: stringResource(R.string.profile_title),
+                        )
+                    },
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack, modifier = Modifier.testTag("profile_back")) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.profile_back),
+                                )
+                            }
                         }
-                    }
-                },
-                actions = {
-                    if (state.own) {
-                        IconButton(
-                            onClick = onOpenSettings,
-                            modifier = Modifier.testTag("profile_settings"),
-                        ) {
-                            Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = stringResource(R.string.profile_open_settings),
-                            )
+                    },
+                    actions = {
+                        if (state.own) {
+                            IconButton(
+                                onClick = onOpenSettings,
+                                modifier = Modifier.testTag("profile_settings"),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Settings,
+                                    contentDescription = stringResource(R.string.profile_open_settings),
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                )
+                AnimatedVisibility(visible = collapsingTop.showTop) {
+                    Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
+                }
+            }
         },
     ) { padding ->
         when {
@@ -197,7 +215,9 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item(key = "banners") { banners() }
+                    item(key = "banners") {
+                        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                    }
                     item(key = "header") {
                         ProfileHeader(
                             state = state,

@@ -28,6 +28,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 
 @Composable
 fun ProfileEditRoute(
@@ -62,9 +65,13 @@ fun ProfileEditScreen(
     onRetry: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = { Text(stringResource(R.string.profile_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("profile_edit_back")) {
