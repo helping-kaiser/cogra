@@ -139,7 +139,7 @@ function ComposeFormInner() {
 
   if (loading) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header}
         <p>Loading…</p>
       </main>
@@ -147,7 +147,7 @@ function ComposeFormInner() {
   }
   if (notFound) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header}
         <p role="alert" data-testid="compose-not-found">
           This post no longer resolves.
@@ -157,7 +157,7 @@ function ComposeFormInner() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header}
       <TextField label="Title" value={title} onChange={setTitle} testId="compose-title" />
       <TextField

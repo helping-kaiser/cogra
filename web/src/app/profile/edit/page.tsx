@@ -105,7 +105,7 @@ export default function ProfileEditPage() {
     "rounded-medium border border-outline bg-surface px-3 py-2 text-body-large text-on-surface";
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       <PageHeader
         title="Edit profile"
         backHref="/profile"

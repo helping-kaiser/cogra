@@ -1,9 +1,9 @@
 "use client";
 
-// The signed-out front door: paste an invite (auth.md "Link URLs"),
-// sign in, or browse the public feed without an account (web.md
-// "Routes"). The /join route does the actual check; the door only
-// finds the id.
+// The invite entry: paste an invite (auth.md "Link URLs") to start
+// an application — reached from the login screen's "New here?"
+// entry, and by the bare /join landing. The /join/<id> route does
+// the actual check; this screen only finds the id.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { useState } from "react";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
 import { Button } from "@/lib/ui/button";
 
-export function FrontDoor() {
+export function InviteEntry() {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [malformed, setMalformed] = useState(false);
@@ -70,7 +70,7 @@ export function FrontDoor() {
       </Link>
       <Link
         href="/feed"
-        data-testid="front_door_browse"
+        data-testid="invite_browse"
         className="text-body-medium text-on-surface-variant underline"
       >
         Just looking? Browse the feed →
