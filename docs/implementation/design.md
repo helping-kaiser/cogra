@@ -430,7 +430,7 @@ behaviour and matching names:
   single-image, gallery, with and without title.
 - **Comment** — author, body, timestamp, media, nested
   replies, stance control. Variants: top-level, nested.
-- **Profile header** — cover, avatar, name, handle, bio, link,
+- **Profile header** — avatar, name, handle, bio, link,
   connection count, and a primary action.
 - **Actor chip / row** — compact person-or-group reference. A
   Collective looks like a person but reads as a shared
