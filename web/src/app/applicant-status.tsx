@@ -72,7 +72,8 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
           {!emailVerified && <VerifyCard />}
           {!keyAttached && !keyOnDevice && <CeremonyCard />}
           {!keyAttached && keyOnDevice && <KeyElsewhereCard />}
-          {keyAttached && !keyOnDevice && <RestoreCard />}
+          {/* keyAttached && !keyOnDevice: the restore ask rides the
+              screen's collapsing top, not this stack. */}
           {keyAttached && keyOnDevice && emailVerified && !waitingHintDismissed && (
             <WaitingHint onDismiss={() => setWaitingHintDismissed(true)} />
           )}
