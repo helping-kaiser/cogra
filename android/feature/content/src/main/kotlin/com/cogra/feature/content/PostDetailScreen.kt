@@ -369,7 +369,14 @@ private fun PostWithThread(
                     ErrorLine(R.string.content_error_refused, "detail_refused")
                 }
                 if (state.signingFailed) {
-                    ErrorLine(R.string.content_error_signing, "detail_signing_failed")
+                    ErrorLine(
+                        if (state.signingNeedsKey) {
+                            R.string.content_error_signing_no_key
+                        } else {
+                            R.string.content_error_signing
+                        },
+                        "detail_signing_failed",
+                    )
                 }
                 if (state.submitTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "detail_comment_transport")
@@ -453,7 +460,14 @@ private fun CommentThread(
                         ErrorLine(R.string.content_error_refused, "comment_edit_refused")
                     }
                     if (state.editSigningFailed) {
-                        ErrorLine(R.string.content_error_signing, "comment_edit_signing_failed")
+                        ErrorLine(
+                            if (state.signingNeedsKey) {
+                                R.string.content_error_signing_no_key
+                            } else {
+                                R.string.content_error_signing
+                            },
+                            "comment_edit_signing_failed",
+                        )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
@@ -516,7 +530,14 @@ private fun CommentThread(
                     ErrorLine(R.string.content_error_refused, "comment_reply_refused")
                 }
                 if (state.replySigningFailed) {
-                    ErrorLine(R.string.content_error_signing, "comment_reply_signing_failed")
+                    ErrorLine(
+                        if (state.signingNeedsKey) {
+                            R.string.content_error_signing_no_key
+                        } else {
+                            R.string.content_error_signing
+                        },
+                        "comment_reply_signing_failed",
+                    )
                 }
                 if (state.replyTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "comment_reply_transport")
