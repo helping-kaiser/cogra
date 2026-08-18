@@ -94,9 +94,9 @@ describe("ApplicantStatus", () => {
     expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
   });
 
-  it("offers a restore when the key is attached but not on this browser", () => {
+  it("leaves the attached-elsewhere restore to the collapsing top", () => {
     renderStatus(approval({ keyAttached: true }));
-    expect(screen.getByTestId("home_restore")).toBeInTheDocument();
+    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
     expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
   });
 
