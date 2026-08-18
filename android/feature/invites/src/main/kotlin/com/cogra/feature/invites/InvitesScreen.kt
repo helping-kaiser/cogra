@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ErrorCode
@@ -125,6 +126,7 @@ fun InvitesScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(

@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.MonogramAvatar
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
@@ -195,6 +196,7 @@ fun ProfileScreen(
                             }
                         }
                     },
+                    colors = surfaceTopAppBarColors(),
                     scrollBehavior = scrollBehavior,
                 )
                 AnimatedVisibility(visible = showTop) {

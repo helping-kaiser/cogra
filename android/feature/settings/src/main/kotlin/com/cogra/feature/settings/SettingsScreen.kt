@@ -45,6 +45,7 @@ import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
 import com.cogra.core.designsystem.rememberKeyGate
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
 import com.cogra.domain.identity.recoveryCodeTypedBack
@@ -126,6 +127,7 @@ fun SettingsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(

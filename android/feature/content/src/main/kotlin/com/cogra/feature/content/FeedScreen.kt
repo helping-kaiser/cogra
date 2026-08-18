@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
 
@@ -127,6 +128,7 @@ fun FeedScreen(
                             }
                         }
                     },
+                    colors = surfaceTopAppBarColors(),
                     scrollBehavior = scrollBehavior,
                 )
                 AnimatedVisibility(visible = showTop) {
