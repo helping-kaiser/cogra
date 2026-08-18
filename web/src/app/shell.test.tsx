@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -53,15 +53,42 @@ describe("AppShell", () => {
     expect(await screen.findByTestId("nav-profile")).toHaveAttribute("aria-current", "page");
   });
 
-  it("shows no bar to an anonymous viewer", async () => {
+  it("frames an anonymous reader with the same bar, gated slots asking instead of bouncing", async () => {
     renderWithProviders(
       <AppShell>
         <p>content</p>
       </AppShell>,
     );
+    const nav = await screen.findByTestId("bottom-nav");
+    expect(nav).toBeInTheDocument();
+    expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
+
+    // A gated slot opens the prompt in place; the read stays behind it.
+    fireEvent.click(screen.getByTestId("nav-compose"));
+    const prompt = screen.getByTestId("join-prompt") as HTMLDialogElement;
+    expect(prompt.open).toBe(true);
+    expect(screen.getByTestId("join-prompt-signin")).toHaveAttribute("href", "/login");
+    expect(screen.getByText("content")).toBeInTheDocument();
+
+    // Keep browsing closes it; nothing navigated.
+    fireEvent.click(screen.getByTestId("join-prompt-dismiss"));
+    await waitFor(() => expect(prompt.open).toBe(false));
+
+    // The profile slot asks the same way.
+    fireEvent.click(screen.getByTestId("nav-profile"));
+    expect(prompt.open).toBe(true);
+  });
+
+  it("keeps the bar off the front door", async () => {
+    pathname = "/";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("content")).toBeInTheDocument();
   });
 });

@@ -4,19 +4,46 @@
 // action, and profile. The center slot is an action, not a
 // destination — the decided deviation from M3's destinations-only
 // navigation-bar guidance — and wears primary-container, the one loud
-// surface per screen (design.md §2.4).
+// surface per screen (design.md §2.4). Every viewer gets the same
+// bar; a slot that needs an account opens the join prompt on a
+// signed-out tap — ask, never bounce.
 
 import Link from "next/link";
+import { useState } from "react";
 
-export function BottomNav({ active }: { active: "feed" | "profile" | null }) {
-  const item = "flex flex-1 flex-col items-center gap-1 py-3 text-label-medium";
+import { AddIcon, DynamicFeedIcon, PersonIcon } from "@/lib/ui/icons";
+import { JoinPrompt } from "@/lib/ui/join-prompt";
+
+export function BottomNav({
+  active,
+  signedIn,
+}: {
+  active: "feed" | "profile" | null;
+  signedIn: boolean;
+}) {
+  const [prompting, setPrompting] = useState(false);
+  const item = "flex flex-1 flex-col items-center gap-1 py-2 text-label-medium";
   const tone = (selected: boolean) =>
     selected ? "text-on-surface" : "text-on-surface-variant";
+  const composeSlot = (
+    <span
+      aria-hidden
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container"
+    >
+      <AddIcon />
+    </span>
+  );
+  const profileSlot = (
+    <>
+      <PersonIcon filled={active === "profile"} />
+      Profile
+    </>
+  );
   return (
     <nav
       data-testid="bottom-nav"
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-outline-variant bg-surface-container"
+      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-outline-variant bg-surface-container pb-[env(safe-area-inset-bottom)]"
     >
       <Link
         href="/feed"
@@ -24,29 +51,49 @@ export function BottomNav({ active }: { active: "feed" | "profile" | null }) {
         aria-current={active === "feed" ? "page" : undefined}
         className={`${item} ${tone(active === "feed")}`}
       >
+        <DynamicFeedIcon />
         Feed
       </Link>
-      <Link
-        href="/compose"
-        data-testid="nav-compose"
-        aria-label="New post"
-        className={item}
-      >
-        <span
-          aria-hidden
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-title-large text-on-primary-container"
+      {signedIn ? (
+        <Link
+          href="/compose"
+          data-testid="nav-compose"
+          aria-label="New post"
+          className={item}
         >
-          +
-        </span>
-      </Link>
-      <Link
-        href="/profile"
-        data-testid="nav-profile"
-        aria-current={active === "profile" ? "page" : undefined}
-        className={`${item} ${tone(active === "profile")}`}
-      >
-        Profile
-      </Link>
+          {composeSlot}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          data-testid="nav-compose"
+          aria-label="New post"
+          onClick={() => setPrompting(true)}
+          className={item}
+        >
+          {composeSlot}
+        </button>
+      )}
+      {signedIn ? (
+        <Link
+          href="/profile"
+          data-testid="nav-profile"
+          aria-current={active === "profile" ? "page" : undefined}
+          className={`${item} ${tone(active === "profile")}`}
+        >
+          {profileSlot}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          data-testid="nav-profile"
+          onClick={() => setPrompting(true)}
+          className={`${item} ${tone(false)}`}
+        >
+          {profileSlot}
+        </button>
+      )}
+      <JoinPrompt open={prompting} onClose={() => setPrompting(false)} />
     </nav>
   );
 }
