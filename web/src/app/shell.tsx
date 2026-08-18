@@ -17,7 +17,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const active =
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
   return (
-    <div className={`flex min-h-full flex-1 flex-col ${signedIn ? "pb-20" : ""}`}>
+    <div
+      className={`flex min-h-full flex-1 flex-col ${
+        signedIn ? "pb-[calc(4rem+env(safe-area-inset-bottom))]" : ""
+      }`}
+    >
       {children}
       {signedIn && <BottomNav active={active} />}
     </div>
