@@ -1,0 +1,117 @@
+# The profile surface (api-spec.md "Actors"; roadmap "Slice 2.1"):
+# public reads by handle, the viewer's own profile, the authored
+# chronicle, and the parallel-Registration update. Documents stay flat
+# per the house style.
+
+query UserProfile($handle: String!) {
+  user(handle: $handle) {
+    id
+    handle
+    displayName {
+      value
+      status
+    }
+    bio {
+      value
+      status
+    }
+    websiteUrl {
+      value
+      status
+    }
+  }
+}
+
+query MyProfile {
+  me {
+    id
+    handle
+    displayName {
+      value
+      status
+    }
+    bio {
+      value
+      status
+    }
+    websiteUrl {
+      value
+      status
+    }
+  }
+}
+
+# The chronicle rendered as labelled rows: family + genesis mark, a
+# snippet of the touched content, and the post to open. A record is a
+# genesis when its target/terminal is the mint of its own act id.
+query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after: String) {
+  records(author: $author, family: $family, first: $first, after: $after) {
+    edges {
+      node {
+        id
+        family
+        targetId
+        terminalId
+        target {
+          __typename
+          ... on Post {
+            id
+            title {
+              value
+            }
+            content {
+              value
+            }
+          }
+          ... on Comment {
+            id
+            content {
+              value
+            }
+            target {
+              __typename
+              ... on Post {
+                id
+              }
+            }
+          }
+        }
+        terminal {
+          __typename
+          ... on Comment {
+            id
+            content {
+              value
+            }
+            target {
+              __typename
+              ... on Post {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+mutation PrepareProfileUpdate($input: PrepareProfileUpdateInput!) {
+  prepareProfileUpdate(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+      gcAfterEpochs
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
