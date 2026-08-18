@@ -14,7 +14,7 @@ use chrono::{DateTime, Utc};
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
-use postgres_store::{PgPool, auth as store, mirror, staged};
+use postgres_store::{PgPool, auth as store, mirror, profile as profile_store, staged};
 use uuid::Uuid;
 
 use l1_standin::StandIn;
@@ -648,9 +648,18 @@ impl AuthSession {
 }
 
 /// An actor in the one handle namespace — a mention resolves to exactly
-/// one actor.
+/// one actor. Interface coverage grows with the slices
+/// (api-spec.md "Actors").
 #[derive(Interface)]
-#[graphql(field(name = "id", ty = "Uuid"), field(name = "handle", ty = "String"))]
+#[graphql(
+    field(name = "id", ty = "Uuid"),
+    field(name = "handle", ty = "String"),
+    field(
+        name = "display_name",
+        ty = "ModeratedText",
+        desc = "The current display name (the newest profile version)."
+    )
+)]
 pub enum Actor {
     User(User),
 }
@@ -689,6 +698,14 @@ impl User {
                 .map(|v| v.session_id)
         })
     }
+
+    async fn profile(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<profile_store::ProfileVersion>> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(profile_store::current_profile(pool, self.identity.id).await?)
+    }
 }
 
 #[Object]
@@ -704,9 +721,33 @@ impl User {
     }
 
     /// The current display name (the newest profile version).
-    async fn display_name(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
-        let pool = ctx.data::<PgPool>()?;
-        Ok(store::current_display_name(pool, self.identity.id).await?)
+    async fn display_name(&self, ctx: &Context<'_>) -> async_graphql::Result<ModeratedText> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => {
+                ModeratedText::from_version(Some(p.display_name), p.redaction_reason.is_some())
+            }
+            // Registration seeds every user's first version row; the
+            // handle stands in for actors from before that invariant.
+            None => ModeratedText::from_version(Some(self.identity.handle.clone()), false),
+        })
+    }
+
+    /// The profile biography (the newest profile version); value null
+    /// when never set.
+    async fn bio(&self, ctx: &Context<'_>) -> async_graphql::Result<ModeratedText> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => ModeratedText::from_version(p.bio, p.redaction_reason.is_some()),
+            None => ModeratedText::from_version(None, false),
+        })
+    }
+
+    /// The profile's website link (the newest profile version); value
+    /// null when never set.
+    async fn website_url(&self, ctx: &Context<'_>) -> async_graphql::Result<ModeratedText> {
+        Ok(match self.profile(ctx).await? {
+            Some(p) => ModeratedText::from_version(p.website_url, p.redaction_reason.is_some()),
+            None => ModeratedText::from_version(None, false),
+        })
     }
 
     /// Active authentication sessions, one per refresh token.
@@ -1284,8 +1325,9 @@ impl PostType {
     }
 
     /// This post's direct comments — genesis Reviews whose A leg
-    /// enters here — oldest-first in landing order (conversation
-    /// order), keyset-paginated.
+    /// enters here — newest-first in landing order (a comment's landing
+    /// position is its genesis, so edits never reorder the thread),
+    /// keyset-paginated.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn comments(
         &self,
@@ -1351,7 +1393,7 @@ impl CommentType {
         ModerationStatus::Normal
     }
 
-    /// This comment's direct replies, oldest-first in landing order.
+    /// This comment's direct replies, newest-first in landing order.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn replies(
         &self,

@@ -15,7 +15,7 @@ const server = startMswServer();
 const invited: MeUser = {
   id: "u1",
   handle: "ada",
-  displayName: null,
+  displayName: { value: null },
   accountState: "MEMBER",
   hasReciprocated: false,
   invitedBy: { id: "u0", handle: "grace" },

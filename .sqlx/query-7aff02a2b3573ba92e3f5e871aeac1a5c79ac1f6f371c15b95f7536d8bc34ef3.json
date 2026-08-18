@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT display_name, bio, avatar_id, cover_id, website_url,\n                redaction_reason, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1 ORDER BY created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "avatar_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "cover_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "website_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "7aff02a2b3573ba92e3f5e871aeac1a5c79ac1f6f371c15b95f7536d8bc34ef3"
+}

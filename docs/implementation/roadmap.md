@@ -205,7 +205,7 @@ can land in any order — 2.3 (topics) needs only the text core.
 ### Slice 2.1 — The shell and profiles
 
 - The app shell from the [design.md §6](design.md) inventory —
-  bottom navigation, top app bars, the compose FAB, bottom
+  bottom navigation, top app bars, the compose action, bottom
   sheets, snackbars — the frame every content-era surface hangs
   from.
 - Profile reads: `actor` / `user` by id or handle, the profile

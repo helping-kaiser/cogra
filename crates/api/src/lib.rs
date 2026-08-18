@@ -11,6 +11,7 @@ pub mod l1;
 pub mod mailer;
 pub mod onboarding;
 pub mod prepare;
+pub mod profile;
 pub mod ratelimit;
 pub mod relay;
 pub mod schema;

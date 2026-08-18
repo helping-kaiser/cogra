@@ -201,9 +201,9 @@ record-backed connection encodes the landing-order key
 `(epoch, act time, position)`; pages walk forward with
 `first`/`after` or backward with `last`/`before` (one direction
 per request), and results always come back in the connection's
-declared order. The chronicle and the post listing serve
-newest-first; thread reads serve oldest-first (conversation
-order).
+declared order. The chronicle, the post listing, and thread
+reads all serve newest-first — a node's landing position is its
+genesis, so editing a comment never moves it up its thread.
 
 ### Query budgets
 
@@ -583,7 +583,7 @@ type PostEdge {
   node: Post!
 }
 
-"A page of comments, oldest-first in landing order."
+"A page of comments, newest-first in landing order."
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
@@ -862,8 +862,9 @@ type Post implements Node {
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
   "This post's direct comments — genesis Reviews whose actor leg
-   enters here — oldest-first in landing order (conversation
-   order). The named view over records(target:, family: REVIEW)."
+   enters here — newest-first in landing order (a comment's
+   landing position is its genesis, so edits never reorder the
+   thread). The named view over records(target:, family: REVIEW)."
   comments(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
@@ -880,7 +881,7 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
-  "This comment's direct replies, oldest-first in landing order."
+  "This comment's direct replies, newest-first in landing order."
   replies(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
@@ -2380,9 +2381,10 @@ input PrepareCommentEditInput {
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
  witnessed payout address (a Liquid address — ledger.md). Omitted
- fields are untouched. For a Collective's profile, actAs routes
- through its governed edit flow. The handle is L2 account state,
- not profile payload — see changeHandle."
+ fields are untouched. displayName refuses the explicit-null
+ clear — a profile always shows a name. For a Collective's
+ profile, actAs routes through its governed edit flow. The handle
+ is L2 account state, not profile payload — see changeHandle."
 input PrepareProfileUpdateInput {
   displayName: String
   bio: String

@@ -32,6 +32,7 @@ use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
+use crate::profile::ProfileError;
 use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
 use crate::relay::{self, RelayError};
 use crate::stance::{self, StanceError};
@@ -352,6 +353,17 @@ struct PrepareCommentInput {
 struct PrepareCommentEditInput {
     id: Uuid,
     content: async_graphql::MaybeUndefined<String>,
+}
+
+/// A profile update's field set — omitted = untouched, explicit null =
+/// cleared, a value = replaced (api-spec.md "Content authoring"). The
+/// display name refuses the clear; the handle is L2 account state, not
+/// profile payload — see changeHandle.
+#[derive(InputObject)]
+struct PrepareProfileUpdateInput {
+    display_name: async_graphql::MaybeUndefined<String>,
+    bio: async_graphql::MaybeUndefined<String>,
+    website_url: async_graphql::MaybeUndefined<String>,
 }
 
 /// A prepared content write: the staged handshake plus `node` — the L2
@@ -1653,6 +1665,56 @@ impl Mutation {
         {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
+        }
+    }
+
+    /// Prepares an update of the viewer's profile — a parallel
+    /// Registration, L1's own profile-update idiom: payload only, never
+    /// identity (substrate.md §9). Chained behind the current head; one
+    /// in-flight update per profile.
+    async fn prepare_profile_update(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareProfileUpdateInput,
+    ) -> async_graphql::Result<PreparePayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        let draft = crate::profile::ProfileUpdateDraft {
+            display_name: edit_field(input.display_name),
+            bio: edit_field(input.bio),
+            website_url: edit_field(input.website_url),
+        };
+        match crate::profile::prepare_profile_update(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            draft,
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PreparePayload {
+                writes: Some(vec![PreparedWrite::from_prepared(prepared)]),
+                user_errors: vec![],
+            }),
+            Err(ProfileError::BadInput { field, message }) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::BadInput,
+                    message,
+                    vec![field.to_string()],
+                )],
+            }),
+            Err(ProfileError::Prepare(e)) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::from_onboarding(&OnboardingError::from(e), "")],
+            }),
+            Err(e) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![internal(e)],
+            }),
         }
     }
 
