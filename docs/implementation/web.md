@@ -195,10 +195,13 @@ swapped for sign-in entries. Every write surface stays gated; the
 front door carries the browse entry so an anonymous visitor finds
 the public read without an account.
 
-The signed-in shell is the bottom bar
+The shell is the bottom bar
 ([design.md §6](design.md#6-components)), rendered from the root
-layout so it frames the public tier and the `(app)` group alike;
-anonymous viewers browse without it. The account-status banners
+layout so it frames the public tier and the `(app)` group alike —
+one frame for every viewer: an anonymous visitor gets the same
+bar on the public read surfaces, its account-needing slots
+(compose, profile) routing to the front door; only the front door
+and auth surfaces stand alone. The account-status banners
 (the security notice, the application cards, the member status)
 ride the feed and the own profile. Settings hangs off the
 profile's gear; invites is a standalone entry on the own
