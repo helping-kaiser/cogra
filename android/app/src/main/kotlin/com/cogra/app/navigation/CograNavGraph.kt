@@ -396,7 +396,6 @@ fun CograNavGraph(
                                 onActorRestoredResultConsumed = {
                                     entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
                                 },
-                                onRestoreActor = { navController.navigate(Restore) },
                                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
                                 snackbarHostState = shellSnackbar,
                             )
@@ -477,7 +476,6 @@ fun CograNavGraph(
                                 onActorRestoredResultConsumed = {
                                     entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
                                 },
-                                onRestoreActor = { navController.navigate(Restore) },
                                 onStartKeyCeremony = { navController.navigate(KeyCeremony) },
                                 snackbarHostState = shellSnackbar,
                             )
