@@ -1,6 +1,12 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -14,6 +20,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
  * The screen's collapsing top (design.md §6): the bar (and any banner
@@ -97,6 +105,31 @@ fun rememberCollapsingTop(): CollapsingTop {
         canScroll = { barMayMove.value },
     )
     return remember(scrollBehavior, gate) { CollapsingTop(scrollBehavior, gate, showTop) }
+}
+
+/**
+ * The banner strip under the top app bar: hosts whatever card rides
+ * the collapsing top. Painted `surface` across the full width like the
+ * bar above it, so the collapsing region reads as one opaque plane
+ * (design.md §6) — content scrolling under is cut by one straight
+ * edge instead of showing through the card's margins and corners.
+ */
+@Composable
+fun CollapsingTopBanner(
+    top: CollapsingTop,
+    horizontalPadding: Dp = 16.dp,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(visible = top.showTop) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = horizontalPadding),
+        ) {
+            content()
+        }
+    }
 }
 
 /** Reveal after this fraction of the window height, scrolled upward. */
