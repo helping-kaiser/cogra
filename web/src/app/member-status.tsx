@@ -15,6 +15,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
+import { StickyReveal } from "@/lib/ui/sticky-reveal";
 import { RestoreCard } from "./applicant-status";
 
 type DeviceState = {
@@ -113,7 +114,13 @@ export function MemberStatus({
 
   return (
     <div className="flex flex-col gap-4">
-      {!device.keyOnDevice && <RestoreCard />}
+      {/* Must-act, so it follows the reader: away on scroll-down,
+          back the moment they scroll up. */}
+      {!device.keyOnDevice && (
+        <StickyReveal>
+          <RestoreCard />
+        </StickyReveal>
+      )}
       {prompt && (
         <Card testId="home_reciprocation">
           <h2 className="text-title-medium">@{inviter.handle} vouched you in</h2>
