@@ -201,8 +201,10 @@ The shell is the bottom bar
 layout so it frames the public tier and the `(app)` group alike —
 one frame for every viewer: an anonymous visitor gets the same
 bar on the public read surfaces, its account-needing slots
-(compose, profile) routing to the front door; only the front door
-and auth surfaces stand alone. The account-status banners
+(compose, profile) opening the join prompt in place — sign in or
+keep browsing — never bouncing the read; only the auth surfaces
+(login, join, reset, verify) stand alone. The account-status
+banners
 (the security notice, the application cards, the member status)
 ride the feed and the own profile. Settings hangs off the
 profile's gear; invites is a standalone entry on the own
