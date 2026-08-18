@@ -91,15 +91,16 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
 
-    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/");
+    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/login");
   });
 
-  it("backs to home", () => {
+  it("carries no back arrow — the feed is a tab root for every viewer", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
     renderWithProviders(<FeedView />);
-    expect(screen.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
+    expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("feed-back")).not.toBeInTheDocument();
   });
 
   it("shows the empty copy when nothing has landed", async () => {
