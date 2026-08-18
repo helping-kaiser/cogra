@@ -14,11 +14,15 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
+import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
@@ -30,6 +34,8 @@ import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
+import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
 import com.cogra.network.di.NetworkBindsModule
@@ -79,6 +85,43 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         commentsFirst: Int,
         commentsAfter: String?,
     ): Outcome<PostDetail?> = Outcome.Success(details[id])
+}
+
+/** Scriptable profile surface: the viewer's own, others by handle,
+ * and the chronicle rows. prepareProfileUpdate applies the edit and
+ * returns no writes — the signer completes trivially, which is the
+ * point: navigation tests exercise the flow, not the crypto. */
+class ScriptedProfileRepository : ThrowingProfileRepository() {
+    var profile: ProfileView? = null
+    var others: MutableMap<String, ProfileView> = mutableMapOf()
+    var records: List<RecordRow> = emptyList()
+    val updates = mutableListOf<Triple<String, String?, String?>>()
+
+    override suspend fun myProfile(): Outcome<ProfileView?> = Outcome.Success(profile)
+
+    override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
+        Outcome.Success(others[handle] ?: profile?.takeIf { it.handle == handle })
+
+    override suspend fun authorRecords(
+        authorId: String,
+        family: com.cogra.crypto.Family?,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<RecordRow>> = Outcome.Success(Page(records, endCursor = null, hasNextPage = false))
+
+    override suspend fun prepareProfileUpdate(
+        displayName: String,
+        bio: String?,
+        websiteUrl: String?,
+    ): Outcome<List<PreparedWriteView>> {
+        updates += Triple(displayName, bio, websiteUrl)
+        profile = profile?.copy(
+            displayName = testModeratedField(displayName),
+            bio = testModeratedField(bio),
+            websiteUrl = testModeratedField(websiteUrl),
+        )
+        return Outcome.Success(emptyList())
+    }
 }
 
 /** Sessions enough for the Settings destination to render and sign out. */
@@ -164,4 +207,11 @@ object FakeBindingsModule {
 
     @Provides
     fun contentRepository(fake: ScriptedContentRepository): ContentRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedProfileRepository(): ScriptedProfileRepository = ScriptedProfileRepository()
+
+    @Provides
+    fun profileRepository(fake: ScriptedProfileRepository): ProfileRepository = fake
 }

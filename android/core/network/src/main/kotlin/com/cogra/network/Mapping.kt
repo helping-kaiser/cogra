@@ -29,6 +29,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
+import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
@@ -38,6 +39,7 @@ import com.cogra.domain.flatMap
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.PostFields
+import com.cogra.network.graphql.fragment.ProfileFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
@@ -161,6 +163,14 @@ internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
 internal fun com.cogra.network.graphql.type.FieldModerationStatus.toDomain(): FieldStatus =
     runCatching { FieldStatus.valueOf(rawValue) }.getOrDefault(FieldStatus.UNKNOWN)
 
+internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
+    id = id,
+    handle = handle,
+    displayName = ModeratedField(displayName.value, displayName.status.toDomain()),
+    bio = ModeratedField(bio.value, bio.status.toDomain()),
+    websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
+)
+
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())
 internal fun PostFields.Description.toDomain() = ModeratedField(value, status.toDomain())
 internal fun PostFields.Content.toDomain() = ModeratedField(value, status.toDomain())
@@ -171,7 +181,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     title = title.toDomain(),
     description = description.toDomain(),
     content = content.toDomain(),
-    author = author?.let { ActorRef(it.id, it.handle) },
+    author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -179,7 +189,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
 internal fun CommentFields.toDomain(): CommentView = CommentView(
     id = id,
     content = content.toDomain(),
-    author = author?.let { ActorRef(it.id, it.handle) },
+    author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
 )

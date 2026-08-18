@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
@@ -20,6 +21,7 @@ import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
+import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
@@ -102,4 +104,7 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun contentRepository(impl: ContentRepositoryImpl): ContentRepository
+
+    @Binds
+    abstract fun profileRepository(impl: ProfileRepositoryImpl): ProfileRepository
 }

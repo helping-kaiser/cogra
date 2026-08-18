@@ -1,41 +1,32 @@
+// The account-status banners — the application cards, the husk/restore
+// card, the reciprocation prompt, and parked handshakes — shell-scoped:
+// they ride above whichever tab is active until resolved (design.md §6;
+// auth.md "Application": an applicant lands in the same shell as a
+// member, the application riding along as cards, never a wall).
+
 package com.cogra.feature.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,19 +35,14 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
-import kotlinx.coroutines.launch
 
 @Composable
-fun HomeRoute(
+fun StatusBannersRoute(
     actorRestoredResult: Boolean,
     onActorRestoredResultConsumed: () -> Unit,
-    handleChangedResult: Boolean,
-    onHandleChangedResultConsumed: () -> Unit,
-    onOpenFeed: () -> Unit,
-    onOpenInvites: () -> Unit,
-    onOpenSettings: () -> Unit,
     onRestoreActor: () -> Unit,
     onStartKeyCeremony: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -66,17 +52,15 @@ fun HomeRoute(
             viewModel.onActorRestored()
         }
     }
-    // Settings already confirmed the change; here the stale greeting
-    // just gets re-read, silently.
-    LaunchedEffect(handleChangedResult) {
-        if (handleChangedResult) {
-            onHandleChangedResultConsumed()
-            viewModel.refresh()
-        }
-    }
-    HomeScreen(
+    StatusBannerOneShots(
         state = state,
-        onPullRefresh = viewModel::onPullRefresh,
+        snackbarHostState = snackbarHostState,
+        onActorRestoredShown = viewModel::onActorRestoredShown,
+        onApprovedShown = viewModel::onApprovedShown,
+        onWelcomeShown = viewModel::onWelcomeShown,
+    )
+    StatusBanners(
+        state = state,
         onTokenChange = viewModel::onTokenChange,
         onVerify = viewModel::onVerify,
         onResendEmailChange = viewModel::onResendEmailChange,
@@ -84,53 +68,31 @@ fun HomeRoute(
         onRearmInputChange = viewModel::onRearmInputChange,
         onRearm = viewModel::onRearm,
         onDismissWaitingHint = viewModel::onDismissWaitingHint,
-        onApprovedShown = viewModel::onApprovedShown,
-        onWelcomeShown = viewModel::onWelcomeShown,
         onPDirectedChange = viewModel::onPDirectedChange,
         onPInterestChange = viewModel::onPInterestChange,
         onReciprocate = viewModel::onReciprocate,
         onDismissReciprocation = viewModel::onDismissReciprocation,
         onResumePending = viewModel::onResumePending,
-        onActorRestoredShown = viewModel::onActorRestoredShown,
-        onOpenFeed = onOpenFeed,
-        onOpenInvites = onOpenInvites,
-        onOpenSettings = onOpenSettings,
-        onRestoreActor = onRestoreActor,
         onStartKeyCeremony = onStartKeyCeremony,
+        onRestoreActor = onRestoreActor,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The one-shot confirmations — restored, approved, landed — fired
+ * once per event on the shell's snackbar host (design.md §6).
+ * Consumed only after the snackbar is done: clearing first would flip
+ * the LaunchedEffect key and cancel the showing coroutine.
+ */
 @Composable
-fun HomeScreen(
+fun StatusBannerOneShots(
     state: HomeUiState,
-    onPullRefresh: () -> Unit,
-    onTokenChange: (String) -> Unit,
-    onVerify: () -> Unit,
-    onResendEmailChange: (String) -> Unit,
-    onResend: () -> Unit,
-    onRearmInputChange: (String) -> Unit,
-    onRearm: () -> Unit,
-    onDismissWaitingHint: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    onActorRestoredShown: () -> Unit,
     onApprovedShown: () -> Unit,
     onWelcomeShown: () -> Unit,
-    onPDirectedChange: (Double) -> Unit,
-    onPInterestChange: (Double) -> Unit,
-    onReciprocate: () -> Unit,
-    onDismissReciprocation: () -> Unit,
-    onResumePending: () -> Unit,
-    onActorRestoredShown: () -> Unit,
-    onOpenFeed: () -> Unit,
-    onOpenInvites: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onRestoreActor: () -> Unit,
-    onStartKeyCeremony: () -> Unit,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val restoredMessage = stringResource(R.string.home_actor_restored)
-    // Consumed only after the snackbar is done: clearing first would
-    // flip the LaunchedEffect key and cancel the showing coroutine.
     LaunchedEffect(state.actorRestored) {
         if (state.actorRestored) {
             snackbarHostState.showSnackbar(restoredMessage)
@@ -151,191 +113,122 @@ fun HomeScreen(
             onWelcomeShown()
         }
     }
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(snackbarData = data, modifier = Modifier.testTag("home_snackbar"))
-            }
-        },
-    ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = state.refreshing,
-            onRefresh = onPullRefresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .testTag("home_refresh"),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                if (state.loading) {
-                    CircularProgressIndicator(modifier = Modifier.testTag("home_loading"))
-                    return@Column
-                }
-                Text(
-                    text = state.profile?.let { stringResource(R.string.home_greeting, it.handle) }
-                        ?: stringResource(R.string.home_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier
-                        .semantics { heading() }
-                        .testTag("home_greeting"),
-                )
-                if (state.transportFailed) {
-                    Text(
-                        text = stringResource(R.string.error_transport),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("home_transport_error"),
-                    )
-                }
-                if (state.applicant) {
-                    ApplicantStatus(
-                        state = state,
-                        onTokenChange = onTokenChange,
-                        onVerify = onVerify,
-                        onResendEmailChange = onResendEmailChange,
-                        onResend = onResend,
-                        onRearmInputChange = onRearmInputChange,
-                        onRearm = onRearm,
-                        onDismissWaitingHint = onDismissWaitingHint,
-                        onStartKeyCeremony = onStartKeyCeremony,
-                        onRestoreActor = onRestoreActor,
-                    )
-                } else {
-                    if (state.huskWarning) {
-                        RestoreCard(onRestoreActor)
-                    }
-                    state.reciprocationTarget?.let { inviter ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    text = stringResource(R.string.home_reciprocate_title, inviter.handle),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.testTag("home_reciprocation"),
-                                )
-                                Text(stringResource(R.string.home_reciprocate_body))
-                                StanceSlider(
-                                    label = stringResource(R.string.stance_p_directed),
-                                    value = state.pDirected,
-                                    onChange = onPDirectedChange,
-                                    testTag = "home_p_directed",
-                                )
-                                StanceSlider(
-                                    label = stringResource(R.string.stance_p_interest),
-                                    value = state.pInterest,
-                                    onChange = onPInterestChange,
-                                    testTag = "home_p_interest",
-                                )
-                                if (state.signingFailed) {
-                                    Text(
-                                        text = stringResource(R.string.home_signing_failed),
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.testTag("home_signing_failed"),
-                                    )
-                                }
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(
-                                        onClick = onReciprocate,
-                                        enabled = !state.signing,
-                                        modifier = Modifier.testTag("home_reciprocate"),
-                                    ) {
-                                        Text(stringResource(R.string.home_reciprocate_sign))
-                                    }
-                                    TextButton(
-                                        onClick = onDismissReciprocation,
-                                        modifier = Modifier.testTag("home_reciprocate_skip"),
-                                    ) {
-                                        Text(stringResource(R.string.home_reciprocate_skip))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (state.reciprocated) {
-                        Text(
-                            text = stringResource(R.string.home_reciprocated),
-                            modifier = Modifier.testTag("home_reciprocated"),
-                        )
-                    }
-                    if (state.pendingHandshakes > 0) {
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    stringResource(R.string.home_pending, state.pendingHandshakes),
-                                    modifier = Modifier.testTag("home_pending"),
-                                )
-                                OutlinedButton(
-                                    onClick = onResumePending,
-                                    modifier = Modifier.testTag("home_resume"),
-                                ) {
-                                    Text(stringResource(R.string.home_resume))
-                                }
-                            }
-                        }
-                    }
-                }
-                OutlinedButton(
-                    onClick = onOpenFeed,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("home_feed"),
-                ) {
-                    Text(stringResource(R.string.home_open_feed))
-                }
-                val invitesLockedMessage = stringResource(R.string.home_invites_locked_message)
-                InvitesButton(
-                    locked = state.applicant,
-                    onOpen = onOpenInvites,
-                    onLockedTap = { scope.launch { snackbarHostState.showSnackbar(invitesLockedMessage) } },
-                )
-                OutlinedButton(
-                    onClick = onOpenSettings,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("home_settings"),
-                ) {
-                    Text(stringResource(R.string.home_open_settings))
-                }
-            }
-        }
-    }
 }
 
 /**
- * Acting is gated for applicants, but the surface stays visible (auth.md
- * "Application"): the locked look borrows the M3 disabled tokens (38%
- * content, 12% outline) while the button stays tappable, so a tap can
- * explain the lock instead of dying silently.
+ * The banner stack. Ambient by design: nothing renders while the
+ * account state loads, and a settled member with nothing pending
+ * contributes no UI at all.
  */
 @Composable
-private fun InvitesButton(locked: Boolean, onOpen: () -> Unit, onLockedTap: () -> Unit) {
-    val lockedState = stringResource(R.string.home_invites_locked)
-    OutlinedButton(
-        onClick = if (locked) onLockedTap else onOpen,
-        colors = if (locked) {
-            ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+fun StatusBanners(
+    state: HomeUiState,
+    onTokenChange: (String) -> Unit,
+    onVerify: () -> Unit,
+    onResendEmailChange: (String) -> Unit,
+    onResend: () -> Unit,
+    onRearmInputChange: (String) -> Unit,
+    onRearm: () -> Unit,
+    onDismissWaitingHint: () -> Unit,
+    onPDirectedChange: (Double) -> Unit,
+    onPInterestChange: (Double) -> Unit,
+    onReciprocate: () -> Unit,
+    onDismissReciprocation: () -> Unit,
+    onResumePending: () -> Unit,
+    onStartKeyCeremony: () -> Unit,
+    onRestoreActor: () -> Unit,
+) {
+    if (state.loading) return
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        if (state.applicant) {
+            ApplicantStatus(
+                state = state,
+                onTokenChange = onTokenChange,
+                onVerify = onVerify,
+                onResendEmailChange = onResendEmailChange,
+                onResend = onResend,
+                onRearmInputChange = onRearmInputChange,
+                onRearm = onRearm,
+                onDismissWaitingHint = onDismissWaitingHint,
+                onStartKeyCeremony = onStartKeyCeremony,
+                onRestoreActor = onRestoreActor,
             )
         } else {
-            ButtonDefaults.outlinedButtonColors()
-        },
-        border = if (locked) {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-        } else {
-            ButtonDefaults.outlinedButtonBorder(enabled = true)
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("home_invites")
-            .then(
-                if (locked) Modifier.semantics { stateDescription = lockedState } else Modifier,
-            ),
-    ) {
-        Text(stringResource(R.string.home_open_invites))
+            if (state.huskWarning) {
+                RestoreCard(onRestoreActor)
+            }
+            state.reciprocationTarget?.let { inviter ->
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = stringResource(R.string.home_reciprocate_title, inviter.handle),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.testTag("home_reciprocation"),
+                        )
+                        Text(stringResource(R.string.home_reciprocate_body))
+                        StanceSlider(
+                            label = stringResource(R.string.stance_p_directed),
+                            value = state.pDirected,
+                            onChange = onPDirectedChange,
+                            testTag = "home_p_directed",
+                        )
+                        StanceSlider(
+                            label = stringResource(R.string.stance_p_interest),
+                            value = state.pInterest,
+                            onChange = onPInterestChange,
+                            testTag = "home_p_interest",
+                        )
+                        if (state.signingFailed) {
+                            Text(
+                                text = stringResource(R.string.home_signing_failed),
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.testTag("home_signing_failed"),
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = onReciprocate,
+                                enabled = !state.signing,
+                                modifier = Modifier.testTag("home_reciprocate"),
+                            ) {
+                                Text(stringResource(R.string.home_reciprocate_sign))
+                            }
+                            TextButton(
+                                onClick = onDismissReciprocation,
+                                modifier = Modifier.testTag("home_reciprocate_skip"),
+                            ) {
+                                Text(stringResource(R.string.home_reciprocate_skip))
+                            }
+                        }
+                    }
+                }
+            }
+            if (state.reciprocated) {
+                Text(
+                    text = stringResource(R.string.home_reciprocated),
+                    modifier = Modifier.testTag("home_reciprocated"),
+                )
+            }
+            if (state.pendingHandshakes > 0) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            stringResource(R.string.home_pending, state.pendingHandshakes),
+                            modifier = Modifier.testTag("home_pending"),
+                        )
+                        OutlinedButton(
+                            onClick = onResumePending,
+                            modifier = Modifier.testTag("home_resume"),
+                        ) {
+                            Text(stringResource(R.string.home_resume))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -605,4 +498,3 @@ private fun ErrorCode.resendMessage(): Int = when (this) {
     ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
     else -> R.string.error_generic
 }
-

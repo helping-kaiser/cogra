@@ -26,6 +26,7 @@ import com.cogra.app.HiltTestActivity
 import com.cogra.app.di.ScriptedAccountRepository
 import com.cogra.app.di.ScriptedContentRepository
 import com.cogra.app.di.ScriptedOnboardingRepository
+import com.cogra.app.di.ScriptedProfileRepository
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.sealKeyBackup
@@ -71,6 +72,8 @@ class CograNavGraphTest {
 
     @Inject lateinit var content: ScriptedContentRepository
 
+    @Inject lateinit var profiles: ScriptedProfileRepository
+
     @Inject lateinit var notices: SecurityNotices
 
     @Inject lateinit var storageHealth: FakeStorageHealth
@@ -96,9 +99,15 @@ class CograNavGraphTest {
         tokens.save(AuthTokens(accessToken = "access", refreshToken = "refresh", accountId = "u1"))
     }
 
-    private fun member() = UserProfile("u1", "jakob", null, AccountState.MEMBER, true, invitedBy = null)
+    private fun member(): UserProfile {
+        profiles.profile = com.cogra.domain.testing.testProfile(id = "u1", handle = "jakob")
+        return UserProfile("u1", "jakob", null, AccountState.MEMBER, true, invitedBy = null)
+    }
 
-    private fun applicant() = UserProfile("u1", "joiner", null, AccountState.APPLICANT, false, invitedBy = null)
+    private fun applicant(): UserProfile {
+        profiles.profile = com.cogra.domain.testing.testProfile(id = "u1", handle = "joiner")
+        return UserProfile("u1", "joiner", null, AccountState.APPLICANT, false, invitedBy = null)
+    }
 
     private fun applicantStatus(keyAttached: Boolean) = ApplicationStatus(
         accountState = AccountState.APPLICANT,
@@ -180,8 +189,7 @@ class CograNavGraphTest {
             ),
         )
         render()
-        waitForTag("home_feed")
-        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
+        // The signed-in root IS the feed tab (design.md §6).
         waitForTag("feed_post_p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
 
@@ -191,17 +199,85 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theComposerOpensFromTheFeed() {
+    fun theComposerOpensFromTheBarsCenterAction() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("home_feed")
-        compose.onNodeWithTag("home_feed").performScrollTo().performClick()
-        waitForTag("feed_compose")
-        compose.onNodeWithTag("feed_compose").performClick()
+        waitForTag("bar_compose")
+        compose.onNodeWithTag("bar_compose").performClick()
         waitForTag("compose_body")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
+    }
+
+    @Test
+    fun theBottomBarSwitchesToTheProfileTab() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_display_name")
+        val entry = navController.currentBackStackEntry
+        assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
+        assertThat(entry?.toRoute<Profile>()?.handle).isNull()
+        // The own-profile tab carries no back arrow; the bar stays.
+        assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+
+        // Back to the feed tab by the bar.
+        compose.onNodeWithTag("bar_feed").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
+    fun anAuthorChipOpensTheirProfile() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        profiles.others["author"] =
+            com.cogra.domain.testing.testProfile(id = "author-1", handle = "author")
+        render()
+        waitForTag("feed_author_p1")
+        compose.onNodeWithTag("feed_author_p1").performClick()
+        waitForTag("profile_display_name")
+        val entry = navController.currentBackStackEntry
+        assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
+        assertThat(entry?.toRoute<Profile>()?.handle).isEqualTo("author")
+        // Another actor's profile is a drill-in: back arrow, no edit.
+        assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("profile_edit").fetchSemanticsNodes()).isEmpty()
+    }
+
+    @Test
+    fun theProfileEditSavesAndConfirms() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_edit")
+        compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
+        waitForTag("profile_edit_bio")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>()).isTrue()
+
+        compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
+        compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
+
+        // The save pops back to the profile, which re-reads.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Profile>() == true
+        }
+        assertThat(profiles.updates).hasSize(1)
+        assertThat(profiles.updates.first().second).contains("Hello")
+        compose.waitUntilAtLeastOneExists(
+            hasTestTag("profile_bio") and hasText("Hello", substring = true),
+            timeoutMillis = 30_000,
+        )
     }
 
     // The guest read shell: Feed and PostDetail live on the signed-out
@@ -250,7 +326,7 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun signingInWhileBrowsingLandsOnHomeWithAClearedStack() {
+    fun signingInWhileBrowsingLandsOnTheFeedTabWithAClearedStack() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -261,24 +337,25 @@ class CograNavGraphTest {
 
         signIn()
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true &&
+                navController.previousBackStackEntry == null
         }
-        // The phase flip cleared the browsing stack.
-        assertThat(navController.previousBackStackEntry).isNull()
     }
 
     @Test
-    fun aSignedInSessionLandsOnHome() {
+    fun aSignedInSessionLandsOnTheFeedTabWithTheBar() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("home_greeting")
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
+        waitForTag("bottom_bar")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        // No back arrow on the root tab.
+        assertThat(compose.onAllNodesWithTag("feed_back").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
-    fun aRestoredActorRefreshesHomeAndConfirms() {
+    fun aRestoredActorRefreshesTheShellAndConfirms() {
         val actor = ActorKey.generate()
         val code = RecoveryCode.generate()
         signIn()
@@ -297,38 +374,42 @@ class CograNavGraphTest {
         compose.onNodeWithTag("restore_code").performTextInput(code.display())
         compose.onNodeWithTag("restore_submit").performClick()
 
-        // Back on Home with the husk banner gone — no process death.
-        // (The snackbar itself is asserted in HomeScreenTest; under
-        // Robolectric's fast-forwarded clock it auto-dismisses before a
-        // poll can catch it here.)
+        // Back on the feed tab with the husk banner gone — no process
+        // death. (The snackbar itself is asserted in StatusBannersTest;
+        // under Robolectric's fast-forwarded clock it auto-dismisses
+        // before a poll can catch it here.)
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true &&
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true &&
                 compose.onAllNodesWithTag("home_restore").fetchSemanticsNodes().isEmpty()
         }
         assertThat(identity.seed).isEqualTo(actor.seed())
     }
 
     @Test
-    fun aChangedHandleRefreshesTheHomeGreeting() {
+    fun aChangedHandleRefreshesTheProfile() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
 
-        waitForTag("home_greeting")
-        compose.onNodeWithTag("home_settings").performClick()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_settings")
+        compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 
         compose.onNodeWithTag("settings_new_handle").performScrollTo().performTextInput("renamed")
         compose.onNodeWithTag("settings_change_handle").performScrollTo().performClick()
         compose.waitForIdle()
+        // The service knows the new handle; the profile fake follows.
+        profiles.profile = com.cogra.domain.testing.testProfile(id = "u1", handle = "renamed")
 
-        // Home outlives the push/pop; only the nav result re-reads the
-        // profile, so the greeting must show the new handle on return.
+        // The profile outlives the push/pop; only the nav result
+        // re-reads, so the handle must refresh on return.
         compose.onNodeWithTag("settings_back").performClick()
         compose.waitUntilAtLeastOneExists(
-            hasTestTag("home_greeting") and hasText("renamed", substring = true),
+            hasTestTag("profile_handle") and hasText("renamed", substring = true),
             timeoutMillis = 30_000,
         )
     }
@@ -340,8 +421,10 @@ class CograNavGraphTest {
         account.profile = member()
         render()
 
-        waitForTag("home_settings")
-        compose.onNodeWithTag("home_settings").performClick()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_settings")
+        compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag("settings_export_key").performScrollTo().performClick()
@@ -357,9 +440,10 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun anApplicantLandsInTheHomeShellWithTheWaitingHint() {
+    fun anApplicantLandsInTheShellWithTheWaitingHint() {
         // Registration returned an ordinary session: the applicant is
-        // simply signed in, and Home is the root — never a wall.
+        // simply signed in, and the feed tab is the root — never a
+        // wall; the application rides along as shell banners.
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = applicant()
@@ -367,10 +451,9 @@ class CograNavGraphTest {
         render()
 
         waitForTag("home_waiting")
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
-        // Only acting is gated: the shell buttons stay visible.
-        assertThat(compose.onAllNodesWithTag("home_invites").fetchSemanticsNodes()).isNotEmpty()
-        assertThat(compose.onAllNodesWithTag("home_settings").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        // Only acting is gated: the bar stays, the shell stays open.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
@@ -383,8 +466,10 @@ class CograNavGraphTest {
         onboarding.status = applicantStatus(keyAttached = true)
         render()
 
-        waitForTag("home_settings")
-        compose.onNodeWithTag("home_settings").performScrollTo().performClick()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_settings")
+        compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 
@@ -424,7 +509,7 @@ class CograNavGraphTest {
         compose.onNodeWithTag("recovery_code_typed_back").performTextInput(shown)
         compose.onNodeWithTag("recovery_code_saved").performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true
         }
     }
 
@@ -478,11 +563,11 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("home_greeting")
+        waitForTag("bottom_bar")
 
         compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
         compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Home>()).isTrue()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         assertThat(onboarding.checkedInviteIds).isEmpty()
     }
 
@@ -500,7 +585,7 @@ class CograNavGraphTest {
 
         signIn()
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<Home>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true
         }
 
         runBlocking { tokens.clear() }

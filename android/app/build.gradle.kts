@@ -71,11 +71,13 @@ android {
 
 dependencies {
     implementation(project(":core:network"))
+    implementation(project(":core:designsystem"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:content"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:home"))
     implementation(project(":feature:invites"))
+    implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))
 
     implementation(libs.androidx.navigation.compose)

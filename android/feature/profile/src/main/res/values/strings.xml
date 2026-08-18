@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">Profile</string>
+    <string name="profile_back">Back</string>
+    <string name="profile_not_found">This profile doesn\'t exist.</string>
+    <string name="error_transport">Something didn\'t load. Check your connection and try again.</string>
+    <string name="profile_retry">Try again</string>
+    <string name="profile_load_more">Show more</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_invites">Invites</string>
+    <string name="profile_invites_locked">Inviting unlocks once your application is approved.</string>
+    <string name="profile_open_settings">Settings</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="profile_filter_posts">Posts</string>
+    <string name="profile_filter_comments">Comments</string>
+    <string name="profile_filter_everything">Everything</string>
+    <string name="profile_chronicle_empty">Nothing here yet.</string>
+
+    <string name="chronicle_published">Published a post</string>
+    <string name="chronicle_edited_post">Edited a post</string>
+    <string name="chronicle_commented">Commented</string>
+    <string name="chronicle_edited_comment">Edited a comment</string>
+    <string name="chronicle_profile_record">Profile update</string>
+    <string name="chronicle_stanced">Shared a stance</string>
+    <string name="chronicle_acted">Did something</string>
+
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_edit_display_name">Display name</string>
+    <string name="profile_edit_bio">Bio</string>
+    <string name="profile_edit_website">Website</string>
+    <string name="profile_edit_save">Save</string>
+    <string name="profile_edit_empty_name">A display name is required.</string>
+    <string name="profile_edit_refused">That didn\'t work. Check the fields and try again.</string>
+    <string name="profile_edit_signing_failed">Signing didn\'t complete. Try again.</string>
+</resources>
