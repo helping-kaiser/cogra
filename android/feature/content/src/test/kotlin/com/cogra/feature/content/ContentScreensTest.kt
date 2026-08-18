@@ -158,21 +158,42 @@ class ContentScreensTest {
     }
 
     @Test
-    fun theComposeAffordanceSwapsForTheSignInEntryForAGuest() {
+    fun theGuestBannerCarriesTheSignInEntry() {
         var joining = false
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             signedIn = false,
             onSignInOrJoin = { joining = true },
         )
+        compose.onNodeWithTag("feed_guest_banner").assertExists()
         compose.onNodeWithTag("feed_signin").performClick()
         assertThat(joining).isTrue()
+    }
+
+    @Test
+    fun aSignedInReaderSeesNoGuestBanner() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_guest_banner").assertDoesNotExist()
+        compose.onNodeWithTag("feed_signin").assertDoesNotExist()
     }
 
     @Test
     fun aResolvingPhaseWithholdsTheSignInEntry() {
         renderFeed(FeedUiState(loading = false), signedIn = null)
         compose.onNodeWithTag("feed_signin").assertDoesNotExist()
+    }
+
+    // The guest notice rides the same collapsing top as the key banner:
+    // away scrolling down, back with the returning bar.
+    @Test
+    fun theGuestBannerRidesTheCollapsingTop() {
+        renderFeed(
+            FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
+            signedIn = false,
+        )
+        compose.onNodeWithTag("feed_guest_banner").assertExists()
+        compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("feed_guest_banner").assertDoesNotExist()
     }
 
     @Test
@@ -231,6 +252,7 @@ class ContentScreensTest {
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
         onOversightChange: (OversightChoice) -> Unit = {},
+        keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
             ComposePostScreen(
@@ -242,8 +264,27 @@ class ContentScreensTest {
                 onOversightChange = onOversightChange,
                 onSubmit = onSubmit,
                 onBack = {},
+                keyBanner = keyBanner,
             )
         }
+    }
+
+    // The composer hosts the key-banner slot on its collapsing top — a
+    // keyless writer learns before drafting, not at submit.
+    @Test
+    fun theComposerHostsTheKeyBannerSlot() {
+        renderComposer(
+            ComposePostUiState(),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        compose.onNodeWithTag("key_banner").assertExists()
     }
 
     @Test

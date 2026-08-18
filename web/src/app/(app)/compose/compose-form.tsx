@@ -17,9 +17,12 @@ import {
   preparePostEdit,
 } from "@/lib/api/content-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { RestoreCard } from "@/app/applicant-status";
 import { Button } from "@/lib/ui/button";
+import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TextField } from "@/lib/ui/text-field";
@@ -50,6 +53,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const signer = useWriteSigner();
   const router = useRouter();
   const editingId = useSearchParams().get("post");
+  const keyOnDevice = useKeyOnDevice(store);
 
   const [loading, setLoading] = useState(editingId !== null);
   const [notFound, setNotFound] = useState(false);
@@ -138,12 +142,17 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   // composer's behavior. A post that no longer resolves backs to the
   // feed instead of the dead detail page.
   const header = (
-    <PageHeader
-      title={editingId === null ? "New post" : "Edit post"}
-      backHref={editingId === null || notFound ? "/feed" : `/posts/${editingId}`}
-      backLabel={editingId === null || notFound ? "Back to feed" : "Back to post"}
-      backTestId="compose-back"
-    />
+    <CollapsingTop>
+      <PageHeader
+        title={editingId === null ? "New post" : "Edit post"}
+        backHref={editingId === null || notFound ? "/feed" : `/posts/${editingId}`}
+        backLabel={editingId === null || notFound ? "Back to feed" : "Back to post"}
+        backTestId="compose-back"
+      />
+      {/* The key banner rides the collapsing top here too — a keyless
+          writer learns before drafting, not at submit (design.md §6). */}
+      {keyOnDevice === false && <RestoreCard />}
+    </CollapsingTop>
   );
 
   if (loading) {

@@ -1,11 +1,18 @@
 package com.cogra.feature.settings
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.KeyGateResult
 import com.cogra.domain.ErrorCode
@@ -33,6 +40,7 @@ class SettingsScreenTest {
         onBackupCodeSaved: () -> Unit = {},
         onExportKey: () -> Unit = {},
         keyGate: KeyGate = FakeKeyGate(KeyGateResult.Granted),
+        keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
             SettingsScreen(
@@ -48,8 +56,27 @@ class SettingsScreenTest {
                 onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
                 keyGate = keyGate,
+                keyBanner = keyBanner,
             )
         }
+    }
+
+    // Settings hosts the key-banner slot on its collapsing top like
+    // every main surface (design.md §6).
+    @Test
+    fun settingsHostsTheKeyBannerSlot() {
+        render(
+            SettingsUiState(),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        compose.onNodeWithTag("key_banner").assertExists()
     }
 
     @Test

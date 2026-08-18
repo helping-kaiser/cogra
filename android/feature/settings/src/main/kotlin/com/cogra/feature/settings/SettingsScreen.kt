@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
@@ -55,6 +56,7 @@ fun SettingsRoute(
     onBack: () -> Unit,
     onHandleChanged: () -> Unit,
     onExportKey: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -85,6 +87,7 @@ fun SettingsRoute(
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
         onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
+        keyBanner = keyBanner,
     )
 }
 
@@ -111,6 +114,7 @@ fun SettingsScreen(
     onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
+    keyBanner: @Composable () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val feedbackMessage = state.feedback?.let { stringResource(it.message()) }
@@ -126,27 +130,33 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
-                title = {
-                    Text(
-                        text = stringResource(R.string.settings_title),
-                        modifier = Modifier.semantics { heading() },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("settings_back"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                    title = {
+                        Text(
+                            text = stringResource(R.string.settings_title),
+                            modifier = Modifier.semantics { heading() },
                         )
-                    }
-                },
-            )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.testTag("settings_back"),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
+                    },
+                )
+                // The key banner rides the collapsing top on every main
+                // surface (design.md §6); the host pads to line up with
+                // the content below.
+                CollapsingTopBanner(collapsingTop, horizontalPadding = 24.dp) { keyBanner() }
+            }
         },
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->

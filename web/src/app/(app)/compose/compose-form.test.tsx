@@ -220,6 +220,26 @@ describe("ComposeForm", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("collapses the restore card into the header for a keyless browser", async () => {
+    // A keyless writer learns before drafting, not at submit
+    // (design.md §6).
+    renderWithProviders(<ComposeForm store={fakeIdentityStore({})} />, {
+      store: signedInStore(),
+    });
+    const restore = await screen.findByTestId("home_restore");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
+  });
+
+  it("shows no restore card while the key is on this browser", async () => {
+    renderWithProviders(<ComposeForm store={fakeIdentityStore({ keyOnDevice: true })} />, {
+      store: signedInStore(),
+    });
+    expect(await screen.findByTestId("compose-body")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument(),
+    );
+  });
+
   it("tells a keyless browser to restore, not to wait", async () => {
     // The write genuinely waits on the reader acting — the copy must
     // say so instead of the generic stays-pending line.
