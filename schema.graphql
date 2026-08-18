@@ -12,11 +12,16 @@ enum AccountState {
 
 """
 An actor in the one handle namespace — a mention resolves to exactly
-one actor.
+one actor. Interface coverage grows with the slices
+(api-spec.md "Actors").
 """
 interface Actor {
 	id: UUID!
 	handle: String!
+	"""
+	The current display name (the newest profile version).
+	"""
+	displayName: ModeratedText!
 }
 
 type Application {
@@ -205,7 +210,7 @@ type Comment implements Node {
 	target: CommentTarget
 	moderationStatus: ModerationStatus!
 	"""
-	This comment's direct replies, oldest-first in landing order.
+	This comment's direct replies, newest-first in landing order.
 	"""
 	replies(after: String, before: String, first: Int, last: Int): CommentConnection!
 }
@@ -718,6 +723,13 @@ type Mutation {
 	"""
 	prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
 	"""
+	Prepares an update of the viewer's profile — a parallel
+	Registration, L1's own profile-update idiom: payload only, never
+	identity (substrate.md §9). Chained behind the current head; one
+	in-flight update per profile.
+	"""
+	prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
+	"""
 	Relays the pre-signed proposals to L1's seal round trip. When the
 	seal returns synchronously the payload's staged writes are
 	already AWAITING_APPROVAL, verified act included. Verification
@@ -816,8 +828,9 @@ type Post implements Node {
 	moderationStatus: ModerationStatus!
 	"""
 	This post's direct comments — genesis Reviews whose A leg
-	enters here — oldest-first in landing order (conversation
-	order), keyset-paginated.
+	enters here — newest-first in landing order (a comment's landing
+	position is its genesis, so edits never reorder the thread),
+	keyset-paginated.
 	"""
 	comments(after: String, before: String, first: Int, last: Int): CommentConnection!
 }
@@ -923,6 +936,18 @@ input PreparePostInput {
 	pDirected: Dimension
 }
 
+"""
+A profile update's field set — omitted = untouched, explicit null =
+cleared, a value = replaced (api-spec.md "Content authoring"). The
+display name refuses the clear; the handle is L2 account state, not
+profile payload — see changeHandle.
+"""
+input PrepareProfileUpdateInput {
+	displayName: String
+	bio: String
+	websiteUrl: String
+}
+
 input PrepareStanceInput {
 	"""
 	The target actor; toward a Profile this is the reciprocation
@@ -1002,6 +1027,19 @@ type Query {
 	Null when the request is unauthenticated.
 	"""
 	me: User
+	"""
+	One user by id or unique handle — exactly one argument
+	(api-spec.md "Queries"). Handles resolve case-insensitively
+	(auth.md "Handle and email format"); null for no match.
+	"""
+	user(id: UUID, handle: String): User
+	"""
+	Any actor by id or unique handle — one namespace across kinds, so
+	a handle resolves to exactly one actor; exactly one argument.
+	Kinds resolve as their types arrive with the slices — users
+	today; null for no match.
+	"""
+	actor(id: UUID, handle: String): Actor
 	"""
 	One staged write mid-handshake. Field-level: resolves only for
 	the staging actor's session; null otherwise.
@@ -1435,7 +1473,17 @@ type User implements Actor {
 	"""
 	The current display name (the newest profile version).
 	"""
-	displayName: String
+	displayName: ModeratedText!
+	"""
+	The profile biography (the newest profile version); value null
+	when never set.
+	"""
+	bio: ModeratedText!
+	"""
+	The profile's website link (the newest profile version); value
+	null when never set.
+	"""
+	websiteUrl: ModeratedText!
 	"""
 	Active authentication sessions, one per refresh token.
 	Field-level: resolves only for the account's own viewer; null

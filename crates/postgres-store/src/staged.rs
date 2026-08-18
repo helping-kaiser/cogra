@@ -294,29 +294,6 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     })
 }
 
-/// The actor's live staged write of one family — e.g. the staged
-/// Registration the admission sequence signs (auth.md "Approval and
-/// landing"). Expired stagings are ignored: a fresh one replaces them.
-pub async fn live_for_actor(
-    pool: &PgPool,
-    actor_id: Uuid,
-    family: Family,
-) -> Result<Option<StagedWrite>, StagedError> {
-    let id = sqlx::query_scalar!(
-        "SELECT id FROM staged_writes
-         WHERE actor_id = $1 AND family = $2 AND state <> 'expired'
-         ORDER BY created_at DESC LIMIT 1",
-        actor_id,
-        family.as_str(),
-    )
-    .fetch_optional(pool)
-    .await?;
-    match id {
-        Some(id) => Ok(Some(load(pool, id).await?)),
-        None => Ok(None),
-    }
-}
-
 /// Whether the actor has a live staged write of the family toward the
 /// target — the in-flight half of a graph-derived read (auth.md
 /// "Reciprocation is the joiner's own act"). Expired stagings are

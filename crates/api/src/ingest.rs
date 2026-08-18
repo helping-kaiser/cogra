@@ -64,6 +64,7 @@ pub async fn ingest_pending<B: L1Boundary>(
     // path: the live loop, the dev CLI, and rebuilds alike.
     crate::onboarding::land_promoted(pool, &outcome.promoted).await;
     crate::content::land_promoted(pool, &outcome.promoted).await;
+    crate::profile::land_promoted(pool, &outcome.promoted).await;
     if let Some(last) = packages.last() {
         let expired = staged::expire_due(pool, last.epoch, gc_after_epochs).await?;
         let reaped = staged::reap_expired(pool, last.epoch, gc_after_epochs).await?;

@@ -251,8 +251,9 @@ reintroduce the tone-80 orange §2.1 rejects.
   and an outline on the page colour is the *outlined* card, a
   different component. Dialogs sit on `surfaceContainerHigh`.
 - `primaryContainer` is the loudest surface in the app. It
-  belongs to the compose FAB and to a committed stance — not
-  to every button. Spend it in one place per screen.
+  belongs to the bar's compose action and to a committed
+  stance — not to every button. Spend it in one place per
+  screen.
 - Secondary text is `onSurfaceVariant`, never `onSurface` at
   reduced opacity: opacity breaks the contrast guarantee the
   token carries.
@@ -440,8 +441,22 @@ behaviour and matching names:
   reserved before load so content never jumps.
 - **Empty, loading, and error states** for every list surface.
   Designed, not blank.
-- **Scaffolding** — top app bars, bottom navigation, compose
-  FAB, bottom sheets, snackbars.
+- **Scaffolding** — top app bars, bottom navigation, bottom
+  sheets, snackbars.
+
+The bottom bar is the app's frame. Five slots, left to right:
+**feed, search, create post, wallet, profile** — each slot
+arrives with the slice that builds its surface, so the bar grows
+toward five. The center slot is the compose *action*, not a
+destination — a deliberate deviation from M3's destinations-only
+navigation-bar guidance, accepted for the reach of the one
+gesture the product lives on; it wears `primaryContainer`
+(§2.4). Signed-in and applicant viewers get the bar; anonymous
+viewers browse the public read surfaces without it. Settings
+hangs off the profile screen's top-bar gear; invite management
+is a standalone entry on one's own profile. The application and
+reciprocation cards are shell-scoped banners — they ride above
+whichever tab is active until resolved.
 
 Confirmation of a completed action is a snackbar on both
 platforms, fired once per event.
