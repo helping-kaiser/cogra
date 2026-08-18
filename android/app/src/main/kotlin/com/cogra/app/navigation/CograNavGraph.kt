@@ -413,6 +413,13 @@ fun CograNavGraph(
                         navController.popBackStack()
                     },
                     onBack = { navController.navigateUp() },
+                    keyBanner = {
+                        if (signedIn == true) {
+                            KeyRestoreBannerRoute(
+                                onRestoreActor = { navController.navigate(Restore) },
+                            )
+                        }
+                    },
                 )
             }
             composable<PostDetail> { entry ->
@@ -506,6 +513,13 @@ fun CograNavGraph(
                             ?.set(HANDLE_CHANGED_RESULT, true)
                     },
                     onExportKey = { navController.navigate(KeyExport) },
+                    keyBanner = {
+                        if (signedIn == true) {
+                            KeyRestoreBannerRoute(
+                                onRestoreActor = { navController.navigate(Restore) },
+                            )
+                        }
+                    },
                 )
             }
             composable<KeyExport> {
