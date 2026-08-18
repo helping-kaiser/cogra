@@ -108,6 +108,19 @@ class PostDetailViewModelTest {
     }
 
     @Test
+    fun aKeylessDeviceMarksTheCommentFailureAsNeedsKey() = runTest(dispatcher) {
+        identity.seed = null
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(vm.state.value.signingNeedsKey).isTrue()
+    }
+
+    @Test
     fun startLoadsThePostAndItsThread() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start("post-1")

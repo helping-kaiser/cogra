@@ -15,7 +15,6 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { StanceSlider } from "@/lib/ui/stance-slider";
-import { RestoreCard } from "./applicant-status";
 
 type DeviceState = {
   keyOnDevice: boolean;
@@ -113,7 +112,8 @@ export function MemberStatus({
 
   return (
     <div className="flex flex-col gap-4">
-      {!device.keyOnDevice && <RestoreCard />}
+      {/* The husk warning rides the screen's collapsing top, not this
+          stack — it must follow the reader (feed-view/profile-view). */}
       {prompt && (
         <Card testId="home_reciprocation">
           <h2 className="text-title-medium">@{inviter.handle} vouched you in</h2>

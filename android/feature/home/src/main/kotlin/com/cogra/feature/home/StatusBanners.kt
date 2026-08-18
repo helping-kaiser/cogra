@@ -40,7 +40,6 @@ import com.cogra.domain.signing.RegistrationProgress
 fun StatusBannersRoute(
     actorRestoredResult: Boolean,
     onActorRestoredResultConsumed: () -> Unit,
-    onRestoreActor: () -> Unit,
     onStartKeyCeremony: () -> Unit,
     snackbarHostState: SnackbarHostState,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -74,7 +73,6 @@ fun StatusBannersRoute(
         onDismissReciprocation = viewModel::onDismissReciprocation,
         onResumePending = viewModel::onResumePending,
         onStartKeyCeremony = onStartKeyCeremony,
-        onRestoreActor = onRestoreActor,
     )
 }
 
@@ -116,6 +114,29 @@ fun StatusBannerOneShots(
 }
 
 /**
+ * The key-restore banner alone, for the screen's collapsing top: a
+ * must-act card that follows the reader — away scrolling down, back
+ * on any upward scroll — instead of living only at the top of the
+ * list (design.md §6). It shows whenever the account's actor key is
+ * attached but absent on this device: the member husk, and the
+ * applicant whose key lives elsewhere.
+ */
+@Composable
+fun KeyRestoreBannerRoute(
+    onRestoreActor: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    KeyRestoreBanner(state, onRestoreActor)
+}
+
+@Composable
+fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit) {
+    if (state.loading || !state.keyElsewhere) return
+    RestoreCard(onRestoreActor)
+}
+
+/**
  * The banner stack. Ambient by design: nothing renders while the
  * account state loads, and a settled member with nothing pending
  * contributes no UI at all.
@@ -136,11 +157,12 @@ fun StatusBanners(
     onDismissReciprocation: () -> Unit,
     onResumePending: () -> Unit,
     onStartKeyCeremony: () -> Unit,
-    onRestoreActor: () -> Unit,
 ) {
     if (state.loading) return
+    // The host pads horizontally — the feed's list padding, the
+    // profile's item wrap — so the cards line up with its content.
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (state.applicant) {
@@ -154,12 +176,11 @@ fun StatusBanners(
                 onRearm = onRearm,
                 onDismissWaitingHint = onDismissWaitingHint,
                 onStartKeyCeremony = onStartKeyCeremony,
-                onRestoreActor = onRestoreActor,
             )
         } else {
-            if (state.huskWarning) {
-                RestoreCard(onRestoreActor)
-            }
+            // The member husk warning rides the screen's collapsing top
+            // (KeyRestoreBannerRoute), not this stack — it must follow
+            // the reader.
             state.reciprocationTarget?.let { inviter ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -249,7 +270,6 @@ private fun ApplicantStatus(
     onRearm: () -> Unit,
     onDismissWaitingHint: () -> Unit,
     onStartKeyCeremony: () -> Unit,
-    onRestoreActor: () -> Unit,
 ) {
     when (val progress = state.progress) {
         null -> CircularProgressIndicator(modifier = Modifier.testTag("home_status_loading"))
@@ -263,10 +283,13 @@ private fun ApplicantStatus(
                 // A key sits on the device but the attach was refused —
                 // it belongs to another account (ACTOR_KEY_IN_USE).
                 !progress.keyAttached && progress.keyOnDevice -> KeyElsewhereCard(onStartKeyCeremony)
-                progress.keyAttached && !progress.keyOnDevice -> RestoreCard(onRestoreActor)
-                else -> if (progress.emailVerified && !state.waitingHintDismissed) {
-                    WaitingHint(onDismissWaitingHint)
-                }
+                // keyAttached && !keyOnDevice: the restore ask rides the
+                // screen's collapsing top (KeyRestoreBanner), not this
+                // stack.
+                progress.keyAttached && progress.keyOnDevice ->
+                    if (progress.emailVerified && !state.waitingHintDismissed) {
+                        WaitingHint(onDismissWaitingHint)
+                    }
             }
         }
         RegistrationProgress.AwaitingLanding ->
@@ -274,7 +297,8 @@ private fun ApplicantStatus(
                 text = stringResource(R.string.home_approved),
                 modifier = Modifier.testTag("home_landing"),
             )
-        RegistrationProgress.AwaitingSigningKey -> RestoreCard(onRestoreActor)
+        // The restore ask rides the screen's collapsing top.
+        RegistrationProgress.AwaitingSigningKey -> Unit
         RegistrationProgress.NeedsInvite -> RearmCard(state, onRearmInputChange, onRearm)
         RegistrationProgress.Member ->
             // Momentary: the refresh re-reads the member shape.

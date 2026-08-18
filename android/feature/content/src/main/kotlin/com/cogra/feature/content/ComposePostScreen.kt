@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.OversightChoice
 import com.cogra.feature.content.R
 
@@ -76,9 +79,13 @@ fun ComposePostScreen(
     onBack: () -> Unit,
 ) {
     val editing = state.editingId != null
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = {
                     Text(
                         stringResource(
@@ -162,7 +169,14 @@ fun ComposePostScreen(
                 ErrorLine(R.string.content_error_refused, "compose_refused")
             }
             if (state.signingFailed) {
-                ErrorLine(R.string.content_error_signing, "compose_signing_failed")
+                ErrorLine(
+                    if (state.signingNeedsKey) {
+                        R.string.content_error_signing_no_key
+                    } else {
+                        R.string.content_error_signing
+                    },
+                    "compose_signing_failed",
+                )
             }
             if (state.transportFailed) {
                 ErrorLine(R.string.content_error_transport, "compose_transport_error")

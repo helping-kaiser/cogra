@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -199,6 +200,49 @@ describe("PostView", () => {
       }),
     );
     expect(screen.getByTestId("comment-draft")).toHaveValue("");
+  });
+
+  it("tells a keyless browser to restore a pending comment, not to wait", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      graphql.mutation("PrepareComment", () =>
+        HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c-node",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(
+      <PostView postId="p1" store={fakeIdentityStore({})} />,
+      {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner({
+          signStaged: () =>
+            Promise.resolve({ kind: "awaitingSeal" as const, id: "w1" }),
+        }),
+      },
+    );
+    fireEvent.change(await screen.findByTestId("comment-draft"), {
+      target: { value: "Nice one" },
+    });
+    fireEvent.click(screen.getByTestId("comment-license-attribution"));
+    fireEvent.click(screen.getByTestId("comment-submit"));
+    const alert = await screen.findByTestId("comment-signing-needs-key");
+    expect(alert).toHaveTextContent("Restore your key");
   });
 
   it("keeps the comment button disabled without a draft", async () => {
