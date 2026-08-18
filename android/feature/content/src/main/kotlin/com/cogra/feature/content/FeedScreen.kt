@@ -21,19 +21,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
@@ -91,29 +86,12 @@ fun FeedScreen(
     banners: @Composable () -> Unit = {},
 ) {
     // The collapsing top (design.md §6): the bar hides scrolling down
-    // and re-enters on any upward scroll (M3 enterAlways); the key
-    // banner rides the same region, shrinking away and back by scroll
-    // direction so a must-act card follows the reader.
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showTop by remember { mutableStateOf(true) }
-    val topConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -4) showTop = false
-                if (available.y > 4) showTop = true
-                return Offset.Zero
-            }
-        }
-    }
-    // The observer sits outside the bar's connection: enterAlways
-    // consumes every vertical delta while the bar collapses or
-    // expands, so an inner observer would see nothing until the bar
-    // finished moving — and the banner would miss the upward scroll
-    // that brings the bar back.
+    // and returns after a third of a screen of upward scroll; the key
+    // banner rides the same region and gate, so a must-act card
+    // follows the reader.
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(topConnection)
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             Column {
                 TopAppBar(
@@ -129,9 +107,9 @@ fun FeedScreen(
                         }
                     },
                     colors = surfaceTopAppBarColors(),
-                    scrollBehavior = scrollBehavior,
+                    scrollBehavior = collapsingTop.scrollBehavior,
                 )
-                AnimatedVisibility(visible = showTop) {
+                AnimatedVisibility(visible = collapsingTop.showTop) {
                     Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
                 }
             }

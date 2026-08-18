@@ -13,7 +13,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import com.cogra.domain.OversightChoice
@@ -75,13 +74,12 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_empty").assertDoesNotExist()
     }
 
-    // The regression this pins: the bar's enterAlways connection
-    // consumes every delta while the bar moves, so the banner's
-    // observer must sit outside it — a small upward scroll (less than
-    // the bar's own height) has to bring the banner back even though
-    // the bar swallows the whole delta re-entering.
+    // The key banner rides the shared collapsing top: away scrolling
+    // down, back only after about a third of a screen of accumulated
+    // upward scroll (the gate itself is pinned in the designsystem's
+    // CollapsingTopTest; this covers the feed wiring it).
     @Test
-    fun theKeyBannerFollowsTheReaderBackOnASmallUpwardScroll() {
+    fun theKeyBannerRidesTheCollapsingTop() {
         renderFeed(
             FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
             keyBanner = {
@@ -93,20 +91,22 @@ class ContentScreensTest {
                 )
             },
         )
-        compose.onNodeWithTag("key_banner").assertExists()
-        compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
-        compose.onNodeWithTag("key_banner").assertDoesNotExist()
-        // A short drag, held before release: per-frame deltas clear the
-        // observer's 4px threshold, the total stays under the bar's own
-        // height (the regression's blind spot), and the hold kills the
-        // fling velocity.
-        compose.onNodeWithTag("feed_list").performTouchInput {
+        fun dragUpBy(px: Float) = compose.onNodeWithTag("feed_list").performTouchInput {
             down(center)
-            moveBy(Offset(0f, 20f))
-            moveBy(Offset(0f, 10f))
+            moveBy(Offset(0f, px))
             advanceEventTime(250)
             up()
         }
+        compose.onNodeWithTag("key_banner").assertExists()
+        compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // A short correction toward a post's top summons nothing.
+        dragUpBy(30f)
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // The accumulated run crosses the gate: the banner returns.
+        dragUpBy(80f)
+        dragUpBy(80f)
+        dragUpBy(80f)
         compose.onNodeWithTag("key_banner").assertExists()
     }
 

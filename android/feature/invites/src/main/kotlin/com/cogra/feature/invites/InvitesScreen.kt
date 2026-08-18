@@ -27,7 +27,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -50,6 +48,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.InviteLinkInfo
@@ -121,13 +121,13 @@ fun InvitesScreen(
     // The husk gate explains itself on tap — a disabled button would
     // swallow the tap and leave the gate unexplained.
     val onHuskHint: () -> Unit = { scope.launch { snackbarHostState.showSnackbar(huskHint) } }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
             TopAppBar(
                 colors = surfaceTopAppBarColors(),
-                scrollBehavior = scrollBehavior,
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = {
                     Text(
                         text = stringResource(R.string.invites_title),
