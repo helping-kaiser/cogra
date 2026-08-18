@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,11 +21,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +52,7 @@ fun FeedRoute(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
@@ -61,6 +71,7 @@ fun FeedRoute(
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
         onSignInOrJoin = onSignInOrJoin,
+        keyBanner = keyBanner,
         banners = banners,
     )
 }
@@ -75,23 +86,48 @@ fun FeedScreen(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
 ) {
+    // The collapsing top (design.md §6): the bar hides scrolling down
+    // and re-enters on any upward scroll (M3 enterAlways); the key
+    // banner rides the same region, shrinking away and back by scroll
+    // direction so a must-act card follows the reader.
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var showTop by remember { mutableStateOf(true) }
+    val topConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -4) showTop = false
+                if (available.y > 4) showTop = true
+                return Offset.Zero
+            }
+        }
+    }
     Scaffold(
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .nestedScroll(topConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.content_feed_title)) },
-                actions = {
-                    if (signedIn == false) {
-                        TextButton(
-                            onClick = onSignInOrJoin,
-                            modifier = Modifier.testTag("feed_signin"),
-                        ) {
-                            Text(stringResource(R.string.content_feed_signin))
+            Column {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.content_feed_title)) },
+                    actions = {
+                        if (signedIn == false) {
+                            TextButton(
+                                onClick = onSignInOrJoin,
+                                modifier = Modifier.testTag("feed_signin"),
+                            ) {
+                                Text(stringResource(R.string.content_feed_signin))
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+                AnimatedVisibility(visible = showTop) {
+                    Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
+                }
+            }
         },
     ) { padding ->
         PullToRefreshBox(
@@ -112,7 +148,7 @@ fun FeedScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    banners()
+                    Box(Modifier.padding(horizontal = 16.dp)) { banners() }
                     ErrorLine(R.string.content_error_transport, "feed_transport_error")
                     TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
                         Text(stringResource(R.string.content_retry))
@@ -126,7 +162,7 @@ fun FeedScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    banners()
+                    Box(Modifier.padding(horizontal = 16.dp)) { banners() }
                     Text(
                         stringResource(R.string.content_feed_empty),
                         modifier = Modifier.testTag("feed_empty"),

@@ -116,6 +116,27 @@ fun StatusBannerOneShots(
 }
 
 /**
+ * The member husk warning alone, for the screen's collapsing top: a
+ * must-act card that follows the reader — away scrolling down, back
+ * on any upward scroll — instead of living only at the top of the
+ * list (design.md §6).
+ */
+@Composable
+fun KeyRestoreBannerRoute(
+    onRestoreActor: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    KeyRestoreBanner(state, onRestoreActor)
+}
+
+@Composable
+fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit) {
+    if (state.loading || state.applicant || !state.huskWarning) return
+    RestoreCard(onRestoreActor)
+}
+
+/**
  * The banner stack. Ambient by design: nothing renders while the
  * account state loads, and a settled member with nothing pending
  * contributes no UI at all.
@@ -139,8 +160,10 @@ fun StatusBanners(
     onRestoreActor: () -> Unit,
 ) {
     if (state.loading) return
+    // The host pads horizontally — the feed's list padding, the
+    // profile's item wrap — so the cards line up with its content.
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         if (state.applicant) {
@@ -157,9 +180,9 @@ fun StatusBanners(
                 onRestoreActor = onRestoreActor,
             )
         } else {
-            if (state.huskWarning) {
-                RestoreCard(onRestoreActor)
-            }
+            // The member husk warning rides the screen's collapsing top
+            // (KeyRestoreBannerRoute), not this stack — it must follow
+            // the reader.
             state.reciprocationTarget?.let { inviter ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

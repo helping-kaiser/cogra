@@ -15,7 +15,10 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
@@ -442,6 +445,12 @@ class CograNavGraphTest {
         compose.waitForIdle()
         // The service knows the new handle; the profile fake follows.
         profiles.profile = com.cogra.domain.testing.testProfile(id = "u1", handle = "renamed")
+
+        // The scroll to the handle field collapsed the enterAlways bar;
+        // an upward swipe brings it back before the tap — the thumb's
+        // own gesture.
+        compose.onRoot().performTouchInput { swipeDown() }
+        compose.waitForIdle()
 
         // The profile outlives the push/pop; only the nav result
         // re-reads, so the handle must refresh on return.
