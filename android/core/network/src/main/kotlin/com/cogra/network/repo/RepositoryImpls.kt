@@ -21,6 +21,9 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordLink
+import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
@@ -30,11 +33,17 @@ import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
+import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
+import com.cogra.network.graphql.AuthorRecordsQuery
+import com.cogra.network.graphql.CommentRepliesQuery
+import com.cogra.network.graphql.MyProfileQuery
+import com.cogra.network.graphql.PrepareProfileUpdateMutation
+import com.cogra.network.graphql.UserByHandleQuery
 import com.cogra.network.graphql.ApplyWithInviteMutation
 import com.cogra.network.graphql.ApproveActsMutation
 import com.cogra.network.graphql.ApproveApplicantsMutation
@@ -76,6 +85,7 @@ import com.cogra.network.graphql.type.PrepareCommentEditInput
 import com.cogra.network.graphql.type.PrepareCommentInput
 import com.cogra.network.graphql.type.PreparePostEditInput
 import com.cogra.network.graphql.type.PreparePostInput
+import com.cogra.network.graphql.type.PrepareProfileUpdateInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
 import com.cogra.network.graphql.type.ApproveApplicantsInput
@@ -499,15 +509,62 @@ class ContentRepositoryImpl @Inject constructor(
                 id = id,
                 commentsFirst = commentsFirst,
                 commentsAfter = Optional.presentIfNotNull(commentsAfter),
+                repliesFirst = REPLIES_FIRST,
             ),
         ).fetch().map { data ->
             data.post?.let { post ->
                 PostDetail(
                     post = post.postFields.toDomain(),
                     comments = Page(
-                        items = post.comments.edges.map { it.node.commentFields.toDomain() },
+                        items = post.comments.edges.map { edge ->
+                            edge.node.commentFields.toDomain().copy(
+                                replies = Page(
+                                    items = edge.node.replies.edges.map { r ->
+                                        r.node.commentFields.toDomain()
+                                    },
+                                    endCursor = edge.node.replies.pageInfo.endCursor,
+                                    hasNextPage = edge.node.replies.pageInfo.hasNextPage,
+                                ),
+                            )
+                        },
                         endCursor = post.comments.pageInfo.endCursor,
                         hasNextPage = post.comments.pageInfo.hasNextPage,
+                    ),
+                )
+            }
+        }
+    }
+
+    override suspend fun commentReplies(
+        commentId: String,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<CommentView>> = guard.run {
+        client.query(
+            CommentRepliesQuery(
+                id = commentId,
+                first = first,
+                after = Optional.presentIfNotNull(after),
+                repliesFirst = REPLIES_FIRST,
+            ),
+        ).fetch().flatMap { data ->
+            when (val comment = data.comment) {
+                null -> Outcome.Failed(IllegalStateException("comment vanished under its replies"))
+                else -> Outcome.Success(
+                    Page(
+                        items = comment.replies.edges.map { edge ->
+                            edge.node.commentFields.toDomain().copy(
+                                replies = Page(
+                                    items = edge.node.replies.edges.map { r ->
+                                        r.node.commentFields.toDomain()
+                                    },
+                                    endCursor = edge.node.replies.pageInfo.endCursor,
+                                    hasNextPage = edge.node.replies.pageInfo.hasNextPage,
+                                ),
+                            )
+                        },
+                        endCursor = comment.replies.pageInfo.endCursor,
+                        hasNextPage = comment.replies.pageInfo.hasNextPage,
                     ),
                 )
             }
@@ -609,4 +666,105 @@ class ContentRepositoryImpl @Inject constructor(
                 }
             }
         }
+
+    private companion object {
+        /** The reply prefetch depth of every thread read — one level. */
+        const val REPLIES_FIRST = 3
+    }
+}
+
+@Singleton
+class ProfileRepositoryImpl @Inject constructor(
+    private val client: ApolloClient,
+    private val guard: AuthGuard,
+) : ProfileRepository {
+
+    override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> = guard.run {
+        client.query(UserByHandleQuery(handle)).fetch().map { data ->
+            data.user?.profileFields?.toDomain()
+        }
+    }
+
+    override suspend fun myProfile(): Outcome<ProfileView?> = guard.run {
+        client.query(MyProfileQuery()).fetch().map { data -> data.me?.profileFields?.toDomain() }
+    }
+
+    override suspend fun authorRecords(
+        authorId: String,
+        family: Family?,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<RecordRow>> = guard.run {
+        client.query(
+            AuthorRecordsQuery(
+                author = authorId,
+                family = Optional.presentIfNotNull(family?.toRecordFamily()),
+                first = first,
+                after = Optional.presentIfNotNull(after),
+            ),
+        ).fetch().map { data ->
+            Page(
+                items = data.records.edges.map { it.node.toRow() },
+                endCursor = data.records.pageInfo.endCursor,
+                hasNextPage = data.records.pageInfo.hasNextPage,
+            )
+        }
+    }
+
+    override suspend fun prepareProfileUpdate(
+        displayName: String,
+        bio: String?,
+        websiteUrl: String?,
+    ): Outcome<List<PreparedWriteView>> = guard.run {
+        client.mutation(
+            PrepareProfileUpdateMutation(
+                // The edit form holds the full field set, so every field
+                // rides as present; a present null clears (api-spec.md
+                // "Content authoring") — the display name never nulls.
+                PrepareProfileUpdateInput(
+                    displayName = Optional.present(displayName),
+                    bio = Optional.present(bio),
+                    websiteUrl = Optional.present(websiteUrl),
+                ),
+            ),
+        ).payloadOutcome({ it.prepareProfileUpdate.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.prepareProfileUpdate.writes?.map { w -> w.preparedWriteFields.toDomain() }
+        }
+    }
+}
+
+/** The reverse of RecordFamily.toDomain — null for UNKNOWN (no filter). */
+private fun Family.toRecordFamily(): com.cogra.network.graphql.type.RecordFamily? =
+    com.cogra.network.graphql.type.RecordFamily.knownEntries.find { it.rawValue == name }
+
+/**
+ * One chronicle row: family + genesis mark, the touched content's
+ * snippet, and the post it opens. A record is a genesis exactly when
+ * its target (binary) or terminal (hyper) is the mint of its own act.
+ */
+private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
+    val mint = "mint:$id"
+    val terminalComment = terminal?.onComment
+    val targetPost = target?.onPost
+    val targetComment = target?.onComment
+    val snippet = terminalComment?.content?.value
+        ?: targetPost?.title?.value
+        ?: targetPost?.content?.value
+        ?: targetComment?.content?.value
+    val link = when {
+        // A Review's thread opens at its parent post, when the parent
+        // is a post CoGra carries; nested reply chains stay unlinked
+        // until a comment permalink exists.
+        terminalComment != null -> terminalComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
+        targetPost != null -> RecordLink.ToPost(targetPost.id)
+        targetComment != null -> targetComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
+        else -> null
+    }
+    return RecordRow(
+        id = id,
+        family = family.toDomain(),
+        genesis = targetId == mint || terminalId == mint,
+        snippet = snippet,
+        link = link,
+    )
 }

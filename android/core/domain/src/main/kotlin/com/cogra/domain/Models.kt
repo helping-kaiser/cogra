@@ -71,8 +71,13 @@ data class UserProfile(
     val invitedBy: ActorRef?,
 )
 
-/** A minimal reference to another actor. */
-data class ActorRef(val id: String, val handle: String)
+/** A minimal reference to another actor, as the actor chip renders it. */
+data class ActorRef(
+    val id: String,
+    val handle: String,
+    /** The current display name; null when the read did not ask. */
+    val displayName: String? = null,
+)
 
 /** The anonymous pre-submit view of an invite link. */
 data class InviteCheck(
@@ -225,6 +230,12 @@ data class CommentView(
     val author: ActorRef?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /**
+     * The first page of direct replies, when the read prefetched one
+     * (the thread read carries one level; deeper levels load on
+     * expand). Null when the read did not ask.
+     */
+    val replies: Page<CommentView>? = null,
 )
 
 /** One forward page of a keyset connection. */
@@ -265,4 +276,40 @@ data class LicenseChoice(
 data class PreparedContentView(
     val node: String,
     val writes: List<PreparedWriteView>,
+)
+
+
+// ---------------------------------------------------------------------
+// Profiles (slice 2.1 — api-spec.md "Actors", roadmap "Slice 2.1")
+// ---------------------------------------------------------------------
+
+/** An actor's public profile — the newest profile version's fields. */
+data class ProfileView(
+    val id: String,
+    val handle: String,
+    val displayName: ModeratedField,
+    val bio: ModeratedField,
+    val websiteUrl: ModeratedField,
+)
+
+/** A tappable link from a chronicle row into the content it touched. */
+sealed interface RecordLink {
+    /** The row opens this post. */
+    data class ToPost(val postId: String) : RecordLink
+}
+
+/**
+ * One row of an actor's chronicle — the `records(author:)` read
+ * rendered as an honest labelled history (roadmap "Slice 2.1"). The
+ * label derives from family + genesis; the snippet is the touched
+ * content's current text, when CoGra carries a display row for it.
+ */
+data class RecordRow(
+    /** L1's record identifier — the list key. */
+    val id: String,
+    val family: Family,
+    /** True when the record minted its node (created), false on updates. */
+    val genesis: Boolean,
+    val snippet: String?,
+    val link: RecordLink?,
 )

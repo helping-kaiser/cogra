@@ -34,6 +34,8 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
@@ -41,6 +43,7 @@ import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
@@ -351,7 +354,45 @@ open class ThrowingContentRepository : ContentRepository {
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView> =
         throw UnsupportedOperationException()
+    override suspend fun commentReplies(
+        commentId: String,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<CommentView>> = throw UnsupportedOperationException()
 }
+
+/** Base fake for the profile surface — override what a test scripts. */
+open class ThrowingProfileRepository : ProfileRepository {
+    override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> =
+        throw UnsupportedOperationException()
+    override suspend fun myProfile(): Outcome<ProfileView?> =
+        throw UnsupportedOperationException()
+    override suspend fun authorRecords(
+        authorId: String,
+        family: Family?,
+        first: Int,
+        after: String?,
+    ): Outcome<Page<RecordRow>> = throw UnsupportedOperationException()
+    override suspend fun prepareProfileUpdate(
+        displayName: String,
+        bio: String?,
+        websiteUrl: String?,
+    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+}
+
+fun testProfile(
+    id: String = "author-1",
+    handle: String = "author",
+    displayName: String? = "Author",
+    bio: String? = null,
+    websiteUrl: String? = null,
+): ProfileView = ProfileView(
+    id = id,
+    handle = handle,
+    displayName = testModeratedField(displayName),
+    bio = testModeratedField(bio),
+    websiteUrl = testModeratedField(websiteUrl),
+)
 
 fun testModeratedField(value: String?) = ModeratedField(value, FieldStatus.NORMAL)
 

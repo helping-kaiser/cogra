@@ -26,7 +26,7 @@ class ContentScreensTest {
         state: FeedUiState,
         signedIn: Boolean? = true,
         onOpenPost: (String) -> Unit = {},
-        onCompose: () -> Unit = {},
+        onOpenActor: (String) -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
@@ -38,20 +38,17 @@ class ContentScreensTest {
                 onRefresh = onRefresh,
                 onLoadMore = onLoadMore,
                 onOpenPost = onOpenPost,
-                onCompose = onCompose,
+                onOpenActor = onOpenActor,
                 onSignInOrJoin = onSignInOrJoin,
-                onBack = {},
+                onBack = null,
             )
         }
     }
 
     @Test
-    fun anEmptyFeedShowsTheEmptyCopyAndTheComposer() {
-        var composing = false
-        renderFeed(FeedUiState(loading = false), onCompose = { composing = true })
+    fun anEmptyFeedShowsTheEmptyCopy() {
+        renderFeed(FeedUiState(loading = false))
         compose.onNodeWithTag("feed_empty").assertExists()
-        compose.onNodeWithTag("feed_compose").performClick()
-        assertThat(composing).isTrue()
     }
 
     @Test
@@ -204,10 +201,16 @@ class ContentScreensTest {
         viewerId: String? = null,
         signedIn: Boolean? = true,
         onEdit: (String) -> Unit = {},
+        onOpenActor: (String) -> Unit = {},
         onSubmitComment: () -> Unit = {},
         onSignInOrJoin: () -> Unit = {},
         onRefresh: () -> Unit = {},
         onLoadMoreComments: () -> Unit = {},
+        onLoadMoreReplies: (com.cogra.domain.CommentView) -> Unit = {},
+        onStartEditComment: (com.cogra.domain.CommentView) -> Unit = {},
+        onSubmitCommentEdit: () -> Unit = {},
+        onStartReply: (String) -> Unit = {},
+        onSubmitReply: () -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
@@ -221,7 +224,17 @@ class ContentScreensTest {
                 onOversightChange = {},
                 onSubmitComment = onSubmitComment,
                 onCommentSignedShown = {},
+                onLoadMoreReplies = onLoadMoreReplies,
+                onStartEditComment = onStartEditComment,
+                onEditDraftChange = {},
+                onCancelEditComment = {},
+                onSubmitCommentEdit = onSubmitCommentEdit,
+                onStartReply = onStartReply,
+                onReplyDraftChange = {},
+                onCancelReply = {},
+                onSubmitReply = onSubmitReply,
                 onEdit = onEdit,
+                onOpenActor = onOpenActor,
                 onSignInOrJoin = onSignInOrJoin,
                 onBack = {},
             )
@@ -365,5 +378,141 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_comment_transport").performScrollTo().assertExists()
         compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments_error").assertDoesNotExist()
+    }
+
+    // -- The comment thread (slice 2.1: edit affordance, nesting) --
+
+    private fun comment(
+        id: String,
+        authorId: String = "author-1",
+        edited: Boolean = false,
+        replies: com.cogra.domain.Page<com.cogra.domain.CommentView>? = null,
+    ) = testComment(id).let { base ->
+        base.copy(
+            author = base.author?.copy(id = authorId),
+            updatedAt = if (edited) base.updatedAt.plusSeconds(60) else base.createdAt,
+            createdAt = base.createdAt,
+            replies = replies,
+        )
+    }
+
+    @Test
+    fun theViewersOwnCommentOffersEditOthersDoNot() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("mine", authorId = "viewer"), comment("theirs")),
+            ),
+            viewerId = "viewer",
+        )
+        compose.onNodeWithTag("comment_edit_mine").assertExists()
+        compose.onNodeWithTag("comment_edit_theirs").assertDoesNotExist()
+    }
+
+    @Test
+    fun anEditedCommentCarriesTheSoftMarker() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1", edited = true), comment("c2")),
+            ),
+        )
+        compose.onNodeWithTag("comment_edited_c1").assertExists()
+        compose.onNodeWithTag("comment_edited_c2").assertDoesNotExist()
+    }
+
+    @Test
+    fun theEditAffordanceOpensTheInlineEditor() {
+        var editing: com.cogra.domain.CommentView? = null
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("mine", authorId = "viewer")),
+            ),
+            viewerId = "viewer",
+            onStartEditComment = { editing = it },
+        )
+        compose.onNodeWithTag("comment_edit_mine").performScrollTo().performClick()
+        assertThat(editing?.id).isEqualTo("mine")
+    }
+
+    @Test
+    fun theInlineEditorRendersWithSaveAndCancel() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("mine", authorId = "viewer")),
+                editingCommentId = "mine",
+                editDraft = "better words",
+            ),
+            viewerId = "viewer",
+        )
+        compose.onNodeWithTag("comment_edit_input").assertExists()
+        compose.onNodeWithTag("comment_edit_save").assertExists()
+        compose.onNodeWithTag("comment_edit_cancel").assertExists()
+    }
+
+    @Test
+    fun prefetchedRepliesNestAndOfferMore() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(
+                    comment(
+                        "c1",
+                        replies = com.cogra.domain.Page(
+                            listOf(comment("r1")),
+                            endCursor = "rc",
+                            hasNextPage = true,
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_comment_r1").assertExists()
+        compose.onNodeWithTag("replies_more_c1").assertExists()
+    }
+
+    @Test
+    fun theReplyAffordanceIsSignedInOnly() {
+        val state = PostDetailUiState(
+            loading = false,
+            post = testPost("p1"),
+            comments = listOf(comment("c1")),
+        )
+        renderDetail(state, signedIn = false)
+        compose.onNodeWithTag("comment_reply_c1").assertDoesNotExist()
+    }
+
+    @Test
+    fun theReplyComposerRendersUnderItsComment() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+                replyingToId = "c1",
+            ),
+        )
+        compose.onNodeWithTag("comment_reply_input").assertExists()
+        compose.onNodeWithTag("comment_reply_submit").assertExists()
+    }
+
+    @Test
+    fun authorChipsRenderOnPostAndComments() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+            ),
+        )
+        compose.onNodeWithTag("detail_author").assertExists()
+        compose.onNodeWithTag("comment_author_c1").assertExists()
     }
 }

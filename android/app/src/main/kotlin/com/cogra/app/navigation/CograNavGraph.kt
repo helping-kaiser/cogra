@@ -1,47 +1,62 @@
-// The single NavHost with type-safe routes (android/CLAUDE.md
-// "Navigation").
+// The single NavHost with type-safe routes, inside the shell scaffold
+// (android/CLAUDE.md "Navigation"; design.md §6): the bottom bar frames
+// the signed-in top-level tabs, and the account-status banners ride
+// above whichever tab is active.
 // Registration returns an ordinary session, so an applicant is simply
-// signed in: the applicant/member distinction lives inside the Home
-// shell, not in navigation (auth.md "Application").
+// signed in: the applicant/member distinction lives in the shell
+// banners, not in navigation (auth.md "Application").
 
 package com.cogra.app.navigation
 
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.core.util.Consumer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
+import com.cogra.feature.auth.PasswordResetRoute
+import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ComposePostRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
-import com.cogra.feature.auth.PasswordResetRoute
-import com.cogra.feature.auth.RestoreRoute
-import com.cogra.feature.home.HomeRoute
+import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.profile.ProfileEditRoute
+import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -72,9 +87,6 @@ data object Restore
 data object KeyCeremony
 
 @Serializable
-data object Home
-
-@Serializable
 data object Feed
 
 @Serializable
@@ -82,6 +94,13 @@ data class ComposePost(val postId: String? = null)
 
 @Serializable
 data class PostDetail(val postId: String)
+
+/** An actor's profile; a null handle is the viewer's own (the tab). */
+@Serializable
+data class Profile(val handle: String? = null)
+
+@Serializable
+data object ProfileEdit
 
 @Serializable
 data object Invites
@@ -96,18 +115,21 @@ data object KeyExport
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
 
 /**
- * The Restore→Home result key. It rides the back-stack ENTRY's
+ * The Restore result key. It rides the back-stack ENTRY's
  * savedStateHandle — a different object from the one injected into the
  * entry's ViewModels, so it must be read here, where the entry is in
  * hand (android/CLAUDE.md "Navigation").
  */
 private const val ACTOR_RESTORED_RESULT = "actor_restored"
 
-/** The Settings→Home result key: the handle changed, re-read the profile. */
+/** The Settings→Profile result key: the handle changed, re-read. */
 private const val HANDLE_CHANGED_RESULT = "handle_changed"
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
 private const val CONTENT_SIGNED_RESULT = "content_signed"
+
+/** The ProfileEdit→Profile result key: the update signed, re-read. */
+private const val PROFILE_SAVED_RESULT = "profile_saved"
 
 /** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
@@ -132,8 +154,8 @@ fun CograNavGraph(
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
 
-    // The read shells (Feed, PostDetail) live on both stacks and swap
-    // their write affordances for join entries when anonymous
+    // The read shells (Feed, PostDetail, Profile) live on both stacks
+    // and swap their write affordances for join entries when anonymous
     // (android.md "Screens"). Null while the cold phase resolves:
     // neither affordance shows, the web twin's "resolving" branch.
     val signedIn = when (phase) {
@@ -144,22 +166,28 @@ fun CograNavGraph(
 
     // Auth drives navigation: a genuine phase flip lands on the new
     // phase's root with a cleared stack (android/CLAUDE.md
-    // "Navigation"). An applicant lands on Home too — the read shell
-    // with the application riding along as cards, never a wall
-    // (auth.md "Application"). Two arrivals must NOT navigate: the
-    // same phase re-resolving after recreation (the restored stack is
-    // already right), and the cold LOADING → SIGNED_OUT resolution —
-    // the start destination already IS the signed-out root, carrying
-    // any invite deep link the NavController applied from the launch
-    // intent, which clearing here would drop.
+    // "Navigation"). The signed-in root is the Feed tab — an applicant
+    // lands there too, the application riding along as shell banners,
+    // never a wall (auth.md "Application"). Two arrivals must NOT
+    // navigate: the same phase re-resolving after recreation (the
+    // restored stack is already right), and the cold LOADING →
+    // SIGNED_OUT resolution — the start destination already IS the
+    // signed-out root, carrying any invite deep link the NavController
+    // applied from the launch intent, which clearing here would drop.
+    // The NavHost composes inside the scaffold's subcomposition, so the
+    // graph is not set yet on this scope's first side-effect pass — the
+    // flip waits for the first back-stack entry.
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val graphReady = backStackEntry != null
     var navigatedPhase by rememberSaveable { mutableStateOf(AuthPhase.LOADING) }
-    LaunchedEffect(phase) {
+    LaunchedEffect(phase, graphReady) {
+        if (!graphReady) return@LaunchedEffect
         if (phase == AuthPhase.LOADING) return@LaunchedEffect
         val from = navigatedPhase
         navigatedPhase = phase
         val root: Any = when {
             from == phase -> return@LaunchedEffect
-            phase == AuthPhase.SIGNED_IN -> Home
+            phase == AuthPhase.SIGNED_IN -> Feed
             from == AuthPhase.LOADING -> return@LaunchedEffect
             else -> InviteEntry()
         }
@@ -189,141 +217,231 @@ fun CograNavGraph(
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
 
-    NavHost(
-        navController = navController,
-        startDestination = InviteEntry(),
-    ) {
-        composable<InviteEntry>(
-            deepLinks = listOf(
-                // The canonical /join/<id> URL (auth.md "Link URLs")
-                // carries the id as a path segment, which the
-                // route-derived pattern cannot express (defaulted args
-                // encode as query parameters) — so the patterns are
-                // explicit, plus the bare /join landing.
-                navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join/{inviteId}" },
-                navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join" },
-            ),
-        ) { entry ->
-            val route = entry.toRoute<InviteEntry>()
-            InviteEntryRoute(
-                deepLinkedInviteId = route.inviteId,
-                onUsableLink = { id -> navController.navigate(Apply(id)) },
-                onLogInInstead = { navController.navigate(Login) },
-                onBrowseFeed = { navController.navigate(Feed) },
-            )
+    // The shell: one scaffold owning the bottom bar and the shell-level
+    // snackbar host (design.md §6) — the bar frames the signed-in
+    // top-level tabs; anonymous viewers browse the public read
+    // surfaces without it.
+    val shellSnackbar = remember { SnackbarHostState() }
+    val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
+    val onOwnProfileTab = backStackEntry?.let { entry ->
+        entry.destination.hasRoute(Profile::class) && entry.toRoute<Profile>().handle == null
+    } == true
+
+    // The documented tab pattern: pop to the signed-in root saving
+    // state, single-top, restoring the target tab's state.
+    fun toTab(route: Any) {
+        navController.navigate(route) {
+            popUpTo(Feed) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
         }
-        composable<Apply> { entry ->
-            // A successful register flips the token store; the phase
-            // holder navigates.
-            ApplyRoute(inviteId = entry.toRoute<Apply>().inviteId)
-        }
-        composable<KeyCeremony> {
-            KeyCeremonyRoute(onDone = { navController.popBackStack() })
-        }
-        composable<Login> {
-            LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
-        }
-        composable<PasswordReset> {
-            PasswordResetRoute(onDone = { navController.popBackStack() })
-        }
-        composable<Restore> {
-            RestoreRoute(
-                onRestored = {
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(ACTOR_RESTORED_RESULT, true)
-                    navController.popBackStack()
-                },
-            )
-        }
-        composable<Home> { entry ->
-            val actorRestoredResult by entry.savedStateHandle
-                .getStateFlow(ACTOR_RESTORED_RESULT, false)
-                .collectAsStateWithLifecycle()
-            val handleChangedResult by entry.savedStateHandle
-                .getStateFlow(HANDLE_CHANGED_RESULT, false)
-                .collectAsStateWithLifecycle()
-            HomeRoute(
-                actorRestoredResult = actorRestoredResult,
-                onActorRestoredResultConsumed = {
-                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
-                },
-                handleChangedResult = handleChangedResult,
-                onHandleChangedResultConsumed = {
-                    entry.savedStateHandle[HANDLE_CHANGED_RESULT] = false
-                },
-                onOpenFeed = { navController.navigate(Feed) },
-                onOpenInvites = { navController.navigate(Invites) },
-                onOpenSettings = { navController.navigate(Settings) },
-                onRestoreActor = { navController.navigate(Restore) },
-                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
-            )
-        }
-        composable<Feed> { entry ->
-            val signedResult by entry.savedStateHandle
-                .getStateFlow(CONTENT_SIGNED_RESULT, false)
-                .collectAsStateWithLifecycle()
-            FeedRoute(
-                signedIn = signedIn,
-                onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-                onCompose = { navController.navigate(ComposePost()) },
-                // Pushes the front door (the web guest entries link to
-                // "/"), so back returns to the reading context.
-                onSignInOrJoin = { navController.navigate(InviteEntry()) },
-                onBack = { navController.navigateUp() },
-                refreshSignal = signedResult,
-                onRefreshSignalConsumed = {
-                    entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
-                },
-            )
-        }
-        composable<ComposePost> { entry ->
-            ComposePostRoute(
-                postId = entry.toRoute<ComposePost>().postId,
-                onSaved = {
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(CONTENT_SIGNED_RESULT, true)
-                    navController.popBackStack()
-                },
-                onBack = { navController.navigateUp() },
-            )
-        }
-        composable<PostDetail> { entry ->
-            val signedResult by entry.savedStateHandle
-                .getStateFlow(CONTENT_SIGNED_RESULT, false)
-                .collectAsStateWithLifecycle()
-            val accountId by authState.accountId.collectAsStateWithLifecycle()
-            PostDetailRoute(
-                postId = entry.toRoute<PostDetail>().postId,
-                viewerId = accountId,
-                signedIn = signedIn,
-                onEdit = { id -> navController.navigate(ComposePost(id)) },
-                onSignInOrJoin = { navController.navigate(InviteEntry()) },
-                onBack = { navController.navigateUp() },
-                refreshSignal = signedResult,
-                onRefreshSignalConsumed = {
-                    entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
-                },
-            )
-        }
-        composable<Invites> {
-            InvitesRoute(onBack = { navController.navigateUp() })
-        }
-        composable<Settings> {
-            SettingsRoute(
-                onBack = { navController.navigateUp() },
-                onHandleChanged = {
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(HANDLE_CHANGED_RESULT, true)
-                },
-                onExportKey = { navController.navigate(KeyExport) },
-            )
-        }
-        composable<KeyExport> {
-            // Arriving reveals nothing; the screen's own gate does.
-            KeyExportRoute(onBack = { navController.navigateUp() })
+    }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(shellSnackbar) { data ->
+                Snackbar(snackbarData = data, modifier = Modifier.testTag("shell_snackbar"))
+            }
+        },
+        bottomBar = {
+            if (signedIn == true && (onFeedTab || onOwnProfileTab)) {
+                CograBottomBar(
+                    feedSelected = onFeedTab,
+                    profileSelected = onOwnProfileTab,
+                    onFeed = { toTab(Feed) },
+                    onCompose = { navController.navigate(ComposePost()) },
+                    onProfile = { toTab(Profile()) },
+                )
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = InviteEntry(),
+            modifier = Modifier.padding(padding),
+        ) {
+            composable<InviteEntry>(
+                deepLinks = listOf(
+                    // The canonical /join/<id> URL (auth.md "Link URLs")
+                    // carries the id as a path segment, which the
+                    // route-derived pattern cannot express (defaulted args
+                    // encode as query parameters) — so the patterns are
+                    // explicit, plus the bare /join landing.
+                    navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join/{inviteId}" },
+                    navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}/join" },
+                ),
+            ) { entry ->
+                val route = entry.toRoute<InviteEntry>()
+                InviteEntryRoute(
+                    deepLinkedInviteId = route.inviteId,
+                    onUsableLink = { id -> navController.navigate(Apply(id)) },
+                    onLogInInstead = { navController.navigate(Login) },
+                    onBrowseFeed = { navController.navigate(Feed) },
+                )
+            }
+            composable<Apply> { entry ->
+                // A successful register flips the token store; the phase
+                // holder navigates.
+                ApplyRoute(inviteId = entry.toRoute<Apply>().inviteId)
+            }
+            composable<KeyCeremony> {
+                KeyCeremonyRoute(onDone = { navController.popBackStack() })
+            }
+            composable<Login> {
+                LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
+            }
+            composable<PasswordReset> {
+                PasswordResetRoute(onDone = { navController.popBackStack() })
+            }
+            composable<Restore> {
+                RestoreRoute(
+                    onRestored = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(ACTOR_RESTORED_RESULT, true)
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<Feed> { entry ->
+                val signedResult by entry.savedStateHandle
+                    .getStateFlow(CONTENT_SIGNED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                val actorRestoredResult by entry.savedStateHandle
+                    .getStateFlow(ACTOR_RESTORED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                FeedRoute(
+                    signedIn = signedIn,
+                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    // Pushes the front door (the web guest entries link to
+                    // "/"), so back returns to the reading context.
+                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
+                    // The signed-in Feed is the shell's root tab; the
+                    // anonymous Feed is pushed from the front door.
+                    onBack = if (signedIn == true) null else ({ navController.navigateUp() }),
+                    refreshSignal = signedResult,
+                    onRefreshSignalConsumed = {
+                        entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
+                    },
+                    banners = {
+                        if (signedIn == true) {
+                            StatusBannersRoute(
+                                actorRestoredResult = actorRestoredResult,
+                                onActorRestoredResultConsumed = {
+                                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
+                                },
+                                onRestoreActor = { navController.navigate(Restore) },
+                                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
+                                snackbarHostState = shellSnackbar,
+                            )
+                        }
+                    },
+                )
+            }
+            composable<ComposePost> { entry ->
+                ComposePostRoute(
+                    postId = entry.toRoute<ComposePost>().postId,
+                    onSaved = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(CONTENT_SIGNED_RESULT, true)
+                        navController.popBackStack()
+                    },
+                    onBack = { navController.navigateUp() },
+                )
+            }
+            composable<PostDetail> { entry ->
+                val signedResult by entry.savedStateHandle
+                    .getStateFlow(CONTENT_SIGNED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                val accountId by authState.accountId.collectAsStateWithLifecycle()
+                PostDetailRoute(
+                    postId = entry.toRoute<PostDetail>().postId,
+                    viewerId = accountId,
+                    signedIn = signedIn,
+                    onEdit = { id -> navController.navigate(ComposePost(id)) },
+                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
+                    onBack = { navController.navigateUp() },
+                    refreshSignal = signedResult,
+                    onRefreshSignalConsumed = {
+                        entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
+                    },
+                )
+            }
+            composable<Profile> { entry ->
+                val route = entry.toRoute<Profile>()
+                val handleChangedResult by entry.savedStateHandle
+                    .getStateFlow(HANDLE_CHANGED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                val profileSavedResult by entry.savedStateHandle
+                    .getStateFlow(PROFILE_SAVED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                val actorRestoredResult by entry.savedStateHandle
+                    .getStateFlow(ACTOR_RESTORED_RESULT, false)
+                    .collectAsStateWithLifecycle()
+                ProfileRoute(
+                    handle = route.handle,
+                    handleChangedResult = handleChangedResult,
+                    onHandleChangedResultConsumed = {
+                        entry.savedStateHandle[HANDLE_CHANGED_RESULT] = false
+                    },
+                    profileSavedResult = profileSavedResult,
+                    onProfileSavedResultConsumed = {
+                        entry.savedStateHandle[PROFILE_SAVED_RESULT] = false
+                    },
+                    onEdit = { navController.navigate(ProfileEdit) },
+                    onOpenSettings = { navController.navigate(Settings) },
+                    onOpenInvites = { navController.navigate(Invites) },
+                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
+                    // The own-profile tab has no back arrow; another
+                    // actor's profile is a drill-in.
+                    onBack = if (route.handle == null) null else ({ navController.navigateUp() }),
+                    banners = {
+                        if (route.handle == null && signedIn == true) {
+                            StatusBannersRoute(
+                                actorRestoredResult = actorRestoredResult,
+                                onActorRestoredResultConsumed = {
+                                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
+                                },
+                                onRestoreActor = { navController.navigate(Restore) },
+                                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
+                                snackbarHostState = shellSnackbar,
+                            )
+                        }
+                    },
+                )
+            }
+            composable<ProfileEdit> {
+                ProfileEditRoute(
+                    onSaved = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(PROFILE_SAVED_RESULT, true)
+                        navController.popBackStack()
+                    },
+                    onBack = { navController.navigateUp() },
+                )
+            }
+            composable<Invites> {
+                InvitesRoute(onBack = { navController.navigateUp() })
+            }
+            composable<Settings> {
+                SettingsRoute(
+                    onBack = { navController.navigateUp() },
+                    onHandleChanged = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(HANDLE_CHANGED_RESULT, true)
+                    },
+                    onExportKey = { navController.navigate(KeyExport) },
+                )
+            }
+            composable<KeyExport> {
+                // Arriving reveals nothing; the screen's own gate does.
+                KeyExportRoute(onBack = { navController.navigateUp() })
+            }
         }
     }
 }

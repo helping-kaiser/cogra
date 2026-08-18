@@ -127,12 +127,17 @@ touch-target sizes — alongside its UI tests.
 
 ## Screens
 
-The destination map — type-safe destinations, one NavHost
-(`CograNavGraph.kt`). Auth drives navigation: a phase flip lands
-on the new phase's root — `InviteEntry` signed out, `Home` signed
-in — with a cleared stack, so which stack reaches a destination is
-its access gate. Every inner screen carries a top-bar back arrow
-over `navigateUp()`.
+The destination map — type-safe destinations, one NavHost inside
+the shell scaffold (`CograNavGraph.kt`). Auth drives navigation:
+a phase flip lands on the new phase's root — `InviteEntry` signed
+out, the `Feed` tab signed in — with a cleared stack, so which
+stack reaches a destination is its access gate. The signed-in
+shell frames the top-level tabs with the bottom bar
+([design.md §6](design.md#6-components)); tabs carry no back
+arrow, every inner screen carries one over `navigateUp()`. The
+account-status banners (the application cards, husk/restore, the
+reciprocation prompt — `feature:home`) ride above whichever tab
+is active until resolved.
 
 | Destination | Stack | Web counterpart ([web.md "Routes"](web.md#routes)) |
 |---|---|---|
@@ -140,12 +145,13 @@ over `navigateUp()`.
 | `Apply(inviteId)` | signed out | the apply step of `/join/<link-id>` |
 | `Login` | signed out | `/login` |
 | `PasswordReset` | signed out | `/reset` |
-| `Home` (signed-in root) | signed in | `/` signed in |
-| `Feed` | both (public read) | `/feed` |
+| `Feed` (signed-in root; bar tab) | both (public read) | `/feed` |
+| `Profile(handle?)` (bar tab when own; drill-in by handle) | both (public read) | `/u/<handle>` |
+| `ProfileEdit` | signed in | the edit form of `/u/<handle>` |
 | `PostDetail(postId)` | both (public read) | `/posts/<id>` |
-| `ComposePost(postId?)` | signed in | `/compose` (+`?post=<id>`) |
-| `Invites` | signed in | `/invites` |
-| `Settings` | signed in | `/settings` |
+| `ComposePost(postId?)` (the bar's center action) | signed in | `/compose` (+`?post=<id>`) |
+| `Invites` (entry on the own profile) | signed in | `/invites` |
+| `Settings` (gear on the own profile) | signed in | `/settings` |
 | `KeyExport` | signed in | `/settings/key` |
 | `KeyCeremony` | signed in | `/key` |
 | `Restore` | signed in | `/restore` |
@@ -153,8 +159,9 @@ over `navigateUp()`.
 The read surfaces are public on every client — accounts gate
 participation, never viewing
 ([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
-`Feed` and `PostDetail` sit on both stacks, write affordances
-swapped for join entries; the front door carries the browse
+`Feed`, `PostDetail`, and `Profile` sit on both stacks, write
+affordances swapped for join entries — anonymous viewers browse
+without the bottom bar; the front door carries the browse
 entry, and the join entries on the read surfaces push the front
 door, so back returns to the reading context. No guest session
 exists anywhere: an anonymous read simply carries no

@@ -64,7 +64,7 @@ class ContentRepositoryTest {
          "content":{"__typename":"ModeratedText",
                     "value":${if (redacted) "null" else "\"body\""},
                     "status":"${if (redacted) "REDACTED" else "NORMAL"}"},
-         "author":{"__typename":"User","id":"u1","handle":"alice"},
+         "author":{"__typename":"User","id":"u1","handle":"alice","displayName":{"__typename":"ModeratedText","value":"Alice"}},
          "createdAt":"2026-08-12T10:00:00+00:00",
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "moderationStatus":"NORMAL"}
@@ -113,10 +113,12 @@ class ContentRepositoryTest {
                "comments":{"__typename":"CommentConnection",
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
-                   "author":{"__typename":"User","id":"u2","handle":"bob"},
+                   "author":{"__typename":"User","id":"u2","handle":"bob","displayName":{"__typename":"ModeratedText","value":"Bob"}},
                    "createdAt":"2026-08-12T10:05:00+00:00",
                    "updatedAt":"2026-08-12T10:05:00+00:00",
-                   "moderationStatus":"NORMAL"}}],
+                   "moderationStatus":"NORMAL",
+                   "replies":{"__typename":"CommentConnection","edges":[],
+                     "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
         )
         val detail = (repo().post("p1", 20, null) as Outcome.Success).value
