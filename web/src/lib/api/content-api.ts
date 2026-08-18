@@ -7,6 +7,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  CommentRepliesDocument,
   PostDetailDocument,
   PostsDocument,
   PrepareCommentDocument,
@@ -17,13 +18,15 @@ import {
   type PostsQuery,
   type Oversight,
 } from "@/__generated__/graphql";
-import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
+import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
 export type PostView = PostsQuery["posts"]["edges"][number]["node"];
 
 type DetailPost = NonNullable<PostDetailQuery["post"]>;
 export type CommentView = DetailPost["comments"]["edges"][number]["node"];
+/** A nested reply — one prefetched level under each comment. */
+export type ReplyView = CommentView["replies"]["edges"][number]["node"];
 
 export type Page<T> = {
   items: readonly T[];
@@ -52,6 +55,37 @@ export type PreparedContent = {
 
 /** One page per fetch; the server default is the same number. */
 export const CONTENT_PAGE_SIZE = 20;
+
+/** The reply prefetch depth of every thread read — one level. */
+export const REPLIES_FIRST = 3;
+
+/** A further page of one comment's direct replies (expand). */
+export async function fetchCommentReplies(
+  client: ApolloClient,
+  commentId: string,
+  after: string | null = null,
+): Promise<Outcome<Page<CommentView>>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CommentRepliesDocument,
+      variables: {
+        id: commentId,
+        first: CONTENT_PAGE_SIZE,
+        after,
+        repliesFirst: REPLIES_FIRST,
+      },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const comment = fetched.value.comment;
+  if (!comment) return failed(new Error("comment vanished under its replies"));
+  return success({
+    items: comment.replies.edges.map((edge) => edge.node),
+    endCursor: comment.replies.pageInfo.endCursor ?? null,
+    hasNextPage: comment.replies.pageInfo.hasNextPage,
+  });
+}
 
 export async function fetchPosts(
   client: ApolloClient,
@@ -82,7 +116,12 @@ export async function fetchPostDetail(
   const fetched = await fetchOutcome(() =>
     client.query({
       query: PostDetailDocument,
-      variables: { id, commentsFirst: CONTENT_PAGE_SIZE, commentsAfter },
+      variables: {
+        id,
+        commentsFirst: CONTENT_PAGE_SIZE,
+        commentsAfter,
+        repliesFirst: REPLIES_FIRST,
+      },
       fetchPolicy: "network-only",
     }),
   );

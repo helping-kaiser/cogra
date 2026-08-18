@@ -1,11 +1,13 @@
 "use client";
 
-// The signed-in shell (Android's Home): applicant vs member is cards,
-// never navigation (auth.md "The applicant experience"). The guarded Me
-// read exercises refresh-and-replay; a refused read is a dead session —
-// the phase flip handles it, the shell just stops loading.
+// The account-status banners (Android's twin, design.md §6): the
+// security notice, the application cards, and the member status —
+// shell-scoped, riding above whichever tab is active until resolved
+// (auth.md "The applicant experience": applicant vs member is cards,
+// never navigation). The guarded Me read exercises refresh-and-replay;
+// a refused read is a dead session — the phase flip handles it, the
+// banners just stop loading.
 
-import Link from "next/link";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -24,7 +26,7 @@ function noticeDate(detectedAt: string): string {
   }).format(new Date(detectedAt));
 }
 
-export function HomeShell({
+export function StatusBanners({
   notices = securityNotices,
 }: {
   /** Test injection. */
@@ -86,8 +88,7 @@ export function HomeShell({
   }, [flow, refresh]);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
-      <h1 className="text-headline-small">CoGra</h1>
+    <section aria-label="Account status" className="flex w-full flex-col gap-4">
       {reuseDetectedAt !== null && (
         <div
           role="alert"
@@ -115,36 +116,6 @@ export function HomeShell({
           Loading…
         </p>
       )}
-      {me !== null && (
-        <>
-          <p data-testid="home_greeting" className="text-body-large">
-            Hello, @{me.handle}
-          </p>
-          <nav className="flex gap-4">
-            <Link
-              href="/feed"
-              data-testid="home_feed"
-              className="text-body-medium text-on-surface-variant underline"
-            >
-              Feed
-            </Link>
-            <Link
-              href="/invites"
-              data-testid="home_invites"
-              className="text-body-medium text-on-surface-variant underline"
-            >
-              Invites
-            </Link>
-            <Link
-              href="/settings"
-              data-testid="home_settings"
-              className="text-body-medium text-on-surface-variant underline"
-            >
-              Settings
-            </Link>
-          </nav>
-        </>
-      )}
       {welcome && (
         <p role="status" data-testid="home_welcome" className="text-body-medium">
           Welcome — you&apos;re in. Your registration landed.
@@ -153,6 +124,6 @@ export function HomeShell({
       {isApplicant && <ApplicantStatus progress={progress} />}
       {me?.accountState === "MEMBER" && <MemberStatus me={me} />}
       {transportFailed && <TransportError testId="home_transport_error" />}
-    </main>
+    </section>
   );
 }

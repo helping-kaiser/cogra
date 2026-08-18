@@ -3,7 +3,10 @@
 // One post and its direct thread (comment.md §2), with the comment box —
 // a genesis Review signed in this browser. Confirmation is asynchronous:
 // a freshly signed comment appears once its record lands, so the surface
-// says so instead of faking it.
+// says so instead of faking it. Slice 2.1 closes the thread's UI gaps:
+// author chips, the creator's inline edit with the soft Edited marker
+// (design.md §9), inline replies, and the nested reply tree — one
+// prefetched level, more on demand.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -11,18 +14,50 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { Oversight } from "@/__generated__/graphql";
 import {
+  fetchCommentReplies,
   fetchPostDetail,
   prepareComment,
+  prepareCommentEdit,
   type CommentView,
   type PostDetail,
+  type ReplyView,
 } from "@/lib/api/content-api";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+
+/** Any node of the thread tree — a comment or a nested reply. */
+type ThreadComment = CommentView | ReplyView;
+
+/** One comment's reply thread as expanded past the prefetched page. */
+type ReplyThread = {
+  items: readonly ThreadComment[];
+  endCursor: string | null;
+  hasMore: boolean;
+  loading: boolean;
+  failed: boolean;
+};
+
+/** Nesting indents up to three levels, then flattens (design.md §6). */
+const MAX_INDENT_DEPTH = 3;
+
+function prefetchedReplies(comment: ThreadComment): {
+  items: readonly ThreadComment[];
+  endCursor: string | null;
+  hasMore: boolean;
+} {
+  if (!("replies" in comment)) return { items: [], endCursor: null, hasMore: false };
+  return {
+    items: comment.replies.edges.map((edge) => edge.node),
+    endCursor: comment.replies.pageInfo.endCursor ?? null,
+    hasMore: comment.replies.pageInfo.hasNextPage,
+  };
+}
 
 export function PostView({ postId }: { postId: string }) {
   const client = useApolloClient();
@@ -50,12 +85,18 @@ export function PostView({ postId }: { postId: string }) {
   const [submitFailed, setSubmitFailed] = useState(false);
   const [commentSigned, setCommentSigned] = useState(false);
 
-  // Effect-invoked, so no synchronous setState here (the lint's
-  // cascading-render guard); submit paths reset the flags themselves.
-  // As in FeedView: the fault reflects the last COMPLETED fetch — it
-  // clears only on an outcome, never eagerly, so a failed retry never
-  // flashes the error surface — and carries which fetch failed, so it
-  // surfaces where that fetch was requested.
+  // Reply threads expanded past their prefetched page, keyed by comment.
+  const [replyThreads, setReplyThreads] = useState<Record<string, ReplyThread>>({});
+  // The inline comment edit — the affordance renders on own comments only.
+  const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editFailed, setEditFailed] = useState(false);
+  // The inline reply — a genesis Review targeting the comment.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [replyFailed, setReplyFailed] = useState(false);
+
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
@@ -72,6 +113,8 @@ export function PostView({ postId }: { postId: string }) {
         setComments(outcome.value.comments.items);
         setEndCursor(outcome.value.comments.endCursor);
         setHasMore(outcome.value.comments.hasNextPage);
+        // The prefetch re-read everything; expansions start over.
+        setReplyThreads({});
       }
     });
     return () => {
@@ -86,8 +129,6 @@ export function PostView({ postId }: { postId: string }) {
     setLoadingMore(true);
     const outcome = await fetchPostDetail(client, postId, endCursor);
     setLoadingMore(false);
-    // A failed page is a fault, not a no-op: the loaded thread stays
-    // and the load-more slot says why nothing new arrived.
     if (outcome.kind !== "success") {
       setTransportFault("append");
       return;
@@ -98,6 +139,41 @@ export function PostView({ postId }: { postId: string }) {
     setComments((current) => [...current, ...next.items]);
     setEndCursor(next.endCursor);
     setHasMore(next.hasNextPage);
+  };
+
+  const onLoadMoreReplies = async (comment: ThreadComment) => {
+    const seeded = replyThreads[comment.id] ?? {
+      ...prefetchedReplies(comment),
+      loading: false,
+      failed: false,
+    };
+    if (seeded.loading) return;
+    setReplyThreads((current) => ({
+      ...current,
+      [comment.id]: { ...seeded, loading: true, failed: false },
+    }));
+    const outcome = await fetchCommentReplies(client, comment.id, seeded.endCursor);
+    setReplyThreads((current) => ({
+      ...current,
+      [comment.id]:
+        outcome.kind === "success"
+          ? {
+              items: [...seeded.items, ...outcome.value.items],
+              endCursor: outcome.value.endCursor,
+              hasMore: outcome.value.hasNextPage,
+              loading: false,
+              failed: false,
+            }
+          : { ...seeded, loading: false, failed: true },
+    }));
+  };
+
+  const signAll = async (writes: readonly Parameters<typeof signer.signStaged>[0][]) => {
+    const results = [];
+    for (const staged of writes) {
+      results.push(await signer.signStaged(staged));
+    }
+    return results.every((result) => result.kind === "done");
   };
 
   const onSubmitComment = async () => {
@@ -124,16 +200,62 @@ export function PostView({ postId }: { postId: string }) {
       setSubmitFailed(true);
       return;
     }
-    const results = [];
-    for (const staged of prepared.value.writes) {
-      results.push(await signer.signStaged(staged));
-    }
+    const done = await signAll(prepared.value.writes);
     setSubmitting(false);
-    if (results.every((result) => result.kind === "done")) {
+    if (done) {
       setDraft("");
       setCommentSigned(true);
     } else {
       setSignIncomplete(true);
+    }
+  };
+
+  const onSubmitEdit = async () => {
+    if (editing === null || editSubmitting || editing.draft.trim() === "") return;
+    setEditSubmitting(true);
+    setEditFailed(false);
+    const prepared = await guard.run(() =>
+      prepareCommentEdit(client, { id: editing.id, content: editing.draft }),
+    );
+    if (prepared.kind !== "success") {
+      setEditSubmitting(false);
+      setEditFailed(true);
+      return;
+    }
+    const done = await signAll(prepared.value.writes);
+    setEditSubmitting(false);
+    if (done) {
+      setEditing(null);
+      setCommentSigned(true);
+    } else {
+      setEditFailed(true);
+    }
+  };
+
+  const onSubmitReply = async () => {
+    if (replyingTo === null || replySubmitting || replyDraft.trim() === "") return;
+    setReplySubmitting(true);
+    setReplyFailed(false);
+    const prepared = await guard.run(() =>
+      prepareComment(client, {
+        target: replyingTo,
+        content: replyDraft,
+        license: { attributionRequired, oversight },
+      }),
+    );
+    if (prepared.kind !== "success") {
+      setReplySubmitting(false);
+      setReplyFailed(true);
+      return;
+    }
+    const done = await signAll(prepared.value.writes);
+    setReplySubmitting(false);
+    if (done) {
+      setReplyingTo(null);
+      setReplyDraft("");
+      setCommentSigned(true);
+    } else {
+      setReplyFailed(true);
     }
   };
 
@@ -200,6 +322,176 @@ export function PostView({ postId }: { postId: string }) {
 
   const post = detail.post;
 
+  const renderComment = (comment: ThreadComment, depth: number): React.ReactNode => {
+    const thread = replyThreads[comment.id];
+    const prefetch = prefetchedReplies(comment);
+    const replies = thread?.items ?? prefetch.items;
+    const repliesHaveMore = thread?.hasMore ?? prefetch.hasMore;
+    const isOwn = viewerId !== null && comment.author?.id === viewerId;
+    const isEditing = editing?.id === comment.id;
+    const edited = comment.updatedAt > comment.createdAt;
+    return (
+      <li
+        key={comment.id}
+        data-testid={`post-comment-${comment.id}`}
+        className="flex flex-col gap-3"
+        style={{ marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px` }}
+      >
+        <Card>
+          {comment.author && (
+            <ActorChip
+              handle={comment.author.handle}
+              displayName={comment.author.displayName.value}
+              testId={`comment-author-${comment.id}`}
+            />
+          )}
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={editing.draft}
+                onChange={(event) => setEditing({ id: comment.id, draft: event.target.value })}
+                rows={3}
+                aria-label="Edit comment"
+                data-testid="comment-edit-input"
+                className="rounded-extra-small border border-outline p-2"
+              />
+              {editFailed && (
+                <p role="alert" data-testid="comment-edit-failed" className="text-body-small text-error">
+                  That didn&apos;t save. Try again.
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  testId="comment-edit-save"
+                  size="sm"
+                  onClick={() => void onSubmitEdit()}
+                  disabled={editSubmitting || editing.draft.trim() === ""}
+                >
+                  Save
+                </Button>
+                <Button
+                  testId="comment-edit-cancel"
+                  variant="text"
+                  size="sm"
+                  onClick={() => setEditing(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-body-medium">{comment.content.value}</p>
+              {/* The soft marker, friendly not forensic (design.md §9). */}
+              {edited && (
+                <p
+                  data-testid={`comment-edited-${comment.id}`}
+                  className="text-label-small text-on-surface-variant"
+                >
+                  Edited
+                </p>
+              )}
+              <div className="flex gap-2">
+                {phase === "signedIn" && (
+                  <Button
+                    testId={`comment-reply-${comment.id}`}
+                    variant="text"
+                    size="sm"
+                    onClick={() => {
+                      setReplyingTo(comment.id);
+                      setReplyDraft("");
+                      setEditing(null);
+                    }}
+                  >
+                    Reply
+                  </Button>
+                )}
+                {isOwn && (
+                  <Button
+                    testId={`comment-edit-${comment.id}`}
+                    variant="text"
+                    size="sm"
+                    onClick={() => {
+                      setEditing({ id: comment.id, draft: comment.content.value ?? "" });
+                      setReplyingTo(null);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </Card>
+        {replyingTo === comment.id && (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={replyDraft}
+              onChange={(event) => setReplyDraft(event.target.value)}
+              rows={3}
+              aria-label="Reply"
+              data-testid="comment-reply-input"
+              className="rounded-extra-small border border-outline p-2"
+            />
+            {replyFailed && (
+              <p role="alert" data-testid="comment-reply-failed" className="text-body-small text-error">
+                That didn&apos;t send. Try again.
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button
+                testId="comment-reply-submit"
+                size="sm"
+                onClick={() => void onSubmitReply()}
+                disabled={replySubmitting || replyDraft.trim() === ""}
+              >
+                Sign reply
+              </Button>
+              <Button
+                testId="comment-reply-cancel"
+                variant="text"
+                size="sm"
+                onClick={() => setReplyingTo(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+        {replies.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {replies.map((reply) => renderComment(reply, depth + 1))}
+          </ul>
+        )}
+        {thread?.loading === true && (
+          <p data-testid={`replies-loading-${comment.id}`} className="text-body-small">
+            Loading…
+          </p>
+        )}
+        {thread?.failed === true && (
+          <Button
+            testId={`replies-retry-${comment.id}`}
+            variant="text"
+            size="sm"
+            onClick={() => void onLoadMoreReplies(comment)}
+          >
+            Retry
+          </Button>
+        )}
+        {repliesHaveMore && thread?.loading !== true && thread?.failed !== true && (
+          <Button
+            testId={`replies-more-${comment.id}`}
+            variant="text"
+            size="sm"
+            onClick={() => void onLoadMoreReplies(comment)}
+          >
+            Show replies
+          </Button>
+        )}
+      </li>
+    );
+  };
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
       {header(viewerId !== null && post.author?.id === viewerId)}
@@ -217,7 +509,11 @@ export function PostView({ postId }: { postId: string }) {
         {post.content.value}
       </p>
       {post.author && (
-        <p className="text-body-small text-on-surface-variant">@{post.author.handle}</p>
+        <ActorChip
+          handle={post.author.handle}
+          displayName={post.author.displayName.value}
+          testId="post-author"
+        />
       )}
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Comments</h2>
@@ -227,18 +523,7 @@ export function PostView({ postId }: { postId: string }) {
       {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
       {comments.length === 0 && <p data-testid="post-no-comments">No comments yet.</p>}
       <ul className="flex flex-col gap-3">
-        {comments.map((comment) => (
-          <li key={comment.id} data-testid={`post-comment-${comment.id}`}>
-            <Card>
-              <p className="text-body-medium">{comment.content.value}</p>
-              {comment.author && (
-                <p className="text-body-small text-on-surface-variant">
-                  @{comment.author.handle}
-                </p>
-              )}
-            </Card>
-          </li>
-        ))}
+        {comments.map((comment) => renderComment(comment, 0))}
       </ul>
       {hasMore &&
         (transportFault === "append" ? (
@@ -331,7 +616,7 @@ export function PostView({ postId }: { postId: string }) {
           {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (
             <p data-testid="comment-signed" className="text-body-medium text-success">
-              Signed — your comment appears once its record lands. Refresh to check.
+              Signed — your write appears once its record lands. Refresh to check.
             </p>
           )}
           <Button
