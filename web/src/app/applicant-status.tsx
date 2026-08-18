@@ -181,8 +181,7 @@ export function RestoreCard() {
     <Card>
       <h2 className="text-title-medium">Your key isn&apos;t on this browser</h2>
       <p className="text-body-medium text-on-surface-variant">
-        Your account exists, but its signing key lives elsewhere. Restore it with your recovery code
-        to continue here.
+        Restore it with your recovery code to post, vouch, and act.
       </p>
       <Link
         href="/restore"
