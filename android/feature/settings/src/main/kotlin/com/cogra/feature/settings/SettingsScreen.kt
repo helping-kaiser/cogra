@@ -1,6 +1,8 @@
 package com.cogra.feature.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,6 +57,7 @@ fun SettingsRoute(
     onBack: () -> Unit,
     onHandleChanged: () -> Unit,
     onExportKey: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -85,6 +88,7 @@ fun SettingsRoute(
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
         onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
+        keyBanner = keyBanner,
     )
 }
 
@@ -111,6 +115,7 @@ fun SettingsScreen(
     onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
+    keyBanner: @Composable () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val feedbackMessage = state.feedback?.let { stringResource(it.message()) }
@@ -126,27 +131,35 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
-                title = {
-                    Text(
-                        text = stringResource(R.string.settings_title),
-                        modifier = Modifier.semantics { heading() },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("settings_back"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                    title = {
+                        Text(
+                            text = stringResource(R.string.settings_title),
+                            modifier = Modifier.semantics { heading() },
                         )
-                    }
-                },
-            )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.testTag("settings_back"),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
+                    },
+                )
+                // The key banner rides the collapsing top on every main
+                // surface (design.md §6); the host pads to line up with
+                // the content below.
+                AnimatedVisibility(visible = collapsingTop.showTop) {
+                    Box(Modifier.padding(horizontal = 24.dp)) { keyBanner() }
+                }
+            }
         },
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->

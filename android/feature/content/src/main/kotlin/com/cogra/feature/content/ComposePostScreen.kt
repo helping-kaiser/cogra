@@ -1,6 +1,8 @@
 package com.cogra.feature.content
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +48,7 @@ fun ComposePostRoute(
     postId: String?,
     onSaved: () -> Unit,
     onBack: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
     viewModel: ComposePostViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -63,6 +66,7 @@ fun ComposePostRoute(
         onOversightChange = viewModel::onOversightChange,
         onSubmit = viewModel::onSubmit,
         onBack = onBack,
+        keyBanner = keyBanner,
     )
 }
 
@@ -77,32 +81,41 @@ fun ComposePostScreen(
     onOversightChange: (OversightChoice) -> Unit,
     onSubmit: () -> Unit,
     onBack: () -> Unit,
+    keyBanner: @Composable () -> Unit = {},
 ) {
     val editing = state.editingId != null
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
-                title = {
-                    Text(
-                        stringResource(
-                            if (editing) R.string.content_compose_edit_title
-                            else R.string.content_compose_title,
-                        ),
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("compose_back")) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_back),
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                    title = {
+                        Text(
+                            stringResource(
+                                if (editing) R.string.content_compose_edit_title
+                                else R.string.content_compose_title,
+                            ),
                         )
-                    }
-                },
-            )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("compose_back")) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.content_back),
+                            )
+                        }
+                    },
+                )
+                // The key banner rides the collapsing top here too — a
+                // keyless writer learns before drafting, not at submit
+                // (design.md §6).
+                AnimatedVisibility(visible = collapsingTop.showTop) {
+                    Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
+                }
+            }
         },
     ) { padding ->
         Column(

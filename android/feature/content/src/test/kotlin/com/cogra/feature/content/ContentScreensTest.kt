@@ -231,6 +231,7 @@ class ContentScreensTest {
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
         onOversightChange: (OversightChoice) -> Unit = {},
+        keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
             ComposePostScreen(
@@ -242,8 +243,27 @@ class ContentScreensTest {
                 onOversightChange = onOversightChange,
                 onSubmit = onSubmit,
                 onBack = {},
+                keyBanner = keyBanner,
             )
         }
+    }
+
+    // The composer hosts the key-banner slot on its collapsing top — a
+    // keyless writer learns before drafting, not at submit.
+    @Test
+    fun theComposerHostsTheKeyBannerSlot() {
+        renderComposer(
+            ComposePostUiState(),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        compose.onNodeWithTag("key_banner").assertExists()
     }
 
     @Test

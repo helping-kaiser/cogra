@@ -426,6 +426,34 @@ class CograNavGraphTest {
         assertThat(identity.seed).isEqualTo(actor.seed())
     }
 
+    // The husk banner rides every main surface (design.md §6): the
+    // composer warns before drafting, settings alongside the backup
+    // card.
+    @Test
+    fun theHuskBannerRidesTheComposerAndSettings() {
+        signIn()
+        identity.seed = null
+        account.profile = member()
+        render()
+
+        waitForTag("bar_compose")
+        compose.onNodeWithTag("bar_compose").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>() == true
+        }
+        waitForTag("home_restore")
+
+        compose.onNodeWithTag("compose_back").performClick()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_settings")
+        compose.onNodeWithTag("profile_settings").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Settings>() == true
+        }
+        waitForTag("home_restore")
+    }
+
     @Test
     fun aChangedHandleRefreshesTheProfile() {
         signIn()
