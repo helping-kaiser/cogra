@@ -72,7 +72,24 @@ data class HomeUiState(
     val transportFailed: Boolean = false,
     /** One-shot: a restore just landed the actor key; cleared once shown. */
     val actorRestored: Boolean = false,
-)
+) {
+    /**
+     * The account's actor key is attached but not on this device —
+     * the restore ask, member husk and mid-flow applicant alike. It
+     * rides the screen's collapsing top (KeyRestoreBanner), never
+     * the banner stack.
+     */
+    val keyElsewhere: Boolean
+        get() {
+            if (huskWarning) return true
+            if (!applicant) return false
+            return when (val p = progress) {
+                is RegistrationProgress.AwaitingApproval -> p.keyAttached && !p.keyOnDevice
+                RegistrationProgress.AwaitingSigningKey -> true
+                else -> false
+            }
+        }
+}
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(

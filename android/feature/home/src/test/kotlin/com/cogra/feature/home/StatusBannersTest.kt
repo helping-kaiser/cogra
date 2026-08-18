@@ -38,7 +38,7 @@ class StatusBannersTest {
                 onDismissWaitingHint = {},
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
-                onStartKeyCeremony = {}, onRestoreActor = {},
+                onStartKeyCeremony = {},
             )
         }
     }
@@ -87,7 +87,7 @@ class StatusBannersTest {
     }
 
     @Test
-    fun theKeyRestoreBannerShowsForAMemberHuskOnly() {
+    fun theKeyRestoreBannerShowsForAMemberHusk() {
         compose.setContent {
             KeyRestoreBanner(HomeUiState(loading = false, huskWarning = true), onRestoreActor = {})
         }
@@ -95,13 +95,38 @@ class StatusBannersTest {
     }
 
     @Test
-    fun theKeyRestoreBannerStaysQuietForApplicantsAndKeyedDevices() {
+    fun theKeyRestoreBannerShowsForAnApplicantKeyAttachedElsewhere() {
+        compose.setContent {
+            KeyRestoreBanner(
+                applicant(awaiting(keyAttached = true, keyOnDevice = false)),
+                onRestoreActor = {},
+            )
+        }
+        compose.onNodeWithTag("home_restore").assertExists()
+    }
+
+    @Test
+    fun theKeyRestoreBannerShowsWhileTheSigningKeyBlocksLanding() {
+        compose.setContent {
+            KeyRestoreBanner(
+                applicant(RegistrationProgress.AwaitingSigningKey),
+                onRestoreActor = {},
+            )
+        }
+        compose.onNodeWithTag("home_restore").assertExists()
+    }
+
+    @Test
+    fun theKeyRestoreBannerStaysQuietPreCeremonyAndOnKeyedDevices() {
         compose.setContent {
             Column {
+                // No key anywhere yet: the ask is the ceremony, never
+                // a restore with nothing to restore.
                 KeyRestoreBanner(
-                    HomeUiState(loading = false, applicant = true, huskWarning = true),
+                    applicant(awaiting(keyAttached = false, keyOnDevice = false)),
                     onRestoreActor = {},
                 )
+                KeyRestoreBanner(applicant(awaiting()), onRestoreActor = {})
                 KeyRestoreBanner(
                     HomeUiState(loading = false, huskWarning = false),
                     onRestoreActor = {},
@@ -220,10 +245,11 @@ class StatusBannersTest {
     }
 
     @Test
-    fun aKeyAttachedElsewhereOffersRestoreInstead() {
+    fun aKeyAttachedElsewhereLeavesRestoreToTheCollapsingTop() {
         render(applicant(awaiting(keyAttached = true, keyOnDevice = false)))
-        compose.onNodeWithTag("home_restore").assertExists()
+        compose.onNodeWithTag("home_restore").assertDoesNotExist()
         compose.onNodeWithTag("home_create_key").assertDoesNotExist()
+        compose.onNodeWithTag("home_waiting").assertDoesNotExist()
     }
 
     @Test
