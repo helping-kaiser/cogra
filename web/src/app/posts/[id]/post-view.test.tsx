@@ -14,9 +14,51 @@ function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
 
+type FixtureComment = {
+  id: string;
+  body: string;
+  authorId?: string;
+  edited?: boolean;
+  replies?: FixtureComment[];
+  repliesHaveMore?: boolean;
+};
+
+function commentNode(comment: FixtureComment, withReplies = true): Record<string, unknown> {
+  return {
+    __typename: "Comment",
+    id: comment.id,
+    content: moderated(comment.body),
+    author: {
+      __typename: "User",
+      id: comment.authorId ?? "u2",
+      handle: "bob",
+      displayName: { __typename: "ModeratedText", value: "Bob" },
+    },
+    createdAt: "2026-08-12T10:05:00Z",
+    updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
+    moderationStatus: "NORMAL",
+    ...(withReplies
+      ? {
+          replies: {
+            __typename: "CommentConnection",
+            edges: (comment.replies ?? []).map((reply) => ({
+              __typename: "CommentEdge",
+              node: commentNode(reply, false),
+            })),
+            pageInfo: {
+              __typename: "PageInfo",
+              hasNextPage: comment.repliesHaveMore ?? false,
+              endCursor: null,
+            },
+          },
+        }
+      : {}),
+  };
+}
+
 function detail(
   authorId: string,
-  comments: { id: string; body: string }[],
+  comments: FixtureComment[],
   page: { hasNextPage: boolean; endCursor: string | null } = {
     hasNextPage: false,
     endCursor: null,
@@ -29,7 +71,12 @@ function detail(
       title: moderated("The title"),
       description: moderated(null),
       content: moderated("The body"),
-      author: { __typename: "User", id: authorId, handle: "alice" },
+      author: {
+        __typename: "User",
+        id: authorId,
+        handle: "alice",
+        displayName: { __typename: "ModeratedText", value: "Alice" },
+      },
       createdAt: "2026-08-12T10:00:00Z",
       updatedAt: "2026-08-12T10:00:00Z",
       moderationStatus: "NORMAL",
@@ -37,15 +84,7 @@ function detail(
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
           __typename: "CommentEdge",
-          node: {
-            __typename: "Comment",
-            id: comment.id,
-            content: moderated(comment.body),
-            author: { __typename: "User", id: "u2", handle: "bob" },
-            createdAt: "2026-08-12T10:05:00Z",
-            updatedAt: "2026-08-12T10:05:00Z",
-            moderationStatus: "NORMAL",
-          },
+          node: commentNode(comment),
         })),
         pageInfo: {
           __typename: "PageInfo",
@@ -279,5 +318,159 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to feed" })).toHaveAttribute("href", "/feed");
+  });
+
+  it("marks an edited comment softly and offers the edit to its creator only", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [
+            { id: "c1", body: "mine", authorId: "acct-1", edited: true },
+            { id: "c2", body: "theirs" },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("comment-edited-c1")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-edited-c2")).not.toBeInTheDocument();
+    expect(screen.getByTestId("comment-edit-c1")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-edit-c2")).not.toBeInTheDocument();
+  });
+
+  it("edits a comment inline and signs the update", async () => {
+    let variables: unknown;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }]),
+        }),
+      ),
+      graphql.mutation("PrepareCommentEdit", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareCommentEdit: {
+              __typename: "PrepareContentPayload",
+              node: "c1",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
+    fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+    const input = screen.getByTestId("comment-edit-input");
+    expect(input).toHaveValue("old words");
+    fireEvent.change(input, { target: { value: "better words" } });
+    fireEvent.click(screen.getByTestId("comment-edit-save"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+    expect(variables).toEqual({ input: { id: "c1", content: "better words" } });
+    // The editor closes and the in-flight notice shows.
+    expect(screen.queryByTestId("comment-edit-input")).not.toBeInTheDocument();
+    expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
+  });
+
+  it("renders prefetched replies nested and expands past them", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("author-1", [
+            {
+              id: "c1",
+              body: "top",
+              replies: [{ id: "r1", body: "nested" }],
+              repliesHaveMore: true,
+            },
+          ]),
+        }),
+      ),
+      graphql.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r2", body: "more" }) }],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("nested");
+    fireEvent.click(screen.getByTestId("replies-more-c1"));
+    expect(await screen.findByTestId("post-comment-r2")).toHaveTextContent("more");
+    expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
+  });
+
+  it("replies inline, targeting the comment not the post", async () => {
+    let variables: unknown;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
+      ),
+      graphql.mutation("PrepareComment", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "new-reply",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
+    fireEvent.click(await screen.findByTestId("comment-reply-c1"));
+    fireEvent.change(screen.getByTestId("comment-reply-input"), {
+      target: { value: "me too" },
+    });
+    fireEvent.click(screen.getByTestId("comment-reply-submit"));
+    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
+    // A reply is a genesis Review targeting the comment (comment.md §1).
+    expect((variables as { input: { target: string } }).input.target).toBe("c1");
+    expect(screen.queryByTestId("comment-reply-input")).not.toBeInTheDocument();
+  });
+
+  it("links authors as chips into their profiles", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-author")).toHaveAttribute("href", "/u/alice");
+    expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
   });
 });
