@@ -162,10 +162,10 @@ participation, never viewing
 `Feed`, `PostDetail`, and `Profile` sit on both stacks, write
 affordances swapped for join entries — the bar rides the tab
 surfaces for anonymous viewers too, its account-needing slots
-(compose, profile) prompting at the front door; the front door
-carries the browse entry, and the join entries on the read
-surfaces push the front door, so back returns to the reading
-context. No guest session
+(compose, profile) asking in place via the join prompt; the
+login screen carries the invite and browse entries, and the
+join entries on the read surfaces push it, so back returns to
+the reading context. No guest session
 exists anywhere: an anonymous read simply carries no
 token. Email-carried surfaces (`/verify`, the `/reset?token=`
 arrival) have no destinations: those links open in the browser.

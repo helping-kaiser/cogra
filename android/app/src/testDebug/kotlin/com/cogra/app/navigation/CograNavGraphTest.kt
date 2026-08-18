@@ -327,30 +327,42 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun aGuestsComposeSlotPromptsAtTheFrontDoor() {
+    fun aGuestsComposeSlotAsksAndSignInPushesTheLogin() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
+
+        // The gated slot asks in place — the feed stays underneath.
         compose.onNodeWithTag("bar_compose").performClick()
+        waitForTag("join_prompt")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+
+        // Sign in or join pushes the login, back returning to the read.
+        compose.onNodeWithTag("join_prompt_signin").performClick()
         compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
-        // Pushed, not replaced: back returns to the reading context.
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isTrue()
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     @Test
-    fun aGuestsProfileSlotPromptsAtTheFrontDoor() {
+    fun aGuestsProfileSlotAsksAndKeepBrowsingStays() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
+
         compose.onNodeWithTag("bar_profile").performClick()
-        compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
-        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        waitForTag("join_prompt")
+
+        // Keep browsing dismisses; nothing navigated.
+        compose.onNodeWithTag("join_prompt_dismiss").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("join_prompt").fetchSemanticsNodes().isEmpty()
+        }
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     @Test
