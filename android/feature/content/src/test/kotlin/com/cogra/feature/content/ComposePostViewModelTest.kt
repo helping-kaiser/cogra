@@ -90,6 +90,21 @@ class ComposePostViewModelTest {
     }
 
     @Test
+    fun aKeylessDeviceMarksTheFailureAsNeedsKey() = runTest(dispatcher) {
+        // The real signer with no seed: the genuine husk path, so the
+        // screen can say "restore your key" instead of "stays pending".
+        identity.seed = null
+        val vm = viewModel()
+        vm.onTitleChange("A title")
+        vm.onBodyChange("The body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signingFailed).isTrue()
+        assertThat(vm.state.value.signingNeedsKey).isTrue()
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    @Test
     fun aCreateSignsAndReportsSaved() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onTitleChange("A title")

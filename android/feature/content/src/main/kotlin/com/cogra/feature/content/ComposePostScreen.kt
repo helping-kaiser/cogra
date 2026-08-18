@@ -162,7 +162,14 @@ fun ComposePostScreen(
                 ErrorLine(R.string.content_error_refused, "compose_refused")
             }
             if (state.signingFailed) {
-                ErrorLine(R.string.content_error_signing, "compose_signing_failed")
+                ErrorLine(
+                    if (state.signingNeedsKey) {
+                        R.string.content_error_signing_no_key
+                    } else {
+                        R.string.content_error_signing
+                    },
+                    "compose_signing_failed",
+                )
             }
             if (state.transportFailed) {
                 ErrorLine(R.string.content_error_transport, "compose_transport_error")
