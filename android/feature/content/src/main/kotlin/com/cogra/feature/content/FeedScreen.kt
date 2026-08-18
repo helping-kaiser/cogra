@@ -12,11 +12,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -244,7 +244,9 @@ private fun GuestBanner(onSignInOrJoin: () -> Unit) {
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.content_guest_body))
-            OutlinedButton(
+            // Filled: joining is the one committing action a guest has
+            // on this surface (design.md §6).
+            Button(
                 onClick = onSignInOrJoin,
                 modifier = Modifier.testTag("feed_signin"),
             ) {
