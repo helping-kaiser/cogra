@@ -160,10 +160,12 @@ The read surfaces are public on every client — accounts gate
 participation, never viewing
 ([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
 `Feed`, `PostDetail`, and `Profile` sit on both stacks, write
-affordances swapped for join entries — anonymous viewers browse
-without the bottom bar; the front door carries the browse
-entry, and the join entries on the read surfaces push the front
-door, so back returns to the reading context. No guest session
+affordances swapped for join entries — the bar rides the tab
+surfaces for anonymous viewers too, its account-needing slots
+(compose, profile) prompting at the front door; the front door
+carries the browse entry, and the join entries on the read
+surfaces push the front door, so back returns to the reading
+context. No guest session
 exists anywhere: an anonymous read simply carries no
 token. Email-carried surfaces (`/verify`, the `/reset?token=`
 arrival) have no destinations: those links open in the browser.

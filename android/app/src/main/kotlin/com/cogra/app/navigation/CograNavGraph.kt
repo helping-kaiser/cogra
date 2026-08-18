@@ -218,9 +218,10 @@ fun CograNavGraph(
     SecurityNoticeHost()
 
     // The shell: one scaffold owning the bottom bar and the shell-level
-    // snackbar host (design.md §6) — the bar frames the signed-in
-    // top-level tabs; anonymous viewers browse the public read
-    // surfaces without it.
+    // snackbar host (design.md §6) — one frame for every viewer: the
+    // bar rides the tab surfaces signed in or out, and a slot that
+    // needs an account routes a signed-out tap to the front door,
+    // back returning to the reading context.
     val shellSnackbar = remember { SnackbarHostState() }
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onOwnProfileTab = backStackEntry?.let { entry ->
@@ -244,13 +245,25 @@ fun CograNavGraph(
             }
         },
         bottomBar = {
-            if (signedIn == true && (onFeedTab || onOwnProfileTab)) {
+            if (signedIn != null && (onFeedTab || onOwnProfileTab)) {
                 CograBottomBar(
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
                     onFeed = { toTab(Feed) },
-                    onCompose = { navController.navigate(ComposePost()) },
-                    onProfile = { toTab(Profile()) },
+                    onCompose = {
+                        if (signedIn == true) {
+                            navController.navigate(ComposePost())
+                        } else {
+                            navController.navigate(InviteEntry())
+                        }
+                    },
+                    onProfile = {
+                        if (signedIn == true) {
+                            toTab(Profile())
+                        } else {
+                            navController.navigate(InviteEntry())
+                        }
+                    },
                 )
             }
         },
@@ -317,9 +330,6 @@ fun CograNavGraph(
                     // Pushes the front door (the web guest entries link to
                     // "/"), so back returns to the reading context.
                     onSignInOrJoin = { navController.navigate(InviteEntry()) },
-                    // The signed-in Feed is the shell's root tab; the
-                    // anonymous Feed is pushed from the front door.
-                    onBack = if (signedIn == true) null else ({ navController.navigateUp() }),
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
