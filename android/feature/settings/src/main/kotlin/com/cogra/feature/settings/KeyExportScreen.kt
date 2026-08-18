@@ -26,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograTopBar
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.domain.identity.ExportedSecret
@@ -67,7 +67,7 @@ fun KeyExportScreen(
     KeyGateWarning(gate)
     Scaffold(
         topBar = {
-            TopAppBar(
+            CograTopBar(
                 title = {
                     Text(
                         text = stringResource(R.string.key_export_title),

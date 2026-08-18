@@ -5,6 +5,9 @@
 // destination — a deliberate, documented deviation from M3's
 // destinations-only navigation-bar guidance — and wears
 // primaryContainer, the one loud surface per screen (design.md §2.4).
+// The short navigation bar (64dp) is the compact M3 default — the
+// classic 80dp NavigationBar reads oversized next to the bars popular
+// apps carry (design.md §6).
 
 package com.cogra.app.ui
 
@@ -20,8 +23,8 @@ import androidx.compose.material.icons.outlined.DynamicFeed
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,8 +43,8 @@ fun CograBottomBar(
     onCompose: () -> Unit,
     onProfile: () -> Unit,
 ) {
-    NavigationBar(modifier = Modifier.testTag("bottom_bar")) {
-        NavigationBarItem(
+    ShortNavigationBar(modifier = Modifier.testTag("bottom_bar")) {
+        ShortNavigationBarItem(
             selected = feedSelected,
             onClick = onFeed,
             icon = {
@@ -53,7 +56,7 @@ fun CograBottomBar(
             label = { Text(stringResource(R.string.bar_feed)) },
             modifier = Modifier.testTag("bar_feed"),
         )
-        NavigationBarItem(
+        ShortNavigationBarItem(
             selected = false,
             onClick = onCompose,
             icon = {
@@ -71,9 +74,11 @@ fun CograBottomBar(
                     )
                 }
             },
+            // The compose action is icon-only: the badge is its label.
+            label = null,
             modifier = Modifier.testTag("bar_compose"),
         )
-        NavigationBarItem(
+        ShortNavigationBarItem(
             selected = profileSelected,
             onClick = onProfile,
             icon = {

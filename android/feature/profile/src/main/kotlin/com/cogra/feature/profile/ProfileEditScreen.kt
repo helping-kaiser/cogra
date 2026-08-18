@@ -19,7 +19,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograTopBar
 
 @Composable
 fun ProfileEditRoute(
@@ -64,7 +64,7 @@ fun ProfileEditScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            CograTopBar(
                 title = { Text(stringResource(R.string.profile_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("profile_edit_back")) {
