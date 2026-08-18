@@ -151,6 +151,20 @@ export function LoginForm({
       >
         Forgot password?
       </Link>
+      <Link
+        href="/join"
+        data-testid="login_join"
+        className="text-body-medium text-on-surface-variant underline"
+      >
+        New here? Enter your invite
+      </Link>
+      <Link
+        href="/feed"
+        data-testid="login_browse"
+        className="text-body-medium text-on-surface-variant underline"
+      >
+        Just looking? Browse the feed →
+      </Link>
     </main>
   );
 }

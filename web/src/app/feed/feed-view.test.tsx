@@ -91,7 +91,7 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
 
-    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/");
+    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/login");
   });
 
   it("carries no back arrow — the feed is a tab root for every viewer", async () => {

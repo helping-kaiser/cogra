@@ -554,7 +554,7 @@ export function PostView({ postId }: { postId: string }) {
         ))}
       {phase === "signedOut" && (
         <Link
-          href="/"
+          href="/login"
           data-testid="comment-signin"
           className="self-start text-body-medium text-on-surface-variant underline"
         >
