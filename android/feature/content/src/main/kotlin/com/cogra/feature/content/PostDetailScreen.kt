@@ -40,6 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
+import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
@@ -128,10 +131,14 @@ fun PostDetailScreen(
             onCommentSignedShown()
         }
     }
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
+        modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                colors = surfaceTopAppBarColors(),
+                scrollBehavior = collapsingTop.scrollBehavior,
                 title = { Text(state.post?.title?.value.orEmpty()) },
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("detail_back")) {
@@ -369,7 +376,14 @@ private fun PostWithThread(
                     ErrorLine(R.string.content_error_refused, "detail_refused")
                 }
                 if (state.signingFailed) {
-                    ErrorLine(R.string.content_error_signing, "detail_signing_failed")
+                    ErrorLine(
+                        if (state.signingNeedsKey) {
+                            R.string.content_error_signing_no_key
+                        } else {
+                            R.string.content_error_signing
+                        },
+                        "detail_signing_failed",
+                    )
                 }
                 if (state.submitTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "detail_comment_transport")
@@ -453,7 +467,14 @@ private fun CommentThread(
                         ErrorLine(R.string.content_error_refused, "comment_edit_refused")
                     }
                     if (state.editSigningFailed) {
-                        ErrorLine(R.string.content_error_signing, "comment_edit_signing_failed")
+                        ErrorLine(
+                            if (state.signingNeedsKey) {
+                                R.string.content_error_signing_no_key
+                            } else {
+                                R.string.content_error_signing
+                            },
+                            "comment_edit_signing_failed",
+                        )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
@@ -516,7 +537,14 @@ private fun CommentThread(
                     ErrorLine(R.string.content_error_refused, "comment_reply_refused")
                 }
                 if (state.replySigningFailed) {
-                    ErrorLine(R.string.content_error_signing, "comment_reply_signing_failed")
+                    ErrorLine(
+                        if (state.signingNeedsKey) {
+                            R.string.content_error_signing_no_key
+                        } else {
+                            R.string.content_error_signing
+                        },
+                        "comment_reply_signing_failed",
+                    )
                 }
                 if (state.replyTransportFailed) {
                     ErrorLine(R.string.content_error_transport, "comment_reply_transport")

@@ -1,10 +1,20 @@
 package com.cogra.feature.content
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
@@ -30,6 +40,7 @@ class ContentScreensTest {
         onSignInOrJoin: () -> Unit = {},
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
+        keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
             FeedScreen(
@@ -40,6 +51,7 @@ class ContentScreensTest {
                 onOpenPost = onOpenPost,
                 onOpenActor = onOpenActor,
                 onSignInOrJoin = onSignInOrJoin,
+                keyBanner = keyBanner,
             )
         }
     }
@@ -60,6 +72,78 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_post_p1").performClick()
         assertThat(opened).isEqualTo("p1")
         compose.onNodeWithTag("feed_empty").assertDoesNotExist()
+    }
+
+    // The key banner rides the shared collapsing top: away scrolling
+    // down, back only after about a third of a screen of accumulated
+    // upward scroll (the gate itself is pinned in the designsystem's
+    // CollapsingTopTest; this covers the feed wiring it).
+    @Test
+    fun theKeyBannerRidesTheCollapsingTop() {
+        renderFeed(
+            FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        fun dragUpBy(px: Float) = compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, px))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("key_banner").assertExists()
+        compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // A short correction toward a post's top summons nothing.
+        dragUpBy(30f)
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // The accumulated run crosses the gate: the banner returns.
+        dragUpBy(80f)
+        dragUpBy(80f)
+        dragUpBy(80f)
+        compose.onNodeWithTag("key_banner").assertExists()
+    }
+
+    // Reaching the top reveals without the tally — and on the feed the
+    // gate must sit inside the pull-to-refresh box, whose gesture
+    // would otherwise swallow the at-the-top leftover that carries
+    // the signal.
+    @Test
+    fun reachingTheFeedTopRevealsTheBanner() {
+        renderFeed(
+            FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
+            keyBanner = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("key_banner"),
+                )
+            },
+        )
+        // A short hop down from the top hides the banner…
+        compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -60f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("key_banner").assertDoesNotExist()
+        // …and coming back to the top brings it straight back, far
+        // below the third-of-a-screen gate.
+        compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, 100f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("key_banner").assertExists()
     }
 
     @Test
