@@ -30,22 +30,15 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -54,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.MonogramAvatar
+import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
@@ -143,25 +138,11 @@ fun ProfileScreen(
             onOpenInvites()
         }
     }
-    // The collapsing top — the FeedScreen twin: enterAlways bar plus
-    // the direction-driven key banner.
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showTop by remember { mutableStateOf(true) }
-    val topConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -4) showTop = false
-                if (available.y > 4) showTop = true
-                return Offset.Zero
-            }
-        }
-    }
-    // Observer outside the bar's connection — enterAlways consumes
-    // the deltas while the bar moves (see FeedScreen).
+    // The collapsing top — the FeedScreen twin: the shared bar-plus-
+    // banner region with the reveal gate.
+    val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(topConnection)
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = {
             SnackbarHost(snackbarHostState) },
         topBar = {
@@ -197,9 +178,9 @@ fun ProfileScreen(
                         }
                     },
                     colors = surfaceTopAppBarColors(),
-                    scrollBehavior = scrollBehavior,
+                    scrollBehavior = collapsingTop.scrollBehavior,
                 )
-                AnimatedVisibility(visible = showTop) {
+                AnimatedVisibility(visible = collapsingTop.showTop) {
                     Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
                 }
             }
