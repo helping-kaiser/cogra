@@ -129,7 +129,7 @@ touch-target sizes — alongside its UI tests.
 
 The destination map — type-safe destinations, one NavHost inside
 the shell scaffold (`CograNavGraph.kt`). Auth drives navigation:
-a phase flip lands on the new phase's root — `InviteEntry` signed
+a phase flip lands on the new phase's root — `Login` signed
 out, the `Feed` tab signed in — with a cleared stack, so which
 stack reaches a destination is its access gate. The signed-in
 shell frames the top-level tabs with the bottom bar
@@ -141,9 +141,9 @@ is active until resolved.
 
 | Destination | Stack | Web counterpart ([web.md "Routes"](web.md#routes)) |
 |---|---|---|
-| `InviteEntry` (start; `/join` App Links land here) | signed out | `/` front door + `/join/<link-id>` |
+| `Login` (start — the signed-out entry: sign in, invite, browse) | signed out | `/login` |
+| `InviteEntry` (`/join` App Links land here) | signed out | `/join` + `/join/<link-id>` |
 | `Apply(inviteId)` | signed out | the apply step of `/join/<link-id>` |
-| `Login` | signed out | `/login` |
 | `PasswordReset` | signed out | `/reset` |
 | `Feed` (signed-in root; bar tab) | both (public read) | `/feed` |
 | `Profile(handle?)` (bar tab when own; drill-in by handle) | both (public read) | `/u/<handle>` |

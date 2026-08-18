@@ -143,9 +143,9 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun aSignedOutUserLandsOnTheInviteEntry() {
+    fun aSignedOutUserLandsOnTheLoginScreen() {
         render()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>())
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>())
             .isTrue()
     }
 
@@ -288,8 +288,8 @@ class CograNavGraphTest {
     fun aGuestBrowsesTheFeedFromTheFrontDoor() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // One shell for every viewer: the guest keeps the bar.
@@ -309,8 +309,8 @@ class CograNavGraphTest {
             ),
         )
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("feed_post_p1").performClick()
         waitForTag("detail_comment_signin")
@@ -318,11 +318,11 @@ class CograNavGraphTest {
         // never merely disabled.
         assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
 
-        // The join entry pushes the front door, so back returns to the
-        // post (web parity: the guest entries link to "/").
+        // The join entry pushes the login screen, so back returns to the
+        // post (web parity: the guest entries link to /login).
         compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
         compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isTrue()
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
     }
 
@@ -330,8 +330,8 @@ class CograNavGraphTest {
     fun aGuestsComposeSlotPromptsAtTheFrontDoor() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("bar_compose").performClick()
         compose.waitForIdle()
@@ -344,8 +344,8 @@ class CograNavGraphTest {
     fun aGuestsProfileSlotPromptsAtTheFrontDoor() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("bar_profile").performClick()
         compose.waitForIdle()
@@ -359,8 +359,8 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_signin")
 
         signIn()
@@ -501,7 +501,7 @@ class CograNavGraphTest {
 
         compose.onNodeWithTag("settings_sign_out").performScrollTo().performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
     }
 
@@ -615,9 +615,10 @@ class CograNavGraphTest {
         }
 
         runBlocking { tokens.clear() }
+        // Signing out lands on the clean login root — the deep-linked
+        // invite entry is gone from the stack entirely.
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
-        assertThat(currentInviteEntry()?.inviteId).isNull()
     }
 }

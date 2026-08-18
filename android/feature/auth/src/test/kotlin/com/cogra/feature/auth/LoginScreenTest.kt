@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.cogra.domain.ErrorCode
 import com.google.common.truth.Truth.assertThat
@@ -23,7 +24,12 @@ class LoginScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private fun render(state: LoginUiState, onForgetOnSignOutChange: (Boolean) -> Unit = {}) {
+    private fun render(
+        state: LoginUiState,
+        onForgetOnSignOutChange: (Boolean) -> Unit = {},
+        onJoin: () -> Unit = {},
+        onBrowse: () -> Unit = {},
+    ) {
         compose.setContent {
             LoginScreen(
                 state = state,
@@ -32,6 +38,8 @@ class LoginScreenTest {
                 onForgetOnSignOutChange = onForgetOnSignOutChange,
                 onSubmit = {},
                 onForgotPassword = {},
+                onJoin = onJoin,
+                onBrowse = onBrowse,
             )
         }
     }
@@ -86,5 +94,19 @@ class LoginScreenTest {
     fun theDontRememberRowRendersItsState() {
         render(LoginUiState(forgetOnSignOut = true))
         compose.onNodeWithTag("login_dont_remember").assertIsOn()
+    }
+
+    @Test
+    fun theEntryCarriesTheInviteAndBrowsePaths() {
+        // Login is the signed-out entry (design.md §6): the other two
+        // paths — apply with an invite, read without an account — hang
+        // off it.
+        var joined = false
+        var browsed = false
+        render(LoginUiState(), onJoin = { joined = true }, onBrowse = { browsed = true })
+        compose.onNodeWithTag("login_join").performScrollTo().performClick()
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        assertThat(joined).isTrue()
+        assertThat(browsed).isTrue()
     }
 }
