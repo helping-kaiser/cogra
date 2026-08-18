@@ -11,6 +11,7 @@ package com.cogra.app.navigation
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -271,7 +272,11 @@ fun CograNavGraph(
         NavHost(
             navController = navController,
             startDestination = InviteEntry(),
-            modifier = Modifier.padding(padding),
+            // consumeWindowInsets rides with the padding (the documented
+            // nested-scaffold pattern): without it every screen's own
+            // scaffold re-applies the status inset the shell already
+            // padded, doubling the space above each top bar.
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
             composable<InviteEntry>(
                 deepLinks = listOf(
