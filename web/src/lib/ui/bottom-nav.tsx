@@ -10,6 +10,8 @@
 
 import Link from "next/link";
 
+import { AddIcon, DynamicFeedIcon, PersonIcon } from "@/lib/ui/icons";
+
 export function BottomNav({
   active,
   signedIn,
@@ -32,6 +34,7 @@ export function BottomNav({
         aria-current={active === "feed" ? "page" : undefined}
         className={`${item} ${tone(active === "feed")}`}
       >
+        <DynamicFeedIcon />
         Feed
       </Link>
       <Link
@@ -42,9 +45,9 @@ export function BottomNav({
       >
         <span
           aria-hidden
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-title-large text-on-primary-container"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container"
         >
-          +
+          <AddIcon />
         </span>
       </Link>
       <Link
@@ -53,6 +56,7 @@ export function BottomNav({
         aria-current={active === "profile" ? "page" : undefined}
         className={`${item} ${tone(active === "profile")}`}
       >
+        <PersonIcon filled={active === "profile"} />
         Profile
       </Link>
     </nav>
