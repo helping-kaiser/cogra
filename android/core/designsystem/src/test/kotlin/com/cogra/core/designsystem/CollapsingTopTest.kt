@@ -115,6 +115,47 @@ class CollapsingTopTest {
         compose.onNodeWithTag("top_region").assertExists()
     }
 
+    // The shared banner slot rides the same gate the screens wire by
+    // hand elsewhere: content shows with the top and leaves with it.
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun theBannerSlotHostsContentAndFollowsTheGate() {
+        compose.setContent {
+            val top = rememberCollapsingTop()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .collapsingTop(top),
+            ) {
+                TopAppBar(title = {}, scrollBehavior = top.scrollBehavior)
+                CollapsingTopBanner(top) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("banner"),
+                    )
+                }
+                LazyColumn(
+                    Modifier
+                        .fillMaxSize()
+                        .testTag("list"),
+                ) {
+                    items(50) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag("banner").assertExists()
+        compose.onNodeWithTag("list").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("banner").assertDoesNotExist()
+    }
+
     @Test
     fun aDownwardScrollResetsTheTally() {
         renderTop()

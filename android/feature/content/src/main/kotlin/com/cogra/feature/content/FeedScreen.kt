@@ -1,6 +1,5 @@
 package com.cogra.feature.content
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
@@ -99,10 +99,8 @@ fun FeedScreen(
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
-                AnimatedVisibility(visible = collapsingTop.showTop) {
-                    Box(Modifier.padding(horizontal = 16.dp)) {
-                        if (signedIn == false) GuestBanner(onSignInOrJoin) else keyBanner()
-                    }
+                CollapsingTopBanner(collapsingTop) {
+                    if (signedIn == false) GuestBanner(onSignInOrJoin) else keyBanner()
                 }
             }
         },

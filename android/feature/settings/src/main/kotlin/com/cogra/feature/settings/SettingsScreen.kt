@@ -1,8 +1,6 @@
 package com.cogra.feature.settings
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +39,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
@@ -156,9 +155,7 @@ fun SettingsScreen(
                 // The key banner rides the collapsing top on every main
                 // surface (design.md §6); the host pads to line up with
                 // the content below.
-                AnimatedVisibility(visible = collapsingTop.showTop) {
-                    Box(Modifier.padding(horizontal = 24.dp)) { keyBanner() }
-                }
+                CollapsingTopBanner(collapsingTop, horizontalPadding = 24.dp) { keyBanner() }
             }
         },
         snackbarHost = {
