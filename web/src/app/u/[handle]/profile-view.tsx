@@ -1,8 +1,8 @@
 "use client";
 
 // The profile screen (roadmap "Slice 2.1"; design.md §6 "Profile
-// header"): cover placeholder, monogram avatar, name, handle, bio,
-// link — and the authored chronicle under filter chips. The header's
+// header"): monogram avatar, name, handle, bio, link — and the
+// authored chronicle under filter chips. The header's
 // connection count and the connections sections arrive with the
 // stance slice (open-questions Q35); media covers with slice 2.5.
 // Shared by /u/<handle> (public) and /profile (the viewer's own tab).
@@ -169,9 +169,7 @@ export function ProfileScreen({ handle }: { handle: string | null }) {
       )}
       {profile && (
         <>
-          {/* The cover placeholder — a quiet band until media lands (2.5). */}
-          <div aria-hidden className="h-24 w-full rounded-medium bg-surface-container-high" />
-          <div className="-mt-12 flex flex-col gap-2 px-2">
+          <div className="flex flex-col gap-2 px-2">
             <span data-testid="profile-avatar">
               <MonogramAvatar name={name ?? "?"} size="lg" />
             </span>
