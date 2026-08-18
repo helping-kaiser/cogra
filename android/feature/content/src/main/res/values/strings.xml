@@ -17,6 +17,7 @@
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
     <string name="content_feed_signin">Sign in or join</string>
+    <string name="content_guest_body">You\'re browsing as a guest — sign in or join to post and vouch.</string>
     <string name="content_comment_signin">Sign in or join to comment</string>
     <string name="content_comment_hint">Add a comment</string>
     <string name="content_comment_submit">Sign comment</string>
