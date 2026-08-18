@@ -8,6 +8,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,6 +47,8 @@ data class PostDetailUiState(
     val submitting: Boolean = false,
     val refused: Boolean = false,
     val signingFailed: Boolean = false,
+    /** The device held no key when signing failed — restore, don't wait. */
+    val signingNeedsKey: Boolean = false,
     /** A submit that never reached the server; a composer error, not a read fault. */
     val submitTransportFailed: Boolean = false,
     /** One-shot: the comment signed; shown once, then consumed. */
@@ -202,7 +205,9 @@ class PostDetailViewModel @Inject constructor(
         val s = _state.value
         val id = s.editingCommentId ?: return
         if (s.editSubmitting || s.editDraft.isBlank()) return
-        _state.update { it.copy(editSubmitting = true, editRefused = false, editSigningFailed = false) }
+        _state.update {
+            it.copy(editSubmitting = true, editRefused = false, editSigningFailed = false, signingNeedsKey = false)
+        }
         viewModelScope.launch {
             val prepared = when (val outcome = content.prepareCommentEdit(id, s.editDraft)) {
                 is Outcome.Success -> outcome.value
@@ -215,7 +220,17 @@ class PostDetailViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared.writes)
+            val results = try {
+                signer.sign(prepared.writes)
+            } catch (_: NoActorKeyException) {
+                // A husk device: the write waits on the reader restoring
+                // the key, not on time passing (the invites twin) —
+                // without the catch the coroutine would die unreported.
+                _state.update {
+                    it.copy(editSubmitting = false, editSigningFailed = true, signingNeedsKey = true)
+                }
+                return@launch
+            }
             if (results.all { it is WriteResult.Done }) {
                 _state.update {
                     it.copy(
@@ -252,7 +267,13 @@ class PostDetailViewModel @Inject constructor(
         val target = s.replyingToId ?: return
         if (s.replySubmitting || s.replyDraft.isBlank()) return
         _state.update {
-            it.copy(replySubmitting = true, replyRefused = false, replySigningFailed = false, replyTransportFailed = false)
+            it.copy(
+                replySubmitting = true,
+                replyRefused = false,
+                replySigningFailed = false,
+                signingNeedsKey = false,
+                replyTransportFailed = false,
+            )
         }
         viewModelScope.launch {
             val prepared = when (
@@ -272,7 +293,14 @@ class PostDetailViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared.writes)
+            val results = try {
+                signer.sign(prepared.writes)
+            } catch (_: NoActorKeyException) {
+                _state.update {
+                    it.copy(replySubmitting = false, replySigningFailed = true, signingNeedsKey = true)
+                }
+                return@launch
+            }
             if (results.all { it is WriteResult.Done }) {
                 _state.update {
                     it.copy(replySubmitting = false, replyingToId = null, replyDraft = "", commentSigned = true)
@@ -297,6 +325,7 @@ class PostDetailViewModel @Inject constructor(
                 submitting = true,
                 refused = false,
                 signingFailed = false,
+                signingNeedsKey = false,
                 submitTransportFailed = false,
             )
         }
@@ -318,7 +347,14 @@ class PostDetailViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared.writes)
+            val results = try {
+                signer.sign(prepared.writes)
+            } catch (_: NoActorKeyException) {
+                _state.update {
+                    it.copy(submitting = false, signingFailed = true, signingNeedsKey = true)
+                }
+                return@launch
+            }
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, draft = "", commentSigned = true) }
             } else {

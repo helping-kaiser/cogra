@@ -81,14 +81,18 @@ describe("MemberStatus", () => {
     );
   });
 
-  it("shows the husk warning and no prompt when the key lives elsewhere", async () => {
+  it("withholds the reciprocation prompt while the key lives elsewhere", async () => {
+    // The husk warning itself rides the screen's collapsing top now
+    // (feed-view/profile-view) — this stack only stays quiet.
     const store = fakeIdentityStore({ keyOnDevice: false });
     renderWithProviders(<MemberStatus me={invited} store={store} />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
     });
-    expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
-    expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
   });
 
   it("shows no prompt once the device remembers a dismissal", async () => {
