@@ -55,9 +55,11 @@ describe("ApplicantStatus", () => {
     expect(screen.getByTestId("home_landing")).toBeInTheDocument();
   });
 
-  it("prompts a restore when the key lives elsewhere", () => {
+  it("leaves the restore prompt to the screen's collapsing top", () => {
+    // The keyless read from the identity store renders the card in
+    // the header region (feed-view/profile-view), not in this stack.
     renderStatus({ kind: "awaitingSigningKey" });
-    expect(screen.getByTestId("home_restore")).toHaveAttribute("href", "/restore");
+    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
   });
 
   it.each([
@@ -92,9 +94,9 @@ describe("ApplicantStatus", () => {
     expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
   });
 
-  it("offers a restore when the key is attached but not on this browser", () => {
+  it("leaves the attached-elsewhere restore to the collapsing top", () => {
     renderStatus(approval({ keyAttached: true }));
-    expect(screen.getByTestId("home_restore")).toBeInTheDocument();
+    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
     expect(screen.queryByTestId("home_create_key")).not.toBeInTheDocument();
   });
 
