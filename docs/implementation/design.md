@@ -467,6 +467,17 @@ standalone entry on one's own profile. The application and
 reciprocation cards are shell-scoped banners — they ride above
 whichever tab is active until resolved.
 
+The screen top collapses: scrolling down hides the top app bar,
+and any upward scroll brings it back — M3 `enterAlways` on
+Android; the web mirrors the motion with a sticky region that
+hides once half of its own flow slot has scrolled past (early
+enough to feel prompt, late enough that the exit motion covers
+the vacated slot) and pins back on any upward scroll. A must-act
+card — the member key-restore banner — rides the collapsing
+region on the feed and profile, following the reader away and
+back by scroll direction instead of living only at the top of
+the list.
+
 Confirmation of a completed action is a snackbar on both
 platforms, fired once per event.
 
