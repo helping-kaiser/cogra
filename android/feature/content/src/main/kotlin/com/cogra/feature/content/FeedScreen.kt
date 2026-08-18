@@ -104,10 +104,15 @@ fun FeedScreen(
             }
         }
     }
+    // The observer sits outside the bar's connection: enterAlways
+    // consumes every vertical delta while the bar collapses or
+    // expands, so an inner observer would see nothing until the bar
+    // finished moving — and the banner would miss the upward scroll
+    // that brings the bar back.
     Scaffold(
         modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .nestedScroll(topConnection),
+            .nestedScroll(topConnection)
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             Column {
                 TopAppBar(

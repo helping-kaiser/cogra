@@ -155,10 +155,12 @@ fun ProfileScreen(
             }
         }
     }
+    // Observer outside the bar's connection — enterAlways consumes
+    // the deltas while the bar moves (see FeedScreen).
     Scaffold(
         modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .nestedScroll(topConnection),
+            .nestedScroll(topConnection)
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = {
             SnackbarHost(snackbarHostState) },
         topBar = {
