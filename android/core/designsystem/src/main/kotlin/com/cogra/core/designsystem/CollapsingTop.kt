@@ -1,6 +1,10 @@
 package com.cogra.core.designsystem
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +18,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -111,8 +116,10 @@ fun rememberCollapsingTop(): CollapsingTop {
  * The banner strip under the top app bar: hosts whatever card rides
  * the collapsing top. Painted `surface` across the full width like the
  * bar above it, so the collapsing region reads as one opaque plane
- * (design.md §6) — content scrolling under is cut by one straight
- * edge instead of showing through the card's margins and corners.
+ * (design.md §6), with a small painted gap below the card separating
+ * its rounded corners from whatever the plane cuts (the web region's
+ * `pb-2`). Enter and exit are vertical only — the region leaves and
+ * returns through the top, never from a side.
  */
 @Composable
 fun CollapsingTopBanner(
@@ -120,12 +127,16 @@ fun CollapsingTopBanner(
     horizontalPadding: Dp = 16.dp,
     content: @Composable () -> Unit,
 ) {
-    AnimatedVisibility(visible = top.showTop) {
+    AnimatedVisibility(
+        visible = top.showTop,
+        enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+        exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+    ) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = horizontalPadding),
+                .padding(start = horizontalPadding, end = horizontalPadding, bottom = 8.dp),
         ) {
             content()
         }
