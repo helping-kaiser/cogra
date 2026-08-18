@@ -1,6 +1,16 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -8,12 +18,15 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
  * The screen's collapsing top (design.md §6): the bar (and any banner
@@ -97,6 +110,37 @@ fun rememberCollapsingTop(): CollapsingTop {
         canScroll = { barMayMove.value },
     )
     return remember(scrollBehavior, gate) { CollapsingTop(scrollBehavior, gate, showTop) }
+}
+
+/**
+ * The banner strip under the top app bar: hosts whatever card rides
+ * the collapsing top. Painted `surface` across the full width like the
+ * bar above it, so the collapsing region reads as one opaque plane
+ * (design.md §6), with a small painted gap below the card separating
+ * its rounded corners from whatever the plane cuts (the web region's
+ * `pb-2`). Enter and exit are vertical only — the region leaves and
+ * returns through the top, never from a side.
+ */
+@Composable
+fun CollapsingTopBanner(
+    top: CollapsingTop,
+    horizontalPadding: Dp = 16.dp,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = top.showTop,
+        enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+        exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = horizontalPadding, end = horizontalPadding, bottom = 8.dp),
+        ) {
+            content()
+        }
+    }
 }
 
 /** Reveal after this fraction of the window height, scrolled upward. */

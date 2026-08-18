@@ -24,6 +24,9 @@ import {
 } from "@/lib/api/settings-api";
 import { createBackupManager, type BackupManager } from "@/lib/identity/backup";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
+import { RestoreCard } from "@/app/applicant-status";
+import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
@@ -119,6 +122,7 @@ export function SettingsView({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const tokens = useTokenStore();
+  const keyOnDevice = useKeyOnDevice(store);
 
   const [builtBackup] = useState<BackupManager>(() =>
     createBackupManager({ client, guard, store }),
@@ -316,12 +320,17 @@ export function SettingsView({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 pb-12 pt-3">
-      <PageHeader
-        title="Settings"
-        backHref="/profile"
-        backLabel="Back to profile"
-        backTestId="settings_back"
-      />
+      <CollapsingTop>
+        <PageHeader
+          title="Settings"
+          backHref="/profile"
+          backLabel="Back to profile"
+          backTestId="settings_back"
+        />
+        {/* The key banner rides the collapsing top on every main
+            surface (design.md §6). */}
+        {keyOnDevice === false && <RestoreCard />}
+      </CollapsingTop>
 
       <Card testId="settings_backup_card">
         <h2 className="text-title-medium">Key backup</h2>

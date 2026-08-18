@@ -2,8 +2,8 @@
 <resources>
     <string name="home_title">CoGra</string>
     <string name="home_greeting">Hello, @%1$s</string>
-    <string name="home_husk_title">Your actor isn\'t on this phone</string>
-    <string name="home_husk_body">You\'re signed in, but the key that acts as you lives elsewhere. Restore it with your recovery code to post, vouch, and act.</string>
+    <string name="home_husk_title">Your key isn\'t on this phone</string>
+    <string name="home_husk_body">Restore it with your recovery code to post, vouch, and act.</string>
     <string name="home_husk_restore">Restore with recovery code</string>
     <string name="home_actor_restored">Your actor is back on this phone.</string>
     <string name="home_reciprocate_title">@%1$s vouched you in</string>

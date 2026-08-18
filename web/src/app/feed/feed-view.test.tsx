@@ -97,14 +97,28 @@ describe("FeedView", () => {
     expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
   });
 
-  it("reads without a session and swaps the composer for the sign-in entry", async () => {
+  it("reads without a session and carries the guest banner in the collapsing top", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
 
+    // The one sign-in-or-join entry rides the guest banner, in place
+    // of a header action (design.md §6).
+    const banner = screen.getByTestId("feed-guest-banner");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(banner);
     expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/login");
+  });
+
+  it("shows no guest banner to a signed-in reader", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler());
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("feed-guest-banner")).not.toBeInTheDocument();
   });
 
   it("carries no back arrow — the feed is a tab root for every viewer", async () => {

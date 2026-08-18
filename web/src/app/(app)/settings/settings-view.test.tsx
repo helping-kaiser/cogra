@@ -146,6 +146,20 @@ describe("SettingsView backup", () => {
     expect(await screen.findByTestId("settings_back")).toHaveAttribute("href", "/profile");
   });
 
+  it("collapses the restore card into the header for a keyless browser", async () => {
+    // The key banner rides settings like every main surface
+    // (design.md §6).
+    renderSettings();
+    const restore = await screen.findByTestId("home_restore");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
+  });
+
+  it("shows no restore card while the key is on this browser", async () => {
+    renderSettings({ keyOnDevice: true });
+    expect(await screen.findByTestId("settings_export_key")).toBeInTheDocument();
+    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
+  });
+
   it("points a keyless browser at restore", async () => {
     renderSettings();
     expect(await screen.findByTestId("settings_backup_no_actor")).toBeInTheDocument();
