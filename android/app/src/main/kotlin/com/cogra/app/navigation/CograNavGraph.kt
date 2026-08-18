@@ -13,10 +13,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.core.util.Consumer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.domain.store.TokenStore
@@ -218,11 +223,42 @@ fun CograNavGraph(
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
 
+    // The guest prompt behind an account-needing slot (design.md §6):
+    // ask, never bounce — the reader picks the auth flow or stays put.
+    var joinPrompt by remember { mutableStateOf(false) }
+    if (joinPrompt) {
+        AlertDialog(
+            onDismissRequest = { joinPrompt = false },
+            title = { Text(stringResource(R.string.join_prompt_title)) },
+            text = { Text(stringResource(R.string.join_prompt_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        joinPrompt = false
+                        navController.navigate(Login)
+                    },
+                    modifier = Modifier.testTag("join_prompt_signin"),
+                ) {
+                    Text(stringResource(R.string.join_prompt_signin))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { joinPrompt = false },
+                    modifier = Modifier.testTag("join_prompt_dismiss"),
+                ) {
+                    Text(stringResource(R.string.join_prompt_dismiss))
+                }
+            },
+            modifier = Modifier.testTag("join_prompt"),
+        )
+    }
+
     // The shell: one scaffold owning the bottom bar and the shell-level
     // snackbar host (design.md §6) — one frame for every viewer: the
     // bar rides the tab surfaces signed in or out, and a slot that
-    // needs an account routes a signed-out tap to the front door,
-    // back returning to the reading context.
+    // needs an account opens the join prompt on a signed-out tap —
+    // ask, never bounce.
     val shellSnackbar = remember { SnackbarHostState() }
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onOwnProfileTab = backStackEntry?.let { entry ->
@@ -255,14 +291,14 @@ fun CograNavGraph(
                         if (signedIn == true) {
                             navController.navigate(ComposePost())
                         } else {
-                            navController.navigate(InviteEntry())
+                            joinPrompt = true
                         }
                     },
                     onProfile = {
                         if (signedIn == true) {
                             toTab(Profile())
                         } else {
-                            navController.navigate(InviteEntry())
+                            joinPrompt = true
                         }
                     },
                 )

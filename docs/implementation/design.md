@@ -454,8 +454,10 @@ gesture the product lives on; it wears `primaryContainer`
 (§2.4). Every viewer gets the same shell: the bar shows for
 signed-in, applicant, and anonymous viewers alike, and a slot
 that needs an account (the compose action, the profile tab)
-routes an anonymous tap to the front door, back returning to
-the reading context. The bars are compact: the 64dp short
+asks on an anonymous tap — a dialog offering sign-in or
+keep-browsing — never yanking the read away. Login is the
+signed-out entry; the invite entry and the public feed hang
+off it. The bars are compact: the 64dp short
 navigation bar rather than the taller classic one, under the
 stock small top app bar with its inset applied exactly once; the
 web mirrors them (≈61px bar, ≈48px header band), its slots
