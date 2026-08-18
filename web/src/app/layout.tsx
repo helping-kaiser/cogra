@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
 
@@ -21,6 +21,12 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "CoGra",
   description: "The CoGra web app.",
+};
+
+// cover lets the fixed bottom bar extend into the home-indicator area,
+// where its own safe-area padding keeps the slots tappable.
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

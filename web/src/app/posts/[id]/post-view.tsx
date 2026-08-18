@@ -282,7 +282,7 @@ export function PostView({ postId }: { postId: string }) {
 
   if (loading) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header(false)}
         <p>Loading…</p>
       </main>
@@ -290,7 +290,7 @@ export function PostView({ postId }: { postId: string }) {
   }
   if (notFound) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header(false)}
         <p role="alert" data-testid="post-not-found">
           This post no longer resolves.
@@ -300,7 +300,7 @@ export function PostView({ postId }: { postId: string }) {
   }
   if (detail === null) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header(false)}
         <div className="flex items-center gap-3">
           <TransportError testId="post-transport-error" />
@@ -493,7 +493,7 @@ export function PostView({ postId }: { postId: string }) {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header(viewerId !== null && post.author?.id === viewerId)}
       <div>
         {post.title.value && (

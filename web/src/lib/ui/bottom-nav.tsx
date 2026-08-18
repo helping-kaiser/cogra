@@ -9,14 +9,14 @@
 import Link from "next/link";
 
 export function BottomNav({ active }: { active: "feed" | "profile" | null }) {
-  const item = "flex flex-1 flex-col items-center gap-1 py-3 text-label-medium";
+  const item = "flex flex-1 flex-col items-center gap-1 py-2 text-label-medium";
   const tone = (selected: boolean) =>
     selected ? "text-on-surface" : "text-on-surface-variant";
   return (
     <nav
       data-testid="bottom-nav"
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-outline-variant bg-surface-container"
+      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-outline-variant bg-surface-container pb-[env(safe-area-inset-bottom)]"
     >
       <Link
         href="/feed"
