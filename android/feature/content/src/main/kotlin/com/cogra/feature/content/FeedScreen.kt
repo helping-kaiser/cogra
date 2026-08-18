@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -87,29 +88,21 @@ fun FeedScreen(
 ) {
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the key
-    // banner rides the same region and gate, so a must-act card
-    // follows the reader.
+    // banner — or the guest notice, for the signed-out reader — rides
+    // the same region and gate, so the card follows the reader.
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         topBar = {
             Column {
                 TopAppBar(
                     title = { Text(stringResource(R.string.content_feed_title)) },
-                    actions = {
-                        if (signedIn == false) {
-                            TextButton(
-                                onClick = onSignInOrJoin,
-                                modifier = Modifier.testTag("feed_signin"),
-                            ) {
-                                Text(stringResource(R.string.content_feed_signin))
-                            }
-                        }
-                    },
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
                 AnimatedVisibility(visible = collapsingTop.showTop) {
-                    Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
+                    Box(Modifier.padding(horizontal = 16.dp)) {
+                        if (signedIn == false) GuestBanner(onSignInOrJoin) else keyBanner()
+                    }
                 }
             }
         },
@@ -235,6 +228,29 @@ fun FeedScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The guest notice: the feed's one sign-in-or-join entry, riding the
+ * collapsing top in place of a separate header action (design.md §6).
+ */
+@Composable
+private fun GuestBanner(onSignInOrJoin: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("feed_guest_banner"),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.content_guest_body))
+            OutlinedButton(
+                onClick = onSignInOrJoin,
+                modifier = Modifier.testTag("feed_signin"),
+            ) {
+                Text(stringResource(R.string.content_feed_signin))
             }
         }
     }
