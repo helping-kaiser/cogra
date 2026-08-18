@@ -7,6 +7,8 @@ import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { RegistrationProvider } from "@/lib/signing/provider";
 
+import { AppShell } from "./shell";
+
 // One variable family for everything (design.md §3). latin-ext is not
 // optional: `İ ğ ş` live there, so a latin-only subset silently breaks
 // Turkish. next/font self-hosts at build time, so no request reaches Google
@@ -35,7 +37,9 @@ export default function RootLayout({
         <SessionProvider>
           <ApolloWrapper>
             <AuthRuntimeProvider>
-              <RegistrationProvider>{children}</RegistrationProvider>
+              <RegistrationProvider>
+                <AppShell>{children}</AppShell>
+              </RegistrationProvider>
             </AuthRuntimeProvider>
           </ApolloWrapper>
         </SessionProvider>

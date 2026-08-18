@@ -12,6 +12,8 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
 import { useAuthPhase } from "@/lib/session/provider";
+import { StatusBanners } from "@/app/status-banners";
+import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -73,19 +75,11 @@ export function FeedView() {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-6">
       <PageHeader
         title="Feed"
-        backHref="/"
+        backHref={phase === "signedIn" ? undefined : "/"}
         backLabel="Back to home"
         backTestId="feed-back"
         action={
-          phase === "signedIn" ? (
-            <Link
-              href="/compose"
-              data-testid="feed-compose"
-              className={buttonClassName({ size: "sm" })}
-            >
-              Write a post
-            </Link>
-          ) : phase === "signedOut" ? (
+          phase === "signedOut" ? (
             <Link
               href="/"
               data-testid="feed-signin"
@@ -96,6 +90,8 @@ export function FeedView() {
           ) : undefined
         }
       />
+      {/* The account-status banners ride the active tab (design.md §6). */}
+      {phase === "signedIn" && <StatusBanners />}
       {transportFault === "refresh" && (
         <div className="flex items-center gap-3">
           {/* With posts on screen the fault means "stale", not "gone":
@@ -130,17 +126,23 @@ export function FeedView() {
       <ul className="flex flex-col gap-3" data-testid="feed-list">
         {posts.map((post) => (
           <li key={post.id}>
-            <Link href={`/posts/${post.id}`} data-testid={`feed-post-${post.id}`}>
-              <Card>
+            <Card>
+              {post.author && (
+                <ActorChip
+                  handle={post.author.handle}
+                  displayName={post.author.displayName.value}
+                  testId={`feed-author-${post.id}`}
+                />
+              )}
+              <Link
+                href={`/posts/${post.id}`}
+                data-testid={`feed-post-${post.id}`}
+                className="flex flex-col gap-1"
+              >
                 {post.title.value && <h2 className="text-title-medium">{post.title.value}</h2>}
                 <p className="line-clamp-4 text-body-medium">{post.content.value}</p>
-                {post.author && (
-                  <p className="text-body-small text-on-surface-variant">
-                    @{post.author.handle}
-                  </p>
-                )}
-              </Card>
-            </Link>
+              </Link>
+            </Card>
           </li>
         ))}
       </ul>

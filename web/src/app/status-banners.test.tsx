@@ -7,7 +7,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
-import { HomeShell } from "./home-shell";
+import { StatusBanners } from "./status-banners";
 
 const server = startMswServer();
 
@@ -35,16 +35,18 @@ function signedInStore() {
   return store;
 }
 
-describe("HomeShell", () => {
+describe("StatusBanners", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  it("greets a member and starts no poll loop", async () => {
+  it("stays quiet for a settled member and starts no poll loop", async () => {
     server.use(meHandler("MEMBER"));
     const { flow } = fakeFlow();
-    renderWithProviders(<HomeShell />, { store: signedInStore(), flow });
-    expect(await screen.findByTestId("home_greeting")).toHaveTextContent("@ada");
+    renderWithProviders(<StatusBanners />, { store: signedInStore(), flow });
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_loading")).not.toBeInTheDocument(),
+    );
     expect(flow.ensureAdvancing).not.toHaveBeenCalled();
     expect(screen.queryByTestId("home_status_loading")).not.toBeInTheDocument();
   });
@@ -52,7 +54,7 @@ describe("HomeShell", () => {
   it("starts the poll loop for an applicant and renders its progress", async () => {
     server.use(meHandler("APPLICANT"));
     const { flow, emit } = fakeFlow();
-    renderWithProviders(<HomeShell />, { store: signedInStore(), flow });
+    renderWithProviders(<StatusBanners />, { store: signedInStore(), flow });
     await waitFor(() => expect(flow.ensureAdvancing).toHaveBeenCalled());
     expect(screen.getByTestId("home_status_loading")).toBeInTheDocument();
 
@@ -67,8 +69,10 @@ describe("HomeShell", () => {
     server.use(meHandler("APPLICANT"));
     const { flow, emit } = fakeFlow();
     (flow.consumeLanded as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
-    renderWithProviders(<HomeShell />, { store: signedInStore(), flow });
-    await screen.findByTestId("home_greeting");
+    renderWithProviders(<StatusBanners />, { store: signedInStore(), flow });
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_loading")).not.toBeInTheDocument(),
+    );
 
     server.use(meHandler("MEMBER"));
     act(() => {
@@ -83,7 +87,7 @@ describe("HomeShell", () => {
 
   it("surfaces a transport fault on the viewer read", async () => {
     server.use(graphql.query("Me", () => HttpResponse.error()));
-    renderWithProviders(<HomeShell />, { store: signedInStore() });
+    renderWithProviders(<StatusBanners />, { store: signedInStore() });
     expect(await screen.findByTestId("home_transport_error")).toBeInTheDocument();
   });
 
@@ -91,7 +95,7 @@ describe("HomeShell", () => {
     server.use(meHandler("MEMBER"));
     const notices = createSecurityNotices();
     notices.post("2026-08-10T09:30:00Z");
-    renderWithProviders(<HomeShell notices={notices} />, { store: signedInStore() });
+    renderWithProviders(<StatusBanners notices={notices} />, { store: signedInStore() });
     expect(await screen.findByTestId("security_notice")).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("security_notice_dismiss"));
@@ -101,10 +105,12 @@ describe("HomeShell", () => {
 
   it("shows no security notice when none is pending", async () => {
     server.use(meHandler("MEMBER"));
-    renderWithProviders(<HomeShell notices={createSecurityNotices()} />, {
+    renderWithProviders(<StatusBanners notices={createSecurityNotices()} />, {
       store: signedInStore(),
     });
-    await screen.findByTestId("home_greeting");
+    await waitFor(() =>
+      expect(screen.queryByTestId("home_loading")).not.toBeInTheDocument(),
+    );
     expect(screen.queryByTestId("security_notice")).not.toBeInTheDocument();
   });
 });

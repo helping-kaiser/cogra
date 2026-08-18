@@ -15,6 +15,25 @@ function signedInStore() {
   return store;
 }
 
+/** The status banners ride the signed-in feed and read the viewer. */
+function meHandler() {
+  return graphql.query("Me", () =>
+    HttpResponse.json({
+      data: {
+        me: {
+          __typename: "User",
+          id: "acct-1",
+          handle: "ada",
+          displayName: { __typename: "ModeratedText", value: null },
+          accountState: "MEMBER",
+          hasReciprocated: true,
+          invitedBy: null,
+        },
+      },
+    }),
+  );
+}
+
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
@@ -26,7 +45,12 @@ function post(id: string, title: string) {
     title: moderated(title),
     description: moderated(null),
     content: moderated(`body of ${id}`),
-    author: { __typename: "User", id: "u1", handle: "alice" },
+    author: {
+      __typename: "User",
+      id: "u1",
+      handle: "alice",
+      displayName: { __typename: "ModeratedText", value: "Alice" },
+    },
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
     moderationStatus: "NORMAL",
@@ -52,9 +76,9 @@ describe("FeedView", () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
+    server.use(meHandler());
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
-    expect(screen.getByTestId("feed-compose")).toHaveAttribute("href", "/compose");
     expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
@@ -66,7 +90,7 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
-    expect(screen.queryByTestId("feed-compose")).not.toBeInTheDocument();
+
     expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/");
   });
 
