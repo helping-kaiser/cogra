@@ -5,6 +5,8 @@
     <string name="login_password">Password</string>
     <string name="login_submit">Sign in</string>
     <string name="login_forgot">Forgot password?</string>
+    <string name="login_join">New here? Enter your invite</string>
+    <string name="login_browse">Just looking? Browse the feed</string>
     <string name="login_invalid_credentials">That email and password don\'t match.</string>
     <string name="auth_dont_remember">Don\'t remember this account on this device</string>
 

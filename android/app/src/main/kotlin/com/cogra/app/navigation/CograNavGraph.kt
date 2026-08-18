@@ -11,11 +11,15 @@ package com.cogra.app.navigation
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.core.util.Consumer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
+import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.domain.store.TokenStore
@@ -189,7 +195,7 @@ fun CograNavGraph(
             from == phase -> return@LaunchedEffect
             phase == AuthPhase.SIGNED_IN -> Feed
             from == AuthPhase.LOADING -> return@LaunchedEffect
-            else -> InviteEntry()
+            else -> Login
         }
         navController.navigate(root) {
             popUpTo(0) { inclusive = true }
@@ -217,10 +223,42 @@ fun CograNavGraph(
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
 
+    // The guest prompt behind an account-needing slot (design.md §6):
+    // ask, never bounce — the reader picks the auth flow or stays put.
+    var joinPrompt by remember { mutableStateOf(false) }
+    if (joinPrompt) {
+        AlertDialog(
+            onDismissRequest = { joinPrompt = false },
+            title = { Text(stringResource(R.string.join_prompt_title)) },
+            text = { Text(stringResource(R.string.join_prompt_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        joinPrompt = false
+                        navController.navigate(Login)
+                    },
+                    modifier = Modifier.testTag("join_prompt_signin"),
+                ) {
+                    Text(stringResource(R.string.join_prompt_signin))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { joinPrompt = false },
+                    modifier = Modifier.testTag("join_prompt_dismiss"),
+                ) {
+                    Text(stringResource(R.string.join_prompt_dismiss))
+                }
+            },
+            modifier = Modifier.testTag("join_prompt"),
+        )
+    }
+
     // The shell: one scaffold owning the bottom bar and the shell-level
-    // snackbar host (design.md §6) — the bar frames the signed-in
-    // top-level tabs; anonymous viewers browse the public read
-    // surfaces without it.
+    // snackbar host (design.md §6) — one frame for every viewer: the
+    // bar rides the tab surfaces signed in or out, and a slot that
+    // needs an account opens the join prompt on a signed-out tap —
+    // ask, never bounce.
     val shellSnackbar = remember { SnackbarHostState() }
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onOwnProfileTab = backStackEntry?.let { entry ->
@@ -244,21 +282,39 @@ fun CograNavGraph(
             }
         },
         bottomBar = {
-            if (signedIn == true && (onFeedTab || onOwnProfileTab)) {
+            if (signedIn != null && (onFeedTab || onOwnProfileTab)) {
                 CograBottomBar(
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
                     onFeed = { toTab(Feed) },
-                    onCompose = { navController.navigate(ComposePost()) },
-                    onProfile = { toTab(Profile()) },
+                    onCompose = {
+                        if (signedIn == true) {
+                            navController.navigate(ComposePost())
+                        } else {
+                            joinPrompt = true
+                        }
+                    },
+                    onProfile = {
+                        if (signedIn == true) {
+                            toTab(Profile())
+                        } else {
+                            joinPrompt = true
+                        }
+                    },
                 )
             }
         },
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = InviteEntry(),
-            modifier = Modifier.padding(padding),
+            // Login is the signed-out entry — signing in is the common
+            // path; the invite entry hangs off it (design.md §6).
+            startDestination = Login,
+            // consumeWindowInsets rides with the padding (the documented
+            // nested-scaffold pattern): without it every screen's own
+            // scaffold re-applies the status inset the shell already
+            // padded, doubling the space above each top bar.
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
             composable<InviteEntry>(
                 deepLinks = listOf(
@@ -288,7 +344,11 @@ fun CograNavGraph(
                 KeyCeremonyRoute(onDone = { navController.popBackStack() })
             }
             composable<Login> {
-                LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
+                LoginRoute(
+                    onForgotPassword = { navController.navigate(PasswordReset) },
+                    onJoin = { navController.navigate(InviteEntry()) },
+                    onBrowse = { navController.navigate(Feed) },
+                )
             }
             composable<PasswordReset> {
                 PasswordResetRoute(onDone = { navController.popBackStack() })
@@ -314,12 +374,9 @@ fun CograNavGraph(
                     signedIn = signedIn,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
-                    // Pushes the front door (the web guest entries link to
-                    // "/"), so back returns to the reading context.
-                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
-                    // The signed-in Feed is the shell's root tab; the
-                    // anonymous Feed is pushed from the front door.
-                    onBack = if (signedIn == true) null else ({ navController.navigateUp() }),
+                    // Pushes the login screen (the web guest entries link
+                    // to /login), so back returns to the reading context.
+                    onSignInOrJoin = { navController.navigate(Login) },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
@@ -362,7 +419,7 @@ fun CograNavGraph(
                     signedIn = signedIn,
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
-                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
+                    onSignInOrJoin = { navController.navigate(Login) },
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {

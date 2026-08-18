@@ -23,11 +23,11 @@ targetSdk = "36"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.13.0"
-# Compose 1.9.1. The BOM is a floor, not a ceiling — activity-compose
-# raises the ui/foundation/runtime group one patch further, to 1.9.2 —
-# so it is kept within a patch of what actually resolves. It also has to
-# clear 1.8.0, where `LocalClipboard` (the recovery-code copy) lands.
-composeBom = "2025.09.00"
+# Compose 1.9.4 + Material3 1.4.0: the 2025.10 line is the earliest
+# BOM carrying the stable short navigation bar the shell's compact
+# bar needs. It also has to clear 1.8.0, where `LocalClipboard` (the
+# recovery-code copy) lands.
+composeBom = "2025.10.01"
 navigationCompose = "2.8.5"
 datastore = "1.1.1"
 # BiometricPrompt is the documented way to re-confirm the person before

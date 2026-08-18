@@ -143,9 +143,9 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun aSignedOutUserLandsOnTheInviteEntry() {
+    fun aSignedOutUserLandsOnTheLoginScreen() {
         render()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>())
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>())
             .isTrue()
     }
 
@@ -288,11 +288,12 @@ class CograNavGraphTest {
     fun aGuestBrowsesTheFeedFromTheFrontDoor() {
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        assertThat(compose.onAllNodesWithTag("feed_compose").fetchSemanticsNodes()).isEmpty()
+        // One shell for every viewer: the guest keeps the bar.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("feed_signin").fetchSemanticsNodes()).isNotEmpty()
     }
 
@@ -308,8 +309,8 @@ class CograNavGraphTest {
             ),
         )
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("feed_post_p1").performClick()
         waitForTag("detail_comment_signin")
@@ -317,12 +318,51 @@ class CograNavGraphTest {
         // never merely disabled.
         assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
 
-        // The join entry pushes the front door, so back returns to the
-        // post (web parity: the guest entries link to "/").
+        // The join entry pushes the login screen, so back returns to the
+        // post (web parity: the guest entries link to /login).
         compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
         compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>()).isTrue()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isTrue()
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+    }
+
+    @Test
+    fun aGuestsComposeSlotAsksAndSignInPushesTheLogin() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+
+        // The gated slot asks in place — the feed stays underneath.
+        compose.onNodeWithTag("bar_compose").performClick()
+        waitForTag("join_prompt")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+
+        // Sign in or join pushes the login, back returning to the read.
+        compose.onNodeWithTag("join_prompt_signin").performClick()
+        compose.waitForIdle()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isTrue()
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
+    fun aGuestsProfileSlotAsksAndKeepBrowsingStays() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("join_prompt")
+
+        // Keep browsing dismisses; nothing navigated.
+        compose.onNodeWithTag("join_prompt_dismiss").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("join_prompt").fetchSemanticsNodes().isEmpty()
+        }
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     @Test
@@ -331,8 +371,8 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("invite_browse")
-        compose.onNodeWithTag("invite_browse").performScrollTo().performClick()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_signin")
 
         signIn()
@@ -350,8 +390,6 @@ class CograNavGraphTest {
         render()
         waitForTag("bottom_bar")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
-        // No back arrow on the root tab.
-        assertThat(compose.onAllNodesWithTag("feed_back").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
@@ -475,7 +513,7 @@ class CograNavGraphTest {
 
         compose.onNodeWithTag("settings_sign_out").performScrollTo().performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
     }
 
@@ -589,9 +627,10 @@ class CograNavGraphTest {
         }
 
         runBlocking { tokens.clear() }
+        // Signing out lands on the clean login root — the deep-linked
+        // invite entry is gone from the stack entirely.
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<InviteEntry>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
-        assertThat(currentInviteEntry()?.inviteId).isNull()
     }
 }

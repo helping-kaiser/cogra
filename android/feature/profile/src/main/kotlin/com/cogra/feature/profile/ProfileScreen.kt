@@ -1,20 +1,17 @@
 // The profile screen (roadmap "Slice 2.1"; design.md §6 "Profile
-// header"): cover placeholder, monogram avatar, name, handle, bio,
-// link — and the authored chronicle under filter chips. The header's
+// header"): monogram avatar, name, handle, bio, link — and the
+// authored chronicle under filter chips. The header's
 // connection count and the connections sections arrive with the
 // stance slice (open-questions Q35); media covers with slice 2.5.
 
 package com.cogra.feature.profile
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -278,72 +275,63 @@ private fun ProfileHeader(
 ) {
     val profile = state.profile ?: return
     val name = profile.displayName.value?.takeIf { it.isNotBlank() } ?: profile.handle
-    Column {
-        // The cover placeholder — a quiet band until media lands (2.5).
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(96.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        MonogramAvatar(
+            name = name,
+            size = 64.dp,
+            modifier = Modifier.testTag("profile_avatar"),
         )
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            MonogramAvatar(
-                name = name,
-                size = 64.dp,
-                modifier = Modifier.offset(y = (-32).dp).testTag("profile_avatar"),
+        Column {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .semantics { heading() }
+                    .testTag("profile_display_name"),
             )
-            Column(modifier = Modifier.offset(y = (-24).dp)) {
+            Text(
+                text = "@${profile.handle}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("profile_handle"),
+            )
+            profile.bio.value?.takeIf { it.isNotBlank() }?.let { bio ->
                 Text(
-                    text = name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier
-                        .semantics { heading() }
-                        .testTag("profile_display_name"),
+                    text = bio,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 8.dp).testTag("profile_bio"),
                 )
+            }
+            profile.websiteUrl.value?.takeIf { it.isNotBlank() }?.let { url ->
                 Text(
-                    text = "@${profile.handle}",
+                    text = url,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("profile_handle"),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp).testTag("profile_website"),
                 )
-                profile.bio.value?.takeIf { it.isNotBlank() }?.let { bio ->
-                    Text(
-                        text = bio,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(top = 8.dp).testTag("profile_bio"),
-                    )
-                }
-                profile.websiteUrl.value?.takeIf { it.isNotBlank() }?.let { url ->
-                    Text(
-                        text = url,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 4.dp).testTag("profile_website"),
-                    )
-                }
-                if (state.own) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 12.dp),
+            }
+            if (state.own) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 12.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = onEdit,
+                        modifier = Modifier.testTag("profile_edit"),
                     ) {
-                        OutlinedButton(
-                            onClick = onEdit,
-                            modifier = Modifier.testTag("profile_edit"),
-                        ) {
-                            Text(stringResource(R.string.profile_edit))
-                        }
-                        // Invite management is a standalone entry on
-                        // one's own profile (design.md §6); an
-                        // applicant's tap explains the lock upstream.
-                        OutlinedButton(
-                            onClick = onOpenInvites,
-                            modifier = Modifier.testTag("profile_invites"),
-                        ) {
-                            Text(stringResource(R.string.profile_invites))
-                        }
+                        Text(stringResource(R.string.profile_edit))
+                    }
+                    // Invite management is a standalone entry on
+                    // one's own profile (design.md §6); an
+                    // applicant's tap explains the lock upstream.
+                    OutlinedButton(
+                        onClick = onOpenInvites,
+                        modifier = Modifier.testTag("profile_invites"),
+                    ) {
+                        Text(stringResource(R.string.profile_invites))
                     }
                 }
             }

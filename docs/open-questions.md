@@ -217,6 +217,33 @@ the holder's feed.
 
 ---
 
+## Q37 — Where the bottom bar rides on drill-in surfaces
+
+**Where it shows up:**
+[design.md §6](implementation/design.md#6-components),
+[android.md "Screens"](implementation/android.md#screens),
+[web.md "Routes"](implementation/web.md#routes)
+**Status:** open
+
+### Context
+
+The two clients disagree on where the shell's bar shows. Android
+mounts it on the tab roots only — a drill-in (post detail,
+settings) replaces it with the screen's own back arrow. The web
+renders it on every signed-in route. Popular apps split the
+difference: the bar stays on read drill-ins (a post detail keeps
+the tabs) and leaves full-screen flows (compose, settings).
+Neither client violates a written rule — the rule doesn't exist.
+
+### The question
+
+On which surfaces does the bar ride: tab roots only (Android
+today), everywhere (web today), or tab roots plus read drill-ins
+(the popular-app pattern)? One rule for both clients; purely
+presentational — no graph or economics contact.
+
+---
+
 ## Q36 — Owner-chosen default filter for the profile chronicle
 
 **Where it shows up:**
