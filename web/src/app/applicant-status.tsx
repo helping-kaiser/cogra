@@ -17,7 +17,6 @@ import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { rearmMessage as sharedRearmMessage } from "@/lib/ui/error-messages";
-import { StickyReveal } from "@/lib/ui/sticky-reveal";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
@@ -41,11 +40,9 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
         </p>
       );
     case "awaitingSigningKey":
-      return (
-        <StickyReveal>
-          <RestoreCard />
-        </StickyReveal>
-      );
+      // The restore card rides the screen's collapsing top (the
+      // keyless read from the identity store covers this state).
+      return null;
     case "needsInvite":
       return <RearmCard />;
     case "rejectedByDevice":

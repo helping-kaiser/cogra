@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { FeedView } from "./feed-view";
@@ -82,6 +83,18 @@ describe("FeedView", () => {
     expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
+  });
+
+  it("collapses the restore card into the header for a keyless member", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler());
+    renderWithProviders(<FeedView store={fakeIdentityStore({})} />, {
+      store: signedInStore(),
+    });
+    const restore = await screen.findByTestId("home_restore");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
   });
 
   it("reads without a session and swaps the composer for the sign-in entry", async () => {
