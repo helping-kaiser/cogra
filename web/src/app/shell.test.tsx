@@ -53,15 +53,30 @@ describe("AppShell", () => {
     expect(await screen.findByTestId("nav-profile")).toHaveAttribute("aria-current", "page");
   });
 
-  it("shows no bar to an anonymous viewer", async () => {
+  it("frames an anonymous reader with the same bar, slots prompting at the front door", async () => {
     renderWithProviders(
       <AppShell>
         <p>content</p>
       </AppShell>,
     );
+    const nav = await screen.findByTestId("bottom-nav");
+    expect(nav).toBeInTheDocument();
+    expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
+    expect(screen.getByTestId("nav-compose")).toHaveAttribute("href", "/");
+    expect(screen.getByTestId("nav-profile")).toHaveAttribute("href", "/");
+    expect(screen.getByText("content")).toBeInTheDocument();
+  });
+
+  it("keeps the bar off the front door", async () => {
+    pathname = "/";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("content")).toBeInTheDocument();
   });
 });
