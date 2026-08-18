@@ -1,11 +1,12 @@
 "use client";
 
 // The screen's collapsing top: the header (and the key banner when
-// present) leaves with the flow scrolling down — but only once the
-// region's own slot is fully scrolled past, so no gap opens near the
-// top — and pins back the moment the reader scrolls up. The sentinel
-// marks the region's natural position; a sticky element can't measure
-// that itself once it is stuck.
+// present) leaves with the flow scrolling down — but only once half
+// the region's own slot is scrolled past; the exit transition and the
+// scroll itself cover the rest of the slot, and waiting for the whole
+// slot made the hide feel late — and pins back the moment the reader
+// scrolls up. The sentinel marks the region's natural position; a
+// sticky element can't measure that itself once it is stuck.
 
 import { useEffect, useRef, useState } from "react";
 
@@ -25,8 +26,8 @@ export function CollapsingTop({ children }: { children: React.ReactNode }) {
         if (Math.abs(delta) > 4) {
           const height = region.current?.offsetHeight ?? 0;
           const slotTop = sentinel.current?.getBoundingClientRect().top ?? 0;
-          // Hide only scrolling down with the whole slot off-screen.
-          setHidden(delta > 0 && slotTop < -height);
+          // Hide only scrolling down with half the slot off-screen.
+          setHidden(delta > 0 && slotTop < -height / 2);
           lastY = y;
         }
         ticking = false;
