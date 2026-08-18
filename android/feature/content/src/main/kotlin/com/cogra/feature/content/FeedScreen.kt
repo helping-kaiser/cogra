@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
-import com.cogra.core.designsystem.CograTopBar
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
@@ -79,7 +79,7 @@ fun FeedScreen(
 ) {
     Scaffold(
         topBar = {
-            CograTopBar(
+            TopAppBar(
                 title = { Text(stringResource(R.string.content_feed_title)) },
                 actions = {
                     if (signedIn == false) {

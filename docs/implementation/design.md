@@ -455,10 +455,11 @@ gesture the product lives on; it wears `primaryContainer`
 signed-in, applicant, and anonymous viewers alike, and a slot
 that needs an account (the compose action, the profile tab)
 routes an anonymous tap to the front door, back returning to
-the reading context. The bars are compact — the 64dp short
-navigation bar and 48dp top app bars, the heights popular apps
-sit at rather than the taller classic M3 defaults; the web
-mirrors them (≈57px bar, 48px header band). Settings hangs off
+the reading context. The bars are compact: the 64dp short
+navigation bar rather than the taller classic one, under the
+stock small top app bar with its inset applied exactly once; the
+web mirrors them (≈61px bar, ≈48px header band), its slots
+wearing the same Material glyphs as the app's. Settings hangs off
 the profile screen's top-bar gear; invite management is a
 standalone entry on one's own profile. The application and
 reciprocation cards are shell-scoped banners — they ride above
