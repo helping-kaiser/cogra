@@ -30,16 +30,25 @@ describe("CollapsingTop", () => {
     stubLayout(0);
     expect(region.className).toContain("translate-y-0");
 
-    // A slight downward scroll with the slot still visible: no hide,
-    // no gap.
+    // A slight downward scroll with most of the slot still visible:
+    // no hide, no gap.
     scrollTo(40);
     await waitFor(() => expect(region.className).toContain("translate-y-0"));
 
-    // Past the region's own slot, scrolling down hides it.
-    scrollTo(400);
+    // Half the slot gone, scrolling down hides it — the reader never
+    // waits for the whole slot.
+    scrollTo(60);
     await waitFor(() => expect(region.className).toContain("-translate-y-"));
 
     // Any upward scroll brings it back.
+    scrollTo(45);
+    await waitFor(() => expect(region.className).toContain("translate-y-0"));
+
+    // Deep in the page the same pair holds: down hides, up reveals.
+    // Each step expects a state change, so the waits stay honest —
+    // asserting an already-true state would race the coalescing rAF.
+    scrollTo(400);
+    await waitFor(() => expect(region.className).toContain("-translate-y-"));
     scrollTo(320);
     await waitFor(() => expect(region.className).toContain("translate-y-0"));
   });
