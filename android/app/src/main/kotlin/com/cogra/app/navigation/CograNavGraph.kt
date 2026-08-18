@@ -190,7 +190,7 @@ fun CograNavGraph(
             from == phase -> return@LaunchedEffect
             phase == AuthPhase.SIGNED_IN -> Feed
             from == AuthPhase.LOADING -> return@LaunchedEffect
-            else -> InviteEntry()
+            else -> Login
         }
         navController.navigate(root) {
             popUpTo(0) { inclusive = true }
@@ -271,7 +271,9 @@ fun CograNavGraph(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = InviteEntry(),
+            // Login is the signed-out entry — signing in is the common
+            // path; the invite entry hangs off it (design.md §6).
+            startDestination = Login,
             // consumeWindowInsets rides with the padding (the documented
             // nested-scaffold pattern): without it every screen's own
             // scaffold re-applies the status inset the shell already
@@ -306,7 +308,11 @@ fun CograNavGraph(
                 KeyCeremonyRoute(onDone = { navController.popBackStack() })
             }
             composable<Login> {
-                LoginRoute(onForgotPassword = { navController.navigate(PasswordReset) })
+                LoginRoute(
+                    onForgotPassword = { navController.navigate(PasswordReset) },
+                    onJoin = { navController.navigate(InviteEntry()) },
+                    onBrowse = { navController.navigate(Feed) },
+                )
             }
             composable<PasswordReset> {
                 PasswordResetRoute(onDone = { navController.popBackStack() })
@@ -332,9 +338,9 @@ fun CograNavGraph(
                     signedIn = signedIn,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
-                    // Pushes the front door (the web guest entries link to
-                    // "/"), so back returns to the reading context.
-                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
+                    // Pushes the login screen (the web guest entries link
+                    // to /login), so back returns to the reading context.
+                    onSignInOrJoin = { navController.navigate(Login) },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
@@ -377,7 +383,7 @@ fun CograNavGraph(
                     signedIn = signedIn,
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
-                    onSignInOrJoin = { navController.navigate(InviteEntry()) },
+                    onSignInOrJoin = { navController.navigate(Login) },
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = {
