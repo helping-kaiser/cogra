@@ -78,7 +78,7 @@ export function FeedView() {
         action={
           phase === "signedOut" ? (
             <Link
-              href="/"
+              href="/login"
               data-testid="feed-signin"
               className={buttonClassName({ variant: "outline", size: "sm" })}
             >

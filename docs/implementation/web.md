@@ -165,9 +165,10 @@ The route map (Android parity per surface):
 
 | Route | Access | Surface (Android counterpart) |
 |---|---|---|
-| `/` | public | signed out: front door — invite entry, sign-in, feed browsing (InviteEntry); signed in: redirect `/feed` |
-| `/login` | public; signed-in → redirect `/` | Login |
+| `/` | public | pure phase switch — signed out: redirect `/login`, signed in: redirect `/feed` |
+| `/login` | public; signed-in → redirect `/` | Login — the signed-out entry: sign in, plus the invite (`/join`) and feed-browse entries |
 | `/reset` (+`?token=` pre-fills the confirm form) | public | PasswordReset |
+| `/join` | public | InviteEntry — paste an invite to start an application |
 | `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply; signed in: re-arm |
 | `/verify?token=` | public, sessionless | email-verification result |
 | `/feed` | public | Feed — the chronological listing; the shell's root tab |
@@ -192,8 +193,8 @@ anyone, without an account
 so `/feed`, `/posts/<id>`, and `/u/<handle>` render for anonymous
 visitors, with the write affordances (comment box, reply, edit)
 swapped for sign-in entries. Every write surface stays gated; the
-front door carries the browse entry so an anonymous visitor finds
-the public read without an account.
+login screen — the signed-out entry — carries the browse entry so
+an anonymous visitor finds the public read without an account.
 
 The shell is the bottom bar
 ([design.md §6](design.md#6-components)), rendered from the root
@@ -211,8 +212,9 @@ Gating is client-side — tokens are client-held, so the server
 never knows the auth state. The `(app)` route group's layout
 guards the gated routes and replaces a signed-out visit to
 `/login`; a route's membership in the group is the gate, so the
-public read surfaces live outside it. `/` branches in place on
-the phase. Phase flips replace the location, never push — the
+public read surfaces live outside it. `/` redirects on the
+phase, rendering nothing. Phase flips replace the location,
+never push — the
 Android navigation parity. Web deltas from Android: `/invites`
 renders the applicant lock in-page (the URL is directly
 addressable), `/reset?token=` and `/verify?token=` arrive as

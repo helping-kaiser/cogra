@@ -25,9 +25,9 @@ beforeEach(() => {
 });
 
 describe("RootView", () => {
-  it("shows the front door when signed out", () => {
+  it("sends a signed-out arrival to the login screen", async () => {
     renderWithProviders(<RootView />);
-    expect(screen.getByTestId("invite_login")).toBeInTheDocument();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
   });
 
   it("lands a signed-in arrival on the feed tab", async () => {
@@ -35,6 +35,6 @@ describe("RootView", () => {
     // banners ride there — "/" holds no shell of its own anymore.
     renderWithProviders(<RootView />, { store: signedInStore() });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/feed"));
-    expect(screen.queryByTestId("invite_login")).not.toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalledWith("/login");
   });
 });

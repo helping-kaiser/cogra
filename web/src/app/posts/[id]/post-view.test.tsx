@@ -223,7 +223,7 @@ describe("PostView", () => {
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
     expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
-    expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/");
+    expect(screen.getByTestId("comment-signin")).toHaveAttribute("href", "/login");
   });
 
   it("keeps the thread readable and faults at the load-more slot when a comments page fails", async () => {
