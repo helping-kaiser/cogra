@@ -56,6 +56,7 @@ import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ComposePostRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
+import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
@@ -381,6 +382,13 @@ fun CograNavGraph(
                     onRefreshSignalConsumed = {
                         entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
                     },
+                    keyBanner = {
+                        if (signedIn == true) {
+                            KeyRestoreBannerRoute(
+                                onRestoreActor = { navController.navigate(Restore) },
+                            )
+                        }
+                    },
                     banners = {
                         if (signedIn == true) {
                             StatusBannersRoute(
@@ -455,6 +463,13 @@ fun CograNavGraph(
                     // The own-profile tab has no back arrow; another
                     // actor's profile is a drill-in.
                     onBack = if (route.handle == null) null else ({ navController.navigateUp() }),
+                    keyBanner = {
+                        if (route.handle == null && signedIn == true) {
+                            KeyRestoreBannerRoute(
+                                onRestoreActor = { navController.navigate(Restore) },
+                            )
+                        }
+                    },
                     banners = {
                         if (route.handle == null && signedIn == true) {
                             StatusBannersRoute(

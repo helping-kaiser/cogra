@@ -6,6 +6,7 @@
 
 package com.cogra.feature.profile
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,15 +30,22 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -63,6 +71,7 @@ fun ProfileRoute(
     onOpenInvites: () -> Unit,
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
+    keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -91,6 +100,7 @@ fun ProfileRoute(
         onOpenInvites = onOpenInvites,
         onOpenPost = onOpenPost,
         onBack = onBack,
+        keyBanner = keyBanner,
         banners = banners,
     )
 }
@@ -109,6 +119,7 @@ fun ProfileScreen(
     onOpenInvites: () -> Unit,
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
+    keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -131,41 +142,63 @@ fun ProfileScreen(
             onOpenInvites()
         }
     }
+    // The collapsing top — the FeedScreen twin: enterAlways bar plus
+    // the direction-driven key banner.
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var showTop by remember { mutableStateOf(true) }
+    val topConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -4) showTop = false
+                if (available.y > 4) showTop = true
+                return Offset.Zero
+            }
+        }
+    }
     Scaffold(
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .nestedScroll(topConnection),
         snackbarHost = {
             SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.profile?.let { "@${it.handle}" }
-                            ?: stringResource(R.string.profile_title),
-                    )
-                },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack, modifier = Modifier.testTag("profile_back")) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.profile_back),
-                            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = state.profile?.let { "@${it.handle}" }
+                                ?: stringResource(R.string.profile_title),
+                        )
+                    },
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack, modifier = Modifier.testTag("profile_back")) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.profile_back),
+                                )
+                            }
                         }
-                    }
-                },
-                actions = {
-                    if (state.own) {
-                        IconButton(
-                            onClick = onOpenSettings,
-                            modifier = Modifier.testTag("profile_settings"),
-                        ) {
-                            Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = stringResource(R.string.profile_open_settings),
-                            )
+                    },
+                    actions = {
+                        if (state.own) {
+                            IconButton(
+                                onClick = onOpenSettings,
+                                modifier = Modifier.testTag("profile_settings"),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Settings,
+                                    contentDescription = stringResource(R.string.profile_open_settings),
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+                AnimatedVisibility(visible = showTop) {
+                    Box(Modifier.padding(horizontal = 16.dp)) { keyBanner() }
+                }
+            }
         },
     ) { padding ->
         when {
@@ -197,7 +230,9 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item(key = "banners") { banners() }
+                    item(key = "banners") {
+                        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                    }
                     item(key = "header") {
                         ProfileHeader(
                             state = state,

@@ -1,6 +1,7 @@
 package com.cogra.feature.home
 
 import android.content.Context
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
@@ -79,10 +80,35 @@ class StatusBannersTest {
     }
 
     @Test
-    fun theHuskStateOffersRestore() {
+    fun theHuskWarningRidesTheCollapsingTopNotTheStack() {
         render(HomeUiState(loading = false, huskWarning = true))
-        compose.onNodeWithTag("home_restore").assertExists()
+        compose.onNodeWithTag("home_restore").assertDoesNotExist()
         compose.onNodeWithTag("home_reciprocation").assertDoesNotExist()
+    }
+
+    @Test
+    fun theKeyRestoreBannerShowsForAMemberHuskOnly() {
+        compose.setContent {
+            KeyRestoreBanner(HomeUiState(loading = false, huskWarning = true), onRestoreActor = {})
+        }
+        compose.onNodeWithTag("home_restore").assertExists()
+    }
+
+    @Test
+    fun theKeyRestoreBannerStaysQuietForApplicantsAndKeyedDevices() {
+        compose.setContent {
+            Column {
+                KeyRestoreBanner(
+                    HomeUiState(loading = false, applicant = true, huskWarning = true),
+                    onRestoreActor = {},
+                )
+                KeyRestoreBanner(
+                    HomeUiState(loading = false, huskWarning = false),
+                    onRestoreActor = {},
+                )
+            }
+        }
+        compose.onNodeWithTag("home_restore").assertDoesNotExist()
     }
 
     @Test
