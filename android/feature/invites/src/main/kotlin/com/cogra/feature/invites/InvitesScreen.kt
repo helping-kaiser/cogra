@@ -26,7 +26,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +45,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograTopBar
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
 import com.cogra.domain.ApplicationInfo
@@ -120,7 +120,7 @@ fun InvitesScreen(
     val onHuskHint: () -> Unit = { scope.launch { snackbarHostState.showSnackbar(huskHint) } }
     Scaffold(
         topBar = {
-            TopAppBar(
+            CograTopBar(
                 title = {
                     Text(
                         text = stringResource(R.string.invites_title),

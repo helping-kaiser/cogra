@@ -31,7 +31,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
@@ -48,6 +47,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograTopBar
 import com.cogra.core.designsystem.MonogramAvatar
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
@@ -138,7 +138,7 @@ fun ProfileScreen(
         snackbarHost = {
             SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            CograTopBar(
                 title = {
                     Text(
                         text = state.profile?.let { "@${it.handle}" }

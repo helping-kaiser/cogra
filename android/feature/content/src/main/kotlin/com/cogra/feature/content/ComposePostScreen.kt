@@ -23,7 +23,6 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograTopBar
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.domain.OversightChoice
 import com.cogra.feature.content.R
@@ -78,7 +78,7 @@ fun ComposePostScreen(
     val editing = state.editingId != null
     Scaffold(
         topBar = {
-            TopAppBar(
+            CograTopBar(
                 title = {
                     Text(
                         stringResource(
