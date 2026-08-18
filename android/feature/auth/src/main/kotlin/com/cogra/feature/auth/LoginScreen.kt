@@ -33,6 +33,8 @@ import com.cogra.domain.ErrorCode
 @Composable
 fun LoginRoute(
     onForgotPassword: () -> Unit,
+    onJoin: () -> Unit,
+    onBrowse: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -43,6 +45,8 @@ fun LoginRoute(
         onForgetOnSignOutChange = viewModel::onForgetOnSignOutChange,
         onSubmit = viewModel::onSubmit,
         onForgotPassword = onForgotPassword,
+        onJoin = onJoin,
+        onBrowse = onBrowse,
     )
 }
 
@@ -54,6 +58,8 @@ fun LoginScreen(
     onForgetOnSignOutChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onForgotPassword: () -> Unit,
+    onJoin: () -> Unit,
+    onBrowse: () -> Unit,
 ) {
     Scaffold { padding ->
         Column(
@@ -123,6 +129,20 @@ fun LoginScreen(
                 modifier = Modifier.testTag("login_forgot"),
             ) {
                 Text(stringResource(R.string.login_forgot))
+            }
+            // The signed-out entry carries the other two paths: the
+            // invite entry and the public read (design.md §6).
+            TextButton(
+                onClick = onJoin,
+                modifier = Modifier.testTag("login_join"),
+            ) {
+                Text(stringResource(R.string.login_join))
+            }
+            TextButton(
+                onClick = onBrowse,
+                modifier = Modifier.testTag("login_browse"),
+            ) {
+                Text(stringResource(R.string.login_browse))
             }
         }
     }

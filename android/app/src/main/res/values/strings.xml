@@ -8,4 +8,8 @@
     <string name="bar_feed">Feed</string>
     <string name="bar_compose">New post</string>
     <string name="bar_profile">Profile</string>
+    <string name="join_prompt_title">Join the conversation</string>
+    <string name="join_prompt_body">Posting and profiles need an account.</string>
+    <string name="join_prompt_signin">Sign in or join</string>
+    <string name="join_prompt_dismiss">Keep browsing</string>
 </resources>

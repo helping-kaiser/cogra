@@ -430,7 +430,7 @@ behaviour and matching names:
   single-image, gallery, with and without title.
 - **Comment** — author, body, timestamp, media, nested
   replies, stance control. Variants: top-level, nested.
-- **Profile header** — cover, avatar, name, handle, bio, link,
+- **Profile header** — avatar, name, handle, bio, link,
   connection count, and a primary action.
 - **Actor chip / row** — compact person-or-group reference. A
   Collective looks like a person but reads as a shared
@@ -451,10 +451,19 @@ toward five. The center slot is the compose *action*, not a
 destination — a deliberate deviation from M3's destinations-only
 navigation-bar guidance, accepted for the reach of the one
 gesture the product lives on; it wears `primaryContainer`
-(§2.4). Signed-in and applicant viewers get the bar; anonymous
-viewers browse the public read surfaces without it. Settings
-hangs off the profile screen's top-bar gear; invite management
-is a standalone entry on one's own profile. The application and
+(§2.4). Every viewer gets the same shell: the bar shows for
+signed-in, applicant, and anonymous viewers alike, and a slot
+that needs an account (the compose action, the profile tab)
+asks on an anonymous tap — a dialog offering sign-in or
+keep-browsing — never yanking the read away. Login is the
+signed-out entry; the invite entry and the public feed hang
+off it. The bars are compact: the 64dp short
+navigation bar rather than the taller classic one, under the
+stock small top app bar with its inset applied exactly once; the
+web mirrors them (≈61px bar, ≈48px header band), its slots
+wearing the same Material glyphs as the app's. Settings hangs off
+the profile screen's top-bar gear; invite management is a
+standalone entry on one's own profile. The application and
 reciprocation cards are shell-scoped banners — they ride above
 whichever tab is active until resolved.
 
