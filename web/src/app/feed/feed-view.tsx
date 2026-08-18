@@ -29,10 +29,12 @@ function GuestBanner() {
       <p className="text-body-medium text-on-surface-variant">
         You&apos;re browsing as a guest — sign in or join to post and vouch.
       </p>
+      {/* Filled: joining is the one committing action a guest has on
+          this surface (design.md §6). */}
       <Link
         href="/login"
         data-testid="feed-signin"
-        className={buttonClassName({ variant: "outline", size: "sm", selfStart: true })}
+        className={buttonClassName({ size: "sm", selfStart: true })}
       >
         Sign in or join
       </Link>
