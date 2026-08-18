@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -202,17 +203,44 @@ describe("ComposeForm", () => {
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
-    renderWithProviders(<ComposeForm />, {
+    renderWithProviders(
+      <ComposeForm store={fakeIdentityStore({ keyOnDevice: true })} />,
+      {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner({
+          signStaged: vi.fn(() =>
+            Promise.resolve({ kind: "failed" as const, id: "w1", cause: new Error("offline") }),
+          ),
+        }),
+      },
+    );
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+    expect(await screen.findByTestId("compose-signing-failed")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("tells a keyless browser to restore, not to wait", async () => {
+    // The write genuinely waits on the reader acting — the copy must
+    // say so instead of the generic stays-pending line.
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
+      ),
+    );
+    renderWithProviders(<ComposeForm store={fakeIdentityStore({})} />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner({
         signStaged: vi.fn(() =>
-          Promise.resolve({ kind: "failed" as const, id: "w1", cause: new Error("offline") }),
+          Promise.resolve({ kind: "awaitingSeal" as const, id: "w1" }),
         ),
       }),
     });
     fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
     fireEvent.click(screen.getByTestId("compose-submit"));
-    expect(await screen.findByTestId("compose-signing-failed")).toBeInTheDocument();
+    const alert = await screen.findByTestId("compose-signing-needs-key");
+    expect(alert).toHaveTextContent("Restore your key");
+    expect(screen.queryByTestId("compose-signing-failed")).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
 });
