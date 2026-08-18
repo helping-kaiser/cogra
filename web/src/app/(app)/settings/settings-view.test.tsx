@@ -141,6 +141,11 @@ describe("SettingsView backup", () => {
     expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(expected);
   });
 
+  it("backs to the profile it hangs off", async () => {
+    renderSettings();
+    expect(await screen.findByTestId("settings_back")).toHaveAttribute("href", "/profile");
+  });
+
   it("points a keyless browser at restore", async () => {
     renderSettings();
     expect(await screen.findByTestId("settings_backup_no_actor")).toBeInTheDocument();
