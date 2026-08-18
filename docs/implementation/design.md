@@ -484,10 +484,13 @@ flow slot has scrolled past (early enough to feel prompt, late
 enough that the exit motion covers the vacated slot). A must-act
 card — the key-restore banner, shown whenever the account's
 actor key is attached but absent on this device, member and
-applicant alike — rides the collapsing region on the feed and
-profile, following the reader away and back by scroll direction
-instead of living only at the top of the list; the banner stack
-never repeats it.
+applicant alike — rides the collapsing region on every main
+surface (a purely read-only surface may omit it), following the
+reader away and back by scroll direction instead of living only
+at the top of the list; the banner stack never repeats it. For
+the signed-out reader the feed's slot carries the guest notice
+instead — the one sign-in-or-join entry, riding in place of a
+separate header action.
 
 Confirmation of a completed action is a snackbar on both
 platforms, fired once per event.
