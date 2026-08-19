@@ -103,6 +103,7 @@ pub async fn prepare_stance<B: L1Boundary>(
             asserted_parents: vec![],
             deps: vec![],
             payload: vec![],
+            node: None,
         },
     )
     .await?)

@@ -70,6 +70,7 @@ impl Rig {
             asserted_parents: vec![],
             deps: vec![],
             payload: b"profile".to_vec(),
+            node: None,
         }
     }
 

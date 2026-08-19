@@ -75,6 +75,12 @@ pub struct StagedWrite {
     pub state: StagedState,
     pub proposal: Proposal,
     pub prepared_epoch: i64,
+    /// The L2 node the payload envelope carries, for a write that mints
+    /// or edits one — the display rows this write owns while pending.
+    pub node_id: Option<Uuid>,
+    /// The authoring instant: when the device's pre-commitment was
+    /// recorded, which is what the content dates from (substrate.md §6).
+    pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
     /// The pre-commitment leg, present from pre-sign submission on.
     pub pre_signed: Option<PreSignedParts>,
     /// The host additions, present from the seal on.
@@ -166,6 +172,7 @@ pub async fn insert(
     actor_id: Uuid,
     proposal: &Proposal,
     prepared_epoch: i64,
+    node_id: Option<Uuid>,
 ) -> Result<(), StagedError> {
     let body = &proposal.body;
     let seq = i64::try_from(body.seq)
@@ -176,9 +183,9 @@ pub async fn insert(
         "INSERT INTO staged_writes
              (id, actor_id, act_id, author, seq, family,
               middle, target, p_d, p_i, settlement_ref, license,
-              asserted_parents, deps, payload, prepared_epoch)
+              asserted_parents, deps, payload, prepared_epoch, node_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                 $14, $15, $16)",
+                 $14, $15, $16, $17)",
         id,
         actor_id,
         body.act_id().to_string(),
@@ -195,6 +202,7 @@ pub async fn insert(
         &deps,
         &proposal.payload,
         prepared_epoch,
+        node_id,
     )
     .execute(conn)
     .await?;
@@ -208,7 +216,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
                 deps, payload, state, author_pubkey, nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
-                host_seal, prepared_epoch
+                host_seal, prepared_epoch, node_id, pre_signed_at
          FROM staged_writes WHERE id = $1",
         id,
     )
@@ -289,6 +297,8 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
         proposal,
         prepared_epoch: row.prepared_epoch,
+        node_id: row.node_id,
+        pre_signed_at: row.pre_signed_at,
         pre_signed,
         sealed,
     })
@@ -398,7 +408,8 @@ async fn transition(
 
 /// Stores the device's pre-commitment leg and moves the write into
 /// `sealing`. Accepts a retry from `sealing` (a relay that died between
-/// recording and sealing).
+/// recording and sealing) — `pre_signed_at` is set only the first time,
+/// so a retry never moves the instant the content is dated from.
 pub async fn record_pre_signed(
     pool: &PgPool,
     id: Uuid,
@@ -407,7 +418,8 @@ pub async fn record_pre_signed(
     let updated = sqlx::query!(
         "UPDATE staged_writes
          SET state = 'sealing', author_pubkey = $2, nonce = $3,
-             pre_signature = $4, updated_at = NOW()
+             pre_signature = $4, pre_signed_at = COALESCE(pre_signed_at, NOW()),
+             updated_at = NOW()
          WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')",
         id,
         &pre.author_pubkey,
@@ -527,45 +539,70 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
 /// Expires one staged write immediately — the terminal path for a
 /// handshake that can never complete (a seal lost before it was stored).
 pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(), StagedError> {
-    let updated = sqlx::query!(
+    let mut tx = pool.begin().await?;
+    let node_id = sqlx::query_scalar!(
         "UPDATE staged_writes
          SET state = 'expired', payload = ''::bytea, expired_epoch = $2,
              updated_at = NOW()
-         WHERE id = $1 AND state NOT IN ('landed', 'expired')",
+         WHERE id = $1 AND state NOT IN ('landed', 'expired')
+         RETURNING node_id",
         id,
         current_epoch,
     )
-    .execute(pool)
+    .fetch_optional(&mut *tx)
     .await?
-    .rows_affected();
-    if updated == 1 {
-        Ok(())
-    } else {
-        Err(StagedError::NotFound(id))
-    }
+    .ok_or(StagedError::NotFound(id))?;
+    discard_pending_content(&mut tx, node_id.into_iter()).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// GC, first phase: expires every unlanded staged write prepared at least
-/// `gc_after_epochs` epochs ago, dropping its staged payload. The expired
+/// `gc_after_epochs` epochs ago, dropping its staged payload and, in the
+/// same transaction, whatever it had on screen while pending. The expired
 /// row remains observable until the reap so a device polling a lost
-/// handshake sees the terminal state rather than a vanished id.
+/// handshake sees the terminal state rather than a vanished id; the
+/// content itself leaves every reader's view at once — on the graph
+/// nothing ever existed (substrate.md §6).
 pub async fn expire_due(
     pool: &PgPool,
     current_epoch: i64,
     gc_after_epochs: i64,
 ) -> Result<u64, StagedError> {
-    Ok(sqlx::query!(
+    let mut tx = pool.begin().await?;
+    let expired = sqlx::query_scalar!(
         "UPDATE staged_writes
          SET state = 'expired', payload = ''::bytea, expired_epoch = $1,
              updated_at = NOW()
          WHERE state NOT IN ('landed', 'expired')
-           AND prepared_epoch + $2 <= $1",
+           AND prepared_epoch + $2 <= $1
+         RETURNING node_id",
         current_epoch,
         gc_after_epochs,
     )
-    .execute(pool)
-    .await?
-    .rows_affected())
+    .fetch_all(&mut *tx)
+    .await?;
+    let count = expired.len() as u64;
+    discard_pending_content(&mut tx, expired.into_iter().flatten()).await?;
+    tx.commit().await?;
+    Ok(count)
+}
+
+/// The display side of expiry: every node an expired write owned loses
+/// its pending rows. A write that minted nothing (Registration, Attach)
+/// carries no node id and has nothing to discard.
+async fn discard_pending_content(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    nodes: impl Iterator<Item = Uuid>,
+) -> Result<(), StagedError> {
+    for node in nodes {
+        crate::content::discard_pending(tx, node)
+            .await
+            .map_err(|e| match e {
+                crate::content::ContentError::Storage(e) => StagedError::Storage(e),
+            })?;
+    }
+    Ok(())
 }
 
 /// GC, second phase: deletes expired rows another `gc_after_epochs` epochs
