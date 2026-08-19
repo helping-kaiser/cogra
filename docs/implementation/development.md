@@ -7,6 +7,7 @@
 | Rust (stable) | Language toolchain | https://rustup.rs |
 | Docker + Compose | Local databases (any compose-compatible runtime works — see `DOCKER_COMPOSE` below) | https://docs.docker.com/get-docker |
 | sqlx-cli | Running migrations | Auto-installed by `make init`; manual: `cargo install sqlx-cli --no-default-features --features postgres` |
+| mkcert | The dev server's certificate, for phones that reach it by address ([below](#reaching-the-web-dev-server-from-the-phone)) | https://github.com/FiloSottile/mkcert |
 
 Verify everything is in place:
 ```bash
@@ -84,10 +85,14 @@ over file values.
 `scripts/` holds standalone dev helper scripts. Current inventory:
 
 - `scripts/stamp-net.sh` — rewrites the `DATABASE_URL` host and
-  `WEB_ORIGIN` in `.env` to the machine's current LAN IPv4. Run it
-  after every network change on setups where the DB, the API, or the
-  phones sit on different network namespaces and rendezvous on the
-  host's LAN address.
+  `WEB_ORIGIN` in `.env` to the machine's current LAN IPv4, re-issues
+  the dev server's certificate for that address, and stages the mkcert
+  root CA behind it at
+  `android/app/src/devCa/res/raw/cogra_dev_ca.pem` (gitignored — the CA
+  is per-machine). Run it after every network change on setups where
+  the DB, the API, or the phones sit on different network namespaces
+  and rendezvous on the host's LAN address. Without mkcert on `PATH` it
+  stamps `.env` and says what it skipped.
 
 ---
 
@@ -121,6 +126,7 @@ make android-build  Assemble the debug APK
 make android-lint Run Android lint (not a CI gate, convenience only)
 make web-dev      Start the web app dev server over https (needs Node from web/.nvmrc)
 make web-apk      Stage the Android debug APK where the web app serves it
+make guest-apk    Build that APK against this machine's dev server, and stage it
 make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
 ```
 
@@ -141,21 +147,23 @@ adb reverse tcp:3000 tcp:3000    # then browse https://localhost:3000
 ```
 
 **A phone on the LAN or the hotspot, and any guest's phone: https.**
-`make web-dev` runs `next dev --experimental-https`, which generates a
-self-signed certificate through
-[mkcert](https://github.com/FiloSottile/mkcert) on first start (a
-one-time binary download plus a local CA install, both of which it
-announces), and Next's dev server listens on every interface by default.
-Guests browse `https://<the dev machine's LAN or hotspot address>:3000`,
-step past the certificate warning — their phones do not trust that CA,
-and a bypassed warning still leaves an https origin, which is what the
-secure context depends on — and land on the login page, which offers the
-Android app as a download (`make web-apk` stages the debug APK that
-`make android-build` produced into `web/public/downloads/`, gitignored).
-`WEB_ORIGIN` follows the same address so emailed links resolve for them:
-`https://<address>:3000` — `scripts/stamp-net.sh` stamps it (and the
-`DATABASE_URL` host) to the machine's current address after a network
-change.
+`make web-dev` runs `next dev --experimental-https` and Next's dev server
+listens on every interface by default. The certificate it serves is the
+one `scripts/stamp-net.sh` issued through
+[mkcert](https://github.com/FiloSottile/mkcert), naming `localhost` and
+the machine's current address; where no stamped pair exists Next
+generates its own, which names only `localhost` and so serves the tunnel
+route alone. `WEB_ORIGIN` follows the same address, so emailed links
+resolve for guests too: `https://<address>:3000`.
+
+Guests browse `https://<the dev machine's LAN or hotspot address>:3000`
+and step past the certificate warning — their browser does not trust
+that CA, and a bypassed warning still leaves an https origin, which is
+what the secure context depends on. They land on the login page, which
+offers the Android app as a download from `web/public/downloads/`
+(gitignored): `make web-apk` stages whatever `make android-build`
+produced, and `make guest-apk` builds and stages the one a guest can
+actually sign in with.
 
 Requests for dev-only assets then come from a private-range origin rather
 than the address the server started on, so `next.config.ts` allowlists the
@@ -168,7 +176,24 @@ The phone never talks to the API directly: the dev server proxies
 `/graphql` to `GRAPHQL_URL`, default `http://localhost:8080/graphql`,
 which is right whenever the API runs beside it. That hop is server-side,
 so it stays plain http without mixing content into the https page — the
-browser only ever talks same-origin.
+phone only ever talks to the web origin.
+
+**The guest APK.** A browser can be told to proceed past an untrusted
+certificate; an installed app cannot. `make guest-apk` therefore builds
+the debug APK against `WEB_ORIGIN` — `cogra.graphqlUrl` becomes
+`https://<address>:3000/graphql`, so the app rides the same `/graphql`
+proxy the browser does, over the same https origin — and the debug
+variant trusts the mkcert root CA that stamp-net.sh staged, as a
+[debug-only trust anchor](https://developer.android.com/privacy-and-security/security-config#TrustingDebugCa)
+Android ignores unless the build is debuggable. Nothing the phone sends
+leaves TLS, and a release build cannot inherit that trust: the CA rides
+a source set the debug variant alone compiles, and the anchor sits in a
+`debug-overrides` block that a non-debuggable build discards.
+
+Both the address and the CA are compiled in, so a guest phone that
+followed the dev machine onto a different network needs a new APK:
+re-run `scripts/stamp-net.sh`, restart the dev server, `make guest-apk`,
+and have the guest download and install it again.
 
 ---
 
