@@ -9,6 +9,10 @@
 .cxx
 local.properties
 
+# The dev machine's mkcert root CA, staged by scripts/stamp-net.sh for guest
+# debug builds — per-machine trust, never committed.
+/app/src/devCa/res/raw/
+
 # Per-module build output
 **/build/
 .kotlin/
