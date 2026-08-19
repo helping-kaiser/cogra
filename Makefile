@@ -6,7 +6,13 @@ export
 DOCKER_COMPOSE ?= docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-ci
+# The debug APK the web app hands to hotspot guests (development.md
+# "Reaching the web dev server from the phone"): built by android-build,
+# staged into web/public by web-apk, gitignored at the destination.
+ANDROID_DEBUG_APK = android/app/build/outputs/apk/debug/app-debug.apk
+WEB_APK_DIR       = web/public/downloads
+
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk web-ci
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -112,6 +118,15 @@ android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience on
 
 web-dev: ## Start the web app dev server (needs Node from web/.nvmrc)
 	cd web && npm run dev
+
+web-apk: ## Stage the Android debug APK where the web app serves it (run make android-build first)
+	@[ -f $(ANDROID_DEBUG_APK) ] || { \
+		echo "Error: $(ANDROID_DEBUG_APK) not found — run 'make android-build' first"; \
+		exit 1; \
+	}
+	@mkdir -p $(WEB_APK_DIR)
+	cp $(ANDROID_DEBUG_APK) $(WEB_APK_DIR)/app-debug.apk
+	@echo "Staged $(WEB_APK_DIR)/app-debug.apk — the login page links it at /downloads/app-debug.apk"
 
 web-ci: ## Run the web CI checks (mirrors the web job in ci.yml)
 	cd web && npm ci && npm run codegen && npm run lint && npm test && npm run build
