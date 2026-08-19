@@ -228,6 +228,13 @@ the exact host-sealed verified act
    prepared act that never lands is discarded, staged payload
    included, after a bounded number of epochs.
 
+**Content exists at authoring, not at landing.** A prepared record
+is its author's content from the moment they sign it, readable by
+everyone from that moment and marked as not yet final. Landing is
+when L1 finality arrives — when the act becomes ordered fact — not
+when the content begins to exist. The epoch never defines the
+content; it dates it.
+
 **Custody exceptions:** the system actors (§8) sign in backend
 custody by design. A Collective's key is creator-held with
 per-member 2-of-2 co-signing — the backend holds half of each
