@@ -93,9 +93,8 @@ Both surfaces that show a fresh code — the ceremony and settings
 — render it through one component, which also carries the
 write-it-down gate: the code is dismissed only by being typed or
 pasted back ([auth.md "Key recovery"](auth.md#key-recovery)).
-Its copy button needs a secure context, so on a LAN dev build
-reached over plain http the copy fails visibly rather than
-silently.
+Its copy button needs a secure context, so where one is missing
+the copy fails visibly rather than silently.
 
 **A page cannot mark a clip sensitive**, so on Android the
 browser's own copy confirmation shows the code where the app
