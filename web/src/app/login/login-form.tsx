@@ -21,6 +21,10 @@ import { PasswordField } from "@/lib/ui/password-field";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
+// Where `make web-apk` stages the Android debug APK (development.md
+// "Reaching the web dev server from the phone").
+const APK_HREF = "/downloads/app-debug.apk";
+
 function loginMessage(code: ErrorCode): string {
   switch (code) {
     case "INVALID_CREDENTIALS":
@@ -165,6 +169,16 @@ export function LoginForm({
       >
         Just looking? Browse the feed →
       </Link>
+      {/* A static file under public/, staged by `make web-apk` — a plain
+          anchor, not next/link, since it leaves the router entirely. */}
+      <a
+        href={APK_HREF}
+        download
+        data-testid="login_android_apk"
+        className="text-body-medium text-on-surface-variant underline"
+      >
+        On Android? Download the app (APK)
+      </a>
     </main>
   );
 }
