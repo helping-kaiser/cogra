@@ -244,6 +244,35 @@ presentational — no graph or economics contact.
 
 ---
 
+## Q38 — What a reader sees when pending content expires
+
+**Where it shows up:**
+[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission),
+[architecture.md "The write path"](implementation/architecture.md#the-write-path),
+[design.md §9](implementation/design.md#9-honesty-surfaces)
+**Status:** open
+
+### Context
+
+Content is readable by everyone from the moment its author signs
+it, marked pending until the act lands. A staged write that never
+completes the handshake is garbage-collected after a bounded
+number of epochs — on the graph nothing ever existed, so the
+never-erase-silently rule
+([layers.md §5](primitive/layers.md#5-deletion-policy)) has no
+record to bind. But readers already saw the content, and it now
+disappears from their view.
+
+### The question
+
+What does a reader who saw a pending item see when it expires:
+nothing (it vanishes), a calm expiry marker in place of the
+content, or does expiry only ever show to the author? The honesty
+rule was written for records; a pending item is content without a
+record, and this is the gap it opens.
+
+---
+
 ## Q36 — Owner-chosen default filter for the profile chronicle
 
 **Where it shows up:**
