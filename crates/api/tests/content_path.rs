@@ -180,7 +180,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(carried.1, "full");
 
     // The chronicle sees it: newest-first listing and the record read.
-    let listed = content_store::list_posts(&rig.pool, None, false, 10)
+    let listed = content_store::list_posts(&rig.pool, None, false, 10, true)
         .await
         .expect("lists");
     assert_eq!(listed.len(), 1);
@@ -438,14 +438,15 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
 
     // The thread read: the post's direct children hold only Bob's
     // comment, oldest-first; the reply lives under the comment.
-    let on_post = content_store::comments_for_target(&rig.pool, post_id, None, false, 10)
+    let on_post = content_store::comments_for_target(&rig.pool, post_id, None, false, 10, true)
         .await
         .expect("thread");
     assert_eq!(on_post.len(), 1);
     assert_eq!(on_post[0].id, comment.node);
-    let on_comment = content_store::comments_for_target(&rig.pool, comment.node, None, false, 10)
-        .await
-        .expect("replies");
+    let on_comment =
+        content_store::comments_for_target(&rig.pool, comment.node, None, false, 10, true)
+            .await
+            .expect("replies");
     assert_eq!(on_comment.len(), 1);
     assert_eq!(on_comment[0].id, reply.node);
 
@@ -508,7 +509,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     }
 
     // Newest-first: the last post leads.
-    let page1 = content_store::list_posts(&rig.pool, None, false, 2)
+    let page1 = content_store::list_posts(&rig.pool, None, false, 2, true)
         .await
         .expect("page 1");
     assert_eq!(
@@ -517,7 +518,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     );
 
     // The keyset cursor continues exactly where the page ended.
-    let page2 = content_store::list_posts(&rig.pool, Some(page1[1].order), false, 2)
+    let page2 = content_store::list_posts(&rig.pool, Some(page1[1].sort_key()), false, 2, true)
         .await
         .expect("page 2");
     assert_eq!(
@@ -527,7 +528,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
 
     // Backward from the same cursor walks the other way (the newer
     // neighbors), still served newest-first.
-    let back = content_store::list_posts(&rig.pool, Some(page2[1].order), true, 2)
+    let back = content_store::list_posts(&rig.pool, Some(page2[1].sort_key()), true, 2, true)
         .await
         .expect("backward");
     assert_eq!(
@@ -676,6 +677,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
         .expect("reads")
         .expect("post")
         .order
+        .expect("landed")
         .landed_epoch;
     let windowed = mirror::records(
         &rig.pool,

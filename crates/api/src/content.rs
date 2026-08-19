@@ -188,6 +188,7 @@ pub async fn prepare_post<B: L1Boundary>(
             asserted_parents: vec![],
             deps: vec![],
             payload,
+            node: Some(node),
         },
     )
     .await?;
@@ -246,6 +247,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             asserted_parents: vec![node.parent],
             deps: vec![],
             payload,
+            node: Some(post.id),
         },
     )
     .await?;
@@ -297,6 +299,7 @@ pub async fn prepare_comment<B: L1Boundary>(
             asserted_parents: vec![],
             deps: vec![],
             payload,
+            node: Some(node),
         },
     )
     .await?;
@@ -353,6 +356,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
             asserted_parents: vec![node.parent],
             deps: vec![],
             payload,
+            node: Some(comment.id),
         },
     )
     .await?;
@@ -427,11 +431,141 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError
         .map_err(|e| ContentError::Internal(format!("stored node id unparseable: {e}")))
 }
 
+/// Pre-commitment materialization (substrate.md §6; architecture.md
+/// "The write path"): from the moment the author signs, a content write's
+/// display rows exist and read to everyone, marked pending. A write that
+/// mints or edits nothing — Registration, Opinion, Attach — has nothing
+/// to materialize and returns quietly.
+///
+/// Idempotent, because the pre-sign leg accepts a retry: the entity row
+/// is inserted only once, and a version row keyed by the same authoring
+/// instant collides with itself.
+pub async fn stage_pending(pool: &PgPool, staged_id: Uuid) -> Result<(), ContentError> {
+    let write = staged::load(pool, staged_id).await?;
+    let body = &write.proposal.body;
+    let family = match body.family {
+        f @ (Family::Publish | Family::Review) => f,
+        _ => return Ok(()),
+    };
+    if write.node_id.is_none() {
+        return Ok(());
+    }
+    let created_at = write.pre_signed_at.ok_or_else(|| {
+        ContentError::Internal("pre-signed write without an authoring instant".into())
+    })?;
+    let content = CograContent::decode_payload(&write.proposal.payload)
+        .map_err(|e| ContentError::Internal(format!("staged payload not admissible: {e}")))?;
+    let own_mint = NodeId::Mint(ActId {
+        author: body.author.clone(),
+        seq: body.seq,
+        family: body.family,
+    })
+    .to_string();
+    let target = body.target.to_string();
+    let is_genesis = target == own_mint;
+
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    match (family, is_genesis) {
+        (Family::Publish, true) => {
+            content_store::insert_post(
+                &mut tx,
+                content.node,
+                write.actor_id,
+                &target,
+                None,
+                created_at,
+                clear_to_null(&content.title),
+                clear_to_null(&content.description),
+                content.body.as_deref().unwrap_or_default(),
+            )
+            .await?;
+        }
+        (Family::Publish, false) => {
+            // The pending edit's own text shows at once, marked pending —
+            // an edit is a record, and a prepared record is its author's
+            // content from the moment they sign it (substrate.md §6). The
+            // merge is the promotion path's: absent keeps, empty clears.
+            let post = content_store::post(pool, content.node)
+                .await?
+                .ok_or(ContentError::NotFound)?;
+            let title = merge_optional(&content.title, &post.title);
+            let description = merge_optional(&content.description, &post.description);
+            let body_text = content.body.clone().unwrap_or(post.content);
+            content_store::insert_post_version(
+                &mut tx,
+                post.id,
+                title.as_deref(),
+                description.as_deref(),
+                &body_text,
+                true,
+                created_at,
+            )
+            .await?;
+        }
+        (Family::Review, true) => {
+            let (target_id, target_type) = comment_parent(pool, body).await?;
+            content_store::insert_comment(
+                &mut tx,
+                content.node,
+                target_id,
+                target_type,
+                write.actor_id,
+                &target,
+                None,
+                created_at,
+                content.body.as_deref().unwrap_or_default(),
+            )
+            .await?;
+        }
+        (Family::Review, false) => {
+            let comment = content_store::comment(pool, content.node)
+                .await?
+                .ok_or(ContentError::NotFound)?;
+            let body_text = content.body.clone().unwrap_or(comment.content);
+            content_store::insert_comment_version(
+                &mut tx, comment.id, &body_text, true, created_at,
+            )
+            .await?;
+        }
+        _ => unreachable!("filtered to content families above"),
+    }
+    tx.commit()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    Ok(())
+}
+
+/// A genesis Review's parent as the display store names it — the A leg's
+/// node, pending or landed alike (a pending comment on a pending post is
+/// two staged writes and one thread).
+async fn comment_parent(
+    pool: &PgPool,
+    body: &common::l1::handshake::StructuralBody,
+) -> Result<(Uuid, &'static str), ContentError> {
+    let parent = body
+        .middle
+        .as_ref()
+        .ok_or_else(|| ContentError::Internal("review without a parent leg".into()))?
+        .to_string();
+    if let Some(post) = content_store::post_by_node(pool, &parent).await? {
+        Ok((post.id, "post"))
+    } else if let Some(comment) = content_store::comment_by_node(pool, &parent).await? {
+        Ok((comment.id, "comment"))
+    } else {
+        Err(ContentError::Internal(
+            "comment parent has no display row".into(),
+        ))
+    }
+}
+
 /// Confirm-side promotion (architecture.md "The write path" step 5):
 /// for every landed content record, move the payload into permanent
-/// carriage and make the display rows visible. Failures log and leave
-/// the record un-promoted — the mirror governs, and a later rebuild can
-/// re-run promotion; nothing is silently dropped.
+/// carriage and drop the display rows' pending mark. Failures log and
+/// leave the record un-promoted — the mirror governs, and a later
+/// rebuild can re-run promotion; nothing is silently dropped.
 pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
     for write in promoted {
         let family = match common::l1::census::Family::parse(&write.family) {
@@ -485,6 +619,12 @@ async fn land_one(
     let target = body.target.to_string();
     let is_genesis = target == own_mint;
 
+    // The rows are normally already on screen from the pre-commitment, so
+    // landing writes the causal key onto them; the insert branches serve a
+    // record that landed without a pending row of its own — a mirror
+    // rebuild, or a write staged before pending rows existed.
+    let created_at = staged_row.pre_signed_at.unwrap_or_else(chrono::Utc::now);
+
     let mut tx = pool
         .begin()
         .await
@@ -493,66 +633,64 @@ async fn land_one(
         .await?;
     match (family, is_genesis) {
         (Family::Publish, true) => {
-            content_store::insert_post(
-                &mut tx,
-                content.node,
-                write.actor_id,
-                &target,
-                order,
-                clear_to_null(&content.title),
-                clear_to_null(&content.description),
-                content.body.as_deref().unwrap_or_default(),
-            )
-            .await?;
+            if content_store::land_post(&mut tx, content.node, order).await? {
+                content_store::land_post_version(&mut tx, content.node).await?;
+            } else {
+                content_store::insert_post(
+                    &mut tx,
+                    content.node,
+                    write.actor_id,
+                    &target,
+                    Some(order),
+                    created_at,
+                    clear_to_null(&content.title),
+                    clear_to_null(&content.description),
+                    content.body.as_deref().unwrap_or_default(),
+                )
+                .await?;
+            }
         }
         (Family::Publish, false) => {
             let post = content_store::post_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
-            // Copy-forward merge: the newest version row alone renders
-            // the post (data-model.md "Display-content versioning");
-            // present-and-empty clears, absent keeps.
-            let title = merge_optional(&content.title, &post.title);
-            let description = merge_optional(&content.description, &post.description);
-            let body_text = content.body.clone().unwrap_or(post.content);
-            content_store::insert_post_version(
-                &mut tx,
-                post.id,
-                title.as_deref(),
-                description.as_deref(),
-                &body_text,
-            )
-            .await?;
+            if !content_store::land_post_version(&mut tx, post.id).await? {
+                // Copy-forward merge: the newest version row alone renders
+                // the post (data-model.md "Display-content versioning");
+                // present-and-empty clears, absent keeps.
+                let title = merge_optional(&content.title, &post.title);
+                let description = merge_optional(&content.description, &post.description);
+                let body_text = content.body.clone().unwrap_or(post.content);
+                content_store::insert_post_version(
+                    &mut tx,
+                    post.id,
+                    title.as_deref(),
+                    description.as_deref(),
+                    &body_text,
+                    false,
+                    created_at,
+                )
+                .await?;
+            }
         }
         (Family::Review, true) => {
-            let parent = body
-                .middle
-                .as_ref()
-                .ok_or_else(|| ContentError::Internal("review without a parent leg".into()))?
-                .to_string();
-            let (target_id, target_type) =
-                if let Some(post) = content_store::post_by_node(pool, &parent).await? {
-                    (post.id, "post")
-                } else if let Some(parent_comment) =
-                    content_store::comment_by_node(pool, &parent).await?
-                {
-                    (parent_comment.id, "comment")
-                } else {
-                    return Err(ContentError::Internal(
-                        "comment parent has no display row".into(),
-                    ));
-                };
-            content_store::insert_comment(
-                &mut tx,
-                content.node,
-                target_id,
-                target_type,
-                write.actor_id,
-                &target,
-                order,
-                content.body.as_deref().unwrap_or_default(),
-            )
-            .await?;
+            if content_store::land_comment(&mut tx, content.node, order).await? {
+                content_store::land_comment_version(&mut tx, content.node).await?;
+            } else {
+                let (target_id, target_type) = comment_parent(pool, body).await?;
+                content_store::insert_comment(
+                    &mut tx,
+                    content.node,
+                    target_id,
+                    target_type,
+                    write.actor_id,
+                    &target,
+                    Some(order),
+                    created_at,
+                    content.body.as_deref().unwrap_or_default(),
+                )
+                .await?;
+            }
         }
         (Family::Review, false) => {
             let comment = content_store::comment_by_node(pool, &target)
@@ -560,8 +698,13 @@ async fn land_one(
                 .ok_or_else(|| {
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
-            let body_text = content.body.clone().unwrap_or(comment.content);
-            content_store::insert_comment_version(&mut tx, comment.id, &body_text).await?;
+            if !content_store::land_comment_version(&mut tx, comment.id).await? {
+                let body_text = content.body.clone().unwrap_or(comment.content);
+                content_store::insert_comment_version(
+                    &mut tx, comment.id, &body_text, false, created_at,
+                )
+                .await?;
+            }
         }
         _ => unreachable!("filtered to content families above"),
     }

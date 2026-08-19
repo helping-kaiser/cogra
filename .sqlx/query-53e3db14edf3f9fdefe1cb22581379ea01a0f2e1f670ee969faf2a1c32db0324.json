@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM post_versions WHERE post_id = $1 AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "53e3db14edf3f9fdefe1cb22581379ea01a0f2e1f670ee969faf2a1c32db0324"
+}

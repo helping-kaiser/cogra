@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM comments WHERE id = $1 AND landed_epoch IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e6ddf101beee8505515ef1aea277768f6adacfa0667b96c3b4d75db236bfc254"
+}
