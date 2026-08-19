@@ -28,10 +28,12 @@ import { SigningPending } from "@/lib/ui/signing-pending";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
+// Oversight sets how much AI disclosure reuse must meet — a term on
+// downstream use, never a declaration of how the author made the content.
 const OVERSIGHT_OPTIONS: readonly { value: Oversight; label: string }[] = [
-  { value: "NONE", label: "No AI" },
-  { value: "CONDITIONAL", label: "AI-assisted" },
-  { value: "FULL", label: "AI-generated" },
+  { value: "NONE", label: "None" },
+  { value: "CONDITIONAL", label: "On request" },
+  { value: "FULL", label: "Full chain" },
 ];
 
 export function ComposeForm({
@@ -208,6 +210,10 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       {editingId === null && (
         <fieldset className="flex flex-col gap-2" data-testid="compose-license">
           <legend className="text-label-large">License</legend>
+          <p className="text-body-small text-on-surface-variant">
+            Terms for anyone who reuses this — not a statement about how you
+            made it.
+          </p>
           <label className="flex items-center gap-2 text-body-medium">
             <input
               type="checkbox"
@@ -218,7 +224,12 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             />
             Require attribution
           </label>
-          <div className="flex gap-3" role="radiogroup" aria-label="AI provenance">
+          <div
+            className="flex items-center gap-3"
+            role="radiogroup"
+            aria-label="Require AI disclosure"
+          >
+            <span className="text-body-medium">Require AI disclosure</span>
             {OVERSIGHT_OPTIONS.map((option) => (
               <label key={option.value} className="flex items-center gap-1 text-body-medium">
                 <input
