@@ -150,6 +150,14 @@ chronicle behind every fold is reachable through the generic
 record surface (`records`), so any consumer can replay any fold
 from public records.
 
+Reads serve pending content. A record is its author's content from
+the moment they sign it, so node reads and listings serve it to
+**every** viewer — not only its author — with its pending state
+visible and ahead of the newest landed entry
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+Landing is a state content reaches, never the condition of its
+being read.
+
 Consequently there is no destructive verb on graph state: no
 `delete`/`unlike`/`unfollow`. A stance is changed by a new
 record; severance is netting a bundle to `(0,0)`, not a removal;
@@ -255,7 +263,7 @@ The mutation surface therefore has three legs:
   openings — and sign the approval witness over.
 - **`approveActs`** relays the approval witnesses — only an
   approved act is orderable — and drives retries across epoch
-  boundaries. Confirmation is asynchronous: the act is real when
+  boundaries. Confirmation is asynchronous: the act is final when
   it appears in the mirror, observed through `stagedWrite` —
   there is no synchronous "write succeeded" response, because
   whether an act lands is L1's fact alone.
@@ -429,7 +437,8 @@ enum ErrorCode {
  single node(id) accessor."
 interface Node {
   id: UUID!
-  "When this node was created — its minting record's confirmation."
+  "When this node was created — when its minting record was
+   authored, which on a pending node precedes landing."
   createdAt: DateTime!
   "When this node last changed — its most recent fold-winning
    update record or display-content version; equals createdAt if
@@ -573,7 +582,8 @@ type Record {
 "Payload carriage state — moves one way, full to reduced."
 enum PayloadState { FULL REDUCED }
 
-"A page of posts, newest-first in landing order."
+"A page of posts, newest-first: pending entries, then landed
+ entries in landing order."
 type PostConnection {
   edges: [PostEdge!]!
   pageInfo: PageInfo!
@@ -583,7 +593,8 @@ type PostEdge {
   node: Post!
 }
 
-"A page of comments, newest-first in landing order."
+"A page of comments, newest-first: pending entries, then landed
+ entries in landing order."
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
@@ -862,9 +873,9 @@ type Post implements Node {
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
   "This post's direct comments — genesis Reviews whose actor leg
-   enters here — newest-first in landing order (a comment's
-   landing position is its genesis, so edits never reorder the
-   thread). The named view over records(target:, family: REVIEW)."
+   enters here — newest-first (a comment's landing position is its
+   genesis, so edits never reorder the thread). The named view over
+   records(target:, family: REVIEW)."
   comments(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
@@ -881,7 +892,7 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
-  "This comment's direct replies, newest-first in landing order."
+  "This comment's direct replies, newest-first."
   replies(first: Int, after: String, last: Int, before: String): CommentConnection!
 }
 
@@ -2122,7 +2133,10 @@ enum StagedWriteState {
 
 "One staged write — the observation point for the handshake and
  the asynchronous confirm. Field-authorized to the staging actor's
- session."
+ session: the handshake is the author's own business. The staged
+ *content* is nobody's secret — it reads through the ordinary node
+ and listing surfaces from the pre-commitment onward, for every
+ viewer."
 type StagedWrite {
   id: UUID!
   state: StagedWriteState!
