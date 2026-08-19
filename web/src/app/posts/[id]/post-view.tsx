@@ -598,7 +598,12 @@ export function PostView({
               Require attribution
             </label>
             <span aria-hidden>·</span>
-            <div className="flex gap-2" role="radiogroup" aria-label="AI provenance">
+            <div
+              className="flex items-center gap-2"
+              role="radiogroup"
+              aria-label="Require AI disclosure"
+            >
+              <span>Require AI disclosure</span>
               {(["NONE", "CONDITIONAL", "FULL"] as const).map((value) => (
                 <label key={value} className="flex items-center gap-1">
                   <input
@@ -609,7 +614,7 @@ export function PostView({
                     checked={oversight === value}
                     onChange={() => setOversight(value)}
                   />
-                  {value === "NONE" ? "No AI" : value === "CONDITIONAL" ? "AI-assisted" : "AI-generated"}
+                  {value === "NONE" ? "None" : value === "CONDITIONAL" ? "On request" : "Full chain"}
                 </label>
               ))}
             </div>
