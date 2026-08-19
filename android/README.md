@@ -77,3 +77,11 @@ to the device and point the app at `localhost` (already cleartext-permitted):
 adb reverse tcp:8080 tcp:8080
 ./gradlew :app:installDebug -Pcogra.graphqlUrl=http://localhost:8080/graphql
 ```
+
+A **guest's phone** has no cable and no trust in the dev machine, so it goes
+through the web dev server instead: `make guest-apk` from the repo root points
+the app at `<WEB_ORIGIN>/graphql` and trusts the mkcert CA that
+`scripts/stamp-net.sh` stages at `app/src/devCa/res/raw/cogra_dev_ca.pem`.
+That CA is per-machine and gitignored; without it the debug build keeps the
+config in `src/main`, and `make guest-apk` says which command produces it. See
+[development.md](../docs/implementation/development.md#reaching-the-web-dev-server-from-the-phone).

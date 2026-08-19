@@ -32,7 +32,22 @@ val graphqlUrl: String = configured("cogra.graphqlUrl", "http://10.0.2.2:8080/gr
 // The per-environment web origin behind every shareable link (auth.md
 // "Link URLs"); its host doubles as the App Links host.
 val webOrigin: String = configured("cogra.webOrigin", "https://cogra.example")
-val webHost: String = webOrigin.substringAfter("://").substringBefore("/")
+// The App Links host is the origin's host alone. A port belongs in the
+// intent filter's own `android:port`, and leaving that out matches any port —
+// which is what a dev origin on :3000 needs.
+val webHost: String =
+    webOrigin.substringAfter("://").substringBefore("/").substringBefore(":")
+
+// The dev machine's mkcert root CA, staged as a gitignored raw resource by
+// `scripts/stamp-net.sh` so a guest's debug app trusts the https web origin it
+// talks GraphQL to (development.md "Reaching the web dev server from the
+// phone"). Staged: the debug variant gains the source set whose
+// network_security_config.xml names that CA as a debug-only trust anchor.
+// Absent (CI, a fresh clone): the directory is not a source set at all, and
+// the debug build keeps main's config — `make guest-apk` is what demands the
+// CA, with the command that produces it.
+val devCaRes: File = file("src/devCa/res")
+val devCaStaged: Boolean = devCaRes.resolve("raw/cogra_dev_ca.pem").exists()
 
 android {
     namespace = "com.cogra.app"
@@ -45,6 +60,12 @@ android {
         buildConfigField("String", "GRAPHQL_URL", "\"$graphqlUrl\"")
         buildConfigField("String", "WEB_ORIGIN", "\"$webOrigin\"")
         manifestPlaceholders["cograWebHost"] = webHost
+    }
+
+    sourceSets {
+        if (devCaStaged) {
+            getByName("debug").res.srcDir(devCaRes)
+        }
     }
 
     buildTypes {

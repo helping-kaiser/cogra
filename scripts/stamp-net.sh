@@ -9,6 +9,11 @@
 # exist) all converge on the host's LAN address — the API reaches the
 # DB through it, and phones reach the web/API surfaces through the
 # same address in WEB_ORIGIN.
+#
+# The address is also a name in the dev server's certificate, so it is
+# re-issued here too, and the CA that signs it is staged where the debug
+# Android build picks it up — a guest's app verifies that address the
+# same way their browser does.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -22,3 +27,23 @@ sed -i -E "s#^WEB_ORIGIN=https?://[^:/]+#WEB_ORIGIN=https://${IP}#" .env
 
 grep -E '^(DATABASE_URL|WEB_ORIGIN)=' .env
 echo "stamped ${IP}"
+
+# The certificate and the CA behind it. Browsers reach the dev server past
+# a warning whatever it is signed with, but the Android app has no such
+# step: it verifies the chain and the address, so both have to be right.
+if ! command -v mkcert >/dev/null 2>&1; then
+    echo "mkcert not found — certificate left as is; the app cannot reach ${IP}" >&2
+    echo "  install it (https://github.com/FiloSottile/mkcert) and re-run" >&2
+    exit 0
+fi
+
+CERT_DIR=web/certificates
+DEV_CA=android/app/src/devCa/res/raw/cogra_dev_ca.pem
+
+mkdir -p "$CERT_DIR" "$(dirname "$DEV_CA")"
+mkcert -cert-file "$CERT_DIR/localhost.pem" -key-file "$CERT_DIR/localhost-key.pem" \
+    localhost 127.0.0.1 ::1 "$IP"
+cp "$(mkcert -CAROOT)/rootCA.pem" "$DEV_CA"
+
+echo "issued ${CERT_DIR}/localhost.pem for ${IP}; staged its CA at ${DEV_CA}"
+echo "restart the web dev server, then rebuild the guest APK: make guest-apk"
