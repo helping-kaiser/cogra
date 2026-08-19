@@ -261,7 +261,9 @@ reintroduce the tone-80 orange §2.1 rejects.
   negative stance is an ordinary, legitimate opinion (§8) and
   colouring it as an error editorialises it.
 - `success` marks a completed action — a signed write landing, a
-  saved edit. It never carries the meaning alone: the words say what
+  saved edit. Landing settles content the reader already sees; it
+  never announces an arrival (§9). It never carries the meaning
+  alone: the words say what
   happened and the colour agrees with them (§10). It is not a stance
   colour either; a positive stance is an opinion, not an outcome.
 
@@ -756,6 +758,12 @@ carry that without alarming anyone.
   warning.
 - **Sensitive** — a gentle blur with tap to reveal, tuned by
   the reader's own preference. Warm wording.
+- **Pending** — content authored but not yet L1-final. It shows
+  in full to every reader, not just its author, with a quiet
+  marker saying it is still settling
+  ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
+  Nothing is greyed out or held back: the content is real, only
+  its place in the order is not.
 
 None of these use `error` colouring.
 
