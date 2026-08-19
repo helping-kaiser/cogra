@@ -9,10 +9,12 @@
     <string name="content_field_description">Description</string>
     <string name="content_field_body">What do you want to publish?</string>
     <string name="content_license_heading">License</string>
+    <string name="content_license_caption">Terms for anyone who reuses this — not a statement about how you made it.</string>
     <string name="content_license_attribution">Require attribution</string>
-    <string name="content_license_oversight_none">No AI</string>
-    <string name="content_license_oversight_conditional">AI-assisted</string>
-    <string name="content_license_oversight_full">AI-generated</string>
+    <string name="content_license_oversight_label">Require AI disclosure</string>
+    <string name="content_license_oversight_none">None</string>
+    <string name="content_license_oversight_conditional">On request</string>
+    <string name="content_license_oversight_full">Full chain</string>
     <string name="content_submit">Sign and publish</string>
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
