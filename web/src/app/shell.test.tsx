@@ -126,6 +126,19 @@ describe("AppShell", () => {
     );
   });
 
+  it("keeps the bar off the own profile until the gate passes", async () => {
+    pathname = "/profile";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
+    );
+  });
+
   it("keeps the bar off the auth surfaces", async () => {
     pathname = "/login";
     renderWithProviders(

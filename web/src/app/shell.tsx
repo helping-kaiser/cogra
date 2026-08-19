@@ -19,9 +19,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const signedIn = phase === "signedIn";
   const readSurface =
     pathname === "/feed" ||
-    pathname === "/profile" ||
     pathname.startsWith("/posts/") ||
-    pathname.startsWith("/u/");
+    pathname.startsWith("/u/") ||
+    // The own profile is a gated read surface: its frame waits for the
+    // gate, which replaces a signed-out arrival with /login.
+    (signedIn && pathname === "/profile");
   const showBar = phase !== "resolving" && readSurface;
   const active =
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
