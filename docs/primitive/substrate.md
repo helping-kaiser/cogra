@@ -233,7 +233,11 @@ is its author's content from the moment they sign it, readable by
 everyone from that moment and marked as not yet final. Landing is
 when L1 finality arrives — when the act becomes ordered fact — not
 when the content begins to exist. The epoch never defines the
-content; it dates it.
+content; it dates it. The existence is conditional on that arrival:
+when a prepared act expires unlanded and is discarded, the content
+leaves every reader's view with it — on the graph nothing ever
+existed, so there is nothing to mark — and its author is told that
+it did not land.
 
 **Custody exceptions:** the system actors (§8) sign in backend
 custody by design. A Collective's key is creator-held with

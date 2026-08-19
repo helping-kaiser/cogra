@@ -763,7 +763,11 @@ carry that without alarming anyone.
   marker saying it is still settling
   ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
   Nothing is greyed out or held back: the content is real, only
-  its place in the order is not.
+  its place in the order is not. If the act expires unlanded, the
+  content leaves every reader's view — readers see nothing in its
+  place, since on the graph nothing ever existed — and the author
+  gets a calm notice that it did not land, in this section's
+  register, never `error` colouring.
 
 None of these use `error` colouring.
 
