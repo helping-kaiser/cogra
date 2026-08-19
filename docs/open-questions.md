@@ -37,6 +37,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q38 — see [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission) and [design.md §9](implementation/design.md#9-honesty-surfaces): expired pending content vanishes for every reader (nothing ever existed on the graph, so nothing is marked); the author gets a calm did-not-land notice.
 - Q7 — see [data-model.md §"author_id"](implementation/data-model.md#author_id--one-foreign-key-still-a-cache).
 - Q8 — see [chats.md §6](instances/chats.md#6-moderation-inside-the-chat) and [governance.md §8](primitive/governance.md#8-instances).
 - Q3 — see [graph-model.md §4](primitive/graph-model.md#4-stances-not-events) "Stances, not events".
@@ -242,35 +243,6 @@ On which surfaces does the bar ride: tab roots only (Android
 today), everywhere (web today), or tab roots plus read drill-ins
 (the popular-app pattern)? One rule for both clients; purely
 presentational — no graph or economics contact.
-
----
-
-## Q38 — What a reader sees when pending content expires
-
-**Where it shows up:**
-[substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission),
-[architecture.md "The write path"](implementation/architecture.md#the-write-path),
-[design.md §9](implementation/design.md#9-honesty-surfaces)
-**Status:** open
-
-### Context
-
-Content is readable by everyone from the moment its author signs
-it, marked pending until the act lands. A staged write that never
-completes the handshake is garbage-collected after a bounded
-number of epochs — on the graph nothing ever existed, so the
-never-erase-silently rule
-([layers.md §5](primitive/layers.md#5-deletion-policy)) has no
-record to bind. But readers already saw the content, and it now
-disappears from their view.
-
-### The question
-
-What does a reader who saw a pending item see when it expires:
-nothing (it vanishes), a calm expiry marker in place of the
-content, or does expiry only ever show to the author? The honesty
-rule was written for records; a pending item is content without a
-record, and this is the gap it opens.
 
 ---
 
