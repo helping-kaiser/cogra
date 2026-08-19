@@ -1711,9 +1711,9 @@ type Query {
   ): RecordConnection!
 
   "The chronological listing (roadmap Slice 2): every post,
-   newest-first in landing order — the record set's own order,
-   never wall clock (graph-model.md §2). Deliberately not the
-   ranked feed."
+   newest-first — pending entries, then landed entries in landing
+   order, the record set's own order, never wall clock
+   (graph-model.md §2). Deliberately not the ranked feed."
   posts(first: Int, after: String, last: Int, before: String): PostConnection!
 
   "One staged write by id — the confirm-side observation point of
