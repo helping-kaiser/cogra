@@ -283,11 +283,18 @@ steps:
    act, so the relay can neither alter it nor author one unasked.
 5. **Confirm** (ingestion). When the accepted act arrives in the
    mirror, the staged write is promoted: payload becomes
-   permanent carriage, display rows become visible, flow state
-   advances. A staged write that never completes the handshake
-   and lands is garbage-collected — staged payload included —
-   after a bounded number of epochs (an operational parameter,
-   [data-model.md](data-model.md)).
+   permanent carriage, display rows drop their pending mark, flow
+   state advances. A staged write that never completes the
+   handshake and lands is garbage-collected — staged payload
+   included — after a bounded number of epochs (an operational
+   parameter, [data-model.md](data-model.md)).
+
+Staged content is served, not withheld. From the pre-commitment
+signature onward a staged write's display rows are readable by
+everyone, carrying a pending mark until confirm
+([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
+the read paths order them ahead of the newest landed record,
+since a pending write has no causal key yet.
 
 ### Atomicity
 
