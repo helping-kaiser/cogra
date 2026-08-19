@@ -32,7 +32,11 @@ val graphqlUrl: String = configured("cogra.graphqlUrl", "http://10.0.2.2:8080/gr
 // The per-environment web origin behind every shareable link (auth.md
 // "Link URLs"); its host doubles as the App Links host.
 val webOrigin: String = configured("cogra.webOrigin", "https://cogra.example")
-val webHost: String = webOrigin.substringAfter("://").substringBefore("/")
+// The App Links host is the origin's host alone. A port belongs in the
+// intent filter's own `android:port`, and leaving that out matches any port —
+// which is what a dev origin on :3000 needs.
+val webHost: String =
+    webOrigin.substringAfter("://").substringBefore("/").substringBefore(":")
 
 // The dev machine's mkcert root CA, staged as a gitignored raw resource by
 // `scripts/stamp-net.sh` so a guest's debug app trusts the https web origin it
