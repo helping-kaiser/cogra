@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "predev": "npm run codegen",
-    "dev": "next dev --experimental-https",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0",

@@ -12,7 +12,11 @@ CARGO          = cargo
 ANDROID_DEBUG_APK = android/app/build/outputs/apk/debug/app-debug.apk
 WEB_APK_DIR       = web/public/downloads
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk web-ci
+# The dev machine's mkcert root CA, staged by scripts/stamp-net.sh: the
+# guest APK trusts it so it can talk https to this machine's web origin.
+ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
+
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk guest-apk web-ci
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -127,6 +131,20 @@ web-apk: ## Stage the Android debug APK where the web app serves it (run make an
 	@mkdir -p $(WEB_APK_DIR)
 	cp $(ANDROID_DEBUG_APK) $(WEB_APK_DIR)/app-debug.apk
 	@echo "Staged $(WEB_APK_DIR)/app-debug.apk — the login page links it at /downloads/app-debug.apk"
+
+guest-apk: ## Build the debug APK for a guest's phone against this machine's dev server, and stage it
+	@case '$(WEB_ORIGIN)' in \
+		https://*) ;; \
+		*) echo "Error: WEB_ORIGIN must be an https origin (got '$(WEB_ORIGIN)') — run scripts/stamp-net.sh"; exit 1;; \
+	esac
+	@[ -f $(ANDROID_DEV_CA) ] || { \
+		echo "Error: $(ANDROID_DEV_CA) not found — run scripts/stamp-net.sh"; \
+		exit 1; \
+	}
+	cd android && ./gradlew :app:assembleDebug \
+		-Pcogra.graphqlUrl=$(WEB_ORIGIN)/graphql \
+		-Pcogra.webOrigin=$(WEB_ORIGIN)
+	$(MAKE) web-apk
 
 web-ci: ## Run the web CI checks (mirrors the web job in ci.yml)
 	cd web && npm ci && npm run codegen && npm run lint && npm test && npm run build

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The debug variant's network security config, used only when the dev
+     machine's mkcert root CA has been staged next to it (see
+     app/build.gradle.kts); otherwise the debug build keeps main's config.
+
+     It is main's config plus a debug-only trust anchor: guest phones run the
+     debug APK against the dev machine's https web origin, whose certificate
+     mkcert signs. `debug-overrides` is ignored outright unless
+     android:debuggable is true, so release builds cannot pick this trust up,
+     and the anchors it names are added to every other configuration. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="@raw/cogra_dev_ca" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
