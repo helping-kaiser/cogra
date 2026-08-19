@@ -42,3 +42,9 @@ next-env.d.ts
 
 # graphql codegen output — regenerated at build/CI, never committed
 /src/__generated__/
+
+# the dev server's self-signed certificate (next dev --experimental-https)
+/certificates/
+
+# the Android debug APK the login page links, staged by `make web-apk`
+/public/downloads/

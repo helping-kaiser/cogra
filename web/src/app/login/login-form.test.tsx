@@ -189,6 +189,14 @@ describe("LoginForm", () => {
     expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
   });
 
+  it("offers the Android app as a download from the served APK path", () => {
+    renderWithProviders(<LoginForm />);
+    const link = screen.getByTestId("login_android_apk");
+    expect(link).toHaveAttribute("href", "/downloads/app-debug.apk");
+    // `download` keeps the browser from trying to render the binary.
+    expect(link).toHaveAttribute("download");
+  });
+
   it("redirects an already-signed-in visit home", async () => {
     const store = createTokenStore();
     store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });

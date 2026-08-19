@@ -119,31 +119,56 @@ make android-ci   Run the Android CI checks (mirrors the android job in ci.yml; 
 make android-test Run Android unit tests; scope to one module with m=feature:home
 make android-build  Assemble the debug APK
 make android-lint Run Android lint (not a CI gate, convenience only)
-make web-dev      Start the web app dev server (needs Node from web/.nvmrc)
+make web-dev      Start the web app dev server over https (needs Node from web/.nvmrc)
+make web-apk      Stage the Android debug APK where the web app serves it
 make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
 ```
 
 ### Reaching the web dev server from the phone
 
-Hand testing runs in the phone's browser, and it must arrive over
-**`localhost`**, tunnelled — never a LAN address:
+The page must arrive in a
+[secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts):
+without one `crypto.subtle` is undefined, the key-custody code throws on
+first paint, and nothing hydrates. Two origins qualify — `localhost`,
+trusted as secure whatever the scheme, and any `https` origin, trusted by
+scheme regardless of who signed the certificate. That gives two routes.
+
+**A cabled phone: the tunnel.** Nothing to configure, and the origin is
+the one the server started on:
 
 ```bash
-adb reverse tcp:3000 tcp:3000    # then browse http://localhost:3000
+adb reverse tcp:3000 tcp:3000    # then browse https://localhost:3000
 ```
 
-A LAN URL like `http://192.168.0.5:3000` reaches the server and renders
-a blank page. Plain http on a non-loopback host is not a
-[secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts),
-so `crypto.subtle` is undefined, the key-custody code throws on first
-paint, and nothing hydrates. `localhost` is trusted as secure regardless
-of scheme, which is what makes the tunnel the only workable route. This
-also disposes of Next's dev-only cross-origin block on `/_next/*`, since
-the origin is then the one the server started on.
+**A phone on the LAN or the hotspot, and any guest's phone: https.**
+`make web-dev` runs `next dev --experimental-https`, which generates a
+self-signed certificate through
+[mkcert](https://github.com/FiloSottile/mkcert) on first start (a
+one-time binary download plus a local CA install, both of which it
+announces), and Next's dev server listens on every interface by default.
+Guests browse `https://<the dev machine's LAN or hotspot address>:3000`,
+step past the certificate warning — their phones do not trust that CA,
+and a bypassed warning still leaves an https origin, which is what the
+secure context depends on — and land on the login page, which offers the
+Android app as a download (`make web-apk` stages the debug APK that
+`make android-build` produced into `web/public/downloads/`, gitignored).
+`WEB_ORIGIN` follows the same address so emailed links resolve for them:
+`https://<address>:3000` — `scripts/stamp-net.sh` stamps it (and the
+`DATABASE_URL` host) to the machine's current address after a network
+change.
+
+Requests for dev-only assets then come from a private-range origin rather
+than the address the server started on, so `next.config.ts` allowlists the
+RFC 1918 ranges under `allowedDevOrigins`; without it Next blocks `/_next/*`
+and the HMR socket. If the dev server runs inside a WSL distro, the LAN
+route additionally needs that distro's ports exposed on the host's
+interfaces — WSL's NAT keeps them private otherwise.
 
 The phone never talks to the API directly: the dev server proxies
 `/graphql` to `GRAPHQL_URL`, default `http://localhost:8080/graphql`,
-which is right whenever the API runs beside it.
+which is right whenever the API runs beside it. That hop is server-side,
+so it stays plain http without mixing content into the https page — the
+browser only ever talks same-origin.
 
 ---
 
