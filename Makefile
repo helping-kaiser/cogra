@@ -1,7 +1,9 @@
 -include .env
 export
 
-DOCKER_COMPOSE = docker compose -f docker/docker-compose.yml
+# ?= so a machine-local .env can point at another compose runtime
+# (e.g. podman in a WSL toolbox — development.md "Environment Variables").
+DOCKER_COMPOSE ?= docker compose -f docker/docker-compose.yml
 CARGO          = cargo
 
 .PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-ci
