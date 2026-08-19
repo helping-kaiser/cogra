@@ -1276,6 +1276,45 @@ impl ModeratedText {
     }
 }
 
+/// Where a node stands relative to L1 finality. PENDING: authored and
+/// signed, not yet ordered — real content whose place in the order is
+/// not yet fixed (substrate.md §6). LANDED: the minting act is ordered
+/// fact. There is no expired state: an expired act's content leaves
+/// every reader's view.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum LandingState {
+    Pending,
+    Landed,
+}
+
+/// A node's landing position. `epoch` is the graph's own clock and is
+/// null exactly while `state` is PENDING — a pending write has no causal
+/// key yet (architecture.md "The write path").
+#[derive(SimpleObject, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Landing {
+    pub state: LandingState,
+    pub epoch: Option<i64>,
+}
+
+impl Landing {
+    /// A node lands when its own minting record does *and* nothing it
+    /// carries is still settling: an unlanded edit leaves the node
+    /// pending, because the text on screen is the pending version.
+    fn of(order: Option<postgres_store::content::LandingOrder>, version_pending: bool) -> Self {
+        match order {
+            Some(o) if !version_pending => Self {
+                state: LandingState::Landed,
+                epoch: Some(o.landed_epoch),
+            },
+            _ => Self {
+                state: LandingState::Pending,
+                epoch: None,
+            },
+        }
+    }
+}
+
 /// The primary public-content surface: an L1 Content node minted by
 /// its author's Publish record, rendered from the display store
 /// (post.md).
@@ -1287,7 +1326,8 @@ impl PostType {
         self.0.id
     }
 
-    /// The minting record's confirmation.
+    /// When this node was created — when its minting record was
+    /// authored, which on a pending node precedes landing.
     async fn created_at(&self) -> DateTime<Utc> {
         self.0.created_at
     }
@@ -1296,6 +1336,11 @@ impl PostType {
     /// `createdAt` if never changed.
     async fn updated_at(&self) -> DateTime<Utc> {
         self.0.version_created_at.max(self.0.created_at)
+    }
+
+    /// Where this post stands relative to L1 finality.
+    async fn landing(&self) -> Landing {
+        Landing::of(self.0.order, self.0.version_pending)
     }
 
     async fn title(&self) -> ModeratedText {
@@ -1325,9 +1370,10 @@ impl PostType {
     }
 
     /// This post's direct comments — genesis Reviews whose A leg
-    /// enters here — newest-first in landing order (a comment's landing
-    /// position is its genesis, so edits never reorder the thread),
-    /// keyset-paginated.
+    /// enters here — newest-first: pending entries, then landed entries
+    /// in landing order (a comment's landing position is its genesis, so
+    /// edits never reorder the thread), keyset-paginated.
+    /// `includePending: false` serves only what has landed on L1.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn comments(
         &self,
@@ -1336,8 +1382,9 @@ impl PostType {
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<KeysetConnection<CommentType>> {
-        comments_connection(ctx, self.0.id, after, before, first, last).await
+        comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 }
 
@@ -1351,7 +1398,8 @@ impl CommentType {
         self.0.id
     }
 
-    /// The minting record's confirmation.
+    /// When this node was created — when its minting record was
+    /// authored, which on a pending node precedes landing.
     async fn created_at(&self) -> DateTime<Utc> {
         self.0.created_at
     }
@@ -1360,6 +1408,11 @@ impl CommentType {
     /// `createdAt` if never changed.
     async fn updated_at(&self) -> DateTime<Utc> {
         self.0.version_created_at.max(self.0.created_at)
+    }
+
+    /// Where this comment stands relative to L1 finality.
+    async fn landing(&self) -> Landing {
+        Landing::of(self.0.order, self.0.version_pending)
     }
 
     async fn content(&self) -> ModeratedText {
@@ -1393,7 +1446,9 @@ impl CommentType {
         ModerationStatus::Normal
     }
 
-    /// This comment's direct replies, newest-first in landing order.
+    /// This comment's direct replies, newest-first: pending entries,
+    /// then landed entries in landing order. `includePending: false`
+    /// serves only what has landed on L1.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn replies(
         &self,
@@ -1402,8 +1457,9 @@ impl CommentType {
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<KeysetConnection<CommentType>> {
-        comments_connection(ctx, self.0.id, after, before, first, last).await
+        comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
 }
 
@@ -1420,12 +1476,17 @@ impl CommentType {
     field(
         name = "created_at",
         ty = "DateTime<Utc>",
-        desc = "The minting record's confirmation."
+        desc = "When this node was created — when its minting record was authored, which on a pending node precedes landing."
     ),
     field(
         name = "updated_at",
         ty = "DateTime<Utc>",
         desc = "The most recent fold-winning update's promotion; equals createdAt if never changed."
+    ),
+    field(
+        name = "landing",
+        ty = "Landing",
+        desc = "Where this node stands relative to L1 finality — landing is a substrate fact about every minted node."
     )
 )]
 pub enum Node {
@@ -1587,6 +1648,7 @@ where
 
 /// The shared comments/replies read: a target's direct children,
 /// newest-first in landing order.
+#[allow(clippy::too_many_arguments)]
 async fn comments_connection(
     ctx: &Context<'_>,
     target: Uuid,
@@ -1594,6 +1656,7 @@ async fn comments_connection(
     before: Option<String>,
     first: Option<i32>,
     last: Option<i32>,
+    include_pending: bool,
 ) -> async_graphql::Result<KeysetConnection<CommentType>> {
     let pool = ctx.data::<PgPool>()?;
     let page = keyset_page(first, after, last, before)?;
@@ -1608,13 +1671,17 @@ async fn comments_connection(
             }),
         page.backward,
         page.limit + 1,
+        include_pending,
     )
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
     Ok(keyset_connection(
         rows,
         &page,
-        |c| (c.order.landed_epoch, c.order.act_time, c.order.position),
+        |c| {
+            let k = c.sort_key();
+            (k.landed_epoch, k.act_time, k.position)
+        },
         CommentType,
     ))
 }
