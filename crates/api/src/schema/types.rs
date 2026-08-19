@@ -1586,7 +1586,7 @@ where
 }
 
 /// The shared comments/replies read: a target's direct children,
-/// oldest-first in landing order.
+/// newest-first in landing order.
 async fn comments_connection(
     ctx: &Context<'_>,
     target: Uuid,
