@@ -5,7 +5,7 @@
 | Tool | Purpose | Install |
 |---|---|---|
 | Rust (stable) | Language toolchain | https://rustup.rs |
-| Docker + Compose | Local databases | https://docs.docker.com/get-docker |
+| Docker + Compose | Local databases (any compose-compatible runtime works — see `DOCKER_COMPOSE` below) | https://docs.docker.com/get-docker |
 | sqlx-cli | Running migrations | Auto-installed by `make init`; manual: `cargo install sqlx-cli --no-default-features --features postgres` |
 
 Verify everything is in place:
@@ -48,6 +48,7 @@ over file values.
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `postgres://gnp:gnp_secret@localhost:5432/gnp_db` | Full Postgres connection URL (used by sqlx-cli and the app) |
+| `DOCKER_COMPOSE` | `docker compose -f docker/docker-compose.yml` | Compose command the make targets drive (make-only; the binaries never read it) — override to use another compose-compatible runtime, e.g. `wsl.exe -d claude-podman --cd /mnt/c/Users/<name>/dev/cogra -- podman compose -f docker/docker-compose.yml` |
 | `POSTGRES_USER` | `gnp` | Postgres username (used by Docker and Makefile) |
 | `POSTGRES_PASSWORD` | `gnp_secret` | Postgres password |
 | `POSTGRES_DB` | `gnp_db` | Postgres database name |
