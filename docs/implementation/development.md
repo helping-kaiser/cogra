@@ -79,6 +79,18 @@ over file values.
 
 ---
 
+## Helper scripts
+
+`scripts/` holds standalone dev helper scripts. Current inventory:
+
+- `scripts/stamp-net.sh` — rewrites the `DATABASE_URL` host and
+  `WEB_ORIGIN` in `.env` to the machine's current LAN IPv4. Run it
+  after every network change on setups where the DB, the API, or the
+  phones sit on different network namespaces and rendezvous on the
+  host's LAN address.
+
+---
+
 ## Make Commands
 
 ```
