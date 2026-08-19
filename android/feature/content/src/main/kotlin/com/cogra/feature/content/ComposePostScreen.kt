@@ -222,6 +222,11 @@ internal fun LicenseControls(
             stringResource(R.string.content_license_heading),
             style = MaterialTheme.typography.titleSmall,
         )
+        Text(
+            stringResource(R.string.content_license_caption),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -234,6 +239,7 @@ internal fun LicenseControls(
                 modifier = Modifier.testTag("license_attribution"),
             )
         }
+        Text(stringResource(R.string.content_license_oversight_label))
         val options = listOf(
             OversightChoice.NONE to R.string.content_license_oversight_none,
             OversightChoice.CONDITIONAL to R.string.content_license_oversight_conditional,

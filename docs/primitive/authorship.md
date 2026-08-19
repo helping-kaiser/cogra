@@ -89,9 +89,10 @@ is not derivable from the shared graph.
   record authors — creator-only for content bodies, the certified
   owner for items, declared sets for chats
   ([substrate.md §9](substrate.md#9-node-values-and-updates)).
-- **The credit obligation.** `a = 1` license qualifiers oblige
-  CoGra to credit the author on every display, quote, and
-  reference surface
+- **The credit obligation.** An `attr = 1` license qualifier
+  binds everyone who reuses the content to credit its author;
+  CoGra meets that term on every display, quote, and reference
+  surface it renders
   ([platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations)).
 
 Authorship survives everything: payload removal and account
