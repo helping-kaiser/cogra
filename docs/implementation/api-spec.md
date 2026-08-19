@@ -2319,17 +2319,19 @@ input ReferenceInput {
   pInterest: Dimension!
 }
 
-"AI-provenance oversight, three-valued
+"The AI-disclosure requirement the content is licensed under,
+ three-valued
  (layer1-interface.md §10 def:content:license-qualifiers): NONE —
  no disclosure required; CONDITIONAL — generation details
  disclosed on query; FULL — the complete provenance chain
- published alongside the record."
+ published alongside the record. A requirement on downstream use,
+ not a declaration of how the content was made."
 enum Oversight { NONE CONDITIONAL FULL }
 
 "The mandatory authoring-time declaration (platform-guidelines.md):
- whether attribution is required on reuse surfaces, and the
- oversight degree driving the AI badge and provenance obligations.
- Immutable — genesis-only; edits never carry a license."
+ the terms downstream use must meet — whether attribution is
+ required on reuse surfaces, and how much generation detail must
+ be disclosed. Immutable — genesis-only; edits never carry a license."
 input LicenseInput {
   attributionRequired: Boolean!
   oversight: Oversight!
