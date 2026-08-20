@@ -90,7 +90,7 @@ two named simplifications. **Money** — the `B_i` surface and θ-debits
 honored as numbers, without a real Layer 0 economy behind them.
 **Standing** — formation, the admission handshake, ordering, causal
 keys, maturity, and the θ-ledger are implemented in full, but the
-staged-standing solve (layer1-interface.md §11.4–11.5) is not: every
+conserved standing solve (layer1-interface.md §11.3–11.5) is not: every
 act's stamp is taken as 1, so the W2a wall and W2b door pass
 trivially and the derived Self-edge reading carries a constant
 coordinate. The gates' call-sites are real; the real substrate brings

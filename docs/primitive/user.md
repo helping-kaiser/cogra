@@ -122,7 +122,7 @@ One account = one L0 address, self-custodied.
   [data-model.md](../implementation/data-model.md).
 
 Cold start: with no vouches a fresh account's standing is exactly
-its own commitment rate, `α = r` (`cor:epoch:zero-relational-row`).
+its own commitment rate, `α = r` (`prop:epoch:final-standing-embedding`).
 Registration is an ordinary final-set act whose stamp is that
 rate, so the funded burn clears the write rule through the stamp;
 vouches then lift or dilute standing from that baseline

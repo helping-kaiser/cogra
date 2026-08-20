@@ -172,9 +172,9 @@ anti-spam price on top of §7's deposit floor.
 **Structure.** The campaign anchor carries a `(0, 0)` Reference to
 each named anchor and to the target. That declares the targeting as
 replayable public structure while injecting nothing: a `(0, 0)`
-record has `w̃ = 0` and never vouches
+record has `w̃ = 0` and directs no allocation outward
 (`rem:graph:zero-parameter-degeneracy`,
-`def:epoch:person-vouch-eligibility`) — the same degeneracy the proposal
+`def:epoch:standing-recipient-resolution`) — the same degeneracy the proposal
 pattern rests on
 ([substrate-map.md §5](substrate-map.md#5-governance-and-moderation)).
 Reach toward the target is delivered by real contributor records
