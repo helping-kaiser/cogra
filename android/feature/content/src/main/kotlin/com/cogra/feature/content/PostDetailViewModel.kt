@@ -37,6 +37,8 @@ data class PostDetailUiState(
     val commentsEndCursor: String? = null,
     val commentsHaveMore: Boolean = false,
     val loadingMore: Boolean = false,
+    /** The landed-only opt-out; true is the API's own default. */
+    val includePending: Boolean = true,
     val notFound: Boolean = false,
     val transportFault: TransportFault? = null,
     /** The comment box. */
@@ -71,8 +73,12 @@ data class PostDetailUiState(
 /**
  * One post and its direct thread (comment.md §2), with the comment box
  * — a genesis Review signed on this device. A freshly signed comment is
- * still in flight (confirmation is asynchronous), so the thread shows
- * it only once its record lands; the refresh after landing is a pull.
+ * its author's content from the moment they sign it and reads for
+ * everyone, marked as not yet final (substrate.md §6), so the thread
+ * refetches once the signature is in: the refetched page carries the
+ * new state, which is the only way a client takes it on — never by
+ * merging the new entry into the page it already holds (api-spec.md
+ * "A page is a snapshot, not a live view").
  */
 @HiltViewModel
 class PostDetailViewModel @Inject constructor(
@@ -95,11 +101,25 @@ class PostDetailViewModel @Inject constructor(
     // fetch — so a failed retry never flashes the error surface —
     // and carries which fetch failed, so it surfaces where that
     // fetch was requested.
+    /**
+     * The landed-only opt-out. The cursor namespaces differ, so a
+     * change restarts the walk rather than continuing the held one.
+     */
+    fun setIncludePending(include: Boolean) {
+        if (_state.value.includePending == include) return
+        _state.update { it.copy(includePending = include) }
+        refresh()
+    }
+
     fun refresh() {
         val id = postId ?: return
         _state.update { it.copy(loading = true) }
+        val includePending = _state.value.includePending
         viewModelScope.launch {
-            when (val outcome = content.post(id, FEED_PAGE_SIZE, commentsAfter = null)) {
+            when (
+                val outcome =
+                    content.post(id, FEED_PAGE_SIZE, commentsAfter = null, includePending = includePending)
+            ) {
                 is Outcome.Success -> {
                     val detail = outcome.value
                     if (detail == null) {
@@ -134,12 +154,15 @@ class PostDetailViewModel @Inject constructor(
         if (s.loadingMore || !s.commentsHaveMore) return
         _state.update { it.copy(loadingMore = true) }
         viewModelScope.launch {
-            when (val outcome = content.comments(id, FEED_PAGE_SIZE, s.commentsEndCursor)) {
+            when (
+                val outcome =
+                    content.comments(id, FEED_PAGE_SIZE, s.commentsEndCursor, s.includePending)
+            ) {
                 is Outcome.Success -> _state.update {
                     it.copy(
                         loadingMore = false,
                         transportFault = null,
-                        comments = it.comments + outcome.value.items,
+                        comments = it.comments.appendPage(outcome.value.items) { c -> c.id },
                         commentsEndCursor = outcome.value.endCursor,
                         commentsHaveMore = outcome.value.hasNextPage,
                     )
@@ -164,10 +187,17 @@ class PostDetailViewModel @Inject constructor(
             it.copy(replyThreads = it.replyThreads + (comment.id to seeded.copy(loading = true, failed = false)))
         }
         viewModelScope.launch {
-            when (val outcome = content.commentReplies(comment.id, FEED_PAGE_SIZE, seeded.endCursor)) {
+            when (
+                val outcome = content.commentReplies(
+                    comment.id,
+                    FEED_PAGE_SIZE,
+                    seeded.endCursor,
+                    s.includePending,
+                )
+            ) {
                 is Outcome.Success -> _state.update {
                     val thread = ReplyThread(
-                        items = seeded.items + outcome.value.items,
+                        items = seeded.items.appendPage(outcome.value.items) { c -> c.id },
                         endCursor = outcome.value.endCursor,
                         hasMore = outcome.value.hasNextPage,
                     )
@@ -238,6 +268,7 @@ class PostDetailViewModel @Inject constructor(
                         commentSigned = true,
                     )
                 }
+                refresh()
             } else {
                 _state.update { it.copy(editSubmitting = false, editSigningFailed = true) }
             }
@@ -303,6 +334,7 @@ class PostDetailViewModel @Inject constructor(
                 _state.update {
                     it.copy(replySubmitting = false, replyingToId = null, replyDraft = "", commentSigned = true)
                 }
+                refresh()
             } else {
                 _state.update { it.copy(replySubmitting = false, replySigningFailed = true) }
             }
@@ -354,6 +386,7 @@ class PostDetailViewModel @Inject constructor(
             }
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, draft = "", commentSigned = true) }
+                refresh()
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }

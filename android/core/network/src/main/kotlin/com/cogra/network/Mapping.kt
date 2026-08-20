@@ -25,6 +25,8 @@ import com.cogra.domain.ApplicationView
 import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.Landing
+import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.PostView
@@ -174,6 +176,13 @@ internal fun PostFields.Description.toDomain() = ModeratedField(value, status.to
 internal fun PostFields.Content.toDomain() = ModeratedField(value, status.toDomain())
 internal fun CommentFields.Content.toDomain() = ModeratedField(value, status.toDomain())
 
+/** An unknown state is never presented as pending. */
+internal fun com.cogra.network.graphql.type.LandingState.toDomain(): LandingState =
+    runCatching { LandingState.valueOf(rawValue) }.getOrDefault(LandingState.UNKNOWN)
+
+internal fun PostFields.Landing.toDomain() = Landing(state.toDomain(), epoch)
+internal fun CommentFields.Landing.toDomain() = Landing(state.toDomain(), epoch)
+
 internal fun PostFields.toDomain(): PostView = PostView(
     id = id,
     title = title.toDomain(),
@@ -182,6 +191,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
+    landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.oversight),
 )
 
@@ -191,6 +201,7 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
+    landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.oversight),
 )
 
