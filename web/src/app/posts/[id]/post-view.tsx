@@ -1,9 +1,10 @@
 "use client";
 
 // One post and its direct thread (comment.md §2), with the comment box —
-// a genesis Review signed in this browser. Confirmation is asynchronous:
-// a freshly signed comment appears once its record lands, so the surface
-// says so instead of faking it. Slice 2.1 closes the thread's UI gaps:
+// a genesis Review signed in this browser. A signed comment is already
+// its author's content (substrate.md §6), so the thread re-reads and the
+// author finds it in place under the pending marker — only L1 finality
+// is still outstanding. Slice 2.1 closes the thread's UI gaps:
 // author chips, the creator's inline edit with the soft Edited marker
 // (design.md §9), inline replies, and the nested reply tree — one
 // prefetched level, more on demand.
@@ -217,6 +218,12 @@ export function PostView({
     if (done) {
       setDraft("");
       setCommentSigned(true);
+      // The comment is content from the moment it is signed, so re-read
+      // the thread and show it rather than sending the author away to
+      // refresh by hand. Refetching is the client's own explicit act
+      // (api-spec.md "A page is a snapshot, not a live view") — this is
+      // that act, not a merge into the page already held.
+      refresh();
     } else {
       setSigningNeedsKey((await store.actorKey()) === null);
       setSignIncomplete(true);
@@ -240,6 +247,7 @@ export function PostView({
     if (done) {
       setEditing(null);
       setCommentSigned(true);
+      refresh();
     } else {
       setEditFailed(true);
     }
@@ -267,6 +275,7 @@ export function PostView({
       setReplyingTo(null);
       setReplyDraft("");
       setCommentSigned(true);
+      refresh();
     } else {
       setReplyFailed(true);
     }
@@ -613,7 +622,7 @@ export function PostView({
           {submitFailed && <TransportError testId="comment-transport-error" />}
           {commentSigned && (
             <p data-testid="comment-signed" className="text-body-medium text-success">
-              Signed — your write appears once its record lands. Refresh to check.
+              Signed — it&apos;s in the thread now, still settling.
             </p>
           )}
           <Button
