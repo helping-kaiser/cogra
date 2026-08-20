@@ -220,7 +220,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             json!({ "input": {
                 "title": "Hello graph",
                 "content": "The very first post.",
-                "license": { "attribution": 1.0, "oversight": 0.0 },
+                "license": { "attribution": 1.0, "provenance": 0.0 },
             }}),
         )
         .await;
@@ -278,7 +278,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             json!({ "input": {
                 "target": post_id,
                 "content": "Great start!",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
                 "pInterest": 0.5,
             }}),
         )
@@ -380,7 +380,7 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "content": "anonymous?",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
             }}),
         )
         .await;
@@ -405,7 +405,7 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             json!({ "input": {
                 "target": Uuid::new_v4(),
                 "content": "into the void",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
             }}),
         )
         .await;
@@ -425,7 +425,7 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "content": "x",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
                 "pDirected": 1.5,
             }}),
         )

@@ -301,12 +301,12 @@ struct LicenseInput {
     /// `o` — how far a use must be tracked publicly and left open to
     /// audit, a degree on `[0, 1]` (`def:content:provenance`), offered
     /// on the same three readings.
-    oversight: f64,
+    provenance: f64,
 }
 
 impl LicenseInput {
     fn to_content(&self) -> Result<crate::content::License, crate::content::ContentError> {
-        crate::content::License::checked(self.attribution, self.oversight)
+        crate::content::License::checked(self.attribution, self.provenance)
     }
 }
 

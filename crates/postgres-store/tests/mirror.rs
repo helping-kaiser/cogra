@@ -46,7 +46,7 @@ async fn ingestion_appends_and_advances_the_cursor(pool: PgPool) {
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     assert_eq!(
         mirror::record_ids_in_epoch(&pool, 0).await.expect("ids"),
-        vec![format!("act:alice:0:registration")]
+        vec!["act:alice:0:registration".to_string()]
     );
     assert!(
         mirror::has_record_by(&pool, "alice", Family::Registration)
