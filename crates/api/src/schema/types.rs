@@ -1551,11 +1551,59 @@ pub type KeysetConnection<G> = Connection<
     async_graphql::connection::DisableNodesField,
 >;
 
+/// A keyset cursor: the landing-order key, plus — on content
+/// connections — the entry's own id. Cursors are opaque per the Relay
+/// spec, so what rides inside is the server's to choose; the id is what
+/// lets a pending entry that has since landed be found again instead of
+/// served twice (api-spec.md "Pagination").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CursorKey {
+    pub epoch: i64,
+    pub act_time: i64,
+    pub position: i64,
+    pub id: Option<Uuid>,
+}
+
+impl CursorKey {
+    /// The landing-order triple, for the record-backed reads that
+    /// paginate on it alone.
+    pub fn order(&self) -> (i64, i64, i64) {
+        (self.epoch, self.act_time, self.position)
+    }
+}
+
+/// The store's listing cursor, from the wire cursor.
+pub(crate) fn content_cursor(
+    key: Option<CursorKey>,
+) -> Option<postgres_store::content::ContentCursor> {
+    key.map(|k| postgres_store::content::ContentCursor {
+        order: postgres_store::content::LandingOrder {
+            landed_epoch: k.epoch,
+            act_time: k.act_time,
+            position: k.position,
+        },
+        id: k.id,
+    })
+}
+
+/// The wire cursor of one listing entry: its sort key and its id.
+pub(crate) fn content_cursor_key(
+    order: postgres_store::content::LandingOrder,
+    id: Uuid,
+) -> CursorKey {
+    CursorKey {
+        epoch: order.landed_epoch,
+        act_time: order.act_time,
+        position: order.position,
+        id: Some(id),
+    }
+}
+
 /// A validated keyset page request: the exclusive cursor, the walk
 /// direction, and the page size (default 20, max 100 — over-asking
 /// refuses).
 pub struct KeysetPage {
-    pub cursor: Option<(i64, i64, i64)>,
+    pub cursor: Option<CursorKey>,
     pub backward: bool,
     pub limit: i64,
 }
@@ -1596,19 +1644,40 @@ pub fn keyset_page(
     })
 }
 
-pub fn encode_landing_cursor(epoch: i64, act_time: i64, position: i64) -> String {
-    B64.encode(format!("{epoch}:{act_time}:{position}"))
+pub fn encode_landing_cursor(key: CursorKey) -> String {
+    let CursorKey {
+        epoch,
+        act_time,
+        position,
+        id,
+    } = key;
+    match id {
+        Some(id) => B64.encode(format!("{epoch}:{act_time}:{position}:{id}")),
+        None => B64.encode(format!("{epoch}:{act_time}:{position}")),
+    }
 }
 
-fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<(i64, i64, i64)> {
+/// A cursor without the trailing id is accepted and paginates on the
+/// key alone — one issued before the id was carried stays usable.
+fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<CursorKey> {
     let invalid = || async_graphql::Error::new("invalid cursor");
     let raw = B64.decode(cursor).map_err(|_| invalid())?;
     let text = String::from_utf8(raw).map_err(|_| invalid())?;
-    let mut parts = text.split(':').map(str::parse::<i64>);
-    match (parts.next(), parts.next(), parts.next(), parts.next()) {
-        (Some(Ok(e)), Some(Ok(a)), Some(Ok(p)), None) => Ok((e, a, p)),
-        _ => Err(invalid()),
-    }
+    let parts: Vec<&str> = text.split(':').collect();
+    let [epoch, act_time, position, rest @ ..] = parts.as_slice() else {
+        return Err(invalid());
+    };
+    let id = match rest {
+        [] => None,
+        [id] => Some(Uuid::parse_str(id).map_err(|_| invalid())?),
+        _ => return Err(invalid()),
+    };
+    Ok(CursorKey {
+        epoch: epoch.parse().map_err(|_| invalid())?,
+        act_time: act_time.parse().map_err(|_| invalid())?,
+        position: position.parse().map_err(|_| invalid())?,
+        id,
+    })
 }
 
 /// Builds a keyset connection from a page of items fetched with
@@ -1619,7 +1688,7 @@ fn decode_landing_cursor(cursor: &str) -> async_graphql::Result<(i64, i64, i64)>
 pub fn keyset_connection<T, G>(
     mut items: Vec<T>,
     page: &KeysetPage,
-    cursor_of: impl Fn(&T) -> (i64, i64, i64),
+    cursor_of: impl Fn(&T) -> CursorKey,
     wrap: impl Fn(T) -> G,
 ) -> KeysetConnection<G>
 where
@@ -1639,10 +1708,11 @@ where
         (page.cursor.is_some(), has_more)
     };
     let mut connection = KeysetConnection::new(has_previous, has_next);
-    connection.edges.extend(items.into_iter().map(|item| {
-        let (e, a, p) = cursor_of(&item);
-        Edge::new(encode_landing_cursor(e, a, p), wrap(item))
-    }));
+    connection.edges.extend(
+        items
+            .into_iter()
+            .map(|item| Edge::new(encode_landing_cursor(cursor_of(&item)), wrap(item))),
+    );
     connection
 }
 
@@ -1663,12 +1733,7 @@ async fn comments_connection(
     let rows = postgres_store::content::comments_for_target(
         pool,
         target,
-        page.cursor
-            .map(|(e, a, p)| postgres_store::content::LandingOrder {
-                landed_epoch: e,
-                act_time: a,
-                position: p,
-            }),
+        content_cursor(page.cursor),
         page.backward,
         page.limit + 1,
         include_pending,
@@ -1678,10 +1743,7 @@ async fn comments_connection(
     Ok(keyset_connection(
         rows,
         &page,
-        |c| {
-            let k = c.sort_key();
-            (k.landed_epoch, k.act_time, k.position)
-        },
+        |c| content_cursor_key(c.sort_key(), c.id),
         CommentType,
     ))
 }

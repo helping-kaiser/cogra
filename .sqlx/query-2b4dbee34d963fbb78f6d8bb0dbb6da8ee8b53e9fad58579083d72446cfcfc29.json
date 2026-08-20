@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM comments\n             WHERE (id, created_at)\n                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))\n               AND landed_epoch IS NULL\n             RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2b4dbee34d963fbb78f6d8bb0dbb6da8ee8b53e9fad58579083d72446cfcfc29"
+}

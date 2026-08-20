@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM comment_versions WHERE comment_id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e04189dcc5cc2d27e45174fcf78e6eb9f150bcaafc4802ed3a48a8c9f18f381"
+}

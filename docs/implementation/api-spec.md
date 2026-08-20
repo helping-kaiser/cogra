@@ -216,11 +216,17 @@ genesis, so editing a comment never moves it up its thread.
 **Pending entries come first, in their own cursor namespace.** A
 pending write has no causal key yet, so it sorts under a sentinel
 epoch above every real one and orders among pending entries by
-authoring instant. The cursor keeps its `(epoch, act time,
-position)` form and stays opaque; a pending entry's cursor changes
-when it lands, because its position in the order changes. Every
-listing takes `includePending` (default true): false serves only
-what has landed on L1, for a reader who wants the settled graph.
+`(authoring instant, node id)` — the instant alone is not unique,
+because nothing serializes two authors' signatures apart. A
+pending entry's cursor changes when it lands, because its position
+in the order changes; a content cursor therefore carries the
+entry's own id alongside the key, so a walk resuming from it can
+find where the entry went instead of serving it twice. Cursors
+stay opaque: what rides inside is the server's business, and a
+client reads no structure into them. Every listing takes
+`includePending` (default true): false serves only what has landed
+on L1 — including, on a landed node carrying an unlanded edit, the
+version that landed — for a reader who wants the settled graph.
 
 **A page is a snapshot, not a live view.** A listing read computes
 one view of the graph and freezes it; refetching is the client's
