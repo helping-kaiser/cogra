@@ -10,7 +10,6 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.OversightChoice
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -67,7 +66,8 @@ class ContentRepositoryTest {
          "author":{"__typename":"User","id":"u1","handle":"alice","displayName":{"__typename":"ModeratedText","value":"Alice"}},
          "createdAt":"2026-08-12T10:00:00+00:00",
          "updatedAt":"2026-08-12T11:00:00+00:00",
-         "moderationStatus":"NORMAL"}
+         "moderationStatus":"NORMAL",
+         "license":{"__typename":"License","attribution":0.5,"oversight":1.0}}
     """.trimIndent()
 
     @Test
@@ -83,6 +83,7 @@ class ContentRepositoryTest {
         assertThat(post.id).isEqualTo("p1")
         assertThat(post.title.value).isEqualTo("Hello")
         assertThat(post.author?.handle).isEqualTo("alice")
+        assertThat(post.license).isEqualTo(LicenseChoice(attribution = 0.5, oversight = 1.0))
         assertThat(page.hasNextPage).isTrue()
         assertThat(page.endCursor).isEqualTo("c1")
     }
@@ -110,6 +111,7 @@ class ContentRepositoryTest {
                "createdAt":"2026-08-12T10:00:00+00:00",
                "updatedAt":"2026-08-12T10:00:00+00:00",
                "moderationStatus":"NORMAL",
+               "license":{"__typename":"License","attribution":0.0,"oversight":0.0},
                "comments":{"__typename":"CommentConnection",
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
@@ -117,6 +119,7 @@ class ContentRepositoryTest {
                    "createdAt":"2026-08-12T10:05:00+00:00",
                    "updatedAt":"2026-08-12T10:05:00+00:00",
                    "moderationStatus":"NORMAL",
+                   "license":{"__typename":"License","attribution":1.0,"oversight":0.0},
                    "replies":{"__typename":"CommentConnection","edges":[],
                      "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
@@ -126,6 +129,9 @@ class ContentRepositoryTest {
         assertThat(detail.post.author).isNull()
         assertThat(detail.comments.items.single().content.value).isEqualTo("hi")
         assertThat(detail.comments.items.single().author?.handle).isEqualTo("bob")
+        assertThat(detail.post.license).isEqualTo(LicenseChoice.PublicDomain)
+        assertThat(detail.comments.items.single().license)
+            .isEqualTo(LicenseChoice(attribution = 1.0, oversight = 0.0))
 
         enqueue("""{"data":{"post":null}}""")
         assertThat((repo().post("gone", 20, null) as Outcome.Success).value).isNull()
@@ -140,7 +146,7 @@ class ContentRepositoryTest {
                           "canonicalProposal":"AAECAw==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        val license = LicenseChoice(attributionRequired = true, oversight = OversightChoice.NONE)
+        val license = LicenseChoice(attribution = 1.0, oversight = 0.0)
         val prepared = (repo().preparePost("T", null, "B", license) as Outcome.Success).value
         assertThat(prepared.node).isEqualTo("node-1")
         assertThat(prepared.writes.single().id).isEqualTo("w1")
@@ -157,7 +163,7 @@ class ContentRepositoryTest {
     }
 
     @Test
-    fun anEditSendsExplicitNullsForClearedFields() = runTest {
+    fun anEditSendsTheCompleteFieldSet() = runTest {
         enqueue(
             """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
                "node":"p1",
@@ -167,8 +173,8 @@ class ContentRepositoryTest {
         )
         repo().preparePostEdit("p1", title = null, description = null, content = "B")
         val body = server.takeRequest().body.readUtf8()
-        // The wire carries explicit nulls — a present null clears; an
-        // absent key would leave the field untouched (api-spec.md).
+        // The payload is the whole content state: the optional fields
+        // ride as explicit nulls rather than absent keys (post.md §4).
         assertThat(body).contains("\"title\":null")
         assertThat(body).contains("\"description\":null")
         assertThat(body).contains("\"content\":\"B\"")

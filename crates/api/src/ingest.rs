@@ -24,12 +24,36 @@ pub enum IngestError {
     Staged(#[from] staged::StagedError),
 }
 
-/// One ingestion pass's result: the epochs landed and the staged writes
-/// their records confirmed.
+/// A confirm-side promotion that did not follow its record. The record
+/// landed and the mirror governs, so ingestion carries on and a later
+/// rebuild can re-run the promotion — but the failure rides the outcome
+/// instead of living only in the log, so callers and tests can see it.
+#[derive(Debug)]
+pub struct PromotionFailure {
+    /// Which promotion flow failed: `onboarding`, `content`, `profile`.
+    pub stage: &'static str,
+    pub staged: uuid::Uuid,
+    pub act_id: String,
+    pub error: String,
+}
+
+impl std::fmt::Display for PromotionFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} promotion failed for staged {} (act {}): {}",
+            self.stage, self.staged, self.act_id, self.error
+        )
+    }
+}
+
+/// One ingestion pass's result: the epochs landed, the staged writes
+/// their records confirmed, and any promotion that failed on the way.
 #[derive(Debug, Default)]
 pub struct IngestOutcome {
     pub epochs: u64,
     pub promoted: Vec<staged::PromotedWrite>,
+    pub promotion_failures: Vec<PromotionFailure>,
 }
 
 /// Ingests every epoch published since the cursor, promoting staged
@@ -62,9 +86,19 @@ pub async fn ingest_pending<B: L1Boundary>(
     // rows and landed content records promote their payload into
     // carriage and their display rows into view — on every ingestion
     // path: the live loop, the dev CLI, and rebuilds alike.
-    crate::onboarding::land_promoted(pool, &outcome.promoted).await;
-    crate::content::land_promoted(pool, &outcome.promoted).await;
-    crate::profile::land_promoted(pool, &outcome.promoted).await;
+    let mut failures = crate::onboarding::land_promoted(pool, &outcome.promoted).await;
+    failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
+    failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
+    for failure in &failures {
+        tracing::error!(
+            stage = failure.stage,
+            staged = %failure.staged,
+            act = %failure.act_id,
+            error = %failure.error,
+            "confirm-side promotion failed; record remains unpromoted"
+        );
+    }
+    outcome.promotion_failures = failures;
     if let Some(last) = packages.last() {
         let expired = staged::expire_due(pool, last.epoch, gc_after_epochs).await?;
         let reaped = staged::reap_expired(pool, last.epoch, gc_after_epochs).await?;

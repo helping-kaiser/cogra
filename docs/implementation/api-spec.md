@@ -903,7 +903,8 @@ type Collective implements Node & Actor {
 "Text and/or media authored by an actor — the primary public
  surface and the canonical feed-ranking target. Minted by a Publish
  record; edits are ordinary-role Publish + payload records at
- attachment 0, read by the chain-ordered per-field fold
+ attachment 0, read by the chain-ordered fold — the newest
+ record's payload is the whole content state
  (substrate.md §9, post.md §4)."
 type Post implements Node {
   "Optional title / headline."
@@ -917,6 +918,8 @@ type Post implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The qualifiers the minting Publish record carried."
+  license: License!
   "This post's direct comments — genesis Reviews whose actor leg
    enters here — newest-first (a comment's landing position is its
    genesis, so edits never reorder the thread). The named view over
@@ -937,6 +940,8 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The qualifiers the minting Review record carried."
+  license: License!
   "This comment's direct replies, newest-first."
   replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 }
@@ -2364,22 +2369,25 @@ input ReferenceInput {
   pInterest: Dimension!
 }
 
-"The AI-disclosure requirement the content is licensed under,
- three-valued
- (layer1-interface.md §10 def:content:license-qualifiers): NONE —
- no disclosure required; CONDITIONAL — generation details
- disclosed on query; FULL — the complete provenance chain
- published alongside the record. A requirement on downstream use,
- not a declaration of how the content was made."
-enum Oversight { NONE CONDITIONAL FULL }
+"The qualifiers a content node was minted with
+ (layer1-interface.md §10 def:content:license-qualifiers): each a
+ degree on [0, 1] — attribution `a`, how far a use must credit the
+ maker; oversight `o`, how far a use must be tracked publicly and
+ left open to audit. Requirements on downstream use, never a
+ declaration of how the content was made."
+type License {
+  attribution: Float!
+  oversight: Float!
+}
 
 "The mandatory authoring-time declaration (platform-guidelines.md):
- the terms downstream use must meet — whether attribution is
- required on reuse surfaces, and how much generation detail must
- be disclosed. Immutable — genesis-only; edits never carry a license."
+ the terms downstream use must meet, as a degree on each axis. The
+ composer offers the three readings CoGra publishes — 0, 0.5
+ (commercial uses only), and 1. Immutable — genesis-only; edits
+ never carry a license."
 input LicenseInput {
-  attributionRequired: Boolean!
-  oversight: Oversight!
+  attribution: Float!
+  oversight: Float!
 }
 
 "Author a Post — stages the Publish plus the Tag and Reference
@@ -2403,16 +2411,15 @@ input PreparePostInput {
 }
 
 "Edit a Post — stages one ordinary-role Publish + payload record
- at attachment 0 carrying the new values for the supplied fields;
- omitted fields are untouched (newest-wins fold per field). A
- supplied gallery is the full intended arrangement. Only the
- eligible author's edit is prepared. New tags or citations are
- their own gestures, not edit fields."
+ at attachment 0 carrying the Post's complete new content state;
+ an omitted title, description, or gallery is a Post without one.
+ Only the eligible author's edit is prepared. New tags or
+ citations are their own gestures, not edit fields."
 input PreparePostEditInput {
   id: UUID!
   title: String
   description: String
-  content: String
+  content: String!
   attachments: [AttachmentInput!]
 }
 
@@ -2434,7 +2441,7 @@ input PrepareCommentInput {
 
 input PrepareCommentEditInput {
   id: UUID!
-  content: String
+  content: String!
   attachments: [AttachmentInput!]
 }
 
@@ -2489,10 +2496,12 @@ extend type Mutation {
 }
 ```
 
-An edit input's optional text fields ride three-valued: omitted =
-untouched, explicit null = cleared, a value = replaced — the wire
-form of the per-field newest-wins fold. `isCover` applies to post
-galleries only; comment galleries ignore it.
+A content edit input carries the whole content state, so its
+optional text fields are two-valued: a value renders, omitted or
+null renders as nothing. A profile update's fields ride
+three-valued — omitted = untouched, explicit null = cleared, a
+value = replaced. `isCover` applies to post galleries only;
+comment galleries ignore it.
 
 A media gallery on a create/edit input is the **full intended
 gallery** for that write: the new current arrangement, referencing

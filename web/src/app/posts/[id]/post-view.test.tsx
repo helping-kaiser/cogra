@@ -38,6 +38,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     createdAt: "2026-08-12T10:05:00Z",
     updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
     moderationStatus: "NORMAL",
+    license: { __typename: "License", attribution: 0, oversight: 0 },
     ...(withReplies
       ? {
           replies: {
@@ -81,6 +82,7 @@ function detail(
       createdAt: "2026-08-12T10:00:00Z",
       updatedAt: "2026-08-12T10:00:00Z",
       moderationStatus: "NORMAL",
+    license: { __typename: "License", attribution: 0, oversight: 0 },
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -119,6 +121,24 @@ describe("PostView", () => {
     expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
+  });
+
+  // Enforcement inside CoGra reduces to honest display
+  // (platform-guidelines.md §5), so the qualifiers ride both the post
+  // and every comment.
+  it("shows the license terms on the post and on each comment", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-license-terms")).toHaveTextContent(
+      "Public domain",
+    );
+    expect(screen.getByTestId("comment-license-terms-c1")).toHaveTextContent(
+      "Public domain",
+    );
   });
 
   it("offers the edit link to the creator only", async () => {
@@ -185,7 +205,7 @@ describe("PostView", () => {
     fireEvent.change(await screen.findByTestId("comment-draft"), {
       target: { value: "Nice one" },
     });
-    fireEvent.click(screen.getByTestId("comment-license-attribution"));
+    fireEvent.click(screen.getByTestId("comment-license-attribution-1"));
     fireEvent.click(screen.getByTestId("comment-submit"));
 
     expect(await screen.findByTestId("comment-signed")).toBeInTheDocument();
@@ -195,7 +215,7 @@ describe("PostView", () => {
         input: {
           target: "p1",
           content: "Nice one",
-          license: { attributionRequired: true, oversight: "NONE" },
+          license: { attribution: 1, oversight: 0 },
         },
       }),
     );
@@ -239,7 +259,7 @@ describe("PostView", () => {
     fireEvent.change(await screen.findByTestId("comment-draft"), {
       target: { value: "Nice one" },
     });
-    fireEvent.click(screen.getByTestId("comment-license-attribution"));
+    fireEvent.click(screen.getByTestId("comment-license-attribution-1"));
     fireEvent.click(screen.getByTestId("comment-submit"));
     const alert = await screen.findByTestId("comment-signing-needs-key");
     expect(alert).toHaveTextContent("Restore your key");

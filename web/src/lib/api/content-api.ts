@@ -16,8 +16,8 @@ import {
   PreparePostEditDocument,
   type PostDetailQuery,
   type PostsQuery,
-  type Oversight,
 } from "@/__generated__/graphql";
+import type { License } from "@/lib/license";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
@@ -39,10 +39,8 @@ export type PostDetail = {
   comments: Page<CommentView>;
 };
 
-export type LicenseChoice = {
-  attributionRequired: boolean;
-  oversight: Oversight;
-};
+/** The declaration a genesis content write carries (`@/lib/license`). */
+export type LicenseChoice = License;
 
 /**
  * A prepared content write: the node id the content will serve under

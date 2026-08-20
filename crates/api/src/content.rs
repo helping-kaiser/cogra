@@ -14,6 +14,7 @@ use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
 use uuid::Uuid;
 
+use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
 
@@ -21,39 +22,185 @@ use crate::prepare::{self, Gesture, PrepareError, Target};
 /// so stronger stances stay expressible.
 pub const DEFAULT_STANCE: f64 = 0.1;
 
-/// AI-provenance oversight, three-valued (layer1-interface.md §10,
-/// `def:content:license-qualifiers`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Oversight {
-    /// o = 0 — no AI disclosure required.
-    None,
-    /// o = 0.5 — generation details disclosed on query.
-    Conditional,
-    /// o = 1 — full provenance chain published alongside the record.
-    Full,
-}
+/// The resolution the canonical string renders and the wire accepts:
+/// three decimal places. A degree is a judgment, not a measurement, so
+/// the grid is coarse enough to be readable and fine enough that no
+/// tier CoGra publishes needs rounding.
+const AXIS_STEPS: f64 = 1000.0;
 
 /// License qualifiers, declared at authoring time and immutable
-/// (post.md §1; platform-guidelines.md §5). They ride the structural
-/// record as public protocol references (layer1-interface.md §8.2) —
-/// never the envelope, so they survive every payload state.
-#[derive(Debug, Clone, Copy)]
+/// (post.md §1; platform-guidelines.md §5). Both axes are degrees on
+/// `[0, 1]` — attribution `a` (`def:content:attribution`) and oversight
+/// `o` (`def:content:provenance`); neither is a switch. The pair rides
+/// the structural record as public protocol references
+/// (layer1-interface.md §8.2) — never the envelope, so it survives every
+/// payload state.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct License {
-    pub attribution: bool,
-    pub oversight: Oversight,
+    pub attribution: f64,
+    pub oversight: f64,
 }
 
 impl License {
+    /// Public Domain, `(a, o) = (0, 0)`: the unique point of zero
+    /// severity, where a use carries no downstream obligation whatever
+    /// (`rem:content:public-domain`). CoGra's default license.
+    pub const PUBLIC_DOMAIN: Self = Self {
+        attribution: 0.0,
+        oversight: 0.0,
+    };
+
+    /// Checks a caller-supplied pair and snaps each axis to the
+    /// published grid. Refuses anything off the square or finer than the
+    /// grid, rather than silently publishing bytes the author did not
+    /// choose.
+    pub fn checked(attribution: f64, oversight: f64) -> Result<Self, ContentError> {
+        Ok(Self {
+            attribution: axis("license.attribution", attribution)?,
+            oversight: axis("license.oversight", oversight)?,
+        })
+    }
+
     /// The canonical structural string CoGra publishes
-    /// (data-model.md "License qualifiers"): `a=<0|1>;o=<0|0.5|1>`.
+    /// (data-model.md "License qualifiers"): `a=<degree>;o=<degree>`,
+    /// each degree a decimal on `[0, 1]` with trailing zeros trimmed.
     pub fn canonical(&self) -> String {
-        let a = u8::from(self.attribution);
-        let o = match self.oversight {
-            Oversight::None => "0",
-            Oversight::Conditional => "0.5",
-            Oversight::Full => "1",
-        };
-        format!("a={a};o={o}")
+        format!(
+            "a={};o={}",
+            render_axis(self.attribution),
+            render_axis(self.oversight)
+        )
+    }
+
+    /// The pair a canonical string encodes; None when the string is not
+    /// one CoGra published. The read side has no license of its own to
+    /// fall back on — a record's own bytes are the only source.
+    pub fn parse(canonical: &str) -> Option<Self> {
+        let (a, o) = canonical.split_once(';')?;
+        let attribution = parse_axis(a.strip_prefix("a=")?)?;
+        let oversight = parse_axis(o.strip_prefix("o=")?)?;
+        Some(Self {
+            attribution,
+            oversight,
+        })
+    }
+}
+
+fn axis(field: &'static str, value: f64) -> Result<f64, ContentError> {
+    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+        return Err(ContentError::BadInput {
+            field,
+            message: "a license axis is a degree on [0, 1]".into(),
+        });
+    }
+    let steps = value * AXIS_STEPS;
+    if (steps - steps.round()).abs() > 1e-6 {
+        return Err(ContentError::BadInput {
+            field,
+            message: "a license axis carries at most three decimal places".into(),
+        });
+    }
+    Ok(steps.round() / AXIS_STEPS)
+}
+
+fn render_axis(value: f64) -> String {
+    let rendered = format!("{value:.3}");
+    rendered
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_owned()
+}
+
+fn parse_axis(value: &str) -> Option<f64> {
+    let parsed: f64 = value.parse().ok()?;
+    (parsed.is_finite() && (0.0..=1.0).contains(&parsed)).then_some(parsed)
+}
+
+#[cfg(test)]
+mod license_tests {
+    use super::{AXIS_STEPS, ContentError, License};
+
+    #[test]
+    fn canonical_renders_the_published_tiers() {
+        let cases = [
+            (0.0, 0.0, "a=0;o=0"),
+            (0.5, 0.0, "a=0.5;o=0"),
+            (1.0, 0.5, "a=1;o=0.5"),
+            (1.0, 1.0, "a=1;o=1"),
+        ];
+        for (attribution, oversight, expected) in cases {
+            let license = License {
+                attribution,
+                oversight,
+            };
+            assert_eq!(license.canonical(), expected);
+        }
+    }
+
+    #[test]
+    fn canonical_round_trips_across_the_whole_grid() {
+        for steps in 0..=1000 {
+            let license = License::checked(
+                f64::from(steps) / AXIS_STEPS,
+                f64::from(1000 - steps) / AXIS_STEPS,
+            )
+            .expect("every grid point is a license");
+            assert_eq!(License::parse(&license.canonical()), Some(license));
+        }
+    }
+
+    #[test]
+    fn every_string_the_retired_ladder_published_still_parses() {
+        for a in ["0", "1"] {
+            for o in ["0", "0.5", "1"] {
+                let ladder = format!("a={a};o={o}");
+                let parsed = License::parse(&ladder).expect("a ladder string is a float pair");
+                assert_eq!(parsed.canonical(), ladder);
+            }
+        }
+    }
+
+    #[test]
+    fn parse_refuses_what_cogra_never_published() {
+        for bad in [
+            "a=0",
+            "a=0;o",
+            "o=0;a=0",
+            "a=;o=0",
+            "a=2;o=0",
+            "a=-0.5;o=0",
+            "a=0;o=NONE",
+            "",
+        ] {
+            assert!(License::parse(bad).is_none(), "{bad} parsed");
+        }
+    }
+
+    #[test]
+    fn checked_accepts_the_whole_square() {
+        assert_eq!(
+            License::checked(0.25, 0.75).expect("interior points are licenses"),
+            License {
+                attribution: 0.25,
+                oversight: 0.75,
+            }
+        );
+    }
+
+    #[test]
+    fn checked_refuses_degrees_off_the_square_or_off_the_grid() {
+        for (a, o) in [
+            (-0.1, 0.0),
+            (1.1, 0.0),
+            (0.0, f64::NAN),
+            (0.0, f64::INFINITY),
+            (0.0, 0.0005),
+        ] {
+            assert!(
+                matches!(License::checked(a, o), Err(ContentError::BadInput { .. })),
+                "({a}, {o}) was accepted"
+            );
+        }
     }
 }
 
@@ -102,13 +249,14 @@ pub struct PostDraft {
     pub p_directed: Option<f64>,
 }
 
-/// An edit's field set: `None` = untouched; `Some("")` = cleared
-/// (post.md §4 — per-field newest-wins; empty is a value).
+/// An edit's complete field set: the payload is the Post's whole new
+/// content state, so an absent title or description is a Post without
+/// one (post.md §4).
 pub struct PostEditDraft {
     pub id: Uuid,
     pub title: Option<String>,
     pub description: Option<String>,
-    pub content: Option<String>,
+    pub content: String,
 }
 
 pub struct CommentDraft {
@@ -121,7 +269,7 @@ pub struct CommentDraft {
 
 pub struct CommentEditDraft {
     pub id: Uuid,
-    pub content: Option<String>,
+    pub content: String,
 }
 
 /// A prepared content write: the staged handshake plus the L2 node id
@@ -208,12 +356,6 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
-    if draft.title.is_none() && draft.description.is_none() && draft.content.is_none() {
-        return Err(ContentError::BadInput {
-            field: "input",
-            message: "an edit must change at least one field".into(),
-        });
-    }
     let post = content_store::post(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -227,7 +369,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         node: post.id,
         title: draft.title,
         description: draft.description,
-        body: draft.content,
+        body: Some(draft.content),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -316,12 +458,6 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: CommentEditDraft,
 ) -> Result<PreparedContent, ContentError> {
-    let Some(content) = draft.content else {
-        return Err(ContentError::BadInput {
-            field: "input",
-            message: "an edit must change at least one field".into(),
-        });
-    };
     let comment = content_store::comment(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -336,7 +472,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         node: comment.id,
         title: None,
         description: None,
-        body: Some(content),
+        body: Some(draft.content),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -479,6 +615,7 @@ pub async fn stage_pending(
                 content.node,
                 write.actor_id,
                 &target,
+                record_license(body)?,
                 None,
                 created_at,
                 clear_to_null(&content.title),
@@ -490,20 +627,16 @@ pub async fn stage_pending(
         (Family::Publish, false) => {
             // The pending edit's own text shows at once, marked pending —
             // an edit is a record, and a prepared record is its author's
-            // content from the moment they sign it (substrate.md §6). The
-            // merge is the promotion path's: absent keeps, empty clears.
+            // content from the moment they sign it (substrate.md §6).
             let post = content_store::post(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            let title = merge_optional(&content.title, &post.title);
-            let description = merge_optional(&content.description, &post.description);
-            let body_text = content.body.clone().unwrap_or(post.content);
             content_store::insert_post_version(
                 &mut tx,
                 post.id,
-                title.as_deref(),
-                description.as_deref(),
-                &body_text,
+                clear_to_null(&content.title),
+                clear_to_null(&content.description),
+                content.body.as_deref().unwrap_or_default(),
                 true,
                 created_at,
             )
@@ -518,6 +651,7 @@ pub async fn stage_pending(
                 target_type,
                 write.actor_id,
                 &target,
+                record_license(body)?,
                 None,
                 created_at,
                 content.body.as_deref().unwrap_or_default(),
@@ -528,9 +662,12 @@ pub async fn stage_pending(
             let comment = content_store::comment(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            let body_text = content.body.clone().unwrap_or(comment.content);
             content_store::insert_comment_version(
-                &mut tx, comment.id, &body_text, true, created_at,
+                &mut tx,
+                comment.id,
+                content.body.as_deref().unwrap_or_default(),
+                true,
+                created_at,
             )
             .await?;
         }
@@ -540,6 +677,16 @@ pub async fn stage_pending(
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     Ok(())
+}
+
+/// A content record's canonical license string. Declaration is mandatory
+/// at authoring time (platform-guidelines.md §5), so a content record
+/// reaching promotion without one is a broken record — not a
+/// public-domain one, which is a choice only its author can make.
+fn record_license(body: &common::l1::handshake::StructuralBody) -> Result<&str, ContentError> {
+    body.license
+        .as_deref()
+        .ok_or_else(|| ContentError::Internal("content record without license qualifiers".into()))
 }
 
 /// A genesis Review's parent as the display store names it — the A leg's
@@ -567,24 +714,30 @@ async fn comment_parent(
 
 /// Confirm-side promotion (architecture.md "The write path" step 5):
 /// for every landed content record, move the payload into permanent
-/// carriage and drop the display rows' pending mark. Failures log and
-/// leave the record un-promoted — the mirror governs, and a later
-/// rebuild can re-run promotion; nothing is silently dropped.
-pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
+/// carriage and drop the display rows' pending mark. A failure leaves
+/// the record un-promoted — the mirror governs, and a later rebuild can
+/// re-run promotion — and is returned rather than swallowed, so the
+/// ingestion pass reports what did not follow.
+pub async fn land_promoted(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Vec<PromotionFailure> {
+    let mut failures = Vec::new();
     for write in promoted {
         let family = match common::l1::census::Family::parse(&write.family) {
             Some(f @ (Family::Publish | Family::Review)) => f,
             _ => continue,
         };
         if let Err(e) = land_one(pool, write, family).await {
-            tracing::error!(
-                staged = %write.id,
-                act = %write.act_id,
-                error = %e,
-                "content promotion failed; record remains unpromoted"
-            );
+            failures.push(PromotionFailure {
+                stage: "content",
+                staged: write.id,
+                act_id: write.act_id.clone(),
+                error: e.to_string(),
+            });
         }
     }
+    failures
 }
 
 async fn land_one(
@@ -646,6 +799,7 @@ async fn land_one(
                     content.node,
                     write.actor_id,
                     &target,
+                    record_license(body)?,
                     Some(order),
                     created_at,
                     clear_to_null(&content.title),
@@ -660,18 +814,12 @@ async fn land_one(
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
             if !content_store::land_post_version(&mut tx, post.id, created_at).await? {
-                // Copy-forward merge: the newest version row alone renders
-                // the post (data-model.md "Display-content versioning");
-                // present-and-empty clears, absent keeps.
-                let title = merge_optional(&content.title, &post.title);
-                let description = merge_optional(&content.description, &post.description);
-                let body_text = content.body.clone().unwrap_or(post.content);
                 content_store::insert_post_version(
                     &mut tx,
                     post.id,
-                    title.as_deref(),
-                    description.as_deref(),
-                    &body_text,
+                    clear_to_null(&content.title),
+                    clear_to_null(&content.description),
+                    content.body.as_deref().unwrap_or_default(),
                     false,
                     created_at,
                 )
@@ -690,6 +838,7 @@ async fn land_one(
                     target_type,
                     write.actor_id,
                     &target,
+                    record_license(body)?,
                     Some(order),
                     created_at,
                     content.body.as_deref().unwrap_or_default(),
@@ -704,9 +853,12 @@ async fn land_one(
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
             if !content_store::land_comment_version(&mut tx, comment.id, created_at).await? {
-                let body_text = content.body.clone().unwrap_or(comment.content);
                 content_store::insert_comment_version(
-                    &mut tx, comment.id, &body_text, false, created_at,
+                    &mut tx,
+                    comment.id,
+                    content.body.as_deref().unwrap_or_default(),
+                    false,
+                    created_at,
                 )
                 .await?;
             }
@@ -719,18 +871,8 @@ async fn land_one(
     Ok(())
 }
 
-/// A create's optional display field: present-and-empty stores NULL
-/// (nothing was ever set), text stores itself.
+/// A snapshot's optional display field: absent or empty stores NULL,
+/// text stores itself.
 fn clear_to_null(field: &Option<String>) -> Option<&str> {
     field.as_deref().filter(|s| !s.is_empty())
-}
-
-/// An edit's optional display field against the current version:
-/// absent keeps, empty clears to NULL, text replaces.
-fn merge_optional(edit: &Option<String>, current: &Option<String>) -> Option<String> {
-    match edit {
-        None => current.clone(),
-        Some(s) if s.is_empty() => None,
-        Some(s) => Some(s.clone()),
-    }
 }
