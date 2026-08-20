@@ -15,11 +15,16 @@ function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
 
+function landing(pending = false) {
+  return { __typename: "Landing", state: pending ? "PENDING" : "LANDED" };
+}
+
 type FixtureComment = {
   id: string;
   body: string;
   authorId?: string;
   edited?: boolean;
+  pending?: boolean;
   replies?: FixtureComment[];
   repliesHaveMore?: boolean;
 };
@@ -37,6 +42,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     },
     createdAt: "2026-08-12T10:05:00Z",
     updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
+    landing: landing(comment.pending),
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, oversight: 0 },
     ...(withReplies
@@ -65,6 +71,7 @@ function detail(
     hasNextPage: false,
     endCursor: null,
   },
+  postPending = false,
 ) {
   return {
     post: {
@@ -81,8 +88,9 @@ function detail(
       },
       createdAt: "2026-08-12T10:00:00Z",
       updatedAt: "2026-08-12T10:00:00Z",
+      landing: landing(postPending),
       moderationStatus: "NORMAL",
-    license: { __typename: "License", attribution: 0, oversight: 0 },
+      license: { __typename: "License", attribution: 0, oversight: 0 },
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -121,6 +129,43 @@ describe("PostView", () => {
     expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
+  });
+
+  // The quiet marker in design.md §9's register: the content reads in
+  // full either way, and only its place in the order is unsettled.
+  it("marks a pending post and a pending comment, leaving landed ones unmarked", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail(
+            "u1",
+            [
+              { id: "c1", body: "Just signed", pending: true },
+              { id: "c2", body: "Long landed" },
+            ],
+            { hasNextPage: false, endCursor: null },
+            true,
+          ),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-pending")).toHaveTextContent("Still settling");
+    expect(screen.getByTestId("comment-pending-c1")).toHaveTextContent("Still settling");
+    expect(screen.queryByTestId("comment-pending-c2")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+    expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("Just signed");
+  });
+
+  it("leaves a landed post unmarked", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-title")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-pending")).not.toBeInTheDocument();
   });
 
   // Enforcement inside CoGra reduces to honest display
@@ -220,6 +265,55 @@ describe("PostView", () => {
       }),
     );
     expect(screen.getByTestId("comment-draft")).toHaveValue("");
+  });
+
+  // The signed comment is content already, so the author finds it in
+  // the thread under its marker instead of being sent off to refresh.
+  it("re-reads the thread after signing so the author sees their pending comment", async () => {
+    let reads = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data:
+            reads === 1
+              ? detail("u1", [])
+              : detail("u1", [{ id: "c9", body: "Nice one", pending: true }]),
+        });
+      }),
+      graphql.mutation("PrepareComment", () =>
+        HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c9",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(await screen.findByTestId("comment-draft"), {
+      target: { value: "Nice one" },
+    });
+    fireEvent.click(screen.getByTestId("comment-submit"));
+
+    expect(await screen.findByTestId("post-comment-c9")).toHaveTextContent("Nice one");
+    expect(screen.getByTestId("comment-pending-c9")).toHaveTextContent("Still settling");
+    expect(reads).toBe(2);
   });
 
   it("tells a keyless browser to restore a pending comment, not to wait", async () => {

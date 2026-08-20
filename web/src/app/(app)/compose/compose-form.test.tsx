@@ -163,6 +163,7 @@ describe("ComposeForm", () => {
               author: { __typename: "User", id: "u1", handle: "alice" },
               createdAt: "2026-08-12T10:00:00Z",
               updatedAt: "2026-08-12T10:00:00Z",
+              landing: { __typename: "Landing", state: "LANDED" },
               moderationStatus: "NORMAL",
               license: { __typename: "License", attribution: 0, oversight: 0 },
               comments: {
