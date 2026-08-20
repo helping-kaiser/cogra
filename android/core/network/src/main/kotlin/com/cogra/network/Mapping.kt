@@ -27,7 +27,6 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ModeratedField
-import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
@@ -44,7 +43,6 @@ import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
 import com.cogra.network.graphql.type.LicenseInput
-import com.cogra.network.graphql.type.Oversight
 import com.cogra.network.graphql.type.RecordFamily
 import com.cogra.network.graphql.type.StagedWriteState
 import java.util.Base64
@@ -184,6 +182,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
+    license = LicenseChoice(license.attribution, license.oversight),
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -192,13 +191,10 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     author = author?.let { ActorRef(it.id, it.handle, it.displayName.value) },
     createdAt = createdAt,
     updatedAt = updatedAt,
+    license = LicenseChoice(license.attribution, license.oversight),
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
-    attributionRequired = attributionRequired,
-    oversight = when (oversight) {
-        OversightChoice.NONE -> Oversight.NONE
-        OversightChoice.CONDITIONAL -> Oversight.CONDITIONAL
-        OversightChoice.FULL -> Oversight.FULL
-    },
+    attribution = attribution,
+    oversight = oversight,
 )
