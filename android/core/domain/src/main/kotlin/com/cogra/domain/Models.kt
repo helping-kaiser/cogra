@@ -211,6 +211,37 @@ data class ModeratedField(
     val status: FieldStatus,
 )
 
+/**
+ * Where a node stands relative to L1 finality (substrate.md §6).
+ * PENDING is real content whose place in the order is not yet fixed;
+ * LANDED is ordered fact. UNKNOWN is the forward-compatible fallback —
+ * a state this build cannot name is never presented as pending.
+ */
+enum class LandingState {
+    PENDING,
+    LANDED,
+    UNKNOWN,
+}
+
+/**
+ * A node's landing position. `epoch` is the graph's own clock and is
+ * null exactly while `state` is PENDING — a pending write has no causal
+ * key yet (api-spec.md "Identity and actor interfaces").
+ */
+data class Landing(
+    val state: LandingState,
+    val epoch: Int? = null,
+) {
+    /** Drives the quiet "still settling" marker (design.md §9). */
+    val isPending: Boolean get() = state == LandingState.PENDING
+
+    companion object {
+        val Pending = Landing(LandingState.PENDING, null)
+
+        fun landed(epoch: Int) = Landing(LandingState.LANDED, epoch)
+    }
+}
+
 /** One post with its current display version. */
 data class PostView(
     val id: String,
@@ -221,6 +252,8 @@ data class PostView(
     val author: ActorRef?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** Where this post stands relative to L1 finality. */
+    val landing: Landing,
     /** The qualifiers the minting Publish record carried. */
     val license: LicenseChoice,
 )
@@ -232,6 +265,8 @@ data class CommentView(
     val author: ActorRef?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** Where this comment stands relative to L1 finality. */
+    val landing: Landing,
     /** The qualifiers the minting Review record carried. */
     val license: LicenseChoice,
     /**

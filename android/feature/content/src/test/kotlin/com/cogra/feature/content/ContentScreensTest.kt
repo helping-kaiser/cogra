@@ -15,6 +15,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import com.cogra.domain.Landing
+import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
@@ -60,6 +62,39 @@ class ContentScreensTest {
     fun anEmptyFeedShowsTheEmptyCopy() {
         renderFeed(FeedUiState(loading = false))
         compose.onNodeWithTag("feed_empty").assertExists()
+    }
+
+    // Pending content shows in full — nothing greyed out or held back —
+    // beside a quiet marker saying its place in the order is not yet
+    // fixed (design.md §9).
+    @Test
+    fun aPendingPostCarriesTheSettlingMarker() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1", landing = Landing.Pending),
+                    testPost("p2", landing = Landing.landed(4)),
+                ),
+            ),
+        )
+        // The card is one click target, so it merges its children's
+        // semantics — the marker is read out as part of the card and is
+        // only addressable on its own in the unmerged tree.
+        compose.onNodeWithTag("feed_post_pending_p1", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed_post_pending_p2", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun anUnnamedLandingStateIsNotPresentedAsPending() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1", landing = Landing(LandingState.UNKNOWN, null))),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_pending_p1", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -389,6 +424,39 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_body").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
+    }
+
+    // Landing is per node: a landed post can carry a comment that is
+    // still settling, and the marker follows the node it belongs to.
+    @Test
+    fun theSettlingMarkerFollowsTheNodeThatIsPending() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1", landing = Landing.landed(2)),
+                comments = listOf(
+                    testComment("c1", landing = Landing.Pending),
+                    testComment("c2", landing = Landing.landed(2)),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_pending").assertDoesNotExist()
+        compose.onNodeWithTag("comment_pending_c1").assertExists()
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("comment_pending_c2").assertDoesNotExist()
+    }
+
+    @Test
+    fun aPendingPostIsMarkedOnItsDetail() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1", landing = Landing.Pending),
+                comments = emptyList(),
+            ),
+        )
+        compose.onNodeWithTag("detail_pending").assertExists()
+        compose.onNodeWithTag("detail_body").assertExists()
     }
 
     // Enforcement inside CoGra reduces to honest display

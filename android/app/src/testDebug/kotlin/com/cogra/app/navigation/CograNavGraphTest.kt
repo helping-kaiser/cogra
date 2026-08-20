@@ -221,6 +221,52 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
     }
 
+    // Content exists at authoring, not at landing (substrate.md §6), so
+    // a signed post has somewhere to go: its own detail, where the
+    // settling marker sits on it.
+    @Test
+    fun aSignedPostOpensOnItsOwnDetail() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.preparedNode = "p-new"
+        content.details["p-new"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost(
+                "p-new",
+                landing = com.cogra.domain.Landing.Pending,
+            ),
+            comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
+        )
+        render()
+        waitForTag("bar_compose")
+        compose.onNodeWithTag("bar_compose").performClick()
+        waitForTag("compose_body")
+        compose.onNodeWithTag("compose_body").performTextInput("Something new")
+        compose.onNodeWithTag("compose_submit").performScrollTo().performClick()
+
+        // Settle first, and surface a composer-side refusal as itself
+        // rather than as a timeout on a screen that never changed.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>() != true ||
+                compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes().isNotEmpty()
+        }
+        assertThat(compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes()).isEmpty()
+
+        waitForTag("detail_body")
+        compose.onNodeWithTag("detail_pending").assertExists()
+        val entry = navController.currentBackStackEntry
+        assertThat(entry?.destination?.hasRoute<PostDetail>()).isTrue()
+        assertThat(entry?.toRoute<PostDetail>()?.postId).isEqualTo("p-new")
+
+        // The composer left the stack: back returns to the reading
+        // context that launched it, not to a spent form.
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
     @Test
     fun theBottomBarSwitchesToTheProfileTab() {
         signIn()

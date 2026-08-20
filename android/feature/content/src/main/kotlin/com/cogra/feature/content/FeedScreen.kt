@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
@@ -288,6 +289,9 @@ private fun PostCard(post: PostView, onClick: () -> Unit, onOpenActor: (String) 
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            if (post.landing.isPending) {
+                PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
         }
     }
