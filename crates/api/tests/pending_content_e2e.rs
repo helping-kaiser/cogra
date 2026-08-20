@@ -756,7 +756,7 @@ async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
         .gql(
             Some(&token),
             PREPARE_POST_EDIT,
-            json!({ "input": { "id": post_id, "title": "New title" }}),
+            json!({ "input": { "id": post_id, "title": "New title", "content": "Old body" }}),
         )
         .await;
     rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
@@ -856,7 +856,7 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
         .gql(
             Some(&token),
             PREPARE_POST_EDIT,
-            json!({ "input": { "id": post_id, "title": "New title" }}),
+            json!({ "input": { "id": post_id, "title": "New title", "content": "Old body" }}),
         )
         .await;
     assert_eq!(
@@ -876,7 +876,7 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
 
     // An edit is a record, and a prepared record is its author's content
     // from the moment they sign it: the new title is on screen at once,
-    // the node reads pending, and the untouched body copied forward.
+    // the node reads pending, and the body reads as the snapshot has it.
     let pending = rig.gql(None, READ, json!({ "id": post_id })).await;
     assert_eq!(pending["post"]["title"]["value"], "New title");
     assert_eq!(pending["post"]["content"]["value"], "Old body");
@@ -949,7 +949,7 @@ async fn an_expired_edit_leaves_the_previous_version_rendered(pool: PgPool) {
         .gql(
             Some(&token),
             PREPARE_POST_EDIT,
-            json!({ "input": { "id": post_id, "title": "Doomed title" }}),
+            json!({ "input": { "id": post_id, "title": "Doomed title", "content": "Old body" }}),
         )
         .await;
     rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])

@@ -903,7 +903,8 @@ type Collective implements Node & Actor {
 "Text and/or media authored by an actor — the primary public
  surface and the canonical feed-ranking target. Minted by a Publish
  record; edits are ordinary-role Publish + payload records at
- attachment 0, read by the chain-ordered per-field fold
+ attachment 0, read by the chain-ordered fold — the newest
+ record's payload is the whole content state
  (substrate.md §9, post.md §4)."
 type Post implements Node {
   "Optional title / headline."
@@ -2403,16 +2404,15 @@ input PreparePostInput {
 }
 
 "Edit a Post — stages one ordinary-role Publish + payload record
- at attachment 0 carrying the new values for the supplied fields;
- omitted fields are untouched (newest-wins fold per field). A
- supplied gallery is the full intended arrangement. Only the
- eligible author's edit is prepared. New tags or citations are
- their own gestures, not edit fields."
+ at attachment 0 carrying the Post's complete new content state;
+ an omitted title, description, or gallery is a Post without one.
+ Only the eligible author's edit is prepared. New tags or
+ citations are their own gestures, not edit fields."
 input PreparePostEditInput {
   id: UUID!
   title: String
   description: String
-  content: String
+  content: String!
   attachments: [AttachmentInput!]
 }
 
@@ -2434,7 +2434,7 @@ input PrepareCommentInput {
 
 input PrepareCommentEditInput {
   id: UUID!
-  content: String
+  content: String!
   attachments: [AttachmentInput!]
 }
 
@@ -2489,10 +2489,12 @@ extend type Mutation {
 }
 ```
 
-An edit input's optional text fields ride three-valued: omitted =
-untouched, explicit null = cleared, a value = replaced — the wire
-form of the per-field newest-wins fold. `isCover` applies to post
-galleries only; comment galleries ignore it.
+A content edit input carries the whole content state, so its
+optional text fields are two-valued: a value renders, omitted or
+null renders as nothing. A profile update's fields ride
+three-valued — omitted = untouched, explicit null = cleared, a
+value = replaced. `isCover` applies to post galleries only;
+comment galleries ignore it.
 
 A media gallery on a create/edit input is the **full intended
 gallery** for that write: the new current arrangement, referencing
