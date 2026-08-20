@@ -102,11 +102,11 @@ epoch write set becomes the next public edge set — six rule groups:
   endpoints (`def:graph:registration`);
 - **(final state)** the proposed completed edge set and final post-debit
   balance/count pairs (`def:epoch:proposed-final-act-state`);
-- **(staged standing)** the complete staged standing package — the relation
-  multigraph, relation coefficients, wall-clamped activation, the exact
-  depth-two envelope anchor, and the certified depth-three and depth-four
-  stages (`def:network:staged-standing-package`) — which feeds W2a/W2b
-  through the published final standing and stamps;
+- **(conserved standing)** the complete conserved standing package — fold
+  cells and their coefficients, the base allocation matrix, wall-clamped
+  activation, the accepted tilt rung, source emission, and the certified
+  equilibrium (`def:network:conserved-standing-package`) — which feeds
+  W2a/W2b through the published final standing and stamps;
 - **(final gates)** the write rule: **W1** solvency (debited)
   $b_i \ge \theta^{(k)}$, **W2a** individual final safety
   $\rho_{\text{act}}(q) \ge \rho_\theta$, **W2b** the averaged epoch door
@@ -289,7 +289,7 @@ host-cached values, because standing no longer consumes them
 (`rem:epoch:shared-raw-edge-primitive`, `def:epoch:damped-edge-weight`);
 and the raw-traversal **precision clip is deleted** — Layer 1 publishes no
 raw pruning tolerance ($\epsilon_{\text{clip}}$ has no successor;
-`rem:sorting:raw-pruning-is-implementation`, `rem:epoch:admission-not-clipping`).
+`rem:sorting:raw-pruning-is-implementation`).
 
 Note: the payload **projection / bytes** are terminal by postulate — no
 closure quantity reads them (removable-projection invariance), so they are
@@ -562,9 +562,11 @@ formation, package validity, or the epoch target;
 | $m_\theta$ | $5/4$ (chartered margin factor; one dial read four ways) | `def:epoch:safety-threshold` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** act budget, denominated in accepted authored acts; not yet locked) | `def:epoch:epoch-act-budget` |
 | $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer; not yet locked) | `post:epoch:final-edge-set` |
-| $L_{\text{vch}}$ | 4 (projected vouch depth, in complete person-vouch acts) | `def:epoch:projected-vouch-depth` |
+| $L_{\text{hop}}$ | 4 (chartered transport depth, in hops of the conserved transport) | `def:epoch:standing-depth-mass` |
+| $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
-| stage screens $\mathcal{K}^{[h]}_{\text{row}}$ | $\le h/(4 m_\theta)$: **0.4 / 0.6 / 0.8** for $h = 2, 3, 4$ (exact at $m_\theta = 5/4$) | `subsec:verification:reference-constants` |
+| $\kappa_{\text{self}}$, $\omega_D$ | unity (self-retention base and every published domain weight; reference values pending the calibration lock) | `tbl:epoch:standing-domain-weights` |
+| certificate screen $\mathcal{K}_k$ | a rung is accepted iff $m_\theta\,\mathcal{K}_k \le 1$; the anchor $t_k = 0$ always certifies | `def:dynamics:conserved-standing-certificate` |
 | $M_{\text{payload}}$ | deployment-calibrated; **per act, aggregate over a hyper-edge's projections** | `def:graph:act-payload-projection` |
 
 Canonical raw defaults and derived raw constants (terminal formulas,
@@ -660,7 +662,7 @@ one $\theta$-debit, competes under W1/W2a/W2b, consumes epoch write
 capacity, and receives the same final stamp as every other same-author act
 — **no special Registration branch and no live-value newcomer formula**. A
 candidate actor has prior count zero; with no relational flow its stamp is
-its own source rate (`cor:epoch:zero-relational-row`), and a current
+its own source rate (`prop:epoch:final-standing-embedding`), and a current
 high-rate external vouch may lift it under the ordinary hull. **Same-epoch
 topology creates no source** (`cor:epoch:same-epoch-source-hull`): a
 same-epoch cohort whose source rates all lie below $\rho_\theta$ cannot
@@ -1623,7 +1625,7 @@ Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
 De-invite/T → de-invitee's Profile. Reference is trait-independent on both
 ends: its A-leg sources from any passive citing artifact, and its T-leg
 targets any existing passive node, including a Profile, never an Actor
-(`rem:nodes:reference-author-weight`).
+(`rem:nodes:reference-author-allocation`).
 
 **Reviews are commentary, never state (`rem:graph:reviews-commentary`).**
 Every passive node type implements Reviewable: anything that exists in the
@@ -1635,7 +1637,7 @@ standing-designated person-vouch family, and no raw Review leg or
 Review-created Comment can lend upstream standing to a third party's later
 Reference — a later Reference is evaluated as its own complete act, through
 its own author (`def:graph:act-edge-projection`,
-`rem:graph:grounded-target-does-not-imply-vouch`). Commentary thus stays
+`rem:graph:grounded-target-does-not-imply-allocation`). Commentary thus stays
 available to feed, CAN, and terminal guild policies without becoming a
 standing conduit.
 
@@ -1822,7 +1824,7 @@ names them /A and /T.)
 | **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
 | **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the standing projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is the protocol act (§8.2); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
-| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches standing semantics: a Reference whose semantic target is **not** a Profile is **standing-inert** (still read by feed, raw signed traversal, CAN, provenance, terminal policy); a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ folds into one author-owned person-vouch relation $a \to i$, reaching a source $u$ only through $u$'s depth-two envelope of its **author** — the artifact supplies context, no transferable standing, and incoming weight on it never enters the T-leg (§11.4, `rem:epoch:complete-hyper-vouches`); self-reference is excluded by the compiler; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-weight`, `def:nodes:standing-role-census`) |
+| Reference | Actor → Passive(artifact) → Passive(target) | Epistemic $(0,1,0,1)$ M / Tribal $(1,1,1,1)$ F | enthusiasm $e \in [-1,1]$, effort $f \in [-1,1]$; A: $p_d = f, p_i = e$; T: $p_d = e, p_i = f$. Review with its legs transposed; **mints nothing** — both endpoints of the T-leg are pre-existing nodes: the citing artifact is any passive node, the target any passive node including a Profile, never an Actor. The strong Tribal leg carries the citation itself; the weak Epistemic leg carries authorship. Commentary, never state (`rem:graph:reviews-commentary`); census sibling is Tag. Target class switches the allocation destination: a **complete** Reference whose T-leg targets Profile$_i$ with strictly-positive folded $(e, f)$ resolves its fold cell to Actor $i$; every other Reference resolves to its author's self-retention channel — weighed and priced either way, but reaching no one else (still read by feed, raw signed traversal, CAN, provenance, terminal policy). The artifact supplies context, never transferable standing: incoming weight on the citing artifact enters no cell (§11.3, `def:epoch:standing-recipient-resolution`). Self-reference resolves home; withdrawal is per-leg net stance (`edge:nodes:hyper-reference`, `rem:nodes:reference-author-allocation`) |
 
 There is no combined Actor → Actor → Chat request edge: joining is the binary
 Join Request (Actor → Chat), and inviting is the Invitation hyper-edge (Chat
