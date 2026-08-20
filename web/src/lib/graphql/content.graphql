@@ -134,6 +134,10 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
     createdAt
     updatedAt
     moderationStatus
+    license {
+      attribution
+      oversight
+    }
     comments(first: $commentsFirst, after: $commentsAfter) {
       edges {
         node {
@@ -152,6 +156,10 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
           createdAt
           updatedAt
           moderationStatus
+          license {
+            attribution
+            oversight
+          }
           replies(first: $repliesFirst) {
             edges {
               node {
@@ -170,6 +178,10 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
                 createdAt
                 updatedAt
                 moderationStatus
+                license {
+                  attribution
+                  oversight
+                }
               }
             }
             pageInfo {
@@ -210,6 +222,10 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
           createdAt
           updatedAt
           moderationStatus
+          license {
+            attribution
+            oversight
+          }
           replies(first: $repliesFirst) {
             edges {
               node {
@@ -228,6 +244,10 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
                 createdAt
                 updatedAt
                 moderationStatus
+                license {
+                  attribution
+                  oversight
+                }
               }
             }
             pageInfo {

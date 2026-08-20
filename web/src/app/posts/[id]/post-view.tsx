@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { Oversight } from "@/__generated__/graphql";
+import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchCommentReplies,
   fetchPostDetail,
@@ -29,6 +29,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
@@ -85,8 +86,7 @@ export function PostView({
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
 
   const [draft, setDraft] = useState("");
-  const [attributionRequired, setAttributionRequired] = useState(false);
-  const [oversight, setOversight] = useState<Oversight>("NONE");
+  const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
   const [submitting, setSubmitting] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
   const [signIncomplete, setSignIncomplete] = useState(false);
@@ -197,7 +197,7 @@ export function PostView({
       prepareComment(client, {
         target: postId,
         content: draft,
-        license: { attributionRequired, oversight },
+        license,
       }),
     );
     if (prepared.kind === "refused") {
@@ -251,7 +251,7 @@ export function PostView({
       prepareComment(client, {
         target: replyingTo,
         content: replyDraft,
-        license: { attributionRequired, oversight },
+        license,
       }),
     );
     if (prepared.kind !== "success") {
@@ -393,6 +393,10 @@ export function PostView({
           ) : (
             <>
               <p className="text-body-medium">{comment.content.value}</p>
+              <LicenseTerms
+                license={comment.license}
+                testId={`comment-license-terms-${comment.id}`}
+              />
               {/* The soft marker, friendly not forensic (design.md §9). */}
               {edited && (
                 <p
@@ -526,6 +530,7 @@ export function PostView({
           testId="post-author"
         />
       )}
+      <LicenseTerms license={post.license} testId="post-license-terms" />
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
@@ -585,40 +590,7 @@ export function PostView({
             rows={3}
             className="rounded-extra-small border border-outline p-2"
           />
-          <fieldset className="flex flex-wrap items-center gap-3 text-body-medium" data-testid="comment-license">
-            <legend className="sr-only">License</legend>
-            <label className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                data-testid="comment-license-attribution"
-                className="accent-primary"
-                checked={attributionRequired}
-                onChange={(event) => setAttributionRequired(event.target.checked)}
-              />
-              Require attribution
-            </label>
-            <span aria-hidden>·</span>
-            <div
-              className="flex items-center gap-2"
-              role="radiogroup"
-              aria-label="Require AI disclosure"
-            >
-              <span>Require AI disclosure</span>
-              {(["NONE", "CONDITIONAL", "FULL"] as const).map((value) => (
-                <label key={value} className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="comment-oversight"
-                    className="accent-primary"
-                    data-testid={`comment-oversight-${value.toLowerCase()}`}
-                    checked={oversight === value}
-                    onChange={() => setOversight(value)}
-                  />
-                  {value === "NONE" ? "None" : value === "CONDITIONAL" ? "On request" : "Full chain"}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <LicenseChooser value={license} onChange={setLicense} testIdPrefix="comment" />
           {refusedMessage && (
             <p role="alert" data-testid="comment-refused" className="text-body-medium text-error">
               {refusedMessage}
