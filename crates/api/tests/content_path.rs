@@ -6,8 +6,7 @@
 //! eligibility, serialization, and unknown targets.
 
 use api::content::{
-    self, CommentDraft, CommentEditDraft, ContentError, License, Oversight, PostDraft,
-    PostEditDraft,
+    self, CommentDraft, CommentEditDraft, ContentError, License, PostDraft, PostEditDraft,
 };
 use api::l1::{L1Boundary, StandInBoundary};
 use common::envelope::CograContent;
@@ -31,8 +30,8 @@ const GC: i64 = 8;
 
 fn license() -> License {
     License {
-        attribution: true,
-        oversight: Oversight::None,
+        attribution: 1.0,
+        oversight: 0.0,
     }
 }
 

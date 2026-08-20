@@ -5,7 +5,6 @@ import com.cogra.crypto.Family
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.OversightChoice
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
@@ -109,8 +108,7 @@ class ComposePostViewModelTest {
         val vm = viewModel()
         vm.onTitleChange("A title")
         vm.onBodyChange("The body")
-        vm.onAttributionChange(true)
-        vm.onOversightChange(OversightChoice.CONDITIONAL)
+        vm.onLicenseChange(LicenseChoice(attribution = 1.0, oversight = 0.5))
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -119,7 +117,7 @@ class ComposePostViewModelTest {
             "A title",
             null,
             "The body",
-            LicenseChoice(attributionRequired = true, oversight = OversightChoice.CONDITIONAL),
+            LicenseChoice(attribution = 1.0, oversight = 0.5),
         ).inOrder()
     }
 

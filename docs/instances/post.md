@@ -39,9 +39,10 @@ The Publish record carries:
   ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)) —
   headroom stays for deliberately strong attachment; the default
   is a fallback, never the recommendation.
-- **License qualifiers.** Attribution `attr ∈ {0, 1}` and
-  oversight `o ∈ {0, 0.5, 1}` — `attr` here, keeping the symbol
-  apart from the attachment parameter `a` above — are structural
+- **License qualifiers.** Attribution and oversight, each a
+  degree on `[0, 1]` — written `attr` and `o` here, keeping the
+  attribution symbol apart from the attachment parameter `a`
+  above — are structural
   metadata of the Publish record — declared at authoring time
   (mandatory in every content-creation flow), immutable
   thereafter, out of reach of any edit. CoGra publishes them as

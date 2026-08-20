@@ -55,6 +55,7 @@ function post(id: string, title: string) {
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
     moderationStatus: "NORMAL",
+    license: { __typename: "License", attribution: 0, oversight: 0 },
   };
 }
 
