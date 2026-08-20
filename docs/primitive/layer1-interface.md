@@ -2401,42 +2401,81 @@ one traversal (`rem:dynamics:standing-feed-separation`).
 
 ### 11.5 Final standing
 
+**Conserved standing map and equilibrium
+(`def:epoch:conserved-standing-map`,
+`def:epoch:conserved-standing-equilibrium`).** The current-epoch standing map
+is the transported pair mediant over the reduced source rates
+$\hat{r}_u = b_u^{(k)}/(\nu\,N_u^{(k)})$, and the epoch's standing state is
+its fixed point $\boldsymbol{x}^*$ on the rate-hull box $\mathcal{B}_k$,
+solved once, in the current epoch, from the completed final state.
+
 **Final epoch standing (`def:epoch:final-standing`,
-`eq:epoch:final-standing-mediant`)** — the stage-$h^*_k$ equilibrium
-coordinate and its numéraire scaling,
-$\hat{\alpha}_i^{(k)} = x^{[h^*_k]}_i$, $\alpha_i^{(k)} = \nu\,
-\hat{\alpha}_i^{(k)}$; because the stage map is a mediant of the certified
-flows, this equals the exact post-debit balance/count **weighted mediant**:
+`eq:epoch:final-standing-mediant`)** — that equilibrium coordinate and its
+numéraire scaling, $\hat{\alpha}_i^{(k)} = x^*_i$, $\alpha_i^{(k)} = \nu\,
+\hat{\alpha}_i^{(k)}$; because the conserved map is a mediant of the
+transported pairs, this equals the exact post-debit balance/count **weighted
+mediant**:
 
-$$\alpha_i^{(k)} = \dfrac{b_i^{(k)} + \sum_{u \neq i} W_{\text{end}}^{(k)}(u \to i) \cdot b_u^{(k)}}{\max(N_i^{(k)}, 1) + \sum_{u \neq i} W_{\text{end}}^{(k)}(u \to i) \cdot N_u^{(k)}}$$
+$$\alpha_i^{(k)} = \dfrac{\sum_u \Pi_{ui}\, b_u^{(k)}}{\sum_u \Pi_{ui}\, N_u^{(k)}} = \dfrac{\tilde{b}_i}{\tilde{N}_i}$$
 
-Every contributing source has $N_u^{(k)} \ge 1$ (authoring a person-vouch
-requires an accepted act); the $\max(\cdot,1)$ guard belongs only to the
-target's own coordinate. **Reduction theorem:** under uniform contributing
-action counts the mediant reduces exactly to the rate-weighted DeGroot
-average — the mediant is the normative formula, DeGroot the reduction.
-**Vouching is rival per target:** an endorser's action mass rides in every
-denominator it enters. Recomputed at each boundary from the completed
-final state and published in the certificate; consumed downstream as a
-fixed external scalar. Standing is the straddler: binding where the write
-rule reads it (through the stamps), terminal where downstream read-sites
-read it.
+The sums run over **all** sources, Actor $i$ included: every row of the
+transport carries a self column, so $i$'s own pair enters its own mediant
+through $\Pi_{ii} > 0$ rather than as a separate leading term. Every
+contributing source has $N_u^{(k)} \ge 1$ (Registration is an accepted act);
+the $\max(\cdot,1)$ guard belongs only to the published reduced rate and is
+never applied to a transporting source. **Reduction theorem:** under uniform
+contributing action counts the mediant reduces exactly to the rate-weighted
+DeGroot average — the mediant is the normative formula, DeGroot the
+reduction. **Allocation is rival per source:** a source's pair is apportioned
+across targets and self, never replicated, so what one recipient gains the
+siblings and the source's own retention lose. Recomputed at each boundary
+from the completed final state and published in the certificate; consumed
+downstream as a fixed external scalar. Standing is the straddler: binding
+where the write rule reads it (through the stamps), terminal where downstream
+read-sites read it.
 
-**Properties:** (1) bidirectional
-(`prop:epoch:final-standing-bidirectional-response`) —
-$\mathrm{sgn}(\partial\alpha_i/\partial W_{\text{end}}(u \to i)) =
-\mathrm{sgn}(r_u - \alpha_i)$: a higher-rate source lifts, a lower-rate
-source dilutes, and Layer 1 provides no target veto; (2) hull bound
-(`prop:epoch:final-standing-hull`) — $\alpha_i$ lies in the
-contributing-rate hull $[\min r, \max r]$ over the target's own rate and
-its positive-flow sources; (3) strong-embedding limit
-(`prop:epoch:final-standing-strong-embedding`) — as incoming admitted
-action mass dominates, $\alpha_i$ approaches the flow-weighted source
-average (dense-cluster fairness: the pooled leave-one-out burn-per-action
-of the support base, `rem:epoch:dense-cluster-fairness`); with zero
-relational flow, $\alpha_i = r_i$ exactly and the row certificate is zero
-(`cor:epoch:zero-relational-row` — whole-stage fallback and one-row
-zeroing are distinct).
+**Properties:** (1) bidirectional response
+(`prop:epoch:final-standing-response`) —
+$\mathrm{sgn}(\partial\alpha_i/\partial \Pi_{ui}) = \mathrm{sgn}(r_u -
+\alpha_i)$: a higher-rate source lifts, a lower-rate source dilutes, and
+Layer 1 provides no target veto
+(`rem:comparator:conserved-allocation-scope`); (2) hull bound
+(`prop:epoch:final-standing-hull`) — $\alpha_i$ lies in the transported-rate
+hull $[\min r_u, \max r_u]$ over the sources with $\Pi_{ui} > 0$, at every
+state of the solve and not merely at the fixed point, and that contributing
+set is fixed by the base scores and the ledger alone, so the hull is known
+before the solve begins; (3) strong-embedding limit
+(`prop:epoch:final-standing-embedding`) — as incoming transported action mass
+dominates the own pair, $\alpha_i$ approaches the transported-mass-weighted
+source average (dense-cluster fairness: the pooled leave-one-out
+burn-per-action of the support base, `rem:epoch:dense-cluster-fairness`);
+with zero relational flow, $\alpha_i = r_i$ exactly; (4) equal-rate
+invariance (`prop:epoch:equal-rate-standing-invariance`) — if every
+contributing source carries the same reduced rate, $\alpha_i$ is exactly that
+rate at every state, every rung, every profile and depth mass. A community of
+equal rate cannot lift itself, and no arrangement of regard inside it changes
+any member's standing.
+
+**The average standing of a closed cluster is its ledger
+(`post:epoch:cluster-rate-invariance`,
+`thm:epoch:closed-cluster-rate-identity`).** Call a set $S$ of Actors
+*closed* when $\mathsf{A}_{uj} = 0$ whenever exactly one of $u, j$ lies in
+$S$ — a property of the base matrix alone, checkable before the solve. Then
+the **transported-mass-weighted** mean standing of $S$ equals $\nu$ times its
+aggregate residual balance over its aggregate action mass, at every state of
+the solve. The weighting is mandatory: the identity holds for the
+$\tilde{N}_i$-weighted mean only, and any restatement that drops the weight
+is false. Standing transport within a closed community is purely
+distributive — no internal arrangement of regard, tilt, or transport may
+raise or lower what the community's ledger can back. Exact closure is a
+limit, not a field condition: a boundary carrying base-allocation weight at
+most $\varepsilon$ in each direction leaks proportionally to $\varepsilon$
+times the rate spread across it (`cor:epoch:cluster-rate-leakage`). This is
+also the criterion for admissibility: a rule that **deletes** pair mass
+detaches a cluster's mean from its ledger and is inadmissible; one that
+**relocates** unexported mass into its owner's own row preserves the identity
+verbatim, which is exactly what source emission does
+(`cor:epoch:conserving-source-root-criterion`).
 
 **Full-pair source transport is a current nonclaim
 (`rem:epoch:full-pair-source-transport`).** The mediant transports the
@@ -2455,10 +2494,15 @@ endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
 (capacity per reserve unit $= 1/\theta \approx 18.94$ at the chartered
-value): grip is rented, not owned. Griefing is bounded by the closed
-census, per-act pricing, the no-stacking envelope, and the certificate
-(`rem:epoch:griefing-resistance`); a low-rate source may still dilute a
-target within the rate hull — attributable and priced, not impossible.
+value): grip is rented, not owned. Amplification by multiplicity is closed by
+conservation rather than by any per-path rule — a source apportions one unit
+however many acts it authors, so additional acts redistribute that unit
+instead of adding to it. Griefing is bounded by four independent constraints
+(`rem:epoch:griefing-resistance`): only acts their author authored enter that
+author's row; every act is priced and count-dilutive; outward allocation is
+one conserved unit; and what a depleted history can export is bounded by what
+its author presently stakes. A low-rate source may still dilute a target
+within the rate hull — attributable and priced, not impossible.
 
 **Rate parking (`rem:epoch:rate-parking`):** a parked actor below the wall
 is **wall-clamped** — its projected activation fixed at the wall value with
@@ -2468,12 +2512,27 @@ activation while below the wall; each parked endorsement action still pays
 its $\theta$. Parking is priced, visible, wall-clamped — no longer a
 certificate hazard.
 
-Within the epoch, standing is a fixed-point solve, not an orbit: existence,
-uniqueness, and convergence on the declared boxes are certified per stage
-(`subsec:epoch:within-epoch-standing-solver`,
-`thm:dynamics:within-epoch-fixed-point-convergence`); the pre-Edition-4
-self-edge orbit apparatus is quarantined as non-normative
-(`subsec:dynamics:quarantined-residuals`).
+Within the epoch, standing is a fixed-point solve, not an orbit
+(`subsec:epoch:within-epoch-standing-solver`). The resolution is uniform
+rather than regional: the rate hull is invariant with no certificate at all
+(`thm:dynamics:conserved-standing-existence`); a valid certificate
+$\mathcal{K}_k$ makes the fixed point unique on it and every orbit converge
+geometrically (`thm:dynamics:certified-conserved-standing-uniqueness`,
+`thm:dynamics:within-epoch-fixed-point-convergence`); and the solution does
+not depend on where the solver started
+(`cor:dynamics:standing-initialization-independence`). The orbit and
+bifurcation apparatus of the earlier scalar regime is quarantined as
+non-normative (`subsec:dynamics:quarantined-residuals`).
+
+**Monotonicity in burn is claimed only at the anchor
+(`prop:epoch:no-tilt-commitment-monotonicity`).** At $t_k = 0$ the transport
+is state-independent and a burn raises the standing of everyone the burner's
+allocation reaches, including the burner. At $t_k > 0$ **no such claim is
+made**: the transport then depends on the state it is used to compute, and
+whether final standing is monotone in an underlying burn is open
+(`frontier:tilted-monotonicity`). Terminal reward monotonicity in the
+*published* standing input is a separate retained property and does not
+discharge this one.
 
 ### 11.6 Epoch boundary, the final act sequence, and the raw reading
 
