@@ -2,18 +2,16 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.23.2-dev, July 2026), reproducing its binding surface for the purpose
+> v0.24.4, August 2026), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.23.2-dev ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.23.2-dev_flat.tex`); its internal
-`\setversion` string still reads v0.23.0-dev — the filename edition is the
-one distributed, and it carries the **Edition 4** body rewrite (the
-authored-act ontology, the admission handshake, the authoritative act
-order, and the epoch-quantized staged standing refoundation). This
-reference draws two scopes from it:
+**Derived file — hard facts only.** v0.24.4 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.24.4_flat.tex`). It carries the **Edition 4**
+body rewrite (the authored-act ontology, the admission handshake, the
+authoritative act order) and the **Edition 5** refoundation of standing as
+one conserved allocation operator. This reference draws two scopes from it:
 
 - **The closure surface** — the binding material only: kernel record, the
   admission rules, closure quantities, the two straddlers, and the shared
@@ -129,11 +127,11 @@ values read — directly, through other values, **or through a binding
 validity predicate** — into any rule in $\mathcal{A}$. A value belongs to
 the closure not only when it appears arithmetically in W1/W2 or
 recognition, but also when its validity decides which value may appear
-there: the complete-act projection, the exact depth-two envelope, the
-depth-three/depth-four admission fractions, the stage equilibria, the
-declared stage boxes, and the stage row-certificate verdicts all lie in
-$\overline{\mathcal{A}}$ — they determine which certified stage, and
-therefore which final standing, reaches W2. A **proof transcript** is
+there: the complete-act fold, the base allocation matrix, the emission
+fractions, the accepted tilt rung, the declared hull box, and the
+certificate verdict all lie in $\overline{\mathcal{A}}$ — they determine
+which equilibrium, and therefore which final standing, reaches W2. A
+**proof transcript** is
 different: it is *evidence about* a binding value with no alternative
 arithmetic read-site — replacing a valid transcript with another proof of
 the same committed statement changes no standing. Transcripts are
@@ -157,12 +155,12 @@ Two laws make the predicate usable:
    straddle this way — the standing field $\alpha_i$ (read by the gate, and
    read again as the reward multiplier) and the title certificate
    $\mathrm{owner}^{(k)}$ (read by recognition clause (iii), and read again
-   by guild routing). The staged package contains many binding intermediate
-   values — the exact depth-two envelope, the D3/D4 selections, the stage
-   equilibria — but only the final standing field is a straddler; the
-   intermediate stages carry no independent terminal semantics.
+   by guild routing). The standing package contains many binding intermediate
+   values — the base allocation matrix, the emission fractions, the accepted
+   rung — but only the final standing field is a straddler; the intermediate
+   values carry no independent terminal semantics.
 2. **Recomputability is irrelevant to authority.** The standing field, the
-   title certificate, and the whole staged standing package are all
+   title certificate, and the whole conserved standing package are all
    recomputable from $E_k$ and the published constants, yet binding:
    recomputability sets *audit cost*, never *permission*. Audit rights do
    not become override rights.
@@ -191,9 +189,9 @@ audited but not authored (`rem:transport:guild-grant-preconditions`).
 **Boundary in one sentence.** The binding surface is the feedback closure
 of final-set admission: the accepted record set, the final post-debit
 ledger, the binding constants, the formation and recognition rules, the
-complete staged standing package, final standing and stamps, and the W1/W2
-validity verdicts. The exact depth-two envelope, the D3/D4 admission
-fractions, the stage equilibria, and the stage row-certificate verdicts are
+complete conserved standing package, final standing and stamps, and the
+W1/W2 validity verdicts. The base allocation matrix, the emission fractions,
+the accepted tilt rung, and the certificate verdict are
 binding because changing any of them may change final standing and
 therefore final-set admission. Everything else the network publishes is
 terminal. Permission is decided per read-site by a single question — *does
@@ -242,17 +240,17 @@ Shared mathematics (norms, delimiters, number sets) is tag-exempt.
 | recognition predicate (i)–(vi) | is admission | — | L1·closure | consume only |
 | formation rule (identifier algebra; endpoint typing; handshake) | is admission | — | L1·closure | consume only |
 | dependent-set partition | validity replay | guild dashboards | L1·verify | consume only; recompute to audit |
-| complete person-vouch compiler + projected standing graph (relation multigraph) | via projected standing → W2 | guild audit dashboards | L1·closure | consume only; recompute to audit |
-| per-author folds, inviter revocation, person-vouch compilation | via projected paths → standing → W2 | terminal authored-history displays | L1·closure | consume only |
-| relation coefficients $c(\xi)$, direct relation weights $W_{\text{rel}}$ | via source-relative paths → standing → W2 | guild audit/display | L1·closure | consume only |
-| projected target activations $\bar{g}_{\text{vch}}(x_i)$ | via every projected vouch edge | terminal diagnostics | L1·closure | consume only |
-| causal standing paths + source envelopes $W^{[h]}_{\text{env}}$ | via stage admission and final safe flow | terminal path diagnostics | L1·closure | consume only |
-| stage admission fractions $t_k^{[h]}$, admission schedule | via $W_{\text{end}}^{(k)}$ → standing → W2 | admission dashboards | L1·closure | consume only |
-| declared standing boxes, stage equilibria, path-incidence masses | standing-package validity | audit dashboards | L1·closure | consume only |
+| act-folding compiler + base allocation matrix $\mathsf{A}$ | via the transport → standing → W2 | guild audit dashboards | L1·closure | consume only; recompute to audit |
+| per-author folds, inviter revocation, recipient resolution | via the base matrix → standing → W2 | terminal authored-history displays | L1·closure | consume only |
+| cell coefficients $c(\xi)$, domain weights $\omega_D$, self-retention base $\kappa_{\text{self}}$ | via the base matrix → standing → W2 | guild audit/display | L1·closure | consume only |
+| recipient activations $\bar{g}_{\text{vch}}(x_j)$ | via every tilted allocation score | terminal diagnostics | L1·closure | consume only |
+| hop allocation matrices $\Lambda^{(r)}$, depth mass $\mathfrak{m}_m$ | via the conserved transport | terminal allocation diagnostics | L1·closure | consume only |
+| accepted tilt rung $t_k$, tilt profile $\upsilon_r(t_k)$ | via $\boldsymbol{\Pi}$ → standing → W2 | allocation dashboards | L1·closure | consume only |
+| declared hull box $\mathcal{B}_k$, equilibrium $\boldsymbol{x}^*$ | standing-package validity | audit dashboards | L1·closure | consume only |
 | residual balances $b_i$, action counts $N_i$ | source pairs of the standing mediant; W1 | ledger dashboards | L1·closure | consume only |
-| final safe flow $W_{\text{end}}^{(k)}(u \to i)$ | standing mediant → W2 | guild/readout diagnostics | L1·closure | consume only |
+| source emission $\mathfrak{e}_u$, transport entries $\Pi_{ui}$ | standing mediant → W2 | guild/readout diagnostics | L1·closure | consume only |
 | action + epoch stamps $\rho_{\text{act}}, \rho_{\text{ep}}$ | W2a / W2b | guild dashboards | L1·closure | consume only |
-| stage row certificate $\mathcal{K}^{[h]}_{\text{row}}$ + binding verdict | selects positive relational schedule vs fallback | guild dashboards | L1·closure | consume only; recompute to audit |
+| standing certificate $\mathcal{K}_k$ + binding verdict | selects the accepted tilt rung | guild dashboards | L1·closure | consume only; recompute to audit |
 | local width $W_{\text{loc}}$ | width fence + safety-threshold rule | guild dashboards | L1·closure | consume only; recompute to audit |
 | accepted interval boxes, path-incidence transcript, fixed-point residual reports | — (evidence for the committed package) | any verifier | L1·verify | consume only; replayable evidence |
 | attested boundary timestamp, closure cause | boundary-accountability replay | guild dashboards | L1·verify | consume only |
@@ -320,16 +318,25 @@ auditability. Only the structural record is L1·closure.
 > The host's cached raw $\tilde{w}(e)$, $\epsilon(e)$, and derived raw
 > constants are non-authoritative by-products.
 >
-> The grant does not include any component of the standing-update package:
-> the complete-act compiler, projected standing graph, selected standing
-> envelopes, admission fractions, standing box, row-certificate verdict,
-> final $W_{\text{end}}^{(k)}$, and $\alpha_i$ are binding and must be
-> consumed as published, though every participant may recompute them to
-> audit.
+> The grant does not include any component of the conserved standing package
+> (`def:network:conserved-standing-package`): the fold compiler and its
+> recipient resolution, the base allocation matrix, the tilt profile and the
+> accepted rung, the depth mass, source emission, the conserved transport
+> $\boldsymbol{\Pi}$, the rate hull box, the certificate verdict, and the
+> final $\alpha$ are binding and must be consumed as published, though every
+> participant may recompute them to audit.
+>
+> Conservation is what makes that list closed rather than arbitrary. Every
+> item above feeds a single row-stochastic operator, so a guild that
+> replaced any one of them would not merely publish a different number — it
+> would publish a different *total*, and one guild's regard would no longer
+> be rival against another's
+> (`post:epoch:standing-pair-mass-conservation`). The terminal complement is
+> safe to fork precisely because nothing in it is conserved.
 >
 > A guild MAY NOT override any value with a feedback read-site: the kernel
 > inputs (accepted edge set, binding constants, burn snapshot), the
-> admission rules, and the derived straddlers — the standing-update
+> admission rules, and the derived straddlers — the conserved standing
 > package with its relative-standing field $\alpha_i$ *as gate input* and
 > the title certificate $T^{(k)}$ — which it must consume as published. A
 > guild MAY still *recompute* any such value to audit it; recomputation is
@@ -338,7 +345,7 @@ auditability. Only the structural record is L1·closure.
 > Deviating from a terminal default forks only the deviating guild (loss
 > of composability); attempting to deviate from a binding value forks the
 > shared graph and is rejected. The binding surface is the accepted-state
-> kernel, admission rules, standing-update package, standing as gate
+> kernel, admission rules, conserved standing package, standing as gate
 > input, and title — and no larger.
 
 On the admission rules: the write rule ($W1/W2a/W2b$), formation, and
