@@ -2593,28 +2593,31 @@ for raw consumers (§9.4): Möbius image of final reduced standing, tenure
 maturity, placed at the boundary slot — **no freeze, no previous-standing
 memory, no below-wall branch**. It has no effect on standing.
 
-**Epoch-$k$ staged standing computation
-(`alg:epoch:staged-standing-computation`):**
+**Epoch-$k$ conserved standing computation
+(`alg:epoch:conserved-standing-computation`):**
 
 ```text
  1: Input: proposed 𝒬_k, settled boundary burn state, E_{k−1}, constants
  2: Validate formation + dependent-set closure
  3: Form tentative E_k = E_{k−1} ∪ ΔE_k          (def:epoch:proposed-final-act-state)
  4: Apply all count increments and θ-debits; reject if any b_i^(k) < 0
- 5: Compile eligible folded person-vouch relations + coefficients c(ξ)
-                                                  (def:epoch:temporal-vouch-multigraph)
- 6: Construct the exact depth-two max-envelope map (def:epoch:depth-two-standing-map)
- 7: Certify + solve the unique depth-two anchor    (def:epoch:stage-equilibrium)
- 8: Form exact depth-three envelopes; run admission backoff; solve D3
- 9: Form exact depth-four envelopes; run admission backoff; solve D4
-10: h*_k ← highest certified stage                 (prop:epoch:staged-safe-polarity)
-11: Compute final flow W_end^(k) and final standing α^(k)
-12: Compute final act stamps, epoch stamp, door headroom
+ 5: Fold every accepted act into cells, resolve each recipient, form 𝖠
+                                                  (def:epoch:standing-fold-cell,
+                                        def:epoch:domain-weighted-base-allocation)
+ 6: Read emission fractions 𝔢_u and contributing widths from 𝖠 + the ledger
+                                                  (def:epoch:source-emission)
+ 7: For each rung t of 𝒢_t, greatest first: evaluate 𝒦_k over ℬ_k;
+    break when m_θ·𝒦_k ≤ 1                       (alg:epoch:tilt-backoff)
+ 8: Solve the unique equilibrium x* at the accepted rung t_k
+                                    (thm:dynamics:certified-conserved-standing-uniqueness)
+ 9: Compute transport entries Π_ui and final standing α^(k)
+                                     (def:epoch:finite-depth-conserved-transport)
+10: Compute final act stamps, epoch stamp, door headroom
                                                   (def:epoch:final-act-stamps)
-13: Check W1, W2a, W2b                             (post:epoch:final-act-sequence-write-rule)
-14: Derive the raw Self-edge reading               (def:epoch:raw-self-edge-reading)
-15: If all conditions pass: accept 𝒬_k, publish E_k + the standing package
-    with stage row certificates; else reject — no standing is published for it
+11: Check W1, W2a, W2b                             (post:epoch:final-act-sequence-write-rule)
+12: Derive the raw Self-edge reading               (def:epoch:raw-self-edge-reading)
+13: If all conditions pass: accept 𝒬_k, publish E_k + the standing package
+    with the accepted rung and 𝒦_k; else reject — no standing is published for it
 ```
 
 **Epoch Replay Determinism (`prop:epoch:epoch-replay-determinism`).** Given
@@ -2804,9 +2807,10 @@ reproduced by their own owners.
   (`rem:graph:act-payload-custody-phases`); full payload bytes are
   available only while in full projection, and Layer-1 verification never
   requires them. For standing, edge availability alone is insufficient: the
-  verifier must also determine that no eligible complete act was omitted —
-  projection completeness (`prop:deployment:projection-completeness`) and
-  the public declared inputs and formula editions supply that binding.
+  verifier must also determine that no accepted complete act was omitted —
+  allocation-input completeness
+  (`prop:deployment:allocation-input-completeness`) and the public declared
+  inputs and formula editions supply that binding.
 - **Final Epoch State Agreement
   (`subsec:deployment:final-epoch-state-agreement`).** At each boundary the
   operator publishes the authoritative ordered act sequence $\mathcal{Q}_k$
@@ -2852,30 +2856,31 @@ reproduced by their own owners.
   record fields. For a hyper-edge leg, the record also contains its role
   and sibling identity, so complete-act identity is independently
   reconstructible.
-- **Independent Reproduction of Staged Standing
-  (`subsec:deployment:staged-standing-reproducibility`).** Every binding
-  input, intermediate value, validity verdict, and output of the staged
-  standing package (`def:network:staged-standing-package`) is independently
-  derivable from $E_k$, the completed final ledger, and the published
-  constants and formula editions. **No server-maintained vouch counter,
-  hidden path set, unpublished admission fraction, private model weight, or
-  uncommitted certificate box may enter standing.** The replay sequence:
-  derive final balances and counts → reconstruct complete acts →
-  apply census, folds, revocations → coefficients and activations →
-  compile the relation multigraph → reconstruct envelopes and admitted
-  flows → recompute the final flow and mediant → execute the interval
-  verifier over the declared boxes → derive final standing, stamps, and W2
-  decisions. Projection completeness and dynamic safety are orthogonal
-  checks (`rem:deployment:completeness-safety-orthogonal`); a valid package
+- **Independent Reproduction of Conserved Standing
+  (`subsec:deployment:conserved-standing-reproducibility`).** Every binding
+  input, intermediate value, validity verdict, and output of the conserved
+  standing package (`def:network:conserved-standing-package`) is
+  independently derivable from $E_k$, the completed final ledger, and the
+  published constants and formula editions. **No server-maintained
+  allocation counter, hidden recipient assignment, unpublished tilt rung,
+  private model weight, or uncommitted certificate box may enter standing.**
+  The replay sequence: derive final balances and counts → reconstruct
+  complete acts → apply folds and revocations → cell coefficients and
+  recipient resolution → assemble the base allocation matrix → read emission
+  fractions → evaluate the certificate down the tilt grid → solve the
+  equilibrium and the transport → recompute the mediant → derive final
+  standing, stamps, and W2 decisions. Allocation-input completeness and
+  dynamic safety are orthogonal checks
+  (`rem:deployment:completeness-safety-orthogonal`); a valid package
   requires both.
 - **Formula Completeness (`subsec:deployment:completeness`).** The published
   material — protocol constants; edge-type specifications and census; tensor
   pipeline; path-view extraction; mask and tier rules; determinant sign and
-  damped weight; **net stance, person-vouch eligibility, relation
-  coefficients, activations, the stage admission machinery, control-edge
-  exclusion and inviter revocation**; the **write rule (W1/W2a/W2b),
+  damped weight; **net stance, cell coefficients, recipient resolution,
+  domain weights, activations, the tilt grid and emission rule, control-act
+  self-resolution and inviter revocation**; the **write rule (W1/W2a/W2b),
   closure rule, formation rule + handshake, and the θ-debit ledger**;
-  settlement recognition and the **epoch title fold**; the staged
+  settlement recognition and the **epoch title fold**; the conserved
   derivation sequence and certificate definitions; the
   safety-price/five-ρ-floor family — is jointly sufficient to reproduce the
   server's output from published records alone. Terminal mechanisms are not
