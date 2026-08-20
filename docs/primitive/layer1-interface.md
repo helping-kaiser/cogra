@@ -1962,7 +1962,9 @@ separation governed by the floor ladder $\{1, \sqrt{\eta}, \eta\}$.
 Invitation are proposals. They establish no membership and do not substitute
 for the Participant edge. A Chat membership signal exists only when the
 joining actor authors a Participant edge. Ignoring a proposal requires no
-graph action.
+graph action. A Join Request allocates to nobody but its author; an
+inviter's own complete, positive, unsuppressed Invitation act may instead
+compile into a person-vouch toward the invitee.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
 (`def:nodes:canonical-membership-fold`).** For actor $a$ and Chat $C$, let
@@ -2217,6 +2219,7 @@ Actor or the permanently bound Profile of an Actor:
 | Accept / Ratify otherwise | self |
 | Withdraw, Rescind, Leave, De-invite | self |
 | Artifact-directed acts: Opinion-on-content, Tag, Review, Bid, Send, Publish, Owner, Participant, Registration | self |
+| — Participant resolves home in all four of its cases (found, join, found successor, move), at its A-leg coefficient | |
 | Hostile or zero-stance person-directed acts | self |
 
 Self is a destination, not a defect: a self-resolved cell lands on the
@@ -2554,15 +2557,20 @@ verbatim, which is exactly what source emission does
 
 **Full-pair source transport is a current nonclaim
 (`rem:epoch:full-pair-source-transport`).** The mediant transports the
-*full* current source pair $(b_u^{(k)}, N_u^{(k)})$ with no source-root
-attenuation: a depleted source ($b_u = 0$) contributes zero numerator but
-positive denominator count — pure denominator ballast through an otherwise
-valid path. This is priced, visible, and hull-bounded, but the
+*full*, unscaled current source pair $(b_u^{(k)}, N_u^{(k)})$ with no
+source-root attenuation: emission never scales the pair itself, only the
+transport entries that route it, so what a sub-wall source withholds from
+its recipients it retains at its own self column rather than losing. A
+fully depleted source ($b_u = 0$) gives $\mathfrak{e}_u = 0$ exactly, so
+its transport row collapses to the identity and the source reaches no
+target at all. What survives depletion is graduated: a partially-depleted
+source ($0 < \hat{r}_u < \rho_\theta$) still exports the fraction
+$\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
+rate-proportional dilution persists, priced and bounded by the hull. The
 specification makes **no** claim that every unit of relational standing
 pressure is continuously backed by positive current residual balance;
 replacing full-pair transport with a source-root eligibility rule is an
-open question (`frontier:source-root-eligibility`,
-`frontier:depleted-source-ballast`).
+open question (`frontier:source-root-eligibility`).
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
 endorsement is $\theta$-priced exactly — each ballast action debits
