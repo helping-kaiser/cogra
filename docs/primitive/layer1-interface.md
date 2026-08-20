@@ -2926,12 +2926,12 @@ objects live only in the boundary ledger** (§3).
 | $\rho_{\text{pol}}$ | Policy floor: the host's dimensionless gate-axis dial; announced at $k$, effective at $k+1$; valid iff $\rho_{\text{pol}}\nu \ge \theta$. Canonical default $1$. | `def:epoch:policy-floor` |
 | $\theta$ | Safety threshold (reserve/action): the minimum attestation price behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (R1–R7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
 | $\rho_\theta$, $\rho_{\text{eff}}$ | Safety floor $\theta/\nu$ (the wall: W2a, the activation-clamp key, the fence pin) and effective floor $\max(\rho_{\text{pol}}, \rho_\theta)$ (the door: W2b, the per-act door benchmark). | `def:epoch:safety-floor`, `def:epoch:participation-floor` |
-| $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin, stage screens $h/(4m_\theta)$, fence slack, escalation clause. | `def:epoch:safety-threshold` |
+| $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin (a rung certifies iff $m_\theta\,\mathcal{K}_k \le 1$), fence slack, escalation clause. | `def:epoch:safety-threshold` |
 | $\beta$, $\eta$ | Inverse temperature $2\ln 2 \approx 1.386$; bleed $0.05$ — binding (both enter the deployed core $Q$). | `ax:epoch:thermodynamic-boundary`, `def:graph:path-view-extraction` |
 | $N_{\text{epoch}}$ | Epoch **target** act budget, denominated in accepted authored acts. | `def:epoch:epoch-act-budget` |
 | $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth); buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
 | $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
-| $L_{\text{vch}}$ | Projected vouch depth 4, in complete person-vouch acts. | `def:epoch:projected-vouch-depth` |
+| $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
 ### 14.2 Rules
 
@@ -2946,10 +2946,10 @@ objects live only in the boundary ledger** (§3).
 
 | Symbol | Definition | Ref |
 |---|---|---|
-| $\alpha_i$ | Final epoch standing: the comparator realized on the graph, gauge fixed by the neutral source; the stage-$h^*_k$ equilibrium = the exact post-debit balance/count mediant. Binding where the gate reads it (through the stamps); terminal read-sites read it downstream per the ledger. Bounded in the contributing-rate hull. Enters the raw Self-edge reading via $p_i = \alpha_i/(\nu+\alpha_i)$. | `def:epoch:final-standing` |
+| $\alpha_i$ | Final epoch standing: the comparator realized on the graph, gauge fixed by the neutral source; the conserved equilibrium coordinate = the exact post-debit balance/count mediant under the conserved transport. Binding where the gate reads it (through the stamps); terminal read-sites read it downstream per the ledger. Bounded in the contributing-rate hull. Enters the raw Self-edge reading via $p_i = \alpha_i/(\nu+\alpha_i)$. | `def:epoch:final-standing` |
 | $\mathrm{owner}^{(k)}$ | Title certificate $\text{Items} \to V_u \cup \{\varnothing\}$; recognition reads it, terminal services may read it. | `def:graph:title-certificate` |
 
-"The only straddlers are $\alpha_i$ and $\mathrm{owner}^{(k)}$." The staged
+"The only straddlers are $\alpha_i$ and $\mathrm{owner}^{(k)}$." The standing
 package's intermediate values are binding but not straddlers (§2).
 
 ### 14.4 Closure
@@ -2961,20 +2961,21 @@ package's intermediate values are binding but not straddlers (§2).
 | $b_i$ | Residual balance $B_i - \sum_a \theta^{(k_a)}$ (imported frame net of consummated per-act debits, each vintage-frozen); numerator of $r_i$ and the object of W1. | `def:comparator:residual-balance` |
 | $b_i^{(k)}, N_i^{(k)}$ | Proposed final post-debit pairs of the completed tentative state — the standing inputs. | `def:epoch:proposed-final-act-state` |
 | $\bar{p}_d, \bar{p}_i$ | Net stance of a same-author full-incidence bundle: sum-then-clip to $[-1,1]$; standing projection only. | `def:epoch:net-stance` |
-| $\xi$, $c(\xi)$ | Folded person-vouch relation (full-incidence bundle key, folded coordinates, causal frontier) and its intrinsic coefficient — the geometric mean of the mandatory positive folded coordinates, in $(0,1]$. | `def:epoch:folded-vouch-relation`, `def:epoch:relation-coefficient` |
-| person-vouch eligibility | Closed census + complete incidence + author ownership + person target + strictly positive folded coordinates + live consent + no self-vouch; no glyph. | `def:epoch:person-vouch-eligibility` |
-| inviter revocation | Per-author suppression predicate for Invitation acts when the latest same-incidence record is a De-invite; no glyph. | `def:epoch:inviter-revocation` |
-| control-edge class | Withdraw, Rescind, Leave, De-invite/A·T: type-fixed records, never vouch, excluded from the projection. | `rem:epoch:control-edges-never-vouch` |
-| $G^{\text{rel}}_{\text{vch},k}$ | Temporal person-vouch multigraph: Actor-only, eligible folded relations; parallel relations not collapsed. | `def:epoch:temporal-vouch-multigraph` |
+| $\xi$, $\mathcal{R}_k$, $c(\xi)$ | Standing fold cell (one accepted Actor-authored act folded with its full-incidence bundle), the epoch's eligible cell set, and the cell's total effective coefficient — the geometric mean of the **magnitudes** of its mandatory folded coordinates, in $[0,1]$. | `def:epoch:standing-fold-cell`, `def:epoch:effective-act-contribution` |
+| recipient resolution | Published order-free operator sending each cell to a person recipient or to the author's self-retention channel; strictly positive coordinates, author ownership, live consent, and an anchored person target are what send it outward. Every cell is weighed either way; no glyph. | `def:epoch:standing-recipient-resolution`, `post:epoch:universal-act-weighing` |
+| inviter revocation | Per-author suppression predicate for Invitation acts when the latest epoch index in the same-incidence record set contains a De-invite; no glyph. | `def:epoch:inviter-revocation` |
+| control-act class | Withdraw, Rescind, Leave, De-invite/A·T: type-fixed records, weighed and priced, always resolving to their author. | `rem:epoch:control-acts-resolve-to-self` |
+| $\mathsf{A}_{uj}$, $\kappa_{\text{self}}$, $\omega_D$, $\delta_D(\xi)$ | Base allocation matrix over the anchored Actors — the sole standing-relevant reading of the epoch's acts — with the self-retention base, the published domain weights, and the act-level domain profile. | `def:epoch:domain-weighted-base-allocation`, `def:epoch:standing-domain-profile` |
 | $g_{\text{vch}}(x)$, $\bar{g}_{\text{vch}}(x)$ | Responsive activation $\big(Q(p(x))/Q(1)\big)^{1/4}$ and its safety-wall clamp $g_{\text{vch}}(\max(x, \rho_\theta))$ — the sole standing activation; below-wall constant, zero derivative. | `def:epoch:responsive-vouch-activation`, `def:epoch:safety-wall-clamped-activation` |
-| $W_{\text{rel},k}(\xi;\boldsymbol{x})$ | Direct relation standing weight $c(\xi)\,\bar{g}_{\text{vch}}(x_{\text{tgt}})$. | `rem:epoch:direct-relation-edge` |
-| $W^{[h]}_{\text{env}}$, $W^{[h]}_{\text{adm}}$ | Exact depth-$h$ source envelope (max-product over causal standing paths) and the admitted stage flow (exact at D2; admission homotopy at D3/D4). | `def:epoch:depth-bounded-source-envelope`, `def:epoch:delegated-stage-admission` |
-| $t_k^{[h]}$ | Stage admission fraction, $h \in \{3,4\}$: one global published scalar per stage, accepted by the canonical dyadic backoff. | `alg:epoch:stage-admission-backoff` |
-| $x^{[h]}$, $h^*_k$ | Stage equilibria (fixed points of the stage maps on their declared boxes) and the highest certified stage. | `def:epoch:stage-equilibrium`, `prop:epoch:staged-safe-polarity` |
-| $W_{\text{end}}^{(k)}(u \to i)$ | Final safe standing flow: the certified stage's admitted flow at its equilibrium. Sole relational input to standing. | `def:epoch:final-safe-standing-flow` |
-| $\mathcal{K}^{[h]}_{\text{row}}$ | Stage row certificate; chartered screens $h/(4m_\theta) = 0.4/0.6/0.8$; verdict selects the accepted stage. | `subsec:verification:reference-constants` |
+| $\lambda^{(r)}_{uj}(\boldsymbol{x})$, $\Lambda^{(r)}(\boldsymbol{x})$ | Hop allocation score and matrix: base score tilted by the recipient's clamped activation raised to $\upsilon_r(t_k)$, self unmodulated, row-normalized — row-stochastic at every state. | `def:epoch:hop-allocation-score`, `eq:epoch:hop-allocation-matrix` |
+| $\upsilon_r^\circ$, $\upsilon_r(t)$, $t_k$, $\mathcal{G}_t$ | Chartered hop-exponent shape (decreasing in $r$), the applied profile at strength $t$, the accepted rung, and the published finite backoff grid terminating at the always-certifying anchor $t = 0$. | `def:epoch:standing-tilt-profile`, `def:epoch:tilt-backoff-grid` |
+| $\mathfrak{m}_m$, $L_{\text{hop}}$, $m^*$ | Published depth mass over hops (summing to one), the chartered transport depth, and the deepest supported index. | `def:epoch:standing-depth-mass` |
+| $\mathfrak{e}_u$, $\mathfrak{E}$ | Source emission fraction $\min(1, \hat{r}_u/\rho_\theta)$ and its diagonal: history travels on the back of balance; a property of the source's pair, never of one relation. | `def:epoch:source-emission` |
+| $\boldsymbol{\Pi}(\boldsymbol{x})$, $\Pi_{ui}$, $\tilde{b}_i$, $\tilde{N}_i$ | Conserved transport — emission applied once to the depth-mass mixture of hop products — its entries, and the transported pair mass. Sole relational input to standing; every row sums to one. | `def:epoch:finite-depth-conserved-transport`, `post:epoch:standing-pair-mass-conservation` |
+| $\boldsymbol{x}^*$, $\mathcal{B}_k$ | The epoch's unique conserved equilibrium and the rate-hull box it is solved on, known before the solve begins. | `def:epoch:conserved-standing-equilibrium`, `prop:epoch:final-standing-hull` |
+| $\mathcal{K}_k$ | Conserved standing certificate; a rung is accepted iff $m_\theta\,\mathcal{K}_k \le 1$, and its verdict distinguishes certificate failure from indecisive enclosure. | `def:dynamics:conserved-standing-certificate` |
 | $\rho_{\text{act}}(q)$, $\rho_{\text{ep}}^{(k)}$ | Final act stamp (act-owned reduced final standing) and act-weighted epoch stamp. | `def:epoch:final-act-stamps` |
-| $W^+(v), W^-(v)$ | Raw double-cover parity registers — terminal raw-service state, not standing flow. | `def:epoch:double-cover-bfs-state` |
+| $W^+(v), W^-(v)$ | Raw double-cover parity registers — terminal raw-service state, read by no standing quantity. | `def:epoch:double-cover-bfs-state` |
 | $\mathrm{pos}(e)$ **(L1·verify)** | Audit position under the identity-key linearization; consumed by no formula. | `def:epoch:log-position` |
 | ownership thread, Item genesis | Boundary-indexed title chain; declarative genesis act minting the Item's identity. | `def:graph:ownership-thread`, `def:graph:item-genesis-act` |
 | set price | Average member-author raw rate over a dependent set at the closing burn snapshot; consumed by the closure rule and nothing else — averaging can clear the door, never mask a member below $\theta$. | `post:epoch:final-act-sequence-write-rule` |
@@ -2982,10 +2983,10 @@ package's intermediate values are binding but not straddlers (§2).
 | door headroom $H_k$ | $\sum_i \Delta N_i^{(k)}(\hat{\alpha}_i^{(k)} - \rho_{\text{eff}})$: epoch stamp surplus over the door; congestion diagnostic **(L1·verify)**, no actuator. | `eq:epoch:final-epoch-headroom` |
 | $W_{\text{loc}}$ | Local width: the width-fence input of the safety-threshold rule. | `subsec:epoch:floor-governance` |
 | settlement references | Act-identity references $\mathrm{settles}$ / $\mathrm{accepts}$ (Accept/Ratify → Bid/Accept acts); metadata, not incidence; forced causal parents. | `def:graph:settlement-act-reference` |
-| Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; person-directed for person-vouch eligibility. | `edge:nodes:accept`, `edge:nodes:ratify` |
-| Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; standing-inert. | §9 |
+| Accept / Ratify | Direct Actor-to-Actor settlement consent (non-binding alone) / commit; Relational, promoted, Half tier; resolves to the counterparty only when title-transferring under the epoch title fold. | `edge:nodes:accept`, `edge:nodes:ratify` |
+| Withdraw / Rescind / Leave / De-invite | Control records; Minimal, Marginal, forced $+1$; weighed and priced, always resolving home. | §9 |
 | $\tau^*$ | Maturity crossover $\approx 0.94$ (raw channel). | `prop:epoch:crossover-location` |
-| Dynamics machinery **(certificates (L1·closure); interval evidence (L1·verify); the rest (—) shared dynamics)** | Activation properties (`prop:dynamics:responsive-vouch-activation-bound`, `-monotonicity`, `-concavity`), the wall clamp (`prop:dynamics:safety-wall-clamp`), depth-two contraction (`thm:dynamics:depth-two-anchor-contraction`, `thm:dynamics:max-envelope-lipschitz`), certified stage contraction (`thm:dynamics:certified-stage-contraction`), within-epoch fixed-point convergence (`thm:dynamics:within-epoch-fixed-point-convergence`), the projected depth gain budget (`thm:dynamics:projected-depth-gain-budget`), the standing map-shock bound (`prop:dynamics:standing-map-shock-bound`), warm-start independence (`rem:dynamics:warm-start-independence`). The pre-Edition-4 orbit/bifurcation apparatus is quarantined as non-normative rederivation obligations (`subsec:dynamics:quarantined-residuals`). | `app:dynamics` |
+| Dynamics machinery **(certificates (L1·closure); interval evidence (L1·verify); the rest (—) shared dynamics)** | Activation properties (`prop:dynamics:responsive-vouch-activation-bound`, `-monotonicity`, `-concavity`), the wall clamp (`prop:dynamics:safety-wall-clamp`), hull invariance without a certificate (`thm:dynamics:conserved-standing-existence`), certified uniqueness and geometric convergence (`thm:dynamics:certified-conserved-standing-uniqueness`, `thm:dynamics:within-epoch-fixed-point-convergence`), initialization independence (`cor:dynamics:standing-initialization-independence`, `rem:dynamics:warm-start-independence`), the standing map-shock bound (`prop:dynamics:standing-map-shock-bound`). The earlier orbit/bifurcation apparatus is quarantined as non-normative rederivation obligations (`subsec:dynamics:quarantined-residuals`). | `app:dynamics` |
 
 ### 14.5 Terminal objects (full paper only)
 
