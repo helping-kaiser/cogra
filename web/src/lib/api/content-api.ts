@@ -67,11 +67,26 @@ export const CONTENT_PAGE_SIZE = 20;
 /** The reply prefetch depth of every thread read — one level. */
 export const REPLIES_FIRST = 3;
 
+/**
+ * The landed-only opt-out (api-spec.md "Pagination"). Reads serve
+ * pending entries by default — they are their author's content already;
+ * `includePending: false` serves only what has landed on L1, for a
+ * reader who wants the settled graph.
+ */
+export type ListingOptions = { includePending?: boolean };
+
+const INCLUDE_PENDING_DEFAULT = true;
+
+function includePendingOf(options: ListingOptions): boolean {
+  return options.includePending ?? INCLUDE_PENDING_DEFAULT;
+}
+
 /** A further page of one comment's direct replies (expand). */
 export async function fetchCommentReplies(
   client: ApolloClient,
   commentId: string,
   after: string | null = null,
+  options: ListingOptions = {},
 ): Promise<Outcome<Page<CommentView>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
@@ -81,6 +96,7 @@ export async function fetchCommentReplies(
         first: CONTENT_PAGE_SIZE,
         after,
         repliesFirst: REPLIES_FIRST,
+        includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",
     }),
@@ -98,11 +114,16 @@ export async function fetchCommentReplies(
 export async function fetchPosts(
   client: ApolloClient,
   after: string | null = null,
+  options: ListingOptions = {},
 ): Promise<Outcome<Page<PostView>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
       query: PostsDocument,
-      variables: { first: CONTENT_PAGE_SIZE, after },
+      variables: {
+        first: CONTENT_PAGE_SIZE,
+        after,
+        includePending: includePendingOf(options),
+      },
       fetchPolicy: "network-only",
     }),
   );
@@ -120,6 +141,7 @@ export async function fetchPostDetail(
   client: ApolloClient,
   id: string,
   commentsAfter: string | null = null,
+  options: ListingOptions = {},
 ): Promise<Outcome<PostDetail | null>> {
   const fetched = await fetchOutcome(() =>
     client.query({
@@ -129,6 +151,7 @@ export async function fetchPostDetail(
         commentsFirst: CONTENT_PAGE_SIZE,
         commentsAfter,
         repliesFirst: REPLIES_FIRST,
+        includePending: includePendingOf(options),
       },
       fetchPolicy: "network-only",
     }),
