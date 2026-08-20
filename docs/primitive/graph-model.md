@@ -78,10 +78,10 @@ names the fold it applies.
 
 What "current" means is always a declared fold:
 
-- **L1 reads bundles in exactly two places.** The standing
-  projection nets each same-author bundle by sum-then-clip before
-  the safe standing flow `W_end`, and the title fold reads
-  settlement records epoch-quantized. Nothing else on L1 consumes a bundle.
+- **L1 reads bundles in exactly two places.** Act folding nets each
+  same-author bundle by sum-then-clip before the cell reaches the
+  base allocation matrix, and the title fold reads settlement
+  records epoch-quantized. Nothing else on L1 consumes a bundle.
 - **Every other current-state read is its consumer's declared
   rule.** CoGra declares its folds per surface: the current
   profile is the newest Registration payload; chat membership is
