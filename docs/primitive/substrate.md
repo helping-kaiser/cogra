@@ -391,10 +391,9 @@ per-concept table: [substrate-map.md](substrate-map.md)):
   revises by succession, not in place** — its metadata is the
   lineage head's founding payload
   ([chats.md §8](../instances/chats.md#8-chat-metadata-and-updates)).
-  *(The in-place carriers rest on the Edition-5 draft's formation
-  permissions — non-self-minting Publish, Review/T, and Owner
-  targets; [layer1-interface.md](layer1-interface.md)'s Edition-4
-  copy predates them and refreshes when the edition lands.)*
+  The in-place carriers rest on L1's formation permissions for
+  non-self-minting Publish, Review/T, and Owner targets
+  ([layer1-interface.md §8.1](layer1-interface.md#81-acts-projections-partition-and-passivity)).
 - **Eligible authors** — declared per (node, field): the creator,
   the current certified owner, or the designated system actor.
   Eligibility is a CoGra read rule, never an L1 restriction: L1

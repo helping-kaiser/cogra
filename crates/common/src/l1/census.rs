@@ -21,7 +21,7 @@ pub enum Family {
     Withdraw,
     Rescind,
     Leave,
-    // Hyper (§9.6; Participant per the Edition-5 draft — see `legs`)
+    // Hyper (§9.6; Participant's legs are the movement act — see `legs`)
     Tag,
     Review,
     Bid,
@@ -306,13 +306,11 @@ impl Family {
                     fixed_params: false,
                 },
             ],
-            // The Edition-5 uniform movement act — A-leg whence, T-leg
-            // whither; found/join self-loop (A = T legal). The T-leg is a
-            // weak lineage marker, census-forced positive (`params_check`)
-            // so it can never flip a walk's parity; the member's real
-            // stance rides the A-leg. layer1-interface.md's Edition-4
-            // census predates the hyper shape and refreshes when the
-            // edition lands.
+            // The uniform movement act — A-leg whence, T-leg whither;
+            // found/join self-loop (A = T legal). The T-leg is a weak
+            // lineage marker, census-forced positive (`params_check`) so
+            // it can never flip a walk's parity; the member's real stance
+            // rides the A-leg.
             Family::Participant => &[
                 LegSpec {
                     role: LegRole::A,
