@@ -33,8 +33,8 @@ A convenience subset; the ledger is the authority.
 | `θ`, `ν` | Safety price (the θ-debit) and numéraire. |
 | `ρ_pol`, `ρ_θ`, `ρ_eff` | Policy floor, the wall, the door — the gate-axis floors. |
 | `ρ_act`, `ρ_ep` | Action stamps read by the write rule (W2a / W2b). |
-| `W_end(j → i)` | Final safe standing flow — the certified stage's admitted flow over the person-vouch relation layer. |
-| `L`, `L_vch` | Depth bounds: raw signed BFS (4); projected vouch flow (4). |
+| `Π_ui` | Conserved transport entry — source `u`'s share of its one unit of allocation landing on `i`. |
+| `L`, `L_hop` | Depth bounds: raw signed BFS (4); conserved transport (4). |
 | `owner^(k)` | The title certificate. |
 | `M_payload` | Payload byte bound. |
 
