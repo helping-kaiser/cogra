@@ -294,18 +294,19 @@ struct PreparePayload {
 /// public protocol references, surviving every payload state.
 #[derive(InputObject)]
 struct LicenseInput {
-    /// Credit requirement: the creator is credited on every display,
-    /// quote, and reference surface.
-    attribution_required: bool,
-    oversight: super::types::OversightLevel,
+    /// `a` — how far a use must credit the maker, a degree on `[0, 1]`
+    /// (`def:content:attribution`). CoGra's composer offers the three
+    /// readings it publishes: 0, 0.5 (commercial uses only), and 1.
+    attribution: f64,
+    /// `o` — how far a use must be tracked publicly and left open to
+    /// audit, a degree on `[0, 1]` (`def:content:provenance`), offered
+    /// on the same three readings.
+    oversight: f64,
 }
 
 impl LicenseInput {
-    fn to_content(&self) -> crate::content::License {
-        crate::content::License {
-            attribution: self.attribution_required,
-            oversight: self.oversight.to_content(),
-        }
+    fn to_content(&self) -> Result<crate::content::License, crate::content::ContentError> {
+        crate::content::License::checked(self.attribution, self.oversight)
     }
 }
 
@@ -323,15 +324,15 @@ struct PreparePostInput {
     p_directed: Option<Dimension>,
 }
 
-/// A Post edit: omitted fields are untouched (newest-wins fold per
-/// field, post.md §4); an explicit null clears the field. Identity,
-/// creator, and license never edit.
+/// A Post edit: the complete new content state, the same field set a
+/// create carries (post.md §4). An omitted title or description is a
+/// Post without one. Identity, creator, and license never edit.
 #[derive(InputObject)]
 struct PreparePostEditInput {
     id: Uuid,
-    title: async_graphql::MaybeUndefined<String>,
-    description: async_graphql::MaybeUndefined<String>,
-    content: async_graphql::MaybeUndefined<String>,
+    title: Option<String>,
+    description: Option<String>,
+    content: String,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -347,12 +348,11 @@ struct PrepareCommentInput {
     p_interest: Option<Dimension>,
 }
 
-/// A Comment edit: an omitted body is refused (nothing would change);
-/// an explicit null clears to empty.
+/// A Comment edit: the complete new body (comment.md §4).
 #[derive(InputObject)]
 struct PrepareCommentEditInput {
     id: Uuid,
-    content: async_graphql::MaybeUndefined<String>,
+    content: String,
 }
 
 /// A profile update's field set — omitted = untouched, explicit null =
@@ -411,8 +411,8 @@ impl PrepareContentPayload {
     }
 }
 
-/// An edit field from the wire: undefined = untouched, null = cleared,
-/// a value = replaced (post.md §4 — empty is a value).
+/// A profile-update field from the wire: undefined = untouched, null =
+/// cleared, a value = replaced (user.md §4 — empty is a value).
 fn edit_field(v: async_graphql::MaybeUndefined<String>) -> Option<String> {
     match v {
         async_graphql::MaybeUndefined::Undefined => None,
@@ -1564,11 +1564,15 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let license = match input.license.to_content() {
+            Ok(license) => license,
+            Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+        };
         let draft = crate::content::PostDraft {
             title: input.title,
             description: input.description,
             content: input.content,
-            license: input.license.to_content(),
+            license,
             p_directed: input.p_directed.map(|d| d.0),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
@@ -1594,9 +1598,9 @@ impl Mutation {
         let cfg = ctx.data::<OnboardingConfig>()?;
         let draft = crate::content::PostEditDraft {
             id: input.id,
-            title: edit_field(input.title),
-            description: edit_field(input.description),
-            content: edit_field(input.content),
+            title: input.title,
+            description: input.description,
+            content: input.content,
         };
         match crate::content::prepare_post_edit(
             pool,
@@ -1623,10 +1627,14 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let license = match input.license.to_content() {
+            Ok(license) => license,
+            Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+        };
         let draft = crate::content::CommentDraft {
             target: input.target,
             content: input.content,
-            license: input.license.to_content(),
+            license,
             p_directed: input.p_directed.map(|d| d.0),
             p_interest: input.p_interest.map(|d| d.0),
         };
@@ -1652,7 +1660,7 @@ impl Mutation {
         let cfg = ctx.data::<OnboardingConfig>()?;
         let draft = crate::content::CommentEditDraft {
             id: input.id,
-            content: edit_field(input.content),
+            content: input.content,
         };
         match crate::content::prepare_comment_edit(
             pool,

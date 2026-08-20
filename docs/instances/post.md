@@ -39,9 +39,10 @@ The Publish record carries:
   ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)) —
   headroom stays for deliberately strong attachment; the default
   is a fallback, never the recommendation.
-- **License qualifiers.** Attribution `attr ∈ {0, 1}` and
-  oversight `o ∈ {0, 0.5, 1}` — `attr` here, keeping the symbol
-  apart from the attachment parameter `a` above — are structural
+- **License qualifiers.** Attribution and oversight, each a
+  degree on `[0, 1]` — written `attr` and `o` here, keeping the
+  attribution symbol apart from the attachment parameter `a`
+  above — are structural
   metadata of the Publish record — declared at authoring time
   (mandatory in every content-creation flow), immutable
   thereafter, out of reach of any edit. CoGra publishes them as
@@ -142,11 +143,12 @@ The instantiation of the node-value update rule
   head ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
   The backend populates the chain at prepare time and serializes
   edits per Post.
-- **Granularity:** per field — title, description, body, and the
-  media manifest each fold newest-wins independently; an edit
-  payload carries only the fields it changes. Replacing media is
-  new digests in a new edit payload; the old bytes' digests stay
-  committed on the superseded record.
+- **Granularity:** the whole Post — title, description, body, and
+  the media manifest together. An edit payload is the complete
+  content state, and the winning record renders it as it stands:
+  a field the payload omits is a Post without that field.
+  Replacing media is new digests in a new edit payload; the old
+  bytes' digests stay committed on the superseded record.
 
 Every edit is a priced act — `θ`-debited, permanently counted.
 History is public: superseded payloads remain published unless
