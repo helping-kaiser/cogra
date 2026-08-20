@@ -509,7 +509,19 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
         rig.close_and_ingest().await;
     }
 
+    // Expiry is the first phase: the write reaches its terminal state and
+    // stops serving content, while the payload rides the row until the
+    // reap — a record landing in that window still promotes
+    // (data-model.md "Staged writes").
     let w = staged::load(&rig.pool, abandoned.id).await.expect("loads");
     assert_eq!(w.state, StagedState::Expired);
-    assert!(w.proposal.payload.is_empty());
+    assert!(!w.proposal.payload.is_empty());
+
+    staged::reap_expired(&rig.pool, 1_000, GC)
+        .await
+        .expect("reaps");
+    assert!(matches!(
+        staged::load(&rig.pool, abandoned.id).await,
+        Err(staged::StagedError::NotFound(_))
+    ));
 }

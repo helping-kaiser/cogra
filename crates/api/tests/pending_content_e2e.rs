@@ -191,29 +191,62 @@ impl Rig {
         signed
     }
 
+    /// Submits one raw pre-commitment blob for a staged write — the leg
+    /// the rig's `pre_sign` drives with a good signature, exposed so a
+    /// test can drive it with a refused one.
+    async fn submit_pre_commitment(&self, token: &str, staged_id: &str, blob: &[u8]) -> Value {
+        self.gql(
+            Some(token),
+            "mutation($input: SubmitProposalsInput!) {
+               submitProposals(input: $input) {
+                 stagedWrites { id } userErrors { code message }
+               }
+             }",
+            json!({ "input": { "proposals": [{
+                "stagedWriteId": staged_id,
+                "signature": B64.encode(blob),
+            }]}}),
+        )
+        .await
+    }
+
     /// Approval, epoch close and ingestion — the rest of the path, from
     /// already pre-signed writes, so the content lands.
     async fn approve_and_close(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
+        self.approve(token, key, signed).await;
+        self.close_and_ingest().await;
+    }
+
+    /// The approval leg alone — the act becomes orderable, but nothing
+    /// has landed until an epoch closes over it.
+    async fn approve(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
             let witness = key
                 .approve(&write.pre, &write.act, &host_key)
                 .expect("approves");
-            self.gql(
-                Some(token),
-                "mutation($input: ApproveActsInput!) {
+            let approved = self
+                .gql(
+                    Some(token),
+                    "mutation($input: ApproveActsInput!) {
                    approveActs(input: $input) {
                      stagedWrites { state } userErrors { code message }
                    }
                  }",
-                json!({ "input": { "approvals": [{
-                    "stagedWriteId": write.id,
-                    "signature": B64.encode(witness.approval_signature),
-                }]}}),
-            )
-            .await;
+                    json!({ "input": { "approvals": [{
+                        "stagedWriteId": write.id,
+                        "signature": B64.encode(witness.approval_signature),
+                    }]}}),
+                )
+                .await;
+            assert_eq!(
+                approved["approveActs"]["userErrors"]
+                    .as_array()
+                    .expect("array"),
+                &Vec::<Value>::new(),
+                "approval refused: {approved}"
+            );
         }
-        self.close_and_ingest().await;
     }
 
     /// Pre-commitment, approval, epoch close and ingestion — the whole
@@ -499,6 +532,144 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig.prepare_post(&token, "Never seals", "body").await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node");
+    let write = &prepared["preparePost"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id");
+
+    // A structurally valid pre-commitment whose signature covers
+    // nothing: the relay records it and stages the content, then the
+    // substrate refuses the seal.
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = key.pre_sign(proposal);
+    let mut forged = pre.pre_signature.clone();
+    forged[0] ^= 0xff;
+    let refused = rig
+        .submit_pre_commitment(
+            &token,
+            staged_id,
+            &wire::encode_pre_commitment(&pre.nonce, &forged),
+        )
+        .await;
+    assert_eq!(
+        refused["submitProposals"]["userErrors"][0]["code"], "SIGNATURE_INVALID",
+        "the seal must refuse a forged pre-commitment: {refused}"
+    );
+
+    // Nothing the refused pre-commitment staged is readable: the content
+    // was never the author's, because the substrate never took it.
+    let gone = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) { id } node(id: $id) { id } }"#,
+            json!({ "id": post_id }),
+        )
+        .await;
+    assert!(
+        gone["post"].is_null(),
+        "a write that failed to seal publishes nothing: {gone}"
+    );
+    assert!(gone["node"].is_null());
+    assert!(rig.listed(None, "first: 10").await.is_empty());
+
+    // The write is back in the device's hands, retryable — and a proper
+    // signature re-stages the very same content.
+    let staged = rig
+        .gql(
+            Some(&token),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": staged_id }),
+        )
+        .await;
+    assert_eq!(staged["stagedWrite"]["state"], "AWAITING_PRE_SIGN");
+
+    rig.pre_sign(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+    let retried = rig.listed(None, "first: 10").await;
+    assert_eq!(retried.len(), 1, "the retry re-stages the content");
+    assert_eq!(retried[0]["node"]["id"], post_id);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (post_id, post_staged) = rig.pending_post(&token, &key, "host", "b").await;
+
+    // A comment prepared against the pending post, whose parent then
+    // expires: staging it can never succeed, because the parent it would
+    // hang under is gone.
+    let (_, commenter_key) = rig.seed_member("commenter", "commenter@example.com").await;
+    let commenter = rig.log_in("commenter@example.com").await;
+    let prepared = rig
+        .gql(
+            Some(&commenter),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": post_id,
+                "content": "Orphaned before it was signed.",
+                "license": { "attributionRequired": false, "oversight": "NONE" },
+            }}),
+        )
+        .await;
+    let write = &prepared["prepareComment"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id").to_string();
+
+    postgres_store::staged::expire_one(
+        &rig.pool,
+        Uuid::parse_str(&post_staged).expect("uuid"),
+        FAR_FUTURE_EPOCH,
+    )
+    .await
+    .expect("expires the parent");
+
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = commenter_key.pre_sign(proposal);
+    let refused = rig
+        .submit_pre_commitment(
+            &commenter,
+            &staged_id,
+            &wire::encode_pre_commitment(&pre.nonce, &pre.pre_signature),
+        )
+        .await;
+    assert!(
+        !refused["submitProposals"]["userErrors"]
+            .as_array()
+            .expect("errors")
+            .is_empty(),
+        "staging a comment with no parent must fail the leg: {refused}"
+    );
+
+    // The refusal leaves the write where the device can act on it, not
+    // stranded in `sealing` until GC.
+    let staged = rig
+        .gql(
+            Some(&commenter),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": staged_id }),
+        )
+        .await;
+    assert_eq!(
+        staged["stagedWrite"]["state"], "AWAITING_PRE_SIGN",
+        "a failed staging must not wedge the write: {staged}"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (_, key) = rig.seed_member("author", "author@example.com").await;
@@ -567,6 +738,47 @@ async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
 
     // The default is the canon: pending content shows.
     assert_eq!(rig.listed(None, "first: 10").await.len(), 2);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post_id = rig.landed_post(&token, &key, "Old title", "Old body").await;
+
+    let edit = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": post_id, "title": "New title" }}),
+        )
+        .await;
+    rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
+        .await;
+
+    // The default view is the canon: the pending edit's text, marked
+    // pending on a node whose own record landed (D4).
+    let default = rig.listed(None, "first: 10").await;
+    assert_eq!(default[0]["node"]["title"]["value"], "New title");
+    assert_eq!(default[0]["node"]["landing"]["state"], "PENDING");
+
+    // The opt-out is the settled graph: the version that landed, and a
+    // landing state that says so — the epoch contract holds, because
+    // nothing on screen is unlanded any more.
+    let settled = rig.listed(None, "first: 10, includePending: false").await;
+    assert_eq!(settled.len(), 1);
+    let node = &settled[0]["node"];
+    assert_eq!(node["id"], post_id);
+    assert_eq!(
+        node["title"]["value"], "Old title",
+        "the opt-out must not serve an unlanded edit: {node}"
+    );
+    assert_eq!(node["landing"]["state"], "LANDED");
+    assert!(
+        node["landing"]["epoch"].is_i64(),
+        "a LANDED node carries its epoch: {node}"
+    );
 }
 
 #[sqlx::test(migrations = "../../migrations")]
@@ -677,6 +889,48 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
     assert_eq!(landed["post"]["title"]["value"], "New title");
     assert_eq!(landed["post"]["landing"]["state"], "LANDED");
     assert!(landed["post"]["landing"]["epoch"].is_i64());
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig
+        .prepare_post(&token, "Late lander", "slow to order")
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node");
+    let signed = rig
+        .pre_sign(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+
+    // The act is approved — orderable, but not yet ordered.
+    rig.approve(&token, &key, &signed).await;
+
+    // GC's first phase runs in that window: the content leaves every
+    // view, and the staged row stays behind, unreaped.
+    rig.expire_everything().await;
+    assert!(
+        rig.listed(None, "first: 10").await.is_empty(),
+        "expiry takes the content off screen"
+    );
+
+    // Then the epoch closes over the act after all — the mirror governs,
+    // so the content comes back, this time with its real landing order.
+    rig.close_and_ingest().await;
+
+    let edges = rig.listed(None, "first: 10").await;
+    assert_eq!(edges.len(), 1, "the late landing promotes: {edges:?}");
+    let node = &edges[0]["node"];
+    assert_eq!(node["id"], post_id);
+    assert_eq!(node["title"]["value"], "Late lander");
+    assert_eq!(node["content"]["value"], "slow to order");
+    assert_eq!(node["landing"]["state"], "LANDED");
+    assert!(
+        node["landing"]["epoch"].is_i64(),
+        "the rebuilt rows carry the record's own landing order: {node}"
+    );
 }
 
 #[sqlx::test(migrations = "../../migrations")]

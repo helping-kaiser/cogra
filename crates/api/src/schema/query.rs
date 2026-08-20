@@ -12,8 +12,9 @@ use postgres_store::{PgPool, auth as store, content as content_store, mirror, st
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, InviteLinkCheck, KeysetConnection, Node, PostType, Record, RecordFamily,
-    RecordId, StagedWriteType, User, connection_cost, keyset_connection, keyset_page,
+    Actor, CommentType, CursorKey, InviteLinkCheck, KeysetConnection, Node, PostType, Record,
+    RecordFamily, RecordId, StagedWriteType, User, connection_cost, content_cursor,
+    content_cursor_key, keyset_connection, keyset_page,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -279,12 +280,7 @@ impl Query {
             {
                 Some(address) => filter.author = Some(address),
                 None => {
-                    return Ok(keyset_connection(
-                        vec![],
-                        &page,
-                        |_: &Record| (0, 0, 0),
-                        |r| r,
-                    ));
+                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
                 }
             }
         }
@@ -292,12 +288,7 @@ impl Query {
             match uuid_to_node_string(pool, target).await? {
                 Some(node) => filter.target = Some(node),
                 None => {
-                    return Ok(keyset_connection(
-                        vec![],
-                        &page,
-                        |_: &Record| (0, 0, 0),
-                        |r| r,
-                    ));
+                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
                 }
             }
         }
@@ -305,24 +296,20 @@ impl Query {
             match uuid_to_node_string(pool, terminal).await? {
                 Some(node) => filter.terminal = Some(node),
                 None => {
-                    return Ok(keyset_connection(
-                        vec![],
-                        &page,
-                        |_: &Record| (0, 0, 0),
-                        |r| r,
-                    ));
+                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
                 }
             }
         }
-        let rows = mirror::records(pool, &filter, page.cursor, page.backward, page.limit + 1)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        Ok(keyset_connection(
-            rows,
-            &page,
-            |r| (r.epoch, r.act_time, r.position),
-            Record,
-        ))
+        let rows = mirror::records(
+            pool,
+            &filter,
+            page.cursor.map(|c| c.order()),
+            page.backward,
+            page.limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(keyset_connection(rows, &page, record_cursor, Record))
     }
 
     /// The chronological listing (roadmap "Slice 2"): every post,
@@ -344,11 +331,7 @@ impl Query {
         let page = keyset_page(first, after, last, before)?;
         let rows = content_store::list_posts(
             pool,
-            page.cursor.map(|(e, a, p)| content_store::LandingOrder {
-                landed_epoch: e,
-                act_time: a,
-                position: p,
-            }),
+            content_cursor(page.cursor),
             page.backward,
             page.limit + 1,
             include_pending,
@@ -358,12 +341,21 @@ impl Query {
         Ok(keyset_connection(
             rows,
             &page,
-            |p| {
-                let k = p.sort_key();
-                (k.landed_epoch, k.act_time, k.position)
-            },
+            |p| content_cursor_key(p.sort_key(), p.id),
             PostType,
         ))
+    }
+}
+
+/// A chronicle entry's cursor. The record set carries no pending
+/// namespace — a record is in the chronicle exactly when it is ordered
+/// fact — so the landing-order key alone identifies the position.
+fn record_cursor(r: &mirror::RecordFull) -> CursorKey {
+    CursorKey {
+        epoch: r.epoch,
+        act_time: r.act_time,
+        position: r.position,
+        id: None,
     }
 }
 

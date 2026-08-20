@@ -18,6 +18,15 @@ use postgres_store::{content as content_store, genesis, mirror};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// The cursor a resolver hands back for a listing entry: its sort key
+/// and its own id.
+fn cursor_of(p: &content_store::Post) -> content_store::ContentCursor {
+    content_store::ContentCursor {
+        order: p.sort_key(),
+        id: Some(p.id),
+    }
+}
+
 const GC: i64 = 8;
 
 fn license() -> License {
@@ -518,7 +527,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
     );
 
     // The keyset cursor continues exactly where the page ended.
-    let page2 = content_store::list_posts(&rig.pool, Some(page1[1].sort_key()), false, 2, true)
+    let page2 = content_store::list_posts(&rig.pool, Some(cursor_of(&page1[1])), false, 2, true)
         .await
         .expect("page 2");
     assert_eq!(
@@ -528,7 +537,7 @@ async fn the_listing_pages_by_keyset_in_landing_order(pool: PgPool) {
 
     // Backward from the same cursor walks the other way (the newer
     // neighbors), still served newest-first.
-    let back = content_store::list_posts(&rig.pool, Some(page2[1].sort_key()), true, 2, true)
+    let back = content_store::list_posts(&rig.pool, Some(cursor_of(&page2[1])), true, 2, true)
         .await
         .expect("backward");
     assert_eq!(
