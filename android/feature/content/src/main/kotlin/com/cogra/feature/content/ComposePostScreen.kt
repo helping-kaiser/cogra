@@ -2,7 +2,6 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -32,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
@@ -39,7 +38,7 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
-import com.cogra.domain.OversightChoice
+import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.R
 
 @Composable
@@ -61,8 +60,7 @@ fun ComposePostRoute(
         onTitleChange = viewModel::onTitleChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onBodyChange = viewModel::onBodyChange,
-        onAttributionChange = viewModel::onAttributionChange,
-        onOversightChange = viewModel::onOversightChange,
+        onLicenseChange = viewModel::onLicenseChange,
         onSubmit = viewModel::onSubmit,
         onBack = onBack,
         keyBanner = keyBanner,
@@ -76,8 +74,7 @@ fun ComposePostScreen(
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onBodyChange: (String) -> Unit,
-    onAttributionChange: (Boolean) -> Unit,
-    onOversightChange: (OversightChoice) -> Unit,
+    onLicenseChange: (LicenseChoice) -> Unit,
     onSubmit: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
@@ -168,12 +165,7 @@ fun ComposePostScreen(
             // License qualifiers are genesis-only and immutable
             // (post.md §4) — the edit form carries none.
             if (!editing) {
-                LicenseControls(
-                    attributionRequired = state.attributionRequired,
-                    oversight = state.oversight,
-                    onAttributionChange = onAttributionChange,
-                    onOversightChange = onOversightChange,
-                )
+                LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
             }
             if (state.refused) {
                 ErrorLine(R.string.content_error_refused, "compose_refused")
@@ -208,14 +200,17 @@ fun ComposePostScreen(
     }
 }
 
-/** The mandatory authoring-time license declaration (guidelines §5). */
+/**
+ * The mandatory authoring-time license declaration (guidelines §5).
+ * Each axis offers the three degrees CoGra publishes a reading for —
+ * the record carries the whole square, but a degree with no published
+ * reading is a term no reader could check.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LicenseControls(
-    attributionRequired: Boolean,
-    oversight: OversightChoice,
-    onAttributionChange: (Boolean) -> Unit,
-    onOversightChange: (OversightChoice) -> Unit,
+    license: LicenseChoice,
+    onLicenseChange: (LicenseChoice) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -227,35 +222,105 @@ internal fun LicenseControls(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.content_license_attribution))
-            Switch(
-                checked = attributionRequired,
-                onCheckedChange = onAttributionChange,
-                modifier = Modifier.testTag("license_attribution"),
-            )
-        }
-        Text(stringResource(R.string.content_license_oversight_label))
-        val options = listOf(
-            OversightChoice.NONE to R.string.content_license_oversight_none,
-            OversightChoice.CONDITIONAL to R.string.content_license_oversight_conditional,
-            OversightChoice.FULL to R.string.content_license_oversight_full,
+        LicenseAxis(
+            label = R.string.content_license_attribution_label,
+            tags = ATTRIBUTION_TAGS,
+            labels = ATTRIBUTION_LABELS,
+            value = license.attribution,
+            onChange = { onLicenseChange(license.copy(attribution = it)) },
         )
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, (choice, label) ->
-                SegmentedButton(
-                    selected = oversight == choice,
-                    onClick = { onOversightChange(choice) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                    modifier = Modifier.testTag("license_oversight_${choice.name.lowercase()}"),
-                ) {
-                    Text(stringResource(label))
-                }
+        LicenseAxis(
+            label = R.string.content_license_oversight_label,
+            tags = OVERSIGHT_TAGS,
+            labels = OVERSIGHT_LABELS,
+            value = license.oversight,
+            onChange = { onLicenseChange(license.copy(oversight = it)) },
+        )
+    }
+}
+
+private val ATTRIBUTION_TAGS = listOf(
+    "license_attribution_none",
+    "license_attribution_commercial",
+    "license_attribution_always",
+)
+
+private val ATTRIBUTION_LABELS = listOf(
+    R.string.content_license_attribution_none,
+    R.string.content_license_attribution_commercial,
+    R.string.content_license_attribution_always,
+)
+
+private val OVERSIGHT_TAGS = listOf(
+    "license_oversight_none",
+    "license_oversight_commercial",
+    "license_oversight_always",
+)
+
+private val OVERSIGHT_LABELS = listOf(
+    R.string.content_license_oversight_none,
+    R.string.content_license_oversight_commercial,
+    R.string.content_license_oversight_always,
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LicenseAxis(
+    @StringRes label: Int,
+    tags: List<String>,
+    labels: List<Int>,
+    value: Double,
+    onChange: (Double) -> Unit,
+) {
+    Text(stringResource(label))
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        LicenseChoice.TIERS.forEachIndexed { index, tier ->
+            SegmentedButton(
+                selected = value == tier,
+                onClick = { onChange(tier) },
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = LicenseChoice.TIERS.size,
+                ),
+                modifier = Modifier.testTag(tags[index]),
+            ) {
+                Text(stringResource(labels[index]))
             }
         }
     }
+}
+
+/**
+ * What a landed node's qualifiers oblige, on the read surface. Public
+ * Domain is the one pair that obliges nothing, so it says so rather
+ * than listing two absences; a degree between the published tiers reads
+ * as the degree itself rather than being rounded into a tier it is not.
+ */
+@Composable
+internal fun licenseTerms(license: LicenseChoice): String {
+    if (license.attribution == 0.0 && license.oversight == 0.0) {
+        return stringResource(R.string.content_license_terms_public_domain)
+    }
+    val terms = mutableListOf<String>()
+    if (license.attribution > 0.0) {
+        terms += when (license.attribution) {
+            0.5 -> stringResource(R.string.content_license_terms_credit_commercial)
+            1.0 -> stringResource(R.string.content_license_terms_credit_always)
+            else -> stringResource(
+                R.string.content_license_terms_credit_degree,
+                license.attribution.toString(),
+            )
+        }
+    }
+    if (license.oversight > 0.0) {
+        terms += when (license.oversight) {
+            0.5 -> stringResource(R.string.content_license_terms_record_commercial)
+            1.0 -> stringResource(R.string.content_license_terms_record_always)
+            else -> stringResource(
+                R.string.content_license_terms_record_degree,
+                license.oversight.toString(),
+            )
+        }
+    }
+    return terms.joinToString(" ")
 }

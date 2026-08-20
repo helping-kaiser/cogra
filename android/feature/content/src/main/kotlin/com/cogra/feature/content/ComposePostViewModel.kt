@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.OversightChoice
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
@@ -23,8 +22,7 @@ data class ComposePostUiState(
     val title: String = "",
     val description: String = "",
     val body: String = "",
-    val attributionRequired: Boolean = false,
-    val oversight: OversightChoice = OversightChoice.NONE,
+    val license: LicenseChoice = LicenseChoice.PublicDomain,
     val submitting: Boolean = false,
     val emptyBody: Boolean = false,
     val refused: Boolean = false,
@@ -82,8 +80,7 @@ class ComposePostViewModel @Inject constructor(
     fun onTitleChange(v: String) = _state.update { it.copy(title = v) }
     fun onDescriptionChange(v: String) = _state.update { it.copy(description = v) }
     fun onBodyChange(v: String) = _state.update { it.copy(body = v, emptyBody = false) }
-    fun onAttributionChange(v: Boolean) = _state.update { it.copy(attributionRequired = v) }
-    fun onOversightChange(v: OversightChoice) = _state.update { it.copy(oversight = v) }
+    fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
     fun onSubmit() {
@@ -108,7 +105,7 @@ class ComposePostViewModel @Inject constructor(
                     title = s.title.ifBlank { null },
                     description = s.description.ifBlank { null },
                     content = s.body,
-                    license = LicenseChoice(s.attributionRequired, s.oversight),
+                    license = s.license,
                 )
             } else {
                 content.preparePostEdit(
