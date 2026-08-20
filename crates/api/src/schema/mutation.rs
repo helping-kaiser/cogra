@@ -323,15 +323,15 @@ struct PreparePostInput {
     p_directed: Option<Dimension>,
 }
 
-/// A Post edit: omitted fields are untouched (newest-wins fold per
-/// field, post.md §4); an explicit null clears the field. Identity,
-/// creator, and license never edit.
+/// A Post edit: the complete new content state, the same field set a
+/// create carries (post.md §4). An omitted title or description is a
+/// Post without one. Identity, creator, and license never edit.
 #[derive(InputObject)]
 struct PreparePostEditInput {
     id: Uuid,
-    title: async_graphql::MaybeUndefined<String>,
-    description: async_graphql::MaybeUndefined<String>,
-    content: async_graphql::MaybeUndefined<String>,
+    title: Option<String>,
+    description: Option<String>,
+    content: String,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -347,12 +347,11 @@ struct PrepareCommentInput {
     p_interest: Option<Dimension>,
 }
 
-/// A Comment edit: an omitted body is refused (nothing would change);
-/// an explicit null clears to empty.
+/// A Comment edit: the complete new body (comment.md §4).
 #[derive(InputObject)]
 struct PrepareCommentEditInput {
     id: Uuid,
-    content: async_graphql::MaybeUndefined<String>,
+    content: String,
 }
 
 /// A profile update's field set — omitted = untouched, explicit null =
@@ -411,8 +410,8 @@ impl PrepareContentPayload {
     }
 }
 
-/// An edit field from the wire: undefined = untouched, null = cleared,
-/// a value = replaced (post.md §4 — empty is a value).
+/// A profile-update field from the wire: undefined = untouched, null =
+/// cleared, a value = replaced (user.md §4 — empty is a value).
 fn edit_field(v: async_graphql::MaybeUndefined<String>) -> Option<String> {
     match v {
         async_graphql::MaybeUndefined::Undefined => None,
@@ -1594,9 +1593,9 @@ impl Mutation {
         let cfg = ctx.data::<OnboardingConfig>()?;
         let draft = crate::content::PostEditDraft {
             id: input.id,
-            title: edit_field(input.title),
-            description: edit_field(input.description),
-            content: edit_field(input.content),
+            title: input.title,
+            description: input.description,
+            content: input.content,
         };
         match crate::content::prepare_post_edit(
             pool,
@@ -1652,7 +1651,7 @@ impl Mutation {
         let cfg = ctx.data::<OnboardingConfig>()?;
         let draft = crate::content::CommentEditDraft {
             id: input.id,
-            content: edit_field(input.content),
+            content: input.content,
         };
         match crate::content::prepare_comment_edit(
             pool,
