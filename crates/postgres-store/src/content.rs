@@ -663,35 +663,56 @@ pub async fn list_posts(
     // cursor would put the walk in the wrong branch — serving the entry
     // again out of the other one, or skipping what sorts between them.
     let cursor = resolve_post_cursor(pool, cursor).await?;
-    // The two namespaces never interleave: every pending entry sorts
-    // ahead of every landed one. So a walk fills from whichever branch
-    // the cursor is in and continues into the other, and each branch
-    // stays a single index-served query.
+    merge_walk(
+        cursor,
+        backward,
+        limit,
+        include_pending,
+        |c, back, n| list_posts_landed(pool, c, back, n, include_pending),
+        |c, back, n| list_posts_pending(pool, c, back, n),
+    )
+    .await
+}
+
+/// The two-branch walk both listings share. The namespaces never
+/// interleave — every pending entry sorts ahead of every landed one — so
+/// the walk fills from whichever branch the cursor sits in and continues
+/// into the other, and each branch stays a single index-served query.
+/// Results always come back newest-first, whichever way the walk ran.
+async fn merge_walk<T, Landed, Pending, LFut, PFut>(
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    include_pending: bool,
+    landed: Landed,
+    pending: Pending,
+) -> Result<Vec<T>, ContentError>
+where
+    Landed: Fn(Option<LandingOrder>, bool, i64) -> LFut,
+    Pending: Fn((Option<Timestamp>, Option<Uuid>), bool, i64) -> PFut,
+    LFut: std::future::Future<Output = Result<Vec<T>, ContentError>>,
+    PFut: std::future::Future<Output = Result<Vec<T>, ContentError>>,
+{
     let in_pending = cursor.is_some_and(|c| c.order.is_pending());
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = list_posts_landed(pool, cursor.map(|c| c.order), true, limit, include_pending)
-                .await?;
+            out = landed(cursor.map(|c| c.order), true, limit).await?;
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
-            let mut pending =
-                list_posts_pending(pool, pending_from(cursor), true, remaining).await?;
-            pending.append(&mut out);
-            out = pending;
+            let mut head = pending(pending_from(cursor), true, remaining).await?;
+            head.append(&mut out);
+            out = head;
         }
     } else {
         if include_pending && (cursor.is_none() || in_pending) {
-            out = list_posts_pending(pool, pending_from(cursor), false, limit).await?;
+            out = pending(pending_from(cursor), false, limit).await?;
         }
         let remaining = limit - out.len() as i64;
         if remaining > 0 {
             let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
-            out.append(
-                &mut list_posts_landed(pool, landed_cursor, false, remaining, include_pending)
-                    .await?,
-            );
+            out.append(&mut landed(landed_cursor, false, remaining).await?);
         }
     }
     Ok(out)
@@ -970,48 +991,15 @@ pub async fn comments_for_target(
     include_pending: bool,
 ) -> Result<Vec<Comment>, ContentError> {
     let cursor = resolve_comment_cursor(pool, cursor).await?;
-    let in_pending = cursor.is_some_and(|c| c.order.is_pending());
-    let mut out = Vec::new();
-    if backward {
-        if !in_pending {
-            out = comments_landed(
-                pool,
-                target_id,
-                cursor.map(|c| c.order),
-                true,
-                limit,
-                include_pending,
-            )
-            .await?;
-        }
-        let remaining = limit - out.len() as i64;
-        if include_pending && remaining > 0 {
-            let mut pending =
-                comments_pending(pool, target_id, pending_from(cursor), true, remaining).await?;
-            pending.append(&mut out);
-            out = pending;
-        }
-    } else {
-        if include_pending && (cursor.is_none() || in_pending) {
-            out = comments_pending(pool, target_id, pending_from(cursor), false, limit).await?;
-        }
-        let remaining = limit - out.len() as i64;
-        if remaining > 0 {
-            let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
-            out.append(
-                &mut comments_landed(
-                    pool,
-                    target_id,
-                    landed_cursor,
-                    false,
-                    remaining,
-                    include_pending,
-                )
-                .await?,
-            );
-        }
-    }
-    Ok(out)
+    merge_walk(
+        cursor,
+        backward,
+        limit,
+        include_pending,
+        |c, back, n| comments_landed(pool, target_id, c, back, n, include_pending),
+        |c, back, n| comments_pending(pool, target_id, c, back, n),
+    )
+    .await
 }
 
 /// The landed branch of the thread read; `include_pending` gates the
