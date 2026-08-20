@@ -1640,8 +1640,8 @@ Every passive node type implements Reviewable: anything that exists in the
 graph admits attributed public commentary. A Review transitions no
 settlement state, moves no title, binds no tag, creates no membership, and
 enters no admission quantity. Universal Reviewability is **standing-inert**,
-and the inertness is semantic rather than topological: Review is not a
-standing-designated person-vouch family, and no raw Review leg or
+and the inertness is semantic rather than topological: a Review cell always
+resolves to its author, and no raw Review leg or
 Review-created Comment can lend upstream standing to a third party's later
 Reference — a later Reference is evaluated as its own complete act, through
 its own author (`def:graph:act-edge-projection`,
@@ -1686,8 +1686,8 @@ Passive leaf nodes (`subsec:nodes:leaf-passive-nodes`):
   Self-edge bond. Taggable, Reviewable. In: **Registration**, Self (Dec.),
   Opinion, Tag/A, Review/A, **Invitation/T, De-invite/T** (from Chats).
   Out: Self (Rep.) → Actor (derived), Tag/T → Type, Review/T → Comment.
-  Profile-targeted person-directed acts are filtered by person-vouch
-  eligibility before they can carry source rate into standing.
+  Profile-targeted person-directed acts must clear recipient resolution
+  before they can carry source rate to the bound Actor.
 - **Content** (`node:nodes:content`) — primary digital artifact, minted
   from its Publish act. Taggable, Reviewable. In: **Publish (genesis, fixes
   $\mathrm{creator}$)**, Opinion, Tag/A, Review/A. Out: Tag/T → Type,
@@ -1799,14 +1799,14 @@ standing, not a second run of the standing machinery.
 |---|---|---|---|---|---|---|
 | **Registration** | Actor → Profile | Identity | $(1,0,0,1)$ | Full | $p_d = p_i = 1$ (fixed); $\epsilon = +1$ forced | actor's self-introduction and the **anchoring record** of the grounded pair (Actor, Profile) — nothing minted; the sole family carrying fresh grounded endpoints; root of the author's identity chain; parallel Registrations update payload only, never the identity; one ordinary act under final-set admission (`edge:nodes:registration`, `def:graph:registration`) |
 | **Publish** | Actor → Content | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | **genesis act of a Content node**, fixing $\mathrm{creator}$; mirrors Owner (row-collapse); license qualifiers are public protocol references of this act (`edge:nodes:publish`) |
-| Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is person-directed and subject to person-vouch eligibility |
-| Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a standing vouch |
+| Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is person-directed and subject to recipient resolution |
+| Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a recipient; the cell resolves home |
 | Participant | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | Full | interactivity $i$, responsibility $r$ ($p_d = i$, $p_i = r$) | the actor's own membership signal for the terminal membership fold (§9.8); the founding member's Participant is the Chat's genesis act |
 | Owner | Actor → Item | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | at $a = 0$ anchors the title thread but is routing-inert — title is sentiment-blind; orphaned Owner edges persist without title force |
 | **Join Request** | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | **Half** | urgency $u \in [-1,1]$, formality $f \in [-1,1]$ ($p_d = u$, $p_i = f$) | a proposal, not participation: creates no membership, alters no Chat state (`edge:nodes:join-request`) |
 | Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title moves only at Ratify; person-directed: only positive-coordinate Accepts fold into the standing projection |
 | Ratify | Actor(buyer) → Actor(seller) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | final comfort $c$, final equity $e$ | settlement reference must match the Accept's, plus the exact Accept reference; the commit record (final at the certificate); same person-vouch role |
-| Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — never vouches, excluded from the standing projection |
+| Withdraw | Actor(buyer) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | control record — weighed and priced, always resolving home |
 | Rescind | Actor(seller) → Offer | Minimal | $(0,0,0,1)$ | Marginal | $p_d = p_i = 1$ fixed; $\epsilon = +1$ forced | seller's sole escape from a non-binding Accept before commit; control record |
 | **Leave** | Actor → Chat | Minimal | $(0,0,0,1)$ | Marginal | type-fixed $p_d = p_i = 1$; $\epsilon = +1$ forced | unilateral departure/dissociation declaration; **unconditional** (no membership precondition — a Leave from a never-member is a valid public record); no effect on standing, title, settlement, or gates; exit record of the terminal membership fold (`edge:nodes:leave`, `subsec:necessity:unrestricted-departure`) |
 
@@ -1881,10 +1881,10 @@ construction); Withdraw, Rescind, Leave, De-invite/A·T (type-fixed control
 records); Invitation/T (relevance $r \in [0,1]$, intensity 1). All other
 types contain at least one signed user-controlled parameter.
 
-**Coherence column, not vouch column:** $\epsilon$ is routing/coherence
-parity only; vouching is decided by person-vouch eligibility reading stance
-marginals — a $(-,-)$ Profile Opinion has $\epsilon = +1$ but is not a
-person-vouch (it fails the strictly-positive coordinate test).
+**Coherence column, not destination column:** $\epsilon$ is
+routing/coherence parity only; the recipient is decided by resolution
+reading stance marginals — a $(-,-)$ Profile Opinion has $\epsilon = +1$ but
+fails the strictly-positive coordinate clause and resolves to its author.
 
 **Dispatch rule.** Leg identity is (family, leg-role), never tensor geometry:
 Reference/A and Review/T, and Reference/T and Review/A, are geometric
@@ -1951,9 +1951,15 @@ policy verdict).
 
 **Inviter Revocation (`def:epoch:inviter-revocation`).** Author $j$'s
 Invitation act toward incidence (Chat $C$, Profile $P$) is **absent** from
-person-vouch compilation iff the $\prec$-maximal element of $j$'s own
-{Invitation, De-invite} records with that incidence is a De-invite; a later
-complete Invitation re-establishes the eligible act. Suppression is
+fold-cell compilation iff the latest **epoch index** represented in $j$'s own
+{Invitation, De-invite} records with that incidence contains a De-invite —
+ties within an epoch favouring the revocation; a later complete Invitation at
+a subsequent epoch re-establishes the act. The rule is **epoch-quantized,
+not order-read**, and obligatorily so: no standing quantity may read
+host-assigned order or any intra-epoch "latest"
+(`post:epoch:standing-epoch-set-determinism`), and the $\prec$-maximal
+element is free among acts with no declared dependency, so a host could
+otherwise decide suppression by placement. Suppression is
 strictly per-author — it never affects another author's invitation — and is
 a suppression predicate, not a parameter contribution. No control edge
 enters any stance sum. "Conviction sums; consent toggles": stance bundles
@@ -2631,10 +2637,11 @@ memory, no below-wall branch**. It has no effect on standing.
 **Epoch Replay Determinism (`prop:epoch:epoch-replay-determinism`).** Given
 $E_k$, the boundary burn state, the debit schedule, the published
 constants, the projection-compiler version, and the declared certificate
-procedure, the entire epoch-$k$ derivation — rates, eligible relations,
-coefficients, envelopes, admission fractions, final flow, final standing,
-title, the raw Self-edge reading, activations, stamps, headroom, and stage
-certificates — is deterministic: a function of the authoritative order
+procedure, the entire epoch-$k$ derivation — rates, fold cells,
+coefficients, the base matrix, emission fractions, the accepted rung, the
+transport, final standing, title, the raw Self-edge reading, activations,
+stamps, headroom, and the certificate — is deterministic: a function of the
+authoritative order
 $\mathcal{Q}_k$ (`lem:graph:ordered-replay-determinism`), invariant under
 every payload state.
 
@@ -2781,11 +2788,11 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 | causal parents, declared dependencies | formation rule; authoritative-order compliance ($\mathrm{DepOK}$); causal closure of $E_k$ | backward-only metadata; never a scoring input (the $\tau$-farming lint) |
 | handshake objects ($C^{\text{pre}}_q$, verified act, approval witness) | formation — only approved verified acts are orderable | fraud proofs are verification evidence |
 | $\tilde{w}(e)$ | raw-graph traversals: feed ranking, the raw signed double-cover service, bridge Channel 1 | **one raw formula for all raw-graph consumers**; the formula itself is a terminal default (§3); standing is not a raw consumer |
-| stance marginals $p_d, p_i$ | person-vouch eligibility (folded coordinates); settlement-adjacent stance reads | stance gates the person-vouch; terminal stance consumers named in the ledger |
-| folded relations $\xi$, coefficients $c(\xi)$ | standing projection → mediant → gate | the relation layer (§11.3) |
-| $\bar{g}_{\text{vch}}(x)$ | every direct relation weight in the standing solve | wall-clamped; below-wall constant |
-| envelopes, admission fractions $t_k^{[h]}$, stage equilibria, row certificates | select the certified stage → final flow → standing → W2 | binding intermediate values, not straddlers |
-| $W_{\text{end}}^{(k)}(u \to i)$ | the standing mediant | sole relational input to standing |
+| stance marginals $p_d, p_i$ | recipient resolution (folded coordinates); settlement-adjacent stance reads | stance decides the destination; terminal stance consumers named in the ledger |
+| fold cells $\xi$, coefficients $c(\xi)$ | base allocation matrix → transport → mediant → gate | the act-folding layer (§11.3) |
+| $\bar{g}_{\text{vch}}(x)$ | every tilted allocation score in the standing solve | wall-clamped; below-wall constant |
+| base matrix $\mathsf{A}$, emission $\mathfrak{e}_u$, accepted rung $t_k$, certificate $\mathcal{K}_k$ | assemble the transport → standing → W2 | binding intermediate values, not straddlers |
+| transport entries $\Pi_{ui}$ | the standing mediant | sole relational input to standing |
 | settlement references | recognition clauses (i)–(ii); forced handshake chain | act-identity resolution |
 | ownership thread | title certificate; recognition clause (iii) | title as straddler |
 | $\mathrm{owner}^{(k)}$ | recognition clause (iii) | terminal routing/display read it downstream |
@@ -3065,12 +3072,12 @@ Word register (closure edition symbol index, *Word Collisions*):
   the neutral source ($r$, per-actor rate). Bundle is not fiber.
 - **coherence vs. stance** — $\epsilon(e) = \mathrm{sgn}(p_d p_i)$ is the
   coherence bit; the stance marginal $\mathrm{sgn}(p_d)$ is the author's
-  directional verdict. Coherence composes; stance gates person-directed
-  endorsement.
-- **envelope vs. final flow** — the source envelope is the source's exact
-  max-product view of an actor; the final flow is the relational mass
-  admitted into that actor's standing row. Admitting less into a row does
-  not rewrite the envelope.
+  directional verdict. Coherence composes; stance decides where a
+  person-directed cell resolves.
+- **tilt vs. emission** — the tilt sets how sharply a source's regard is
+  divided among its recipients; emission sets how much of that source's pair
+  leaves its own row at all. Two axes, never one dial
+  (`rem:epoch:tilt-backoff-is-not-export-backoff`).
 - **maturity** — $\tau$ is graph connection-context maturity, a raw
   (terminal) channel; Layer-0 maturity is a cycle/lead concept, cited only
   through `PA-` labels. Raw maturity never enters the standing activation.
@@ -3093,10 +3100,11 @@ $\epsilon \in \{+1,-1\}$ (parity) — the pre-Edition-4 collision partner
 $\epsilon_{\text{clip}}$ is deleted · $N_i$ vs $N_{\text{epoch}}$ ·
 $\mathbb{T}^{\text{act}}_q$ (act time) vs $\mathbb{T}_{\partial k}$
 (boundary slot of derived readings) vs $\mathrm{pos}(e)$ (audit
-coordinate) · $x$ is reserved for reduced stage standing · $g_{\text{vch}}$
-(activation) vs $g$ (Bid generosity) · $W_{\text{end}}^{(k)}$ (final flow)
-vs $W^{[h]}_{\text{env}}$ (envelopes) vs $W_{\text{loc}}$ (local width) ·
-$L_{\text{vch}}$ (projected) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
+coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
+(activation) vs $g$ (Bid generosity) · $\Pi_{ui}$ (transport entry) vs
+$W_{\text{loc}}$ (local width) · $\mathfrak{m}_m$ (depth mass) vs $m_\theta$
+(margin factor) vs $m^*$ (supported depth) ·
+$L_{\text{hop}}$ (transport) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
 (Layer-0 opaque address vs actor label after frame binding). **Full
 (routing tier) vs full mask (stored shape)** remains a prose distinction —
 a Half edge is full-mask but Half-tier.
