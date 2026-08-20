@@ -631,10 +631,14 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
 /// promoted Registration flips its account's approved application to
 /// landed and the account state to member. Driven off the ingestion
 /// pass; a no-op for Registrations without an approved application (the
-/// genesis records on a rebuild). A failure logs and leaves the
-/// application approved — it lands on a later pass or surfaces
-/// operationally.
-pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
+/// genesis records on a rebuild). A failure leaves the application
+/// approved — it lands on a later pass — and is returned rather than
+/// swallowed, so the ingestion pass reports what did not follow.
+pub async fn land_promoted(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Vec<crate::ingest::PromotionFailure> {
+    let mut failures = Vec::new();
     for write in promoted {
         if write.family != Family::Registration.as_str() {
             continue;
@@ -642,11 +646,15 @@ pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
         match store::land_account(pool, write.actor_id).await {
             Ok(true) => tracing::info!(account = %write.actor_id, "application landed"),
             Ok(false) => {}
-            Err(e) => {
-                tracing::error!(account = %write.actor_id, error = %e, "landing failed");
-            }
+            Err(e) => failures.push(crate::ingest::PromotionFailure {
+                stage: "onboarding",
+                staged: write.id,
+                act_id: write.act_id.clone(),
+                error: e.to_string(),
+            }),
         }
     }
+    failures
 }
 
 /// The account reaper (auth.md "Reaper"): a periodic sweep deleting

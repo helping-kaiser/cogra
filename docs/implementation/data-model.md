@@ -152,15 +152,23 @@ read individually, never through the chain root, so the anchoring
 record's payload format constrains nothing.
 
 The rules: CoGra sets the PCE body (key 1) to `""` — everything
-CoGra renders lives in the guild map. A genesis act carries every
-supplied field; an **edit carries only the changed fields** —
-absent means untouched, present-and-empty means cleared — matching
-the per-field newest-wins fold ([post.md §4](../instances/post.md#4-editing)).
+CoGra renders lives in the guild map. A content act — genesis or
+edit — **carries the complete content state**: absent and
+present-and-empty both render as nothing, because the winning
+payload is the whole value
+([post.md §4](../instances/post.md#4-editing)). A profile update
+carries only the changed fields — absent means untouched,
+present-and-empty means cleared
+([user.md §4](../primitive/user.md#4-postgres-side-content)).
 License qualifiers never ride the envelope: they are structural
 fields of the record (public protocol references,
 [layer1-interface.md §8.2](../primitive/layer1-interface.md)),
-published as the canonical string `a=<0|1>;o=<0|0.5|1>` in the
-record's license field, so they survive every payload state.
+published as the canonical string `a=<degree>;o=<degree>` in the
+record's license field, so they survive every payload state. A
+degree is a decimal on `[0, 1]` at three-decimal resolution with
+trailing zeros trimmed — `a=0;o=0.5` — so the string is one
+rendering per point and round-trips exactly. The display rows
+cache it; the record is what binds.
 Because the L1 payload witness covers the envelope bytes and the
 envelope carries the node UUID, the witness is proof of the display
 row's binding to its minted node. The spec's §3 text pipeline
