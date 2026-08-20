@@ -14,6 +14,7 @@ import {
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
+  type LandingState,
   type PostDetailQuery,
   type PostsQuery,
 } from "@/__generated__/graphql";
@@ -33,6 +34,15 @@ export type Page<T> = {
   endCursor: string | null;
   hasNextPage: boolean;
 };
+
+/**
+ * Whether a content node is authored but not yet ordered on L1
+ * (api-spec.md "Landing"). An unlanded edit reads PENDING too — the
+ * text on screen is the pending version.
+ */
+export function isPending(node: { landing: { state: LandingState } }): boolean {
+  return node.landing.state === "PENDING";
+}
 
 export type PostDetail = {
   post: PostView;

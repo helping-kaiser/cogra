@@ -16,6 +16,7 @@ import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchCommentReplies,
   fetchPostDetail,
+  isPending,
   prepareComment,
   prepareCommentEdit,
   type CommentView,
@@ -31,6 +32,7 @@ import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
+import { PendingMarker } from "@/lib/ui/pending-marker";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -406,6 +408,11 @@ export function PostView({
                   Edited
                 </p>
               )}
+              {/* Its sibling in the same register: an unlanded comment
+                  — or one carrying an unlanded edit — is still real. */}
+              {isPending(comment) && (
+                <PendingMarker testId={`comment-pending-${comment.id}`} />
+              )}
               <div className="flex gap-2">
                 {phase === "signedIn" && (
                   <Button
@@ -531,6 +538,10 @@ export function PostView({
         />
       )}
       <LicenseTerms license={post.license} testId="post-license-terms" />
+      {/* The post reads in full whether or not it has landed; the
+          marker carries the difference (design.md §9). An unlanded edit
+          marks the post too — the text on screen is that edit. */}
+      {isPending(post) && <PendingMarker testId="post-pending" />}
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces

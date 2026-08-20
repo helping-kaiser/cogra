@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchPosts, type PostView } from "@/lib/api/content-api";
+import { fetchPosts, isPending, type PostView } from "@/lib/api/content-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -21,6 +21,7 @@ import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
+import { PendingMarker } from "@/lib/ui/pending-marker";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -163,6 +164,10 @@ export function FeedView({
                 {post.title.value && <h2 className="text-title-medium">{post.title.value}</h2>}
                 <p className="line-clamp-4 text-body-medium">{post.content.value}</p>
               </Link>
+              {/* Shown in full, marked quietly (design.md §9) — a
+                  pending post is real content whose place in the order
+                  is not yet fixed. */}
+              {isPending(post) && <PendingMarker testId={`feed-pending-${post.id}`} />}
             </Card>
           </li>
         ))}
