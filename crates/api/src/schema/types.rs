@@ -1243,7 +1243,7 @@ pub struct License {
     /// left open to audit, on `[0, 1]` (`def:content:provenance`).
     /// CoGra publishes three readings: 0 no record owed, 0.5 a public
     /// record of commercial uses only, 1 a public record of every use.
-    pub oversight: f64,
+    pub provenance: f64,
 }
 
 impl License {
@@ -1256,7 +1256,7 @@ impl License {
             .ok_or_else(|| async_graphql::Error::new("license qualifiers are unreadable"))?;
         Ok(Self {
             attribution: license.attribution,
-            oversight: license.oversight,
+            provenance: license.provenance,
         })
     }
 }

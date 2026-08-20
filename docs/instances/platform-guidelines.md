@@ -196,7 +196,7 @@ witnessed on the shared graph via the platform-document anchor.
 Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
 thereafter: **attribution** `a ∈ [0, 1]` (credit requirement,
-`def:content:attribution`) and **oversight** `o ∈ [0, 1]` (public
+`def:content:attribution`) and **provenance** `o ∈ [0, 1]` (public
 use-record requirement, `def:content:provenance`). Neither axis
 is a switch — each is a judgment of degree. Both are terms over
 *downstream use* — what others must do when they adopt, quote, or
