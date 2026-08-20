@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post_versions SET pending = FALSE WHERE post_id = $1 AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c3e3655118d45a152ea8fd1aac3b2632d0a593237db4c11ed63a29ad8507127e"
+}

@@ -497,6 +497,7 @@ async fn approve_one<B: L1Boundary>(
             asserted_parents: vec![],
             deps: vec![registration.proposal.body.act_id()],
             payload: vec![],
+            node: None,
         },
     )
     .await?;
@@ -614,6 +615,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             asserted_parents: vec![],
             deps: vec![],
             payload: registration_payload(&application.handle),
+            node: None,
         },
     )
     .await?;
