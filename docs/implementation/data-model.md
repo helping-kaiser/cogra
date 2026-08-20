@@ -152,10 +152,14 @@ read individually, never through the chain root, so the anchoring
 record's payload format constrains nothing.
 
 The rules: CoGra sets the PCE body (key 1) to `""` — everything
-CoGra renders lives in the guild map. A genesis act carries every
-supplied field; an **edit carries only the changed fields** —
-absent means untouched, present-and-empty means cleared — matching
-the per-field newest-wins fold ([post.md §4](../instances/post.md#4-editing)).
+CoGra renders lives in the guild map. A content act — genesis or
+edit — **carries the complete content state**: absent and
+present-and-empty both render as nothing, because the winning
+payload is the whole value
+([post.md §4](../instances/post.md#4-editing)). A profile update
+carries only the changed fields — absent means untouched,
+present-and-empty means cleared
+([user.md §4](../primitive/user.md#4-postgres-side-content)).
 License qualifiers never ride the envelope: they are structural
 fields of the record (public protocol references,
 [layer1-interface.md §8.2](../primitive/layer1-interface.md)),
