@@ -97,9 +97,15 @@ impl Rig {
     /// Closes the epoch and runs the ingestion pass.
     async fn close_and_ingest(&self) -> api::ingest::IngestOutcome {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
+        let outcome = api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
             .await
-            .expect("ingests")
+            .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
+        outcome
     }
 }
 

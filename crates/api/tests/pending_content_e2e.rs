@@ -139,13 +139,18 @@ impl Rig {
 
     async fn close_and_ingest(&self) {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(
+        let outcome = api::ingest::ingest_pending(
             &api::l1::StandInBoundary(self.standin.clone()),
             &self.pool,
             GC,
         )
         .await
         .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
     }
 
     /// The pre-commitment leg alone — the anchor the canon names. The
