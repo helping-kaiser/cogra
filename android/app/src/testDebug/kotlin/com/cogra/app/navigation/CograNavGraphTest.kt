@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.performTextInput
@@ -326,6 +327,11 @@ class CograNavGraphTest {
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("feed_post_p1").performClick()
+        // The thread is a lazy list, so the prompt below it is composed
+        // only once scrolled to.
+        waitForTag("detail_list")
+        compose.onNodeWithTag("detail_list")
+            .performScrollToNode(hasTestTag("detail_comment_signin"))
         waitForTag("detail_comment_signin")
         // The composer is absent for the anonymous reader, swapped —
         // never merely disabled.

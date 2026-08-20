@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.OversightChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.NoActorKeyException
@@ -42,8 +41,7 @@ data class PostDetailUiState(
     val transportFault: TransportFault? = null,
     /** The comment box. */
     val draft: String = "",
-    val attributionRequired: Boolean = false,
-    val oversight: OversightChoice = OversightChoice.NONE,
+    val license: LicenseChoice = LicenseChoice.PublicDomain,
     val submitting: Boolean = false,
     val refused: Boolean = false,
     val signingFailed: Boolean = false,
@@ -280,7 +278,7 @@ class PostDetailViewModel @Inject constructor(
                 val outcome = content.prepareComment(
                     target = target,
                     content = s.replyDraft,
-                    license = LicenseChoice(s.attributionRequired, s.oversight),
+                    license = s.license,
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -312,8 +310,7 @@ class PostDetailViewModel @Inject constructor(
     }
 
     fun onDraftChange(v: String) = _state.update { it.copy(draft = v) }
-    fun onAttributionChange(v: Boolean) = _state.update { it.copy(attributionRequired = v) }
-    fun onOversightChange(v: OversightChoice) = _state.update { it.copy(oversight = v) }
+    fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onCommentSignedShown() = _state.update { it.copy(commentSigned = false) }
 
     fun onSubmitComment() {
@@ -334,7 +331,7 @@ class PostDetailViewModel @Inject constructor(
                 val outcome = content.prepareComment(
                     target = id,
                     content = s.draft,
-                    license = LicenseChoice(s.attributionRequired, s.oversight),
+                    license = s.license,
                 )
             ) {
                 is Outcome.Success -> outcome.value

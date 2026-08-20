@@ -126,13 +126,18 @@ impl Rig {
 
     async fn close_and_ingest(&self) {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(
+        let outcome = api::ingest::ingest_pending(
             &api::l1::StandInBoundary(self.standin.clone()),
             &self.pool,
             8,
         )
         .await
         .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
     }
 
     /// The device's two signing steps over a `PrepareContentPayload`'s
@@ -215,7 +220,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             json!({ "input": {
                 "title": "Hello graph",
                 "content": "The very first post.",
-                "license": { "attributionRequired": true, "oversight": "NONE" },
+                "license": { "attribution": 1.0, "oversight": 0.0 },
             }}),
         )
         .await;
@@ -273,7 +278,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
             json!({ "input": {
                 "target": post_id,
                 "content": "Great start!",
-                "license": { "attributionRequired": false, "oversight": "NONE" },
+                "license": { "attribution": 0.0, "oversight": 0.0 },
                 "pInterest": 0.5,
             }}),
         )
@@ -375,7 +380,7 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "content": "anonymous?",
-                "license": { "attributionRequired": false, "oversight": "NONE" },
+                "license": { "attribution": 0.0, "oversight": 0.0 },
             }}),
         )
         .await;
@@ -400,7 +405,7 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             json!({ "input": {
                 "target": Uuid::new_v4(),
                 "content": "into the void",
-                "license": { "attributionRequired": false, "oversight": "NONE" },
+                "license": { "attribution": 0.0, "oversight": 0.0 },
             }}),
         )
         .await;
@@ -420,7 +425,7 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "content": "x",
-                "license": { "attributionRequired": false, "oversight": "NONE" },
+                "license": { "attribution": 0.0, "oversight": 0.0 },
                 "pDirected": 1.5,
             }}),
         )

@@ -13,6 +13,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::{PgPool, auth as store, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
+use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
 
@@ -145,26 +146,28 @@ pub async fn prepare_profile_update<B: L1Boundary>(
 /// actor_profile_versions row. The admission Registration (and the
 /// genesis casts) carry pre-PCE payloads — anything without the
 /// envelope magic is theirs, handled by onboarding, and skipped here.
-/// Failures log and leave the record un-promoted — the mirror governs,
-/// and a later rebuild can re-run promotion.
-pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
+/// A failure leaves the record un-promoted — the mirror governs, and a
+/// later rebuild can re-run promotion — and is returned rather than
+/// swallowed, so the ingestion pass reports what did not follow.
+pub async fn land_promoted(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Vec<PromotionFailure> {
+    let mut failures = Vec::new();
     for write in promoted {
         if write.family != Family::Registration.as_str() {
             continue;
         }
-        match land_one(pool, write).await {
-            Ok(()) => {}
-            Err(ProfileError::BadInput { .. }) => unreachable!("promotion raises no input errors"),
-            Err(e) => {
-                tracing::error!(
-                    staged = %write.id,
-                    act = %write.act_id,
-                    error = %e,
-                    "profile promotion failed; record remains unpromoted"
-                );
-            }
+        if let Err(e) = land_one(pool, write).await {
+            failures.push(PromotionFailure {
+                stage: "profile",
+                staged: write.id,
+                act_id: write.act_id.clone(),
+                error: e.to_string(),
+            });
         }
     }
+    failures
 }
 
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
