@@ -1933,10 +1933,25 @@ graph action.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
 (`def:nodes:canonical-membership-fold`).** For actor $a$ and Chat $C$, let
-$M(a,C)$ be $a$'s own Participant and Leave records toward $C$ (a
-$\prec$-chain). Then
+$M(a,C)$ be $a$'s own **acts** bearing on membership of $C$ — not edges
+incident on $C$, which is a different and wrong set. Three shapes bear: a
+Participant act with $T = C$ (participation in $C$); a Participant act with
+$A = C$ and $T \neq C$ (departure from $C$); a Leave toward $C$
+(departure). Then
 $\mathrm{member}^{(k)}(a,C) = \text{true} \iff M(a,C) \neq \varnothing$ and
-its $\prec$-maximal element is a Participant. Under this default, De-invite
+its latest element is a participation shape. One move act is simultaneously
+$C_0$-departing and $C_1$-joining, read once in each fold from the leg
+roles of the same act. **The fold keys on leg role, never on family
+incidence**: reading "any Participant act incident on $C$" as participation
+takes a move's A-leg for a rejoin of the chat being left, so moving away
+would read as staying. Leave is not subsumed — departing without arriving
+is not expressible as a Participant act, there being no "nowhere" node and
+a self-referential T-leg being a join. Membership does not take the
+chain requirement of the revision folds
+(`rem:nodes:membership-not-chain-ordered`): $M(a,C)$ spans two families and
+two leg roles, so it is no revision bundle and has no genesis act to root a
+chain, and fold-ignoring a chainless act would condition departure on chain
+hygiene. Under this default, De-invite
 records are **advisory**: they enter only through a published chat/guild
 policy $\mathcal{P}$ naming an authority set (published per
 `subsec:deployment:completeness`). Where $\mathcal{P}$ recognizes one, the
