@@ -31,7 +31,7 @@ const GC: i64 = 8;
 fn license() -> License {
     License {
         attribution: 1.0,
-        oversight: 0.0,
+        provenance: 0.0,
     }
 }
 
