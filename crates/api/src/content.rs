@@ -588,13 +588,14 @@ async fn land_one(
     write: &staged::PromotedWrite,
     family: Family,
 ) -> Result<(), ContentError> {
+    // An expired write still carries its payload — expiry stops serving
+    // the content, the reap is what destroys it — so a record landing in
+    // that window promotes like any other, and the insert branches below
+    // rebuild the display rows expiry took down, this time with the real
+    // landing order. Past the reap there is no row to load and the
+    // promotion fails loudly.
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
-    if payload.is_empty() {
-        return Err(ContentError::Internal(
-            "staged payload already collected (late landing)".into(),
-        ));
-    }
     let sealed = staged_row
         .sealed
         .as_ref()
