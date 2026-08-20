@@ -944,7 +944,7 @@ async fn an_expired_edit_leaves_the_previous_version_rendered(pool: PgPool) {
         .gql(
             Some(&token),
             PREPARE_POST_EDIT,
-            json!({ "input": { "id": post_id, "title": "Doomed title" }}),
+            json!({ "input": { "id": post_id, "title": "Doomed title", "content": "Old body" }}),
         )
         .await;
     rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
