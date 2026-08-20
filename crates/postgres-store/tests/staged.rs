@@ -91,7 +91,7 @@ fn published(author: &str, seq: u64, family: Family, epoch: i64, position: i64) 
 async fn stage(pool: &PgPool, actor_id: Uuid, p: &Proposal, prepared_epoch: i64) -> Uuid {
     let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
-    staged::insert(&mut tx, id, actor_id, p, prepared_epoch)
+    staged::insert(&mut tx, id, actor_id, p, prepared_epoch, None)
         .await
         .expect("insert");
     tx.commit().await.expect("commit");

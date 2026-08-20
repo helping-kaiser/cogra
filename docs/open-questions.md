@@ -37,6 +37,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q37 — see [design.md §6](implementation/design.md#6-components), [android.md "Screens"](implementation/android.md#screens), and [web.md "Routes"](implementation/web.md#routes): the bar rides every **read** surface — the tab roots and the read drill-ins (post detail, any actor's profile) — and leaves the **task** flows (compose, profile edit, settings, invites, the key and auth surfaces), which carry a back arrow instead. A read drill-in is still reading, so the frame that got the reader there stays; a flow owns the screen until it finishes or is backed out of, and a tab tap mid-write is an accidental abandon. One rule for both clients, purely presentational — no graph or economics contact.
 - Q38 — see [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission) and [design.md §9](implementation/design.md#9-honesty-surfaces): expired pending content vanishes for every reader (nothing ever existed on the graph, so nothing is marked); the author gets a calm did-not-land notice.
 - Q7 — see [data-model.md §"author_id"](implementation/data-model.md#author_id--one-foreign-key-still-a-cache).
 - Q8 — see [chats.md §6](instances/chats.md#6-moderation-inside-the-chat) and [governance.md §8](primitive/governance.md#8-instances).
@@ -216,33 +217,6 @@ the connection *lists* behind it)? The natural moment to answer
 is slice 2.2, when the stance control makes Affinity bundles
 real. Display-only either way: inbound connections never shape
 the holder's feed.
-
----
-
-## Q37 — Where the bottom bar rides on drill-in surfaces
-
-**Where it shows up:**
-[design.md §6](implementation/design.md#6-components),
-[android.md "Screens"](implementation/android.md#screens),
-[web.md "Routes"](implementation/web.md#routes)
-**Status:** open
-
-### Context
-
-The two clients disagree on where the shell's bar shows. Android
-mounts it on the tab roots only — a drill-in (post detail,
-settings) replaces it with the screen's own back arrow. The web
-renders it on every signed-in route. Popular apps split the
-difference: the bar stays on read drill-ins (a post detail keeps
-the tabs) and leaves full-screen flows (compose, settings).
-Neither client violates a written rule — the rule doesn't exist.
-
-### The question
-
-On which surfaces does the bar ride: tab roots only (Android
-today), everywhere (web today), or tab roots plus read drill-ins
-(the popular-app pattern)? One rule for both clients; purely
-presentational — no graph or economics contact.
 
 ---
 

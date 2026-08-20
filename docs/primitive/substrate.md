@@ -57,7 +57,7 @@ What CoGra **consumes as published** (recompute only to audit):
 - the burn snapshot `B_i` (an L0 input surfaced by L1);
 - the admission rules — formation (with the approval handshake
   and the authoritative act order), the proposed final state, the
-  staged standing package, the final gates (the two-gate write
+  conserved standing package, the final gates (the two-gate write
   rule: W1 solvency / W2a wall / W2b door), settlement
   recognition, and the write
   ([layer1-interface.md §7](layer1-interface.md));
