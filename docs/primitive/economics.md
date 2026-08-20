@@ -209,7 +209,11 @@ anchor's genesis
 ([substrate.md §9](substrate.md#9-node-values-and-updates)). A
 campaign anchor is no proposal anchor: its cover view is the
 campaign's rules, which contributors read to know what earns, and
-superseded terms are history exactly as for a post.
+superseded terms are history exactly as for a post. Whether an
+adjustment restates every term — a Content fold reads the winning
+payload whole — or campaign anchors declare a per-term
+granularity of their own is open
+([open-questions.md Q40](../open-questions.md#q40--campaign-term-granularity-under-whole-payload-content-folds)).
 
 - **Mutable before settlement:** `e_end` (free, unlimited
   extensions — the anti-bot lever, §6.1), `declared_goal`, `χ_c`

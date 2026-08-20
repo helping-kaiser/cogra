@@ -142,11 +142,12 @@ The instantiation of the node-value update rule
   head ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
   The backend populates the chain at prepare time and serializes
   edits per Post.
-- **Granularity:** per field — title, description, body, and the
-  media manifest each fold newest-wins independently; an edit
-  payload carries only the fields it changes. Replacing media is
-  new digests in a new edit payload; the old bytes' digests stay
-  committed on the superseded record.
+- **Granularity:** the whole Post — title, description, body, and
+  the media manifest together. An edit payload is the complete
+  content state, and the winning record renders it as it stands:
+  a field the payload omits is a Post without that field.
+  Replacing media is new digests in a new edit payload; the old
+  bytes' digests stay committed on the superseded record.
 
 Every edit is a priced act — `θ`-debited, permanently counted.
 History is public: superseded payloads remain published unless

@@ -71,7 +71,7 @@ open-questions Q32.
 **Slice 2's text core is closed** (hand-tested 2026-08-12):
 Publish and Review authoring through the write path, the Peer
 Content Envelope, carriage and display content in Postgres,
-per-field newest-wins edits, chronicle and node reads, and the
+newest-wins snapshot edits, chronicle and node reads, and the
 chronological `posts` listing — with the compose, feed, and
 post-detail surfaces on both clients, public reads included.
 Behind it landed two hardening passes: key custody (the signed
