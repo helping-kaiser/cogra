@@ -622,7 +622,7 @@ pub async fn list_posts(
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = list_posts_landed(pool, cursor, true, limit).await?;
+            out = list_posts_landed(pool, cursor, true, limit, include_pending).await?;
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
@@ -644,17 +644,28 @@ pub async fn list_posts(
         let remaining = limit - out.len() as i64;
         if remaining > 0 {
             let landed_cursor = cursor.filter(|c| !c.is_pending());
-            out.append(&mut list_posts_landed(pool, landed_cursor, false, remaining).await?);
+            out.append(
+                &mut list_posts_landed(pool, landed_cursor, false, remaining, include_pending)
+                    .await?,
+            );
         }
     }
     Ok(out)
 }
 
+/// The landed branch. `include_pending` reaches the version lateral as
+/// well as the entity filter: a landed node carrying an unlanded edit
+/// renders that edit's text by default (D4), so a reader who asked for
+/// the settled graph must be served the version that landed instead.
+/// The pre-edit version is always there — an edit appends a row, it
+/// never replaces one — so the node is served either way, and it reads
+/// LANDED with its epoch because the text on screen is ordered fact.
 async fn list_posts_landed(
     pool: &PgPool,
     cursor: Option<LandingOrder>,
     backward: bool,
     limit: i64,
+    include_pending: bool,
 ) -> Result<Vec<Post>, ContentError> {
     let (ce, ca, cp) = match cursor {
         Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
@@ -673,7 +684,8 @@ async fn list_posts_landed(
                JOIN LATERAL (
                    SELECT title, description, content, redaction_reason,
                           pending, created_at
-                   FROM post_versions WHERE post_id = p.id
+                   FROM post_versions
+                   WHERE post_id = p.id AND ($6 OR NOT pending)
                    ORDER BY created_at DESC LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NOT NULL
@@ -693,6 +705,7 @@ async fn list_posts_landed(
         cp,
         backward,
         limit,
+        include_pending,
     )
     .fetch_all(pool)
     .await?;
@@ -840,7 +853,7 @@ pub async fn comments_for_target(
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = comments_landed(pool, target_id, cursor, true, limit).await?;
+            out = comments_landed(pool, target_id, cursor, true, limit, include_pending).await?;
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
@@ -870,19 +883,30 @@ pub async fn comments_for_target(
         if remaining > 0 {
             let landed_cursor = cursor.filter(|c| !c.is_pending());
             out.append(
-                &mut comments_landed(pool, target_id, landed_cursor, false, remaining).await?,
+                &mut comments_landed(
+                    pool,
+                    target_id,
+                    landed_cursor,
+                    false,
+                    remaining,
+                    include_pending,
+                )
+                .await?,
             );
         }
     }
     Ok(out)
 }
 
+/// The landed branch of the thread read; `include_pending` gates the
+/// version lateral for the same reason it does in [`list_posts_landed`].
 async fn comments_landed(
     pool: &PgPool,
     target_id: Uuid,
     cursor: Option<LandingOrder>,
     backward: bool,
     limit: i64,
+    include_pending: bool,
 ) -> Result<Vec<Comment>, ContentError> {
     let (ce, ca, cp) = match cursor {
         Some(c) => (Some(c.landed_epoch), Some(c.act_time), Some(c.position)),
@@ -900,7 +924,8 @@ async fn comments_landed(
                FROM comments c
                JOIN LATERAL (
                    SELECT content, redaction_reason, pending, created_at
-                   FROM comment_versions WHERE comment_id = c.id
+                   FROM comment_versions
+                   WHERE comment_id = c.id AND ($7 OR NOT pending)
                    ORDER BY created_at DESC LIMIT 1
                ) v ON TRUE
                WHERE c.target_id = $6
@@ -922,6 +947,7 @@ async fn comments_landed(
         backward,
         limit,
         target_id,
+        include_pending,
     )
     .fetch_all(pool)
     .await?;

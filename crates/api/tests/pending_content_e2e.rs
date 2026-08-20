@@ -727,6 +727,47 @@ async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
+async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post_id = rig.landed_post(&token, &key, "Old title", "Old body").await;
+
+    let edit = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": post_id, "title": "New title" }}),
+        )
+        .await;
+    rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
+        .await;
+
+    // The default view is the canon: the pending edit's text, marked
+    // pending on a node whose own record landed (D4).
+    let default = rig.listed(None, "first: 10").await;
+    assert_eq!(default[0]["node"]["title"]["value"], "New title");
+    assert_eq!(default[0]["node"]["landing"]["state"], "PENDING");
+
+    // The opt-out is the settled graph: the version that landed, and a
+    // landing state that says so — the epoch contract holds, because
+    // nothing on screen is unlanded any more.
+    let settled = rig.listed(None, "first: 10, includePending: false").await;
+    assert_eq!(settled.len(), 1);
+    let node = &settled[0]["node"];
+    assert_eq!(node["id"], post_id);
+    assert_eq!(
+        node["title"]["value"], "Old title",
+        "the opt-out must not serve an unlanded edit: {node}"
+    );
+    assert_eq!(node["landing"]["state"], "LANDED");
+    assert!(
+        node["landing"]["epoch"].is_i64(),
+        "a LANDED node carries its epoch: {node}"
+    );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (_, key) = rig.seed_member("author", "author@example.com").await;
