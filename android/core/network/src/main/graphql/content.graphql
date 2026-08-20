@@ -26,6 +26,10 @@ fragment PostFields on Post {
   }
   createdAt
   updatedAt
+  landing {
+    state
+    epoch
+  }
   moderationStatus
   license {
     attribution
@@ -48,6 +52,10 @@ fragment CommentFields on Comment {
   }
   createdAt
   updatedAt
+  landing {
+    state
+    epoch
+  }
   moderationStatus
   license {
     attribution
@@ -103,8 +111,10 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
-query Posts($first: Int!, $after: String) {
-  posts(first: $first, after: $after) {
+# `includePending` defaults to true per api-spec.md "Pending entries come
+# first, in their own cursor namespace"; false serves only what landed.
+query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
+  posts(first: $first, after: $after, includePending: $includePending) {
     edges {
       node {
         ...PostFields
@@ -117,14 +127,14 @@ query Posts($first: Int!, $after: String) {
   }
 }
 
-query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!) {
+query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
   post(id: $id) {
     ...PostFields
-    comments(first: $commentsFirst, after: $commentsAfter) {
+    comments(first: $commentsFirst, after: $commentsAfter, includePending: $includePending) {
       edges {
         node {
           ...CommentFields
-          replies(first: $repliesFirst) {
+          replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
                 ...CommentFields
@@ -147,14 +157,14 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
 
 # The expand read: a further page of one comment's direct replies,
 # each carrying its own first reply page so nesting can continue.
-query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!) {
+query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!, $includePending: Boolean! = true) {
   comment(id: $id) {
     id
-    replies(first: $first, after: $after) {
+    replies(first: $first, after: $after, includePending: $includePending) {
       edges {
         node {
           ...CommentFields
-          replies(first: $repliesFirst) {
+          replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
                 ...CommentFields
