@@ -102,13 +102,14 @@ pub struct PostDraft {
     pub p_directed: Option<f64>,
 }
 
-/// An edit's field set: `None` = untouched; `Some("")` = cleared
-/// (post.md §4 — per-field newest-wins; empty is a value).
+/// An edit's complete field set: the payload is the Post's whole new
+/// content state, so an absent title or description is a Post without
+/// one (post.md §4).
 pub struct PostEditDraft {
     pub id: Uuid,
     pub title: Option<String>,
     pub description: Option<String>,
-    pub content: Option<String>,
+    pub content: String,
 }
 
 pub struct CommentDraft {
@@ -121,7 +122,7 @@ pub struct CommentDraft {
 
 pub struct CommentEditDraft {
     pub id: Uuid,
-    pub content: Option<String>,
+    pub content: String,
 }
 
 /// A prepared content write: the staged handshake plus the L2 node id
@@ -208,12 +209,6 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
-    if draft.title.is_none() && draft.description.is_none() && draft.content.is_none() {
-        return Err(ContentError::BadInput {
-            field: "input",
-            message: "an edit must change at least one field".into(),
-        });
-    }
     let post = content_store::post(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -227,7 +222,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         node: post.id,
         title: draft.title,
         description: draft.description,
-        body: draft.content,
+        body: Some(draft.content),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -316,12 +311,6 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: CommentEditDraft,
 ) -> Result<PreparedContent, ContentError> {
-    let Some(content) = draft.content else {
-        return Err(ContentError::BadInput {
-            field: "input",
-            message: "an edit must change at least one field".into(),
-        });
-    };
     let comment = content_store::comment(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -336,7 +325,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         node: comment.id,
         title: None,
         description: None,
-        body: Some(content),
+        body: Some(draft.content),
     }
     .encode_payload();
     let prepared = prepare::prepare(
@@ -490,20 +479,16 @@ pub async fn stage_pending(
         (Family::Publish, false) => {
             // The pending edit's own text shows at once, marked pending —
             // an edit is a record, and a prepared record is its author's
-            // content from the moment they sign it (substrate.md §6). The
-            // merge is the promotion path's: absent keeps, empty clears.
+            // content from the moment they sign it (substrate.md §6).
             let post = content_store::post(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            let title = merge_optional(&content.title, &post.title);
-            let description = merge_optional(&content.description, &post.description);
-            let body_text = content.body.clone().unwrap_or(post.content);
             content_store::insert_post_version(
                 &mut tx,
                 post.id,
-                title.as_deref(),
-                description.as_deref(),
-                &body_text,
+                clear_to_null(&content.title),
+                clear_to_null(&content.description),
+                content.body.as_deref().unwrap_or_default(),
                 true,
                 created_at,
             )
@@ -528,9 +513,12 @@ pub async fn stage_pending(
             let comment = content_store::comment(pool, content.node)
                 .await?
                 .ok_or(ContentError::NotFound)?;
-            let body_text = content.body.clone().unwrap_or(comment.content);
             content_store::insert_comment_version(
-                &mut tx, comment.id, &body_text, true, created_at,
+                &mut tx,
+                comment.id,
+                content.body.as_deref().unwrap_or_default(),
+                true,
+                created_at,
             )
             .await?;
         }
@@ -660,18 +648,12 @@ async fn land_one(
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
             if !content_store::land_post_version(&mut tx, post.id, created_at).await? {
-                // Copy-forward merge: the newest version row alone renders
-                // the post (data-model.md "Display-content versioning");
-                // present-and-empty clears, absent keeps.
-                let title = merge_optional(&content.title, &post.title);
-                let description = merge_optional(&content.description, &post.description);
-                let body_text = content.body.clone().unwrap_or(post.content);
                 content_store::insert_post_version(
                     &mut tx,
                     post.id,
-                    title.as_deref(),
-                    description.as_deref(),
-                    &body_text,
+                    clear_to_null(&content.title),
+                    clear_to_null(&content.description),
+                    content.body.as_deref().unwrap_or_default(),
                     false,
                     created_at,
                 )
@@ -704,9 +686,12 @@ async fn land_one(
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
             if !content_store::land_comment_version(&mut tx, comment.id, created_at).await? {
-                let body_text = content.body.clone().unwrap_or(comment.content);
                 content_store::insert_comment_version(
-                    &mut tx, comment.id, &body_text, false, created_at,
+                    &mut tx,
+                    comment.id,
+                    content.body.as_deref().unwrap_or_default(),
+                    false,
+                    created_at,
                 )
                 .await?;
             }
@@ -719,18 +704,8 @@ async fn land_one(
     Ok(())
 }
 
-/// A create's optional display field: present-and-empty stores NULL
-/// (nothing was ever set), text stores itself.
+/// A snapshot's optional display field: absent or empty stores NULL,
+/// text stores itself.
 fn clear_to_null(field: &Option<String>) -> Option<&str> {
     field.as_deref().filter(|s| !s.is_empty())
-}
-
-/// An edit's optional display field against the current version:
-/// absent keeps, empty clears to NULL, text replaces.
-fn merge_optional(edit: &Option<String>, current: &Option<String>) -> Option<String> {
-    match edit {
-        None => current.clone(),
-        Some(s) if s.is_empty() => None,
-        Some(s) => Some(s.clone()),
-    }
 }
