@@ -202,12 +202,15 @@ pre-commitment and the host-sealed verified act as the handshake
 advances — is one `staged_writes` row from **prepare** until
 **confirm**. Staged payload bytes ride the row; promotion at
 confirm copies them into the carriage tables, which own permanent
-payload storage. Promotion on confirm makes the display rows
-visible and drives the flows built on landing (an applicant's
-Registration confirming flips their account to member —
-[auth.md](auth.md)). Staged state is L2-operational: it is exempt
-from append-only history and leaves no trace once collected —
-nothing existed on the graph.
+payload storage. A content write's display rows appear earlier, at
+the pre-commitment signature, carrying a pending mark ("Content
+nodes" below); promotion on confirm drops that mark and drives the
+flows built on landing (an applicant's Registration confirming
+flips their account to member — [auth.md](auth.md)). Staged state
+is L2-operational: it is exempt from append-only history and
+leaves no trace once collected — nothing existed on the graph.
+Expiry takes the write's pending display rows with it, in the same
+transaction, for the same reason.
 
 ```sql
 CREATE TABLE staged_writes (
@@ -248,6 +251,12 @@ CREATE TABLE staged_writes (
     content_commitment  BYTEA,
     deps_commitment     BYTEA,
     host_seal           BYTEA,
+
+    -- The display rows this write owns while pending: node_id is the
+    -- L2 UUID the payload envelope carries, recorded at prepare;
+    -- pre_signed_at is the authoring instant the content dates from.
+    node_id        UUID,
+    pre_signed_at  TIMESTAMPTZ,
 
     prepared_epoch BIGINT      NOT NULL,
     expired_epoch  BIGINT,
@@ -461,38 +470,64 @@ CREATE TABLE actor_profile_versions (
 ### Content nodes
 
 Every content entity row binds to its minted L1 node through
-`l1_node_id` — the mint identifier stored verbatim, written at
-confirm. The row's UUID also rides the payload envelope's guild
-map, so the L1 witness attests the binding; the column is a
-verified cache of a graph fact, same class as `target_id`. The
-landing-order columns (`landed_epoch`, `act_time`, `position`)
-cache the genesis record's authoritative causal key and are the
-chronological listings' sort key — the record set's own order,
-never wall clock ([graph-model.md §2](../primitive/graph-model.md));
-like every mirror-derived column they are rebuildable and never
+`l1_node_id` — the mint identifier stored verbatim. The row's UUID
+also rides the payload envelope's guild map, so the L1 witness
+attests the binding; the column is a verified cache of a graph
+fact, same class as `target_id`. The landing-order columns
+(`landed_epoch`, `act_time`, `position`) cache the genesis
+record's authoritative causal key and are the chronological
+listings' sort key — the record set's own order, never wall clock
+([graph-model.md §2](../primitive/graph-model.md)); like every
+mirror-derived column they are rebuildable and never
 authoritative.
+
+The row is written at the **pre-commitment signature**, not at
+confirm: a prepared record is its author's content from the moment
+they sign it
+([substrate.md §6](../primitive/substrate.md)), so it is a real
+display row like any other, readable by everyone, from that moment
+on. The landing-order columns are its pending mark — all three are
+NULL until the genesis record lands, because a pending write has
+no causal key yet, and confirm fills them in. They are all-null or
+all-present, never mixed. `created_at` is the authoring instant and
+is set once, so the date never jumps at landing.
+
+A pending row is L2-operational, like the staged row it belongs
+to: when a prepared act expires unlanded, its pending rows are
+deleted with it and nothing is left behind — on the graph nothing
+ever existed, so there is nothing to mark. This does not engage
+append-only history or the redaction rules: a pending item has no
+record and no graph structure.
 
 ```sql
 -- Posts: one immutable entity row per post; display fields live on
 -- post_versions.
+-- The landing-order columns are NULL while the genesis record is
+-- pending; DESC index order (which implies NULLS FIRST) is what puts
+-- pending entries ahead of the newest landed entry in the listings.
 CREATE TABLE posts (
     id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id    UUID        NOT NULL REFERENCES actors(id),
     l1_node_id   TEXT        NOT NULL UNIQUE,
-    landed_epoch BIGINT      NOT NULL,
-    act_time     BIGINT      NOT NULL,
-    position     BIGINT      NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    landed_epoch BIGINT,
+    act_time     BIGINT,
+    position     BIGINT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 
 -- Post versions: append-only display content. One row per edit;
--- the newest row is the rendered post.
+-- the newest row is the rendered post. A version row carries no
+-- landing coordinates of its own, so an unlanded edit is marked by
+-- `pending` instead: its new text shows immediately, and the row is
+-- deleted if the edit expires, leaving the previous version rendered.
 CREATE TABLE post_versions (
     post_id          UUID        NOT NULL REFERENCES posts(id),
     title            TEXT,       -- optional headline
     description      TEXT,       -- optional short summary / subtitle
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
+    pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (post_id, created_at)
 );
@@ -510,16 +545,18 @@ CREATE TABLE comments (
                              ('post', 'comment', 'chat', 'chat_message', 'item')),
     author_id    UUID        NOT NULL REFERENCES actors(id),
     l1_node_id   TEXT        NOT NULL UNIQUE,
-    landed_epoch BIGINT      NOT NULL,
-    act_time     BIGINT      NOT NULL,
-    position     BIGINT      NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    landed_epoch BIGINT,
+    act_time     BIGINT,
+    position     BIGINT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 
 CREATE TABLE comment_versions (
     comment_id       UUID        NOT NULL REFERENCES comments(id),
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
+    pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (comment_id, created_at)
 );
