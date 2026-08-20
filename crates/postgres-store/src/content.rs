@@ -389,65 +389,91 @@ pub async fn discard_pending(
     node_id: Uuid,
     created_at: Timestamp,
 ) -> Result<(), ContentError> {
+    discard_pending_many(tx, &[node_id], &[created_at]).await
+}
+
+/// The same discard for many writes at once — a GC sweep is a fixed
+/// handful of statements rather than six per node. `nodes` and
+/// `instants` are parallel: each index is one write's node and the
+/// authoring instant its rows carry, and the pair is what every
+/// statement matches on.
+pub async fn discard_pending_many(
+    tx: &mut Transaction<'_, Postgres>,
+    nodes: &[Uuid],
+    instants: &[Timestamp],
+) -> Result<(), ContentError> {
+    if nodes.is_empty() {
+        return Ok(());
+    }
     sqlx::query!(
         "DELETE FROM post_versions
-         WHERE post_id = $1 AND created_at = $2 AND pending",
-        node_id,
-        created_at,
+         WHERE (post_id, created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+           AND pending",
+        nodes,
+        instants,
     )
     .execute(&mut **tx)
     .await?;
     sqlx::query!(
         "DELETE FROM comment_versions
-         WHERE comment_id = $1 AND created_at = $2 AND pending",
-        node_id,
-        created_at,
+         WHERE (comment_id, created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+           AND pending",
+        nodes,
+        instants,
     )
     .execute(&mut **tx)
     .await?;
     sqlx::query!(
         "DELETE FROM post_attachments
-         WHERE post_id = $1
-           AND EXISTS (SELECT 1 FROM posts
-                       WHERE id = $1 AND landed_epoch IS NULL
-                         AND created_at = $2)",
-        node_id,
-        created_at,
+         WHERE post_id IN (
+             SELECT id FROM posts
+             WHERE (id, created_at)
+                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+               AND landed_epoch IS NULL)",
+        nodes,
+        instants,
     )
     .execute(&mut **tx)
     .await?;
     sqlx::query!(
         "DELETE FROM comment_attachments
-         WHERE comment_id = $1
-           AND EXISTS (SELECT 1 FROM comments
-                       WHERE id = $1 AND landed_epoch IS NULL
-                         AND created_at = $2)",
-        node_id,
-        created_at,
+         WHERE comment_id IN (
+             SELECT id FROM comments
+             WHERE (id, created_at)
+                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+               AND landed_epoch IS NULL)",
+        nodes,
+        instants,
     )
     .execute(&mut **tx)
     .await?;
-    let removed_post = sqlx::query_scalar!(
+    let mut removed = sqlx::query_scalar!(
         "DELETE FROM posts
-         WHERE id = $1 AND landed_epoch IS NULL AND created_at = $2
+         WHERE (id, created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+           AND landed_epoch IS NULL
          RETURNING id",
-        node_id,
-        created_at,
+        nodes,
+        instants,
     )
-    .fetch_optional(&mut **tx)
+    .fetch_all(&mut **tx)
     .await?;
-    let removed_comment = sqlx::query_scalar!(
-        "DELETE FROM comments
-         WHERE id = $1 AND landed_epoch IS NULL AND created_at = $2
-         RETURNING id",
-        node_id,
-        created_at,
-    )
-    .fetch_optional(&mut **tx)
-    .await?;
-    if let Some(removed) = removed_post.or(removed_comment) {
-        discard_pending_thread(tx, removed).await?;
-    }
+    removed.extend(
+        sqlx::query_scalar!(
+            "DELETE FROM comments
+             WHERE (id, created_at)
+                   IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+               AND landed_epoch IS NULL
+             RETURNING id",
+            nodes,
+            instants,
+        )
+        .fetch_all(&mut **tx)
+        .await?,
+    );
+    discard_pending_thread(tx, removed).await?;
     Ok(())
 }
 
@@ -459,9 +485,9 @@ pub async fn discard_pending(
 /// so it renders as an orphan whose `target` resolves to null.
 async fn discard_pending_thread(
     tx: &mut Transaction<'_, Postgres>,
-    root: Uuid,
+    roots: Vec<Uuid>,
 ) -> Result<(), ContentError> {
-    let mut frontier = vec![root];
+    let mut frontier = roots;
     while !frontier.is_empty() {
         let children: Vec<Uuid> = sqlx::query_scalar!(
             "SELECT id FROM comments

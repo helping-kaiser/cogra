@@ -437,11 +437,18 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError
 /// mints or edits nothing — Registration, Opinion, Attach — has nothing
 /// to materialize and returns quietly.
 ///
+/// `created_at` is the authoring instant the pre-sign leg recorded — the
+/// caller has it from `record_pre_signed`, so nothing here reloads the
+/// row it was just handed.
+///
 /// Idempotent, because the pre-sign leg accepts a retry: the entity row
 /// is inserted only once, and a version row keyed by the same authoring
 /// instant collides with itself.
-pub async fn stage_pending(pool: &PgPool, staged_id: Uuid) -> Result<(), ContentError> {
-    let write = staged::load(pool, staged_id).await?;
+pub async fn stage_pending(
+    pool: &PgPool,
+    write: &staged::StagedWrite,
+    created_at: chrono::DateTime<chrono::Utc>,
+) -> Result<(), ContentError> {
     let body = &write.proposal.body;
     let family = match body.family {
         f @ (Family::Publish | Family::Review) => f,
@@ -450,9 +457,6 @@ pub async fn stage_pending(pool: &PgPool, staged_id: Uuid) -> Result<(), Content
     if write.node_id.is_none() {
         return Ok(());
     }
-    let created_at = write.pre_signed_at.ok_or_else(|| {
-        ContentError::Internal("pre-signed write without an authoring instant".into())
-    })?;
     let content = CograContent::decode_payload(&write.proposal.payload)
         .map_err(|e| ContentError::Internal(format!("staged payload not admissible: {e}")))?;
     let own_mint = NodeId::Mint(ActId {

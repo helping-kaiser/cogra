@@ -29,6 +29,14 @@ pub enum StagedError {
     Storage(#[from] sqlx::Error),
 }
 
+impl From<crate::content::ContentError> for StagedError {
+    fn from(e: crate::content::ContentError) -> Self {
+        match e {
+            crate::content::ContentError::Storage(e) => Self::Storage(e),
+        }
+    }
+}
+
 /// Handshake progress, states per api-spec.md "The write flow".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StagedState {
@@ -407,40 +415,47 @@ async fn transition(
 }
 
 /// Stores the device's pre-commitment leg and moves the write into
-/// `sealing`. Accepts a retry from `sealing` (a relay that died between
-/// recording and sealing) — `pre_signed_at` is set only the first time,
-/// so a retry never moves the instant the content is dated from.
+/// `sealing`, returning the authoring instant the content dates from.
+/// Accepts a retry from `sealing` (a relay that died between recording
+/// and sealing) — `pre_signed_at` is set only the first time, so a retry
+/// gets back the same instant rather than moving it.
 pub async fn record_pre_signed(
     pool: &PgPool,
     id: Uuid,
     pre: &PreSignedParts,
-) -> Result<(), StagedError> {
-    let updated = sqlx::query!(
+) -> Result<chrono::DateTime<chrono::Utc>, StagedError> {
+    let recorded = sqlx::query_scalar!(
         "UPDATE staged_writes
          SET state = 'sealing', author_pubkey = $2, nonce = $3,
              pre_signature = $4, pre_signed_at = COALESCE(pre_signed_at, NOW()),
              updated_at = NOW()
-         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')",
+         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')
+         RETURNING pre_signed_at",
         id,
         &pre.author_pubkey,
         &pre.nonce,
         &pre.pre_signature,
     )
-    .execute(pool)
-    .await?
-    .rows_affected();
-    if updated == 1 {
-        return Ok(());
+    .fetch_optional(pool)
+    .await?;
+    match recorded {
+        Some(Some(at)) => Ok(at),
+        Some(None) => Err(StagedError::Corrupt(
+            id,
+            "pre-commitment recorded without an authoring instant".into(),
+        )),
+        None => {
+            let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
+                .fetch_optional(pool)
+                .await?
+                .ok_or(StagedError::NotFound(id))?;
+            Err(StagedError::WrongState {
+                id,
+                expected: "awaiting_pre_sign or sealing".to_string(),
+                actual,
+            })
+        }
     }
-    let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or(StagedError::NotFound(id))?;
-    Err(StagedError::WrongState {
-        id,
-        expected: "awaiting_pre_sign or sealing".to_string(),
-        actual,
-    })
 }
 
 /// Stores the host additions of the sealed verified act and moves the
@@ -623,16 +638,9 @@ async fn discard_pending_content(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     nodes: impl Iterator<Item = StagedRows>,
 ) -> Result<(), StagedError> {
-    for staged in nodes {
-        let (Some(node), Some(created_at)) = (staged.node_id, staged.pre_signed_at) else {
-            continue;
-        };
-        crate::content::discard_pending(tx, node, created_at)
-            .await
-            .map_err(|e| match e {
-                crate::content::ContentError::Storage(e) => StagedError::Storage(e),
-            })?;
-    }
+    let (ids, instants): (Vec<Uuid>, Vec<_>) =
+        nodes.filter_map(|s| s.node_id.zip(s.pre_signed_at)).unzip();
+    crate::content::discard_pending_many(tx, &ids, &instants).await?;
     Ok(())
 }
 
