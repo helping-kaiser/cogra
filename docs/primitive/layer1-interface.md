@@ -1962,7 +1962,9 @@ separation governed by the floor ladder $\{1, \sqrt{\eta}, \eta\}$.
 Invitation are proposals. They establish no membership and do not substitute
 for the Participant edge. A Chat membership signal exists only when the
 joining actor authors a Participant edge. Ignoring a proposal requires no
-graph action.
+graph action. A Join Request allocates to nobody but its author; an
+inviter's own complete, positive, unsuppressed Invitation act may instead
+compile into a person-vouch toward the invitee.
 
 **Canonical Membership Fold — the full paper's Layer-2 default
 (`def:nodes:canonical-membership-fold`).** For actor $a$ and Chat $C$, let
