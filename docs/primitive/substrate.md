@@ -361,9 +361,9 @@ updating a minted node means authoring *about* it. CoGra's single
 rule for every updatable node value follows:
 
 **A node's updatable values are a fold over witnessed payloads on
-update records toward the node: per declared field, the newest
-eligible record wins — "newest" read as the head of its author's
-declared causal chain, never the bare `≺`-maximum.** An update is
+update records toward the node: the newest eligible record wins —
+"newest" read as the head of its author's declared causal chain,
+never the bare `≺`-maximum — and its payload is read whole.** An update is
 an ordinary gesture (§4): a new inventory edge toward the existing
 node, the new values in its payload envelope (§7), read back by
 the declared fold. Each concept declares four slots (the
@@ -403,8 +403,10 @@ per-concept table: [substrate-map.md](substrate-map.md)):
   per fold, so folds coexist on one node: a member updates their
   own bio while The Moderator's verdict Tag marks the same records
   — different folds, both live.
-- **Fold granularity** — newest per field, per parameter, or per
-  (target, Type), declared with the concept.
+- **Fold granularity** — what one winning payload covers: the
+  node's whole content state (Content, Comment), one field, one
+  parameter, or one (target, Type) pair, declared with the
+  concept.
 - **Chain root.** The head is the terminus of the declared
   causal-parent chain from the root; an update record without such
   a chain is fold-ignored. Roots: the genesis act (Content,
