@@ -2217,6 +2217,7 @@ Actor or the permanently bound Profile of an Actor:
 | Accept / Ratify otherwise | self |
 | Withdraw, Rescind, Leave, De-invite | self |
 | Artifact-directed acts: Opinion-on-content, Tag, Review, Bid, Send, Publish, Owner, Participant, Registration | self |
+| — Participant resolves home in all four of its cases (found, join, found successor, move), at its A-leg coefficient | |
 | Hostile or zero-stance person-directed acts | self |
 
 Self is a destination, not a defect: a self-resolved cell lands on the
