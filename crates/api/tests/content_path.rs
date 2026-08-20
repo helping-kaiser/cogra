@@ -755,9 +755,9 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
 
     // Re-running the content landing pass over already-promoted writes
     // (a forced double-promotion; the real promote_landed filter never
-    // re-selects a landed row) duplicates nothing: the entity insert
-    // conflicts, the per-record transaction rolls back, the failure is
-    // reported, and the carriage rows stay exactly one per act.
+    // re-selects a landed row) is a clean no-op: carriage inserts ignore
+    // the conflict and the version rows land by their own key, so the
+    // pass reports nothing and duplicates nothing.
     let promoted = sqlx::query_as::<_, (Uuid, Uuid, String, String)>(
         "SELECT id, actor_id, act_id, family FROM staged_writes WHERE state = 'landed'",
     )
@@ -779,8 +779,8 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
         .collect();
     let failures = content::land_promoted(&rig.pool, &writes).await;
     assert!(
-        !failures.is_empty() && failures.iter().all(|f| f.stage == "content"),
-        "a refused re-promotion is reported, not swallowed: {failures:?}"
+        failures.is_empty(),
+        "re-promotion is a no-op, not a failure: {failures:?}"
     );
     let carriage = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM act_payloads")
         .fetch_one(&rig.pool)

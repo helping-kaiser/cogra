@@ -112,15 +112,19 @@ impl Rig {
     }
 
     async fn close_and_ingest(&self) {
-        self.standin.close_epoch().await.expect("closes");
-        let outcome = api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
-            .await
-            .expect("ingests");
+        let outcome = self.close_and_ingest_raw().await;
         assert!(
             outcome.promotion_failures.is_empty(),
             "confirm-side promotion failed: {:?}",
             outcome.promotion_failures
         );
+    }
+
+    async fn close_and_ingest_raw(&self) -> api::ingest::IngestOutcome {
+        self.standin.close_epoch().await.expect("closes");
+        api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
+            .await
+            .expect("ingests")
     }
 
     async fn update(
@@ -232,6 +236,42 @@ async fn second_update_chains_behind_the_head_and_merges(pool: PgPool) {
     assert_eq!(current.bio, None);
     assert_eq!(current.website_url.as_deref(), Some("https://ada.example"));
     assert_eq!(rig.version_count(actor).await, 3);
+}
+
+/// A promotion that cannot complete names itself in the ingestion
+/// outcome rather than leaving the caller with a version row that
+/// silently never appeared.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), None, None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    // The merge copies unchanged fields forward from the current
+    // version; without one the promotion cannot build the new row.
+    sqlx::query("DELETE FROM actor_profile_versions WHERE actor_id = $1")
+        .bind(actor)
+        .execute(&rig.pool)
+        .await
+        .expect("clears versions");
+
+    let outcome = rig.close_and_ingest_raw().await;
+
+    let failure = match outcome.promotion_failures.as_slice() {
+        [only] => only,
+        other => panic!("expected one reported failure, got {other:?}"),
+    };
+    assert_eq!(failure.stage, "profile");
+    assert_eq!(failure.staged, prepared.id);
+    assert!(
+        failure.error.contains("seeded profile version"),
+        "unexpected: {}",
+        failure.error
+    );
+    assert_eq!(rig.version_count(actor).await, 0);
 }
 
 #[sqlx::test(migrations = "../../migrations")]
