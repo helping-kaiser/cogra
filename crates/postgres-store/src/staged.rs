@@ -29,6 +29,14 @@ pub enum StagedError {
     Storage(#[from] sqlx::Error),
 }
 
+impl From<crate::content::ContentError> for StagedError {
+    fn from(e: crate::content::ContentError) -> Self {
+        match e {
+            crate::content::ContentError::Storage(e) => Self::Storage(e),
+        }
+    }
+}
+
 /// Handshake progress, states per api-spec.md "The write flow".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StagedState {
@@ -407,40 +415,47 @@ async fn transition(
 }
 
 /// Stores the device's pre-commitment leg and moves the write into
-/// `sealing`. Accepts a retry from `sealing` (a relay that died between
-/// recording and sealing) — `pre_signed_at` is set only the first time,
-/// so a retry never moves the instant the content is dated from.
+/// `sealing`, returning the authoring instant the content dates from.
+/// Accepts a retry from `sealing` (a relay that died between recording
+/// and sealing) — `pre_signed_at` is set only the first time, so a retry
+/// gets back the same instant rather than moving it.
 pub async fn record_pre_signed(
     pool: &PgPool,
     id: Uuid,
     pre: &PreSignedParts,
-) -> Result<(), StagedError> {
-    let updated = sqlx::query!(
+) -> Result<chrono::DateTime<chrono::Utc>, StagedError> {
+    let recorded = sqlx::query_scalar!(
         "UPDATE staged_writes
          SET state = 'sealing', author_pubkey = $2, nonce = $3,
              pre_signature = $4, pre_signed_at = COALESCE(pre_signed_at, NOW()),
              updated_at = NOW()
-         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')",
+         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')
+         RETURNING pre_signed_at",
         id,
         &pre.author_pubkey,
         &pre.nonce,
         &pre.pre_signature,
     )
-    .execute(pool)
-    .await?
-    .rows_affected();
-    if updated == 1 {
-        return Ok(());
+    .fetch_optional(pool)
+    .await?;
+    match recorded {
+        Some(Some(at)) => Ok(at),
+        Some(None) => Err(StagedError::Corrupt(
+            id,
+            "pre-commitment recorded without an authoring instant".into(),
+        )),
+        None => {
+            let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
+                .fetch_optional(pool)
+                .await?
+                .ok_or(StagedError::NotFound(id))?;
+            Err(StagedError::WrongState {
+                id,
+                expected: "awaiting_pre_sign or sealing".to_string(),
+                actual,
+            })
+        }
     }
-    let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or(StagedError::NotFound(id))?;
-    Err(StagedError::WrongState {
-        id,
-        expected: "awaiting_pre_sign or sealing".to_string(),
-        actual,
-    })
 }
 
 /// Stores the host additions of the sealed verified act and moves the
@@ -476,15 +491,38 @@ pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result
     })
 }
 
-/// Returns a failed seal to `awaiting_pre_sign` so the device can retry.
+/// Returns a failed seal to `awaiting_pre_sign` so the device can retry,
+/// taking the write's pending display rows with it in the same
+/// transaction. The rows were staged against a pre-commitment the
+/// substrate refused, so nothing was ever the author's content; leaving
+/// them readable would publish a write that failed to seal. A retry of
+/// the leg re-stages them — `stage_pending` is idempotent.
 pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
-    transition(
-        pool,
+    let mut tx = pool.begin().await?;
+    let reverted = sqlx::query_as!(
+        StagedRows,
+        "UPDATE staged_writes
+         SET state = 'awaiting_pre_sign', updated_at = NOW()
+         WHERE id = $1 AND state = 'sealing'
+         RETURNING node_id, pre_signed_at",
         id,
-        &[StagedState::Sealing],
-        StagedState::AwaitingPreSign,
     )
-    .await
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some(staged_rows) = reverted else {
+        let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or(StagedError::NotFound(id))?;
+        return Err(StagedError::WrongState {
+            id,
+            expected: StagedState::Sealing.as_str().to_string(),
+            actual,
+        });
+    };
+    discard_pending_content(&mut tx, std::iter::once(staged_rows)).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// Marks the approval relayed: `awaiting_approval` → `relaying`. Accepts a
@@ -511,9 +549,11 @@ pub struct PromotedWrite {
 
 /// Confirm: marks every staged write whose record landed in `epoch` as
 /// `landed`, returning the promoted rows. Matching is by the act
-/// identifier — a record landing after its staged write was collected
-/// still promotes (the mirror governs; late landing wins), though its
-/// staged payload is already gone.
+/// identifier — a record landing after its staged write expired still
+/// promotes, display rows and all (the mirror governs; late landing
+/// wins). The payload it needs is still on the expired row: expiry stops
+/// serving the content, the reap is what destroys it. Past the reap
+/// there is no row to match and the record stays unpromoted.
 pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWrite>, StagedError> {
     let rows = sqlx::query!(
         "UPDATE staged_writes
@@ -540,69 +580,75 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
 /// handshake that can never complete (a seal lost before it was stored).
 pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(), StagedError> {
     let mut tx = pool.begin().await?;
-    let node_id = sqlx::query_scalar!(
+    let expired = sqlx::query_as!(
+        StagedRows,
         "UPDATE staged_writes
-         SET state = 'expired', payload = ''::bytea, expired_epoch = $2,
-             updated_at = NOW()
+         SET state = 'expired', expired_epoch = $2, updated_at = NOW()
          WHERE id = $1 AND state NOT IN ('landed', 'expired')
-         RETURNING node_id",
+         RETURNING node_id, pre_signed_at",
         id,
         current_epoch,
     )
     .fetch_optional(&mut *tx)
     .await?
     .ok_or(StagedError::NotFound(id))?;
-    discard_pending_content(&mut tx, node_id.into_iter()).await?;
+    discard_pending_content(&mut tx, std::iter::once(expired)).await?;
     tx.commit().await?;
     Ok(())
 }
 
 /// GC, first phase: expires every unlanded staged write prepared at least
-/// `gc_after_epochs` epochs ago, dropping its staged payload and, in the
-/// same transaction, whatever it had on screen while pending. The expired
-/// row remains observable until the reap so a device polling a lost
-/// handshake sees the terminal state rather than a vanished id; the
-/// content itself leaves every reader's view at once — on the graph
-/// nothing ever existed (substrate.md §6).
+/// `gc_after_epochs` epochs ago, taking whatever it had on screen while
+/// pending with it in the same transaction. The content leaves every
+/// reader's view at once — on the graph nothing ever existed
+/// (substrate.md §6) — while the row itself remains until the reap: a
+/// device polling a lost handshake sees the terminal state rather than a
+/// vanished id, and the payload stays with it, invisible, so a record
+/// that lands late can still be promoted.
 pub async fn expire_due(
     pool: &PgPool,
     current_epoch: i64,
     gc_after_epochs: i64,
 ) -> Result<u64, StagedError> {
     let mut tx = pool.begin().await?;
-    let expired = sqlx::query_scalar!(
+    let expired = sqlx::query_as!(
+        StagedRows,
         "UPDATE staged_writes
-         SET state = 'expired', payload = ''::bytea, expired_epoch = $1,
-             updated_at = NOW()
+         SET state = 'expired', expired_epoch = $1, updated_at = NOW()
          WHERE state NOT IN ('landed', 'expired')
            AND prepared_epoch + $2 <= $1
-         RETURNING node_id",
+         RETURNING node_id, pre_signed_at",
         current_epoch,
         gc_after_epochs,
     )
     .fetch_all(&mut *tx)
     .await?;
     let count = expired.len() as u64;
-    discard_pending_content(&mut tx, expired.into_iter().flatten()).await?;
+    discard_pending_content(&mut tx, expired.into_iter()).await?;
     tx.commit().await?;
     Ok(count)
 }
 
 /// The display side of expiry: every node an expired write owned loses
-/// its pending rows. A write that minted nothing (Registration, Attach)
-/// carries no node id and has nothing to discard.
+/// the pending rows *that write* staged, named by the authoring instant
+/// they were written under. A write that minted nothing (Registration,
+/// Attach) carries no node id, and one that never reached its
+/// pre-commitment staged nothing — neither has anything to discard.
 async fn discard_pending_content(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    nodes: impl Iterator<Item = Uuid>,
+    nodes: impl Iterator<Item = StagedRows>,
 ) -> Result<(), StagedError> {
-    for node in nodes {
-        crate::content::discard_pending(tx, node)
-            .await
-            .map_err(|e| match e {
-                crate::content::ContentError::Storage(e) => StagedError::Storage(e),
-            })?;
-    }
+    let (ids, instants): (Vec<Uuid>, Vec<_>) =
+        nodes.filter_map(|s| s.node_id.zip(s.pre_signed_at)).unzip();
+    crate::content::discard_pending_many(tx, &ids, &instants).await?;
     Ok(())
+}
+
+/// The display rows one staged write owns: the node it minted or edited,
+/// and the authoring instant its rows carry.
+struct StagedRows {
+    node_id: Option<Uuid>,
+    pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 /// GC, second phase: deletes expired rows another `gc_after_epochs` epochs
