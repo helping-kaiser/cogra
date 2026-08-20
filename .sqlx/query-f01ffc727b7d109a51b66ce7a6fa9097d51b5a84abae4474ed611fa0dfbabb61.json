@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM posts\n         WHERE (id, created_at)\n               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))\n           AND landed_epoch IS NULL\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f01ffc727b7d109a51b66ce7a6fa9097d51b5a84abae4474ed611fa0dfbabb61"
+}

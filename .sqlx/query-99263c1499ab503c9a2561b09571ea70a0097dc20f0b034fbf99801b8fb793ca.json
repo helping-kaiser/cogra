@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM comment_versions\n         WHERE (comment_id, created_at)\n               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))\n           AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "99263c1499ab503c9a2561b09571ea70a0097dc20f0b034fbf99801b8fb793ca"
+}

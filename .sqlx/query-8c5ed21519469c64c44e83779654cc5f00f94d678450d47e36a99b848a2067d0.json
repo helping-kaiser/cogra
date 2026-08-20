@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,\n                      p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.pending AS \"version_pending!\",\n                      v.created_at AS \"version_created_at!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason,\n                          pending, created_at\n                   FROM post_versions WHERE post_id = p.id\n                   ORDER BY created_at DESC LIMIT 1\n               ) v ON TRUE\n               WHERE p.landed_epoch IS NOT NULL\n                 AND ($1::bigint IS NULL\n                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))\n               ORDER BY\n                   CASE WHEN $4 THEN p.landed_epoch END ASC,\n                   CASE WHEN $4 THEN p.act_time END ASC,\n                   CASE WHEN $4 THEN p.position END ASC,\n                   p.landed_epoch DESC, p.act_time DESC, p.position DESC\n               LIMIT $5\n           ) page\n           ORDER BY landed_epoch DESC, act_time DESC, position DESC",
+  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,\n                      p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.pending AS \"version_pending!\",\n                      v.created_at AS \"version_created_at!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason,\n                          pending, created_at\n                   FROM post_versions\n                   WHERE post_id = p.id AND ($6 OR NOT pending)\n                   ORDER BY created_at DESC LIMIT 1\n               ) v ON TRUE\n               WHERE p.landed_epoch IS NOT NULL\n                 AND ($1::bigint IS NULL\n                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))\n               ORDER BY\n                   CASE WHEN $4 THEN p.landed_epoch END ASC,\n                   CASE WHEN $4 THEN p.act_time END ASC,\n                   CASE WHEN $4 THEN p.position END ASC,\n                   p.landed_epoch DESC, p.act_time DESC, p.position DESC\n               LIMIT $5\n           ) page\n           ORDER BY landed_epoch DESC, act_time DESC, position DESC",
   "describe": {
     "columns": [
       {
@@ -75,7 +75,8 @@
         "Int8",
         "Int8",
         "Bool",
-        "Int8"
+        "Int8",
+        "Bool"
       ]
     },
     "nullable": [
@@ -94,5 +95,5 @@
       false
     ]
   },
-  "hash": "a9d5cfd127afa277e844929448c95f051ef7efacc1abacd5d02246c59e3aca27"
+  "hash": "8c5ed21519469c64c44e83779654cc5f00f94d678450d47e36a99b848a2067d0"
 }

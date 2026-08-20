@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'expired', expired_epoch = $1, updated_at = NOW()\n         WHERE state NOT IN ('landed', 'expired')\n           AND prepared_epoch + $2 <= $1\n         RETURNING node_id, pre_signed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "pre_signed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "305642322135e355de3bed7344215f42405011b744274a645c81c0c010ace411"
+}
