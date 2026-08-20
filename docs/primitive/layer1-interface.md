@@ -936,10 +936,23 @@ danglingness never binds (`def:graph:anchoring`,
 `lem:graph:dangling-neutral-fold`).
 
 **Genesis act and creator (`def:graph:genesis-act-and-creator`).** The
-genesis act of a minted node is the authored act whose identifier it mints;
-the genesis families are: Item — Owner; Offer — Bid/T; Comment — Review/T;
-Message — Send/T; Chat — the founding member's Participant; Content —
-Publish. The creator map is uniform:
+genesis act of a minted node is the authored act whose identifier it mints.
+**Minting is a role a record plays, not a property of its family.** Write
+$\mathrm{tt}(q)$ for an act's *terminal target* — the target of a binary
+act, the T-leg's terminus of a hyper-edge act. For every act $q$ of a
+genesis family, $\mathrm{role}(q) = \text{genesis}$ iff
+$\mathrm{tt}(q) = \mathsf{mint}(\mathrm{actid}(q))$ and **ordinary**
+otherwise: decidable from two fields of the one act, by syntactic term
+equality and no lookup. **Only self-minting acts mint, fix the creator,
+establish genesis context, or root title**; an ordinary act of the same
+family names a node that already exists and does none of these, whatever
+payload or context it carries. The identifier algebra forces this —
+$\mathsf{mint}$ takes an *act* identifier, so a family-level reading would
+need $\mathsf{mint}(\mathrm{actid}(q))$ derivable from the family alone;
+Chat is the demonstration, one family and two roles. The genesis families
+are: Item — Owner; Offer — Bid/T; Comment — Review/T; Message — Send/T;
+Chat — the founding member's Participant; Content — Publish. The creator
+map is uniform:
 $\mathrm{creator}(n) = \mathrm{author}(\mathrm{genesis}(n))$ for minted
 nodes, $n$ itself for $\mathsf{addr}(a)$, $\mathsf{addr}(a)$ for
 $\mathsf{prof}(a)$, and $\bot$ for named nodes, with $\alpha_\bot := 0$ —
@@ -1679,8 +1692,10 @@ Passive leaf nodes (`subsec:nodes:leaf-passive-nodes`):
   Profile-targeted person-directed acts are filtered by person-vouch
   eligibility before they can carry source rate into standing.
 - **Content** (`node:nodes:content`) — primary digital artifact, minted
-  from its Publish act. Taggable, Reviewable. In: **Publish (genesis, fixes
-  $\mathrm{creator}$)**, Opinion, Tag/A, Review/A. Out: Tag/T → Type,
+  from its genesis Publish act. Taggable, Reviewable. In: **Publish** —
+  genesis when it targets its own mint (fixing $\mathrm{creator}$),
+  ordinary-role when it names the existing node — Opinion, Tag/A,
+  Review/A. Out: Tag/T → Type,
   Review/T → Comment. (The closure edition specifies no terminal
   content-ranking mechanism.)
 - **Item** (`node:nodes:item`) — ownable entity. Taggable, Reviewable,
@@ -1788,7 +1803,7 @@ standing, not a second run of the standing machinery.
 | Edge | Src → Tgt | Domain | Mask (stored) | Tier | Params (roles) | Notes |
 |---|---|---|---|---|---|---|
 | **Registration** | Actor → Profile | Identity | $(1,0,0,1)$ | Full | $p_d = p_i = 1$ (fixed); $\epsilon = +1$ forced | actor's self-introduction and the **anchoring record** of the grounded pair (Actor, Profile) — nothing minted; the sole family carrying fresh grounded endpoints; root of the author's identity chain; parallel Registrations update payload only, never the identity; one ordinary act under final-set admission (`edge:nodes:registration`, `def:graph:registration`) |
-| **Publish** | Actor → Content | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | **genesis act of a Content node**, fixing $\mathrm{creator}$; mirrors Owner (row-collapse); license qualifiers are public protocol references of this act (`edge:nodes:publish`) |
+| **Publish** | Actor → Content | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | Content's **genesis family**: a Publish targeting its own mint mints the node and fixes $\mathrm{creator}$; one naming an existing node is ordinary-role and mints nothing; mirrors Owner (row-collapse); license qualifiers are public protocol references of the genesis act (`edge:nodes:publish`) |
 | Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is person-directed and subject to person-vouch eligibility |
 | Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a standing vouch |
 | Participant | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | Full | interactivity $i$, responsibility $r$ ($p_d = i$, $p_i = r$) | the actor's own membership signal for the terminal membership fold (§9.8); the founding member's Participant is the Chat's genesis act |
