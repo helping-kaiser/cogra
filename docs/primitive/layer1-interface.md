@@ -2220,7 +2220,7 @@ and emits $\mathsf{A}$ — only then does anything allocate. The exclusion of
 passive nodes therefore happens once, in the compiler, rather than being
 re-checked at every hop.
 
-### 11.4 Staged standing (epoch-quantized, no memory)
+### 11.4 Conserved standing transport (epoch-quantized, no memory)
 
 **Proposed final epoch state (`def:epoch:proposed-final-act-state`).** Fix
 a proposed write set $\mathcal{Q}_k$. For each actor $i$, the accepted-act
@@ -2241,15 +2241,29 @@ is defined only for a completed epoch edge set: one simultaneous standing
 result per proposed write set. No normative standing value exists after
 Registration but before a vouch, after a burn but before an action, or
 between same-epoch acts — everything is interpreted together at closure.
-The staged equilibria are internal current-epoch calculations; only the
-final certified result is published. **The preceding epoch's standing is
-not an argument of any epoch-$k$ standing map** — an implementation may
-warm-start from it, but uniqueness of the certified fixed point makes the
-result initialization-independent (`rem:dynamics:warm-start-independence`).
-Causal order governs record formation, act identity, and path viability;
-it does not induce intra-epoch standing snapshots — the stages are a
-solver, not a timeline
+The solver's iterates toward the equilibrium are internal current-epoch
+calculations; only the final certified result is published. **The preceding
+epoch's standing is not an argument of any epoch-$k$ standing map**
+(`post:epoch:standing-memorylessness`) — an implementation may warm-start
+from it, but uniqueness of the certified fixed point makes the result
+initialization-independent
+(`cor:dynamics:standing-initialization-independence`,
+`rem:dynamics:warm-start-independence`). Standing at boundary $k$ is a
+function of the accepted epoch set, the final ledger, the epoch title fold,
+and the published constants, invariant under every dependency-compliant
+permutation of the act sequence
+(`post:epoch:standing-epoch-set-determinism`): causal order governs record
+formation, act identity, and dependency validity, but induces no intra-epoch
+standing snapshot — the iterates are a numerical path, not a timeline
 (`rem:epoch:causality-without-intra-epoch-standing`).
+
+**Standing measures; it does not hold
+(`post:epoch:standing-is-measurement`).** Standing is a comparison
+coordinate computed over the record, never a quantity possessed within it.
+No allocation, transport, tilt, or equilibrium moves, encumbers, or spends
+anything an Actor owns — the ledger after the measurement is the ledger
+before it. The word "transfer" in standing prose is a defect
+(`rem:epoch:transport-is-not-ledger-transfer`).
 
 **Responsive activation (`def:epoch:responsive-vouch-activation`).** In
 reduced standing $x = \hat{\alpha}_i = \alpha_i/\nu$, $p(x) = x/(1+x)$, the
@@ -2257,16 +2271,18 @@ non-temporal normalized deployed core is $Q(p)/Q(1)$ with
 $Q(p) = \sigma_{\text{sig}}(\beta p)\sqrt{\tanh p\,(1 - \eta^2 \tanh p)}$,
 and the responsive per-hop standing activation is its fourth root:
 
-$$g_{\text{vch}}(x) = \left(\frac{Q(p(x))}{Q(1)}\right)^{1/L_{\text{vch}}}, \qquad L_{\text{vch}} = 4$$
+$$g_{\text{vch}}(x) = \left(\frac{Q(p(x))}{Q(1)}\right)^{\gamma}, \qquad \gamma = 1/4$$
 
 — zero at zero standing, strictly increasing, $< 1$ at every finite
 standing, independent of raw maturity and entropy. Its log-gain is one
-quarter of the full core gain, so every simple projected path through at
-most four live targets spends at most one full-$Q$ budget
-(`thm:dynamics:projected-depth-gain-budget`).
+quarter of the full core gain, so every transported chain through at most
+$L_{\text{hop}}$ live targets consumes at most one full-$Q$ budget. $\gamma$
+is a **chartered activation exponent, not the reciprocal of a transport
+depth** — its numerical coincidence with $L_{\text{hop}} = 4$ is a
+coincidence, and routing one through the other is a defect.
 
 **Safety-wall clamp (`def:epoch:safety-wall-clamped-activation`).** Every
-standing stage evaluates the **effective** activation
+standing evaluation uses the **effective** activation
 
 $$\bar{g}_{\text{vch}}(x) = g_{\text{vch}}(\max(x, \rho_\theta))$$
 
@@ -2276,91 +2292,105 @@ the wall the activation is constant with zero derivative; above it,
 responsive; at the wall, continuous with a generalized gain interval
 (`prop:dynamics:safety-wall-clamp`). The clamp is a within-epoch analytic
 device: activation does not pay $\theta$, create source, or grant
-admission. (This replaces the pre-Edition-4 last-valid-pair freeze:
-historical standing memory is deleted.)
+admission.
 
-**Causal standing paths (`def:epoch:causal-standing-path`).** A causal
-standing path of depth $h$ from $u$ to $i$ is a sequence of relations
-$\xi_1, \dots, \xi_h$ in the multigraph with $1 \le h \le L_{\text{vch}}$,
-a simple Actor sequence, matching endpoints, **strictly increasing relation
-frontiers**, all within one completed epoch package. Its state-dependent
-weight is $W_P(\boldsymbol{x}) = \prod_\ell W_{\text{rel},k}(\xi_\ell;
-\boldsymbol{x})$; every factor lies in $[0,1)$, so every optimal bounded
-walk has a simple representative. **Projected vouch depth
-(`def:epoch:projected-vouch-depth`):** $L_{\text{vch}} = 4$, measured in
-complete person-vouch acts — distinct from raw feed depth $L = 4$, which
-counts Action-Graph legs; a complete Reference or Invitation is one
-$L_{\text{vch}}$ hop but two raw legs. A depth-one path is exactly one
-direct relation (`def:epoch:direct-profile-vouch`).
+**Pair-mass conservation (`post:epoch:standing-pair-mass-conservation`,
+`thm:epoch:standing-pair-mass-conservation`).** During transport each Actor
+disposes of exactly **one unit** of allocation over all recipients
+*including itself*. The transported quantity is the residual pair
+$(b_u^{(k)}, N_u^{(k)})$. Allocating more to one recipient necessarily
+allocates less to the others or to self: no transport operation creates,
+destroys, or exports pair mass beyond that unit. Conservation is an
+**identity of the operator**, not a property of its fixed point — every row
+of the transport sums to one at every state and every tilt rung.
 
-**Source envelopes (`def:epoch:depth-bounded-source-envelope`).** The exact
-depth-$h$ source envelope is the max-product over causal standing paths of
-depth $\le h$:
-$W^{[h]}_{\text{env},k}(u \to i; \boldsymbol{x}) = \max_P W_P(\boldsymbol{x})$,
-zero on an empty path set; monotone in depth and $< 1$. An envelope is a
-**value, not a selected-path identity**: exact co-maximizers produce the
-same standing input, and the witness class is verification evidence only
-(`rem:epoch:anchor-witnesses-evidence`). The max prevents path multiplicity
-from stacking one source-target value.
+**Tilt profile and hop allocation (`def:epoch:standing-tilt-profile`,
+`def:epoch:hop-allocation-score`, `eq:epoch:hop-allocation-matrix`).** The
+chartered shape $\upsilon_r^\circ$ assigns a nonnegative exponent to each hop
+$r \in \{1, \dots, L_{\text{hop}}\}$, decreasing in $r$; at accepted strength
+$t_k$ the applied profile is $\upsilon_r(t_k) = t_k\,\upsilon_r^\circ$. In
+reduced standing state $\boldsymbol{x}$, for $j \ne u$,
 
-**Exact depth-two anchor (`def:epoch:depth-two-standing-map`,
-`def:epoch:depth-two-anchor-equilibrium`).** Stage $h = 2$ is exact — its
-admitted flow *is* the depth-two envelope, no admission fraction. With
-$n_i^{(k)} = \max(N_i^{(k)}, 1)$ and reduced source rates
-$\hat{r}_i^{(k)} = b_i^{(k)}/(\nu\, n_i^{(k)})$, the depth-two map is the
-mediant over admitted action-mass ratios
-$m^{[2]}_{ui} = (N_u^{(k)}/n_i^{(k)})\, W^{[2]}_{\text{env},k}(u \to i;
-\boldsymbol{x})$
-(`eq:epoch:depth-two-standing-map`), and the **depth-two anchor** is its
-unique fixed point on the declared stage box — a finite max envelope of
-mediants, contraction-certified
-(`thm:dynamics:max-envelope-lipschitz`,
-`thm:dynamics:depth-two-anchor-contraction`). It is unclipped and
-endogenous: the source view is maximized at the same state being solved.
+$$s^{(r)}_{uj}(\boldsymbol{x}) = \mathsf{A}_{uj}\,\bar{g}_{\text{vch}}(x_j)^{\upsilon_r(t_k)}, \qquad s^{(r)}_{uu} = \mathsf{A}_{uu},$$
 
-**Delegated stages and admission fractions
-(`def:epoch:delegated-stage-admission`, `def:epoch:stage-standing-map`,
-`alg:epoch:stage-admission-backoff`).** For $h \in \{3, 4\}$ the
-certificate publishes one **stage admission fraction** $t_k^{[h]} \in
-[0,1]$, and the admitted depth-$h$ flow is the homotopy
+the self score **unmodulated**; normalizing each row over self and all
+recipients gives the row-stochastic **hop allocation matrix**
+$\Lambda^{(r)}(\boldsymbol{x})$. Hop 1 is always the source-adjacent factor,
+and the exponent belongs to the **transported mass, never to the row**
+(`rem:epoch:mass-owner-relative-hop-order`): one author's row renders at
+hop-1 strength when it apportions that author's own pair, and at hop-$r$
+strength when it relays the pair of a source $r-1$ hops away.
 
-$$W^{[h]}_{\text{adm}} = (1 - t_k^{[h]})\, W^{[h-1]}_{\text{adm}} + t_k^{[h]}\, W^{[h]}_{\text{env}},$$
+Standing's voice is relative, and it is the **only** voice
+(`post:epoch:hop-faded-responsive-tilt`,
+`prop:epoch:relative-allocation-odds`): the ratio of two recipients' shares
+of one source at one hop is the ratio of their base scores times the ratio of
+their clamped activations raised to $\upsilon_r(t_k)$, independent of every
+other entry and of the normalization. Any second modulator — a per-recipient
+export fraction, a popularity factor, a recency bonus — is a violation of the
+design rather than an unchartered parameter. Rivalry is conservative per row
+(`prop:epoch:rival-allocation-response`): a rising recipient gains exactly
+what its siblings *and the source's own retention* lose; below the safety
+wall every derivative vanishes; and a row does not depend on its own owner's
+standing, so standing never directly defends its own retention.
 
-sandwiched between the preceding certified flow and the exact depth-$h$
-envelope. The fraction is **global to the stage**: no per-path, per-source,
-per-target, or identity-keyed allocation surface exists. The canonical
-backoff accepts the largest certifiable fraction on the published
-dyadic grid ($t = 2^{-j}$, $j \le J_{\text{adm}}$), verifying box
-invariance, row contraction, and fixed-point enclosure at each candidate;
-$t = 0$ reproduces the preceding stage exactly. The stage equilibrium
-(`def:epoch:stage-equilibrium`) is the fixed point of the stage map (the
-same mediant shape, admitted flow frozen during the solve) on its
-canonical stage box, certified by the stage row certificates
-$\mathcal{K}^{[h]}_{\text{row}} \le h/(4 m_\theta)$
-(`thm:dynamics:certified-stage-contraction`). **"Clip" is retired from
-normative Layer-1 vocabulary** (`rem:epoch:admission-not-clipping`): net
-stance uses interval projection, activation uses the wall clamp, and
-unsuccessful extensions use certified stage fallback.
+Support is fixed before the solve (`prop:epoch:standing-support-preservation`):
+the clamped activation is strictly positive, so
+$\lambda^{(r)}_{uj}(\boldsymbol{x}) > 0 \iff \mathsf{A}_{uj} > 0$ at every
+state and rung. **Who contributes to whom is checkable from published data**,
+independently of the fixed point that has not yet been computed.
 
-**Final safe standing flow (`def:epoch:final-safe-standing-flow`,
-`eq:epoch:final-safe-standing-flow`).** Let $h^*_k \in \{2,3,4\}$ be the
-highest certified stage. The final source-target flow consumed by standing
-is the admitted flow of that stage at its equilibrium:
+**Depth mass and source emission (`def:epoch:standing-depth-mass`,
+`def:epoch:source-emission`).** The published depth mass $\mathfrak{m}_m \ge
+0$, $m \in \{1, \dots, L_{\text{hop}}\}$, sums to one; its deepest supported
+index is $m^*$. History travels on the back of balance: the **emission
+fraction** of source $u$ is
 
-$$W_{\text{end}}^{(k)}(u \to i) = W^{[h^*_k]}_{\text{adm}}\big(u \to i;\ \boldsymbol{x}^{[h^*_k]}\big),$$
+$$\mathfrak{e}_u = \min\!\left(1,\ \frac{b_u^{(k)}}{\theta\, N_u^{(k)}}\right) = \min\!\left(1,\ \frac{\hat{r}_u}{\rho_\theta}\right) \in [0, 1],$$
 
-the **sole** relational source-target weight entering standing — not a raw
-Action-Graph max-product, not a double-cover register, not an
-independently transferable balance; zero if no eligible relation reaches
-$i$ from $u$. It never exceeds the exact envelope of its stage
-(`prop:epoch:final-flow-no-stacking` — per-source-target; no cross-target
-rivalry claim, `rem:comparator:no-cross-target-rivalry`). **Staged safe
-polarity (`prop:epoch:staged-safe-polarity`):** an uncertifiable D4 falls
-back to the certified D3, an uncertifiable D3 to the exact D2 anchor —
-D4 → D3 → D2; no failed extension invents, reverses, or reallocates
-standing. Envelope and final flow answer different questions
-(`rem:epoch:depth-two-view-versus-final-flow`): admitting less into a
-destination row does not rewrite the source's envelope of that actor.
+the source's own reduced rate measured against the safety wall and capped at
+one; the exported capacity $b_u/\theta$ *is* the ledger's remaining-action
+capacity up to integrality, which is why no new constant was minted to state
+it. Emission is a property of the source's **pair**, never of one of its
+relations — a per-recipient fraction is prohibited, because the tilt is the
+sole chartered modulator of a source's relative odds.
+
+**Finite-depth conserved transport
+(`def:epoch:finite-depth-conserved-transport`,
+`eq:epoch:finite-depth-conserved-transport`).** With
+$\mathfrak{E} = \mathrm{diag}(\mathfrak{e}_u)$,
+
+$$\boldsymbol{\Pi}(\boldsymbol{x}) = \mathfrak{E} \sum_{m=1}^{L_{\text{hop}}} \mathfrak{m}_m\, \Pi^{(m)}(\boldsymbol{x}) + \big(I - \mathfrak{E}\big), \qquad \Pi^{(m)}(\boldsymbol{x}) = \Lambda^{(1)}(\boldsymbol{x}) \cdots \Lambda^{(m)}(\boldsymbol{x}).$$
+
+Emission is applied **once, to the finished mixture**: inside a hop it would
+compound as $\mathfrak{e}_u^m$ and silently reprice the depth mass, and a
+depleted relay must pass a solvent source's history on at full strength.
+$\boldsymbol{\Pi}(\boldsymbol{x})$ is the published operator that the
+mediant, the certificate, and every boundary artifact consume; $\Pi_{ui}$
+replaces any notion of a per-pair standing flow. Unexported mass returns home
+(`rem:epoch:emission-self-inertia`): a depleted Actor's own row weights its
+own near-zero rate *more* heavily, so rehabilitation shifts from the
+community toward the Actor's own ledger — a price, never a ban, since one
+burn raises $b_u$, $\hat{r}_u$, and $\mathfrak{e}_u$ together. No Actor
+exports more history than its present balance could pay for at today's action
+price (`thm:epoch:emission-export-bound`).
+
+**Tilt backoff (`def:epoch:tilt-backoff-grid`, `alg:epoch:tilt-backoff`).**
+The accepted strength $t_k$ is the greatest element of the published finite
+grid $\mathcal{G}_t$ (chartered depth $J_{\text{tilt}}$, terminating at zero)
+whose certificate passes. Backoff preserves the shape exactly — a lower rung
+is **the same signal at lower volume**, never a signal substitution — and
+each rung is independently certified rather than inferred from a higher one.
+The anchor $t_k = 0$ is the exact no-tilt allocation rule and always
+certifies (`prop:epoch:no-tilt-anchor`), which is what makes the grid safely
+degradable. Lowering $t_k$ reduces **discrimination among recipients**, not a
+source's total non-self allocation — that quantity is emission's, on a
+different axis (`rem:epoch:tilt-backoff-is-not-export-backoff`). A rung can
+fail two ways and the certificate must say which
+(`rem:epoch:certificate-failure-versus-indecisive-enclosure`): a
+*certificate failure* proves the fence does not hold and the graph moved; an
+*indecisive enclosure* proves nothing and calls for tighter interval
+arithmetic, not a lower rung.
 
 **Raw signed double-cover service (`subsec:epoch:raw-signed-service`).** The
 double-cover traversal survives as a public raw-graph service for consumers
