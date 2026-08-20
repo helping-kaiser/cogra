@@ -36,7 +36,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     updatedAt: "2026-08-12T10:00:00Z",
     landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
-    license: { __typename: "License", attribution: 0, oversight: 0 },
+    license: { __typename: "License", attribution: 0, provenance: 0 },
     ...overrides,
   };
 }
@@ -127,7 +127,7 @@ describe("fetchPostDetail", () => {
                             license: {
                               __typename: "License",
                               attribution: 0,
-                              oversight: 0,
+                              provenance: 0,
                             },
                           },
                         },
@@ -155,7 +155,7 @@ describe("fetchPostDetail", () => {
 });
 
 describe("preparePost", () => {
-  const license = { attribution: 1, oversight: 0 };
+  const license = { attribution: 1, provenance: 0 };
 
   it("lifts the node and the staged writes", async () => {
     server.use(
@@ -275,14 +275,14 @@ describe("prepareComment", () => {
     const outcome = await prepareComment(client(), {
       target: "p1",
       content: "First!",
-      license: { attribution: 0, oversight: 0.5 },
+      license: { attribution: 0, provenance: 0.5 },
     });
     expect(outcome.kind).toBe("success");
     expect(variables).toEqual({
       input: {
         target: "p1",
         content: "First!",
-        license: { attribution: 0, oversight: 0.5 },
+        license: { attribution: 0, provenance: 0.5 },
       },
     });
   });

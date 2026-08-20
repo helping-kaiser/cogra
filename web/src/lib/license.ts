@@ -1,5 +1,5 @@
 // License qualifiers (platform-guidelines.md §5): two axes, each a
-// degree on [0,1] — attribution `a` and oversight `o`. Both are terms
+// degree on [0,1] — attribution `a` and provenance `o`. Both are terms
 // over downstream use, never a statement about how the content was
 // made. The wire carries the full square so the record CoGra publishes
 // is the field L1 reserves; the composer offers only the three readings
@@ -8,7 +8,7 @@
 
 export type License = {
   attribution: number;
-  oversight: number;
+  provenance: number;
 };
 
 export type LicenseTier = {
@@ -18,7 +18,7 @@ export type LicenseTier = {
   hint: string;
 };
 
-export const PUBLIC_DOMAIN: License = { attribution: 0, oversight: 0 };
+export const PUBLIC_DOMAIN: License = { attribution: 0, provenance: 0 };
 
 export const ATTRIBUTION_TIERS: readonly LicenseTier[] = [
   { value: 0, label: "No credit", hint: "Nobody owes you a name." },
@@ -30,7 +30,7 @@ export const ATTRIBUTION_TIERS: readonly LicenseTier[] = [
   { value: 1, label: "Credit always", hint: "Every use credits you." },
 ];
 
-export const OVERSIGHT_TIERS: readonly LicenseTier[] = [
+export const PROVENANCE_TIERS: readonly LicenseTier[] = [
   { value: 0, label: "No record", hint: "Uses go unlogged." },
   {
     value: 0.5,
@@ -56,7 +56,7 @@ export function tierOf(tiers: readonly LicenseTier[], value: number): LicenseTie
  * the degree itself rather than being rounded into a tier it is not.
  */
 export function licenseTerms(license: License): readonly string[] {
-  if (license.attribution === 0 && license.oversight === 0) {
+  if (license.attribution === 0 && license.provenance === 0) {
     return ["Public domain — no obligation on reuse"];
   }
   const terms: string[] = [];
@@ -66,10 +66,10 @@ export function licenseTerms(license: License): readonly string[] {
         `Credit owed to degree ${license.attribution}.`,
     );
   }
-  if (license.oversight > 0) {
+  if (license.provenance > 0) {
     terms.push(
-      tierOf(OVERSIGHT_TIERS, license.oversight)?.hint ??
-        `Uses logged publicly to degree ${license.oversight}.`,
+      tierOf(PROVENANCE_TIERS, license.provenance)?.hint ??
+        `Uses logged publicly to degree ${license.provenance}.`,
     );
   }
   return terms;

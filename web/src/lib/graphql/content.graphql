@@ -107,7 +107,7 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
         moderationStatus
         license {
           attribution
-          oversight
+          provenance
         }
       }
     }
@@ -154,7 +154,7 @@ query PostDetail(
     moderationStatus
     license {
       attribution
-      oversight
+      provenance
     }
     comments(
       first: $commentsFirst
@@ -183,7 +183,7 @@ query PostDetail(
           moderationStatus
           license {
             attribution
-            oversight
+            provenance
           }
           replies(first: $repliesFirst, includePending: $includePending) {
             edges {
@@ -208,7 +208,7 @@ query PostDetail(
                 moderationStatus
                 license {
                   attribution
-                  oversight
+                  provenance
                 }
               }
             }
@@ -261,7 +261,7 @@ query CommentReplies(
           moderationStatus
           license {
             attribution
-            oversight
+            provenance
           }
           replies(first: $repliesFirst, includePending: $includePending) {
             edges {
@@ -286,7 +286,7 @@ query CommentReplies(
                 moderationStatus
                 license {
                   attribution
-                  oversight
+                  provenance
                 }
               }
             }
