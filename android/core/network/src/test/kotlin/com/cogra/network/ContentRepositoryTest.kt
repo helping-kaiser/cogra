@@ -157,7 +157,7 @@ class ContentRepositoryTest {
     }
 
     @Test
-    fun anEditSendsExplicitNullsForClearedFields() = runTest {
+    fun anEditSendsTheCompleteFieldSet() = runTest {
         enqueue(
             """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
                "node":"p1",
@@ -167,8 +167,8 @@ class ContentRepositoryTest {
         )
         repo().preparePostEdit("p1", title = null, description = null, content = "B")
         val body = server.takeRequest().body.readUtf8()
-        // The wire carries explicit nulls — a present null clears; an
-        // absent key would leave the field untouched (api-spec.md).
+        // The payload is the whole content state: the optional fields
+        // ride as explicit nulls rather than absent keys (post.md §4).
         assertThat(body).contains("\"title\":null")
         assertThat(body).contains("\"description\":null")
         assertThat(body).contains("\"content\":\"B\"")
