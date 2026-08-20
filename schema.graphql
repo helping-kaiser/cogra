@@ -194,7 +194,8 @@ type ChangePasswordPayload {
 type Comment implements Node {
 	id: UUID!
 	"""
-	The minting record's confirmation.
+	When this node was created — when its minting record was
+	authored, which on a pending node precedes landing.
 	"""
 	createdAt: DateTime!
 	"""
@@ -202,6 +203,10 @@ type Comment implements Node {
 	`createdAt` if never changed.
 	"""
 	updatedAt: DateTime!
+	"""
+	Where this comment stands relative to L1 finality.
+	"""
+	landing: Landing!
 	content: ModeratedText!
 	author: User
 	"""
@@ -210,9 +215,11 @@ type Comment implements Node {
 	target: CommentTarget
 	moderationStatus: ModerationStatus!
 	"""
-	This comment's direct replies, newest-first in landing order.
+	This comment's direct replies, newest-first: pending entries,
+	then landed entries in landing order. `includePending: false`
+	serves only what has landed on L1.
 	"""
-	replies(after: String, before: String, first: Int, last: Int): CommentConnection!
+	replies(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
 }
 
 type CommentConnection {
@@ -498,6 +505,28 @@ type KeyBackupChallengePayload {
 }
 
 """
+A node's landing position. `epoch` is the graph's own clock and is
+null exactly while `state` is PENDING — a pending write has no causal
+key yet (architecture.md "The write path").
+"""
+type Landing {
+	state: LandingState!
+	epoch: Int
+}
+
+"""
+Where a node stands relative to L1 finality. PENDING: authored and
+signed, not yet ordered — real content whose place in the order is
+not yet fixed (substrate.md §6). LANDED: the minting act is ordered
+fact. There is no expired state: an expired act's content leaves
+every reader's view.
+"""
+enum LandingState {
+	PENDING
+	LANDED
+}
+
+"""
 License qualifiers, mandatory at authoring time and immutable
 (platform-guidelines.md §5): they ride the structural record as
 public protocol references, surviving every payload state.
@@ -757,13 +786,17 @@ interface Node {
 	"""
 	id: UUID!
 	"""
-	The minting record's confirmation.
+	When this node was created — when its minting record was authored, which on a pending node precedes landing.
 	"""
 	createdAt: DateTime!
 	"""
 	The most recent fold-winning update's promotion; equals createdAt if never changed.
 	"""
 	updatedAt: DateTime!
+	"""
+	Where this node stands relative to L1 finality — landing is a substrate fact about every minted node.
+	"""
+	landing: Landing!
 }
 
 """
@@ -813,7 +846,8 @@ enum PayloadState {
 type Post implements Node {
 	id: UUID!
 	"""
-	The minting record's confirmation.
+	When this node was created — when its minting record was
+	authored, which on a pending node precedes landing.
 	"""
 	createdAt: DateTime!
 	"""
@@ -821,6 +855,10 @@ type Post implements Node {
 	`createdAt` if never changed.
 	"""
 	updatedAt: DateTime!
+	"""
+	Where this post stands relative to L1 finality.
+	"""
+	landing: Landing!
 	title: ModeratedText!
 	description: ModeratedText!
 	content: ModeratedText!
@@ -828,11 +866,12 @@ type Post implements Node {
 	moderationStatus: ModerationStatus!
 	"""
 	This post's direct comments — genesis Reviews whose A leg
-	enters here — newest-first in landing order (a comment's landing
-	position is its genesis, so edits never reorder the thread),
-	keyset-paginated.
+	enters here — newest-first: pending entries, then landed entries
+	in landing order (a comment's landing position is its genesis, so
+	edits never reorder the thread), keyset-paginated.
+	`includePending: false` serves only what has landed on L1.
 	"""
-	comments(after: String, before: String, first: Int, last: Int): CommentConnection!
+	comments(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
 }
 
 type PostConnection {
@@ -1078,11 +1117,12 @@ type Query {
 	records(author: UUID, target: UUID, terminal: UUID, family: RecordFamily, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, after: String, before: String, first: Int, last: Int): RecordConnection!
 	"""
 	The chronological listing (roadmap "Slice 2"): every post,
-	newest-first in landing order — the record set's own order,
-	never wall clock (graph-model.md §2). Deliberately not the
-	ranked feed.
+	newest-first — pending entries, then landed entries in landing
+	order, the record set's own order, never wall clock
+	(graph-model.md §2). `includePending: false` serves only what has
+	landed on L1. Deliberately not the ranked feed.
 	"""
-	posts(after: String, before: String, first: Int, last: Int): PostConnection!
+	posts(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): PostConnection!
 }
 
 type Record {

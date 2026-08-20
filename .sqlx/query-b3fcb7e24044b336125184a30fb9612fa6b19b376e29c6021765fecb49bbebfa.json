@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE comment_versions SET pending = FALSE WHERE comment_id = $1 AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b3fcb7e24044b336125184a30fb9612fa6b19b376e29c6021765fecb49bbebfa"
+}

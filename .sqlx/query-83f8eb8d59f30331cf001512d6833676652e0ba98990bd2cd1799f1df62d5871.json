@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,\n                  c.landed_epoch, c.act_time, c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.l1_node_id = $1",
+  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,\n                  c.landed_epoch, c.act_time, c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.id = $1",
   "describe": {
     "columns": [
       {
@@ -60,13 +60,18 @@
       },
       {
         "ordinal": 11,
+        "name": "version_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
         "name": "version_created_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -75,14 +80,15 @@
       false,
       false,
       false,
-      false,
-      false,
-      false,
+      true,
+      true,
+      true,
       false,
       false,
       true,
+      false,
       false
     ]
   },
-  "hash": "f543815fe705fe9e64186c83bcfedaca64268b2413ca784c7ec8e5c34c43b306"
+  "hash": "83f8eb8d59f30331cf001512d6833676652e0ba98990bd2cd1799f1df62d5871"
 }

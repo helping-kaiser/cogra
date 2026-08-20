@@ -197,12 +197,15 @@ an anonymous visitor finds the public read without an account.
 
 The shell is the bottom bar
 ([design.md §6](design.md#6-components)), rendered from the root
-layout so it frames the public tier and the `(app)` group alike —
-one frame for every viewer: an anonymous visitor gets the same
+layout so it frames the read surfaces across the public tier and
+the `(app)` group alike — `/feed`, `/posts/<id>`, `/u/<handle>`,
+and `/profile`. The task flows (`/compose`, `/profile/edit`,
+`/settings`, `/settings/key`, `/invites`, `/key`, `/restore`) and
+the auth surfaces (login, join, reset, verify) stand without it.
+One frame for every viewer: an anonymous visitor gets the same
 bar on the public read surfaces, its account-needing slots
 (compose, profile) opening the join prompt in place — sign in or
-keep browsing — never bouncing the read; only the auth surfaces
-(login, join, reset, verify) stand alone. The account-status
+keep browsing — never bouncing the read. The account-status
 banners
 (the security notice, the application cards, the member status)
 ride the feed and the own profile. Settings hangs off the

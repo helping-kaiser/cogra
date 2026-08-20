@@ -135,6 +135,7 @@ impl Rig {
                 asserted_parents: vec![],
                 deps: vec![],
                 payload: vec![],
+                node: None,
             },
         )
         .await

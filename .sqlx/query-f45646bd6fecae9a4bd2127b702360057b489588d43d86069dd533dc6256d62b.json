@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM post_attachments\n         WHERE post_id = $1\n           AND EXISTS (SELECT 1 FROM posts\n                       WHERE id = $1 AND landed_epoch IS NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f45646bd6fecae9a4bd2127b702360057b489588d43d86069dd533dc6256d62b"
+}

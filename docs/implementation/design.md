@@ -457,7 +457,13 @@ gesture the product lives on; it wears `primaryContainer`
 signed-in, applicant, and anonymous viewers alike, and a slot
 that needs an account (the compose action, the profile tab)
 asks on an anonymous tap — a dialog offering sign-in or
-keep-browsing — never yanking the read away. Login is the
+keep-browsing — never yanking the read away. The bar rides every
+**read** surface — the tab roots and the read drill-ins (post
+detail, any actor's profile) — and leaves the **task** flows
+(compose, profile edit, settings, invites, the key and auth
+surfaces), which carry a back arrow instead: a drill-in is still
+reading, so the frame that got the reader there stays, while a
+flow owns the screen until it finishes. Login is the
 signed-out entry; the invite entry and the public feed hang
 off it. The bars are compact: the 64dp short
 navigation bar rather than the taller classic one, under the
