@@ -173,7 +173,7 @@ orders each bundle for the fold and anchors epoch age.
 | Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); genesis legs are ordinary hops. |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
-| Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-edges-never-vouch`. |
+| Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-acts-resolve-to-self`. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
 
 Ballots need no row of their own: a vote is a payload-marked
@@ -335,8 +335,8 @@ defined (a zero parameter is already inert, §3.1).
 coherence bit, never a favor bit (`rem:graph:sign-semantics`) —
 `(−1, −1)` is gauge-equivalent to `(+1, +1)` for routing. That is
 right for standing (coherent condemnation is a strong coherent
-signal, and person-vouch eligibility
-(`def:epoch:person-vouch-eligibility`) gates stance separately) and wrong
+signal, and recipient resolution
+(`def:epoch:standing-recipient-resolution`) reads stance separately) and wrong
 for a feed: hate-and-avoid must rank *opposite* to love-and-seek,
 not identical. The stance survives in the stored slice's marginal
 row precisely for terminal read-sites — and the feed is one: it
@@ -432,10 +432,11 @@ would silently reintroduce it.
   `b ≥ 2–3` lets a cluster amplify one entry edge without bound.
   Rejecting sum-scoring for this redundancy-amplification failure
   is CoGra's call — the raw path rule is a replaceable terminal
-  default — and it follows the precedent L1's standing side sets
-  with its anti-stacking max-product envelope
-  (`def:epoch:depth-bounded-source-envelope`,
-  `prop:epoch:final-flow-no-stacking`).
+  default — and it follows the precedent L1's standing side sets by
+  conserving each source's allocation across all recipients, so
+  multiplicity redistributes rather than accumulates
+  (`post:epoch:standing-pair-mass-conservation`,
+  `prop:epoch:dilution-cost`).
 - **Disjoint-sum is the principled middle.** By Menger's theorem
   the number of internally disjoint `u→c` paths is capped by the
   minimum node cut, so breadth counts exactly when it is realized
