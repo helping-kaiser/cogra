@@ -242,9 +242,22 @@ class CograNavGraphTest {
         compose.onNodeWithTag("bar_compose").performClick()
         waitForTag("compose_body")
         compose.onNodeWithTag("compose_body").performTextInput("Something new")
-        compose.onNodeWithTag("compose_submit").performClick()
+        compose.onNodeWithTag("compose_submit").performScrollTo().performClick()
 
-        waitForTag("detail_pending")
+        // Settle first, and surface a composer-side refusal as itself
+        // rather than as a timeout on a screen that never changed.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>() != true ||
+                compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes().isNotEmpty()
+        }
+        assertThat(compose.onAllNodesWithTag("compose_refused").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes()).isEmpty()
+
+        waitForTag("detail_body")
+        compose.onNodeWithTag("detail_pending").assertExists()
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<PostDetail>()).isTrue()
         assertThat(entry?.toRoute<PostDetail>()?.postId).isEqualTo("p-new")

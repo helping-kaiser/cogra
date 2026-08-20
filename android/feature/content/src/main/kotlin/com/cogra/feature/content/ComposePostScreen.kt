@@ -56,9 +56,8 @@ fun ComposePostRoute(
     // landing in state, not something composition itself performs.
     LaunchedEffect(state.saved) {
         if (state.saved) {
-            val newPostId = state.savedPostId
+            onSaved(state.savedPostId)
             viewModel.onSavedConsumed()
-            onSaved(newPostId)
         }
     }
     ComposePostScreen(
