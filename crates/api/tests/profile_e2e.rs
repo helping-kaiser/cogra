@@ -182,9 +182,14 @@ impl Rig {
 
     async fn close_and_ingest(&self) {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(&self.boundary(), &self.pool, GC)
+        let outcome = api::ingest::ingest_pending(&self.boundary(), &self.pool, GC)
             .await
             .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
     }
 
     /// The device's two signing steps over a `PreparePayload`'s writes,
