@@ -30,7 +30,7 @@ const AXIS_STEPS: f64 = 1000.0;
 
 /// License qualifiers, declared at authoring time and immutable
 /// (post.md §1; platform-guidelines.md §5). Both axes are degrees on
-/// `[0, 1]` — attribution `a` (`def:content:attribution`) and oversight
+/// `[0, 1]` — attribution `a` (`def:content:attribution`) and provenance
 /// `o` (`def:content:provenance`); neither is a switch. The pair rides
 /// the structural record as public protocol references
 /// (layer1-interface.md §8.2) — never the envelope, so it survives every
@@ -38,7 +38,7 @@ const AXIS_STEPS: f64 = 1000.0;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct License {
     pub attribution: f64,
-    pub oversight: f64,
+    pub provenance: f64,
 }
 
 impl License {
@@ -47,17 +47,17 @@ impl License {
     /// (`rem:content:public-domain`). CoGra's default license.
     pub const PUBLIC_DOMAIN: Self = Self {
         attribution: 0.0,
-        oversight: 0.0,
+        provenance: 0.0,
     };
 
     /// Checks a caller-supplied pair and snaps each axis to the
     /// published grid. Refuses anything off the square or finer than the
     /// grid, rather than silently publishing bytes the author did not
     /// choose.
-    pub fn checked(attribution: f64, oversight: f64) -> Result<Self, ContentError> {
+    pub fn checked(attribution: f64, provenance: f64) -> Result<Self, ContentError> {
         Ok(Self {
             attribution: axis("license.attribution", attribution)?,
-            oversight: axis("license.oversight", oversight)?,
+            provenance: axis("license.provenance", provenance)?,
         })
     }
 
@@ -68,7 +68,7 @@ impl License {
         format!(
             "a={};o={}",
             render_axis(self.attribution),
-            render_axis(self.oversight)
+            render_axis(self.provenance)
         )
     }
 
@@ -78,10 +78,10 @@ impl License {
     pub fn parse(canonical: &str) -> Option<Self> {
         let (a, o) = canonical.split_once(';')?;
         let attribution = parse_axis(a.strip_prefix("a=")?)?;
-        let oversight = parse_axis(o.strip_prefix("o=")?)?;
+        let provenance = parse_axis(o.strip_prefix("o=")?)?;
         Some(Self {
             attribution,
-            oversight,
+            provenance,
         })
     }
 }
@@ -128,10 +128,10 @@ mod license_tests {
             (1.0, 0.5, "a=1;o=0.5"),
             (1.0, 1.0, "a=1;o=1"),
         ];
-        for (attribution, oversight, expected) in cases {
+        for (attribution, provenance, expected) in cases {
             let license = License {
                 attribution,
-                oversight,
+                provenance,
             };
             assert_eq!(license.canonical(), expected);
         }
@@ -182,7 +182,7 @@ mod license_tests {
             License::checked(0.25, 0.75).expect("interior points are licenses"),
             License {
                 attribution: 0.25,
-                oversight: 0.75,
+                provenance: 0.75,
             }
         );
     }
