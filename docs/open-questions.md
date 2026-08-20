@@ -27,7 +27,6 @@ within a phase, order is flexible.
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
 | 2c. Profile surface (with slice 2.2) | 2 | **Q35, Q36** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real) and the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?). Slice 2.1 ships without both. |
-| 2d. Content-license surface | 1 | **Q39** | What `oversight` actually licenses — the L1 author confirmed `o` is a permission over machine/AI use of the content, not a disclosure duty; waiting on the L1 team's corrected licensing section to re-align docs and copy. The read-side display of the qualifiers is settled and proceeds now. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -37,6 +36,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q39 — see [platform-guidelines.md §5](instances/platform-guidelines.md#5-license-and-provenance-obligations) and [layer1-interface.md §10](primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only): both axes are degrees on `[0, 1]` — attribution `a` credits the maker, oversight `o` requires a public, auditable record of uses — and `prop:content:closure-exclusion` grants their whole interpretation to Layer 2. CoGra publishes a reading for three degrees per axis (0, 0.5 "commercial uses only", 1), offers exactly those in its composers, defaults to Public Domain `(0, 0)`, and shows the pair on every content surface.
 - Q37 — see [design.md §6](implementation/design.md#6-components), [android.md "Screens"](implementation/android.md#screens), and [web.md "Routes"](implementation/web.md#routes): the bar rides every **read** surface — the tab roots and the read drill-ins (post detail, any actor's profile) — and leaves the **task** flows (compose, profile edit, settings, invites, the key and auth surfaces), which carry a back arrow instead. A read drill-in is still reading, so the frame that got the reader there stays; a flow owns the screen until it finishes or is backed out of, and a tab tap mid-write is an accidental abandon. One rule for both clients, purely presentational — no graph or economics contact.
 - Q38 — see [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission) and [design.md §9](implementation/design.md#9-honesty-surfaces): expired pending content vanishes for every reader (nothing ever existed on the graph, so nothing is marked); the author gets a calm did-not-land notice.
 - Q7 — see [data-model.md §"author_id"](implementation/data-model.md#author_id--one-foreign-key-still-a-cache).
@@ -245,61 +245,6 @@ it live? It is public display state, which suggests a
 profile payload (witnessed like the other display fields) — but
 it could also stay a pure L2 preference. Decide when profile
 usage is real.
-
----
-
-## Q39 — What the license qualifiers cannot express
-
-**Where it shows up:** [platform-guidelines.md §5](instances/platform-guidelines.md#5-license-and-provenance-obligations),
-[layer1-interface.md §10](primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)
-
-### Context
-
-The census fixes two license qualifiers: attribution
-`attr ∈ {0, 1}` (credit required on reuse) and oversight
-`o ∈ {0, 0.5, 1}` (how much AI-generation detail reuse must
-disclose — none, on query, or the full chain). Both are terms
-over downstream use; severity `l = attr + o` constrains adoption
-and enters no L1 formula. The value space is closed the same way
-the edge census is: CoGra cannot mint a third qualifier.
-
-### The question
-
-What `oversight` actually licenses — **waiting on the L1 team's
-corrected licensing section.**
-
-Discussed directly with the L1 author (2026-08-19): the paper's
-§Licensing wording misleads. `o` is intended as a **permission
-over machine use of the content** — whether it may be used for
-AI training and the rest — not merely a disclosure duty on
-reusers. The L1 team is issuing a corrected version of the
-section; when it lands, CoGra re-aligns
-[platform-guidelines.md §5](instances/platform-guidelines.md#5-license-and-provenance-obligations),
-[layer1-interface.md §10](primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only),
-and the composer copy to it — the disclosure-flavoured reading
-those carry today is interim, faithful to the current paper
-text. Two consequences already settled by that clarification:
-
-- **No third qualifier is needed** — training consent is `o`'s
-  own subject once the corrected text lands.
-- **`o = 1`'s provenance-chain obligation** (guild-schema key 6,
-  format deferred —
-  [data-model.md](implementation/data-model.md#the-payload-envelope))
-  is expected to be restated by the corrected section; hold key
-  6 until then.
-
-**Settled CoGra-side (2026-08-19), not waiting on the text:**
-the qualifiers must be readable — a read-side field plus display
-on content surfaces. That is the *whole* CoGra obligation:
-CoGra never copies content, comments and references point at the
-original, so attribution is structurally over-satisfied by the
-graph itself; enforcement inside CoGra reduces to honest display.
-Display labels stay semantics-light until the corrected section
-names the values.
-
-### Related
-
-Q30 (the other open L1-team thread).
 
 ---
 

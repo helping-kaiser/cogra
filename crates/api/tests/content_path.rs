@@ -3,11 +3,10 @@
 //! Comment's genesis Review through the five-step write path, edit
 //! chains, promotion into carriage and display rows, the chronicle
 //! reads, and every refusal branch the prepare surface owns —
-//! eligibility, serialization, unknown targets, and empty edits.
+//! eligibility, serialization, and unknown targets.
 
 use api::content::{
-    self, CommentDraft, CommentEditDraft, ContentError, License, Oversight, PostDraft,
-    PostEditDraft,
+    self, CommentDraft, CommentEditDraft, ContentError, License, PostDraft, PostEditDraft,
 };
 use api::l1::{L1Boundary, StandInBoundary};
 use common::envelope::CograContent;
@@ -31,8 +30,8 @@ const GC: i64 = 8;
 
 fn license() -> License {
     License {
-        attribution: true,
-        oversight: Oversight::None,
+        attribution: 1.0,
+        oversight: 0.0,
     }
 }
 
@@ -94,9 +93,14 @@ impl Rig {
 
     async fn close_and_ingest(&self) {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
+        let outcome = api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
             .await
             .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
     }
 
     /// Drives one prepared content write through signatures and confirm.
@@ -203,12 +207,12 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
 }
 
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_post_edit_folds_per_field_and_appends_a_version(pool: PgPool) {
+async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.funded_actor("alice").await;
     let post_id = rig.post(actor, &key, "Old title", "Old body").await;
 
-    // Change the title only; the body copies forward.
+    // A new title; the payload restates the body it keeps.
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -218,7 +222,7 @@ async fn a_post_edit_folds_per_field_and_appends_a_version(pool: PgPool) {
             id: post_id,
             title: Some("New title".into()),
             description: None,
-            content: None,
+            content: "Old body".into(),
         },
     )
     .await
@@ -237,7 +241,8 @@ async fn a_post_edit_folds_per_field_and_appends_a_version(pool: PgPool) {
     assert_eq!(post.title.as_deref(), Some("New title"));
     assert_eq!(post.content, "Old body");
 
-    // Clearing the title stores NULL; the newest row alone renders.
+    // A snapshot without a title stores NULL — the snapshot is the
+    // whole state, so an absent field is a Post without that field.
     let clear = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -245,9 +250,9 @@ async fn a_post_edit_folds_per_field_and_appends_a_version(pool: PgPool) {
         actor,
         PostEditDraft {
             id: post_id,
-            title: Some(String::new()),
+            title: None,
             description: None,
-            content: Some("New body".into()),
+            content: "New body".into(),
         },
     )
     .await
@@ -266,13 +271,38 @@ async fn a_post_edit_folds_per_field_and_appends_a_version(pool: PgPool) {
     assert_eq!(post.title, None);
     assert_eq!(post.content, "New body");
 
+    // An explicit empty title stores NULL the same way.
+    let empty = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        PostEditDraft {
+            id: post_id,
+            title: Some(String::new()),
+            description: Some("Sub".into()),
+            content: "Newer body".into(),
+        },
+    )
+    .await
+    .expect("prepares empty title");
+    rig.land(&empty, &key).await;
+
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title, None);
+    assert_eq!(post.description.as_deref(), Some("Sub"));
+    assert_eq!(post.content, "Newer body");
+
     let versions =
         sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM post_versions WHERE post_id = $1")
             .bind(post_id)
             .fetch_one(&rig.pool)
             .await
             .expect("counts");
-    assert_eq!(versions, 3, "append-only: genesis + two edits");
+    assert_eq!(versions, 4, "append-only: genesis + three edits");
 }
 
 #[sqlx::test(migrations = "../../migrations")]
@@ -293,27 +323,11 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Hijack".into()),
             description: None,
-            content: None,
+            content: "Body".into(),
         },
     )
     .await;
     assert!(matches!(refused, Err(ContentError::NotCreator)));
-
-    // An empty edit is refused.
-    let refused = content::prepare_post_edit(
-        &rig.pool,
-        &rig.boundary,
-        GC,
-        alice,
-        PostEditDraft {
-            id: post_id,
-            title: None,
-            description: None,
-            content: None,
-        },
-    )
-    .await;
-    assert!(matches!(refused, Err(ContentError::BadInput { .. })));
 
     // An unknown id is NotFound.
     let refused = content::prepare_post_edit(
@@ -325,7 +339,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: Uuid::new_v4(),
             title: Some("x".into()),
             description: None,
-            content: None,
+            content: "Body".into(),
         },
     )
     .await;
@@ -342,7 +356,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("One".into()),
             description: None,
-            content: None,
+            content: "Body".into(),
         },
     )
     .await
@@ -356,7 +370,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Two".into()),
             description: None,
-            content: None,
+            content: "Body".into(),
         },
     )
     .await;
@@ -373,7 +387,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             id: post_id,
             title: Some("Three".into()),
             description: None,
-            content: None,
+            content: "Body".into(),
         },
     )
     .await
@@ -468,7 +482,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
         bob,
         CommentEditDraft {
             id: comment.node,
-            content: Some("First! (edited)".into()),
+            content: "First! (edited)".into(),
         },
     )
     .await
@@ -596,7 +610,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
             id: post_id,
             title: Some("T2".into()),
             description: None,
-            content: None,
+            content: "B".into(),
         },
     )
     .await
@@ -750,9 +764,9 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
 
     // Re-running the content landing pass over already-promoted writes
     // (a forced double-promotion; the real promote_landed filter never
-    // re-selects a landed row) duplicates nothing: the entity insert
-    // conflicts, the per-record transaction rolls back and logs, and
-    // the carriage rows stay exactly one per act.
+    // re-selects a landed row) is a clean no-op: carriage inserts ignore
+    // the conflict and the version rows land by their own key, so the
+    // pass reports nothing and duplicates nothing.
     let promoted = sqlx::query_as::<_, (Uuid, Uuid, String, String)>(
         "SELECT id, actor_id, act_id, family FROM staged_writes WHERE state = 'landed'",
     )
@@ -772,7 +786,11 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             family: r.3.clone(),
         })
         .collect();
-    content::land_promoted(&rig.pool, &writes).await;
+    let failures = content::land_promoted(&rig.pool, &writes).await;
+    assert!(
+        failures.is_empty(),
+        "re-promotion is a no-op, not a failure: {failures:?}"
+    );
     let carriage = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM act_payloads")
         .fetch_one(&rig.pool)
         .await

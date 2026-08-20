@@ -2033,52 +2033,58 @@ oscillation dilutes $r_j$ irrevocably.
 
 ## 10 Content governance metadata (PN full §9, `sec:content` — full paper only)
 
-The closure edition names licensing / provenance metadata policies only as a
-terminal-complement ledger row ("reimplement freely"). The full paper still
-specifies the defaults:
-
 Every content node carries metadata beyond the sentiment slice — licensing
-terms, provenance markers, format-level attributes. **None enter any
-scoring, attribution, or transport formula**; they affect actor choices
-(hence topology) indirectly and one-directionally.
+terms and format-level attributes. **None enter any scoring, attribution, or
+transport formula**; they affect actor choices (hence topology) indirectly
+and one-directionally. Erasure therefore drops the controlled payload while
+leaving every Layer 1 quantity untouched
+(`prop:graph:removable-projection-invariance`).
 
-**License Qualifiers (`def:content:license-qualifiers`).** Attribution $a \in \{0, 1\}$
-(credit requirement) and Oversight $o \in \{0, 0.5, 1\}$ (AI provenance);
-severity $l_{ij} = a_i + o_j \in [0, 2]$ over the $2\times 3$ space:
+**The two axes.** **Provenance** $o$ (`def:content:provenance`) is the
+requirement that uses of a work be tracked publicly and left open to audit,
+judged as a degree along $o \in [0, 1]$ — from no required record of any
+use, to a complete and auditable public record of every use.
+**Attribution** $a$ (`def:content:attribution`) is the requirement that uses
+credit the maker, judged along $a \in [0, 1]$ — from no naming requirement
+at all, to unconditional credit on every use. Both are duties on downstream
+*use*.
 
-$$\mathbf{L}_{ij} = \begin{pmatrix} \text{Public Domain} & \text{Conditional Disclosure} & \text{Full Provenance} \\ \text{Attribution} & \text{Conditional Attribution} & \text{Full Provenance + Attribution} \end{pmatrix}$$
+**License Qualifiers (`def:content:license-qualifiers`).** The pair
+$(a, o)$ is a point of the square $[0,1] \times [0,1]$ carrying severity
+$l = a + o$. Neither axis is a switch: a license is a judgment of degree on
+each, and the corners are only its extremes,
 
-Rules: licensing metadata is a per-content-node attribute, set by the
-creating actor when the node enters the graph, immutable thereafter — under
-Edition 4 the qualifiers are **public protocol references of the genesis
-act** (`def:graph:public-protocol-reference`), retained across every
-payload state; published as part of the self-sufficient record and
-independently verifiable. **No Layer 1 formula consumes $l_{ij}$;
-enforcement is a Layer 2 guild responsibility**
-(`subsec:content:licensing`), published per the formula-completeness
-invariant (App. I, `subsec:deployment:completeness`). A high $l_{ij}$ can
-still act indirectly: it lowers adoption, hence betweenness centrality
-$S_C$, hence a creator's guild reward $R_C$ — partially offsetting the
-standing amplifier (`rem:content:license-guild-interaction`, a terminal
-reward-economics consequence, not a Layer-1 formula).
+$$\mathbf{L}_{ij} = \begin{pmatrix} \text{Public Domain} & \text{Provenance} \\ \text{Attribution} & \text{Provenance + Attribution} \end{pmatrix}$$
 
-**Provenance / AI oversight** (`subsec:content:provenance`): $o = 0$ no AI disclosure
-required; $o = 0.5$ conditional disclosure (declared when queried); $o = 1$
-full provenance (complete generation chain published alongside the record).
-The spec records the qualifier but does not formalize the provenance chain
-itself.
+indexed by the extremal values $a_i$ (rows) and $o_j$ (columns), where
+severity specializes to $l_{ij} = a_i + o_j$. Every interior point is a
+graded license lying between these four. The corner $(0, 0)$ is **Public
+Domain** (`rem:content:public-domain`): the unique point of zero severity,
+and the only license under which a use carries no downstream obligation
+whatever.
 
-**Content-level metadata** (`subsec:content:metadata`): media type, format identifiers,
-language tags, display metadata — carried on the record for rendering and
-policy enforcement, consumed by no scoring or attribution formula.
+**Interpretation lies outside the closure
+(`prop:content:closure-exclusion`).** Layer 1 fixes exactly one thing about
+the pair: its *place*. It is a structural field of the genesis record — set
+at minting, immutable, surviving payload removal, published with the
+self-sufficient edge record. No read-site of $(a, o)$ or of $l$ is ever read
+back into the decision of what may append to $G$, so the whole license field
+belongs to the terminal complement. **Judging a degree on either axis,
+checking compliance, and enforcing terms are Layer 2 acts** — CoGra's, and
+published per the formula-completeness invariant
+(App. I, `subsec:deployment:completeness`); see
+[platform-guidelines.md §5](../instances/platform-guidelines.md#5-license-and-provenance-obligations).
+A more demanding pair still acts indirectly: it lowers adoption, hence
+betweenness centrality $S_C$, hence a creator's guild reward $R_C$ —
+partially offsetting the standing amplifier
+(`rem:content:license-guild-interaction`, a terminal reward-economics
+consequence, not a Layer-1 formula).
 
-**Payload governance across phases** (`rem:content:payload-governance-phases`):
-every act carries a payload; a centralized-phase host may impose payload
-schemas, media, and rendering rules as custody policy without changing any
-Layer 1 computation; in the decentralized phase Layer 1 carries only
-structural records and payload residues, so payload governance is entirely a
-Layer 2 carriage/rendering concern — the licensing qualifiers are its
-content-node special case.
+**Deferred by the spec:** what constitutes a valid public use record at a
+given $o$, how a degree on either axis is judged, how provenance and
+attribution claims are verified, and which further content-level attributes
+— media type, format, language, display metadata — deserve formalization.
+Formalizing them changes no scoring, attribution, or transport definition.
 
 ---
 
