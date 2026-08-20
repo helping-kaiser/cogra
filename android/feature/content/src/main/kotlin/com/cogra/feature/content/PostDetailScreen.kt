@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
@@ -287,6 +288,9 @@ private fun PostWithThread(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.testTag("detail_license_terms"),
                 )
+                if (post.landing.isPending) {
+                    PendingMarker(testTag = "detail_pending")
+                }
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.content_comments_heading),
@@ -504,6 +508,9 @@ private fun CommentThread(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("comment_edited_${comment.id}"),
                         )
+                    }
+                    if (comment.landing.isPending) {
+                        PendingMarker(testTag = "comment_pending_${comment.id}")
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (signedIn == true) {
