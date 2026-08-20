@@ -34,6 +34,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     author: { __typename: "User", id: "u1", handle: "alice" },
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
+    landing: { __typename: "Landing", state: "LANDED" },
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, oversight: 0 },
     ...overrides,
@@ -72,6 +73,31 @@ describe("fetchPosts", () => {
     server.use(graphql.query("Posts", () => HttpResponse.error()));
     expect((await fetchPosts(client())).kind).toBe("failed");
   });
+
+  // The listing serves pending entries unless the reader opts out
+  // (api-spec.md "Pagination"): the default rides every read, and false
+  // asks for the settled graph.
+  it("asks for pending entries by default and carries the landed-only opt-out", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      graphql.query("Posts", ({ variables }) => {
+        asked.push(variables.includePending);
+        return HttpResponse.json({
+          data: {
+            posts: {
+              __typename: "PostConnection",
+              edges: [],
+              pageInfo: pageInfo(false, null),
+            },
+          },
+        });
+      }),
+    );
+    const c = client();
+    await fetchPosts(c);
+    await fetchPosts(c, null, { includePending: false });
+    expect(asked).toEqual([true, false]);
+  });
 });
 
 describe("fetchPostDetail", () => {
@@ -96,6 +122,7 @@ describe("fetchPostDetail", () => {
                             author: { __typename: "User", id: "u2", handle: "bob" },
                             createdAt: "2026-08-12T10:05:00Z",
                             updatedAt: "2026-08-12T10:05:00Z",
+                            landing: { __typename: "Landing", state: "LANDED" },
                             moderationStatus: "NORMAL",
                             license: {
                               __typename: "License",
