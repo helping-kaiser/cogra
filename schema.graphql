@@ -210,6 +210,10 @@ type Comment implements Node {
 	content: ModeratedText!
 	author: User
 	"""
+	The license qualifiers the minting Review record carried.
+	"""
+	license: License!
+	"""
 	The node this comment is on — the genesis Review's parent.
 	"""
 	target: CommentTarget
@@ -527,17 +531,48 @@ enum LandingState {
 }
 
 """
+The license qualifiers a content node was minted with (§5 of
+platform-guidelines.md; layer1-interface.md §10
+`def:content:license-qualifiers`) — set by the creator when the node
+entered the graph, immutable thereafter, and surviving payload
+removal. Both are duties on *downstream use*, never a statement about
+how the content was made.
+"""
+type License {
+	"""
+	`a` — the degree to which a use must credit the maker, on
+	`[0, 1]` (`def:content:attribution`). CoGra publishes three
+	readings: 0 no credit owed, 0.5 credit on commercial uses only,
+	1 credit on every use.
+	"""
+	attribution: Float!
+	"""
+	`o` — the degree to which a use must be tracked publicly and
+	left open to audit, on `[0, 1]` (`def:content:provenance`).
+	CoGra publishes three readings: 0 no record owed, 0.5 a public
+	record of commercial uses only, 1 a public record of every use.
+	"""
+	oversight: Float!
+}
+
+"""
 License qualifiers, mandatory at authoring time and immutable
 (platform-guidelines.md §5): they ride the structural record as
 public protocol references, surviving every payload state.
 """
 input LicenseInput {
 	"""
-	Credit requirement: the creator is credited on every display,
-	quote, and reference surface.
+	`a` — how far a use must credit the maker, a degree on `[0, 1]`
+	(`def:content:attribution`). CoGra's composer offers the three
+	readings it publishes: 0, 0.5 (commercial uses only), and 1.
 	"""
-	attributionRequired: Boolean!
-	oversight: Oversight!
+	attribution: Float!
+	"""
+	`o` — how far a use must be tracked publicly and left open to
+	audit, a degree on `[0, 1]` (`def:content:provenance`), offered
+	on the same three readings.
+	"""
+	oversight: Float!
 }
 
 input LogInInput {
@@ -800,19 +835,6 @@ interface Node {
 }
 
 """
-AI-provenance oversight, three-valued (platform-guidelines.md §5;
-layer1-interface.md §10 `def:content:license-qualifiers`): NONE — no
-AI disclosure required; CONDITIONAL — generation details disclosed
-on query; FULL — the complete provenance chain published alongside
-the record.
-"""
-enum Oversight {
-	NONE
-	CONDITIONAL
-	FULL
-}
-
-"""
 Information about pagination in a connection
 """
 type PageInfo {
@@ -863,6 +885,10 @@ type Post implements Node {
 	description: ModeratedText!
 	content: ModeratedText!
 	author: User
+	"""
+	The license qualifiers the minting Publish record carried.
+	"""
+	license: License!
 	moderationStatus: ModerationStatus!
 	"""
 	This post's direct comments — genesis Reviews whose A leg
