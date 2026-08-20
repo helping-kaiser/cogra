@@ -918,6 +918,8 @@ type Post implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The qualifiers the minting Publish record carried."
+  license: License!
   "This post's direct comments — genesis Reviews whose actor leg
    enters here — newest-first (a comment's landing position is its
    genesis, so edits never reorder the thread). The named view over
@@ -938,6 +940,8 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The qualifiers the minting Review record carried."
+  license: License!
   "This comment's direct replies, newest-first."
   replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 }
@@ -2365,22 +2369,25 @@ input ReferenceInput {
   pInterest: Dimension!
 }
 
-"The AI-disclosure requirement the content is licensed under,
- three-valued
- (layer1-interface.md §10 def:content:license-qualifiers): NONE —
- no disclosure required; CONDITIONAL — generation details
- disclosed on query; FULL — the complete provenance chain
- published alongside the record. A requirement on downstream use,
- not a declaration of how the content was made."
-enum Oversight { NONE CONDITIONAL FULL }
+"The qualifiers a content node was minted with
+ (layer1-interface.md §10 def:content:license-qualifiers): each a
+ degree on [0, 1] — attribution `a`, how far a use must credit the
+ maker; oversight `o`, how far a use must be tracked publicly and
+ left open to audit. Requirements on downstream use, never a
+ declaration of how the content was made."
+type License {
+  attribution: Float!
+  oversight: Float!
+}
 
 "The mandatory authoring-time declaration (platform-guidelines.md):
- the terms downstream use must meet — whether attribution is
- required on reuse surfaces, and how much generation detail must
- be disclosed. Immutable — genesis-only; edits never carry a license."
+ the terms downstream use must meet, as a degree on each axis. The
+ composer offers the three readings CoGra publishes — 0, 0.5
+ (commercial uses only), and 1. Immutable — genesis-only; edits
+ never carry a license."
 input LicenseInput {
-  attributionRequired: Boolean!
-  oversight: Oversight!
+  attribution: Float!
+  oversight: Float!
 }
 
 "Author a Post — stages the Publish plus the Tag and Reference

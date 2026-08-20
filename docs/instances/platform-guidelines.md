@@ -195,15 +195,18 @@ witnessed on the shared graph via the platform-document anchor.
 
 Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
-thereafter: **attribution** `attr ∈ {0, 1}` (credit requirement)
-and **oversight** `o ∈ {0, 0.5, 1}` (AI-disclosure requirement).
-Both are terms over *downstream use* — what others must do when
-they adopt, quote, or build on the content — never a statement
-about how the content was made. Severity `l = attr + o`
-constrains adoption, nothing else. They are content-governance
-metadata of the Publish record
-(`def:content:license-qualifiers`); no L1 formula consumes
-them — enforcement is explicitly CoGra's responsibility
+thereafter: **attribution** `a ∈ [0, 1]` (credit requirement,
+`def:content:attribution`) and **oversight** `o ∈ [0, 1]` (public
+use-record requirement, `def:content:provenance`). Neither axis
+is a switch — each is a judgment of degree. Both are terms over
+*downstream use* — what others must do when they adopt, quote, or
+build on the content — never a statement about how the content
+was made. Severity `l = a + o` constrains adoption, nothing else.
+They are content-governance metadata of the Publish record
+(`def:content:license-qualifiers`); no L1 formula consumes them,
+and `prop:content:closure-exclusion` grants the whole
+interpretation to Layer 2 — judging a degree, checking
+compliance, and enforcing terms are CoGra's acts
 ([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
 CoGra enforces them through four planks:
 
@@ -212,22 +215,37 @@ CoGra enforces them through four planks:
    record is submitted — an L2 write-validation rule, same class
    as envelope conformance
    ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
-2. **Render obligations.** `attr = 1` ⇒ the creator is credited
-   on every display, quote, and reference surface. `o = 0.5` ⇒
-   generation details are disclosed on query; `o = 1` ⇒ the full
-   provenance chain is published alongside the record. `o = 0`
-   binds no one to disclose anything — it is the absence of a
-   disclosure term, not a claim that no AI was involved.
-3. **Violations are a guidelines category.** Uncredited reuse of
-   `attr = 1` content and unmet disclosure obligations on
-   `o ≥ 0.5` content ride the
+   The default is Public Domain `(0, 0)`, the unique point of
+   zero severity (`rem:content:public-domain`).
+2. **CoGra's published reading of the degrees.** The record
+   carries the whole square; CoGra publishes a reading for three
+   degrees per axis and offers exactly those in its composers,
+   because a degree with no published reading is a term no
+   author could mean and no reader could check. `a = 1` ⇒ the
+   creator is credited on every display, quote, and reference
+   surface; `a = 0.5` ⇒ credited on commercial uses only;
+   `a = 0` ⇒ no credit owed. `o = 1` ⇒ every use is logged
+   publicly and stays open to audit; `o = 0.5` ⇒ commercial uses
+   only; `o = 0` ⇒ no record owed. A record arriving with an
+   interior degree is served as that degree, never rounded into a
+   reading it does not carry.
+3. **Violations are a guidelines category.** Uncredited reuse at
+   a positive `a` and unmet use-record obligations at a positive
+   `o` ride the
    ordinary report → Proposal → moderation path (§1,
    [moderation.md §2](moderation.md#2-reports--proposals-on-the-graph))
    — classified and marked like any other guidelines violation.
-4. **The provenance-chain format is a versioned, reserved field**
-   in CoGra's published payload-format spec. The full chain
-   format is deferred until the AI-provenance workstream needs
-   it; the reservation keeps old records forward-readable.
+4. **The use-record format is a versioned, reserved field** in
+   CoGra's published payload-format spec. What constitutes a
+   valid public use record at a given `o` is deferred by the
+   spec; the reservation keeps old records forward-readable.
+
+CoGra's own surfaces satisfy the terms structurally: it never
+copies content — comments and references point at the original,
+and a CoGra reference is itself a public, auditable record of the
+use. Enforcement inside CoGra reduces to honest display, which is
+why the qualifiers are a read-side field shown on every content
+surface.
 
 ## What this doc is not
 
