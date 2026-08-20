@@ -27,6 +27,7 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.ModeratedField
@@ -326,15 +327,23 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
 
 /** Content-repository base: every call throws until overridden. */
 open class ThrowingContentRepository : ContentRepository {
-    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> =
-        throw UnsupportedOperationException()
+    override suspend fun posts(
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<Page<PostView>> = throw UnsupportedOperationException()
     override suspend fun post(
         id: String,
         commentsFirst: Int,
         commentsAfter: String?,
+        includePending: Boolean,
     ): Outcome<PostDetail?> = throw UnsupportedOperationException()
-    override suspend fun comments(postId: String, first: Int, after: String?): Outcome<Page<CommentView>> =
-        throw UnsupportedOperationException()
+    override suspend fun comments(
+        postId: String,
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<Page<CommentView>> = throw UnsupportedOperationException()
     override suspend fun preparePost(
         title: String?,
         description: String?,
@@ -358,6 +367,7 @@ open class ThrowingContentRepository : ContentRepository {
         commentId: String,
         first: Int,
         after: String?,
+        includePending: Boolean,
     ): Outcome<Page<CommentView>> = throw UnsupportedOperationException()
 }
 
@@ -402,6 +412,7 @@ fun testPost(
     body: String = "Body $id",
     author: ActorRef? = ActorRef("author-1", "author"),
     license: LicenseChoice = LicenseChoice.PublicDomain,
+    landing: Landing = Landing.landed(1),
 ): PostView = PostView(
     id = id,
     title = testModeratedField(title),
@@ -410,6 +421,7 @@ fun testPost(
     author = author,
     createdAt = Instant.EPOCH,
     updatedAt = Instant.EPOCH,
+    landing = landing,
     license = license,
 )
 
@@ -418,11 +430,13 @@ fun testComment(
     body: String = "Comment $id",
     author: ActorRef? = ActorRef("author-2", "commenter"),
     license: LicenseChoice = LicenseChoice.PublicDomain,
+    landing: Landing = Landing.landed(1),
 ): CommentView = CommentView(
     id = id,
     content = testModeratedField(body),
     author = author,
     createdAt = Instant.EPOCH,
     updatedAt = Instant.EPOCH,
+    landing = landing,
     license = license,
 )
