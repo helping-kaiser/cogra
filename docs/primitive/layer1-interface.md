@@ -1471,9 +1471,9 @@ Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`):
 
 | Tier | $\sqrt{\lvert\det(\boldsymbol{\Psi}^{[P]})\rvert}$ | Edge types |
 |---|---|---|
-| Full | $\approx 0.27$–$0.36$ | Opinion, Review/A, Reference/T, Self, Owner, Publish, Participant, Send/A |
+| Full | $\approx 0.27$–$0.36$ | Opinion, Review/A, Reference/T, Self, Owner, Publish, Participant/A, Send/A |
 | Half | $\approx 0.20$–$0.22$ | Bid, Accept, Ratify, Join Request, Invitation/A |
-| Marginal | $\approx 0.07$–$0.08$ | Tag, Affinity, Review/T, Reference/A, Send/T, Invitation/T, control legs |
+| Marginal | $\approx 0.07$–$0.08$ | Tag, Affinity, Review/T, Reference/A, Send/T, Invitation/T, Participant/T, control legs |
 
 Self/Reputation is Full but standing-dependent
 ($\lvert\det\rvert^{1/2} \to 0$ as $\alpha \to 0$); supremum tracked by
@@ -1631,8 +1631,8 @@ Publish, Send/A) is a census property, not an incentive surface
 Offer is the sole non-Taggable passive type: a settlement artifact does not
 belong in the semantic taxonomy. Target validity: Opinion → any passive;
 Affinity → Type; Tag → Taggable; Review → Reviewable; Owner/Bid → Ownable;
-Join Request, Invitation/A, Send/A, Leave, De-invite/A, Participant →
-Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
+Join Request, Invitation/A, Send/A, Leave, De-invite/A, Participant/A →
+Chat; Participant/T → Chat; Withdraw/Rescind → Offer; Invitation/T → invitee's Profile;
 De-invite/T → de-invitee's Profile. Reference is trait-independent on both
 ends: its A-leg sources from any passive citing artifact, and its T-leg
 targets any existing passive node, including a Profile, never an Actor
@@ -1708,11 +1708,13 @@ Passive leaf nodes (`subsec:nodes:leaf-passive-nodes`):
   not change Type semantics, tags, standing, title, or gates.
 - **Chat** (`node:nodes:chat`) — conversation container, minted from its
   founding member's Participant act. Conversational, Taggable, Reviewable.
-  In: Participant, Opinion, **Join Request, Leave**, Send/A, Tag/A,
-  Review/A, **Invitation/A, De-invite/A**. Out: **Invitation/T → Profile,
+  In: **Participant/A**, Participant/T (from a Chat), Opinion, **Join
+  Request, Leave**, Send/A, Tag/A, Review/A, **Invitation/A,
+  De-invite/A**. Out: **Participant/T → Chat**, **Invitation/T → Profile,
   De-invite/T → Profile**, Send/T → Message, Tag/T → Type, Review/T →
-  Comment. Closure role: Participant is a promoted Full-tier enacted
-  relation; Join Request and Invitation are proposals, not participation;
+  Comment. Closure role: Participant/A is a promoted Full-tier enacted
+  relation and Participant/T a Marginal lineage marker; Join Request and
+  Invitation are proposals, not participation;
   Leave and De-invite are control records. **Membership is not a Layer-1
   admission predicate; it is a terminal fold** (§9.8).
 
@@ -1806,7 +1808,6 @@ standing, not a second run of the standing machinery.
 | **Publish** | Actor → Content | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | Content's **genesis family**: a Publish targeting its own mint mints the node and fixes $\mathrm{creator}$; one naming an existing node is ordinary-role and mints nothing; mirrors Owner (row-collapse); license qualifiers are public protocol references of the genesis act (`edge:nodes:publish`) |
 | Opinion | Actor → passive | Tribal | $(1,1,1,1)$ | Full | polarity $p$, reaction $r$ ($p_d = p$, $p_i = r$) | the archetypal edge; on a Profile it is person-directed and subject to person-vouch eligibility |
 | Affinity | Actor → Type | Epistemic | $(0,1,0,1)$ | Marginal | association $a$, attraction $t$ ($p_d = a$, $p_i = t$) | relevance, not verdict; its sign is coherence, not a standing vouch |
-| Participant | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | Full | interactivity $i$, responsibility $r$ ($p_d = i$, $p_i = r$) | the actor's own membership signal for the terminal membership fold (§9.8); the founding member's Participant is the Chat's genesis act |
 | Owner | Actor → Item | Economic | $(1,1,1,1)$ ↑promoted | Full | attachment $a \in [-1,1]$ ($p_d = a$, $p_i = 1$) | at $a = 0$ anchors the title thread but is routing-inert — title is sentiment-blind; orphaned Owner edges persist without title force |
 | **Join Request** | Actor → Chat | Relational | $(1,1,1,1)$ ↑promoted | **Half** | urgency $u \in [-1,1]$, formality $f \in [-1,1]$ ($p_d = u$, $p_i = f$) | a proposal, not participation: creates no membership, alters no Chat state (`edge:nodes:join-request`) |
 | Accept | Actor(seller) → Actor(buyer) | Relational | $(1,1,1,1)$ ↑promoted | **Half** | comfort $c$, equity $e$ ($p_d = c$, $p_i = e$) | settlement reference → Bid act; not binding — title moves only at Ratify; person-directed: only positive-coordinate Accepts fold into the standing projection |
@@ -1834,6 +1835,7 @@ names them /A and /T.)
 | Tag | Actor → Passive → Type | Epistemic $(0,1,0,1)$ M / Epistemic $(0,1,0,1)$ M | relevance $r \in [-1,1]$, confidence $c \in [0,1]$; A: $p_d = r, p_i = c$; T: $p_d = c, p_i = r$ |
 | Review | Actor → Passive → Comment | Tribal $(1,1,1,1)$ F / Epistemic $(0,1,0,1)$ M | enthusiasm $e$, effort $f$; A: $p_d = e, p_i = f$; T: $p_d = f, p_i = e$. Commentary, never state; standing-inert as a family |
 | Bid | Actor → Item → Offer | Economic ↑promoted, both legs **Half** | signed generosity $g \in [-1,1]$, urgency $u \in [0,1]$; A: $p_d = g, p_i = u$; T: $p_d = u, p_i = g$. Both legs carry $\epsilon = \mathrm{sgn}(g)$, so composed parity is $+1$: a predatory Bid is parity-visible per leg, parity-neutral as a composition; the buyer's stance is read by stance consumers (`cor:nodes:bid-leg-parity`) |
+| **Participant** | Actor → Chat → Chat | Relational $(1,1,1,1)$ ↑ F / Epistemic $(0,1,0,1)$ M | interactivity $i \in [-1,1]$, responsibility $r \in [-1,1]$, continuity $c \in [0,1]$; A: $p_d = i, p_i = r$; T: $p_d = c, p_i = 1$ type-fixed (forced $\epsilon = +1$, `lem:nodes:self-loop-neutral`). **A-leg whence, T-leg whither** — one meaning, *I move from A to T*, in four instantiations: **found** (both legs on $\mathsf{mint}(\mathrm{actid})$), **join** (both on $C_1$), **found successor** (A on $C_0$, T on the mint), **move** (A on $C_0$, T on $C_1$). There is no shape branch to test and no field a reader must consult; the terminal target alone decides whether the act mints, so found and found successor mint and join and move do not (§8.1). Origin is unchecked at formation — a move from a chat the author was never in is a decorated join. The A-leg's $(i, r)$ are the act's mandatory coordinates; the T-leg's $c$ is authored, semantically vacuous in the join and found cases, and **not** mandatory, so a choice on a meaningless field never moves its author's coefficient. The T-leg's damped weight is bounded by the Marginal family supremum, a function of $c$ alone (`thm:graph:raw-weight-ceiling`). The membership fold reads leg roles, never family incidence (§9.8) (`edge:nodes:participant`) |
 | **Invitation** | Actor → Chat → Profile(invitee) | Relational $(1,1,1,1)$ ↑ **Half** / Epistemic $(0,1,0,1)$ M | urgency $u \in [-1,1]$, formality $f \in [-1,1]$, relevance $r \in [0,1]$; A: $p_d = u, p_i = f$; T: $p_d = r, p_i = 1$ (forced $+1$ for $r > 0$). A public, priced, authored vouch that the invitee fits the community; a proposal, not participation. The terminal leg targets the invitee's **Profile**, never the Actor — influence reaches the invitee only through their standing-dependent activation (wall-clamped, §11.4). Revocable per author (§9.8) (`edge:nodes:hyper-invitation`, `subsec:necessity:invitation-profile-terminus`) |
 | **De-invite** | Actor → Chat → Profile(de-invitee) | Minimal $(0,0,0,1)$ M / Minimal $(0,0,0,1)$ M | none — both legs type-fixed $p_d = p_i = 1$, $\epsilon = +1$ forced | declaration that another actor should not be (or no longer be) part of a Chat; a **control record** — its force is terminal policy, never a Layer-1 validity predicate. **Unconditional**: the author need not be a member, inviter, or authority; the target need not be a member. Both legs excluded from the standing projection — a De-invite never vouches for its target. Sole closure-visible effect: per-author suppression of the author's own Invitation bundle toward the same (Chat, Profile) incidence (`edge:nodes:hyper-deinvite`, `subsec:necessity:deinvite-profile-terminus`) |
 | Send | Actor → Chat → Message | Relational $(1,1,1,1)$ ↑ F / Minimal $(0,0,0,1)$ M | importance $i \in [-1,1]$; A: $p_d = i, p_i = 1$; T: $p_d = 1, p_i = i$. **Renamed from "Write"** (`edge:nodes:hyper-send`): *write* is the protocol act (§8.2); a Send is carried into the graph by a write, it is not one. **Not membership-gated**: a Layer-1 membership precondition would drag membership into the admission closure (`rem:nodes:membership-is-terminal`). Standing role none: sending into a Chat endorses no one |
@@ -1860,7 +1862,8 @@ where prose and the tables disagree, the tables govern**
 | Publish | Economic | ↑ | • | • | • | • | F | $\pm 1$ |
 | Opinion | Tribal | — | • | • | • | • | F | $\pm 1$ |
 | Affinity | Epistemic | — | ∘ | • | ∘ | • | M | $\pm 1$ |
-| Participant | Relational | ↑ | • | • | • | • | F | $\pm 1$ |
+| Participant/A | Relational | ↑ | • | • | • | • | F | $\pm 1$ |
+| Participant/T | Epistemic | — | ∘ | • | ∘ | • | M | $+1$ |
 | Owner | Economic | ↑ | • | • | • | • | F | $\pm 1$ |
 | Join Request | Relational | ↑ | • | • | • | • | H | $\pm 1$ |
 | Invitation/A | Relational | ↑ | • | • | • | • | H | $\pm 1$ |
@@ -1883,7 +1886,9 @@ where prose and the tables disagree, the tables govern**
 
 Forced $+1$: Self Dec/Rep and Registration ($p_d = 1$, $p_i > 0$ by
 construction); Withdraw, Rescind, Leave, De-invite/A·T (type-fixed control
-records); Invitation/T (relevance $r \in [0,1]$, intensity 1). All other
+records); Invitation/T (relevance $r \in [0,1]$, intensity 1);
+Participant/T (continuity $c \in [0,1]$, $p_i = 1$ type-fixed, forced by the
+same self-loop parity requirement, `rem:nodes:self-loop-parity`). All other
 types contain at least one signed user-controlled parameter.
 
 **Coherence column, not vouch column:** $\epsilon$ is routing/coherence
@@ -1898,7 +1903,8 @@ and role (`rem:nodes:edge-census-normative`).
 
 **Act payload schema (`tbl:nodes:act-payload-schema`):** every act family
 has a payload controller — its **author** — and a canonical payload (e.g.
-Opinion/Affinity: rationale; Participant: participation note; Join Request:
+Opinion/Affinity: rationale; Participant: participation note + continuity
+note; Join Request:
 request message; Invitation: invitation message; Accept/Ratify: terms,
 receipt; Leave: parting reason; De-invite: reason; Review: reviewer
 metadata + comment body; Reference: reference note; Bid: bid terms + offer
