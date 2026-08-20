@@ -176,6 +176,28 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-post-p1")).toHaveTextContent("Settling");
   });
 
+  // A pending entry sorts above every landed one until it lands, when
+  // it drops into landing order — which can put it below the cursor the
+  // walk resumes from, so the next page serves it again.
+  it("drops an entry the held page already carries when appending", async () => {
+    server.use(
+      graphql.query("Posts", ({ variables }) =>
+        HttpResponse.json({
+          data:
+            variables.after == null
+              ? postsPage([post("p1", "Settling", true), post("p2", "Older")], "c1", true)
+              : postsPage([post("p1", "Settling"), post("p3", "Oldest")], null, false),
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
+    expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
+    // The held copy stays as it was read — no reconciliation.
+    expect(screen.getByTestId("feed-pending-p1")).toBeInTheDocument();
+  });
+
   it("renders the transport error on a fault", async () => {
     server.use(graphql.query("Posts", () => HttpResponse.error()));
     renderWithProviders(<FeedView />);
