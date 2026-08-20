@@ -296,21 +296,27 @@ pub async fn land_post(
         == 1)
 }
 
-/// Confirm: drops the pending mark from a post's unlanded version row.
+/// Confirm: drops the pending mark from the version row the landing
+/// write itself staged, named by its authoring instant — `(post_id,
+/// created_at)` is the version row's key, so a node carrying more than
+/// one unlanded version never lands a write's text on another's record.
 /// False when there is none — the edit landed without ever being staged
 /// here, and the promotion path appends the version instead.
 pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
+    created_at: Timestamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE post_versions SET pending = FALSE WHERE post_id = $1 AND pending",
+        "UPDATE post_versions SET pending = FALSE
+         WHERE post_id = $1 AND created_at = $2 AND pending",
         post_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?
     .rows_affected()
-        >= 1)
+        == 1)
 }
 
 /// Confirm: the comment side of [`land_post`].
@@ -337,36 +343,47 @@ pub async fn land_comment(
 pub async fn land_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
+    created_at: Timestamp,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE comment_versions SET pending = FALSE WHERE comment_id = $1 AND pending",
+        "UPDATE comment_versions SET pending = FALSE
+         WHERE comment_id = $1 AND created_at = $2 AND pending",
         comment_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?
     .rows_affected()
-        >= 1)
+        == 1)
 }
 
 /// Expiry: removes whatever a never-landed write put on screen under
 /// `node_id` — a pending entity row with its versions and junctions, or
 /// the pending version row of an unlanded edit, which leaves the previous
-/// version rendered. Landed rows are untouched; the content leaves every
+/// version rendered. `created_at` is the write's own authoring instant,
+/// and every statement is scoped to it: a node can carry the pending rows
+/// of more than one staged write, and expiring one must not take
+/// another's. Landed rows are untouched; the content leaves every
 /// reader's view because on the graph nothing ever existed (substrate.md
 /// §6), so there is nothing to mark and no graph structure is engaged.
 pub async fn discard_pending(
     tx: &mut Transaction<'_, Postgres>,
     node_id: Uuid,
+    created_at: Timestamp,
 ) -> Result<(), ContentError> {
     sqlx::query!(
-        "DELETE FROM post_versions WHERE post_id = $1 AND pending",
-        node_id
+        "DELETE FROM post_versions
+         WHERE post_id = $1 AND created_at = $2 AND pending",
+        node_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?;
     sqlx::query!(
-        "DELETE FROM comment_versions WHERE comment_id = $1 AND pending",
-        node_id
+        "DELETE FROM comment_versions
+         WHERE comment_id = $1 AND created_at = $2 AND pending",
+        node_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?;
@@ -374,8 +391,10 @@ pub async fn discard_pending(
         "DELETE FROM post_attachments
          WHERE post_id = $1
            AND EXISTS (SELECT 1 FROM posts
-                       WHERE id = $1 AND landed_epoch IS NULL)",
-        node_id
+                       WHERE id = $1 AND landed_epoch IS NULL
+                         AND created_at = $2)",
+        node_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?;
@@ -383,23 +402,78 @@ pub async fn discard_pending(
         "DELETE FROM comment_attachments
          WHERE comment_id = $1
            AND EXISTS (SELECT 1 FROM comments
-                       WHERE id = $1 AND landed_epoch IS NULL)",
-        node_id
+                       WHERE id = $1 AND landed_epoch IS NULL
+                         AND created_at = $2)",
+        node_id,
+        created_at,
     )
     .execute(&mut **tx)
     .await?;
-    sqlx::query!(
-        "DELETE FROM posts WHERE id = $1 AND landed_epoch IS NULL",
-        node_id
+    let removed_post = sqlx::query_scalar!(
+        "DELETE FROM posts
+         WHERE id = $1 AND landed_epoch IS NULL AND created_at = $2
+         RETURNING id",
+        node_id,
+        created_at,
     )
-    .execute(&mut **tx)
+    .fetch_optional(&mut **tx)
     .await?;
-    sqlx::query!(
-        "DELETE FROM comments WHERE id = $1 AND landed_epoch IS NULL",
-        node_id
+    let removed_comment = sqlx::query_scalar!(
+        "DELETE FROM comments
+         WHERE id = $1 AND landed_epoch IS NULL AND created_at = $2
+         RETURNING id",
+        node_id,
+        created_at,
     )
-    .execute(&mut **tx)
+    .fetch_optional(&mut **tx)
     .await?;
+    if let Some(removed) = removed_post.or(removed_comment) {
+        discard_pending_thread(tx, removed).await?;
+    }
+    Ok(())
+}
+
+/// Expiry's transitive reach: a discarded pending node takes the pending
+/// comments hanging under it, and the pending replies under those. Their
+/// own staged writes expire on their own schedule, but the content has
+/// nowhere left to hang — a pending comment on nothing is not a thread.
+/// A *landed* comment is left where it is: its record is ordered fact,
+/// so it renders as an orphan whose `target` resolves to null.
+async fn discard_pending_thread(
+    tx: &mut Transaction<'_, Postgres>,
+    root: Uuid,
+) -> Result<(), ContentError> {
+    let mut frontier = vec![root];
+    while !frontier.is_empty() {
+        let children: Vec<Uuid> = sqlx::query_scalar!(
+            "SELECT id FROM comments
+             WHERE target_id = ANY($1) AND landed_epoch IS NULL",
+            &frontier,
+        )
+        .fetch_all(&mut **tx)
+        .await?;
+        if children.is_empty() {
+            break;
+        }
+        // The entity row goes, so every version it carries goes with it —
+        // a pending node's versions are all pending by construction.
+        sqlx::query!(
+            "DELETE FROM comment_versions WHERE comment_id = ANY($1)",
+            &children
+        )
+        .execute(&mut **tx)
+        .await?;
+        sqlx::query!(
+            "DELETE FROM comment_attachments WHERE comment_id = ANY($1)",
+            &children
+        )
+        .execute(&mut **tx)
+        .await?;
+        sqlx::query!("DELETE FROM comments WHERE id = ANY($1)", &children)
+            .execute(&mut **tx)
+            .await?;
+        frontier = children;
+    }
     Ok(())
 }
 

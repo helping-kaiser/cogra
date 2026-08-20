@@ -191,6 +191,25 @@ impl Rig {
         signed
     }
 
+    /// Submits one raw pre-commitment blob for a staged write — the leg
+    /// the rig's `pre_sign` drives with a good signature, exposed so a
+    /// test can drive it with a refused one.
+    async fn submit_pre_commitment(&self, token: &str, staged_id: &str, blob: &[u8]) -> Value {
+        self.gql(
+            Some(token),
+            "mutation($input: SubmitProposalsInput!) {
+               submitProposals(input: $input) {
+                 stagedWrites { id } userErrors { code message }
+               }
+             }",
+            json!({ "input": { "proposals": [{
+                "stagedWriteId": staged_id,
+                "signature": B64.encode(blob),
+            }]}}),
+        )
+        .await
+    }
+
     /// Approval, epoch close and ingestion — the rest of the path, from
     /// already pre-signed writes, so the content lands.
     async fn approve_and_close(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
@@ -496,6 +515,144 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
         )
         .await;
     assert_eq!(staged["stagedWrite"]["state"], "EXPIRED");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig.prepare_post(&token, "Never seals", "body").await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node");
+    let write = &prepared["preparePost"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id");
+
+    // A structurally valid pre-commitment whose signature covers
+    // nothing: the relay records it and stages the content, then the
+    // substrate refuses the seal.
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = key.pre_sign(proposal);
+    let mut forged = pre.pre_signature.clone();
+    forged[0] ^= 0xff;
+    let refused = rig
+        .submit_pre_commitment(
+            &token,
+            staged_id,
+            &wire::encode_pre_commitment(&pre.nonce, &forged),
+        )
+        .await;
+    assert_eq!(
+        refused["submitProposals"]["userErrors"][0]["code"], "SIGNATURE_INVALID",
+        "the seal must refuse a forged pre-commitment: {refused}"
+    );
+
+    // Nothing the refused pre-commitment staged is readable: the content
+    // was never the author's, because the substrate never took it.
+    let gone = rig
+        .gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) { id } node(id: $id) { id } }"#,
+            json!({ "id": post_id }),
+        )
+        .await;
+    assert!(
+        gone["post"].is_null(),
+        "a write that failed to seal publishes nothing: {gone}"
+    );
+    assert!(gone["node"].is_null());
+    assert!(rig.listed(None, "first: 10").await.is_empty());
+
+    // The write is back in the device's hands, retryable — and a proper
+    // signature re-stages the very same content.
+    let staged = rig
+        .gql(
+            Some(&token),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": staged_id }),
+        )
+        .await;
+    assert_eq!(staged["stagedWrite"]["state"], "AWAITING_PRE_SIGN");
+
+    rig.pre_sign(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+    let retried = rig.listed(None, "first: 10").await;
+    assert_eq!(retried.len(), 1, "the retry re-stages the content");
+    assert_eq!(retried[0]["node"]["id"], post_id);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let (post_id, post_staged) = rig.pending_post(&token, &key, "host", "b").await;
+
+    // A comment prepared against the pending post, whose parent then
+    // expires: staging it can never succeed, because the parent it would
+    // hang under is gone.
+    let (_, commenter_key) = rig.seed_member("commenter", "commenter@example.com").await;
+    let commenter = rig.log_in("commenter@example.com").await;
+    let prepared = rig
+        .gql(
+            Some(&commenter),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": post_id,
+                "content": "Orphaned before it was signed.",
+                "license": { "attributionRequired": false, "oversight": "NONE" },
+            }}),
+        )
+        .await;
+    let write = &prepared["prepareComment"]["writes"][0];
+    let staged_id = write["id"].as_str().expect("id").to_string();
+
+    postgres_store::staged::expire_one(
+        &rig.pool,
+        Uuid::parse_str(&post_staged).expect("uuid"),
+        FAR_FUTURE_EPOCH,
+    )
+    .await
+    .expect("expires the parent");
+
+    let proposal = wire::decode_proposal(
+        &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    let pre = commenter_key.pre_sign(proposal);
+    let refused = rig
+        .submit_pre_commitment(
+            &commenter,
+            &staged_id,
+            &wire::encode_pre_commitment(&pre.nonce, &pre.pre_signature),
+        )
+        .await;
+    assert!(
+        !refused["submitProposals"]["userErrors"]
+            .as_array()
+            .expect("errors")
+            .is_empty(),
+        "staging a comment with no parent must fail the leg: {refused}"
+    );
+
+    // The refusal leaves the write where the device can act on it, not
+    // stranded in `sealing` until GC.
+    let staged = rig
+        .gql(
+            Some(&commenter),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": staged_id }),
+        )
+        .await;
+    assert_eq!(
+        staged["stagedWrite"]["state"], "AWAITING_PRE_SIGN",
+        "a failed staging must not wedge the write: {staged}"
+    );
 }
 
 #[sqlx::test(migrations = "../../migrations")]
