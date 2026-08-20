@@ -85,6 +85,10 @@ pub struct Post {
     pub id: Uuid,
     pub author_id: Uuid,
     pub l1_node_id: String,
+    /// The canonical license string the genesis record published — a
+    /// structural field of that record, cached here for the read side
+    /// (platform-guidelines.md §5).
+    pub license: String,
     /// The genesis record's landing coordinates; None while the record
     /// is still pending.
     pub order: Option<LandingOrder>,
@@ -118,6 +122,8 @@ pub struct Comment {
     pub target_type: String,
     pub author_id: Uuid,
     pub l1_node_id: String,
+    /// The canonical license string the genesis record published.
+    pub license: String,
     pub order: Option<LandingOrder>,
     pub created_at: Timestamp,
     pub content: String,
@@ -144,6 +150,7 @@ pub async fn insert_post(
     id: Uuid,
     author_id: Uuid,
     l1_node_id: &str,
+    license: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
     title: Option<&str>,
@@ -152,13 +159,14 @@ pub async fn insert_post(
 ) -> Result<bool, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO posts
-             (id, author_id, l1_node_id, landed_epoch, act_time, position,
-              created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+             (id, author_id, l1_node_id, license, landed_epoch, act_time,
+              position, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO NOTHING",
         id,
         author_id,
         l1_node_id,
+        license,
         order.map(|o| o.landed_epoch),
         order.map(|o| o.act_time),
         order.map(|o| o.position),
@@ -229,21 +237,23 @@ pub async fn insert_comment(
     target_type: &str,
     author_id: Uuid,
     l1_node_id: &str,
+    license: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
     content: &str,
 ) -> Result<bool, ContentError> {
     let inserted = sqlx::query!(
         "INSERT INTO comments
-             (id, target_id, target_type, author_id, l1_node_id,
+             (id, target_id, target_type, author_id, l1_node_id, license,
               landed_epoch, act_time, position, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          ON CONFLICT (id) DO NOTHING",
         id,
         target_id,
         target_type,
         author_id,
         l1_node_id,
+        license,
         order.map(|o| o.landed_epoch),
         order.map(|o| o.act_time),
         order.map(|o| o.position),
@@ -565,6 +575,7 @@ fn post_from_row(row: PostRow) -> Post {
         id: row.id,
         author_id: row.author_id,
         l1_node_id: row.l1_node_id,
+        license: row.license,
         order: landing_order(row.landed_epoch, row.act_time, row.position),
         created_at: row.created_at,
         title: row.title,
@@ -580,6 +591,7 @@ struct PostRow {
     id: Uuid,
     author_id: Uuid,
     l1_node_id: String,
+    license: String,
     landed_epoch: Option<i64>,
     act_time: Option<i64>,
     position: Option<i64>,
@@ -598,8 +610,8 @@ struct PostRow {
 pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError> {
     let row = sqlx::query_as!(
         PostRow,
-        r#"SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch, p.act_time,
-                  p.position, p.created_at,
+        r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                  p.landed_epoch, p.act_time, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
@@ -624,8 +636,8 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
 pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post>, ContentError> {
     let row = sqlx::query_as!(
         PostRow,
-        r#"SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch, p.act_time,
-                  p.position, p.created_at,
+        r#"SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                  p.landed_epoch, p.act_time, p.position, p.created_at,
                   v.title, v.description,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
@@ -804,8 +816,8 @@ async fn list_posts_landed(
     let rows = sqlx::query_as!(
         PostRow,
         r#"SELECT * FROM (
-               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,
-                      p.act_time, p.position, p.created_at,
+               SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                      p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
@@ -858,8 +870,8 @@ async fn list_posts_pending(
     let rows = sqlx::query_as!(
         PostRow,
         r#"SELECT * FROM (
-               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,
-                      p.act_time, p.position, p.created_at,
+               SELECT p.id, p.author_id, p.l1_node_id, p.license,
+                      p.landed_epoch, p.act_time, p.position, p.created_at,
                       v.title, v.description,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
@@ -903,6 +915,7 @@ fn comment_from_row(row: CommentRow) -> Comment {
         target_type: row.target_type,
         author_id: row.author_id,
         l1_node_id: row.l1_node_id,
+        license: row.license,
         order: landing_order(row.landed_epoch, row.act_time, row.position),
         created_at: row.created_at,
         content: row.content,
@@ -918,6 +931,7 @@ struct CommentRow {
     target_type: String,
     author_id: Uuid,
     l1_node_id: String,
+    license: String,
     landed_epoch: Option<i64>,
     act_time: Option<i64>,
     position: Option<i64>,
@@ -932,8 +946,9 @@ struct CommentRow {
 pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, ContentError> {
     let row = sqlx::query_as!(
         CommentRow,
-        r#"SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,
-                  c.landed_epoch, c.act_time, c.position, c.created_at,
+        r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
+                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!"
@@ -958,8 +973,9 @@ pub async fn comment_by_node(
 ) -> Result<Option<Comment>, ContentError> {
     let row = sqlx::query_as!(
         CommentRow,
-        r#"SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,
-                  c.landed_epoch, c.act_time, c.position, c.created_at,
+        r#"SELECT c.id, c.target_id, c.target_type, c.author_id,
+                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                  c.position, c.created_at,
                   v.content AS "content!", v.redaction_reason,
                   v.pending AS "version_pending!",
                   v.created_at AS "version_created_at!"
@@ -1020,8 +1036,8 @@ async fn comments_landed(
         CommentRow,
         r#"SELECT * FROM (
                SELECT c.id, c.target_id, c.target_type, c.author_id,
-                      c.l1_node_id, c.landed_epoch, c.act_time, c.position,
-                      c.created_at,
+                      c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                      c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!"
@@ -1072,8 +1088,8 @@ async fn comments_pending(
         CommentRow,
         r#"SELECT * FROM (
                SELECT c.id, c.target_id, c.target_type, c.author_id,
-                      c.l1_node_id, c.landed_epoch, c.act_time, c.position,
-                      c.created_at,
+                      c.l1_node_id, c.license, c.landed_epoch, c.act_time,
+                      c.position, c.created_at,
                       v.content AS "content!", v.redaction_reason,
                       v.pending AS "version_pending!",
                       v.created_at AS "version_created_at!"

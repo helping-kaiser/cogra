@@ -44,7 +44,7 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
-import com.cogra.domain.OversightChoice
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
 
@@ -76,8 +76,7 @@ fun PostDetailRoute(
         onRefresh = viewModel::refresh,
         onLoadMoreComments = viewModel::loadMoreComments,
         onDraftChange = viewModel::onDraftChange,
-        onAttributionChange = viewModel::onAttributionChange,
-        onOversightChange = viewModel::onOversightChange,
+        onLicenseChange = viewModel::onLicenseChange,
         onSubmitComment = viewModel::onSubmitComment,
         onCommentSignedShown = viewModel::onCommentSignedShown,
         onLoadMoreReplies = viewModel::onLoadMoreReplies,
@@ -105,8 +104,7 @@ fun PostDetailScreen(
     onRefresh: () -> Unit,
     onLoadMoreComments: () -> Unit,
     onDraftChange: (String) -> Unit,
-    onAttributionChange: (Boolean) -> Unit,
-    onOversightChange: (OversightChoice) -> Unit,
+    onLicenseChange: (LicenseChoice) -> Unit,
     onSubmitComment: () -> Unit,
     onCommentSignedShown: () -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
@@ -216,8 +214,7 @@ fun PostDetailScreen(
                         signedIn = signedIn,
                         onLoadMoreComments = onLoadMoreComments,
                         onDraftChange = onDraftChange,
-                        onAttributionChange = onAttributionChange,
-                        onOversightChange = onOversightChange,
+                        onLicenseChange = onLicenseChange,
                         onSubmitComment = onSubmitComment,
                         onLoadMoreReplies = onLoadMoreReplies,
                         onStartEditComment = onStartEditComment,
@@ -245,8 +242,7 @@ private fun PostWithThread(
     signedIn: Boolean?,
     onLoadMoreComments: () -> Unit,
     onDraftChange: (String) -> Unit,
-    onAttributionChange: (Boolean) -> Unit,
-    onOversightChange: (OversightChoice) -> Unit,
+    onLicenseChange: (LicenseChoice) -> Unit,
     onSubmitComment: () -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
     onStartEditComment: (CommentView) -> Unit,
@@ -285,6 +281,12 @@ private fun PostWithThread(
                         testTag = "detail_author",
                     )
                 }
+                Text(
+                    licenseTerms(post.license),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("detail_license_terms"),
+                )
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.content_comments_heading),
@@ -366,12 +368,7 @@ private fun PostWithThread(
                         .fillMaxWidth()
                         .testTag("detail_comment_input"),
                 )
-                LicenseControls(
-                    attributionRequired = state.attributionRequired,
-                    oversight = state.oversight,
-                    onAttributionChange = onAttributionChange,
-                    onOversightChange = onOversightChange,
-                )
+                LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
                 if (state.refused) {
                     ErrorLine(R.string.content_error_refused, "detail_refused")
                 }
@@ -493,6 +490,12 @@ private fun CommentThread(
                     }
                 } else {
                     Text(comment.content.value.orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        licenseTerms(comment.license),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.testTag("comment_license_terms_${comment.id}"),
+                    )
                     // The soft marker, friendly not forensic (design.md §9).
                     if (comment.updatedAt.isAfter(comment.createdAt)) {
                         Text(

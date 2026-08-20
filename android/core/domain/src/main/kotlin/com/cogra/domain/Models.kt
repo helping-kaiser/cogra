@@ -221,6 +221,8 @@ data class PostView(
     val author: ActorRef?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** The qualifiers the minting Publish record carried. */
+    val license: LicenseChoice,
 )
 
 /** One comment with its current display version. */
@@ -230,6 +232,8 @@ data class CommentView(
     val author: ActorRef?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** The qualifiers the minting Review record carried. */
+    val license: LicenseChoice,
     /**
      * The first page of direct replies, when the read prefetched one
      * (the thread read carries one level; deeper levels load on
@@ -253,21 +257,31 @@ data class PostDetail(
 )
 
 /**
- * AI-provenance oversight, three-valued
- * (platform-guidelines.md §5): the declaration is mandatory at
- * authoring time.
+ * License qualifiers, declared at authoring and immutable
+ * (platform-guidelines.md §5): attribution `a` and oversight `o`, each
+ * a degree on [0, 1]. Both are terms over downstream use, never a
+ * statement about how the content was made. The declaration is
+ * mandatory at authoring time.
  */
-enum class OversightChoice {
-    NONE,
-    CONDITIONAL,
-    FULL,
-}
-
-/** License qualifiers, declared at authoring and immutable. */
 data class LicenseChoice(
-    val attributionRequired: Boolean,
-    val oversight: OversightChoice,
-)
+    val attribution: Double,
+    val oversight: Double,
+) {
+    companion object {
+        /**
+         * Public Domain: the unique point of zero severity, where a use
+         * carries no downstream obligation whatever. CoGra's default.
+         */
+        val PublicDomain = LicenseChoice(0.0, 0.0)
+
+        /**
+         * The degrees CoGra publishes a reading for. The composer
+         * offers these and nothing between them — a degree with no
+         * published reading is a term no reader could check.
+         */
+        val TIERS = listOf(0.0, 0.5, 1.0)
+    }
+}
 
 /**
  * A prepared content write: the node id the content will serve under
