@@ -3041,11 +3041,11 @@ Word register (closure edition symbol index, *Word Collisions*):
   (the door) | the safety price $\theta$ | "through the floor" (the binding
   axiom). Never conflate the price axis ($\nu$, $\theta$) with the position
   axis ($\rho_{\text{pol}}, \rho_\theta, \rho_{\text{eff}}$).
-- **admission fraction vs. clip** — the delegated stages publish one global
-  admission fraction per stage; "clip" is retired from normative Layer-1
-  vocabulary (`rem:epoch:admission-not-clipping`) — net stance uses interval
-  projection, activation uses the wall clamp, failed extensions use stage
-  fallback.
+- **tilt rung vs. clip** — the certificate accepts one global tilt strength
+  $t_k$ per epoch; "clip" is not normative Layer-1 vocabulary — net stance
+  uses interval projection, activation uses the wall clamp, and an
+  uncertifiable rung falls back down the published grid
+  (`def:epoch:tilt-backoff-grid`).
 - **authoritative vs. compliant order** — the published order fixes
   finalized state even if later proven dependency-non-compliant by a fraud
   proof; sanctions are deployment-level, never history rewrites

@@ -142,10 +142,10 @@ Two influence channels exist, and they must never be conflated:
   yours. This is CoGra feed policy, stated in the published
   ranking spec ([feed-ranking.md](feed-ranking.md)).
 - **Standing is inbound — and gates writing, never ranking.**
-  Eligible vouches toward a person *do* move that person's
-  standing `α_i` through L1's standing projection — lifting when
-  the voucher's rate exceeds the target's standing, diluting
-  otherwise (`prop:epoch:final-standing-bidirectional-response`);
+  Acts directed at a person *do* move that person's standing `α_i`
+  through L1's conserved standing transport — lifting when the
+  source's rate exceeds the target's standing, diluting otherwise
+  (`prop:epoch:final-standing-response`);
   standing feeds the write gate and is freely readable
   downstream — but it never enters the feed: who may act, never
   what the feed shows.
