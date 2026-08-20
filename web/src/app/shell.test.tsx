@@ -79,8 +79,68 @@ describe("AppShell", () => {
     expect(prompt.open).toBe(true);
   });
 
+  it.each(["/posts/post-1", "/u/alice"])(
+    "keeps the bar on the read drill-in %s",
+    async (path) => {
+      pathname = path;
+      renderWithProviders(
+        <AppShell>
+          <p>content</p>
+        </AppShell>,
+        { store: signedInStore() },
+      );
+      expect(await screen.findByTestId("bottom-nav")).toBeInTheDocument();
+      // A drill-in selects no tab.
+      expect(screen.getByTestId("nav-feed")).not.toHaveAttribute("aria-current");
+      expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("aria-current");
+    },
+  );
+
+  it.each(["/compose", "/profile/edit", "/settings", "/settings/key", "/invites", "/key", "/restore"])(
+    "leaves the task flow %s without the bar",
+    async (path) => {
+      pathname = path;
+      renderWithProviders(
+        <AppShell>
+          <p>content</p>
+        </AppShell>,
+        { store: signedInStore() },
+      );
+      expect(await screen.findByText("content")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
+      );
+    },
+  );
+
   it("keeps the bar off the front door", async () => {
     pathname = "/";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the bar off the own profile until the gate passes", async () => {
+    pathname = "/profile";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+    );
+    expect(await screen.findByText("content")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the bar off the auth surfaces", async () => {
+    pathname = "/login";
     renderWithProviders(
       <AppShell>
         <p>content</p>
