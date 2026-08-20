@@ -73,11 +73,13 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
-query Posts($first: Int!, $after: String) {
-  posts(first: $first, after: $after) {
+# `includePending` carries the schema's own default: a listing serves
+# pending entries unless the reader asks for the settled graph.
+query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
+  posts(first: $first, after: $after, includePending: $includePending) {
     edges {
       node {
-    id
+        id
         title {
           value
           status
@@ -99,6 +101,9 @@ query Posts($first: Int!, $after: String) {
         }
         createdAt
         updatedAt
+        landing {
+          state
+        }
         moderationStatus
         license {
           attribution
@@ -113,7 +118,13 @@ query Posts($first: Int!, $after: String) {
   }
 }
 
-query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repliesFirst: Int!) {
+query PostDetail(
+  $id: UUID!
+  $commentsFirst: Int!
+  $commentsAfter: String
+  $repliesFirst: Int!
+  $includePending: Boolean! = true
+) {
   post(id: $id) {
     id
     title {
@@ -137,12 +148,19 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
     }
     createdAt
     updatedAt
+    landing {
+      state
+    }
     moderationStatus
     license {
       attribution
       oversight
     }
-    comments(first: $commentsFirst, after: $commentsAfter) {
+    comments(
+      first: $commentsFirst
+      after: $commentsAfter
+      includePending: $includePending
+    ) {
       edges {
         node {
           id
@@ -159,12 +177,15 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
           }
           createdAt
           updatedAt
+          landing {
+            state
+          }
           moderationStatus
           license {
             attribution
             oversight
           }
-          replies(first: $repliesFirst) {
+          replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
                 id
@@ -181,6 +202,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
                 }
                 createdAt
                 updatedAt
+                landing {
+                  state
+                }
                 moderationStatus
                 license {
                   attribution
@@ -205,10 +229,16 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
 
 # The expand read: a further page of one comment's direct replies,
 # each carrying its own first reply page so nesting can continue.
-query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: Int!) {
+query CommentReplies(
+  $id: UUID!
+  $first: Int!
+  $after: String
+  $repliesFirst: Int!
+  $includePending: Boolean! = true
+) {
   comment(id: $id) {
     id
-    replies(first: $first, after: $after) {
+    replies(first: $first, after: $after, includePending: $includePending) {
       edges {
         node {
           id
@@ -225,12 +255,15 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
           }
           createdAt
           updatedAt
+          landing {
+            state
+          }
           moderationStatus
           license {
             attribution
             oversight
           }
-          replies(first: $repliesFirst) {
+          replies(first: $repliesFirst, includePending: $includePending) {
             edges {
               node {
                 id
@@ -247,6 +280,9 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
                 }
                 createdAt
                 updatedAt
+                landing {
+                  state
+                }
                 moderationStatus
                 license {
                   attribution
