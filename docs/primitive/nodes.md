@@ -28,18 +28,18 @@ how a database table would:
   record, never by payload.
 - **Genesis is per record, not per family.** `mint` takes an *act*
   identifier, so whether an act mints is decidable from two fields
-  of the act itself: an act of a mint-capable family whose target
-  equals the mint of its own identifier is the **genesis act** — it
+  of the act itself: an act of a mint-capable family whose
+  **terminal target** — the target of a binary act, the T-leg's
+  terminus of a hyper-edge act — equals the mint of its own
+  identifier is the **genesis act** — it
   mints the node, fixes `creator`, establishes genesis context, and
   (for Item) roots title; an act of the same family toward an
   existing node mints nothing — it is an ordinary-role record, the
   update shape of
   [substrate.md §9](substrate.md#9-node-values-and-updates). A node
   can never be re-minted: `mint` is injective and an ordinary act's
-  target is not derived from its own identifier. *(Edition-5 draft
-  ruling; [layer1-interface.md](layer1-interface.md)'s Edition-4
-  copy still glosses Publish at the family level and mirrors the
-  ruling when the edition lands.)*
+  target is not derived from its own identifier
+  ([layer1-interface.md §8.1](layer1-interface.md#81-acts-projections-partition-and-passivity)).
 - **Properties are folds.** Any "node property" — sentiment, norm,
   creator, membership — is a declared fold over the records that
   reference the node. What a node *shows* in CoGra (name, body,

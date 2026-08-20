@@ -959,6 +959,21 @@ $\mathsf{prof}(a)$, and $\bot$ for named nodes, with $\alpha_\bot := 0$ —
 a Type reached as a feed terminus takes the neutral amplifier. No one owns
 a concept; named nodes are commons by construction.
 
+**Freshness of the terminal target.** Target validity (§9.2) *types* the
+terminal target; it does not require it to be fresh. For **Publish, Owner,
+Review/T, and Send/T** the terminus may equally be the act's own mint or a
+node that already exists, and formation decides which by comparing those
+two fields — that is what makes an update expressible at all, records being
+immutable. **Bid/T is the exception and is fresh-mint-only**: a Bid/T
+naming an existing Offer would give it inbound incidence from a second Item
+— inert in the settlement fold, which resolves by Bid act identifier, but
+live in raw traversal, in CAN, and in any sentiment fold admitting Bid.
+Revising an offer means authoring a new one. Formation is class-syntactic
+and stateless apart from act-identifier freshness, so it decides *fresh
+mint or existing* and never *existing and consistent with that node's
+genesis* — a Review/T update whose A-leg names a different context is
+well-formed, and the discrepancy falls to the fold that reads it.
+
 **Registration (`def:graph:registration`).** An actor-authored edge
 Actor → Profile and the anchoring record of the grounded pair. It is the
 sole record family whose endpoints may be fresh grounded identifiers —

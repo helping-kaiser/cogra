@@ -67,10 +67,8 @@ Participant's T-leg is census-forced positive and Marginal — a
 weak lineage marker, structural rather than stance-bearing; the
 member's real stance toward the destination rides the A-leg, and
 for a join or founding the self-loop T-leg is routing-inert
-whatever it carries. *(Participant's hyper shape is the Edition-5
-draft's census;
-[layer1-interface.md](../primitive/layer1-interface.md)'s
-Edition-4 copy predates it and refreshes when the edition lands.)*
+whatever it carries
+([layer1-interface.md §9.6](../primitive/layer1-interface.md#96-hyper-edge-types-subsecnodeshyper-edges)).
 
 ---
 
