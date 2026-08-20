@@ -2554,15 +2554,20 @@ verbatim, which is exactly what source emission does
 
 **Full-pair source transport is a current nonclaim
 (`rem:epoch:full-pair-source-transport`).** The mediant transports the
-*full* current source pair $(b_u^{(k)}, N_u^{(k)})$ with no source-root
-attenuation: a depleted source ($b_u = 0$) contributes zero numerator but
-positive denominator count — pure denominator ballast through an otherwise
-valid path. This is priced, visible, and hull-bounded, but the
+*full*, unscaled current source pair $(b_u^{(k)}, N_u^{(k)})$ with no
+source-root attenuation: emission never scales the pair itself, only the
+transport entries that route it, so what a sub-wall source withholds from
+its recipients it retains at its own self column rather than losing. A
+fully depleted source ($b_u = 0$) gives $\mathfrak{e}_u = 0$ exactly, so
+its transport row collapses to the identity and the source reaches no
+target at all. What survives depletion is graduated: a partially-depleted
+source ($0 < \hat{r}_u < \rho_\theta$) still exports the fraction
+$\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
+rate-proportional dilution persists, priced and bounded by the hull. The
 specification makes **no** claim that every unit of relational standing
 pressure is continuously backed by positive current residual balance;
 replacing full-pair transport with a source-root eligibility rule is an
-open question (`frontier:source-root-eligibility`,
-`frontier:depleted-source-ballast`).
+open question (`frontier:source-root-eligibility`).
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
 endorsement is $\theta$-priced exactly — each ballast action debits
