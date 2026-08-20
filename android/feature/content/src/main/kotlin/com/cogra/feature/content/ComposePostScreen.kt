@@ -44,16 +44,22 @@ import com.cogra.feature.content.R
 @Composable
 fun ComposePostRoute(
     postId: String?,
-    onSaved: () -> Unit,
+    /** The new post's id on a create, null on an edit. */
+    onSaved: (String?) -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     viewModel: ComposePostViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(postId) { viewModel.start(postId) }
-    if (state.saved) {
-        viewModel.onSavedConsumed()
-        onSaved()
+    // A one-shot: leaving the composer is an effect of the signature
+    // landing in state, not something composition itself performs.
+    LaunchedEffect(state.saved) {
+        if (state.saved) {
+            val newPostId = state.savedPostId
+            viewModel.onSavedConsumed()
+            onSaved(newPostId)
+        }
     }
     ComposePostScreen(
         state = state,

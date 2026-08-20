@@ -409,11 +409,24 @@ fun CograNavGraph(
             composable<ComposePost> { entry ->
                 ComposePostRoute(
                     postId = entry.toRoute<ComposePost>().postId,
-                    onSaved = {
+                    // A created post opens on its own detail, so the
+                    // author reads what they just wrote — marked as
+                    // still settling, since content exists at authoring,
+                    // not at landing (substrate.md §6). The composer
+                    // leaves the stack, so back returns to the reading
+                    // context that launched it, refreshed. An edit came
+                    // from its post already and simply returns to it.
+                    onSaved = { newPostId ->
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set(CONTENT_SIGNED_RESULT, true)
-                        navController.popBackStack()
+                        if (newPostId == null) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(PostDetail(newPostId)) {
+                                popUpTo<ComposePost> { inclusive = true }
+                            }
+                        }
                     },
                     onBack = { navController.navigateUp() },
                     keyBanner = {
