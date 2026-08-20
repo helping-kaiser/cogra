@@ -109,11 +109,14 @@ taken from the bundle's `≺`-newest member. Excluded from folding,
 read per-record: the settlement handshake (Bid, Accept, Ratify).
 Control records never enter feed traversal at all (§4). An
 author's Invitation legs toward a `(Chat, Profile)` pair are
-suppressed iff the `≺`-maximal element of that author's own
-{Invitation, De-invite} records with that incidence is a
-De-invite — a later Invitation re-establishes them — L1's
-inviter-revocation rule (`def:epoch:inviter-revocation`),
-adopted as the fold's rule here.
+suppressed iff the latest epoch index represented in that
+author's own {Invitation, De-invite} records with that incidence
+contains a De-invite — ties within an epoch favouring the
+revocation; a later complete Invitation at a subsequent epoch
+re-establishes the act. The rule is epoch-quantized, not
+order-read — L1's inviter-revocation rule
+(`def:epoch:inviter-revocation`), adopted as the fold's rule
+here.
 
 This mirrors L1's net-stance fold (`def:epoch:net-stance`;
 [layer1-interface.md §11.3](layer1-interface.md#113-act-folding-and-the-base-allocation-matrix))
