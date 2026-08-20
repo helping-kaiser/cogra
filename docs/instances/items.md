@@ -152,7 +152,7 @@ Commerce also leaves ordinary interpersonal fabric: Accept and
 Ratify are actor-directed records, and stance-positive ones are
 person-vouch acts like any other — good-faith trade is part of
 how standing grows
-([layer1-interface.md §11.3](../primitive/layer1-interface.md#113-stance-aggregation-and-the-person-vouch-relation-layer)).
+([layer1-interface.md §11.3](../primitive/layer1-interface.md#113-act-folding-and-the-base-allocation-matrix)).
 
 ---
 

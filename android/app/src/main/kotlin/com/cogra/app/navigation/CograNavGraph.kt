@@ -1,7 +1,7 @@
 // The single NavHost with type-safe routes, inside the shell scaffold
 // (android/CLAUDE.md "Navigation"; design.md §6): the bottom bar frames
-// the signed-in top-level tabs, and the account-status banners ride
-// above whichever tab is active.
+// the read surfaces — the tabs and the read drill-ins — and the
+// account-status banners ride above whichever tab is active.
 // Registration returns an ordinary session, so an applicant is simply
 // signed in: the applicant/member distinction lives in the shell
 // banners, not in navigation (auth.md "Application").
@@ -257,14 +257,17 @@ fun CograNavGraph(
 
     // The shell: one scaffold owning the bottom bar and the shell-level
     // snackbar host (design.md §6) — one frame for every viewer: the
-    // bar rides the tab surfaces signed in or out, and a slot that
+    // bar rides the read surfaces signed in or out, and a slot that
     // needs an account opens the join prompt on a signed-out tap —
-    // ask, never bounce.
+    // ask, never bounce. A read drill-in keeps the frame but selects
+    // no tab; the task flows drop it for their back arrow.
     val shellSnackbar = remember { SnackbarHostState() }
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
-    val onOwnProfileTab = backStackEntry?.let { entry ->
-        entry.destination.hasRoute(Profile::class) && entry.toRoute<Profile>().handle == null
-    } == true
+    val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
+    val onOwnProfileTab = onProfile &&
+        backStackEntry?.toRoute<Profile>()?.handle == null
+    val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
+    val onReadSurface = onFeedTab || onProfile || onPostDetail
 
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
@@ -283,7 +286,7 @@ fun CograNavGraph(
             }
         },
         bottomBar = {
-            if (signedIn != null && (onFeedTab || onOwnProfileTab)) {
+            if (signedIn != null && onReadSurface) {
                 CograBottomBar(
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,

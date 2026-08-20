@@ -131,9 +131,11 @@ The destination map — type-safe destinations, one NavHost inside
 the shell scaffold (`CograNavGraph.kt`). Auth drives navigation:
 a phase flip lands on the new phase's root — `Login` signed
 out, the `Feed` tab signed in — with a cleared stack, so which
-stack reaches a destination is its access gate. The signed-in
-shell frames the top-level tabs with the bottom bar
-([design.md §6](design.md#6-components)); tabs carry no back
+stack reaches a destination is its access gate. The shell frames
+every read surface with the bottom bar
+([design.md §6](design.md#6-components)) — the tabs plus the read
+drill-ins `PostDetail` and `Profile(handle)`; the task flows drop
+it. Tabs carry no back
 arrow, every inner screen carries one over `navigateUp()`. The
 account-status banners (the application cards, husk/restore, the
 reciprocation prompt — `feature:home`) ride above whichever tab
@@ -160,7 +162,7 @@ The read surfaces are public on every client — accounts gate
 participation, never viewing
 ([graph-model.md "Core principles"](../primitive/graph-model.md#1-core-principles)).
 `Feed`, `PostDetail`, and `Profile` sit on both stacks, write
-affordances swapped for join entries — the bar rides the tab
+affordances swapped for join entries — the bar rides those read
 surfaces for anonymous viewers too, its account-needing slots
 (compose, profile) asking in place via the join prompt; the
 login screen carries the invite and browse entries, and the

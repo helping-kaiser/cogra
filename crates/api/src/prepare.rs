@@ -63,6 +63,10 @@ pub struct Gesture {
     pub deps: Vec<ActId>,
     /// Payload bytes — canonical empty is the zero-length string.
     pub payload: Vec<u8>,
+    /// The L2 node this gesture mints or edits, when it carries one.
+    /// Recorded on the staged row so the write owns its pending display
+    /// rows: expiry discards them, confirm lands them.
+    pub node: Option<Uuid>,
 }
 
 /// A prepared staged write: the handle for the whole handshake plus the
@@ -158,7 +162,15 @@ pub async fn prepare<B: L1Boundary>(
         deps: gesture.deps,
     };
     let id = Uuid::new_v4();
-    staged::insert(&mut tx, id, actor_id, &proposal, prepared_epoch).await?;
+    staged::insert(
+        &mut tx,
+        id,
+        actor_id,
+        &proposal,
+        prepared_epoch,
+        gesture.node,
+    )
+    .await?;
     tx.commit().await?;
     Ok(Prepared {
         id,

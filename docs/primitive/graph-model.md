@@ -78,10 +78,10 @@ names the fold it applies.
 
 What "current" means is always a declared fold:
 
-- **L1 reads bundles in exactly two places.** The standing
-  projection nets each same-author bundle by sum-then-clip before
-  the safe standing flow `W_end`, and the title fold reads
-  settlement records epoch-quantized. Nothing else on L1 consumes a bundle.
+- **L1 reads bundles in exactly two places.** Act folding nets each
+  same-author bundle by sum-then-clip before the cell reaches the
+  base allocation matrix, and the title fold reads settlement
+  records epoch-quantized. Nothing else on L1 consumes a bundle.
 - **Every other current-state read is its consumer's declared
   rule.** CoGra declares its folds per surface: the current
   profile is the newest Registration payload; chat membership is
@@ -142,10 +142,10 @@ Two influence channels exist, and they must never be conflated:
   yours. This is CoGra feed policy, stated in the published
   ranking spec ([feed-ranking.md](feed-ranking.md)).
 - **Standing is inbound — and gates writing, never ranking.**
-  Eligible vouches toward a person *do* move that person's
-  standing `α_i` through L1's standing projection — lifting when
-  the voucher's rate exceeds the target's standing, diluting
-  otherwise (`prop:epoch:final-standing-bidirectional-response`);
+  Acts directed at a person *do* move that person's standing `α_i`
+  through L1's conserved standing transport — lifting when the
+  source's rate exceeds the target's standing, diluting otherwise
+  (`prop:epoch:final-standing-response`);
   standing feeds the write gate and is freely readable
   downstream — but it never enters the feed: who may act, never
   what the feed shows.

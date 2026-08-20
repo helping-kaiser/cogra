@@ -326,9 +326,10 @@ impl Query {
     }
 
     /// The chronological listing (roadmap "Slice 2"): every post,
-    /// newest-first in landing order — the record set's own order,
-    /// never wall clock (graph-model.md §2). Deliberately not the
-    /// ranked feed.
+    /// newest-first — pending entries, then landed entries in landing
+    /// order, the record set's own order, never wall clock
+    /// (graph-model.md §2). `includePending: false` serves only what has
+    /// landed on L1. Deliberately not the ranked feed.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn posts(
         &self,
@@ -337,6 +338,7 @@ impl Query {
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
+        #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<KeysetConnection<PostType>> {
         let pool = ctx.data::<PgPool>()?;
         let page = keyset_page(first, after, last, before)?;
@@ -349,13 +351,17 @@ impl Query {
             }),
             page.backward,
             page.limit + 1,
+            include_pending,
         )
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(keyset_connection(
             rows,
             &page,
-            |p| (p.order.landed_epoch, p.order.act_time, p.order.position),
+            |p| {
+                let k = p.sort_key();
+                (k.landed_epoch, k.act_time, k.position)
+            },
             PostType,
         ))
     }
@@ -384,6 +390,11 @@ async fn lookup_actor(
 
 /// A UUID as a mirror identifier: a content node's mint id, or an
 /// actor's Profile node — the two shapes records target this slice.
+/// A pending content node resolves here like any other, through its
+/// display row, so `records(target:)` on it is well-formed and empty
+/// rather than falling through to the actor branch: the chronicle
+/// contains only ordered fact (api-spec.md "The graph is a chronicle").
+/// A UUID naming neither resolves to no actor, hence to an empty page.
 async fn uuid_to_node_string(pool: &PgPool, id: Uuid) -> async_graphql::Result<Option<String>> {
     match content_store::content_kind(pool, id)
         .await

@@ -199,6 +199,11 @@ class CograNavGraphTest {
         compose.onNodeWithTag("feed_post_p1").performClick()
         waitForTag("detail_comment_c1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+
+        // A read drill-in keeps the frame and carries its own back arrow
+        // (design.md §6); no tab is selected.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("detail_back").fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
@@ -211,6 +216,8 @@ class CograNavGraphTest {
         compose.onNodeWithTag("bar_compose").performClick()
         waitForTag("compose_body")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
+        // A task flow owns the screen: the bar leaves (design.md §6).
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
@@ -250,9 +257,11 @@ class CograNavGraphTest {
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
         assertThat(entry?.toRoute<Profile>()?.handle).isEqualTo("author")
-        // Another actor's profile is a drill-in: back arrow, no edit.
+        // Another actor's profile is a read drill-in: back arrow, no
+        // edit, and the frame stays with no tab selected.
         assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("profile_edit").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
@@ -267,6 +276,7 @@ class CograNavGraphTest {
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>()).isTrue()
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
 
         compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
@@ -320,6 +330,17 @@ class CograNavGraphTest {
         // The composer is absent for the anonymous reader, swapped —
         // never merely disabled.
         assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
+
+        // The frame rides the drill-in for the guest too, its gated
+        // slots still asking in place rather than bouncing the read.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        compose.onNodeWithTag("bar_compose").performClick()
+        waitForTag("join_prompt")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
+        compose.onNodeWithTag("join_prompt_dismiss").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("join_prompt").fetchSemanticsNodes().isEmpty()
+        }
 
         // The join entry pushes the login screen, so back returns to the
         // post (web parity: the guest entries link to /login).
@@ -501,6 +522,7 @@ class CograNavGraphTest {
         waitForTag("profile_settings")
         compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
 
         compose.onNodeWithTag("settings_export_key").performScrollTo().performClick()
         compose.waitForIdle()
