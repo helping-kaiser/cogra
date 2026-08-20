@@ -39,7 +39,7 @@ function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
 }
 
-function post(id: string, title: string) {
+function post(id: string, title: string, pending = false) {
   return {
     __typename: "Post",
     id,
@@ -54,6 +54,7 @@ function post(id: string, title: string) {
     },
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
+    landing: { __typename: "Landing", state: pending ? "PENDING" : "LANDED" },
     moderationStatus: "NORMAL",
     license: { __typename: "License", attribution: 0, oversight: 0 },
   };
@@ -158,6 +159,43 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
     expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+  });
+
+  it("marks a pending post and leaves a landed one unmarked", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({
+          data: postsPage([post("p1", "Settling", true), post("p2", "Final")], null, false),
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    expect(await screen.findByTestId("feed-pending-p1")).toHaveTextContent("Still settling");
+    expect(screen.queryByTestId("feed-pending-p2")).not.toBeInTheDocument();
+    // Shown in full, never held back (design.md §9).
+    expect(screen.getByTestId("feed-post-p1")).toHaveTextContent("Settling");
+  });
+
+  // A pending entry sorts above every landed one until it lands, when
+  // it drops into landing order — which can put it below the cursor the
+  // walk resumes from, so the next page serves it again.
+  it("drops an entry the held page already carries when appending", async () => {
+    server.use(
+      graphql.query("Posts", ({ variables }) =>
+        HttpResponse.json({
+          data:
+            variables.after == null
+              ? postsPage([post("p1", "Settling", true), post("p2", "Older")], "c1", true)
+              : postsPage([post("p1", "Settling"), post("p3", "Oldest")], null, false),
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
+    expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
+    // The held copy stays as it was read — no reconciliation.
+    expect(screen.getByTestId("feed-pending-p1")).toBeInTheDocument();
   });
 
   it("renders the transport error on a fault", async () => {
