@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'sealing', author_pubkey = $2, nonce = $3,\n             pre_signature = $4, pre_signed_at = COALESCE(pre_signed_at, NOW()),\n             updated_at = NOW()\n         WHERE id = $1 AND state IN ('awaiting_pre_sign', 'sealing')\n         RETURNING pre_signed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pre_signed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "a4089f4f9115cd8b09609836cc9355046f794e32799b705743610225eb5904a0"
+}
