@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT landed_epoch, act_time, position FROM comments WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "landed_epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "position",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "60116d8826ad411366f4699e23a4d7aa591f7e16f8f3256f0fd07d281b138779"
+}

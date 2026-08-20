@@ -437,11 +437,18 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError
 /// mints or edits nothing — Registration, Opinion, Attach — has nothing
 /// to materialize and returns quietly.
 ///
+/// `created_at` is the authoring instant the pre-sign leg recorded — the
+/// caller has it from `record_pre_signed`, so nothing here reloads the
+/// row it was just handed.
+///
 /// Idempotent, because the pre-sign leg accepts a retry: the entity row
 /// is inserted only once, and a version row keyed by the same authoring
 /// instant collides with itself.
-pub async fn stage_pending(pool: &PgPool, staged_id: Uuid) -> Result<(), ContentError> {
-    let write = staged::load(pool, staged_id).await?;
+pub async fn stage_pending(
+    pool: &PgPool,
+    write: &staged::StagedWrite,
+    created_at: chrono::DateTime<chrono::Utc>,
+) -> Result<(), ContentError> {
     let body = &write.proposal.body;
     let family = match body.family {
         f @ (Family::Publish | Family::Review) => f,
@@ -450,9 +457,6 @@ pub async fn stage_pending(pool: &PgPool, staged_id: Uuid) -> Result<(), Content
     if write.node_id.is_none() {
         return Ok(());
     }
-    let created_at = write.pre_signed_at.ok_or_else(|| {
-        ContentError::Internal("pre-signed write without an authoring instant".into())
-    })?;
     let content = CograContent::decode_payload(&write.proposal.payload)
         .map_err(|e| ContentError::Internal(format!("staged payload not admissible: {e}")))?;
     let own_mint = NodeId::Mint(ActId {
@@ -588,13 +592,14 @@ async fn land_one(
     write: &staged::PromotedWrite,
     family: Family,
 ) -> Result<(), ContentError> {
+    // An expired write still carries its payload — expiry stops serving
+    // the content, the reap is what destroys it — so a record landing in
+    // that window promotes like any other, and the insert branches below
+    // rebuild the display rows expiry took down, this time with the real
+    // landing order. Past the reap there is no row to load and the
+    // promotion fails loudly.
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
-    if payload.is_empty() {
-        return Err(ContentError::Internal(
-            "staged payload already collected (late landing)".into(),
-        ));
-    }
     let sealed = staged_row
         .sealed
         .as_ref()
@@ -634,7 +639,7 @@ async fn land_one(
     match (family, is_genesis) {
         (Family::Publish, true) => {
             if content_store::land_post(&mut tx, content.node, order).await? {
-                content_store::land_post_version(&mut tx, content.node).await?;
+                content_store::land_post_version(&mut tx, content.node, created_at).await?;
             } else {
                 content_store::insert_post(
                     &mut tx,
@@ -654,7 +659,7 @@ async fn land_one(
             let post = content_store::post_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
-            if !content_store::land_post_version(&mut tx, post.id).await? {
+            if !content_store::land_post_version(&mut tx, post.id, created_at).await? {
                 // Copy-forward merge: the newest version row alone renders
                 // the post (data-model.md "Display-content versioning");
                 // present-and-empty clears, absent keeps.
@@ -675,7 +680,7 @@ async fn land_one(
         }
         (Family::Review, true) => {
             if content_store::land_comment(&mut tx, content.node, order).await? {
-                content_store::land_comment_version(&mut tx, content.node).await?;
+                content_store::land_comment_version(&mut tx, content.node, created_at).await?;
             } else {
                 let (target_id, target_type) = comment_parent(pool, body).await?;
                 content_store::insert_comment(
@@ -698,7 +703,7 @@ async fn land_one(
                 .ok_or_else(|| {
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
-            if !content_store::land_comment_version(&mut tx, comment.id).await? {
+            if !content_store::land_comment_version(&mut tx, comment.id, created_at).await? {
                 let body_text = content.body.clone().unwrap_or(comment.content);
                 content_store::insert_comment_version(
                     &mut tx, comment.id, &body_text, false, created_at,

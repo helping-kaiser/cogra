@@ -208,9 +208,16 @@ nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration confirming
 flips their account to member — [auth.md](auth.md)). Staged state
 is L2-operational: it is exempt from append-only history and
-leaves no trace once collected — nothing existed on the graph.
-Expiry takes the write's pending display rows with it, in the same
-transaction, for the same reason.
+leaves no trace once reaped — nothing existed on the graph.
+
+Collection is two phases, and they cut different things. **Expiry**
+takes the write's pending display rows with it, in the same
+transaction: the content leaves every reader's view at once. The
+row and its payload stay, invisible, until the **reap** — so a
+record that lands between the two still promotes, rebuilding the
+display rows under its real landing order. A record landing after
+the reap has no staged row left to promote from; it stays in the
+mirror, unpromoted, and the failure is logged.
 
 ```sql
 CREATE TABLE staged_writes (
@@ -497,7 +504,17 @@ to: when a prepared act expires unlanded, its pending rows are
 deleted with it and nothing is left behind — on the graph nothing
 ever existed, so there is nothing to mark. This does not engage
 append-only history or the redaction rules: a pending item has no
-record and no graph structure.
+record and no graph structure. The delete is scoped to the
+expiring write's own authoring instant, because a node can carry
+the pending rows of more than one write, and it reaches down the
+thread: the pending comments hanging under a discarded pending
+node go with it, and the pending replies under those.
+
+A comment whose own record lands while its parent never does is
+an **orphan**: the comment stays — its record is ordered fact —
+and its `target` resolves to null. The thread it was written into
+does not exist on the graph, so there is nothing for it to point
+at.
 
 ```sql
 -- Posts: one immutable entity row per post; display fields live on

@@ -36,7 +36,7 @@ pub enum RelayError {
     /// put on screen. The write is intact and a retry of the leg heals it;
     /// serving the content as if it were invisible is not an option.
     #[error("staged content could not be made readable: {0}")]
-    Staging(String),
+    Staging(#[from] crate::content::ContentError),
     #[error(transparent)]
     Staged(#[from] staged::StagedError),
     #[error(transparent)]
@@ -74,14 +74,25 @@ pub async fn submit_pre_signed<B: L1Boundary>(
         }
         other => return Err(wrong_state(id, "awaiting_pre_sign", other)),
     }
-    staged::record_pre_signed(pool, id, &pre).await?;
+    let pre_signed_at = staged::record_pre_signed(pool, id, &pre).await?;
     // The pre-commitment is the anchor: from here the content is the
     // author's, readable by everyone and marked pending (substrate.md §6).
     // A failure here fails the leg rather than degrading to invisible
     // content — the device's retry re-runs both steps idempotently.
-    crate::content::stage_pending(pool, id)
-        .await
-        .map_err(|e| RelayError::Staging(e.to_string()))?;
+    if let Err(e) = crate::content::stage_pending(pool, &write, pre_signed_at).await {
+        // Staging can fail deterministically — a comment whose parent was
+        // discarded between prepare and pre-sign will fail every retry —
+        // so leaving the write in `sealing` would wedge it until GC and
+        // block the author's next edit of the node. Hand it back instead.
+        if let Err(revert) = staged::revert_to_pre_sign(pool, id).await {
+            tracing::error!(
+                staged = %id,
+                error = %revert,
+                "staging failed and the revert failed too; the write stays in sealing"
+            );
+        }
+        return Err(RelayError::Staging(e));
+    }
     let pre_signed = PreSignedProposal {
         proposal: write.proposal.clone(),
         author_pubkey: pre.author_pubkey,
