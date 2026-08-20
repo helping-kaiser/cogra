@@ -634,7 +634,7 @@ async fn land_one(
     match (family, is_genesis) {
         (Family::Publish, true) => {
             if content_store::land_post(&mut tx, content.node, order).await? {
-                content_store::land_post_version(&mut tx, content.node).await?;
+                content_store::land_post_version(&mut tx, content.node, created_at).await?;
             } else {
                 content_store::insert_post(
                     &mut tx,
@@ -654,7 +654,7 @@ async fn land_one(
             let post = content_store::post_by_node(pool, &target)
                 .await?
                 .ok_or_else(|| ContentError::Internal("edited post has no display row".into()))?;
-            if !content_store::land_post_version(&mut tx, post.id).await? {
+            if !content_store::land_post_version(&mut tx, post.id, created_at).await? {
                 // Copy-forward merge: the newest version row alone renders
                 // the post (data-model.md "Display-content versioning");
                 // present-and-empty clears, absent keeps.
@@ -675,7 +675,7 @@ async fn land_one(
         }
         (Family::Review, true) => {
             if content_store::land_comment(&mut tx, content.node, order).await? {
-                content_store::land_comment_version(&mut tx, content.node).await?;
+                content_store::land_comment_version(&mut tx, content.node, created_at).await?;
             } else {
                 let (target_id, target_type) = comment_parent(pool, body).await?;
                 content_store::insert_comment(
@@ -698,7 +698,7 @@ async fn land_one(
                 .ok_or_else(|| {
                     ContentError::Internal("edited comment has no display row".into())
                 })?;
-            if !content_store::land_comment_version(&mut tx, comment.id).await? {
+            if !content_store::land_comment_version(&mut tx, comment.id, created_at).await? {
                 let body_text = content.body.clone().unwrap_or(comment.content);
                 content_store::insert_comment_version(
                     &mut tx, comment.id, &body_text, false, created_at,

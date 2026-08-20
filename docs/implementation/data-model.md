@@ -497,7 +497,17 @@ to: when a prepared act expires unlanded, its pending rows are
 deleted with it and nothing is left behind — on the graph nothing
 ever existed, so there is nothing to mark. This does not engage
 append-only history or the redaction rules: a pending item has no
-record and no graph structure.
+record and no graph structure. The delete is scoped to the
+expiring write's own authoring instant, because a node can carry
+the pending rows of more than one write, and it reaches down the
+thread: the pending comments hanging under a discarded pending
+node go with it, and the pending replies under those.
+
+A comment whose own record lands while its parent never does is
+an **orphan**: the comment stays — its record is ordered fact —
+and its `target` resolves to null. The thread it was written into
+does not exist on the graph, so there is nothing for it to point
+at.
 
 ```sql
 -- Posts: one immutable entity row per post; display fields live on

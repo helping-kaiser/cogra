@@ -476,15 +476,38 @@ pub async fn record_sealed(pool: &PgPool, id: Uuid, act: &VerifiedAct) -> Result
     })
 }
 
-/// Returns a failed seal to `awaiting_pre_sign` so the device can retry.
+/// Returns a failed seal to `awaiting_pre_sign` so the device can retry,
+/// taking the write's pending display rows with it in the same
+/// transaction. The rows were staged against a pre-commitment the
+/// substrate refused, so nothing was ever the author's content; leaving
+/// them readable would publish a write that failed to seal. A retry of
+/// the leg re-stages them — `stage_pending` is idempotent.
 pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
-    transition(
-        pool,
+    let mut tx = pool.begin().await?;
+    let reverted = sqlx::query_as!(
+        StagedRows,
+        "UPDATE staged_writes
+         SET state = 'awaiting_pre_sign', updated_at = NOW()
+         WHERE id = $1 AND state = 'sealing'
+         RETURNING node_id, pre_signed_at",
         id,
-        &[StagedState::Sealing],
-        StagedState::AwaitingPreSign,
     )
-    .await
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some(staged_rows) = reverted else {
+        let actual = sqlx::query_scalar!("SELECT state FROM staged_writes WHERE id = $1", id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or(StagedError::NotFound(id))?;
+        return Err(StagedError::WrongState {
+            id,
+            expected: StagedState::Sealing.as_str().to_string(),
+            actual,
+        });
+    };
+    discard_pending_content(&mut tx, std::iter::once(staged_rows)).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// Marks the approval relayed: `awaiting_approval` → `relaying`. Accepts a
@@ -540,19 +563,20 @@ pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWri
 /// handshake that can never complete (a seal lost before it was stored).
 pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(), StagedError> {
     let mut tx = pool.begin().await?;
-    let node_id = sqlx::query_scalar!(
+    let expired = sqlx::query_as!(
+        StagedRows,
         "UPDATE staged_writes
          SET state = 'expired', payload = ''::bytea, expired_epoch = $2,
              updated_at = NOW()
          WHERE id = $1 AND state NOT IN ('landed', 'expired')
-         RETURNING node_id",
+         RETURNING node_id, pre_signed_at",
         id,
         current_epoch,
     )
     .fetch_optional(&mut *tx)
     .await?
     .ok_or(StagedError::NotFound(id))?;
-    discard_pending_content(&mut tx, node_id.into_iter()).await?;
+    discard_pending_content(&mut tx, std::iter::once(expired)).await?;
     tx.commit().await?;
     Ok(())
 }
@@ -570,39 +594,52 @@ pub async fn expire_due(
     gc_after_epochs: i64,
 ) -> Result<u64, StagedError> {
     let mut tx = pool.begin().await?;
-    let expired = sqlx::query_scalar!(
+    let expired = sqlx::query_as!(
+        StagedRows,
         "UPDATE staged_writes
          SET state = 'expired', payload = ''::bytea, expired_epoch = $1,
              updated_at = NOW()
          WHERE state NOT IN ('landed', 'expired')
            AND prepared_epoch + $2 <= $1
-         RETURNING node_id",
+         RETURNING node_id, pre_signed_at",
         current_epoch,
         gc_after_epochs,
     )
     .fetch_all(&mut *tx)
     .await?;
     let count = expired.len() as u64;
-    discard_pending_content(&mut tx, expired.into_iter().flatten()).await?;
+    discard_pending_content(&mut tx, expired.into_iter()).await?;
     tx.commit().await?;
     Ok(count)
 }
 
 /// The display side of expiry: every node an expired write owned loses
-/// its pending rows. A write that minted nothing (Registration, Attach)
-/// carries no node id and has nothing to discard.
+/// the pending rows *that write* staged, named by the authoring instant
+/// they were written under. A write that minted nothing (Registration,
+/// Attach) carries no node id, and one that never reached its
+/// pre-commitment staged nothing — neither has anything to discard.
 async fn discard_pending_content(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    nodes: impl Iterator<Item = Uuid>,
+    nodes: impl Iterator<Item = StagedRows>,
 ) -> Result<(), StagedError> {
-    for node in nodes {
-        crate::content::discard_pending(tx, node)
+    for staged in nodes {
+        let (Some(node), Some(created_at)) = (staged.node_id, staged.pre_signed_at) else {
+            continue;
+        };
+        crate::content::discard_pending(tx, node, created_at)
             .await
             .map_err(|e| match e {
                 crate::content::ContentError::Storage(e) => StagedError::Storage(e),
             })?;
     }
     Ok(())
+}
+
+/// The display rows one staged write owns: the node it minted or edited,
+/// and the authoring instant its rows carry.
+struct StagedRows {
+    node_id: Option<Uuid>,
+    pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 /// GC, second phase: deletes expired rows another `gc_after_epochs` epochs
