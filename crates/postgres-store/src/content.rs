@@ -60,6 +60,24 @@ impl LandingOrder {
     }
 }
 
+/// A listing cursor: the sort key, plus the entry's own id.
+///
+/// The id carries two things the key alone cannot. A pending key is the
+/// authoring instant, which two writes can share — nothing serializes
+/// two authors' pre-commitment signatures apart — so the id is the
+/// tiebreaker that keeps a page boundary from dropping siblings. And a
+/// pending entry can *land* between two pages, moving from one namespace
+/// to the other; the id is what lets the walk find where it went instead
+/// of serving it a second time out of the landed branch.
+///
+/// `id` is optional so a cursor issued before it was carried still
+/// paginates, on the key alone.
+#[derive(Debug, Clone, Copy)]
+pub struct ContentCursor {
+    pub order: LandingOrder,
+    pub id: Option<Uuid>,
+}
+
 /// One post with its current display version (entity row + newest
 /// version row).
 #[derive(Debug, Clone)]
@@ -609,41 +627,41 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
 /// serves only what has landed on L1. `limit` is capped by the resolver.
 pub async fn list_posts(
     pool: &PgPool,
-    cursor: Option<LandingOrder>,
+    cursor: Option<ContentCursor>,
     backward: bool,
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Post>, ContentError> {
+    // The cursor is resolved against the row's current state before the
+    // walk: a pending entry can land between two pages, and a stale
+    // cursor would put the walk in the wrong branch — serving the entry
+    // again out of the other one, or skipping what sorts between them.
+    let cursor = resolve_post_cursor(pool, cursor).await?;
     // The two namespaces never interleave: every pending entry sorts
     // ahead of every landed one. So a walk fills from whichever branch
     // the cursor is in and continues into the other, and each branch
     // stays a single index-served query.
-    let in_pending = cursor.is_some_and(|c| c.is_pending());
+    let in_pending = cursor.is_some_and(|c| c.order.is_pending());
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = list_posts_landed(pool, cursor, true, limit, include_pending).await?;
+            out = list_posts_landed(pool, cursor.map(|c| c.order), true, limit, include_pending)
+                .await?;
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
-            let mut pending = list_posts_pending(
-                pool,
-                cursor.and_then(|c| c.pending_instant()),
-                true,
-                remaining,
-            )
-            .await?;
+            let mut pending =
+                list_posts_pending(pool, pending_from(cursor), true, remaining).await?;
             pending.append(&mut out);
             out = pending;
         }
     } else {
         if include_pending && (cursor.is_none() || in_pending) {
-            out = list_posts_pending(pool, cursor.and_then(|c| c.pending_instant()), false, limit)
-                .await?;
+            out = list_posts_pending(pool, pending_from(cursor), false, limit).await?;
         }
         let remaining = limit - out.len() as i64;
         if remaining > 0 {
-            let landed_cursor = cursor.filter(|c| !c.is_pending());
+            let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
             out.append(
                 &mut list_posts_landed(pool, landed_cursor, false, remaining, include_pending)
                     .await?,
@@ -651,6 +669,71 @@ pub async fn list_posts(
         }
     }
     Ok(out)
+}
+
+/// The pending branch's keyset: the authoring instant and the entry id
+/// that breaks ties on it. Empty for a cursor in the landed namespace —
+/// the pending branch is then walked from its own end.
+fn pending_from(cursor: Option<ContentCursor>) -> (Option<Timestamp>, Option<Uuid>) {
+    match cursor.filter(|c| c.order.is_pending()) {
+        Some(c) => (c.order.pending_instant(), c.id),
+        None => (None, None),
+    }
+}
+
+/// The id a pending cursor must be re-checked against, if any: only a
+/// pending cursor can move, and only one carrying an id can be found.
+fn movable(cursor: Option<ContentCursor>) -> Option<Uuid> {
+    cursor.filter(|c| c.order.is_pending()).and_then(|c| c.id)
+}
+
+/// Re-points a cursor at the landing coordinates its entry has now.
+/// `None` means the entry is still pending, so the cursor stands.
+fn repoint(cursor: Option<ContentCursor>, landed: Option<LandingOrder>) -> Option<ContentCursor> {
+    match (cursor, landed) {
+        (Some(c), Some(order)) => Some(ContentCursor { order, ..c }),
+        (c, _) => c,
+    }
+}
+
+/// Where a post cursor's entry sits *now*. A pending cursor names an
+/// entry whose key moves when it lands, so a walk resuming from it has
+/// to ask the row, not the cursor. A landed cursor never moves — a
+/// node's landing position is its genesis — and is returned unchanged,
+/// as is a cursor carrying no id to look up.
+async fn resolve_post_cursor(
+    pool: &PgPool,
+    cursor: Option<ContentCursor>,
+) -> Result<Option<ContentCursor>, ContentError> {
+    let Some(id) = movable(cursor) else {
+        return Ok(cursor);
+    };
+    let landed = sqlx::query!(
+        "SELECT landed_epoch, act_time, position FROM posts WHERE id = $1",
+        id
+    )
+    .fetch_optional(pool)
+    .await?
+    .and_then(|r| landing_order(r.landed_epoch, r.act_time, r.position));
+    Ok(repoint(cursor, landed))
+}
+
+/// The comment side of [`resolve_post_cursor`].
+async fn resolve_comment_cursor(
+    pool: &PgPool,
+    cursor: Option<ContentCursor>,
+) -> Result<Option<ContentCursor>, ContentError> {
+    let Some(id) = movable(cursor) else {
+        return Ok(cursor);
+    };
+    let landed = sqlx::query!(
+        "SELECT landed_epoch, act_time, position FROM comments WHERE id = $1",
+        id
+    )
+    .fetch_optional(pool)
+    .await?
+    .and_then(|r| landing_order(r.landed_epoch, r.act_time, r.position));
+    Ok(repoint(cursor, landed))
 }
 
 /// The landed branch. `include_pending` reaches the version lateral as
@@ -713,13 +796,18 @@ async fn list_posts_landed(
 }
 
 /// The pending branch: unlanded entries newest-authored-first, keyed by
-/// the authoring instant the pending cursor encodes.
+/// `(authoring instant, id)`. The id is in the key because the instant
+/// alone is not unique — two authors' pre-commitment signatures can share
+/// a microsecond, and a keyset on a non-unique column drops the siblings
+/// at every page boundary. A cursor from before the id was carried
+/// (`None`) keysets on the instant alone.
 async fn list_posts_pending(
     pool: &PgPool,
-    cursor: Option<Timestamp>,
+    cursor: (Option<Timestamp>, Option<Uuid>),
     backward: bool,
     limit: i64,
 ) -> Result<Vec<Post>, ContentError> {
+    let (at, after_id) = cursor;
     let rows = sqlx::query_as!(
         PostRow,
         r#"SELECT * FROM (
@@ -738,15 +826,21 @@ async fn list_posts_pending(
                ) v ON TRUE
                WHERE p.landed_epoch IS NULL
                  AND ($1::timestamptz IS NULL
-                      OR ($2 AND p.created_at > $1)
-                      OR (NOT $2 AND p.created_at < $1))
+                      OR ($3 AND (($2::uuid IS NULL AND p.created_at > $1)
+                                  OR ($2 IS NOT NULL
+                                      AND (p.created_at, p.id) > ($1, $2))))
+                      OR (NOT $3 AND (($2::uuid IS NULL AND p.created_at < $1)
+                                      OR ($2 IS NOT NULL
+                                          AND (p.created_at, p.id) < ($1, $2)))))
                ORDER BY
-                   CASE WHEN $2 THEN p.created_at END ASC,
-                   p.created_at DESC
-               LIMIT $3
+                   CASE WHEN $3 THEN p.created_at END ASC,
+                   CASE WHEN $3 THEN p.id END ASC,
+                   p.created_at DESC, p.id DESC
+               LIMIT $4
            ) page
-           ORDER BY created_at DESC"#,
-        cursor,
+           ORDER BY created_at DESC, id DESC"#,
+        at,
+        after_id,
         backward,
         limit,
     )
@@ -844,44 +938,40 @@ pub async fn comment_by_node(
 pub async fn comments_for_target(
     pool: &PgPool,
     target_id: Uuid,
-    cursor: Option<LandingOrder>,
+    cursor: Option<ContentCursor>,
     backward: bool,
     limit: i64,
     include_pending: bool,
 ) -> Result<Vec<Comment>, ContentError> {
-    let in_pending = cursor.is_some_and(|c| c.is_pending());
+    let cursor = resolve_comment_cursor(pool, cursor).await?;
+    let in_pending = cursor.is_some_and(|c| c.order.is_pending());
     let mut out = Vec::new();
     if backward {
         if !in_pending {
-            out = comments_landed(pool, target_id, cursor, true, limit, include_pending).await?;
+            out = comments_landed(
+                pool,
+                target_id,
+                cursor.map(|c| c.order),
+                true,
+                limit,
+                include_pending,
+            )
+            .await?;
         }
         let remaining = limit - out.len() as i64;
         if include_pending && remaining > 0 {
-            let mut pending = comments_pending(
-                pool,
-                target_id,
-                cursor.and_then(|c| c.pending_instant()),
-                true,
-                remaining,
-            )
-            .await?;
+            let mut pending =
+                comments_pending(pool, target_id, pending_from(cursor), true, remaining).await?;
             pending.append(&mut out);
             out = pending;
         }
     } else {
         if include_pending && (cursor.is_none() || in_pending) {
-            out = comments_pending(
-                pool,
-                target_id,
-                cursor.and_then(|c| c.pending_instant()),
-                false,
-                limit,
-            )
-            .await?;
+            out = comments_pending(pool, target_id, pending_from(cursor), false, limit).await?;
         }
         let remaining = limit - out.len() as i64;
         if remaining > 0 {
-            let landed_cursor = cursor.filter(|c| !c.is_pending());
+            let landed_cursor = cursor.map(|c| c.order).filter(|o| !o.is_pending());
             out.append(
                 &mut comments_landed(
                     pool,
@@ -954,13 +1044,16 @@ async fn comments_landed(
     Ok(rows.into_iter().map(comment_from_row).collect())
 }
 
+/// The pending branch of the thread read; same `(instant, id)` keyset as
+/// [`list_posts_pending`], and for the same reason.
 async fn comments_pending(
     pool: &PgPool,
     target_id: Uuid,
-    cursor: Option<Timestamp>,
+    cursor: (Option<Timestamp>, Option<Uuid>),
     backward: bool,
     limit: i64,
 ) -> Result<Vec<Comment>, ContentError> {
+    let (at, after_id) = cursor;
     let rows = sqlx::query_as!(
         CommentRow,
         r#"SELECT * FROM (
@@ -976,18 +1069,24 @@ async fn comments_pending(
                    FROM comment_versions WHERE comment_id = c.id
                    ORDER BY created_at DESC LIMIT 1
                ) v ON TRUE
-               WHERE c.target_id = $4
+               WHERE c.target_id = $5
                  AND c.landed_epoch IS NULL
                  AND ($1::timestamptz IS NULL
-                      OR ($2 AND c.created_at > $1)
-                      OR (NOT $2 AND c.created_at < $1))
+                      OR ($3 AND (($2::uuid IS NULL AND c.created_at > $1)
+                                  OR ($2 IS NOT NULL
+                                      AND (c.created_at, c.id) > ($1, $2))))
+                      OR (NOT $3 AND (($2::uuid IS NULL AND c.created_at < $1)
+                                      OR ($2 IS NOT NULL
+                                          AND (c.created_at, c.id) < ($1, $2)))))
                ORDER BY
-                   CASE WHEN $2 THEN c.created_at END ASC,
-                   c.created_at DESC
-               LIMIT $3
+                   CASE WHEN $3 THEN c.created_at END ASC,
+                   CASE WHEN $3 THEN c.id END ASC,
+                   c.created_at DESC, c.id DESC
+               LIMIT $4
            ) page
-           ORDER BY created_at DESC"#,
-        cursor,
+           ORDER BY created_at DESC, id DESC"#,
+        at,
+        after_id,
         backward,
         limit,
         target_id,

@@ -5,7 +5,7 @@
 //! serialization rules make that state hard to reach end to end — the
 //! store's contract has to hold on its own.
 
-use postgres_store::content::{self, LandingOrder};
+use postgres_store::content::{self, ContentCursor, LandingOrder, Post};
 use postgres_store::genesis;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -114,6 +114,140 @@ async fn pending_versions(pool: &PgPool, post_id: Uuid) -> Vec<(Timestamp, bool)
     .collect()
 }
 
+/// The cursor a resolver would hand back for a listing entry: its sort
+/// key and its own id.
+fn cursor_of(p: &Post) -> ContentCursor {
+    ContentCursor {
+        order: p.sort_key(),
+        id: Some(p.id),
+    }
+}
+
+async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Vec<Post> {
+    content::list_posts(pool, cursor, false, limit, true)
+        .await
+        .expect("lists")
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    // Two pre-commitment signatures in the same microsecond: nothing
+    // serializes two authors' signing apart, so the authoring instant
+    // alone cannot key the walk.
+    let one = post(
+        &pool,
+        author,
+        "mint:act:author:1:publish",
+        None,
+        at(0),
+        "one",
+    )
+    .await;
+    let two = post(
+        &pool,
+        author,
+        "mint:act:author:2:publish",
+        None,
+        at(0),
+        "two",
+    )
+    .await;
+
+    let all = page(&pool, None, 10).await;
+    assert_eq!(all.len(), 2, "both pending entries are listed");
+
+    // Walking one at a time must visit both — the exclusive cursor may
+    // not swallow the sibling sharing its instant.
+    let first = page(&pool, None, 1).await;
+    assert_eq!(first.len(), 1);
+    let second = page(&pool, Some(cursor_of(&first[0])), 1).await;
+    assert_eq!(
+        second.len(),
+        1,
+        "the same-instant sibling must survive the page boundary"
+    );
+
+    let mut walked = vec![first[0].id, second[0].id];
+    walked.sort();
+    let mut expected = vec![one, two];
+    expected.sort();
+    assert_eq!(walked, expected);
+
+    // And the walk ends there, rather than looping on the tie.
+    assert!(page(&pool, Some(cursor_of(&second[0])), 1).await.is_empty());
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let old = post(
+        &pool,
+        author,
+        "mint:act:author:1:publish",
+        Some(order(1, 0)),
+        at(0),
+        "landed-old",
+    )
+    .await;
+    let new = post(
+        &pool,
+        author,
+        "mint:act:author:2:publish",
+        Some(order(1, 1)),
+        at(10),
+        "landed-new",
+    )
+    .await;
+    let pending_first = post(
+        &pool,
+        author,
+        "mint:act:author:3:publish",
+        None,
+        at(20),
+        "p1",
+    )
+    .await;
+    let pending_second = post(
+        &pool,
+        author,
+        "mint:act:author:4:publish",
+        None,
+        at(30),
+        "p2",
+    )
+    .await;
+
+    // Page one ends inside the pending set.
+    let page1 = page(&pool, None, 2).await;
+    assert_eq!(
+        page1.iter().map(|p| p.id).collect::<Vec<_>>(),
+        vec![pending_second, pending_first]
+    );
+    let boundary = cursor_of(&page1[1]);
+
+    // Both pending entries land before the client asks for page two —
+    // their keys move out of the pending namespace and into the landed
+    // one, under the cursor the client is holding.
+    let mut tx = pool.begin().await.expect("tx");
+    content::land_post(&mut tx, pending_first, order(2, 0))
+        .await
+        .expect("lands");
+    content::land_post(&mut tx, pending_second, order(2, 1))
+        .await
+        .expect("lands");
+    tx.commit().await.expect("commit");
+
+    // Page two resumes where the cursor's entry actually sits now, so it
+    // serves the rest and nothing twice.
+    let page2 = page(&pool, Some(boundary), 10).await;
+    assert_eq!(
+        page2.iter().map(|p| p.id).collect::<Vec<_>>(),
+        vec![new, old],
+        "an entry that landed between pages must not be served again"
+    );
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -133,9 +267,17 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", true, at(10))
         .await
         .expect("first");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "second edit", true, at(20))
-        .await
-        .expect("second");
+    content::insert_post_version(
+        &mut tx,
+        id,
+        Some("title"),
+        None,
+        "second edit",
+        true,
+        at(20),
+    )
+    .await
+    .expect("second");
     tx.commit().await.expect("commit");
 
     // Landing the earlier one drops its mark and only its mark.
@@ -195,7 +337,15 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
 
     // A pending post, a pending comment on it, and a pending reply to
     // that comment: one thread, three staged writes, none landed.
-    let host = post(&pool, author, "mint:act:author:1:publish", None, at(0), "host").await;
+    let host = post(
+        &pool,
+        author,
+        "mint:act:author:1:publish",
+        None,
+        at(0),
+        "host",
+    )
+    .await;
     let reply = comment(
         &pool,
         commenter,
@@ -241,7 +391,10 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
 
     assert!(content::post(&pool, host).await.expect("read").is_none());
     assert!(
-        content::comment(&pool, reply).await.expect("read").is_none(),
+        content::comment(&pool, reply)
+            .await
+            .expect("read")
+            .is_none(),
         "a pending comment on a discarded pending post goes with it"
     );
     assert!(
@@ -260,5 +413,10 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
         .expect("read")
         .expect("the landed comment survives");
     assert_eq!(orphan.target_id, host);
-    assert!(content::post(&pool, orphan.target_id).await.expect("read").is_none());
+    assert!(
+        content::post(&pool, orphan.target_id)
+            .await
+            .expect("read")
+            .is_none()
+    );
 }
