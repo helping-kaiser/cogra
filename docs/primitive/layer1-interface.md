@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs, motivation prose, and Layer 0 internals are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 341 distinct anchor names,
-`anchor_set_hash = 2a127f2ed527da32af0f024d378dc5e14a267f4756a2f23540ea4959080e11f1`
+anchor-stability contract: 364 distinct anchor names,
+`anchor_set_hash = 32495505d9d99edf2db0c709f9063fef0d3e015817cc1b98fd51c0cf9bb5de72`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -1029,6 +1029,14 @@ legs — Reference's A-leg may source from any passive node (the universal
 citing artifact). Edges between actors may be asymmetric; each edge
 carries independent sentiment parameters set unilaterally by its
 originating actor (`rem:graph:asymmetry`).
+
+**Author–source identity (`prop:graph:author-source-identity`).** One
+proposition, not an inference across the ontology and passivity axioms:
+$\mathrm{src}(e) = \mathrm{author}(q)$ for a binary act, and for a
+hyper-edge act $\mathrm{src}(e_A) = \mathrm{author}(q)$,
+$\mathrm{tgt}(e_A) = \mathrm{src}(e_T) = \mathrm{middle}(q)$,
+$\mathrm{tgt}(e_T) = \mathrm{semanticTarget}(q)$. There is no accepted
+record sourced at an actor who did not author it.
 
 **Derived raw edges and the raw traversal snapshot
 (`def:graph:derived-raw-edges`, `def:graph:raw-traversal-snapshot`).** A
