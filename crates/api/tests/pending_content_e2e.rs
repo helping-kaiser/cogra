@@ -213,26 +213,40 @@ impl Rig {
     /// Approval, epoch close and ingestion — the rest of the path, from
     /// already pre-signed writes, so the content lands.
     async fn approve_and_close(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
+        self.approve(token, key, signed).await;
+        self.close_and_ingest().await;
+    }
+
+    /// The approval leg alone — the act becomes orderable, but nothing
+    /// has landed until an epoch closes over it.
+    async fn approve(&self, token: &str, key: &ActorKey, signed: &[Signed]) {
         let host_key = self.standin.host_public_key().await.expect("host key");
         for write in signed {
             let witness = key
                 .approve(&write.pre, &write.act, &host_key)
                 .expect("approves");
-            self.gql(
-                Some(token),
-                "mutation($input: ApproveActsInput!) {
+            let approved = self
+                .gql(
+                    Some(token),
+                    "mutation($input: ApproveActsInput!) {
                    approveActs(input: $input) {
                      stagedWrites { state } userErrors { code message }
                    }
                  }",
-                json!({ "input": { "approvals": [{
-                    "stagedWriteId": write.id,
-                    "signature": B64.encode(witness.approval_signature),
-                }]}}),
-            )
-            .await;
+                    json!({ "input": { "approvals": [{
+                        "stagedWriteId": write.id,
+                        "signature": B64.encode(witness.approval_signature),
+                    }]}}),
+                )
+                .await;
+            assert_eq!(
+                approved["approveActs"]["userErrors"]
+                    .as_array()
+                    .expect("array"),
+                &Vec::<Value>::new(),
+                "approval refused: {approved}"
+            );
         }
-        self.close_and_ingest().await;
     }
 
     /// Pre-commitment, approval, epoch close and ingestion — the whole
@@ -875,6 +889,48 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
     assert_eq!(landed["post"]["title"]["value"], "New title");
     assert_eq!(landed["post"]["landing"]["state"], "LANDED");
     assert!(landed["post"]["landing"]["epoch"].is_i64());
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let prepared = rig
+        .prepare_post(&token, "Late lander", "slow to order")
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node");
+    let signed = rig
+        .pre_sign(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+
+    // The act is approved — orderable, but not yet ordered.
+    rig.approve(&token, &key, &signed).await;
+
+    // GC's first phase runs in that window: the content leaves every
+    // view, and the staged row stays behind, unreaped.
+    rig.expire_everything().await;
+    assert!(
+        rig.listed(None, "first: 10").await.is_empty(),
+        "expiry takes the content off screen"
+    );
+
+    // Then the epoch closes over the act after all — the mirror governs,
+    // so the content comes back, this time with its real landing order.
+    rig.close_and_ingest().await;
+
+    let edges = rig.listed(None, "first: 10").await;
+    assert_eq!(edges.len(), 1, "the late landing promotes: {edges:?}");
+    let node = &edges[0]["node"];
+    assert_eq!(node["id"], post_id);
+    assert_eq!(node["title"]["value"], "Late lander");
+    assert_eq!(node["content"]["value"], "slow to order");
+    assert_eq!(node["landing"]["state"], "LANDED");
+    assert!(
+        node["landing"]["epoch"].is_i64(),
+        "the rebuilt rows carry the record's own landing order: {node}"
+    );
 }
 
 #[sqlx::test(migrations = "../../migrations")]

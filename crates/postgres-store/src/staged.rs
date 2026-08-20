@@ -534,9 +534,11 @@ pub struct PromotedWrite {
 
 /// Confirm: marks every staged write whose record landed in `epoch` as
 /// `landed`, returning the promoted rows. Matching is by the act
-/// identifier — a record landing after its staged write was collected
-/// still promotes (the mirror governs; late landing wins), though its
-/// staged payload is already gone.
+/// identifier — a record landing after its staged write expired still
+/// promotes, display rows and all (the mirror governs; late landing
+/// wins). The payload it needs is still on the expired row: expiry stops
+/// serving the content, the reap is what destroys it. Past the reap
+/// there is no row to match and the record stays unpromoted.
 pub async fn promote_landed(pool: &PgPool, epoch: i64) -> Result<Vec<PromotedWrite>, StagedError> {
     let rows = sqlx::query!(
         "UPDATE staged_writes
@@ -566,8 +568,7 @@ pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(
     let expired = sqlx::query_as!(
         StagedRows,
         "UPDATE staged_writes
-         SET state = 'expired', payload = ''::bytea, expired_epoch = $2,
-             updated_at = NOW()
+         SET state = 'expired', expired_epoch = $2, updated_at = NOW()
          WHERE id = $1 AND state NOT IN ('landed', 'expired')
          RETURNING node_id, pre_signed_at",
         id,
@@ -582,12 +583,13 @@ pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(
 }
 
 /// GC, first phase: expires every unlanded staged write prepared at least
-/// `gc_after_epochs` epochs ago, dropping its staged payload and, in the
-/// same transaction, whatever it had on screen while pending. The expired
-/// row remains observable until the reap so a device polling a lost
-/// handshake sees the terminal state rather than a vanished id; the
-/// content itself leaves every reader's view at once — on the graph
-/// nothing ever existed (substrate.md §6).
+/// `gc_after_epochs` epochs ago, taking whatever it had on screen while
+/// pending with it in the same transaction. The content leaves every
+/// reader's view at once — on the graph nothing ever existed
+/// (substrate.md §6) — while the row itself remains until the reap: a
+/// device polling a lost handshake sees the terminal state rather than a
+/// vanished id, and the payload stays with it, invisible, so a record
+/// that lands late can still be promoted.
 pub async fn expire_due(
     pool: &PgPool,
     current_epoch: i64,
@@ -597,8 +599,7 @@ pub async fn expire_due(
     let expired = sqlx::query_as!(
         StagedRows,
         "UPDATE staged_writes
-         SET state = 'expired', payload = ''::bytea, expired_epoch = $1,
-             updated_at = NOW()
+         SET state = 'expired', expired_epoch = $1, updated_at = NOW()
          WHERE state NOT IN ('landed', 'expired')
            AND prepared_epoch + $2 <= $1
          RETURNING node_id, pre_signed_at",

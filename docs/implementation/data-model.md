@@ -208,9 +208,16 @@ nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration confirming
 flips their account to member — [auth.md](auth.md)). Staged state
 is L2-operational: it is exempt from append-only history and
-leaves no trace once collected — nothing existed on the graph.
-Expiry takes the write's pending display rows with it, in the same
-transaction, for the same reason.
+leaves no trace once reaped — nothing existed on the graph.
+
+Collection is two phases, and they cut different things. **Expiry**
+takes the write's pending display rows with it, in the same
+transaction: the content leaves every reader's view at once. The
+row and its payload stay, invisible, until the **reap** — so a
+record that lands between the two still promotes, rebuilding the
+display rows under its real landing order. A record landing after
+the reap has no staged row left to promote from; it stays in the
+mirror, unpromoted, and the failure is logged.
 
 ```sql
 CREATE TABLE staged_writes (
