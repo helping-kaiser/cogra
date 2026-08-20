@@ -141,7 +141,7 @@ class ComposePostViewModelTest {
         val vm = viewModel()
         vm.onTitleChange("A title")
         vm.onBodyChange("The body")
-        vm.onLicenseChange(LicenseChoice(attribution = 1.0, oversight = 0.5))
+        vm.onLicenseChange(LicenseChoice(attribution = 1.0, provenance = 0.5))
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -150,7 +150,7 @@ class ComposePostViewModelTest {
             "A title",
             null,
             "The body",
-            LicenseChoice(attribution = 1.0, oversight = 0.5),
+            LicenseChoice(attribution = 1.0, provenance = 0.5),
         ).inOrder()
     }
 

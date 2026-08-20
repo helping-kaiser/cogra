@@ -77,7 +77,7 @@ class ContentRepositoryTest {
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "landing":$landing,
          "moderationStatus":"NORMAL",
-         "license":{"__typename":"License","attribution":0.5,"oversight":1.0}}
+         "license":{"__typename":"License","attribution":0.5,"provenance":1.0}}
     """.trimIndent()
 
     @Test
@@ -93,7 +93,7 @@ class ContentRepositoryTest {
         assertThat(post.id).isEqualTo("p1")
         assertThat(post.title.value).isEqualTo("Hello")
         assertThat(post.author?.handle).isEqualTo("alice")
-        assertThat(post.license).isEqualTo(LicenseChoice(attribution = 0.5, oversight = 1.0))
+        assertThat(post.license).isEqualTo(LicenseChoice(attribution = 0.5, provenance = 1.0))
         assertThat(post.landing).isEqualTo(Landing.landed(7))
         assertThat(post.landing.isPending).isFalse()
         assertThat(page.hasNextPage).isTrue()
@@ -153,7 +153,7 @@ class ContentRepositoryTest {
                "updatedAt":"2026-08-12T10:00:00+00:00",
                "landing":${landingJson("LANDED", 3)},
                "moderationStatus":"NORMAL",
-               "license":{"__typename":"License","attribution":0.0,"oversight":0.0},
+               "license":{"__typename":"License","attribution":0.0,"provenance":0.0},
                "comments":{"__typename":"CommentConnection",
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
@@ -162,7 +162,7 @@ class ContentRepositoryTest {
                    "updatedAt":"2026-08-12T10:05:00+00:00",
                    "landing":${landingJson("PENDING", null)},
                    "moderationStatus":"NORMAL",
-                   "license":{"__typename":"License","attribution":1.0,"oversight":0.0},
+                   "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
                    "replies":{"__typename":"CommentConnection","edges":[],
                      "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",
@@ -174,7 +174,7 @@ class ContentRepositoryTest {
         assertThat(detail.comments.items.single().author?.handle).isEqualTo("bob")
         assertThat(detail.post.license).isEqualTo(LicenseChoice.PublicDomain)
         assertThat(detail.comments.items.single().license)
-            .isEqualTo(LicenseChoice(attribution = 1.0, oversight = 0.0))
+            .isEqualTo(LicenseChoice(attribution = 1.0, provenance = 0.0))
         // A landed post can carry a comment that has not landed yet.
         assertThat(detail.post.landing).isEqualTo(Landing.landed(3))
         assertThat(detail.comments.items.single().landing).isEqualTo(Landing.Pending)
@@ -192,7 +192,7 @@ class ContentRepositoryTest {
                           "canonicalProposal":"AAECAw==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        val license = LicenseChoice(attribution = 1.0, oversight = 0.0)
+        val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
         val prepared = (repo().preparePost("T", null, "B", license) as Outcome.Success).value
         assertThat(prepared.node).isEqualTo("node-1")
         assertThat(prepared.writes.single().id).isEqualTo("w1")

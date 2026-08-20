@@ -326,8 +326,8 @@ class ContentScreensTest {
         var license: LicenseChoice? = null
         renderComposer(ComposePostUiState(), onLicenseChange = { license = it })
         compose.onNodeWithTag("license_attribution_none").assertExists()
-        compose.onNodeWithTag("license_oversight_always").performScrollTo().performClick()
-        assertThat(license).isEqualTo(LicenseChoice(attribution = 0.0, oversight = 1.0))
+        compose.onNodeWithTag("license_provenance_always").performScrollTo().performClick()
+        assertThat(license).isEqualTo(LicenseChoice(attribution = 0.0, provenance = 1.0))
     }
 
     // The composer offers the published readings and nothing between
@@ -340,9 +340,9 @@ class ContentScreensTest {
             "license_attribution_none",
             "license_attribution_commercial",
             "license_attribution_always",
-            "license_oversight_none",
-            "license_oversight_commercial",
-            "license_oversight_always",
+            "license_provenance_none",
+            "license_provenance_commercial",
+            "license_provenance_always",
         ).forEach { compose.onNodeWithTag(it).assertExists() }
     }
 
@@ -467,7 +467,7 @@ class ContentScreensTest {
         renderDetail(
             PostDetailUiState(
                 loading = false,
-                post = testPost("p1", license = LicenseChoice(attribution = 1.0, oversight = 0.0)),
+                post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
                 comments = listOf(testComment("c1")),
             ),
         )
