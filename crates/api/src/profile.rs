@@ -133,6 +133,7 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             asserted_parents: vec![parent],
             deps: vec![],
             payload,
+            node: None,
         },
     )
     .await?;

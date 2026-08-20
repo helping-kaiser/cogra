@@ -791,6 +791,7 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
             }],
             deps: vec![],
             payload: vec![],
+            node: None,
         },
     )
     .await

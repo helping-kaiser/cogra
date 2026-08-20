@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM posts WHERE id = $1 AND landed_epoch IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c9c1d5049f68da45bfb63d2d53220b0eead1396f4927136975cc44c633351097"
+}

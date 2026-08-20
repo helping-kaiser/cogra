@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,\n                      p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.created_at AS \"version_created_at!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason, created_at\n                   FROM post_versions WHERE post_id = p.id\n                   ORDER BY created_at DESC LIMIT 1\n               ) v ON TRUE\n               WHERE ($1::bigint IS NULL\n                      OR ($4 AND (p.landed_epoch, p.act_time, p.position) > ($1, $2, $3))\n                      OR (NOT $4 AND (p.landed_epoch, p.act_time, p.position) < ($1, $2, $3)))\n               ORDER BY\n                   CASE WHEN $4 THEN p.landed_epoch END ASC,\n                   CASE WHEN $4 THEN p.act_time END ASC,\n                   CASE WHEN $4 THEN p.position END ASC,\n                   p.landed_epoch DESC, p.act_time DESC, p.position DESC\n               LIMIT $5\n           ) page\n           ORDER BY landed_epoch DESC, act_time DESC, position DESC",
+  "query": "SELECT * FROM (\n               SELECT p.id, p.author_id, p.l1_node_id, p.landed_epoch,\n                      p.act_time, p.position, p.created_at,\n                      v.title, v.description,\n                      v.content AS \"content!\", v.redaction_reason,\n                      v.pending AS \"version_pending!\",\n                      v.created_at AS \"version_created_at!\"\n               FROM posts p\n               JOIN LATERAL (\n                   SELECT title, description, content, redaction_reason,\n                          pending, created_at\n                   FROM post_versions WHERE post_id = p.id\n                   ORDER BY created_at DESC LIMIT 1\n               ) v ON TRUE\n               WHERE p.landed_epoch IS NULL\n                 AND ($1::timestamptz IS NULL\n                      OR ($2 AND p.created_at > $1)\n                      OR (NOT $2 AND p.created_at < $1))\n               ORDER BY\n                   CASE WHEN $2 THEN p.created_at END ASC,\n                   p.created_at DESC\n               LIMIT $3\n           ) page\n           ORDER BY created_at DESC",
   "describe": {
     "columns": [
       {
@@ -60,15 +60,18 @@
       },
       {
         "ordinal": 11,
+        "name": "version_pending!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
         "name": "version_created_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Int8",
-        "Int8",
+        "Timestamptz",
         "Bool",
         "Int8"
       ]
@@ -77,16 +80,17 @@
       false,
       false,
       false,
-      false,
-      false,
-      false,
-      false,
+      true,
       true,
       true,
       false,
       true,
+      true,
+      false,
+      true,
+      false,
       false
     ]
   },
-  "hash": "e7ae58da7871b60356f0668d2659b1dba98431d3e4380e64507a8a1ec31671fe"
+  "hash": "fa926ef01472e5f08cb5a02a66838d7f94d153d2be69c7cec2c4612effdccb3f"
 }
