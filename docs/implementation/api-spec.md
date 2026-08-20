@@ -2372,12 +2372,12 @@ input ReferenceInput {
 "The qualifiers a content node was minted with
  (layer1-interface.md §10 def:content:license-qualifiers): each a
  degree on [0, 1] — attribution `a`, how far a use must credit the
- maker; oversight `o`, how far a use must be tracked publicly and
+ maker; provenance `o`, how far a use must be tracked publicly and
  left open to audit. Requirements on downstream use, never a
  declaration of how the content was made."
 type License {
   attribution: Float!
-  oversight: Float!
+  provenance: Float!
 }
 
 "The mandatory authoring-time declaration (platform-guidelines.md):
@@ -2387,7 +2387,7 @@ type License {
  never carry a license."
 input LicenseInput {
   attribution: Float!
-  oversight: Float!
+  provenance: Float!
 }
 
 "Author a Post — stages the Publish plus the Tag and Reference
