@@ -293,14 +293,14 @@ data class PostDetail(
 
 /**
  * License qualifiers, declared at authoring and immutable
- * (platform-guidelines.md §5): attribution `a` and oversight `o`, each
+ * (platform-guidelines.md §5): attribution `a` and provenance `o`, each
  * a degree on [0, 1]. Both are terms over downstream use, never a
  * statement about how the content was made. The declaration is
  * mandatory at authoring time.
  */
 data class LicenseChoice(
     val attribution: Double,
-    val oversight: Double,
+    val provenance: Double,
 ) {
     companion object {
         /**
