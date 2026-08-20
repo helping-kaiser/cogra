@@ -140,11 +140,11 @@ mod license_tests {
     #[test]
     fn canonical_round_trips_across_the_whole_grid() {
         for steps in 0..=1000 {
-            let value = f64::from(steps) / AXIS_STEPS;
-            let license = License {
-                attribution: value,
-                oversight: 1.0 - value,
-            };
+            let license = License::checked(
+                f64::from(steps) / AXIS_STEPS,
+                f64::from(1000 - steps) / AXIS_STEPS,
+            )
+            .expect("every grid point is a license");
             assert_eq!(License::parse(&license.canonical()), Some(license));
         }
     }
