@@ -31,9 +31,10 @@ these — these are the rules most often violated:
 5. **Flag contradictions inline.** If a doc contradicts another or
    the user's framing, raise it in the same response. Don't paper
    over it.
-6. **One session per task.** After a PR is merged, suggest a fresh
-   session before starting the next task. Long sessions
-   accumulate context that doesn't help.
+6. **Sessions end at task boundaries.** When the task fabric ends —
+   not mechanically at every PR — suggest a fresh session. Long
+   sessions accumulate context that doesn't help; externalized
+   state is what makes the fresh start cheap.
 7. **Never deviate silently.** If you have reason to break a rule
    here, name the rule and the reason — let the human accept or
    reject. The rule is not "never deviate," it's "never deviate
@@ -257,13 +258,25 @@ subagent. It does the heavy reading inside its own context,
 returns a summary, and keeps the main thread lean — the cheapest
 way to investigate without bloating the session.
 
-### One session per task
+### Sessions end at task boundaries
 
-Each PR merge is a natural session boundary. After a task closes,
-**suggest a fresh session before starting the next task.** Long
-sessions accumulate context that doesn't help: redundant doc
-re-reads, resolved discussions, stale hypotheses. Fresh sessions
-reload this file and start lean.
+A session ends when the **task fabric** ends — when the threads in
+flight stop feeding each other — not mechanically at every PR
+merge. A day where environment work, a live demo, and the bug
+reports it produced genuinely interleave is one fabric: cutting it
+per-PR re-derives the shared context every hour for nothing. But
+once the fabric ends, **suggest a fresh session before the next
+task**: long sessions accumulate context that doesn't help
+(redundant doc re-reads, resolved discussions, stale hypotheses),
+and fresh sessions reload this file and start lean.
+
+What makes fresh sessions cheap is externalization, and that duty
+is the rule's real content: every decision, ruling, and piece of
+working state lands in a durable artifact (docs, open-questions,
+the backlog, PR bodies, tmp_dev notes) **as it happens**, never
+only in conversation. Context compaction is a seatbelt, not a
+plan — a compacted session cannot audit what its own summary
+dropped, so never rely on it to carry state a file should hold.
 
 ### One Edit per response during active design iteration
 
