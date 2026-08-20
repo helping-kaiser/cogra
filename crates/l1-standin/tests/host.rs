@@ -434,9 +434,9 @@ async fn bid_is_fresh_mint_only_while_ordinary_send_stays_legal(pool: PgPool) {
     let own_offer = NodeId::Mint(ActId::new(&actor.address(), 1, Family::Bid).expect("ok"));
     submit(&host, &actor, hyper(1, Family::Bid, &item, &own_offer)).await;
 
-    // An ordinary-role Send toward an existing Message stays legal — the
-    // Edition-5 permission set keeps it, and CoGra's transcript fold, not
-    // formation, is what ignores it.
+    // An ordinary-role Send toward an existing Message stays legal — L1's
+    // permission set keeps it, and CoGra's transcript fold, not formation,
+    // is what ignores it.
     let chat = NodeId::Mint(ActId::new("founder", 0, Family::Participant).expect("ok"));
     let foreign_message = NodeId::Mint(ActId::new("other", 2, Family::Send).expect("ok"));
     submit(
