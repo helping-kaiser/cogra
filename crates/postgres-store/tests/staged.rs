@@ -307,11 +307,13 @@ async fn gc_expires_then_reaps_and_spares_landed_writes(pool: PgPool) {
 
     // Epoch 7, bound 8: nothing due yet (0 + 8 > 7).
     assert_eq!(staged::expire_due(&pool, 7, 8).await.expect("gc"), 0);
-    // Epoch 8: the stale write expires — payload dropped, landed spared.
+    // Epoch 8: the stale write expires, landed spared. The payload rides
+    // the row until the reap, so a record landing in that window can
+    // still be promoted (data-model.md "Staged writes").
     assert_eq!(staged::expire_due(&pool, 8, 8).await.expect("gc"), 1);
     let w = staged::load(&pool, stale).await.expect("loads");
     assert_eq!(w.state, StagedState::Expired);
-    assert!(w.proposal.payload.is_empty());
+    assert!(!w.proposal.payload.is_empty());
     assert_eq!(
         staged::load(&pool, fresh).await.expect("loads").state,
         StagedState::AwaitingPreSign
@@ -353,12 +355,23 @@ async fn expire_one_is_targeted_and_terminal(pool: PgPool) {
 }
 
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_record_landing_after_collection_still_promotes(pool: PgPool) {
-    // The mirror governs: late landing wins over expiry, though the staged
-    // payload is already gone (data-model.md "Staged writes").
+async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
+    // The mirror governs: late landing wins over expiry, and the payload
+    // the promotion needs is still on the expired row — expiry stops
+    // serving the content, the reap destroys it (data-model.md "Staged
+    // writes").
     let actor_id = actor(&pool, "alice", "alice").await;
     let id = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
     staged::expire_one(&pool, id, 0).await.expect("expires");
+    assert!(
+        !staged::load(&pool, id)
+            .await
+            .expect("loads")
+            .proposal
+            .payload
+            .is_empty(),
+        "the payload outlives expiry, so a late landing has something to promote"
+    );
 
     mirror::ingest_epoch(
         &pool,

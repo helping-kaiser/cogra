@@ -40,12 +40,17 @@ async fn actor(pool: &PgPool, handle: &str) -> Uuid {
     id
 }
 
+/// A stand-in mint identifier. Only its uniqueness matters here, and
+/// the row's own id supplies that.
+fn node_of(id: Uuid, family: &str) -> String {
+    format!("mint:act:{id}:0:{family}")
+}
+
 /// A post entity row plus its first version, pending unless `order` is
 /// given.
 async fn post(
     pool: &PgPool,
     author: Uuid,
-    node: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
     body: &str,
@@ -56,7 +61,7 @@ async fn post(
         &mut tx,
         id,
         author,
-        node,
+        &node_of(id, "publish"),
         order,
         created_at,
         Some("title"),
@@ -70,17 +75,20 @@ async fn post(
 }
 
 /// A comment entity row plus its first version, pending unless `order`
-/// is given.
+/// is given. The parent's kind is read from the store rather than
+/// passed, so a test names only what it is arranging.
 async fn comment(
     pool: &PgPool,
     author: Uuid,
     target: Uuid,
-    target_type: &str,
-    node: &str,
     order: Option<LandingOrder>,
     created_at: Timestamp,
     body: &str,
 ) -> Uuid {
+    let target_type = content::content_kind(pool, target)
+        .await
+        .expect("kind")
+        .expect("the parent is content");
     let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
     content::insert_comment(
@@ -89,7 +97,7 @@ async fn comment(
         target,
         target_type,
         author,
-        node,
+        &node_of(id, "review"),
         order,
         created_at,
         body,
@@ -100,18 +108,18 @@ async fn comment(
     id
 }
 
+/// Every version row of a post, oldest first, with its pending mark.
+/// The runtime query API, not the checked macro: integration tests are
+/// not covered by the committed offline metadata.
 async fn pending_versions(pool: &PgPool, post_id: Uuid) -> Vec<(Timestamp, bool)> {
-    sqlx::query!(
+    sqlx::query_as::<_, (Timestamp, bool)>(
         "SELECT created_at, pending FROM post_versions
          WHERE post_id = $1 ORDER BY created_at",
-        post_id,
     )
+    .bind(post_id)
     .fetch_all(pool)
     .await
     .expect("versions")
-    .into_iter()
-    .map(|r| (r.created_at, r.pending))
-    .collect()
 }
 
 /// The cursor a resolver would hand back for a listing entry: its sort
@@ -135,24 +143,8 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     // Two pre-commitment signatures in the same microsecond: nothing
     // serializes two authors' signing apart, so the authoring instant
     // alone cannot key the walk.
-    let one = post(
-        &pool,
-        author,
-        "mint:act:author:1:publish",
-        None,
-        at(0),
-        "one",
-    )
-    .await;
-    let two = post(
-        &pool,
-        author,
-        "mint:act:author:2:publish",
-        None,
-        at(0),
-        "two",
-    )
-    .await;
+    let one = post(&pool, author, None, at(0), "one").await;
+    let two = post(&pool, author, None, at(0), "two").await;
 
     let all = page(&pool, None, 10).await;
     assert_eq!(all.len(), 2, "both pending entries are listed");
@@ -181,42 +173,10 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let old = post(
-        &pool,
-        author,
-        "mint:act:author:1:publish",
-        Some(order(1, 0)),
-        at(0),
-        "landed-old",
-    )
-    .await;
-    let new = post(
-        &pool,
-        author,
-        "mint:act:author:2:publish",
-        Some(order(1, 1)),
-        at(10),
-        "landed-new",
-    )
-    .await;
-    let pending_first = post(
-        &pool,
-        author,
-        "mint:act:author:3:publish",
-        None,
-        at(20),
-        "p1",
-    )
-    .await;
-    let pending_second = post(
-        &pool,
-        author,
-        "mint:act:author:4:publish",
-        None,
-        at(30),
-        "p2",
-    )
-    .await;
+    let old = post(&pool, author, Some(order(1, 0)), at(0), "landed-old").await;
+    let new = post(&pool, author, Some(order(1, 1)), at(10), "landed-new").await;
+    let pending_first = post(&pool, author, None, at(20), "p1").await;
+    let pending_second = post(&pool, author, None, at(30), "p2").await;
 
     // Page one ends inside the pending set.
     let page1 = page(&pool, None, 2).await;
@@ -251,15 +211,7 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(
-        &pool,
-        author,
-        "mint:act:author:1:publish",
-        Some(order(1, 0)),
-        at(0),
-        "genesis",
-    )
-    .await;
+    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
 
     // Two unlanded edits sit on the node, each staged by its own write
     // and dated from its own pre-commitment.
@@ -299,15 +251,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    let id = post(
-        &pool,
-        author,
-        "mint:act:author:1:publish",
-        Some(order(1, 0)),
-        at(0),
-        "genesis",
-    )
-    .await;
+    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(&mut tx, id, Some("title"), None, "doomed", true, at(10))
         .await
@@ -337,32 +281,12 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
 
     // A pending post, a pending comment on it, and a pending reply to
     // that comment: one thread, three staged writes, none landed.
-    let host = post(
-        &pool,
-        author,
-        "mint:act:author:1:publish",
-        None,
-        at(0),
-        "host",
-    )
-    .await;
-    let reply = comment(
-        &pool,
-        commenter,
-        host,
-        "post",
-        "mint:act:commenter:1:review",
-        None,
-        at(10),
-        "on a pending post",
-    )
-    .await;
+    let host = post(&pool, author, None, at(0), "host").await;
+    let reply = comment(&pool, commenter, host, None, at(10), "on a pending post").await;
     let nested = comment(
         &pool,
         commenter,
         reply,
-        "comment",
-        "mint:act:commenter:2:review",
         None,
         at(20),
         "on a pending comment",
@@ -375,8 +299,6 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
         &pool,
         commenter,
         host,
-        "post",
-        "mint:act:commenter:3:review",
         Some(order(2, 0)),
         at(30),
         "already ordered",
