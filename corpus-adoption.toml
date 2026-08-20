@@ -1,0 +1,850 @@
+####################################################################
+# cogra corpus linter — ADOPTION DATA (first draft, for review)
+#
+# This file instantiates, for THIS repository, the seven data the
+# label calculus is parametric in, plus this corpus's own additions,
+# exactly as ARCH sig:linter:adoption-data specifies:
+#
+#   Sigma  the prefix Signature ............... [signature]
+#   Omega  the owner partition ................ [partition]
+#   Pi     the profile signature .............. [profiles]
+#   K      the reserved kinds ................. [reserved-kinds]
+#          designated typed-data classes ...... [typed-data]
+#          citation-index designations ........ [citation-indexes]
+#          scanned-region recognition ......... [scanned-regions]
+#   plus   banned-token sets .................. [banned-tokens]
+#          the carrier's exclusions ........... [carrier]
+#
+# Conventions in this file:
+#   * References to discipline labels are written PLAIN (no backticks,
+#     no acutes, no parentheses) so that this file can never be read
+#     as carrying label occurrences, whatever frontend later sees it.
+#     Read "LBL sig:labels:owners" as "the Signature environment of
+#     the label calculus".
+#   * Path prefixes are LITERAL, never patterns — ARCH
+#     sig:linter:adoption-data, honoring ARCH dec:linter:no-regex
+#     even in configuration. A prefix ending in "/" matches a tree;
+#     a prefix naming a file matches that file.
+#   * Every "QUESTION n" marker refers to the numbered question in
+#     crates/cogra-linter/docs/adoption-notes.md. Nothing marked QUESTION has been
+#     decided; the value present is a DRAFT PROPOSAL only.
+####################################################################
+
+[meta]
+draft            = "lane D, first draft"
+drafted          = "2026-08-20"
+status           = "for review — no value here is a recorded decision yet"
+corpus_root      = "."          # repository root
+discipline_docs  = [
+  "crates/cogra-linter/docs/label-calculus.md",
+  "crates/cogra-linter/docs/environment-kinds.md",
+  "crates/cogra-linter/docs/identity-adjudication.md",
+  "crates/cogra-linter/docs/interchange-conventions.md",
+]
+
+
+####################################################################
+# [carrier] — what the corpus IS
+#
+# Not one of the seven parameters by name, but LBL judg:labels:minting
+# fixes the carrier ("every authored prose and code source of the
+# corpus, excluding version-control internals, build and dependency
+# directories, archived and vendored trees, and generated artifacts")
+# and Omega must be TOTAL on it. A partition cannot be checked total
+# against an unstated domain, so the exclusions are stated here.
+# DEVIATION: this section is beyond the brief's list of sections;
+# it is named rather than smuggled. See QUESTION 1.
+####################################################################
+
+[carrier]
+
+# Version-control internals, build outputs, dependency trees.
+exclude_trees = [
+  ".git/",
+  "target/",                    # cargo, workspace-level
+  "android/build/",
+  "android/app/build/",
+  "android/.gradle/",
+  "android/gradle/wrapper/",    # vendored wrapper jar + properties
+  "web/node_modules/",
+  "web/.next/",
+  "web/out/",
+]
+
+# Generated artifacts: they stay in the tree, and the linter may check
+# their bytes (ARCH rule:linter:register-freshness), but they mint and
+# cite nothing — LBL judg:labels:minting, "a generated region within a
+# carrier source ... remains in the carrier as bytes, checked for
+# exactness, while participating in nothing".
+nonparticipating_files = [
+  "schema.graphql",             # exported, CI-diffed (CLAUDE.md)
+  "Cargo.lock",
+  "web/package-lock.json",
+  "design-tokens.json",
+  "client-crypto-vectors.json",
+  "android/gradle/libs.versions.toml",
+]
+
+# Vendored trees: third-party sources kept in-repo. Empty today; the
+# first-party Kotlin grammar of ARCH dec:linter:kotlin-tree-sitter
+# ships a GENERATED parser, which lands here when it exists.
+vendored_trees = [
+  # "crates/cogra-linter/vendor/tree-sitter-kotlin-generated/",
+]
+
+# QUESTION 2 — docs/primitive/layer1-interface.md is a DERIVED
+# extraction of a third-party specification (its own provenance note),
+# under a separate licence (LICENSE-DOCS, CC-BY-4.0), whose ~364 label
+# names are contractually frozen upstream. Whether that makes it a
+# "vendored tree" for carrier purposes is the single largest open
+# question in this draft. This draft does NOT exclude it; see
+# [partition] rule 14 and the notes.
+
+
+####################################################################
+# [signature] — Sigma: registered prefixes -> owners
+#
+# LBL sig:labels:owners. Sigma is a partial map from registered
+# prefixes to owners; each registered prefix names exactly one owner
+# in Omega's range. Sigma is closed under its registered FAMILIES;
+# a prefix outside every family enters only by recorded decision.
+#
+# Two sources of prefixes here:
+#   (a) hand-registered prefixes for document owners and doc-tree
+#       owners — the SPEC/GUIDE/NOTES pattern of the illustration;
+#   (b) one registered FAMILY for code packages, with the derivation
+#       rule stated below.
+####################################################################
+
+[signature]
+
+# --- Family: code packages -------------------------------------
+# LBL sig:labels:owners: "each code package | one prefix per package,
+# derived from the package name". Derivation rule R-PKG, stated so the
+# family is closed: take the package's directory basename relative to
+# the corpus root, uppercase it, and delete every hyphen. Hyphens must
+# go: PREFIX ::= [A-Z][A-Z0-9]* admits no punctuation.
+# Uniqueness is inherited from directory uniqueness. A NEW package
+# therefore needs no decision — it joins the family by R-PKG.
+# QUESTION 3 — R-PKG yields long prefixes (COGRAINTERCHANGE, 16 chars).
+# Alternative R-PKG': same, but delete a leading "COGRA" when what
+# remains is nonempty and unique -> LINTER, INTERCHANGE.
+
+[signature.families.package]
+rule        = "uppercase(basename(package_dir)) with hyphens deleted"
+rule_id     = "R-PKG"
+applies_to  = "every unit the build system names as a package: a Cargo package, the Gradle build, the npm package"
+
+# --- Hand-registered prefixes ----------------------------------
+# owner  = stable owner id used everywhere else in this file
+# prefix = the registered PREFIX for imported citations
+# note   = provenance of the registration
+
+[[signature.prefix]]
+prefix = "LBL"
+owner  = "doc.label-calculus"
+note   = "provisional in ARCH preamble; kept verbatim"
+
+[[signature.prefix]]
+prefix = "KND"
+owner  = "doc.kind-registry"
+note   = "provisional in ARCH preamble; kept verbatim"
+
+[[signature.prefix]]
+prefix = "IDN"
+owner  = "doc.identity-adjudication"
+note   = "provisional in ARCH preamble; kept verbatim"
+
+[[signature.prefix]]
+prefix = "ICX"
+owner  = "doc.interchange-conventions"
+note   = "provisional in ARCH preamble; kept verbatim; already in live use — 65 imported citations from the interchange crate's docs and 4 from ARCH itself"
+
+[[signature.prefix]]
+prefix = "ARCH"
+owner  = "doc.linter-architecture"
+note   = "ARCH's own proposed prefix; already in live use — 16 imported citations from the interchange crate's docs"
+
+[[signature.prefix]]
+prefix = "L1IF"
+owner  = "doc.layer1-interface"
+note   = "the Layer 1 interface document, named as a major document by ARCH conv:linter:owner-partition. QUESTION 2, QUESTION 4"
+
+# Doc-tree owners. These are NOT major documents; they are the
+# residual groups that make Omega total over docs/ without inventing
+# eight document owners for documents that carry no labels today.
+# ARCH conv:linter:owner-partition explicitly leaves "how the docs
+# trees group beneath major documents" to this draft. QUESTION 5.
+
+[[signature.prefix]]
+prefix = "PRIM"
+owner  = "tree.docs-primitive"
+note   = "docs/primitive/ minus layer1-interface.md — 17 files, 0 label occurrences today"
+
+[[signature.prefix]]
+prefix = "INST"
+owner  = "tree.docs-instances"
+note   = "docs/instances/ — 10 files, 0 label occurrences today"
+
+[[signature.prefix]]
+prefix = "IMPL"
+owner  = "tree.docs-implementation"
+note   = "docs/implementation/ — 12 files, 0 label occurrences today. QUESTION 5 asks whether api-spec.md (3479 lines) and data-model.md (1417 lines) should be promoted to major documents now"
+
+[[signature.prefix]]
+prefix = "DOCS"
+owner  = "tree.docs-root"
+note   = "docs/README.md and docs/open-questions.md"
+
+[[signature.prefix]]
+prefix = "NOTES"
+owner  = "tree.working-notes"
+note   = "ARCH conv:linter:owner-partition: working notes are their own owner. One owner, two roots (tmp_dev/, tmp_research_files/). Both are gitignored junctions — QUESTION 6"
+
+[[signature.prefix]]
+prefix = "REPO"
+owner  = "tree.repo-root"
+note   = "the residual owner: root prose (README, CONTRIBUTING, CLAUDE.md), Makefile, scripts/, migrations/, docker/. Last rule of the partition; this is what makes Omega total"
+
+# --- Prefixes derived by R-PKG (listed for legibility only) ------
+# They are members of the family, not separate registrations.
+#   crates/api             -> API
+#   crates/common          -> COMMON
+#   crates/l1-standin      -> L1STANDIN
+#   crates/postgres-store  -> POSTGRESSTORE
+#   crates/cogra-linter    -> COGRALINTER
+#   crates/cogra-interchange -> COGRAINTERCHANGE
+#   android                -> ANDROID
+#   web                    -> WEB
+
+# --- Numbered-record family: NOT registered in v1 ---------------
+# LBL sig:labels:owners admits a family of numbered records
+# (records/NNN-*.md, one owner per record, prefix from the filename).
+# This corpus has no such tree. Registering one is a later decision.
+
+[signature.families.numbered_records]
+registered = false
+reason     = "no records/NNN-*.md tree exists in this corpus"
+
+
+####################################################################
+# [partition] — Omega: ordered path-prefix rules -> owners
+#
+# LBL sig:labels:owners: Omega is total on the carrier. ARCH
+# sig:linter:adoption-data: explicit path-prefix rules, literal
+# prefixes, no patterns. FIRST MATCH WINS, so the order below is
+# load-bearing: the five document owners must precede the package
+# rule for crates/cogra-linter/, and layer1-interface.md must precede
+# docs/primitive/.
+#
+# LBL inf:labels:derivation-warrant: "The owner is the asset's
+# package, never the module" — so a package's whole tree is one owner
+# and refactoring inside it changes nothing.
+####################################################################
+
+[partition]
+match = "first-match-wins, in the order listed"
+
+# --- 1..5: the discipline documents and the linter architecture ---
+# Each is its own owner though all five sit inside the cogra-linter
+# package tree. They are corpus-generic disciplines that happen to be
+# kept there; ARCH conv:linter:owner-partition names the four
+# disciplines as major documents, and ARCH registers its own prefix.
+
+[[partition.rule]]
+order = 1
+path  = "crates/cogra-linter/docs/label-calculus.md"
+owner = "doc.label-calculus"
+
+[[partition.rule]]
+order = 2
+path  = "crates/cogra-linter/docs/environment-kinds.md"
+owner = "doc.kind-registry"
+
+[[partition.rule]]
+order = 3
+path  = "crates/cogra-linter/docs/identity-adjudication.md"
+owner = "doc.identity-adjudication"
+
+[[partition.rule]]
+order = 4
+path  = "crates/cogra-linter/docs/interchange-conventions.md"
+owner = "doc.interchange-conventions"
+
+[[partition.rule]]
+order = 5
+path  = "crates/cogra-linter/docs/architecture.md"
+owner = "doc.linter-architecture"
+note  = "QUESTION 7 — should the linter package's design doc be its own owner (ARCH, as drafted) or simply part of pkg.cogra-linter?"
+
+# --- 6..13: package owners (prefixes by R-PKG) -------------------
+
+[[partition.rule]]
+order = 6
+path  = "crates/cogra-linter/"
+owner = "pkg.cogra-linter"
+note  = "docs-only today; src/ lands with the first slice"
+
+[[partition.rule]]
+order = 7
+path  = "crates/cogra-interchange/"
+owner = "pkg.cogra-interchange"
+note  = "COVERS ITS docs/ DELIBERATELY. Evidence: concept.md and design.md mint 16 + 76 labels with ZERO collisions, share the area 'icx', and design.md cites concept.md's mints UNPREFIXED (e.g. req:icx:determinism) — which resolves only if the two files are one owner (LBL inf:labels:same-owner-citation). They import ARCH and ICX with brackets, confirming those are other owners"
+
+[[partition.rule]]
+order = 8
+path  = "crates/api/"
+owner = "pkg.api"
+
+[[partition.rule]]
+order = 9
+path  = "crates/common/"
+owner = "pkg.common"
+
+[[partition.rule]]
+order = 10
+path  = "crates/l1-standin/"
+owner = "pkg.l1-standin"
+
+[[partition.rule]]
+order = 11
+path  = "crates/postgres-store/"
+owner = "pkg.postgres-store"
+
+[[partition.rule]]
+order = 12
+path  = "android/"
+owner = "pkg.android"
+note  = "one owner for the whole Gradle build. QUESTION 8 — android/ has 12 Gradle modules (:app, :core:crypto|designsystem|domain|network, :feature:auth|content|home|invites|onboarding|profile|settings). ARCH conv:linter:owner-partition explicitly parks 'whether Android modules split' for this draft. Drafted as ONE owner; splitting is 12 more rules and 12 more prefixes"
+
+[[partition.rule]]
+order = 13
+path  = "web/"
+owner = "pkg.web"
+
+# --- 14: the Layer 1 interface document -------------------------
+
+[[partition.rule]]
+order = 14
+path  = "docs/primitive/layer1-interface.md"
+owner = "doc.layer1-interface"
+note  = """
+BLOCKER, NOT A SETTLED RULE — see QUESTION 2 and QUESTION 4.
+
+Measured facts about this file as it stands today:
+  * it carries ~364 label-shaped backtick spans, areas graph, epoch,
+    nodes, dynamics, comparator, transport, network, deployment,
+    introduction, sorting, necessity, content, symbols, verification,
+    gates;
+  * essentially every one occurs in PARENTHESIZED form — which LBL
+    lang:labels:label-language reads as a SAME-OWNER CITATION — while
+    almost none occurs bare. Under the calculus that is ~360 citations
+    with no mint anywhere in the owner: total-resolution failures, not
+    mints (LBL inv:labels:total-resolution);
+  * the few bare spans (e.g. tbl:symbols:boundary in a table cell)
+    would be read as accidental MINTS;
+  * its kind tokens include post, subsec, tbl, edge, node, none of
+    which the kind registry catalogues (Table is tab; sub- prefixes
+    are presentation, so subsec reduces to sec);
+  * the names are pinned upstream: the file records an anchor-set hash
+    and states that renaming any pinned label is a breaking change on
+    the Peer Team's side. They cannot be migrated by this corpus.
+Three ways out are laid out in the notes; none is chosen here.
+"""
+
+# --- 15..18: doc-tree residual owners ---------------------------
+
+[[partition.rule]]
+order = 15
+path  = "docs/primitive/"
+owner = "tree.docs-primitive"
+
+[[partition.rule]]
+order = 16
+path  = "docs/instances/"
+owner = "tree.docs-instances"
+
+[[partition.rule]]
+order = 17
+path  = "docs/implementation/"
+owner = "tree.docs-implementation"
+
+[[partition.rule]]
+order = 18
+path  = "docs/"
+owner = "tree.docs-root"
+
+# --- 19..20: working notes (one owner, two roots) ---------------
+
+[[partition.rule]]
+order = 19
+path  = "tmp_dev/"
+owner = "tree.working-notes"
+
+[[partition.rule]]
+order = 20
+path  = "tmp_research_files/"
+owner = "tree.working-notes"
+note  = "LBL ansatz:labels:unchecked-locals expressly REJECTS exempting the working notes from resolution, so these trees are in the carrier and fully checked"
+
+# --- 21: the residual rule that makes Omega total ---------------
+
+[[partition.rule]]
+order = 21
+path  = ""
+owner = "tree.repo-root"
+note  = "empty prefix matches everything not matched above: README.md, CONTRIBUTING.md, CLAUDE.md, Makefile, Cargo.toml, rust-toolchain.toml, scripts/, migrations/, docker/, and anything new. Totality is structural, not a check that can fail"
+
+
+####################################################################
+# [profiles] — Pi: the registered family of inventory profiles
+#
+# LBL sig:labels:profiles requires FIVE data per profile:
+#   kind token, census, classification rule (the area derives from
+#   it), name transformation, standard place.
+# LBL inv:labels:inventory then binds: within each owner, EVERY asset
+# of the census carries EXACTLY ONE label of the kind at the standard
+# place; the derivation is INJECTIVE; and no label of the kind occurs
+# without a covered asset.
+#
+# Two profiles in v1, both Rust, both named by ARCH
+# conv:linter:rust-frontend ("a test profile recognizing
+# test-attributed functions, a module profile recognizing mod items").
+# No web, Kotlin, or Markdown profile in v1: their frontends are later
+# slices (ARCH gate:linter:architecture-review, sequencing clause),
+# and a profile whose frontend does not exist cannot compute a census.
+####################################################################
+
+[profiles]
+count = 2
+
+# ---------------------------------------------------------------
+# Profile 1: Rust tests
+# ---------------------------------------------------------------
+[[profiles.profile]]
+id   = "rust-test"
+kind = "test"
+# 'test' is the Assets-family row of KND conv:kinds:assets (Test ->
+# test). Note the homonym: KND conv:kinds:examples also rows Test, as
+# quiz. The kind token at the label is the disambiguation (KND
+# cav:kinds:homonymy), and inventory kinds only ever derive.
+
+  [profiles.profile.census]
+  language    = "rust"
+  recognizer  = "syn item tree: a fn item carrying a test attribute"
+  attributes  = ["test", "tokio::test", "sqlx::test"]
+  attribute_rule = "any attribute path whose final segment is 'test'"
+  note = """
+LBL cav:labels:assets: "A test is what the harness recognizes." The
+three attributes above are what this corpus's harnesses recognize;
+the open rule keeps a fourth harness from needing a code change.
+MEASURED 2026-08-20: 284 test-attributed functions across the four
+Cargo packages (98 #[test], 171 #[sqlx::test], 15 #[tokio::test]).
+"""
+
+  [profiles.profile.classification]
+  # The AREA derives from this rule.
+  rule  = "the Cargo TARGET containing the function"
+  areas = { lib_or_bin_target = "unit", integration_test_target = "integration" }
+  registered_unused = ["interunit"]
+  note = """
+The illustration in LBL sig:labels:profiles uses areas unit,
+interunit, integration. Cargo recognizes two test target kinds, not
+three, so 'interunit' is registered and unpopulated. QUESTION 9.
+INTERPRETATION FLAGGED: LBL judg:labels:derivation forbids file,
+module, path and position from entering a derivation, and
+LBL ansatz:labels:path-derivation rejects path-derived NAMES. This
+draft reads "which Cargo target contains it" as a BUILD-SYSTEM fact
+about the asset's class — the same species of fact as "the harness
+recognizes it as a test" — and not as a path fact, even though the
+build system happens to locate integration targets by directory.
+If review rejects that reading, the fallback is a single constant
+area for the profile. QUESTION 10.
+"""
+
+  [profiles.profile.name_transformation]
+  rule = "the function's bare identifier, lowercased, underscores replaced by hyphens"
+  example = "decode_roundtrip -> decode-roundtrip"
+  note = """
+Exactly the illustration's transformation, which produces
+test:integration:decode-roundtrip. Output must match
+name ::= word ("-" word)*, word ::= [a-z0-9]+ — Rust's snake_case
+identifiers do, after the substitution.
+MEASURED: injectivity holds TODAY. Per-owner distinct test-function
+names: api 160/160, common 81/81, l1-standin 15/15,
+postgres-store 26/26. Zero collisions; the profile is adoptable
+without renaming a single test.
+"""
+
+  [profiles.profile.standard_place]
+  place = "the function's own documentation comment"
+  form  = "a line carrying the label alone, in the code (acute) syntax"
+  note = """
+LBL sig:labels:profiles allows the header, the documentation comment,
+or the owner's prose — ONE choice per profile. The documentation
+comment is the only Rust option that survives ARCH
+dec:linter:rust-comment-ban, and it is what ARCH
+conv:linter:rust-frontend declares Rust's scanned region.
+COST, NAMED: LBL inv:labels:inventory demands the label on EVERY
+covered asset, so adoption is a 284-function migration. Nothing
+partial is available: an uncovered asset is a hard failure, not a
+warning. QUESTION 11.
+"""
+
+# ---------------------------------------------------------------
+# Profile 2: Rust modules
+# ---------------------------------------------------------------
+[[profiles.profile]]
+id   = "rust-module"
+kind = "mod"
+# KND conv:kinds:assets: Module -> mod.
+
+  [profiles.profile.census]
+  language   = "rust"
+  recognizer = "syn item tree: module DEFINITIONS"
+  definition_rule = "an inline `mod name { ... }` item, or the file (or dir/mod.rs) that backs a `mod name;` declaration — counted ONCE per definition, never per declaration"
+  exclude    = ["modules attributed #[cfg(test)]"]
+  note = """
+LBL sig:labels:profiles admits "a container such as a module or
+namespace DEFINITION" — the word decides the census, and measurement
+confirms it must: `mod rig;` is declared NINE times in
+crates/api/tests/*.rs, all naming the ONE definition at
+crates/api/tests/rig/. Under a declaration-census that is a 9-way
+injectivity violation of LBL inv:labels:inventory; under a
+definition-census it is one asset.
+The #[cfg(test)] exclusion is a PROPOSAL, not a discipline
+consequence: 13 files declare `mod tests`, so without the exclusion
+the profile derives mod:*:tests thirteen times and fails injectivity
+in two owners on day one. Excluding them is defensible — they are
+test scaffolding, and their contents are the test profile's business
+— but it is a choice. QUESTION 12.
+MEASURED after the exclusion: no duplicate module name remains in any
+owner (api, common, l1-standin, postgres-store all clean).
+"""
+
+  [profiles.profile.classification]
+  rule  = "the module's declared visibility"
+  areas = { pub = "public", other = "internal" }
+  note = """
+The area must derive from a fact the asset itself exposes, never from
+where it sits (LBL judg:labels:derivation; LBL
+ansatz:labels:path-derivation). Visibility is such a fact; the parent
+module path is not. Two areas keep it binary — pub(crate), pub(super)
+and private all classify 'internal'.
+WEAKEST PART OF THIS DRAFT. Alternatives: (a) a single constant area,
+e.g. mod:module:<name>, which carries no information but cannot be
+wrong; (b) three areas splitting pub / pub(crate) / private.
+Note the consequence either way: changing a module from private to
+pub CHANGES ITS LABEL and dangles its citations (LBL
+metathm:labels:warrant-lapse) — visibility becomes a citation-visible
+facet. QUESTION 13.
+"""
+
+  [profiles.profile.name_transformation]
+  rule = "the module's bare identifier, lowercased, underscores replaced by hyphens"
+  example = "record_mirror -> record-mirror"
+
+  [profiles.profile.standard_place]
+  place = "the module's INNER documentation comment"
+  form  = "a //! line carrying the label alone, in the code (acute) syntax, at the top of the module body"
+  note = """
+One place per profile is required, and file-backed and inline modules
+must share it. The inner doc comment is the only form both can carry:
+//! at the top of the backing file, and //! at the top of an inline
+`mod foo { ... }` body. An outer /// would work for inline items only.
+COST, NAMED: ~42 module definitions (63 `mod` declarations, minus 13
+`mod tests`, minus the 8 surplus `mod rig;` declarations) would each
+need an inner doc comment. QUESTION 11.
+"""
+
+# --- Profiles deliberately NOT in v1 ----------------------------
+# Naming them keeps K's reservations legible (see [reserved-kinds]).
+#   func      Rust/Kotlin/TS functions  — census is large; no ruling
+#   type      Rust type items           — no ruling
+#   class     Kotlin classes            — needs the Kotlin frontend
+#   migr      migrations/*.sql          — no SQL frontend
+#   endpoint  GraphQL operations        — no GraphQL frontend
+#   suite     test suites               — no harness notion of a suite
+# LBL sig:labels:profiles: extending Pi is a RECORDED DECISION, and
+# the deciding commit must, in the same commit, retire or rename every
+# authored mint of the claimed kind. K below keeps that cost at zero
+# by forbidding those kinds to authors from the start.
+
+
+####################################################################
+# [reserved-kinds] — K
+#
+# LBL sig:labels:reserved-kinds: K is the set of kinds intended for
+# DERIVATION ONLY. Every kind governed by Pi lies in K. A kind in K
+# that no profile governs admits NEITHER warrant rule: its bare
+# occurrence is a hard failure awaiting its derivation, never an
+# authored mint (LBL inv:labels:warrant-totality).
+#
+# WHAT BELONGS IN K, AND WHY:
+# The calculus says a corpus adopting a kind registry "populates K
+# from it by its own recorded decision" but does not say WHICH kinds.
+# The registry answers it: KND conv:kinds:assets is defined by exactly
+# the property that makes a kind derivable — "The family's mark is
+# that the name is the code's own: an asset is headed by the
+# identifier it already bears, where every other family's head is a
+# heading an author composes." A kind whose name is the code's own is
+# a kind no author should be minting by hand. So:
+#
+#   K := the distinct kind tokens of KND conv:kinds:assets.
+#
+# COST TODAY: ZERO. Not one live mint in the corpus uses an
+# Assets-family kind (checked across all 7 label-carrying files:
+# areas labels, kinds, identity, interchange, linter, icx, and the
+# layer1-interface areas). Reserving now costs nothing and prevents
+# the painful case LBL sig:labels:profiles describes — a later profile
+# CLAIMING a kind and having to retire every authored mint of it in
+# the same commit.
+# QUESTION 14 offers the narrow alternative K = {test, mod}.
+####################################################################
+
+[reserved-kinds]
+source = "KND conv:kinds:assets — distinct kind tokens of that table"
+count  = 36
+
+governed = [
+  "test",   # profile rust-test
+  "mod",    # profile rust-module
+]
+
+reserved_ungoverned = [
+  "api",         # API item
+  "alert",       # Alert
+  "bench",       # Benchmark
+  "cli",         # CLI command
+  "class",       # Class; also Struct, Structure (KND inv:kinds:one-kind)
+  "dataset",     # Dataset
+  "endpoint",    # Endpoint; also Route
+  "envvar",      # Environment variable
+  "errcode",     # Error code
+  "event",       # Event
+  "flag",        # Feature flag
+  "fixture",     # Fixture
+  "func",        # Function
+  "fuzz",        # Fuzz target
+  "iface",       # Interface
+  "job",         # Job; also Task
+  "lib",         # Library
+  "lint",        # Lint rule
+  "macro",       # Macro
+  "metric",      # Metric
+  "migr",        # Migration
+  "ns",          # Namespace
+  "pkg",         # Package
+  "pipeline",    # Pipeline; also Workflow
+  "query",       # Query
+  "role",        # Role
+  "runex",       # Runnable example
+  "dataschema",  # Schema (data-shape sense; daggered in KND)
+  "script",      # Script
+  "svc",         # Service
+  "setting",     # Setting
+  "snapshot",    # Snapshot
+  "suite",       # Suite
+  "type",        # Type
+]
+
+# Deliberately OUTSIDE K, though they name code-adjacent things:
+#   listing, impl, alg, model, data — these are AUTHORED environments
+#   (KND conv:kinds:computation), headed by a heading an author
+#   composes, not by an identifier the code already bears. design.md
+#   already mints impl:icx:* and model:icx:* legitimately.
+
+
+####################################################################
+# [typed-data] — designated classes citing synthetically
+#
+# EMPTY IN V1 — stated, not omitted.
+#
+# LBL inf:labels:synthetic-citation lets a corpus designate classes of
+# typed-data strings (identifiers in schemas, manifests, machine-
+# checked design artifacts) as citing a target owner. Designating a
+# class makes every such string a citation that MUST resolve (LBL
+# inv:labels:total-resolution) — so a designation is a hard commitment
+# and empty is the honest v1.
+#
+# Candidates considered and NOT designated:
+#   * interchange namespace labels — expressly disqualified by the
+#     source: ICX's preamble states its namespace labels "are
+#     unrelated to the documentation labels of any corpus labeling
+#     discipline; only the word is shared". No invention available.
+#   * schema.graphql type/field names — generated artifact, and no
+#     documentation owner mints matching labels.
+#   * migrations/*.sql filenames, design-tokens.json keys,
+#     client-crypto-vectors.json ids — nothing mints them either.
+# In every case the missing half is a MINT to cite. The designation
+# becomes interesting the day a profile derives labels for those
+# assets. QUESTION 15.
+####################################################################
+
+[typed-data]
+classes = []
+empty_in_v1 = true
+reason = "no typed-data string in this corpus targets a documentation mint; ICX expressly disclaims the connection for its own namespace labels"
+
+
+####################################################################
+# [citation-indexes] — documents maintaining committed indexes
+#
+# EMPTY IN V1 — stated, not omitted.
+#
+# LBL inf:labels:anchor-harvest: a designated document D maintains a
+# committed index of its citations into an UPSTREAM OWNER U, presented
+# as exactly the distinct set Anchors(D, U), ordered bytewise-
+# lexicographically, with any pinned hash computed from that ordered
+# presentation alone.
+#
+# ONE LIVE CANDIDATE, NOT DESIGNATED HERE:
+# docs/primitive/layer1-interface.md already pins an anchor set — "364
+# distinct anchor names, anchor_set_hash = sha256 over the sorted
+# distinct anchor names joined by \n, no trailing newline". That is
+# the anchor-harvest shape almost exactly. Two things block the
+# designation:
+#   (1) U must be an OWNER OF THIS CORPUS with actual mints — Import
+#       requires O' |- o => l — and the PeerNetworks specification is
+#       not in this corpus at all. There is nothing for the harvested
+#       citations to resolve INTO.
+#   (2) the file materializes no index SECTION; it states a count and
+#       a hash. LBL inf:labels:anchor-harvest requires the committed
+#       index to present the set, and LBL metathm:labels:no-self-
+#       support requires it to sit outside body(D).
+# Designating it is therefore downstream of QUESTION 2. Note also
+# that the calculus fixes only the ordering and the projection; the
+# hash function, its role separation, and its identifier are owed to
+# the identity discipline (LBL inf:labels:anchor-harvest, closing
+# clause; IDN). QUESTION 4.
+####################################################################
+
+[citation-indexes]
+designations = []
+empty_in_v1 = true
+reason = "the one candidate (layer1-interface.md) needs an upstream OWNER inside the corpus before its citations can resolve; blocked on QUESTION 2"
+
+
+####################################################################
+# [scanned-regions] — per language, which regions participate
+#
+# LBL judg:labels:participation: "In code, only comments and
+# documentation comments are scanned; string and character literals
+# and fenced documentation examples are not. Which regions count as
+# comments in each language is fixed at adoption."
+# ARCH's frontend decisions fix them per language: Rust = doc comments
+# only; Markdown = prose; web and Kotlin = comments.
+#
+# A language with NO frontend has NO scanned regions. Its files stay
+# in the carrier and stay owned — they simply carry no occurrences,
+# and LBL judg:labels:minting makes a file with no occurrences
+# "vacuously in good standing".
+####################################################################
+
+[scanned-regions]
+
+[[scanned-regions.language]]
+language   = "markdown"
+extensions = [".md"]
+frontend   = "pulldown-cmark"
+slice      = 1
+scanned    = ["authored prose blocks (block-level elements, structure resolved away)"]
+not_scanned = [
+  "fenced code blocks (nonparticipating wholesale)",
+  "double-backtick code spans (displayed, not participating)",
+  "generated regions (checked as bytes, participating in nothing)",
+]
+region_unit = "one block-level element, list markers / quote markers / continuation indentation resolved away"
+delimiter_note = "single- vs double-backtick is decided by reading the delimiter run length at the span's own offset (ARCH conv:linter:markdown-frontend); an unpaired backtick fails ITS BLOCK and only its block"
+
+[[scanned-regions.language]]
+language   = "rust"
+extensions = [".rs"]
+frontend   = "syn"
+slice      = 1
+scanned    = [
+  "outer line doc comments (///)",
+  "inner line doc comments (//!)",
+  "outer block doc comments (/** ... */)",
+  "inner block doc comments (/*! ... */)",
+  "#[doc = \"...\"] attributes",
+]
+not_scanned = [
+  "plain line comments (//) — BANNED, see [banned-tokens]",
+  "plain block comments (/* ... */) — see QUESTION 16",
+  "string and character literals, including raw strings",
+  "fenced examples inside doc comments",
+]
+region_unit = "one comment, its leaders resolved away; a run of consecutive /// lines is ONE logical region"
+note = "ARCH conv:linter:rust-frontend: Rust's scanned regions are exactly the documentation comments, which survive parsing as doc attributes with spans"
+
+[[scanned-regions.language]]
+language   = "typescript"
+extensions = [".ts", ".tsx"]
+frontend   = "swc_ecma_parser"
+slice      = 2
+scanned    = ["line comments (//)", "block comments (/* ... */)", "JSDoc block comments (/** ... */)"]
+not_scanned = ["string, template and character literals", "JSX text nodes"]
+region_unit = "one comment from swc's out-of-band comments store, keyed by byte position"
+note = "ARCH conv:linter:web-frontend: web = comments, all forms. No ban is proposed for // in TypeScript"
+
+[[scanned-regions.language]]
+language   = "kotlin"
+extensions = [".kt"]
+frontend   = "tree-sitter, first-party grammar"
+slice      = 3
+scanned    = ["line comments (//)", "block comments (/* ... */)", "KDoc (/** ... */)"]
+not_scanned = ["string literals including templates and multi-dollar interpolation", "character literals"]
+region_unit = "one comment node from the grammar, leaders resolved away"
+precondition = "the first-party grammar parses the whole Android corpus to ZERO error nodes (ARCH dec:linter:kotlin-tree-sitter)"
+note = "MEASURED in ARCH rep:linter:kotlin-parser-study: 138 Kotlin files, 964 line comments, 441 block comments (all KDoc). .kts is NOT listed here — QUESTION 17"
+
+# --- Languages present with NO frontend, hence no scanned regions ---
+# Listed so their absence is a decision rather than an oversight.
+[[scanned-regions.none]]
+languages  = ["sql", "graphql", "toml", "kotlin-script", "shell", "properties", "json", "yaml", "svg"]
+extensions = [".sql", ".graphql", ".toml", ".kts", ".sh", ".properties", ".json", ".yaml", ".yml", ".svg"]
+reason     = "no frontend exists; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
+# LaTeX is absent from the corpus tree today; ARCH
+# open:linter:latex-frontend keeps its frontend deferred.
+
+
+####################################################################
+# [banned-tokens] — this corpus's own additions
+#
+# ARCH rule:linter:banned-tokens: per language, token classes that
+# must not occur in carrier sources; every occurrence is a hard,
+# located diagnostic. Detection is the pre-tokenizer's (ARCH
+# dec:linter:pretokenizer), never a pattern match.
+####################################################################
+
+[banned-tokens]
+
+[[banned-tokens.rule]]
+id       = "rust-plain-line-comment"
+language = "rust"
+token    = "plain line comment (// not followed by / or !)"
+severity = "error"
+status   = "ruled"
+source   = "ARCH dec:linter:rust-comment-ban — the rule's named first entry"
+note = """
+The token must be recognized LEXICALLY, not textually: a // inside a
+string literal, a raw string, or a char literal is not a comment.
+That is precisely why ARCH dec:linter:pretokenizer exists.
+MIGRATION COST, MEASURED 2026-08-20: ~1210 plain-comment occurrences
+across 73 .rs files in crates/. ARCH names this: "the existing Rust
+crates contain plain comments today, so adopting the ban implies a
+one-time migration sweep — a separate task; the linter only reports."
+"""
+
+[[banned-tokens.rule]]
+id       = "rust-plain-block-comment"
+language = "rust"
+token    = "plain block comment (/* not followed by * or !)"
+severity = "error"
+status   = "PROPOSED — not ruled"
+source   = "implied by ARCH dec:linter:rust-comment-ban's sentence 'Rust sources of this corpus carry documentation comments only'; NOT named among its entries"
+note     = "QUESTION 16. Drafted as a separate rule so it can be struck without touching the ruled one."
+
+# No bans for markdown, typescript or kotlin in v1. Kotlin and
+# TypeScript keep // — it is a scanned region there, not contraband.
