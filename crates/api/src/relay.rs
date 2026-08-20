@@ -32,6 +32,11 @@ pub enum RelayError {
     /// answered idempotently.
     #[error("staged write {0}: resubmitted pre-commitment differs from the sealed one")]
     ReplayMismatch(Uuid),
+    /// The pre-commitment was recorded but its display rows could not be
+    /// put on screen. The write is intact and a retry of the leg heals it;
+    /// serving the content as if it were invisible is not an option.
+    #[error("staged content could not be made readable: {0}")]
+    Staging(String),
     #[error(transparent)]
     Staged(#[from] staged::StagedError),
     #[error(transparent)]
@@ -70,6 +75,13 @@ pub async fn submit_pre_signed<B: L1Boundary>(
         other => return Err(wrong_state(id, "awaiting_pre_sign", other)),
     }
     staged::record_pre_signed(pool, id, &pre).await?;
+    // The pre-commitment is the anchor: from here the content is the
+    // author's, readable by everyone and marked pending (substrate.md §6).
+    // A failure here fails the leg rather than degrading to invisible
+    // content — the device's retry re-runs both steps idempotently.
+    crate::content::stage_pending(pool, id)
+        .await
+        .map_err(|e| RelayError::Staging(e.to_string()))?;
     let pre_signed = PreSignedProposal {
         proposal: write.proposal.clone(),
         author_pubkey: pre.author_pubkey,

@@ -213,6 +213,23 @@ declared order. The chronicle, the post listing, and thread
 reads all serve newest-first — a node's landing position is its
 genesis, so editing a comment never moves it up its thread.
 
+**Pending entries come first, in their own cursor namespace.** A
+pending write has no causal key yet, so it sorts under a sentinel
+epoch above every real one and orders among pending entries by
+authoring instant. The cursor keeps its `(epoch, act time,
+position)` form and stays opaque; a pending entry's cursor changes
+when it lands, because its position in the order changes. Every
+listing takes `includePending` (default true): false serves only
+what has landed on L1, for a reader who wants the settled graph.
+
+**A page is a snapshot, not a live view.** A listing read computes
+one view of the graph and freezes it; refetching is the client's
+own explicit act. State changes — a pending entry landing, an
+expired one vanishing — appear only in a refetched page, and the
+refetched page carries the new state, never both. Clients neither
+merge newly pending items into a page they already hold nor
+reconcile a held page against a newer one.
+
 ### Query budgets
 
 Every request is priced in validation, before any resolver runs
@@ -444,6 +461,10 @@ interface Node {
    update record or display-content version; equals createdAt if
    never changed."
   updatedAt: DateTime!
+  "Where this node stands relative to L1 finality — landing is a
+   substrate fact about every minted node, so it lives here rather
+   than on each content type."
+  landing: Landing!
   "Records authored from this node — for an actor, their outgoing
    chronicle; the generic way to read any relationship before named
    convenience views exist. Filter by family, by the kind of node
@@ -474,6 +495,24 @@ interface Node {
     untilEpoch: Int
     first: Int, after: String, last: Int, before: String
   ): RecordConnection!
+}
+
+"Where a node stands relative to L1 finality. PENDING: authored and
+ signed, not yet ordered — real content whose place in the order is
+ not yet fixed (substrate.md §6). LANDED: the minting act is ordered
+ fact. There is no expired state: an expired act's content leaves
+ every reader's view."
+enum LandingState { PENDING LANDED }
+
+"A node's landing position. `epoch` is the graph's own clock — the
+ same integer as the genesis Record's landingEpoch, surfaced on the
+ node so a client renders the marker without traversing to a record.
+ It is null exactly while `state` is PENDING: a pending write has no
+ causal key yet. An unlanded edit leaves its node PENDING, because
+ the text on screen is the pending version."
+type Landing {
+  state: LandingState!
+  epoch: Int
 }
 
 "An entity that takes actions and authors content: a User or a
@@ -876,7 +915,7 @@ type Post implements Node {
    enters here — newest-first (a comment's landing position is its
    genesis, so edits never reorder the thread). The named view over
    records(target:, family: REVIEW)."
-  comments(first: Int, after: String, last: Int, before: String): CommentConnection!
+  comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 }
 
 "A threaded response — minted by a Review record targeting whatever
@@ -893,7 +932,7 @@ type Comment implements Node {
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
   "This comment's direct replies, newest-first."
-  replies(first: Int, after: String, last: Int, before: String): CommentConnection!
+  replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
 }
 
 "What a Review can respond to — root content, another Comment, a
@@ -1711,10 +1750,10 @@ type Query {
   ): RecordConnection!
 
   "The chronological listing (roadmap Slice 2): every post,
-   newest-first in landing order — the record set's own order,
-   never wall clock (graph-model.md §2). Deliberately not the
-   ranked feed."
-  posts(first: Int, after: String, last: Int, before: String): PostConnection!
+   newest-first — pending entries, then landed entries in landing
+   order, the record set's own order, never wall clock
+   (graph-model.md §2). Deliberately not the ranked feed."
+  posts(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): PostConnection!
 
   "One staged write by id — the confirm-side observation point of
    the write path. Field-level: resolves only for the staging

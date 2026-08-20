@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET landed_epoch = $2, act_time = $3, position = $4\n         WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ff0efdeccb5eeee42a922ced24127a87e92c09d0229a58820f2e60dd0f04f8f0"
+}
