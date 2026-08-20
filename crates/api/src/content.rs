@@ -14,6 +14,7 @@ use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
 use uuid::Uuid;
 
+use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
 
@@ -555,24 +556,30 @@ async fn comment_parent(
 
 /// Confirm-side promotion (architecture.md "The write path" step 5):
 /// for every landed content record, move the payload into permanent
-/// carriage and drop the display rows' pending mark. Failures log and
-/// leave the record un-promoted — the mirror governs, and a later
-/// rebuild can re-run promotion; nothing is silently dropped.
-pub async fn land_promoted(pool: &PgPool, promoted: &[staged::PromotedWrite]) {
+/// carriage and drop the display rows' pending mark. A failure leaves
+/// the record un-promoted — the mirror governs, and a later rebuild can
+/// re-run promotion — and is returned rather than swallowed, so the
+/// ingestion pass reports what did not follow.
+pub async fn land_promoted(
+    pool: &PgPool,
+    promoted: &[staged::PromotedWrite],
+) -> Vec<PromotionFailure> {
+    let mut failures = Vec::new();
     for write in promoted {
         let family = match common::l1::census::Family::parse(&write.family) {
             Some(f @ (Family::Publish | Family::Review)) => f,
             _ => continue,
         };
         if let Err(e) = land_one(pool, write, family).await {
-            tracing::error!(
-                staged = %write.id,
-                act = %write.act_id,
-                error = %e,
-                "content promotion failed; record remains unpromoted"
-            );
+            failures.push(PromotionFailure {
+                stage: "content",
+                staged: write.id,
+                act_id: write.act_id.clone(),
+                error: e.to_string(),
+            });
         }
     }
+    failures
 }
 
 async fn land_one(

@@ -94,9 +94,14 @@ impl Rig {
 
     async fn close_and_ingest(&self) {
         self.standin.close_epoch().await.expect("closes");
-        api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
+        let outcome = api::ingest::ingest_pending(&self.boundary, &self.pool, GC)
             .await
             .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
     }
 
     /// Drives one prepared content write through signatures and confirm.
@@ -760,9 +765,9 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
 
     // Re-running the content landing pass over already-promoted writes
     // (a forced double-promotion; the real promote_landed filter never
-    // re-selects a landed row) duplicates nothing: the entity insert
-    // conflicts, the per-record transaction rolls back and logs, and
-    // the carriage rows stay exactly one per act.
+    // re-selects a landed row) is a clean no-op: carriage inserts ignore
+    // the conflict and the version rows land by their own key, so the
+    // pass reports nothing and duplicates nothing.
     let promoted = sqlx::query_as::<_, (Uuid, Uuid, String, String)>(
         "SELECT id, actor_id, act_id, family FROM staged_writes WHERE state = 'landed'",
     )
@@ -782,7 +787,11 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
             family: r.3.clone(),
         })
         .collect();
-    content::land_promoted(&rig.pool, &writes).await;
+    let failures = content::land_promoted(&rig.pool, &writes).await;
+    assert!(
+        failures.is_empty(),
+        "re-promotion is a no-op, not a failure: {failures:?}"
+    );
     let carriage = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM act_payloads")
         .fetch_one(&rig.pool)
         .await
