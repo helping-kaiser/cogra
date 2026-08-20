@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { Oversight } from "@/__generated__/graphql";
+import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import {
   fetchPostDetail,
   preparePost,
@@ -23,18 +23,11 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
+import { LicenseChooser } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TextField } from "@/lib/ui/text-field";
 import { TransportError } from "@/lib/ui/transport-error";
-
-// Oversight sets how much AI disclosure reuse must meet — a term on
-// downstream use, never a declaration of how the author made the content.
-const OVERSIGHT_OPTIONS: readonly { value: Oversight; label: string }[] = [
-  { value: "NONE", label: "None" },
-  { value: "CONDITIONAL", label: "On request" },
-  { value: "FULL", label: "Full chain" },
-];
 
 export function ComposeForm({
   store = identityStore,
@@ -62,8 +55,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [body, setBody] = useState("");
-  const [attributionRequired, setAttributionRequired] = useState(false);
-  const [oversight, setOversight] = useState<Oversight>("NONE");
+  const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
   const [submitting, setSubmitting] = useState(false);
   const [emptyBody, setEmptyBody] = useState(false);
   const [refusedMessage, setRefusedMessage] = useState<string | null>(null);
@@ -108,7 +100,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             title: title.trim() === "" ? null : title,
             description: description.trim() === "" ? null : description,
             content: body,
-            license: { attributionRequired, oversight },
+            license,
           })
         : preparePostEdit(client, {
             id: editingId,
@@ -208,43 +200,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         )}
       </div>
       {editingId === null && (
-        <fieldset className="flex flex-col gap-2" data-testid="compose-license">
-          <legend className="text-label-large">License</legend>
-          <p className="text-body-small text-on-surface-variant">
-            Terms for anyone who reuses this — not a statement about how you
-            made it.
-          </p>
-          <label className="flex items-center gap-2 text-body-medium">
-            <input
-              type="checkbox"
-              data-testid="license-attribution"
-              className="accent-primary"
-              checked={attributionRequired}
-              onChange={(event) => setAttributionRequired(event.target.checked)}
-            />
-            Require attribution
-          </label>
-          <div
-            className="flex items-center gap-3"
-            role="radiogroup"
-            aria-label="Require AI disclosure"
-          >
-            <span className="text-body-medium">Require AI disclosure</span>
-            {OVERSIGHT_OPTIONS.map((option) => (
-              <label key={option.value} className="flex items-center gap-1 text-body-medium">
-                <input
-                  type="radio"
-                  name="oversight"
-                  className="accent-primary"
-                  data-testid={`license-oversight-${option.value.toLowerCase()}`}
-                  checked={oversight === option.value}
-                  onChange={() => setOversight(option.value)}
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <LicenseChooser value={license} onChange={setLicense} testIdPrefix="compose" />
       )}
       {refusedMessage && (
         <p role="alert" data-testid="compose-refused" className="text-body-medium text-error">

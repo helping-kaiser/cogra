@@ -35,6 +35,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     createdAt: "2026-08-12T10:00:00Z",
     updatedAt: "2026-08-12T10:00:00Z",
     moderationStatus: "NORMAL",
+    license: { __typename: "License", attribution: 0, oversight: 0 },
     ...overrides,
   };
 }
@@ -96,6 +97,12 @@ describe("fetchPostDetail", () => {
                             createdAt: "2026-08-12T10:05:00Z",
                             updatedAt: "2026-08-12T10:05:00Z",
                             moderationStatus: "NORMAL",
+                            license: {
+                              __typename: "License",
+                              attribution: 0,
+                              oversight: 0,
+                            },
+    license: { __typename: "License", attribution: 0, oversight: 0 },
                           },
                         },
                       ],
