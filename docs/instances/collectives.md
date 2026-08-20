@@ -144,7 +144,7 @@ design error:
 A Collective the community defunds (severance netting its
 inbound stances to `(0,0)`) falls back to its own commitment
 rate — the standing its treasury-funded burns buy, every
-relational lift gone (`cor:epoch:zero-relational-row`) — no
+relational lift gone (`prop:epoch:final-standing-embedding`) — no
 matter how healthy its internal membership; a thriving internal
 membership buys no protocol standing by itself. Each authority is
 earned and lost on its own terms.
