@@ -267,6 +267,55 @@ describe("PostView", () => {
     expect(screen.getByTestId("comment-draft")).toHaveValue("");
   });
 
+  // The signed comment is content already, so the author finds it in
+  // the thread under its marker instead of being sent off to refresh.
+  it("re-reads the thread after signing so the author sees their pending comment", async () => {
+    let reads = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data:
+            reads === 1
+              ? detail("u1", [])
+              : detail("u1", [{ id: "c9", body: "Nice one", pending: true }]),
+        });
+      }),
+      graphql.mutation("PrepareComment", () =>
+        HttpResponse.json({
+          data: {
+            prepareComment: {
+              __typename: "PrepareContentPayload",
+              node: "c9",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "REVIEW",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  gcAfterEpochs: 8,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(await screen.findByTestId("comment-draft"), {
+      target: { value: "Nice one" },
+    });
+    fireEvent.click(screen.getByTestId("comment-submit"));
+
+    expect(await screen.findByTestId("post-comment-c9")).toHaveTextContent("Nice one");
+    expect(screen.getByTestId("comment-pending-c9")).toHaveTextContent("Still settling");
+    expect(reads).toBe(2);
+  });
+
   it("tells a keyless browser to restore a pending comment, not to wait", async () => {
     server.use(
       graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
