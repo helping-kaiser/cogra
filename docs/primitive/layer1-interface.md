@@ -2051,7 +2051,7 @@ funding a member's own burns raises only that member's own source. The
 comparator sees a funded member exactly as it sees a self-funded one — the
 burn is real either way.
 
-### 11.3 Stance aggregation and the person-vouch relation layer
+### 11.3 Act folding and the base allocation matrix
 
 **Net Stance (`def:epoch:net-stance`).** For every eligible same-author
 parallel bundle $\Pi(a, s, t, f)$ (`def:graph:authored-act-bundle` —
@@ -2069,116 +2069,156 @@ create a complete act from unmatched records. Excluded from stance
 aggregation: **derived Self-edge components** (not authored records, hence
 no bundle); the settlement records **Accept and Ratify** (recognition and
 standing read individual records); the **control records** Withdraw,
-Rescind, Leave, De-invite/A·T; and every family of standing role *none*
-where the fold would be used only to create standing. Feed ranking, raw
-signed traversal, CAN, title, payload display, and settlement recognition
-continue to read their declared raw records or bundles — **the fold is one
-input to standing, never a mutation of the record**, and it never merges,
-hides, or removes payload projections.
+Rescind, Leave, De-invite/A·T; and every family that resolves to its author
+where the fold would otherwise be used only to create standing. Feed
+ranking, raw signed traversal, CAN, title, payload display, and settlement
+recognition continue to read their declared raw records or bundles — **net
+stance is one input to act folding, never a mutation of the record**, and it
+never merges, hides, or removes payload projections
+(`prop:graph:removable-projection-invariance`).
 
-Aggregation properties: order-free once the epoch record set and bundle
-folds are fixed; range-safe (the clip returns parameters to the master
-formula's domain); **priced** (every revision increments $N_j$, irrevocably
-diluting $r_j$); append-only. Sum-then-clip is deliberate: walking back
-accumulated conviction costs counter-acts in proportion to it — flip-flops
-are expensive, stance is sticky (`rem:epoch:conviction-inertia`). A prior
-$(0.5, 0.5)$ act is cancelled by authoring $(-0.5, -0.5)$ toward the same
-target: the bundle nets to $(0,0)$ — no eligible relation compiles — and
-the counter-act consumed an action (one $\theta$ debit off $b_j$):
-severance is burn-priced (`subsec:verification:stance-aggregation`).
+Aggregation properties (`prop:epoch:net-stance-properties`): order-free once
+the epoch record set and bundle folds are fixed; range-safe (the clip
+returns parameters to the master formula's domain); **priced** (every
+revision increments $N_j$, irrevocably diluting $r_j$); append-only.
+Sum-then-clip is deliberate: walking back accumulated conviction costs
+counter-acts in proportion to it — flip-flops are expensive, stance is
+sticky (`rem:epoch:conviction-inertia`). A prior $(0.5, 0.5)$ act is
+cancelled by authoring $(-0.5, -0.5)$ toward the same target: the bundle
+nets to $(0,0)$ — the cell resolves home at coefficient zero and reaches no
+one — and the counter-act consumed an action (one $\theta$ debit off
+$b_j$): severance is burn-priced
+(`subsec:verification:stance-aggregation`).
 
-**Folded person-vouch relation (`def:epoch:folded-vouch-relation`,
-`rem:epoch:compiled-acts-fold`).** After the per-author fold and inviter
-revocation, the compiler groups the accepted acts of one **full incidence**
-(author, family, source, semantic target, and — for hyper-edges — middle)
-into **folded person-vouch relations** $\xi$. A relation's identity is the
-deterministic full-incidence bundle key, not a new act identifier; it
-contains the source Actor, the target Actor, the family and complete
-incidence, the folded mandatory coordinates, the ordered constituent act
-identifiers, and its **causal frontier** — the latest authoritative causal
-key of its constituents. A folded relation is a derived reading: no new
-act, edge projection, payload, debit, count increment, or Lamport event. A
-family that does not aggregate parallel acts is represented by singleton
-relations; a sum-then-clip family produces one relation per full-incidence
-bundle. **Standing consumes folded relations** — never independently
-folded legs, never an arbitrary constituent act.
+**Standing fold cells (`def:epoch:standing-fold-cell`,
+`rem:epoch:compiled-acts-fold-into-cells`).** After the per-author net-stance
+fold and inviter revocation, the compiler groups the accepted acts of one
+**full incidence** (author, family, source, semantic target, and — for
+hyper-edges — middle) into **fold cells** $\xi$, the order-free unit of
+standing input. A cell's identity is the deterministic full-incidence bundle
+key, not a new act identifier; a hyper-edge act is one cell, never two
+(`cor:graph:standing-act-atomicity`). A cell is a derived reading: no new
+act, edge projection, payload, debit, count increment, or Lamport event.
+**Every accepted Actor-authored act lies in exactly one cell of the epoch's
+eligible set $\mathcal{R}_k$, and every cell is weighed**
+(`post:epoch:universal-act-weighing`): there is no eligibility predicate
+deciding which acts bear standing and no *role: none* category. What the
+folded coordinates decide is the **destination**, not whether the act counts.
 
-**Person-vouch eligibility (`def:epoch:person-vouch-eligibility`).** A
-folded relation $\xi$ is person-vouch eligible at boundary $k$ iff all of:
-**(i) closed census** — its family and semantic target carry a person-vouch
-role in the standing-role census (`def:nodes:standing-role-census`; a
-family not designated has role *none*); **(ii) complete incidence** — every
-hyper-edge constituent is formation-valid, its A- and T-projections
-resolving to one parent act; no unmatched projection contributes; **(iii)
-author ownership** — the projected source is the initiating author of every
-constituent act; **(iv) person target** — the semantic target is an Actor
-or the permanently bound Profile of an Actor (a Profile compiles to the
-bound Actor); **(v) strictly positive mandatory coordinates** after the
-fold — Opinion $p_d, p_i$; Reference $e, f$; Invitation $u, f, r$;
-Accept/Ratify $c, e$; **(vi) live authored consent** — a revoked Invitation
-is absent, and no control record vouches
-(`rem:epoch:control-edges-never-vouch` — load-bearing for De-invite, whose
-fixed positive parameters would otherwise vouch for the expellee); **(vii)
-no self-vouch**. The rule is local, order-free, and has no glyph — it
-selects relations, not a score. A coherent-hostile $(-,-)$ person-directed
-relation fails (v); raw determinant parity stays available to raw consumers
-but never creates a vouch.
+**Effective act contribution (`def:epoch:effective-act-contribution`).** Each
+cell carries a total coefficient $c(\xi) \in [0,1]$: the geometric mean of
+the **magnitudes** of its mandatory folded coordinates —
+$\sqrt{|\bar{p}_d\,\bar{p}_i|}$ (Opinion), $\sqrt{|e\,f|}$ (Reference),
+$|u\,f\,r|^{1/3}$ (Invitation), $\sqrt{|c\,e|}$ (Accept/Ratify), and
+likewise for the families that never resolve outward (Publish and Owner on
+$a$, Affinity on $a, t$, Tag on $r, c$, Review on $e, f$, Send on $i$, Bid on
+$g, u$, Join Request on $u, f$, Participant on $i, r$). Where a family's legs
+carry separate coordinates the mandatory set is the **A-leg's** — a T-leg
+records where an act points, not what its author felt about pointing there.
+A family carrying no authored coordinate at all (Registration and the control
+records) has an empty geometric mean and coefficient $1$.
 
-Compilation properties (`prop:epoch:person-vouch-properties`):
-**author-owned** (every projected edge is sourced by the author of the acts
-that create it); **passive-independent** (passive context identifies the
-act and its target but contributes no standing weight);
-**standing-atomic** (a complete hyper-edge contributes once or not at all,
-`cor:graph:person-vouch-act-atomicity`); **record-preserving**
-(non-vouching, incomplete, hostile, suppressed, or standing-inert records
-stay public and readable by every non-standing consumer); **range-safe**;
-**self-vouch-free**; **deterministic**. Compilation precedes standing
-paths (`rem:epoch:vouch-projection-compilation`): the compiler first
-reconstructs complete acts, applies folds and revocations, checks the
-census, and emits the relation layer — only then are standing paths
-constructed, so a passive artifact never appears in a standing path at all.
+Taking magnitudes is what makes the coefficient *total*: a maximally hostile
+act consumes exactly as much of its author's conserved unit as a maximally
+supportive one (`rem:epoch:hostility-is-priced`). Direction decides the
+destination; magnitude decides the price. A cell whose stance folds to
+exactly zero has coefficient zero and contributes to no entry — it was still
+admitted, debited, and counted.
 
-**Relation coefficient (`def:epoch:relation-coefficient`).** An eligible
-relation's epoch-fixed intrinsic strength is the geometric mean of its
-mandatory positive folded coordinates,
-$c(\xi) = \big(\prod_{\ell=1}^m s_\ell(\xi)\big)^{1/m} \in (0,1]$ —
-$\sqrt{\bar{p}_d\,\bar{p}_i}$ (Opinion), $\sqrt{e\,f}$ (Reference),
-$(u\,f\,r)^{1/3}$ (Invitation), $\sqrt{c\,e}$ (Accept/Ratify) — invariant
-under A/T rendering, independent of raw maturity, temporal entropy,
-path-view tier, payload state, and passive-node degree, and fixed by the
-completed epoch relation fold. An ineligible relation has no projected
-standing edge and no operative coefficient.
+**Recipient resolution (`def:epoch:standing-recipient-resolution`,
+`tbl:epoch:standing-recipient-resolution`).** A published, deterministic,
+order-free operator sends each cell either to a person recipient or to the
+author's **self-retention channel**. It resolves outward only for a cell with
+strictly positive mandatory coordinates, live authored consent, author
+ownership, and an **anchored** person target — the semantic target being an
+Actor or the permanently bound Profile of an Actor:
 
-**Temporal person-vouch multigraph
-(`def:epoch:temporal-vouch-multigraph`).** The epoch-$k$ standing substrate
-is the Actor-only multigraph $G^{\text{rel}}_{\text{vch},k}$ over the
-eligible folded relations. Each relation carries its source, target,
-frontier, and coefficient; at reduced standing state $\boldsymbol{x}$ its
-state-dependent **direct standing edge weight** is
+| Act class | Recipient |
+|---|---|
+| Positive Opinion on Profile$_j$ | Actor $j$ |
+| Complete positive Invitation (unsuppressed) | the invitee |
+| Complete positive Reference to Profile$_j$ | Actor $j$ |
+| Accept / Ratify, title-transferring under the epoch title fold | the counterparty |
+| Accept / Ratify otherwise | self |
+| Withdraw, Rescind, Leave, De-invite | self |
+| Artifact-directed acts: Opinion-on-content, Tag, Review, Bid, Send, Publish, Owner, Participant, Registration | self |
+| Hostile or zero-stance person-directed acts | self |
 
-$$W_{\text{rel},k}(\xi; \boldsymbol{x}) = c(\xi)\, \bar{g}_{\text{vch}}(x_{\mathrm{tgt}(\xi)})$$
+Self is a destination, not a defect: a self-resolved cell lands on the
+diagonal of the base matrix, priced and counted like any other. The
+settlement rows read the epoch title fold and nothing else
+(`post:epoch:settlement-standing-title-coupling`); the revocation rows read
+epoch indices with ties favouring the revocation. Syntax alone never selects
+a non-self recipient — a cell whose target identifier is not anchored in the
+completed set resolves home by the same rule
+(`rem:epoch:allocation-index-set`), which keeps resolution and allocation
+ranging over one closed index set so that no column can receive allocation
+without owning a row.
 
-(`rem:epoch:direct-relation-edge`) — the multigraph stores the
-state-independent coefficients; the activation is applied inside the
-standing solve, not baked into a precomputed weight. **Parallel eligible
-relations between one ordered Actor pair are not collapsed** to one
-strongest coefficient (`rem:epoch:no-pair-collapse`): relations differing
-in family, incidence, provenance, or frontier remain distinct, and the
-source envelope selects among them at the state being evaluated; neither
-Actor identity nor act identity ever breaks a semantic tie.
+**Control acts resolve to self (`rem:epoch:control-acts-resolve-to-self`).**
+Withdraw, Rescind, Leave, and De-invite/A·T are accepted acts, so they are
+weighed and consume their author's allocation — they simply never direct any
+of it outward. De-invite is the case that makes this load-bearing: its fixed
+raw parameters are positive, and treating raw positivity as regard would turn
+expulsion into standing support. The family's only compilation-visible effect
+on another act is **inviter revocation**
+(`def:epoch:inviter-revocation`): actor $a$'s Invitation toward $(C, P)$ is
+absent iff the latest epoch index in $a$'s Invitation/De-invite records for
+that pair contains a De-invite, ties within an epoch favouring the
+revocation, and a later Invitation re-establishing the act. The rule is
+epoch-quantized rather than order-read — no standing quantity may read
+host-assigned order (`post:epoch:standing-epoch-set-determinism`) — and
+strictly per author. **Conviction sums; consent toggles**: stance bundles
+aggregate with inertia, but a vouch-of-fitness is live consent, and live
+consent is latest-record-wins.
 
-**Complete hyper-vouches (`rem:epoch:complete-hyper-vouches`).** Invitation
-and Reference are standing-bearing only as complete author-owned acts: a
-complete Invitation by $a$ toward invitee $i$, or a complete Reference by
-$a$ toward Profile$_i$, folds into a direct relation $a \to i$. Another
-actor's Opinion, Participant, Join Request, or Send toward the Chat — or
-incoming weight on the citing artifact — contributes nothing. For a source
-$u$, either act matters only through $u$'s depth-two envelope of its
-**author** composed with the direct relation weight. Passive
-non-interference (`prop:epoch:passive-non-interference`): any change to raw
-passive-node incidence that leaves the eligible relation set unchanged
-leaves every coefficient, envelope, admitted flow, final flow, and final
-standing unchanged — no passive node is a standing switchboard.
+**Base allocation matrix (`def:epoch:domain-weighted-base-allocation`,
+`eq:epoch:domain-weighted-base-allocation`).** Each cell carries a published
+act-level domain profile $\delta_D(\xi) \ge 0$ with $\sum_D \delta_D(\xi) =
+1$, so a hyper-edge act spreads one unit across the domains of its
+projections and is never double-counted (`def:epoch:standing-domain-profile`).
+With published nonnegative domain weights $\omega_D$ and the published
+self-retention base $\kappa_{\text{self}} > 0$
+(`def:epoch:self-retention-base`), the **base allocation score** of the
+ordered Actor pair $(u, j)$ is
+
+$$\mathsf{A}_{uj} = \kappa_{\text{self}}\,\mathbf{1}_{u=j} + \sum_{\xi:\ \mathrm{src}(\xi)=u,\ \mathrm{res}(\xi)=j} c(\xi) \sum_D \omega_D\,\delta_D(\xi) \;\ge\; 0,$$
+
+with $\mathsf{A}_{uu} \ge \kappa_{\text{self}} > 0$, so every anchored Actor
+has a well-defined row even having authored nothing. **$\mathsf{A}$ is the
+sole standing-relevant reading of the epoch's acts: no standing quantity
+reads the Action Graph beyond it.** Reference values for both constants are
+unity, pending the calibration lock.
+
+Because each row is normalized before transport, **artifact activity crowds
+out export** (`rem:epoch:artifact-activity-crowds-out-export`): acts that
+resolve home land on $\mathsf{A}_{uu}$ and shrink every one of that author's
+outward shares. Allocation is conserved, and there is no unallocated
+remainder to draw from — publishing more concentrates the same unit on
+oneself rather than spreading more regard. Carrying others is something an
+Actor *spends* on, in the same unit their own activity consumes.
+
+**Artifacts allocate nothing (`prop:epoch:artifact-non-allocation`).**
+Changing raw incidence on a passive node — a Chat, Content item, Item, Type,
+Comment, Message, Offer, or Profile — leaves every entry of $\mathsf{A}$
+unchanged, and therefore leaves every transported share and every standing
+value unchanged. This is structural, not a guard: only accepted
+Actor-authored acts fold into cells, and an artifact has no row to allocate
+from and no authorship to inherit. Popularity is visible to feed and bridge,
+and invisible here.
+
+Compilation properties (`prop:epoch:act-folding-properties`):
+**author-owned** (every cell is sourced by the author of the complete act
+that creates it); **passive-independent** (passive context identifies the act
+and its semantic target but contributes no upstream standing weight);
+**standing-atomic**; **record-preserving** (incomplete, hostile, suppressed,
+and self-resolving records stay public and readable by every non-standing
+consumer); **range-safe**; **self-inclusive**; **deterministic**. **Folding
+precedes allocation** (`rem:epoch:folding-precedes-allocation`): the compiler
+reconstructs complete acts, applies folds and revocations, resolves each cell,
+and emits $\mathsf{A}$ — only then does anything allocate. The exclusion of
+passive nodes therefore happens once, in the compiler, rather than being
+re-checked at every hop.
 
 ### 11.4 Staged standing (epoch-quantized, no memory)
 
