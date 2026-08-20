@@ -28,7 +28,6 @@ within a phase, order is flexible.
 | 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
 | 2c. Profile surface (with slice 2.2) | 2 | **Q35, Q36** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real) and the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?). Slice 2.1 ships without both. |
 | 2d. Content-license surface | 1 | **Q39** | What `oversight` actually licenses — the L1 author confirmed `o` is a permission over machine/AI use of the content, not a disclosure duty; waiting on the L1 team's corrected licensing section to re-align docs and copy. The read-side display of the qualifiers is settled and proceeds now. |
-| 2e. Campaign surface | 1 | **Q40** | Campaign-term granularity — a campaign anchor is a Content node and Content now folds whole-payload, but the terms are declared adjustable per term. Deferred until campaigns are built; no code depends on it today. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -301,35 +300,6 @@ names the values.
 ### Related
 
 Q30 (the other open L1-team thread).
-
----
-
-## Q40 — Campaign-term granularity under whole-payload content folds
-
-**Where it shows up:**
-[economics.md §3.2](primitive/economics.md#32-adjustability),
-[substrate.md §9](primitive/substrate.md#9-node-values-and-updates)
-**Status:** open (deferred — campaigns are unbuilt; nothing in
-`crates/` reads campaign terms)
-
-### Context
-
-A campaign anchor is a Content node and revises like one, and a
-Content node's fold reads the newest record's payload whole. The
-adjustability rules were written against a per-term read: `e_end`,
-`declared_goal`, `χ_c`, and the escrowed `D` each move on their
-own, `D` top-up-only, while `anchors` and `target` are
-fold-ignored per field.
-
-### The question
-
-Does a campaign term change restate every term — one snapshot per
-adjustment, with the top-up-only and immutability rules enforced
-by comparing snapshots — or do campaign anchors declare a per-term
-granularity of their own, making them the one Content-family node
-that does not fold whole? The first keeps one rule for the family
-and puts the burden on validation; the second keeps the escrow
-rules trivially local and costs the uniformity.
 
 ---
 

@@ -203,28 +203,27 @@ anchor carries the public record and pointers.
 Public visibility of every adjustment is the discipline. Term
 changes land as witnessed payloads on advertiser-authored
 ordinary-role **Publish** records toward the campaign anchor — the
-anchor is a Content node and revises like one, newest change per
-term along the advertiser's declared causal chain from the
-anchor's genesis
+anchor is a Content node and revises like one: each adjustment
+carries the **complete new terms state**, and the newest along
+the advertiser's declared causal chain from the anchor's genesis
+wins whole
 ([substrate.md §9](substrate.md#9-node-values-and-updates)). A
 campaign anchor is no proposal anchor: its cover view is the
 campaign's rules, which contributors read to know what earns, and
-superseded terms are history exactly as for a post. Whether an
-adjustment restates every term — a Content fold reads the winning
-payload whole — or campaign anchors declare a per-term
-granularity of their own is open
-([open-questions.md Q40](../open-questions.md#q40--campaign-term-granularity-under-whole-payload-content-folds)).
+superseded terms are history exactly as for a post.
 
 - **Mutable before settlement:** `e_end` (free, unlimited
   extensions — the anti-bot lever, §6.1), `declared_goal`, `χ_c`
   (a compute failsafe: if the graph grows rapidly mid-window the
   advertiser raises it to keep enumeration tractable), and the
-  escrowed `D` — **top-up only**, never lowered: the locked escrow
-  backs §7's flat-on-`D` anti-spam floor.
+  escrowed `D` — **top-up only**: a terms state whose `D` falls
+  below the current one is refused, so the locked escrow keeps
+  backing §7's flat-on-`D` anti-spam floor.
 - **Immutable after creation:** `anchors` and `target`. They define
   the campaign's identity — whose feeds, what node — so they are
-  not in the updatable set: a later Publish carrying different
-  ones is fold-ignored per field. The targeting is *also* declared
+  not in the updatable set: they read from genesis, and a later
+  Publish carrying different ones never moves them. The targeting
+  is *also* declared
   structurally, as the anchor's `(0, 0)` References at creation
   (§3); later References from the anchor toward other nodes are
   ineligible and equally fold-ignored — the fold protects the
