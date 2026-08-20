@@ -77,7 +77,7 @@ query Posts($first: Int!, $after: String) {
   posts(first: $first, after: $after) {
     edges {
       node {
-    id
+        id
         title {
           value
           status
@@ -99,6 +99,9 @@ query Posts($first: Int!, $after: String) {
         }
         createdAt
         updatedAt
+        landing {
+          state
+        }
         moderationStatus
         license {
           attribution
@@ -137,6 +140,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
     }
     createdAt
     updatedAt
+    landing {
+      state
+    }
     moderationStatus
     license {
       attribution
@@ -159,6 +165,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
           }
           createdAt
           updatedAt
+          landing {
+            state
+          }
           moderationStatus
           license {
             attribution
@@ -181,6 +190,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $repl
                 }
                 createdAt
                 updatedAt
+                landing {
+                  state
+                }
                 moderationStatus
                 license {
                   attribution
@@ -225,6 +237,9 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
           }
           createdAt
           updatedAt
+          landing {
+            state
+          }
           moderationStatus
           license {
             attribution
@@ -247,6 +262,9 @@ query CommentReplies($id: UUID!, $first: Int!, $after: String, $repliesFirst: In
                 }
                 createdAt
                 updatedAt
+                landing {
+                  state
+                }
                 moderationStatus
                 license {
                   attribution
