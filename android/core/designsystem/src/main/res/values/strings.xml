@@ -6,4 +6,5 @@
     <string name="recovery_code_copied">Copied</string>
     <string name="recovery_code_type_back">Type or paste the code to confirm</string>
     <string name="recovery_code_saved">I\'ve written it down</string>
+    <string name="pending_settling">Still settling</string>
 </resources>

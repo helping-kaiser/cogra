@@ -44,6 +44,7 @@ class ComposePostViewModelTest {
             id: String,
             commentsFirst: Int,
             commentsAfter: String?,
+            includePending: Boolean,
         ): Outcome<PostDetail?> = Outcome.Success(
             PostDetail(
                 post = testPost(id, title = "Loaded title", body = "Loaded body"),
@@ -101,6 +102,38 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.signingFailed).isTrue()
         assertThat(vm.state.value.signingNeedsKey).isTrue()
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // prepare answers with the node id the content will serve under
+    // once the write lands, so the composer can hand the author
+    // straight to their own post — pending, but readable.
+    @Test
+    fun aCreateReportsTheNodeItWillServeUnder() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("The body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.savedPostId).isEqualTo("node-1")
+
+        vm.onSavedConsumed()
+        assertThat(vm.state.value.savedPostId).isNull()
+        assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // An edit was reached from the post it edits, so there is nowhere
+    // new to send the author.
+    @Test
+    fun anEditReportsNoNodeToOpen() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("p1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBodyChange("better words")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(vm.state.value.savedPostId).isNull()
     }
 
     @Test
