@@ -22,39 +22,185 @@ use crate::prepare::{self, Gesture, PrepareError, Target};
 /// so stronger stances stay expressible.
 pub const DEFAULT_STANCE: f64 = 0.1;
 
-/// AI-provenance oversight, three-valued (layer1-interface.md §10,
-/// `def:content:license-qualifiers`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Oversight {
-    /// o = 0 — no AI disclosure required.
-    None,
-    /// o = 0.5 — generation details disclosed on query.
-    Conditional,
-    /// o = 1 — full provenance chain published alongside the record.
-    Full,
-}
+/// The resolution the canonical string renders and the wire accepts:
+/// three decimal places. A degree is a judgment, not a measurement, so
+/// the grid is coarse enough to be readable and fine enough that no
+/// tier CoGra publishes needs rounding.
+const AXIS_STEPS: f64 = 1000.0;
 
 /// License qualifiers, declared at authoring time and immutable
-/// (post.md §1; platform-guidelines.md §5). They ride the structural
-/// record as public protocol references (layer1-interface.md §8.2) —
-/// never the envelope, so they survive every payload state.
-#[derive(Debug, Clone, Copy)]
+/// (post.md §1; platform-guidelines.md §5). Both axes are degrees on
+/// `[0, 1]` — attribution `a` (`def:content:attribution`) and oversight
+/// `o` (`def:content:provenance`); neither is a switch. The pair rides
+/// the structural record as public protocol references
+/// (layer1-interface.md §8.2) — never the envelope, so it survives every
+/// payload state.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct License {
-    pub attribution: bool,
-    pub oversight: Oversight,
+    pub attribution: f64,
+    pub oversight: f64,
 }
 
 impl License {
+    /// Public Domain, `(a, o) = (0, 0)`: the unique point of zero
+    /// severity, where a use carries no downstream obligation whatever
+    /// (`rem:content:public-domain`). CoGra's default license.
+    pub const PUBLIC_DOMAIN: Self = Self {
+        attribution: 0.0,
+        oversight: 0.0,
+    };
+
+    /// Checks a caller-supplied pair and snaps each axis to the
+    /// published grid. Refuses anything off the square or finer than the
+    /// grid, rather than silently publishing bytes the author did not
+    /// choose.
+    pub fn checked(attribution: f64, oversight: f64) -> Result<Self, ContentError> {
+        Ok(Self {
+            attribution: axis("license.attribution", attribution)?,
+            oversight: axis("license.oversight", oversight)?,
+        })
+    }
+
     /// The canonical structural string CoGra publishes
-    /// (data-model.md "License qualifiers"): `a=<0|1>;o=<0|0.5|1>`.
+    /// (data-model.md "License qualifiers"): `a=<degree>;o=<degree>`,
+    /// each degree a decimal on `[0, 1]` with trailing zeros trimmed.
     pub fn canonical(&self) -> String {
-        let a = u8::from(self.attribution);
-        let o = match self.oversight {
-            Oversight::None => "0",
-            Oversight::Conditional => "0.5",
-            Oversight::Full => "1",
-        };
-        format!("a={a};o={o}")
+        format!(
+            "a={};o={}",
+            render_axis(self.attribution),
+            render_axis(self.oversight)
+        )
+    }
+
+    /// The pair a canonical string encodes; None when the string is not
+    /// one CoGra published. The read side has no license of its own to
+    /// fall back on — a record's own bytes are the only source.
+    pub fn parse(canonical: &str) -> Option<Self> {
+        let (a, o) = canonical.split_once(';')?;
+        let attribution = parse_axis(a.strip_prefix("a=")?)?;
+        let oversight = parse_axis(o.strip_prefix("o=")?)?;
+        Some(Self {
+            attribution,
+            oversight,
+        })
+    }
+}
+
+fn axis(field: &'static str, value: f64) -> Result<f64, ContentError> {
+    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+        return Err(ContentError::BadInput {
+            field,
+            message: "a license axis is a degree on [0, 1]".into(),
+        });
+    }
+    let steps = value * AXIS_STEPS;
+    if (steps - steps.round()).abs() > 1e-6 {
+        return Err(ContentError::BadInput {
+            field,
+            message: "a license axis carries at most three decimal places".into(),
+        });
+    }
+    Ok(steps.round() / AXIS_STEPS)
+}
+
+fn render_axis(value: f64) -> String {
+    let rendered = format!("{value:.3}");
+    rendered
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_owned()
+}
+
+fn parse_axis(value: &str) -> Option<f64> {
+    let parsed: f64 = value.parse().ok()?;
+    (parsed.is_finite() && (0.0..=1.0).contains(&parsed)).then_some(parsed)
+}
+
+#[cfg(test)]
+mod license_tests {
+    use super::{AXIS_STEPS, ContentError, License};
+
+    #[test]
+    fn canonical_renders_the_published_tiers() {
+        let cases = [
+            (0.0, 0.0, "a=0;o=0"),
+            (0.5, 0.0, "a=0.5;o=0"),
+            (1.0, 0.5, "a=1;o=0.5"),
+            (1.0, 1.0, "a=1;o=1"),
+        ];
+        for (attribution, oversight, expected) in cases {
+            let license = License {
+                attribution,
+                oversight,
+            };
+            assert_eq!(license.canonical(), expected);
+        }
+    }
+
+    #[test]
+    fn canonical_round_trips_across_the_whole_grid() {
+        for steps in 0..=1000 {
+            let value = f64::from(steps) / AXIS_STEPS;
+            let license = License {
+                attribution: value,
+                oversight: 1.0 - value,
+            };
+            assert_eq!(License::parse(&license.canonical()), Some(license));
+        }
+    }
+
+    #[test]
+    fn every_string_the_retired_ladder_published_still_parses() {
+        for a in ["0", "1"] {
+            for o in ["0", "0.5", "1"] {
+                let ladder = format!("a={a};o={o}");
+                let parsed = License::parse(&ladder).expect("a ladder string is a float pair");
+                assert_eq!(parsed.canonical(), ladder);
+            }
+        }
+    }
+
+    #[test]
+    fn parse_refuses_what_cogra_never_published() {
+        for bad in [
+            "a=0",
+            "a=0;o",
+            "o=0;a=0",
+            "a=;o=0",
+            "a=2;o=0",
+            "a=-0.5;o=0",
+            "a=0;o=NONE",
+            "",
+        ] {
+            assert!(License::parse(bad).is_none(), "{bad} parsed");
+        }
+    }
+
+    #[test]
+    fn checked_accepts_the_whole_square() {
+        assert_eq!(
+            License::checked(0.25, 0.75).expect("interior points are licenses"),
+            License {
+                attribution: 0.25,
+                oversight: 0.75,
+            }
+        );
+    }
+
+    #[test]
+    fn checked_refuses_degrees_off_the_square_or_off_the_grid() {
+        for (a, o) in [
+            (-0.1, 0.0),
+            (1.1, 0.0),
+            (0.0, f64::NAN),
+            (0.0, f64::INFINITY),
+            (0.0, 0.0005),
+        ] {
+            assert!(
+                matches!(License::checked(a, o), Err(ContentError::BadInput { .. })),
+                "({a}, {o}) was accepted"
+            );
+        }
     }
 }
 
@@ -469,6 +615,7 @@ pub async fn stage_pending(
                 content.node,
                 write.actor_id,
                 &target,
+                record_license(body)?,
                 None,
                 created_at,
                 clear_to_null(&content.title),
@@ -504,6 +651,7 @@ pub async fn stage_pending(
                 target_type,
                 write.actor_id,
                 &target,
+                record_license(body)?,
                 None,
                 created_at,
                 content.body.as_deref().unwrap_or_default(),
@@ -529,6 +677,16 @@ pub async fn stage_pending(
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     Ok(())
+}
+
+/// A content record's canonical license string. Declaration is mandatory
+/// at authoring time (platform-guidelines.md §5), so a content record
+/// reaching promotion without one is a broken record — not a
+/// public-domain one, which is a choice only its author can make.
+fn record_license(body: &common::l1::handshake::StructuralBody) -> Result<&str, ContentError> {
+    body.license
+        .as_deref()
+        .ok_or_else(|| ContentError::Internal("content record without license qualifiers".into()))
 }
 
 /// A genesis Review's parent as the display store names it — the A leg's
@@ -641,6 +799,7 @@ async fn land_one(
                     content.node,
                     write.actor_id,
                     &target,
+                    record_license(body)?,
                     Some(order),
                     created_at,
                     clear_to_null(&content.title),
@@ -679,6 +838,7 @@ async fn land_one(
                     target_type,
                     write.actor_id,
                     &target,
+                    record_license(body)?,
                     Some(order),
                     created_at,
                     content.body.as_deref().unwrap_or_default(),

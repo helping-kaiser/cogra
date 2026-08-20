@@ -294,18 +294,19 @@ struct PreparePayload {
 /// public protocol references, surviving every payload state.
 #[derive(InputObject)]
 struct LicenseInput {
-    /// Credit requirement: the creator is credited on every display,
-    /// quote, and reference surface.
-    attribution_required: bool,
-    oversight: super::types::OversightLevel,
+    /// `a` — how far a use must credit the maker, a degree on `[0, 1]`
+    /// (`def:content:attribution`). CoGra's composer offers the three
+    /// readings it publishes: 0, 0.5 (commercial uses only), and 1.
+    attribution: f64,
+    /// `o` — how far a use must be tracked publicly and left open to
+    /// audit, a degree on `[0, 1]` (`def:content:provenance`), offered
+    /// on the same three readings.
+    oversight: f64,
 }
 
 impl LicenseInput {
-    fn to_content(&self) -> crate::content::License {
-        crate::content::License {
-            attribution: self.attribution_required,
-            oversight: self.oversight.to_content(),
-        }
+    fn to_content(&self) -> Result<crate::content::License, crate::content::ContentError> {
+        crate::content::License::checked(self.attribution, self.oversight)
     }
 }
 
@@ -1563,11 +1564,15 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let license = match input.license.to_content() {
+            Ok(license) => license,
+            Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+        };
         let draft = crate::content::PostDraft {
             title: input.title,
             description: input.description,
             content: input.content,
-            license: input.license.to_content(),
+            license,
             p_directed: input.p_directed.map(|d| d.0),
         };
         match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
@@ -1622,10 +1627,14 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let license = match input.license.to_content() {
+            Ok(license) => license,
+            Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+        };
         let draft = crate::content::CommentDraft {
             target: input.target,
             content: input.content,
-            license: input.license.to_content(),
+            license,
             p_directed: input.p_directed.map(|d| d.0),
             p_interest: input.p_interest.map(|d| d.0),
         };

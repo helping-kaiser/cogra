@@ -1226,26 +1226,38 @@ pub enum PayloadState {
     Reduced,
 }
 
-/// AI-provenance oversight, three-valued (platform-guidelines.md §5;
-/// layer1-interface.md §10 `def:content:license-qualifiers`): NONE — no
-/// AI disclosure required; CONDITIONAL — generation details disclosed
-/// on query; FULL — the complete provenance chain published alongside
-/// the record.
-#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
-#[graphql(name = "Oversight", rename_items = "SCREAMING_SNAKE_CASE")]
-pub enum OversightLevel {
-    None,
-    Conditional,
-    Full,
+/// The license qualifiers a content node was minted with (§5 of
+/// platform-guidelines.md; layer1-interface.md §10
+/// `def:content:license-qualifiers`) — set by the creator when the node
+/// entered the graph, immutable thereafter, and surviving payload
+/// removal. Both are duties on *downstream use*, never a statement about
+/// how the content was made.
+#[derive(SimpleObject)]
+pub struct License {
+    /// `a` — the degree to which a use must credit the maker, on
+    /// `[0, 1]` (`def:content:attribution`). CoGra publishes three
+    /// readings: 0 no credit owed, 0.5 credit on commercial uses only,
+    /// 1 credit on every use.
+    pub attribution: f64,
+    /// `o` — the degree to which a use must be tracked publicly and
+    /// left open to audit, on `[0, 1]` (`def:content:provenance`).
+    /// CoGra publishes three readings: 0 no record owed, 0.5 a public
+    /// record of commercial uses only, 1 a public record of every use.
+    pub oversight: f64,
 }
 
-impl OversightLevel {
-    pub fn to_content(self) -> crate::content::Oversight {
-        match self {
-            Self::None => crate::content::Oversight::None,
-            Self::Conditional => crate::content::Oversight::Conditional,
-            Self::Full => crate::content::Oversight::Full,
-        }
+impl License {
+    /// The pair the display row's canonical string carries. An
+    /// unparseable string is an invariant break, not a licensing
+    /// choice — the read fails rather than inventing a weaker or
+    /// stronger pair than the record published.
+    fn of(canonical: &str) -> async_graphql::Result<Self> {
+        let license = crate::content::License::parse(canonical)
+            .ok_or_else(|| async_graphql::Error::new("license qualifiers are unreadable"))?;
+        Ok(Self {
+            attribution: license.attribution,
+            oversight: license.oversight,
+        })
     }
 }
 
@@ -1365,6 +1377,11 @@ impl PostType {
         author_user(ctx, self.0.author_id).await
     }
 
+    /// The license qualifiers the minting Publish record carried.
+    async fn license(&self) -> async_graphql::Result<License> {
+        License::of(&self.0.license)
+    }
+
     async fn moderation_status(&self) -> ModerationStatus {
         ModerationStatus::Normal
     }
@@ -1424,6 +1441,11 @@ impl CommentType {
 
     async fn author(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
         author_user(ctx, self.0.author_id).await
+    }
+
+    /// The license qualifiers the minting Review record carried.
+    async fn license(&self) -> async_graphql::Result<License> {
+        License::of(&self.0.license)
     }
 
     /// The node this comment is on — the genesis Review's parent.

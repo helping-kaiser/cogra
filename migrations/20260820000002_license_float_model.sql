@@ -11,8 +11,18 @@
 -- grammar and converts to itself — the stored act and staged rows need
 -- no rewrite.
 
-ALTER TABLE posts    ADD COLUMN license TEXT;
-ALTER TABLE comments ADD COLUMN license TEXT;
+-- The column default is the ruled default license, Public Domain — the
+-- same value the composer starts on, so a row written without an
+-- explicit license lands where an author who chose nothing would land.
+-- The write path always supplies it; the default only covers rows the
+-- column predates.
+ALTER TABLE posts    ADD COLUMN license TEXT DEFAULT 'a=0;o=0';
+ALTER TABLE comments ADD COLUMN license TEXT DEFAULT 'a=0;o=0';
+
+-- The backfills below want the pre-existing rows blank so the record's
+-- own qualifiers win over that default.
+UPDATE posts    SET license = NULL;
+UPDATE comments SET license = NULL;
 
 -- Backfill from the record the row projects: the staged proposal first
 -- (L2-owned, and the only source for a write that has not landed), the
