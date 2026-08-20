@@ -143,14 +143,34 @@ interface AccountRepository {
  * the display store.
  */
 interface ContentRepository {
-    /** The chronological listing, newest first. */
-    suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>>
+    /**
+     * The chronological listing, newest first — pending entries first,
+     * then landed entries in landing order. `includePending = false`
+     * serves only what has landed on L1, for a reader who wants the
+     * settled graph (api-spec.md "Pending entries come first, in their
+     * own cursor namespace"); true is the API's own default.
+     */
+    suspend fun posts(
+        first: Int,
+        after: String?,
+        includePending: Boolean = true,
+    ): Outcome<Page<PostView>>
 
     /** One post with its first comments page; null for an unknown id. */
-    suspend fun post(id: String, commentsFirst: Int, commentsAfter: String?): Outcome<PostDetail?>
+    suspend fun post(
+        id: String,
+        commentsFirst: Int,
+        commentsAfter: String?,
+        includePending: Boolean = true,
+    ): Outcome<PostDetail?>
 
     /** A further comments page of one post. */
-    suspend fun comments(postId: String, first: Int, after: String?): Outcome<Page<CommentView>>
+    suspend fun comments(
+        postId: String,
+        first: Int,
+        after: String?,
+        includePending: Boolean = true,
+    ): Outcome<Page<CommentView>>
 
     suspend fun preparePost(
         title: String?,
@@ -179,7 +199,12 @@ interface ContentRepository {
     suspend fun prepareCommentEdit(id: String, content: String): Outcome<PreparedContentView>
 
     /** A further page of one comment's direct replies (expand). */
-    suspend fun commentReplies(commentId: String, first: Int, after: String?): Outcome<Page<CommentView>>
+    suspend fun commentReplies(
+        commentId: String,
+        first: Int,
+        after: String?,
+        includePending: Boolean = true,
+    ): Outcome<Page<CommentView>>
 }
 
 /**
