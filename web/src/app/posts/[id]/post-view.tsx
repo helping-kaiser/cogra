@@ -24,6 +24,7 @@ import {
   type PostDetail,
   type ReplyView,
 } from "@/lib/api/content-api";
+import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -149,7 +150,7 @@ export function PostView({
     if (outcome.value === null) return;
     setTransportFault(null);
     const next = outcome.value.comments;
-    setComments((current) => [...current, ...next.items]);
+    setComments((current) => appendDeduped(current, next.items));
     setEndCursor(next.endCursor);
     setHasMore(next.hasNextPage);
   };
@@ -171,7 +172,7 @@ export function PostView({
       [comment.id]:
         outcome.kind === "success"
           ? {
-              items: [...seeded.items, ...outcome.value.items],
+              items: appendDeduped(seeded.items, outcome.value.items),
               endCursor: outcome.value.endCursor,
               hasMore: outcome.value.hasNextPage,
               loading: false,

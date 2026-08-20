@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPosts, isPending, type PostView } from "@/lib/api/content-api";
+import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -93,7 +94,7 @@ export function FeedView({
     setLoadingMore(false);
     if (outcome.kind === "success") {
       setTransportFault(null);
-      setPosts((current) => [...current, ...outcome.value.items]);
+      setPosts((current) => appendDeduped(current, outcome.value.items));
       setEndCursor(outcome.value.endCursor);
       setHasNextPage(outcome.value.hasNextPage);
     } else {
