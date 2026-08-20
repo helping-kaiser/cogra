@@ -44,7 +44,7 @@ function commentNode(comment: FixtureComment, withReplies = true): Record<string
     updatedAt: comment.edited ? "2026-08-12T11:00:00Z" : "2026-08-12T10:05:00Z",
     landing: landing(comment.pending),
     moderationStatus: "NORMAL",
-    license: { __typename: "License", attribution: 0, oversight: 0 },
+    license: { __typename: "License", attribution: 0, provenance: 0 },
     ...(withReplies
       ? {
           replies: {
@@ -90,7 +90,7 @@ function detail(
       updatedAt: "2026-08-12T10:00:00Z",
       landing: landing(postPending),
       moderationStatus: "NORMAL",
-      license: { __typename: "License", attribution: 0, oversight: 0 },
+      license: { __typename: "License", attribution: 0, provenance: 0 },
       comments: {
         __typename: "CommentConnection",
         edges: comments.map((comment) => ({
@@ -260,7 +260,7 @@ describe("PostView", () => {
         input: {
           target: "p1",
           content: "Nice one",
-          license: { attribution: 1, oversight: 0 },
+          license: { attribution: 1, provenance: 0 },
         },
       }),
     );

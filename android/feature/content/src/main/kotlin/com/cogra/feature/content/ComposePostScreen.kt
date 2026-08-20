@@ -235,11 +235,11 @@ internal fun LicenseControls(
             onChange = { onLicenseChange(license.copy(attribution = it)) },
         )
         LicenseAxis(
-            label = R.string.content_license_oversight_label,
-            tags = OVERSIGHT_TAGS,
-            labels = OVERSIGHT_LABELS,
-            value = license.oversight,
-            onChange = { onLicenseChange(license.copy(oversight = it)) },
+            label = R.string.content_license_provenance_label,
+            tags = PROVENANCE_TAGS,
+            labels = PROVENANCE_LABELS,
+            value = license.provenance,
+            onChange = { onLicenseChange(license.copy(provenance = it)) },
         )
     }
 }
@@ -256,16 +256,16 @@ private val ATTRIBUTION_LABELS = listOf(
     R.string.content_license_attribution_always,
 )
 
-private val OVERSIGHT_TAGS = listOf(
-    "license_oversight_none",
-    "license_oversight_commercial",
-    "license_oversight_always",
+private val PROVENANCE_TAGS = listOf(
+    "license_provenance_none",
+    "license_provenance_commercial",
+    "license_provenance_always",
 )
 
-private val OVERSIGHT_LABELS = listOf(
-    R.string.content_license_oversight_none,
-    R.string.content_license_oversight_commercial,
-    R.string.content_license_oversight_always,
+private val PROVENANCE_LABELS = listOf(
+    R.string.content_license_provenance_none,
+    R.string.content_license_provenance_commercial,
+    R.string.content_license_provenance_always,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -303,7 +303,7 @@ private fun LicenseAxis(
  */
 @Composable
 internal fun licenseTerms(license: LicenseChoice): String {
-    if (license.attribution == 0.0 && license.oversight == 0.0) {
+    if (license.attribution == 0.0 && license.provenance == 0.0) {
         return stringResource(R.string.content_license_terms_public_domain)
     }
     val terms = mutableListOf<String>()
@@ -317,13 +317,13 @@ internal fun licenseTerms(license: LicenseChoice): String {
             )
         }
     }
-    if (license.oversight > 0.0) {
-        terms += when (license.oversight) {
+    if (license.provenance > 0.0) {
+        terms += when (license.provenance) {
             0.5 -> stringResource(R.string.content_license_terms_record_commercial)
             1.0 -> stringResource(R.string.content_license_terms_record_always)
             else -> stringResource(
                 R.string.content_license_terms_record_degree,
-                license.oversight.toString(),
+                license.provenance.toString(),
             )
         }
     }

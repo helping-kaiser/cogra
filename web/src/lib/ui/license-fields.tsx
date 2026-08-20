@@ -8,7 +8,7 @@
 
 import {
   ATTRIBUTION_TIERS,
-  OVERSIGHT_TIERS,
+  PROVENANCE_TIERS,
   licenseTerms,
   type License,
   type LicenseTier,
@@ -78,11 +78,11 @@ export function LicenseChooser({
       />
       <AxisChoice
         legend="Public record of use"
-        tiers={OVERSIGHT_TIERS}
-        name={`${testIdPrefix}-oversight`}
-        testIdPrefix={`${testIdPrefix}-license-oversight`}
-        value={value.oversight}
-        onChange={(oversight) => onChange({ ...value, oversight })}
+        tiers={PROVENANCE_TIERS}
+        name={`${testIdPrefix}-provenance`}
+        testIdPrefix={`${testIdPrefix}-license-provenance`}
+        value={value.provenance}
+        onChange={(provenance) => onChange({ ...value, provenance })}
       />
     </fieldset>
   );

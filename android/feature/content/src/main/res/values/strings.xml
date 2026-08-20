@@ -14,10 +14,10 @@
     <string name="content_license_attribution_none">Never</string>
     <string name="content_license_attribution_commercial">Commercially</string>
     <string name="content_license_attribution_always">Always</string>
-    <string name="content_license_oversight_label">Public record of use</string>
-    <string name="content_license_oversight_none">Never</string>
-    <string name="content_license_oversight_commercial">Commercially</string>
-    <string name="content_license_oversight_always">Always</string>
+    <string name="content_license_provenance_label">Public record of use</string>
+    <string name="content_license_provenance_none">Never</string>
+    <string name="content_license_provenance_commercial">Commercially</string>
+    <string name="content_license_provenance_always">Always</string>
     <string name="content_license_terms_public_domain">Public domain — no obligation on reuse</string>
     <string name="content_license_terms_credit_commercial">Commercial uses credit the maker.</string>
     <string name="content_license_terms_credit_always">Every use credits the maker.</string>
