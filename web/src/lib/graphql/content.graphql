@@ -100,6 +100,10 @@ query Posts($first: Int!, $after: String) {
         createdAt
         updatedAt
         moderationStatus
+        license {
+          attribution
+          oversight
+        }
       }
     }
     pageInfo {

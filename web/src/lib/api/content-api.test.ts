@@ -102,7 +102,6 @@ describe("fetchPostDetail", () => {
                               attribution: 0,
                               oversight: 0,
                             },
-    license: { __typename: "License", attribution: 0, oversight: 0 },
                           },
                         },
                       ],
@@ -129,7 +128,7 @@ describe("fetchPostDetail", () => {
 });
 
 describe("preparePost", () => {
-  const license = { attributionRequired: true, oversight: "NONE" as const };
+  const license = { attribution: 1, oversight: 0 };
 
   it("lifts the node and the staged writes", async () => {
     server.use(
@@ -249,14 +248,14 @@ describe("prepareComment", () => {
     const outcome = await prepareComment(client(), {
       target: "p1",
       content: "First!",
-      license: { attributionRequired: false, oversight: "CONDITIONAL" },
+      license: { attribution: 0, oversight: 0.5 },
     });
     expect(outcome.kind).toBe("success");
     expect(variables).toEqual({
       input: {
         target: "p1",
         content: "First!",
-        license: { attributionRequired: false, oversight: "CONDITIONAL" },
+        license: { attribution: 0, oversight: 0.5 },
       },
     });
   });
