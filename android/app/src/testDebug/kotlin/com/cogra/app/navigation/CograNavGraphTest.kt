@@ -221,6 +221,39 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
     }
 
+    // Content exists at authoring, not at landing (substrate.md §6), so
+    // a signed post has somewhere to go: its own detail, where the
+    // settling marker sits on it.
+    @Test
+    fun aSignedPostOpensOnItsOwnDetail() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.preparedNode = "p-new"
+        content.details["p-new"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost(
+                "p-new",
+                landing = com.cogra.domain.Landing.Pending,
+            ),
+            comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
+        )
+        render()
+        waitForTag("bar_compose")
+        compose.onNodeWithTag("bar_compose").performClick()
+        waitForTag("compose_body")
+        compose.onNodeWithTag("compose_body").performTextInput("Something new")
+        compose.onNodeWithTag("compose_submit").performClick()
+
+        waitForTag("detail_pending")
+        val entry = navController.currentBackStackEntry
+        assertThat(entry?.destination?.hasRoute<PostDetail>()).isTrue()
+        assertThat(entry?.toRoute<PostDetail>()?.postId).isEqualTo("p-new")
+
+        // The composer left the stack: back returns to the reading
+        // context that launched it, not to a spent form.
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
     @Test
     fun theBottomBarSwitchesToTheProfileTab() {
         signIn()
