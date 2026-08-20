@@ -33,7 +33,7 @@ fragment PostFields on Post {
   moderationStatus
   license {
     attribution
-    oversight
+    provenance
   }
 }
 
@@ -59,7 +59,7 @@ fragment CommentFields on Comment {
   moderationStatus
   license {
     attribution
-    oversight
+    provenance
   }
 }
 

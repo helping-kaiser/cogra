@@ -300,7 +300,7 @@ impl Rig {
                 json!({ "input": {
                     "title": title,
                     "content": body,
-                    "license": { "attribution": 1.0, "oversight": 0.0 },
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
                 }}),
             )
             .await;
@@ -623,7 +623,7 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
             json!({ "input": {
                 "target": post_id,
                 "content": "Orphaned before it was signed.",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
             }}),
         )
         .await;
@@ -802,7 +802,7 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
             json!({ "input": {
                 "target": post_id,
                 "content": "Settling too.",
-                "license": { "attribution": 0.0, "oversight": 0.0 },
+                "license": { "attribution": 0.0, "provenance": 0.0 },
             }}),
         )
         .await;

@@ -39,7 +39,7 @@ The Publish record carries:
   ([invitations.md §3](../primitive/invitations.md#3-default-values-and-customization)) —
   headroom stays for deliberately strong attachment; the default
   is a fallback, never the recommendation.
-- **License qualifiers.** Attribution and oversight, each a
+- **License qualifiers.** Attribution and provenance, each a
   degree on `[0, 1]` — written `attr` and `o` here, keeping the
   attribution symbol apart from the attachment parameter `a`
   above — are structural

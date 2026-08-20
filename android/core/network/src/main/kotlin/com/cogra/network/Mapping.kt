@@ -192,7 +192,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     createdAt = createdAt,
     updatedAt = updatedAt,
     landing = landing.toDomain(),
-    license = LicenseChoice(license.attribution, license.oversight),
+    license = LicenseChoice(license.attribution, license.provenance),
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -202,10 +202,10 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     createdAt = createdAt,
     updatedAt = updatedAt,
     landing = landing.toDomain(),
-    license = LicenseChoice(license.attribution, license.oversight),
+    license = LicenseChoice(license.attribution, license.provenance),
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
     attribution = attribution,
-    oversight = oversight,
+    provenance = provenance,
 )

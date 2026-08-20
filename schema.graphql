@@ -552,7 +552,7 @@ type License {
 	CoGra publishes three readings: 0 no record owed, 0.5 a public
 	record of commercial uses only, 1 a public record of every use.
 	"""
-	oversight: Float!
+	provenance: Float!
 }
 
 """
@@ -572,7 +572,7 @@ input LicenseInput {
 	audit, a degree on `[0, 1]` (`def:content:provenance`), offered
 	on the same three readings.
 	"""
-	oversight: Float!
+	provenance: Float!
 }
 
 input LogInInput {
