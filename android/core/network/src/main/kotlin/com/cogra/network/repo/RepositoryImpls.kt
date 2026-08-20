@@ -487,8 +487,18 @@ class ContentRepositoryImpl @Inject constructor(
 
     // Reads are public-graph queries; they still ride the guard so a
     // signed-in viewer's stale token refreshes rather than erroring.
-    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> = guard.run {
-        client.query(PostsQuery(first = first, after = Optional.presentIfNotNull(after)))
+    override suspend fun posts(
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<Page<PostView>> = guard.run {
+        client.query(
+            PostsQuery(
+                first = first,
+                after = Optional.presentIfNotNull(after),
+                includePending = Optional.present(includePending),
+            ),
+        )
             .fetch()
             .map { data ->
                 Page(
@@ -503,6 +513,7 @@ class ContentRepositoryImpl @Inject constructor(
         id: String,
         commentsFirst: Int,
         commentsAfter: String?,
+        includePending: Boolean,
     ): Outcome<PostDetail?> = guard.run {
         client.query(
             PostDetailQuery(
@@ -510,6 +521,7 @@ class ContentRepositoryImpl @Inject constructor(
                 commentsFirst = commentsFirst,
                 commentsAfter = Optional.presentIfNotNull(commentsAfter),
                 repliesFirst = REPLIES_FIRST,
+                includePending = Optional.present(includePending),
             ),
         ).fetch().map { data ->
             data.post?.let { post ->
@@ -539,6 +551,7 @@ class ContentRepositoryImpl @Inject constructor(
         commentId: String,
         first: Int,
         after: String?,
+        includePending: Boolean,
     ): Outcome<Page<CommentView>> = guard.run {
         client.query(
             CommentRepliesQuery(
@@ -546,6 +559,7 @@ class ContentRepositoryImpl @Inject constructor(
                 first = first,
                 after = Optional.presentIfNotNull(after),
                 repliesFirst = REPLIES_FIRST,
+                includePending = Optional.present(includePending),
             ),
         ).fetch().flatMap { data ->
             when (val comment = data.comment) {
@@ -575,8 +589,9 @@ class ContentRepositoryImpl @Inject constructor(
         postId: String,
         first: Int,
         after: String?,
+        includePending: Boolean,
     ): Outcome<Page<CommentView>> =
-        post(postId, first, after).flatMap { detail ->
+        post(postId, first, after, includePending).flatMap { detail ->
             when (detail) {
                 null -> Outcome.Failed(IllegalStateException("post vanished under its thread"))
                 else -> Outcome.Success(detail.comments)

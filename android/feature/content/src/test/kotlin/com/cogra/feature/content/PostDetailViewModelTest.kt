@@ -3,6 +3,7 @@ package com.cogra.feature.content
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Family
 import com.cogra.domain.CommentView
+import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
@@ -46,17 +47,29 @@ class PostDetailViewModelTest {
             Outcome.Success(Page(listOf(testComment("c2")), null, hasNextPage = false))
         var commentPrepared = 0
 
+        var detailReads = 0
+        val includePendingAsked = mutableListOf<Boolean>()
+
         override suspend fun post(
             id: String,
             commentsFirst: Int,
             commentsAfter: String?,
-        ): Outcome<PostDetail?> = detail
+            includePending: Boolean,
+        ): Outcome<PostDetail?> {
+            detailReads += 1
+            includePendingAsked += includePending
+            return detail
+        }
 
         override suspend fun comments(
             postId: String,
             first: Int,
             after: String?,
-        ): Outcome<Page<CommentView>> = nextComments
+            includePending: Boolean,
+        ): Outcome<Page<CommentView>> {
+            includePendingAsked += includePending
+            return nextComments
+        }
 
         var prepareFails = false
         var editPrepared = 0
@@ -79,6 +92,7 @@ class PostDetailViewModelTest {
             commentId: String,
             first: Int,
             after: String?,
+            includePending: Boolean,
         ): Outcome<Page<CommentView>> = repliesPage
 
         override suspend fun prepareComment(
@@ -249,6 +263,94 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.submitTransportFailed).isFalse()
         assertThat(vm.state.value.commentSigned).isTrue()
+    }
+
+    @Test
+    fun aSignedCommentRefetchesTheThread() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        val readsBeforeSubmit = content.detailReads
+
+        // The signed comment is pending content, real from the moment
+        // it is signed — it reaches the thread through a refetched
+        // page, never by being merged into the held one.
+        content.detail = Outcome.Success(
+            PostDetail(
+                post = testPost("post-1"),
+                comments = Page(
+                    listOf(testComment("c1"), testComment("c9", landing = Landing.Pending)),
+                    "cc1",
+                    hasNextPage = true,
+                ),
+            ),
+        )
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.detailReads).isEqualTo(readsBeforeSubmit + 1)
+        val comments = vm.state.value.comments
+        assertThat(comments.map { it.id }).containsExactly("c1", "c9").inOrder()
+        assertThat(comments.last().landing.isPending).isTrue()
+    }
+
+    @Test
+    fun aSignedReplyRefetchesTheThread() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        val readsBeforeSubmit = content.detailReads
+
+        vm.onStartReply("c1")
+        vm.onReplyDraftChange("me too")
+        vm.onSubmitReply()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.detailReads).isEqualTo(readsBeforeSubmit + 1)
+    }
+
+    @Test
+    fun aFailedSubmitLeavesTheThreadUnread() = runTest(dispatcher) {
+        content.prepareFails = true
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        val readsBeforeSubmit = content.detailReads
+
+        vm.onDraftChange("Great post")
+        vm.onSubmitComment()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.detailReads).isEqualTo(readsBeforeSubmit)
+    }
+
+    @Test
+    fun aCommentThatLandedMidWalkIsNotAppendedTwice() = runTest(dispatcher) {
+        content.nextComments =
+            Outcome.Success(Page(listOf(testComment("c1"), testComment("c2")), null, hasNextPage = false))
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.loadMoreComments()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1", "c2").inOrder()
+    }
+
+    @Test
+    fun theThreadAsksForPendingEntriesByDefault() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.includePending).isTrue()
+        assertThat(content.includePendingAsked).containsExactly(true)
+
+        vm.setIncludePending(false)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.includePendingAsked).containsExactly(true, false).inOrder()
     }
 
     @Test

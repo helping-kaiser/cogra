@@ -10,10 +10,12 @@ package com.cogra.app.di
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.InviteCheck
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
+import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -72,18 +74,37 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
     }
 }
 
-/** Scriptable feed state: tests set the listing and detail pages. */
+/**
+ * Scriptable feed state: tests set the listing and detail pages.
+ * `preparePost` answers with the node the post will serve under and no
+ * writes — the signer completes trivially, which is the point:
+ * navigation tests exercise the flow, not the crypto.
+ */
 class ScriptedContentRepository : ThrowingContentRepository() {
     var listing: List<PostView> = emptyList()
     var details: MutableMap<String, PostDetail> = mutableMapOf()
+    var preparedNode: String = "p-new"
 
-    override suspend fun posts(first: Int, after: String?): Outcome<Page<PostView>> =
+    override suspend fun preparePost(
+        title: String?,
+        description: String?,
+        content: String,
+        license: LicenseChoice,
+    ): Outcome<PreparedContentView> =
+        Outcome.Success(PreparedContentView(preparedNode, emptyList()))
+
+    override suspend fun posts(
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<Page<PostView>> =
         Outcome.Success(Page(listing, endCursor = null, hasNextPage = false))
 
     override suspend fun post(
         id: String,
         commentsFirst: Int,
         commentsAfter: String?,
+        includePending: Boolean,
     ): Outcome<PostDetail?> = Outcome.Success(details[id])
 }
 
