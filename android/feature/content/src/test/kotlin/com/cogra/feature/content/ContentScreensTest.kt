@@ -15,7 +15,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
-import com.cogra.domain.OversightChoice
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testPost
 import com.google.common.truth.Truth.assertThat
@@ -251,7 +251,7 @@ class ContentScreensTest {
     private fun renderComposer(
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
-        onOversightChange: (OversightChoice) -> Unit = {},
+        onLicenseChange: (LicenseChoice) -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
     ) {
         compose.setContent {
@@ -260,8 +260,7 @@ class ContentScreensTest {
                 onTitleChange = {},
                 onDescriptionChange = {},
                 onBodyChange = {},
-                onAttributionChange = {},
-                onOversightChange = onOversightChange,
+                onLicenseChange = onLicenseChange,
                 onSubmit = onSubmit,
                 onBack = {},
                 keyBanner = keyBanner,
@@ -289,17 +288,33 @@ class ContentScreensTest {
 
     @Test
     fun createModeCarriesTheLicenseControls() {
-        var oversight: OversightChoice? = null
-        renderComposer(ComposePostUiState(), onOversightChange = { oversight = it })
-        compose.onNodeWithTag("license_attribution").assertExists()
-        compose.onNodeWithTag("license_oversight_full").performScrollTo().performClick()
-        assertThat(oversight).isEqualTo(OversightChoice.FULL)
+        var license: LicenseChoice? = null
+        renderComposer(ComposePostUiState(), onLicenseChange = { license = it })
+        compose.onNodeWithTag("license_attribution_none").assertExists()
+        compose.onNodeWithTag("license_oversight_always").performScrollTo().performClick()
+        assertThat(license).isEqualTo(LicenseChoice(attribution = 0.0, oversight = 1.0))
+    }
+
+    // The composer offers the published readings and nothing between
+    // them — a free numeric input would ask an author to price a degree
+    // CoGra has no reading for (platform-guidelines.md §5).
+    @Test
+    fun theComposerOffersOnlyTheNamedTiers() {
+        renderComposer(ComposePostUiState())
+        listOf(
+            "license_attribution_none",
+            "license_attribution_commercial",
+            "license_attribution_always",
+            "license_oversight_none",
+            "license_oversight_commercial",
+            "license_oversight_always",
+        ).forEach { compose.onNodeWithTag(it).assertExists() }
     }
 
     @Test
     fun editModeHidesTheImmutableLicense() {
         renderComposer(ComposePostUiState(editingId = "p1"))
-        compose.onNodeWithTag("license_attribution").assertDoesNotExist()
+        compose.onNodeWithTag("license_attribution_none").assertDoesNotExist()
     }
 
     @Test
@@ -342,8 +357,7 @@ class ContentScreensTest {
                 onRefresh = onRefresh,
                 onLoadMoreComments = onLoadMoreComments,
                 onDraftChange = {},
-                onAttributionChange = {},
-                onOversightChange = {},
+                onLicenseChange = {},
                 onSubmitComment = onSubmitComment,
                 onCommentSignedShown = {},
                 onLoadMoreReplies = onLoadMoreReplies,
@@ -375,6 +389,22 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_body").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
+    }
+
+    // Enforcement inside CoGra reduces to honest display
+    // (platform-guidelines.md §5), so the qualifiers ride the post and
+    // every comment on the read surface.
+    @Test
+    fun theLicenseTermsRideThePostAndEveryComment() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1", license = LicenseChoice(attribution = 1.0, oversight = 0.0)),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        compose.onNodeWithTag("detail_license_terms").assertExists()
+        compose.onNodeWithTag("comment_license_terms_c1").assertExists()
     }
 
     @Test

@@ -89,8 +89,8 @@ describe("ComposeForm", () => {
 
     fireEvent.change(screen.getByTestId("compose-title"), { target: { value: "A title" } });
     fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "The body" } });
-    fireEvent.click(screen.getByTestId("license-attribution"));
-    fireEvent.click(screen.getByTestId("license-oversight-conditional"));
+    fireEvent.click(screen.getByTestId("compose-license-attribution-1"));
+    fireEvent.click(screen.getByTestId("compose-license-oversight-0.5"));
     fireEvent.click(screen.getByTestId("compose-submit"));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
@@ -100,7 +100,7 @@ describe("ComposeForm", () => {
         title: "A title",
         description: null,
         content: "The body",
-        license: { attributionRequired: true, oversight: "CONDITIONAL" },
+        license: { attribution: 1, oversight: 0.5 },
       },
     });
   });
@@ -164,6 +164,7 @@ describe("ComposeForm", () => {
               createdAt: "2026-08-12T10:00:00Z",
               updatedAt: "2026-08-12T10:00:00Z",
               moderationStatus: "NORMAL",
+              license: { __typename: "License", attribution: 0, oversight: 0 },
               comments: {
                 __typename: "CommentConnection",
                 edges: [],

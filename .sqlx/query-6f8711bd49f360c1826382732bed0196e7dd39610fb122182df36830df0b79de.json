@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id, c.l1_node_id,\n                  c.landed_epoch, c.act_time, c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.l1_node_id = $1",
+  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id,\n                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                  c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.l1_node_id = $1",
   "describe": {
     "columns": [
       {
@@ -30,41 +30,46 @@
       },
       {
         "ordinal": 5,
+        "name": "license",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "landed_epoch",
         "type_info": "Int8"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "act_time",
         "type_info": "Int8"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "position",
         "type_info": "Int8"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "content!",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "redaction_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "version_pending!",
         "type_info": "Bool"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "version_created_at!",
         "type_info": "Timestamptz"
       }
@@ -80,6 +85,7 @@
       false,
       false,
       false,
+      false,
       true,
       true,
       true,
@@ -90,5 +96,5 @@
       false
     ]
   },
-  "hash": "6e87f642b2d55f15306192179f415480cf0809c7e72116c9074c753f9c95f9ee"
+  "hash": "6f8711bd49f360c1826382732bed0196e7dd39610fb122182df36830df0b79de"
 }

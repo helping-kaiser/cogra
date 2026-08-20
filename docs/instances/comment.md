@@ -120,8 +120,8 @@ instantiated for Comments:
   causal chain; same-parent siblings are a branch and the
   incumbent holds
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
-- **Granularity:** per field — body and media manifest fold
-  independently.
+- **Granularity:** the whole Comment — body and media manifest
+  together, the winning payload read as the complete state.
 
 **The parent is genesis-fixed.** The Comment's parent is its
 **genesis** Review's A-leg target. Formation cannot check that an

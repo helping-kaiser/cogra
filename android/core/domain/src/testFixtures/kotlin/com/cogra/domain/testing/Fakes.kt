@@ -401,6 +401,7 @@ fun testPost(
     title: String? = "Title $id",
     body: String = "Body $id",
     author: ActorRef? = ActorRef("author-1", "author"),
+    license: LicenseChoice = LicenseChoice.PublicDomain,
 ): PostView = PostView(
     id = id,
     title = testModeratedField(title),
@@ -409,16 +410,19 @@ fun testPost(
     author = author,
     createdAt = Instant.EPOCH,
     updatedAt = Instant.EPOCH,
+    license = license,
 )
 
 fun testComment(
     id: String,
     body: String = "Comment $id",
     author: ActorRef? = ActorRef("author-2", "commenter"),
+    license: LicenseChoice = LicenseChoice.PublicDomain,
 ): CommentView = CommentView(
     id = id,
     content = testModeratedField(body),
     author = author,
     createdAt = Instant.EPOCH,
     updatedAt = Instant.EPOCH,
+    license = license,
 )

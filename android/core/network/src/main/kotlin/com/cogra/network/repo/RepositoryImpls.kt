@@ -615,14 +615,14 @@ class ContentRepositoryImpl @Inject constructor(
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostEditMutation(
-                // The edit form holds the full field set, so every field
-                // rides as present; a present null clears (api-spec.md
-                // "Content authoring").
+                // An edit payload is the Post's complete content state,
+                // so every field rides explicitly; a null renders as
+                // nothing (post.md §4).
                 PreparePostEditInput(
                     id = id,
                     title = Optional.present(title),
                     description = Optional.present(description),
-                    content = Optional.present(content),
+                    content = content,
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -656,7 +656,7 @@ class ContentRepositoryImpl @Inject constructor(
         guard.run {
             client.mutation(
                 PrepareCommentEditMutation(
-                    PrepareCommentEditInput(id = id, content = Optional.present(content)),
+                    PrepareCommentEditInput(id = id, content = content),
                 ),
             ).payloadOutcome({ it.prepareCommentEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
                 data.prepareCommentEdit.node?.let { node ->
