@@ -56,7 +56,7 @@ function post(id: string, title: string, pending = false) {
     updatedAt: "2026-08-12T10:00:00Z",
     landing: { __typename: "Landing", state: pending ? "PENDING" : "LANDED" },
     moderationStatus: "NORMAL",
-    license: { __typename: "License", attribution: 0, oversight: 0 },
+    license: { __typename: "License", attribution: 0, provenance: 0 },
   };
 }
 
