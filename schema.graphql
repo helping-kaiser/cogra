@@ -900,12 +900,11 @@ type PostEdge {
 }
 
 """
-A Comment edit: an omitted body is refused (nothing would change);
-an explicit null clears to empty.
+A Comment edit: the complete new body (comment.md §4).
 """
 input PrepareCommentEditInput {
 	id: UUID!
-	content: String
+	content: String!
 }
 
 """
@@ -947,15 +946,15 @@ type PreparePayload {
 }
 
 """
-A Post edit: omitted fields are untouched (newest-wins fold per
-field, post.md §4); an explicit null clears the field. Identity,
-creator, and license never edit.
+A Post edit: the complete new content state, the same field set a
+create carries (post.md §4). An omitted title or description is a
+Post without one. Identity, creator, and license never edit.
 """
 input PreparePostEditInput {
 	id: UUID!
 	title: String
 	description: String
-	content: String
+	content: String!
 }
 
 """
