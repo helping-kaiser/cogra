@@ -506,16 +506,15 @@ Stated independently of any mechanism that achieves them.
   $E_k$, dependent-set partition, realized size, closure cause, attested
   boundary timestamp; **(ii) final ledger** — settled boundary burn state,
   final residual balances, final action counts, accepted-act increments,
-  debit vintages; **(iii) semantic projection** — complete person-vouch
-  acts, per-author folds, inviter revocation, relation coefficients, the
-  Actor-only relation multigraph; **(iv) the exact depth-two anchor** —
-  candidate family, source envelopes, standing map, standing box,
-  contraction certificate, fixed-point enclosure, co-maximizer witnesses;
-  **(v) the delegated stages** — depth-three/depth-four certified
-  selections, admission proposals, accepted backoff parameters, standing
-  maps, boxes, stage row certificates, fixed-point enclosures, or the
-  staged fallback; **(vi) final standing and admission** — the highest
-  certified stage $h^*_k$, final safe flow $W_{\text{end}}^{(k)}$, final
+  debit vintages; **(iii) act folding** — complete acts, per-author folds,
+  inviter revocation, cell coefficients, recipient resolution, the base
+  allocation matrix; **(iv) the transport** — domain weights and profiles,
+  the tilt shape, the depth mass, source emission fractions, and the hop
+  allocation matrices they assemble; **(v) the accepted rung** — the
+  certificate evaluated at each attempted rung of the published grid, its
+  failure mode, the accepted $t_k$, the declared hull box, and the
+  fixed-point enclosure; **(vi) final standing and admission** — the
+  equilibrium $\boldsymbol{x}^*$, the transport entries $\Pi_{ui}$, final
   standing, final action and epoch stamps, door headroom, W1/W2 verdicts;
   **(vii) shared closure outputs and policy** — the title certificate,
   settlement-recognition result, epoch target size, min/max durations, the
@@ -536,13 +535,14 @@ Stated independently of any mechanism that achieves them.
 computation that can feed admission is specified by published formula over
 the public record and independently reproducible from records and constants
 alone. For standing, verification has three explicit layers: the epoch
-certificate commits the complete person-vouch projection and its selected
-simple Actor paths; the admission schedule and exact balance/count mediant
-are replayed from public action masses and residual balances; and the
-graph-dependent path-incidence certificate checks the declared standing box
-and the chartered row-contraction margin. An uncertifiable extension has
-safe polarity: it contributes zero, and if all relational flow into an
-actor is zero, that actor's standing is exactly their own neutral source.
+certificate commits the folded cells, their recipients, and the base
+allocation matrix; the transport and the exact balance/count mediant are
+replayed from public action masses and residual balances; and the
+graph-dependent certificate $\mathcal{K}_k$ checks the declared hull box
+against the chartered margin. An uncertifiable rung falls back down the
+published grid to the no-tilt anchor, which always certifies; if all
+relational flow into an actor is zero, that actor's standing is exactly
+their own neutral source.
 Centralized phase: verification as audit (results apply before
 verification; constants being calibrated, not yet locked). Decentralized
 phase: verification as gate (nothing failing verification takes effect).
@@ -613,7 +613,7 @@ $\mathcal{A}$ is the six rule groups of `def:network:admission-closure`
 (§2): **formation** (identifier algebra, endpoint typing, asserted parents,
 dependent sets, the approval handshake, the authoritative order — §8.1,
 §8.2, §9); the **final state** (the proposed completed edge set and final
-post-debit pairs — §11.6); **staged standing** (the package that produces
+post-debit pairs — §11.6); **conserved standing** (the package that produces
 final standing — §11.4); the **final gates** (the write rule W1/W2a/W2b +
 the act budget — §7.1); **recognition** (§7.2); and the **write** (the
 host's admission of the final set — §11.6). The write rule decides *who may
@@ -649,9 +649,9 @@ A record by actor $i$ is writable in epoch $k$ iff all three sub-gates hold
 
 An insolvent actor (W1) restores capacity immediately by committing burns.
 Re-crossing the wall (W2a) requires some combination of new burns raising
-$r_i$ directly and new positive-rate person-vouch connections from actors
-whose rates exceed the current standing, lifting the mediant within the
-contributing-rate hull (`prop:epoch:final-standing-hull`).
+$r_i$ directly and new incoming allocation from actors whose rates exceed
+the current standing, lifting the mediant within the transported-rate hull
+(`prop:epoch:final-standing-hull`).
 
 Actor states (`tbl:epoch:actor-states`), by (W2a $\rho_{\text{act}} \ge
 \rho_\theta$, W1 $b \ge \theta$): **Active** (✓/✓, may act); **Band** (✓/✓,
@@ -829,9 +829,10 @@ in the boundary ledger, **reads stance marginals rather than path parity**.
 This is forced by the Quadrant Law: a coerced and unfair Accept with both
 parameters negative has $\epsilon = +1$ — correct for routing coherence,
 wrong as a verdict. Routing reads coherence; stance consumers read stance.
-The closure-side gate is person-vouch eligibility on Accept/Ratify
-(actor-directed acts vouch only if all mandatory coordinates are strictly
-positive, §11.3).
+The closure-side gate is recipient resolution on Accept/Ratify: the act
+reaches the counterparty only when it is title-transferring under the epoch
+title fold and all its mandatory coordinates are strictly positive; otherwise
+it resolves to its author (§11.3).
 
 The full paper's **terminal default** for the read-site
 (`rem:graph:settlement-reputation`): three authored edges carry three signed
@@ -983,7 +984,7 @@ independently folded projections, substitute an unrelated incoming edge for
 an A-projection, or select a T-projection whose parent act it cannot
 resolve. Layer 1 reads bundles in **exactly two** places
 (`rem:graph:authored-act-bundle-consumers`): the **standing** projection
-(net stance + person-vouch eligibility + inviter revocation, §11.3) and
+(net stance + recipient resolution + inviter revocation, §11.3) and
 **title** (the epoch-quantized settlement fold, §7.2). Every other reading
 — current profile (latest), membership, decay, amended-vs-accumulated
 display — is Layer-2-free. A parallel *genesis* is rejected by record
@@ -1044,8 +1045,8 @@ $G_k^{\text{raw}} = (V_k, E_k \cup D_k^{\text{raw}})$, where
 $D_k^{\text{raw}}$ holds the *current* derived readings — they replace
 earlier derived readings rather than accumulating. Feed ranking, raw
 signed traversal, and canonical bridge traversal consume
-$G_k^{\text{raw}}$; **standing consumes the temporal person-vouch
-multigraph and never traverses $D_k^{\text{raw}}$**.
+$G_k^{\text{raw}}$; **standing consumes the base allocation matrix and never
+traverses $D_k^{\text{raw}}$ — or the Action Graph at all**.
 
 ### 8.2 The write, dependencies, and the admission handshake
 
@@ -1063,7 +1064,7 @@ submission that is not written is not refused — it is nothing (the network
 has no ontology of the unwritten, and only the certificate speaks). Not
 writes (`rem:network:not-a-write`): derived edges (recomputation), payload
 reduction, non-written candidates, provisional standing solves, and the
-internal stage equilibria — only the accepted final set and its standing
+solver's internal iterates — only the accepted final set and its standing
 package speak.
 
 **Causal parents (`def:graph:act-causal-parents`).** An act may declare
@@ -1408,9 +1409,9 @@ service, and Channel 1 of bridge transport — with no per-consumer variant
 `rem:epoch:shared-raw-edge-primitive`). Under Edition 4 the raw formula
 itself is a **terminal default** (a guild may replace it, publishing the
 replacement completely; host-cached values are by-products — §3, §4).
-**Standing is not a raw-graph consumer:** it compiles complete acts into
-folded person-vouch relations and reads the relation coefficient and
-wall-clamped target activation instead (§11.3–11.4), never $\tilde{w}$.
+**Standing is not a raw-graph consumer:** it folds complete acts into cells
+and reads the cell coefficient and the wall-clamped recipient activation
+instead (§11.3–11.4), never $\tilde{w}$.
 Terminal reads of the stored $3 \times 3$ record (the full paper's Scalar
 and Attribution Views, feed terminus norms, CAN base values) are named only
 in the boundary ledger.
@@ -1455,9 +1456,9 @@ singular values, and damped weight are invariant under the joint flip.
 parameter product within an edge, leg product within a hyper-edge, parity
 product along a path. $(-1,-1)$ is gauge-equivalent to $(+1,+1)$ for
 *coherence* consumers. Stance is the author's directional verdict, read from
-the marginal sign of $p_d$; standing endorsement is a **stance consumer** on
-person-directed acts (person-vouch eligibility, §11.3). Coherent
-condemnation is a strong coherent signal, but not a vouch. Normative: (1)
+the marginal sign of $p_d$; standing's recipient resolution is a **stance
+consumer** on person-directed acts (§11.3). Coherent condemnation is a
+strong coherent signal, but it resolves home. Normative: (1)
 $\epsilon(e)$ is a coherence bit, never a favor bit; (2) indifference is
 zero magnitude, not a sign; (3) stance survives in the stored slice's
 marginal row and terminal stance read-sites; it is never substituted for
