@@ -1,12 +1,12 @@
 "use client";
 
 // The app shell (design.md §6): one frame for every viewer — the
-// bottom bar shows signed in or out, its account-needing slots
-// prompting at the front door. Signed out it frames the public read
-// tier; the front door and auth surfaces stand alone, and while the
-// phase resolves it stays off so it never flashes. Rendered from the
-// root layout so it wraps the public tier and the (app) group alike;
-// the auth gate stays where it is.
+// bottom bar rides the read surfaces signed in or out, its
+// account-needing slots prompting the anonymous reader. The task
+// flows and the auth surfaces stand without it, and while the phase
+// resolves it stays off so it never flashes. Rendered from the root
+// layout so it wraps the public tier and the (app) group alike; the
+// auth gate stays where it is.
 
 import { usePathname } from "next/navigation";
 
@@ -17,11 +17,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const phase = useAuthPhase();
   const pathname = usePathname();
   const signedIn = phase === "signedIn";
-  const publicReadSurface =
+  const readSurface =
     pathname === "/feed" ||
     pathname.startsWith("/posts/") ||
-    pathname.startsWith("/u/");
-  const showBar = signedIn || (phase === "signedOut" && publicReadSurface);
+    pathname.startsWith("/u/") ||
+    // The own profile is a gated read surface: its frame waits for the
+    // gate, which replaces a signed-out arrival with /login.
+    (signedIn && pathname === "/profile");
+  const showBar = phase !== "resolving" && readSurface;
   const active =
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
   return (
