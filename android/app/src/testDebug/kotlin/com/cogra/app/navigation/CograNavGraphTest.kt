@@ -207,6 +207,41 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("detail_back").fetchSemanticsNodes()).isNotEmpty()
     }
 
+    // The reader drills into a still-settling post and reads it landed
+    // there; the card they come back to already knows. The listing
+    // itself is untouched — the fake still serves the pending page —
+    // so nothing here is the page reconciliation the snapshot rule
+    // forbids (api-spec.md "A page is a snapshot, not a live view").
+    @Test
+    fun aLandingReadOnTheDetailClearsTheFeedCardsMarker() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(
+            com.cogra.domain.testing.testPost("p1", landing = com.cogra.domain.Landing.Pending),
+        )
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost(
+                "p1",
+                landing = com.cogra.domain.Landing.landed(9),
+            ),
+            comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
+        )
+        render()
+        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("feed_post_pending_p1", useUnmergedTree = true).assertExists()
+
+        compose.onNodeWithTag("feed_post_p1").performClick()
+        waitForTag("detail_body")
+        compose.onNodeWithTag("detail_back").performClick()
+        waitForTag("feed_post_p1")
+
+        assertThat(
+            compose.onAllNodesWithTag("feed_post_pending_p1", useUnmergedTree = true)
+                .fetchSemanticsNodes(),
+        ).isEmpty()
+    }
+
     @Test
     fun theComposerOpensFromTheBarsCenterAction() {
         signIn()
