@@ -33,14 +33,6 @@ data class ComposePostUiState(
     val notFound: Boolean = false,
     /** One-shot: the write signed; the caller leaves the composer. */
     val saved: Boolean = false,
-    /**
-     * The node id the content will serve under once the write lands —
-     * `prepare*`'s own answer, so it is known before the act is ordered
-     * (api-spec.md "Content authoring"). A created post opens on it, so
-     * the author reads what they just wrote, marked as still settling;
-     * null on an edit, which already came from that post.
-     */
-    val savedPostId: String? = null,
 )
 
 /**
@@ -89,7 +81,7 @@ class ComposePostViewModel @Inject constructor(
     fun onDescriptionChange(v: String) = _state.update { it.copy(description = v) }
     fun onBodyChange(v: String) = _state.update { it.copy(body = v, emptyBody = false) }
     fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
-    fun onSavedConsumed() = _state.update { it.copy(saved = false, savedPostId = null) }
+    fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
     fun onSubmit() {
         val s = _state.value
@@ -146,13 +138,7 @@ class ComposePostViewModel @Inject constructor(
                 return@launch
             }
             if (results.all { it is WriteResult.Done }) {
-                _state.update {
-                    it.copy(
-                        submitting = false,
-                        saved = true,
-                        savedPostId = prepared.node.takeIf { _ -> s.editingId == null },
-                    )
-                }
+                _state.update { it.copy(submitting = false, saved = true) }
             } else {
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
