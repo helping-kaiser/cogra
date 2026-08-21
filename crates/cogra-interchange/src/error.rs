@@ -264,6 +264,14 @@ pub enum EnvelopeError {
 /// shortcut: whether a host processes a given theory's CDDL is the host's
 /// policy, and a reader that will not process an assigned theory holds
 /// neither it nor anything above it in that major.
+///
+/// ```
+/// use cogra_interchange::{Theory, TheoryError};
+///
+/// let err = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => missing}"#)
+///     .expect_err("nothing defines `missing`");
+/// assert!(matches!(err, TheoryError::UnresolvedRule { ref name, line: 1 } if name == "missing"));
+/// ```
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum TheoryError {
@@ -341,6 +349,14 @@ pub enum TheoryError {
 /// A pattern is compiled at `Theory::parse` and executed nowhere else, so
 /// this error is reached only through [`TheoryError::Regexp`], never at
 /// match time.
+///
+/// ```
+/// use cogra_interchange::{RegexpError, Theory, TheoryError};
+///
+/// let err = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => tstr .regexp "[a-"}"#)
+///     .expect_err("the character class is not closed");
+/// assert!(matches!(err, TheoryError::Regexp(RegexpError::Malformed { .. })));
+/// ```
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum RegexpError {
