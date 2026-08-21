@@ -181,13 +181,13 @@ mod tests {
         }
     }
 
-    /// The contract [`XsdPattern::is_match`] owes, kept as a runnable test
-    /// against the day the engine can meet it. Every assertion here is a
-    /// negative the current engine answers wrongly, because its public
-    /// matcher searches rather than matches; the positives beside them are
-    /// asserted in the tests that run.
+    /// Whole-string matching, the anchored discipline the seam requires: a
+    /// pattern matches only when it accounts for the whole subject, so a
+    /// match against a strict superstring or a substring fails. The engine's
+    /// own anchored matcher delivers this (`dec:xchg:regexp-engine`); the
+    /// alternation case beside it is the counterexample that rules out ever
+    /// recovering anchoring from a span check.
     #[test]
-
     fn xsd_whole_string_matching() {
         let p = compile("a");
         assert!(p.is_match("a").expect("within budget"));

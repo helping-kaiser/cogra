@@ -669,13 +669,13 @@ mod tests {
         /// is read out of the parsed base theory, so the check holds for
         /// whatever pattern the conventions ship.
         ///
-        /// Ignored for the same reason as the seam's own contract test: the
-        /// engine's public matcher searches rather than matches, so it
-        /// answers true for every near miss that merely *contains* a label.
-        /// The half of the biconditional that survives an unanchored engine
-        /// is asserted below, and runs.
+        /// The full biconditional: the scanner accepts a near miss exactly
+        /// when the pattern matches it. Anchored matching
+        /// (`dec:xchg:regexp-engine`) is what lets it hold in both
+        /// directions — an unanchored matcher would answer true for every
+        /// near miss that merely *contains* a label, and only the forward
+        /// half would survive.
         #[test]
-
         fn the_two_label_recognizers_agree(text in near_label()) {
             prop_assert_eq!(
                 crate::NamespaceLabel::parse(&text).is_ok(),
@@ -686,9 +686,9 @@ mod tests {
         }
 
         /// Every label the ABNF scanner accepts, the conventions' pattern
-        /// matches. This direction is unaffected by the engine's anchoring
-        /// shortfall — a whole-string match is a match — so it runs, and it
-        /// is what would catch a pattern that had drifted from the grammar.
+        /// matches — the forward half of the biconditional above, called out
+        /// on its own because it is what would catch a pattern that had
+        /// drifted from the grammar.
         #[test]
         fn the_pattern_matches_every_label_the_scanner_accepts(text in near_label()) {
             if crate::NamespaceLabel::parse(&text).is_ok() {
