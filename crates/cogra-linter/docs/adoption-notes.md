@@ -45,10 +45,11 @@ in a separate section keeps them from being smuggled into Ω as
 owner-less path rules.
 
 Three sub-lists, because the calculus treats the three differently:
-`exclude_trees` leaves the carrier entirely; `nonparticipating_files`
-stay in the carrier **as bytes** (``judg:labels:minting``: a generated
-region "remains in the carrier as bytes, checked for exactness, while
-participating in nothing") — which is exactly what
+`exclude_trees` leaves the carrier entirely; `generated_files` stay
+in the carrier in full — under calculus v2
+(``inv:labels:generated-compliance``) their occurrences mint and cite
+like any others, excluded only from what the region presents, and
+their bytes stay exactness-checked, which is what
 ``rule:linter:register-freshness`` needs; `vendored_trees` is empty
 today and reserved for the generated Kotlin parser of
 ``dec:linter:kotlin-tree-sitter``.
@@ -388,7 +389,11 @@ carries its label or the run fails. Adopting Π as drafted means
 labelling **284 test functions** and **~42 module definitions** before
 the linter can pass, plus the ~1210 plain-comment sweep from the ban.
 *Options:* adopt Π empty in v1 and add profiles per migration; adopt
-the test profile only (its injectivity is already clean); adopt both.
+the test profile only (its injectivity is already clean); adopt both;
+or — opened by calculus v2 (``inv:labels:generated-compliance``) —
+(d) adopt with **standard place = a generated register per owner**,
+which drops the migration to one generator and zero source edits, at
+the price of the label not being visible at the asset itself.
 
 **Q12 — Exclude `#[cfg(test)]` modules from the module census?**
 Drafted: excluded. Without the exclusion the profile fails
