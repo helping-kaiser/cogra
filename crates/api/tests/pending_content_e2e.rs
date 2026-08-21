@@ -338,7 +338,47 @@ impl Rig {
             .await;
         listing["posts"]["edges"].as_array().expect("edges").clone()
     }
+
+    /// The profile chronicle: one author's records, newest-first. The
+    /// connection takes no `includePending` — the record set has no
+    /// pending namespace to opt out of.
+    async fn chronicle(&self, author: &Uuid) -> Vec<Value> {
+        let listing = self
+            .gql(None, CHRONICLE, json!({ "a": author.to_string() }))
+            .await;
+        listing["records"]["edges"]
+            .as_array()
+            .expect("edges")
+            .clone()
+    }
+
+    /// Every record on one node — the same chronicle, filtered to a
+    /// target.
+    async fn records_on(&self, target: &str) -> Vec<Value> {
+        let listing = self
+            .gql(
+                None,
+                r#"query($t: UUID!) {
+                     records(target: $t, first: 10) { edges { node { id } } }
+                   }"#,
+                json!({ "t": target }),
+            )
+            .await;
+        listing["records"]["edges"]
+            .as_array()
+            .expect("edges")
+            .clone()
+    }
 }
+
+const CHRONICLE: &str = r#"query($a: UUID!) {
+  records(author: $a, first: 10) {
+    edges { node {
+      id family landingEpoch
+      target { id landing { state epoch } ... on Post { title { value } } }
+    } }
+  }
+}"#;
 
 const PREPARE_POST: &str = r#"mutation($input: PreparePostInput!) {
   preparePost(input: $input) {
@@ -784,6 +824,94 @@ async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
         node["landing"]["epoch"].is_i64(),
         "a LANDED node carries its epoch: {node}"
     );
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let landed = rig.landed_post(&token, &key, "Landed", "b").await;
+
+    let prepared = rig.prepare_post(&token, "Pending", "b").await;
+    let pending = prepared["preparePost"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string();
+    let signed = rig
+        .pre_sign(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+
+    // The record set carries no pending namespace — a record is in the
+    // chronicle exactly when it is ordered fact — so the listing needs no
+    // opt-out to serve the settled graph. The signed-but-unordered
+    // Publish is simply not there.
+    let edges = rig.chronicle(&author).await;
+    assert_eq!(edges.len(), 1, "only ordered fact is listed: {edges:#?}");
+    assert_eq!(edges[0]["node"]["family"], "PUBLISH");
+    assert_eq!(edges[0]["node"]["target"]["id"], landed.as_str());
+    assert!(
+        edges[0]["node"]["landingEpoch"].is_i64(),
+        "a chronicle row always carries its landing epoch: {edges:#?}"
+    );
+
+    // The pending node's own chronicle is well-formed and empty.
+    assert!(
+        rig.records_on(&pending).await.is_empty(),
+        "a pending node has no record yet"
+    );
+
+    // Landing is what puts a record in the chronicle.
+    rig.approve_and_close(&token, &key, &signed).await;
+    let edges = rig.chronicle(&author).await;
+    assert_eq!(edges.len(), 2);
+    let targets: Vec<&str> = edges
+        .iter()
+        .map(|e| e["node"]["target"]["id"].as_str().expect("id"))
+        .collect();
+    assert!(targets.contains(&pending.as_str()), "{targets:?}");
+    assert_eq!(rig.records_on(&pending).await.len(), 1);
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post_id = rig.landed_post(&token, &key, "Old title", "Old body").await;
+
+    let edit = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": post_id, "title": "New title", "content": "Old body" }}),
+        )
+        .await;
+    let signed = rig
+        .pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
+        .await;
+
+    // The edit is signed but unordered: the chronicle still holds the one
+    // Publish that landed, at its own landing epoch.
+    let edges = rig.chronicle(&author).await;
+    assert_eq!(edges.len(), 1, "the unlanded edit is not fact: {edges:#?}");
+    let row = &edges[0]["node"];
+    assert_eq!(row["family"], "PUBLISH");
+    assert!(row["landingEpoch"].is_i64());
+
+    // A row points at the node, and a node read is always current: the
+    // target carries the pending edit's text, marked PENDING. The
+    // chronicle's landed-only guarantee is over which records exist, not
+    // over which version the node they name serves.
+    assert_eq!(row["target"]["id"], post_id.as_str());
+    assert_eq!(row["target"]["title"]["value"], "New title");
+    assert_eq!(row["target"]["landing"]["state"], "PENDING");
+
+    // Landing the edit is what adds the edit's own row.
+    rig.approve_and_close(&token, &key, &signed).await;
+    let edges = rig.chronicle(&author).await;
+    assert_eq!(edges.len(), 2, "the landed edit is its own record");
+    assert_eq!(edges[0]["node"]["target"]["landing"]["state"], "LANDED");
 }
 
 #[sqlx::test(migrations = "../../migrations")]

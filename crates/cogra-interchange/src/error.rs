@@ -8,8 +8,11 @@
 //! operation takes. An operation that was handed what it asked for and
 //! answers negatively returns that answer as a value, never as an `Err`.
 //!
-//! Slices 1 and 2 carry the four enums the CBOR core and the envelope
-//! need; the rest arrive with the slices that raise them.
+//! Seven leaf enums: four for the CBOR core and the envelope, one for a
+//! refused theory, one for a refused acquisition, and one for the
+//! `.regexp` seam, which a consumer meets inside [`TheoryError`] rather
+//! than on its own. [`Error`] aggregates the six a consumer meets
+//! directly, for callers that want a single arm from this crate.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -385,4 +388,127 @@ pub enum RegexpError {
         /// The budget that was in force.
         budget: usize,
     },
+}
+
+/// A theory refused at acquisition.
+///
+/// Every arm refuses a *mutation of the held state*, never a document: an
+/// acquisition that would break downward-closed holding, permanence, the
+/// additive-minor regime, or the restraint invariant is not the kind of
+/// thing `Registry::acquire` takes. Whether a document is accepted is a
+/// verdict and travels as a value.
+///
+/// Two arms carry a verdict's payload inside an error, and that is the
+/// criterion's consequence rather than a breach of it: a theory that
+/// breaks an invariant is not the kind of thing acquisition takes, and the
+/// verdict explaining why is the error's detail.
+///
+/// ```
+/// use cogra_interchange::{AcquireError, Coordinate, NamespaceLabel, Registry, Theory};
+///
+/// let theory = Theory::parse(r#"e = {0 => "com.example", 1 => [1, 4, uint], 2 => tstr}"#)
+///     .expect("an assignable theory");
+/// let label = NamespaceLabel::parse("com.example").expect("a label");
+///
+/// let mut registry = Registry::new();
+/// let err = registry
+///     .acquire(Coordinate::new(label, 1, 3), theory)
+///     .expect_err("the theory pins minor 4, not the acquired minor 3");
+/// assert!(matches!(err, AcquireError::PinMismatch { .. }));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum AcquireError {
+    /// A minor at or below the major's ceiling, offered as new.
+    ///
+    /// Assignment proceeds in increasing minor order and a gap below an
+    /// assigned minor is never filled, so a minor the ceiling has already
+    /// passed is not an acquisition the held state can take.
+    #[error("minor {minor} is not above the ceiling {ceiling}")]
+    OutOfOrder {
+        /// The minor offered.
+        minor: u64,
+        /// The greatest minor of that major already held.
+        ceiling: u64,
+    },
+    /// The theory's own pins name a coordinate other than the acquired
+    /// one.
+    #[error("theory pins {found}, not the acquired coordinate")]
+    PinMismatch {
+        /// The label, major, and minor the theory pins, as it pins them.
+        found: String,
+    },
+    /// The coordinate is held, and the theory offered for it is not the
+    /// one held.
+    ///
+    /// Theories are never revised and never withdrawn: once a coordinate
+    /// is assigned, its theory object is immutable. Offering the held
+    /// theory again is not a change and is admitted.
+    #[error("coordinate is already held under a different theory")]
+    Immutable,
+    /// The theory's model class is not included in the base theory's.
+    #[error("theory does not extend the base theory: {detail}")]
+    NotExtendingBase {
+        /// Which of the base theory's positions the theory fails, and how.
+        detail: String,
+    },
+    /// The theory does not extend the greatest held theory below it
+    /// additively.
+    #[error("minor inclusion fails against minor {against}")]
+    InclusionViolated {
+        /// The minor compared against: the greatest held below the one
+        /// offered.
+        against: u64,
+        /// Every way the additive regime was broken, in ascending key
+        /// order.
+        breaches: Vec<crate::InclusionBreach>,
+    },
+    /// The theory admits a floating-point value, a tag, or a restrained
+    /// simple value at a position that never names one.
+    ///
+    /// Refused outside a lenient registry, where a reader consuming a
+    /// registry it does not own admits the theory and keeps the report.
+    #[error("theory reaches a restrained value without naming it")]
+    ImplicitReach {
+        /// Every position that reaches a restrained value implicitly, and
+        /// the path by which it reaches.
+        reaches: Vec<crate::ImplicitReach>,
+    },
+}
+
+/// One error type for consumers that want one.
+///
+/// A sum over the six enums a consumer meets directly, for a caller whose
+/// own error type wants a single arm from this crate. Nothing here returns
+/// it: the taxonomy stays a taxonomy, and the aggregate is a convenience
+/// on top of it rather than a flattening of it.
+///
+/// ```
+/// use cogra_interchange::{Error, LabelError, NamespaceLabel};
+///
+/// let refusal: LabelError = NamespaceLabel::parse("Com.Example").expect_err("uppercase");
+/// let aggregated = Error::from(refusal);
+/// assert!(matches!(aggregated, Error::Label(_)));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum Error {
+    /// A `Value` invariant refused at construction.
+    #[error(transparent)]
+    Value(#[from] ValueError),
+    /// Bytes refused as a name of the data language.
+    #[error(transparent)]
+    Decode(#[from] DecodeError),
+    /// A string refused as a namespace label.
+    #[error(transparent)]
+    Label(#[from] LabelError),
+    /// A value refused as a document, or a prefix refused as an envelope.
+    #[error(transparent)]
+    Envelope(#[from] EnvelopeError),
+    /// CDDL refused as an assigned theory.
+    #[error(transparent)]
+    Theory(#[from] TheoryError),
+    /// A theory refused at acquisition.
+    #[error(transparent)]
+    Acquire(#[from] AcquireError),
 }
