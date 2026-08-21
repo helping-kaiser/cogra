@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                  p.landed_epoch, p.act_time, p.position, p.created_at,\n                  v.title, v.description,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM posts p\n           JOIN LATERAL (\n               SELECT title, description, content, redaction_reason, pending,\n                      created_at\n               FROM post_versions WHERE post_id = p.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE p.id = $1",
+  "query": "SELECT p.id, p.author_id, p.l1_node_id, p.license,\n                  p.landed_epoch, p.act_time, p.position, p.created_at,\n                  v.title, v.description,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM posts p\n           JOIN LATERAL (\n               SELECT title, description, content, redaction_reason, pending,\n                      created_at\n               FROM post_versions WHERE post_id = p.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE p.l1_node_id = $1",
   "describe": {
     "columns": [
       {
@@ -76,7 +76,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -96,5 +96,5 @@
       false
     ]
   },
-  "hash": "d3f1601d98ff4ee6b129de2a991f3d01e7d65eb83cfda3a973d2addcf86a4dd9"
+  "hash": "12c5af4b29eeeaed3a5193feb838d05fac029370fac123b346ab060d31b08618"
 }
