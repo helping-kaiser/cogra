@@ -37,11 +37,14 @@
 #![allow(dead_code)]
 
 pub(crate) mod ast;
+pub(crate) mod companion;
 pub(crate) mod fragment;
 pub(crate) mod lex;
 pub(crate) mod parse;
 pub(crate) mod print;
 pub(crate) mod resolve;
+
+pub use companion::OpenTheory;
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -223,6 +226,26 @@ impl Theory {
     /// ```
     pub fn to_cddl(&self) -> String {
         print::print(&self.cddl)
+    }
+
+    /// The open companion: this theory with the minor position of key 1
+    /// freed to `uint` and the base theory's wildcard joining the map.
+    ///
+    /// Derived, total, and of a different type — no registry takes an
+    /// [`OpenTheory`]. Every content key keeps its type and its
+    /// requiredness: the derivation makes exactly two edits and no third.
+    ///
+    /// ```
+    /// use cogra_interchange::Theory;
+    ///
+    /// let theory = Theory::parse(r#"e = {0 => "com.example", 1 => [1, 2, uint]}"#)
+    ///     .expect("an assignable theory");
+    /// let open = theory.open_companion();
+    /// assert!(open.to_cddl().contains("1 => [1, uint, uint]"));
+    /// assert!(open.to_cddl().ends_with("* (uint .gt 1) => any}\n"));
+    /// ```
+    pub fn open_companion(&self) -> OpenTheory {
+        companion::derive(self)
     }
 
     fn slice(&self, span: Span) -> &str {
