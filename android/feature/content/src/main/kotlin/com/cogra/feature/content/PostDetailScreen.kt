@@ -1,6 +1,7 @@
 package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -132,7 +133,6 @@ fun PostDetailScreen(
     }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
@@ -168,67 +168,88 @@ fun PostDetailScreen(
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-            when {
-                state.notFound -> ErrorLine(
-                    R.string.content_error_not_found,
-                    "detail_not_found",
-                    modifier = Modifier.padding(24.dp),
-                )
-                state.transportFault != null && state.post == null -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    ErrorLine(R.string.content_error_transport, "detail_transport_error")
-                    TextButton(onClick = onRefresh, modifier = Modifier.testTag("detail_retry")) {
-                        Text(stringResource(R.string.content_retry))
-                    }
-                }
-                state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
-                    // A transport fault never blanks content already on
-                    // screen, and it surfaces where the failed fetch was
-                    // requested: a failed refresh on this banner, a
-                    // failed comments page at the load-more slot in the
-                    // thread (android.md "Degrade, never crash").
-                    if (state.transportFault == TransportFault.REFRESH) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+            // The collapsing top wires up inside the pull-to-refresh
+            // box, not on the Scaffold: post-scroll flows innermost
+            // first, and the refresh gesture consumes the unconsumed
+            // at-the-top leftover — the gate's signal that the reader is
+            // back at the top — before an outer gate would ever see it.
+            // Outside, the bar stays hidden at the top of the thread
+            // while a pull is already gathering, which reads as a
+            // refresh fired mid-scroll (the feed's twin wiring).
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .collapsingTop(collapsingTop),
+            ) {
+                when {
+                    state.notFound -> ErrorLine(
+                        R.string.content_error_not_found,
+                        "detail_not_found",
+                        modifier = Modifier.padding(24.dp),
+                    )
+                    state.transportFault != null && state.post == null -> Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        ErrorLine(R.string.content_error_transport, "detail_transport_error")
+                        TextButton(
+                            onClick = onRefresh,
+                            modifier = Modifier.testTag("detail_retry"),
                         ) {
-                            ErrorLine(R.string.content_error_transport, "detail_transport_banner")
-                            TextButton(
-                                onClick = onRefresh,
-                                modifier = Modifier.testTag("detail_retry"),
-                            ) {
-                                Text(stringResource(R.string.content_retry))
-                            }
+                            Text(stringResource(R.string.content_retry))
                         }
                     }
-                    PostWithThread(
-                        state = state,
-                        post = state.post,
-                        viewerId = viewerId,
-                        signedIn = signedIn,
-                        onLoadMoreComments = onLoadMoreComments,
-                        onDraftChange = onDraftChange,
-                        onLicenseChange = onLicenseChange,
-                        onSubmitComment = onSubmitComment,
-                        onLoadMoreReplies = onLoadMoreReplies,
-                        onStartEditComment = onStartEditComment,
-                        onEditDraftChange = onEditDraftChange,
-                        onCancelEditComment = onCancelEditComment,
-                        onSubmitCommentEdit = onSubmitCommentEdit,
-                        onStartReply = onStartReply,
-                        onReplyDraftChange = onReplyDraftChange,
-                        onCancelReply = onCancelReply,
-                        onSubmitReply = onSubmitReply,
-                        onOpenActor = onOpenActor,
-                        onSignInOrJoin = onSignInOrJoin,
-                    )
+                    state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
+                        // A transport fault never blanks content already
+                        // on screen, and it surfaces where the failed
+                        // fetch was requested: a failed refresh on this
+                        // banner, a failed comments page at the load-more
+                        // slot in the thread (android.md "Degrade, never
+                        // crash").
+                        if (state.transportFault == TransportFault.REFRESH) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                ErrorLine(
+                                    R.string.content_error_transport,
+                                    "detail_transport_banner",
+                                )
+                                TextButton(
+                                    onClick = onRefresh,
+                                    modifier = Modifier.testTag("detail_retry"),
+                                ) {
+                                    Text(stringResource(R.string.content_retry))
+                                }
+                            }
+                        }
+                        PostWithThread(
+                            state = state,
+                            post = state.post,
+                            viewerId = viewerId,
+                            signedIn = signedIn,
+                            onLoadMoreComments = onLoadMoreComments,
+                            onDraftChange = onDraftChange,
+                            onLicenseChange = onLicenseChange,
+                            onSubmitComment = onSubmitComment,
+                            onLoadMoreReplies = onLoadMoreReplies,
+                            onStartEditComment = onStartEditComment,
+                            onEditDraftChange = onEditDraftChange,
+                            onCancelEditComment = onCancelEditComment,
+                            onSubmitCommentEdit = onSubmitCommentEdit,
+                            onStartReply = onStartReply,
+                            onReplyDraftChange = onReplyDraftChange,
+                            onCancelReply = onCancelReply,
+                            onSubmitReply = onSubmitReply,
+                            onOpenActor = onOpenActor,
+                            onSignInOrJoin = onSignInOrJoin,
+                        )
+                    }
                 }
             }
         }
