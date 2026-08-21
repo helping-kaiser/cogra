@@ -6,6 +6,7 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
@@ -84,6 +85,7 @@ data class PostDetailUiState(
 class PostDetailViewModel @Inject constructor(
     private val content: ContentRepository,
     private val signer: WriteSigner,
+    private val landings: LandingSignal,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostDetailUiState())
@@ -127,6 +129,11 @@ class PostDetailViewModel @Inject constructor(
                             it.copy(loading = false, notFound = true, transportFault = null)
                         }
                     } else {
+                        // This read is the device's freshest word on
+                        // where the post stands; the feed card the
+                        // reader came from is still holding the state
+                        // its own page carried.
+                        landings.observed(detail.post.id, detail.post.landing)
                         _state.update {
                             it.copy(
                                 loading = false,

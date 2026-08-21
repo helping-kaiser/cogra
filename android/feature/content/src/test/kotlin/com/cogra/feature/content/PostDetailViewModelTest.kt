@@ -9,6 +9,8 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
+import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.content.NodeLanding
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -19,7 +21,9 @@ import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -31,6 +35,7 @@ import org.junit.Test
 class PostDetailViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
+    private val landings = LandingSignal()
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
@@ -109,7 +114,7 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, WriteSigner(sealer, identity))
+    private fun viewModel() = PostDetailViewModel(content, WriteSigner(sealer, identity), landings)
 
     @Before
     fun setUp() {
@@ -144,6 +149,40 @@ class PostDetailViewModelTest {
         assertThat(state.post?.id).isEqualTo("post-1")
         assertThat(state.comments.map { it.id }).containsExactly("c1")
         assertThat(state.commentsHaveMore).isTrue()
+    }
+
+    // Every read of the post is the device's freshest word on where it
+    // stands, and the surfaces already carrying it are told.
+    @Test
+    fun eachReadPublishesWhereThePostStands() = runTest(dispatcher) {
+        val seen = mutableListOf<NodeLanding>()
+        // Unconfined so the collector is subscribed before the read
+        // publishes — the documented recipe for collecting a hot flow
+        // in a test.
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            landings.updates.collect { seen += it }
+        }
+
+        content.detail = Outcome.Success(
+            PostDetail(
+                post = testPost("post-1", landing = Landing.Pending),
+                comments = Page(emptyList(), null, hasNextPage = false),
+            ),
+        )
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seen).containsExactly(NodeLanding("post-1", Landing.Pending))
+
+        content.detail = Outcome.Success(
+            PostDetail(
+                post = testPost("post-1", landing = Landing.landed(7)),
+                comments = Page(emptyList(), null, hasNextPage = false),
+            ),
+        )
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seen.last()).isEqualTo(NodeLanding("post-1", Landing.landed(7)))
     }
 
     @Test
