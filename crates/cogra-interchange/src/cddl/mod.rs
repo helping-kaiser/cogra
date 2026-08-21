@@ -39,12 +39,14 @@
 pub(crate) mod ast;
 pub(crate) mod companion;
 pub(crate) mod fragment;
+pub(crate) mod inclusion;
 pub(crate) mod lex;
 pub(crate) mod parse;
 pub(crate) mod print;
 pub(crate) mod resolve;
 
 pub use companion::OpenTheory;
+pub use inclusion::{Inclusion, InclusionBreach, check_inclusion};
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
