@@ -700,6 +700,23 @@ fn size_on_an_unsigned_integer_is_a_range() {
     assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
 }
 
+/// `uint .size N` ≡ `0…256**N`, and `256**9 > 2**64`, so a width of nine
+/// bytes or more admits every unsigned integer — where the byte count a
+/// value happens to need would say nothing of the kind.
+#[test]
+fn size_on_an_unsigned_integer_admits_every_uint_past_eight_bytes() {
+    assert!(admits("uint .size 9", Value::Unsigned(5)));
+    assert!(admits("uint .size 9", Value::Unsigned(u64::MAX)));
+    assert!(admits("uint .size 20", Value::Unsigned(5)));
+    assert!(admits("uint .size 20", Value::Unsigned(u64::MAX)));
+    // A range of oversized widths is satisfied the same way.
+    assert!(admits("uint .size (9..12)", Value::Unsigned(u64::MAX)));
+    assert!(admits("uint .size (10..20)", Value::Unsigned(5)));
+    // Eight is unchanged: the widths at or below it still bound the value.
+    assert!(!admits("uint .size 1", Value::Unsigned(256)));
+    assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
+}
+
 #[test]
 fn size_refuses_a_target_it_is_not_defined_for() {
     assert!(!admits("any .size 1", Value::Null));
