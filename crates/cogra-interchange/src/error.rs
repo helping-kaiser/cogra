@@ -11,7 +11,8 @@
 //! Seven leaf enums: four for the CBOR core and the envelope, one for a
 //! refused theory, one for a refused acquisition, and one for the
 //! `.regexp` seam, which a consumer meets inside [`TheoryError`] rather
-//! than on its own.
+//! than on its own. [`Error`] aggregates the six a consumer meets
+//! directly, for callers that want a single arm from this crate.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -473,4 +474,41 @@ pub enum AcquireError {
         /// the path by which it reaches.
         reaches: Vec<crate::ImplicitReach>,
     },
+}
+
+/// One error type for consumers that want one.
+///
+/// A sum over the six enums a consumer meets directly, for a caller whose
+/// own error type wants a single arm from this crate. Nothing here returns
+/// it: the taxonomy stays a taxonomy, and the aggregate is a convenience
+/// on top of it rather than a flattening of it.
+///
+/// ```
+/// use cogra_interchange::{Error, LabelError, NamespaceLabel};
+///
+/// let refusal: LabelError = NamespaceLabel::parse("Com.Example").expect_err("uppercase");
+/// let aggregated = Error::from(refusal);
+/// assert!(matches!(aggregated, Error::Label(_)));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum Error {
+    /// A `Value` invariant refused at construction.
+    #[error(transparent)]
+    Value(#[from] ValueError),
+    /// Bytes refused as a name of the data language.
+    #[error(transparent)]
+    Decode(#[from] DecodeError),
+    /// A string refused as a namespace label.
+    #[error(transparent)]
+    Label(#[from] LabelError),
+    /// A value refused as a document, or a prefix refused as an envelope.
+    #[error(transparent)]
+    Envelope(#[from] EnvelopeError),
+    /// CDDL refused as an assigned theory.
+    #[error(transparent)]
+    Theory(#[from] TheoryError),
+    /// A theory refused at acquisition.
+    #[error(transparent)]
+    Acquire(#[from] AcquireError),
 }
