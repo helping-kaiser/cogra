@@ -5,11 +5,14 @@
 //! teardown, one spelling, and bounded determination. The description
 //! language adds two whose subject is a chain of minors: conservativity,
 //! and the composition of inclusion the registry's one-comparison rule
-//! rests on. The rest arrive with the slices whose subjects they are.
+//! rests on. Satisfaction unlocks forward compatibility, which is stated
+//! over the same chains and needs documents to quantify over. The rest
+//! arrive with the slices whose subjects they are.
 
 use cogra_interchange::{
     Array, Bytes, Content, ContentKey, Document, Envelope, Float, LabelError, MAX_ENVELOPE_PREFIX,
     Map, NamespaceLabel, Negative, Simple, Tag, Text, Theory, Value, Version, check_inclusion,
+    satisfies, satisfies_global, satisfies_open,
 };
 use proptest::prelude::*;
 
@@ -271,6 +274,53 @@ fn consecutive_inclusion(chain: &[Theory]) -> bool {
     })
 }
 
+/// A value of the type a generated slot carries.
+///
+/// One value per member of `CHAIN_TYPES`, varied by the seed so that the
+/// property is quantified over documents and not over one fixture. A type
+/// outside that set means the chain generator grew a case this did not, and
+/// the panic says so rather than silently generating a document that
+/// conforms to nothing.
+fn value_of(ty: &str, seed: u8) -> Value {
+    match ty {
+        "uint" => Value::Unsigned(u64::from(seed)),
+        "tstr" => Value::Text(Text::from(format!("v{seed}"))),
+        "[* uint]" => Value::Array(Array::new(
+            (0..u64::from(seed % 4))
+                .map(Value::Unsigned)
+                .collect::<Vec<Value>>(),
+        )),
+        "{a: 1}" => Value::Map(
+            Map::new([(Value::Text(Text::from("a".to_owned())), Value::Unsigned(1))])
+                .expect("one key"),
+        ),
+        other => {
+            panic!("the chain generator draws a type this generator has no value for: {other}")
+        }
+    }
+}
+
+/// A document that conforms to a generated theory: every required key, and
+/// the optional ones the flags select.
+fn conforming(theory: &Theory, seeds: &[u8], carried: &[bool]) -> Document {
+    let mut content = Content::new();
+    for (index, slot) in theory.slots().enumerate() {
+        let carry = slot.required() || carried[index % carried.len()];
+        if !carry {
+            continue;
+        }
+        content.insert(
+            slot.key(),
+            value_of(slot.type_source(), seeds[index % seeds.len()]),
+        );
+    }
+    let (major, minor) = theory.coordinate();
+    Document::new(
+        Envelope::new(theory.label().clone(), Version::new(major, minor, 0)),
+        content,
+    )
+}
+
 /// Drop the repeated keys a generator has no way to avoid, so that the
 /// constructor's duplicate refusal is not what the property measures.
 fn map_of(pairs: Vec<(Value, Value)>) -> Map {
@@ -442,6 +492,56 @@ proptest! {
                     earlier.to_cddl(),
                     later.to_cddl(),
                     verdict
+                );
+            }
+        }
+    }
+
+    /// The base theory is satisfied by every document, before any
+    /// assignment is consulted — which is what "constitutionally prior"
+    /// buys, and what makes reaching it without dispatch sound.
+    ///
+    /// It is also the crosscheck of the two label recognizers at the
+    /// document level: key 0 of a `Document` came through the ABNF scanner,
+    /// and this judgment runs it through the base theory's `.regexp` and
+    /// its `.size (3..255)`.
+    #[test]
+    fn every_document_satisfies_the_base_theory(document in any_document()) {
+        prop_assert!(satisfies_global(&document).holds());
+    }
+
+    /// Forward compatibility: a document a later minor's theory admits is
+    /// admitted by the open companion of every earlier assigned minor.
+    ///
+    /// This is what lets a reader below the stamp still read: it judges
+    /// against the companion of the greatest theory it holds, and the
+    /// metatheorem says the answer agrees with the emitter's. Quantified
+    /// over the same generated chains conservativity is, under the same
+    /// premise the registry actually checks.
+    #[test]
+    fn forward_compatibility_a_conforming_document_meets_every_earlier_companion(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+    ) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        for (index, theory) in chain.iter().enumerate() {
+            let document = conforming(theory, &seeds, &carried);
+            prop_assert!(
+                satisfies(&document, theory).holds(),
+                "the generated document does not conform to the theory it was built from: {}",
+                theory.to_cddl()
+            );
+            for earlier in &chain[..=index] {
+                let open = earlier.open_companion();
+                prop_assert!(
+                    satisfies_open(&document, &open).holds(),
+                    "a document of minor {:?} fails the companion of minor {:?}: {:?}",
+                    theory.coordinate(),
+                    earlier.coordinate(),
+                    satisfies_open(&document, &open)
                 );
             }
         }

@@ -50,9 +50,9 @@
 //! as an identity.
 
 use super::ast::{
-    Assign, Cddl, GenericArgs, GenericParams, Group, GroupChoice, GroupEntry, GroupEntryKind,
-    MemberKey, MemberKeyKind, Occur, OccurKind, Operator, Rule, RuleBody, Type, Type1, Type2,
-    Type2Kind, Uint, Value, ValueKind,
+    Cddl, GenericArgs, GenericParams, Group, GroupChoice, GroupEntry, GroupEntryKind, MemberKey,
+    MemberKeyKind, Occur, OccurKind, Operator, Rule, RuleBody, Type, Type1, Type2, Type2Kind, Uint,
+    Value, ValueKind,
 };
 
 /// A whole document in normal form, one rule per line.
@@ -299,12 +299,14 @@ fn print_value(value: &Value, out: &mut String) {
 /// Offered here rather than inferred at each call: `=` does not, which is
 /// what makes the parser's fallback necessary and the printer's fidelity
 /// on that fallback worth asserting.
-pub(crate) fn assignment_is_unambiguous(assign: Assign) -> bool {
-    assign != Assign::Plain
+#[cfg(test)]
+pub(crate) fn assignment_is_unambiguous(assign: super::ast::Assign) -> bool {
+    assign != super::ast::Assign::Plain
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::ast::Assign;
     use super::super::parse::{CORPUS, parse};
     use super::*;
 
