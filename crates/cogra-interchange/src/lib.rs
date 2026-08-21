@@ -50,6 +50,7 @@ mod regexp;
 mod value;
 mod version;
 
+pub use cddl::{BaseTheory, KeySlot, Theory, global};
 pub use envelope::{Content, ContentKey, Document, Envelope, MAX_ENVELOPE_PREFIX};
 pub use error::{DecodeError, EnvelopeError, LabelError, RegexpError, TheoryError, ValueError};
 pub use label::NamespaceLabel;

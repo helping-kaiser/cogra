@@ -53,8 +53,8 @@
 //! Nothing here fixes the *order* of the entries: a map's entries carry no
 //! order, and a theory writing key 1 before key 0 pins the same map.
 
-use crate::NamespaceLabel;
 use crate::error::TheoryError;
+use crate::{ContentKey, NamespaceLabel};
 
 use super::ast::{
     Cddl, GroupEntry, GroupEntryKind, MemberKey, MemberKeyKind, Occur, OccurKind, Rule, RuleBody,
@@ -91,14 +91,14 @@ impl Fragment {
 /// One enumerated content key.
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Slot {
-    key: u64,
+    key: ContentKey,
     required: bool,
     type_span: Span,
 }
 
 impl Slot {
     /// The key, always greater than 1.
-    pub(crate) fn key(&self) -> u64 {
+    pub(crate) fn key(&self) -> ContentKey {
         self.key
     }
 
@@ -137,10 +137,14 @@ pub(crate) fn check(cddl: &Cddl) -> Result<Fragment, TheoryError> {
                 coordinate = Some(pinned_coordinate(value)?);
             }
             key => {
+                // Unreachable in practice: keys 0 and 1 are consumed above,
+                // so nothing at or below 1 reaches the constructor. The
+                // refusal is expressed rather than assumed away.
+                let key = ContentKey::new(key).map_err(|error| refusal(entry.span.line, error))?;
                 if slots.iter().any(|slot| slot.key == key) {
                     return Err(refusal(
                         entry.span.line,
-                        format!("content key {key} is enumerated twice"),
+                        format!("content key {} is enumerated twice", key.get()),
                     ));
                 }
                 slots.push(Slot {
@@ -161,7 +165,7 @@ pub(crate) fn check(cddl: &Cddl) -> Result<Fragment, TheoryError> {
         None => return Err(refusal(root.span.line, "key 1 is absent")),
     };
 
-    slots.sort_by_key(|slot| slot.key);
+    slots.sort_by_key(|slot| slot.key.get());
 
     Ok(Fragment {
         label,
@@ -543,7 +547,7 @@ mod tests {
         let slots: Vec<(u64, bool)> = fragment
             .slots()
             .iter()
-            .map(|slot| (slot.key(), slot.required()))
+            .map(|slot| (slot.key().get(), slot.required()))
             .collect();
         assert_eq!(slots, [(2, true), (7, false)]);
     }
@@ -552,20 +556,24 @@ mod tests {
     fn slots_are_ascending_whatever_order_they_were_written_in() {
         let fragment =
             admit(r#"e = {9 => uint, 0 => "com.example", 3 => uint, 1 => [0, 0, uint]}"#);
-        let keys: Vec<u64> = fragment.slots().iter().map(|slot| slot.key()).collect();
+        let keys: Vec<u64> = fragment
+            .slots()
+            .iter()
+            .map(|slot| slot.key().get())
+            .collect();
         assert_eq!(keys, [3, 9]);
     }
 
     #[test]
     fn a_content_key_may_be_written_in_any_base() {
         let fragment = admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 0x10 => uint}"#);
-        assert_eq!(fragment.slots()[0].key(), 16);
+        assert_eq!(fragment.slots()[0].key().get(), 16);
     }
 
     #[test]
     fn a_content_key_may_use_the_colon_form() {
         let fragment = admit(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2: tstr}"#);
-        assert_eq!(fragment.slots()[0].key(), 2);
+        assert_eq!(fragment.slots()[0].key().get(), 2);
     }
 
     /// Clause 6 as a non-check: a tagged type at a content key is exotic
@@ -792,7 +800,7 @@ more = (2 => uint)"#
         // Keys 0 and 1 are consumed as the envelope before any slot is
         // recorded, so no slot can carry them.
         let fragment = admit(MINIMAL);
-        assert!(fragment.slots().iter().all(|slot| slot.key() > 1));
+        assert!(fragment.slots().iter().all(|slot| slot.key().get() > 1));
     }
 
     #[test]
