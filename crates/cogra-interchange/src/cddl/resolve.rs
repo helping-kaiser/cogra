@@ -62,7 +62,6 @@ use super::ast::{
     Cddl, GenericArgs, Group, GroupEntry, GroupEntryKind, MemberKey, MemberKeyKind, Name, Rule,
     RuleBody, Type, Type1, Type2, Type2Kind,
 };
-use super::lex::Span;
 use super::parse::parse;
 use super::print;
 use crate::error::TheoryError;
@@ -80,7 +79,6 @@ const PRELUDE: &str = include_str!("../../tests/corpus/rfc8610-appendix-d-prelud
 pub(crate) struct ResolvedRule {
     params: Vec<String>,
     body: RuleBody,
-    span: Span,
     from_prelude: bool,
 }
 
@@ -93,13 +91,6 @@ impl ResolvedRule {
     /// What the rule assigns, with every `/=` and `//=` folded in.
     pub(crate) fn body(&self) -> &RuleBody {
         &self.body
-    }
-
-    /// Where the rule was written.
-    ///
-    /// A prelude rule's span indexes the prelude source, not the theory's.
-    pub(crate) fn span(&self) -> Span {
-        self.span
     }
 
     /// Whether the rule came from the standard prelude rather than from the
@@ -149,6 +140,32 @@ impl RuleTable {
     /// The theory's own rules, prelude excluded, in name order.
     pub(crate) fn own_rules(&self) -> impl Iterator<Item = (&str, &ResolvedRule)> + '_ {
         self.own.iter().map(|(name, rule)| (name.as_str(), rule))
+    }
+
+    /// This table with one rule's body replaced.
+    ///
+    /// The open companion's derivation edits the root rule of a theory whose
+    /// every reference already resolved, and the evaluator needs a table
+    /// that answers for the edited tree. Rebuilding the table from that tree
+    /// would be a second resolution with a failure mode; replacing one body
+    /// has none, because the derivation introduces only `uint` and `any`,
+    /// which every table already answers for.
+    pub(crate) fn with_rule_body(&self, name: &str, body: RuleBody) -> RuleTable {
+        let mut table = self.clone();
+        match table.own.get_mut(name) {
+            Some(rule) => rule.body = body,
+            None => {
+                table.own.insert(
+                    name.to_owned(),
+                    ResolvedRule {
+                        params: Vec::new(),
+                        body,
+                        from_prelude: false,
+                    },
+                );
+            }
+        }
+        table
     }
 
     fn check(&self) -> Result<(), TheoryError> {
@@ -319,7 +336,6 @@ fn merge(
                         ResolvedRule {
                             params,
                             body: rule.body.clone(),
-                            span: rule.span,
                             from_prelude: false,
                         },
                     );
@@ -413,7 +429,6 @@ fn extend_type(base: Option<ResolvedRule>, rule: &Rule) -> Result<ResolvedRule, 
             choices,
             span: rule.span,
         }),
-        span: rule.span,
         from_prelude: false,
     })
 }
@@ -462,7 +477,6 @@ fn extend_group(base: Option<ResolvedRule>, rule: &Rule) -> Result<ResolvedRule,
             }),
             span: rule.span,
         })),
-        span: rule.span,
         from_prelude: false,
     })
 }

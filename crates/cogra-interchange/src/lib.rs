@@ -51,8 +51,9 @@ mod value;
 mod version;
 
 pub use cddl::{
-    BaseTheory, ImplicitReach, Inclusion, InclusionBreach, KeySlot, OpenTheory, Provision,
-    Restrained, RestraintReport, Theory, check_inclusion, global,
+    BaseTheory, ImplicitReach, Inclusion, InclusionBreach, KeySlot, Mismatch, MismatchKind,
+    OpenTheory, Provision, Restrained, RestraintReport, Satisfaction, Theory, check_inclusion,
+    global, satisfies, satisfies_global, satisfies_open,
 };
 pub use envelope::{Content, ContentKey, Document, Envelope, MAX_ENVELOPE_PREFIX};
 pub use error::{DecodeError, EnvelopeError, LabelError, RegexpError, TheoryError, ValueError};
