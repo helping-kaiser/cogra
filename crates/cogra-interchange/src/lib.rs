@@ -40,6 +40,7 @@
 
 #![warn(missing_docs, missing_debug_implementations)]
 
+mod cddl;
 mod decode;
 mod encode;
 mod envelope;
