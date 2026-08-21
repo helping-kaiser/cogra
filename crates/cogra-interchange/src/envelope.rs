@@ -6,13 +6,40 @@
 //! definition is the shape of [`Document`], which is why
 //! [`Document::new`] is total and [`Document::try_from_value`] is the only
 //! place the definition is checked.
+//!
+//! [`Envelope::peek`] reads the envelope out of a bounded prefix, and
+//! answers which instrument governs a document — never whether the bytes
+//! are a document. A byte sequence with a well-formed envelope and a
+//! non-canonical tail is not in the data language at all, and the crate's
+//! verdict on it comes from [`Document::from_canonical_bytes`]. It is the
+//! routing decision that is early, never the acceptance.
 
 use std::collections::BTreeMap;
 
-use crate::error::EnvelopeError;
-use crate::label::NamespaceLabel;
+use crate::decode::{Head, head_span, read_head};
+use crate::error::{DecodeError, EnvelopeError, LabelError};
+use crate::label::{MAX_LABEL_BYTES, NamespaceLabel};
 use crate::value::{Map, Text, Value};
 use crate::version::Version;
+
+/// The greatest number of bytes [`Envelope::peek`] reads.
+///
+/// The bound is the conventions' own: a map head of at most 9 bytes, key 0
+/// at 1, a label at 2 + 255, key 1 at 1, and a version of a 1-byte array
+/// head plus three uint heads of at most 9 bytes each — 9 + 1 + 257 + 1 +
+/// 1 + 27 = 296. It is tight: a maximal map head over a maximal label and
+/// a maximal version reaches it exactly.
+///
+/// Reading this many bytes settles which instrument governs a document. It
+/// settles nothing about whether the bytes are a document: that answer
+/// comes only from a full decode through [`Document::from_canonical_bytes`].
+///
+/// ```
+/// use cogra_interchange::MAX_ENVELOPE_PREFIX;
+///
+/// assert_eq!(MAX_ENVELOPE_PREFIX, 296);
+/// ```
+pub const MAX_ENVELOPE_PREFIX: usize = 296;
 
 /// A content key: an unsigned integer strictly greater than 1.
 ///
@@ -223,6 +250,161 @@ impl Envelope {
     pub const fn version(&self) -> Version {
         self.version
     }
+
+    /// Read the envelope out of a prefix, reporting the bytes consumed.
+    ///
+    /// At most [`MAX_ENVELOPE_PREFIX`] bytes are read, whatever follows
+    /// them: the map head, key 0 and its label, key 1 and its version, and
+    /// then a stop. Preferred serialization is checked on every head read,
+    /// and the first two keys must be 0 and 1 in that order — which is
+    /// what makes this answer agree with a full decode's whenever a full
+    /// decode succeeds.
+    ///
+    /// **This certifies no membership.** It answers which instrument
+    /// governs a document, not whether the bytes are one: everything past
+    /// the envelope is unread, so a non-canonical tail passes here and is
+    /// refused only by [`Document::from_canonical_bytes`]. A prefix too
+    /// short to carry the envelope is [`EnvelopeError::Truncated`], which
+    /// is a request for more bytes and not a rejection.
+    ///
+    /// ```
+    /// use cogra_interchange::{
+    ///     Content, Document, Envelope, EnvelopeError, MAX_ENVELOPE_PREFIX, NamespaceLabel, Version,
+    /// };
+    ///
+    /// let label = NamespaceLabel::parse("com.example.thing").expect("a label");
+    /// let document = Document::new(Envelope::new(label, Version::new(1, 2, 3)), Content::new());
+    /// let bytes = document.to_canonical_bytes();
+    ///
+    /// let (envelope, consumed) = Envelope::peek(&bytes).expect("an envelope");
+    /// assert_eq!(&envelope, document.envelope());
+    /// assert!(consumed <= MAX_ENVELOPE_PREFIX);
+    ///
+    /// let err = Envelope::peek(&bytes[..4]).expect_err("four bytes carry no envelope");
+    /// assert!(matches!(err, EnvelopeError::Truncated { given: 4, .. }));
+    /// ```
+    pub fn peek(prefix: &[u8]) -> Result<(Envelope, usize), EnvelopeError> {
+        let given = prefix.len();
+        // Every path below refuses what it cannot read inside the bound —
+        // an over-long label by its declared length, a wide head by
+        // preferred serialization — so the window is never the reason a
+        // read runs out.
+        let window = &prefix[..given.min(MAX_ENVELOPE_PREFIX)];
+        let mut position = 0usize;
+
+        let head = bounded_head(window, &mut position, given)?;
+        if head.major != 5 {
+            return Err(EnvelopeError::NotAMap);
+        }
+        if head.argument == 0 {
+            return Err(EnvelopeError::MissingKey { key: 0 });
+        }
+
+        expect_envelope_key(window, &mut position, 0, given)?;
+        let label = read_label(window, &mut position, given)?;
+
+        if head.argument == 1 {
+            return Err(EnvelopeError::MissingKey { key: 1 });
+        }
+
+        expect_envelope_key(window, &mut position, 1, given)?;
+        let version = read_version(window, &mut position, given)?;
+
+        Ok((Envelope::new(label, version), position))
+    }
+}
+
+/// One head, with the decoder's refusals translated into the prefix path's
+/// own: a head the data language refuses is a non-canonical prefix, and an
+/// input that ends inside one is a request for more bytes.
+fn bounded_head(window: &[u8], position: &mut usize, given: usize) -> Result<Head, EnvelopeError> {
+    let start = *position;
+    read_head(window, position).map_err(|error| match error {
+        DecodeError::Truncated { .. } => EnvelopeError::Truncated {
+            given,
+            needed_at_least: start + window.get(start).map_or(1, |&initial| head_span(initial)),
+        },
+        _ => EnvelopeError::NonCanonicalPrefix { offset: start },
+    })
+}
+
+/// Key 0, then key 1: the two least keys, which sortedness puts first in
+/// every document's name, so a greater key here means the expected one is
+/// absent altogether.
+fn expect_envelope_key(
+    window: &[u8],
+    position: &mut usize,
+    expected: u64,
+    given: usize,
+) -> Result<(), EnvelopeError> {
+    let head = bounded_head(window, position, given)?;
+    if head.major != 0 {
+        return Err(EnvelopeError::NonIntegerKey {
+            key: format!("of major type {}", head.major),
+        });
+    }
+    if head.argument != expected {
+        return Err(EnvelopeError::MissingKey { key: expected });
+    }
+    Ok(())
+}
+
+fn read_label(
+    window: &[u8],
+    position: &mut usize,
+    given: usize,
+) -> Result<NamespaceLabel, EnvelopeError> {
+    let head = bounded_head(window, position, given)?;
+    if head.major != 3 {
+        return Err(EnvelopeError::BadLabelType);
+    }
+    // The declared length alone refuses an over-long label, so no payload
+    // beyond the bound is ever reached for.
+    let declared = usize::try_from(head.argument).unwrap_or(usize::MAX);
+    if declared > MAX_LABEL_BYTES {
+        return Err(EnvelopeError::BadLabel(LabelError::TooLong {
+            length: declared,
+        }));
+    }
+
+    let start = *position;
+    let end = start + declared;
+    if end > window.len() {
+        return Err(EnvelopeError::Truncated {
+            given,
+            needed_at_least: end,
+        });
+    }
+
+    let text = std::str::from_utf8(&window[start..end]).map_err(|error| {
+        EnvelopeError::NonCanonicalPrefix {
+            offset: start + error.valid_up_to(),
+        }
+    })?;
+    let label = NamespaceLabel::parse(text).map_err(EnvelopeError::BadLabel)?;
+    *position = end;
+    Ok(label)
+}
+
+fn read_version(
+    window: &[u8],
+    position: &mut usize,
+    given: usize,
+) -> Result<Version, EnvelopeError> {
+    let head = bounded_head(window, position, given)?;
+    if head.major != 4 || head.argument != 3 {
+        return Err(EnvelopeError::BadVersion);
+    }
+
+    let mut triple = [0u64; 3];
+    for part in &mut triple {
+        let head = bounded_head(window, position, given)?;
+        if head.major != 0 {
+            return Err(EnvelopeError::BadVersion);
+        }
+        *part = head.argument;
+    }
+    Ok(Version::new(triple[0], triple[1], triple[2]))
 }
 
 /// A document of the data language.

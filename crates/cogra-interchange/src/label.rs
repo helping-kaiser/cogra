@@ -23,7 +23,7 @@ use crate::error::LabelError;
 
 /// The greatest number of bytes a namespace label occupies. Because the
 /// alphabet is ASCII, this is equally its greatest character count.
-const MAX_LABEL_BYTES: usize = 255;
+pub(crate) const MAX_LABEL_BYTES: usize = 255;
 
 /// A namespace label: two or more dot-separated atoms over `a`–`z` and
 /// `0`–`9`, hyphens interior only, at most 255 bytes.
