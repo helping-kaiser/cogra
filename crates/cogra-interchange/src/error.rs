@@ -8,8 +8,8 @@
 //! operation takes. An operation that was handed what it asked for and
 //! answers negatively returns that answer as a value, never as an `Err`.
 //!
-//! Slice 1 carries the two enums the deterministic CBOR core needs;
-//! the remaining five arrive with the slices that raise them.
+//! Slices 1 and 2 carry the four enums the CBOR core and the envelope
+//! need; the remaining three arrive with the slices that raise them.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -129,4 +129,125 @@ pub enum DecodeError {
         /// The first byte not part of a valid UTF-8 sequence.
         offset: usize,
     },
+}
+
+/// A string refused as a namespace label.
+///
+/// Every variant but [`LabelError::TooFewAtoms`], which is a fact about
+/// the whole string, carries a character position into the offered string.
+///
+/// ```
+/// use cogra_interchange::{LabelError, NamespaceLabel};
+///
+/// let err = NamespaceLabel::parse("com.Example").expect_err("uppercase");
+/// assert!(matches!(
+///     err,
+///     LabelError::BadCharacter {
+///         position: 4,
+///         found: 'E'
+///     }
+/// ));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum LabelError {
+    /// Fewer than the two atoms every label carries — a bare word claims
+    /// the root, which no label may.
+    #[error("namespace label needs at least two atoms")]
+    TooFewAtoms,
+    /// An atom with no characters in it: a leading dot, a trailing dot, a
+    /// doubled dot, or the empty string.
+    #[error("empty atom at character {position}")]
+    EmptyAtom {
+        /// Where the empty atom begins.
+        position: usize,
+    },
+    /// A character outside the alphabet of `a`–`z`, `0`–`9`, the hyphen,
+    /// and the separating dot.
+    #[error("character {found:?} at position {position} is outside the label alphabet")]
+    BadCharacter {
+        /// Where the character stands, counted in characters.
+        position: usize,
+        /// The character met.
+        found: char,
+    },
+    /// An atom whose first or last character is a hyphen, which the ABNF
+    /// admits only in an atom's interior.
+    #[error("atom at position {position} begins or ends with a hyphen")]
+    HyphenAtEdge {
+        /// Where the offending atom begins.
+        position: usize,
+    },
+    /// A string longer than the 255 bytes the Grammar's sentence allows.
+    #[error("namespace label is {length} bytes, over the limit of 255")]
+    TooLong {
+        /// The length of the string offered, in bytes.
+        length: usize,
+    },
+}
+
+/// Bytes or a value refused as a document, or a prefix too short to carry
+/// an envelope.
+///
+/// ```
+/// use cogra_interchange::{EnvelopeError, Value, Version};
+///
+/// let err = Version::from_value(&Value::Unsigned(3)).expect_err("not a triple");
+/// assert!(matches!(err, EnvelopeError::BadVersion));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum EnvelopeError {
+    /// The prefix ended before the envelope did.
+    #[error("prefix of {given} bytes is too short to carry an envelope")]
+    Truncated {
+        /// How many bytes were offered.
+        given: usize,
+        /// The least number of bytes that would let the read that ran out
+        /// complete. What follows that read may need more still.
+        needed_at_least: usize,
+    },
+    /// The value is not a map, so it is not a document.
+    #[error("document is not a map")]
+    NotAMap,
+    /// A key outside the unsigned integers, which the key space excludes.
+    #[error("key {key} is not an unsigned integer")]
+    NonIntegerKey {
+        /// A rendering of the offending key: its debug form where the key
+        /// was decoded whole, its major type where only a head was read.
+        key: String,
+    },
+    /// One of the two envelope keys is absent.
+    #[error("key {key} is missing")]
+    MissingKey {
+        /// The key that is missing: 0 or 1.
+        key: u64,
+    },
+    /// Key 0 holds a text string that is not a namespace label.
+    #[error("key 0 does not hold a namespace label")]
+    BadLabel(#[source] LabelError),
+    /// Key 0 holds something that is not a text string at all.
+    #[error("key 0 does not hold a text string")]
+    BadLabelType,
+    /// Key 1 holds something other than a three-element array of unsigned
+    /// integers.
+    #[error("key 1 does not hold a version triple")]
+    BadVersion,
+    /// A content key of 0 or 1, which the envelope owns.
+    #[error("content key {key} is not greater than 1")]
+    ReservedContentKey {
+        /// The key offered.
+        key: u64,
+    },
+    /// A head of the envelope prefix that preferred serialization refuses,
+    /// or a label whose bytes are not valid UTF-8.
+    #[error("envelope prefix is not canonically encoded at byte {offset}")]
+    NonCanonicalPrefix {
+        /// Where the offending head or byte stands.
+        offset: usize,
+    },
+    /// Bytes offered as a document that are not a name of the data
+    /// language at all.
+    #[error("bytes are not a name of the data language")]
+    NotCanonical(#[source] DecodeError),
 }
