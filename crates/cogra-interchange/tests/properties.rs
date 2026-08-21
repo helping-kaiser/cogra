@@ -1,10 +1,14 @@
 //! The metatheorem obligations of the design's property table, one per
 //! theorem, named after it so that a failure names what it broke.
 //!
-//! Slice 1 owes three: unique names, canonical order, and iterative
-//! teardown. The rest arrive with the slices whose subjects they are.
+//! Slices 1 and 2 owe five: unique names, canonical order, iterative
+//! teardown, one spelling, and bounded determination. The rest arrive with
+//! the slices whose subjects they are.
 
-use cogra_interchange::{Array, Bytes, Float, Map, Negative, Simple, Tag, Text, Value};
+use cogra_interchange::{
+    Array, Bytes, Content, ContentKey, Document, Envelope, Float, LabelError, MAX_ENVELOPE_PREFIX,
+    Map, NamespaceLabel, Negative, Simple, Tag, Text, Value, Version,
+};
 use proptest::prelude::*;
 
 /// A generator over the whole value model.
@@ -45,6 +49,115 @@ fn any_value_pair() -> impl Strategy<Value = (Value, Value)> {
         3 => (any_value(), any_value()),
         1 => any_value().prop_map(|v| (v.clone(), v)),
     ]
+}
+
+/// Σ of the label grammar: the thirty-six characters of the alphabet.
+const ALNUM: &str = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+fn alnum() -> impl Strategy<Value = char> {
+    prop::sample::select(ALNUM.chars().collect::<Vec<char>>())
+}
+
+fn alnum_or_hyphen() -> impl Strategy<Value = char> {
+    prop::sample::select(format!("{ALNUM}-").chars().collect::<Vec<char>>())
+}
+
+/// `atom = alnum [ *( alnum / "-" ) alnum ]`, read off the ABNF a second
+/// time — the generator and the scanner are two independent readings, and
+/// the property is what makes them agree.
+fn any_atom() -> impl Strategy<Value = String> {
+    (
+        alnum(),
+        prop::option::of((prop::collection::vec(alnum_or_hyphen(), 0..5), alnum())),
+    )
+        .prop_map(|(first, rest)| {
+            let mut atom = String::new();
+            atom.push(first);
+            if let Some((middle, last)) = rest {
+                atom.extend(middle);
+                atom.push(last);
+            }
+            atom
+        })
+}
+
+/// `namespace-label = atom 1*( "." atom )`, kept well inside the 255-byte
+/// bound, which has its own vectors at both edges.
+fn any_label() -> impl Strategy<Value = String> {
+    prop::collection::vec(any_atom(), 2..5).prop_map(|atoms| atoms.join("."))
+}
+
+fn any_version() -> impl Strategy<Value = Version> {
+    (any::<u64>(), any::<u64>(), any::<u64>())
+        .prop_map(|(major, minor, patch)| Version::new(major, minor, patch))
+}
+
+fn any_document() -> impl Strategy<Value = Document> {
+    (
+        any_label(),
+        any_version(),
+        prop::collection::vec((2u64..=u64::MAX, any_value()), 0..4),
+    )
+        .prop_map(|(label, version, entries)| {
+            let label = NamespaceLabel::parse(&label).expect("generated from the ABNF");
+            let mut content = Content::new();
+            for (key, value) in entries {
+                content.insert(ContentKey::new(key).expect("above the envelope"), value);
+            }
+            Document::new(Envelope::new(label, version), content)
+        })
+}
+
+/// One mutation per way out of the language, each provably outside it.
+#[derive(Debug, Clone, Copy)]
+enum Mutation {
+    Uppercase,
+    Underscore,
+    NonAscii,
+    LeadingDot,
+    TrailingDot,
+    DoubledDot,
+    HyphenAtEdge,
+    OneAtom,
+    TooLong,
+}
+
+fn any_mutation() -> impl Strategy<Value = Mutation> {
+    prop::sample::select(vec![
+        Mutation::Uppercase,
+        Mutation::Underscore,
+        Mutation::NonAscii,
+        Mutation::LeadingDot,
+        Mutation::TrailingDot,
+        Mutation::DoubledDot,
+        Mutation::HyphenAtEdge,
+        Mutation::OneAtom,
+        Mutation::TooLong,
+    ])
+}
+
+/// Apply a mutation, `index` selecting where among the candidate positions
+/// it lands.
+fn mutate(label: &str, mutation: Mutation, index: usize) -> String {
+    let characters: Vec<char> = label.chars().collect();
+    let at = index % characters.len();
+    let replace = |replacement: char| {
+        let mut mutated = characters.clone();
+        mutated[at] = replacement;
+        mutated.into_iter().collect::<String>()
+    };
+
+    match mutation {
+        Mutation::Uppercase => replace('A'),
+        Mutation::Underscore => replace('_'),
+        Mutation::NonAscii => replace('ä'),
+        Mutation::LeadingDot => format!(".{label}"),
+        Mutation::TrailingDot => format!("{label}."),
+        Mutation::DoubledDot => label.replacen('.', "..", 1),
+        Mutation::HyphenAtEdge => label.replacen('.', ".-", 1),
+        Mutation::OneAtom => label.replace('.', ""),
+        Mutation::TooLong => format!("{label}{}", "a".repeat(256)),
+    }
 }
 
 /// Drop the repeated keys a generator has no way to avoid, so that the
@@ -122,6 +235,98 @@ proptest! {
         if let Ok(value) = Value::from_canonical_bytes(&bytes) {
             prop_assert_eq!(value.to_canonical_bytes(), bytes);
         }
+    }
+
+    /// One spelling, one encoding: string equality, byte equality, and
+    /// encoded-item equality coincide on labels, and parsing is inverse to
+    /// printing.
+    #[test]
+    fn one_spelling_parsing_and_printing_are_inverse(text in any_label()) {
+        let label = NamespaceLabel::parse(&text).expect("generated from the ABNF");
+        prop_assert_eq!(label.as_str(), &text);
+        let printed = label.to_string();
+        prop_assert_eq!(&printed, &text);
+        prop_assert_eq!(NamespaceLabel::parse(&printed).ok(), Some(label));
+    }
+
+    #[test]
+    fn one_spelling_string_equality_is_byte_equality((a, b) in (any_label(), any_label())) {
+        let first = Value::Text(Text::from(a.clone()));
+        let second = Value::Text(Text::from(b.clone()));
+        prop_assert_eq!(
+            a == b,
+            first.to_canonical_bytes() == second.to_canonical_bytes()
+        );
+    }
+
+    /// Every character of the alphabet is printable ASCII, on which UTF-8
+    /// acts as the identity — so every label is a fixed point of NFC and
+    /// NFD alike, and no normalization can produce a second byte form.
+    /// Checked here without a normalization dependency, exactly as the
+    /// demonstration argues it.
+    #[test]
+    fn one_spelling_every_label_is_ascii(text in any_label()) {
+        let label = NamespaceLabel::parse(&text).expect("generated from the ABNF");
+        prop_assert!(label.as_str().is_ascii());
+        prop_assert!(label.as_str().bytes().all(|b| (0x21..0x7f).contains(&b)));
+        prop_assert_eq!(label.as_str().chars().count(), label.as_str().len());
+    }
+
+    /// A string outside the language is refused, and refused as the kind of
+    /// fault it is.
+    #[test]
+    fn one_spelling_mutations_leave_the_language(
+        text in any_label(),
+        mutation in any_mutation(),
+        index in 0usize..64,
+    ) {
+        let mutated = mutate(&text, mutation, index);
+        let error = NamespaceLabel::parse(&mutated)
+            .expect_err("the mutation leaves the language");
+        prop_assert_eq!(label_variant(&error), expected_variant(mutation), "over {:?}", mutated);
+    }
+
+    /// Bounded determination: the envelope is settled by at most a
+    /// 296-byte prefix, and the bounded read agrees with the full decode.
+    #[test]
+    fn bounded_determination_peek_agrees_within_the_bound(document in any_document()) {
+        let bytes = document.to_canonical_bytes();
+        let (envelope, consumed) = Envelope::peek(&bytes).expect("a document this crate wrote");
+
+        prop_assert!(consumed <= MAX_ENVELOPE_PREFIX);
+        prop_assert!(consumed <= bytes.len());
+        prop_assert_eq!(&envelope, document.envelope());
+
+        let decoded = Document::from_canonical_bytes(&bytes).expect("a name this crate wrote");
+        prop_assert_eq!(decoded.envelope(), &envelope);
+
+        // The same answer given nothing beyond the bound.
+        let cut = bytes.len().min(MAX_ENVELOPE_PREFIX);
+        prop_assert_eq!(
+            Envelope::peek(&bytes[..cut]).expect("the envelope lies inside the bound"),
+            (envelope, consumed)
+        );
+    }
+}
+
+fn label_variant(error: &LabelError) -> &'static str {
+    match error {
+        LabelError::TooFewAtoms => "TooFewAtoms",
+        LabelError::EmptyAtom { .. } => "EmptyAtom",
+        LabelError::BadCharacter { .. } => "BadCharacter",
+        LabelError::HyphenAtEdge { .. } => "HyphenAtEdge",
+        LabelError::TooLong { .. } => "TooLong",
+        other => panic!("a variant this test has not met: {other:?}"),
+    }
+}
+
+fn expected_variant(mutation: Mutation) -> &'static str {
+    match mutation {
+        Mutation::Uppercase | Mutation::Underscore | Mutation::NonAscii => "BadCharacter",
+        Mutation::LeadingDot | Mutation::TrailingDot | Mutation::DoubledDot => "EmptyAtom",
+        Mutation::HyphenAtEdge => "HyphenAtEdge",
+        Mutation::OneAtom => "TooFewAtoms",
+        Mutation::TooLong => "TooLong",
     }
 }
 
