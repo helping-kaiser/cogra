@@ -4,6 +4,7 @@ members = [
     "crates/l1-standin",
     "crates/postgres-store",
     "crates/common",
+    "crates/cogra-interchange",
 ]
 resolver = "2"
 
