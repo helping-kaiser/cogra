@@ -58,9 +58,20 @@ class AndroidModuleConventionPlugin : Plugin<Project> {
         val launcher21 = extensions.getByType<JavaToolchainService>().launcherFor {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
+        // Robolectric resolves its android-all sandbox jar from the
+        // staged directory instead of downloading it when the test JVM
+        // starts — the offline mode Robolectric documents for hermetic
+        // builds (LegacyDependencyResolver's javadoc; the CI guidance in
+        // robolectric.org/blog/2023/11/11/improving-android-all-downloading).
+        // The root project fills the directory from ordinary Gradle
+        // dependencies.
+        val stagedSdks = rootProject.layout.buildDirectory.dir("robolectric-sdks")
         tasks.withType<Test>().configureEach {
             maxParallelForks = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
             javaLauncher.set(launcher21)
+            dependsOn(":stageRobolectricSdks")
+            systemProperty("robolectric.offline", "true")
+            systemProperty("robolectric.dependency.dir", stagedSdks.get().asFile.absolutePath)
         }
 
         extensions.configure<KotlinAndroidProjectExtension> {
