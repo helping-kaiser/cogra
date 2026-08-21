@@ -210,33 +210,41 @@ fn clone_iter(root: &Value) -> Value {
     let mut results: Vec<Value> = Vec::new();
     while let Some(step) = work.pop() {
         match step {
-            Step::Clone(value) => match value {
-                Value::Array(array) => {
-                    work.push(Step::BuildArray(array.0.len()));
-                    for child in array.0.iter().rev() {
-                        work.push(Step::Clone(child));
-                    }
+            // A container defers to a build step and pushes its children; a
+            // leaf clones directly. The children finish before the build
+            // step, so it finds them waiting on `results`.
+            Step::Clone(Value::Array(array)) => {
+                work.push(Step::BuildArray(array.0.len()));
+                for child in array.0.iter().rev() {
+                    work.push(Step::Clone(child));
                 }
-                Value::Map(map) => {
-                    work.push(Step::BuildMap(map.0.len()));
-                    for (key, value) in map.0.iter().rev() {
-                        work.push(Step::Clone(value));
-                        work.push(Step::Clone(key));
-                    }
+            }
+            Step::Clone(Value::Map(map)) => {
+                work.push(Step::BuildMap(map.0.len()));
+                for (key, value) in map.0.iter().rev() {
+                    work.push(Step::Clone(value));
+                    work.push(Step::Clone(key));
                 }
-                Value::Tag(tag) => {
-                    work.push(Step::BuildTag(tag.number));
-                    work.push(Step::Clone(&tag.item));
-                }
-                leaf => results.push(clone_leaf(leaf)),
-            },
+            }
+            Step::Clone(Value::Tag(tag)) => {
+                work.push(Step::BuildTag(tag.number));
+                work.push(Step::Clone(&tag.item));
+            }
+            Step::Clone(Value::Unsigned(n)) => results.push(Value::Unsigned(*n)),
+            Step::Clone(Value::Negative(n)) => results.push(Value::Negative(*n)),
+            Step::Clone(Value::Bytes(b)) => results.push(Value::Bytes(b.clone())),
+            Step::Clone(Value::Text(t)) => results.push(Value::Text(t.clone())),
+            Step::Clone(Value::Bool(b)) => results.push(Value::Bool(*b)),
+            Step::Clone(Value::Null) => results.push(Value::Null),
+            Step::Clone(Value::Simple(s)) => results.push(Value::Simple(*s)),
+            Step::Clone(Value::Float(f)) => results.push(Value::Float(*f)),
             Step::BuildArray(len) => {
-                let start = results.len() - len;
+                let start = results.len().saturating_sub(len);
                 let items = results.split_off(start);
                 results.push(Value::Array(Array(items)));
             }
             Step::BuildMap(len) => {
-                let start = results.len() - len * 2;
+                let start = results.len().saturating_sub(len * 2);
                 let mut flat = results.split_off(start).into_iter();
                 let mut entries = Vec::with_capacity(len);
                 while let (Some(key), Some(value)) = (flat.next(), flat.next()) {
@@ -245,7 +253,7 @@ fn clone_iter(root: &Value) -> Value {
                 results.push(Value::Map(Map::from_sorted(entries)));
             }
             Step::BuildTag(number) => {
-                let item = results.pop().expect("the tag's item was rebuilt");
+                let item = results.pop().unwrap_or(Value::Null);
                 results.push(Value::Tag(Tag {
                     number,
                     item: Box::new(item),
@@ -253,25 +261,9 @@ fn clone_iter(root: &Value) -> Value {
             }
         }
     }
-    results.pop().expect("the root was rebuilt")
-}
-
-/// Clone a value known to hold no nested value. The containers are handled
-/// by the worklist in [`clone_iter`], so this never recurses.
-fn clone_leaf(value: &Value) -> Value {
-    match value {
-        Value::Unsigned(n) => Value::Unsigned(*n),
-        Value::Negative(n) => Value::Negative(*n),
-        Value::Bytes(b) => Value::Bytes(b.clone()),
-        Value::Text(t) => Value::Text(t.clone()),
-        Value::Bool(b) => Value::Bool(*b),
-        Value::Null => Value::Null,
-        Value::Simple(s) => Value::Simple(*s),
-        Value::Float(f) => Value::Float(*f),
-        Value::Array(_) | Value::Map(_) | Value::Tag(_) => {
-            unreachable!("containers are rebuilt by the worklist")
-        }
-    }
+    // The worklist rebuilds exactly one value for the root.
+    debug_assert_eq!(results.len(), 1, "the clone leaves the root on the stack");
+    results.pop().unwrap_or(Value::Null)
 }
 
 /// Structural equality over an explicit worklist of pairs, in the shape of
