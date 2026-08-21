@@ -47,10 +47,11 @@ discipline_docs  = [
 # [carrier] — what the corpus IS
 #
 # Not one of the seven parameters by name, but LBL judg:labels:minting
-# fixes the carrier ("every authored prose and code source of the
-# corpus, excluding version-control internals, build and dependency
-# directories, archived and vendored trees, and generated artifacts")
-# and Omega must be TOTAL on it. A partition cannot be checked total
+# fixes the carrier ("every committed prose and code source of the
+# corpus, authored and generated alike, excluding version-control
+# internals, build and dependency directories, archived and vendored
+# trees, and uncommitted generated artifacts") and Omega must be
+# TOTAL on it. A partition cannot be checked total
 # against an unstated domain, so the exclusions are stated here.
 # DEVIATION: this section is beyond the brief's list of sections;
 # it is named rather than smuggled. See QUESTION 1.
@@ -71,12 +72,15 @@ exclude_trees = [
   "web/out/",
 ]
 
-# Generated artifacts: they stay in the tree, and the linter may check
-# their bytes (ARCH rule:linter:register-freshness), but they mint and
-# cite nothing — LBL judg:labels:minting, "a generated region within a
-# carrier source ... remains in the carrier as bytes, checked for
-# exactness, while participating in nothing".
-nonparticipating_files = [
+# Committed generated files: in the carrier in full. Under LBL
+# inv:labels:generated-compliance their occurrences are occurrences
+# in full — each the unique mint of its label on its warrant, or a
+# resolving citation — excluded only from what the region PRESENTS
+# (its rows never feed the sets they were generated from). None of
+# the files below has a scanned frontend today, so in practice they
+# carry no occurrences; freshness checks stay byte-exact either way
+# (ARCH rule:linter:register-freshness).
+generated_files = [
   "schema.graphql",             # exported, CI-diffed (CLAUDE.md)
   "Cargo.lock",
   "web/package-lock.json",
@@ -481,14 +485,18 @@ without renaming a single test.
   form  = "a line carrying the label alone, in the code (acute) syntax"
   note = """
 LBL sig:labels:profiles allows the header, the documentation comment,
-or the owner's prose — ONE choice per profile. The documentation
-comment is the only Rust option that survives ARCH
-dec:linter:rust-comment-ban, and it is what ARCH
-conv:linter:rust-frontend declares Rust's scanned region.
+the owner's prose, or — since calculus v2 — a generated register of
+the owner (LBL inv:labels:generated-compliance), ONE choice per
+profile. The documentation comment is drafted here: it is what ARCH
+conv:linter:rust-frontend declares Rust's scanned region, and it
+keeps the label visible at the asset.
 COST, NAMED: LBL inv:labels:inventory demands the label on EVERY
-covered asset, so adoption is a 284-function migration. Nothing
-partial is available: an uncovered asset is a hard failure, not a
-warning. QUESTION 11.
+covered asset, so adoption at this place is a 284-function migration.
+Nothing partial is available: an uncovered asset is a hard failure,
+not a warning. ALTERNATIVE opened by calculus v2: standard place = a
+generated register per owner, dropping the migration to one generator
+and zero source edits, at the price of label-at-the-asset locality.
+QUESTION 11, option (d).
 """
 
 # ---------------------------------------------------------------
@@ -748,11 +756,13 @@ language   = "markdown"
 extensions = [".md"]
 frontend   = "pulldown-cmark"
 slice      = 1
-scanned    = ["authored prose blocks (block-level elements, structure resolved away)"]
+scanned    = [
+  "authored prose blocks (block-level elements, structure resolved away)",
+  "generated prose regions (occurrences in full, excluded only from what the region presents — LBL inv:labels:generated-compliance; exactness still checked)",
+]
 not_scanned = [
   "fenced code blocks (nonparticipating wholesale)",
   "double-backtick code spans (displayed, not participating)",
-  "generated regions (checked as bytes, participating in nothing)",
 ]
 region_unit = "one block-level element, list markers / quote markers / continuation indentation resolved away"
 delimiter_note = "single- vs double-backtick is decided by reading the delimiter run length at the span's own offset (ARCH conv:linter:markdown-frontend); an unpaired backtick fails ITS BLOCK and only its block"
