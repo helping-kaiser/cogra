@@ -597,7 +597,72 @@ fn syntax(error: SyntaxError) -> TheoryError {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
+
     use super::*;
+
+    /// The label alphabet, the separator, and a selection of near misses.
+    const ALPHABET: [char; 10] = ['a', 'b', '0', '9', '-', '.', 'A', '_', ' ', 'ä'];
+
+    fn near_label() -> impl Strategy<Value = String> {
+        proptest::collection::vec(proptest::sample::select(ALPHABET.as_slice()), 0..12)
+            .prop_map(|chars| chars.into_iter().collect())
+    }
+
+    fn namespace_form() -> &'static XsdPattern {
+        match global().pattern_of("namespace-form") {
+            Some(pattern) => pattern,
+            None => panic!("the base theory has no compiled namespace-form pattern"),
+        }
+    }
+
+    proptest! {
+        /// The crate recognizes namespace labels twice by two independent
+        /// routes — the ABNF scanner and the base theory's `.regexp` — and
+        /// the two agreeing is a checkable fact
+        /// (`design.md`, `verif:xchg:label-pattern-crosscheck`). The pattern
+        /// is read out of the parsed base theory, so the check holds for
+        /// whatever pattern the conventions ship.
+        ///
+        /// Ignored for the same reason as the seam's own contract test: the
+        /// engine's public matcher searches rather than matches, so it
+        /// answers true for every near miss that merely *contains* a label.
+        /// The half of the biconditional that survives an unanchored engine
+        /// is asserted below, and runs.
+        #[test]
+        #[ignore = "regexml 0.2.2 exposes no anchored matcher — see the regexp module documentation"]
+        fn the_two_label_recognizers_agree(text in near_label()) {
+            prop_assert_eq!(
+                crate::NamespaceLabel::parse(&text).is_ok(),
+                namespace_form().is_match(&text),
+                "the scanner and the pattern disagree about {:?}",
+                text
+            );
+        }
+
+        /// Every label the ABNF scanner accepts, the conventions' pattern
+        /// matches. This direction is unaffected by the engine's anchoring
+        /// shortfall — a whole-string match is a match — so it runs, and it
+        /// is what would catch a pattern that had drifted from the grammar.
+        #[test]
+        fn the_pattern_matches_every_label_the_scanner_accepts(text in near_label()) {
+            if crate::NamespaceLabel::parse(&text).is_ok() {
+                prop_assert!(
+                    namespace_form().is_match(&text),
+                    "the scanner accepted {:?} and the pattern did not match it",
+                    text
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_pattern_matches_labels_the_scanner_accepts_by_hand() {
+        for label in ["com.example", "a.b", "a-b.c9", "0.0", "com.example.thing"] {
+            assert!(crate::NamespaceLabel::parse(label).is_ok(), "{label}");
+            assert!(namespace_form().is_match(label), "{label}");
+        }
+    }
 
     #[test]
     fn the_base_theory_goes_through_the_pipeline() {
