@@ -824,9 +824,6 @@ fn expected_variant(mutation: Mutation) -> &'static str {
 /// One million levels deep, which the data language admits because it
 /// bounds nesting nowhere. Decoding, encoding, and dropping are each
 /// iterative, and this is what says so.
-///
-/// The value is never cloned, hashed, or compared here: those walks are
-/// the compiler's derived ones, and they still recurse.
 #[test]
 fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
     const DEPTH: usize = 1_000_000;
@@ -838,6 +835,43 @@ fn a_value_nested_one_million_deep_decodes_encodes_and_drops() {
     assert_eq!(value.canonical_len(), bytes.len());
     assert_eq!(value.to_canonical_bytes(), bytes);
     drop(value);
+}
+
+/// The same depth, put through the walks the compiler once derived —
+/// `Clone`, `PartialEq`, `Hash` — and through the two consumers that carry
+/// a deep value on their own stack, `Document::to_value` and satisfaction.
+/// Each is iterative now (`impl:xchg:iterative-teardown`), and a recursive
+/// one of any of them would overflow the stack here.
+#[test]
+fn a_value_nested_one_million_deep_clones_hashes_compares_and_satisfies() {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    const DEPTH: usize = 1_000_000;
+
+    let mut bytes = vec![0x81u8; DEPTH];
+    bytes.push(0x00);
+    let value = Value::from_canonical_bytes(&bytes).expect("nesting is bounded by the input alone");
+
+    // Clone is a deep, iterative rebuild; the copy names the same structure.
+    let clone = value.clone();
+    assert!(clone == value);
+
+    // Equal values hash equal, however deep — the Hash/PartialEq contract.
+    let mut left = DefaultHasher::new();
+    let mut right = DefaultHasher::new();
+    value.hash(&mut left);
+    clone.hash(&mut right);
+    assert_eq!(left.finish(), right.finish());
+
+    // A document carrying the deep value: to_value clones it into a map,
+    // and the base theory judges it — both walk it without the call stack.
+    let label = NamespaceLabel::parse("com.example").expect("a label");
+    let mut content = Content::new();
+    content.insert(ContentKey::new(2).expect("a content key"), value);
+    let document = Document::new(Envelope::new(label, Version::new(1, 0, 0)), content);
+    assert!(matches!(document.to_value(), Value::Map(_)));
+    assert!(satisfies_global(&document).holds());
 }
 
 /// The same depth reached through all three recursive constructors, so
