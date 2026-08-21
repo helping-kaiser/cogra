@@ -43,7 +43,9 @@
 mod decode;
 mod encode;
 mod error;
+mod label;
 mod value;
 
-pub use error::{DecodeError, ValueError};
+pub use error::{DecodeError, LabelError, ValueError};
+pub use label::NamespaceLabel;
 pub use value::{Array, Bytes, Float, FloatWidth, Map, Negative, Simple, Tag, Text, Value};
