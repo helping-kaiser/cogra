@@ -221,21 +221,19 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
     }
 
-    // Content exists at authoring, not at landing (substrate.md §6), so
-    // a signed post has somewhere to go: its own detail, where the
-    // settling marker sits on it.
+    // A signed post lands the author back on the feed — the web twin —
+    // where their post already sits at the top, marked as still
+    // settling: content exists at authoring, not at landing
+    // (substrate.md §6).
     @Test
-    fun aSignedPostOpensOnItsOwnDetail() {
+    fun aSignedPostLandsOnTheRefreshedFeed() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         content.preparedNode = "p-new"
-        content.details["p-new"] = com.cogra.domain.PostDetail(
-            post = com.cogra.domain.testing.testPost(
-                "p-new",
-                landing = com.cogra.domain.Landing.Pending,
-            ),
-            comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
+        content.pendingAfterPrepare = com.cogra.domain.testing.testPost(
+            "p-new",
+            landing = com.cogra.domain.Landing.Pending,
         )
         render()
         waitForTag("bar_compose")
@@ -256,15 +254,19 @@ class CograNavGraphTest {
         assertThat(compose.onAllNodesWithTag("compose_signing_failed").fetchSemanticsNodes()).isEmpty()
         assertThat(compose.onAllNodesWithTag("compose_transport_error").fetchSemanticsNodes()).isEmpty()
 
-        waitForTag("detail_body")
-        compose.onNodeWithTag("detail_pending").assertExists()
-        val entry = navController.currentBackStackEntry
-        assertThat(entry?.destination?.hasRoute<PostDetail>()).isTrue()
-        assertThat(entry?.toRoute<PostDetail>()?.postId).isEqualTo("p-new")
+        // The feed re-read: the entry the server only started serving
+        // once the write was prepared is on screen, still settling.
+        waitForTag("feed_post_p-new")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        // The card merges its descendants' semantics, so the marker is
+        // only itself in the unmerged tree.
+        compose.onNodeWithTag("feed_post_pending_p-new", useUnmergedTree = true).assertExists()
 
-        // The composer left the stack: back returns to the reading
-        // context that launched it, not to a spent form.
-        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        // The composer left the stack: back never returns to a spent
+        // form.
+        assertThat(
+            navController.currentBackStack.value.any { it.destination.hasRoute<ComposePost>() },
+        ).isFalse()
     }
 
     @Test

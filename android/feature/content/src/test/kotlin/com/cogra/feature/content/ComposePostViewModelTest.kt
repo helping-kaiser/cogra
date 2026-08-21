@@ -104,36 +104,18 @@ class ComposePostViewModelTest {
         assertThat(vm.state.value.saved).isFalse()
     }
 
-    // prepare answers with the node id the content will serve under
-    // once the write lands, so the composer can hand the author
-    // straight to their own post — pending, but readable.
+    // The saved flag is a one-shot: the caller navigates once, and a
+    // consumed flag must not re-fire on the next recomposition.
     @Test
-    fun aCreateReportsTheNodeItWillServeUnder() = runTest(dispatcher) {
+    fun consumingTheSavedFlagLeavesTheComposerAtRest() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onBodyChange("The body")
         vm.onSubmit()
         dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.savedPostId).isEqualTo("node-1")
+        assertThat(vm.state.value.saved).isTrue()
 
         vm.onSavedConsumed()
-        assertThat(vm.state.value.savedPostId).isNull()
         assertThat(vm.state.value.saved).isFalse()
-    }
-
-    // An edit was reached from the post it edits, so there is nowhere
-    // new to send the author.
-    @Test
-    fun anEditReportsNoNodeToOpen() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("p1")
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onBodyChange("better words")
-        vm.onSubmit()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.saved).isTrue()
-        assertThat(vm.state.value.savedPostId).isNull()
     }
 
     @Test
