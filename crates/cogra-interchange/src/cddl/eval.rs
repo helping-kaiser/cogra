@@ -46,11 +46,10 @@
 //! A rule that references itself without consuming anything — `a = b`,
 //! `b = a` — denotes no value, and is answered `false` on the visited set
 //! this module keeps rather than by recursing forever. A rule that
-//! references itself *through* a value — `a = [* a]` — recurses to the
-//! nesting depth of the document, exactly as the derived `Clone`,
-//! `PartialEq`, and `Hash` of [`Value`] already do
-//! (`impl:xchg:iterative-teardown`), and shares their audit-phase
-//! attention.
+//! references itself *through* a value — `a = [* a]` — descends one call
+//! frame per level of the document, so a document nested past
+//! [`MATCH_DEPTH_LIMIT`] is answered `false` at the position it exceeds
+//! rather than overflowing the stack.
 
 use std::collections::BTreeMap;
 
@@ -461,7 +460,24 @@ pub(crate) struct Evaluator<'a> {
     visiting: Vec<&'a str>,
     /// Generic parameter bindings, innermost last.
     scopes: Vec<Vec<(&'a str, &'a Type1)>>,
+    /// How many values deep the match currently is: the guard against a
+    /// rule that references itself *through* a value against a document
+    /// nested deeply enough to overflow the call stack.
+    depth: usize,
 }
+
+/// The greatest value-nesting depth the matcher descends before it answers
+/// a position `false` rather than overflowing the stack.
+///
+/// A rule that recurses through a value — `a = [* a]` — descends one call
+/// frame per level of the document it matches, so a hostile document nested
+/// deeply enough would overflow the stack the way the data language's own
+/// walks once did. Recursive-descent matchers standardly bound this
+/// (serde_json's `RECURSION_LIMIT` is 128); the bound here is generous
+/// against it, and real theories and documents nest far shallower. A
+/// document deeper than this is answered as a non-match at the position it
+/// exceeds, which keeps the judgment a verdict rather than a crash.
+const MATCH_DEPTH_LIMIT: usize = 256;
 
 /// A `.regexp` match that ran out of budget: what it was matching against,
 /// and how much it was given.
@@ -479,6 +495,7 @@ impl<'a> Evaluator<'a> {
             exhausted: None,
             visiting: Vec::new(),
             scopes: Vec::new(),
+            depth: 0,
         }
     }
 
@@ -885,9 +902,14 @@ impl<'a> Evaluator<'a> {
     /// visited set cleared: a rule may legitimately re-enter itself under a
     /// value it consumed.
     fn match_inner(&mut self, value: &Value, ty: &'a Type) -> bool {
+        if self.depth >= MATCH_DEPTH_LIMIT {
+            return false;
+        }
+        self.depth += 1;
         let saved = std::mem::take(&mut self.visiting);
         let matched = self.match_type(value, ty);
         self.visiting = saved;
+        self.depth -= 1;
         matched
     }
 
