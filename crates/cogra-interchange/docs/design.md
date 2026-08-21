@@ -650,7 +650,7 @@ The conventions ship exactly one `.regexp` pattern, `namespace-form` in the base
 ```rust
 /// A reader's registry state: assigned coordinates with their immutable
 /// theory objects, holding downward-closed within each major.
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Registry { /* private */ }
 
 impl Registry {
@@ -932,6 +932,8 @@ pub enum Error {
     #[error(transparent)] Acquire(#[from] AcquireError),
 }
 ```
+
+`Registry` derives `Clone`, which is what the ruled sharing model (`dec:xchg:theory-sharing`) asks of it: a consumer wanting a registry on another thread clones it. `Instrument` and `Under` are exhaustive as sketched — they are the dispatch's instruments, not verdicts, and their arms are the acceptance definition's own closed set; `#[non_exhaustive]` stays on the verdict and error enums, where growth is genuinely expected.
 
 The composite operations compose the taxonomy rather than flattening it: `Document::from_canonical_bytes` surfaces `EnvelopeError`, with `NotCanonical` carrying the decoder's located refusal as its source — bytes outside the data language and a canonical value that is not a document are different answers, and the arm keeps them distinguishable. `BadLabel` carries the scanner's refusal of an offered string; `BadLabelType` covers a key-0 value that offers no string at all. `ReservedContentKey` is raised by `ContentKey::new` — inside `try_from_value` keys 0 and 1 are consumed as the envelope before content is read, so no content key at or below 1 can reach it there.
 
