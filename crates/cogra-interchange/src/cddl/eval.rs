@@ -628,37 +628,41 @@ impl<'a> Evaluator<'a> {
                 key: Some(key),
                 value,
             } => self.map_member(key, value, map, consumed, faults),
+            // "If the memberkey is not given, the entry can only be used for
+            // matching arrays, not for maps" — except where the type is a
+            // group, which is the socket idiom `* $$extension`.
             GroupEntryKind::Member { key: None, value } => {
-                // "If the memberkey is not given, the entry can only be
-                // used for matching arrays, not for maps" — except where
-                // the type is a group, which is the socket idiom
-                // `* $$extension`.
                 let group = self.spliced(value)?;
-                let mut total = 0;
-                for choice in &group.choices {
-                    let mut faults_here = Vec::new();
-                    let before = count(consumed);
-                    self.map_entries(&choice.entries, map, consumed, &mut faults_here);
-                    if faults_here.is_empty() {
-                        total = count(consumed) - before;
-                        return Some(total);
-                    }
-                }
-                let _ = total;
-                None
+                self.map_group(group, map, consumed)
             }
-            GroupEntryKind::Inline(group) => {
-                for choice in &group.choices {
-                    let mut faults_here = Vec::new();
-                    let before = count(consumed);
-                    self.map_entries(&choice.entries, map, consumed, &mut faults_here);
-                    if faults_here.is_empty() {
-                        return Some(count(consumed) - before);
-                    }
-                }
-                None
-            }
+            GroupEntryKind::Inline(group) => self.map_group(group, map, consumed),
         }
+    }
+
+    /// One repetition of a group spliced into a map: the first choice that
+    /// takes its members whole, and how many it took.
+    ///
+    /// A choice that fails leaves the map as it found it. Members it had
+    /// already taken are given back, so the next choice sees the state the
+    /// first one started from — a prioritized choice picks *between*
+    /// alternatives, and a half-applied one is neither.
+    fn map_group(
+        &mut self,
+        group: &'a Group,
+        map: &crate::value::Map,
+        consumed: &mut [bool],
+    ) -> Option<usize> {
+        for choice in &group.choices {
+            let before: Vec<bool> = consumed.to_vec();
+            let taken = count(consumed);
+            let mut faults = Vec::new();
+            self.map_entries(&choice.entries, map, consumed, &mut faults);
+            if faults.is_empty() {
+                return Some(count(consumed) - taken);
+            }
+            consumed.copy_from_slice(&before);
+        }
+        None
     }
 
     /// One keyed member: pick the first unconsumed member of the map whose
