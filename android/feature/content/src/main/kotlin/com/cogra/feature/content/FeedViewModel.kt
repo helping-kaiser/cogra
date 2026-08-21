@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
+import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.content.NodeLanding
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -14,6 +16,14 @@ import kotlinx.coroutines.launch
 
 /** One page per fetch; the server default is the same number. */
 internal const val FEED_PAGE_SIZE = 20
+
+/** The held entry keeps its place; only its landing state moves. */
+private fun List<PostView>.withLanding(update: NodeLanding): List<PostView> =
+    if (none { it.id == update.nodeId }) {
+        this
+    } else {
+        map { if (it.id == update.nodeId) it.copy(landing = update.landing) else it }
+    }
 
 data class FeedUiState(
     val loading: Boolean = true,
@@ -39,6 +49,7 @@ data class FeedUiState(
 @HiltViewModel
 class FeedViewModel @Inject constructor(
     private val content: ContentRepository,
+    landings: LandingSignal,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
@@ -46,6 +57,25 @@ class FeedViewModel @Inject constructor(
 
     init {
         refresh()
+        // A node the device has since read afresh — the reader opened
+        // the post and pulled to refresh until it landed — carries its
+        // state back to the card that is still on screen. The page
+        // itself is untouched: no entry moves, arrives, or leaves, so
+        // this is not the page reconciliation the snapshot rule
+        // forbids (api-spec.md "A page is a snapshot, not a live
+        // view"). A read that asked the other landed-only question saw
+        // another version of the node, so it says nothing here.
+        viewModelScope.launch {
+            landings.updates.collect { update ->
+                _state.update {
+                    if (update.includePending != it.includePending) {
+                        it
+                    } else {
+                        it.copy(posts = it.posts.withLanding(update))
+                    }
+                }
+            }
+        }
     }
 
     // The fault reflects the last COMPLETED fetch: clearing it
