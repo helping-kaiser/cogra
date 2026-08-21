@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
@@ -113,6 +114,88 @@ class CollapsingTopTest {
         // the signal.
         dragUpBy(100f)
         compose.onNodeWithTag("top_region").assertExists()
+    }
+
+    /**
+     * The same top, with a pull-to-refresh box in the chain — the
+     * arrangement every read surface has. [gateOutside] puts the gate
+     * above the box, the box between the gate and the list.
+     */
+    @OptIn(ExperimentalMaterial3Api::class)
+    private fun renderTopWithRefreshBox(gateOutside: Boolean) {
+        compose.setContent {
+            val top = rememberCollapsingTop()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .then(if (gateOutside) Modifier.collapsingTop(top) else Modifier),
+            ) {
+                TopAppBar(title = {}, scrollBehavior = top.scrollBehavior)
+                AnimatedVisibility(visible = top.showTop) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("top_region"),
+                    )
+                }
+                PullToRefreshBox(isRefreshing = false, onRefresh = {}) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .then(if (gateOutside) Modifier else Modifier.collapsingTop(top)),
+                    ) {
+                        LazyColumn(
+                            Modifier
+                                .fillMaxSize()
+                                .testTag("list"),
+                        ) {
+                            items(50) {
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(80.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Where a screen has both, the gate belongs INSIDE the
+    // pull-to-refresh box: the refresh gesture consumes the leftover
+    // in its own post-scroll, so a gate above the box never sees it.
+    @Test
+    fun theGateReadsTheAtTopSignalFromInsideARefreshBox() {
+        renderTopWithRefreshBox(gateOutside = false)
+        compose.onNodeWithTag("list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -60f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("top_region").assertDoesNotExist()
+        dragUpBy(100f)
+        compose.onNodeWithTag("top_region").assertExists()
+    }
+
+    // The failure that rule prevents: the top stays gone at the top of
+    // the content, while the same drags feed the refresh gesture — a
+    // re-read that reads as fired mid-scroll.
+    @Test
+    fun aRefreshBoxBelowTheGateSwallowsTheAtTopSignal() {
+        renderTopWithRefreshBox(gateOutside = true)
+        compose.onNodeWithTag("list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -60f))
+            advanceEventTime(250)
+            up()
+        }
+        compose.onNodeWithTag("top_region").assertDoesNotExist()
+        dragUpBy(100f)
+        compose.onNodeWithTag("top_region").assertDoesNotExist()
     }
 
     // The shared banner slot rides the same gate the screens wire by
