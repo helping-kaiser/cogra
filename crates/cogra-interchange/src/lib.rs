@@ -46,11 +46,12 @@ mod encode;
 mod envelope;
 mod error;
 mod label;
+mod regexp;
 mod value;
 mod version;
 
 pub use envelope::{Content, ContentKey, Document, Envelope, MAX_ENVELOPE_PREFIX};
-pub use error::{DecodeError, EnvelopeError, LabelError, ValueError};
+pub use error::{DecodeError, EnvelopeError, LabelError, RegexpError, ValueError};
 pub use label::NamespaceLabel;
 pub use value::{Array, Bytes, Float, FloatWidth, Map, Negative, Simple, Tag, Text, Value};
 pub use version::{Coordinate, Version};
