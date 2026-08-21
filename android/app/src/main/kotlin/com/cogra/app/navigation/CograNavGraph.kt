@@ -407,25 +407,30 @@ fun CograNavGraph(
                 )
             }
             composable<ComposePost> { entry ->
+                val editing = entry.toRoute<ComposePost>().postId != null
                 ComposePostRoute(
                     postId = entry.toRoute<ComposePost>().postId,
-                    // A created post opens on its own detail, so the
-                    // author reads what they just wrote — marked as
-                    // still settling, since content exists at authoring,
-                    // not at landing (substrate.md §6). The composer
-                    // leaves the stack, so back returns to the reading
-                    // context that launched it, refreshed. An edit came
-                    // from its post already and simply returns to it.
-                    onSaved = { newPostId ->
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(CONTENT_SIGNED_RESULT, true)
-                        if (newPostId == null) {
+                    // A new post lands on the feed, where the author
+                    // finds it at the top marked as still settling —
+                    // content exists at authoring, not at landing
+                    // (substrate.md §6); the web twin lands on /feed
+                    // too. Popping to the feed tab — rather than
+                    // navigating to it — takes the composer and any
+                    // drill-in above the tab off the stack in one move,
+                    // leaving one feed entry whose result signal asks it
+                    // to re-read. An edit came from its post already and
+                    // simply returns to it, refreshed.
+                    onSaved = {
+                        if (editing) {
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(CONTENT_SIGNED_RESULT, true)
                             navController.popBackStack()
                         } else {
-                            navController.navigate(PostDetail(newPostId)) {
-                                popUpTo<ComposePost> { inclusive = true }
-                            }
+                            navController.popBackStack<Feed>(inclusive = false)
+                            navController.currentBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(CONTENT_SIGNED_RESULT, true)
                         }
                     },
                     onBack = { navController.navigateUp() },
