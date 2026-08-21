@@ -14,10 +14,10 @@
 //! is about how a verdict moves as the reader grows.
 
 use cogra_interchange::{
-    Array, Bytes, Content, ContentKey, Coordinate, Document, Envelope, Float, Instrument,
-    LabelError, MAX_ENVELOPE_PREFIX, Map, NamespaceLabel, Negative, Registry, Rejection, Simple,
-    Tag, Text, Theory, Value, Verdict, Version, accept, check_inclusion, dispatch, dispatch_prefix,
-    satisfies, satisfies_global, satisfies_open,
+    Array, Bytes, Content, ContentKey, Coordinate, Document, Envelope, Float, FloatWidth,
+    Instrument, LabelError, MAX_ENVELOPE_PREFIX, Map, NamespaceLabel, Negative, Registry,
+    Rejection, Simple, Tag, Text, Theory, Value, Verdict, Version, accept, check_inclusion,
+    dispatch, dispatch_prefix, satisfies, satisfies_global, satisfies_open,
 };
 use proptest::prelude::*;
 
@@ -406,6 +406,44 @@ fn map_of(pairs: Vec<(Value, Value)>) -> Map {
     Map::new(kept).expect("the keys were made distinct above")
 }
 
+/// Whether `x` is exactly a `binary16` value — the narrowest width. An
+/// independent oracle for the float reduction's minimality: it decides
+/// representability from the value's own magnitude and granularity, never
+/// by asking the crate. Infinities and the one admitted NaN are exactly the
+/// `binary16` specials, so they are the narrowest width too.
+fn fits_binary16(x: f64) -> bool {
+    if x.is_nan() || x.is_infinite() || x == 0.0 {
+        return true;
+    }
+    let a = x.abs();
+    // Above the largest finite `binary16` value, or below its smallest
+    // positive subnormal, no `binary16` number is equal to `x`.
+    if a > 65504.0 || a < 2f64.powi(-24) {
+        return false;
+    }
+    // The binade exponent, read exactly from the (necessarily normal) `f64`
+    // bits — `a >= 2^-24` is far above the `f64` subnormal range.
+    let binade = ((a.to_bits() >> 52) & 0x7ff) as i32 - 1023;
+    // `binary16`'s ULP: `2^(binade-10)` where it is normal, a fixed `2^-24`
+    // through its subnormal binades. `x` fits exactly iff it is an integer
+    // multiple of that ULP.
+    let ulp_exp = if binade >= -14 { binade - 10 } else { -24 };
+    (a / 2f64.powi(ulp_exp)).fract() == 0.0
+}
+
+/// The narrowest `FloatWidth` whose round-trip preserves `x`, computed
+/// without the crate: `Half` where `binary16` holds it exactly, else
+/// `Single` where `binary32` does, else `Double`.
+fn minimal_width(x: f64) -> FloatWidth {
+    if fits_binary16(x) {
+        FloatWidth::Half
+    } else if (x as f32 as f64) == x {
+        FloatWidth::Single
+    } else {
+        FloatWidth::Double
+    }
+}
+
 proptest! {
     /// Every structure has exactly one name, and byte equality of names
     /// decides equality of structures.
@@ -453,12 +491,22 @@ proptest! {
         prop_assert_eq!(v.canonical_len(), v.to_canonical_bytes().len());
     }
 
-    /// A float holds the shortest form that preserves its value, so
-    /// reducing an already-reduced float changes nothing.
+    /// A float holds the shortest form that preserves its value. Two things
+    /// follow, and both are asserted: reducing an already-reduced float
+    /// changes nothing (idempotence), and the width is *minimal* — no
+    /// narrower `FloatWidth` round-trips to the same `f64`, checked against
+    /// an independent width oracle.
     #[test]
-    fn float_reduction_is_idempotent(v in any::<f64>()) {
+    fn float_reduction_is_minimal(v in any::<f64>()) {
         if let Ok(float) = Float::from_f64(v) {
-            prop_assert_eq!(Float::from_f64(float.to_f64()).ok(), Some(float));
+            let x = float.to_f64();
+            prop_assert_eq!(Float::from_f64(x).ok(), Some(float));
+            prop_assert_eq!(
+                float.width(),
+                minimal_width(x),
+                "the float was stored at {:?}, not its minimal width",
+                float.width()
+            );
         }
     }
 
