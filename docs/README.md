@@ -147,6 +147,9 @@ an `instances/` doc is a sign the mechanism belongs in
   tables.
 - [development](implementation/development.md) — local setup,
   tools, workflows.
+- [engineering-process](implementation/engineering-process.md) —
+  the six-phase process for substantial builds: concept, design
+  candidate, review, implementation, audit, commissioning.
 - [api-spec](implementation/api-spec.md) — backend GraphQL spec:
   type system, queries (read surface), and mutations (the
   prepare → pre-sign → seal → approve → confirm write surface).
