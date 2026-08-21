@@ -55,6 +55,8 @@ pub enum BootstrapError {
     Mirror(#[from] mirror::MirrorError),
     #[error(transparent)]
     Ingest(#[from] crate::ingest::IngestError),
+    #[error("genesis promotion failed: {0}")]
+    PromotionFailed(String),
     #[error("L1 relay: {0}")]
     Relay(String),
     #[error("operator login: {0}")]
@@ -117,6 +119,29 @@ struct CastMember {
     key: ActorKey,
 }
 
+/// The bootstrap's ingestion step. Ordinary ingestion treats a
+/// confirm-side promotion failure as survivable — the record landed, the
+/// mirror governs, and a later rebuild re-runs the promotion — but the
+/// bootstrap is the one-shot step that decides whether an instance
+/// exists, so it refuses to complete on any failure rather than leaving
+/// a half-promoted genesis behind a success message.
+async fn ingest_or_refuse(boundary: &StandInBoundary, pool: &PgPool) -> Result<(), BootstrapError> {
+    let outcome =
+        crate::ingest::ingest_pending(boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS)
+            .await?;
+    if outcome.promotion_failures.is_empty() {
+        return Ok(());
+    }
+    Err(BootstrapError::PromotionFailed(
+        outcome
+            .promotion_failures
+            .iter()
+            .map(|failure| failure.to_string())
+            .collect::<Vec<_>>()
+            .join("; "),
+    ))
+}
+
 /// Runs the bootstrap. Takes the stand-in directly: the L0 genesis burn
 /// and the genesis epoch close are substrate-side operations the seam
 /// deliberately does not carry (with the real Layer 1 both happen on the
@@ -128,7 +153,7 @@ pub async fn run(
 ) -> Result<BootstrapOutcome, BootstrapError> {
     // Catch up the mirror first, so the gate reads current state.
     let boundary = StandInBoundary(standin.clone());
-    crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
+    ingest_or_refuse(&boundary, pool).await?;
 
     let l2_half = genesis::system_actors_present(pool).await?;
     let publisher_address = genesis::actor_by_handle(pool, PUBLISHER_HANDLE)
@@ -288,7 +313,7 @@ pub async fn run(
     submit(&publisher.key, role_tag).await?;
 
     standin.close_epoch().await?;
-    crate::ingest::ingest_pending(&boundary, pool, crate::ingest::DEFAULT_GC_AFTER_EPOCHS).await?;
+    ingest_or_refuse(&boundary, pool).await?;
 
     // The gate must now hold on both sides.
     let landed = mirror::has_record_by(pool, &publisher.key.address(), Family::Publish).await?;
