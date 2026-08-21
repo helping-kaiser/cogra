@@ -222,7 +222,7 @@ class FeedViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.posts.first().landing.isPending).isTrue()
 
-        landings.observed("p1", Landing.landed(5))
+        landings.observed("p1", Landing.landed(5), includePending = true)
         dispatcher.scheduler.advanceUntilIdle()
 
         // The entry keeps its place — the page is a snapshot, and only
@@ -241,12 +241,27 @@ class FeedViewModelTest {
         val vm = FeedViewModel(content, landings)
         dispatcher.scheduler.advanceUntilIdle()
 
-        landings.observed("p9", Landing.Pending)
+        landings.observed("p9", Landing.Pending, includePending = true)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.posts.single().landing).isEqualTo(Landing.landed(4))
 
-        landings.observed("p1", Landing.Pending)
+        landings.observed("p1", Landing.Pending, includePending = true)
         dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.posts.single().landing.isPending).isTrue()
+    }
+
+    // A landed-only read served the version that landed, so it says
+    // nothing about the pending entry a default listing is showing.
+    @Test
+    fun aReadThatAskedTheOtherQuestionLeavesTheMarkerAlone() = runTest(dispatcher) {
+        content.pages[null] =
+            Outcome.Success(Page(listOf(testPost("p1", landing = Landing.Pending)), null, false))
+        val vm = FeedViewModel(content, landings)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        landings.observed("p1", Landing.landed(5), includePending = false)
+        dispatcher.scheduler.advanceUntilIdle()
+
         assertThat(vm.state.value.posts.single().landing.isPending).isTrue()
     }
 

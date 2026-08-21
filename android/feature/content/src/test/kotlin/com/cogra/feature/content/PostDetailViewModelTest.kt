@@ -172,7 +172,9 @@ class PostDetailViewModelTest {
         val vm = viewModel()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(seen).containsExactly(NodeLanding("post-1", Landing.Pending))
+        assertThat(seen).containsExactly(
+            NodeLanding("post-1", Landing.Pending, includePending = true),
+        )
 
         content.detail = Outcome.Success(
             PostDetail(
@@ -182,7 +184,8 @@ class PostDetailViewModelTest {
         )
         vm.refresh()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(seen.last()).isEqualTo(NodeLanding("post-1", Landing.landed(7)))
+        assertThat(seen.last())
+            .isEqualTo(NodeLanding("post-1", Landing.landed(7), includePending = true))
     }
 
     @Test

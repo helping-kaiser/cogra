@@ -8,8 +8,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-/** One node's landing state as a read just saw it. */
-data class NodeLanding(val nodeId: String, val landing: Landing)
+/**
+ * One node's landing state as a read just saw it, under the question
+ * that read asked: a landed-only read serves the version that landed,
+ * so its answer speaks only to a page that asked the same.
+ */
+data class NodeLanding(
+    val nodeId: String,
+    val landing: Landing,
+    val includePending: Boolean,
+)
 
 /**
  * Where a node stands relative to L1 finality, as the freshest read on
@@ -39,7 +47,7 @@ class LandingSignal @Inject constructor() {
 
     val updates: SharedFlow<NodeLanding> = _updates.asSharedFlow()
 
-    fun observed(nodeId: String, landing: Landing) {
-        _updates.tryEmit(NodeLanding(nodeId, landing))
+    fun observed(nodeId: String, landing: Landing, includePending: Boolean) {
+        _updates.tryEmit(NodeLanding(nodeId, landing, includePending))
     }
 }
