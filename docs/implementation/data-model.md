@@ -468,7 +468,10 @@ CREATE TABLE user_credentials (
 -- act_payloads. Registration seeds the first row with
 -- display_name = handle; genesis seeds the system actors'. A
 -- Collective's changes land through its governed edit flow
--- (substrate.md §9).
+-- (substrate.md §9). The key is the row's own `version_id`: two
+-- writes can share one `created_at` — `now()` is the transaction
+-- timestamp — and the newest-wins read breaks that tie on
+-- `version_id`.
 CREATE TABLE actor_profile_versions (
     actor_id         UUID        NOT NULL REFERENCES actors(id),
     display_name     TEXT        NOT NULL,
@@ -478,8 +481,10 @@ CREATE TABLE actor_profile_versions (
     website_url      TEXT,
     redaction_reason TEXT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (actor_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY
 );
+CREATE INDEX actor_profile_versions_current_idx
+    ON actor_profile_versions (actor_id, created_at DESC, version_id DESC);
 ```
 
 ### Content nodes

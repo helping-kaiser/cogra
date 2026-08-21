@@ -71,6 +71,42 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
     assert_eq!(count, 2);
 }
 
+/// Two version rows written in one transaction carry the same
+/// `created_at` — `now()` is the transaction timestamp — so this is the
+/// same-instant collision the monotonic key exists for, forced through
+/// the real write path rather than simulated.
+#[sqlx::test(migrations = "../../migrations")]
+async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool) {
+    let actor = seed_actor(&pool, "ada").await;
+
+    let mut tx = pool.begin().await.expect("tx");
+    profile::insert_profile_version(&mut tx, actor, "First", None, None, None, None)
+        .await
+        .expect("first insert");
+    profile::insert_profile_version(&mut tx, actor, "Second", None, None, None, None)
+        .await
+        .expect("second insert");
+    tx.commit().await.expect("commits");
+
+    let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
+        "SELECT created_at FROM actor_profile_versions
+         WHERE actor_id = $1 AND display_name IN ('First', 'Second')
+         ORDER BY version_id",
+    )
+    .bind(actor)
+    .fetch_all(&pool)
+    .await
+    .expect("stamps");
+    assert_eq!(stamps.len(), 2, "both same-instant rows survive");
+    assert_eq!(stamps[0], stamps[1], "the collision is real, not near-miss");
+
+    let current = profile::current_profile(&pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(current.display_name, "Second", "the later write is current");
+}
+
 #[sqlx::test(migrations = "../../migrations")]
 async fn current_profile_is_none_for_unknown_actor(pool: PgPool) {
     assert!(

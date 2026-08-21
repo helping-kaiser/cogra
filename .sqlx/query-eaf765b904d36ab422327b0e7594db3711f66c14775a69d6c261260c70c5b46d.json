@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT display_name, bio, avatar_id, cover_id, website_url,\n                redaction_reason, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1 ORDER BY created_at DESC LIMIT 1",
+  "query": "SELECT display_name, bio, avatar_id, cover_id, website_url,\n                redaction_reason, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1\n         ORDER BY created_at DESC, version_id DESC LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -54,5 +54,5 @@
       false
     ]
   },
-  "hash": "7aff02a2b3573ba92e3f5e871aeac1a5c79ac1f6f371c15b95f7536d8bc34ef3"
+  "hash": "eaf765b904d36ab422327b0e7594db3711f66c14775a69d6c261260c70c5b46d"
 }
