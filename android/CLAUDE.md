@@ -180,3 +180,12 @@ pieces").
 
 CI runs `./gradlew test` and `./gradlew :app:assembleDebug`, path-filtered to
 `android/**` and `schema.graphql`.
+
+Robolectric runs in **offline mode**: its android-all sandbox jars are
+declared in `libs.versions.toml`, staged by the root project's
+`stageRobolectricSdks`, and read from there, so nothing is fetched while
+tests run. Two consequences. Bumping `robolectric` means bumping the
+`androidAll*` versions with it — the coordinates come from Robolectric's own
+`DefaultSdkProvider.populateSdks` and its `PREINSTRUMENTED_VERSION`. And a
+test that pins a new API level with `@Config(sdk = [N])` needs that level's
+jar added to the catalog and to the root build script's map.
