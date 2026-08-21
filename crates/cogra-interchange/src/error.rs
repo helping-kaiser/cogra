@@ -347,8 +347,9 @@ pub enum TheoryError {
 /// error in name only.
 ///
 /// A pattern is compiled at `Theory::parse` and executed nowhere else, so
-/// this error is reached only through [`TheoryError::Regexp`], never at
-/// match time.
+/// the compile-time variants are reached only through
+/// [`TheoryError::Regexp`]; [`RegexpError::BudgetExhausted`] alone can
+/// arise at match time, and it is a refusal, never an answer.
 ///
 /// ```
 /// use cogra_interchange::{RegexpError, Theory, TheoryError};
@@ -371,5 +372,17 @@ pub enum RegexpError {
     EngineRefused {
         /// The engine's account of why it declined.
         detail: String,
+    },
+    /// A match that did not complete within the seam's operation budget.
+    ///
+    /// The budget counts matching operations, never time, so the same
+    /// pattern, subject, and budget give the same outcome on every
+    /// machine. This is the one failure the seam can raise at match time;
+    /// the evaluator surfaces it as a located mismatch, never as a silent
+    /// answer.
+    #[error("pattern match exhausted the {budget}-operation budget")]
+    BudgetExhausted {
+        /// The budget that was in force.
+        budget: usize,
     },
 }

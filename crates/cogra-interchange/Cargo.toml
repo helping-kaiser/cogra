@@ -8,7 +8,10 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-regexml = "0.2"
+# Pinned fork exposing the anchored whole-string matcher (Regex::is_full_match);
+# upstream exposure filed as Paligo/regexml#15 — repoint at crates.io when it
+# merges and releases.
+regexml = { git = "https://github.com/helping-kaiser/regexml", rev = "feddb83dfdacceff2e81e86e7618ca31acccf910" }
 thiserror = { workspace = true }
 
 [dev-dependencies]

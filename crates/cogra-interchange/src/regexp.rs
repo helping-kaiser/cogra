@@ -33,28 +33,6 @@
 //!   position — `a|ab` against `ab` yields a match of span 0 to 1, and a
 //!   span check would reject a subject XSD accepts
 //!   (`conv:xchg:regexp-anchoring`).
-//!
-//! # Open: the engine's public matcher is unanchored
-//!
-//! The first of those divergences is not met by the engine as its public
-//! API stands, and the shortfall is recorded here rather than papered over.
-//! `Regex::is_match` searches: it reports a match wherever one begins, so
-//! `a` answers true against `ab`, which XSD rejects. That is the XPath
-//! `fn:matches` reading, and it holds under `Regex::xsd` as much as under
-//! `Regex::xpath`, because the language argument selects the pattern
-//! dialect and not the matching discipline.
-//!
-//! The anchored discipline is implemented in the port — `ReMatcher::
-//! match_at(0, true)` makes end-of-program succeed only at the end of the
-//! subject, which is exactly whole-string matching — but both the method
-//! and the matcher are `pub(crate)`, so no caller can reach it. The remedy
-//! is upstream (an anchored entry point on `Regex`) or a pinned fork, and
-//! it is a decision above this file: the two workarounds available here are
-//! a span check, which the design rejects by name, and a translation into
-//! another dialect, which the seam exists to prevent. Until it is settled,
-//! [`XsdPattern::is_match`] carries the engine's search semantics, the
-//! contract it owes stands as an ignored test, and nothing in the crate
-//! evaluates a `.regexp` against a document.
 //! - **`^` and `$` are ordinary characters**, matching themselves. Because
 //!   anchoring is implicit, XSD makes them metacharacters nowhere.
 //! - **Character-class subtraction** `[a-z-[aeiou]]` exists.
@@ -64,6 +42,20 @@
 //!   third runs in the dangerous direction: `a*?` is not a lazy quantifier
 //!   in XSD, so an engine reading it as one would accept a pattern XSD
 //!   rejects. This engine refuses it.
+//!
+//! # The anchored matcher and the budget, by pinned fork
+//!
+//! The engine's own `Regex::is_match` searches — the XPath `fn:matches`
+//! reading, under `Regex::xsd` as much as under `Regex::xpath`, because
+//! the language argument selects the pattern dialect and not the matching
+//! discipline. The anchored discipline this seam requires is
+//! `Regex::is_full_match_bounded`, exposed by the pinned fork this crate
+//! depends on (the anchored exposure is filed upstream as
+//! Paligo/regexml#15; when the fork's surface merges and releases, the
+//! dependency repoints at crates.io and the fork retires).
+//! [`XsdPattern::is_match`] goes through it and through nothing else, so a
+//! pattern matches exactly when it accounts for the whole subject, within
+//! [`OPS_BUDGET`] operations.
 //!
 //! # One level of string escaping
 //!
@@ -77,17 +69,19 @@
 //!
 //! # Runtime characterization
 //!
-//! A Saxon-derived engine backtracks, so no linear-time bound in the length
-//! of the subject is available by construction, and the guard duty
-//! (`req:xchg:regexp-guard`) is discharged by measurement rather than
-//! assumption. The measurements stand in [`tests::pathological_patterns`]:
-//! on the classic exponential shapes — nested quantifiers over an
-//! alternation, `(a+)+b` and its relatives — against subjects sized to
-//! expose blowup, every pattern completed in single-digit milliseconds,
-//! three orders of magnitude inside the two-second bound the test asserts.
-//! No match budget stands at the seam, because the measurement did not
-//! demand one; the exposure it bounds is narrow either way, since patterns
-//! execute only out of theories a reader deliberately acquired.
+//! A Saxon-derived engine backtracks, so no linear-time bound in the
+//! length of the subject is available by construction, and the guard duty
+//! (`req:xchg:regexp-guard`) is discharged by measurement. Under the
+//! correct anchored matching the classic exponential shapes are real —
+//! `(a+)+b` against thirty characters measured **761 seconds** unbounded
+//! (2026-08-21), where the unanchored search's early-exit optimizations
+//! had masked the blowup at microseconds. The remedy the guard requirement
+//! pre-authorized therefore stands: every match runs under the
+//! deterministic operation budget [`OPS_BUDGET`], exhaustion is a loud
+//! refusal and never an answer, and [`tests::pathological_patterns`]
+//! asserts both the speed and the honesty of the refusal. The exposure is
+//! narrow either way, since patterns execute only out of theories a
+//! reader deliberately acquired.
 
 // The seam lands before its consumer: the `Theory::parse` pipeline that
 // compiles a theory's patterns is the next commit, and until it arrives
@@ -100,6 +94,19 @@ use std::sync::Arc;
 use regexml::Regex;
 
 use crate::error::RegexpError;
+
+/// The operation budget of one [`XsdPattern::is_match`] call.
+///
+/// Calibrated 2026-08-21 against the pinned engine (debug build): the
+/// conventions' namespace-form pattern costs 253 operations to accept a
+/// 56-character label and 1017 to reject one — rejection is the expensive
+/// direction — while `(a+)+b` against thirty characters exhausts any
+/// budget (761 s unbounded; ×16 more operations per four characters of
+/// subject). 100 000 leaves two orders of magnitude of headroom over the
+/// measured legitimate cases and refuses the exponential shapes in
+/// single-digit milliseconds. Raising it is a recorded decision, not a
+/// tweak: the budget is part of what a verdict means.
+pub(crate) const OPS_BUDGET: usize = 100_000;
 
 /// A compiled XSD regular expression, as `.regexp` means it.
 ///
@@ -134,22 +141,23 @@ impl XsdPattern {
         }
     }
 
-    /// Whether the pattern matches the whole of `text`.
+    /// Whether the pattern matches the whole of `text`, within the
+    /// operation budget.
     ///
     /// XSD regular expressions are implicitly anchored at head and tail, so
     /// there is no partial-match method here and never will be, and no
-    /// anchoring is applied to the engine's answer.
+    /// anchoring is applied to the engine's answer — the engine's own
+    /// anchored matcher delivers it.
     ///
-    /// **The engine does not yet deliver that contract.** `regexml` 0.2.2
-    /// exposes only an unanchored search, so what this returns today is
-    /// "the pattern matches somewhere in `text`" — which accepts subjects
-    /// XSD rejects. The module documentation carries the finding and the
-    /// two workarounds it rules out. No caller in this crate evaluates a
-    /// `.regexp` against a document, so no wrong answer is reachable
-    /// through the public API; the method exists because the seam is
-    /// three methods wide and compiling a pattern is the half that works.
-    pub(crate) fn is_match(&self, text: &str) -> bool {
-        self.regex.is_match(text)
+    /// A backtracking engine offers no time bound, so the walk is metered:
+    /// a match that does not complete within [`OPS_BUDGET`] operations is
+    /// [`RegexpError::BudgetExhausted`], never a bool — refusal is loud,
+    /// deterministic, and machine-independent, because the budget counts
+    /// operations and not time.
+    pub(crate) fn is_match(&self, text: &str) -> Result<bool, RegexpError> {
+        self.regex
+            .is_full_match_bounded(text, OPS_BUDGET)
+            .map_err(|_| RegexpError::BudgetExhausted { budget: OPS_BUDGET })
     }
 
     /// The pattern as given, for diagnostics.
@@ -185,43 +193,30 @@ mod tests {
     /// matcher searches rather than matches; the positives beside them are
     /// asserted in the tests that run.
     #[test]
-    #[ignore = "regexml 0.2.2 exposes no anchored matcher — see the module documentation"]
+
     fn xsd_whole_string_matching() {
         let p = compile("a");
-        assert!(p.is_match("a"));
-        assert!(!p.is_match("ab"));
-        assert!(!p.is_match("ba"));
-        assert!(!p.is_match("bab"));
+        assert!(p.is_match("a").expect("within budget"));
+        assert!(!p.is_match("ab").expect("within budget"));
+        assert!(!p.is_match("ba").expect("within budget"));
+        assert!(!p.is_match("bab").expect("within budget"));
 
         // The counterexample that rules out a span check: a leftmost-first
         // engine matches `a` here and reports span 0..1, so a span check
         // rejects a subject XSD accepts through the second alternative.
         let alternation = compile("a|ab");
-        assert!(alternation.is_match("ab"));
-        assert!(!alternation.is_match("abc"));
+        assert!(alternation.is_match("ab").expect("within budget"));
+        assert!(!alternation.is_match("abc").expect("within budget"));
 
         let bounded = compile("a{2,3}");
-        assert!(!bounded.is_match("aaaa"));
+        assert!(!bounded.is_match("aaaa").expect("within budget"));
 
         let three = compile(".{3}");
-        assert!(!three.is_match("äöüx"));
+        assert!(!three.is_match("äöüx").expect("within budget"));
 
         let label = compile(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+");
-        assert!(!label.is_match("Com.example"));
-        assert!(!label.is_match("com.example "));
-    }
-
-    /// What the engine does today, asserted so that the divergence is a
-    /// checked fact rather than a remembered one. The day this test fails
-    /// is the day the seam's contract is met.
-    #[test]
-    fn the_engine_searches_where_xsd_matches() {
-        let p = compile("a");
-        assert!(
-            p.is_match("ab"),
-            "the engine has gained anchored matching: un-ignore xsd_whole_string_matching \
-             and delete this test"
-        );
+        assert!(!label.is_match("Com.example").expect("within budget"));
+        assert!(!label.is_match("com.example ").expect("within budget"));
     }
 
     /// Both alternatives are reachable, which is what a span check would
@@ -229,22 +224,22 @@ mod tests {
     #[test]
     fn alternation_reaches_its_second_branch() {
         let p = compile("a|ab");
-        assert!(p.is_match("ab"));
-        assert!(p.is_match("a"));
+        assert!(p.is_match("ab").expect("within budget"));
+        assert!(p.is_match("a").expect("within budget"));
     }
 
     #[test]
     fn caret_is_an_ordinary_character() {
         let p = compile("^a");
-        assert!(p.is_match("^a"));
-        assert!(!p.is_match("a"));
+        assert!(p.is_match("^a").expect("within budget"));
+        assert!(!p.is_match("a").expect("within budget"));
     }
 
     #[test]
     fn dollar_is_an_ordinary_character() {
         let p = compile("a$");
-        assert!(p.is_match("a$"));
-        assert!(!p.is_match("a"));
+        assert!(p.is_match("a$").expect("within budget"));
+        assert!(!p.is_match("a").expect("within budget"));
     }
 
     /// The engine reads an escaped `$` as an error rather than as the
@@ -258,41 +253,41 @@ mod tests {
     #[test]
     fn character_classes_subtract() {
         let p = compile("[a-z-[aeiou]]");
-        assert!(p.is_match("b"));
-        assert!(p.is_match("z"));
-        assert!(!p.is_match("a"));
-        assert!(!p.is_match("u"));
+        assert!(p.is_match("b").expect("within budget"));
+        assert!(p.is_match("z").expect("within budget"));
+        assert!(!p.is_match("a").expect("within budget"));
+        assert!(!p.is_match("u").expect("within budget"));
     }
 
     #[test]
     fn the_xml_name_start_escape_is_understood() {
         let p = compile(r"\i");
-        assert!(p.is_match("a"));
-        assert!(p.is_match("_"));
-        assert!(p.is_match(":"));
-        assert!(!p.is_match("1"));
-        assert!(!p.is_match("-"));
+        assert!(p.is_match("a").expect("within budget"));
+        assert!(p.is_match("_").expect("within budget"));
+        assert!(p.is_match(":").expect("within budget"));
+        assert!(!p.is_match("1").expect("within budget"));
+        assert!(!p.is_match("-").expect("within budget"));
     }
 
     #[test]
     fn the_xml_name_escape_is_understood() {
         let p = compile(r"\c");
-        assert!(p.is_match("a"));
-        assert!(p.is_match("-"));
-        assert!(p.is_match("."));
-        assert!(p.is_match("1"));
-        assert!(!p.is_match(" "));
+        assert!(p.is_match("a").expect("within budget"));
+        assert!(p.is_match("-").expect("within budget"));
+        assert!(p.is_match(".").expect("within budget"));
+        assert!(p.is_match("1").expect("within budget"));
+        assert!(!p.is_match(" ").expect("within budget"));
     }
 
     #[test]
     fn the_name_escapes_have_complements() {
         let start = compile(r"\I");
-        assert!(start.is_match("1"));
-        assert!(!start.is_match("a"));
+        assert!(start.is_match("1").expect("within budget"));
+        assert!(!start.is_match("a").expect("within budget"));
 
         let name = compile(r"\C");
-        assert!(name.is_match(" "));
-        assert!(!name.is_match("a"));
+        assert!(name.is_match(" ").expect("within budget"));
+        assert!(!name.is_match("a").expect("within budget"));
     }
 
     /// The divergence in the dangerous direction: an engine reading `a*?`
@@ -331,23 +326,23 @@ mod tests {
     #[test]
     fn quantifiers_and_bounds_behave() {
         let p = compile("a{2,3}");
-        assert!(!p.is_match("a"));
-        assert!(p.is_match("aa"));
-        assert!(p.is_match("aaa"));
+        assert!(!p.is_match("a").expect("within budget"));
+        assert!(p.is_match("aa").expect("within budget"));
+        assert!(p.is_match("aaa").expect("within budget"));
     }
 
     #[test]
     fn the_empty_subject_matches_a_nullable_pattern() {
         let p = compile("a*");
-        assert!(p.is_match(""));
-        assert!(p.is_match("aaa"));
+        assert!(p.is_match("").expect("within budget"));
+        assert!(p.is_match("aaa").expect("within budget"));
     }
 
     #[test]
     fn unicode_categories_are_understood() {
         let p = compile(r"\p{Lu}+");
-        assert!(p.is_match("AB"));
-        assert!(!p.is_match("ab"));
+        assert!(p.is_match("AB").expect("within budget"));
+        assert!(!p.is_match("ab").expect("within budget"));
     }
 
     /// The engine counts characters, not bytes: three non-ASCII characters
@@ -355,8 +350,8 @@ mod tests {
     #[test]
     fn non_ascii_subjects_match_by_character() {
         let p = compile(".{3}");
-        assert!(p.is_match("äöü"));
-        assert!(!p.is_match("ä"));
+        assert!(p.is_match("äöü").expect("within budget"));
+        assert!(!p.is_match("ä").expect("within budget"));
     }
 
     #[test]
@@ -369,7 +364,7 @@ mod tests {
     fn a_clone_matches_what_the_original_matched() {
         let p = compile("a+");
         let q = p.clone();
-        assert!(q.is_match("aaa"));
+        assert!(q.is_match("aaa").expect("within budget"));
         assert_eq!(q.source(), p.source());
     }
 
@@ -378,29 +373,27 @@ mod tests {
     #[test]
     fn the_namespace_form_pattern_recognizes_labels() {
         let p = compile(r"[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+");
-        assert!(p.is_match("com.example"));
-        assert!(p.is_match("com.example.thing"));
-        assert!(p.is_match("a.b"));
-        assert!(p.is_match("a-b.c"));
-        assert!(!p.is_match("com"));
-        assert!(!p.is_match("com."));
-        assert!(!p.is_match(".com"));
-        assert!(!p.is_match("com.-example"));
-        assert!(!p.is_match("com..example"));
+        assert!(p.is_match("com.example").expect("within budget"));
+        assert!(p.is_match("com.example.thing").expect("within budget"));
+        assert!(p.is_match("a.b").expect("within budget"));
+        assert!(p.is_match("a-b.c").expect("within budget"));
+        assert!(!p.is_match("com").expect("within budget"));
+        assert!(!p.is_match("com.").expect("within budget"));
+        assert!(!p.is_match(".com").expect("within budget"));
+        assert!(!p.is_match("com.-example").expect("within budget"));
+        assert!(!p.is_match("com..example").expect("within budget"));
     }
 
     /// The guard duty (`req:xchg:regexp-guard`): a backtracking engine
-    /// offers no linear-time bound, so the pathological shapes are measured
-    /// rather than assumed. The bound asserted is generous by design — the
-    /// question is blowup or no blowup, not milliseconds — and the measured
-    /// times are printed so a run can be compared against the module doc.
-    ///
-    /// Should this ever run away, the remedy is a match budget at the seam,
-    /// which changes `is_match`'s contract and is therefore a design
-    /// decision, not a test's to make.
+    /// offers no linear-time bound, so the budget bounds the walk instead,
+    /// and this measures that it does. Under anchored matching the
+    /// exponential shapes are real — `(a+)+b` against thirty characters
+    /// ran 761 seconds unbounded when first measured — so every case must
+    /// now finish fast, either with an answer or with the budget refusal,
+    /// and a refusal is never disguised as "no match".
     #[test]
     fn pathological_patterns() {
-        let budget = Duration::from_secs(2);
+        let bound = Duration::from_secs(2);
         let cases: &[(&str, String)] = &[
             ("(a+)+b", "a".repeat(30)),
             ("(a*)*b", "a".repeat(30)),
@@ -414,15 +407,22 @@ mod tests {
         for (pattern, subject) in cases {
             let compiled = compile(pattern);
             let started = Instant::now();
-            let matched = compiled.is_match(subject);
+            let outcome = compiled.is_match(subject);
             let elapsed = started.elapsed();
             println!(
-                "regexp guard: {pattern:?} against {} chars -> {matched} in {elapsed:?}",
+                "regexp guard: {pattern:?} against {} chars -> {outcome:?} in {elapsed:?}",
                 subject.chars().count()
             );
             assert!(
-                elapsed < budget,
-                "{pattern:?} took {elapsed:?}, over the {budget:?} bound"
+                elapsed < bound,
+                "{pattern:?} took {elapsed:?}, over the {bound:?} bound"
+            );
+            assert!(
+                matches!(
+                    outcome,
+                    Ok(false) | Err(RegexpError::BudgetExhausted { .. })
+                ),
+                "{pattern:?} answered {outcome:?}; these subjects never match"
             );
         }
     }

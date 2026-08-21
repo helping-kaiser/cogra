@@ -680,11 +680,11 @@ mod tests {
         /// The half of the biconditional that survives an unanchored engine
         /// is asserted below, and runs.
         #[test]
-        #[ignore = "regexml 0.2.2 exposes no anchored matcher — see the regexp module documentation"]
+
         fn the_two_label_recognizers_agree(text in near_label()) {
             prop_assert_eq!(
                 crate::NamespaceLabel::parse(&text).is_ok(),
-                namespace_form().is_match(&text),
+                namespace_form().is_match(&text).expect("within budget"),
                 "the scanner and the pattern disagree about {:?}",
                 text
             );
@@ -698,7 +698,7 @@ mod tests {
         fn the_pattern_matches_every_label_the_scanner_accepts(text in near_label()) {
             if crate::NamespaceLabel::parse(&text).is_ok() {
                 prop_assert!(
-                    namespace_form().is_match(&text),
+                    namespace_form().is_match(&text).expect("within budget"),
                     "the scanner accepted {:?} and the pattern did not match it",
                     text
                 );
@@ -710,7 +710,10 @@ mod tests {
     fn the_pattern_matches_labels_the_scanner_accepts_by_hand() {
         for label in ["com.example", "a.b", "a-b.c9", "0.0", "com.example.thing"] {
             assert!(crate::NamespaceLabel::parse(label).is_ok(), "{label}");
-            assert!(namespace_form().is_match(label), "{label}");
+            assert!(
+                namespace_form().is_match(label).expect("within budget"),
+                "{label}"
+            );
         }
     }
 
