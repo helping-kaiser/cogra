@@ -1,0 +1,21 @@
+[package]
+name    = "cogra-interchange"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+
+[dev-dependencies]
+# Property obligations of the design's metatheorem table: shrinking and
+# prop_recursive over the recursive Value model (design.md, dependency
+# justifications).
+proptest = "1"
+# Loads the vector corpus in tests only. The library's refusal of serde
+# (design.md, refused dependencies) is about its own data model, which no
+# test fixture reaches.
+serde_json = { workspace = true }

@@ -236,7 +236,7 @@ The decoder refuses a major-type-3 item whose payload is not valid UTF-8, with `
 
 **Implementation remark (Iterative teardown)** · `impl:xchg:iterative-teardown`
 
-`Value` is a recursive type, so the compiler's derived drop glue recurses to the nesting depth of the value, and a deeply nested value produced by a hostile input would overflow the stack while being freed — after decoding succeeded, in code that never asked to touch it. The remedy is an iterative teardown: `Drop` implemented on `Array` and `Map`, dismantling with an explicit worklist rather than by recursion, with `into_vec` and `into_entries` as the escape hatches `Drop` otherwise closes. `Value` itself implements no `Drop`, so destructuring it in a pattern stays legal. The decoder's own recursion is bounded by the same reasoning and is written iteratively for the same reason (`dec:xchg:nesting-policy`).
+`Value` is a recursive type, so the compiler's derived drop glue recurses to the nesting depth of the value, and a deeply nested value produced by a hostile input would overflow the stack while being freed — after decoding succeeded, in code that never asked to touch it. The remedy is an iterative teardown: `Drop` implemented on `Array`, `Map`, and `Tag` — every variant that owns a `Value` — dismantling with an explicit worklist rather than by recursion, with `into_vec`, `into_entries`, and `into_item` as the escape hatches `Drop` otherwise closes. `Value` itself implements no `Drop`, so destructuring it in a pattern stays legal. The decoder's own recursion is bounded by the same reasoning and is written iteratively for the same reason, and so is `Ord` (`prop:xchg:canonical-order`): any walk over a value that recursed would reopen the hazard the teardown closes (`dec:xchg:nesting-policy`). The derived `Clone`, `PartialEq`, and `Hash` still recurse — a bound the consumer of a hostile value must know from the rustdoc, and a candidate for the audit phase's attention.
 
 **Decision (No nesting bound)** · `dec:xchg:nesting-policy`
 
@@ -344,7 +344,7 @@ pub struct Document { envelope: Envelope, content: Content }
 impl Document {
     /// Total: every argument is already validated.
     pub fn new(envelope: Envelope, content: Content) -> Document;
-    pub fn from_canonical_bytes(bytes: &[u8]) -> Result<Document, DecodeError>;
+    pub fn from_canonical_bytes(bytes: &[u8]) -> Result<Document, EnvelopeError>;
     pub fn to_canonical_bytes(&self) -> Vec<u8>;
     pub fn envelope(&self) -> &Envelope;
     pub fn content(&self) -> &Content;
@@ -859,12 +859,16 @@ pub enum EnvelopeError {
     MissingKey { key: u64 },
     #[error("key 0 does not hold a namespace label")]
     BadLabel(#[source] LabelError),
+    #[error("key 0 does not hold a text string")]
+    BadLabelType,
     #[error("key 1 does not hold a version triple")]
     BadVersion,
     #[error("content key {key} is not greater than 1")]
     ReservedContentKey { key: u64 },
     #[error("envelope prefix is not canonically encoded at byte {offset}")]
     NonCanonicalPrefix { offset: usize },
+    #[error("bytes are not a name of the data language")]
+    NotCanonical(#[source] DecodeError),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -922,6 +926,8 @@ pub enum Error {
     #[error(transparent)] Acquire(#[from] AcquireError),
 }
 ```
+
+The composite operations compose the taxonomy rather than flattening it: `Document::from_canonical_bytes` surfaces `EnvelopeError`, with `NotCanonical` carrying the decoder's located refusal as its source — bytes outside the data language and a canonical value that is not a document are different answers, and the arm keeps them distinguishable. `BadLabel` carries the scanner's refusal of an offered string; `BadLabelType` covers a key-0 value that offers no string at all. `ReservedContentKey` is raised by `ContentKey::new` — inside `try_from_value` keys 0 and 1 are consumed as the envelope before content is read, so no content key at or below 1 can reach it there.
 
 `AcquireError::InclusionViolated` carries a `Vec<InclusionBreach>` — a verdict's payload riding inside an error — and that is not a violation of (`crit:xchg:error-or-verdict`) but its consequence: a theory that breaks the invariant is not the kind of thing `acquire` takes, and the verdict explaining why is the error's detail. `AcquireError::ImplicitReach` carries the restraint report's findings for the same reason (`dec:xchg:restraint-enforcement`). The standalone `check_inclusion` (`alg:xchg:inclusion-check`) returns the verdict as a verdict, for the owner's tooling, which is the surface that wants to look at a breach without failing, and `Theory::restraint` does the same for the report.
 
