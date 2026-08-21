@@ -8,8 +8,8 @@
 //! operation takes. An operation that was handed what it asked for and
 //! answers negatively returns that answer as a value, never as an `Err`.
 //!
-//! Slice 1 carries the two enums the deterministic CBOR core needs;
-//! the remaining five arrive with the slices that raise them.
+//! Slices 1 and 2 carry the four enums the CBOR core and the envelope
+//! need; the remaining three arrive with the slices that raise them.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -128,5 +128,60 @@ pub enum DecodeError {
     InvalidUtf8 {
         /// The first byte not part of a valid UTF-8 sequence.
         offset: usize,
+    },
+}
+
+/// A string refused as a namespace label.
+///
+/// Every variant but [`LabelError::TooFewAtoms`], which is a fact about
+/// the whole string, carries a character position into the offered string.
+///
+/// ```
+/// use cogra_interchange::{LabelError, NamespaceLabel};
+///
+/// let err = NamespaceLabel::parse("com.Example").expect_err("uppercase");
+/// assert!(matches!(
+///     err,
+///     LabelError::BadCharacter {
+///         position: 4,
+///         found: 'E'
+///     }
+/// ));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum LabelError {
+    /// Fewer than the two atoms every label carries — a bare word claims
+    /// the root, which no label may.
+    #[error("namespace label needs at least two atoms")]
+    TooFewAtoms,
+    /// An atom with no characters in it: a leading dot, a trailing dot, a
+    /// doubled dot, or the empty string.
+    #[error("empty atom at character {position}")]
+    EmptyAtom {
+        /// Where the empty atom begins.
+        position: usize,
+    },
+    /// A character outside the alphabet of `a`–`z`, `0`–`9`, the hyphen,
+    /// and the separating dot.
+    #[error("character {found:?} at position {position} is outside the label alphabet")]
+    BadCharacter {
+        /// Where the character stands, counted in characters.
+        position: usize,
+        /// The character met.
+        found: char,
+    },
+    /// An atom whose first or last character is a hyphen, which the ABNF
+    /// admits only in an atom's interior.
+    #[error("atom at position {position} begins or ends with a hyphen")]
+    HyphenAtEdge {
+        /// Where the offending atom begins.
+        position: usize,
+    },
+    /// A string longer than the 255 bytes the Grammar's sentence allows.
+    #[error("namespace label is {length} bytes, over the limit of 255")]
+    TooLong {
+        /// The length of the string offered, in bytes.
+        length: usize,
     },
 }
