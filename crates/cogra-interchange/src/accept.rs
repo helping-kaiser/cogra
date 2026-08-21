@@ -61,7 +61,6 @@ use crate::{
 /// ));
 /// ```
 #[derive(Debug)]
-#[non_exhaustive]
 pub enum Instrument<'r> {
     /// The stamp is held: the strict verdict is `d ⊨ R(ℓ, M, m)`.
     Strict {
