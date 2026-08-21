@@ -48,6 +48,20 @@ Wants the conventions/design owner's ruling (non-blocking; not fixed here):
 
 - **M3** — the memory-amplification factor is inherent to the no-bound policy. Accepting it (documented) or introducing a size/depth cap is a change to `dec:xchg:nesting-policy`, the owner's to make. The orchestrator's C1/C2 fix removes the *crash* without capping *depth*, so M3 stands as a resource-use disclosure either way.
 
+## Disposition (close-out)
+
+Landed and verified 2026-08-21:
+
+- **C1, C2, M1, M2 — fixed.** `Value`'s `Clone`/`PartialEq`/`Hash` are iterative (the overflow is gone — a 20 000-deep hostile value clones, hashes, and compares, re-confirmed by reproduction); the evaluator and CDDL parser carry explicit depth bounds returning a verdict or a located error; `uint .size N ≥ 9` admits every uint. The nesting policy is untouched — the walks are iterative, no cap on data depth.
+- **m1, m2, M4 — fixed** in the companion-cut change, held for the conventions owner's review: stale comments corrected, the float property strengthened to minimality, the design API sketches reconciled to the shipped surface.
+- **Open-companion cut — implemented**, held for the owner's review of the conventions wording.
+
+Fuzzing (the audit's own tooling, run past the fixed overflow): `decode_canonical` clean over 218 737 runs, `accept_document` clean over 269 047 runs — zero crash artifacts on the two targets where a crash would be a finding. `cddl_parse` timed out exactly on the parser DoS below, as expected; no other timeout or crash.
+
+**New finding — F1 (Major, DoS): exponential-time backtracking in the CDDL parser.** The member key-vs-value double-parse (rewind-and-reparse) is 2^depth on nested arrays, maps, and inline groups: measured 1.8 s at nesting depth 20, a timeout past ~26, a hang at ~40. Reachable from `Theory::parse` on hostile theory text — which is *acquired* (a reader's deliberate choice), not arbitrary untrusted input, so the exposure is narrower than the decoder's, hence Major not Critical. The depth guard (128) does not help; the blowup is below it. The fix is a parser refactor — parse `type1` once and decide key-versus-value by lookahead instead of rewind — substantial and semantics-touching, so it is deferred to its own reviewed slice, the owner's to schedule.
+
+Wants the owner's ruling (non-blocking): **M3** — the ~48× memory amplification is inherent to the no-bound policy; documenting it or capping it is a change to `dec:xchg:nesting-policy`. **F1** — the parser-DoS refactor slice.
+
 ## Gate
 
-The audit closes when every Critical and Major is either fixed or recorded as an owner decision, the fuzz lane has run once clean past the fixed overflow, and this report names the disposition of each finding. The commissioning phase — a first real consumer, a CI lane, a recorded time budget — follows.
+The audit is closed: every Critical and Major is fixed or recorded as an owner decision, the fuzz lane ran clean past the fixed overflow on its two crash-relevant targets, and each finding's disposition is named above. Commissioning — [commissioning.md](commissioning.md) — follows.
