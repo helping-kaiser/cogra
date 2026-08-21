@@ -558,40 +558,58 @@ impl<'a> Evaluator<'a> {
                     None => break,
                 }
             }
-            if count < min && !self.key_is_present(entry, map, consumed) {
-                let (key, expected) = self.entry_description(entry);
-                faults.push(Fault {
-                    key,
-                    expected,
-                    found: "nothing: the key is absent".to_owned(),
-                    kind: MismatchKind::Unsatisfied,
-                });
+            if count < min {
+                // An entry that must occur and did not is a failure of the
+                // whole group, whatever entries follow it — a later
+                // wildcard picking the member up does not rescue it. That
+                // is why the extensibility idiom of §3.5.4 writes its
+                // enumerated key optional.
+                let fault = match self.unconsumed_under(entry, map, consumed) {
+                    Some(index) => {
+                        let (member_key, member_value) = &map.entries()[index];
+                        // The member is marked taken so the leftover pass
+                        // does not report the same failure twice. The
+                        // verdict is settled either way: a fault stands.
+                        consumed[index] = true;
+                        Fault {
+                            key: key_number(member_key),
+                            expected: self.entry_description(entry).1,
+                            found: render(member_value),
+                            kind: MismatchKind::Unsatisfied,
+                        }
+                    }
+                    None => {
+                        let (key, expected) = self.entry_description(entry);
+                        Fault {
+                            key,
+                            expected,
+                            found: "nothing: the key is absent".to_owned(),
+                            kind: MismatchKind::Unsatisfied,
+                        }
+                    }
+                };
+                faults.push(fault);
             }
         }
     }
 
-    /// Whether some member the entry did not take carries a key the entry
-    /// would have taken.
-    ///
-    /// Purely a question about wording. Such a member is left over and is
-    /// reported against this entry's type by the leftover pass, and saying
-    /// "the key is absent" beside that would be two faults for one, the
-    /// first of them false: the key is there, its value is not in the type.
-    fn key_is_present(
+    /// A member the entry did not take whose *key* the entry would have
+    /// taken: the key is there and its value is not in the type.
+    fn unconsumed_under(
         &mut self,
         entry: &'a GroupEntry,
         map: &crate::value::Map,
         consumed: &[bool],
-    ) -> bool {
+    ) -> Option<usize> {
         let GroupEntryKind::Member { key: Some(key), .. } = &entry.kind else {
-            return false;
+            return None;
         };
         for (index, (member_key, _)) in map.entries().iter().enumerate() {
             if !consumed[index] && self.match_member_key(member_key, key) {
-                return true;
+                return Some(index);
             }
         }
-        false
+        None
     }
 
     /// One repetition of one entry against the map.
