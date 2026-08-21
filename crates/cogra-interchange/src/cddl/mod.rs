@@ -20,6 +20,7 @@
 //! | [`parse`] | recursive-descent parser onto [`ast`] |
 //! | [`print`] | the normalized printer |
 //! | [`resolve`] | the rule table, the prelude, generics, sockets |
+//! | [`fragment`] | assignable-fragment membership |
 //!
 //! The grammar these implement is checked into the repository beside the
 //! code, at `tests/corpus/rfc8610-abnf.txt`, so that a reader auditing the
@@ -38,6 +39,7 @@
 #![allow(dead_code)]
 
 pub(crate) mod ast;
+pub(crate) mod fragment;
 pub(crate) mod lex;
 pub(crate) mod parse;
 pub(crate) mod print;
