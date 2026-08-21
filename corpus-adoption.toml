@@ -319,7 +319,7 @@ note  = "docs-only today; src/ lands with the first slice"
 order = 7
 path  = "crates/cogra-interchange/"
 owner = "pkg.cogra-interchange"
-note  = "COVERS ITS docs/ DELIBERATELY. Evidence: concept.md and design.md mint 16 + 76 labels with ZERO collisions, share the area 'icx', and design.md cites concept.md's mints UNPREFIXED (e.g. req:icx:determinism) — which resolves only if the two files are one owner (LBL inf:labels:same-owner-citation). They import ARCH and ICX with brackets, confirming those are other owners"
+note  = "COVERS ITS docs/ DELIBERATELY. Evidence: concept.md and design.md mint 16 + 76 labels with ZERO collisions, share the area 'xchg', and design.md cites concept.md's mints UNPREFIXED (e.g. req:xchg:determinism) — which resolves only if the two files are one owner (LBL inf:labels:same-owner-citation). They import ARCH and ICX with brackets, confirming those are other owners"
 
 [[partition.rule]]
 order = 8
@@ -647,7 +647,7 @@ precondition of enabling the profile, not a cleanup after it.
 #
 # COST TODAY: ZERO. Not one live mint in the corpus uses an
 # Assets-family kind (checked across all 7 label-carrying files of the
-# carrier: areas labels, kinds, identity, interchange, linter, icx).
+# carrier: areas labels, kinds, identity, interchange, linter, xchg).
 # Reserving now costs nothing and prevents the painful case LBL
 # sig:labels:profiles describes — a later profile CLAIMING a kind and
 # having to retire every authored mint of it in the same commit. A
@@ -705,7 +705,7 @@ reserved_ungoverned = [
 #   listing, impl, alg, model, data — these are AUTHORED environments
 #   (KND conv:kinds:computation), headed by a heading an author
 #   composes, not by an identifier the code already bears. design.md
-#   already mints impl:icx:* and model:icx:* legitimately.
+#   already mints impl:xchg:* and model:xchg:* legitimately.
 
 
 ####################################################################
