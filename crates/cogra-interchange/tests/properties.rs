@@ -2,12 +2,14 @@
 //! theorem, named after it so that a failure names what it broke.
 //!
 //! Slices 1 and 2 owe five: unique names, canonical order, iterative
-//! teardown, one spelling, and bounded determination. The rest arrive with
-//! the slices whose subjects they are.
+//! teardown, one spelling, and bounded determination. The description
+//! language adds two whose subject is a chain of minors: conservativity,
+//! and the composition of inclusion the registry's one-comparison rule
+//! rests on. The rest arrive with the slices whose subjects they are.
 
 use cogra_interchange::{
     Array, Bytes, Content, ContentKey, Document, Envelope, Float, LabelError, MAX_ENVELOPE_PREFIX,
-    Map, NamespaceLabel, Negative, Simple, Tag, Text, Value, Version,
+    Map, NamespaceLabel, Negative, Simple, Tag, Text, Theory, Value, Version, check_inclusion,
 };
 use proptest::prelude::*;
 
@@ -160,6 +162,115 @@ fn mutate(label: &str, mutation: Mutation, index: usize) -> String {
     }
 }
 
+// -- chains of minors -----------------------------------------------------
+
+/// The types a generated content key is drawn from. Small on purpose: what
+/// the two chain properties measure is how keys move between minors, not
+/// how many types the parser reads.
+const CHAIN_TYPES: [&str; 4] = ["uint", "tstr", "[* uint]", "{a: 1}"];
+
+/// One content key of a generated theory.
+type Slot = (u64, bool, &'static str);
+
+/// One move from a minor to its successor.
+///
+/// Additive moves are weighted up, because a chain that breaks at its first
+/// step exercises the implication's premise and nothing beyond it — but
+/// every breaking move is here too, so that the properties are quantified
+/// over chains that really do break.
+#[derive(Debug, Clone, Copy)]
+enum Move {
+    AddOptional,
+    AddRequired,
+    Drop(usize),
+    Retype(usize),
+    Flip(usize),
+}
+
+fn any_move() -> impl Strategy<Value = Move> {
+    prop_oneof![
+        4 => Just(Move::AddOptional),
+        1 => Just(Move::AddRequired),
+        1 => (0usize..8).prop_map(Move::Drop),
+        1 => (0usize..8).prop_map(Move::Retype),
+        1 => (0usize..8).prop_map(Move::Flip),
+    ]
+}
+
+/// A chain of assigned theories of one label and major, at minors 0, 1, 2,
+/// … — built by applying the generated moves one after another.
+fn any_minor_chain() -> impl Strategy<Value = Vec<Theory>> {
+    prop::collection::vec(any_move(), 1..4).prop_map(|moves| {
+        let mut slots: Vec<Slot> = vec![(2, true, "uint"), (3, false, "tstr")];
+        let mut next_key = 4;
+        let mut chain = vec![theory_at(0, &slots)];
+
+        for (step, movement) in moves.iter().enumerate() {
+            apply(&mut slots, *movement, &mut next_key);
+            chain.push(theory_at(step as u64 + 1, &slots));
+        }
+        chain
+    })
+}
+
+fn apply(slots: &mut Vec<Slot>, movement: Move, next_key: &mut u64) {
+    let count = slots.len().max(1);
+    let at = |index: usize| index % count;
+    match movement {
+        Move::AddOptional => {
+            slots.push((*next_key, false, CHAIN_TYPES[0]));
+            *next_key += 1;
+        }
+        Move::AddRequired => {
+            slots.push((*next_key, true, CHAIN_TYPES[0]));
+            *next_key += 1;
+        }
+        Move::Drop(index) => {
+            if !slots.is_empty() {
+                slots.remove(at(index));
+            }
+        }
+        Move::Retype(index) => {
+            if let Some(slot) = slots.get_mut(at(index)) {
+                let next = CHAIN_TYPES
+                    .iter()
+                    .position(|ty| *ty == slot.2)
+                    .map_or(0, |current| (current + 1) % CHAIN_TYPES.len());
+                slot.2 = CHAIN_TYPES[next];
+            }
+        }
+        Move::Flip(index) => {
+            if let Some(slot) = slots.get_mut(at(index)) {
+                slot.1 = !slot.1;
+            }
+        }
+    }
+}
+
+fn theory_at(minor: u64, slots: &[Slot]) -> Theory {
+    let mut source = format!("e = {{0 => \"com.example\", 1 => [1, {minor}, uint]");
+    for (key, required, ty) in slots {
+        source.push_str(", ");
+        if !required {
+            source.push_str("? ");
+        }
+        source.push_str(&format!("{key} => {ty}"));
+    }
+    source.push('}');
+    Theory::parse(&source).expect("a generated theory of the assignable fragment")
+}
+
+/// Whether every consecutive pair of the chain stands in inclusion — the
+/// premise both chain properties are stated under, and the one the registry
+/// actually checks.
+fn consecutive_inclusion(chain: &[Theory]) -> bool {
+    chain.windows(2).all(|pair| {
+        check_inclusion(&pair[0], &pair[1])
+            .expect("one label, one major, ascending minors")
+            .holds()
+    })
+}
+
 /// Drop the repeated keys a generator has no way to avoid, so that the
 /// constructor's duplicate refusal is not what the property measures.
 fn map_of(pairs: Vec<(Value, Value)>) -> Map {
@@ -306,6 +417,62 @@ proptest! {
             Envelope::peek(&bytes[..cut]).expect("the envelope lies inside the bound"),
             (envelope, consumed)
         );
+    }
+
+    /// Inclusion composes: consecutive-pair inclusion over a chain implies
+    /// inclusion between every pair of it.
+    ///
+    /// This is what makes the registry's one comparison sound. Acquiring a
+    /// minor, it checks against the greatest held theory below it and
+    /// against no lower one — which is only enough if "verbatim" composes
+    /// along the chain. The design asserts that it does; this is the
+    /// assertion made executable rather than trusted.
+    #[test]
+    fn inclusion_composes_along_a_chain(chain in any_minor_chain()) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        for (index, earlier) in chain.iter().enumerate() {
+            for later in &chain[index + 1..] {
+                let verdict = check_inclusion(earlier, later)
+                    .expect("one label, one major, ascending minors");
+                prop_assert!(
+                    verdict.holds(),
+                    "consecutive inclusion holds along the chain and {} does not include {}: {:?}",
+                    earlier.to_cddl(),
+                    later.to_cddl(),
+                    verdict
+                );
+            }
+        }
+    }
+
+    /// Conservativity: a content key absent from some earlier assigned
+    /// minor is optional in every later minor's theory.
+    ///
+    /// The reason a reader that holds only an earlier minor can still be
+    /// spoken to: nothing a later minor adds is ever demanded of a document
+    /// the earlier one describes.
+    #[test]
+    fn conservativity_a_key_absent_earlier_is_optional_later(chain in any_minor_chain()) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        for (index, earlier) in chain.iter().enumerate() {
+            for later in &chain[index + 1..] {
+                for slot in later.slots() {
+                    if earlier.slot(slot.key().get()).is_none() {
+                        prop_assert!(
+                            !slot.required(),
+                            "key {} is absent at minor {:?} and required at minor {:?}",
+                            slot.key().get(),
+                            earlier.coordinate(),
+                            later.coordinate()
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 

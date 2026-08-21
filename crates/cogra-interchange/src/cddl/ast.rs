@@ -38,7 +38,105 @@
 //! later refusal — an unresolved rule, a type outside the assignable
 //! fragment — can be located as precisely as a syntax error.
 
-use super::lex::{ByteQual, NumberToken, Span};
+use super::lex::{ByteQual, NumberToken, Span, SyntaxError};
+
+/// What a text literal denotes: its characters, with the escapes resolved.
+///
+/// The parser keeps escapes intact, because `SESC = "\" (%x20-7E /
+/// %x80-10FFFD)` says which escapes are *well formed* and not what they
+/// mean. This answers the second question, and it has to be answered
+/// somewhere: a `.regexp` pattern arrives inside a text literal, and
+/// RFC 8610 §3.8.3.1 is explicit that "there is one level of string
+/// escaping before the XSD escaping rules are applied" — the conventions'
+/// own pattern is written `\\.` and denotes `\.`.
+///
+/// The rules are JSON's, which is where the RFC's own `\u` sentence points:
+/// `\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`, and `\uXXXX` with
+/// surrogate pairs. `SESC` admits escapes JSON does not, and an escape of
+/// any other character denotes that character — the reading the grammar's
+/// own permissiveness forces, since it admits `\q` and gives it no meaning.
+///
+/// A `\u` escape that is incomplete, not hexadecimal, or an unpaired
+/// surrogate is a located refusal: no character of the data language
+/// answers to it.
+pub(crate) fn unescape_text(raw: &str, span: Span) -> Result<String, SyntaxError> {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars();
+
+    while let Some(c) = chars.next() {
+        if c != '\\' {
+            out.push(c);
+            continue;
+        }
+        match chars.next() {
+            Some('"') => out.push('"'),
+            Some('\\') => out.push('\\'),
+            Some('/') => out.push('/'),
+            Some('b') => out.push('\u{8}'),
+            Some('f') => out.push('\u{c}'),
+            Some('n') => out.push('\n'),
+            Some('r') => out.push('\r'),
+            Some('t') => out.push('\t'),
+            Some('u') => out.push(unescape_hex(&mut chars, span)?),
+            Some(other) => out.push(other),
+            None => {
+                return Err(SyntaxError::at(span, "text literal ends in a backslash"));
+            }
+        }
+    }
+
+    Ok(out)
+}
+
+/// One `\uXXXX` escape, and its low surrogate where the first is high.
+fn unescape_hex(chars: &mut std::str::Chars<'_>, span: Span) -> Result<char, SyntaxError> {
+    let first = hex_quad(chars, span)?;
+    if !(0xd800..=0xdbff).contains(&first) {
+        return match char::from_u32(first) {
+            Some(c) => Ok(c),
+            None => Err(SyntaxError::at(
+                span,
+                "text literal carries an unpaired low surrogate",
+            )),
+        };
+    }
+
+    if chars.next() != Some('\\') || chars.next() != Some('u') {
+        return Err(SyntaxError::at(
+            span,
+            "text literal carries a high surrogate with no low surrogate after it",
+        ));
+    }
+    let second = hex_quad(chars, span)?;
+    if !(0xdc00..=0xdfff).contains(&second) {
+        return Err(SyntaxError::at(
+            span,
+            "text literal carries a high surrogate followed by a non-surrogate",
+        ));
+    }
+
+    let combined = 0x10000 + ((first - 0xd800) << 10) + (second - 0xdc00);
+    match char::from_u32(combined) {
+        Some(c) => Ok(c),
+        None => Err(SyntaxError::at(span, "surrogate pair names no character")),
+    }
+}
+
+fn hex_quad(chars: &mut std::str::Chars<'_>, span: Span) -> Result<u32, SyntaxError> {
+    let mut value = 0;
+    for _ in 0..4 {
+        match chars.next().and_then(|c| c.to_digit(16)) {
+            Some(digit) => value = value * 16 + digit,
+            None => {
+                return Err(SyntaxError::at(
+                    span,
+                    "text literal carries an incomplete \\u escape",
+                ));
+            }
+        }
+    }
+    Ok(value)
+}
 
 /// A whole CDDL source: `cddl = S 1*(rule S)`.
 ///
@@ -441,4 +539,99 @@ pub(crate) enum ValueKind {
         /// The characters between the quotes, byte for byte.
         raw: String,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SPAN: Span = Span {
+        start: 0,
+        end: 0,
+        line: 1,
+        column: 1,
+    };
+
+    fn denote(raw: &str) -> String {
+        match unescape_text(raw, SPAN) {
+            Ok(text) => text,
+            Err(error) => panic!("expected {raw:?} to denote a string, but: {error}"),
+        }
+    }
+
+    fn refuse(raw: &str) -> SyntaxError {
+        match unescape_text(raw, SPAN) {
+            Ok(text) => panic!("expected {raw:?} to be refused, but it denoted {text:?}"),
+            Err(error) => error,
+        }
+    }
+
+    #[test]
+    fn an_unescaped_literal_denotes_itself() {
+        assert_eq!(denote("com.example"), "com.example");
+        assert_eq!(denote(""), "");
+    }
+
+    #[test]
+    fn the_json_escapes_are_resolved() {
+        assert_eq!(denote(r#"a\"b"#), "a\"b");
+        assert_eq!(denote(r"a\\b"), r"a\b");
+        assert_eq!(denote(r"a\/b"), "a/b");
+        assert_eq!(denote(r"a\nb"), "a\nb");
+        assert_eq!(denote(r"a\tb"), "a\tb");
+        assert_eq!(denote(r"a\rb"), "a\rb");
+        assert_eq!(denote(r"a\bb"), "a\u{8}b");
+        assert_eq!(denote(r"a\fb"), "a\u{c}b");
+    }
+
+    /// The one level of string escaping RFC 8610 §3.8.3.1 puts in front of
+    /// the XSD rules: the conventions' pattern is written `\\.` and reaches
+    /// the engine as `\.`.
+    #[test]
+    fn a_doubled_backslash_denotes_one() {
+        assert_eq!(denote(r"[a-z0-9]\\."), r"[a-z0-9]\.");
+    }
+
+    #[test]
+    fn a_unicode_escape_denotes_its_character() {
+        assert_eq!(denote("\\u0041"), "A");
+        assert_eq!(denote("\\u00e4"), "ä");
+        assert_eq!(denote("a\\u0041b"), "aAb");
+    }
+
+    #[test]
+    fn a_surrogate_pair_denotes_one_character() {
+        assert_eq!(denote("\\ud83d\\ude00"), "\u{1f600}");
+    }
+
+    /// `SESC` admits escapes JSON does not and gives them no meaning, so an
+    /// escape of any other character denotes that character.
+    #[test]
+    fn an_escape_the_rules_do_not_name_denotes_its_character() {
+        assert_eq!(denote(r"\q"), "q");
+        assert_eq!(denote(r"\'"), "'");
+    }
+
+    #[test]
+    fn a_broken_unicode_escape_is_refused() {
+        assert!(refuse(r"\u12").detail.contains("incomplete"));
+        assert!(refuse(r"\uzzzz").detail.contains("incomplete"));
+    }
+
+    #[test]
+    fn an_unpaired_surrogate_is_refused() {
+        assert!(refuse(r"\ud83d").detail.contains("low surrogate"));
+        assert!(refuse(r"\ud83dx").detail.contains("low surrogate"));
+        assert!(
+            refuse("\\ud83d\\u0041")
+                .detail
+                .contains("followed by a non-surrogate")
+        );
+        assert!(refuse(r"\ude00").detail.contains("surrogate"));
+    }
+
+    #[test]
+    fn a_trailing_backslash_is_refused() {
+        assert!(refuse("a\\").detail.contains("backslash"));
+    }
 }

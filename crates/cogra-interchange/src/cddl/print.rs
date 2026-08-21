@@ -137,7 +137,8 @@ fn print_type1(type1: &Type1, out: &mut String) {
     }
 }
 
-fn print_type2(type2: &Type2, out: &mut String) {
+/// One `type2`, for a diagnostic naming the form at a position.
+pub(crate) fn print_type2(type2: &Type2, out: &mut String) {
     match &type2.kind {
         Type2Kind::Value(value) => print_value(value, out),
         Type2Kind::Typename { name, args } => {
