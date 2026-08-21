@@ -466,14 +466,31 @@ impl Satisfaction { pub fn holds(&self) -> bool; }
 /// failure has one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
-pub struct Mismatch { /* key, expected type source, what was found */ }
+pub struct Mismatch { /* private */ }
+impl Mismatch {
+    pub fn key(&self) -> Option<ContentKey>;
+    pub fn at(&self) -> &str;
+    pub fn expected(&self) -> &str;
+    pub fn found(&self) -> &str;
+    pub fn kind(&self) -> MismatchKind;
+}
+
+/// Which kind of failure a `Mismatch` reports.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum MismatchKind {
+    /// A value outside its type, a required key absent, a key not enumerated.
+    Unsatisfied,
+    /// A `.regexp` match ran out of the seam's operation budget.
+    BudgetExhausted { budget: usize },
+}
 
 pub fn satisfies(d: &Document, s: &Theory) -> Satisfaction;
 pub fn satisfies_open(d: &Document, s: &OpenTheory) -> Satisfaction;
 pub fn satisfies_global(d: &Document) -> Satisfaction;
 ```
 
-No `Result` appears, and the absence is the design. Every way satisfaction could fail to *compute* — unparseable source, a theory outside the fragment, a `.regexp` pattern that will not compile, a control operator the evaluator does not implement — is caught by `Theory::parse` and surfaces as a `TheoryError` there. By the time a `Theory` exists, evaluation is total: the document is finite, the theory is finite, and every pattern in it was compiled — not executed — at parse time (`dec:xchg:regexp-seam`). Two boundedness facts carry the claim past its naive reading, both measured during implementation. A non-productive rule cycle — `a = b`, `b = a` — parses, resolves, and sits in the fragment, and finiteness of the theory alone does not stop a walk through it; the evaluator carries a visited set, under which such a rule denotes no value. And a `.regexp` match runs under the seam's deterministic operation budget, whose exhaustion is the judgment's one runtime refusal, rendered as a located mismatch and never as an answer (`req:xchg:regexp-guard`). Failing to satisfy is then never an error but a negative judgment, which is what (`[ICX-judg:interchange:satisfaction]`) says it is.
+No `Result` appears, and the absence is the design. Every way satisfaction could fail to *compute* — unparseable source, a theory outside the fragment, a `.regexp` pattern that will not compile, a control operator the evaluator does not implement — is caught by `Theory::parse` and surfaces as a `TheoryError` there. By the time a `Theory` exists, evaluation is total: the document is finite, the theory is finite, and every pattern in it was compiled — not executed — at parse time (`dec:xchg:regexp-seam`). Two boundedness facts carry the claim past its naive reading, both measured during implementation. A non-productive rule cycle — `a = b`, `b = a` — parses, resolves, and sits in the fragment, and finiteness of the theory alone does not stop a walk through it; the evaluator carries a visited set, under which such a rule denotes no value. And a `.regexp` match runs under the seam's deterministic operation budget, whose exhaustion is the judgment's one runtime refusal, rendered as a located mismatch of kind `MismatchKind::BudgetExhausted` and never as an answer (`req:xchg:regexp-guard`). Failing to satisfy is then never an error but a negative judgment, which is what (`[ICX-judg:interchange:satisfaction]`) says it is.
 
 One evaluation detail is settled by the fragment rather than by us. In general CDDL, matching a map against a group carrying both explicit entries and a wildcard is a search; here the assignable fragment pins every content key to a literal unsigned integer, so each map entry has at most one explicit entry it can match and the remainder falls to the wildcard — matching is deterministic, and the fragment's structural restriction is what buys it. The precise matching rules to implement are RFC 8610 Appendix C together with the cut semantics of its §3.5.4, verified against that document at implementation rather than inferred here.
 
@@ -536,6 +553,12 @@ Each enumerated key gains a cut for a reason the evaluator's tests surfaced: wit
 **Signature (Restraint report)** · `sig:xchg:restraint-api`
 
 ```rust
+/// A kind of value the restraint invariant governs: the three the
+/// conventions name, and no fourth.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum Restrained { Float, Tag, Simple }
+
 /// Where an assigned theory reaches a floating-point value, a tag, or a
 /// simple value other than `false`, `true`, and `null`.
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -547,18 +570,29 @@ impl RestraintReport {
     pub fn implicit_reaches(&self) -> impl Iterator<Item = &ImplicitReach> + '_;
 }
 
-/// An explicit provision, and whether it fixes the canonical form of what
-/// it admits.
+/// An explicit provision: a position naming a restrained kind, and whether
+/// it fixes the canonical form of what it admits.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
-pub struct Provision { /* key, kind admitted, canonical form fixed or not */ }
+pub struct Provision { /* private */ }
+impl Provision {
+    pub fn key(&self) -> ContentKey;
+    pub fn kind(&self) -> Restrained;
+    pub fn named(&self) -> &str;
+    pub fn fixes_canonical_form(&self) -> bool;
+}
 
 /// A position admitting a restrained value without naming it — through
 /// `any`, through an unrestricted major-type reference, or through a
 /// prelude type that reaches one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
-pub struct ImplicitReach { /* key, the path by which it reaches */ }
+pub struct ImplicitReach { /* private */ }
+impl ImplicitReach {
+    pub fn key(&self) -> ContentKey;
+    pub fn kind(&self) -> Restrained;
+    pub fn path(&self) -> impl Iterator<Item = &str> + '_;
+}
 ```
 
 The report is where (`[ICX-inv:interchange:restraint]`) becomes machine-visible: the invariant governs what an *assigned theory* admits, not what the data language contains, so the enforcement point is a theory and not a `Value`. The type system carries the invariant's other half — every restrained kind is reachable in `Value` only through a variant that names it, `Float`, `Tag`, or `Simple`, with `Simple::new` refusing the three trivially admitted values so that they cannot arrive by that door — which makes "restrained" a visible property of a match arm rather than a fact to remember. A theory with a non-empty `implicit_reaches` is refused at acquisition (`dec:xchg:restraint-enforcement`); the report is computed either way.
@@ -901,6 +935,8 @@ pub enum RegexpError {
     Malformed { detail: String },
     #[error("engine refused the pattern: {detail}")]
     EngineRefused { detail: String },
+    #[error("pattern match exhausted the {budget}-operation budget")]
+    BudgetExhausted { budget: usize },
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -939,7 +975,7 @@ The composite operations compose the taxonomy rather than flattening it: `Docume
 
 `AcquireError::InclusionViolated` carries a `Vec<InclusionBreach>` — a verdict's payload riding inside an error — and that is not a violation of (`crit:xchg:error-or-verdict`) but its consequence: a theory that breaks the invariant is not the kind of thing `acquire` takes, and the verdict explaining why is the error's detail. `AcquireError::ImplicitReach` carries the restraint report's findings for the same reason (`dec:xchg:restraint-enforcement`). The standalone `check_inclusion` (`alg:xchg:inclusion-check`) returns the verdict as a verdict, for the owner's tooling, which is the surface that wants to look at a breach without failing, and `Theory::restraint` does the same for the report.
 
-`RegexpError` has two arms and no third. `Malformed` is the pattern the engine reports as not well-formed under XML Schema rules, located where the engine locates it; `EngineRefused` is a well-formed pattern the engine declines for a reason of its own. There is no translation arm because there is no translator (`dec:xchg:regexp-engine`), and a budget arm arrives with the budget, if the measurement demands one (`req:xchg:regexp-guard`).
+`RegexpError` has three arms. `Malformed` is the pattern the engine reports as not well-formed under XML Schema rules, located where the engine locates it; `EngineRefused` is a well-formed pattern the engine declines for a reason of its own; `BudgetExhausted` is a match that ran past the seam's operation budget, the one arm that arises at match time rather than at `Theory::parse` (`dec:xchg:regexp-engine`). There is no translation arm because there is no translator, the budget arm being the remedy the guard requirement pre-authorized (`req:xchg:regexp-guard`).
 
 **Convention (Every error is located)** · `conv:xchg:located-errors`
 
