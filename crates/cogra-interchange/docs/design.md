@@ -607,6 +607,8 @@ The engine is `regexml` 0.2.2 (verified on crates.io 2026-08-20), a pure-Rust po
 
 The alternative shape — a linear-time mainstream engine with a translator in front of it — is refused because the translator would be first-party code standing between two standards, and every divergence of (`rep:xchg:xsd-divergences`) is a place where it could quietly match a different language than either. What the choice costs is the engine's runtime guarantee, and that cost is carried explicitly by (`req:xchg:regexp-guard`) rather than absorbed.
 
+Measured against the shipped engine (0.2.2, verified in code 2026-08-21), two of this decision's premises needed repair, and both are repaired by the pinned fork the crate depends on — ruled 2026-08-21, the upstream exposure filed as Paligo/regexml#15, the dependency repointing at crates.io when it merges and releases. First, anchoring: the engine's published matcher is a substring search even in XSD mode, the anchored whole-string matcher existing inside it unexported; no in-dialect rewrite can supply anchoring (XSD has no anchor characters to write) and the span check stays refused (`ansatz:xchg:span-checked-regex`), so the fork exposes the internal anchored matcher as `is_full_match`. Second, the runtime: under correct anchored matching the exponential shapes are real — `(a+)+b` against thirty characters measured 761 seconds, where the unanchored search's early exits had masked it at microseconds — so the guard's pre-authorized remedy stands as the fork's second patch: a deterministic operation-count budget threaded through the one choke point every backtracking step crosses (empirically ×16 operations per four subject characters on the exponential shape — the counter sees the blowup where it happens). The budget counts operations and never time, so a verdict is machine-independent; the seam calls `is_full_match_bounded` with a calibrated constant (measured: the conventions' own pattern costs 253 operations to accept a 56-character label, 1017 to reject one; the constant leaves two orders of magnitude of headroom and refuses the exponential shapes in milliseconds), and exhaustion surfaces as its own refusal — `RegexpError::BudgetExhausted`, which the evaluator renders as a located mismatch, never as a silent answer. Two lesser qualifications, recorded: compilation runs one probe match against the empty string, so "compiles without executing" holds only up to that probe; and the engine's conformance suite is the XPath superset's, its own source noting the XSD mode is less tested — one more reason the guard requirement and the crosscheck property exist.
+
 **Requirement (Characterize the engine's runtime)** · `req:xchg:regexp-guard`
 
 A Saxon-derived engine backtracks, so no linear-time bound in the length of the subject is available by construction, and the implementation phase owes a characterization rather than an assumption: measure `regexml`'s behavior on the pathological shapes — nested quantifiers over an alternation, `(a+)+b` and its relatives — against subjects sized to expose blowup, and record the finding in the crate's own documentation beside (`rep:xchg:xsd-divergences`). Should the measurements show unbounded behavior, a match budget stands at the seam (`dec:xchg:regexp-seam`) before the crate ships; how exhaustion of that budget surfaces — which `RegexpError` variant, and what becomes of `is_match`'s signature — is settled together with the budget and is not guessed at here.
@@ -891,8 +893,8 @@ pub enum TheoryError {
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum RegexpError {
-    #[error("pattern is not a well-formed XSD regular expression at position {position}")]
-    Malformed { position: usize },
+    #[error("pattern is not a well-formed XSD regular expression: {detail}")]
+    Malformed { detail: String },
     #[error("engine refused the pattern: {detail}")]
     EngineRefused { detail: String },
 }

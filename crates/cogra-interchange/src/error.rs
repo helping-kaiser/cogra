@@ -9,7 +9,7 @@
 //! answers negatively returns that answer as a value, never as an `Err`.
 //!
 //! Slices 1 and 2 carry the four enums the CBOR core and the envelope
-//! need; the remaining three arrive with the slices that raise them.
+//! need; the rest arrive with the slices that raise them.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -250,4 +250,139 @@ pub enum EnvelopeError {
     /// language at all.
     #[error("bytes are not a name of the data language")]
     NotCanonical(#[source] DecodeError),
+}
+
+/// CDDL refused as an assigned theory.
+///
+/// Every arm refuses a *source*, never a document: a theory that does not
+/// parse, references a rule nothing defines, falls outside the assignable
+/// fragment, or uses a control operator this implementation does not
+/// evaluate is not the kind of thing `Theory::parse` takes. Whether a
+/// document satisfies a theory is a verdict and travels as a value.
+///
+/// [`TheoryError::Unevaluable`] is a specified outcome rather than a
+/// shortcut: whether a host processes a given theory's CDDL is the host's
+/// policy, and a reader that will not process an assigned theory holds
+/// neither it nor anything above it in that major.
+///
+/// ```
+/// use cogra_interchange::{Theory, TheoryError};
+///
+/// let err = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => missing}"#)
+///     .expect_err("nothing defines `missing`");
+/// assert!(matches!(err, TheoryError::UnresolvedRule { ref name, line: 1 } if name == "missing"));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum TheoryError {
+    /// The source is not acceptable CDDL.
+    ///
+    /// The parser's own refusals arrive here, and so do the two defects the
+    /// grammar admits but a rule table cannot: a name defined twice with
+    /// different expressions, which RFC 8610 §3.1 calls an error in as many
+    /// words, and a generic instantiated at an arity its rule does not
+    /// take. All three are located the same way, because a consumer
+    /// reporting them cannot tell which pass raised them.
+    #[error("CDDL syntax error at line {line}, column {column}: {detail}")]
+    Syntax {
+        /// 1-based line.
+        line: u32,
+        /// 1-based character column.
+        column: u32,
+        /// What was wrong, in a sentence.
+        detail: String,
+    },
+    /// A reference to a rule the theory does not define and the standard
+    /// prelude does not supply.
+    ///
+    /// A socket — a name beginning with `$` or `$$` — never lands here:
+    /// RFC 8610 §3.9 makes an undefined socket the empty choice rather than
+    /// a missing definition.
+    #[error("unresolved rule reference {name:?} at line {line}")]
+    UnresolvedRule {
+        /// The reference as it was written.
+        name: String,
+        /// 1-based line of the reference.
+        line: u32,
+    },
+    /// The theory parses and resolves, but is not a sentence of the
+    /// assignable fragment.
+    ///
+    /// The detail opens with the line the refusal was located at: the
+    /// variant carries no structured location of its own, and a fragment
+    /// refusal without one would be unlocatable in a consumer's diagnostic.
+    #[error("theory is not in the assignable fragment: {detail}")]
+    NotInFragment {
+        /// Which clause failed, and where.
+        detail: String,
+    },
+    /// The theory uses a control operator outside the evaluable subset.
+    ///
+    /// Never raised for the *type* at a content key, which the fragment
+    /// leaves free: a theory refused here is in the fragment and would be
+    /// evaluable by an implementation covering more of the vocabulary.
+    #[error("theory uses {operator}, which this implementation does not evaluate")]
+    Unevaluable {
+        /// The operator as it was written, leading dot included.
+        operator: String,
+    },
+    /// A `.regexp` pattern the crate cannot use.
+    #[error("`.regexp` pattern is not usable")]
+    Regexp(#[from] RegexpError),
+    /// Two theories offered for comparison differ in label or major.
+    #[error("theories differ in label or major and are not comparable")]
+    Incomparable,
+}
+
+/// A `.regexp` pattern the crate cannot use.
+///
+/// Two arms and no third: a pattern the engine reports as not well formed
+/// under XML Schema rules, and a well-formed pattern the engine declines
+/// for a reason of its own. There is no translation arm, because there is
+/// no translator — the engine implements the XSD flavor itself.
+///
+/// Both arms carry the engine's own account rather than a location. The
+/// engine's error type offers no position into the pattern, and inventing
+/// one — reporting every refusal at character zero — would be a located
+/// error in name only.
+///
+/// A pattern is compiled at `Theory::parse` and executed nowhere else, so
+/// the compile-time variants are reached only through
+/// [`TheoryError::Regexp`]; [`RegexpError::BudgetExhausted`] alone can
+/// arise at match time, and it is a refusal, never an answer.
+///
+/// ```
+/// use cogra_interchange::{RegexpError, Theory, TheoryError};
+///
+/// let err = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => tstr .regexp "[a-"}"#)
+///     .expect_err("the character class is not closed");
+/// assert!(matches!(err, TheoryError::Regexp(RegexpError::Malformed { .. })));
+/// ```
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum RegexpError {
+    /// The pattern is not a well-formed XSD regular expression.
+    #[error("pattern is not a well-formed XSD regular expression: {detail}")]
+    Malformed {
+        /// The engine's account of what was wrong.
+        detail: String,
+    },
+    /// A well-formed pattern the engine declined for a reason of its own.
+    #[error("engine refused the pattern: {detail}")]
+    EngineRefused {
+        /// The engine's account of why it declined.
+        detail: String,
+    },
+    /// A match that did not complete within the seam's operation budget.
+    ///
+    /// The budget counts matching operations, never time, so the same
+    /// pattern, subject, and budget give the same outcome on every
+    /// machine. This is the one failure the seam can raise at match time;
+    /// the evaluator surfaces it as a located mismatch, never as a silent
+    /// answer.
+    #[error("pattern match exhausted the {budget}-operation budget")]
+    BudgetExhausted {
+        /// The budget that was in force.
+        budget: usize,
+    },
 }
