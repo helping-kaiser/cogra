@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk guest-apk web-ci
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk guest-apk web-ci fuzz-interchange
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -112,6 +112,25 @@ docs-link-check: ## Check markdown link targets + anchors (mirrors docs-ci.yml; 
 
 build: ## Build all crates
 	$(CARGO) build --all
+
+# The audit-phase fuzz lane (docs/design.md preview:xchg:fuzz-plan).
+# cargo-fuzz needs the nightly compiler's -Zsanitizer, so this is a
+# separate toolchain from the one `ci` runs and is deliberately NOT a
+# dependency of `ci` — run it by hand. Override FUZZ_CARGO to pin a
+# nightly (e.g. FUZZ_CARGO='cargo +nightly-2026-08-01') and FUZZ_TIME
+# for a longer campaign. cddl_parse is expected to end in a libfuzzer
+# timeout on the recorded parser-DoS; that does not fail the lane.
+FUZZ_CARGO ?= cargo +nightly
+FUZZ_TIME  ?= 60
+
+fuzz-interchange: ## Run the cogra-interchange fuzz targets (needs nightly + cargo-fuzz; not a CI gate)
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "Error: cargo-fuzz not found (cargo install cargo-fuzz; needs a nightly toolchain)"; exit 1; }
+	cd crates/cogra-interchange && bash fuzz/seed.sh
+	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run decode_canonical -- -max_total_time=$(FUZZ_TIME) -timeout=10
+	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run accept_document -- -max_total_time=$(FUZZ_TIME) -timeout=10
+	@echo "cddl_parse is expected to end in a timeout on the recorded parser-DoS:"
+	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run cddl_parse -- -max_total_time=$(FUZZ_TIME) -timeout=10 \
+		|| echo "cddl_parse ended in a libfuzzer timeout (expected: the recorded parser-DoS)"
 
 android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
 
