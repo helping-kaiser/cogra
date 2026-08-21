@@ -309,13 +309,29 @@ fn read_major_seven(additional: u8, argument: u64, start: usize) -> Result<Value
     }
 }
 
-struct Head {
-    major: u8,
-    additional: u8,
-    argument: u64,
+/// A head, read and checked. The envelope's prefix path reads heads
+/// without decoding the items under them, which is what keeps it inside
+/// its bound over a map of any size.
+pub(crate) struct Head {
+    pub(crate) major: u8,
+    pub(crate) additional: u8,
+    pub(crate) argument: u64,
 }
 
-fn read_head(input: &[u8], position: &mut usize) -> Result<Head, DecodeError> {
+/// How many bytes the head beginning with this initial byte occupies. The
+/// forms no well-formed encoding produces are one byte, since reading that
+/// byte is what refuses them.
+pub(crate) const fn head_span(initial: u8) -> usize {
+    match initial & 0x1f {
+        24 => 2,
+        25 => 3,
+        26 => 5,
+        27 => 9,
+        _ => 1,
+    }
+}
+
+pub(crate) fn read_head(input: &[u8], position: &mut usize) -> Result<Head, DecodeError> {
     let start = *position;
     let &initial = input.get(start).ok_or(DecodeError::Truncated {
         offset: input.len(),
