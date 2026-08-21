@@ -589,7 +589,7 @@ fn tear_down(mut work: Vec<Value>) {
                     work.push(value);
                 }
             }
-            Value::Tag(t) => work.push(*t.item),
+            Value::Tag(mut t) => work.push(t.take_item()),
             _ => {}
         }
     }
@@ -656,8 +656,29 @@ impl Tag {
     ///
     /// assert_eq!(Tag::new(42, Value::Null).into_item(), Value::Null);
     /// ```
-    pub fn into_item(self) -> Value {
-        *self.item
+    pub fn into_item(mut self) -> Value {
+        self.take_item()
+    }
+
+    /// Empty the tag, leaving a leaf behind.
+    ///
+    /// The box is reused rather than replaced: the point is to leave the
+    /// tag holding something whose drop recurses nowhere.
+    fn take_item(&mut self) -> Value {
+        mem::replace(&mut *self.item, Value::Null)
+    }
+}
+
+impl Drop for Tag {
+    fn drop(&mut self) {
+        // A tag is recursive, so a chain of them is a chain the compiler's
+        // drop glue would descend. Arrays and maps dismantle themselves
+        // iteratively already, and the worklist reaches a tag inside one
+        // of them without recursing; tag directly inside tag is the one
+        // chain left, and this is where it is broken.
+        if matches!(*self.item, Value::Tag(_)) {
+            tear_down(vec![self.take_item()]);
+        }
     }
 }
 
