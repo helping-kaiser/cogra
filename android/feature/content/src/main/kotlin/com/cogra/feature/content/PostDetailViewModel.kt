@@ -133,7 +133,7 @@ class PostDetailViewModel @Inject constructor(
                         // where the post stands; the feed card the
                         // reader came from is still holding the state
                         // its own page carried.
-                        landings.observed(detail.post.id, detail.post.landing)
+                        landings.observed(detail.post.id, detail.post.landing, includePending)
                         _state.update {
                             it.copy(
                                 loading = false,

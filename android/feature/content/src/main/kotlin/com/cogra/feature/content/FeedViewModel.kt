@@ -63,10 +63,17 @@ class FeedViewModel @Inject constructor(
         // itself is untouched: no entry moves, arrives, or leaves, so
         // this is not the page reconciliation the snapshot rule
         // forbids (api-spec.md "A page is a snapshot, not a live
-        // view").
+        // view"). A read that asked the other landed-only question saw
+        // another version of the node, so it says nothing here.
         viewModelScope.launch {
             landings.updates.collect { update ->
-                _state.update { it.copy(posts = it.posts.withLanding(update)) }
+                _state.update {
+                    if (update.includePending != it.includePending) {
+                        it
+                    } else {
+                        it.copy(posts = it.posts.withLanding(update))
+                    }
+                }
             }
         }
     }
