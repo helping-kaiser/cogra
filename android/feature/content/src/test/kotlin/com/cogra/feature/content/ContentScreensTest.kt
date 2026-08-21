@@ -181,6 +181,27 @@ class ContentScreensTest {
         compose.onNodeWithTag("key_banner").assertExists()
     }
 
+    // The feed twin of the detail screen's rule: an upward correction
+    // from the middle of the listing scrolls, it does not re-read.
+    @Test
+    fun anUpwardDragAwayFromTheFeedTopScrollsInsteadOfRefreshing() {
+        var refreshes = 0
+        renderFeed(
+            FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
+            onRefresh = { refreshes++ },
+        )
+        repeat(3) {
+            compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
+        }
+        compose.onNodeWithTag("feed_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, 200f))
+            advanceEventTime(250)
+            up()
+        }
+        assertThat(refreshes).isEqualTo(0)
+    }
+
     @Test
     fun theNextPageLoadsOnDemand() {
         var more = false
@@ -424,6 +445,34 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_body").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
+    }
+
+    // Pull-to-refresh belongs to the top of the thread: a reader
+    // correcting upward from the middle of a long post is scrolling,
+    // not asking for a re-read.
+    @Test
+    fun anUpwardDragAwayFromTheTopScrollsInsteadOfRefreshing() {
+        var refreshes = 0
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = (1..30).map { testComment("c$it") },
+            ),
+            onRefresh = { refreshes++ },
+        )
+        // Down the thread, well past the header…
+        repeat(3) {
+            compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
+        }
+        // …then a correction back up that the thread itself absorbs.
+        compose.onNodeWithTag("detail_list").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, 200f))
+            advanceEventTime(250)
+            up()
+        }
+        assertThat(refreshes).isEqualTo(0)
     }
 
     // Landing is per node: a landed post can carry a comment that is

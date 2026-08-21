@@ -44,8 +44,8 @@ import com.cogra.feature.content.R
 @Composable
 fun ComposePostRoute(
     postId: String?,
-    /** The new post's id on a create, null on an edit. */
-    onSaved: (String?) -> Unit,
+    /** The write signed; the caller decides where the author lands. */
+    onSaved: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     viewModel: ComposePostViewModel = hiltViewModel(),
@@ -56,7 +56,7 @@ fun ComposePostRoute(
     // landing in state, not something composition itself performs.
     LaunchedEffect(state.saved) {
         if (state.saved) {
-            onSaved(state.savedPostId)
+            onSaved()
             viewModel.onSavedConsumed()
         }
     }
