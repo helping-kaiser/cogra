@@ -62,7 +62,6 @@ use super::ast::{
     Cddl, GenericArgs, Group, GroupEntry, GroupEntryKind, MemberKey, MemberKeyKind, Name, Rule,
     RuleBody, Type, Type1, Type2, Type2Kind,
 };
-use super::lex::Span;
 use super::parse::parse;
 use super::print;
 use crate::error::TheoryError;
@@ -80,7 +79,6 @@ const PRELUDE: &str = include_str!("../../tests/corpus/rfc8610-appendix-d-prelud
 pub(crate) struct ResolvedRule {
     params: Vec<String>,
     body: RuleBody,
-    span: Span,
     from_prelude: bool,
 }
 
@@ -93,13 +91,6 @@ impl ResolvedRule {
     /// What the rule assigns, with every `/=` and `//=` folded in.
     pub(crate) fn body(&self) -> &RuleBody {
         &self.body
-    }
-
-    /// Where the rule was written.
-    ///
-    /// A prelude rule's span indexes the prelude source, not the theory's.
-    pub(crate) fn span(&self) -> Span {
-        self.span
     }
 
     /// Whether the rule came from the standard prelude rather than from the
@@ -168,7 +159,6 @@ impl RuleTable {
                     name.to_owned(),
                     ResolvedRule {
                         params: Vec::new(),
-                        span: body_span(&body),
                         body,
                         from_prelude: false,
                     },
@@ -346,7 +336,6 @@ fn merge(
                         ResolvedRule {
                             params,
                             body: rule.body.clone(),
-                            span: rule.span,
                             from_prelude: false,
                         },
                     );
@@ -382,14 +371,6 @@ fn merge(
     }
 
     Ok(table)
-}
-
-/// Where a rule body was written.
-fn body_span(body: &RuleBody) -> Span {
-    match body {
-        RuleBody::Type(ty) => ty.span,
-        RuleBody::Group(entry) => entry.span,
-    }
 }
 
 /// Whether two rule bodies are the same expression, in the crate's one
@@ -448,7 +429,6 @@ fn extend_type(base: Option<ResolvedRule>, rule: &Rule) -> Result<ResolvedRule, 
             choices,
             span: rule.span,
         }),
-        span: rule.span,
         from_prelude: false,
     })
 }
@@ -497,7 +477,6 @@ fn extend_group(base: Option<ResolvedRule>, rule: &Rule) -> Result<ResolvedRule,
             }),
             span: rule.span,
         })),
-        span: rule.span,
         from_prelude: false,
     })
 }
