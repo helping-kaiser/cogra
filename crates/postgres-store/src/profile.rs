@@ -20,7 +20,8 @@ pub struct ProfileVersion {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-/// The actor's current profile — the newest version row; None for an
+/// The actor's current profile — the newest version row, `version_id`
+/// breaking a tie when two writes share one `created_at`; None for an
 /// actor that never got one (impossible for registered users, who are
 /// seeded at registration).
 pub async fn current_profile(
@@ -32,7 +33,8 @@ pub async fn current_profile(
         "SELECT display_name, bio, avatar_id, cover_id, website_url,
                 redaction_reason, created_at
          FROM actor_profile_versions
-         WHERE actor_id = $1 ORDER BY created_at DESC LIMIT 1",
+         WHERE actor_id = $1
+         ORDER BY created_at DESC, version_id DESC LIMIT 1",
         actor_id,
     )
     .fetch_optional(pool)
