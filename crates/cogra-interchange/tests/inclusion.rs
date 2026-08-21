@@ -385,6 +385,43 @@ fn a_prelude_type_is_not_part_of_the_compared_form() {
     }
 }
 
+// -- composition ----------------------------------------------------------
+
+/// The worked instance of the property in `tests/properties.rs`: the
+/// registry compares an acquired minor against the greatest held theory
+/// below it and against no lower one, which is sound because "verbatim"
+/// composes. Here it composes over three named minors, with the endpoint
+/// pair checked as well as the two consecutive ones.
+#[test]
+fn inclusion_composes_over_three_minors() {
+    let first = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr}"#;
+    let second = r#"e = {0 => "com.example", 1 => [1, 1, uint], 2 => tstr, ? 3 => uint}"#;
+    let third =
+        r#"e = {0 => "com.example", 1 => [1, 2, uint], 2 => tstr, ? 3 => uint, ? 4 => bstr}"#;
+
+    holds(first, second);
+    holds(second, third);
+    holds(first, third);
+}
+
+/// And it fails to compose only where a consecutive pair already failed: a
+/// chain whose middle step drops a key is broken at that step, and the
+/// endpoint pair reports the same key.
+#[test]
+fn a_break_in_the_middle_is_visible_at_the_endpoints() {
+    let first = r#"e = {0 => "com.example", 1 => [1, 0, uint], 2 => tstr}"#;
+    let second = r#"e = {0 => "com.example", 1 => [1, 1, uint]}"#;
+    let third = r#"e = {0 => "com.example", 1 => [1, 2, uint], ? 3 => uint}"#;
+
+    holds(second, third);
+    for (earlier, later) in [(first, second), (first, third)] {
+        assert!(matches!(
+            breaches(earlier, later).as_slice(),
+            [InclusionBreach::KeyDropped { key }] if key.get() == 2
+        ));
+    }
+}
+
 // -- comparability --------------------------------------------------------
 
 fn incomparable(earlier: &str, later: &str) {
