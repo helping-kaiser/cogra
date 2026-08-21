@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO actor_profile_versions\n             (actor_id, display_name, bio, avatar_id, cover_id, website_url,\n              landed_epoch, act_time, position)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b7f812c396f30796f92660d6ba95994ed3fe053b4c0445a5b465c195a5c254ef"
+}
