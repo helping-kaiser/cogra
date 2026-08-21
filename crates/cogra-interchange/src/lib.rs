@@ -47,6 +47,7 @@ mod envelope;
 mod error;
 mod label;
 mod regexp;
+mod registry;
 mod value;
 mod version;
 
@@ -56,7 +57,10 @@ pub use cddl::{
     global, satisfies, satisfies_global, satisfies_open,
 };
 pub use envelope::{Content, ContentKey, Document, Envelope, MAX_ENVELOPE_PREFIX};
-pub use error::{DecodeError, EnvelopeError, LabelError, RegexpError, TheoryError, ValueError};
+pub use error::{
+    AcquireError, DecodeError, EnvelopeError, LabelError, RegexpError, TheoryError, ValueError,
+};
 pub use label::NamespaceLabel;
+pub use registry::Registry;
 pub use value::{Array, Bytes, Float, FloatWidth, Map, Negative, Simple, Tag, Text, Value};
 pub use version::{Coordinate, Version};
