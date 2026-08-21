@@ -7,7 +7,9 @@
 //! adding the base theory's wildcard. Anything else the derivation touched
 //! would appear as a third hunk (`design.md`, `alg:xchg:companion`).
 
-use cogra_interchange::Theory;
+use cogra_interchange::{
+    Content, ContentKey, Document, Envelope, NamespaceLabel, Theory, Value, Version, satisfies_open,
+};
 
 /// The conventions' own illustration of an assigned theory, with both a
 /// required and an optional content key so that requiredness has something
@@ -24,6 +26,20 @@ fn parse(source: &str) -> Theory {
         Ok(theory) => theory,
         Err(error) => panic!("expected {source:?} to be an assigned theory, but: {error}"),
     }
+}
+
+/// A document at `com.example` with the given version and content.
+fn document(version: Version, entries: Vec<(u64, Value)>) -> Document {
+    let label = NamespaceLabel::parse("com.example").expect("a namespace label");
+    let mut content = Content::new();
+    for (key, value) in entries {
+        content.insert(ContentKey::new(key).expect("a content key"), value);
+    }
+    Document::new(Envelope::new(label, version), content)
+}
+
+fn text(s: &str) -> Value {
+    Value::Text(s.to_owned().into())
 }
 
 // -- the diff -------------------------------------------------------------
@@ -129,15 +145,17 @@ fn hunks_between(theory: &Theory) -> Vec<Hunk> {
     hunks(&tokens(&theory.to_cddl()), &tokens(&open.to_cddl()))
 }
 
-/// The check the diff exists for: exactly two hunks, and each is the edit
-/// the derivation is allowed.
-fn assert_exactly_the_two_edits(source: &str, minor: &str) {
+/// The check the diff exists for: the freed minor first, one cut marker on
+/// each of the `cut_keys` enumerated keys, and the wildcard last — and
+/// nothing else. Each is exactly the edit the derivation is allowed.
+fn assert_the_expected_edits(source: &str, minor: &str, cut_keys: usize) {
     let theory = parse(source);
     let found = hunks_between(&theory);
+    let expected = 2 + cut_keys;
     assert_eq!(
         found.len(),
-        2,
-        "the companion of {source:?} differs in {} places, not two: {found:?}",
+        expected,
+        "the companion of {source:?} differs in {} places, not {expected}: {found:?}",
         found.len()
     );
 
@@ -149,8 +167,21 @@ fn assert_exactly_the_two_edits(source: &str, minor: &str) {
         },
         "the first edit is not the minor position freed to `uint`"
     );
+
+    // One cut marker inserted on each enumerated content key, in key order.
+    let cut = Hunk {
+        removed: Vec::new(),
+        inserted: vec!["^".to_owned()],
+    };
+    for hunk in &found[1..1 + cut_keys] {
+        assert_eq!(
+            hunk, &cut,
+            "an enumerated key gained something other than one cut marker"
+        );
+    }
+
     assert_eq!(
-        found[1],
+        found[1 + cut_keys],
         Hunk {
             removed: Vec::new(),
             inserted: [",", "*", "(", "uint", ".gt", "1", ")", "=>", "any"]
@@ -158,30 +189,32 @@ fn assert_exactly_the_two_edits(source: &str, minor: &str) {
                 .map(|token| (*token).to_owned())
                 .collect(),
         },
-        "the second edit is not the base theory's wildcard joining the map"
+        "the last edit is not the base theory's wildcard joining the map"
     );
 }
 
-// -- the two edits, and no third ------------------------------------------
+// -- the two relaxations and the cut, and no more -------------------------
 
 #[test]
-fn the_companion_makes_exactly_two_edits() {
-    assert_exactly_the_two_edits(ASSIGNED, "2");
+fn the_companion_frees_the_minor_cuts_each_key_and_adds_the_wildcard() {
+    assert_the_expected_edits(ASSIGNED, "2", 2);
 }
 
 #[test]
-fn the_two_edits_are_the_only_ones_whatever_the_theory_enumerates() {
-    assert_exactly_the_two_edits(r#"e = {0 => "com.example", 1 => [0, 0, uint]}"#, "0");
-    assert_exactly_the_two_edits(
+fn the_edits_are_the_only_ones_whatever_the_theory_enumerates() {
+    assert_the_expected_edits(r#"e = {0 => "com.example", 1 => [0, 0, uint]}"#, "0", 0);
+    assert_the_expected_edits(
         r#"e = {0 => "com.example", 1 => [7, 13, uint], 2 => tstr .size 3, ? 3 => [* uint]}"#,
         "13",
+        2,
     );
-    assert_exactly_the_two_edits(
+    assert_the_expected_edits(
         concat!(
             "e = {0 => \"com.example\", 1 => [1, 5, uint], 2 => inner}\n",
             "inner = {a: 1, b: [* tstr]}\n",
         ),
         "5",
+        1,
     );
 }
 
@@ -224,8 +257,30 @@ fn the_companion_keeps_the_label_and_the_floor() {
 fn every_content_key_keeps_its_type_and_its_requiredness() {
     let theory = parse(ASSIGNED);
     let printed = theory.open_companion().to_cddl();
-    assert!(printed.contains("2 => tstr"));
-    assert!(printed.contains("? 7 => bstr"));
+    // The type and the requiredness stand; the key now carries the cut.
+    assert!(printed.contains("2 ^ => tstr"));
+    assert!(printed.contains("? 7 ^ => bstr"));
+}
+
+/// The cut binds an optional key's type under tolerant validation: a
+/// document carrying a value outside the enumerated type at a known
+/// optional key is rejected, where the companion's wildcard would
+/// otherwise have readmitted it (`design.md`, `alg:xchg:companion`).
+#[test]
+fn a_mistyped_optional_key_is_rejected_tolerantly() {
+    let theory = parse(r#"e = {0 => "com.example", 1 => [1, 2, uint], ? 2 => tstr}"#);
+    let open = theory.open_companion();
+    let stamped_above = Version::new(1, 9, 0);
+
+    // An integer at key 2, where the theory names tstr: now rejected.
+    let mistyped = document(stamped_above, vec![(2, Value::Unsigned(7))]);
+    assert!(!satisfies_open(&mistyped, &open).holds());
+
+    // A tstr at key 2 still holds, and the key absent still holds.
+    let conforming = document(stamped_above, vec![(2, text("hello"))]);
+    assert!(satisfies_open(&conforming, &open).holds());
+    let absent = document(stamped_above, Vec::new());
+    assert!(satisfies_open(&absent, &open).holds());
 }
 
 /// The rules below the root are not the map, so the derivation does not
