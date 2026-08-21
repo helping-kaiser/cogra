@@ -67,14 +67,31 @@ static END: TokenKind = TokenKind::Eof;
 /// located refusal rather than an empty document.
 pub(crate) fn parse(source: &str) -> Result<Cddl, SyntaxError> {
     let tokens = tokenize(source)?;
-    let mut parser = Parser { tokens, pos: 0 };
+    let mut parser = Parser {
+        tokens,
+        pos: 0,
+        depth: 0,
+    };
     parser.cddl()
 }
 
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    /// How many `type2` productions are open on the call stack: the guard
+    /// against a theory nested deeply enough to overflow the recursive
+    /// descent.
+    depth: usize,
 }
+
+/// The greatest `type2` nesting the parser descends before it refuses the
+/// theory as too deeply nested.
+///
+/// Every level of `(...)`, `{...}`, `[...]`, `#6(...)`, and `<...>` opens
+/// one `type2`, so this bounds the recursion. Recursive-descent parsers
+/// standardly bound their depth (serde_json's `RECURSION_LIMIT` is 128);
+/// this matches it, and real theories nest fewer than ten deep.
+const MAX_PARSE_DEPTH: usize = 128;
 
 impl Parser {
     // -- cursor -----------------------------------------------------------
@@ -371,8 +388,27 @@ impl Parser {
         })
     }
 
-    /// The ten alternatives of `type2`.
+    /// The ten alternatives of `type2`, guarded against unbounded nesting.
+    ///
+    /// The depth is balanced on every exit, success or failure, so the
+    /// parser's speculative rewinds — which abandon a `type2` mid-parse and
+    /// try another reading — leave no descent counted twice.
     fn type2(&mut self) -> Result<Type2, SyntaxError> {
+        self.depth += 1;
+        if self.depth > MAX_PARSE_DEPTH {
+            self.depth -= 1;
+            return Err(SyntaxError::at(
+                self.span(),
+                format!("type nested deeper than {MAX_PARSE_DEPTH} levels"),
+            ));
+        }
+        let result = self.type2_body();
+        self.depth -= 1;
+        result
+    }
+
+    /// The ten alternatives of `type2`.
+    fn type2_body(&mut self) -> Result<Type2, SyntaxError> {
         let start = self.pos;
         let kind = match self.kind() {
             TokenKind::Number(_) | TokenKind::Text(_) | TokenKind::Bytes { .. } => {
@@ -527,12 +563,31 @@ impl Parser {
         })
     }
 
+    /// One group entry, guarded against unbounded nesting.
+    ///
+    /// A group entry may be a parenthesized inline group, and inline groups
+    /// nest through `grpent` without passing `type2`, so this shares the
+    /// same depth counter and the same balanced-exit discipline.
+    fn grpent(&mut self) -> Result<GroupEntry, SyntaxError> {
+        self.depth += 1;
+        if self.depth > MAX_PARSE_DEPTH {
+            self.depth -= 1;
+            return Err(SyntaxError::at(
+                self.span(),
+                format!("group nested deeper than {MAX_PARSE_DEPTH} levels"),
+            ));
+        }
+        let result = self.grpent_body();
+        self.depth -= 1;
+        result
+    }
+
     /// ```abnf
     /// grpent = [occur S] [memberkey S] type
     ///        / [occur S] groupname [genericarg]  ; preempted by above
     ///        / [occur S] "(" S group S ")"
     /// ```
-    fn grpent(&mut self) -> Result<GroupEntry, SyntaxError> {
+    fn grpent_body(&mut self) -> Result<GroupEntry, SyntaxError> {
         let start = self.pos;
         let occur = self.occur();
         let after_occur = self.pos;
@@ -1204,6 +1259,25 @@ mod tests {
     fn locates_a_refusal_on_the_line_it_happened() {
         let error = refuse("a = 1\nb = 2\nc = [3");
         assert_eq!((error.line, error.column), (3, 7));
+    }
+
+    // -- bounded nesting --------------------------------------------------
+
+    #[test]
+    fn refuses_a_type_nested_past_the_depth_bound() {
+        let deep = format!("a = {}1{}", "(".repeat(400), ")".repeat(400));
+        let error = refuse(&deep);
+        assert!(error.detail.contains("nested deeper"));
+        // Located, not a panic: the refusal points at where it gave up.
+        assert!(error.line >= 1 && error.column >= 1);
+    }
+
+    #[test]
+    fn a_realistically_nested_theory_still_parses() {
+        // Eight levels of array nesting — deeper than any real theory — is
+        // well within the bound.
+        let nested = format!("a = {}uint{}", "[".repeat(8), "]".repeat(8));
+        accept(&nested);
     }
 
     // -- the ambiguity of `=` ---------------------------------------------
