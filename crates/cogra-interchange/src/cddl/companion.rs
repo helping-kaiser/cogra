@@ -27,13 +27,17 @@
 //! total function has to have an answer everywhere; a `Theory` cannot take
 //! that path.
 
+use std::collections::BTreeMap;
+
 use super::ast::{
     Cddl, GroupEntry, GroupEntryKind, MemberKey, MemberKeyKind, Name, Occur, OccurKind, Operation,
     Operator, RuleBody, Type, Type1, Type2, Type2Kind, Value, ValueKind,
 };
 use super::lex::{NumberToken, Span};
+use super::resolve::RuleTable;
 use super::{Theory, fragment, print};
 use crate::NamespaceLabel;
+use crate::regexp::XsdPattern;
 
 /// The open companion of an assigned theory: the minor position freed to
 /// `uint`, the closure replaced by the base theory's wildcard, nothing else
@@ -56,6 +60,8 @@ use crate::NamespaceLabel;
 #[derive(Clone, Debug)]
 pub struct OpenTheory {
     cddl: Cddl,
+    table: RuleTable,
+    patterns: BTreeMap<usize, XsdPattern>,
     label: NamespaceLabel,
     floor: (u64, u64),
 }
@@ -108,14 +114,32 @@ impl OpenTheory {
     pub fn to_cddl(&self) -> String {
         print::print(&self.cddl)
     }
+
+    /// The rewritten tree, its rule table, and the theory's compiled
+    /// patterns — what satisfaction reads.
+    pub(crate) fn parts(&self) -> (&Cddl, &RuleTable, &BTreeMap<usize, XsdPattern>) {
+        (&self.cddl, &self.table, &self.patterns)
+    }
 }
 
 /// Derive the companion: clone the parsed tree and apply the two edits.
+///
+/// The patterns come across by clone rather than by recompilation: the tree
+/// is a clone, so every `.regexp` operand stands where it stood, and the
+/// keys of the pattern map still find it.
 pub(crate) fn derive(theory: &Theory) -> OpenTheory {
     let mut cddl = theory.cddl.clone();
     relax(&mut cddl);
+    let table = match cddl.rules.first() {
+        Some(root) => theory
+            .table
+            .with_rule_body(&root.name.text, root.body.clone()),
+        None => theory.table.clone(),
+    };
     OpenTheory {
         cddl,
+        table,
+        patterns: theory.patterns.clone(),
         label: theory.label().clone(),
         floor: theory.coordinate(),
     }

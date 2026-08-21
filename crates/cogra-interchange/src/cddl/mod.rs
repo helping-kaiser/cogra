@@ -21,24 +21,17 @@
 //! | [`companion`] | open-companion derivation |
 //! | [`inclusion`] | minor inclusion, key by key |
 //! | [`restraint`] | the restraint report over an assigned theory |
+//! | [`eval`] | satisfaction: a `Value` matched against a resolved type |
+//! | [`control`] | control-operator evaluation, over the ruled subset |
 //!
 //! The grammar these implement is checked into the repository beside the
 //! code, at `tests/corpus/rfc8610-abnf.txt`, so that a reader auditing the
 //! parser against its specification does not have to leave the tree.
-//!
-//! Satisfaction and control-operator evaluation are the next slice
-//! (`design.md`, `model:xchg:module-map`), and the free functions the
-//! judgment owes — `satisfies` and its two siblings — arrive with them.
-
-// The description language lands before its evaluator. Accessors the
-// evaluator needs — a resolved rule's span, whether it came from the
-// prelude, a compiled pattern's match method — are built here and first
-// called there. The allow is scoped to this module tree and comes off with
-// the evaluation slice.
-#![allow(dead_code)]
 
 pub(crate) mod ast;
 pub(crate) mod companion;
+pub(crate) mod control;
+pub(crate) mod eval;
 pub(crate) mod fragment;
 pub(crate) mod inclusion;
 pub(crate) mod lex;
@@ -48,6 +41,7 @@ pub(crate) mod resolve;
 pub(crate) mod restraint;
 
 pub use companion::OpenTheory;
+pub use eval::{Mismatch, MismatchKind, Satisfaction, satisfies, satisfies_global, satisfies_open};
 pub use inclusion::{Inclusion, InclusionBreach, check_inclusion};
 pub use restraint::{ImplicitReach, Provision, Restrained, RestraintReport};
 
@@ -439,6 +433,7 @@ impl BaseTheory {
     /// text, which is what lets the cross-check of the two label
     /// recognizers be a check and not a restatement
     /// (`design.md`, `verif:xchg:label-pattern-crosscheck`).
+    #[cfg(test)]
     pub(crate) fn pattern_of(&self, rule: &str) -> Option<&XsdPattern> {
         let prepared = self.prepared.as_ref()?;
         let body = prepared.table.get(rule)?.body();
