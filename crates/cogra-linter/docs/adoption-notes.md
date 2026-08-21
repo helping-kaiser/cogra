@@ -113,8 +113,8 @@ Three choices in this section rest on measurement rather than taste:
 
 **The interchange crate's docs belong to the crate's owner (rule 7).**
 `concept.md` mints 16 labels and `design.md` mints 76, with **zero
-collisions** between them, both in area `icx`; and `design.md` cites
-`req:icx:determinism` — a mint of `concept.md` — in the **unprefixed**
+collisions** between them, both in area `xchg`; and `design.md` cites
+`req:xchg:determinism` — a mint of `concept.md` — in the **unprefixed**
 form. Under ``inf:labels:same-owner-citation`` an unprefixed citation
 "never resolves into another owner", so that citation resolves *only
 if* the two files are one owner. Meanwhile both files cite `ARCH` and
@@ -220,8 +220,8 @@ non-event.
 Kinds deliberately left **outside** K although they sound code-shaped:
 `listing`, `impl`, `alg`, `model`, `data`. These sit in
 ``conv:kinds:computation``, are headed by an authored heading, and are
-in live authored use — `design.md` legitimately mints `impl:icx:*` and
-`model:icx:*`. Reserving them would break the corpus today.
+in live authored use — `design.md` legitimately mints `impl:xchg:*` and
+`model:xchg:*`. Reserving them would break the corpus today.
 
 ### `[typed-data]` and `[citation-indexes]` — empty, said out loud
 
@@ -308,16 +308,14 @@ breaking change on the L1 team's side. With R2 the question does not
 arise: the file is outside the label graph, and the extensions are not
 owed.
 
-**F3. `ICX` the prefix and `icx` the area are unrelated, and look
-related — and R3 adds a third lookalike.** `ICX` is registered to the
-interchange **conventions** document; `icx` is the area used by the
-interchange **crate's** docs, which are a different owner; and R-PKG′
-now gives that crate the prefix `INTERCHANGE`. Nothing formally
-collides — prefixes and areas are separate namespaces, and the three
-tokens are distinct — but a reader will assume some pair of them names
-the same thing. **This finding is open: no ruling covers it.** Cheap to
-fix now by renaming one of them, expensive later (85 citations carry
-`ICX`; 183 labels carry `icx`).
+**F3. `ICX` the prefix names the conventions document; the crate's
+docs use the area `xchg`.** `ICX` is registered to the interchange
+**conventions** document; the interchange **crate's** docs — a
+different owner — mint in area `xchg` (ruled 2026-08-21, renamed from
+a lookalike while the rename was still cheap); and R-PKG′ gives that
+crate the prefix `INTERCHANGE`. Prefixes and areas are separate
+namespaces, the three tokens are distinct, and no pair now invites the
+assumption that it names one thing.
 
 ---
 
