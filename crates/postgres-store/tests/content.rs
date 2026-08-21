@@ -344,3 +344,175 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
             .is_none()
     );
 }
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+
+    // Two landed edits whose authoring instants run the opposite way
+    // from their records: the edit written second was ordered first by
+    // L1, which is what a promotion pass replaying two epochs out of
+    // order produces.
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post_version(
+        &mut tx,
+        id,
+        Some("title"),
+        None,
+        "landed later",
+        Some(order(9, 0)),
+        at(100),
+    )
+    .await
+    .expect("later record");
+    content::insert_post_version(
+        &mut tx,
+        id,
+        Some("title"),
+        None,
+        "landed earlier",
+        Some(order(2, 0)),
+        at(200),
+    )
+    .await
+    .expect("earlier record");
+    tx.commit().await.expect("commit");
+
+    let rendered = content::post(&pool, id)
+        .await
+        .expect("read")
+        .expect("the post is there");
+    assert_eq!(
+        rendered.content, "landed later",
+        "the records order the versions; the clock only proxied them"
+    );
+    assert_eq!(
+        rendered.version_created_at,
+        at(100),
+        "updatedAt follows the winning version, not the newest instant"
+    );
+
+    // Every listing read resolves the same version as the single read.
+    let listed = page(&pool, None, 10).await;
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].content, "landed later");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let commenter = actor(&pool, "commenter").await;
+    let host = post(&pool, author, Some(order(1, 0)), at(0), "host").await;
+    let id = comment(&pool, commenter, host, Some(order(1, 1)), at(10), "genesis").await;
+
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_comment_version(&mut tx, id, "landed later", Some(order(9, 0)), at(100))
+        .await
+        .expect("later record");
+    content::insert_comment_version(&mut tx, id, "landed earlier", Some(order(2, 0)), at(200))
+        .await
+        .expect("earlier record");
+    tx.commit().await.expect("commit");
+
+    let rendered = content::comment(&pool, id)
+        .await
+        .expect("read")
+        .expect("the comment is there");
+    assert_eq!(rendered.content, "landed later");
+
+    let thread = content::comments_for_target(&pool, host, None, false, 10, true)
+        .await
+        .expect("thread");
+    assert_eq!(thread.len(), 1);
+    assert_eq!(
+        thread[0].content, "landed later",
+        "the thread read resolves the same version as the single read"
+    );
+}
+
+/// An unlanded edit has no place in the order yet, so it renders above
+/// every landed version regardless of what the coordinates say — the
+/// author's own text, from the moment they signed it (substrate.md §6).
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post_version(&mut tx, id, Some("title"), None, "pending", None, at(10))
+        .await
+        .expect("pending edit");
+    content::insert_post_version(
+        &mut tx,
+        id,
+        Some("title"),
+        None,
+        "landed",
+        Some(order(9, 0)),
+        at(20),
+    )
+    .await
+    .expect("landed edit");
+    tx.commit().await.expect("commit");
+
+    let rendered = content::post(&pool, id)
+        .await
+        .expect("read")
+        .expect("the post is there");
+    assert_eq!(rendered.content, "pending");
+    assert!(rendered.version_pending);
+
+    // A reader who asked for only what the graph has settled skips it
+    // and gets the newest landed version instead.
+    let landed_only = content::list_posts(&pool, None, false, 10, false)
+        .await
+        .expect("lists");
+    assert_eq!(landed_only.len(), 1);
+    assert_eq!(landed_only[0].content, "landed");
+    assert!(!landed_only[0].version_pending);
+}
+
+/// A version row written before the coordinates existed carries none, and
+/// falls back to its instant — but never above a version the graph
+/// ordered. Written through raw SQL because no store function can
+/// produce a landed row without coordinates any more, which is the
+/// point: only the migration's own legacy rows look like this.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_landed_version_without_coordinates_falls_below_one_with_them(pool: PgPool) {
+    let author = actor(&pool, "author").await;
+    let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
+
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post_version(
+        &mut tx,
+        id,
+        Some("title"),
+        None,
+        "ordered by the graph",
+        Some(order(2, 0)),
+        at(10),
+    )
+    .await
+    .expect("landed edit");
+    tx.commit().await.expect("commit");
+
+    sqlx::query(
+        "INSERT INTO post_versions (post_id, title, content, pending, created_at)
+         VALUES ($1, 'title', 'legacy', FALSE, $2)",
+    )
+    .bind(id)
+    .bind(at(20))
+    .execute(&pool)
+    .await
+    .expect("legacy row");
+
+    let rendered = content::post(&pool, id)
+        .await
+        .expect("read")
+        .expect("the post is there");
+    assert_eq!(
+        rendered.content, "ordered by the graph",
+        "a timestamp cannot outrank a landing position"
+    );
+}
