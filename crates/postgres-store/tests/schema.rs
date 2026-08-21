@@ -203,7 +203,7 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
     .bind(chat)
     .execute(&pool)
     .await;
-    assert!(partial.is_err(), "two of three coordinates is not a position");
+    assert!(partial.is_err(), "part of a position is not a position");
 
     sqlx::query(
         "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
