@@ -36,4 +36,5 @@
 // The allow is scoped to this module tree and comes off with 3b.
 #![allow(dead_code)]
 
+pub(crate) mod ast;
 pub(crate) mod lex;
