@@ -8,7 +8,10 @@ use cogra_interchange::DecodeError;
 /// point is that byte-exactness has no third party in it.
 #[allow(dead_code)]
 pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
-    assert!(hex.len() % 2 == 0, "hex string of odd length: {hex}");
+    assert!(
+        hex.len().is_multiple_of(2),
+        "hex string of odd length: {hex}"
+    );
     let digits: Vec<u8> = hex
         .bytes()
         .map(|b| match b {
