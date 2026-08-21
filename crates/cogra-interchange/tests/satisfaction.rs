@@ -487,6 +487,23 @@ fn a_cut_locks_in_a_pick_by_key_alone() {
     assert!(!admits(colon, document));
 }
 
+/// A prioritized choice picks *between* alternatives, so an alternative
+/// that fails half way must give back the members it had already taken.
+#[test]
+fn a_failed_group_choice_in_a_map_gives_its_members_back() {
+    let both = map(vec![
+        (text("a"), Value::Unsigned(1)),
+        (text("c"), Value::Unsigned(2)),
+    ]);
+    // The first alternative takes `a` and then wants a `b` that is not
+    // there; the second wants the `a` the first had taken.
+    assert!(admits("{(a: uint, b: uint // a: uint, c: uint)}", both));
+    assert!(!admits(
+        "{(a: uint, b: uint // a: uint, c: uint)}",
+        map(vec![(text("a"), Value::Unsigned(1))])
+    ));
+}
+
 // -- occurrence -----------------------------------------------------------
 
 #[test]
