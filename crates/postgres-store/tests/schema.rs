@@ -136,3 +136,81 @@ async fn parameter_carrier_versions_append(pool: PgPool) {
     .expect("count");
     assert_eq!(count, 2);
 }
+
+/// Every version table is keyed the same way (data-model.md
+/// "Display-content versioning"), including the tables whose surfaces are
+/// not built yet — the rule is the schema's, not each reader's, so a new
+/// version table that skips it fails here rather than at the first read
+/// that quietly orders by the clock.
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_version_table_is_keyed_on_the_landing_order(pool: PgPool) {
+    const TABLES: [&str; 7] = [
+        "actor_profile_versions",
+        "post_versions",
+        "comment_versions",
+        "chat_versions",
+        "chat_message_versions",
+        "item_versions",
+        "network_parameter_versions",
+    ];
+
+    for table in TABLES {
+        let columns: Vec<String> = sqlx::query_scalar(
+            "SELECT column_name FROM information_schema.columns
+             WHERE table_name = $1
+               AND column_name IN ('landed_epoch', 'act_time', 'position')",
+        )
+        .bind(table)
+        .fetch_all(&pool)
+        .await
+        .expect("columns");
+        assert_eq!(
+            columns.len(),
+            3,
+            "{table} must carry the whole landing-order triple"
+        );
+
+        let identity: Option<String> = sqlx::query_scalar(
+            "SELECT is_identity FROM information_schema.columns
+             WHERE table_name = $1 AND column_name = 'version_id'",
+        )
+        .bind(table)
+        .fetch_optional(&pool)
+        .await
+        .expect("version_id");
+        assert_eq!(
+            identity.as_deref(),
+            Some("YES"),
+            "{table} must carry the monotonic key that decides where no record does"
+        );
+    }
+}
+
+/// The coordinates are one fact in three columns: a row holding part of
+/// a landing position would order against a key the graph never issued.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_partial_landing_position_is_rejected(pool: PgPool) {
+    let chat = Uuid::new_v4();
+    sqlx::query("INSERT INTO chats (id) VALUES ($1)")
+        .bind(chat)
+        .execute(&pool)
+        .await
+        .expect("chat");
+
+    let partial = sqlx::query(
+        "INSERT INTO chat_versions (chat_id, name, landed_epoch) VALUES ($1, 'half', 1)",
+    )
+    .bind(chat)
+    .execute(&pool)
+    .await;
+    assert!(partial.is_err(), "two of three coordinates is not a position");
+
+    sqlx::query(
+        "INSERT INTO chat_versions (chat_id, name, landed_epoch, act_time, position)
+         VALUES ($1, 'whole', 1, 1, 0)",
+    )
+    .bind(chat)
+    .execute(&pool)
+    .await
+    .expect("a whole position is accepted");
+}
