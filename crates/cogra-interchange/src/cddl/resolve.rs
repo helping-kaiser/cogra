@@ -151,6 +151,33 @@ impl RuleTable {
         self.own.iter().map(|(name, rule)| (name.as_str(), rule))
     }
 
+    /// This table with one rule's body replaced.
+    ///
+    /// The open companion's derivation edits the root rule of a theory whose
+    /// every reference already resolved, and the evaluator needs a table
+    /// that answers for the edited tree. Rebuilding the table from that tree
+    /// would be a second resolution with a failure mode; replacing one body
+    /// has none, because the derivation introduces only `uint` and `any`,
+    /// which every table already answers for.
+    pub(crate) fn with_rule_body(&self, name: &str, body: RuleBody) -> RuleTable {
+        let mut table = self.clone();
+        match table.own.get_mut(name) {
+            Some(rule) => rule.body = body,
+            None => {
+                table.own.insert(
+                    name.to_owned(),
+                    ResolvedRule {
+                        params: Vec::new(),
+                        span: body_span(&body),
+                        body,
+                        from_prelude: false,
+                    },
+                );
+            }
+        }
+        table
+    }
+
     fn check(&self) -> Result<(), TheoryError> {
         for rule in self.own.values() {
             self.walk_body(&rule.body, &rule.params)?;
@@ -355,6 +382,14 @@ fn merge(
     }
 
     Ok(table)
+}
+
+/// Where a rule body was written.
+fn body_span(body: &RuleBody) -> Span {
+    match body {
+        RuleBody::Type(ty) => ty.span,
+        RuleBody::Group(entry) => entry.span,
+    }
 }
 
 /// Whether two rule bodies are the same expression, in the crate's one
