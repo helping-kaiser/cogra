@@ -95,9 +95,18 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
     profile::insert_profile_version(&mut tx, actor, "First", None, None, None, None, order(1, 0))
         .await
         .expect("first insert");
-    profile::insert_profile_version(&mut tx, actor, "Second", None, None, None, None, order(1, 0))
-        .await
-        .expect("second insert");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Second",
+        None,
+        None,
+        None,
+        None,
+        order(1, 0),
+    )
+    .await
+    .expect("second insert");
     tx.commit().await.expect("commits");
 
     let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
@@ -130,15 +139,33 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
     let actor = seed_actor(&pool, "ada").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "Landed later", None, None, None, None, order(9, 0))
-        .await
-        .expect("first insert");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Landed later",
+        None,
+        None,
+        None,
+        None,
+        order(9, 0),
+    )
+    .await
+    .expect("first insert");
     tx.commit().await.expect("commits");
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "Landed earlier", None, None, None, None, order(2, 0))
-        .await
-        .expect("second insert");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Landed earlier",
+        None,
+        None,
+        None,
+        None,
+        order(2, 0),
+    )
+    .await
+    .expect("second insert");
     tx.commit().await.expect("commits");
 
     let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
