@@ -234,7 +234,10 @@ own explicit act. State changes — a pending entry landing, an
 expired one vanishing — appear only in a refetched page, and the
 refetched page carries the new state, never both. Clients neither
 merge newly pending items into a page they already hold nor
-reconcile a held page against a newer one.
+reconcile a held page against a newer one. What the snapshot fixes
+is membership and order: a node read afresh carries its own
+landing state to every held page showing it, where the entry stays
+put.
 
 ### Query budgets
 
