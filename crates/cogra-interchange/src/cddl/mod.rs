@@ -44,9 +44,11 @@ pub(crate) mod lex;
 pub(crate) mod parse;
 pub(crate) mod print;
 pub(crate) mod resolve;
+pub(crate) mod restraint;
 
 pub use companion::OpenTheory;
 pub use inclusion::{Inclusion, InclusionBreach, check_inclusion};
+pub use restraint::{ImplicitReach, Provision, Restrained, RestraintReport};
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -248,6 +250,28 @@ impl Theory {
     /// ```
     pub fn open_companion(&self) -> OpenTheory {
         companion::derive(self)
+    }
+
+    /// Which positions of this theory reach a restrained value, and how.
+    ///
+    /// The report is computed, never enforced: a theory reaching a float
+    /// through `any` is refused where it is acquired, and the report is
+    /// what such a refusal carries. Nothing here changes what a document
+    /// satisfies (`design.md`, `dec:xchg:restraint-enforcement`).
+    ///
+    /// ```
+    /// use cogra_interchange::Theory;
+    ///
+    /// let named = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => float64}"#)
+    ///     .expect("an assignable theory");
+    /// assert!(named.restraint().is_restrained());
+    ///
+    /// let reaching = Theory::parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => any}"#)
+    ///     .expect("an assignable theory");
+    /// assert_eq!(reaching.restraint().implicit_reaches().count(), 3);
+    /// ```
+    pub fn restraint(&self) -> RestraintReport {
+        restraint::report(self)
     }
 
     fn slice(&self, span: Span) -> &str {

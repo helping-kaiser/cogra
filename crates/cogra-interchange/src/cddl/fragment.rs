@@ -497,7 +497,16 @@ fn literal_uint(number: &NumberToken) -> Option<u64> {
     if number.is_float || number.text.starts_with('-') {
         return None;
     }
-    let text = &number.text;
+    uint_text(&number.text)
+}
+
+/// The value of an unsigned integer as CDDL spells one: decimal, `0x`, or
+/// `0b`.
+///
+/// Shared with the places that read a `uint` outside a literal — a tag
+/// number, an additional information — so that every base CDDL admits is
+/// read the same way wherever it stands.
+pub(crate) fn uint_text(text: &str) -> Option<u64> {
     if let Some(hex) = text.strip_prefix("0x") {
         u64::from_str_radix(hex, 16).ok()
     } else if let Some(bin) = text.strip_prefix("0b") {
