@@ -319,6 +319,19 @@ can land in any order — 2.3 (topics) needs only the text core.
 - The score readout — [design.md §7](design.md) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.
+- **The feed, detail, and creation surfaces rework** on both
+  clients: the feed gains a filter section (sorting follows once
+  ranks exist), and the presentation of posts and comments — cards,
+  detail views, and the compose flows — is rebuilt around the
+  ranked feed. Deferred elements that land with this rework rather
+  than piecemeal before it: the landed-only ("show only settled
+  content") control (the `includePending` mechanism is already
+  wired on both clients), the license qualifiers on the feed card
+  (already fetched), the author's did-not-land notice
+  ([design.md §9](design.md); rides `stagedWrite`/`EXPIRED`), and
+  the composer's unchanged-snapshot guard (disable save when the
+  edit is byte-identical; the protocol keeps accepting priced
+  no-ops).
 - **Hand test:** ranked feed on the device; later, the same feed
   ranked by the container and on-device (web ranks backend-direct
   until the Wasm stage — [web.md](web.md)).
