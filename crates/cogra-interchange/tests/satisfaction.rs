@@ -422,6 +422,26 @@ fn arrays_nest() {
     ));
 }
 
+/// A rule that recurses through a value descends one call frame per level of
+/// the document it matches. A document nested past the matcher's depth bound
+/// is answered as a mismatch rather than overflowing the stack: a theory and
+/// a document a hostile party controls must not crash the judge.
+#[test]
+fn a_recursive_theory_against_a_deep_document_is_bounded() {
+    let theory = theory_with("nest", "nest = [nest] / 0");
+
+    let deep = |levels: usize| {
+        let mut bytes = vec![0x81u8; levels];
+        bytes.push(0x00);
+        Value::from_canonical_bytes(&bytes).expect("nesting is bounded by the input")
+    };
+
+    // Shallow enough to match within the bound.
+    assert!(satisfies(&document_of(deep(64)), &theory).holds());
+    // Far past the bound: a verdict, not a crash.
+    assert!(!satisfies(&document_of(deep(500_000)), &theory).holds());
+}
+
 #[test]
 fn an_array_member_key_is_documentary() {
     assert!(admits(
