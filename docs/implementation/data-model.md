@@ -89,24 +89,36 @@ govern; every overlay table is rebuildable by replaying the folds.
 **Layered properties** — the append-only history pattern of
 [layers.md](../primitive/layers.md), applied where CoGra owns the
 store — take the same storage shape as display-content versioning
-below: an entity row plus append-only version rows keyed
-`(entity_id, created_at)`, newest row wins, history is the rows
-themselves. Governed overlay properties (the parameter carrier)
-version this way, so the operational cache preserves the same
-auditable history the charter schedule carries on L1. The
+below: an entity row plus append-only version rows, ordered by the
+landing coordinates of the records that promoted them, and history
+is the rows themselves. Governed overlay properties (the parameter
+carrier) version this way, so the operational cache preserves the
+same auditable history the charter schedule carries on L1 — and
+preserves its order, which is L1's and not the host's clock. The
 carrier's concrete shape:
 
 ```sql
 -- The network parameter carrier (network.md §4): append-only
--- version rows per governed parameter; the newest row is the value
--- in force; the genesis seed (the Charter payload's values) is the
--- fold's base case; each landed finalization appends.
+-- version rows per governed parameter; the value in force is the
+-- one the last finalization to land published; the genesis seed
+-- (the Charter payload's values) is the fold's base case,
+-- carrying no coordinates because no record stands behind it.
 CREATE TABLE network_parameter_versions (
-    parameter  TEXT        NOT NULL,
-    value      JSONB       NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (parameter, created_at)
+    parameter    TEXT        NOT NULL,
+    value        JSONB       NOT NULL,
+    landed_epoch BIGINT,
+    act_time     BIGINT,
+    position     BIGINT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version_id   BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX network_parameter_versions_current_idx
+    ON network_parameter_versions (parameter,
+                                   landed_epoch DESC NULLS LAST,
+                                   act_time     DESC NULLS LAST,
+                                   position     DESC NULLS LAST,
+                                   created_at DESC, version_id DESC);
 ```
 
 ---
@@ -331,10 +343,12 @@ schema encodes this as a split per content kind:
   reference columns (`author_id`, containment caches), and
   `created_at`. This row is what foreign keys reference.
 - A **versions table** (`post_versions`, …) holds the mutable
-  display fields as append-only rows keyed
-  `(entity_id, created_at)`. The **current** value is the newest
-  row; the entity's `updated_at` is derived as the newest
-  version's `created_at` — no stored column.
+  display fields as append-only rows, each keyed by its own
+  `version_id` and ordered by the **landing coordinates of the
+  record that promoted it** — `(landed_epoch, act_time, position)`,
+  the same triple the entity rows carry. The **current** value is
+  the version whose record landed last; the entity's `updated_at`
+  is derived as that version's `created_at` — no stored column.
 
 A **redaction tombstone** is just another version row: its
 `redaction_reason` is non-null, its content fields carry the
@@ -346,9 +360,17 @@ sensitive flags and the verdict vocabulary are operational
 metadata rows; the substrate-visible verdict is the Tag record
 ([moderation.md](../instances/moderation.md)).
 
-Current-version reads are `ORDER BY created_at DESC LIMIT 1` per
-entity (or `DISTINCT ON (entity_id)` for lists), served by the
-versions PK.
+Current-version reads order
+`landed_epoch DESC NULLS LAST, act_time DESC NULLS LAST,
+position DESC NULLS LAST, created_at DESC, version_id DESC`
+and take the first row per entity, served by the table's
+current-version index. `created_at` is display metadata: it decides
+only between rows the graph never ordered — a genesis or
+registration seed, which precedes every record. A version whose
+record has not landed sorts above every landed one, because a
+prepared record is its author's content from the moment they sign
+it ([substrate.md §6](../primitive/substrate.md)) and it has no
+place in the order yet.
 
 ### Foundation
 
@@ -468,10 +490,12 @@ CREATE TABLE user_credentials (
 -- act_payloads. Registration seeds the first row with
 -- display_name = handle; genesis seeds the system actors'. A
 -- Collective's changes land through its governed edit flow
--- (substrate.md §9). The key is the row's own `version_id`: two
+-- (substrate.md §9). Promotion stamps the record's landing
+-- coordinates, and they are what order the versions; the seeded
+-- first row carries none, since no record stands behind it. The
+-- row's own `version_id` is the key, and the last tiebreak: two
 -- writes can share one `created_at` — `now()` is the transaction
--- timestamp — and the newest-wins read breaks that tie on
--- `version_id`.
+-- timestamp.
 CREATE TABLE actor_profile_versions (
     actor_id         UUID        NOT NULL REFERENCES actors(id),
     display_name     TEXT        NOT NULL,
@@ -480,11 +504,19 @@ CREATE TABLE actor_profile_versions (
     cover_id         UUID        REFERENCES media_attachments(id),
     website_url      TEXT,
     redaction_reason TEXT,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 CREATE INDEX actor_profile_versions_current_idx
-    ON actor_profile_versions (actor_id, created_at DESC, version_id DESC);
+    ON actor_profile_versions (actor_id,
+                               landed_epoch DESC NULLS LAST,
+                               act_time     DESC NULLS LAST,
+                               position     DESC NULLS LAST,
+                               created_at DESC, version_id DESC);
 ```
 
 ### Content nodes
@@ -546,11 +578,19 @@ CREATE TABLE posts (
     CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
 
--- Post versions: append-only display content. One row per edit;
--- the newest row is the rendered post. A version row carries no
--- landing coordinates of its own, so an unlanded edit is marked by
--- `pending` instead: its new text shows immediately, and the row is
--- deleted if the edit expires, leaving the previous version rendered.
+-- Post versions: append-only display content. One row per edit; the
+-- rendered post is the version whose edit record landed last, under
+-- the same landing coordinates the entity row carries. `pending`
+-- marks an edit whose record has not landed: its new text shows
+-- immediately, above every landed version, and the row is deleted if
+-- the edit expires, leaving the previous version rendered. The
+-- coordinates cannot carry that mark themselves, because a NULL also
+-- means "no record stands behind this row".
+--
+-- `(post_id, created_at)` stays unique though the key moves to
+-- `version_id`: here `created_at` is one write's pre-commitment
+-- instant, and the pre-sign leg's retry idempotence is an ON CONFLICT
+-- on exactly that pair.
 CREATE TABLE post_versions (
     post_id          UUID        NOT NULL REFERENCES posts(id),
     title            TEXT,       -- optional headline
@@ -558,9 +598,20 @@ CREATE TABLE post_versions (
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (post_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    UNIQUE (post_id, created_at),
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX post_versions_current_idx
+    ON post_versions (post_id, pending DESC,
+                      landed_epoch DESC NULLS LAST,
+                      act_time     DESC NULLS LAST,
+                      position     DESC NULLS LAST,
+                      created_at DESC, version_id DESC);
 
 -- Comments: responses to any commentable content node.
 -- Comments are full nodes in the graph (can be liked, replied to).
@@ -587,9 +638,20 @@ CREATE TABLE comment_versions (
     content          TEXT        NOT NULL,
     redaction_reason TEXT,
     pending          BOOLEAN     NOT NULL DEFAULT FALSE,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (comment_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    UNIQUE (comment_id, created_at),
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX comment_versions_current_idx
+    ON comment_versions (comment_id, pending DESC,
+                         landed_epoch DESC NULLS LAST,
+                         act_time     DESC NULLS LAST,
+                         position     DESC NULLS LAST,
+                         created_at DESC, version_id DESC);
 
 -- Chats: conversation containers.
 -- Privacy is per-message (chat_messages.content_privacy), not per-chat —
@@ -609,9 +671,19 @@ CREATE TABLE chat_versions (
     description      TEXT,
     image_id         UUID        REFERENCES media_attachments(id),
     redaction_reason TEXT,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (chat_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX chat_versions_current_idx
+    ON chat_versions (chat_id,
+                      landed_epoch DESC NULLS LAST,
+                      act_time     DESC NULLS LAST,
+                      position     DESC NULLS LAST,
+                      created_at DESC, version_id DESC);
 
 -- Chat messages: individual messages within a chat.
 CREATE TABLE chat_messages (
@@ -644,9 +716,19 @@ CREATE TABLE chat_message_versions (
                                                                   AND epoch >= 1)
                                  ),
     redaction_reason TEXT,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (chat_message_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX chat_message_versions_current_idx
+    ON chat_message_versions (chat_message_id,
+                              landed_epoch DESC NULLS LAST,
+                              act_time     DESC NULLS LAST,
+                              position     DESC NULLS LAST,
+                              created_at DESC, version_id DESC);
 
 -- Items: physical or digital goods (future)
 CREATE TABLE items (
@@ -659,9 +741,19 @@ CREATE TABLE item_versions (
     name             TEXT        NOT NULL,
     description      TEXT,
     redaction_reason TEXT,
+    landed_epoch     BIGINT,
+    act_time         BIGINT,
+    position         BIGINT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (item_id, created_at)
+    version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE INDEX item_versions_current_idx
+    ON item_versions (item_id,
+                      landed_epoch DESC NULLS LAST,
+                      act_time     DESC NULLS LAST,
+                      position     DESC NULLS LAST,
+                      created_at DESC, version_id DESC);
 
 -- Hashtag registry — the L2 naming service for Types
 -- (hashtag.md): name lookup + metadata, including the reserved

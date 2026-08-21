@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE comment_versions\n            SET pending = FALSE, landed_epoch = $3, act_time = $4,\n                position = $5\n         WHERE comment_id = $1 AND created_at = $2 AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "640b63612c1385fdd8b017fe831ed8a6ebb307f75ded659b00d5a14d8d80159c"
+}

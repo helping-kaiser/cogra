@@ -70,6 +70,17 @@ turbine = "1.2.1"
 truth = "1.4.5"
 mockwebserver = "5.4.0"
 robolectric = "4.16.1"
+# Robolectric's android-all sandbox jars, one per API level the suites
+# launch on: the library modules' default (minSdk 26), the two levels
+# `RecoveryCodeConfirmTest` pins with `@Config`, and `app`'s targetSdk.
+# The coordinates are Robolectric's own hard-coded SDK table
+# (`DefaultSdkProvider.populateSdks`, `-i` suffix =
+# `PREINSTRUMENTED_VERSION`), so they move with the `robolectric` version
+# above — a mismatch fails the suite with the resolver's directory listing.
+androidAllApi26 = "8.0.0_r4-robolectric-r1-i7"
+androidAllApi32 = "12.1-robolectric-8229987-i7"
+androidAllApi33 = "13-robolectric-9030017-i7"
+androidAllApi36 = "16-robolectric-13921718-i7"
 androidxTestExt = "1.3.0"
 androidxTestCore = "1.7.0"
 
@@ -133,6 +144,10 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+robolectric-android-all-api26 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "androidAllApi26" }
+robolectric-android-all-api32 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "androidAllApi32" }
+robolectric-android-all-api33 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "androidAllApi33" }
+robolectric-android-all-api36 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "androidAllApi36" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExt" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 

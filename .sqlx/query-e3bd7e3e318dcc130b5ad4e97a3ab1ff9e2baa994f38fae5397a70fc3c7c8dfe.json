@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id,\n                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                  c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY created_at DESC LIMIT 1\n           ) v ON TRUE\n           WHERE c.id = $1",
+  "query": "SELECT c.id, c.target_id, c.target_type, c.author_id,\n                  c.l1_node_id, c.license, c.landed_epoch, c.act_time,\n                  c.position, c.created_at,\n                  v.content AS \"content!\", v.redaction_reason,\n                  v.pending AS \"version_pending!\",\n                  v.created_at AS \"version_created_at!\"\n           FROM comments c\n           JOIN LATERAL (\n               SELECT content, redaction_reason, pending, created_at\n               FROM comment_versions WHERE comment_id = c.id\n               ORDER BY pending DESC,\n                        landed_epoch DESC NULLS LAST,\n                        act_time DESC NULLS LAST,\n                        position DESC NULLS LAST,\n                        created_at DESC, version_id DESC\n               LIMIT 1\n           ) v ON TRUE\n           WHERE c.l1_node_id = $1",
   "describe": {
     "columns": [
       {
@@ -76,7 +76,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -96,5 +96,5 @@
       false
     ]
   },
-  "hash": "ec6bfd593e1a7d4aa8c32ae60f57f55c9f40de0f1fc1d73faebe78413c867f85"
+  "hash": "e3bd7e3e318dcc130b5ad4e97a3ab1ff9e2baa994f38fae5397a70fc3c7c8dfe"
 }
