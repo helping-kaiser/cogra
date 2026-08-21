@@ -175,6 +175,39 @@ pub(crate) fn check(cddl: &Cddl) -> Result<Fragment, TheoryError> {
     })
 }
 
+/// The enumerated content entries of a theory, as they were parsed.
+///
+/// Keys 0 and 1 are the envelope and are not among them. Every entry of a
+/// theory that [`check`] admitted fits the shapes this reads, so nothing is
+/// skipped in practice; it skips rather than refuses because its callers
+/// hold a theory whose membership is already decided and have no refusal
+/// left to raise.
+pub(crate) fn content_entries(cddl: &Cddl) -> Vec<(ContentKey, bool, &Type)> {
+    let Some(root) = cddl.rules.first() else {
+        return Vec::new();
+    };
+    let Ok(entries) = root_entries(root) else {
+        return Vec::new();
+    };
+    entries
+        .iter()
+        .filter_map(|entry| envelope_entry(entry).ok())
+        .filter_map(|(key, required, value)| Some((ContentKey::new(key).ok()?, required, value)))
+        .collect()
+}
+
+/// The literal unsigned key an entry pins, where it pins one.
+///
+/// The one reading of "which key is this entry" in the crate, so that the
+/// membership checker and the companion's rewrite cannot disagree about
+/// which entry is key 1.
+pub(crate) fn entry_key(entry: &GroupEntry) -> Option<u64> {
+    match &entry.kind {
+        GroupEntryKind::Member { key: Some(key), .. } => literal_key(key).ok(),
+        _ => None,
+    }
+}
+
 /// Clauses 1 and 5: the root is one inline map with one group choice.
 fn root_entries(root: &Rule) -> Result<&[GroupEntry], TheoryError> {
     if root.params.is_some() {
