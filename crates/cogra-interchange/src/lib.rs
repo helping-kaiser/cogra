@@ -40,6 +40,7 @@
 
 #![warn(missing_docs, missing_debug_implementations)]
 
+mod accept;
 mod cddl;
 mod decode;
 mod encode;
@@ -51,6 +52,9 @@ mod registry;
 mod value;
 mod version;
 
+pub use accept::{
+    Instrument, Rejection, RejectionCause, Under, Verdict, accept, dispatch, dispatch_prefix,
+};
 pub use cddl::{
     BaseTheory, ImplicitReach, Inclusion, InclusionBreach, KeySlot, Mismatch, MismatchKind,
     OpenTheory, Provision, Restrained, RestraintReport, Satisfaction, Theory, check_inclusion,
