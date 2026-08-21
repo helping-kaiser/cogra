@@ -473,7 +473,7 @@ pub fn satisfies_open(d: &Document, s: &OpenTheory) -> Satisfaction;
 pub fn satisfies_global(d: &Document) -> Satisfaction;
 ```
 
-No `Result` appears, and the absence is the design. Every way satisfaction could fail to *compute* — unparseable source, a theory outside the fragment, a `.regexp` pattern that will not compile, a control operator the evaluator does not implement — is caught by `Theory::parse` and surfaces as a `TheoryError` there. By the time a `Theory` exists, evaluation is total: the document is finite, the theory is finite, and every pattern in it was compiled — not executed — at parse time (`dec:xchg:regexp-seam`). Totality is not a claim about how long a match takes; the engine's runtime profile is the separate duty of (`req:xchg:regexp-guard`). Failing to satisfy is then never an error but a negative judgment, which is what (`[ICX-judg:interchange:satisfaction]`) says it is.
+No `Result` appears, and the absence is the design. Every way satisfaction could fail to *compute* — unparseable source, a theory outside the fragment, a `.regexp` pattern that will not compile, a control operator the evaluator does not implement — is caught by `Theory::parse` and surfaces as a `TheoryError` there. By the time a `Theory` exists, evaluation is total: the document is finite, the theory is finite, and every pattern in it was compiled — not executed — at parse time (`dec:xchg:regexp-seam`). Two boundedness facts carry the claim past its naive reading, both measured during implementation. A non-productive rule cycle — `a = b`, `b = a` — parses, resolves, and sits in the fragment, and finiteness of the theory alone does not stop a walk through it; the evaluator carries a visited set, under which such a rule denotes no value. And a `.regexp` match runs under the seam's deterministic operation budget, whose exhaustion is the judgment's one runtime refusal, rendered as a located mismatch and never as an answer (`req:xchg:regexp-guard`). Failing to satisfy is then never an error but a negative judgment, which is what (`[ICX-judg:interchange:satisfaction]`) says it is.
 
 One evaluation detail is settled by the fragment rather than by us. In general CDDL, matching a map against a group carrying both explicit entries and a wildcard is a search; here the assignable fragment pins every content key to a literal unsigned integer, so each map entry has at most one explicit entry it can match and the remainder falls to the wildcard — matching is deterministic, and the fragment's structural restriction is what buys it. The precise matching rules to implement are RFC 8610 Appendix C together with the cut semantics of its §3.5.4, verified against that document at implementation rather than inferred here.
 
@@ -531,6 +531,8 @@ It is what the sentence says; it is cheap and obviously decidable, where compari
 
 `Theory::open_companion` is a pure, total rewrite of the parsed theory with exactly two edits and no third: the second element of the array pinned at key 1 becomes `uint`, and the base theory's wildcard `* (uint .gt 1) => any` is added to the map, the enumerated content keys staying exactly as they stand with their types and their requiredness (`[ICX-def:interchange:open-companion]`). Because the derivation is a rewrite of an already-parsed tree, "nothing else moves" is checkable by comparison rather than by inspection: the obligation in (`tab:xchg:test-sizing`) re-prints both theories and asserts that the companion's printed form differs from the assigned theory's in exactly those two places. The companion is derived once per acquisition and memoized on the major line for the current ceiling, which keeps `dispatch` allocation-free; the memo is not the registry R, which is a map from coordinates to assigned theories and into which no companion is ever placed.
 
+One semantic fact of the derivation is flagged for the conventions' owner rather than decided here, found by the evaluator's tests: because S's enumerated entries use the non-cut `=>`, an *optional* key whose value fails the enumerated type falls through to the companion's wildcard under RFC 8610 §3.5.4 — `? 2 => tstr` under Open(S) admits an integer at key 2 — while a required key still binds, since a required entry that finds no member fails its group outright. If tolerant validation is meant to bind optional keys' types too, the derivation must add a cut to the enumerated keys, which is a change to (`[ICX-def:interchange:open-companion]`)'s two-edit contract, not to the evaluator.
+
 **Signature (Restraint report)** · `sig:xchg:restraint-api`
 
 ```rust
@@ -587,10 +589,12 @@ impl XsdPattern {
     /// refused at `Theory::parse` rather than at match time.
     pub(crate) fn compile(pattern: &str) -> Result<XsdPattern, RegexpError>;
 
-    /// Whether the pattern matches the whole of `text`. XSD regular
-    /// expressions are implicitly anchored at head and tail, so there is no
-    /// partial-match method here and never will be.
-    pub(crate) fn is_match(&self, text: &str) -> bool;
+    /// Whether the pattern matches the whole of `text`, within the seam's
+    /// deterministic operation budget. XSD regular expressions are
+    /// implicitly anchored at head and tail, so there is no partial-match
+    /// method here and never will be; exhaustion of the budget is
+    /// `RegexpError::BudgetExhausted`, a refusal and never an answer.
+    pub(crate) fn is_match(&self, text: &str) -> Result<bool, RegexpError>;
 
     /// The pattern as given, for diagnostics.
     pub(crate) fn source(&self) -> &str;
@@ -646,7 +650,7 @@ The conventions ship exactly one `.regexp` pattern, `namespace-form` in the base
 ```rust
 /// A reader's registry state: assigned coordinates with their immutable
 /// theory objects, holding downward-closed within each major.
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Registry { /* private */ }
 
 impl Registry {
@@ -928,6 +932,8 @@ pub enum Error {
     #[error(transparent)] Acquire(#[from] AcquireError),
 }
 ```
+
+`Registry` derives `Clone`, which is what the ruled sharing model (`dec:xchg:theory-sharing`) asks of it: a consumer wanting a registry on another thread clones it. `Instrument` and `Under` are exhaustive as sketched — they are the dispatch's instruments, not verdicts, and their arms are the acceptance definition's own closed set; `#[non_exhaustive]` stays on the verdict and error enums, where growth is genuinely expected.
 
 The composite operations compose the taxonomy rather than flattening it: `Document::from_canonical_bytes` surfaces `EnvelopeError`, with `NotCanonical` carrying the decoder's located refusal as its source — bytes outside the data language and a canonical value that is not a document are different answers, and the arm keeps them distinguishable. `BadLabel` carries the scanner's refusal of an offered string; `BadLabelType` covers a key-0 value that offers no string at all. `ReservedContentKey` is raised by `ContentKey::new` — inside `try_from_value` keys 0 and 1 are consumed as the envelope before content is read, so no content key at or below 1 can reach it there.
 

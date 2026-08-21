@@ -185,6 +185,16 @@ pub fn check_inclusion(earlier: &Theory, later: &Theory) -> Result<Inclusion, Th
         return Err(TheoryError::Incomparable);
     }
 
+    Ok(compare(earlier, later))
+}
+
+/// The key-by-key comparison, over two theories already known comparable.
+///
+/// The registry reaches the check this way: it has established the label,
+/// the major, and the ascending minors before it asks, so the `Result` of
+/// [`check_inclusion`] would carry an arm it cannot reach
+/// (`sig:xchg:registry-api`).
+pub(crate) fn compare(earlier: &Theory, later: &Theory) -> Inclusion {
     let before = keyed(earlier);
     let after = keyed(later);
     let mut breaches = Vec::new();
@@ -222,9 +232,9 @@ pub fn check_inclusion(earlier: &Theory, later: &Theory) -> Result<Inclusion, Th
     }
 
     if breaches.is_empty() {
-        Ok(Inclusion::Holds)
+        Inclusion::Holds
     } else {
-        Ok(Inclusion::Violated(breaches))
+        Inclusion::Violated(breaches)
     }
 }
 
