@@ -1,15 +1,23 @@
 //! The metatheorem obligations of the design's property table, one per
 //! theorem, named after it so that a failure names what it broke.
 //!
-//! Slices 1 and 2 owe five: unique names, canonical order, iterative
-//! teardown, one spelling, and bounded determination. The description
-//! language adds two whose subject is a chain of minors: conservativity,
-//! and the composition of inclusion the registry's one-comparison rule
-//! rests on. The rest arrive with the slices whose subjects they are.
+//! Five are about the data language and the envelope: unique names,
+//! canonical order, iterative teardown, one spelling, and the bounded
+//! prefix. Three are stated over a chain of minors: conservativity,
+//! forward compatibility, and the composition of inclusion the registry's
+//! one-comparison rule rests on. The last are stated over a chain and a
+//! growing reader: acceptance monotonicity, the prefix path's agreement
+//! with the full envelope, and the stamping search against a linear scan.
+//!
+//! The registry properties quantify over *states*, not just over inputs:
+//! each generated chain is acquired one minor at a time, and the assertion
+//! is about how a verdict moves as the reader grows.
 
 use cogra_interchange::{
-    Array, Bytes, Content, ContentKey, Document, Envelope, Float, LabelError, MAX_ENVELOPE_PREFIX,
-    Map, NamespaceLabel, Negative, Simple, Tag, Text, Theory, Value, Version, check_inclusion,
+    Array, Bytes, Content, ContentKey, Coordinate, Document, Envelope, Float, Instrument,
+    LabelError, MAX_ENVELOPE_PREFIX, Map, NamespaceLabel, Negative, Registry, Rejection, Simple,
+    Tag, Text, Theory, Value, Verdict, Version, accept, check_inclusion, dispatch, dispatch_prefix,
+    satisfies, satisfies_global, satisfies_open,
 };
 use proptest::prelude::*;
 
@@ -271,6 +279,121 @@ fn consecutive_inclusion(chain: &[Theory]) -> bool {
     })
 }
 
+/// A value of the type a generated slot carries.
+///
+/// One value per member of `CHAIN_TYPES`, varied by the seed so that the
+/// property is quantified over documents and not over one fixture. A type
+/// outside that set means the chain generator grew a case this did not, and
+/// the panic says so rather than silently generating a document that
+/// conforms to nothing.
+fn value_of(ty: &str, seed: u8) -> Value {
+    match ty {
+        "uint" => Value::Unsigned(u64::from(seed)),
+        "tstr" => Value::Text(Text::from(format!("v{seed}"))),
+        "[* uint]" => Value::Array(Array::new(
+            (0..u64::from(seed % 4))
+                .map(Value::Unsigned)
+                .collect::<Vec<Value>>(),
+        )),
+        "{a: 1}" => Value::Map(
+            Map::new([(Value::Text(Text::from("a".to_owned())), Value::Unsigned(1))])
+                .expect("one key"),
+        ),
+        other => {
+            panic!("the chain generator draws a type this generator has no value for: {other}")
+        }
+    }
+}
+
+/// A document that conforms to a generated theory: every required key, and
+/// the optional ones the flags select.
+fn conforming(theory: &Theory, seeds: &[u8], carried: &[bool]) -> Document {
+    let mut content = Content::new();
+    for (index, slot) in theory.slots().enumerate() {
+        let carry = slot.required() || carried[index % carried.len()];
+        if !carry {
+            continue;
+        }
+        content.insert(
+            slot.key(),
+            value_of(slot.type_source(), seeds[index % seeds.len()]),
+        );
+    }
+    let (major, minor) = theory.coordinate();
+    Document::new(
+        Envelope::new(theory.label().clone(), Version::new(major, minor, 0)),
+        content,
+    )
+}
+
+// -- growing readers ------------------------------------------------------
+
+/// The label every generated theory pins, and every generated chain
+/// document carries.
+fn chain_label() -> NamespaceLabel {
+    NamespaceLabel::parse("com.example").expect("the label the chain generator writes")
+}
+
+/// A reader holding the first `upto` minors of the chain, minus the one at
+/// `skipped` — which stands for a minor the owner never assigned, so that
+/// its absence below the ceiling is knowledge.
+///
+/// A refusal here is a failure of the crate and not of the generator: the
+/// chain stands in consecutive inclusion by the premise, and inclusion
+/// composes, so every acquisition below is one the registry must take.
+fn reader(chain: &[Theory], upto: usize, skipped: Option<usize>) -> Registry {
+    let mut registry = Registry::new();
+    for (minor, theory) in chain.iter().enumerate().take(upto) {
+        if Some(minor) == skipped {
+            continue;
+        }
+        let coord = Coordinate::new(chain_label(), 1, minor as u64);
+        if let Err(error) = registry.acquire(coord, theory.clone()) {
+            panic!(
+                "an additive minor of an included chain was refused: {error:?} over {}",
+                theory.to_cddl()
+            );
+        }
+    }
+    registry
+}
+
+/// Where a verdict stands on the way to a strict acceptance: rejected for
+/// an unheld major, accepted tolerantly, accepted strictly. `None` is a
+/// verdict a conforming document is never supposed to meet.
+fn convergence(verdict: &Verdict, stamp: u64) -> Option<u8> {
+    match verdict {
+        Verdict::Rejected(Rejection::UnheldMajor { major: 1 }) => Some(0),
+        Verdict::AcceptedTolerantly { .. } => Some(1),
+        Verdict::AcceptedStrictly { minor } if *minor == stamp => Some(2),
+        _ => None,
+    }
+}
+
+/// The instrument as a comparable rendering — which arm, and which
+/// theory or companion it names.
+fn shape(instrument: &Instrument<'_>) -> String {
+    match instrument {
+        Instrument::Strict { minor, theory } => format!("strict {minor}: {}", theory.to_cddl()),
+        Instrument::Tolerant { floor, companion } => {
+            format!("tolerant {floor}: {}", companion.to_cddl())
+        }
+        other => format!("{other:?}"),
+    }
+}
+
+/// The least held minor whose theory admits this content, found the way
+/// the binary search is not: one probe at a time, in order.
+fn scan(registry: &Registry, content: &Content) -> Option<u64> {
+    registry.minors(&chain_label(), 1).find(|minor| {
+        let coord = Coordinate::new(chain_label(), 1, *minor);
+        let theory = registry.theory(&coord).expect("a minor the registry lists");
+        let (major, held) = theory.coordinate();
+        let envelope = Envelope::new(chain_label(), Version::new(major, held, 0));
+        satisfies(&Document::new(envelope, content.clone()), theory).holds()
+    })
+}
+
 /// Drop the repeated keys a generator has no way to avoid, so that the
 /// constructor's duplicate refusal is not what the property measures.
 fn map_of(pairs: Vec<(Value, Value)>) -> Map {
@@ -447,6 +570,56 @@ proptest! {
         }
     }
 
+    /// The base theory is satisfied by every document, before any
+    /// assignment is consulted — which is what "constitutionally prior"
+    /// buys, and what makes reaching it without dispatch sound.
+    ///
+    /// It is also the crosscheck of the two label recognizers at the
+    /// document level: key 0 of a `Document` came through the ABNF scanner,
+    /// and this judgment runs it through the base theory's `.regexp` and
+    /// its `.size (3..255)`.
+    #[test]
+    fn every_document_satisfies_the_base_theory(document in any_document()) {
+        prop_assert!(satisfies_global(&document).holds());
+    }
+
+    /// Forward compatibility: a document a later minor's theory admits is
+    /// admitted by the open companion of every earlier assigned minor.
+    ///
+    /// This is what lets a reader below the stamp still read: it judges
+    /// against the companion of the greatest theory it holds, and the
+    /// metatheorem says the answer agrees with the emitter's. Quantified
+    /// over the same generated chains conservativity is, under the same
+    /// premise the registry actually checks.
+    #[test]
+    fn forward_compatibility_a_conforming_document_meets_every_earlier_companion(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+    ) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        for (index, theory) in chain.iter().enumerate() {
+            let document = conforming(theory, &seeds, &carried);
+            prop_assert!(
+                satisfies(&document, theory).holds(),
+                "the generated document does not conform to the theory it was built from: {}",
+                theory.to_cddl()
+            );
+            for earlier in &chain[..=index] {
+                let open = earlier.open_companion();
+                prop_assert!(
+                    satisfies_open(&document, &open).holds(),
+                    "a document of minor {:?} fails the companion of minor {:?}: {:?}",
+                    theory.coordinate(),
+                    earlier.coordinate(),
+                    satisfies_open(&document, &open)
+                );
+            }
+        }
+    }
+
     /// Conservativity: a content key absent from some earlier assigned
     /// minor is optional in every later minor's theory.
     ///
@@ -473,6 +646,157 @@ proptest! {
                 }
             }
         }
+    }
+
+    /// Acceptance monotonicity: reader growth converges every verdict.
+    ///
+    /// Walked over the states a chain generates, one acquisition at a
+    /// time. A conforming document meets exactly three verdicts on the
+    /// way — rejected for an unheld major, accepted tolerantly, accepted
+    /// strictly — and it meets them in that order and never goes back: a
+    /// strict acceptance is final, and a tolerant one is provisional only
+    /// upward.
+    #[test]
+    fn acceptance_monotonicity_a_verdict_moves_only_toward_the_stamp(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+        index in 0usize..8,
+    ) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        let stamped = index % chain.len();
+        let document = conforming(&chain[stamped], &seeds, &carried);
+
+        let mut ranks = Vec::new();
+        for upto in 0..=chain.len() {
+            let registry = reader(&chain, upto, None);
+            let verdict = accept(&registry, &document);
+            let rank = convergence(&verdict, stamped as u64);
+            prop_assert!(
+                rank.is_some(),
+                "a conforming document met {:?} at a reader holding {} minors",
+                verdict,
+                upto
+            );
+            ranks.push(rank.unwrap_or(0));
+        }
+
+        prop_assert!(
+            ranks.windows(2).all(|pair| pair[0] <= pair[1]),
+            "a verdict moved away from acceptance over growing states: {ranks:?}"
+        );
+        prop_assert_eq!(
+            ranks.last().copied(),
+            Some(2),
+            "a reader holding the stamp does not accept strictly"
+        );
+    }
+
+    /// The other convergence: a stamp the ceiling passes without ever
+    /// meeting it turns from tolerant acceptance to rejection, the false
+    /// claim becoming checkable the moment knowledge reaches it.
+    #[test]
+    fn acceptance_monotonicity_a_stamp_never_assigned_turns_to_rejection(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+        index in 0usize..8,
+    ) {
+        if !consecutive_inclusion(&chain) || chain.len() < 2 {
+            return Ok(());
+        }
+        // Never minor 0: the skipped minor must sit above a floor for the
+        // tolerant phase to exist at all.
+        let skipped = 1 + index % (chain.len() - 1);
+        let document = conforming(&chain[skipped], &seeds, &carried);
+
+        for upto in 0..=chain.len() {
+            let registry = reader(&chain, upto, Some(skipped));
+            let verdict = accept(&registry, &document);
+            match registry.ceiling(&chain_label(), 1) {
+                None => prop_assert_eq!(
+                    verdict,
+                    Verdict::Rejected(Rejection::UnheldMajor { major: 1 })
+                ),
+                Some(ceiling) if ceiling < skipped as u64 => prop_assert_eq!(
+                    verdict,
+                    Verdict::AcceptedTolerantly { floor: ceiling }
+                ),
+                Some(ceiling) => prop_assert_eq!(
+                    verdict,
+                    Verdict::Rejected(Rejection::UnassignedStamp {
+                        minor: skipped as u64,
+                        ceiling,
+                    })
+                ),
+            }
+        }
+    }
+
+    /// Bounded determination, at the surface that makes it usable: the
+    /// instrument chosen from at most a 296-byte prefix is the instrument
+    /// chosen from the whole envelope — the same arm, and the same theory
+    /// or companion inside it.
+    #[test]
+    fn bounded_determination_the_prefix_routes_as_the_envelope_does(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+        index in 0usize..8,
+        held in 0usize..8,
+        stranger in any_document(),
+    ) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        let registry = reader(&chain, held % (chain.len() + 1), None);
+        let stamped = conforming(&chain[index % chain.len()], &seeds, &carried);
+
+        // One document of the label the reader knows, and one of whatever
+        // the document generator drew — most often a label it does not.
+        for document in [stamped, stranger] {
+            let bytes = document.to_canonical_bytes();
+            let cut = bytes.len().min(MAX_ENVELOPE_PREFIX);
+            let early = dispatch_prefix(&registry, &bytes[..cut])
+                .expect("the envelope of a document this crate wrote lies inside the bound");
+            prop_assert_eq!(
+                shape(&early),
+                shape(&dispatch(&registry, document.envelope()))
+            );
+        }
+    }
+
+    /// The stamping search rests on an invariant rather than on an
+    /// assumption: the satisfying minors are upward closed, so the least
+    /// one is a partition point. The check is the cheap way to notice if
+    /// it ever stops resting on it.
+    #[test]
+    fn stamping_the_binary_search_agrees_with_a_linear_scan(
+        chain in any_minor_chain(),
+        seeds in prop::collection::vec(any::<u8>(), 1..6),
+        carried in prop::collection::vec(any::<bool>(), 1..6),
+        index in 0usize..8,
+        held in 0usize..8,
+    ) {
+        if !consecutive_inclusion(&chain) {
+            return Ok(());
+        }
+        let registry = reader(&chain, held % (chain.len() + 1), None);
+        let content = conforming(&chain[index % chain.len()], &seeds, &carried)
+            .content()
+            .clone();
+
+        prop_assert_eq!(
+            registry.stamp(&chain_label(), 1, &content),
+            scan(&registry, &content)
+        );
+        // And over content no theory of the chain need admit at all.
+        prop_assert_eq!(
+            registry.stamp(&chain_label(), 1, &Content::new()),
+            scan(&registry, &Content::new())
+        );
     }
 }
 

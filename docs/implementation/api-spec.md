@@ -223,10 +223,12 @@ in the order changes; a content cursor therefore carries the
 entry's own id alongside the key, so a walk resuming from it can
 find where the entry went instead of serving it twice. Cursors
 stay opaque: what rides inside is the server's business, and a
-client reads no structure into them. Every listing takes
+client reads no structure into them. Every content listing takes
 `includePending` (default true): false serves only what has landed
 on L1 — including, on a landed node carrying an unlanded edit, the
-version that landed — for a reader who wants the settled graph.
+version that landed — for a reader who wants the settled graph. The
+chronicle takes no such argument: the record set has no pending
+namespace, so a record is listed exactly when it is ordered fact.
 
 **A page is a snapshot, not a live view.** A listing read computes
 one view of the graph and freezes it; refetching is the client's

@@ -36,7 +36,13 @@
 //!
 //! Every node carries the [`Span`] of the source it was read from, so any
 //! later refusal — an unresolved rule, a type outside the assignable
-//! fragment — can be located as precisely as a syntax error.
+//! fragment — can be located as precisely as a syntax error. The rule is
+//! *every* node, not every node some pass happens to locate a refusal in,
+//! which is why the allow below is here and not on a list of fields: a tree
+//! where some nodes carried spans and others did not would make "locate
+//! this" a question about which node it is.
+
+#![allow(dead_code)]
 
 use super::lex::{ByteQual, NumberToken, Span, SyntaxError};
 

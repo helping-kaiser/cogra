@@ -3,11 +3,16 @@
 //! (architecture.md "Genesis bootstrap").
 
 use api::bootstrap::{BootstrapError, BootstrapOutcome, GenesisInput, ensure_operator_login, run};
+use api::l1::{L1Boundary, StandInBoundary};
+use api::profile::ProfileUpdateDraft;
 use common::l1::Family;
+use common::l1::client::ActorKey;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::genesis;
 use postgres_store::mirror;
+use postgres_store::staged::{self, PreSignedParts};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 fn input() -> GenesisInput {
     GenesisInput {
@@ -338,6 +343,157 @@ async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
 
     let err = run(&host, &pool, input()).await.expect_err("occupied");
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+}
+
+/// Drives one profile update authored by the Genesis Moderator through
+/// prepare, pre-signature, and approval with the custodied genesis key.
+/// The act stands approved and unordered; ordering it is the caller's
+/// choice, which is what lets a test aim the promotion at either of the
+/// bootstrap's two ingestion steps. Returns the operator's actor id and
+/// the staged write's.
+async fn relay_operator_profile_update(host: &StandIn, pool: &PgPool) -> (Uuid, Uuid) {
+    let operator = genesis::actor_by_handle(pool, "operator")
+        .await
+        .expect("query")
+        .expect("operator row");
+    let seed: [u8; 32] = genesis::system_key(pool, operator.id)
+        .await
+        .expect("query")
+        .expect("custodied seed")
+        .as_slice()
+        .try_into()
+        .expect("32-byte seed");
+    let key = ActorKey::from_seed(seed);
+
+    let boundary = StandInBoundary(host.clone());
+    let prepared = api::profile::prepare_profile_update(
+        pool,
+        &boundary,
+        api::ingest::DEFAULT_GC_AFTER_EPOCHS,
+        operator.id,
+        ProfileUpdateDraft {
+            display_name: Some("The Operator, edited".into()),
+            bio: None,
+            website_url: None,
+        },
+    )
+    .await
+    .expect("prepares update");
+
+    let write = staged::load(pool, prepared.id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal);
+    let sealed = api::relay::submit_pre_signed(
+        &boundary,
+        pool,
+        prepared.id,
+        PreSignedParts {
+            author_pubkey: pre.author_pubkey.clone(),
+            nonce: pre.nonce.clone(),
+            pre_signature: pre.pre_signature.clone(),
+        },
+    )
+    .await
+    .expect("seals");
+    let host_key = boundary.host_public_key().await.expect("host key");
+    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    api::relay::submit_approval(&boundary, pool, prepared.id, witness.approval_signature)
+        .await
+        .expect("relays");
+
+    (operator.id, prepared.id)
+}
+
+/// Breaks the profile promotion the way `profile::land_one` breaks: the
+/// copy-forward merge reads the current version to carry unchanged
+/// fields, so with no version row the promotion cannot build the new one.
+async fn clear_profile_versions(pool: &PgPool, actor: Uuid) {
+    sqlx::query("DELETE FROM actor_profile_versions WHERE actor_id = $1")
+        .bind(actor)
+        .execute(pool)
+        .await
+        .expect("clears versions");
+}
+
+/// The bootstrap's catch-up ingestion (its first step) refuses on a
+/// promotion failure instead of walking on into the gate: a genesis the
+/// operator is told completed must not sit on a promotion that silently
+/// never happened.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+
+    // The window a re-run on a live instance walks into: an epoch closed
+    // and not yet ingested, carrying a write whose promotion will fail.
+    let (operator, staged_id) = relay_operator_profile_update(&host, &pool).await;
+    host.close_epoch().await.expect("closes");
+    clear_profile_versions(&pool, operator).await;
+
+    let err = run(&host, &pool, input()).await.expect_err("refuses");
+    let message = match err {
+        BootstrapError::PromotionFailed(message) => message,
+        other => panic!("expected PromotionFailed, got {other:?}"),
+    };
+    assert!(
+        message.contains("profile promotion failed"),
+        "unexpected: {message}"
+    );
+    assert!(
+        message.contains("seeded profile version"),
+        "unexpected: {message}"
+    );
+    assert!(
+        message.contains(&staged_id.to_string()),
+        "the failing staged write must name itself: {message}"
+    );
+    // The refusal is a refusal to complete, not a rollback — the record
+    // landed and the mirror governs, exactly as ingestion left it.
+    assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
+}
+
+/// The bootstrap's second ingestion — the one that lands the genesis
+/// sequence it just wrote — refuses on the same terms.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_failed_promotion_refuses_the_genesis_ingestion(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+
+    // Approved and unordered, so the bootstrap's own epoch close is what
+    // orders it — putting the promotion in the second ingestion.
+    let (operator, staged_id) = relay_operator_profile_update(&host, &pool).await;
+    clear_profile_versions(&pool, operator).await;
+
+    // The mirror is a rebuildable cache, and the record keying the L1
+    // half of the gate is gone from it. The cursor stands, so the
+    // catch-up ingestion has nothing to do and the gate sends the re-run
+    // down the repair path — through the epoch close, to the second
+    // ingestion.
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    let charter = format!("act:{publisher}:1:publish");
+    sqlx::query("DELETE FROM mirror_record_legs WHERE record_id = $1")
+        .bind(&charter)
+        .execute(&pool)
+        .await
+        .expect("wipe legs");
+    sqlx::query("DELETE FROM mirror_records WHERE record_id = $1")
+        .bind(&charter)
+        .execute(&pool)
+        .await
+        .expect("wipe record");
+
+    let err = run(&host, &pool, input()).await.expect_err("refuses");
+    let message = match err {
+        BootstrapError::PromotionFailed(message) => message,
+        other => panic!("expected PromotionFailed, got {other:?}"),
+    };
+    assert!(
+        message.contains("profile promotion failed"),
+        "unexpected: {message}"
+    );
+    assert!(
+        message.contains(&staged_id.to_string()),
+        "the failing staged write must name itself: {message}"
+    );
 }
 
 #[sqlx::test(migrations = "../../migrations")]
