@@ -26,7 +26,7 @@ within a phase, order is flexible.
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
-| 2c. Profile surface (with slice 2.2) | 2 | **Q35, Q36** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real) and the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?). Slice 2.1 ships without both. |
+| 2c. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -245,6 +245,35 @@ it live? It is public display state, which suggests a
 profile payload (witnessed like the other display fields) — but
 it could also stay a pure L2 preference. Decide when profile
 usage is real.
+
+---
+
+## Q41 — A settled-content serving mode for the chronicle's targets
+
+**Where it shows up:**
+[api-spec.md "Cursors"](implementation/api-spec.md) (`records`, the
+`includePending` convention)
+**Status:** open (surfaced by the chronicle landed-only pass, PR #412)
+
+### Context
+
+The chronicle guarantees *membership*: a record is listed exactly
+when it is ordered fact, with no pending namespace to opt out of.
+But a chronicle row points at a node, and a node read is always
+current — a landed post carrying an unlanded edit serves the
+pending version, marked PENDING. Content listings offer
+`includePending: false` ("the version that landed"), so the
+settled graph is reachable through `posts` — but not by
+traversing from `records`.
+
+### The question
+
+Should the chronicle's *targets* grow a settled-content serving
+mode — an `includePending`-style switch on `records` that makes
+traversed nodes serve the landed version — or is the membership
+guarantee the chronicle's whole contract, with settled reading
+left to the content listings? Decide when a real reader wants the
+settled graph through a profile.
 
 ---
 
