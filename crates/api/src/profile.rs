@@ -10,6 +10,7 @@
 use common::envelope::CograProfile;
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
+use postgres_store::content::LandingOrder;
 use postgres_store::{PgPool, auth as store, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
@@ -189,6 +190,17 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             "profile payload names a different actor".into(),
         ));
     }
+    // The promoting record's coordinates order the version row against
+    // the others: two updates by one actor are ordered by the records,
+    // not by which promotion ran first.
+    let meta = mirror::record_meta(pool, &write.act_id)
+        .await?
+        .ok_or_else(|| ProfileError::Internal("promoted record missing from mirror".into()))?;
+    let order = LandingOrder {
+        landed_epoch: meta.epoch,
+        act_time: meta.act_time,
+        position: meta.position,
+    };
     let current = profile::current_profile(pool, write.actor_id)
         .await?
         .ok_or_else(|| ProfileError::Internal("actor without a seeded profile version".into()))?;
@@ -220,6 +232,7 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         current.avatar_id,
         current.cover_id,
         website_url.as_deref(),
+        order,
     )
     .await?;
     tx.commit()

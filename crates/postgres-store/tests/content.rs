@@ -218,7 +218,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     // Two unlanded edits sit on the node, each staged by its own write
     // and dated from its own pre-commitment.
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", true, at(10))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", None, at(10))
         .await
         .expect("first");
     content::insert_post_version(
@@ -227,7 +227,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
         Some("title"),
         None,
         "second edit",
-        true,
+        None,
         at(20),
     )
     .await
@@ -237,7 +237,7 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     // Landing the earlier one drops its mark and only its mark.
     let mut tx = pool.begin().await.expect("tx");
     assert!(
-        content::land_post_version(&mut tx, id, at(10))
+        content::land_post_version(&mut tx, id, at(10), order(2, 0))
             .await
             .expect("lands")
     );
@@ -255,10 +255,10 @@ async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool
     let author = actor(&pool, "author").await;
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
     let mut tx = pool.begin().await.expect("tx");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "doomed", true, at(10))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "doomed", None, at(10))
         .await
         .expect("first");
-    content::insert_post_version(&mut tx, id, Some("title"), None, "survivor", true, at(20))
+    content::insert_post_version(&mut tx, id, Some("title"), None, "survivor", None, at(20))
         .await
         .expect("second");
     tx.commit().await.expect("commit");
