@@ -9,7 +9,7 @@
 //! answers negatively returns that answer as a value, never as an `Err`.
 //!
 //! Slices 1 and 2 carry the four enums the CBOR core and the envelope
-//! need; the remaining three arrive with the slices that raise them.
+//! need; the rest arrive with the slices that raise them.
 
 /// A `Value` invariant refused at construction.
 ///
@@ -250,4 +250,35 @@ pub enum EnvelopeError {
     /// language at all.
     #[error("bytes are not a name of the data language")]
     NotCanonical(#[source] DecodeError),
+}
+
+/// A `.regexp` pattern the crate cannot use.
+///
+/// Two arms and no third: a pattern the engine reports as not well formed
+/// under XML Schema rules, and a well-formed pattern the engine declines
+/// for a reason of its own. There is no translation arm, because there is
+/// no translator — the engine implements the XSD flavor itself.
+///
+/// Both arms carry the engine's own account rather than a location. The
+/// engine's error type offers no position into the pattern, and inventing
+/// one — reporting every refusal at character zero — would be a located
+/// error in name only.
+///
+/// A pattern is compiled at `Theory::parse` and executed nowhere else, so
+/// this error is reached through a `TheoryError`, never at match time.
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum RegexpError {
+    /// The pattern is not a well-formed XSD regular expression.
+    #[error("pattern is not a well-formed XSD regular expression: {detail}")]
+    Malformed {
+        /// The engine's account of what was wrong.
+        detail: String,
+    },
+    /// A well-formed pattern the engine declined for a reason of its own.
+    #[error("engine refused the pattern: {detail}")]
+    EngineRefused {
+        /// The engine's account of why it declined.
+        detail: String,
+    },
 }
