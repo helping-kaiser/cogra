@@ -83,12 +83,6 @@
 //! narrow either way, since patterns execute only out of theories a
 //! reader deliberately acquired.
 
-// The seam lands before its consumer: the `Theory::parse` pipeline that
-// compiles a theory's patterns is the next commit, and until it arrives
-// the match and source accessors are exercised only by the tests below.
-// The allow is scoped to this module and comes off with that pipeline.
-#![allow(dead_code)]
-
 use std::sync::Arc;
 
 use regexml::Regex;
