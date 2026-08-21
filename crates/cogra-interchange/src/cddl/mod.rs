@@ -18,16 +18,17 @@
 //! | [`print`] | the normalized printer |
 //! | [`resolve`] | the rule table, the prelude, generics, sockets |
 //! | [`fragment`] | assignable-fragment membership |
+//! | [`companion`] | open-companion derivation |
+//! | [`inclusion`] | minor inclusion, key by key |
+//! | [`restraint`] | the restraint report over an assigned theory |
 //!
 //! The grammar these implement is checked into the repository beside the
 //! code, at `tests/corpus/rfc8610-abnf.txt`, so that a reader auditing the
 //! parser against its specification does not have to leave the tree.
 //!
-//! Satisfaction, control-operator evaluation, the open companion, minor
-//! inclusion, and the restraint report are the next slice
-//! (`design.md`, `model:xchg:module-map`), and the items the full
-//! [`Theory`] signature owes them — `open_companion` and `restraint` —
-//! arrive with them.
+//! Satisfaction and control-operator evaluation are the next slice
+//! (`design.md`, `model:xchg:module-map`), and the free functions the
+//! judgment owes — `satisfies` and its two siblings — arrive with them.
 
 // The description language lands before its evaluator. Accessors the
 // evaluator needs — a resolved rule's span, whether it came from the
