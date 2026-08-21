@@ -85,13 +85,22 @@ class ScriptedContentRepository : ThrowingContentRepository() {
     var details: MutableMap<String, PostDetail> = mutableMapOf()
     var preparedNode: String = "p-new"
 
+    /**
+     * The entry the server starts serving once the write is prepared,
+     * so a re-read of the listing differs from the one before it — how
+     * a test tells a refreshed feed from a stale one.
+     */
+    var pendingAfterPrepare: PostView? = null
+
     override suspend fun preparePost(
         title: String?,
         description: String?,
         content: String,
         license: LicenseChoice,
-    ): Outcome<PreparedContentView> =
-        Outcome.Success(PreparedContentView(preparedNode, emptyList()))
+    ): Outcome<PreparedContentView> {
+        pendingAfterPrepare?.let { listing = listOf(it) + listing }
+        return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
+    }
 
     override suspend fun posts(
         first: Int,
