@@ -63,6 +63,10 @@ api-release: ## Start the API server (optimized build; realistic auth/crypto lat
 	$(CARGO) run --release -p api
 
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
+	# Force a fresh build: on /mnt/c worktrees, cargo's mtime-based
+	# fingerprints can be reused across worktrees sharing a target dir,
+	# silently exporting stale SDL from an old binary while reporting green.
+	find crates -name '*.rs' -exec touch {} +
 	$(CARGO) run -p api --bin export-schema > schema.graphql
 
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
