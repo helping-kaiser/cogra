@@ -22,14 +22,28 @@
 // `aria-live` so the same change reaches a reader who is not looking at
 // the face.
 
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, nearestAnchor, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 
+/**
+ * What the shrug is called where a bundle stands at zero (design.md
+ * §8.4). Two wordings for the one readout: a bundle that was walked back
+ * to nothing, and one that was never given anything.
+ */
+export const SEVERED_LABEL = "Severed";
+export const NO_STANDING_LABEL = "No stance yet";
+
 function face(pair: StancePair): string {
   const anchor = nearestAnchor(pair);
   return `${anchor.emoji} ${anchor.label}`;
+}
+
+/** The same, for a STANDING: the table never speaks for zero (§8.4). */
+function standingFace(pair: StancePair): string {
+  const readout = bundleReadout(pair, SEVERED_LABEL);
+  return `${readout.emoji} ${readout.label}`;
 }
 
 /** The face, the words, and the exact pair — the default reading (§8.3). */
@@ -37,18 +51,44 @@ export function reading(pair: StancePair): string {
   return `${face(pair)} ${formatStancePair(pair)}`;
 }
 
+/** The same reading, for a standing rather than a pick. */
+export function standingReading(pair: StancePair): string {
+  return `${standingFace(pair)} ${formatStancePair(pair)}`;
+}
+
 /** `undefined` while the standing is still being read, `null` where it could not be. */
 export type BundleState = StanceBundle | null | undefined;
+
+/**
+ * What severance actually walks back (design.md §8.3, §8.5). The fold
+ * the graph reads clips at `±1`, but a bundle whose raw sum lies beyond
+ * the clip still carries that history, and "every surface that explains
+ * cost — the severance confirmation above all — states the RAW sums,
+ * because they are what a walk back to zero actually walks".
+ *
+ * So this line is deliberately NOT `standingLine`: showing the clipped
+ * fold here would understate the walk on exactly the bundles where the
+ * difference matters most.
+ */
+export function severanceStandingLine(bundle: BundleState, targetLabel: string): string {
+  if (bundle === undefined) return "Checking where you stand…";
+  if (bundle === null || bundle.records === 0) {
+    return `${ZERO_BUNDLE_EMOJI} You haven't taken a stance on ${targetLabel} yet.`;
+  }
+  return `What you'd be walking back: ${formatStancePair(bundle.rawSum)}`;
+}
 
 export function standingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
   if (bundle === null || bundle.records === 0) {
-    return `You haven't taken a stance on ${targetLabel} yet.`;
+    return `${ZERO_BUNDLE_EMOJI} You haven't taken a stance on ${targetLabel} yet.`;
   }
-  if (bundle.severed) return `You've severed ${targetLabel}.`;
+  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
   // The folded pair rides along with the face: §8.3 makes the numbers
-  // part of the default reading wherever the standing is shown.
-  return `Where you stand now: ${reading(bundle.current)}`;
+  // part of the default reading wherever the standing is shown. It is
+  // the STANDING reading, so a bundle at zero the fold did not flag
+  // still shrugs rather than borrowing the table's nearest face (§8.4).
+  return `Where you stand now: ${standingReading(bundle.current)}`;
 }
 
 /**
@@ -100,7 +140,10 @@ export function landingLine(landing: StanceLanding | null): string {
     if (directedInert) return "Where you stand would carry nothing.";
     if (interestInert) return "What reaches you would carry nothing.";
   }
-  return `This leaves you at: ${face(landing.landing)}`;
+  // Face, words, AND the exact pair (§8.3): the landing carries the same
+  // three the standing does. The landing is a bundle, not a pick, so it
+  // reads through the standing face.
+  return `This leaves you at: ${standingReading(landing.landing)}`;
 }
 
 /** The standing and the pick's face — everything that sits above the field. */

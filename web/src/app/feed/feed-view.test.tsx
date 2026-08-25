@@ -126,8 +126,10 @@ describe("FeedView", () => {
     );
     expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("😊");
     expect(screen.getByTestId("feed-stance-p1-resting-exact")).toHaveTextContent("+0.55 / +0.20");
-    // A card the viewer has no bundle toward keeps the affordance.
-    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("Stance");
+    // A card the viewer has no bundle toward keeps the affordance — a
+    // muted face, never a bare word (design.md §8.3).
+    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("🤷");
+    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("No stance yet");
   });
 
   it("offers a guest the stance control, which asks them to join", async () => {
