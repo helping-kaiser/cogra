@@ -833,6 +833,34 @@ fn a_miscapitalized_head_is_uncatalogued_and_named() {
     assert_eq!(rules(&found), vec!["kind-head-uncatalogued"]);
 }
 
+/// (´[KND-def:kinds:presentation-reduction]´): a head whose reduction
+/// stopped at one of its bounds gets its own rule, because the two failures
+/// are answered in different places — an uncatalogued head at the registry,
+/// this one at the head — and the finding names the bound rather than the
+/// catalogue nothing consulted.
+#[test]
+fn f9_a_head_beyond_the_reduction_bounds_carries_its_own_rule() {
+    let (mut build, _, region) = one_owner();
+    build.head(
+        region,
+        "Main Key Toy Working Running Convention",
+        "conv",
+        10,
+    );
+    let found = kinds::head_validation(&build.g, registry());
+    assert_eq!(rules(&found), vec!["kind-head-beyond-reduction-bounds"]);
+    assert!(
+        found[0].message.contains("devices"),
+        "the finding names the bound: {}",
+        found[0].message
+    );
+    assert!(
+        !found[0].message.contains("carries no pair"),
+        "and never blames the catalogue: {}",
+        found[0].message
+    );
+}
+
 /// (´[KND-judg:kinds:head-validation]´): two is an ambiguous reduction.
 #[test]
 fn a_head_validating_twice_is_ambiguous() {
