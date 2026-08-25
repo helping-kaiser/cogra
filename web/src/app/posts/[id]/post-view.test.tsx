@@ -7,9 +7,13 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
+import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 
-const server = startMswServer();
+// The post and every comment read their own standing, so the read is a
+// default rather than something each test remembers: an unhandled one
+// degrades the control silently instead of failing the test.
+const server = startMswServer(...stanceHandlers());
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -150,6 +154,32 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1a")).toBeInTheDocument();
+  });
+
+  it("wears the viewer's own standing on the post and on a comment", async () => {
+    // §8.3: at rest the target shows the standing — on every surface
+    // that carries a control, not only on the one it was built for.
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [{ id: "c1", body: "First!" }]),
+        }),
+      ),
+      ...stanceHandlers({
+        p1: { pDirected: 0.9, pInterest: 0.25, recordCount: 3 },
+        c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await waitFor(() => expect(screen.getByTestId("post-stance")).toHaveTextContent("Love this"));
+    expect(screen.getByTestId("post-stance-resting-exact")).toHaveTextContent("+0.90 / +0.25");
+    expect(screen.getByTestId("comment-stance-c1")).toHaveTextContent("Don't like this");
+    expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
+      "-0.55 / +0.25",
+    );
   });
 
   // The quiet marker in design.md §9's register: the content reads in
@@ -640,6 +670,84 @@ describe("PostView", () => {
     // A reply is a genesis Review targeting the comment (comment.md §1).
     expect((variables as { input: { target: string } }).input.target).toBe("c1");
     expect(screen.queryByTestId("comment-reply-input")).not.toBeInTheDocument();
+  });
+
+  it("wears the standing on a load that starts with no access token", async () => {
+    // The state every direct arrival at this URL begins in: the refresh
+    // token is persisted, the access token is per-tab memory and this tab
+    // has none yet. Nothing on this surface is viewer-scoped except the
+    // stance controls — the post and its thread read fine anonymously —
+    // so the stance read is the first request that needs a viewer, and it
+    // is the one that has to notice it is not carrying one.
+    window.localStorage.setItem("cogra.activeAccount", "u2");
+    window.localStorage.setItem("cogra.refreshToken", "refresh-1");
+    const store = createTokenStore();
+    expect(store.accessToken()).toBeNull();
+
+    const anonymous: string[] = [];
+    const seeded = {
+      p1: { pDirected: 1, pInterest: 0.2, recordCount: 3 },
+      c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
+    };
+    const stanceRoot = (operation: string, field: string, typename: string) =>
+      graphql.query(operation, ({ variables, request }) => {
+        const id = String(variables.id);
+        const authorized = request.headers.get("authorization") !== null;
+        if (!authorized) anonymous.push(id);
+        return HttpResponse.json({
+          data: {
+            [field]: {
+              __typename: typename,
+              id,
+              // What the server actually answers a request it did not
+              // authenticate: a null field, not an error (types.rs
+              // `viewer_stance`). Nothing in the errors array means
+              // nothing for the guard to react to on its own.
+              viewerStance: authorized ? stanceBundle(seeded[id as keyof typeof seeded]) : null,
+            },
+          },
+        });
+      });
+
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+      graphql.mutation("RefreshSession", () =>
+        HttpResponse.json({
+          data: {
+            refreshSession: {
+              __typename: "AuthPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access-2",
+                refreshToken: "refresh-2",
+                user: { __typename: "User", id: "u2" },
+              },
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      stanceRoot("PostStance", "post", "Post"),
+      stanceRoot("CommentStance", "comment", "Comment"),
+    );
+
+    renderWithProviders(<PostView postId="p1" />, { store, writeSigner: fakeWriteSigner() });
+
+    // Both controls, because both are viewer-scoped reads on this surface
+    // and the defect took the whole class, not the post alone.
+    expect(await screen.findByTestId("post-stance-resting-exact")).toHaveTextContent("+1.00 / +0.20");
+    await waitFor(() =>
+      expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
+        "-0.55 / +0.25",
+      ),
+    );
+    expect(screen.getByTestId("post-stance")).toHaveAccessibleName(/Love this/);
+    // The reads really did start out anonymous — the standing arrived by
+    // refreshing and replaying, not because the rig handed it a token.
+    expect(anonymous).toContain("p1");
+    expect(store.accessToken()).toBe("access-2");
   });
 
   it("links authors as chips into their profiles", async () => {

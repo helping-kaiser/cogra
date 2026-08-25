@@ -5,6 +5,16 @@
 // projection costs one round trip and the standing rides along with it —
 // there is no second query, and nothing here folds one into the other.
 //
+// Both go through `viewerField` inside the guard, like every other
+// viewer-scoped read (outcome.ts): `viewerStance` answers null rather
+// than an error for a reader the request did not authenticate, so unless
+// that null is lifted where the guard can see it, a read issued before
+// this tab has minted an access token comes back empty and nothing
+// refreshes. And the cache is not partitioned by viewer, so a viewer's
+// own field is never answered from it — a cached null would outlive the
+// refresh that fixes it, and a cached bundle would outlive the account
+// that earned it.
+//
 // Both writes are the ordinary staged-write handshake: prepare, then
 // sign what came back. A pick prepares one record; a severance prepares
 // the whole counter-record batch, and the gesture signs every element of
@@ -22,7 +32,7 @@ import {
   PostStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
-import { failed, fetchOutcome, success, unauthenticated, type Outcome } from "@/lib/api/outcome";
+import { failed, success, viewerField, type Outcome } from "@/lib/api/outcome";
 import { prepareSeverance, prepareStance, type StagedWriteView } from "@/lib/api/writes-api";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { WriteSigner } from "@/lib/signing/write-signer";
@@ -36,6 +46,9 @@ import {
   type StanceReadOptions,
   type StanceTarget,
 } from "./stance-data";
+
+/** Every viewer-scoped read in the app asks the server (outcome.ts). */
+const READ_POLICY = "network-only";
 
 /** The `viewerStance` selection, identically shaped across the three roots. */
 type WireBundle = {
@@ -53,43 +66,34 @@ type WireBundle = {
   } | null;
 };
 
-async function wireBundle(
+function wireBundle(
   client: ApolloClient,
   target: StanceTarget,
   pick: StancePair | null,
   options?: StanceReadOptions,
-): Promise<Outcome<WireBundle | null>> {
+): Promise<Outcome<WireBundle>> {
   const variables = {
     id: target.id,
     pick: pick === null ? null : { pDirected: pick.pDirected, pInterest: pick.pInterest },
     includePending: options?.includePending ?? INCLUDE_PENDING_DEFAULT,
   };
-  // A pick must not be answered from an earlier read of the same field:
-  // the landing is the whole point of asking.
-  const fetchPolicy = pick === null ? "cache-first" : "network-only";
-
-  const lift = (viewerStance: WireBundle | null | undefined): Outcome<WireBundle | null> =>
-    success(viewerStance ?? null);
 
   switch (target.kind) {
-    case "post": {
-      const fetched = await fetchOutcome(() =>
-        client.query({ query: PostStanceDocument, variables, fetchPolicy }),
+    case "post":
+      return viewerField(
+        () => client.query({ query: PostStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        (data) => data.post?.viewerStance,
       );
-      return fetched.kind === "success" ? lift(fetched.value.post?.viewerStance) : fetched;
-    }
-    case "comment": {
-      const fetched = await fetchOutcome(() =>
-        client.query({ query: CommentStanceDocument, variables, fetchPolicy }),
+    case "comment":
+      return viewerField(
+        () => client.query({ query: CommentStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        (data) => data.comment?.viewerStance,
       );
-      return fetched.kind === "success" ? lift(fetched.value.comment?.viewerStance) : fetched;
-    }
-    case "profile": {
-      const fetched = await fetchOutcome(() =>
-        client.query({ query: ProfileStanceDocument, variables, fetchPolicy }),
+    case "profile":
+      return viewerField(
+        () => client.query({ query: ProfileStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        (data) => data.user?.viewerStance,
       );
-      return fetched.kind === "success" ? lift(fetched.value.user?.viewerStance) : fetched;
-    }
   }
 }
 
@@ -122,7 +126,6 @@ export function createApolloStanceData(deps: {
       const read = await guard.run(() => wireBundle(client, target, null, options));
       if (read.kind !== "success") return read;
       const wire = read.value;
-      if (wire === null) return unauthenticated();
       return success({
         current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
         records: wire.recordCount,
@@ -135,9 +138,7 @@ export function createApolloStanceData(deps: {
     async project(target, pick, options): Promise<Outcome<StanceLanding>> {
       const read = await guard.run(() => wireBundle(client, target, pick, options));
       if (read.kind !== "success") return read;
-      const wire = read.value;
-      if (wire === null) return unauthenticated();
-      const projected = wire.projected;
+      const projected = read.value.projected;
       if (projected === null) {
         return failed(new Error("viewerStance answered a pick without a projection"));
       }
