@@ -13,6 +13,8 @@ import { createTokenStore, type TokenStore } from "@/lib/session/token-store";
 import { RegistrationProvider } from "@/lib/signing/provider";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
 import type { WriteSigner } from "@/lib/signing/write-signer";
+import { StanceDataProvider } from "@/lib/stance/provider";
+import type { StanceData } from "@/lib/stance/stance-data";
 
 export function renderWithProviders(
   ui: ReactNode,
@@ -21,11 +23,13 @@ export function renderWithProviders(
     ceremony,
     flow,
     writeSigner,
+    stanceData,
   }: {
     store?: TokenStore;
     ceremony?: KeyCeremony;
     flow?: RegistrationFlow;
     writeSigner?: WriteSigner;
+    stanceData?: StanceData;
   } = {},
 ) {
   const client = new ApolloClient({
@@ -37,7 +41,7 @@ export function renderWithProviders(
       <ApolloProvider client={client}>
         <AuthRuntimeProvider>
           <RegistrationProvider ceremony={ceremony} flow={flow} writeSigner={writeSigner}>
-            {ui}
+            <StanceDataProvider data={stanceData}>{ui}</StanceDataProvider>
           </RegistrationProvider>
         </AuthRuntimeProvider>
       </ApolloProvider>
