@@ -962,3 +962,196 @@ Every variant that can be located is located, which is the linter's own version 
 `LabelSyntax` (`sig:lint:near-miss-api`) is not in the taxonomy, and its absence is the point: it is the one `Err` the crate routinely discards, because a delimited span that parses as no form is ordinary text and never a failure (`[LBL-gram:labels:well-formed]`). It is public so that a near-miss can say how far the parse got, and its rustdoc says in as many words that surfacing it as a diagnostic is a defect.
 
 `anyhow` appears in `main.rs` and nowhere else — the repository's rule names both crates, and the division is the documented one: `thiserror` for a library's typed surface, `anyhow` for a binary that only wants to print what went wrong and exit `2`.
+
+## Dependencies · `sec:lint:dependencies`
+
+**Table (Dependencies)** · `tab:lint:dependencies`
+
+Every version was verified against the crate's own docs.rs page on 2026-08-25, not against the architecture's table and not by recall, per the build-from-official-sources rule and (`req:lint:workspace-discipline`). Re-verification at the moment implementation starts is a gate clause (`gate:lint:implementation`).
+
+| Crate | Version verified | Date | Source | Kind | Role |
+| --- | --- | --- | --- | --- | --- |
+| petgraph | 0.8.3 | 2026-08-25 | docs.rs/petgraph | runtime | the corpus graph and every judgment over it |
+| pulldown-cmark | 0.13.4 | 2026-08-25 | docs.rs/pulldown-cmark | runtime | the Markdown frontend |
+| syn | 3.0.4 | 2026-08-25 | docs.rs/syn | runtime | the Rust frontend: item census, doc attributes |
+| proc-macro2 | 1.0.107 | 2026-08-25 | docs.rs/proc-macro2 | runtime | `span-locations`, for byte ranges out of syn spans |
+| toml | 1.1.4+spec-1.1.0 | 2026-08-25 | docs.rs/toml | runtime | the adoption data, with `Spanned` for located defects |
+| serde | workspace `1` | 2026-08-25 | workspace `Cargo.toml` | runtime | the derived `Deserialize` the `toml` crate consumes |
+| thiserror | 2.0.20 | 2026-08-25 | docs.rs/thiserror | runtime | the taxonomy of (`sig:lint:error-taxonomy`) |
+| anyhow | workspace `1` | 2026-08-25 | workspace `Cargo.toml` | runtime | `main.rs` only |
+| clap | 4.6.6 | 2026-08-25 | docs.rs/clap | runtime | the two modes of (`sig:lint:cli-api`), `derive` feature |
+| proptest | 1.11.0 | 2026-08-25 | docs.rs/proptest | dev | the obligations of (`tab:lint:metatheorem-tests`) |
+| swc_ecma_parser | slice 7 | — | — | runtime | the web frontend (`[ARCH-conv:linter:web-frontend]`) |
+| tree-sitter + first-party grammar | slice 8 | — | — | runtime | the Kotlin frontend (`[ARCH-dec:linter:kotlin-tree-sitter]`) |
+| cogra-interchange | when envelope validation opens | — | — | runtime | R19 of (`tab:lint:functional`); nothing reimplemented linter-side |
+| cargo-fuzz, libfuzzer-sys, arbitrary | audit phase | — | — | dev | the targets of (`preview:lint:fuzz-plan`), absent from the version-1 tree |
+
+Two versions have moved since the architecture's table of 2026-08-20 and the movement is recorded rather than absorbed. syn stands at 3.0.4 where the architecture pinned 3.0.3; the pin is a floor and Cargo's caret resolves upward, so nothing is owed but the note. `toml` stands at 1.1.4, a crate the architecture's table does not carry at all, because the adoption-data parser is this document's decision (`dec:lint:toml-parsing`). swc and tree-sitter are deliberately unverified here: they belong to slices 7 and 8, their verification is owed at those slices' own starts, and swc's aggressive major cadence makes a version verified now worthless by then.
+
+**Justification (Each first-slice dependency)** · `just:lint:dependency-argument`
+
+*petgraph.* Ruled rather than chosen (`[ARCH-dec:linter:petgraph-first-class]`); the argument is that the ruling holds up against the crate as it stands. `stable_graph::StableDiGraph<N, E, Ix = DefaultIx>` exists as the alias the corpus-graph model names, and it is the type whose documented purpose is index stability across mutation — which is exactly why pass 2 can add edges to indices pass 1 handed out. `visit::NodeFiltered` and `visit::EdgeFiltered` both exist as documented graph adaptors, which is what makes (`[ARCH-rem:linter:views-not-wrappers]`) implementable rather than aspirational: a restricted graph is an adaptor over a borrow, with no wrapping on our side. The `visit` module also carries `IntoNodeReferences`, `IntoEdgeReferences`, `EdgeRef`, `NodeIndexable`, and `Visitable`, which are the traits the generic algorithms take, so a free function over `&Corpus` and the same function over a filtered view are one function. All four facts read off docs.rs on 2026-08-25.
+
+*pulldown-cmark.* `Parser::into_offset_iter(self) -> OffsetIter<'input, F>` exists and yields `(Event, Range)` pairs mapping each event to its position in the source, which is the whole of what the Markdown frontend needs and the reason the architecture named this driver (`[ARCH-conv:linter:markdown-frontend]`). Its three constructors are `new`, `new_ext`, and `new_with_broken_link_callback`; the frontend uses `new_ext`, because the tables the registry-as-data path parses are a GitHub extension and `Options::empty()` is CommonMark only. `Options::ENABLE_TABLES` is a documented flag and is the only one enabled — every other extension would change what a region is, corpus-wide, for no discipline's benefit.
+
+*syn.* The architecture flags syn's 3.x major boundary as owing verification before the first line depends on it (`[ARCH-tab:linter:dependencies]`), and it is discharged here. At 3.0.4 the four items the Rust frontend names all exist: the function `parse_file`, the type `File`, the type `Attribute`, the module `visit` with its `Visit` trait, and `spanned::Spanned`. The feature set matters and is recorded: `derive`, `parsing`, `printing`, `clone-impls`, and `proc-macro` are default, while `full` and `visit` are optional — so a linter parsing whole files needs `features = ["full", "visit", "extra-traits"]` and gets `parsing` from the defaults. One gap is named rather than papered over: docs.rs surfaces no 2.x-to-3.x migration note, so what changed at the major boundary was not verifiable from the crate's own documentation page, and the verification above is a positive check that the named items exist at 3.0.4 rather than a survey of what moved. Anything the frontend reaches for beyond those five items is verified at the slice.
+
+*proc-macro2.* Not a choice but a consequence: syn's spans are `proc_macro2::Span`, and the byte range of one is `Span::byte_range(&self) -> Range<usize>`, gated behind the `span-locations` feature. Its documentation is explicit about when the range is meaningful — inaccurate inside a procedural macro on stable, and "always accurate regardless of toolchain" outside one — and the linter is outside one (`dec:lint:syn-spans`). The dependency is direct rather than transitive precisely so the feature is switched on where a reader can see it.
+
+*toml and serde.* `toml::from_str` deserializes into a `#[derive(Deserialize)]` type, and `toml::Spanned` is documented as "a spanned value, indicating the range at which it is defined in the source", which is what turns an adoption defect into a located diagnostic rather than a sentence. serde arrives with it and is already a workspace dependency, so the crate adds no new supply-chain surface for it. The case for a real parser over a hand-rolled reader is (`dec:lint:toml-parsing`).
+
+*thiserror.* Mandated by the repository's error rule and carried into this crate by (`req:lint:workspace-discipline`). The argument for it as a dependency is its own: it "deliberately does not appear in your public API. You get the same thing as if you had written an implementation of std::error::Error by hand, and switching from handwritten impls to thiserror or vice versa is not a breaking change" (docs.rs, thiserror 2.0.20, 2026-08-25). Adopting it costs consumers nothing and abandoning it would cost them nothing.
+
+*clap.* The derive API — `#[derive(Parser)]`, `Subcommand`, `Args` — is enabled by the `derive` feature and is the API clap's own documentation leads with. Two subcommands and four flags is under the threshold where hand-rolling is defensible, and the help output is what a CI operator reads when the lane fails.
+
+*proptest.* The concept makes the calculus's metatheorems executable obligations (`conv:lint:metatheorems-as-tests`), and each is universally quantified over generated corpora, which is what a property framework is for and what a vector table cannot express. proptest carries the `Strategy` trait, the `proptest!` macro, and the `collection` module supplying the `vec` and `hash_map` strategies a generated corpus needs; its default case count is 256, "which can be overridden by setting the `PROPTEST_CASES` environment variable" (docs.rs, proptest 1.11.0, 2026-08-25) — the number the property lane's budget in (`tab:lint:budgets`) is stated against. It is also the framework the sibling crate already uses, so the repository carries one property framework and not two.
+
+*cogra-interchange.* Named now, depended on later. R19 of (`tab:lint:functional`) makes delegation total — envelope, encoding, and acceptance validation are wholly the sibling crate's, reimplementing nothing linter-side (`[ARCH-dec:linter:interchange-first-party]`) — and the crate's audit and commissioning phases have closed, so the slice that opens this dependency inherits a finished library rather than a parallel build.
+
+**Decision (Refused dependencies)** · `dec:lint:refused-dependencies`
+
+Six a reader might expect, refused with reasons, so no later contributor re-derives them.
+
+*Any regular-expression engine.* The fixed constraint, and the one place this crate has no discretion at all (`[ARCH-dec:linter:no-regex]`). The signed exception lives inside the interchange crate and reaches nothing here (`[ARCH-dec:linter:cddl-regexp-library]`).
+
+*`walkdir` or `ignore`.* The carrier is defined by literal path prefixes in the adoption data — a prefix ending in `/` matches a tree, a prefix naming a file matches that file, and there is no pattern dialect (`[ARCH-sig:linter:adoption-data]`). `ignore` would bring glob semantics and `.gitignore` resolution to a walk whose whole specification says neither applies, which is a pattern dialect entering by the back door; `walkdir` brings ordering and symlink policy the design must fix itself anyway, since the walk sorts by path for determinism. A recursive `std::fs::read_dir` with sorted entries is some dozens of lines and is the thing the specification describes.
+
+*A diagnostic-rendering crate.* `codespan-reporting` and its kin render source excerpts with carets and colors. The version-1 output is one line per finding plus its related locations, and what shape a richer output should take is (`open:lint:machine-output`). Adopting a renderer before that question is answered picks the answer.
+
+*Any hashing crate.* (`dec:lint:no-digest`). The absence is a checkable gate clause, not a preference.
+
+*`rayon`.* The slice-1 carrier is 58 Markdown files and 73 Rust files, measured; parallelism buys nothing at that size and costs the thing the design is built to guarantee, since a parallel harvest makes completion order observable in exactly the place (`[ARCH-req:linter:determinism]`) forbids it. If the corpus ever grows to where this matters, the two-pass staging is what makes parallelism safe to add — pass 1 is embarrassingly parallel per file — and the decision is taken then, with a measurement in front of it.
+
+*`serde_json`.* Nothing in version 1 is serialized. It arrives with (`open:lint:machine-output`) if that question is answered yes, and not before.
+
+## Test plan · `sec:lint:tests`
+
+**Strategy (Test plan)** · `strat:lint:test-strategy`
+
+Four bodies of tests, differing in what they are evidence for. **Clause tests** are evidence that the linter discharges the gates it is accepted against: one test per clause of (`[LBL-gate:labels:implementation]`), of the mechanical part of (`[KND-gate:kinds:adoption]`), of the two duties (`conv:lint:non-mechanical`) leaves from (`[IDN-gate:identity:implementation]`), and of (`[ARCH-gate:linter:architecture-review]`) — each naming its clause, over this corpus's ruled adoption data, consulting no third document, which is the shape every gate fixes for itself (`conv:lint:gates-as-acceptance`). **Vector tests** are evidence that the parsers agree with the grammars on cases someone chose. **Properties** are evidence that the calculus's metatheorems hold of the code, one per metatheorem so that a failure names the theorem it broke (`conv:lint:metatheorems-as-tests`). **Fuzzing** is evidence about inputs nobody chose, and it belongs to the audit phase by the concept's ruling. Alongside all four, every public item carries a rustdoc example that `cargo test` compiles and runs.
+
+One acceptance suite stands apart and is the milestone: *the linter lints its own four discipline documents*, then the architecture, then the interchange and linter phase artifacts (`rep:lint:first-corpus`). It runs over the real tree rather than a fixture, and it is the test that says the thing works.
+
+**Table (Sized test plan)** · `tab:lint:test-sizing`
+
+Counts are the design's estimate of scope, to be met or explained, not a ceiling.
+
+| Body | Source | Rough count | Shape |
+| --- | --- | --- | --- |
+| Label grammar | (`[LBL-lang:labels:label-language]`) productions | ~70 | accept and reject over `kind`, `area`, `name`: digits, hyphens at edges, empty words, uppercase, three colons, one colon, non-ASCII |
+| Occurrence forms | (`[LBL-gram:labels:well-formed]`) | ~40 | the three forms in both syntaxes; nesting refused; a span parsing as no form is text; the near-miss classes of (`sig:lint:near-miss-api`) |
+| Delimiter regimes | (`[LBL-judg:labels:participation]`) | ~25 | prose: unpaired backtick fails its block and only its block; code: unclosed opening acute fails, an acute opening nothing is text |
+| Markdown regions | (`conv:lint:markdown-surface`) | ~45 | block elements, list continuation, quote markers, wrapped spans, fenced blocks non-participating, single versus double backtick at the offset, headings and their mints, table cells |
+| Pre-tokenizer | (`[ARCH-dec:linter:pretokenizer]`) | ~55 | `//` inside a string, a raw string, a raw string with hashes, a byte string, a char literal, an apostrophe in a lifetime; nested block comments; unterminated forms; the partition invariant on every fixture |
+| Banned tokens | `[banned-tokens]` | ~12 | both ruled classes, each found where it is a comment and not found where it is not |
+| Rust frontend | (`conv:lint:rust-surface`) | ~35 | the five doc-comment forms of `[scanned-regions]`; a `///` run as one region; the test census over the three attribute paths and the open rule; the module census over definitions, not declarations, with `#[cfg(test)]` excluded |
+| Adoption loader | `corpus-adoption.toml` | ~25 | every section round-trips; each `AdoptionError` variant, each located at its row |
+| Registry as data | (`[ARCH-dec:linter:registry-as-data]`) | ~30 | the registry document is the fixture: its own tables parsed, its hybrid triples derived and side-conditioned, its headline counts recomputed and compared, `Hom(C_A)` derived |
+| Judgments | the four gates, clause by clause | ~55 | one test per clause, named for it |
+| Registers | (`sig:lint:register-api`) | ~18 | `Current`, `Stale` with the first differing offset, `Staged`; scoped regeneration ignoring another owner's defects; the spliced generated region |
+| Diagnostics | (`conv:lint:diagnostic-order`) | ~12 | the three sort keys; totality on the corpus; the exit-code mapping |
+| Properties | (`tab:lint:metatheorem-tests`) | 10 | proptest, default 256 cases, budgeted separately |
+| Corpus acceptance | (`rep:lint:first-corpus`) | ~8 | the four disciplines, the architecture, the interchange artifacts, the linter's own concept and design |
+| Doc tests | the public API | ~45 | compiled by `cargo test` |
+
+**Table (Metatheorem and design obligations)** · `tab:lint:metatheorem-tests`
+
+The first four rows are the calculus's metatheory made executable, one property per metatheorem, named after it (`conv:lint:metatheorems-as-tests`). The last six are properties of this design rather than of the calculus, and each is here because it is a claim this document makes that would otherwise go unchecked.
+
+| Obligation | Property |
+| --- | --- |
+| (`[LBL-metathm:labels:order-independence]`) | over generated corpora and shuffled traversal orders: the rendered output is byte-identical |
+| (`[LBL-metathm:labels:no-self-support]`) | over generated corpora with a designated index: an index row never sustains its own membership, and removing a document's last body citation of a label stales the committed index |
+| (`[LBL-metathm:labels:warrant-lapse]`) | over generated transitions of a covered asset: renaming its identifier, changing its classification, or removing it from the census dangles exactly the citations of the facet that moved; moving it across packages dangles exactly the imports under the old prefix; moving it within its package dangles nothing |
+| (`[LBL-metathm:labels:presentation-invariance]`) | over generated corpora and re-formings that preserve every label value: every registry, every harvested set, and every generated register is unchanged |
+| (`prop:lint:label-order`) | `a.cmp(b)` agrees with the bytewise comparison of `a.as_str()` and `b.as_str()` on generated pairs |
+| (`inv:lint:lexeme-partition`) | over arbitrary byte strings: the lexeme spans are ascending, non-overlapping, and cover the input exactly once |
+| (`conv:lint:diagnostic-order`) | the comparator is a total order, and two runs over one generated corpus emit the same sequence |
+| (`dec:lint:one-generator`) | regeneration is idempotent, and a check run immediately after a write reports `Current` for every register written |
+| (`dec:lint:ownership-by-edge`) | `owner_of` agrees with the partition's first-match rule for every node of a generated corpus |
+| (`sig:lint:index-maps`) | every key of `mints` is a key of `labels`, and every `ResolvesTo` target is a node `labels` holds |
+
+**Table (Budgets)** · `tab:lint:budgets`
+
+(`req:lint:timing`) and (`[ARCH-req:linter:timing]`) require a budget beside every recurring action; a recurring action with no budget is itself a defect. The numbers below are the design's proposals, sized against the measured slice-1 carrier of 58 Markdown files and 73 Rust files, and the first measured run replaces each with a measurement. Exceeding a budget thereafter is a finding, not a cost to absorb.
+
+| Action | Proposed budget | Tolerance | Replaced by |
+| --- | --- | --- | --- |
+| full-corpus `check`, warm | 3 s | +50% | the first green full run |
+| per-phase report | every phase named and timed | — | (`[ARCH-req:linter:timing]`) fixes the five phases |
+| vector and clause lane (`cargo test`) | 60 s | +50% | the first green lane |
+| property lane at 256 cases | 120 s | +50% | the first green lane |
+| the linter's addition to `make ci` | 90 s | +50% | commissioning |
+
+The property lane is timed separately from the vector lane, because the two grow for different reasons and a case count raised without noticing is exactly the regression the rule exists to catch.
+
+**Preview (Fuzzing, deferred to audit)** · `preview:lint:fuzz-plan`
+
+Four targets, written at the audit phase and not before, each with its seed corpus named now so the audit does not start from nothing. `pretokenize_rust`: arbitrary bytes into `pretokenize`, asserting no panic and that (`inv:lint:lexeme-partition`) holds — the strongest single assertion the crate has, since it is total on every input. `scan_region`: arbitrary text into `scan_prose` and `scan_code`, asserting no panic and that every reported span lies within the input. `markdown_regions`: arbitrary text into `frontend_md::parse`, asserting no panic and that every region's pieces lie within the file and do not overlap. `adoption_load`: arbitrary text into `Adoption::from_str`, asserting no panic and that success implies a total partition. Seed corpora: the corpus's own Markdown and Rust files, the vector fixtures of (`tab:lint:test-sizing`), and `corpus-adoption.toml`.
+
+Two notes the audit must not discover late. `cargo-fuzz` needs the nightly toolchain for its sanitizer flags, so the fuzz lane is a separate toolchain from the one `make ci` runs and stays a manual lane — the sibling crate's audit established both facts on this machine. And the deferred hazards this document names are exactly where the audit found real defects last time: the recursive descent of the Markdown region walk and the pre-tokenizer's unterminated-form handling are the two places to look first.
+
+## Sequencing · `sec:lint:sequencing`
+
+**Decision (Slice sequencing)** · `dec:lint:slice-sequencing`
+
+Six slices to version 1, in this order, then the two later frontends. The decomposition is the ratified one, confirmed here with each slice's public surface attached, and the slice boundaries are the commit boundaries: each leaves `make ci` green and none lands half-built.
+
+| Slice | Delivers | Public surface |
+| --- | --- | --- |
+| 1 | adoption loader and the graph skeleton | (`sig:lint:adoption-api`), (`conv:lint:owner-assignment`), (`sig:lint:node-weights`), (`sig:lint:edge-weights`), (`sig:lint:index-maps`), (`dec:lint:graph-free-functions`) |
+| 2 | the span scanner | (`prop:lint:label-order`), (`sig:lint:scanner-api`), (`sig:lint:near-miss-api`) |
+| 3 | the Markdown frontend | (`sig:lint:frontend-api`), (`conv:lint:markdown-surface`), (`sig:lint:kind-registry-api`) |
+| 4 | the Rust frontend, the pre-tokenizer, the bans | (`sig:lint:pretokenizer-api`), (`inv:lint:lexeme-partition`), (`sig:lint:bans-api`), (`conv:lint:rust-surface`) |
+| 5 | the judgments | (`sig:lint:judgment-api`), (`tab:lint:judgment-implementation`), (`sig:lint:diagnostic-api`) |
+| 6 | register freshness and generated compliance | (`sig:lint:register-api`), (`dec:lint:one-generator`), (`sig:lint:cli-api`) |
+| 7 | the web frontend | `frontend_web`, verified against swc's own documentation at the slice |
+| 8 | the Kotlin frontend | `frontend_kotlin`, behind the zero-error precondition (`[ARCH-dec:linter:kotlin-tree-sitter]`) |
+
+Slice 2 is independent of slice 1 and may be worked in parallel: `scan.rs` takes region text and returns occurrences, and it names no type from `adopt`, `carrier`, or `graph` — a claim the module map makes checkable rather than hopeful (`rem:lint:split-lines`). Nothing else parallelizes: 3 needs 1 and 2, 4 needs 3's contract, 5 needs 4's census, and 6 needs 5's registries.
+
+Slice 6 is where the corpus changes as well as the code: the first register generation commits the initial per-owner label registers and arms exact byte comparison from then on, which is the condition the test profile's entry into Π waits on (`req:lint:register-generator`), `[profiles]` of the adoption data. Entering Π is a separate commit that flips two fields, and it is not part of slice 6.
+
+## Rejected Ansätze · `sec:lint:rejected`
+
+**Ansatz (The owner in every weight)** · `ansatz:lint:owner-in-weights`
+
+Copy an owner index into every node weight, so no judgment has to walk for it. Then the graph carries the partition twice — once in `Owns` edges and once in fields — and after any mutation nothing says which copy is right. The failure is silent by construction: a judgment reading the field and a judgment reading the edge disagree, and both look correct. Rejected in favor of (`dec:lint:ownership-by-edge`), with the index maps carrying the one lookup where the walk would actually cost something.
+
+**Ansatz (A derived ordering on a three-field label)** · `ansatz:lint:derived-label-order`
+
+Hold `Label` as three word fields and derive `Ord`. Then the order is field-wise, the registers are written in it, and the bytewise comparison every register is checked under disagrees the first time a kind is a prefix of another kind followed by a digit — `a` against `a1`, because the digits sit below the colon in ASCII. A register generated in one order and compared in another is stale on the day it is written, and the diagnostic says the file is out of date rather than that the comparator is wrong. Rejected in favor of (`prop:lint:label-order`).
+
+**Ansatz (A frontend trait)** · `ansatz:lint:frontend-trait`
+
+Define `trait Frontend` and implement it four times. Then the return types carry an object-safety constraint they have no other reason to satisfy, the dispatcher gains a `dyn` boundary for a `match` over four known arms, and the contract lives in two places — the trait and the shared data types — with only one of them enforced. Rejected in favor of (`dec:lint:frontend-dispatch`); a trait admits implementations its author does not know, and there are none.
+
+**Ansatz (Findings folded into the error type)** · `ansatz:lint:findings-as-errors`
+
+Make every judgment return `Result<(), Error>` and let the `?` operator carry findings out. Then the first finding ends the run — where a linter's whole value is reporting all of them — and the difference between "the corpus has a defect" and "the linter cannot read the adoption file" collapses into one type, which is the exact distinction the exit codes exist to preserve. Rejected in favor of (`conv:lint:finding-or-error`) and (`crit:lint:error-or-finding`).
+
+**Ansatz (A parallel harvest)** · `ansatz:lint:parallel-harvest`
+
+Harvest files in parallel, since pass 1 is per-file and independent. Then completion order enters the collection order, and determinism becomes something to restore by sorting rather than something the staging already guarantees (`[ARCH-req:linter:determinism]`). The measured carrier does not need it, and adopting it before a measurement demands it is paying the determinism risk for nothing. Rejected for version 1, and recorded as the shape a later measurement would license.
+
+**Ansatz (Judging a staged profile partially)** · `ansatz:lint:partial-inventory`
+
+Compute a staged profile's census and judge inventory over the assets that already carry their labels, reporting the rest as progress. Then inventory — which admits nothing partial by its own words (`[LBL-inv:labels:inventory]`) — is enforced in a weakened form nothing recorded, a profile is half in force with no fact in the adoption data saying so, and the migration completes into a check that was already passing. Rejected in favor of (`dec:lint:staged-profiles`). Reporting the distance *without* judging it is a different proposal and an open question (`open:lint:staged-census`).
+
+## Implementation gate · `sec:lint:implementation-gate`
+
+**Gate (Implementation)** · `gate:lint:implementation`
+
+Implementation is blocked until all of the following hold. The first four are owed before the code they govern is written, not after.
+
+- every Open Question of this document is ruled and the ruling recorded here as a decision — (`open:lint:reduction-vocabulary`), (`open:lint:head-recognition`), (`open:lint:enforcement-partition`), (`open:lint:machine-output`), (`open:lint:staged-census`) — a phase artifact with open questions closing no phase;
+- the workspace entry exists and `crates/cogra-linter` is a member, with the CI lane and the budgets of (`tab:lint:budgets`) recorded beside it;
+- every dependency version of (`tab:lint:dependencies`) is re-verified against docs.rs at the moment implementation starts, rather than against this document;
+- a fixture test asserts a known byte range out of a `syn` span with `span-locations` enabled, before any Rust-frontend code depends on it (`dec:lint:syn-spans`);
+- `cargo tree` over the crate shows no regular-expression engine, direct or transitive (`[ARCH-dec:linter:no-regex]`), and no hashing library (`dec:lint:no-digest`);
+- the module map (`model:lint:module-map`) is confirmed as stated or amended, the seven additions to the architecture's ruled list included (`rem:lint:module-additions`);
+- the two weight enums (`sig:lint:node-weights`), (`sig:lint:edge-weights`) are confirmed with their endpoints, and the two additions to the architecture's vocabulary sketch — the `Pair` node and the `Covers` edge — are accepted or replaced;
+- the error taxonomy (`sig:lint:error-taxonomy`) and its boundary against findings (`crit:lint:error-or-finding`) are confirmed;
+- the test plan's sizing (`tab:lint:test-sizing`) and the obligations of (`tab:lint:metatheorem-tests`) are confirmed as the acceptance suite's scope;
+- the slice sequencing (`dec:lint:slice-sequencing`) is confirmed, with slice 2's independence from slice 1 accepted as the only parallelism claimed;
+- every citation in this document resolves — a check the finished linter runs on the document that designed it.
