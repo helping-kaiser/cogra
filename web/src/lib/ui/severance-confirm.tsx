@@ -64,7 +64,7 @@ export function SeveranceConfirm({
       <p data-testid="severance-cost" className="mt-2 text-body-medium">
         {kind === "sever"
           ? `Getting there takes ${steps}, one for each stance being walked back. You sign them in one go, and each is priced on its own.`
-          : `It takes ${steps} to sign.`}
+          : `It takes ${steps}.`}
       </p>
       <div className="mt-6 flex justify-end gap-2">
         <button

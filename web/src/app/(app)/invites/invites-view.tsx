@@ -25,7 +25,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
-import { StanceSlider } from "@/lib/ui/stance-slider";
+import { DIRECTED_LABEL, INTEREST_LABEL, StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
 
 function invitesMessage(code: ErrorCode): string {
@@ -250,13 +250,13 @@ export function InvitesView() {
                 Single-use
               </label>
               <StanceSlider
-                label="Directed weight"
+                label={DIRECTED_LABEL}
                 value={prefillPDirected}
                 onChange={setPrefillPDirected}
                 testId="invites_p_directed"
               />
               <StanceSlider
-                label="Interest weight"
+                label={INTEREST_LABEL}
                 value={prefillPInterest}
                 onChange={setPrefillPInterest}
                 testId="invites_p_interest"
@@ -391,13 +391,13 @@ function ApplicationRow({
       {application.approvedAt === null && approvable && (
         <>
           <StanceSlider
-            label="Directed weight"
+            label={DIRECTED_LABEL}
             value={pDirected}
             onChange={setPDirected}
             testId={`approve_p_directed_${application.id}`}
           />
           <StanceSlider
-            label="Interest weight"
+            label={INTEREST_LABEL}
             value={pInterest}
             onChange={setPInterest}
             testId={`approve_p_interest_${application.id}`}
