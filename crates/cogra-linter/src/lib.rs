@@ -71,7 +71,8 @@ pub use graph::{
     out_along, owner_of, owner_view, source_of,
 };
 pub use judge::kinds::{
-    Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced, Reduction,
+    Attestation, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
+    Reduction,
 };
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use scan::{
