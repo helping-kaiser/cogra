@@ -15,6 +15,8 @@
 #   plus   banned-token sets .................. [banned-tokens]
 #          the carrier's exclusions ........... [carrier]
 #          the kind registry's adoption ....... [kinds]
+#          head recognition per format ........ [head-recognition]
+#          the enforcement partition .......... [enforcement]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -900,6 +902,82 @@ kts_note   = "the 16 Gradle scripts (build.gradle.kts, settings.gradle.kts, buil
 
 
 ####################################################################
+# [head-recognition] — which regions are environment heads
+#
+# RULED 2026-08-25.
+#
+# KND def:kinds:presentation-reduction closes by making two things
+# adoption data: "Which environment class a document format declares
+# for a head, and how a head maps to one". KND judg:kinds:head-validation
+# then judges every PARTICIPATING AUTHORED head, and KND
+# inv:kinds:totality demands exactly one judgment per head — so a
+# checker cannot validate one head until this section says which
+# regions are heads at all. [scanned-regions] fixes which regions
+# PARTICIPATE; this section fixes which of them are HEADS.
+#
+# Only Markdown carries heads in this corpus. A code comment is a
+# scanned region and may carry occurrences, but it heads no
+# environment: every document written under the discipline is prose,
+# and the one label a Rust source is owed sits at an asset, not at a
+# head (see [profiles] profile rust-module).
+####################################################################
+
+[head-recognition]
+separator = "·"
+match     = "case-exact"
+note = """
+CASE-EXACT, RULED. KND judg:kinds:head-validation holds when h "is an
+exact catalogue name", and the registry catalogues its names with
+their own capitalization. Folding case would make Table and table one
+name and quietly widen N, which no row authorizes. A head whose only
+defect is casing is therefore a validation failure that names the
+catalogue spelling, never a silent pass.
+ONE CONSEQUENCE, DISCHARGED: ARCH's own head at its LaTeX open
+question read "Open question" where the catalogue carries "Open
+Question". It is corrected in that document rather than absorbed by a
+folding rule here.
+The SEPARATOR is the middle dot that closes every head before its
+mint. It is adoption data because the mint's position is: a checker
+must know where the head text ends and the label begins.
+"""
+
+[[head-recognition.form]]
+id       = "environment-head"
+language = "markdown"
+shape    = "a bold run opening a block, of the form Kind (Title), followed by the separator and the mint"
+head     = "the bold run's text up to the opening parenthesis, trimmed"
+note = """
+The form every discipline document uses. The parenthesized Title is
+the environment's own name and is NOT part of the head: the head is
+what the registry classifies, and the Title is what the author calls
+this one instance. A bold run carrying no parenthesis is not a head.
+"""
+
+[[head-recognition.form]]
+id       = "heading"
+language = "markdown"
+shape    = "a Markdown heading followed by the separator and the mint"
+head     = "the rung the format supplies, not the heading's own text"
+note = """
+KND def:kinds:presentation-reduction: "For named divisions — an
+Introduction, a Conclusion — the underlying rung supplied by the
+format is the base." Markdown's rung is Section, which the registry
+classifies as sec (KND conv:kinds:structure), and every discipline
+document's heading anchors carry sec accordingly. The heading's own
+text is a title and is classified by nothing.
+"""
+
+# --- Formats with NO head form ---------------------------------
+# Listed so their absence is a decision rather than an oversight. A
+# scanned region in any of these may carry mints and citations; none
+# of them heads an environment, so none is validated against the kind
+# registry.
+[[head-recognition.none]]
+languages = ["rust", "typescript", "kotlin"]
+reason    = "code comments carry occurrences, never environment heads"
+
+
+####################################################################
 # [banned-tokens] — this corpus's own additions
 #
 # RULED 2026-08-21.
@@ -962,7 +1040,7 @@ pre-tokenizer and its own diagnostic for a reader.
 # things — the local extension set X_A, the evidence base E_A, the
 # status map sigma_A, the register generator G_A, and the generated
 # companion register E_hat_A — and KND gate:kinds:adoption blocks
-# adoption until the decision names them. Head validation (R11 of the
+# adoption until the decision names them. Head validation (R12 of the
 # linter's functional requirements) reads the effective relation
 # C_A = C union X_A, so a linter cannot validate one head until this
 # section exists.
@@ -1065,3 +1143,66 @@ staged rather than stale. The first generation run commits the
 initial register and arms exact byte comparison from then on. It
 joins [carrier] generated_files in that same commit.
 """
+
+
+####################################################################
+# [enforcement] — the failing set, and the advisory remainder
+#
+# RULED 2026-08-25.
+#
+# LINTER rep:lint:first-corpus scopes acceptance: version 1 is
+# accepted on a clean run over the material WRITTEN UNDER the
+# discipline, and the linter enters CI as a FAILING gate over exactly
+# that set and an ADVISORY one over the rest. The failing set grows as
+# each migration lands, and when the last one has, the advisory half
+# is empty and the gate enforces corpus-wide.
+#
+# The partition lives here, and not in a CI invocation, because
+# growing it is a claim about the corpus: a migration completed. A
+# reviewed edit to this file is how every other such claim is made.
+####################################################################
+
+[enforcement]
+default = "advisory"
+match   = "first-match-wins over literal path prefixes, as [carrier]"
+note = """
+SEMANTICS ARE [carrier]'s: a prefix ending in "/" matches a tree, a
+prefix naming a file matches that file, and there is no pattern
+dialect (ARCH dec:linter:no-regex).
+ENFORCEMENT IS NOT SEVERITY. An error is an error wherever it is
+found, and the diagnostic says so; enforcement decides only whether
+the lane fails on it. A finding outside every failing prefix is
+reported and does not fail the build.
+WHY SCOPED AT ALL: a gate that is red on arrival teaches a team to
+route around the gate (R20). The corpus migrates before the linter
+enforces, and each completed migration is a commit that adds a prefix
+below.
+"""
+
+failing = [
+  "crates/cogra-linter/docs/",
+  "crates/cogra-interchange/docs/",
+]
+
+# What those two prefixes carry, and what they deliberately do not.
+#
+# crates/cogra-linter/docs/ — the four discipline documents, the
+#   linter architecture, and the linter's own phase artifacts. The
+#   tree also holds kickoff.md and adoption-notes.md, which write
+#   every label-shaped reference in displayed double backticks and so
+#   participate in nothing; including them costs nothing and keeps the
+#   prefix one line instead of seven.
+# crates/cogra-interchange/docs/ — that crate's phase artifacts, whose
+#   concept and design are written under the discipline and whose
+#   audit and commissioning notes join them.
+#
+# DELIBERATELY ADVISORY, each awaiting its own migration:
+#   docs/            — 61 label-shaped spans queued for reforming (R20)
+#   crates/*/src/    — ~1210 plain comments queued for the ban sweep
+#   android/, web/   — no frontend before slices 7 and 8
+# The linter's own src/ joins the failing set when it exists: it is
+# written under the ban from its first line, so it has no sweep to
+# wait for. That is a reviewed edit to this section, taken then.
+
+
+

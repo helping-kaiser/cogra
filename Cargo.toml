@@ -5,6 +5,7 @@ members = [
     "crates/postgres-store",
     "crates/common",
     "crates/cogra-interchange",
+    "crates/cogra-linter",
 ]
 resolver = "2"
 
