@@ -41,28 +41,8 @@ export function samePair(a: StancePair, b: StancePair): boolean {
   return a.pDirected === b.pDirected && a.pInterest === b.pInterest;
 }
 
-/**
- * A folded parameter of zero is routing-inert — it carries nothing
- * (design.md §8.2, feed-ranking.md §3). Read off a *folded* pair, never
- * off the value being written.
- */
-export function inertAxes(pair: StancePair): {
-  readonly directed: boolean;
-  readonly interest: boolean;
-} {
-  return { directed: pair.pDirected === 0, interest: pair.pInterest === 0 };
-}
-
-/** A bundle netted to `(0, 0)` — severance (design.md §8.2). */
-export function isSevered(pair: StancePair): boolean {
-  return pair.pDirected === 0 && pair.pInterest === 0;
-}
-
-/**
- * The exact values, for the readers who want them — never the default
- * reading (design.md §8.3, §8.6). Two decimals, the same precision the
- * paired sliders step at.
- */
-export function formatPair(pair: StancePair): string {
-  return `${pair.pDirected.toFixed(2)}, ${pair.pInterest.toFixed(2)}`;
-}
+// Whether a folded pair is routing-inert or severed is the FOLD's
+// statement about itself, and arrives as a flag on the read
+// (`stance-data.ts`). No predicate for it lives here: a client that
+// could compare a value against zero would eventually do so, and the
+// answer it reached would be its own rather than the graph's.
