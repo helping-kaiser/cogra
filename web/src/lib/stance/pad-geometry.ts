@@ -55,6 +55,9 @@ export function knobTravelInset(
   return Math.max(knobRadius, cornerRadius - (cornerRadius - knobRadius) / Math.SQRT2);
 }
 
+/** The inset the field is drawn with, evaluated once from the tokens. */
+export const KNOB_TRAVEL_INSET_PX = knobTravelInset();
+
 /** The pad's box in client coordinates — a DOMRect, or a test's stand-in. */
 export type PadRect = {
   readonly left: number;
