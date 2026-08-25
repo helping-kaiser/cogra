@@ -5,11 +5,15 @@
 // The gesture (§8.3): a single tap target at rest; a plain tap commits
 // the modest positive default; press and hold and a soft circular pad
 // blooms, opening AT THE ORIGIN — the low default belongs to the tap, not
-// to the considered gesture. Drift to position, release to commit.
+// to the considered gesture. Drift to position, release to commit. The
+// pick is the accumulated travel from where the thumb went down, so the
+// pad opens under the thumb without the pick jumping.
 //
 // What it writes (§8.1): exactly the pair picked. There is no delta in
 // this file. Current standing and where a pick lands the bundle are both
-// READS, rendered beside the pick and never folded into it.
+// READS, rendered around the field and never folded into it. Whether a
+// landing carries nothing is the fold's own flag, never a comparison
+// made here.
 //
 // What it never does (§8.2): prevent a choice. The whole square is
 // reachable, corners included. A pick that nets the bundle to (0, 0) is
@@ -26,35 +30,40 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { nearestAnchor } from "@/lib/stance/anchors";
-import { isSevered, ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
-import { padPairAt, padPercentOf } from "@/lib/stance/pad-geometry";
+import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
+import { padPairFromTravel, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
-import type { StanceBundle, StanceTargetRef } from "@/lib/stance/stance-data";
+import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
 import { useAuthPhase } from "@/lib/session/provider";
 import { buttonClassName } from "@/lib/ui/button";
 import { AddIcon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
-import { SeveranceConfirm, type SeveranceKind } from "@/lib/ui/severance-confirm";
+import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
-import { StanceReadout, type BundleState } from "@/lib/ui/stance-readout";
+import { StanceLandingLine, StanceStanding, type BundleState } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
 
 /**
  * How long a press has to be held before the pad blooms. Android's own
  * platform long-press timeout, so the two clients ask the same thing of
- * the same thumb; the Android pad adopts this number rather than a second
- * one.
+ * the same thumb.
  */
 export const LONG_PRESS_MS = 500;
 
 /**
  * How long the pick has to settle before its landing is read. The
  * projection is a backend fold, so it cannot ride every pointer move; a
- * short settle keeps it one read per pause instead of one per pixel.
+ * short settle keeps it one read per pause instead of one per pixel. The
+ * landing line says it is still working the gap out.
  */
 export const PROJECTION_SETTLE_MS = 150;
 
-type Confirming = { kind: SeveranceKind; records: number; pick: StancePair | null };
+/** An open severance confirmation. A null pick is the explicit gesture. */
+type Confirming = {
+  pick: StancePair | null;
+  records: number;
+  alreadySevered: boolean;
+};
 
 export function StanceControl({
   target,
@@ -81,8 +90,9 @@ export function StanceControl({
   const [open, setOpen] = useState(false);
   const [alternates, setAlternates] = useState(false);
   const [pick, setPick] = useState<StancePair>(ORIGIN);
-  const [projection, setProjection] = useState<StancePair | null>(null);
+  const [landing, setLanding] = useState<StanceLanding | null>(null);
   const [confirming, setConfirming] = useState<Confirming | null>(null);
+  const [confirmFailed, setConfirmFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [signed, setSigned] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
@@ -93,6 +103,8 @@ export function StanceControl({
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressClick = useRef(false);
   const capturedPointer = useRef<number | null>(null);
+  /** Where the pointer went down — the origin the pick is measured from. */
+  const travelOrigin = useRef<{ x: number; y: number } | null>(null);
   const bundleRead = useRef(0);
 
   const considered = open || alternates;
@@ -102,13 +114,13 @@ export function StanceControl({
     // Every signed gesture re-reads; the generation drops an older read
     // that answers after a newer one, so the standing never goes back.
     const generation = ++bundleRead.current;
-    void data.bundle(target.id).then((outcome) => {
+    void data.bundle(target).then((outcome) => {
       if (generation !== bundleRead.current) return;
       // A failed standing read leaves the control usable: it degrades to
       // "no standing known" rather than blanking the affordance.
       setFetched(outcome.kind === "success" ? outcome.value : null);
     });
-  }, [data, phase, suppliedBundle, target.id]);
+  }, [data, phase, suppliedBundle, target]);
 
   useEffect(() => {
     readBundle();
@@ -120,16 +132,16 @@ export function StanceControl({
     if (!considered) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      void data.project(target.id, pick).then((outcome) => {
+      void data.project(target, pick).then((outcome) => {
         if (cancelled) return;
-        setProjection(outcome.kind === "success" ? outcome.value : null);
+        setLanding(outcome.kind === "success" ? outcome.value : null);
       });
     }, PROJECTION_SETTLE_MS);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [considered, data, pick, target.id]);
+  }, [considered, data, pick, target]);
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -157,7 +169,7 @@ export function StanceControl({
       if (event.key !== "Escape") return;
       releasePointer();
       setOpen(false);
-      setProjection(null);
+      setLanding(null);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -168,53 +180,71 @@ export function StanceControl({
     clearHold();
     setOpen(false);
     setAlternates(false);
-    setProjection(null);
+    setLanding(null);
   };
 
-  const commit = async (chosen: StancePair) => {
+  /** Signs the picked edge. Reports whether the gesture completed. */
+  const runCommit = async (chosen: StancePair): Promise<boolean> => {
     setBusy(true);
-    setFailed(false);
-    const outcome = await data.commit(target.id, chosen);
+    const outcome = await data.commit(target, chosen);
     setBusy(false);
-    if (outcome.kind === "success") {
-      setSigned(outcome.value.records);
-      readBundle();
-    } else {
-      setFailed(true);
-    }
+    if (outcome.kind !== "success") return false;
+    setSigned(outcome.value.records);
+    readBundle();
+    return true;
   };
 
-  const sever = async () => {
+  /** Signs the whole counter-record batch. Reports whether it completed. */
+  const runSever = async (): Promise<boolean> => {
     setBusy(true);
-    setFailed(false);
-    const outcome = await data.sever(target.id);
+    const outcome = await data.sever(target);
     setBusy(false);
-    if (outcome.kind === "success") {
-      setSigned(outcome.value.records);
-      readBundle();
-    } else {
-      setFailed(true);
-    }
+    if (outcome.kind !== "success") return false;
+    setSigned(outcome.value.records);
+    readBundle();
+    return true;
+  };
+
+  const openSeverance = () => {
+    closeAll();
+    setSigned(null);
+    setFailed(false);
+    setConfirmFailed(false);
+    const records = bundle === null || bundle === undefined ? 0 : bundle.severance.records;
+    setConfirming({ pick: null, records, alreadySevered: records === 0 });
   };
 
   /**
    * Every commit route lands here: read where the pick puts the bundle,
-   * and if that is `(0, 0)` say so and ask, rather than refusing (§8.2).
+   * and if the fold says that reaches severance, say so and ask rather
+   * than refusing (§8.2).
    */
   const commitChecked = async (chosen: StancePair) => {
     setSigned(null);
     setFailed(false);
-    const landed = await data.project(target.id, chosen);
+    setConfirmFailed(false);
+    const landed = await data.project(target, chosen);
     if (landed.kind !== "success") {
       setFailed(true);
       return;
     }
     closeAll();
-    if (isSevered(landed.value)) {
-      setConfirming({ kind: "landsAtZero", records: 1, pick: chosen });
+    if (landed.value.severed) {
+      setConfirming({ pick: chosen, records: 1, alreadySevered: false });
       return;
     }
-    await commit(chosen);
+    if (!(await runCommit(chosen))) setFailed(true);
+  };
+
+  const onConfirmSeverance = async () => {
+    const pending = confirming;
+    if (pending === null) return;
+    setConfirmFailed(false);
+    const completed = pending.pick === null ? await runSever() : await runCommit(pending.pick);
+    // A failure keeps the dialog up and says so, rather than dropping the
+    // reader back to a control that looks like nothing happened.
+    if (completed) setConfirming(null);
+    else setConfirmFailed(true);
   };
 
   const onTap = () => {
@@ -232,12 +262,13 @@ export function StanceControl({
   const onPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (phase !== "signedIn" || busy) return;
     const pointerId = event.pointerId;
+    travelOrigin.current = { x: event.clientX, y: event.clientY };
     clearHold();
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       suppressClick.current = true;
       setPick(ORIGIN);
-      setProjection(null);
+      setLanding(null);
       setSigned(null);
       if (mode === "pad") {
         setOpen(true);
@@ -257,8 +288,14 @@ export function StanceControl({
   const onPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (!open) return;
     const pad = padRef.current;
-    if (pad === null) return;
-    setPick(padPairAt(pad.getBoundingClientRect(), event.clientX, event.clientY));
+    const origin = travelOrigin.current;
+    if (pad === null || origin === null) return;
+    setPick(
+      padPairFromTravel(pad.getBoundingClientRect(), {
+        dx: event.clientX - origin.x,
+        dy: event.clientY - origin.y,
+      }),
+    );
   };
 
   const onPointerUp = () => {
@@ -275,7 +312,6 @@ export function StanceControl({
 
   const restingFace = bundle === null || bundle === undefined ? null : nearestAnchor(bundle.current);
   const knob = padPercentOf(pick);
-  const severable = bundle !== null && bundle !== undefined && bundle.severance.records > 0;
 
   return (
     <div className="relative flex flex-col gap-1">
@@ -318,7 +354,7 @@ export function StanceControl({
             disabled={busy}
             onClick={() => {
               setPick(ORIGIN);
-              setProjection(null);
+              setLanding(null);
               setSigned(null);
               setAlternates(true);
             }}
@@ -337,10 +373,9 @@ export function StanceControl({
           className="absolute bottom-full left-0 z-10 mb-2 flex w-64 flex-col gap-2 rounded-extra-large bg-surface-container-high p-4"
         >
           {/* Above the pad, never under the knob (§8.4). */}
-          <StanceReadout
+          <StanceStanding
             pick={pick}
             bundle={bundle}
-            projection={projection}
             targetLabel={target.label}
             testIdPrefix={testIdPrefix}
           />
@@ -369,19 +404,16 @@ export function StanceControl({
               className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-container"
             />
           </div>
-          {severable && (
-            <button
-              type="button"
-              data-testid={`${testIdPrefix}-sever`}
-              onClick={() => {
-                closeAll();
-                setConfirming({ kind: "sever", records: bundle.severance.records, pick: null });
-              }}
-              className={buttonClassName({ variant: "text", size: "sm" })}
-            >
-              Cut it off
-            </button>
-          )}
+          {/* Below the field, and never merged into the line above it. */}
+          <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />
+          <button
+            type="button"
+            data-testid={`${testIdPrefix}-sever`}
+            onClick={openSeverance}
+            className={buttonClassName({ variant: "text", size: "sm" })}
+          >
+            Sever
+          </button>
         </div>
       )}
 
@@ -393,19 +425,12 @@ export function StanceControl({
           busy={busy}
           onCommit={() => void commitChecked(pick)}
           onCancel={closeAll}
-          onSever={
-            severable
-              ? () => {
-                  closeAll();
-                  setConfirming({ kind: "sever", records: bundle.severance.records, pick: null });
-                }
-              : undefined
-          }
+          onSever={openSeverance}
+          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />}
         >
-          <StanceReadout
+          <StanceStanding
             pick={pick}
             bundle={bundle}
-            projection={projection}
             targetLabel={target.label}
             showExact
             testIdPrefix={testIdPrefix}
@@ -415,22 +440,24 @@ export function StanceControl({
 
       {confirming !== null && (
         <SeveranceConfirm
-          kind={confirming.kind}
+          pick={confirming.pick}
           targetLabel={target.label}
+          bundle={bundle}
           records={confirming.records}
+          alreadySevered={confirming.alreadySevered}
           busy={busy}
-          onCancel={() => setConfirming(null)}
-          onConfirm={() => {
-            const pending = confirming;
+          failed={confirmFailed}
+          onCancel={() => {
             setConfirming(null);
-            void (pending.pick === null ? sever() : commit(pending.pick));
+            setConfirmFailed(false);
           }}
+          onConfirm={() => void onConfirmSeverance()}
         />
       )}
 
       {signed !== null && (
         <p role="status" data-testid={`${testIdPrefix}-signed`} className="text-body-small text-success">
-          {signed === 1 ? "Signed — still settling." : `Signed ${signed} steps — still settling.`}
+          {signed === 1 ? "Signed — still settling." : `Signed ${signed} actions — still settling.`}
         </p>
       )}
       {/* A failed write is a composer error beside its control, never a

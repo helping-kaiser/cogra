@@ -6,12 +6,12 @@
 
 import { describe, expect, it } from "vitest";
 
-import { padOffsetOf, padPairAt, padPercentOf, padRadius, type PadRect } from "./pad-geometry";
+import { padPairFromTravel, padPercentOf, padRadius, type PadRect } from "./pad-geometry";
 import { TAP_DEFAULT } from "./model";
 
-/** A 200×200 pad at the viewport origin: radius 100, field half-side 100/√2. */
+/** A 200×200 pad: radius 100, and 100 px of travel is a full unit. */
 const RECT: PadRect = { left: 0, top: 0, width: 200, height: 200 };
-const HALF = 100 / Math.SQRT2;
+const RADIUS = 100;
 
 const close = (value: number, expected: number) => expect(value).toBeCloseTo(expected, 10);
 
@@ -20,80 +20,86 @@ describe("pad geometry", () => {
     expect(padRadius({ left: 0, top: 0, width: 200, height: 120 })).toBe(60);
   });
 
-  it("picks the origin at the centre", () => {
-    expect(padPairAt(RECT, 100, 100)).toEqual({ pDirected: 0, pInterest: 0 });
+  it("picks the origin before the pointer has travelled", () => {
+    expect(padPairFromTravel(RECT, { dx: 0, dy: 0 })).toEqual({ pDirected: 0, pInterest: 0 });
   });
 
   it("maps horizontal to valence and vertical to connection, upward-positive", () => {
-    const right = padPairAt(RECT, 100 + HALF / 2, 100);
+    const right = padPairFromTravel(RECT, { dx: RADIUS / 2, dy: 0 });
     close(right.pDirected, 0.5);
     close(right.pInterest, 0);
 
     // Screen y grows downward; connection grows upward.
-    const up = padPairAt(RECT, 100, 100 - HALF / 2);
+    const up = padPairFromTravel(RECT, { dx: 0, dy: -RADIUS / 2 });
     close(up.pDirected, 0);
     close(up.pInterest, 0.5);
 
-    const down = padPairAt(RECT, 100, 100 + HALF / 2);
+    const down = padPairFromTravel(RECT, { dx: 0, dy: RADIUS / 2 });
     close(down.pInterest, -0.5);
   });
 
-  it("reaches every corner of the square — the diagonals land on the circle", () => {
-    // The value square is inscribed in the bloom, so its corners sit at
-    // exactly the pad radius from the centre (design.md §8.2 vs §8.3).
-    for (const [dx, dy, pair] of [
-      [+1, -1, { pDirected: 1, pInterest: 1 }],
-      [-1, -1, { pDirected: -1, pInterest: 1 }],
-      [+1, +1, { pDirected: 1, pInterest: -1 }],
-      [-1, +1, { pDirected: -1, pInterest: -1 }],
+  it("gives the drawn radius the full range on each axis", () => {
+    // Travel straight out to the drawn edge is exactly ±1 — the value
+    // space is the square, and the radius is one unit of either axis.
+    close(padPairFromTravel(RECT, { dx: RADIUS, dy: 0 }).pDirected, 1);
+    close(padPairFromTravel(RECT, { dx: -RADIUS, dy: 0 }).pDirected, -1);
+    close(padPairFromTravel(RECT, { dx: 0, dy: -RADIUS }).pInterest, 1);
+    close(padPairFromTravel(RECT, { dx: 0, dy: RADIUS }).pInterest, -1);
+  });
+
+  it("reaches the corners by travelling past the drawn edge on the diagonal", () => {
+    // A corner sits at √2 radii, so it is outside the circle the pad
+    // draws: §8.2's whole square stays reachable, and travel there is
+    // never refused.
+    for (const [sx, sy] of [
+      [+1, -1],
+      [-1, -1],
+      [+1, +1],
+      [-1, +1],
     ] as const) {
-      const picked = padPairAt(RECT, 100 + dx * HALF, 100 + dy * HALF);
-      close(picked.pDirected, pair.pDirected);
-      close(picked.pInterest, pair.pInterest);
-      close(Math.hypot(dx * HALF, dy * HALF), padRadius(RECT));
+      const travel = { dx: sx * RADIUS, dy: sy * RADIUS };
+      const picked = padPairFromTravel(RECT, travel);
+      close(picked.pDirected, sx);
+      close(picked.pInterest, -sy);
+      expect(Math.hypot(travel.dx, travel.dy)).toBeGreaterThan(padRadius(RECT));
     }
   });
 
-  it("clamps a drag past the field instead of refusing it", () => {
-    expect(padPairAt(RECT, 10_000, -10_000)).toEqual({ pDirected: 1, pInterest: 1 });
-    expect(padPairAt(RECT, -10_000, 10_000)).toEqual({ pDirected: -1, pInterest: -1 });
+  it("clamps travel past the field per axis instead of refusing it", () => {
+    // Per axis, never by radius: a long horizontal drag pins valence at
+    // +1 and leaves connection where it was.
+    expect(padPairFromTravel(RECT, { dx: 10_000, dy: -RADIUS / 2 })).toEqual({
+      pDirected: 1,
+      pInterest: 0.5,
+    });
+    expect(padPairFromTravel(RECT, { dx: -10_000, dy: 10_000 })).toEqual({
+      pDirected: -1,
+      pInterest: -1,
+    });
   });
 
-  it("honours the pad's own position, not just its size", () => {
+  it("measures travel, so the pad's position on screen does not matter", () => {
     const offset: PadRect = { left: 40, top: 90, width: 200, height: 200 };
-    expect(padPairAt(offset, 140, 190)).toEqual({ pDirected: 0, pInterest: 0 });
+    expect(padPairFromTravel(offset, { dx: RADIUS / 2, dy: 0 })).toEqual(
+      padPairFromTravel(RECT, { dx: RADIUS / 2, dy: 0 }),
+    );
   });
 
   it("picks the origin from an unlaid-out pad rather than dividing by zero", () => {
     const collapsed: PadRect = { left: 0, top: 0, width: 0, height: 0 };
-    expect(padPairAt(collapsed, 12, 34)).toEqual({ pDirected: 0, pInterest: 0 });
-  });
-
-  it("round-trips a pair through the knob offset", () => {
-    const round = padPairAt(
-      RECT,
-      100 + padOffsetOf(RECT, TAP_DEFAULT).x,
-      100 + padOffsetOf(RECT, TAP_DEFAULT).y,
-    );
-    close(round.pDirected, TAP_DEFAULT.pDirected);
-    close(round.pInterest, TAP_DEFAULT.pInterest);
+    expect(padPairFromTravel(collapsed, { dx: 12, dy: 34 })).toEqual({
+      pDirected: 0,
+      pInterest: 0,
+    });
   });
 
   it("expresses the knob as a percentage of the box, centre at 50%", () => {
     expect(padPercentOf({ pDirected: 0, pInterest: 0 })).toEqual({ x: 50, y: 50 });
-    const corner = padPercentOf({ pDirected: 1, pInterest: 1 });
-    close(corner.x, 50 + 100 / (2 * Math.SQRT2));
-    close(corner.y, 50 - 100 / (2 * Math.SQRT2));
-    // Inside the box on every axis, so the knob never escapes the pad.
-    for (const pair of [
-      { pDirected: 1, pInterest: 1 },
-      { pDirected: -1, pInterest: -1 },
-    ]) {
-      const percent = padPercentOf(pair);
-      expect(percent.x).toBeGreaterThan(0);
-      expect(percent.x).toBeLessThan(100);
-      expect(percent.y).toBeGreaterThan(0);
-      expect(percent.y).toBeLessThan(100);
-    }
+    // ±1 is the drawn edge, which is the box edge on that axis.
+    expect(padPercentOf({ pDirected: 1, pInterest: 1 })).toEqual({ x: 100, y: 0 });
+    expect(padPercentOf({ pDirected: -1, pInterest: -1 })).toEqual({ x: 0, y: 100 });
+    const tap = padPercentOf(TAP_DEFAULT);
+    close(tap.x, 55);
+    close(tap.y, 45);
   });
 });
