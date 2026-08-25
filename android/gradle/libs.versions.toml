@@ -77,10 +77,10 @@ robolectric = "4.16.1"
 # (`DefaultSdkProvider.populateSdks`, `-i` suffix =
 # `PREINSTRUMENTED_VERSION`), so they move with the `robolectric` version
 # above — a mismatch fails the suite with the resolver's directory listing.
-androidAllApi26 = "8.0.0_r4-robolectric-r1-i7"
-androidAllApi32 = "12.1-robolectric-8229987-i7"
-androidAllApi33 = "13-robolectric-9030017-i7"
-androidAllApi36 = "16-robolectric-13921718-i7"
+androidAllApi26 = "17-robolectric-15733970-i7"
+androidAllApi32 = "17-robolectric-15733970-i7"
+androidAllApi33 = "17-robolectric-15733970-i7"
+androidAllApi36 = "17-robolectric-15733970-i7"
 androidxTestExt = "1.3.0"
 androidxTestCore = "1.7.0"
 
