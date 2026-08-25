@@ -47,6 +47,15 @@
     <string name="stance_axis_interest">In your world</string>
     <string name="stance_standing">Where you stand now</string>
     <string name="stance_standing_none">You haven\'t said anything about this yet</string>
+    <!-- The zero bundle's own wording (design.md §8.4). A standing at
+         exactly (0, 0) is the absence of a feeling, so it is named
+         rather than read through the anchor table as its nearest
+         neighbour — which would call it "Nice". -->
+    <string name="stance_standing_zero">Nothing you\'ve said here carries</string>
+    <!-- The raw sums, on the surfaces that explain cost (design.md §8.3).
+         A bundle clipped at +1.00 whose raw sum is +6.00 costs a batch
+         sized by the six, so the six is what gets stated. -->
+    <string name="stance_standing_raw">Everything you\'ve said here adds up to</string>
     <string name="stance_landing">This leaves you at</string>
     <string name="stance_landing_working">Working out where this leaves you…</string>
     <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>
@@ -80,4 +89,11 @@
 
     <string name="stance_coach">Press and hold to pick exactly where you stand.</string>
     <string name="stance_coach_dismiss">Got it</string>
+
+    <!-- The `?` on the pad (design.md §8.3): the explanation on demand,
+         for anyone who met the control after the one-time coach mark was
+         spent. It says what the two axes are and what actually signs,
+         because nothing here should be learned by accident. -->
+    <string name="stance_explain">What this is</string>
+    <string name="stance_explain_body">Drag to say two things at once: how you stand on it, and how much you want it in your world. Nothing is signed until you press Set — letting go just leaves your pick where you put it.</string>
 </resources>

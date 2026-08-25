@@ -303,6 +303,122 @@ fn code_backtick_inside_an_acute_span() {
     assert!(scan.near_misses.is_empty());
 }
 
+/// Code: a backtick pair does not swallow the acute occurrence inside it.
+///
+/// The backtick carries no pairing authority in scanned code text — the
+/// acute belongs to the label syntax and classifies locally — so a stretch
+/// between two backticks is not a span the scanner may consume, and the mint
+/// inside it reads exactly as it reads without them.
+#[test]
+fn f1_backtick_pair_does_not_swallow_a_mint() {
+    let scan = scan_code("the `Foo type and ´def:x:mint´ then `Bar`", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert!(matches!(scan.occurrences[0], Occurrence::Mint { .. }));
+    assert_eq!(scan.occurrences[0].label().as_str(), "def:x:mint");
+
+    let control = scan_code("the Foo type and ´def:x:mint´ then Bar", 0);
+    assert_eq!(control.occurrences.len(), scan.occurrences.len());
+}
+
+/// Code: nor the citation inside it.
+#[test]
+fn f1_backtick_pair_does_not_swallow_a_citation() {
+    let scan = scan_code("the `Foo type and (´def:x:cite´) then `Bar`", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert!(matches!(scan.occurrences[0], Occurrence::SameOwner { .. }));
+}
+
+/// Code: nor the hard failure an unclosed opening acute inside it is.
+///
+/// Suppressing this was the worst of the three, a hard failure being the one
+/// thing the participation judgment does not let pass quietly.
+#[test]
+fn f1_backtick_pair_does_not_suppress_a_delimiter_failure() {
+    let scan = scan_code("a `x and ´def:x:open and `y`", 0);
+    assert_eq!(
+        scan.delimiter_failure,
+        Some(DelimiterFailure {
+            at: 9,
+            delimiter: Delimiter::Acute
+        })
+    );
+}
+
+/// Code: the backtick's own warning survives the loss of its pairing
+/// authority, being read out of the residue the acute pass did not consume.
+#[test]
+fn f1_backtick_near_miss_is_read_out_of_the_residue() {
+    let scan = scan_code("´a:b:c´ and `d:e:f` here", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert_eq!(scan.near_misses.len(), 1);
+    assert_eq!(scan.near_misses[0].why, NearMissKind::BacktickInCode);
+}
+
+/// Code: a backtick never pairs across an acute span, so the two backticks
+/// on either side of one are each unpaired and each inert.
+#[test]
+fn f1_backticks_do_not_pair_across_an_acute_span() {
+    let scan = scan_code("`a ´d:e:f´ b`", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert!(scan.near_misses.is_empty());
+    assert!(scan.delimiter_failure.is_none());
+}
+
+/// Code: an interior a space squeezed apart is warned about, though no
+/// acute opened it.
+///
+/// The run the opening test reads stops at the space, so the span never
+/// opens; the bounded look after that failure is what makes the spacing
+/// warning of (´[LBL-inv:labels:total-resolution]´) reachable in code.
+#[test]
+fn f5_interior_spacing_is_reachable_in_code() {
+    for text in ["´def: fx:spaced´", "´def :fx:spaced´", "´a:b: c´"] {
+        let scan = scan_code(text, 0);
+        assert_eq!(
+            scan.near_misses.len(),
+            1,
+            "{text:?} warns once: {:?}",
+            scan.near_misses
+        );
+        assert!(matches!(
+            scan.near_misses[0].why,
+            NearMissKind::InteriorSpacing { .. }
+        ));
+    }
+}
+
+/// Code: the look creates no span and consumes nothing — it warns, and the
+/// occurrence after it is read exactly as if the look had not happened.
+#[test]
+fn f5_the_spacing_look_swallows_nothing() {
+    let scan = scan_code("´def: fx:spaced´ then ´a:b:c´", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert_eq!(scan.occurrences[0].label().as_str(), "a:b:c");
+    assert!(scan.delimiter_failure.is_none());
+}
+
+/// Code: the look is bounded, so a lone acute far from the next one warns
+/// about nothing — and an apostrophe accident stays text.
+#[test]
+fn f5_the_spacing_look_is_bounded_and_keeps_apostrophes_text() {
+    let far = "´def: fx and then a stretch of prose long enough to carry no acute at all, \
+               nowhere near this one, and long enough again that no bounded look could \
+               reach across it, ´a:b:c´";
+    let scan = scan_code(far, 0);
+    assert!(scan.near_misses.is_empty(), "{:?}", scan.near_misses);
+    assert_eq!(scan.occurrences.len(), 1);
+
+    assert_eq!(
+        scan_code("it isn´t an occurrence", 0),
+        RegionScan::default()
+    );
+    assert!(
+        scan_code("the author´s ´a:b:c´ label", 0)
+            .near_misses
+            .is_empty()
+    );
+}
+
 /// Code: an empty region carries nothing.
 #[test]
 fn code_empty_region() {

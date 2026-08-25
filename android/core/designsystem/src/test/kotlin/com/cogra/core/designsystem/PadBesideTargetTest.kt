@@ -8,11 +8,13 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * Where the pad opens (design.md §8.3): beside the resting target, never
- * under the press, and never off the screen. The rules are arithmetic, so
- * they are checked as arithmetic — including with the target parked
- * against each edge of the viewport, which is where the old centred-on-
- * the-press placement walked off screen.
+ * Where the COACH MARK opens (design.md §8.7): beside the target it
+ * explains, never over it, and never off the screen. It points at one
+ * particular control, so it has to follow that control — unlike the pad,
+ * which opens at one fixed spot ([PadAtLowerCentreTest]).
+ *
+ * The rules are arithmetic, so they are checked as arithmetic —
+ * including with the target parked against each edge of the viewport.
  */
 class PadBesideTargetTest {
 

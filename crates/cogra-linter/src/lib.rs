@@ -48,7 +48,10 @@ pub mod frontend_md;
 pub mod frontend_rust;
 pub mod graph;
 pub mod judge;
+pub mod migrate;
 pub mod pretokenize;
+pub mod registers;
+pub mod render;
 pub mod scan;
 pub mod timing;
 
@@ -71,9 +74,14 @@ pub use graph::{
     out_along, owner_of, owner_view, source_of,
 };
 pub use judge::kinds::{
-    Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced, Reduction,
+    Attestation, Bound, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
+    Reduction,
 };
+pub use migrate::{Migration, Remaining, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
+pub use registers::{
+    Freshness, Register, RegisterScope, Scope, Written, compare, regenerate_all, write_all,
+};
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
     NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
@@ -187,6 +195,13 @@ impl Run {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
+/// The configured roots the walk reached nothing under are reported here and
+/// not in [`check_sources`], because they are a fact about *this walk over
+/// this root*: a caller handing over a source list of its own never claimed
+/// to have traversed the corpus, and telling it that the trees it did not
+/// supply are missing would be answering a question it did not ask
+/// (´conv:lint:owner-assignment´).
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory. Nothing else: a
@@ -205,10 +220,12 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         Err(outcome) => (outcome.sources, outcome.failures),
     };
     let walked = walking.elapsed();
+    let roots = crate::carrier::unmatched_roots(a, &sources);
 
     let mut run = check_sources(a, sources);
     run.timing.record(Phase::Harvest, walked);
     run.findings.extend(failures);
+    run.findings.extend(roots);
     run.findings.sort();
     Ok(run)
 }
@@ -250,6 +267,13 @@ pub fn check_sources(a: &Adoption, mut sources: Vec<SourceFile>) -> Run {
     let mut findings = harvest.findings;
     timing.time(Phase::Judge, || {
         let mut judged = judge::judge_all(&harvest.g, &harvest.r, a, kinds.as_ref());
+        judged.extend(judge::freshness::registers(
+            &harvest.g,
+            &harvest.r,
+            a,
+            kinds.as_ref(),
+            &held,
+        ));
         judge::stamp(&mut judged, &held, a);
         findings.extend(judged);
     });
@@ -612,14 +636,17 @@ impl<'a> Harvest<'a> {
 
 /// Which catalogue names a head validates as, one per `ValidatesAs` edge.
 ///
-/// Zero names is an uncatalogued pair and two is an ambiguous reduction,
-/// which is exactly what the degree check reads off the edges
-/// (´[KND-judg:kinds:head-validation]´).
+/// Zero names is a head that did not validate and two is an ambiguous
+/// reduction, which is exactly what the degree check reads off the edges
+/// (´[KND-judg:kinds:head-validation]´). Which *kind* of failure zero was —
+/// the relation carrying no such pair, or the reduction stopping at one of
+/// its bounds before asking — is the judgment's affair and not the edge's:
+/// an edge that does not exist looks the same either way.
 fn validates_as(k: &KindRegistry, head: &str, declared: &Kind) -> Vec<Box<str>> {
     match k.validate(head, declared) {
         HeadVerdict::Exact => vec![Box::from(head)],
         HeadVerdict::Reduced { base } => vec![base],
-        HeadVerdict::Uncatalogued { .. } => Vec::new(),
+        HeadVerdict::Uncatalogued { .. } | HeadVerdict::Beyond { .. } => Vec::new(),
         HeadVerdict::Ambiguous { bases } => bases,
     }
 }

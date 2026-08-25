@@ -345,7 +345,9 @@ can land in any order — 2.3 (topics) needs only the text core.
   ([design.md §9](design.md); rides `stagedWrite`/`EXPIRED`), and
   the composer's unchanged-snapshot guard (disable save when the
   edit is byte-identical; the protocol keeps accepting priced
-  no-ops).
+  no-ops), and an optional **quick-pad variant** — hold, drag,
+  commit on release, no Set step — as a second mode beside the
+  full pad (jakob, 2026-08-25; the full pad stays the default).
 - **The L1-view / L2-view toggle on the feed.** The stance bundle
   already lets a reader choose which view they read — landed only,
   or landed plus what is still in flight (slice 2.2). The ranked

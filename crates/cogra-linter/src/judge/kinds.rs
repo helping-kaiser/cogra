@@ -30,6 +30,7 @@
 //! out.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::fmt;
 
 use petgraph::stable_graph::NodeIndex;
 
@@ -58,8 +59,9 @@ pub const HYBRID_COLLIDES: RuleId = RuleId::new("registry-hybrid-token-collides"
 pub const HYBRID_MISMATCH: RuleId = RuleId::new("registry-hybrid-token-mismatch");
 
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 8] = [
+pub const RULES: [RuleId; 9] = [
     HEAD_AMBIGUOUS,
+    HEAD_BEYOND_BOUNDS,
     HEAD_UNCATALOGUED,
     HYBRID_COLLIDES,
     HYBRID_MISMATCH,
@@ -77,6 +79,12 @@ const MODIFIER: &str = "Modifier";
 
 /// The header both tables' kind column carries.
 const KIND: &str = "Kind";
+
+/// The header the generated headline table's measure column carries.
+const MEASURE: &str = "Measure";
+
+/// The header its count column carries.
+const COUNT: &str = "Count";
 
 /// The em dash a device row carries where a kind would stand.
 const NO_KIND: &str = "\u{2014}";
@@ -169,16 +177,47 @@ pub struct Reduction {
     pub devices: Vec<Device>,
 }
 
+/// Which bound stopped a reduction before its search was done.
+///
+/// Reduction is a search over spelling rules and a search over arbitrary
+/// text needs bounds to be total, so both of these exist and neither is a
+/// statement about the catalogue. A search that hit one has not finished
+/// asking, and the difference between "the relation carries no such pair"
+/// and "the search never got there" is the whole of why this type exists.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum Bound {
+    /// The candidate budget: how many spellings one reduction may visit.
+    Budget(usize),
+    /// The device depth: how many devices one head may carry.
+    Depth(usize),
+}
+
+impl fmt::Display for Bound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Bound::Budget(many) => write!(f, "a budget of {many} candidate spellings"),
+            Bound::Depth(many) => write!(f, "a depth of {many} devices"),
+        }
+    }
+}
+
 /// `base_A(h)`: what a head reduces to
 /// (´[KND-def:kinds:presentation-reduction]´).
 ///
 /// Usually one route, often none. Several routes reaching one name are one
 /// base; several routes reaching different names carrying the declared kind
 /// are what [`HeadVerdict::Ambiguous`] reports.
+///
+/// `bound` records that the search stopped short of exhausting its
+/// candidates. `None` is a search that finished, and only then does "no
+/// route" mean the reduction reaches nothing.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Reduced {
     /// The routes found, in the order the search met them.
     pub routes: Vec<Reduction>,
+    /// The bound that stopped the search, where one did.
+    pub bound: Option<Bound>,
 }
 
 impl Reduced {
@@ -213,6 +252,53 @@ pub enum HeadVerdict {
         /// The names reached, sorted.
         bases: Vec<Box<str>>,
     },
+    /// The reduction stopped at one of its bounds without reaching a pair,
+    /// so the relation was never asked about this head at all.
+    ///
+    /// This is not [`HeadVerdict::Uncatalogued`] and must never be reported
+    /// as one: the catalogue said nothing here, the search did — and a
+    /// finding that names the catalogue sends its reader to the registry to
+    /// look for a row that was never consulted.
+    Beyond {
+        /// The bound that stopped the search.
+        bound: Bound,
+    },
+}
+
+/// The status one pair of C_A carries under σ_A
+/// (´[KND-judg:kinds:attestation]´).
+///
+/// Two variants and not three, by the coverage invariant's own words: for
+/// every pair of C_A exactly one of firm and borderline holds, and every
+/// candidate lies outside C_A (´[KND-inv:kinds:attestation-coverage]´). A
+/// candidate is therefore not a status this type can carry — it is a
+/// recorded string with no pair, and `[kinds.statuses] candidates` is where
+/// it lives.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Attestation {
+    /// Ordinary attestation: the evidence is accepted as it stands.
+    Firm,
+    /// The pair is accepted and its evidence qualified — the dagger the
+    /// edition prints at the row.
+    Borderline,
+}
+
+impl Attestation {
+    /// The status's name, as the companion register spells it.
+    ///
+    /// ```
+    /// use cogra_linter::Attestation;
+    ///
+    /// assert_eq!(Attestation::Firm.token(), "firm");
+    /// assert_eq!(Attestation::Borderline.token(), "borderline");
+    /// ```
+    #[must_use]
+    pub const fn token(self) -> &'static str {
+        match self {
+            Attestation::Firm => "firm",
+            Attestation::Borderline => "borderline",
+        }
+    }
 }
 
 /// The five counts of (´[KND-tab:kinds:headline-counts]´), derived from the
@@ -239,6 +325,8 @@ pub struct HeadlineCounts {
 #[derive(Clone, Debug, Default)]
 pub struct KindRegistry {
     pairs: BTreeMap<Box<str>, BTreeSet<Kind>>,
+    borderline: BTreeSet<(Box<str>, Kind)>,
+    headline: Option<ByteSpan>,
     families: BTreeSet<DeviceFamily>,
     modifiers: BTreeSet<Box<str>>,
     unrecognized: Vec<Box<str>>,
@@ -311,19 +399,25 @@ impl KindRegistry {
                 base: head.into(),
                 devices: Vec::new(),
             });
-            return Reduced { routes };
+            return Reduced {
+                routes,
+                bound: None,
+            };
         }
         let mut seen: BTreeSet<String> = BTreeSet::new();
         seen.insert(head.to_owned());
         let mut queue: VecDeque<(String, Vec<Device>)> = VecDeque::new();
         queue.push_back((head.to_owned(), Vec::new()));
         let mut visited = 0;
+        let mut bound = None;
         while let Some((candidate, devices)) = queue.pop_front() {
             visited += 1;
             if visited > BUDGET {
+                bound = Some(Bound::Budget(BUDGET));
                 break;
             }
             if devices.len() >= DEPTH {
+                bound = bound.or(Some(Bound::Depth(DEPTH)));
                 continue;
             }
             for (next, device) in self.successors(&candidate) {
@@ -342,7 +436,7 @@ impl KindRegistry {
                 }
             }
         }
-        Reduced { routes }
+        Reduced { routes, bound }
     }
 
     /// `C_A ⊢ h ✓ k`, by an exact pair or one reduction through one base
@@ -382,6 +476,15 @@ impl KindRegistry {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # What the bounds are allowed to say
+    ///
+    /// A reduction that stopped at one of its bounds *and reached no name at
+    /// all* is [`HeadVerdict::Beyond`] and never
+    /// [`HeadVerdict::Uncatalogued`]: nothing was asked of the relation, so
+    /// nothing may be reported about it. A bounded search that did reach a
+    /// name keeps the uncatalogued verdict, because the name it names is one
+    /// the relation was genuinely asked about.
     #[must_use]
     pub fn validate(&self, head: &str, declared: &Kind) -> HeadVerdict {
         if self.carries(head, declared) {
@@ -401,6 +504,9 @@ impl KindRegistry {
         match matching.len() {
             0 => {
                 let mut bases = distinct(reduced.routes.iter().map(|route| route.base.clone()));
+                if let (true, Some(bound)) = (bases.is_empty(), reduced.bound) {
+                    return HeadVerdict::Beyond { bound };
+                }
                 let base = if bases.len() == 1 {
                     bases.remove(0)
                 } else {
@@ -421,6 +527,47 @@ impl KindRegistry {
             .iter()
             .filter(|(_, kinds)| kinds.len() > 1)
             .flat_map(|(name, kinds)| kinds.iter().map(move |kind| (&**name, kind)))
+    }
+
+    /// Every pair of C_A with the status σ_A gives it, in the register's own
+    /// order — name, then kind (´[KND-req:kinds:attestation-register]´).
+    ///
+    /// The status is the edition's, read off the row's own dagger rather
+    /// than from a transcribed list: the dagger is a status mark on the row
+    /// (´[KND-judg:kinds:attestation]´), so the document that carries the
+    /// pair carries its status, and `[kinds.statuses] daggered` is a record
+    /// of what the edition says and not a second source of it. No status is
+    /// strengthened in this corpus, so σ_A is the edition's unchanged.
+    ///
+    /// This is the companion register's input, as [`KindRegistry::homonyms`]
+    /// is (´req:lint:register-generator´).
+    pub fn rows(&self) -> impl Iterator<Item = (&str, &Kind, Attestation)> {
+        self.pairs.iter().flat_map(move |(name, kinds)| {
+            kinds.iter().map(move |kind| {
+                let status = if self.borderline.contains(&(name.clone(), kind.clone())) {
+                    Attestation::Borderline
+                } else {
+                    Attestation::Firm
+                };
+                (&**name, kind, status)
+            })
+        })
+    }
+
+    /// Where the headline counts sit in the registry document, if the
+    /// document carries them.
+    ///
+    /// The generated region of (´[KND-tab:kinds:headline-counts]´) is found
+    /// by its own table shape, which is registry-as-data applied to the one
+    /// table the registry does not read as a catalogue
+    /// (´[ARCH-dec:linter:registry-as-data]´). The generator splices its
+    /// regenerated table into exactly this span
+    /// (´sig:lint:register-api´), and it is the only route to that span: a
+    /// second recognizer, in the adoption data or in the generator, would be
+    /// a second reading of one document.
+    #[must_use]
+    pub fn headline_region(&self) -> Option<ByteSpan> {
+        self.headline
     }
 
     /// The five counts of (´[KND-tab:kinds:headline-counts]´), derived from
@@ -568,7 +715,10 @@ enum Role {
     Catalogue,
     /// `Modifier | Kind`: the emphasis and status modifiers.
     Modifiers,
-    /// Anything else, the generated headline counts included.
+    /// `Measure | Count`: the generated headline counts, which contribute
+    /// no pair and are the generator's to write.
+    Headline,
+    /// Anything else.
     Other,
 }
 
@@ -577,6 +727,7 @@ fn role_of(table: &Table) -> Role {
     match headers.as_slice() {
         [ENVIRONMENT, KIND] => Role::Catalogue,
         [MODIFIER, KIND] => Role::Modifiers,
+        [MEASURE, COUNT] => Role::Headline,
         _ => Role::Other,
     }
 }
@@ -586,6 +737,7 @@ struct Declared {
     name: Box<str>,
     token: Box<str>,
     at: ByteSpan,
+    status: Attestation,
 }
 
 /// The read of one registry document.
@@ -595,6 +747,8 @@ struct Reader<'a> {
     enforcement: Enforcement,
     findings: Vec<Diagnostic>,
     pairs: BTreeMap<Box<str>, BTreeSet<Kind>>,
+    borderline: BTreeSet<(Box<str>, Kind)>,
+    headline: Option<ByteSpan>,
     declared: Vec<Declared>,
     families: BTreeSet<DeviceFamily>,
     modifiers: BTreeSet<Box<str>>,
@@ -611,6 +765,8 @@ impl<'a> Reader<'a> {
             enforcement: a.enforcement.enforcement_for(&doc.path),
             findings: Vec::new(),
             pairs: BTreeMap::new(),
+            borderline: BTreeSet::new(),
+            headline: None,
             declared: Vec::new(),
             families: BTreeSet::new(),
             modifiers: BTreeSet::new(),
@@ -625,6 +781,7 @@ impl<'a> Reader<'a> {
             match role_of(table) {
                 Role::Catalogue => self.catalogue(table),
                 Role::Modifiers => self.modifiers(table),
+                Role::Headline => self.headline = self.headline.or(Some(table.span)),
                 Role::Other => {}
             }
         }
@@ -640,6 +797,8 @@ impl<'a> Reader<'a> {
         if self.findings.is_empty() {
             Ok(KindRegistry {
                 pairs: self.pairs,
+                borderline: self.borderline,
+                headline: self.headline,
                 families: self.families,
                 modifiers: self.modifiers,
                 unrecognized: self.unrecognized,
@@ -660,6 +819,7 @@ impl<'a> Reader<'a> {
                 self.malformed(table, row);
                 continue;
             };
+            let status = status_of(name);
             let name = catalogue_name(name);
             let kind = kind.trim();
             if name.is_empty() {
@@ -667,9 +827,9 @@ impl<'a> Reader<'a> {
             } else if kind == NO_KIND {
                 self.device(&name);
             } else if name.contains(JOIN) {
-                self.hybrid(&name, kind, table);
+                self.hybrid(&name, kind, table, status);
             } else {
-                self.pair(&name, kind, table);
+                self.pair(&name, kind, table, status);
             }
         }
     }
@@ -708,7 +868,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn hybrid(&mut self, name: &str, kind: &str, table: &Table) {
+    fn hybrid(&mut self, name: &str, kind: &str, table: &Table, status: Attestation) {
         let Some(token) = kind_token(kind) else {
             self.not_a_kind(name, kind, table);
             return;
@@ -717,18 +877,25 @@ impl<'a> Reader<'a> {
             name: name.into(),
             token: token.into(),
             at: table.span,
+            status,
         });
     }
 
-    fn pair(&mut self, name: &str, kind: &str, table: &Table) {
+    fn pair(&mut self, name: &str, kind: &str, table: &Table, status: Attestation) {
         let Some(token) = kind_token(kind) else {
             self.not_a_kind(name, kind, table);
             return;
         };
-        self.pairs
-            .entry(name.into())
-            .or_default()
-            .insert(Kind::new(token));
+        let kind = Kind::new(token);
+        self.record(name, &kind, status);
+        self.pairs.entry(name.into()).or_default().insert(kind);
+    }
+
+    /// One row's edition status, kept only where it is not the default.
+    fn record(&mut self, name: &str, kind: &Kind, status: Attestation) {
+        if status == Attestation::Borderline {
+            self.borderline.insert((name.into(), kind.clone()));
+        }
     }
 
     /// Derive the hybrid rows and check the side conditions
@@ -770,6 +937,7 @@ impl<'a> Reader<'a> {
                 self.findings.push(finding);
                 continue;
             }
+            self.record(&one.name, &token, one.status);
             self.pairs
                 .entry(one.name.clone())
                 .or_default()
@@ -836,6 +1004,19 @@ fn catalogue_name(cell: &str) -> String {
     cell.trim().trim_end_matches(DAGGER).trim_end().to_owned()
 }
 
+/// The edition status the row's own mark records.
+///
+/// The dagger is a status mark on the row and never a character of the
+/// name, so the same cell carries both the name and its status
+/// (´[KND-judg:kinds:attestation]´). An undaggered row is firm.
+fn status_of(cell: &str) -> Attestation {
+    if cell.trim_end().ends_with(DAGGER) {
+        Attestation::Borderline
+    } else {
+        Attestation::Firm
+    }
+}
+
 /// The kind token a kind cell carries, which the registry writes in a plain
 /// code span.
 fn kind_token(cell: &str) -> Option<&str> {
@@ -859,6 +1040,17 @@ pub const HEAD_UNCATALOGUED: RuleId = RuleId::new("kind-head-uncatalogued");
 /// A head whose presentation reduction reaches more than one base pair
 /// (´[KND-judg:kinds:head-validation]´).
 pub const HEAD_AMBIGUOUS: RuleId = RuleId::new("kind-head-ambiguous");
+
+/// A head whose reduction stopped at one of its bounds without reaching any
+/// catalogue name (´[KND-def:kinds:presentation-reduction]´).
+///
+/// Its own rule and not [`HEAD_UNCATALOGUED`], because the two ask for
+/// different repairs: an uncatalogued head is answered at the registry, and
+/// this one is answered at the head — a head carrying more devices than the
+/// reduction may remove is a head to write more plainly, and the finding
+/// says which bound it passed rather than sending its reader to look for a
+/// row nothing consulted.
+pub const HEAD_BEYOND_BOUNDS: RuleId = RuleId::new("kind-head-beyond-reduction-bounds");
 
 /// Every head validates as exactly one catalogued pair
 /// (´[KND-judg:kinds:head-validation]´).
@@ -886,10 +1078,7 @@ pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
         let pairs: Vec<NodeIndex> = out_along(g, head, EdgeW::ValidatesAs).collect();
         let (rule, message) = match pairs.len() {
             1 => continue,
-            0 => (
-                HEAD_UNCATALOGUED,
-                uncatalogued(k, &weight.text, &weight.declared),
-            ),
+            0 => unvalidated(k, &weight.text, &weight.declared),
             _ => (
                 HEAD_AMBIGUOUS,
                 format!(
@@ -911,15 +1100,31 @@ pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
     found
 }
 
-/// What an unvalidated head says, with the name it reduced to where the
-/// reduction reached one.
-fn uncatalogued(k: &KindRegistry, head: &str, declared: &Kind) -> String {
+/// What a head with no `ValidatesAs` edge says, and under which rule.
+///
+/// The graph decides *that* the head failed — out-degree zero over
+/// `ValidatesAs`, as the degree check reads it — and the registry is asked
+/// only *which* failure it was, which is the same "consulted for the words"
+/// the traversal above describes. The two are different findings because
+/// they are answered in different places: an uncatalogued head at the
+/// registry, a head beyond the bounds at the head.
+fn unvalidated(k: &KindRegistry, head: &str, declared: &Kind) -> (RuleId, String) {
     match k.validate(head, declared) {
-        HeadVerdict::Uncatalogued { base } if &*base != head => {
+        HeadVerdict::Beyond { bound } => (
+            HEAD_BEYOND_BOUNDS,
+            format!(
+                "the reduction of the head {head} stopped at {bound} without reaching a catalogue name, so the relation was never asked about it"
+            ),
+        ),
+        HeadVerdict::Uncatalogued { base } if &*base != head => (
+            HEAD_UNCATALOGUED,
             format!(
                 "the head {head} reduces to {base}, which the relation does not carry with the kind {declared}"
-            )
-        }
-        _ => format!("the relation carries no pair of {head} with the kind {declared}"),
+            ),
+        ),
+        _ => (
+            HEAD_UNCATALOGUED,
+            format!("the relation carries no pair of {head} with the kind {declared}"),
+        ),
     }
 }

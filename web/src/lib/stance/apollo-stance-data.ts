@@ -54,6 +54,8 @@ const READ_POLICY = "network-only";
 type WireBundle = {
   readonly pDirected: number;
   readonly pInterest: number;
+  readonly rawPDirected: number;
+  readonly rawPInterest: number;
   readonly recordCount: number;
   readonly inert: boolean;
   readonly severed: boolean;
@@ -128,6 +130,9 @@ export function createApolloStanceData(deps: {
       const wire = read.value;
       return success({
         current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
+        // Carried through unclipped: the landing line folds against
+        // these, and the clip is what would lose the history (§8.3).
+        rawSum: { pDirected: wire.rawPDirected, pInterest: wire.rawPInterest },
         records: wire.recordCount,
         inert: wire.inert,
         severed: wire.severed,
