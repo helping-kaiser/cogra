@@ -20,43 +20,8 @@ use petgraph::visit::{EdgeFiltered, EdgeRef, NodeFiltered};
 
 use crate::adopt::{Area, Kind, Language, OwnerId, Place, ProfileId, ProfileStatus};
 use crate::diag::ByteSpan;
+use crate::frontend::RegionKind;
 use crate::scan::{Label, Prefix, Syntax};
-
-/// The form a language gives a comment.
-///
-/// The pre-tokenizer's, and lands with it in slice 4; carried here because
-/// a region records which comment it came from.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum CommentForm {
-    /// `///`
-    LineOuterDoc,
-    /// `//!`
-    LineInnerDoc,
-    /// `//`
-    LinePlain,
-    /// `/** */`
-    BlockOuterDoc,
-    /// `/*! */`
-    BlockInnerDoc,
-    /// `/* */`
-    BlockPlain,
-}
-
-/// What kind of logical region a region node holds.
-///
-/// The frontend contract's, and lands with it in slice 3; carried here
-/// because a region node records it.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum RegionKind {
-    /// A block-level element of prose.
-    Prose,
-    /// A heading, whose rung the format supplies.
-    Heading,
-    /// A comment, in the form the language gives it.
-    Comment(CommentForm),
-    /// One row of a table.
-    TableRow,
-}
 
 /// One entity of the disciplines, held as a node weight of the corpus
 /// graph (´sig:lint:node-weights´).

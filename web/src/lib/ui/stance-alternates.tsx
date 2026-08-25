@@ -19,7 +19,7 @@ import { useEffect, useId, useRef } from "react";
 import { clampDimension, type StancePair } from "@/lib/stance/model";
 import type { StanceInputMode } from "@/lib/stance/input-mode";
 import { buttonClassName } from "@/lib/ui/button";
-import { DIRECTED_LABEL, formatStanceWords, INTEREST_LABEL } from "@/lib/ui/stance-format";
+import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 
 function DirectEntry({
@@ -135,9 +135,6 @@ export function StanceAlternates({
           </>
         )}
       </div>
-      <p data-testid="stance-alt-exact" className="mt-3 text-body-small text-on-surface-variant">
-        {formatStanceWords(pick)}
-      </p>
       {landing}
       <div className="mt-6 flex items-center justify-end gap-2">
         <button
