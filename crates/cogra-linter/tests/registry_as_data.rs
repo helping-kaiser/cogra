@@ -724,7 +724,66 @@ fn reduction_is_bounded() {
     let head = format!("{}section 1.1, restated", "Sub".repeat(200));
     assert!(matches!(
         registry().validate(&head, &Kind::new("sec")),
-        HeadVerdict::Uncatalogued { .. } | HeadVerdict::Reduced { .. }
+        HeadVerdict::Uncatalogued { .. } | HeadVerdict::Reduced { .. } | HeadVerdict::Beyond { .. }
+    ));
+}
+
+/// A reduction stopped by one of its bounds says so, and never that the
+/// relation carries no such pair.
+///
+/// The bound is a fact about the search and the catalogue is a fact about
+/// the registry; reporting the first as the second sends its reader to look
+/// for a row nothing ever consulted. A head carrying more devices than the
+/// reduction may remove is the case that reaches this.
+#[test]
+fn f9_a_reduction_stopped_by_its_bound_does_not_blame_the_catalogue() {
+    let deep = "Main Key Toy Working Running Theorem";
+    let verdict = registry().validate(deep, &Kind::new("thm"));
+    assert!(
+        matches!(verdict, HeadVerdict::Beyond { .. }),
+        "a five-device head reports its bound: {verdict:?}"
+    );
+    let reduced = registry().reduce(deep);
+    assert!(
+        reduced.bound.is_some(),
+        "the reduction records which bound stopped it"
+    );
+    assert!(
+        reduced.routes.is_empty(),
+        "and it reached no catalogue name to report"
+    );
+}
+
+/// A search that finished still reports the catalogue, so the new verdict
+/// narrows and never swallows: an unknown name and a miscased one are both
+/// uncatalogued, and neither reduction was bounded.
+#[test]
+fn f9_a_finished_search_still_reports_the_catalogue() {
+    for head in ["Frobnicator", "Main Frobnicator", "theorem"] {
+        let verdict = registry().validate(head, &Kind::new("thm"));
+        assert!(
+            matches!(verdict, HeadVerdict::Uncatalogued { .. }),
+            "{head} is uncatalogued and not beyond a bound: {verdict:?}"
+        );
+        assert_eq!(
+            registry().reduce(head).bound,
+            None,
+            "{head}: the search finished"
+        );
+    }
+}
+
+/// A head within the bounds validates as it always did: recording the bound
+/// changes no verdict that had one.
+#[test]
+fn f9_a_head_within_the_bounds_is_unchanged() {
+    assert_eq!(
+        registry().validate("Theorem", &Kind::new("thm")),
+        HeadVerdict::Exact
+    );
+    assert!(matches!(
+        registry().validate("Main Key Motivating Numerical Theorem", &Kind::new("thm")),
+        HeadVerdict::Reduced { .. }
     ));
 }
 

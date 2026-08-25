@@ -16,6 +16,7 @@ import {
   FIELD_CORNER_RADIUS_PX,
   KNOB_DIAMETER_PX,
   knobTravelInset,
+  padPairFrom,
   padPairFromTravel,
   padPercentOf,
   padTravelHalfExtent,
@@ -208,5 +209,60 @@ describe("pad geometry", () => {
     const tap = padPercentOf(TAP_DEFAULT);
     close(tap.x, 55);
     close(tap.y, 45);
+  });
+});
+
+// The pad parks and stays open (§8.3), so a second drag adjusts the pick
+// already standing. Same accumulated travel, different starting point.
+describe("travel from a pick already standing", () => {
+  it("is the plain travel map when it starts at the origin", () => {
+    const travel = { dx: HALF / 2, dy: -HALF / 4 };
+    expect(padPairFrom({ pDirected: 0, pInterest: 0 }, RECT, travel)).toEqual(
+      padPairFromTravel(RECT, travel),
+    );
+  });
+
+  it("adds the travel to where the knob already was", () => {
+    const base: StancePair = { pDirected: 0.5, pInterest: -0.25 };
+    const moved = padPairFrom(base, RECT, { dx: HALF / 4, dy: HALF / 2 });
+    close(moved.pDirected, 0.75);
+    close(moved.pInterest, -0.75);
+  });
+
+  it("clamps the sum rather than the travel, so an off-centre base still reaches the corner", () => {
+    // Clamping the travel first would stop the knob at +1 short of the
+    // corner whenever the base was already positive.
+    const base: StancePair = { pDirected: 0.8, pInterest: 0.8 };
+    expect(padPairFrom(base, RECT, { dx: HALF, dy: -HALF })).toEqual({
+      pDirected: 1,
+      pInterest: 1,
+    });
+    expect(padPairFrom(base, RECT, { dx: HALF * 10, dy: -HALF * 10 })).toEqual({
+      pDirected: 1,
+      pInterest: 1,
+    });
+  });
+
+  it("keeps the base when the field has no travel in it", () => {
+    const collapsed: PadRect = { left: 0, top: 0, width: 0, height: 0 };
+    const base: StancePair = { pDirected: 0.4, pInterest: -0.4 };
+    expect(padPairFrom(base, collapsed, { dx: 99, dy: 99 })).toEqual(base);
+  });
+
+  it("never leaves the drawn square, whatever the base and the travel", () => {
+    const bases: StancePair[] = [
+      { pDirected: -1, pInterest: -1 },
+      { pDirected: 1, pInterest: 1 },
+      { pDirected: 0.3, pInterest: -0.7 },
+    ];
+    for (const base of bases) {
+      for (const dx of [-10_000, -HALF, 0, HALF, 10_000]) {
+        for (const dy of [-10_000, -HALF, 0, HALF, 10_000]) {
+          const pick = padPairFrom(base, RECT, { dx, dy });
+          expect(Math.abs(pick.pDirected)).toBeLessThanOrEqual(1);
+          expect(Math.abs(pick.pInterest)).toBeLessThanOrEqual(1);
+        }
+      }
+    }
   });
 });

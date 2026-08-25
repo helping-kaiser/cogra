@@ -369,8 +369,19 @@ pub fn inventory(g: &Corpus, _r: &Registries) -> Vec<Diagnostic> {
 /// that keeps (´[LBL-metathm:labels:no-self-support]´) a theorem. The domain
 /// is empty in this corpus — no generated carrier file has a frontend — and
 /// the query is implemented all the same.
+///
+/// # Which mints the derivation clause reaches
+///
+/// Only those of a kind in K. Generation is a fact about the pen and
+/// warrants attach to no pen: a kind outside K is authored, and "an
+/// authorship a generator transcribes from the record of the authors' choice
+/// is that choice still" — so a generated mint of an authored kind stands on
+/// its authorship exactly as a hand-written one does, and asking it for a
+/// derivation would demand the one warrant its kind does not admit. The
+/// kind partition is (´[LBL-inv:labels:warrant-totality]´)'s business and is
+/// checked there, over authored and generated text alike.
 #[must_use]
-pub fn generated_compliance(g: &Corpus, _r: &Registries) -> Vec<Diagnostic> {
+pub fn generated_compliance(g: &Corpus, _r: &Registries, a: &Adoption) -> Vec<Diagnostic> {
     let mut found = Vec::new();
     for region in nodes_of(g, NodeKind::Region) {
         let Some(NodeW::Region(weight)) = g.node_weight(region) else {
@@ -383,13 +394,15 @@ pub fn generated_compliance(g: &Corpus, _r: &Registries) -> Vec<Diagnostic> {
             let Some(at) = at(g, held) else { continue };
             let (rule, message) = match g.node_weight(held) {
                 Some(NodeW::Mint(mint))
-                    if degree_along(g, held, EdgeW::Derives, Direction::Incoming) == 0 =>
+                    if a.reserved_kinds.contains(&Kind::new(mint.label.kind()))
+                        && degree_along(g, held, EdgeW::Derives, Direction::Incoming) == 0 =>
                 {
                     (
                         GENERATED_UNWARRANTED,
                         format!(
-                            "the generated mint of {} stands on no derivation, and a generator fills no authorship",
-                            mint.label
+                            "{} carries the reserved kind {}, which only a derivation warrants, and the generated mint stands on none",
+                            mint.label,
+                            mint.label.kind()
                         ),
                     )
                 }

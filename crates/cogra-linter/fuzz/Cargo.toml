@@ -1,0 +1,47 @@
+[package]
+name = "cogra-linter-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+# Detached from the crate's workspace: the fuzz crate builds only on the
+# nightly cargo-fuzz lane, never as a member of the version-1 tree, and
+# `make ci` does not compile it.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.cogra-linter]
+path = ".."
+
+[[bin]]
+name = "pretokenize_rust"
+path = "fuzz_targets/pretokenize_rust.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "scan_region"
+path = "fuzz_targets/scan_region.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "markdown_regions"
+path = "fuzz_targets/markdown_regions.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "adoption_load"
+path = "fuzz_targets/adoption_load.rs"
+test = false
+doc = false
+bench = false
