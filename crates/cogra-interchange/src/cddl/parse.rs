@@ -22,8 +22,10 @@
 //! **A member key is only known once it ends.** `memberkey` begins with a
 //! whole `type1` in its first alternative, and whether that was a key or
 //! the entry's own type is decided by the `=>` that may or may not follow
-//! it. The parser parses the `type1`, looks for the arrow, and rewinds if
-//! it is not there.
+//! it. The parser parses the `type1` once; if an arrow follows it was the
+//! key, and if not the same `type1` is handed on as the value's first
+//! choice — never parsed a second time, so a deeply nested entry costs one
+//! descent, not a doubling per level.
 //!
 //! **A group entry's parentheses may be either.** `(a)` is a
 //! parenthesized type; `(a, b)` is an inline group. Alternative 1 is tried
@@ -343,7 +345,21 @@ impl Parser {
     /// `type = type1 *(S "/" S type1)`
     fn ty(&mut self) -> Result<Type, SyntaxError> {
         let start = self.pos;
-        let mut choices = vec![self.type1()?];
+        let first = self.type1()?;
+        self.ty_from_first(first, start)
+    }
+
+    /// Finish a `type = type1 *( "/" type1 )` whose first `type1` is
+    /// already parsed.
+    ///
+    /// `start` is the token index the first `type1` began at, so the whole
+    /// type's span still runs from there. A group entry parses one `type1`
+    /// to look for a `=>`; when none follows, that `type1` is the value's
+    /// first choice, and resuming here spares the parser a second descent
+    /// through it — the difference between one parse per nesting level and
+    /// a doubling.
+    fn ty_from_first(&mut self, first: Type1, start: usize) -> Result<Type, SyntaxError> {
+        let mut choices = vec![first];
         while self.eat(&TokenKind::Slash) {
             choices.push(self.type1()?);
         }
@@ -615,64 +631,83 @@ impl Parser {
     }
 
     /// `[memberkey S] type`, the first alternative of `grpent`.
-    fn member(&mut self) -> Result<GroupEntryKind, SyntaxError> {
-        let start = self.pos;
-        let key = match self.memberkey() {
-            Ok(key) => Some(key),
-            Err(_) => {
-                self.pos = start;
-                None
-            }
-        };
-        let value = self.ty()?;
-        Ok(GroupEntryKind::Member { key, value })
-    }
-
+    ///
     /// ```abnf
     /// memberkey = type1 S ["^" S] "=>"
     ///           / bareword S ":"
     ///           / value S ":"
     /// ```
     ///
-    /// The first alternative is only known to be a member key once its
-    /// `=>` is reached, so it is parsed and rewound. The colon forms are
-    /// decided by one token of lookahead.
-    fn memberkey(&mut self) -> Result<MemberKey, SyntaxError> {
-        let start = self.pos;
-        if let Ok(key) = self.type1() {
-            let cut = self.eat(&TokenKind::Caret);
-            if self.eat(&TokenKind::Arrow) {
-                return Ok(MemberKey {
-                    kind: MemberKeyKind::Type {
-                        key: Box::new(key),
-                        cut,
-                    },
-                    span: self.span_since(start),
-                });
-            }
-        }
-        self.pos = start;
-        if self.kind_at(self.pos + 1) == &TokenKind::Colon {
-            let kind = match self.kind() {
-                TokenKind::Ident(text) => MemberKeyKind::Bareword(Name {
-                    text: text.clone(),
-                    span: self.span(),
-                }),
-                TokenKind::Number(_) | TokenKind::Text(_) | TokenKind::Bytes { .. } => {
-                    MemberKeyKind::Value(self.value()?)
-                }
-                _ => return Err(self.unexpected("a member key")),
-            };
-            if matches!(kind, MemberKeyKind::Bareword(_)) {
-                self.bump();
-            }
-            self.bump();
-            return Ok(MemberKey {
-                kind,
-                span: self.span_since(start),
+    /// The colon forms are told from a plain value by one token of
+    /// lookahead. The `=>` form is only known to be a key once its arrow
+    /// is reached, but the leading `type1` is parsed a single time: if an
+    /// arrow follows it is the key and the value is read after it;
+    /// otherwise that `type1` is handed on as the value's first choice.
+    fn member(&mut self) -> Result<GroupEntryKind, SyntaxError> {
+        if let Some(key) = self.colon_memberkey() {
+            let value = self.ty()?;
+            return Ok(GroupEntryKind::Member {
+                key: Some(key),
+                value,
             });
         }
-        Err(self.unexpected("a member key"))
+        let start = self.pos;
+        let first = self.type1()?;
+        let after_first = self.pos;
+        let cut = self.eat(&TokenKind::Caret);
+        if self.eat(&TokenKind::Arrow) {
+            let key = MemberKey {
+                kind: MemberKeyKind::Type {
+                    key: Box::new(first),
+                    cut,
+                },
+                span: self.span_since(start),
+            };
+            let value = self.ty()?;
+            return Ok(GroupEntryKind::Member {
+                key: Some(key),
+                value,
+            });
+        }
+        // No arrow: the `type1` was the value, not a key. The cut marker,
+        // if it was eaten, belongs to no one here — give it back.
+        self.pos = after_first;
+        let value = self.ty_from_first(first, start)?;
+        Ok(GroupEntryKind::Member { key: None, value })
+    }
+
+    /// The two colon member-key forms, `bareword S ":"` and `value S ":"`,
+    /// decided by one token of lookahead.
+    ///
+    /// Returns `None` — position untouched — when the entry has no colon
+    /// key, leaving the caller to read the `type1 "=>"` form or a plain
+    /// value.
+    fn colon_memberkey(&mut self) -> Option<MemberKey> {
+        if self.kind_at(self.pos + 1) != &TokenKind::Colon {
+            return None;
+        }
+        let start = self.pos;
+        let kind = match self.kind() {
+            TokenKind::Ident(text) => {
+                let bareword = MemberKeyKind::Bareword(Name {
+                    text: text.clone(),
+                    span: self.span(),
+                });
+                self.bump();
+                bareword
+            }
+            TokenKind::Number(_) | TokenKind::Text(_) | TokenKind::Bytes { .. } => {
+                // The token is a literal, so `value` cannot fail; `ok()?`
+                // is the no-`unwrap` spelling of that certainty.
+                MemberKeyKind::Value(self.value().ok()?)
+            }
+            _ => return None,
+        };
+        self.bump();
+        Some(MemberKey {
+            kind,
+            span: self.span_since(start),
+        })
     }
 
     /// `occur = [uint] "*" [uint] / "+" / "?"`
