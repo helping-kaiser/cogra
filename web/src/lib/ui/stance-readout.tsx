@@ -33,11 +33,6 @@ function face(pair: StancePair): string {
 /** `undefined` while the standing is still being read, `null` where it could not be. */
 export type BundleState = StanceBundle | null | undefined;
 
-/** Nothing to show: never stanced, or a standing this session could not read. */
-export function noStanding(bundle: BundleState): boolean {
-  return bundle === null || bundle === undefined || bundle.records === 0;
-}
-
 export function standingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
   if (bundle === null || bundle.records === 0) {
