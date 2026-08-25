@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -35,6 +36,20 @@ function mount(options: StubStanceOptions = {}, { signedIn = true } = {}) {
 }
 
 const control = () => screen.getByTestId(PREFIX);
+
+/** Rebuilds the target prop on every render, the way the real hosts do. */
+function Host() {
+  const [, setTick] = useState(0);
+  return (
+    <>
+      <button type="button" data-testid="host-rerender" onClick={() => setTick((t) => t + 1)} />
+      <StanceControl
+        target={{ id: "post-1", kind: "post", label: "this post" }}
+        testIdPrefix={PREFIX}
+      />
+    </>
+  );
+}
 
 async function settle(ms = 0) {
   await act(async () => {
@@ -590,5 +605,20 @@ describe("the pick that never happened", () => {
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
     expect(data.severed).toEqual([]);
+  });
+
+  it("reads the standing once, however often the host re-renders it", async () => {
+    // The hosts build `target` inline, so a read keyed on the prop's
+    // identity rather than on its fields would re-run on every render.
+    const data = createStubStanceData();
+    renderWithProviders(<Host />, { store: signedInStore(), stanceData: data });
+    await settle();
+    for (let i = 0; i < 3; i += 1) {
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("host-rerender"));
+      });
+      await settle();
+    }
+    expect(data.pendingFlags).toHaveLength(1);
   });
 });
