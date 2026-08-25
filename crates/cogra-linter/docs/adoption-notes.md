@@ -15,14 +15,11 @@ first draft of the adoption data exists — Σ, Ω under
 banned-token sets"*. The data exist and every value in them is a
 recorded decision.
 
-**One amendment travels with the ruling.**
-``conv:linter:owner-partition`` names "the Layer 1 interface document"
-among the major documents, and R2 puts that file outside the carrier
-entirely — it has no owner and no prefix. The same gate provides the
-route: its first bullet confirms the partition convention "as stated or
-amended". The amendment is recorded here and is a pending edit to
-`crates/cogra-linter/docs/architecture.md`, which still names the
-document.
+**One amendment travels with the ruling.** R2 puts
+`docs/primitive/layer1-interface.md` outside the carrier entirely — no
+owner, no prefix — and ``conv:linter:owner-partition`` says so, amended
+in the same commit under the gate bullet that confirms the partition
+convention "as stated or amended".
 
 ## What is fixed, and on what authority
 
@@ -114,8 +111,8 @@ Three choices in this section rest on measurement rather than taste:
 **The interchange crate's docs belong to the crate's owner (rule 7).**
 `concept.md` mints 16 labels and `design.md` mints 76, with **zero
 collisions** between them, both in area `xchg`; and `design.md` cites
-`req:xchg:determinism` — a mint of `concept.md` — in the **unprefixed**
-form. Under ``inf:labels:same-owner-citation`` an unprefixed citation
+``req:xchg:determinism`` — a mint of `concept.md` — in the
+**unprefixed** form. Under ``inf:labels:same-owner-citation`` an unprefixed citation
 "never resolves into another owner", so that citation resolves *only
 if* the two files are one owner. Meanwhile both files cite `ARCH` and
 `ICX` with brackets. The corpus has already answered where this
@@ -143,6 +140,13 @@ Kotlin: their frontends are later slices, and a profile whose frontend
 does not exist cannot compute a census — ``inv:labels:two-pass``
 requires every census computed before any resolution runs, so a
 half-available Π is not a smaller Π, it is a broken one.
+
+The same reasoning stages the two that are here (R19). Both are
+registered and neither is in force: ``inv:labels:inventory`` admits
+nothing partial, and on the day either is switched on it fails at
+every covered asset, because the places their labels must occupy do
+not exist yet. A profile therefore enters Π in the commit that lands
+its migration; `status` and `effective` are what move.
 
 Each profile fixes exactly the five data ``sig:labels:profiles``
 demands. Three of the five were genuinely hard:
@@ -281,6 +285,43 @@ string is not a comment — which is the whole reason
 sweep, which can only over-count; zero raw hits means zero lexical
 hits.)
 
+### `[kinds]` — the kind registry's adoption data
+
+A second discipline with parameters of its own. ``sig:kinds:acceptee``
+names exactly one acceptee owning five things — X_A, E_A, σ_A, G_A,
+Ê_A — and ``gate:kinds:adoption`` blocks adoption until the decision
+names them. Nothing validates a head without them, since head
+validation reads the effective relation C_A = C ∪ X_A.
+
+The registry answers the question in its own closing sentence: *"For
+the corpus in which this registry itself travels, the registry
+authority is the acceptee, and the edition evidence base is E_A
+entire."* `environment-kinds.md` lives in this corpus, so the default
+fits exactly and the ruling adopts it rather than composing something
+new. What the record adds is that it is a record: a default nobody
+wrote down is not a recorded decision, and the gate asks for a
+decision. The acceptee is named rather than described because
+``sig:kinds:acceptee`` requires an authority, and the corpus's
+no-personal-names rule governs the L1 team — an external party — not
+this corpus's own acceptee.
+
+Three consequences, plainly. **X_A is empty**, so C_A = C and every
+head validates against the published relation — a claim the linter
+checks rather than one this file asserts. **Nothing is strengthened**,
+so σ_A is the edition's statuses unchanged and the corpus clause of
+``inv:kinds:attestation-coverage`` holds trivially; the daggered rows
+and the single candidate are recorded so that clause has something to
+be checked against. And **one generator serves every generated
+register**, because ``rule:linter:register-freshness`` already fixes
+regeneration plus exact byte compare as the mechanism, and a second
+generator would be a second source of truth.
+
+The headline counts need one distinction. ``tab:kinds:headline-counts``
+is a generated *region* inside an authored file, not a generated file:
+`environment-kinds.md` stays out of `[carrier]` `generated_files`, and
+what is regenerated and compared is that one table — the registry
+document's only generated region, as its gate says.
+
 ---
 
 ## Findings that are not questions
@@ -292,8 +333,9 @@ parenthesized form — which ``lang:labels:label-language`` reads as a
 the file. Adopting the calculus over the file unchanged produces
 roughly 360 unresolved citations, each a hard failure under
 ``inv:labels:total-resolution``. Worse, the handful of bare spans (for
-instance `tbl:symbols:boundary` inside a table cell at line 69) would
-be read as **mints** — accidental conceptual homes for upstream names.
+instance ``tbl:symbols:boundary`` inside a table cell at line 69,
+displayed here so that quoting the hazard does not commit it) would be
+read as **mints** — accidental conceptual homes for upstream names.
 This finding is the ground of R2.
 
 **F2. That file's kind tokens are not in the registry.** It uses `post`
@@ -317,11 +359,25 @@ crate the prefix `INTERCHANGE`. Prefixes and areas are separate
 namespaces, the three tokens are distinct, and no pair now invites the
 assumption that it names one thing.
 
+**F4. The docs trees carry label-shaped spans, and their targets are
+upstream.** Measured 2026-08-25: 19 files under `docs/` carry 61
+label-shaped spans — 37 in citation form, 24 not, the latter either
+bare in running text or several to a parenthesis, which is no citation
+form at all. Every target is a name of `layer1-interface.md`. Under
+``inv:labels:total-resolution`` each citation-form span resolves
+nowhere, because R2 puts that file outside the carrier; each of the
+others would be read as a **mint**, so prose about the L1 surface would
+become the conceptual home of the L1 team's names. This is F1's hazard
+on the CoGra side of the boundary, and it is the whole distance between
+the linter's first correct run and a green one.
+
 ---
 
 ## Rulings
 
-Ruled 2026-08-21. Each entry says what stands and why.
+Ruled 2026-08-21 through R17, and 2026-08-25 from R18 — the concept
+review's rulings, whose adoption-data half lands here. Each entry says
+what stands and why.
 
 **R1 — The `[carrier]` section is adoption data.** Ω cannot be shown
 total without a stated domain, and ``sig:linter:adoption-data`` reads
@@ -438,6 +494,45 @@ of ``dec:linter:kotlin-tree-sitter`` was measured over the 138 `.kt`
 files only. Revisited at the Kotlin slice, when the grammar that would
 parse them arrives.
 
+**R18 — The kind registry's adoption takes the registry's own
+defaults.** jakob is the acceptee, owning X_A, E_A, σ_A, G_A and Ê_A;
+X_A is empty; E_A is the edition evidence base entire, by reference;
+σ_A strengthens nothing. This is what ``sig:kinds:acceptee`` prescribes
+for the corpus a registry travels in, and this is that corpus. The
+linter's regeneration mode is G_A for every generated register,
+Ê_A and the headline counts included, since
+``rule:linter:register-freshness`` already owns the regenerate-and-
+compare mechanism. A register that has never been generated reports as
+**staged**, not stale: it has no committed bytes to compare against,
+and the first generation run commits it and arms exact comparison
+thereafter.
+
+**R19 — Profiles enter Π with their migrations, staged until then.**
+``inv:labels:inventory`` admits nothing partial, so both profiles are
+unsatisfiable the day they are switched on: the test profile's
+standard place is a register no generator has written, and the module
+profile's is an inner doc comment ~42 definitions lack. Registering
+them and staging entry keeps the file honest about both facts — the
+profiles are decided, and neither is in force. The test profile enters
+when the first register generation lands (R18), the module profile
+when its comments do. Entering is a commit that flips two fields.
+
+**R20 — The docs trees' label-shaped spans are reformed into displayed
+spans (F4).** They mean what they look like — references to the Layer 1
+surface — and the meaning survives the reforming: a double-backtick
+span shows the name and participates in nothing, so the prose keeps
+saying what it said while the label graph stops seeing it. When the L1
+repository becomes public and its specification joins Σ as a citable
+owner, those spans are promoted to imported citations, the form they
+always wanted (R2's future path). Reforming rather than promotion is
+what happens now, for one reason: the linter runs in CI, the corpus
+migrates before the linter enforces, and a gate that is red on arrival
+teaches a team to route around the gate. The sweep is a queued
+migration, verified by the linter once it exists. One consequence
+worth naming — because the spans become displayed rather than live,
+the docs trees do not thereby take labels, so R5's promotion condition
+for `api-spec.md` and `data-model.md` is not tripped by them.
+
 ---
 
 ## Measurements
@@ -458,6 +553,8 @@ Taken 2026-08-20 unless noted, on the branch as checked out.
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
 | TypeScript sources | 162 `.ts`/`.tsx` |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
-| Files carrying labels today | 7, all in the carrier |
-| Live imported citations | `ICX` 65, `LBL` 21, `ARCH` 16, `IDN` 6, `KND` 5 |
+| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, queued under R20 |
+| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them in citation form |
+| Live imported citations (2026-08-25) | `ICX` 70, `ARCH` 60, `LBL` 59, `KND` 19, `IDN` 14 in prose, plus 1 `ICX` in Rust; `SPEC` and `CODEC` occur once each inside fenced illustrations and participate in nothing |
+| Label-shaped backtick spans in `.rs` doc comments (2026-08-25) | 88 — near-miss warnings, since the code syntax is the acute |
 | Label spans in `layer1-interface.md` | ~364, across 15 areas, 14 kind tokens (outside the carrier) |

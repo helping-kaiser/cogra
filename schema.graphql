@@ -224,6 +224,13 @@ type Comment implements Node {
 	serves only what has landed on L1.
 	"""
 	replies(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
+	"""
+	The viewer's own stance bundle toward this comment, and — with
+	`pick` — where a candidate stance would land it. Null for a
+	viewer with no bundle to read. `includePending: false` folds
+	only what has landed on L1.
+	"""
+	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
 }
 
 type CommentConnection {
@@ -756,11 +763,20 @@ type Mutation {
 	"""
 	revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
 	"""
-	Prepares the viewer's stance toward a target as the delta record
-	whose bundle nets to the stated intent. Toward a Profile this is
-	the reciprocation gesture completing the CoGra-join mutual pair.
+	Prepares the viewer's stance toward a node — one new edge carrying
+	exactly the picked values, never a delta against the bundle
+	(design.md §8.1). Toward a Profile this is the interpersonal
+	stance, including the reciprocation gesture.
 	"""
 	prepareStance(input: PrepareStanceInput!): PreparePayload!
+	"""
+	Prepares severance toward a node: the counter-records that net the
+	viewer's bundle to `(0, 0)`. Each is its own priced act, so the
+	batch length is the gesture's cost — a bundle carrying more
+	conviction than one record can walk back needs several
+	(feed-ranking.md §8.1).
+	"""
+	prepareSeverance(input: PrepareSeveranceInput!): PreparePayload!
 	"""
 	Prepares a new Post: one genesis Publish through the ordinary
 	write path — the returned write pre-signs, seals, and approves
@@ -898,6 +914,13 @@ type Post implements Node {
 	`includePending: false` serves only what has landed on L1.
 	"""
 	comments(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): CommentConnection!
+	"""
+	The viewer's own stance bundle toward this post, and — with
+	`pick` — where a candidate stance would land it. Null for a
+	viewer with no bundle to read. `includePending: false` folds
+	only what has landed on L1.
+	"""
+	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
 }
 
 type PostConnection {
@@ -1012,15 +1035,25 @@ input PrepareProfileUpdateInput {
 	websiteUrl: String
 }
 
+input PrepareSeveranceInput {
+	"""
+	The node to sever the acting identity's bundle toward.
+	"""
+	target: UUID!
+}
+
 input PrepareStanceInput {
 	"""
-	The target actor; toward a Profile this is the reciprocation
-	gesture completing the CoGra-join mutual pair.
+	The passive node the stance points at. The target selects the
+	family: Affinity toward a Type, Opinion toward everything else —
+	toward a Profile it is the interpersonal stance (and the
+	reciprocation gesture completing the CoGra-join mutual pair).
 	"""
 	target: UUID!
 	"""
-	The intended net state of the author's bundle — (0,0) is
-	severance.
+	Written as picked — one new edge carrying exactly these values.
+	The bundle is a read-side fold (`viewerStance`); severance is its
+	own gesture, not a value these fields reach.
 	"""
 	pDirected: Dimension!
 	pInterest: Dimension!
@@ -1479,6 +1512,72 @@ enum StagedWriteState {
 	EXPIRED
 }
 
+type StanceBundle {
+	"""
+	The folded valence as it stands.
+	"""
+	pDirected: Dimension!
+	"""
+	The folded connection as it stands.
+	"""
+	pInterest: Dimension!
+	"""
+	How many records the bundle folds.
+	"""
+	recordCount: Int!
+	"""
+	Either axis at zero — the bundle carries nothing on it.
+	"""
+	inert: Boolean!
+	"""
+	Both axes at zero — the bundle is severed.
+	"""
+	severed: Boolean!
+	"""
+	How many counter-records severance would stage right now — the
+	gesture's cost, since each is its own priced act
+	(feed-ranking.md §8.1). Zero when the bundle already nets to
+	`(0, 0)`.
+	"""
+	severanceCost: Int!
+	"""
+	Where the supplied `pick` would land the bundle; null when the
+	field was asked without one.
+	"""
+	projected: StanceProjection
+}
+
+"""
+A candidate pick, for projecting where it would land the bundle
+without authoring anything (design.md §8.2).
+"""
+input StancePickInput {
+	pDirected: Dimension!
+	pInterest: Dimension!
+}
+
+"""
+Where a bundle stands once a candidate pick folds into it.
+"""
+type StanceProjection {
+	"""
+	The folded valence after the pick.
+	"""
+	pDirected: Dimension!
+	"""
+	The folded connection after the pick.
+	"""
+	pInterest: Dimension!
+	"""
+	Either axis at zero — the stance would carry nothing.
+	"""
+	inert: Boolean!
+	"""
+	Both axes at zero — the pick reaches severance.
+	"""
+	severed: Boolean!
+}
+
 input SubmitProposalsInput {
 	proposals: [ProposalSignatureInput!]!
 }
@@ -1586,6 +1685,13 @@ type User implements Actor {
 	null for accounts without an application trace (genesis actors).
 	"""
 	invitedBy: Actor
+	"""
+	The viewer's own stance bundle toward this person's Profile, and
+	— with `pick` — where a candidate stance would land it. Null for
+	a viewer with no bundle to read. `includePending: false` folds
+	only what has landed on L1.
+	"""
+	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
 	"""
 	Whether the viewer's reciprocal Opinion toward invitedBy exists —
 	confirmed in the record mirror (latched on the landed application
