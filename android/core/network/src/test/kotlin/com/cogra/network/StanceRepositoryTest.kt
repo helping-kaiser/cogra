@@ -82,6 +82,8 @@ class StanceRepositoryTest {
     private fun bundleJson(
         pDirected: Double = 0.4,
         pInterest: Double = 0.2,
+        rawPDirected: Double = pDirected,
+        rawPInterest: Double = pInterest,
         recordCount: Int = 3,
         severed: Boolean = false,
         severanceCost: Int = 3,
@@ -89,6 +91,7 @@ class StanceRepositoryTest {
     ) = """
         {"__typename":"StanceBundle",
          "pDirected":$pDirected,"pInterest":$pInterest,
+         "rawPDirected":$rawPDirected,"rawPInterest":$rawPInterest,
          "recordCount":$recordCount,"severed":$severed,
          "severanceCost":$severanceCost,
          "projected":${projected ?: "null"}}
@@ -122,6 +125,52 @@ class StanceRepositoryTest {
         assertThat(standing.net).isEqualTo(StancePair(0.4, -0.2))
         assertThat(standing.records).isEqualTo(5)
         assertThat(standing.includePending).isTrue()
+    }
+
+    @Test
+    fun `the raw sums ride the standing alongside the clipped fold`() = runTest {
+        // Clipped is not hidden (design.md §8.3): a bundle whose history
+        // sums past ±1 still carries it, and the two numbers reach the
+        // client apart so the pad can fold locally and the severance
+        // confirm can quote a price that adds up.
+        enqueue(
+            answerJson(
+                "post",
+                bundleJson(
+                    pDirected = 1.0,
+                    pInterest = -1.0,
+                    rawPDirected = 6.0,
+                    rawPInterest = -4.5,
+                    recordCount = 9,
+                ),
+            ),
+        )
+
+        val standing = (repo().standing("t1") as Outcome.Success).value
+
+        assertThat(standing.net).isEqualTo(StancePair(1.0, -1.0))
+        assertThat(standing.raw).isEqualTo(StancePair(6.0, -4.5))
+    }
+
+    @Test
+    fun `the severance quote carries the raw sums the batch has to walk back`() = runTest {
+        enqueue(
+            answerJson(
+                "post",
+                bundleJson(
+                    pDirected = 1.0,
+                    pInterest = 1.0,
+                    rawPDirected = 6.0,
+                    rawPInterest = 4.5,
+                    severanceCost = 6,
+                ),
+            ),
+        )
+
+        val quote = (repo().severanceQuote("t1") as Outcome.Success).value
+
+        assertThat(quote.raw).isEqualTo(StancePair(6.0, 4.5))
+        assertThat(quote.records).isEqualTo(6)
     }
 
     @Test

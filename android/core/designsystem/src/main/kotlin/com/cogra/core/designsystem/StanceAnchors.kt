@@ -67,6 +67,9 @@ val STANCE_ANCHORS: List<StanceAnchor> = listOf(
  * The readout for [point]: the nearest anchor by Euclidean distance.
  * Ties go to the earlier anchor, which keeps the mapping a pure function
  * of the table's order rather than of iteration luck.
+ *
+ * This reads PICKS and non-zero bundles. A standing goes through
+ * [standingReadout] instead, which knows about the zero bundle.
  */
 fun nearestStanceAnchor(point: StancePoint): StanceAnchor =
     STANCE_ANCHORS.minBy { anchor ->
@@ -74,3 +77,33 @@ fun nearestStanceAnchor(point: StancePoint): StanceAnchor =
         val di = anchor.at.interest - point.interest
         dd * dd + di * di
     }
+
+/**
+ * The zero bundle's own readout, outside the table (design.md §8.4). It
+ * is deliberately not one of [STANCE_ANCHORS]: the table maps a felt
+ * value onto a face, and this is the absence of one.
+ */
+val ZERO_BUNDLE_READOUT = StanceAnchor(
+    at = StancePoint.Origin,
+    emoji = "🤷",
+    label = R.string.stance_standing_zero,
+)
+
+/**
+ * Whether this is the zero bundle: a standing at exactly `(0, 0)`,
+ * severed or netted there. Severance produces exact zero by
+ * construction — it stages the counter-records that cancel the bundle —
+ * so exact equality is the test, not a tolerance.
+ */
+val StancePoint.isZeroBundle: Boolean
+    get() = directed == 0.0 && interest == 0.0
+
+/**
+ * The face a STANDING reads as (design.md §8.4). A bundle standing at
+ * exactly `(0, 0)` never speaks through the table: it is the absence of
+ * a feeling, and reading it as its nearest neighbour — "🙂 Nice" — is a
+ * lie. It gets the shrug and the no-standing wording instead, on every
+ * surface that shows a standing.
+ */
+fun standingReadout(standing: StancePoint): StanceAnchor =
+    if (standing.isZeroBundle) ZERO_BUNDLE_READOUT else nearestStanceAnchor(standing)

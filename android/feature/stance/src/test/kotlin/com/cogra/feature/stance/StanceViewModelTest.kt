@@ -11,6 +11,7 @@ import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.localLanding
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
@@ -41,10 +42,16 @@ class StanceViewModelTest {
         val staged = mutableListOf<StancePair>()
         val projected = mutableListOf<StancePair>()
         var net = StancePair.Origin
+
+        /**
+         * The sums behind [net], before the clip. They default to the
+         * fold, which is the truth for any bundle inside `±1`; a test
+         * about clipping sets them apart deliberately.
+         */
+        var raw: StancePair? = null
         var records = 0
         var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
         var severanceOutcome: Outcome<List<PreparedWriteView>>? = null
-        var landsOnSeverance = false
         var severanceCalls = 0
 
         /** Holds the write open, so the pending answer is observable. */
@@ -67,28 +74,36 @@ class StanceViewModelTest {
             standingCalls += 1
             standingPending += includePending
             if (standingFails) return Outcome.Failed(IllegalStateException("no route to host"))
-            return Outcome.Success(StanceStanding(target, net, records, includePending))
+            return Outcome.Success(
+                StanceStanding(target, net, raw ?: net, records, includePending),
+            )
         }
 
+        /**
+         * Kept only to catch a regression: the pad folds locally now, so
+         * a drag that reaches this at all has put a round trip back
+         * under the thumb (design.md §8.3). Tests assert [projected]
+         * stays empty.
+         */
         override suspend fun projection(
             target: String,
             pick: StancePair,
             includePending: Boolean,
         ): Outcome<StanceProjection> {
             projected += pick
-            return Outcome.Success(
-                StanceProjection(
-                    pick = pick,
-                    net = if (landsOnSeverance) StancePair.Origin else pick,
-                    inertDirected = landsOnSeverance,
-                    inertInterest = landsOnSeverance,
-                    severance = landsOnSeverance,
-                ),
-            )
+            return Outcome.Success(localLanding(raw ?: net, pick))
         }
 
         override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
-            Outcome.Success(SeveranceQuote(target, net, records, alreadySevered = net == StancePair.Origin))
+            Outcome.Success(
+                SeveranceQuote(
+                    target = target,
+                    standing = net,
+                    raw = raw ?: net,
+                    records = records,
+                    alreadySevered = net == StancePair.Origin,
+                ),
+            )
 
         override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> {
             severanceCalls += 1
@@ -303,25 +318,32 @@ class StanceViewModelTest {
         vm.onTapDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The write is still open, and the target already answers.
+        // The write is still open, and the target already answers — with
+        // the pick folded onto the standing it had.
         assertThat(entry(vm).busy).isTrue()
         assertThat(stances.staged).isEmpty()
-        assertThat(entry(vm).standing).isEqualTo(StancePair(0.1, 0.1))
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.6, 0.6))
         assertThat(entry(vm).standingPending).isTrue()
 
+        stances.net = StancePair(0.6, 0.6)
+        stances.records = 3
         gate.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The landed read is the better answer and replaces it.
-        assertThat(entry(vm).standing).isEqualTo(StancePair(0.5, 0.5))
+        // The landed read is the authority and replaces it.
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.6, 0.6))
         assertThat(entry(vm).standingPending).isFalse()
+        assertThat(entry(vm).standingRecords).isEqualTo(3)
     }
 
     @Test
-    fun theAnswerIsTheFoldsOwnNeverTheClientsArithmetic() = runTest(dispatcher) {
-        // The pending value comes from asking where the pick LANDS the
-        // bundle; nothing here adds a pick to a standing.
+    fun theRecordCarriesThePickWhileOnlyTheDisplayFoldsIt() = runTest(dispatcher) {
+        // The fold the reader SEES is local arithmetic (design.md §8.3),
+        // but the record staged behind it carries the picked pair
+        // verbatim — the client never writes a delta (design.md §8.1).
         identity.stancePadTaught = true
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
@@ -329,7 +351,26 @@ class StanceViewModelTest {
         vm.onTapDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(stances.projected).contains(StancePair.TapDefault)
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
+    }
+
+    @Test
+    fun theLocalFoldSumsTheRawHistoryRatherThanTheClippedStanding() = runTest(dispatcher) {
+        // A bundle already past the clip: its fold reads +1.00 while its
+        // history sums to +6.00. Adding a pick to the CLIPPED number
+        // would say a −0.5 leaves the reader at +0.5, when it actually
+        // leaves them at +5.5 — still clipped to +1.00.
+        stances.net = StancePair(1.0, 1.0)
+        stances.raw = StancePair(6.0, 4.0)
+        stances.records = 9
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, StancePair(-0.5, -0.5))
+
+        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(1.0, 1.0))
     }
 
     @Test
@@ -387,22 +428,89 @@ class StanceViewModelTest {
     }
 
     @Test
-    fun onlyTheNewestPickIsAskedAbout() = runTest(dispatcher) {
+    fun everyPickLandsAtOnceAndNoneOfThemCostsARead() = runTest(dispatcher) {
+        // The device symptom: the landing arrived about a second behind
+        // the face, because every pick was a round trip. It is now local
+        // arithmetic — no read, no debounce, no frame of "working out".
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
         vm.onOpenPad(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
         stances.projected.clear()
 
-        // A drifting thumb: only where it settles costs a read.
+        // No scheduler advance between these: a drifting thumb is
+        // answered in the same breath it moves.
         vm.onPick(TARGET, StancePair(0.1, 0.1))
+        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.1, 0.1))
         vm.onPick(TARGET, StancePair(0.2, 0.2))
+        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.2, 0.2))
         vm.onPick(TARGET, StancePair(0.3, 0.3))
+        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.3, 0.3))
+
+        assertThat(stances.projected).isEmpty()
+    }
+
+    @Test
+    fun anOpenedPadAlreadyKnowsWhereItsOriginPickLands() = runTest(dispatcher) {
+        // Nothing to wait for at the moment of blooming either: the pad
+        // opens at the origin and the landing for it is already known.
+        stances.net = StancePair(0.4, 0.2)
+        stances.records = 2
+        val vm = viewModel()
+        vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(stances.projected).containsExactly(StancePair(0.3, 0.3))
-        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.3, 0.3))
+        vm.onOpenPad(TARGET)
+
+        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.4, 0.2))
+        assertThat(stances.projected).isEmpty()
+    }
+
+    @Test
+    fun dismissingAShutPadLeavesItsTargetAlone() = runTest(dispatcher) {
+        // Leaving a screen asks this of every control on it, and a feed
+        // holds many: a dismissal that touched state would churn the
+        // whole map and throw away standings that were already read.
+        stances.net = StancePair(0.4, 0.2)
+        stances.records = 2
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        val before = entry(vm)
+
+        vm.onDismissPad(TARGET)
+
+        assertThat(entry(vm)).isEqualTo(before)
+    }
+
+    @Test
+    fun dismissingAnUnknownTargetCreatesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onDismissPad("never-seen")
+
+        assertThat(vm.state.value.targets).doesNotContainKey("never-seen")
+    }
+
+    @Test
+    fun aParkedPadIsShutAndStagesNothingWhenTheScreenGoesAway() = runTest(dispatcher) {
+        // What the route asks on its way out (design.md §8.3): the pad
+        // is a window of its own, so one left open drew over the next
+        // destination and was still standing on the way back.
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, StancePair(0.6, 0.6))
+        vm.onHold(TARGET)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+
+        vm.onDismissPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(entry(vm).pick).isEqualTo(StancePair.Origin)
+        assertThat(stances.staged).isEmpty()
     }
 
     @Test
@@ -435,12 +543,14 @@ class StanceViewModelTest {
 
     @Test
     fun aPickThatLandsOnZeroAsksInsteadOfCommitting() = runTest(dispatcher) {
-        stances.landsOnSeverance = true
+        stances.net = StancePair(0.8, 0.8)
         stances.records = 2
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
         vm.onOpenPad(TARGET)
+        // Exactly cancels the bundle: a single pick can reach severance
+        // against a short history (design.md §8.2).
         vm.onPick(TARGET, StancePair(-0.8, -0.8))
         dispatcher.scheduler.advanceUntilIdle()
 
