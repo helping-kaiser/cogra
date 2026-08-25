@@ -283,10 +283,31 @@ impl PreTokenized {
     /// caller inside the crate does this before the diagnostics travel.
     pub fn stamp(&mut self, path: &Path, source: &[u8], enforcement: Enforcement) {
         for one in &mut self.unclassified {
-            one.enforcement = enforcement;
-            one.primary = located(path, one.primary.span, source);
+            stamp_one(one, path, source, enforcement);
         }
     }
+
+    /// The lexer's diagnostics, stamped, without disturbing the lexemes.
+    ///
+    /// What a frontend wants: it holds `&PreTokenized` and needs the
+    /// findings in its own [`crate::frontend::Parsed`], and cloning the
+    /// whole partition to reach two fields of a diagnostic would copy one
+    /// lexeme per byte-run of the file for nothing.
+    pub fn stamped(&self, path: &Path, source: &[u8], enforcement: Enforcement) -> Vec<Diagnostic> {
+        self.unclassified
+            .iter()
+            .map(|one| {
+                let mut one = one.clone();
+                stamp_one(&mut one, path, source, enforcement);
+                one
+            })
+            .collect()
+    }
+}
+
+fn stamp_one(one: &mut Diagnostic, path: &Path, source: &[u8], enforcement: Enforcement) {
+    one.enforcement = enforcement;
+    one.primary = located(path, one.primary.span, source);
 }
 
 /// Pre-tokenize one source's bytes under the language that reads it.
