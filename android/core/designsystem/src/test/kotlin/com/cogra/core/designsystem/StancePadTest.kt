@@ -315,6 +315,41 @@ class StancePadTest {
             .assertTextContains("back to nothing", substring = true)
     }
 
+    // -- Where the pad opens (design.md §8.3) --
+    //
+    // WHERE it lands is arithmetic, and PadBesideTargetTest is its
+    // oracle: a popup lives in its own window, so its coordinates in a
+    // Compose test are window-local and say nothing about the screen.
+    // What is worth pinning here is that a pad which opened stays open
+    // for the gesture that opened it.
+
+    @Test
+    fun aBloomedPadOpensBesideTheTargetItBelongsTo() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        // The target itself keeps its place; the pad never replaces it.
+        compose.onNodeWithTag("${TAG}_stance").assertIsDisplayed()
+    }
+
+    @Test
+    fun aDrifitngThumbNeverDismissesItsOwnPad() {
+        // The pad follows one continuous gesture; only a release or a
+        // cancel ends it.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent, -extent))
+            moveTo(center + Offset(-extent, extent))
+        }
+
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        assertThat(dismissed).isEqualTo(0)
+    }
+
     // -- The parked pad: alternates and the severance route --
 
     @Test

@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -155,6 +156,15 @@ data class StanceControlState(
 /** The resting target keeps the platform's minimum (design.md §4, §10). */
 private val TARGET_MIN = 48.dp
 
+/** How far an overlay stands off the target it belongs to. */
+private val PAD_GAP = 8.dp
+
+/** How close to the viewport's edge an overlay is allowed to sit. */
+private val PAD_MARGIN = 12.dp
+
+/** The pad's card, wide enough for the field and its lines of text. */
+private val PAD_WIDTH = 288.dp
+
 /**
  * The stance control: the resting target, the pad it blooms, and the
  * severance confirmation either can reach.
@@ -182,7 +192,9 @@ fun StanceControl(
     modifier: Modifier = Modifier,
 ) {
     val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
-    val padPx = with(LocalDensity.current) { FIELD_SIZE.roundToPx() }
+    val gapPx = with(LocalDensity.current) { PAD_GAP.roundToPx() }
+    val marginPx = with(LocalDensity.current) { PAD_MARGIN.roundToPx() }
+    val besideTarget = remember(gapPx, marginPx) { PadBesideTarget(gapPx, marginPx) }
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(R.string.stance_severance_open)
@@ -236,39 +248,44 @@ fun StanceControl(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             )
+
+            // Both overlays are children of the TARGET, not siblings of
+            // it: a popup anchors to its parent's bounds, and anchoring
+            // to the target is what keeps the pad off the press and the
+            // coach mark on the thing it explains (design.md §8.3, §8.7).
+            if (state.coachMark) {
+                StanceCoachMark(
+                    positionProvider = besideTarget,
+                    onDismissed = onCoachMarkDismissed,
+                    testTagPrefix = testTagPrefix,
+                )
+            }
+
+            if (state.pad != StancePadMode.CLOSED) {
+                val sticky = state.pad == StancePadMode.STICKY
+                Popup(
+                    popupPositionProvider = besideTarget,
+                    onDismissRequest = onDismissPad.takeIf { sticky },
+                    properties = PopupProperties(focusable = sticky),
+                ) {
+                    StancePadOverlay(
+                        state = state,
+                        sticky = sticky,
+                        onPick = onPick,
+                        onCommit = onCommit,
+                        onCancel = onDismissPad,
+                        onToggleExactValues = onToggleExactValues,
+                        onOpenSeverance = onOpenSeverance,
+                        testTagPrefix = testTagPrefix,
+                    )
+                }
+            }
         }
 
         // A refusal has to be visible even when the pad is shut, which is
         // where a plain tap fails.
         if (state.failed && state.pad == StancePadMode.CLOSED) {
             StanceFailure(state.needsKey, testTagPrefix)
-        }
-
-        if (state.coachMark) {
-            StanceCoachMark(
-                onDismissed = onCoachMarkDismissed,
-                testTagPrefix = testTagPrefix,
-            )
-        }
-
-        if (state.pad != StancePadMode.CLOSED) {
-            val sticky = state.pad == StancePadMode.STICKY
-            Popup(
-                popupPositionProvider = remember(padPx) { PadCentredOnTarget(padPx) },
-                onDismissRequest = onDismissPad.takeIf { sticky },
-                properties = PopupProperties(focusable = sticky),
-            ) {
-                StancePadOverlay(
-                    state = state,
-                    sticky = sticky,
-                    onPick = onPick,
-                    onCommit = onCommit,
-                    onCancel = onDismissPad,
-                    onToggleExactValues = onToggleExactValues,
-                    onOpenSeverance = onOpenSeverance,
-                    testTagPrefix = testTagPrefix,
-                )
-            }
         }
 
         state.severance?.let { prompt ->
@@ -333,24 +350,54 @@ private fun Modifier.stanceGesture(
 }
 
 /**
- * Puts the field's centre on the target's centre — the pad blooms under
- * the thumb, and the readout rides above it clear of the finger
- * (design.md §8.3, §8.4).
+ * Places an overlay BESIDE the resting target rather than over it, and
+ * fully inside the viewport (design.md §8.3, §8.7).
+ *
+ * A pad that blooms under the press puts the field and its readout under
+ * the very finger that has to read them, and one placed by the press
+ * point walks off the screen edge for a target near it. So: horizontally
+ * centred on the target, vertically in whichever gap holds it — above by
+ * preference, below when the target sits near the top — and clamped into
+ * the window with a margin either way.
+ *
+ * `windowSize` is the window's visible frame, so the clamp already keeps
+ * clear of the system bars.
  */
-private class PadCentredOnTarget(private val padPx: Int) : PopupPositionProvider {
+internal class PadBesideTarget(
+    private val gapPx: Int,
+    private val marginPx: Int,
+) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
     ): IntOffset {
-        val x = anchorBounds.center.x - popupContentSize.width / 2
-        val y = anchorBounds.center.y - popupContentSize.height + padPx / 2
+        val above = anchorBounds.top - gapPx - popupContentSize.height
+        val below = anchorBounds.bottom + gapPx
+        val roomAbove = anchorBounds.top - gapPx - marginPx
+        val roomBelow = windowSize.height - anchorBounds.bottom - gapPx - marginPx
+        val y = when {
+            popupContentSize.height <= roomAbove -> above
+            popupContentSize.height <= roomBelow -> below
+            // Taller than either gap: take the roomier side and clamp.
+            // The pad scrolls, so on-screen beats beside-the-target.
+            roomAbove >= roomBelow -> above
+            else -> below
+        }
         return IntOffset(
-            x = x.coerceIn(0, maxOf(0, windowSize.width - popupContentSize.width)),
-            y = y.coerceIn(0, maxOf(0, windowSize.height - popupContentSize.height)),
+            x = clamp(
+                anchorBounds.center.x - popupContentSize.width / 2,
+                popupContentSize.width,
+                windowSize.width,
+            ),
+            y = clamp(y, popupContentSize.height, windowSize.height),
         )
     }
+
+    /** Fully inside, margin included — unless the content is wider than the window. */
+    private fun clamp(value: Int, contentSize: Int, windowSize: Int): Int =
+        value.coerceIn(marginPx, maxOf(marginPx, windowSize - contentSize - marginPx))
 }
 
 @Composable
@@ -364,7 +411,7 @@ private fun StancePadOverlay(
     onOpenSeverance: () -> Unit,
     testTagPrefix: String,
 ) {
-    Card(modifier = Modifier.width(288.dp).testTag("${testTagPrefix}_stance_pad")) {
+    Card(modifier = Modifier.width(PAD_WIDTH).testTag("${testTagPrefix}_stance_pad")) {
         Column(
             // A parked pad carries its alternates and the severance
             // route, which is more than a short screen holds upright.
@@ -721,13 +768,32 @@ private fun StanceEntry(
 }
 
 /**
- * The one-time teaching mark: a held gesture is invisible until taught,
- * and a plain tap always works without it (design.md §8.7).
+ * The teaching mark of design.md §8.7: the FIRST tap on a stance target
+ * opens it instead of acting, and it stays until the reader dismisses it
+ * or completes their first hold.
+ *
+ * Two things it must not do. It must not vanish on the next touch — a
+ * popup that dismisses on any outside click is gone before the sentence
+ * is read, and the touch that spawned it counts as one — so nothing but
+ * the explicit dismissal closes it. And it must not sit over the feed:
+ * it is anchored beside the target it explains, clamped on-screen, by
+ * the same provider the pad uses.
  */
 @Composable
-private fun StanceCoachMark(onDismissed: () -> Unit, testTagPrefix: String) {
-    Popup(alignment = Alignment.BottomCenter, onDismissRequest = onDismissed) {
-        Card(modifier = Modifier.testTag("${testTagPrefix}_stance_coach")) {
+private fun StanceCoachMark(
+    positionProvider: PopupPositionProvider,
+    onDismissed: () -> Unit,
+    testTagPrefix: String,
+) {
+    Popup(
+        popupPositionProvider = positionProvider,
+        properties = PopupProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .widthIn(max = PAD_WIDTH)
+                .testTag("${testTagPrefix}_stance_coach"),
+        ) {
             Column(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
