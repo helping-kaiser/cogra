@@ -112,7 +112,10 @@ pub const NEAR_MISS_SPACING: RuleId = RuleId::new("label-near-miss-spacing");
 pub const NEAR_MISS_BRACKET: RuleId = RuleId::new("label-near-miss-bracket");
 
 /// A label-shaped backtick span in scanned code text, where the acute is the
-/// label syntax. The corpus carries 88 of these.
+/// label syntax.
+///
+/// How many the corpus carries is a measurement, and a measurement moves with
+/// every commit: it is what a run reports, never what this comment says.
 pub const NEAR_MISS_BACKTICK: RuleId = RuleId::new("label-backtick-in-code");
 
 /// Several label-shaped spans inside one parenthesis, which is no citation
