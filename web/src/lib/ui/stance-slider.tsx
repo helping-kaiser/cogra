@@ -2,16 +2,7 @@
 
 import { useId } from "react";
 
-/*
- * The two parameters, named the way a reader would name them. design.md
- * §7 keeps implementation vocabulary off the screen — "weight" and
- * "parameter" are on its list by name — and edges.md §1 leaves the
- * frontend free to surface whichever aspect fits the gesture. These are
- * §8.1's own descriptions, shortened to labels, and they are shared so
- * every surface that edits a stance says the same thing.
- */
-export const DIRECTED_LABEL = "Where you stand";
-export const INTEREST_LABEL = "How much you want to see";
+import { formatDimension } from "@/lib/ui/stance-format";
 
 /**
  * A stance dimension editor: a float in the closed [-1, +1]
@@ -33,7 +24,7 @@ export function StanceSlider({
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-label-large">
-        {label}: {value.toFixed(2)}
+        {label} {formatDimension(value)}
       </label>
       <input
         id={id}

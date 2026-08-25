@@ -1,22 +1,29 @@
 "use client";
 
-// Two different numbers, shown as two different lines (design.md §8.2).
+// Two different numbers, and they are never merged into one line
+// (design.md §8.2).
 //
+//   - "Where you stand now: …" sits ABOVE the readout. It is the bundle
+//     as it stands.
 //   - The FACE is the lossy readout of the edge being authored — this
 //     pick, not the bundle it joins (§8.4). Conflating the two would make
 //     the face mean something different depending on history, which is
 //     exactly what a readout must not do.
-//   - Where the pick LANDS the bundle is the fold's answer, read from the
-//     backend and rendered here. The control never derives it.
+//   - "This leaves you at: …" sits BELOW the field. It is the bundle
+//     after the pick — the fold's answer, read from the backend and
+//     rendered here. The control never derives it, and never decides for
+//     itself whether a landing carries nothing: inertness and severance
+//     arrive as flags on the read.
 //
-// The readout sits above the pad, never under the knob: a thumb on the
-// control covers exactly the spot where feedback would otherwise appear
-// (§8.4). It is `aria-live` so the same change reaches a reader who is
-// not looking at the face.
+// Nothing sits under the knob: a thumb on the control covers exactly the
+// spot where feedback would otherwise appear (§8.4). Both lines are
+// `aria-live` so the same change reaches a reader who is not looking at
+// the face.
 
 import { nearestAnchor } from "@/lib/stance/anchors";
-import { formatPair, inertAxes, isSevered, type StancePair } from "@/lib/stance/model";
-import type { StanceBundle } from "@/lib/stance/stance-data";
+import type { StancePair } from "@/lib/stance/model";
+import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
+import { formatStanceWords } from "@/lib/ui/stance-format";
 
 function face(pair: StancePair): string {
   const anchor = nearestAnchor(pair);
@@ -26,40 +33,47 @@ function face(pair: StancePair): string {
 /** `undefined` while the standing is still being read. */
 export type BundleState = StanceBundle | null | undefined;
 
-function standingLine(bundle: BundleState, targetLabel: string): string {
+export function standingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
   if (bundle === null) return `You haven't taken a stance on ${targetLabel} yet.`;
-  if (isSevered(bundle.current) && bundle.severance.records === 0) {
-    return `You've cut off ${targetLabel}.`;
-  }
-  return `Right now: ${face(bundle.current)}`;
+  if (bundle.severed) return `You've severed ${targetLabel}.`;
+  return `Where you stand now: ${face(bundle.current)}`;
 }
 
-function landingLine(projection: StancePair | null): string | null {
-  if (projection === null) return null;
-  if (isSevered(projection)) return "This would end your standing entirely.";
-  const inert = inertAxes(projection);
-  if (inert.directed && !inert.interest) {
-    return `Lands you at ${face(projection)} — where you stand would carry nothing.`;
+/**
+ * The landing, in the precedence Android fixes: severance first, then
+ * inertness, then the ordinary reading. `null` is a landing not yet
+ * known — it says so rather than showing a stale one.
+ *
+ * Which axis is inert is read off the landing the fold returned, and
+ * only once the fold has DECLARED the landing inert. The schema carries
+ * one `inert` flag ("either axis at zero") rather than one per axis, so
+ * the flag decides that inertness applies and the returned pair only
+ * says which side it fell on.
+ */
+export function landingLine(landing: StanceLanding | null): string {
+  if (landing === null) return "Working out where this leaves you…";
+  if (landing.severed) return "This pick nets everything you've said about it back to nothing.";
+  if (landing.inert) {
+    const directedInert = landing.landing.pDirected === 0;
+    const interestInert = landing.landing.pInterest === 0;
+    if (directedInert && interestInert) return "This would carry nothing.";
+    if (directedInert) return "Where you stand would carry nothing.";
+    if (interestInert) return "What reaches you would carry nothing.";
   }
-  if (inert.interest && !inert.directed) {
-    return `Lands you at ${face(projection)} — how much you see would carry nothing.`;
-  }
-  return `Lands you at ${face(projection)}`;
+  return `This leaves you at: ${face(landing.landing)}`;
 }
 
-export function StanceReadout({
+/** The standing and the pick's face — everything that sits above the field. */
+export function StanceStanding({
   pick,
   bundle,
-  projection,
   targetLabel,
   showExact = false,
   testIdPrefix,
 }: {
   pick: StancePair;
   bundle: BundleState;
-  /** The fold's projection of `pick`; null while it is being read. */
-  projection: StancePair | null;
   targetLabel: string;
   /** Exact values stay available, but are never the default reading (§8.3). */
   showExact?: boolean;
@@ -67,28 +81,39 @@ export function StanceReadout({
 }) {
   return (
     <div aria-live="polite" className="flex flex-col gap-1">
-      <p data-testid={`${testIdPrefix}-face`} className="text-title-large">
-        {face(pick)}
-      </p>
       <p
         data-testid={`${testIdPrefix}-standing`}
         className="text-body-small text-on-surface-variant"
       >
         {standingLine(bundle, targetLabel)}
       </p>
-      {landingLine(projection) !== null && (
-        <p data-testid={`${testIdPrefix}-landing`} className="text-body-small">
-          {landingLine(projection)}
-        </p>
-      )}
+      <p data-testid={`${testIdPrefix}-face`} className="text-title-large">
+        {face(pick)}
+      </p>
       {showExact && (
         <p
           data-testid={`${testIdPrefix}-exact`}
           className="text-body-small text-on-surface-variant"
         >
-          {formatPair(pick)}
+          {formatStanceWords(pick)}
         </p>
       )}
     </div>
+  );
+}
+
+/** The landing — the one line that sits below the field. */
+export function StanceLandingLine({
+  landing,
+  testIdPrefix,
+}: {
+  /** The fold's projection of the pick; null while it is being read. */
+  landing: StanceLanding | null;
+  testIdPrefix: string;
+}) {
+  return (
+    <p aria-live="polite" data-testid={`${testIdPrefix}-landing`} className="text-body-small">
+      {landingLine(landing)}
+    </p>
   );
 }

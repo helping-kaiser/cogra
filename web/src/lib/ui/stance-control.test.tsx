@@ -9,11 +9,15 @@ import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-
 import { renderWithProviders } from "@/test/providers";
 import { LONG_PRESS_MS, PROJECTION_SETTLE_MS, StanceControl } from "./stance-control";
 
-const TARGET: StanceTargetRef = { id: "post-1", label: "this post" };
+const TARGET: StanceTargetRef = { id: "post-1", kind: "post", label: "this post" };
 const PREFIX = "stance-post-1";
 
-/** The 200×200 pad the geometry tests use: radius 100, half-side 100/√2. */
-const HALF = 100 / Math.SQRT2;
+/**
+ * The 200×200 pad the geometry tests use: radius 100, and the radius is
+ * the full range on each axis. `hold()` puts the pointer down at (0, 0),
+ * so a pointer position below IS the travel from the drag's origin.
+ */
+const RADIUS = 100;
 
 function signedInStore() {
   const store = createTokenStore();
@@ -153,7 +157,7 @@ describe("the press-and-hold pad", () => {
     await settle();
     await hold();
     layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 100 + HALF / 2, clientY: 100 - HALF });
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: RADIUS / 2, clientY: -RADIUS });
     await settle();
     await act(async () => {
       fireEvent.pointerUp(control(), { pointerId: 1 });
@@ -168,9 +172,10 @@ describe("the press-and-hold pad", () => {
     await settle();
     await hold();
     layOutPad();
-    // The value square is inscribed in the bloom, so its corner sits on
-    // the circle rather than outside the reachable field (§8.2 vs §8.3).
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 100 - HALF, clientY: 100 + HALF });
+    // The drawn radius is the full range on each axis, so the corner is
+    // reached by carrying on past the drawn edge along the diagonal
+    // (§8.2 vs §8.3).
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: -RADIUS, clientY: RADIUS });
     await settle();
     await act(async () => {
       fireEvent.pointerUp(control(), { pointerId: 1 });
@@ -178,12 +183,39 @@ describe("the press-and-hold pad", () => {
     expect(data.sent[0].pick).toEqual({ pDirected: -1, pInterest: -1 });
   });
 
+  it("measures the pick as travel from where the thumb went down", async () => {
+    // An absolute mapping would read this as the pad's own centre and
+    // pick something else entirely.
+    const data = mount();
+    await settle();
+    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 640, clientY: 480 });
+    await settle(LONG_PRESS_MS + 1);
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 640 + RADIUS / 2, clientY: 480 });
+    await settle();
+    await act(async () => {
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+    });
+    expect(data.sent[0].pick.pDirected).toBeCloseTo(0.5, 10);
+    expect(data.sent[0].pick.pInterest).toBeCloseTo(0, 10);
+  });
+
+  it("opens under the thumb without the pick jumping", async () => {
+    mount();
+    await settle();
+    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 640, clientY: 480 });
+    await settle(LONG_PRESS_MS + 1);
+    const knob = screen.getByTestId(`${PREFIX}-knob`);
+    expect(knob.style.left).toBe("50%");
+    expect(knob.style.top).toBe("50%");
+  });
+
   it("commits the release, and does not also fire the tap default", async () => {
     const data = mount();
     await settle();
     await hold();
     layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 100 + HALF, clientY: 100 });
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: RADIUS, clientY: 0 });
     await settle();
     await act(async () => {
       fireEvent.pointerUp(control(), { pointerId: 1 });
@@ -245,21 +277,74 @@ describe("the readout", () => {
     await settle();
     await hold();
     layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 100 - HALF, clientY: 100 + HALF });
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: -RADIUS, clientY: RADIUS });
     await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-face`)).toHaveTextContent("Absolutely not");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This leaves you at:");
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Absolutely not");
+    expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("Where you stand now:");
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("All in");
   });
 
-  it("says a stance carries nothing where the landing is inert on one axis", async () => {
+  it("keeps the two lines apart, one above the field and one below it", async () => {
+    mount({ fold: lastWins, seed: { "post-1": { records: [{ pDirected: 0.9, pInterest: 0.9 }] } } });
+    await settle();
+    await hold();
+    const field = screen.getByTestId(`${PREFIX}-field`);
+    const standing = screen.getByTestId(`${PREFIX}-standing`);
+    const landing = screen.getByTestId(`${PREFIX}-landing`);
+    expect(standing).not.toBe(landing);
+    // DOCUMENT_POSITION_FOLLOWING: the field comes after the standing,
+    // and the landing after the field.
+    expect(standing.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(field.compareDocumentPosition(landing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("says a stance carries nothing where the fold flags the landing inert", async () => {
     mount({ fold: lastWins });
     await settle();
     await hold();
     layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 100, clientY: 100 - HALF });
+    // Valence at zero, connection alive: the axis wording follows.
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 0, clientY: -RADIUS });
     await settle(PROJECTION_SETTLE_MS + 1);
-    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("would carry nothing");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
+      "Where you stand would carry nothing.",
+    );
+  });
+
+  it("says what reaches you would carry nothing where the other axis is inert", async () => {
+    mount({ fold: lastWins });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: RADIUS, clientY: 0 });
+    await settle(PROJECTION_SETTLE_MS + 1);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
+      "What reaches you would carry nothing.",
+    );
+  });
+
+  it("says it is still working the landing out rather than showing a stale one", async () => {
+    mount({ fold: lastWins });
+    await settle();
+    await hold();
+    // The settle has not elapsed, so no landing has been read yet.
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
+      "Working out where this leaves you…",
+    );
+  });
+
+  it("names a landing that reaches severance as what it nets, not as a reading", async () => {
+    mount({ fold: lastWins });
+    await settle();
+    await hold();
+    layOutPad();
+    // The origin: both axes at zero, which the fold flags as severance.
+    await settle(PROJECTION_SETTLE_MS + 1);
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
+      "This pick nets everything you've said about it back to nothing.",
+    );
   });
 
   it("counts pending stances in every read it makes", async () => {
@@ -323,7 +408,9 @@ describe("severance", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
     });
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent("2 signed steps");
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "It takes 2 signed actions, each paid for separately.",
+    );
   });
 
   it("stages the counter-record batch once confirmed", async () => {
@@ -346,7 +433,7 @@ describe("severance", () => {
       fireEvent.click(screen.getByTestId("severance-proceed"));
     });
     expect(data.severed).toEqual(["post-1"]);
-    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("2 steps");
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("2 actions");
   });
 
   it("writes nothing when the confirmation is declined", async () => {
@@ -363,11 +450,40 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
-  it("offers nothing to cut off where there is no standing", async () => {
-    mount();
+  it("keeps the route findable but refuses to bill for nothing", async () => {
+    // §8.5 wants severance findable from the open pad; with no standing
+    // there is nothing to walk back, and the dialog says so rather than
+    // hiding the route and leaving the state unreachable.
+    const data = mount();
     await settle();
     await hold();
-    expect(screen.queryByTestId(`${PREFIX}-sever`)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "You are already at nothing here.",
+    );
+    expect(screen.getByTestId("severance-proceed")).toBeDisabled();
+    expect(data.severed).toEqual([]);
+  });
+
+  it("keeps the confirmation up and says so when the batch does not go through", async () => {
+    const data = mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } },
+    });
+    await settle();
+    await hold();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    // The seam goes down between opening the dialog and confirming.
+    const offline = createStubStanceData({ offline: true });
+    data.sever = offline.sever;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
+    expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
 });
 
@@ -421,7 +537,10 @@ describe("the alternate inputs", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
     });
-    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("0.00, 0.00");
+    // The axis is named in words before its number, always signed.
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent(
+      "How you stand +0.00, In your world +0.00",
+    );
     await act(async () => {
       fireEvent.click(screen.getByTestId("stance-alt-cancel"));
     });
@@ -447,7 +566,12 @@ describe("a supplied bundle", () => {
     renderWithProviders(
       <StanceControl
         target={TARGET}
-        bundle={{ current: { pDirected: 0.9, pInterest: 0.25 }, severance: { records: 3 } }}
+        bundle={{
+          current: { pDirected: 0.9, pInterest: 0.25 },
+          inert: false,
+          severed: false,
+          severance: { records: 3 },
+        }}
         testIdPrefix={PREFIX}
       />,
       { store: signedInStore(), stanceData: data },

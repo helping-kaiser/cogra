@@ -16,10 +16,11 @@
 
 import { useEffect, useId, useRef } from "react";
 
-import { clampDimension, formatPair, type StancePair } from "@/lib/stance/model";
+import { clampDimension, type StancePair } from "@/lib/stance/model";
 import type { StanceInputMode } from "@/lib/stance/input-mode";
 import { buttonClassName } from "@/lib/ui/button";
-import { DIRECTED_LABEL, INTEREST_LABEL, StanceSlider } from "@/lib/ui/stance-slider";
+import { DIRECTED_LABEL, formatStanceWords, INTEREST_LABEL } from "@/lib/ui/stance-format";
+import { StanceSlider } from "@/lib/ui/stance-slider";
 
 function DirectEntry({
   label,
@@ -63,6 +64,7 @@ export function StanceAlternates({
   onSever,
   busy = false,
   children,
+  landing,
 }: {
   mode: StanceInputMode;
   pick: StancePair;
@@ -72,12 +74,14 @@ export function StanceAlternates({
   /**
    * Severance is findable from the open pad (design.md §8.5); for anyone
    * whose input is an alternate, the pad never opens, so it is findable
-   * here instead. Absent where there is nothing left to walk back.
+   * here instead.
    */
-  onSever?: () => void;
+  onSever: () => void;
   busy?: boolean;
-  /** The readout, rendered above the inputs the way it sits above the pad. */
+  /** The standing, rendered above the inputs the way it sits above the pad. */
   children?: React.ReactNode;
+  /** The landing line, which sits below the inputs as it sits below the field. */
+  landing?: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -132,19 +136,18 @@ export function StanceAlternates({
         )}
       </div>
       <p data-testid="stance-alt-exact" className="mt-3 text-body-small text-on-surface-variant">
-        {formatPair(pick)}
+        {formatStanceWords(pick)}
       </p>
+      {landing}
       <div className="mt-6 flex items-center justify-end gap-2">
-        {onSever !== undefined && (
-          <button
-            type="button"
-            data-testid="stance-alt-sever"
-            onClick={onSever}
-            className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
-          >
-            Cut it off
-          </button>
-        )}
+        <button
+          type="button"
+          data-testid="stance-alt-sever"
+          onClick={onSever}
+          className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
+        >
+          Sever
+        </button>
         <button
           type="button"
           data-testid="stance-alt-cancel"

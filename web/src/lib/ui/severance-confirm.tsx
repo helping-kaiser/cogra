@@ -1,38 +1,53 @@
 "use client";
 
 // The severance confirmation (design.md §8.5). It serves both routes to
-// `(0, 0)`: the explicit "sever" gesture, and an ordinary pick that
-// happens to land the bundle there — the second is confirmed, never
-// refused, because the control never prevents a choice (§8.2). What
-// separates them is what gets signed, so the dialog says which.
+// `(0, 0)`: the explicit gesture, and an ordinary pick that happens to
+// land the bundle there — the second is confirmed, never refused,
+// because the control never prevents a choice (§8.2). The two are the
+// SAME dialog, distinguished only by the pick line the second one adds.
+//
+// The order is fixed (Android parity): title · the pick line when it was
+// reached by a pick · the consequences · where you stand now · the cost ·
+// the failure line when one exists · Sever, Keep it.
 //
 // The batch size is the legible cost (api-spec.md "A prepare may stage a
 // batch"): each counter-record is its own priced act, so the count is
-// what the reader needs before signing, and it is stated in both modes.
+// what the reader needs before signing.
 //
 // A native <dialog>, like the join prompt: focus trapping, Esc, and the
 // backdrop come from the platform rather than from hand-rolled handlers.
 
 import { useEffect, useRef } from "react";
 
+import { nearestAnchor } from "@/lib/stance/anchors";
+import type { StancePair } from "@/lib/stance/model";
 import { buttonClassName } from "@/lib/ui/button";
-
-export type SeveranceKind = "sever" | "landsAtZero";
+import { standingLine, type BundleState } from "@/lib/ui/stance-readout";
 
 export function SeveranceConfirm({
-  kind,
+  pick,
   targetLabel,
+  bundle,
   records,
+  alreadySevered = false,
   busy = false,
+  failed = false,
   onConfirm,
   onCancel,
 }: {
-  kind: SeveranceKind;
+  /** The pick that reached this dialog; null on the explicit gesture. */
+  pick: StancePair | null;
   /** Already in the reader's words — "this post", "@ada". */
   targetLabel: string;
-  /** How many signed steps reaching zero takes. */
+  /** The standing, for the line that states it. */
+  bundle: BundleState;
+  /** How many signed actions reaching zero takes. */
   records: number;
+  /** The fold reports nothing left to walk back — severing is a no-op. */
+  alreadySevered?: boolean;
   busy?: boolean;
+  /** The signing pass did not complete; the dialog stays open and says so. */
+  failed?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -42,7 +57,8 @@ export function SeveranceConfirm({
     if (dialog !== null && !dialog.open) dialog.showModal();
   }, []);
 
-  const steps = records === 1 ? "1 signed step" : `${records} signed steps`;
+  const actions = records === 1 ? "1 signed action" : `${records} signed actions`;
+  const pickAnchor = pick === null ? null : nearestAnchor(pick);
 
   return (
     <dialog
@@ -51,22 +67,47 @@ export function SeveranceConfirm({
       onClose={onCancel}
       className="m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
-      <h2 className="text-headline-small">
-        {kind === "sever" ? `Cut off ${targetLabel}?` : "This ends your standing"}
-      </h2>
+      <h2 className="text-headline-small">Sever this?</h2>
+      {pickAnchor !== null && (
+        <p data-testid="severance-pick" className="mt-2 text-body-medium">
+          Your pick: {pickAnchor.emoji} {pickAnchor.label}
+        </p>
+      )}
       {/* Not `error` colouring: severance is a deliberate choice, not a
           failure (design.md §2.4). */}
-      <p data-testid="severance-consequences" className="mt-2 text-body-medium text-on-surface-variant">
-        {kind === "sever"
-          ? `Your standing toward ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
-          : `That pick lands your standing toward ${targetLabel} at nothing — it stops reaching your feed, you stop earning from it, and nothing passes on through you.`}
+      <p
+        data-testid="severance-consequences"
+        className="mt-2 text-body-medium text-on-surface-variant"
+      >
+        Your standing toward {targetLabel} drops to nothing. It stops reaching your feed, you stop
+        earning from it, and nothing passes on through you.
+      </p>
+      <p
+        data-testid="severance-standing"
+        className="mt-2 text-body-small text-on-surface-variant"
+      >
+        {standingLine(bundle, targetLabel)}
       </p>
       <p data-testid="severance-cost" className="mt-2 text-body-medium">
-        {kind === "sever"
-          ? `Getting there takes ${steps}, one for each stance being walked back. You sign them in one go, and each is priced on its own.`
-          : `It takes ${steps}.`}
+        {alreadySevered
+          ? "You are already at nothing here."
+          : `It takes ${actions}, each paid for separately.`}
       </p>
+      {failed && (
+        <p role="alert" data-testid="severance-failed" className="mt-2 text-body-medium text-error">
+          That didn&apos;t send. Try again.
+        </p>
+      )}
       <div className="mt-6 flex justify-end gap-2">
+        <button
+          type="button"
+          data-testid="severance-proceed"
+          disabled={busy || alreadySevered}
+          onClick={onConfirm}
+          className={buttonClassName({ variant: "text", size: "sm" })}
+        >
+          Sever
+        </button>
         <button
           type="button"
           data-testid="severance-cancel"
@@ -74,15 +115,6 @@ export function SeveranceConfirm({
           className={buttonClassName({ variant: "text", size: "sm" })}
         >
           Keep it
-        </button>
-        <button
-          type="button"
-          data-testid="severance-proceed"
-          disabled={busy}
-          onClick={onConfirm}
-          className={buttonClassName({ variant: "text", size: "sm" })}
-        >
-          {kind === "sever" ? "Cut it off" : "Yes, that was the intent"}
         </button>
       </div>
     </dialog>
