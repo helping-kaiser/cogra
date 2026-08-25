@@ -157,6 +157,12 @@ class AuthStateViewModel @Inject constructor(
 @Composable
 fun CograNavGraph(
     navController: NavHostController = rememberNavController(),
+    /**
+     * The shell's snackbar host, hoisted so the caller can also publish
+     * it as `LocalSnackbarHostState` — a leaf buried in a feed card
+     * confirms through the ambient, not through a parameter chain.
+     */
+    shellSnackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
@@ -261,8 +267,7 @@ fun CograNavGraph(
     // needs an account opens the join prompt on a signed-out tap —
     // ask, never bounce. A read drill-in keeps the frame but selects
     // no tab; the task flows drop it for their back arrow.
-    val shellSnackbar = remember { SnackbarHostState() }
-    val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
+    val onFeedTab =backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
     val onOwnProfileTab = onProfile &&
         backStackEntry?.toRoute<Profile>()?.handle == null

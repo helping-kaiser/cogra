@@ -23,6 +23,7 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.store.IdentityStore
@@ -42,9 +43,19 @@ enum class PadMode { CLOSED, DRAGGING, STICKY }
 data class TargetStance(
     val pick: StancePair = StancePair.Origin,
     val pad: PadMode = PadMode.CLOSED,
-    /** The fold's answer; null until the read lands. */
+    /**
+     * The fold's answer, or null when the reader has authored nothing
+     * toward this target — which is what the resting target renders as
+     * the labelled affordance rather than a folded pair (design.md §8.3).
+     * A bundle folding to the origin is NOT nothing: it is severance, and
+     * [standingRecords] is what tells the two apart.
+     */
     val standing: StancePair? = null,
     val standingRecords: Int = 0,
+    /** The fold has answered at least once; a failed read has not. */
+    val standingRead: Boolean = false,
+    /** The shown standing counts a record still being signed. */
+    val standingPending: Boolean = false,
     /** Where [pick] leaves the bundle; null while the fold is in flight. */
     val landing: StanceProjection? = null,
     val busy: Boolean = false,
@@ -53,6 +64,12 @@ data class TargetStance(
     val needsKey: Boolean = false,
     val exactValues: Boolean = false,
     val severance: SeveranceState? = null,
+    /**
+     * A stance just signed, as the standing it left the reader at. A
+     * one-shot: the screen shows it once and calls
+     * [StanceViewModel.onConfirmationShown] (design.md §8.3).
+     */
+    val confirmation: StancePair? = null,
 )
 
 /** An open severance confirmation and how it was reached. */
@@ -66,8 +83,10 @@ data class SeveranceState(
 
 data class StanceUiState(
     val targets: Map<String, TargetStance> = emptyMap(),
-    /** The one control carrying the first-run coach mark, if any. */
+    /** The control whose first tap opened the teaching mark, if any. */
     val coachTarget: String? = null,
+    /** The reader's chosen input surface, the same on every control (design.md §8.6). */
+    val inputMode: StanceInputMode = StanceInputMode.Default,
 )
 
 /**
@@ -88,26 +107,80 @@ class StanceViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     private val projections = mutableMapOf<String, Job>()
-    private val observed = mutableSetOf<String>()
 
-    /** Registers a control and reads the standing behind it, once. */
-    fun observe(target: String) {
-        if (!observed.add(target)) return
-        _state.update { it.copy(targets = it.targets + (target to TargetStance())) }
+    /** Targets whose standing read is in flight; a feed asks once, not per frame. */
+    private val reading = mutableSetOf<String>()
+
+    /**
+     * Whether the held gesture has been taught on this device; null until
+     * the store answers. The first tap waits on it rather than acting
+     * blind — a tap that stages a priced act must not be the teaching
+     * moment's casualty (design.md §8.7).
+     */
+    private var taught: Boolean? = null
+
+    init {
+        // Collected, not read once: choosing an alternate in Settings has
+        // to reach controls already composed here (design.md §8.6).
         viewModelScope.launch {
-            if (_state.value.coachTarget == null && !identity.stancePadTaught()) {
-                _state.update { if (it.coachTarget == null) it.copy(coachTarget = target) else it }
+            identity.stanceInputMode.collect { mode ->
+                _state.update { it.copy(inputMode = mode) }
             }
-            readStanding(target)
         }
     }
 
-    /** The plain tap: the modest positive default, no pad (design.md §8.3). */
+    /**
+     * Registers a control and reads the standing behind it. A read that
+     * ANSWERED is not asked again — a node's bundle does not change
+     * under the reader — but one that failed is, the next time the
+     * control comes back into view. Otherwise a single transport blip
+     * leaves that card a mystery button for the rest of the session.
+     */
+    fun observe(target: String) {
+        if (_state.value.targets[target]?.standingRead == true) return
+        if (!reading.add(target)) return
+        _state.update { state ->
+            if (state.targets.containsKey(target)) {
+                state
+            } else {
+                state.copy(targets = state.targets + (target to TargetStance()))
+            }
+        }
+        viewModelScope.launch {
+            if (taught == null) taught = identity.stancePadTaught()
+            readStanding(target)
+            reading.remove(target)
+        }
+    }
+
+    /**
+     * The plain tap. The FIRST tap ever teaches and stages nothing; every
+     * tap after that commits the modest positive default (design.md §8.3,
+     * §8.7).
+     */
     fun onTapDefault(target: String) {
-        commit(target, StancePair.TapDefault)
+        when (taught) {
+            // The store has not answered yet: wait for it rather than
+            // spending the teaching tap on a guess.
+            null -> viewModelScope.launch {
+                taught = identity.stancePadTaught()
+                onTapDefault(target)
+            }
+            false -> teach(target)
+            true -> commit(target, StancePair.TapDefault)
+        }
     }
 
     fun onOpenPad(target: String) {
+        // A hold IS the lesson. It closes an open mark, and it spends the
+        // teaching tap for a reader who found the gesture without being
+        // told — either way they have met it, and teaching them later
+        // would cost them a tap for nothing (design.md §8.7).
+        dismissCoachMark()
+        if (taught == false) {
+            taught = true
+            viewModelScope.launch { identity.markStancePadTaught() }
+        }
         // The pad opens at the origin, untilted — the low default belongs
         // to the tap, not to the considered gesture (design.md §8.3).
         update(target) {
@@ -176,10 +249,24 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    /** The teaching mark is per device and shown once (design.md §8.7). */
-    fun onCoachMarkDismissed() {
-        _state.update { it.copy(coachTarget = null) }
+    /** The mark stays until dismissed or until a hold lands (design.md §8.7). */
+    fun onCoachMarkDismissed() = dismissCoachMark()
+
+    /**
+     * Opens the teaching mark and spends the teaching tap. The flag is
+     * written HERE rather than on dismissal: its meaning is "the tap that
+     * teaches has been spent", and a flag written later would let a
+     * restart swallow a second priced tap in silence.
+     */
+    private fun teach(target: String) {
+        taught = true
+        _state.update { it.copy(coachTarget = target) }
         viewModelScope.launch { identity.markStancePadTaught() }
+    }
+
+    private fun dismissCoachMark() {
+        if (_state.value.coachTarget == null) return
+        _state.update { it.copy(coachTarget = null) }
     }
 
     private fun openSeverance(target: String, fromPick: Boolean) {
@@ -193,10 +280,18 @@ class StanceViewModel @Inject constructor(
         }
     }
 
+    /** Consumes the one-shot confirmation once the screen has shown it. */
+    fun onConfirmationShown(target: String) = update(target) { it.copy(confirmation = null) }
+
     private fun commit(target: String, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
         update(target) { it.copy(busy = true, failed = false, needsKey = false) }
+        // Answer at once (design.md §8.3): the fold says where this pick
+        // leaves the bundle, and the target shows that while the record
+        // is still being signed. It is the same number the pending-
+        // inclusive read will report — asked earlier, never computed here.
+        viewModelScope.launch { showPendingStanding(target, pick) }
         viewModelScope.launch {
             // The record carries the pick verbatim; no delta is derived.
             val prepared = when (val outcome = stances.prepareStance(target, pick)) {
@@ -221,9 +316,26 @@ class StanceViewModel @Inject constructor(
                     )
                 }
                 readStanding(target)
+                // The confirmation carries where the reader now stands,
+                // not what they picked: the pick is one edge, the
+                // standing is what it left them at (design.md §8.1).
+                update(target) { it.copy(confirmation = it.standing ?: pick) }
             } else {
                 fail(target, needsKey = false)
             }
+        }
+    }
+
+    /**
+     * Shows where [pick] leaves the bundle as the standing, while the
+     * record is signed. Dropped if the write already settled — a landed
+     * read is always the better answer.
+     */
+    private suspend fun showPendingStanding(target: String, pick: StancePair) {
+        val outcome = stances.projection(target, pick)
+        if (outcome !is Outcome.Success) return
+        update(target) {
+            if (it.busy) it.copy(standing = outcome.value.net, standingPending = true) else it
         }
     }
 
@@ -243,21 +355,38 @@ class StanceViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The pending-inclusive fold: a stance still settling is one the
+     * author already made, so it counts (design.md §9). A bundle with no
+     * records is no standing at all, which is the difference between the
+     * labelled affordance and a folded pair on the target.
+     */
     private suspend fun readStanding(target: String) {
         when (val outcome = stances.standing(target)) {
             is Outcome.Success -> update(target) {
-                it.copy(standing = outcome.value.net, standingRecords = outcome.value.records)
+                it.copy(
+                    standing = outcome.value.net.takeIf { _ -> outcome.value.records > 0 },
+                    standingRecords = outcome.value.records,
+                    standingRead = true,
+                    standingPending = false,
+                )
             }
             // A missing standing is not a failure the reader has to act
-            // on: the control still works, it simply says less.
+            // on: the control still works, it simply says less. It is
+            // asked again when the control next comes into view.
             else -> Unit
         }
     }
 
     // The pad is left where it was: a tap that failed must not conjure a
     // pad the reader never asked for, and an open pad keeps its place.
-    private fun fail(target: String, needsKey: Boolean) =
+    // A pending standing does not survive it — the write did not keep
+    // the promise the pending answer made, so the fold is asked again.
+    private fun fail(target: String, needsKey: Boolean) {
+        val pending = _state.value.targets[target]?.standingPending == true
         update(target) { it.copy(busy = false, failed = true, needsKey = needsKey) }
+        if (pending) viewModelScope.launch { readStanding(target) }
+    }
 
     private fun failSeverance(target: String) = update(target) {
         it.copy(severance = it.severance?.copy(working = false, failed = true))
