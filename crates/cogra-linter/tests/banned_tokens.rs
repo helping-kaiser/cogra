@@ -1,4 +1,5 @@
-//! Vector tests for the token bans (`[banned-tokens]`, ´sig:lint:bans-api´).
+//! Vector tests for the token bans: `[banned-tokens]` and
+//! (´sig:lint:bans-api´).
 //!
 //! Trace convention: each test names the clause it pins — a row of
 //! `[banned-tokens]`, or the sentence of the bans signature that makes a
