@@ -233,17 +233,11 @@ impl Adoption {
     /// The registry document the classification relation is read out of
     /// (´[ARCH-dec:linter:registry-as-data]´).
     ///
-    /// Recovered from the prose of `[kinds.evidence] adopted`, which is the
-    /// only place in the adoption data that names the document at all. No
-    /// key of `[kinds]` carries it, so the recovery is what
-    /// (´req:lint:adoption-data-only´) leaves available: a compiled-in path
-    /// would be this corpus reaching the code by another route, and a
-    /// positional read of `[meta] discipline_docs` would name the registry
-    /// by where it sits in a list.
-    ///
-    /// The gap is named rather than hidden, as `[banned-tokens]`' missing
-    /// class key is (´sig:lint:bans-api´): a `registry` key beside
-    /// `acceptee` would remove the recovery entirely.
+    /// Read from `[kinds] registry`, the key that names it. The path is
+    /// adoption data and nothing else: a compiled-in one would be this
+    /// corpus reaching the code by another route, and a positional read of
+    /// `[meta] discipline_docs` would name the registry by where it sits in
+    /// a list (´req:lint:adoption-data-only´).
     ///
     /// ```
     /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
@@ -256,26 +250,8 @@ impl Adoption {
     /// ```
     #[must_use]
     pub fn registry_document(&self) -> PathBuf {
-        markdown_path_in(&self.kinds.evidence.adopted).unwrap_or_default()
+        PathBuf::from(&*self.kinds.registry)
     }
-}
-
-/// The first Markdown path a free-text adoption value names.
-///
-/// Trimming is by the characters a path is spelled with rather than by a
-/// pattern, so a path followed by a comma survives and no dialect enters
-/// (´[ARCH-dec:linter:no-regex]´).
-fn markdown_path_in(prose: &str) -> Option<PathBuf> {
-    prose
-        .split_whitespace()
-        .map(|word| word.trim_matches(|one: char| !path_byte(one)))
-        .find(|word| word.ends_with(".md"))
-        .map(PathBuf::from)
-}
-
-/// Whether a character is one a corpus-relative path is spelled with.
-fn path_byte(one: char) -> bool {
-    one.is_ascii_alphanumeric() || matches!(one, '/' | '.' | '-' | '_')
 }
 
 /// When the adoption was drafted and ruled, and where its rationale lives.
@@ -786,6 +762,10 @@ pub struct BannedToken {
 pub struct KindsAdoption {
     /// The named acceptee, who owns the five data below.
     pub acceptee: Box<str>,
+    /// The registry document the classification relation is read out of
+    /// (´[ARCH-dec:linter:registry-as-data]´), as the corpus spells the
+    /// path.
+    pub registry: Box<str>,
     /// X_A: the local extension set.
     pub extensions: KindExtensions,
     /// E_A: the evidence base.

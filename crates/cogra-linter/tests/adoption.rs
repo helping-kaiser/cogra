@@ -60,6 +60,7 @@ designations = []
 
 [kinds]
 acceptee = \"the repository owner\"
+registry = \"docs/environment-kinds.md\"
 
 [kinds.extensions]
 rows = []
@@ -484,6 +485,56 @@ fn every_banned_token_row_names_its_class_in_the_lexers_vocabulary() {
             row.class
         );
     }
+}
+
+/// The registry document is named by its own key, and `registry_document`
+/// reads that key and nothing else — no prose, no compiled-in path, and no
+/// positional read of `[meta] discipline_docs`.
+#[test]
+fn the_registry_document_is_read_from_its_key() {
+    let adoption = ruled();
+    assert_eq!(
+        &*adoption.kinds.registry,
+        "crates/cogra-linter/docs/environment-kinds.md"
+    );
+    assert_eq!(
+        adoption.registry_document(),
+        PathBuf::from("crates/cogra-linter/docs/environment-kinds.md")
+    );
+    assert!(
+        corpus_adoption_path()
+            .parent()
+            .expect("the corpus root")
+            .join(adoption.registry_document())
+            .is_file(),
+        "the key names a document the corpus carries"
+    );
+}
+
+/// A fixture naming a different registry gets that one: the key is the
+/// datum, so the reading follows the file rather than this corpus.
+#[test]
+fn the_registry_document_follows_the_key() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K);
+    let adoption = load(&source).expect("the fixture loads");
+    assert_eq!(
+        adoption.registry_document(),
+        PathBuf::from("docs/environment-kinds.md")
+    );
+}
+
+/// `[kinds]` without its registry key names no document, so the data will
+/// not load at all rather than leaving the bootstrap to guess one.
+#[test]
+fn a_kinds_section_with_no_registry_key_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("registry = \"docs/environment-kinds.md\"\n", "");
+    let error = load(&source).expect_err("no registry key");
+    assert!(matches!(error, AdoptionError::Syntax(_)), "{error:?}");
+    assert!(
+        error.to_string().contains("TOML"),
+        "the message names the parse: {error}"
+    );
 }
 
 #[test]
