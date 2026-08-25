@@ -210,8 +210,10 @@ fn the_generated_documents_carry_occurrences() {
         citations: vec![String::from("sig:ab:cd")],
     };
     for reformed in [false, true] {
-        let run =
-            cogra_linter::run::check_sources(adoption(), sources(&[document.clone()], reformed));
+        let run = cogra_linter::run::check_sources(
+            adoption(),
+            sources(std::slice::from_ref(&document), reformed),
+        );
         assert_eq!(run.registries.mints.len(), 1, "reformed: {reformed}");
         assert_eq!(
             cogra_linter::nodes_of(&run.graph, cogra_linter::NodeKind::Citation).count(),
@@ -319,8 +321,6 @@ proptest! {
     }
 }
 
-// ------------------------------------------------------------ warrant lapse
-
 /// One owner carrying one covered asset, its derived mint, and the citations
 /// of it — the fixture every warrant-lapse transition starts from.
 struct Lapse {
@@ -344,7 +344,12 @@ impl Lapse {
     /// `owner_of_asset` is which package holds it, `area` its
     /// classification, and `identifier` its bare name — the three facets the
     /// derivation reads and therefore the three a transition can move.
-    fn build(owner_of_asset: usize, area: &str, identifier: &str, cited: &[(usize, &str)]) -> Lapse {
+    fn build(
+        owner_of_asset: usize,
+        area: &str,
+        identifier: &str,
+        cited: &[(usize, &str)],
+    ) -> Lapse {
         let mut g = Corpus::new();
         let mut r = Registries::new();
         let mut owners = Vec::new();
@@ -469,7 +474,10 @@ fn renaming_an_asset_dangles_the_citations_of_its_name() {
 fn reclassifying_an_asset_dangles_the_citations_of_its_area() {
     let cited = [(0, "test:unit:alpha")];
     assert_eq!(Lapse::build(0, "unit", "alpha", &cited).dangling(), 0);
-    assert_eq!(Lapse::build(0, "integration", "alpha", &cited).dangling(), 1);
+    assert_eq!(
+        Lapse::build(0, "integration", "alpha", &cited).dangling(),
+        1
+    );
 }
 
 /// (´[LBL-metathm:labels:warrant-lapse]´): moving an asset across packages
@@ -493,13 +501,15 @@ fn moving_an_asset_across_packages_dangles_the_imports_under_the_old_prefix() {
 /// (´[LBL-metathm:labels:warrant-lapse]´): moving an asset *within* its
 /// package lapses nothing — an asset's owner is its package and never its
 /// module, so refactoring inside a package moves nothing.
+///
+/// The move here is a second source under the same owner, which is what a
+/// within-package move is and which the derivation never reads
+/// (´[LBL-ansatz:labels:path-derivation]´).
 #[test]
 fn moving_an_asset_within_its_package_lapses_nothing() {
     let cited = [(0, "test:unit:alpha"), (1, "test:unit:alpha")];
     let before = Lapse::build(0, "unit", "alpha", &cited);
     let mut after = Lapse::build(0, "unit", "alpha", &cited);
-    // The move is a different source under the same owner, which the
-    // derivation never reads (´[LBL-ansatz:labels:path-derivation]´).
     let moved = after.g.add_node(NodeW::Source(SourceNode {
         path: PathBuf::from("one/src/elsewhere.rs"),
         language: Some(Language::new("rust")),
@@ -510,8 +520,6 @@ fn moving_an_asset_within_its_package_lapses_nothing() {
     assert_eq!(after.dangling(), 0);
     let _ = after.other;
 }
-
-// ---------------------------------------------------------- no self support
 
 /// (´[LBL-metathm:labels:no-self-support]´), exercisable half: a generated
 /// occurrence is an occurrence in full — it enters the registries exactly as
@@ -535,7 +543,9 @@ fn a_generated_occurrence_enters_the_registries_in_full() {
         },
         SourceFile {
             path: PathBuf::from("docs/gen/body.md"),
-            owner: adoption().partition.owner_for(Path::new("docs/gen/body.md")),
+            owner: adoption()
+                .partition
+                .owner_for(Path::new("docs/gen/body.md")),
             language: Some(Language::new("markdown")),
             generated: false,
             bytes: Vec::from("It cites (`sig:gen:one`) here.\n"),

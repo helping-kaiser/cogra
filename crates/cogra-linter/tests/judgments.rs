@@ -127,9 +127,9 @@ impl Build {
         if let Some(found) = self.r.labels.get(&(owner, label(text))) {
             return *found;
         }
-        let node = self.g.add_node(NodeW::Label(LabelNode {
-            label: label(text),
-        }));
+        let node = self
+            .g
+            .add_node(NodeW::Label(LabelNode { label: label(text) }));
         self.g.add_edge(owner, node, EdgeW::Owns);
         self.r.record_label(owner, label(text), node);
         node
@@ -237,8 +237,6 @@ fn rules(found: &[Diagnostic]) -> Vec<&str> {
     found.iter().map(|one| one.rule.as_str()).collect()
 }
 
-// ---------------------------------------------------------------- unique mint
-
 /// (´[LBL-inv:labels:unique-mint]´): one mint per owner and label is the
 /// clean case, and the judgment says so with an empty list.
 #[test]
@@ -260,7 +258,10 @@ fn a_second_mint_reports_with_both_locations() {
     assert_eq!(rules(&found), vec!["label-duplicate-mint"]);
     assert_eq!(found[0].primary.span.start, 90, "the later mint is primary");
     assert_eq!(found[0].related.len(), 1);
-    assert_eq!(found[0].related[0].at.span.start, 10, "the first is related");
+    assert_eq!(
+        found[0].related[0].at.span.start, 10,
+        "the first is related"
+    );
 }
 
 /// (´[LBL-inv:labels:unique-mint]´): a third mint is a second finding, and
@@ -309,8 +310,6 @@ fn the_registry_decides_which_mint_is_first() {
     let found = labels::unique_mint(&build.g, &build.r);
     assert_eq!(found[0].related[0].at.span.start, 10);
 }
-
-// ----------------------------------------------------------- total resolution
 
 /// (´[LBL-inv:labels:total-resolution]´): a same-owner citation with one
 /// `ResolvesTo` edge is the clean case.
@@ -443,8 +442,6 @@ fn a_carried_but_unminted_label_resolves_nothing() {
     );
 }
 
-// ----------------------------------------------------------- warrant totality
-
 /// (´[LBL-inv:labels:warrant-totality]´): a kind outside K admits authorship
 /// only, and the occurrence embodies it — no finding, no record owed.
 #[test]
@@ -513,8 +510,6 @@ fn a_staged_profiles_kind_is_ungoverned_not_underived() {
     assert_eq!(rules(&found), vec!["label-kind-ungoverned"]);
 }
 
-// ------------------------------------------------------------------ inventory
-
 /// (´dec:lint:staged-profiles´): no inventory judgment runs over a staged
 /// profile, whatever the graph holds beside it.
 #[test]
@@ -537,8 +532,10 @@ fn a_staged_profile_is_judged_not_at_all() {
 fn a_bijection_between_census_and_carried_labels_is_clean() {
     let (mut build, owner, region) = one_owner();
     let profile = build.profile("rust-test", "test", ProfileStatus::Effective);
-    for (identifier, text, at) in [("alpha", "test:unit:alpha", 10), ("beta", "test:unit:beta", 40)]
-    {
+    for (identifier, text, at) in [
+        ("alpha", "test:unit:alpha", 10),
+        ("beta", "test:unit:beta", 40),
+    ] {
         let mint = build.mint(owner, region, text, at);
         let asset = build.asset(owner, profile, identifier);
         build.derives(asset, mint);
@@ -632,8 +629,6 @@ fn the_inventory_is_checked_within_each_owner() {
     assert!(labels::inventory(&build.g, &build.r).is_empty());
 }
 
-// -------------------------------------------------------- generated compliance
-
 /// (´[LBL-inv:labels:generated-compliance]´): an authored region is no
 /// subject of this clause, whatever stands in it.
 #[test]
@@ -707,8 +702,6 @@ fn a_generated_citation_that_resolves_is_clean() {
     assert!(labels::generated_compliance(&build.g, &build.r).is_empty());
 }
 
-// --------------------------------------------------- anchors and typed data
-
 /// (´[LBL-inf:labels:anchor-harvest]´): the domain is empty in this corpus,
 /// and an empty domain passes vacuously rather than by absence.
 #[test]
@@ -741,14 +734,12 @@ fn the_synthetic_citation_check_passes_vacuously() {
     assert!(labels::synthetic_citation(&build.g, adoption()).is_empty());
 }
 
-// ------------------------------------------------------------ head validation
-
 fn registry() -> &'static KindRegistry {
     static LOADED: OnceLock<KindRegistry> = OnceLock::new();
     LOADED.get_or_init(|| {
         let path = adoption().registry_document();
-        let text = std::fs::read_to_string(root().join(&path))
-            .expect("the registry document is readable");
+        let text =
+            std::fs::read_to_string(root().join(&path)).expect("the registry document is readable");
         let source = SourceFile {
             path,
             owner: OwnerId::new("pkg.cogra-linter"),
@@ -816,8 +807,6 @@ fn the_edges_carry_the_verdict_and_the_registry_the_words() {
     build.pair(head, "Frobnication", "conv");
     assert!(kinds::head_validation(&build.g, registry()).is_empty());
 }
-
-// ----------------------------------------------------- judge_all and stamping
 
 /// (´dec:lint:registry-bootstrap´): with no registry the label judgments run
 /// normally and one diagnostic names kind validation as suppressed, counting

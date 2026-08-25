@@ -75,11 +75,26 @@ const LINTER_ARTIFACTS: [&str; 5] = [
 /// fails this test, which is the intended coupling — the record moves when
 /// the corpus does.
 const RECORDED_INTERCHANGE_DEFECTS: [(&str, &str); 5] = [
-    ("crates/cogra-interchange/docs/audit.md", "label-near-miss-bracket"),
-    ("crates/cogra-interchange/docs/audit.md", "label-duplicate-mint"),
-    ("crates/cogra-interchange/docs/commissioning.md", "label-duplicate-mint"),
-    ("crates/cogra-interchange/docs/design.md", "label-duplicate-mint"),
-    ("crates/cogra-interchange/docs/design.md", "label-duplicate-mint"),
+    (
+        "crates/cogra-interchange/docs/audit.md",
+        "label-near-miss-bracket",
+    ),
+    (
+        "crates/cogra-interchange/docs/audit.md",
+        "label-duplicate-mint",
+    ),
+    (
+        "crates/cogra-interchange/docs/commissioning.md",
+        "label-duplicate-mint",
+    ),
+    (
+        "crates/cogra-interchange/docs/design.md",
+        "label-duplicate-mint",
+    ),
+    (
+        "crates/cogra-interchange/docs/design.md",
+        "label-duplicate-mint",
+    ),
 ];
 
 fn under(prefix: &str) -> Vec<&'static Diagnostic> {
@@ -138,7 +153,7 @@ fn the_linters_own_phase_artifacts_lint_clean() {
     let mut against = Vec::new();
     for document in LINTER_ARTIFACTS {
         for one in &run().findings {
-            if one.primary.path == PathBuf::from(document) {
+            if one.primary.path == Path::new(document) {
                 against.push(spell(one));
             }
         }
@@ -158,12 +173,7 @@ fn the_linters_own_phase_artifacts_lint_clean() {
 fn the_failing_set_carries_only_the_recorded_defects() {
     let mut failing: Vec<(String, &str)> = run()
         .failing()
-        .map(|one| {
-            (
-                one.primary.path.display().to_string(),
-                one.rule.as_str(),
-            )
-        })
+        .map(|one| (one.primary.path.display().to_string(), one.rule.as_str()))
         .collect();
     failing.sort();
     let mut recorded: Vec<(String, &str)> = RECORDED_INTERCHANGE_DEFECTS
@@ -319,7 +329,10 @@ fn the_full_corpus_run_reports_its_wall_time() {
     let checked = cogra_linter::run::check_sources(adoption(), sources);
     let analysed = analysing.elapsed();
 
-    println!("corpus: {counted} sources, {} findings", checked.findings.len());
+    println!(
+        "corpus: {counted} sources, {} findings",
+        checked.findings.len()
+    );
     println!("walk:     {walked:?}");
     println!("analysis: {analysed:?}");
     println!("phases:   {}", checked.timing);

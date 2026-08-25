@@ -248,7 +248,13 @@ pub fn total_resolution(g: &Corpus, r: &Registries) -> Vec<Diagnostic> {
                 enforcement: Enforcement::Advisory,
                 primary: at,
                 related: Vec::new(),
-                message: unresolved_message(g, &weight.label, weight.prefix.as_ref(), owner, &elsewhere),
+                message: unresolved_message(
+                    g,
+                    &weight.label,
+                    weight.prefix.as_ref(),
+                    owner,
+                    &elsewhere,
+                ),
             }),
             several => found.push(Diagnostic {
                 rule: AMBIGUOUS_RESOLUTION,
@@ -520,7 +526,10 @@ fn inventory_of_owner(
         }
         for mint in mints {
             if let Some(NodeW::Mint(weight)) = g.node_weight(mint) {
-                carried.entry(weight.label.clone()).or_default().push(*asset);
+                carried
+                    .entry(weight.label.clone())
+                    .or_default()
+                    .push(*asset);
             }
         }
     }
@@ -628,7 +637,10 @@ fn import_form(g: &Corpus, owner: NodeIndex, label: &Label) -> Option<String> {
     let mut prefixes: Vec<&Prefix> = weight.prefixes.iter().collect();
     prefixes.sort();
     match prefixes.first() {
-        Some(prefix) => Some(format!("{}, which the form {prefix}-{label} reaches", weight.id)),
+        Some(prefix) => Some(format!(
+            "{}, which the form {prefix}-{label} reaches",
+            weight.id
+        )),
         None => Some(format!("{}, which registers no prefix", weight.id)),
     }
 }
@@ -666,4 +678,3 @@ fn owner_id(g: &Corpus, owner: NodeIndex) -> OwnerId {
         _ => OwnerId::new("an unnamed owner"),
     }
 }
-

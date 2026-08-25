@@ -307,12 +307,8 @@ impl<'a> Harvest<'a> {
             }
         };
         self.findings.extend(parsed.diagnostics.iter().cloned());
-        self.findings.extend(bans::findings(
-            &self.a.banned_tokens,
-            src,
-            pre,
-            enforcement,
-        ));
+        self.findings
+            .extend(bans::findings(&self.a.banned_tokens, src, pre, enforcement));
 
         let mut hosts: Vec<(NodeIndex, ByteSpan)> = Vec::new();
         for region in &parsed.regions {
@@ -645,11 +641,15 @@ fn near_miss(miss: &NearMiss) -> (RuleId, String) {
         ),
         NearMissKind::InteriorSpacing { .. } => (
             NEAR_MISS_SPACING,
-            String::from("this span holds whitespace inside its delimiters, where a label holds none"),
+            String::from(
+                "this span holds whitespace inside its delimiters, where a label holds none",
+            ),
         ),
         NearMissKind::MisplacedBracket => (
             NEAR_MISS_BRACKET,
-            String::from("a bracketed interior is the import form and belongs inside a parenthesis"),
+            String::from(
+                "a bracketed interior is the import form and belongs inside a parenthesis",
+            ),
         ),
         NearMissKind::BacktickInCode => (
             NEAR_MISS_BACKTICK,

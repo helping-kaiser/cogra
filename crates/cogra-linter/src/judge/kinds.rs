@@ -916,7 +916,9 @@ pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
 fn uncatalogued(k: &KindRegistry, head: &str, declared: &Kind) -> String {
     match k.validate(head, declared) {
         HeadVerdict::Uncatalogued { base } if &*base != head => {
-            format!("the head {head} reduces to {base}, which the relation does not carry with the kind {declared}")
+            format!(
+                "the head {head} reduces to {base}, which the relation does not carry with the kind {declared}"
+            )
         }
         _ => format!("the relation carries no pair of {head} with the kind {declared}"),
     }
