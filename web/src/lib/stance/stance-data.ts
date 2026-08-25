@@ -93,11 +93,11 @@ export type StanceCommit = {
 export type StanceReadOptions = {
   readonly includePending?: boolean;
   /**
-   * Skip whatever an earlier read of the same field left behind. A
-   * standing read after a write must not be answered from the copy taken
-   * before that write: the answer would be the state the viewer just
-   * changed, which reads as the gesture having done nothing (design.md
-   * §8.3, "a gesture that stages a priced act must never be silent").
+   * This read follows the viewer's own write, so its answer must be the
+   * state that write produced — never the state before it, which reads as
+   * the gesture having done nothing (design.md §8.3, "a gesture that
+   * stages a priced act must never be silent"). An implementation that
+   * asks the server for every viewer-scoped read already satisfies it.
    */
   readonly fresh?: boolean;
 };
