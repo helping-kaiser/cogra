@@ -4,10 +4,11 @@
 //
 // AT REST (§8.3) the target shows the standing: a viewer with a bundle
 // toward the thing sees its face, its words, and its folded pair on the
-// target itself; a viewer without one sees the labelled affordance. The
-// bundle is already loaded by the read that rendered the surface (§8.2),
-// so showing it costs nothing and is the difference between a control
-// and a mystery button.
+// target itself; a viewer without one sees a MUTED, TRANSLUCENT FACE —
+// the same control at rest, visibly waiting to be given a value, never a
+// bare word. The bundle is already loaded by the read that rendered the
+// surface (§8.2), so showing it costs nothing and is the difference
+// between a control and a mystery button.
 //
 // THE FIRST TAP EVER TEACHES (§8.7) and stages nothing: it opens the
 // coach mark and records that the gesture has been met. Every tap after
@@ -19,11 +20,25 @@
 // confirms the signature. A gesture that stages a priced act must never
 // be silent: silence reads as failure and invites the same act again.
 //
-// PRESS AND HOLD and the pad blooms, anchored to the target rather than
-// under the press, clamped inside the viewport, opening AT THE ORIGIN.
+// PRESS AND HOLD and the pad blooms — at ONE FIXED SPOT, the lower
+// centre of the viewport, the same place every time (`pad-parking.ts`).
 // The pick is the accumulated travel from where the thumb went down, so
 // the finger's absolute position never matters, and the drawn field is
 // the value space — the knob never leaves it (`pad-geometry.ts`).
+//
+// RELEASING THE FINGER NEVER COMMITS (§8.3). The pad is a considered
+// surface: release leaves the pick standing and the pad open, an
+// explicit SET commits, and CANCEL — or a press outside — dismisses and
+// stages nothing. An accidental lift must never sign a priced act. A
+// small `?` opens the §8.7 explanation on demand, for anyone meeting the
+// control after the one-time coach mark is spent.
+//
+// THE CONTROL OWNS ITS TOUCHES (§8.3). Nothing it receives — tap, hold,
+// drag, release, or the open pad itself — reaches the surface underneath:
+// opening the pad must never also open the post, and dismissing it must
+// never navigate. One gesture, one meaning. The wrapper stops the
+// propagation, so that is a property of the control rather than of where
+// a host happens to place it.
 //
 // What it writes (§8.1): exactly the pair picked. There is no delta in
 // this file. Current standing and where a pick lands the bundle are both
@@ -40,36 +55,37 @@
 // — the platform's own unification, so there is no second touch path to
 // keep in sync. `touch-action: none` is what stops the browser from
 // claiming the drag as a scroll, pointer capture is what keeps the
-// events coming after the finger leaves the button it started on, and
+// events coming after the finger leaves the element it started on, and
 // suppressing the callout is what stops a long press from becoming a
 // context menu instead of a gesture.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useStanceInputMode } from "@/lib/stance/input-mode";
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
-import { KNOB_TRAVEL_INSET_PX, padPairFromTravel, padPercentOf } from "@/lib/stance/pad-geometry";
+import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
 import { useAuthPhase } from "@/lib/session/provider";
 import { buttonClassName } from "@/lib/ui/button";
-import { AddIcon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
+import { parkedPadStyle } from "@/lib/ui/pad-parking";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
-import { StanceCoachMark } from "@/lib/ui/stance-coach-mark";
+import { StanceCoachMark, STANCE_EXPLANATION } from "@/lib/ui/stance-coach-mark";
 import { formatStancePair } from "@/lib/ui/stance-format";
 import {
+  NO_STANDING_LABEL,
+  SEVERED_LABEL,
   signedLine,
   StanceLandingLine,
   StanceStanding,
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
-import { anchoredStyle, useAnchoredPlacement } from "@/lib/ui/use-anchored";
 
 /**
  * How long a press has to be held before the pad blooms. Android's own
@@ -97,6 +113,9 @@ type Confirming = {
 
 /** Everything reaching severance lands at the origin, by definition. */
 const SEVERED: StanceLanding = { landing: ORIGIN, inert: true, severed: true };
+
+/** A drag in progress: where the pointer went down, and the pick it started from. */
+type Drag = { x: number; y: number; base: StancePair };
 
 export function StanceControl({
   target,
@@ -130,6 +149,7 @@ export function StanceControl({
   const [open, setOpen] = useState(false);
   const [alternates, setAlternates] = useState(false);
   const [coach, setCoach] = useState(false);
+  const [explaining, setExplaining] = useState(false);
   const [pick, setPick] = useState<StancePair>(ORIGIN);
   const [landing, setLanding] = useState<StanceLanding | null>(null);
   /**
@@ -146,17 +166,15 @@ export function StanceControl({
   const [joinPrompt, setJoinPrompt] = useState(false);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const padRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressClick = useRef(false);
-  const capturedPointer = useRef<number | null>(null);
-  /** Where the pointer went down — the origin the pick is measured from. */
-  const travelOrigin = useRef<{ x: number; y: number } | null>(null);
+  /** The element holding the pointer capture, and the pointer it holds. */
+  const captured = useRef<{ element: HTMLElement; pointerId: number } | null>(null);
+  const drag = useRef<Drag | null>(null);
   const bundleRead = useRef(0);
 
   const considered = open || alternates;
-  const placement = useAnchoredPlacement(buttonRef, padRef, open);
 
   // Every host builds `target` inline, so its identity changes on each
   // render. The seam's copy is keyed on the two fields that actually
@@ -224,37 +242,45 @@ export function StanceControl({
   };
 
   const releasePointer = useCallback(() => {
-    const button = buttonRef.current;
-    const pointerId = capturedPointer.current;
-    capturedPointer.current = null;
-    if (button === null || pointerId === null) return;
-    if (typeof button.releasePointerCapture === "function" && button.hasPointerCapture?.(pointerId)) {
-      button.releasePointerCapture(pointerId);
+    const held = captured.current;
+    captured.current = null;
+    drag.current = null;
+    if (held === null) return;
+    if (
+      typeof held.element.releasePointerCapture === "function" &&
+      held.element.hasPointerCapture?.(held.pointerId)
+    ) {
+      held.element.releasePointerCapture(held.pointerId);
     }
   }, []);
 
-  // Escape cancels the open pad. The pad is a pointer surface that takes
-  // no focus of its own, so the listener sits on the document rather than
-  // on a node the key would never reach.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      releasePointer();
-      setOpen(false);
-      setLanding(null);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, releasePointer]);
+  const capturePointer = (element: HTMLElement | null, pointerId: number) => {
+    if (element === null || typeof element.setPointerCapture !== "function") return;
+    element.setPointerCapture(pointerId);
+    captured.current = { element, pointerId };
+  };
 
-  const closeAll = () => {
+  const closeAll = useCallback(() => {
     releasePointer();
     clearHold();
     setOpen(false);
     setAlternates(false);
+    setExplaining(false);
     setLanding(null);
-  };
+  }, [releasePointer]);
+
+  // Escape cancels the open pad. The pad takes no focus of its own while
+  // a pointer is driving it, so the listener sits on the document rather
+  // than on a node the key would never reach.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      closeAll();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, closeAll]);
 
   /** Signs the picked edge. Reports whether the gesture completed. */
   const runCommit = async (chosen: StancePair, landed: StanceLanding): Promise<boolean> => {
@@ -294,6 +320,10 @@ export function StanceControl({
    * and if the fold says that reaches severance, say so and ask rather
    * than refusing (§8.2). Otherwise the projection doubles as the
    * pending-inclusive answer the resting target shows at once (§8.3).
+   *
+   * The backend's projection is the authority here even though the
+   * landing LINE is folded locally under the drag (§8.3): the line is
+   * display, and this is the moment a record gets signed.
    */
   const commitChecked = async (chosen: StancePair) => {
     setSigned(null);
@@ -358,7 +388,7 @@ export function StanceControl({
   const onPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (phase !== "signedIn" || busy) return;
     const pointerId = event.pointerId;
-    travelOrigin.current = { x: event.clientX, y: event.clientY };
+    const from = { x: event.clientX, y: event.clientY };
     clearHold();
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
@@ -367,13 +397,11 @@ export function StanceControl({
       setLanding(null);
       setSigned(null);
       markTaught();
+      // The pad opens at the origin, so that is what this drag builds on.
+      drag.current = { ...from, base: ORIGIN };
       if (mode === "pad") {
         setOpen(true);
-        const button = buttonRef.current;
-        if (button !== null && typeof button.setPointerCapture === "function") {
-          button.setPointerCapture(pointerId);
-          capturedPointer.current = pointerId;
-        }
+        capturePointer(buttonRef.current, pointerId);
       } else {
         // The alternate replaces the pad everywhere (§8.6), the hold
         // gesture included.
@@ -382,29 +410,49 @@ export function StanceControl({
     }, LONG_PRESS_MS);
   };
 
-  const onPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!open) return;
+  /** One rule for how a finger moves the knob, wherever the drag began. */
+  const trackDrag = (clientX: number, clientY: number) => {
     const field = fieldRef.current;
-    const origin = travelOrigin.current;
-    if (field === null || origin === null) return;
+    const from = drag.current;
+    if (field === null || from === null) return;
     setPick(
-      padPairFromTravel(field.getBoundingClientRect(), {
-        dx: event.clientX - origin.x,
-        dy: event.clientY - origin.y,
+      padPairFrom(from.base, field.getBoundingClientRect(), {
+        dx: clientX - from.x,
+        dy: clientY - from.y,
       }),
     );
   };
 
+  const onPointerMove = (event: React.PointerEvent) => {
+    if (!open) return;
+    trackDrag(event.clientX, event.clientY);
+  };
+
+  /**
+   * The release ENDS THE DRAG and nothing else (§8.3). The pick stands,
+   * the pad stays open, and Set is what signs it.
+   */
   const onPointerUp = () => {
     clearHold();
     if (!open) return;
     releasePointer();
-    void commitChecked(pick);
   };
 
   const onPointerCancel = () => {
     clearHold();
-    if (open) closeAll();
+    // A lost pointer is not a dismissal: the pad parks the way a release
+    // parks it, and the reader still has Set and Cancel in front of them.
+    releasePointer();
+  };
+
+  /**
+   * A second drag, started on the parked field, adjusts the pick that is
+   * already standing rather than starting over.
+   */
+  const onFieldPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (busy) return;
+    drag.current = { x: event.clientX, y: event.clientY, base: pick };
+    capturePointer(event.currentTarget, event.pointerId);
   };
 
   // The standing the target wears: what the gesture just projected, or
@@ -416,11 +464,62 @@ export function StanceControl({
       : bundle === null || bundle === undefined || bundle.records === 0
         ? null
         : bundle.current;
-  const restingFace = restingPair === null ? null : nearestAnchor(restingPair);
+  // A standing, so the table is not consulted at the origin (§8.4).
+  const restingFace = restingPair === null ? null : bundleReadout(restingPair, SEVERED_LABEL);
   const knob = padPercentOf(pick);
 
+  const padBody = (
+    <>
+      {/* Above the pad, never under the knob (§8.4). */}
+      <StanceStanding
+        pick={pick}
+        bundle={bundle}
+        targetLabel={target.label}
+        testIdPrefix={testIdPrefix}
+      />
+      {/* A soft rounded square, and the drawn field IS the value
+          space: its corners are (±1, ±1) and the knob never leaves
+          it (§8.3). */}
+      <div
+        ref={fieldRef}
+        data-testid={`${testIdPrefix}-field`}
+        onPointerDown={onFieldPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        className="relative aspect-square w-full touch-none rounded-large bg-surface-container-highest"
+      >
+        {/* The inert centre-lines are drawn as visibly dead ground
+            rather than hidden, so the model reads as legible rather
+            than mysterious (§8.3). */}
+        <div aria-hidden="true" className="absolute left-0 top-1/2 h-px w-full bg-outline-variant" />
+        <div aria-hidden="true" className="absolute left-1/2 top-0 h-full w-px bg-outline-variant" />
+        {/* The knob's centre travels this inset box, which is what
+            keeps the knob itself inside the drawn corner. */}
+        <div aria-hidden="true" className="absolute" style={{ inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
+          {/* primaryContainer is the loudest surface in the app and
+              belongs to a committed stance (§2.4). */}
+          <div
+            data-testid={`${testIdPrefix}-knob`}
+            style={{ left: `${knob.x}%`, top: `${knob.y}%` }}
+            className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-container"
+          />
+        </div>
+      </div>
+      {/* Below the field, and never merged into the line above it. */}
+      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />
+    </>
+  );
+
   return (
-    <div className="relative flex flex-col gap-1">
+    // The control owns its touches (§8.3): nothing it receives reaches
+    // the card or the link behind it.
+    <div
+      className="relative flex flex-col gap-1"
+      onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onPointerUp={(event) => event.stopPropagation()}
+    >
       <div className="flex items-center gap-2">
         {/* 48px minimum, including at rest (design.md §4). */}
         <button
@@ -443,17 +542,26 @@ export function StanceControl({
           onContextMenu={(event) => event.preventDefault()}
           className="flex min-h-12 min-w-12 touch-none select-none items-center justify-center gap-2 rounded-full px-3 text-label-large text-primary [-webkit-touch-callout:none]"
         >
-          {restingFace === null ? (
-            <AddIcon className="h-5 w-5" />
-          ) : (
-            <span aria-hidden="true" className="text-title-large">
-              {restingFace.emoji}
-            </span>
-          )}
+          {/* Never a bare word (§8.3): a viewer with no bundle gets the
+              same face, muted and translucent — the control visibly
+              waiting to be given a value. */}
+          <span
+            aria-hidden="true"
+            data-testid={`${testIdPrefix}-resting-face`}
+            className={
+              restingFace === null
+                ? "text-title-large opacity-40 grayscale"
+                : "text-title-large"
+            }
+          >
+            {restingFace === null ? ZERO_BUNDLE_EMOJI : restingFace.emoji}
+          </span>
           {/* Colour never carries stance alone: the words say it too
               (design.md §10) — and the exact pair with them, because the
               numbers are part of the default reading (§8.3). */}
-          <span aria-hidden="true">{restingFace === null ? "Stance" : restingFace.label}</span>
+          <span aria-hidden="true">
+            {restingFace === null ? NO_STANDING_LABEL : restingFace.label}
+          </span>
           {restingPair !== null && (
             <span
               aria-hidden="true"
@@ -494,68 +602,77 @@ export function StanceControl({
       )}
 
       {open && (
-        <div
-          ref={padRef}
-          role="group"
-          aria-label={`Stance pad for ${target.label}`}
-          data-testid={`${testIdPrefix}-pad`}
-          data-side={placement?.side ?? "unplaced"}
-          style={anchoredStyle(placement)}
-          className="z-20 flex w-64 touch-none flex-col gap-2 rounded-extra-large bg-surface-container-high p-4"
-        >
-          {/* Above the pad, never under the knob (§8.4). */}
-          <StanceStanding
-            pick={pick}
-            bundle={bundle}
-            targetLabel={target.label}
-            testIdPrefix={testIdPrefix}
-          />
-          {/* A soft rounded square, and the drawn field IS the value
-              space: its corners are (±1, ±1) and the knob never leaves
-              it (§8.3). */}
+        <>
+          {/* A press outside dismisses and stages nothing (§8.3). The
+              scrim is also what makes the open pad's surroundings inert:
+              a touch meant for the pad's edge cannot reach a card. */}
           <div
-            ref={fieldRef}
-            data-testid={`${testIdPrefix}-field`}
-            className="relative aspect-square w-full touch-none rounded-large bg-surface-container-highest"
+            data-testid={`${testIdPrefix}-scrim`}
+            aria-hidden="true"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              closeAll();
+            }}
+            className="fixed inset-0 z-10 touch-none"
+          />
+          <div
+            role="group"
+            aria-label={`Stance pad for ${target.label}`}
+            data-testid={`${testIdPrefix}-pad`}
+            style={parkedPadStyle()}
+            className="z-20 flex w-64 touch-none flex-col gap-2 overflow-y-auto rounded-extra-large bg-surface-container-high p-4"
           >
-            {/* The inert centre-lines are drawn as visibly dead ground
-                rather than hidden, so the model reads as legible rather
-                than mysterious (§8.3). */}
-            <div
-              aria-hidden="true"
-              className="absolute left-0 top-1/2 h-px w-full bg-outline-variant"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute left-1/2 top-0 h-full w-px bg-outline-variant"
-            />
-            {/* The knob's centre travels this inset box, which is what
-                keeps the knob itself inside the drawn corner. */}
-            <div
-              aria-hidden="true"
-              className="absolute"
-              style={{ inset: `${KNOB_TRAVEL_INSET_PX}px` }}
-            >
-              {/* primaryContainer is the loudest surface in the app and
-                  belongs to a committed stance (§2.4). */}
-              <div
-                data-testid={`${testIdPrefix}-knob`}
-                style={{ left: `${knob.x}%`, top: `${knob.y}%` }}
-                className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-container"
-              />
+            {padBody}
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                data-testid={`${testIdPrefix}-explain`}
+                aria-expanded={explaining}
+                aria-label="How stances work"
+                onClick={() => setExplaining((shown) => !shown)}
+                className={buttonClassName({ variant: "text", size: "sm" })}
+              >
+                ?
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  data-testid={`${testIdPrefix}-cancel`}
+                  onClick={closeAll}
+                  className={buttonClassName({ variant: "text", size: "sm" })}
+                >
+                  Cancel
+                </button>
+                {/* The only thing on the pad that signs anything (§8.3). */}
+                <button
+                  type="button"
+                  data-testid={`${testIdPrefix}-set`}
+                  disabled={busy}
+                  onClick={() => void commitChecked(pick)}
+                  className={buttonClassName({ variant: "primary", size: "sm" })}
+                >
+                  Set
+                </button>
+              </div>
             </div>
+            {explaining && (
+              <p
+                data-testid={`${testIdPrefix}-explanation`}
+                className="text-body-small text-on-surface-variant"
+              >
+                {STANCE_EXPLANATION}
+              </p>
+            )}
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-sever`}
+              onClick={openSeverance}
+              className={buttonClassName({ variant: "text", size: "sm" })}
+            >
+              Sever
+            </button>
           </div>
-          {/* Below the field, and never merged into the line above it. */}
-          <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />
-          <button
-            type="button"
-            data-testid={`${testIdPrefix}-sever`}
-            onClick={openSeverance}
-            className={buttonClassName({ variant: "text", size: "sm" })}
-          >
-            Sever
-          </button>
-        </div>
+        </>
       )}
 
       {alternates && (
