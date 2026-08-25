@@ -14,6 +14,7 @@
 #          scanned-region recognition ......... [scanned-regions]
 #   plus   banned-token sets .................. [banned-tokens]
 #          the carrier's exclusions ........... [carrier]
+#          the kind registry's adoption ....... [kinds]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -188,12 +189,12 @@ note   = "provisional in ARCH preamble; kept verbatim"
 [[signature.prefix]]
 prefix = "ICX"
 owner  = "doc.interchange-conventions"
-note   = "provisional in ARCH preamble; kept verbatim; already in live use — 65 imported citations from the interchange crate's docs and 4 from ARCH itself"
+note   = "provisional in ARCH preamble; kept verbatim; the corpus's most-cited prefix — 70 imported citations in prose (65 from the interchange crate's docs, 4 from ARCH, 1 from the linter's concept) plus 1 in the interchange crate's Rust sources, measured 2026-08-25"
 
 [[signature.prefix]]
 prefix = "ARCH"
 owner  = "doc.linter-architecture"
-note   = "the linter's architecture document is its own owner; prefix already in live use — 16 imported citations from the interchange crate's docs"
+note   = "the linter's architecture document is its own owner; prefix in live use — 60 imported citations, 43 from the linter crate's concept and 17 from the interchange crate's docs, measured 2026-08-25"
 
 # Doc-tree owners. These are NOT major documents; they are the
 # residual groups that make Omega total over docs/ without inventing
@@ -207,22 +208,22 @@ note   = "the linter's architecture document is its own owner; prefix already in
 [[signature.prefix]]
 prefix = "PRIM"
 owner  = "tree.docs-primitive"
-note   = "docs/primitive/ — 17 files, 0 label occurrences today; layer1-interface.md is outside the carrier, see [carrier] vendored_files"
+note   = "docs/primitive/ — 17 files in the carrier; 10 of them carry 42 label-shaped spans, 29 in citation form (measured 2026-08-25). Every one names the Layer 1 document, and all are queued for reforming into displayed spans (R20); layer1-interface.md itself is outside the carrier, see [carrier] vendored_files"
 
 [[signature.prefix]]
 prefix = "INST"
 owner  = "tree.docs-instances"
-note   = "docs/instances/ — 10 files, 0 label occurrences today"
+note   = "docs/instances/ — 10 files; 6 carry 13 label-shaped spans, 7 in citation form (2026-08-25), all queued under R20"
 
 [[signature.prefix]]
 prefix = "IMPL"
 owner  = "tree.docs-implementation"
-note   = "docs/implementation/ — 12 files, 0 label occurrences today. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
+note   = "docs/implementation/ — 13 files; 2 carry 3 label-shaped spans, 1 in citation form (2026-08-25), queued under R20 — reforming them to displayed spans is what keeps them from becoming labels. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
 
 [[signature.prefix]]
 prefix = "DOCS"
 owner  = "tree.docs-root"
-note   = "docs/README.md and docs/open-questions.md"
+note   = "docs/README.md and docs/open-questions.md; the latter carries 3 label-shaped spans, none in citation form (2026-08-25), queued under R20"
 
 [[signature.prefix]]
 prefix = "NOTES"
@@ -439,17 +440,30 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # No web, Kotlin, or Markdown profile in v1: their frontends are later
 # slices (ARCH gate:linter:architecture-review, sequencing clause),
 # and a profile whose frontend does not exist cannot compute a census.
+#
+# STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
+# nothing partial: every covered asset carries its label at the
+# standard place or the run fails. Both profiles below are therefore
+# unsatisfiable on the day they are switched on — one wants a register
+# no generator has yet written, the other ~42 inner doc comments that
+# do not yet exist. So a profile ENTERS Pi together with the migration
+# that makes it satisfiable, and not before: registered here, staged
+# until its own condition holds. Entering is a commit that flips
+# status and effective, nothing more.
 ####################################################################
 
 [profiles]
-count = 2
+count     = 2   # registered below
+effective = 0   # in Pi today; each profile's status says what it waits on
 
 # ---------------------------------------------------------------
 # Profile 1: Rust tests
 # ---------------------------------------------------------------
 [[profiles.profile]]
-id   = "rust-test"
-kind = "test"
+id     = "rust-test"
+kind   = "test"
+status = "staged"
+enters_when = "the linter's first register generation commits a label-register.md for every owner with covered assets"
 # 'test' is the Assets-family row of KND conv:kinds:assets (Test ->
 # test). Note the homonym: KND conv:kinds:examples also rows Test, as
 # quiz. The kind token at the label is the disambiguation (KND
@@ -541,8 +555,10 @@ from the first slice; nothing here waits on a later one.
 # Profile 2: Rust modules
 # ---------------------------------------------------------------
 [[profiles.profile]]
-id   = "rust-module"
-kind = "mod"
+id     = "rust-module"
+kind   = "mod"
+status = "staged"
+enters_when = "the ~42 module definitions carry the //! inner doc comment of this profile's standard place"
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -659,6 +675,12 @@ precondition of enabling the profile, not a cleanup after it.
 source = "KND conv:kinds:assets — distinct kind tokens of that table"
 count  = 36
 
+# STAGING (2026-08-25): the two kinds below are governed by profiles
+# that are REGISTERED AND STAGED ([profiles]). Until each enters Pi
+# with its migration, no profile governs its kind — and LBL
+# sig:labels:reserved-kinds then makes a bare occurrence of it a hard
+# failure awaiting its derivation, which is the same outcome by a
+# different clause. The lists record registration, not entry.
 governed = [
   "test",   # profile rust-test
   "mod",    # profile rust-module
@@ -927,3 +949,119 @@ pre-tokenizer and its own diagnostic for a reader.
 
 # No bans for markdown, typescript or kotlin in v1. Kotlin and
 # TypeScript keep // — it is a scanned region there, not contraband.
+
+
+####################################################################
+# [kinds] — the kind registry's adoption data
+#
+# RULED 2026-08-25.
+#
+# Not one of the seven, and not the corpus's own invention either: the
+# kind registry is a second discipline with adoption data of its own.
+# KND sig:kinds:acceptee names exactly ONE acceptee A, who owns five
+# things — the local extension set X_A, the evidence base E_A, the
+# status map sigma_A, the register generator G_A, and the generated
+# companion register E_hat_A — and KND gate:kinds:adoption blocks
+# adoption until the decision names them. Head validation (R11 of the
+# linter's functional requirements) reads the effective relation
+# C_A = C union X_A, so a linter cannot validate one head until this
+# section exists.
+#
+# THE RULING ADOPTS THE REGISTRY'S OWN DEFAULT. KND sig:kinds:acceptee
+# closes: "For the corpus in which this registry itself travels, the
+# registry authority is the acceptee, and the edition evidence base is
+# E_A entire." This corpus is that corpus — environment-kinds.md lives
+# in it — so the default fits exactly. A default is not a decision
+# until it is recorded; this section is the record.
+####################################################################
+
+[kinds]
+acceptee = "jakob"
+note = """
+KND sig:kinds:acceptee requires a NAMED authority, not a role, and the
+repository owner is the registry authority for the four discipline
+documents that travel here — so the registry's default resolves to one
+person. (The repo's no-personal-names rule governs the L1 team, an
+external party; it does not reach the corpus's own acceptee.)
+"""
+
+# --- X_A: local extensions ------------------------------------
+# KND judg:kinds:classification: recorded extensions are the only
+# further source of C_A. Empty, and stated rather than omitted, as
+# [typed-data] and [citation-indexes] are.
+[kinds.extensions]
+rows        = []
+hybrids     = []
+empty_in_v1 = true
+reason      = "every head in this corpus validates against C as published; no head needs a pair the registry does not carry"
+revisit_when = "a document adopts an environment name the registry does not catalogue, or a local hybrid — either enters by a recorded decision, per KND inf:kinds:hybrid for the hybrid case"
+
+# --- E_A: the evidence base -----------------------------------
+# KND sig:kinds:acceptee splits E_A in two: an adopted component taken
+# by reference, and an owned component held first-hand covering X_A
+# and any status the acceptee strengthens. With X_A empty and no
+# strengthening, the owned component is empty and E_A is the edition's
+# entire evidence base — the default, verbatim.
+[kinds.evidence]
+adopted = "the edition evidence base of crates/cogra-linter/docs/environment-kinds.md, taken by reference"
+owned   = []
+
+# --- sigma_A: the status map ----------------------------------
+# KND judg:kinds:attestation: an acceptee may STRENGTHEN a base row's
+# edition status (borderline to firm) and never weakens one. None is
+# strengthened, so sigma_A is the edition's statuses unchanged, and
+# KND inv:kinds:attestation-coverage holds trivially: every pair of
+# C_A carries exactly the edition's firm or borderline status.
+[kinds.statuses]
+strengthenings = []
+daggered       = ["Yoga", "Meta-question", "Schema"]   # borderline, per the edition
+candidates     = ["Record (member-bearing-aggregate sense)"]
+note = """
+The daggered rows and the one candidate are the present edition's,
+recorded here so the corpus clause of KND inv:kinds:attestation-
+coverage is checkable against something. The candidate lies OUTSIDE
+C_A, as that invariant requires.
+"""
+
+# --- G_A: the register generator ------------------------------
+# One generator for every generated register the disciplines call for,
+# and it is the linter — ARCH rule:linter:register-freshness already
+# fixes regeneration + exact byte compare as the mechanism, and a
+# second generator would be a second source of truth.
+[kinds.generator]
+generator = "the linter's explicit regeneration mode"
+covers = [
+  "E_hat_A, the companion attestation register ([kinds.register])",
+  "the headline counts of KND tab:kinds:headline-counts",
+  "the per-owner label registers of the rust-test profile ([profiles])",
+]
+note = """
+KND tab:kinds:headline-counts is a generated REGION inside an authored
+file, not a generated file: environment-kinds.md therefore does NOT
+join [carrier] generated_files, and what is regenerated and compared
+is that one table. It is the registry document's only generated
+region, per KND gate:kinds:adoption.
+"""
+
+# --- E_hat_A: the companion register --------------------------
+# KND req:kinds:attestation-register: E_hat_A = G_A(E_A, sigma_A),
+# under the total recorded ordering name, kind, source, locator, then
+# a record sequence number as tiebreak; it presents exactly Hom(C_A)
+# as its homonym section; maintenance is by regeneration and exactness
+# check, and hand-editing it is a failure.
+[kinds.register]
+standard_place = "crates/cogra-linter/docs/attestation-register.md"
+ordering       = "name, kind, source, locator, record sequence number"
+presents       = ["evidence and status rows", "Hom(C_A), the homonym section"]
+state          = "staged — never generated"
+note = """
+NAME AND LOCATION ARE IMPLEMENTATION-DEFINED, as the label registers'
+are: the linter's regeneration mode maintains this file and may move
+it. It carries names and kinds, never labels, so no owner constraint
+falls on it and it may live beside the registry document it presents.
+STAGED means exactly this: a register that has never been generated
+has no committed bytes to compare against, so freshness reports it as
+staged rather than stale. The first generation run commits the
+initial register and arms exact byte comparison from then on. It
+joins [carrier] generated_files in that same commit.
+"""
