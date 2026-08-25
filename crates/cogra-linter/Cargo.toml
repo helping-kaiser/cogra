@@ -18,6 +18,16 @@ petgraph = "0.8.3"
 # The Markdown frontend (design, markdown-surface convention); driven
 # through into_offset_iter, with ENABLE_TABLES the only extension.
 pulldown-cmark = { version = "0.13.4", default-features = false }
+# The Rust frontend (design, rust-surface convention): parse_file plus the
+# visit::Visit walk. `full` and `visit` are optional, and a linter parsing
+# whole files and walking them needs both; `parsing` comes from the
+# defaults. Verified against docs.rs/syn 3.0.4 on 2026-08-25.
+syn = { version = "3.0.4", features = ["full", "visit", "extra-traits"] }
+# Byte ranges out of syn spans (design, syn-spans decision). Direct rather
+# than transitive precisely so `span-locations` is switched on where a
+# reader can see it. Verified against docs.rs/proc-macro2 1.0.107 on
+# 2026-08-25: outside a procedural macro the range is accurate on stable.
+proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
