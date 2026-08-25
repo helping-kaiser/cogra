@@ -364,6 +364,61 @@ fn f1_backticks_do_not_pair_across_an_acute_span() {
     assert!(scan.delimiter_failure.is_none());
 }
 
+/// Code: an interior a space squeezed apart is warned about, though no
+/// acute opened it.
+///
+/// The run the opening test reads stops at the space, so the span never
+/// opens; the bounded look after that failure is what makes the spacing
+/// warning of (´[LBL-inv:labels:total-resolution]´) reachable in code.
+#[test]
+fn f5_interior_spacing_is_reachable_in_code() {
+    for text in ["´def: fx:spaced´", "´def :fx:spaced´", "´a:b: c´"] {
+        let scan = scan_code(text, 0);
+        assert_eq!(
+            scan.near_misses.len(),
+            1,
+            "{text:?} warns once: {:?}",
+            scan.near_misses
+        );
+        assert!(matches!(
+            scan.near_misses[0].why,
+            NearMissKind::InteriorSpacing { .. }
+        ));
+    }
+}
+
+/// Code: the look creates no span and consumes nothing — it warns, and the
+/// occurrence after it is read exactly as if the look had not happened.
+#[test]
+fn f5_the_spacing_look_swallows_nothing() {
+    let scan = scan_code("´def: fx:spaced´ then ´a:b:c´", 0);
+    assert_eq!(scan.occurrences.len(), 1);
+    assert_eq!(scan.occurrences[0].label().as_str(), "a:b:c");
+    assert!(scan.delimiter_failure.is_none());
+}
+
+/// Code: the look is bounded, so a lone acute far from the next one warns
+/// about nothing — and an apostrophe accident stays text.
+#[test]
+fn f5_the_spacing_look_is_bounded_and_keeps_apostrophes_text() {
+    let far = "´def: fx and then a stretch of prose long enough to carry no acute at all, \
+               nowhere near this one, and long enough again that no bounded look could \
+               reach across it, ´a:b:c´";
+    let scan = scan_code(far, 0);
+    assert!(scan.near_misses.is_empty(), "{:?}", scan.near_misses);
+    assert_eq!(scan.occurrences.len(), 1);
+
+    assert_eq!(
+        scan_code("it isn´t an occurrence", 0),
+        RegionScan::default()
+    );
+    assert!(
+        scan_code("the author´s ´a:b:c´ label", 0)
+            .near_misses
+            .is_empty()
+    );
+}
+
 /// Code: an empty region carries nothing.
 #[test]
 fn code_empty_region() {
