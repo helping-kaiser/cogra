@@ -153,6 +153,11 @@ enum Strong {
 
 /// One open block, accumulating its logical text.
 struct Frame {
+    /// Where the block opened in the document, which is the order its
+    /// region is reported in. Blocks close innermost-first — a nested list
+    /// item closes before the item holding it — so closing order is not
+    /// document order and the two are kept apart here.
+    order: usize,
     kind: RegionKind,
     participates: bool,
     /// Whether the block is taken whole rather than assembled from its
@@ -166,8 +171,9 @@ struct Frame {
 }
 
 impl Frame {
-    fn new(kind: RegionKind, participates: bool, verbatim: bool) -> Frame {
+    fn new(order: usize, kind: RegionKind, participates: bool, verbatim: bool) -> Frame {
         Frame {
+            order,
             kind,
             participates,
             verbatim,
@@ -217,6 +223,11 @@ struct Walker<'a> {
     heading_form: bool,
     frames: Vec<Frame>,
     tables: Vec<TableBuild>,
+    /// Regions and heads keyed by the order their blocks opened, sorted
+    /// into document order once the walk is done.
+    regions: Vec<(usize, Region)>,
+    heads: Vec<(usize, Head)>,
+    opened: usize,
     out: Parsed,
 }
 
@@ -237,6 +248,9 @@ impl<'a> Walker<'a> {
             heading_form: has_form(a, HEADING),
             frames: Vec::new(),
             tables: Vec::new(),
+            regions: Vec::new(),
+            heads: Vec::new(),
+            opened: 0,
             out: Parsed {
                 path: src.path.clone(),
                 ..Parsed::default()
@@ -248,6 +262,10 @@ impl<'a> Walker<'a> {
         while !self.frames.is_empty() {
             self.pop();
         }
+        self.regions.sort_by_key(|(order, _)| *order);
+        self.heads.sort_by_key(|(order, _)| *order);
+        self.out.regions = self.regions.into_iter().map(|(_, one)| one).collect();
+        self.out.heads = self.heads.into_iter().map(|(_, one)| one).collect();
         self.out.diagnostics.sort();
         self.out
     }
@@ -349,7 +367,8 @@ impl<'a> Walker<'a> {
 
     fn push(&mut self, kind: RegionKind, participates: bool, verbatim: bool, range: &Range<usize>) {
         let src = self.src;
-        let mut frame = Frame::new(kind, participates, verbatim);
+        self.opened += 1;
+        let mut frame = Frame::new(self.opened, kind, participates, verbatim);
         if verbatim {
             frame.append(src, range);
         }
@@ -415,9 +434,9 @@ impl<'a> Walker<'a> {
         };
         if region.participates {
             self.unpaired(&mut region);
-            self.head(&region, frame.strong);
+            self.head(frame.order, &region, frame.strong);
         }
-        self.out.regions.push(region);
+        self.regions.push((frame.order, region));
         text
     }
 
@@ -476,7 +495,7 @@ impl<'a> Walker<'a> {
     /// heading, whose head is the rung the format supplies. Both are closed
     /// by the separator and the mint, and the mint is what declares the
     /// kind (´dec:lint:head-recognition´).
-    fn head(&mut self, region: &Region, strong: Strong) {
+    fn head(&mut self, order: usize, region: &Region, strong: Strong) {
         let found = match region.kind {
             RegionKind::Heading if self.heading_form => {
                 Some((String::from(RUNG), region.span(), 0))
@@ -490,11 +509,14 @@ impl<'a> Walker<'a> {
         let Some(declared) = self.declared(region, after) else {
             return;
         };
-        self.out.heads.push(Head {
-            text,
-            declared,
-            span,
-        });
+        self.heads.push((
+            order,
+            Head {
+                text,
+                declared,
+                span,
+            },
+        ));
     }
 
     /// The bold form's head, its span, and where the run ended.
