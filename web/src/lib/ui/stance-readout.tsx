@@ -121,7 +121,10 @@ export function landingLine(landing: StanceLanding | null): string {
     if (directedInert) return "Where you stand would carry nothing.";
     if (interestInert) return "What reaches you would carry nothing.";
   }
-  return `This leaves you at: ${standingFace(landing.landing)}`;
+  // Face, words, AND the exact pair (§8.3): the landing carries the same
+  // three the standing does. The landing is a bundle, not a pick, so it
+  // reads through the standing face.
+  return `This leaves you at: ${standingReading(landing.landing)}`;
 }
 
 /** The standing and the pick's face — everything that sits above the field. */
