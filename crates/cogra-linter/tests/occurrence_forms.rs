@@ -464,6 +464,24 @@ fn several_to_one_parenthesis() {
     assert_eq!(covered(text, miss.span), text);
 }
 
+/// The spans of a several-to-one parenthesis still mint, since neither carries
+/// the immediate parenthesis the citation form needs and a bare participating
+/// occurrence is the mint form wherever it sits.
+///
+/// The warning explains the shape; suppressing the mints would hide the very
+/// bare occurrences the unique-mint invariant exists to catch
+/// (´[LBL-inv:labels:unique-mint]´).
+#[test]
+fn several_to_one_parenthesis_still_mints() {
+    let scan = prose("(`a:b:c` and `d:e:f`)");
+    assert_eq!(scan.occurrences.len(), 2);
+    assert!(
+        scan.occurrences
+            .iter()
+            .all(|o| matches!(o, Occurrence::Mint { .. }))
+    );
+}
+
 /// Near-miss, SeveralToOneParenthesis: the count is the parenthesis's own.
 #[test]
 fn several_to_one_parenthesis_counts_three() {
