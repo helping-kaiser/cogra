@@ -962,7 +962,7 @@ pre-tokenizer and its own diagnostic for a reader.
 # things — the local extension set X_A, the evidence base E_A, the
 # status map sigma_A, the register generator G_A, and the generated
 # companion register E_hat_A — and KND gate:kinds:adoption blocks
-# adoption until the decision names them. Head validation (R11 of the
+# adoption until the decision names them. Head validation (R12 of the
 # linter's functional requirements) reads the effective relation
 # C_A = C union X_A, so a linter cannot validate one head until this
 # section exists.
