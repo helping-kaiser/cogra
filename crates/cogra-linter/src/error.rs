@@ -93,6 +93,26 @@ pub enum AdoptionError {
         /// The 1-based position it actually occupies.
         position: u32,
     },
+    /// A configured path exists under a spelling the adoption data does not
+    /// write.
+    ///
+    /// Path matching is byte-exact everywhere in the crate, so a prefix
+    /// spelled `Docs/` against a tree spelled `docs/` matches nothing at
+    /// all — and on a case-insensitive filesystem the author who wrote it
+    /// sees the tree right there and no diagnostic. Absence is a different
+    /// fact and not this one: a configured root that simply is not there is
+    /// the walk's `carrier-unmatched-root`.
+    #[error(
+        "the configured path {configured} is spelled {found} on disk, and matching is byte-exact"
+    )]
+    PathSpelling {
+        /// The row the path sits in.
+        at: Location,
+        /// The path as the adoption data writes it.
+        configured: String,
+        /// The spelling the corpus root actually carries.
+        found: String,
+    },
     /// A profile is missing one of the five data a profile fixes.
     #[error("profile {id} is missing its {datum}")]
     ProfileIncomplete {
@@ -139,6 +159,7 @@ impl AdoptionError {
             | AdoptionError::DuplicatePrefix { at, .. }
             | AdoptionError::PartitionNotTotal { at }
             | AdoptionError::RuleOrderMismatch { at, .. }
+            | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::EffectiveCountMismatch { at, .. } => Some(at),
@@ -229,6 +250,11 @@ mod tests {
                 at: row(),
                 order: 8,
                 position: 4,
+            },
+            AdoptionError::PathSpelling {
+                at: row(),
+                configured: String::from("Docs/"),
+                found: String::from("docs/"),
             },
             AdoptionError::ProfileIncomplete {
                 at: row(),
