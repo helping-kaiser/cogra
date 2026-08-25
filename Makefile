@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint lint-corpus fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -94,11 +94,20 @@ dev: up ## Start DBs, run migrations, then start the API
 
 run: init dev ## Full start: init + dev (first-time friendly)
 
-ci: lint sqlx-check test docs-link-check ## Run full CI pipeline locally (lint + sqlx metadata check + test + docs)
+ci: lint lint-corpus sqlx-check test docs-link-check ## Run full CI pipeline locally (lint + corpus lint + sqlx metadata check + test + docs)
 
 lint: ## Run clippy and fmt check (read-only, matches CI)
 	$(CARGO) fmt --all -- --check
 	SQLX_OFFLINE=true $(CARGO) clippy --all-targets --all-features -- -D warnings
+
+# The corpus linter over its own repository (mirrors the corpus-lint job in
+# ci.yml). Debug rather than release: the lane compiles the crate in debug
+# for its test suite anyway, so the check binary is a by-product, where
+# release would buy ~2 s of runtime for a separate optimized build of the
+# crate and its dependencies (crates/cogra-linter/docs/commissioning.md).
+# Exit 1 is findings on the failing set, 2 is the linter itself failing.
+lint-corpus: ## Run the corpus linter over the repository (mirrors the corpus-lint job in ci.yml)
+	$(CARGO) run -p cogra-linter --bin cogra-lint -- check
 
 fmt: ## Format all code
 	$(CARGO) fmt --all
