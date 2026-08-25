@@ -142,6 +142,14 @@ data class StanceLanding(
 @Immutable
 data class SeverancePrompt(
     val standing: StancePoint,
+    /**
+     * The RAW sums the batch has to walk back, before the clip. This is
+     * what the confirmation states: the count of signed acts is sized by
+     * the raw history, so quoting the clipped fold beside it — `+1.00`
+     * next to "6 actions" — makes the price unexplainable (design.md
+     * §8.3 "Clipped is not hidden").
+     */
+    val raw: StancePoint,
     val records: Int,
     val alreadySevered: Boolean,
     /** Arrived as the result of an ordinary pick rather than the route. */
