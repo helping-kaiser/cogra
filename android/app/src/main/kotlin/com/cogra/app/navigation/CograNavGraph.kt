@@ -21,6 +21,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +50,7 @@ import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
+import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -154,15 +156,30 @@ class AuthStateViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 }
 
+/**
+ * The app's one navigation graph, inside the shell scaffold.
+ *
+ * The shell's snackbar host is PUBLISHED here rather than by the caller.
+ * It is the same composable that renders the `SnackbarHost`, so the host
+ * a leaf publishes to and the host the frame draws cannot drift apart —
+ * and, just as importantly, every test that composes this graph gets the
+ * real wiring instead of a hand-built stand-in. Wiring it one level up
+ * left the app correct and the tests blind to it.
+ */
 @Composable
 fun CograNavGraph(
     navController: NavHostController = rememberNavController(),
-    /**
-     * The shell's snackbar host, hoisted so the caller can also publish
-     * it as `LocalSnackbarHostState` — a leaf buried in a feed card
-     * confirms through the ambient, not through a parameter chain.
-     */
     shellSnackbar: SnackbarHostState = remember { SnackbarHostState() },
+) {
+    CompositionLocalProvider(LocalSnackbarHostState provides shellSnackbar) {
+        CograNavGraphContent(navController, shellSnackbar)
+    }
+}
+
+@Composable
+private fun CograNavGraphContent(
+    navController: NavHostController,
+    shellSnackbar: SnackbarHostState,
 ) {
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
