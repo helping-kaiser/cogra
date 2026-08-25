@@ -2,10 +2,12 @@
 //
 // The shape of the thing: a single tap target at rest, a plain tap
 // commits the modest positive default, and a press-and-hold blooms a
-// soft pad under the thumb that the reader drifts across and releases to
-// commit. Horizontal is valence, vertical is connection, the pad opens
-// at the origin, and the whole square stays reachable — corners
-// included, because someone dragging to the far corner means it.
+// pad — anchored to the target and clear of the finger, never under the
+// press — that the reader drifts across and releases to commit.
+// Horizontal is valence, vertical is connection, the pad opens at the
+// origin, and the whole square stays reachable — corners included,
+// because someone dragging to the far corner means it. The drawn field
+// IS the value space; its geometry lives in StanceFieldGeometry.kt.
 //
 // Two numbers are kept apart on purpose. The FACE is a lossy readout of
 // the edge being authored — this pick — and moves with the thumb. WHERE
@@ -36,6 +38,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -57,9 +60,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -84,6 +90,14 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import java.util.Locale
+import kotlin.math.roundToInt
+
+/**
+ * Which surface the control offers for picking (design.md §8.6), as the
+ * design system's own vocabulary — `core:designsystem` holds no domain
+ * types, so the feature module maps the stored preference onto this.
+ */
+enum class StanceInputSurface { PAD, SLIDERS, ENTRY }
 
 /** Where the pad is: shut, following a thumb, or parked open. */
 enum class StancePadMode {
@@ -141,16 +155,30 @@ data class StanceControlState(
     /** The failure was a husk device: the key has to come back first. */
     val needsKey: Boolean = false,
     val exactValues: Boolean = false,
+    /** The reader's chosen input surface (design.md §8.6). */
+    val inputMode: StanceInputSurface = StanceInputSurface.PAD,
     val severance: SeverancePrompt? = null,
     /** The one-time teaching mark for the held gesture (design.md §8.7). */
     val coachMark: Boolean = false,
+    /**
+     * A stance just signed, as the standing it left the reader at — the
+     * transient confirmation of design.md §8.3. A one-shot: the control
+     * shows it once and reports it back through `onConfirmationShown`.
+     */
+    val confirmation: StancePoint? = null,
 )
-
-/** The pad's drawn diameter; its radius is the whole `[-1, +1]` range. */
-private val PAD_SIZE = 240.dp
 
 /** The resting target keeps the platform's minimum (design.md §4, §10). */
 private val TARGET_MIN = 48.dp
+
+/** How far an overlay stands off the target it belongs to. */
+private val PAD_GAP = 8.dp
+
+/** How close to the viewport's edge an overlay is allowed to sit. */
+private val PAD_MARGIN = 12.dp
+
+/** The pad's card, wide enough for the field and its lines of text. */
+private val PAD_WIDTH = 288.dp
 
 /**
  * The stance control: the resting target, the pad it blooms, and the
@@ -175,15 +203,26 @@ fun StanceControl(
     onConfirmSeverance: () -> Unit,
     onDismissSeverance: () -> Unit,
     onCoachMarkDismissed: () -> Unit,
+    onConfirmationShown: () -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
 ) {
-    val radiusPx = with(LocalDensity.current) { (PAD_SIZE / 2).toPx() }
-    val padPx = with(LocalDensity.current) { PAD_SIZE.roundToPx() }
+    val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
+    val gapPx = with(LocalDensity.current) { PAD_GAP.roundToPx() }
+    val marginPx = with(LocalDensity.current) { PAD_MARGIN.roundToPx() }
+    val besideTarget = remember(gapPx, marginPx) { PadBesideTarget(gapPx, marginPx) }
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(R.string.stance_severance_open)
-    val description = stringResource(R.string.stance_target_action)
+    val action = stringResource(R.string.stance_target_action)
+    val standingLabel = stringResource(R.string.stance_standing)
+    // A target that already carries a standing says so before it says
+    // what a touch does (design.md §8.3).
+    val description = state.standing?.let {
+        stringResource(R.string.stance_target_with_standing, standingLabel, it.reading(), action)
+    } ?: action
+
+    StanceConfirmation(state.confirmation, standingLabel, onConfirmationShown)
 
     Column(modifier) {
         Box(
@@ -193,7 +232,11 @@ fun StanceControl(
                 .clip(RoundedCornerShape(50))
                 .stanceGesture(
                     enabled = !state.busy,
-                    radiusPx = radiusPx,
+                    // An alternate replaces the pad, so the hold has no
+                    // field to drift across: it parks the chosen surface
+                    // open instead (design.md §8.6).
+                    drifts = state.inputMode == StanceInputSurface.PAD,
+                    extentPx = extentPx,
                     onTapDefault = onTapDefault,
                     onOpenPad = onOpenPad,
                     onPick = onPick,
@@ -227,45 +270,45 @@ fun StanceControl(
                 }
                 .testTag("${testTagPrefix}_stance"),
         ) {
-            Text(
-                text = tapLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            )
+            StanceRestingFace(state.standing, tapLabel, testTagPrefix)
+
+            // Both overlays are children of the TARGET, not siblings of
+            // it: a popup anchors to its parent's bounds, and anchoring
+            // to the target is what keeps the pad off the press and the
+            // coach mark on the thing it explains (design.md §8.3, §8.7).
+            if (state.coachMark) {
+                StanceCoachMark(
+                    positionProvider = besideTarget,
+                    onDismissed = onCoachMarkDismissed,
+                    testTagPrefix = testTagPrefix,
+                )
+            }
+
+            if (state.pad != StancePadMode.CLOSED) {
+                val sticky = state.pad == StancePadMode.STICKY
+                Popup(
+                    popupPositionProvider = besideTarget,
+                    onDismissRequest = onDismissPad.takeIf { sticky },
+                    properties = PopupProperties(focusable = sticky),
+                ) {
+                    StancePadOverlay(
+                        state = state,
+                        sticky = sticky,
+                        onPick = onPick,
+                        onCommit = onCommit,
+                        onCancel = onDismissPad,
+                        onToggleExactValues = onToggleExactValues,
+                        onOpenSeverance = onOpenSeverance,
+                        testTagPrefix = testTagPrefix,
+                    )
+                }
+            }
         }
 
         // A refusal has to be visible even when the pad is shut, which is
         // where a plain tap fails.
         if (state.failed && state.pad == StancePadMode.CLOSED) {
             StanceFailure(state.needsKey, testTagPrefix)
-        }
-
-        if (state.coachMark) {
-            StanceCoachMark(
-                onDismissed = onCoachMarkDismissed,
-                testTagPrefix = testTagPrefix,
-            )
-        }
-
-        if (state.pad != StancePadMode.CLOSED) {
-            val sticky = state.pad == StancePadMode.STICKY
-            Popup(
-                popupPositionProvider = remember(padPx) { PadCentredOnTarget(padPx) },
-                onDismissRequest = onDismissPad.takeIf { sticky },
-                properties = PopupProperties(focusable = sticky),
-            ) {
-                StancePadOverlay(
-                    state = state,
-                    sticky = sticky,
-                    onPick = onPick,
-                    onCommit = onCommit,
-                    onCancel = onDismissPad,
-                    onToggleExactValues = onToggleExactValues,
-                    onOpenSeverance = onOpenSeverance,
-                    testTagPrefix = testTagPrefix,
-                )
-            }
         }
 
         state.severance?.let { prompt ->
@@ -287,14 +330,15 @@ fun StanceControl(
  */
 private fun Modifier.stanceGesture(
     enabled: Boolean,
-    radiusPx: Float,
+    drifts: Boolean,
+    extentPx: Float,
     onTapDefault: () -> Unit,
     onOpenPad: () -> Unit,
     onPick: (StancePoint) -> Unit,
     onCommit: () -> Unit,
     onHold: () -> Unit,
     onCancel: () -> Unit,
-): Modifier = if (!enabled) this else pointerInput(radiusPx) {
+): Modifier = if (!enabled) this else pointerInput(extentPx, drifts) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
         var held = false
@@ -307,6 +351,10 @@ private fun Modifier.stanceGesture(
             null
         }
         when {
+            held && !drifts -> {
+                onOpenPad()
+                onHold()
+            }
             held -> {
                 onOpenPad()
                 var travel = Offset.Zero
@@ -315,7 +363,7 @@ private fun Modifier.stanceGesture(
                     travel += change.positionChange()
                     change.consume()
                     if (travel.getDistance() > viewConfiguration.touchSlop) drifted = true
-                    onPick(travel.toStancePoint(radiusPx))
+                    onPick(stancePointFromTravel(travel, extentPx))
                 }
                 when {
                     !completed -> onCancel()
@@ -329,31 +377,55 @@ private fun Modifier.stanceGesture(
     }
 }
 
-/** Screen travel to a field position: y inverted, each axis clamped. */
-private fun Offset.toStancePoint(radiusPx: Float): StancePoint = StancePoint(
-    directed = (x / radiusPx).coerceIn(-1f, 1f).toDouble(),
-    interest = (-y / radiusPx).coerceIn(-1f, 1f).toDouble(),
-)
-
 /**
- * Puts the field's centre on the target's centre — the pad blooms under
- * the thumb, and the readout rides above it clear of the finger
- * (design.md §8.3, §8.4).
+ * Places an overlay BESIDE the resting target rather than over it, and
+ * fully inside the viewport (design.md §8.3, §8.7).
+ *
+ * A pad that blooms under the press puts the field and its readout under
+ * the very finger that has to read them, and one placed by the press
+ * point walks off the screen edge for a target near it. So: horizontally
+ * centred on the target, vertically in whichever gap holds it — above by
+ * preference, below when the target sits near the top — and clamped into
+ * the window with a margin either way.
+ *
+ * `windowSize` is the window's visible frame, so the clamp already keeps
+ * clear of the system bars.
  */
-private class PadCentredOnTarget(private val padPx: Int) : PopupPositionProvider {
+internal class PadBesideTarget(
+    private val gapPx: Int,
+    private val marginPx: Int,
+) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
     ): IntOffset {
-        val x = anchorBounds.center.x - popupContentSize.width / 2
-        val y = anchorBounds.center.y - popupContentSize.height + padPx / 2
+        val above = anchorBounds.top - gapPx - popupContentSize.height
+        val below = anchorBounds.bottom + gapPx
+        val roomAbove = anchorBounds.top - gapPx - marginPx
+        val roomBelow = windowSize.height - anchorBounds.bottom - gapPx - marginPx
+        val y = when {
+            popupContentSize.height <= roomAbove -> above
+            popupContentSize.height <= roomBelow -> below
+            // Taller than either gap: take the roomier side and clamp.
+            // The pad scrolls, so on-screen beats beside-the-target.
+            roomAbove >= roomBelow -> above
+            else -> below
+        }
         return IntOffset(
-            x = x.coerceIn(0, maxOf(0, windowSize.width - popupContentSize.width)),
-            y = y.coerceIn(0, maxOf(0, windowSize.height - popupContentSize.height)),
+            x = clamp(
+                anchorBounds.center.x - popupContentSize.width / 2,
+                popupContentSize.width,
+                windowSize.width,
+            ),
+            y = clamp(y, popupContentSize.height, windowSize.height),
         )
     }
+
+    /** Fully inside, margin included — unless the content is wider than the window. */
+    private fun clamp(value: Int, contentSize: Int, windowSize: Int): Int =
+        value.coerceIn(marginPx, maxOf(marginPx, windowSize - contentSize - marginPx))
 }
 
 @Composable
@@ -367,7 +439,7 @@ private fun StancePadOverlay(
     onOpenSeverance: () -> Unit,
     testTagPrefix: String,
 ) {
-    Card(modifier = Modifier.width(288.dp).testTag("${testTagPrefix}_stance_pad")) {
+    Card(modifier = Modifier.width(PAD_WIDTH).testTag("${testTagPrefix}_stance_pad")) {
         Column(
             // A parked pad carries its alternates and the severance
             // route, which is more than a short screen holds upright.
@@ -379,11 +451,16 @@ private fun StancePadOverlay(
         ) {
             StanceStandingLine(state.standing, testTagPrefix)
             StanceReadout(state.pick, testTagPrefix)
-            StanceField(state.pick)
+            // The chosen surface replaces the pad, it does not sit beside
+            // it: an alternate is the input, not a second opinion
+            // (design.md §8.6).
+            if (state.inputMode == StanceInputSurface.PAD) StanceField(state.pick)
             StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
-                if (state.exactValues) {
-                    StanceExactValues(state.pick, onPick, testTagPrefix)
+                // The alternates are the accessible path, so the way into
+                // them is present whatever the stored preference is.
+                if (state.exactValues || state.inputMode != StanceInputSurface.PAD) {
+                    StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix)
                 }
                 if (state.failed) {
                     StanceFailure(state.needsKey, testTagPrefix)
@@ -403,19 +480,21 @@ private fun StancePadOverlay(
                         Text(stringResource(R.string.stance_cancel))
                     }
                 }
-                TextButton(
-                    onClick = onToggleExactValues,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
-                ) {
-                    Text(
-                        stringResource(
-                            if (state.exactValues) {
-                                R.string.stance_exact_values_hide
-                            } else {
-                                R.string.stance_exact_values_show
-                            },
-                        ),
-                    )
+                if (state.inputMode == StanceInputSurface.PAD) {
+                    TextButton(
+                        onClick = onToggleExactValues,
+                        modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.exactValues) {
+                                    R.string.stance_exact_values_hide
+                                } else {
+                                    R.string.stance_exact_values_show
+                                },
+                            ),
+                        )
+                    }
                 }
                 // The route for the reader who came here to sever: it has
                 // to be findable from the open pad (design.md §8.5).
@@ -427,6 +506,72 @@ private fun StancePadOverlay(
                 }
             }
         }
+    }
+}
+
+/**
+ * What the resting target reads as (design.md §8.3). A viewer with a
+ * bundle toward the thing sees its face and folded pair right there; a
+ * viewer without one sees the labelled affordance.
+ *
+ * The alternative — a button that says the same word whatever you have
+ * already said — is a mystery button, and the bundle is already loaded
+ * by the read that rendered the surface, so showing it costs nothing.
+ * The whole target is one semantics node, so neither half is announced
+ * separately.
+ */
+@Composable
+private fun StanceRestingFace(standing: StancePoint?, tapLabel: String, testTagPrefix: String) {
+    if (standing == null) {
+        Text(
+            text = tapLabel,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .testTag("${testTagPrefix}_stance_label"),
+        )
+        return
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .testTag("${testTagPrefix}_stance_standing_face"),
+    ) {
+        Text(text = nearestStanceAnchor(standing).emoji, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = standing.pair(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+/**
+ * The transient signed-confirmation of design.md §8.3, on the platform's
+ * standard surface. A gesture that stages a priced act must never be
+ * silent — silence reads as failure and invites the same act again —
+ * and it fires once per commit, never on recomposition, because the
+ * state that carries it is consumed as soon as it is shown.
+ */
+@Composable
+private fun StanceConfirmation(
+    confirmation: StancePoint?,
+    standingLabel: String,
+    onShown: () -> Unit,
+) {
+    val host = LocalSnackbarHostState.current
+    val message = confirmation?.let {
+        stringResource(R.string.stance_signed, standingLabel, it.reading())
+    }
+    LaunchedEffect(confirmation) {
+        if (message == null) return@LaunchedEffect
+        // Consumed first: a surface with no host still spends the
+        // one-shot, and a host that is slow never shows it twice.
+        onShown()
+        host?.showSnackbar(message)
     }
 }
 
@@ -457,14 +602,21 @@ private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String) {
 }
 
 /**
- * The face and its words, sitting above the pad rather than under the
- * knob — a thumb on the control covers exactly the spot where feedback
- * would otherwise appear (design.md §8.4).
+ * The face, its words, and the exact pair, sitting above the pad rather
+ * than under the knob — a thumb on the control covers exactly the spot
+ * where feedback would otherwise appear (design.md §8.4).
+ *
+ * All three are the default reading (design.md §8.3): the face carries
+ * the feel and the pair carries the fact, and hiding either makes the
+ * other harder to trust. The pair is written compactly, because the
+ * field itself is what names the axes — but it is ANNOUNCED with them
+ * in words, so no reader is handed a bare pair to decode.
  */
 @Composable
 private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
     val anchor = nearestStanceAnchor(pick)
     val words = stringResource(anchor.label)
+    val spoken = pick.reading()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         // One readout, announced once.
@@ -481,13 +633,21 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
             modifier = Modifier.clearAndSetSemantics { },
         )
         Text(words, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = pick.pair(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .semantics { contentDescription = spoken }
+                .testTag("${testTagPrefix}_stance_exact_pair"),
+        )
     }
 }
 
 /**
- * The field: a soft round ground with its inert centre-lines drawn as
- * visibly dead rather than hidden, and the knob at the pick. No numbers,
- * axes, or gridlines — those are the alternates' job (design.md §8.3).
+ * The field: a soft rounded square whose own box is the value space,
+ * with its inert centre-lines drawn as visibly dead rather than hidden,
+ * and the knob at the pick — never outside the drawing (design.md §8.3).
  */
 @Composable
 private fun StanceField(pick: StancePoint) {
@@ -502,8 +662,29 @@ private fun StanceField(pick: StancePoint) {
     LaunchedEffect(Unit) {
         bloom.animateTo(1f, tween(durationMillis = 200, easing = FastOutSlowInEasing))
     }
-    Canvas(modifier = Modifier.size(PAD_SIZE)) {
-        drawStanceField(pick, ground, dead, knob, knobRing, bloom.value)
+    Canvas(
+        modifier = Modifier
+            .size(FIELD_SIZE)
+            // The bloom scales the whole field, knob included, so the
+            // knob is inside the drawing at every frame of it and not
+            // only once it has finished growing.
+            .graphicsLayer {
+                scaleX = bloom.value
+                scaleY = bloom.value
+            }
+            .testTag("stance_field"),
+    ) {
+        drawStanceField(
+            pick = pick,
+            ground = ground,
+            dead = dead,
+            knob = knob,
+            knobRing = knobRing,
+            cornerPx = FIELD_CORNER.toPx(),
+            knobPx = KNOB_RADIUS.toPx(),
+            dotPx = KNOB_DOT_RADIUS.toPx(),
+            extentPx = FIELD_EXTENT.toPx(),
+        )
     }
 }
 
@@ -513,22 +694,39 @@ private fun DrawScope.drawStanceField(
     dead: Color,
     knob: Color,
     knobRing: Color,
-    scale: Float,
+    cornerPx: Float,
+    knobPx: Float,
+    dotPx: Float,
+    extentPx: Float,
 ) {
-    val radius = size.minDimension / 2f
     val centre = Offset(size.width / 2f, size.height / 2f)
-    drawCircle(color = ground, radius = radius * scale, center = centre)
-    // Dead ground: a bundle whose folded parameter is zero carries
-    // nothing, so the centre-lines are drawn rather than hidden.
-    val band = radius * 0.04f
-    drawLine(dead, Offset(0f, centre.y), Offset(size.width, centre.y), strokeWidth = band)
-    drawLine(dead, Offset(centre.x, 0f), Offset(centre.x, size.height), strokeWidth = band)
-    val at = Offset(
-        x = centre.x + (pick.directed.toFloat() * radius),
-        y = centre.y - (pick.interest.toFloat() * radius),
+    val side = size.minDimension
+    drawRoundRect(
+        color = ground,
+        topLeft = Offset(centre.x - side / 2f, centre.y - side / 2f),
+        size = Size(side, side),
+        cornerRadius = CornerRadius(cornerPx),
     )
-    drawCircle(color = knobRing, radius = radius * 0.11f, center = at)
-    drawCircle(color = knob, radius = radius * 0.08f, center = at)
+    // Dead ground: a bundle whose folded parameter is zero carries
+    // nothing, so the centre-lines are drawn rather than hidden. They
+    // stop at the field's edge, because the field is the value space.
+    val band = side * 0.02f
+    val half = side / 2f
+    drawLine(
+        dead,
+        Offset(centre.x - half, centre.y),
+        Offset(centre.x + half, centre.y),
+        strokeWidth = band,
+    )
+    drawLine(
+        dead,
+        Offset(centre.x, centre.y - half),
+        Offset(centre.x, centre.y + half),
+        strokeWidth = band,
+    )
+    val at = centre + knobOffset(pick, extentPx)
+    drawCircle(color = knobRing, radius = knobPx, center = at)
+    drawCircle(color = knob, radius = dotPx, center = at)
 }
 
 /**
@@ -567,7 +765,25 @@ internal fun StancePoint.reading(): String = stringResource(
     twoPlaces(interest),
 )
 
-internal fun twoPlaces(value: Double): String = String.format(Locale.getDefault(), "%+.2f", value)
+/**
+ * The bare pair, `+0.40 / +0.20`-style (design.md §8.3). Compact because
+ * it sits under a face and a field that already say which axis is which;
+ * every place it is shown names the axes in its accessibility text.
+ */
+@Composable
+internal fun StancePoint.pair(): String =
+    stringResource(R.string.stance_pair, twoPlaces(directed), twoPlaces(interest))
+
+/**
+ * A dimension as the reader reads numbers: always signed, two decimals.
+ * The sign carries the direction, so it is shown even at zero — but a
+ * value that ROUNDS to zero has no direction to report, and `-0.00`
+ * reads as a broken control rather than as a precise one.
+ */
+internal fun twoPlaces(value: Double): String {
+    val rounded = (value * 100).roundToInt() / 100.0
+    return String.format(Locale.getDefault(), "%+.2f", if (rounded == 0.0) 0.0 else rounded)
+}
 
 /**
  * The direct-entry field's text. Root locale, not the reader's: this one
@@ -579,9 +795,14 @@ private fun entryText(value: Double): String = String.format(Locale.ROOT, "%.2f"
 /**
  * The alternates (design.md §8.6): paired sliders and direct entry, the
  * same machinery on a surface a screen-reader or switch user can drive.
+ *
+ * Which of the two shows follows the reader's chosen input: an alternate
+ * they picked is the input, so it stands alone. While the pad is still
+ * the chosen input neither has been picked, so both are offered.
  */
 @Composable
 private fun StanceExactValues(
+    mode: StanceInputSurface,
     pick: StancePoint,
     onPick: (StancePoint) -> Unit,
     testTagPrefix: String,
@@ -592,30 +813,34 @@ private fun StanceExactValues(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        StanceSlider(
-            label = directedLabel,
-            value = pick.directed,
-            onChange = { onPick(pick.copy(directed = it)) },
-            testTag = "${testTagPrefix}_stance_slider_directed",
-        )
-        StanceSlider(
-            label = interestLabel,
-            value = pick.interest,
-            onChange = { onPick(pick.copy(interest = it)) },
-            testTag = "${testTagPrefix}_stance_slider_interest",
-        )
-        StanceEntry(
-            label = directedLabel,
-            value = pick.directed,
-            onChange = { onPick(pick.copy(directed = it)) },
-            testTag = "${testTagPrefix}_stance_entry_directed",
-        )
-        StanceEntry(
-            label = interestLabel,
-            value = pick.interest,
-            onChange = { onPick(pick.copy(interest = it)) },
-            testTag = "${testTagPrefix}_stance_entry_interest",
-        )
+        if (mode != StanceInputSurface.ENTRY) {
+            StanceSlider(
+                label = directedLabel,
+                value = pick.directed,
+                onChange = { onPick(pick.copy(directed = it)) },
+                testTag = "${testTagPrefix}_stance_slider_directed",
+            )
+            StanceSlider(
+                label = interestLabel,
+                value = pick.interest,
+                onChange = { onPick(pick.copy(interest = it)) },
+                testTag = "${testTagPrefix}_stance_slider_interest",
+            )
+        }
+        if (mode != StanceInputSurface.SLIDERS) {
+            StanceEntry(
+                label = directedLabel,
+                value = pick.directed,
+                onChange = { onPick(pick.copy(directed = it)) },
+                testTag = "${testTagPrefix}_stance_entry_directed",
+            )
+            StanceEntry(
+                label = interestLabel,
+                value = pick.interest,
+                onChange = { onPick(pick.copy(interest = it)) },
+                testTag = "${testTagPrefix}_stance_entry_interest",
+            )
+        }
     }
 }
 
@@ -653,13 +878,32 @@ private fun StanceEntry(
 }
 
 /**
- * The one-time teaching mark: a held gesture is invisible until taught,
- * and a plain tap always works without it (design.md §8.7).
+ * The teaching mark of design.md §8.7: the FIRST tap on a stance target
+ * opens it instead of acting, and it stays until the reader dismisses it
+ * or completes their first hold.
+ *
+ * Two things it must not do. It must not vanish on the next touch — a
+ * popup that dismisses on any outside click is gone before the sentence
+ * is read, and the touch that spawned it counts as one — so nothing but
+ * the explicit dismissal closes it. And it must not sit over the feed:
+ * it is anchored beside the target it explains, clamped on-screen, by
+ * the same provider the pad uses.
  */
 @Composable
-private fun StanceCoachMark(onDismissed: () -> Unit, testTagPrefix: String) {
-    Popup(alignment = Alignment.BottomCenter, onDismissRequest = onDismissed) {
-        Card(modifier = Modifier.testTag("${testTagPrefix}_stance_coach")) {
+private fun StanceCoachMark(
+    positionProvider: PopupPositionProvider,
+    onDismissed: () -> Unit,
+    testTagPrefix: String,
+) {
+    Popup(
+        popupPositionProvider = positionProvider,
+        properties = PopupProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .widthIn(max = PAD_WIDTH)
+                .testTag("${testTagPrefix}_stance_coach"),
+        ) {
             Column(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),

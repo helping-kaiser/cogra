@@ -21,7 +21,7 @@ use std::path::PathBuf;
 use crate::adopt::{Adoption, Area, Kind, Place, ProfileId};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic};
-use crate::graph::CommentForm;
+use crate::pretokenize::{CommentForm, PreTokenized};
 use crate::scan::{DelimitedSpan, Syntax};
 
 /// What kind of logical region a frontend produced.
@@ -33,6 +33,13 @@ pub enum RegionKind {
     Heading,
     /// A comment, in the form the language gives it.
     Comment(CommentForm),
+    /// Documentation written as an attribute rather than as a comment: the
+    /// fifth documentation form `[scanned-regions]` names for Rust, a
+    /// `#[doc = "…"]` whose region is the literal's interior. It is not a
+    /// [`RegionKind::Comment`] because it is not one — no comment form
+    /// describes it, and saying it was written `///` would be false about
+    /// the bytes a diagnostic points at.
+    Attribute,
     /// Table material: one cell of one row.
     TableRow,
 }
@@ -198,15 +205,26 @@ pub struct Parsed {
 /// the carrier and stay owned, carrying no occurrences
 /// (´[LBL-judg:labels:minting]´).
 ///
+/// `pre` is the source's own pre-tokenizing, and the two frontends use it
+/// differently by their languages' own shapes: Markdown has no lexical
+/// pre-pass and ignores it, while the Rust frontend reads a doc attribute's
+/// comment form out of it rather than re-deciding one `syn` already dropped
+/// (´conv:lint:rust-surface´).
+///
 /// # Errors
 ///
 /// One or more diagnostics whenever the source cannot be parsed at all — a
 /// Markdown file that is not UTF-8, say. A defect the format bounds to one
 /// block is not such a failure: it travels in [`Parsed::diagnostics`] beside
 /// the regions that did parse.
-pub fn parse(src: &SourceFile, a: &Adoption) -> Result<Parsed, Vec<Diagnostic>> {
+pub fn parse(
+    src: &SourceFile,
+    pre: &PreTokenized,
+    a: &Adoption,
+) -> Result<Parsed, Vec<Diagnostic>> {
     match src.language.as_ref().map(crate::adopt::Language::as_str) {
         Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
+        Some(crate::pretokenize::rust::RUST) => crate::frontend_rust::parse(src, pre, a),
         _ => Ok(Parsed {
             path: src.path.clone(),
             ..Parsed::default()
