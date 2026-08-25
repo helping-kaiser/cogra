@@ -77,6 +77,62 @@ class StanceFieldGeometryTest {
         assertThat(stancePointFromTravel(Offset(40f, 40f), 0f)).isEqualTo(StancePoint.Origin)
     }
 
+    // -- A second drag, from the pick already standing (design.md §8.3) --
+
+    @Test
+    fun aSecondDragAdjustsThePickItStartsFromRatherThanStartingOver() {
+        // The parked pad's field moves the knob by the same accumulated
+        // travel the opening drag uses — from where it already stands.
+        val moved = stancePointFrom(StancePoint(0.5, 0.25), Offset(extent / 4f, -extent / 4f), extent)
+
+        assertThat(moved.directed).isWithin(0.001).of(0.75)
+        assertThat(moved.interest).isWithin(0.001).of(0.5)
+    }
+
+    @Test
+    fun aDragFromTheOriginIsTheOpeningDragsOwnRule() {
+        // One rule for how a finger moves the knob, not two: the opening
+        // drag is this one with the origin as its base.
+        val travel = Offset(extent / 3f, -extent / 5f)
+
+        assertThat(stancePointFrom(StancePoint.Origin, travel, extent))
+            .isEqualTo(stancePointFromTravel(travel, extent))
+    }
+
+    @Test
+    fun aSecondDragClampsTheSumSoAnOffCentreBaseStillReachesTheCorner() {
+        // Clamping the travel first would stop the knob short whenever
+        // the base already sat off centre — the far corner has to stay
+        // reachable from anywhere (design.md §8.2).
+        val cornered = stancePointFrom(StancePoint(-0.5, -0.5), Offset(extent * 4f, -extent * 4f), extent)
+
+        assertThat(cornered).isEqualTo(StancePoint(1.0, 1.0))
+    }
+
+    @Test
+    fun anUnmeasuredFieldKeepsTheBaseRatherThanDividingByZero() {
+        assertThat(stancePointFrom(StancePoint(0.4, -0.2), Offset(40f, 40f), 0f))
+            .isEqualTo(StancePoint(0.4, -0.2))
+    }
+
+    @Test
+    fun noSecondDragFromAnywhereEverPutsTheKnobOutsideTheDrawnField() {
+        // The invariant has to survive the re-drag path too, from every
+        // base the first drag could have left the knob at.
+        for (bd in -4..4) {
+            for (bi in -4..4) {
+                val base = StancePoint(bd / 4.0, bi / 4.0)
+                for (i in -6..6) {
+                    for (j in -6..6) {
+                        val travel = Offset(extent * i * 2f, extent * j * 2f)
+                        val point = stancePointFrom(base, travel, extent)
+                        assertThat(knobInsideField(point, halfSide, corner, knob, extent)).isTrue()
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     fun theKnobStaysInsideTheDrawnFieldAtEveryCornerAndEdge() {
         val extremes = listOf(
