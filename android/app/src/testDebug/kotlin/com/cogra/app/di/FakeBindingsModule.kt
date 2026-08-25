@@ -26,7 +26,12 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
@@ -39,6 +44,7 @@ import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
+import com.cogra.domain.testing.ThrowingStanceRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
 import com.cogra.network.di.NetworkBindsModule
 import dagger.Module
@@ -181,6 +187,34 @@ class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
     }
 }
 
+/**
+ * Every screen that renders content renders stance controls with it, so
+ * the nav graph needs a stance read side that answers rather than
+ * throws. It reports an unauthored bundle: the control shows, and
+ * nothing about it is scripted unless a test asks.
+ */
+class ScriptedStanceRepository : ThrowingStanceRepository() {
+    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+        Outcome.Success(StanceStanding(target, StancePair.Origin, records = 0, includePending = includePending))
+
+    override suspend fun projection(
+        target: String,
+        pick: StancePair,
+        includePending: Boolean,
+    ): Outcome<StanceProjection> = Outcome.Success(
+        StanceProjection(
+            pick = pick,
+            net = pick,
+            inertDirected = pick.pDirected == 0.0,
+            inertInterest = pick.pInterest == 0.0,
+            severance = pick == StancePair.Origin,
+        ),
+    )
+
+    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+        Outcome.Success(SeveranceQuote(target, StancePair.Origin, records = 0, alreadySevered = true))
+}
+
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -244,4 +278,11 @@ object FakeBindingsModule {
 
     @Provides
     fun profileRepository(fake: ScriptedProfileRepository): ProfileRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedStanceRepository(): ScriptedStanceRepository = ScriptedStanceRepository()
+
+    @Provides
+    fun stanceRepository(fake: ScriptedStanceRepository): StanceRepository = fake
 }

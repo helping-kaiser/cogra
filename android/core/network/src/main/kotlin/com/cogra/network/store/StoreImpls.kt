@@ -191,6 +191,13 @@ class IdentityStoreImpl @Inject constructor(
         key(RECIPROCATION)?.let { store.put(it, byteArrayOf(1)) }
     }
 
+    override suspend fun stancePadTaught(): Boolean =
+        key(STANCE_PAD_TAUGHT)?.let { store.get(it) } != null
+
+    override suspend fun markStancePadTaught() {
+        key(STANCE_PAD_TAUGHT)?.let { store.put(it, byteArrayOf(1)) }
+    }
+
     // No adoption: the flag arrived with multi-account custody, so no
     // legacy record can exist.
     override suspend fun forgetOnSignOut(): Boolean =
@@ -213,6 +220,7 @@ class IdentityStoreImpl @Inject constructor(
         const val SEED = "actor_seed"
         const val PENDING_BLOB = "pending_backup_blob"
         const val RECIPROCATION = "reciprocation_dismissed"
+        const val STANCE_PAD_TAUGHT = "stance_pad_taught"
         const val FORGET = "forget_on_sign_out"
         const val HS_PREFIX = "handshake:"
     }

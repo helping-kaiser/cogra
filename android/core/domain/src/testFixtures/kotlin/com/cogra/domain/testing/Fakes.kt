@@ -47,7 +47,12 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
@@ -73,6 +78,7 @@ class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
     var pendingBlob: ByteArray? = null
     var dismissedReciprocation = false
+    var stancePadTaught = false
     var forgetOnSignOut = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
 
@@ -110,6 +116,12 @@ class FakeIdentityStore : IdentityStore {
         dismissedReciprocation = true
     }
 
+    override suspend fun stancePadTaught(): Boolean = stancePadTaught
+
+    override suspend fun markStancePadTaught() {
+        stancePadTaught = true
+    }
+
     override suspend fun forgetOnSignOut(): Boolean = forgetOnSignOut
 
     override suspend fun setForgetOnSignOut(value: Boolean) {
@@ -120,6 +132,7 @@ class FakeIdentityStore : IdentityStore {
         seed = null
         pendingBlob = null
         dismissedReciprocation = false
+        stancePadTaught = false
         forgetOnSignOut = false
         handshakes.clear()
     }
@@ -323,6 +336,23 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
     }
 
     override suspend fun stagedWrite(id: String): Outcome<StagedWriteView?> = Outcome.Success(staged[id])
+}
+
+/** Stance-repository base: every call throws until overridden. */
+open class ThrowingStanceRepository : StanceRepository {
+    override suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
+        throw UnsupportedOperationException()
+    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+        throw UnsupportedOperationException()
+    override suspend fun projection(
+        target: String,
+        pick: StancePair,
+        includePending: Boolean,
+    ): Outcome<StanceProjection> = throw UnsupportedOperationException()
+    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+        throw UnsupportedOperationException()
+    override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> =
+        throw UnsupportedOperationException()
 }
 
 /** Content-repository base: every call throws until overridden. */

@@ -36,6 +36,7 @@ import { LicenseChooser, LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { SigningPending } from "@/lib/ui/signing-pending";
+import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /** Any node of the thread tree — a comment or a nested reply. */
@@ -423,6 +424,11 @@ export function PostView({
               {isPending(comment) && (
                 <PendingMarker testId={`comment-pending-${comment.id}`} />
               )}
+              {/* The comment carries its own stance control (design.md §6). */}
+              <StanceControl
+                target={{ id: comment.id, label: "this comment" }}
+                testIdPrefix={`comment-stance-${comment.id}`}
+              />
               <div className="flex gap-2">
                 {phase === "signedIn" && (
                   <Button
@@ -552,6 +558,8 @@ export function PostView({
           marker carries the difference (design.md §9). An unlanded edit
           marks the post too — the text on screen is that edit. */}
       {isPending(post) && <PendingMarker testId="post-pending" />}
+      {/* The post card's stance control, on the detail surface (design.md §6). */}
+      <StanceControl target={{ id: postId, label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces

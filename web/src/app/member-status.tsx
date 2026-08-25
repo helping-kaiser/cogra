@@ -14,7 +14,7 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { StanceSlider } from "@/lib/ui/stance-slider";
+import { DIRECTED_LABEL, INTEREST_LABEL, StanceSlider } from "@/lib/ui/stance-slider";
 
 type DeviceState = {
   keyOnDevice: boolean;
@@ -122,13 +122,13 @@ export function MemberStatus({
             act, and you can change it any time.
           </p>
           <StanceSlider
-            label="Directed weight"
+            label={DIRECTED_LABEL}
             value={pDirected}
             onChange={setPDirected}
             testId="home_p_directed"
           />
           <StanceSlider
-            label="Interest weight"
+            label={INTEREST_LABEL}
             value={pInterest}
             onChange={setPInterest}
             testId="home_p_interest"

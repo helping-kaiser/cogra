@@ -80,6 +80,15 @@ interface IdentityStore {
     suspend fun markReciprocationDismissed()
 
     /**
+     * Device-local UX state: whether the stance pad's one-time coach
+     * mark has been shown. A held gesture is invisible until taught, and
+     * the teaching is per device, not per account (design.md §8.7).
+     */
+    suspend fun stancePadTaught(): Boolean
+
+    suspend fun markStancePadTaught()
+
+    /**
      * The "don't remember me" opt-in (auth.md "Sign-out"): whether the
      * active account's material is purged when its session ends.
      */
