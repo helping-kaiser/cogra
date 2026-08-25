@@ -75,6 +75,11 @@ pub struct StanceProjection {
 /// per-author fold (feed-ranking.md §3.2), sum-then-clip over their
 /// records toward it. What a pick writes is never derived from this —
 /// the bundle is shown, never folded into the value (design.md §8.1).
+///
+/// Both sides of that fold are served — the clipped pair and the raw
+/// sums it came from. Clients recompute the landing locally under the
+/// drag, and cost surfaces price severance against the sum, so the
+/// history beyond the clip has to reach them (design.md §8.3).
 pub struct StanceBundle {
     sum: common::l1::fold::BundleSum,
     pick: Option<(f64, f64)>,
@@ -90,6 +95,19 @@ impl StanceBundle {
     /// The folded connection as it stands.
     async fn p_interest(&self) -> Dimension {
         Dimension(self.sum.fold().p_i)
+    }
+
+    /// The raw valence sum, before the clip — beyond `±1` where the
+    /// bundle carries more than the fold shows. Not a `Dimension`: the
+    /// sum is unbounded by construction, and clipping it here would
+    /// serve the folded number twice.
+    async fn raw_p_directed(&self) -> f64 {
+        self.sum.p_d
+    }
+
+    /// The raw connection sum, before the clip.
+    async fn raw_p_interest(&self) -> f64 {
+        self.sum.p_i
     }
 
     /// How many records the bundle folds.
