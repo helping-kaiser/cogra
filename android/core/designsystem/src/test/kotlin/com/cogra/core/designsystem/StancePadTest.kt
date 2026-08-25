@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.semantics.SemanticsActions
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -410,6 +411,31 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_coach_dismiss").performClick()
 
         assertThat(coachDismissed).isEqualTo(1)
+    }
+
+    @Test
+    fun theCoachMarkOutlivesTheTouchesAroundIt() {
+        // It used to vanish before it could be read: a popup that
+        // dismisses on any outside click counts the very touch that
+        // spawned it (design.md §8.7).
+        show(StanceControlState(coachMark = true))
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { swipeUp() }
+
+        compose.onNodeWithTag("${TAG}_stance_coach").assertExists()
+        assertThat(coachDismissed).isEqualTo(0)
+    }
+
+    @Test
+    fun theCoachMarkAndThePadShareOneAnchoredSurface() {
+        // Both belong to the target: the mark explains it and the pad
+        // edits it, so neither is a sibling floating over the feed.
+        show(StanceControlState(coachMark = true, pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("${TAG}_stance_coach").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        compose.onNodeWithTag("${TAG}_stance").assertIsDisplayed()
     }
 
     @Test

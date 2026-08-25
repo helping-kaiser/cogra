@@ -80,9 +80,11 @@ interface IdentityStore {
     suspend fun markReciprocationDismissed()
 
     /**
-     * Device-local UX state: whether the stance pad's one-time coach
-     * mark has been shown. A held gesture is invisible until taught, and
-     * the teaching is per device, not per account (design.md §8.7).
+     * Device-local UX state: whether the tap that teaches the held
+     * gesture has been spent. Set when the coach mark opens, so a
+     * restart cannot swallow a second priced tap in silence
+     * (design.md §8.7). Account-scoped like the rest of this store: the
+     * lesson belongs to the person, not to the hardware.
      */
     suspend fun stancePadTaught(): Boolean
 

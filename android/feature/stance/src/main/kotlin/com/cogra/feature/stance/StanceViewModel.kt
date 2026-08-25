@@ -66,7 +66,7 @@ data class SeveranceState(
 
 data class StanceUiState(
     val targets: Map<String, TargetStance> = emptyMap(),
-    /** The one control carrying the first-run coach mark, if any. */
+    /** The control whose first tap opened the teaching mark, if any. */
     val coachTarget: String? = null,
 )
 
@@ -90,24 +90,46 @@ class StanceViewModel @Inject constructor(
     private val projections = mutableMapOf<String, Job>()
     private val observed = mutableSetOf<String>()
 
+    /**
+     * Whether the held gesture has been taught on this device; null until
+     * the store answers. The first tap waits on it rather than acting
+     * blind — a tap that stages a priced act must not be the teaching
+     * moment's casualty (design.md §8.7).
+     */
+    private var taught: Boolean? = null
+
     /** Registers a control and reads the standing behind it, once. */
     fun observe(target: String) {
         if (!observed.add(target)) return
         _state.update { it.copy(targets = it.targets + (target to TargetStance())) }
         viewModelScope.launch {
-            if (_state.value.coachTarget == null && !identity.stancePadTaught()) {
-                _state.update { if (it.coachTarget == null) it.copy(coachTarget = target) else it }
-            }
+            if (taught == null) taught = identity.stancePadTaught()
             readStanding(target)
         }
     }
 
-    /** The plain tap: the modest positive default, no pad (design.md §8.3). */
+    /**
+     * The plain tap. The FIRST tap ever teaches and stages nothing; every
+     * tap after that commits the modest positive default (design.md §8.3,
+     * §8.7).
+     */
     fun onTapDefault(target: String) {
-        commit(target, StancePair.TapDefault)
+        when (taught) {
+            // The store has not answered yet: wait for it rather than
+            // spending the teaching tap on a guess.
+            null -> viewModelScope.launch {
+                taught = identity.stancePadTaught()
+                onTapDefault(target)
+            }
+            false -> teach(target)
+            true -> commit(target, StancePair.TapDefault)
+        }
     }
 
     fun onOpenPad(target: String) {
+        // A hold is the lesson: whoever completed one has no more use for
+        // the mark (design.md §8.7).
+        dismissCoachMark()
         // The pad opens at the origin, untilted — the low default belongs
         // to the tap, not to the considered gesture (design.md §8.3).
         update(target) {
@@ -176,10 +198,24 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    /** The teaching mark is per device and shown once (design.md §8.7). */
-    fun onCoachMarkDismissed() {
-        _state.update { it.copy(coachTarget = null) }
+    /** The mark stays until dismissed or until a hold lands (design.md §8.7). */
+    fun onCoachMarkDismissed() = dismissCoachMark()
+
+    /**
+     * Opens the teaching mark and spends the teaching tap. The flag is
+     * written HERE rather than on dismissal: its meaning is "the tap that
+     * teaches has been spent", and a flag written later would let a
+     * restart swallow a second priced tap in silence.
+     */
+    private fun teach(target: String) {
+        taught = true
+        _state.update { it.copy(coachTarget = target) }
         viewModelScope.launch { identity.markStancePadTaught() }
+    }
+
+    private fun dismissCoachMark() {
+        if (_state.value.coachTarget == null) return
+        _state.update { it.copy(coachTarget = null) }
     }
 
     private fun openSeverance(target: String, fromPick: Boolean) {
