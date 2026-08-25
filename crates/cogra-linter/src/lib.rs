@@ -48,8 +48,10 @@ pub mod frontend_md;
 pub mod frontend_rust;
 pub mod graph;
 pub mod judge;
+pub mod migrate;
 pub mod pretokenize;
 pub mod registers;
+pub mod render;
 pub mod scan;
 pub mod timing;
 
@@ -67,6 +69,7 @@ pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Sev
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
 pub use frontend::{Asset, Head, Parsed, Region, RegionKind, Table};
 pub use frontend_rust::{CargoTarget, Censuses, Declaration};
+pub use migrate::{Migration, Remaining, distances};
 pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
@@ -255,6 +258,13 @@ pub fn check_sources(a: &Adoption, mut sources: Vec<SourceFile>) -> Run {
     let mut findings = harvest.findings;
     timing.time(Phase::Judge, || {
         let mut judged = judge::judge_all(&harvest.g, &harvest.r, a, kinds.as_ref());
+        judged.extend(judge::freshness::registers(
+            &harvest.g,
+            &harvest.r,
+            a,
+            kinds.as_ref(),
+            &held,
+        ));
         judge::stamp(&mut judged, &held, a);
         findings.extend(judged);
     });

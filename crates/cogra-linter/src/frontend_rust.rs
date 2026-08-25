@@ -93,6 +93,42 @@ pub enum CargoTarget {
 }
 
 impl CargoTarget {
+    /// The target a source's place in the Cargo layout puts it in.
+    ///
+    /// Cargo's own layout is the datum: a package's integration targets are
+    /// the trees under its `tests/` directory, and everything else a package
+    /// compiles belongs to a `lib` or `bin` target. Reading it off the
+    /// layout derives no *name* from the path
+    /// (´[LBL-ansatz:labels:path-derivation]´); it is how the build system
+    /// says which target a file belongs to, and the classification reads the
+    /// target.
+    ///
+    /// ```
+    /// use cogra_linter::CargoTarget;
+    /// use std::path::Path;
+    ///
+    /// assert_eq!(
+    ///     CargoTarget::of(Path::new("crates/api/tests/rig/mod.rs")),
+    ///     CargoTarget::IntegrationTest,
+    /// );
+    /// assert_eq!(
+    ///     CargoTarget::of(Path::new("crates/api/src/tests/helper.rs")),
+    ///     CargoTarget::LibOrBin,
+    ///     "a tests module inside a lib target is not an integration target",
+    /// );
+    /// ```
+    #[must_use]
+    pub fn of(path: &std::path::Path) -> CargoTarget {
+        for part in path.components() {
+            match part.as_os_str().to_string_lossy().as_ref() {
+                "src" => return CargoTarget::LibOrBin,
+                "tests" => return CargoTarget::IntegrationTest,
+                _ => {}
+            }
+        }
+        CargoTarget::LibOrBin
+    }
+
     /// The `[profiles]` case name this target selects an area by.
     #[must_use]
     pub const fn case(&self) -> &'static str {
