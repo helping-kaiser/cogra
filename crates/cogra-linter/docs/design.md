@@ -405,6 +405,8 @@ A profile whose `status` is `Staged` is registered and outside the effective pro
 
 Computing a staged profile's census inside the check — to report the migration's distance along the way — is refused for a reason of staging rather than of effort: the census is the input to the inventory judgment, and a computed-but-unjudged census inside the judging run is a half-computed pass, which is what (`[LBL-inv:labels:two-pass]`) exists to forbid. What the migration's distance wants is a measurement, and a measurement is not a lint; it has its own run and its own subcommand (`dec:lint:migrations-subcommand`).
 
+Two things this decision touches are open and await a ruling; the design records them rather than settling them. First, `rust-test`'s entry condition as ruled — "the linter's first register generation commits a label-register.md for every owner with covered assets" — cannot be met while the profile is staged, because a staged profile carries no `Covers` edges and the generator derives registers from effective profiles only: the condition asks for the output of a computation its own staging forbids. Entry therefore wants either a regeneration that computes a staged profile's census expressly for the migration, or a two-commit flip in which the registers land first and the status follows. Second, the `Derives` edge has no producer yet: the judgments that read it are implemented (`tab:lint:judgment-implementation`), and the harvest that would pair each covered asset with the mint at its standard place is the extension the first effective profile needs. Both are the human's to rule.
+
 ## The span scanner · `sec:lint:scanner`
 
 **Signature (Occurrences and the scanner)** · `sig:lint:scanner-api`
