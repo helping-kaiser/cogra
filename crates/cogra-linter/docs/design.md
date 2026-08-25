@@ -1,8 +1,8 @@
 # The Corpus Linter — Design
 
-_Phase 2 of the standard engineering process: the design candidate. The review closes this phase; implementation follows behind the Gate at the end._
+_Phase 2 of the standard engineering process: the design. The review of 2026-08-25 ratified it; implementation follows behind the Gate at the end._
 
-This document is the design candidate for `crates/cogra-linter`, the corpus linter whose concept closed in phase 1. It fixes the crate's module map, the two weight enums of the corpus graph, the public API surface of every slice at rustdoc level, the error taxonomy and its boundary against findings, the dependencies with individual arguments verified against their own current documentation, and a sized test plan; and it ends with the gate implementation must discharge. It decides nothing the architecture has already decided: the pipeline, the single-`StableDiGraph` corpus-graph model, the judgments-as-queries formulation, the frontend conventions, and the three fixed constraints are ratified there and cited here. What it settles is what the architecture left to this phase — the concrete module map against the boundaries that document drew, the node and edge weight enums behind its vocabulary sketch, the error taxonomy, the public shape of the slices, and the test plan's sizing. Where a ratified document could be read two ways, the reading is a Decision of this document, and where the ratified documents settle nothing, the question is an Open Question for the review rather than a decision taken in passing.
+This document is the ratified design for `crates/cogra-linter`, the corpus linter whose concept closed in phase 1. It fixes the crate's module map, the two weight enums of the corpus graph, the public API surface of every slice at rustdoc level, the error taxonomy and its boundary against findings, the dependencies with individual arguments verified against their own current documentation, and a sized test plan; and it ends with the gate implementation must discharge. It decides nothing the architecture has already decided: the pipeline, the single-`StableDiGraph` corpus-graph model, the judgments-as-queries formulation, the frontend conventions, and the three fixed constraints are ratified there and cited here. What it settles is what the architecture left to this phase — the concrete module map against the boundaries that document drew, the node and edge weight enums behind its vocabulary sketch, the error taxonomy, the public shape of the slices, and the test plan's sizing. Where a ratified document could be read two ways, the reading is a Decision of this document; where the ratified documents settled nothing, the review ruled, and the ruling stands here as a Decision recorded where its topic lives.
 
 The document practices the labeling discipline: the label at each heading or environment head is that environment's mint; a parenthesized label in running text is a same-owner citation; material in fenced blocks and double-backtick spans is displayed without participating, which is where every Rust identifier and every token this document merely quotes sits. Every label minted here has area `lint`; the document title mints nothing. Same-owner citations reach the concept document's labels unprefixed, both files lying under `pkg.cogra-linter` in the partition. Imported citations use the prefixes registered in `corpus-adoption.toml`: `LBL` for the label calculus, `KND` for the kind registry, `IDN` for the identity adjudication procedure, `ICX` for the interchange conventions, and `ARCH` for the linter architecture.
 
@@ -295,6 +295,12 @@ pub struct Adoption {
     pub scanned_regions: ScannedRegions,
     pub banned_tokens: BannedTokens,
     pub kinds: KindsAdoption,
+    /// Which participating regions are heads, per format, and the
+    /// case-exact matching rule (`dec:lint:head-recognition`).
+    pub head_recognition: HeadRecognition,
+    /// The failing set, as literal path prefixes
+    /// (`dec:lint:enforcement-partition`).
+    pub enforcement: EnforcementPartition,
 }
 
 impl Adoption {
@@ -385,7 +391,7 @@ pub struct WalkOutcome { pub sources: Vec<SourceFile>, pub failures: Vec<Diagnos
 
 A profile whose `status` is `Staged` is registered and outside the effective profile signature: it is present in the graph as a `Profile` node so that its kind's reservation is legible, it carries no `Covers` edges, its census is not computed, and no inventory judgment runs over it. Its kind stays reserved-but-ungoverned, where a bare occurrence is a hard failure awaiting its derivation — the same outcome by a different clause (`[LBL-sig:labels:reserved-kinds]`), `[profiles]` and `[reserved-kinds]` of the adoption data. Entering Π is a commit that flips two fields, and the linter reads the fields.
 
-The alternative — computing a staged profile's census anyway, to report the migration's distance — is refused for a reason of staging rather than of effort: the census is the input to the inventory judgment, and a computed-but-unjudged census is a half-computed pass, which is what (`[LBL-inv:labels:two-pass]`) exists to forbid. What the migration's distance wants is a measurement, and a measurement is not a lint. Whether the human wants the distance reported anyway is (`open:lint:staged-census`).
+Computing a staged profile's census inside the check — to report the migration's distance along the way — is refused for a reason of staging rather than of effort: the census is the input to the inventory judgment, and a computed-but-unjudged census inside the judging run is a half-computed pass, which is what (`[LBL-inv:labels:two-pass]`) exists to forbid. What the migration's distance wants is a measurement, and a measurement is not a lint; it has its own run and its own subcommand (`dec:lint:migrations-subcommand`).
 
 ## The span scanner · `sec:lint:scanner`
 
@@ -725,6 +731,22 @@ pub enum HeadVerdict {
 
 `homonyms` and `headline_counts` are public because they are the generator's inputs (`req:lint:register-generator`): the companion register presents exactly `Hom(C_A)` and the registry document's headline table is a generated region derived from the tables alone. Deriving them from the same parsed relation the validation uses is what makes the register a view of the classification rather than a second copy of it.
 
+**Decision (The reduction vocabulary is registry data)** · `dec:lint:reduction-vocabulary`
+
+The devices presentation reduction removes are the device rows of (`[KND-conv:kinds:hybrids]`), and `KindRegistry::reduce` reads them from the registry document by the same path that yields the classification relation itself (`[ARCH-dec:linter:registry-as-data]`). Nothing of the vocabulary is transcribed into `corpus-adoption.toml` and nothing of it is compiled in as a list, which is what keeps one vocabulary in one place: the registry defines the environments and the devices alike, and a corpus that copied the devices would hold a second copy to drift.
+
+The division of labor inside the vocabulary is stated rather than blurred, because the two halves are not the same kind of thing. The **device families** — numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated `sub-` prefixes, placement, containment — are spelling rules, and a spelling rule is code: no table row can say "strip a trailing star". What the rows carry is which families the registry *admits*, so `reduce` runs exactly the routines the registry declares and an undeclared family is not stripped. The **modifiers** are single names, and they are wholly data: a modifier is one row, and the twelve the registry carries reach `reduce` as strings it never spells out. That is the half (`[ARCH-conv:linter:markdown-frontend]`) had in view in calling the modifier list adoption data, and it is satisfied by the registry being the datum.
+
+The overriding rows need no separate datum. `HeadVerdict::Exact` is tried before reduction, so a head that is itself an exact catalogue name is never reduced — which is what an overriding row *is*, and why (`[KND-judg:kinds:head-validation]`) writes its second disjunct as "h is not an overriding row". Working hypothesis and Standing hypothesis carry `assum` as ordinary rows of (`[KND-conv:kinds:setup]`), and the device table declares the family so a reader can find it; the linter derives the behavior from the ordering of the two disjuncts and consults no list.
+
+**Decision (Head recognition is adoption data)** · `dec:lint:head-recognition`
+
+`[head-recognition]` of the adoption data fixes which participating regions are heads, and `frontend_md` reads it rather than knowing it: the two Markdown forms this corpus writes — a bold `Kind (Title)` run opening a block, and a heading, each closed by the separator and the mint — the separator itself, and the languages that have no head form at all. A code comment is a scanned region that carries occurrences and heads nothing, which is why `frontend_rust` produces no `Head` values.
+
+Two details are load-bearing and are fixed here. For the bold form the head is the text up to the opening parenthesis: the Title names this instance and the head names the genre, and handing the Title to the registry would ask it to classify a proper noun. For a heading the head is the rung the format supplies and not the heading's own text, exactly as (`[KND-def:kinds:presentation-reduction]`) rules for named divisions — Markdown's rung is Section, which the registry classifies `sec`, and every heading anchor in the corpus carries `sec` accordingly.
+
+Matching is case-exact, ruled, and the consequence is named rather than discovered: `HeadVerdict::Uncatalogued` fires on a head whose only defect is capitalization, and its diagnostic names the catalogue spelling, so the finding reads as the correction it is. Folding case would be the cheaper-looking road and the wrong one — it would make Table and table one name and widen N by a rule no row of the registry authorizes.
+
 ## Registers · `sec:lint:registers`
 
 **Signature (Register surface)** · `sig:lint:register-api`
@@ -812,8 +834,9 @@ pub struct RuleId(&'static str);
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Severity { Error, Warning }
 
-/// Whether this finding fails the build or is reported only
-/// (`rep:lint:first-corpus`).
+/// Whether this finding fails the build or is reported only. Computed
+/// from the finding's path against `[enforcement]` of the adoption data
+/// (`dec:lint:enforcement-partition`), never from its severity.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Enforcement { Failing, Advisory }
 
@@ -833,9 +856,36 @@ pub struct Related { pub at: Location, pub note: String }
 
 `Ord` on `Diagnostic` is implemented, not derived, and is exactly path, then the primary span's start offset, then the rule identifier — the three keys (`[ARCH-req:linter:determinism]`) fixes and in that order. A derived `Ord` would compare the fields in declaration order, putting the rule first, and would then have to be kept honest by field order forever. Two runs over one tree emit one output because the walk sorts its sources by path, every judgment collects deterministically, and the whole list is sorted by this comparator before rendering. The comparator is total on the corpus — two diagnostics with the same path, offset, and rule are the same finding — which is a property obligation rather than a claim (`tab:lint:metatheorem-tests`).
 
+**Decision (Enforcement comes from the adoption data)** · `dec:lint:enforcement-partition`
+
+`Diagnostic::enforcement` is computed by matching the finding's path against the `failing` prefixes of `[enforcement]`, under `[carrier]`'s own literal-prefix semantics and with `advisory` as the default. The failing set is the two documentation trees written under the discipline — the linter's own docs, which hold the four disciplines and the architecture beside its phase artifacts, and the interchange crate's; everything else is reported without failing the lane, and each completed migration adds a prefix (`rep:lint:first-corpus`), `[enforcement]` of the adoption data.
+
+Two properties of the shape are deliberate. Enforcement is orthogonal to severity: an error is an error wherever it is found and the diagnostic says so, with only the exit code differing — so an advisory tree's defects stay visible in full rather than being demoted into warnings a reader learns to skim. And the partition is adoption data rather than a lane flag, because growing it is a claim that a migration has completed, and this repository makes that kind of claim by a reviewed edit to a committed file, not by an argument list.
+
+`check --advisory` lists the advisory half; without it, advisory findings are counted in the summary and not listed, so a run that is clean on the failing set reads as clean.
+
+**Decision (One diagnostic form, fixed and machine-parseable)** · `dec:lint:diagnostic-format`
+
+Version 1 renders one diagnostic form and no second one, and the form is part of the crate's contract rather than an incidental of `render`:
+
+```text
+path:line:col: severity rule: message
+    path:line:col: note
+```
+
+One line per finding; the related locations of (`sig:lint:diagnostic-api`) follow it, indented four spaces, each in the same `path:line:col:` shape. `severity` is `error` or `warning`, `rule` is the `RuleId` token, and the message is a single line — a diagnostic that wants a paragraph wants a related location instead.
+
+The choice is not human-readable *against* machine-readable: this form is both. It is the shape a GitHub Actions problem matcher consumes with no translator in front of it, which is the only machine consumer the linter's consumer set actually has (`sig:lint:consumers`), and it is the shape a compiler-trained reader already parses by eye. A JSON form is not refused, only unbuilt: if one is ever wanted it touches `render` and nothing else, because no judgment, register, or error site knows how output is spelled. Being a contract, the form is stable — changing it is a breaking change to whatever consumes it, and the rustdoc on `render` says so.
+
+**Decision (Migration distance is its own subcommand)** · `dec:lint:migrations-subcommand`
+
+`cogra-lint migrations` computes the censuses of the staged profiles and reports, per profile, how far its entry condition still has to travel: for `rust-test`, the covered assets counted against the registers not yet generated; for `rust-module`, the definitions counted against those still lacking the inner documentation comment, each located. It is delivered with slice 6, where the register generator it reports against lands.
+
+It is never part of `check`, and the separation is the whole of why it is safe. `check` runs the judgments the adoption data puts in force, and a staged profile is not in force (`dec:lint:staged-profiles`); a census computed inside that run would be a half-computed pass of exactly the kind (`[LBL-inv:labels:two-pass]`) exists to forbid. `migrations` is its own run with its own pass 1, it judges nothing, it emits no diagnostic and no verdict, and it always exits `0` on a corpus it could read. What it produces is a measurement, and a measurement reported as a measurement costs the staging nothing.
+
 **Signature (Command line)** · `sig:lint:cli-api`
 
-Two modes, because the register rule requires exactly two: a check that writes nothing, and an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`).
+Three modes: a check that writes nothing, an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`), and the measurement of (`dec:lint:migrations-subcommand`).
 
 ```rust
 #[derive(clap::Parser)]
@@ -868,12 +918,19 @@ enum Command {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Report how far each staged profile's migration still has to travel.
+    /// Judges nothing and writes nothing (`dec:lint:migrations-subcommand`).
+    Migrations {
+        /// Restrict to one staged profile.
+        #[arg(long)]
+        profile: Option<String>,
+    },
 }
 ```
 
-Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings, `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`).
+Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings on the failing set (`dec:lint:enforcement-partition`), `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`). `regenerate` and `migrations` exit `1` only on findings of their own scope, and `migrations` has none.
 
-`clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling two subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
+`clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling three subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
 
 ## Errors · `sec:lint:errors`
 
@@ -996,13 +1053,13 @@ Six a reader might expect, refused with reasons, so no later contributor re-deri
 
 *`walkdir` or `ignore`.* The carrier is defined by literal path prefixes in the adoption data — a prefix ending in `/` matches a tree, a prefix naming a file matches that file, and there is no pattern dialect (`[ARCH-sig:linter:adoption-data]`). `ignore` would bring glob semantics and `.gitignore` resolution to a walk whose whole specification says neither applies, which is a pattern dialect entering by the back door; `walkdir` brings ordering and symlink policy the design must fix itself anyway, since the walk sorts by path for determinism. A recursive `std::fs::read_dir` with sorted entries is some dozens of lines and is the thing the specification describes.
 
-*A diagnostic-rendering crate.* `codespan-reporting` and its kin render source excerpts with carets and colors. The version-1 output is one line per finding plus its related locations, and what shape a richer output should take is (`open:lint:machine-output`). Adopting a renderer before that question is answered picks the answer.
+*A diagnostic-rendering crate.* `codespan-reporting` and its kin render source excerpts with carets and colors. The output is one fixed line per finding plus its related locations (`dec:lint:diagnostic-format`), chosen so a problem matcher reads it without a translator; a renderer that draws source excerpts would produce something no matcher parses, for a reader who is usually a CI log.
 
 *Any hashing crate.* (`dec:lint:no-digest`). The absence is a checkable gate clause, not a preference.
 
 *`rayon`.* The slice-1 carrier is 58 Markdown files and 73 Rust files, measured; parallelism buys nothing at that size and costs the thing the design is built to guarantee, since a parallel harvest makes completion order observable in exactly the place (`[ARCH-req:linter:determinism]`) forbids it. If the corpus ever grows to where this matters, the two-pass staging is what makes parallelism safe to add — pass 1 is embarrassingly parallel per file — and the decision is taken then, with a measurement in front of it.
 
-*`serde_json`.* Nothing in version 1 is serialized. It arrives with (`open:lint:machine-output`) if that question is answered yes, and not before.
+*`serde_json`.* Nothing in version 1 is serialized: the diagnostic form is fixed and it is text (`dec:lint:diagnostic-format`). A JSON form would bring this crate with it and touch `render` alone, which is why nothing else in the design knows how output is spelled.
 
 ## Test plan · `sec:lint:tests`
 
@@ -1084,13 +1141,13 @@ Six slices to version 1, in this order, then the two later frontends. The decomp
 | 3 | the Markdown frontend | (`sig:lint:frontend-api`), (`conv:lint:markdown-surface`), (`sig:lint:kind-registry-api`) |
 | 4 | the Rust frontend, the pre-tokenizer, the bans | (`sig:lint:pretokenizer-api`), (`inv:lint:lexeme-partition`), (`sig:lint:bans-api`), (`conv:lint:rust-surface`) |
 | 5 | the judgments | (`sig:lint:judgment-api`), (`tab:lint:judgment-implementation`), (`sig:lint:diagnostic-api`) |
-| 6 | register freshness and generated compliance | (`sig:lint:register-api`), (`dec:lint:one-generator`), (`sig:lint:cli-api`) |
+| 6 | register freshness, generated compliance, the migrations report | (`sig:lint:register-api`), (`dec:lint:one-generator`), (`sig:lint:cli-api`), (`dec:lint:migrations-subcommand`) |
 | 7 | the web frontend | `frontend_web`, verified against swc's own documentation at the slice |
 | 8 | the Kotlin frontend | `frontend_kotlin`, behind the zero-error precondition (`[ARCH-dec:linter:kotlin-tree-sitter]`) |
 
 Slice 2 is independent of slice 1 and may be worked in parallel: `scan.rs` takes region text and returns occurrences, and it names no type from `adopt`, `carrier`, or `graph` — a claim the module map makes checkable rather than hopeful (`rem:lint:split-lines`). Nothing else parallelizes: 3 needs 1 and 2, 4 needs 3's contract, 5 needs 4's census, and 6 needs 5's registries.
 
-Slice 6 is where the corpus changes as well as the code: the first register generation commits the initial per-owner label registers and arms exact byte comparison from then on, which is the condition the test profile's entry into Π waits on (`req:lint:register-generator`), `[profiles]` of the adoption data. Entering Π is a separate commit that flips two fields, and it is not part of slice 6.
+Slice 6 is where the corpus changes as well as the code: the first register generation commits the initial per-owner label registers and arms exact byte comparison from then on, which is the condition the test profile's entry into Π waits on (`req:lint:register-generator`), `[profiles]` of the adoption data. Entering Π is a separate commit that flips two fields, and it is not part of slice 6. The migrations report (`dec:lint:migrations-subcommand`) lands in the same slice for the same reason: it reports each staged profile's distance against the generator that closes one of the two migrations, so before slice 6 half of what it would say has no referent.
 
 ## Rejected Ansätze · `sec:lint:rejected`
 
@@ -1116,46 +1173,26 @@ Harvest files in parallel, since pass 1 is per-file and independent. Then comple
 
 **Ansatz (Judging a staged profile partially)** · `ansatz:lint:partial-inventory`
 
-Compute a staged profile's census and judge inventory over the assets that already carry their labels, reporting the rest as progress. Then inventory — which admits nothing partial by its own words (`[LBL-inv:labels:inventory]`) — is enforced in a weakened form nothing recorded, a profile is half in force with no fact in the adoption data saying so, and the migration completes into a check that was already passing. Rejected in favor of (`dec:lint:staged-profiles`). Reporting the distance *without* judging it is a different proposal and an open question (`open:lint:staged-census`).
-
-## Open questions · `sec:lint:questions`
-
-Five questions the ratified documents do not settle, each design-shaped and none decided here. Two are gaps in the adoption data, which (`req:lint:adoption-data-only`) makes the only place a fact about this corpus may live; one is where a ruled acceptance scope is recorded; and two are surface choices whose consumer is the human's own workflow. A phase artifact with open questions closes no phase, so each is owed a ruling before (`gate:lint:implementation`) opens.
-
-**Open Question (Where the presentation-reduction vocabulary lives)** · `open:lint:reduction-vocabulary`
-
-The architecture rules that presentation reduction is applied to tokenized head words with "the modifier list being adoption data, not code" (`[ARCH-conv:linter:markdown-frontend]`). The registry states the vocabulary in the prose of (`[KND-def:kinds:presentation-reduction]`) — numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated `sub-` prefixes, placement, containment, and twelve named emphasis and status modifiers — and in prose only: it is not a table, so registry-as-data cannot reach it, and `corpus-adoption.toml` has no section for it. Three roads exist and the design takes none of them unilaterally: add a `[kinds.reduction]` section to the adoption file transcribing the vocabulary, which reintroduces exactly the transcription drift (`[ARCH-dec:linter:registry-as-data]`) exists to prevent; add the vocabulary to the registry document as a Convention table of its own, which is a new edition of a ratified discipline; or read it from the prose, which is parsing an English sentence and is not a road. The same question governs the overriding rows — Working hypothesis and Standing hypothesis reduce to themselves — which are likewise prose.
-
-**Open Question (Where the head-recognition rule lives)** · `open:lint:head-recognition`
-
-(`[KND-def:kinds:presentation-reduction]`) closes by making two things adoption data: "Which environment class a document format declares for a head, and how a head maps to one". For this corpus the rule is visible in every disciplined document — a bold `Kind (Title)` line followed by the separator and the mint, and a Markdown heading followed by the separator and the mint — and it is written down nowhere. `[scanned-regions]` fixes which regions participate, not which of them are heads. Until it is recorded, the Markdown frontend's head recognizer is a code fact about the corpus, which (`req:lint:adoption-data-only`) forbids.
-
-**Open Question (Whether the failing set lives in the adoption data)** · `open:lint:enforcement-partition`
-
-Acceptance is scoped: version 1 is accepted on a clean run over the material written under the discipline, and the linter enters CI as a failing gate over exactly that set and an advisory one over the rest, the failing set growing as each migration lands (`rep:lint:first-corpus`). `Diagnostic::enforcement` is where that partition lands in the types, but nothing records the partition itself. It is corpus data of exactly the shape `[carrier]` holds — a list of path prefixes — which argues for a section in `corpus-adoption.toml`; it is also a fact about a migration schedule rather than about the corpus's structure, which argues for a CI-lane flag. The design does not choose, because the choice decides whether growing the failing set is a reviewed edit to the adoption file or a change to a CI invocation, and that is a governance question.
-
-**Open Question (Whether continuous integration wants machine-readable findings)** · `open:lint:machine-output`
-
-The design renders one human-readable diagnostic form and nothing else: path, line, column, rule, message, then the related locations. No consumer named in (`sig:lint:consumers`) needs more — CI needs the exit code, and authors read the text. A second, machine-readable form would exist only to feed a code-review annotation surface, which is a question about how this repository wants CI to report and not a question the design can answer. It is asked now rather than later because the answer changes `render`'s surface and nothing else, and doing it in version 1 costs almost nothing while retrofitting it means revisiting every diagnostic site.
-
-**Open Question (Whether a staged profile's census is reported)** · `open:lint:staged-census`
-
-(`dec:lint:staged-profiles`) makes a staged profile inert: no census, no judgment, no output. The migrations the two staged profiles wait on are large and measurable — 284 test functions wanting a generated register, ~42 module definitions wanting an inner documentation comment — and a run that computed the census without judging it could report the distance each migration still has to travel. That is a measurement rather than a lint, and it would put a half-computed pass in a design whose staging exists to forbid one; but it is also the only cheap instrument the corpus has for tracking two migrations it has committed to. Whether the human wants it, and if so whether it belongs behind a separate subcommand rather than in `check`, is not the design's call.
+Compute a staged profile's census and judge inventory over the assets that already carry their labels, reporting the rest as progress. Then inventory — which admits nothing partial by its own words (`[LBL-inv:labels:inventory]`) — is enforced in a weakened form nothing recorded, a profile is half in force with no fact in the adoption data saying so, and the migration completes into a check that was already passing. Rejected in favor of (`dec:lint:staged-profiles`). Reporting the distance *without* judging it is a different proposal, and it has its own run (`dec:lint:migrations-subcommand`).
 
 ## Implementation gate · `sec:lint:implementation-gate`
 
 **Gate (Implementation)** · `gate:lint:implementation`
 
-Implementation is blocked until all of the following hold. The first four are owed before the code they govern is written, not after.
+The design phase closed at the review of 2026-08-25, whose rulings stand as the Decisions of this document and whose confirmations discharge the clauses below that name them. The implementation phase closes, and the audit phase opens, only when all of the following hold — the four outstanding clauses owed before the code they govern is written, not after.
 
-- every Open Question of this document is ruled and the ruling recorded here as a decision — (`open:lint:reduction-vocabulary`), (`open:lint:head-recognition`), (`open:lint:enforcement-partition`), (`open:lint:machine-output`), (`open:lint:staged-census`) — a phase artifact with open questions closing no phase;
+Discharged at the review:
+
+- the module map (`model:lint:module-map`) stands as stated, the seven additions to the architecture's ruled list included (`rem:lint:module-additions`);
+- the two weight enums (`sig:lint:node-weights`), (`sig:lint:edge-weights`) stand with their endpoints, and the two additions to the architecture's vocabulary sketch — the `Pair` node and the `Covers` edge — are accepted;
+- the error taxonomy (`sig:lint:error-taxonomy`) and its boundary against findings (`crit:lint:error-or-finding`) stand;
+- the test plan's sizing (`tab:lint:test-sizing`) and the obligations of (`tab:lint:metatheorem-tests`) stand as the acceptance suite's scope;
+- the slice sequencing (`dec:lint:slice-sequencing`) stands, with slice 2's independence from slice 1 accepted as the only parallelism claimed.
+
+Outstanding:
+
 - the workspace entry exists and `crates/cogra-linter` is a member, with the CI lane and the budgets of (`tab:lint:budgets`) recorded beside it;
 - every dependency version of (`tab:lint:dependencies`) is re-verified against docs.rs at the moment implementation starts, rather than against this document;
 - a fixture test asserts a known byte range out of a `syn` span with `span-locations` enabled, before any Rust-frontend code depends on it (`dec:lint:syn-spans`);
 - `cargo tree` over the crate shows no regular-expression engine, direct or transitive (`[ARCH-dec:linter:no-regex]`), and no hashing library (`dec:lint:no-digest`);
-- the module map (`model:lint:module-map`) is confirmed as stated or amended, the seven additions to the architecture's ruled list included (`rem:lint:module-additions`);
-- the two weight enums (`sig:lint:node-weights`), (`sig:lint:edge-weights`) are confirmed with their endpoints, and the two additions to the architecture's vocabulary sketch — the `Pair` node and the `Covers` edge — are accepted or replaced;
-- the error taxonomy (`sig:lint:error-taxonomy`) and its boundary against findings (`crit:lint:error-or-finding`) are confirmed;
-- the test plan's sizing (`tab:lint:test-sizing`) and the obligations of (`tab:lint:metatheorem-tests`) are confirmed as the acceptance suite's scope;
-- the slice sequencing (`dec:lint:slice-sequencing`) is confirmed, with slice 2's independence from slice 1 accepted as the only parallelism claimed;
 - every citation in this document resolves — a check the finished linter runs on the document that designed it.
