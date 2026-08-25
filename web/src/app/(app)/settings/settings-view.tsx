@@ -34,6 +34,7 @@ import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PasswordField } from "@/lib/ui/password-field";
 import { RecoveryCode } from "@/lib/ui/recovery-code";
+import { StanceInputSetting } from "@/lib/ui/stance-input-setting";
 import { TextField } from "@/lib/ui/text-field";
 
 type SettingsAction =
@@ -411,6 +412,8 @@ export function SettingsView({
         )}
         {feedbackLine("backup")}
       </Card>
+
+      <StanceInputSetting />
 
       <Card testId="settings_sessions_card">
         <h2 className="text-title-medium">Sessions</h2>

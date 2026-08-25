@@ -87,6 +87,32 @@ describe("FeedView", () => {
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
   });
 
+  it("carries a stance control on every post card", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First"), post("p2", "Second")], null, false) }),
+      ),
+    );
+    server.use(meHandler());
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    // Part of the post card's inventory (design.md §6) — and outside the
+    // link, since it acts rather than navigates.
+    expect(await screen.findByTestId("feed-stance-p1")).toBeInTheDocument();
+    expect(screen.getByTestId("feed-stance-p2")).toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1")).not.toContainElement(
+      screen.getByTestId("feed-stance-p1"),
+    );
+  });
+
+  it("offers a guest the stance control, which asks them to join", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("feed-stance-p1"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+  });
+
   it("collapses the restore card into the header for a keyless member", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
