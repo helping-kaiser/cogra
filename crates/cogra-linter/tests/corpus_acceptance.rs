@@ -200,6 +200,10 @@ fn the_failing_set_carries_only_the_recorded_defects() {
 #[test]
 fn the_advisory_remainder_carries_the_expected_classes() {
     let by_rule = counted();
+    println!("findings by rule, over {} sources:", run().sources.len());
+    for (rule, count) in &by_rule {
+        println!("  {rule}: {count}");
+    }
     let unresolved = by_rule
         .get("label-unresolved-citation")
         .copied()
