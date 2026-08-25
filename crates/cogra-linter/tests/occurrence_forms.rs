@@ -8,8 +8,9 @@
 //! "a span that parses as no form is ordinary text". The near-miss tests name
 //! their class of (´sig:lint:near-miss-api´).
 
+use cogra_linter::ByteSpan;
 use cogra_linter::scan::{
-    ByteSpan, DelimitedSpan, NearMiss, NearMissKind, Occurrence, RegionScan, scan_code, scan_prose,
+    DelimitedSpan, NearMiss, NearMissKind, Occurrence, RegionScan, scan_code, scan_prose,
 };
 
 /// Stand in for the Markdown frontend: pair the backtick runs of a region and
