@@ -1,15 +1,25 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { StanceBundle } from "@/lib/stance/stance-data";
 import { SeveranceConfirm } from "./severance-confirm";
+
+const STANDING: StanceBundle = {
+  current: { pDirected: 0.6, pInterest: 0.4 },
+  records: 2,
+  inert: false,
+  severed: false,
+  severance: { records: 3 },
+};
 
 function show(props: Partial<React.ComponentProps<typeof SeveranceConfirm>> = {}) {
   const onConfirm = vi.fn();
   const onCancel = vi.fn();
   render(
     <SeveranceConfirm
-      kind="sever"
+      pick={null}
       targetLabel="@ada"
+      bundle={STANDING}
       records={3}
       onConfirm={onConfirm}
       onCancel={onCancel}
@@ -25,14 +35,21 @@ describe("the severance confirmation", () => {
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
 
-  it("names what severance costs before anything is signed", () => {
-    show({ records: 4 });
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent("4 signed steps");
+  it("asks the one question, whichever route reached it", () => {
+    show();
+    expect(screen.getByTestId("severance-confirm")).toHaveTextContent("Sever this?");
   });
 
-  it("counts a single step in the singular", () => {
+  it("names what severance costs before anything is signed", () => {
+    show({ records: 4 });
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "It takes 4 signed actions, each paid for separately.",
+    );
+  });
+
+  it("counts a single action in the singular", () => {
     show({ records: 1 });
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent("1 signed step,");
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent("It takes 1 signed action,");
   });
 
   it("says what reaching zero carries with it", () => {
@@ -43,10 +60,29 @@ describe("the severance confirmation", () => {
     expect(consequences).toHaveTextContent("nothing passes on through you");
   });
 
-  it("asks whether an accidental landing was the intent, rather than refusing it", () => {
-    show({ kind: "landsAtZero", records: 1 });
-    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("that was the intent");
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent("1 signed step");
+  it("states where the reader stands before they decide", () => {
+    show();
+    expect(screen.getByTestId("severance-standing")).toHaveTextContent("Where you stand now:");
+  });
+
+  it("adds the pick line only when a pick reached it", () => {
+    show();
+    expect(screen.queryByTestId("severance-pick")).toBeNull();
+  });
+
+  it("shows the pick that landed here, and asks the same question about it", () => {
+    show({ pick: { pDirected: 0, pInterest: 0 }, records: 1 });
+    expect(screen.getByTestId("severance-pick")).toBeInTheDocument();
+    expect(screen.getByTestId("severance-confirm")).toHaveTextContent("Sever this?");
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Sever");
+  });
+
+  it("refuses to bill for a bundle already at nothing", () => {
+    show({ records: 0, alreadySevered: true });
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "You are already at nothing here.",
+    );
+    expect(screen.getByTestId("severance-proceed")).toBeDisabled();
   });
 
   it("keeps the standing when declined", () => {
@@ -66,6 +102,12 @@ describe("the severance confirmation", () => {
     const { onConfirm } = show({ busy: true });
     fireEvent.click(screen.getByTestId("severance-proceed"));
     expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("stays up and says so when the signing pass did not complete", () => {
+    show({ failed: true });
+    expect(screen.getByTestId("severance-failed")).toHaveTextContent("That didn't send");
+    expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
 
   it("dresses a deliberate choice as one, never as a failure", () => {

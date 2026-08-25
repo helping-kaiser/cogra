@@ -1,15 +1,11 @@
 // The seam the stance control talks to — and the only thing it talks to.
 //
-// Slice 2.2's backend half (the reworked raw-edge `prepareStance`, the
-// read-side bundle fold, and severance's wire shape, which api-spec.md
-// "The generic stance" leaves to settle with this slice) is not merged.
-// So the UI is written against this interface rather than against
-// operations that do not exist yet: `stub-stance-data.ts` implements it
-// for tests and for the app until the wiring follow-up implements it over
-// Apollo. Nothing here imports a GraphQL document.
+// `apollo-stance-data.ts` implements it over the real operations;
+// `stub-stance-data.ts` implements it for tests. The control imports
+// neither: it reads whichever one the provider holds.
 //
 // The semantics the interface encodes (design.md §8.1, api-spec.md
-// conventions):
+// "The generic stance"):
 //
 //   - RAW EDGE. `commit` sends the picked pair verbatim. There is no
 //     delta anywhere in this file: the client never computes one, and
@@ -17,6 +13,11 @@
 //   - READ-SIDE FOLD. Current standing and the projection of a candidate
 //     pick are both *reads*. They come back from the fold; the control
 //     renders them and never derives one from the other.
+//   - INERTNESS AND SEVERANCE ARE FLAGS, NOT COMPARISONS. Whether a
+//     bundle or a landing carries nothing is the fold's statement about
+//     itself (`inert`, `severed` on `StanceBundle` and
+//     `StanceProjection`). No caller re-derives either by testing a
+//     value against zero.
 //   - SEVERANCE IS ITS OWN GESTURE. `sever` states the intent; the batch
 //     of counter-records that nets the bundle to (0, 0) is assembled on
 //     the far side. Each record is its own priced act, so the batch size
@@ -26,9 +27,22 @@
 import type { Outcome } from "@/lib/api/outcome";
 import type { StancePair } from "./model";
 
-/** What the control is stancing, and how copy names it. */
-export type StanceTargetRef = {
+/**
+ * Which root the stance read enters through. `viewerStance` is a field
+ * on Post, Comment, and User, and no interface gathers the three, so the
+ * target's kind is part of naming it — every call site knows it
+ * statically.
+ */
+export type StanceTargetKind = "post" | "comment" | "profile";
+
+/** What the seam needs to name a target. */
+export type StanceTarget = {
   readonly id: string;
+  readonly kind: StanceTargetKind;
+};
+
+/** The same, plus how copy names it. */
+export type StanceTargetRef = StanceTarget & {
   /** Reader-facing, already in the reader's own words: "this post", "@ada". */
   readonly label: string;
 };
@@ -47,7 +61,22 @@ export type SeveranceCost = {
 export type StanceBundle = {
   /** Where the bundle currently nets — never a value the client computed. */
   readonly current: StancePair;
+  /** How many records the bundle folds; zero is a target never stanced. */
+  readonly records: number;
+  /** Either axis at zero, as the fold reports it. */
+  readonly inert: boolean;
+  /** Both axes at zero, as the fold reports it. */
+  readonly severed: boolean;
   readonly severance: SeveranceCost;
+};
+
+/** Where a candidate pick lands the bundle — the fold's answer, not a sum. */
+export type StanceLanding = {
+  readonly landing: StancePair;
+  /** Either axis at zero, as the fold reports it. */
+  readonly inert: boolean;
+  /** Both axes at zero — the pick reaches severance. */
+  readonly severed: boolean;
 };
 
 /** What a completed gesture staged — one record for a pick, N for a severance. */
@@ -68,19 +97,24 @@ export type StanceReadOptions = {
 export const INCLUDE_PENDING_DEFAULT = true;
 
 export interface StanceData {
-  /** The viewer's standing toward `target`; null where they hold none yet. */
-  bundle(target: string, options?: StanceReadOptions): Promise<Outcome<StanceBundle | null>>;
+  /**
+   * The viewer's standing toward `target`. A bundle folding no records is
+   * a target never stanced, not an absent one; a viewer with no bundle to
+   * read at all — a stale token, or an account with no actor on the graph
+   * — is the shared UNAUTHENTICATED refusal, as every viewer-only read is.
+   */
+  bundle(target: StanceTarget, options?: StanceReadOptions): Promise<Outcome<StanceBundle>>;
 
   /** Where `pick` would land the bundle — the fold's answer, not a sum. */
   project(
-    target: string,
+    target: StanceTarget,
     pick: StancePair,
     options?: StanceReadOptions,
-  ): Promise<Outcome<StancePair>>;
+  ): Promise<Outcome<StanceLanding>>;
 
   /** Author one edge carrying exactly `pick`, and sign it. */
-  commit(target: string, pick: StancePair): Promise<Outcome<StanceCommit>>;
+  commit(target: StanceTarget, pick: StancePair): Promise<Outcome<StanceCommit>>;
 
   /** Author the counter-record batch that nets the bundle to `(0, 0)`. */
-  sever(target: string): Promise<Outcome<StanceCommit>>;
+  sever(target: StanceTarget): Promise<Outcome<StanceCommit>>;
 }
