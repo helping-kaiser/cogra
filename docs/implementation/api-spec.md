@@ -2358,7 +2358,9 @@ input AttachmentInput {
  (names are normalized by the naming service; a new name needs no
  creation act, Types anchor vacuously — hashtag.md). Parameters
  default per the low-defaults policy; Tag confidence is
- census-bounded to [0, 1]."
+ census-bounded to [0, 1]. Re-tagging a name revises the claim —
+ the newest record per (author, content, Type) wins, and relevance
+ 0 is the un-tag, read as withdrawn (hashtag.md §4)."
 input TagInput {
   name: String!
   pDirected: Dimension
