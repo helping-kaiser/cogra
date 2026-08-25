@@ -155,9 +155,17 @@ fn census_of<'s>(
             .filter(|asset| asset.profile == profile.id)
             .collect();
         if !held.is_empty() {
-            out.entry(&src.path).or_insert((src, Vec::new())).1.extend(held);
+            out.entry(&src.path)
+                .or_insert((src, Vec::new()))
+                .1
+                .extend(held);
         }
-        declared.extend(censuses.declarations.into_iter().map(|one| (&*src.path, one)));
+        declared.extend(
+            censuses
+                .declarations
+                .into_iter()
+                .map(|one| (&*src.path, one)),
+        );
     }
     for (src, identifier) in backing_files(profile, sources, &declared) {
         let held = &mut out.entry(&src.path).or_insert((src, Vec::new())).1;
@@ -194,8 +202,10 @@ fn backing_files<'s>(
     if profile.census.definition_rule.is_none() {
         return Vec::new();
     }
-    let by_path: BTreeMap<&Path, &SourceFile> =
-        sources.iter().map(|one| (one.path.as_path(), one)).collect();
+    let by_path: BTreeMap<&Path, &SourceFile> = sources
+        .iter()
+        .map(|one| (one.path.as_path(), one))
+        .collect();
     let mut out: BTreeMap<&Path, (&SourceFile, String)> = BTreeMap::new();
     for (declaring, one) in declared {
         for candidate in candidates(declaring, &one.identifier) {
@@ -224,7 +234,10 @@ fn candidates(declaring: &Path, name: &str) -> [PathBuf; 2] {
             None => parent.to_path_buf(),
         }
     };
-    [dir.join(format!("{name}.rs")), dir.join(name).join("mod.rs")]
+    [
+        dir.join(format!("{name}.rs")),
+        dir.join(name).join("mod.rs"),
+    ]
 }
 
 /// One file-backed module definition, located at the top of its own file,

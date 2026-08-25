@@ -590,7 +590,10 @@ fn temporary(name: &str) -> PathBuf {
     let registry = root().join(REGISTRY);
     let held = std::fs::read_to_string(&registry).expect("the registry document");
     let stale = held.replace(FRESH_ROW, STALE_ROW);
-    assert_ne!(stale, held, "the headline table was put back to a stale count");
+    assert_ne!(
+        stale, held,
+        "the headline table was put back to a stale count"
+    );
     std::fs::write(docs.join("environment-kinds.md"), stale).expect("the registry document");
     at
 }
@@ -609,7 +612,7 @@ fn register_findings(run: &cogra_linter::Run) -> Vec<String> {
     run.findings
         .iter()
         .filter(|one| one.rule.as_str().starts_with("register-"))
-        .map(|one| cogra_linter::render::diagnostic(one))
+        .map(cogra_linter::render::diagnostic)
         .collect()
 }
 
@@ -659,7 +662,10 @@ fn regeneration_is_idempotent_and_a_check_after_a_write_is_current() {
     cogra_linter::registers::write_all(&again, &cogra_linter::Scope::WholeCorpus, &at)
         .expect("the second write");
     let third = cogra_linter::check(adoption(), &at).expect("the twice-written corpus");
-    assert_eq!(third.sources, after.sources, "a second write changes no byte");
+    assert_eq!(
+        third.sources, after.sources,
+        "a second write changes no byte"
+    );
     let _ = std::fs::remove_dir_all(&at);
 }
 

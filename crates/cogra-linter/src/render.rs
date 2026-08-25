@@ -88,9 +88,7 @@ pub fn summary(findings: &[Diagnostic], sources: usize) -> String {
         .filter(|one| one.enforcement == Enforcement::Failing)
         .count();
     let advisory = findings.len() - failing;
-    format!(
-        "{sources} sources · {failing} failing · {advisory} advisory",
-    )
+    format!("{sources} sources · {failing} failing · {advisory} advisory",)
 }
 
 /// The per-phase report every run prints beside its findings
@@ -109,7 +107,11 @@ pub fn timing(spent: &Timing) -> String {
 pub fn freshness(reg: &Register, found: &Freshness) -> String {
     let what = match &reg.scope {
         RegisterScope::LabelRegister { owner, profile } => {
-            format!("label register of {} for {}", owner.as_str(), profile.as_str())
+            format!(
+                "label register of {} for {}",
+                owner.as_str(),
+                profile.as_str()
+            )
         }
         RegisterScope::Attestation => String::from("attestation register"),
         RegisterScope::Region { span, .. } => {
@@ -191,6 +193,9 @@ mod tests {
         let mut failing = one("a.md");
         failing.enforcement = Enforcement::Failing;
         let findings = vec![failing, one("b.md"), one("c.md")];
-        assert_eq!(summary(&findings, 12), "12 sources · 1 failing · 2 advisory");
+        assert_eq!(
+            summary(&findings, 12),
+            "12 sources · 1 failing · 2 advisory"
+        );
     }
 }

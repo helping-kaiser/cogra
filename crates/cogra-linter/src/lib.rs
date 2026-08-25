@@ -69,7 +69,6 @@ pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Sev
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
 pub use frontend::{Asset, Head, Parsed, Region, RegionKind, Table};
 pub use frontend_rust::{CargoTarget, Censuses, Declaration};
-pub use migrate::{Migration, Remaining, distances};
 pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
@@ -78,6 +77,7 @@ pub use judge::kinds::{
     Attestation, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
     Reduction,
 };
+pub use migrate::{Migration, Remaining, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use registers::{
     Freshness, Register, RegisterScope, Scope, Written, compare, regenerate_all, write_all,

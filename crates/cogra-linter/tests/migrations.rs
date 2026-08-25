@@ -134,8 +134,7 @@ fn a_definition_declared_many_times_is_counted_once() {
 /// every other output of the crate is (´[ARCH-req:linter:determinism]´).
 #[test]
 fn two_measurements_agree() {
-    let again =
-        migrate::distances(adoption(), &root(), None).expect("a second measurement");
+    let again = migrate::distances(adoption(), &root(), None).expect("a second measurement");
     assert_eq!(&again, measured());
 }
 
@@ -143,8 +142,7 @@ fn two_measurements_agree() {
 #[test]
 fn a_named_profile_is_measured_alone() {
     let only = ProfileId::new("rust-module");
-    let found =
-        migrate::distances(adoption(), &root(), Some(&only)).expect("one profile measured");
+    let found = migrate::distances(adoption(), &root(), Some(&only)).expect("one profile measured");
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].profile, only);
 }
