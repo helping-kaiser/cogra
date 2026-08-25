@@ -225,7 +225,7 @@ Resolve citations while still harvesting, streaming file by file. Then forward r
 
 ## Open questions · `sec:linter:questions`
 
-**Open question (LaTeX frontend)** · `open:linter:latex-frontend`
+**Open Question (LaTeX frontend)** · `open:linter:latex-frontend`
 
 The corpus contains LaTeX sources whose `\label` and `\zcite` commands participate in the reference graph, so a LaTeX frontend is required eventually — deferred by ruling, and remaining so. When taken up, the same standards apply: a structure-aware tokenizer (TeX's category-code lexing for the macro family in scope, not a pattern match), regions and participation defined before scanning, and the frontend study written before the frontend.
 

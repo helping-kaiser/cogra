@@ -15,6 +15,8 @@
 #   plus   banned-token sets .................. [banned-tokens]
 #          the carrier's exclusions ........... [carrier]
 #          the kind registry's adoption ....... [kinds]
+#          head recognition per format ........ [head-recognition]
+#          the enforcement partition .......... [enforcement]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -897,6 +899,82 @@ reason     = "no frontend exists; ARCH dec:linter:ast-frontends forbids analysin
 kts_note   = "the 16 Gradle scripts (build.gradle.kts, settings.gradle.kts, build-logic/) are build infrastructure, not app source, and the zero-error precondition of ARCH dec:linter:kotlin-tree-sitter was measured over the 138 .kt files only. They are revisited at the Kotlin slice, where the grammar that would parse them arrives"
 # LaTeX is absent from the corpus tree today; ARCH
 # open:linter:latex-frontend keeps its frontend deferred.
+
+
+####################################################################
+# [head-recognition] — which regions are environment heads
+#
+# RULED 2026-08-25.
+#
+# KND def:kinds:presentation-reduction closes by making two things
+# adoption data: "Which environment class a document format declares
+# for a head, and how a head maps to one". KND judg:kinds:head-validation
+# then judges every PARTICIPATING AUTHORED head, and KND
+# inv:kinds:totality demands exactly one judgment per head — so a
+# checker cannot validate one head until this section says which
+# regions are heads at all. [scanned-regions] fixes which regions
+# PARTICIPATE; this section fixes which of them are HEADS.
+#
+# Only Markdown carries heads in this corpus. A code comment is a
+# scanned region and may carry occurrences, but it heads no
+# environment: every document written under the discipline is prose,
+# and the one label a Rust source is owed sits at an asset, not at a
+# head (see [profiles] profile rust-module).
+####################################################################
+
+[head-recognition]
+separator = "·"
+match     = "case-exact"
+note = """
+CASE-EXACT, RULED. KND judg:kinds:head-validation holds when h "is an
+exact catalogue name", and the registry catalogues its names with
+their own capitalization. Folding case would make Table and table one
+name and quietly widen N, which no row authorizes. A head whose only
+defect is casing is therefore a validation failure that names the
+catalogue spelling, never a silent pass.
+ONE CONSEQUENCE, DISCHARGED: ARCH's own head at its LaTeX open
+question read "Open question" where the catalogue carries "Open
+Question". It is corrected in that document rather than absorbed by a
+folding rule here.
+The SEPARATOR is the middle dot that closes every head before its
+mint. It is adoption data because the mint's position is: a checker
+must know where the head text ends and the label begins.
+"""
+
+[[head-recognition.form]]
+id       = "environment-head"
+language = "markdown"
+shape    = "a bold run opening a block, of the form Kind (Title), followed by the separator and the mint"
+head     = "the bold run's text up to the opening parenthesis, trimmed"
+note = """
+The form every discipline document uses. The parenthesized Title is
+the environment's own name and is NOT part of the head: the head is
+what the registry classifies, and the Title is what the author calls
+this one instance. A bold run carrying no parenthesis is not a head.
+"""
+
+[[head-recognition.form]]
+id       = "heading"
+language = "markdown"
+shape    = "a Markdown heading followed by the separator and the mint"
+head     = "the rung the format supplies, not the heading's own text"
+note = """
+KND def:kinds:presentation-reduction: "For named divisions — an
+Introduction, a Conclusion — the underlying rung supplied by the
+format is the base." Markdown's rung is Section, which the registry
+classifies as sec (KND conv:kinds:structure), and every discipline
+document's heading anchors carry sec accordingly. The heading's own
+text is a title and is classified by nothing.
+"""
+
+# --- Formats with NO head form ---------------------------------
+# Listed so their absence is a decision rather than an oversight. A
+# scanned region in any of these may carry mints and citations; none
+# of them heads an environment, so none is validated against the kind
+# registry.
+[[head-recognition.none]]
+languages = ["rust", "typescript", "kotlin"]
+reason    = "code comments carry occurrences, never environment heads"
 
 
 ####################################################################
