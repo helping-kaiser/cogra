@@ -2,16 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  clampDimension,
-  clampPair,
-  formatPair,
-  inertAxes,
-  isSevered,
-  ORIGIN,
-  samePair,
-  TAP_DEFAULT,
-} from "./model";
+import { clampDimension, clampPair, ORIGIN, samePair, TAP_DEFAULT } from "./model";
 
 describe("stance model", () => {
   it("bounds a dimension to the closed [-1, +1]", () => {
@@ -32,22 +23,11 @@ describe("stance model", () => {
     });
   });
 
-  it("names both axes as inert only where the folded value is zero", () => {
-    expect(inertAxes(ORIGIN)).toEqual({ directed: true, interest: true });
-    expect(inertAxes({ pDirected: 0, pInterest: 0.3 })).toEqual({
-      directed: true,
-      interest: false,
-    });
-    expect(inertAxes({ pDirected: -0.001, pInterest: 0.3 })).toEqual({
-      directed: false,
-      interest: false,
-    });
-  });
-
-  it("calls only a bundle netted to (0, 0) severed", () => {
-    expect(isSevered(ORIGIN)).toBe(true);
-    expect(isSevered({ pDirected: 0, pInterest: 0.01 })).toBe(false);
-    expect(isSevered(TAP_DEFAULT)).toBe(false);
+  it("never yields a negative zero, which is not a direction", () => {
+    // The pad's vertical axis is inverted, so any drag that never moved
+    // vertically produces -0 before this normalises it.
+    expect(Object.is(clampDimension(-0), 0)).toBe(true);
+    expect(Object.is(clampPair({ pDirected: 1, pInterest: -0 }).pInterest, 0)).toBe(true);
   });
 
   it("compares pairs by value", () => {
@@ -55,8 +35,12 @@ describe("stance model", () => {
     expect(samePair(TAP_DEFAULT, ORIGIN)).toBe(false);
   });
 
-  it("shows exact values at two decimals", () => {
-    expect(formatPair(TAP_DEFAULT)).toBe("0.10, 0.10");
-    expect(formatPair({ pDirected: -1, pInterest: 0.666 })).toBe("-1.00, 0.67");
+  it("offers no inertness or severance predicate to the client", async () => {
+    // Both are the fold's statements about itself and arrive as flags on
+    // the read. A predicate here is what a client would eventually reach
+    // for instead (design.md §8.2).
+    const model: Record<string, unknown> = await import("./model");
+    expect(Object.keys(model)).not.toContain("inertAxes");
+    expect(Object.keys(model)).not.toContain("isSevered");
   });
 });
