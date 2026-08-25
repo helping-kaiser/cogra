@@ -6,6 +6,7 @@ pub mod census;
 pub mod client;
 pub mod crypto;
 pub mod encoding;
+pub mod fold;
 pub mod handshake;
 pub mod identifier;
 pub mod key_backup;
@@ -13,6 +14,7 @@ pub mod wire;
 
 pub use census::{Domain, Family, FamilyKind, LegRole, LegSpec, Tier};
 pub use client::ActorKey;
+pub use fold::{BundleSum, NetStance};
 pub use handshake::{
     AccountBalance, ApprovalWitness, EpochPackage, PreSignedProposal, Proposal, PublishedLeg,
     PublishedRecord, StructuralBody, VerifiedAct,
