@@ -1083,6 +1083,16 @@ pre-tokenizer and its own diagnostic for a reader.
 
 [kinds]
 acceptee = "jakob"
+registry = "crates/cogra-linter/docs/environment-kinds.md"
+registry_note = """
+The document the classification relation C is read out of (ARCH
+dec:linter:registry-as-data). Named here as a key because the linter
+READS it: a compiled-in path would be this corpus reaching the code by
+another route, and before this key existed the path had to be
+recovered from the prose of [kinds.evidence] adopted — a machine
+reading a sentence written for a person. Its spelling is checked
+against the corpus root at load, like every other configured path.
+"""
 note = """
 KND sig:kinds:acceptee requires a NAMED authority, not a role, and the
 repository owner is the registry authority for the four discipline
