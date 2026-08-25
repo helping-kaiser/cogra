@@ -679,7 +679,9 @@ fn read_span(
 ///
 /// Spacing is tried before casing because casing is the narrower claim: a
 /// [`NearMissKind::WrongCase`] is an interior whose *only* defect is casing,
-/// so an interior that also carries whitespace is the spacing warning.
+/// so an interior carrying whitespace as well is the spacing warning — which
+/// is why the spacing test folds case, an interior defective both ways having
+/// to land somewhere and the wider warning being the spacing one.
 fn near_miss(interior: &str, defect: &Defect, at: usize) -> Option<NearMissKind> {
     let syntax = match defect {
         Defect::Bracket => return Some(NearMissKind::MisplacedBracket),
@@ -687,7 +689,7 @@ fn near_miss(interior: &str, defect: &Defect, at: usize) -> Option<NearMissKind>
     };
     if interior.bytes().any(|b| b.is_ascii_whitespace()) {
         let squeezed: String = interior.chars().filter(|c| !c.is_whitespace()).collect();
-        if classify(&squeezed).is_ok() {
+        if classify(&squeezed).is_ok() || classify(&squeezed.to_ascii_lowercase()).is_ok() {
             return Some(NearMissKind::InteriorSpacing { at: at + syntax.at });
         }
         return None;
