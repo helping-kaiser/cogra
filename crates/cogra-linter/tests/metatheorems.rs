@@ -1,11 +1,12 @@
 //! The metatheorems this slice owes, one property per theorem, named after
 //! it (´conv:lint:metatheorems-as-tests´), (´tab:lint:metatheorem-tests´).
 //!
-//! Four rows of that table fall here — order independence, the diagnostic
-//! order, presentation invariance, and warrant lapse — and each is
-//! universally quantified over generated corpora, which is what a property
-//! framework is for and what a vector table cannot express. The remaining
-//! rows belong to earlier slices, which discharged them, or to slice 6.
+//! Six rows of that table fall here — order independence, the diagnostic
+//! order, presentation invariance, warrant lapse, no self-support, and the
+//! one generator — and the first four are universally quantified over
+//! generated corpora, which is what a property framework is for and what a
+//! vector table cannot express. The remaining rows belong to earlier
+//! slices, which discharged them.
 //!
 //! # What is owed later, and why
 //!
@@ -13,13 +14,12 @@
 //! citation index or a generated label register, and this corpus has
 //! neither: `[citation-indexes]` designates nothing and carries its
 //! designations as free text with no upstream owner a `PresentedSet` could
-//! be built from, and the first label register is generated in slice 6. The
-//! half that is exercisable now — that a generated region's occurrences are
-//! occurrences in full — is asserted below; the exclusion half is owed to
-//! slice 6, where the generator that makes a presented set exist lands.
-//!
-//! (´dec:lint:one-generator´) is likewise slice 6's: there is no generator
-//! to be idempotent yet.
+//! be built from, and no label register is generated while both profiles
+//! are staged. Two halves are exercisable and both are asserted below: that
+//! a generated region's occurrences are occurrences in full, and that the
+//! one register this corpus does generate feeds nothing it presents. The
+//! third — the exclusion a `PresentedSet` performs — has no subject here
+//! and is owed to the designation that would create one.
 //!
 //! # No regular expressions in the generators
 //!
@@ -563,4 +563,154 @@ fn a_generated_occurrence_enters_the_registries_in_full() {
         "the body's citation resolves against the generated mint: {:?}",
         run.findings,
     );
+}
+
+/// A corpus of two files in a temporary root: the adoption data, and the
+/// registry document it names.
+///
+/// Two files are the whole of what the generator needs — the classification
+/// relation comes out of the registry document and everything else out of
+/// the adoption data — so this is a real corpus the register generator can
+/// be run and rewritten against, without the cost of copying the repository.
+///
+/// The committed headline table is put back to a stale count on the way in,
+/// so that the write has something to repair and the check after it has
+/// something to confirm.
+fn temporary(name: &str) -> PathBuf {
+    let at = std::env::temp_dir().join(format!("cogra-lint-{name}"));
+    let _ = std::fs::remove_dir_all(&at);
+    let docs = at.join("crates").join("cogra-linter").join("docs");
+    std::fs::create_dir_all(&docs).expect("a temporary corpus root");
+    std::fs::copy(
+        root().join("corpus-adoption.toml"),
+        at.join("corpus-adoption.toml"),
+    )
+    .expect("the adoption data");
+
+    let registry = root().join(REGISTRY);
+    let held = std::fs::read_to_string(&registry).expect("the registry document");
+    let stale = held.replace(FRESH_ROW, STALE_ROW);
+    assert_ne!(stale, held, "the headline table was put back to a stale count");
+    std::fs::write(docs.join("environment-kinds.md"), stale).expect("the registry document");
+    at
+}
+
+/// The registry document, relative to the corpus root.
+const REGISTRY: &str = "crates/cogra-linter/docs/environment-kinds.md";
+
+/// The committed headline row the generator produces.
+const FRESH_ROW: &str = "| Device classes   | 10    |";
+
+/// The same row, put back to what it said before the first generation.
+const STALE_ROW: &str = "| Device classes   | 4     |";
+
+/// Every register freshness reports on, spelled for a failure message.
+fn register_findings(run: &cogra_linter::Run) -> Vec<String> {
+    run.findings
+        .iter()
+        .filter(|one| one.rule.as_str().starts_with("register-"))
+        .map(|one| cogra_linter::render::diagnostic(one))
+        .collect()
+}
+
+/// (´dec:lint:one-generator´): regeneration is idempotent, and a check run
+/// immediately after a write reports `Current` for every register written.
+///
+/// The write is a real one, against a real root: the whole point of the
+/// obligation is that what the generator produced and what landed on disk
+/// are the same bytes, and an in-memory assertion could not tell.
+#[test]
+fn regeneration_is_idempotent_and_a_check_after_a_write_is_current() {
+    let at = temporary("one-generator");
+    let before = cogra_linter::check(adoption(), &at).expect("a fixture corpus");
+    let first = cogra_linter::registers::regenerate_all(
+        &before.graph,
+        &before.registries,
+        adoption(),
+        before.kinds.as_ref(),
+    );
+    assert_eq!(first.len(), 2, "the companion register and the region");
+    assert_eq!(
+        register_findings(&before).len(),
+        2,
+        "one staged, one stale, before anything is written"
+    );
+
+    cogra_linter::registers::write_all(&first, &cogra_linter::Scope::WholeCorpus, &at)
+        .expect("the first write");
+    let after = cogra_linter::check(adoption(), &at).expect("the rewritten corpus");
+    assert_eq!(
+        register_findings(&after),
+        Vec::<String>::new(),
+        "every register written is current"
+    );
+
+    let again = cogra_linter::registers::regenerate_all(
+        &after.graph,
+        &after.registries,
+        adoption(),
+        after.kinds.as_ref(),
+    );
+    let bytes = |regs: &[cogra_linter::Register]| -> Vec<Vec<u8>> {
+        regs.iter().map(|one| one.bytes.clone()).collect()
+    };
+    assert_eq!(bytes(&again), bytes(&first), "regeneration is idempotent");
+
+    cogra_linter::registers::write_all(&again, &cogra_linter::Scope::WholeCorpus, &at)
+        .expect("the second write");
+    let third = cogra_linter::check(adoption(), &at).expect("the twice-written corpus");
+    assert_eq!(third.sources, after.sources, "a second write changes no byte");
+    let _ = std::fs::remove_dir_all(&at);
+}
+
+/// (´[LBL-metathm:labels:no-self-support]´), exclusion half: the companion
+/// register presents Hom(C_A), and what it presents never sustains itself.
+///
+/// The register is a carrier source like any other, so the question is not
+/// hypothetical: were its own rows read back as evidence, the relation would
+/// grow by what the register displays and the register would then be stale
+/// against itself, which is the loop (´[KND-inv:kinds:attestation-coverage]´)
+/// forbids in as many words — Ê_A never stands as evidence for itself. The
+/// property is that adding the register to the corpus changes neither the
+/// relation it presents nor the bytes the generator produces.
+#[test]
+fn the_companion_register_feeds_nothing_it_presents() {
+    let at = temporary("no-self-support");
+    let before = cogra_linter::check(adoption(), &at).expect("a fixture corpus");
+    let without = cogra_linter::registers::regenerate_all(
+        &before.graph,
+        &before.registries,
+        adoption(),
+        before.kinds.as_ref(),
+    );
+    cogra_linter::registers::write_all(&without, &cogra_linter::Scope::WholeCorpus, &at)
+        .expect("the write");
+
+    let after = cogra_linter::check(adoption(), &at).expect("the corpus with its register");
+    let carried = after
+        .sources
+        .keys()
+        .any(|path| path.ends_with("attestation-register.md"));
+    assert!(carried, "the register is in the carrier, and is read");
+
+    let (one, other) = (
+        before.kinds.as_ref().expect("a relation"),
+        after.kinds.as_ref().expect("a relation"),
+    );
+    assert_eq!(
+        one.headline_counts(),
+        other.headline_counts(),
+        "the register's own rows enter no count it presents"
+    );
+    let homonyms = |k: &cogra_linter::KindRegistry| -> Vec<String> {
+        k.homonyms()
+            .map(|(name, kind)| format!("{name} {kind}"))
+            .collect()
+    };
+    assert_eq!(
+        homonyms(one),
+        homonyms(other),
+        "Hom(C_A) is unchanged by the register that presents it"
+    );
+    let _ = std::fs::remove_dir_all(&at);
 }

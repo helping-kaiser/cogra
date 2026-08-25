@@ -88,10 +88,10 @@ fn the_headline_region_matches_its_host_span() {
         held.starts_with("| Measure"),
         "the span is the table: {held:?}"
     );
-    assert_eq!(
-        held.lines().count(),
-        text(reg).lines().count(),
-        "the two tables have the same shape"
+    assert_eq!(held, text(reg), "the splice is byte-exact against its span");
+    assert!(
+        held.contains("| Device classes   | 10    |"),
+        "the count the first generation run repaired"
     );
 }
 
@@ -125,6 +125,58 @@ fn the_comparison_is_exact_bytes() {
     altered[at] = altered[at].wrapping_add(1);
     assert_eq!(compare(reg, Some(&altered)), Freshness::Stale { at });
     assert_eq!(compare(reg, None), Freshness::Staged);
+}
+
+/// (´[KND-req:kinds:attestation-register]´): the register presents exactly
+/// the pairs of the relation, in the recorded ordering, with the status the
+/// edition records for each.
+#[test]
+fn the_attestation_register_orders_its_rows_by_name_then_kind() {
+    let reg = one(&RegisterScope::Attestation);
+    let rows: Vec<Vec<&str>> = text(reg)
+        .lines()
+        .skip_while(|line| !line.starts_with("| Name "))
+        .skip(2)
+        .take_while(|line| line.starts_with('|'))
+        .map(|line| line.split('|').map(str::trim).collect())
+        .collect();
+    let kinds = run().kinds.as_ref().expect("the relation parsed");
+    assert_eq!(
+        rows.len(),
+        kinds.headline_counts().rows,
+        "one row per pair of the relation"
+    );
+    let keyed: Vec<(&str, &str)> = rows.iter().map(|row| (row[1], row[2])).collect();
+    let mut sorted = keyed.clone();
+    sorted.sort();
+    assert_eq!(keyed, sorted, "ordered by name, then kind");
+    for (at, row) in rows.iter().enumerate() {
+        assert_eq!(row[6], (at + 1).to_string(), "the record sequence number");
+        assert!(matches!(row[3], "firm" | "borderline"), "{row:?}");
+    }
+}
+
+/// (´[KND-inv:kinds:attestation-coverage]´): the daggered rows of the
+/// edition are exactly the borderline rows of the register, and the corpus's
+/// own record of them agrees.
+#[test]
+fn the_borderline_rows_are_the_editions_daggered_ones() {
+    let reg = one(&RegisterScope::Attestation);
+    let mut borderline: Vec<String> = text(reg)
+        .lines()
+        .filter(|line| line.contains("| borderline |"))
+        .filter_map(|line| line.split('|').nth(1).map(|cell| cell.trim().to_owned()))
+        .collect();
+    borderline.sort();
+    let mut recorded: Vec<String> = adoption()
+        .kinds
+        .statuses
+        .daggered
+        .iter()
+        .map(|one| one.to_string())
+        .collect();
+    recorded.sort();
+    assert_eq!(borderline, recorded);
 }
 
 /// (´[LBL-cav:labels:coexistence]´): a scoped regeneration touches one
