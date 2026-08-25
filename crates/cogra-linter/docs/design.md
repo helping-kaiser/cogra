@@ -244,7 +244,7 @@ pub struct Registries {
 
 **Proposition (Label order is the bytewise order of the rendered triple)** · `prop:lint:label-order`
 
-Every generated register orders its rows bytewise by label, and the diagnostic order is likewise total and byte-decided (`[ARCH-req:linter:determinism]`), so `Ord` on `Label` must be exactly the bytewise order of `kind:area:name`. It is not the order a derived `Ord` over three separate word fields gives, and the difference is not academic: the colon is `0x3A` and the digits are `0x30` through `0x39`, so a digit sorts *below* the separator. Compare `a1:x:y` against `a:x:y` — field-wise, `a` precedes `a1`; bytewise, `1` precedes `:` and `a1:x:y` comes first. The two orders disagree, and a register generated under one and compared under the other is stale on the day it is written.
+Every generated register orders its rows bytewise by label, and the diagnostic order is likewise total and byte-decided (`[ARCH-req:linter:determinism]`), so `Ord` on `Label` must be exactly the bytewise order of ``kind:area:name``. It is not the order a derived `Ord` over three separate word fields gives, and the difference is not academic: the colon is `0x3A` and the digits are `0x30` through `0x39`, so a digit sorts *below* the separator. Compare ``a1:x:y`` against ``a:x:y`` — field-wise, `a` precedes `a1`; bytewise, `1` precedes `:` and ``a1:x:y`` comes first. The two orders disagree, and a register generated under one and compared under the other is stale on the day it is written.
 
 The design removes the possibility rather than testing for it. `Label` holds its rendered text and two offsets, so the derived `Ord` compares the text first and the offsets — functions of the text — never decide anything:
 
@@ -725,14 +725,6 @@ pub enum HeadVerdict {
 
 `homonyms` and `headline_counts` are public because they are the generator's inputs (`req:lint:register-generator`): the companion register presents exactly `Hom(C_A)` and the registry document's headline table is a generated region derived from the tables alone. Deriving them from the same parsed relation the validation uses is what makes the register a view of the classification rather than a second copy of it.
 
-**Open Question (Where the presentation-reduction vocabulary lives)** · `open:lint:reduction-vocabulary`
-
-The architecture rules that presentation reduction is applied to tokenized head words with "the modifier list being adoption data, not code" (`[ARCH-conv:linter:markdown-frontend]`). The registry states the vocabulary in the prose of (`[KND-def:kinds:presentation-reduction]`) — numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated `sub-` prefixes, placement, containment, and twelve named emphasis and status modifiers — and in prose only: it is not a table, so registry-as-data cannot reach it, and `corpus-adoption.toml` has no section for it. Three roads exist and the design takes none of them unilaterally: add a `[kinds.reduction]` section to the adoption file transcribing the vocabulary, which reintroduces exactly the transcription drift (`[ARCH-dec:linter:registry-as-data]`) exists to prevent; add the vocabulary to the registry document as a Convention table of its own, which is a new edition of a ratified discipline; or read it from the prose, which is parsing an English sentence and is not a road. The same question governs the overriding rows — Working hypothesis and Standing hypothesis reduce to themselves — which are likewise prose.
-
-**Open Question (Where the head-recognition rule lives)** · `open:lint:head-recognition`
-
-(`[KND-def:kinds:presentation-reduction]`) closes by making two things adoption data: "Which environment class a document format declares for a head, and how a head maps to one". For this corpus the rule is visible in every disciplined document — a bold `Kind (Title)` line followed by the separator and the mint, and a Markdown heading followed by the separator and the mint — and it is written down nowhere. `[scanned-regions]` fixes which regions participate, not which of them are heads. Until it is recorded, the Markdown frontend's head recognizer is a code fact about the corpus, which (`req:lint:adoption-data-only`) forbids.
-
 ## Registers · `sec:lint:registers`
 
 **Signature (Register surface)** · `sig:lint:register-api`
@@ -882,18 +874,6 @@ enum Command {
 Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings, `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`).
 
 `clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling two subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
-
-**Open Question (Whether the failing set lives in the adoption data)** · `open:lint:enforcement-partition`
-
-Acceptance is scoped: version 1 is accepted on a clean run over the material written under the discipline, and the linter enters CI as a failing gate over exactly that set and an advisory one over the rest, the failing set growing as each migration lands (`rep:lint:first-corpus`). `Diagnostic::enforcement` is where that partition lands in the types, but nothing records the partition itself. It is corpus data of exactly the shape `[carrier]` holds — a list of path prefixes — which argues for a section in `corpus-adoption.toml`; it is also a fact about a migration schedule rather than about the corpus's structure, which argues for a CI-lane flag. The design does not choose, because the choice decides whether growing the failing set is a reviewed edit to the adoption file or a change to a CI invocation, and that is a governance question.
-
-**Open Question (Whether continuous integration wants machine-readable findings)** · `open:lint:machine-output`
-
-The design renders one human-readable diagnostic form and nothing else: path, line, column, rule, message, then the related locations. No consumer named in (`sig:lint:consumers`) needs more — CI needs the exit code, and authors read the text. A second, machine-readable form would exist only to feed a code-review annotation surface, which is a question about how this repository wants CI to report and not a question the design can answer. It is asked now rather than later because the answer changes `render`'s surface and nothing else, and doing it in version 1 costs almost nothing while retrofitting it means revisiting every diagnostic site.
-
-**Open Question (Whether a staged profile's census is reported)** · `open:lint:staged-census`
-
-(`dec:lint:staged-profiles`) makes a staged profile inert: no census, no judgment, no output. The migrations the two staged profiles wait on are large and measurable — 284 test functions wanting a generated register, ~42 module definitions wanting an inner documentation comment — and a run that computed the census without judging it could report the distance each migration still has to travel. That is a measurement rather than a lint, and it would put a half-computed pass in a design whose staging exists to forbid one; but it is also the only cheap instrument the corpus has for tracking two migrations it has committed to. Whether the human wants it, and if so whether it belongs behind a separate subcommand rather than in `check`, is not the design's call.
 
 ## Errors · `sec:lint:errors`
 
@@ -1137,6 +1117,30 @@ Harvest files in parallel, since pass 1 is per-file and independent. Then comple
 **Ansatz (Judging a staged profile partially)** · `ansatz:lint:partial-inventory`
 
 Compute a staged profile's census and judge inventory over the assets that already carry their labels, reporting the rest as progress. Then inventory — which admits nothing partial by its own words (`[LBL-inv:labels:inventory]`) — is enforced in a weakened form nothing recorded, a profile is half in force with no fact in the adoption data saying so, and the migration completes into a check that was already passing. Rejected in favor of (`dec:lint:staged-profiles`). Reporting the distance *without* judging it is a different proposal and an open question (`open:lint:staged-census`).
+
+## Open questions · `sec:lint:questions`
+
+Five questions the ratified documents do not settle, each design-shaped and none decided here. Two are gaps in the adoption data, which (`req:lint:adoption-data-only`) makes the only place a fact about this corpus may live; one is where a ruled acceptance scope is recorded; and two are surface choices whose consumer is the human's own workflow. A phase artifact with open questions closes no phase, so each is owed a ruling before (`gate:lint:implementation`) opens.
+
+**Open Question (Where the presentation-reduction vocabulary lives)** · `open:lint:reduction-vocabulary`
+
+The architecture rules that presentation reduction is applied to tokenized head words with "the modifier list being adoption data, not code" (`[ARCH-conv:linter:markdown-frontend]`). The registry states the vocabulary in the prose of (`[KND-def:kinds:presentation-reduction]`) — numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated `sub-` prefixes, placement, containment, and twelve named emphasis and status modifiers — and in prose only: it is not a table, so registry-as-data cannot reach it, and `corpus-adoption.toml` has no section for it. Three roads exist and the design takes none of them unilaterally: add a `[kinds.reduction]` section to the adoption file transcribing the vocabulary, which reintroduces exactly the transcription drift (`[ARCH-dec:linter:registry-as-data]`) exists to prevent; add the vocabulary to the registry document as a Convention table of its own, which is a new edition of a ratified discipline; or read it from the prose, which is parsing an English sentence and is not a road. The same question governs the overriding rows — Working hypothesis and Standing hypothesis reduce to themselves — which are likewise prose.
+
+**Open Question (Where the head-recognition rule lives)** · `open:lint:head-recognition`
+
+(`[KND-def:kinds:presentation-reduction]`) closes by making two things adoption data: "Which environment class a document format declares for a head, and how a head maps to one". For this corpus the rule is visible in every disciplined document — a bold `Kind (Title)` line followed by the separator and the mint, and a Markdown heading followed by the separator and the mint — and it is written down nowhere. `[scanned-regions]` fixes which regions participate, not which of them are heads. Until it is recorded, the Markdown frontend's head recognizer is a code fact about the corpus, which (`req:lint:adoption-data-only`) forbids.
+
+**Open Question (Whether the failing set lives in the adoption data)** · `open:lint:enforcement-partition`
+
+Acceptance is scoped: version 1 is accepted on a clean run over the material written under the discipline, and the linter enters CI as a failing gate over exactly that set and an advisory one over the rest, the failing set growing as each migration lands (`rep:lint:first-corpus`). `Diagnostic::enforcement` is where that partition lands in the types, but nothing records the partition itself. It is corpus data of exactly the shape `[carrier]` holds — a list of path prefixes — which argues for a section in `corpus-adoption.toml`; it is also a fact about a migration schedule rather than about the corpus's structure, which argues for a CI-lane flag. The design does not choose, because the choice decides whether growing the failing set is a reviewed edit to the adoption file or a change to a CI invocation, and that is a governance question.
+
+**Open Question (Whether continuous integration wants machine-readable findings)** · `open:lint:machine-output`
+
+The design renders one human-readable diagnostic form and nothing else: path, line, column, rule, message, then the related locations. No consumer named in (`sig:lint:consumers`) needs more — CI needs the exit code, and authors read the text. A second, machine-readable form would exist only to feed a code-review annotation surface, which is a question about how this repository wants CI to report and not a question the design can answer. It is asked now rather than later because the answer changes `render`'s surface and nothing else, and doing it in version 1 costs almost nothing while retrofitting it means revisiting every diagnostic site.
+
+**Open Question (Whether a staged profile's census is reported)** · `open:lint:staged-census`
+
+(`dec:lint:staged-profiles`) makes a staged profile inert: no census, no judgment, no output. The migrations the two staged profiles wait on are large and measurable — 284 test functions wanting a generated register, ~42 module definitions wanting an inner documentation comment — and a run that computed the census without judging it could report the distance each migration still has to travel. That is a measurement rather than a lint, and it would put a half-computed pass in a design whose staging exists to forbid one; but it is also the only cheap instrument the corpus has for tracking two migrations it has committed to. Whether the human wants it, and if so whether it belongs behind a separate subcommand rather than in `check`, is not the design's call.
 
 ## Implementation gate · `sec:lint:implementation-gate`
 
