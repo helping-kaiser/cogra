@@ -42,14 +42,17 @@ pub const RULES: [RuleId; 1] = [VALIDATION_SUPPRESSED];
 
 /// Run every judgment the adoption data puts in force, in a fixed order.
 ///
-/// `kinds` is `None` exactly when the registry document would not parse. The
-/// label judgments then run normally — the registry document is linted first
-/// by the rules that need no kinds, which is the architecture's own
+/// `kinds` is `None` when the registry document would not parse, and equally
+/// when the carrier does not hold it — a fixture corpus of two files, say.
+/// The label judgments then run normally — the registry document is linted
+/// first by the rules that need no kinds, which is the architecture's own
 /// mitigation — and one further diagnostic names kind validation as
 /// suppressed and counts the heads it did not validate. Treating an
 /// unvalidatable head as valid would make a broken registry look like a
 /// clean corpus, which is the failure mode the bootstrap must not have
-/// (´dec:lint:registry-bootstrap´).
+/// (´dec:lint:registry-bootstrap´). The finding sits on the registry
+/// document either way, because that is the file whose absence or defect the
+/// reader has to act on.
 ///
 /// ```
 /// use cogra_linter::graph::{Corpus, Registries};
@@ -123,7 +126,7 @@ fn suppressed(g: &Corpus, a: &Adoption) -> Diagnostic {
         primary: Location::new(a.registry_document(), ByteSpan::new(0, 0), 0, 0),
         related: Vec::new(),
         message: format!(
-            "the kind registry would not parse, so {unvalidated} heads went unvalidated"
+            "the kind registry is unavailable, so {unvalidated} heads went unvalidated"
         ),
     }
 }
