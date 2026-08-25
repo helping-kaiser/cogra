@@ -14,6 +14,7 @@
 #          scanned-region recognition ......... [scanned-regions]
 #   plus   banned-token sets .................. [banned-tokens]
 #          the carrier's exclusions ........... [carrier]
+#          the kind registry's adoption ....... [kinds]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -927,3 +928,119 @@ pre-tokenizer and its own diagnostic for a reader.
 
 # No bans for markdown, typescript or kotlin in v1. Kotlin and
 # TypeScript keep // — it is a scanned region there, not contraband.
+
+
+####################################################################
+# [kinds] — the kind registry's adoption data
+#
+# RULED 2026-08-25.
+#
+# Not one of the seven, and not the corpus's own invention either: the
+# kind registry is a second discipline with adoption data of its own.
+# KND sig:kinds:acceptee names exactly ONE acceptee A, who owns five
+# things — the local extension set X_A, the evidence base E_A, the
+# status map sigma_A, the register generator G_A, and the generated
+# companion register E_hat_A — and KND gate:kinds:adoption blocks
+# adoption until the decision names them. Head validation (R11 of the
+# linter's functional requirements) reads the effective relation
+# C_A = C union X_A, so a linter cannot validate one head until this
+# section exists.
+#
+# THE RULING ADOPTS THE REGISTRY'S OWN DEFAULT. KND sig:kinds:acceptee
+# closes: "For the corpus in which this registry itself travels, the
+# registry authority is the acceptee, and the edition evidence base is
+# E_A entire." This corpus is that corpus — environment-kinds.md lives
+# in it — so the default fits exactly. A default is not a decision
+# until it is recorded; this section is the record.
+####################################################################
+
+[kinds]
+acceptee = "jakob"
+note = """
+KND sig:kinds:acceptee requires a NAMED authority, not a role, and the
+repository owner is the registry authority for the four discipline
+documents that travel here — so the registry's default resolves to one
+person. (The repo's no-personal-names rule governs the L1 team, an
+external party; it does not reach the corpus's own acceptee.)
+"""
+
+# --- X_A: local extensions ------------------------------------
+# KND judg:kinds:classification: recorded extensions are the only
+# further source of C_A. Empty, and stated rather than omitted, as
+# [typed-data] and [citation-indexes] are.
+[kinds.extensions]
+rows        = []
+hybrids     = []
+empty_in_v1 = true
+reason      = "every head in this corpus validates against C as published; no head needs a pair the registry does not carry"
+revisit_when = "a document adopts an environment name the registry does not catalogue, or a local hybrid — either enters by a recorded decision, per KND inf:kinds:hybrid for the hybrid case"
+
+# --- E_A: the evidence base -----------------------------------
+# KND sig:kinds:acceptee splits E_A in two: an adopted component taken
+# by reference, and an owned component held first-hand covering X_A
+# and any status the acceptee strengthens. With X_A empty and no
+# strengthening, the owned component is empty and E_A is the edition's
+# entire evidence base — the default, verbatim.
+[kinds.evidence]
+adopted = "the edition evidence base of crates/cogra-linter/docs/environment-kinds.md, taken by reference"
+owned   = []
+
+# --- sigma_A: the status map ----------------------------------
+# KND judg:kinds:attestation: an acceptee may STRENGTHEN a base row's
+# edition status (borderline to firm) and never weakens one. None is
+# strengthened, so sigma_A is the edition's statuses unchanged, and
+# KND inv:kinds:attestation-coverage holds trivially: every pair of
+# C_A carries exactly the edition's firm or borderline status.
+[kinds.statuses]
+strengthenings = []
+daggered       = ["Yoga", "Meta-question", "Schema"]   # borderline, per the edition
+candidates     = ["Record (member-bearing-aggregate sense)"]
+note = """
+The daggered rows and the one candidate are the present edition's,
+recorded here so the corpus clause of KND inv:kinds:attestation-
+coverage is checkable against something. The candidate lies OUTSIDE
+C_A, as that invariant requires.
+"""
+
+# --- G_A: the register generator ------------------------------
+# One generator for every generated register the disciplines call for,
+# and it is the linter — ARCH rule:linter:register-freshness already
+# fixes regeneration + exact byte compare as the mechanism, and a
+# second generator would be a second source of truth.
+[kinds.generator]
+generator = "the linter's explicit regeneration mode"
+covers = [
+  "E_hat_A, the companion attestation register ([kinds.register])",
+  "the headline counts of KND tab:kinds:headline-counts",
+  "the per-owner label registers of the rust-test profile ([profiles])",
+]
+note = """
+KND tab:kinds:headline-counts is a generated REGION inside an authored
+file, not a generated file: environment-kinds.md therefore does NOT
+join [carrier] generated_files, and what is regenerated and compared
+is that one table. It is the registry document's only generated
+region, per KND gate:kinds:adoption.
+"""
+
+# --- E_hat_A: the companion register --------------------------
+# KND req:kinds:attestation-register: E_hat_A = G_A(E_A, sigma_A),
+# under the total recorded ordering name, kind, source, locator, then
+# a record sequence number as tiebreak; it presents exactly Hom(C_A)
+# as its homonym section; maintenance is by regeneration and exactness
+# check, and hand-editing it is a failure.
+[kinds.register]
+standard_place = "crates/cogra-linter/docs/attestation-register.md"
+ordering       = "name, kind, source, locator, record sequence number"
+presents       = ["evidence and status rows", "Hom(C_A), the homonym section"]
+state          = "staged — never generated"
+note = """
+NAME AND LOCATION ARE IMPLEMENTATION-DEFINED, as the label registers'
+are: the linter's regeneration mode maintains this file and may move
+it. It carries names and kinds, never labels, so no owner constraint
+falls on it and it may live beside the registry document it presents.
+STAGED means exactly this: a register that has never been generated
+has no committed bytes to compare against, so freshness reports it as
+staged rather than stale. The first generation run commits the
+initial register and arms exact byte comparison from then on. It
+joins [carrier] generated_files in that same commit.
+"""
