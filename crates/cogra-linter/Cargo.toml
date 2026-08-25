@@ -15,6 +15,9 @@ path = "src/main.rs"
 # The corpus graph and every judgment over it — ruled first-class and
 # unwrapped (architecture, petgraph decision); pinned per the ruling.
 petgraph = "0.8.3"
+# The Markdown frontend (design, markdown-surface convention); driven
+# through into_offset_iter, with ENABLE_TABLES the only extension.
+pulldown-cmark = { version = "0.13.4", default-features = false }
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
