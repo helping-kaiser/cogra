@@ -127,8 +127,10 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("😊");
     expect(screen.getByTestId("feed-stance-p1-resting-exact")).toHaveTextContent("+0.55 / +0.20");
     // A card the viewer has no bundle toward keeps the affordance — a
-    // muted face, never a bare word (design.md §8.3).
-    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("🤷");
+    // muted face outside the table, never a bare word and never the
+    // shrug a zero standing owns (design.md §8.3, §8.4).
+    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("😐");
+    expect(screen.getByTestId("feed-stance-p2")).not.toHaveTextContent("🤷");
     expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("No stance yet");
   });
 

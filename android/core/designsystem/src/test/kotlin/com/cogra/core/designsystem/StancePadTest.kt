@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHost
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
@@ -27,7 +29,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -55,7 +59,11 @@ class StancePadTest {
     private var severOpened = 0
     private var coachDismissed = 0
     private var confirmationsShown = 0
+    private var underneath = 0
     private val picks = mutableListOf<StancePoint>()
+
+    /** What the pad was standing at when Set was pressed, on the live holder. */
+    private var committedPick: StancePoint? = null
 
     private fun show(state: StanceControlState) {
         compose.setContent {
@@ -93,23 +101,51 @@ class StancePadTest {
             .assertExists()
         compose.onNodeWithText("😊", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("+0.55 / +0.20", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_empty_face", useUnmergedTree = true)
+            .assertDoesNotExist()
     }
 
     @Test
-    fun aTargetWithNoStandingShowsTheLabelledAffordance() {
+    fun aTargetWithNoStandingShowsAMutedFaceAndNeverTheWord() {
+        // A bare word is a mystery button and says the same thing
+        // whatever the reader has already told it (design.md §8.3).
         show(StanceControlState(standing = null))
 
-        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_empty_face", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("Stance", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
             .assertDoesNotExist()
     }
 
     @Test
-    fun aStandingAtTheOriginIsStillAStanding() {
-        // Severance folds to the origin; that is a standing, not silence.
+    fun theEmptyFaceIsMutedAndKeepsTheTargetsAccessibleLabel() {
+        // Muted and translucent on screen, fully labelled to a screen
+        // reader: the affordance keeps its label either way.
+        show(StanceControlState(standing = null))
+
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Tap for a light yes, or press and hold to pick exactly",
+        )
+        // One node, one announcement: the face is a readout of what the
+        // description already says, so it is never read out by its own
+        // emoji name on top of it (design.md §10).
+        val spoken = compose.onNodeWithTag("${TAG}_stance")
+            .fetchSemanticsNode()
+            .config[SemanticsProperties.ContentDescription]
+            .joinToString(" ")
+        assertThat(spoken).doesNotContain("😐")
+    }
+
+    @Test
+    fun aStandingAtZeroShrugsInsteadOfReadingAsNice() {
+        // The zero bundle never speaks through the anchor table: its
+        // nearest neighbour is 🙂 "Nice", and calling the absence of a
+        // feeling that is a lie (design.md §8.4).
         show(StanceControlState(standing = StancePoint.Origin))
 
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🙂", useUnmergedTree = true).assertDoesNotExist()
+        // It is still a standing, and it still shows its pair.
         compose.onNodeWithText("+0.00 / +0.00", useUnmergedTree = true).assertExists()
     }
 
@@ -121,6 +157,116 @@ class StancePadTest {
             "Where you stand now: How you stand +0.55, In your world +0.20. " +
                 "Tap for a light yes, or press and hold to pick exactly",
         )
+    }
+
+    // -- The control owns its touches (design.md §8.3) --
+    //
+    // The post card that carries this control is clickable across its
+    // whole body — that is how a feed opens a post — so every gesture
+    // the control is given lands on a surface that would also act on it.
+    // These pin the rule that none of them ever does: on the device it
+    // showed up as a hold that opened the post detail instead of the
+    // pad, and as a pad flashing over the screen it had just navigated
+    // to.
+
+    /** The control inside a clickable card, exactly as a feed builds it. */
+    private fun showInsideAClickableCard(state: StanceControlState) {
+        compose.setContent {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { underneath++ }
+                    .testTag("card"),
+                contentAlignment = Alignment.Center,
+            ) {
+                StanceControl(
+                    state = state,
+                    onTapDefault = { tapped++ },
+                    onOpenPad = { opened++ },
+                    onPick = { picks += it },
+                    onCommit = { committed++ },
+                    onHold = { held++ },
+                    onDismissPad = { dismissed++ },
+                    onToggleExactValues = { exactToggled++ },
+                    onOpenSeverance = { severOpened++ },
+                    onConfirmSeverance = {},
+                    onDismissSeverance = {},
+                    onCoachMarkDismissed = { coachDismissed++ },
+                    onConfirmationShown = { confirmationsShown++ },
+                    testTagPrefix = TAG,
+                )
+            }
+        }
+    }
+
+    /**
+     * The control inside a clickable card merges into it — which is
+     * exactly the arrangement under test — so the target is reached
+     * through the unmerged tree.
+     */
+    private fun theTarget() = compose.onNodeWithTag("${TAG}_stance", useUnmergedTree = true)
+
+    @Test
+    fun aTapOnTheControlNeverAlsoReachesTheSurfaceUnderneath() {
+        showInsideAClickableCard(StanceControlState())
+
+        theTarget().performClick()
+
+        assertThat(tapped).isEqualTo(1)
+        assertThat(underneath).isEqualTo(0)
+    }
+
+    @Test
+    fun aHoldAndReleaseNeverOpensTheSurfaceUnderneath() {
+        // The reported bug: hold, let go, and the post detail opened
+        // instead of the pad staying parked.
+        showInsideAClickableCard(StanceControlState())
+
+        theTarget().performTouchInput { longClick() }
+
+        assertThat(opened).isEqualTo(1)
+        assertThat(held).isEqualTo(1)
+        assertThat(underneath).isEqualTo(0)
+    }
+
+    @Test
+    fun aDragAndReleaseNeverOpensTheSurfaceUnderneath() {
+        showInsideAClickableCard(StanceControlState(pad = StancePadMode.DRAGGING))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        theTarget().performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent / 2f, -extent / 3f))
+            up()
+        }
+
+        assertThat(picks).isNotEmpty()
+        assertThat(underneath).isEqualTo(0)
+    }
+
+    @Test
+    fun anAlternateInputModeAlsoOwnsItsTouches() {
+        // Same bug, same root, reported separately for the sliders and
+        // the typed entry: a long press navigated instead of opening.
+        showInsideAClickableCard(StanceControlState(inputMode = StanceInputSurface.SLIDERS))
+
+        theTarget().performTouchInput { longClick() }
+
+        assertThat(opened).isEqualTo(1)
+        assertThat(underneath).isEqualTo(0)
+    }
+
+    @Test
+    fun theCardUnderneathStillOpensWhenItIsTheThingTouched() {
+        // The control owns ITS touches, not the card's: a tap anywhere
+        // else on the post still opens the post.
+        showInsideAClickableCard(StanceControlState())
+
+        compose.onNodeWithTag("card").performTouchInput { click(topLeft + Offset(4f, 4f)) }
+
+        assertThat(underneath).isEqualTo(1)
+        assertThat(tapped).isEqualTo(0)
     }
 
     // -- The gesture (design.md §8.3) --
@@ -157,7 +303,7 @@ class StancePadTest {
     }
 
     @Test
-    fun driftingMapsValenceAcrossAndConnectionUpThenCommitsOnRelease() {
+    fun driftingMapsValenceAcrossAndConnectionUp() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
         // One unit of either parameter is FIELD_EXTENT of travel: half
         // of that to the right and a quarter of it up reads (+0.5, +0.25).
@@ -173,7 +319,184 @@ class StancePadTest {
         val last = picks.last()
         assertThat(last.directed).isWithin(0.02).of(0.5)
         assertThat(last.interest).isWithin(0.02).of(0.25)
+    }
+
+    @Test
+    fun releasingADriftedThumbParksThePadAndSignsNothing() {
+        // An accidental lift must never sign a priced act (design.md
+        // §8.3): the pad is a considered surface, and Set is the
+        // signature. This is the autocommit the device kept doing.
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent / 2f, -extent / 4f))
+            up()
+        }
+
+        assertThat(committed).isEqualTo(0)
+        assertThat(dismissed).isEqualTo(0)
+        assertThat(held).isEqualTo(1)
+    }
+
+    @Test
+    fun theReleasedPickIsStillStandingOnTheParkedPad() {
+        // Release keeps the pick, it does not reset it: the reader
+        // looks at what they chose and then decides to sign it.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent / 2f, 0f))
+            up()
+        }
+
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+        // And the pad it stands on is parked, not shut.
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_set").assertExists()
+    }
+
+    // -- The parked pad still takes drags (design.md §8.3) --
+
+    /** Hold, drift half a unit to the right, release: the pad parks at (+0.50, +0.00). */
+    private fun TouchInjectionScope.holdAndRelease(extent: Float) {
+        down(center)
+        advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+        moveTo(center + Offset(extent / 2f, 0f))
+        up()
+    }
+
+    /** One fresh drag on the parked field, by the given travel. */
+    private fun dragTheField(by: Offset) {
+        compose.onNodeWithTag("stance_field").performTouchInput {
+            down(center)
+            moveTo(center + by)
+            up()
+        }
+    }
+
+    @Test
+    fun aFreshDragOnTheParkedFieldMovesTheKnobAgain() {
+        // The reported bug: once the finger lifted, the knob was frozen —
+        // only the launching gesture could move it. Release never commits
+        // (design.md §8.3), so the pad it leaves open has to stay usable.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+
+        dragTheField(Offset(-extent / 4f, -extent / 2f))
+
+        // Adjusted from where it stood, not restarted from the origin.
+        compose.exactPair().assertTextEquals("+0.25 / +0.50")
+        // And a drag is still not a signature.
+        assertThat(committed).isEqualTo(0)
+        assertThat(dismissed).isEqualTo(0)
+    }
+
+    @Test
+    fun theParkedFieldTakesAsManyFreshDragsAsTheReaderLikes() {
+        // No budget of one: the knob is repositionable until Set or
+        // Cancel, however long the reader takes to decide.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        repeat(4) { dragTheField(Offset(0f, extent / 8f)) }
+
+        compose.exactPair().assertTextEquals("+0.50 / -0.50")
+        assertThat(committed).isEqualTo(0)
+    }
+
+    @Test
+    fun setCommitsTheLastOfTheFreshDragsRatherThanTheFirstPick() {
+        // What Set signs is what the field last read, not what the
+        // opening gesture happened to leave behind.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        dragTheField(Offset(extent / 4f, -extent / 4f))
+        dragTheField(Offset(0f, -extent / 4f))
+        compose.onNodeWithTag("${TAG}_stance_set").performScrollTo().performClick()
+
         assertThat(committed).isEqualTo(1)
+        assertThat(committedPick?.directed).isNotNull()
+        assertThat(committedPick!!.directed).isWithin(0.02).of(0.75)
+        assertThat(committedPick!!.interest).isWithin(0.02).of(0.5)
+    }
+
+    @Test
+    fun aFreshDragOnTheParkedFieldNeverReachesTheSurfaceUnderneath() {
+        // The #456 rule holds on this path too: the control owns its
+        // touches, and a second drag is one of them (design.md §8.3).
+        showInsideAClickableCard(StanceControlState(pad = StancePadMode.STICKY))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        dragTheField(Offset(extent / 3f, -extent / 3f))
+
+        assertThat(picks).isNotEmpty()
+        assertThat(underneath).isEqualTo(0)
+        assertThat(dismissed).isEqualTo(0)
+        assertThat(committed).isEqualTo(0)
+    }
+
+    @Test
+    fun aPadMidSignatureTakesNoFurtherDrags() {
+        // Set is in flight: the pick it is signing must not move under it.
+        show(StanceControlState(pad = StancePadMode.STICKY, busy = true))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        dragTheField(Offset(extent / 3f, -extent / 3f))
+
+        assertThat(picks).isEmpty()
+    }
+
+    @Test
+    fun noFreshDragEverPutsTheKnobOutsideTheDrawnField() {
+        // The adversarial sweep again, driven through the SECOND gesture:
+        // whatever the thumb does to a parked pad, the knob stays inside
+        // the drawing (design.md §8.3).
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+        val half = with(compose.density) { (FIELD_SIZE / 2).toPx() }
+        val corner = with(compose.density) { FIELD_CORNER.toPx() }
+        val knob = with(compose.density) { KNOB_RADIUS.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        compose.onNodeWithTag("stance_field").performTouchInput {
+            down(center)
+            for (i in -3..3) {
+                for (j in -3..3) {
+                    moveTo(center + Offset(extent * i * 1.7f, extent * j * 1.7f))
+                }
+            }
+            up()
+        }
+
+        assertThat(picks).isNotEmpty()
+        for (pick in picks) {
+            assertThat(knobInsideField(pick, half, corner, knob, extent)).isTrue()
+        }
+    }
+
+    @Test
+    fun theQuestionMarkExplainsTheControlOnDemand() {
+        // The coach mark is spent on the first hold; the `?` is how
+        // anyone who arrived after that asks (design.md §8.3).
+        show(StanceControlState(pad = StancePadMode.STICKY))
+
+        compose.onNodeWithTag("${TAG}_stance_explanation").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_explain").performScrollTo().performClick()
+
+        compose.onNodeWithTag("${TAG}_stance_explanation")
+            .assertTextContains("Set", substring = true)
     }
 
     @Test
@@ -237,8 +560,15 @@ class StancePadTest {
                         picks += it
                         state = state.copy(pick = it)
                     },
-                    onCommit = { committed++ },
-                    onHold = { held++ },
+                    onCommit = {
+                        committed++
+                        committedPick = state.pick
+                    },
+                    // What the holder does: park the pad, keep the pick.
+                    onHold = {
+                        held++
+                        state = state.copy(pad = StancePadMode.STICKY)
+                    },
                     onDismissPad = { dismissed++ },
                     onToggleExactValues = { exactToggled++ },
                     onOpenSeverance = { severOpened++ },
@@ -375,7 +705,7 @@ class StancePadTest {
     // for the gesture that opened it.
 
     @Test
-    fun aBloomedPadOpensBesideTheTargetItBelongsTo() {
+    fun aBloomedPadExistsWithoutDisplacingItsTarget() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
 
         compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
@@ -575,28 +905,46 @@ class StancePadTest {
 
     // -- The transient confirmation (design.md §8.3) --
 
-    @Test
-    fun aSignedStanceConfirmsOnTheSurfacesSnackbarHost() {
-        val host = SnackbarHostState()
+    /**
+     * The confirmation, wired the way a real screen wires it: consuming
+     * the one-shot CLEARS it, because the state holder is the thing
+     * being told it has been shown.
+     *
+     * That round trip is the whole test. A version that held the state
+     * still passed while the device stayed silent — consuming used to
+     * restart the effect and cancel the snackbar it had just posted, and
+     * only a state that actually changes can catch it.
+     */
+    private fun showLiveConfirmation(host: SnackbarHostState, signed: StancePoint) {
         compose.setContent {
+            var confirmation by remember { mutableStateOf<StancePoint?>(signed) }
             CompositionLocalProvider(LocalSnackbarHostState provides host) {
                 Box(Modifier.fillMaxSize()) {
                     StanceControl(
                         state = StanceControlState(
-                            standing = StancePoint(0.1, 0.1),
-                            confirmation = StancePoint(0.1, 0.1),
+                            standing = signed,
+                            confirmation = confirmation,
                         ),
                         onTapDefault = {}, onOpenPad = {}, onPick = {}, onCommit = {},
                         onHold = {}, onDismissPad = {}, onToggleExactValues = {},
                         onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
                         onCoachMarkDismissed = {},
-                        onConfirmationShown = { confirmationsShown++ },
+                        onConfirmationShown = {
+                            confirmationsShown++
+                            confirmation = null
+                        },
                         testTagPrefix = TAG,
                     )
                     SnackbarHost(host, modifier = Modifier.testTag("host"))
                 }
             }
         }
+    }
+
+    @Test
+    fun aSignedStanceConfirmsOnTheSurfacesSnackbarHost() {
+        val host = SnackbarHostState()
+        showLiveConfirmation(host, StancePoint(0.1, 0.1))
 
         compose.waitForIdle()
 
@@ -607,6 +955,37 @@ class StancePadTest {
             )
         // The one-shot is spent, so a recomposition cannot repeat it.
         assertThat(confirmationsShown).isEqualTo(1)
+    }
+
+    @Test
+    fun consumingTheOneShotDoesNotTearDownTheSnackbarItJustPosted() {
+        // The device bug, isolated: the confirmation is consumed the
+        // moment it is shown, which clears the state describing it. The
+        // snackbar has to survive that and keep standing.
+        val host = SnackbarHostState()
+        showLiveConfirmation(host, StancePoint(0.1, 0.1))
+
+        compose.waitForIdle()
+        // Let every pending recomposition and effect restart settle.
+        compose.mainClock.advanceTimeBy(500)
+        compose.waitForIdle()
+
+        assertThat(confirmationsShown).isEqualTo(1)
+        assertThat(host.currentSnackbarData).isNotNull()
+        compose.onNodeWithTag("host").assertExists()
+    }
+
+    @Test
+    fun aSeveredStandingConfirmsAsAShrugRatherThanAsNice() {
+        // (0, 0) is where severance leaves the reader, and the anchor
+        // table's nearest neighbour to it is 🙂 "Nice" (design.md §8.4).
+        val host = SnackbarHostState()
+        showLiveConfirmation(host, StancePoint.Origin)
+
+        compose.waitForIdle()
+
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🙂", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test

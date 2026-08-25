@@ -65,6 +65,7 @@ class StanceRepositoryImpl @Inject constructor(
             StanceStanding(
                 target = target,
                 net = StancePair(fold.pDirected, fold.pInterest),
+                raw = StancePair(fold.rawPDirected, fold.rawPInterest),
                 records = fold.recordCount,
                 includePending = includePending,
             )
@@ -101,6 +102,7 @@ class StanceRepositoryImpl @Inject constructor(
             SeveranceQuote(
                 target = target,
                 standing = StancePair(fold.pDirected, fold.pInterest),
+                raw = StancePair(fold.rawPDirected, fold.rawPInterest),
                 records = fold.severanceCost,
                 alreadySevered = fold.severed,
             )

@@ -7,11 +7,17 @@
 // leaves the bundle, and the severance prompt when one is open.
 //
 // The raw-edge rule lives here: a commit sends the picked pair and
-// nothing else. The standing and the landing are READ back from the
-// repository — this class never subtracts one from the other, because
-// the record carries what was picked and the bundle is the fold's
-// business (design.md §8.1, api-spec.md "Stance prepares write the
-// picked values").
+// nothing else. This class never derives a delta against the bundle —
+// the record carries what was picked (design.md §8.1, api-spec.md
+// "Stance prepares write the picked values").
+//
+// The standing is READ from the repository. The landing is FOLDED here,
+// from the raw sums that read carries, because a round trip per pick
+// left the second number arriving about a second after the first and
+// the two stopped reading as one control. That fold is display only:
+// it clips a sum for the reader's eyes, it never changes what is
+// written, and the backend's answer remains the authority once a record
+// is signed (design.md §8.3).
 
 package com.cogra.feature.stance
 
@@ -26,11 +32,10 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -51,6 +56,13 @@ data class TargetStance(
      * [standingRecords] is what tells the two apart.
      */
     val standing: StancePair? = null,
+    /**
+     * The raw sums behind [standing], before the clip. The landing is
+     * folded from THESE, locally and instantly; folding the clipped
+     * standing would be wrong for any bundle already past `±1`.
+     * Null until the fold has answered once.
+     */
+    val standingRaw: StancePair? = null,
     val standingRecords: Int = 0,
     /** The fold has answered at least once; a failed read has not. */
     val standingRead: Boolean = false,
@@ -72,6 +84,18 @@ data class TargetStance(
     val confirmation: StancePair? = null,
 )
 
+/**
+ * Where [pick] leaves this bundle, folded locally — or null while the
+ * raw sums are still unknown, which is the one case the pad has nothing
+ * honest to show yet.
+ */
+private fun TargetStance.landingFor(pick: StancePair): StanceProjection? =
+    standingRaw?.let { localLanding(it, pick) }
+
+/** The same fold against freshly read sums, for a pad that is open. */
+private fun TargetStance.landingForRaw(raw: StancePair): StanceProjection? =
+    if (pad == PadMode.CLOSED) null else localLanding(raw, pick)
+
 /** An open severance confirmation and how it was reached. */
 data class SeveranceState(
     val quote: SeveranceQuote,
@@ -89,13 +113,6 @@ data class StanceUiState(
     val inputMode: StanceInputMode = StanceInputMode.Default,
 )
 
-/**
- * How long a drifting thumb settles before the landing is asked for. The
- * face follows the finger with no round trip at all; only the second
- * number — where the pick leaves the bundle — costs a read.
- */
-private const val PROJECTION_SETTLE_MS = 120L
-
 @HiltViewModel
 class StanceViewModel @Inject constructor(
     private val stances: StanceRepository,
@@ -105,8 +122,6 @@ class StanceViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(StanceUiState())
     val state = _state.asStateFlow()
-
-    private val projections = mutableMapOf<String, Job>()
 
     /** Targets whose standing read is in flight; a feed asks once, not per frame. */
     private val reading = mutableSetOf<String>()
@@ -184,21 +199,37 @@ class StanceViewModel @Inject constructor(
         // The pad opens at the origin, untilted — the low default belongs
         // to the tap, not to the considered gesture (design.md §8.3).
         update(target) {
-            it.copy(pad = PadMode.DRAGGING, pick = StancePair.Origin, landing = null, failed = false)
+            it.copy(
+                pad = PadMode.DRAGGING,
+                pick = StancePair.Origin,
+                landing = it.landingFor(StancePair.Origin),
+                failed = false,
+            )
         }
-        requestLanding(target, StancePair.Origin)
     }
 
+    /**
+     * The pick under the thumb. The landing moves with it: the fold is
+     * local arithmetic on the raw sums the surface was already served,
+     * so there is no round trip to wait for and nothing to debounce
+     * (design.md §8.3).
+     */
     fun onPick(target: String, pick: StancePair) {
-        update(target) { it.copy(pick = pick, landing = null) }
-        requestLanding(target, pick)
+        update(target) { it.copy(pick = pick, landing = it.landingFor(pick)) }
     }
 
     /** A hold released without drifting parks the pad open (design.md §8.5, §8.6). */
     fun onHold(target: String) = update(target) { it.copy(pad = PadMode.STICKY) }
 
+    /**
+     * Shuts the pad and stages nothing. Called on the way out of a
+     * screen as well as by Cancel, so a shut pad is left strictly alone
+     * — a feed asks this of every control it holds, and a dismissal that
+     * touched state would churn the whole map for nothing.
+     */
     fun onDismissPad(target: String) {
-        projections.remove(target)?.cancel()
+        val entry = _state.value.targets[target] ?: return
+        if (entry.pad == PadMode.CLOSED) return
         update(target) {
             it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null, exactValues = false)
         }
@@ -287,11 +318,9 @@ class StanceViewModel @Inject constructor(
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
         update(target) { it.copy(busy = true, failed = false, needsKey = false) }
-        // Answer at once (design.md §8.3): the fold says where this pick
-        // leaves the bundle, and the target shows that while the record
-        // is still being signed. It is the same number the pending-
-        // inclusive read will report — asked earlier, never computed here.
-        viewModelScope.launch { showPendingStanding(target, pick) }
+        // Answer at once (design.md §8.3): the target shows where this
+        // pick leaves the bundle while the record is still being signed.
+        showPendingStanding(target, pick)
         viewModelScope.launch {
             // The record carries the pick verbatim; no delta is derived.
             val prepared = when (val outcome = stances.prepareStance(target, pick)) {
@@ -327,32 +356,27 @@ class StanceViewModel @Inject constructor(
     }
 
     /**
-     * Shows where [pick] leaves the bundle as the standing, while the
-     * record is signed. Dropped if the write already settled — a landed
-     * read is always the better answer.
+     * Shows where [pick] leaves the bundle as the standing, at once,
+     * while the record is still being signed (design.md §8.3). The same
+     * local fold the landing line uses, so the answer the reader was
+     * looking at when they pressed Set is the answer they get — and it
+     * arrives in the same frame, not a round trip later.
+     *
+     * The raw sums move with it: a second pick before the read lands
+     * must fold onto the first, not onto the history that preceded it.
      */
-    private suspend fun showPendingStanding(target: String, pick: StancePair) {
-        val outcome = stances.projection(target, pick)
-        if (outcome !is Outcome.Success) return
-        update(target) {
-            if (it.busy) it.copy(standing = outcome.value.net, standingPending = true) else it
-        }
-    }
-
-    /**
-     * Asks the fold where [pick] leaves the bundle, after the thumb
-     * settles. Only the newest question is outstanding — a drag would
-     * otherwise queue one read per frame.
-     */
-    private fun requestLanding(target: String, pick: StancePair) {
-        projections.remove(target)?.cancel()
-        projections[target] = viewModelScope.launch {
-            delay(PROJECTION_SETTLE_MS)
-            val outcome = stances.projection(target, pick)
-            if (outcome is Outcome.Success) {
-                update(target) { if (it.pick == pick) it.copy(landing = outcome.value) else it }
-            }
-        }
+    private fun showPendingStanding(target: String, pick: StancePair) = update(target) {
+        val raw = it.standingRaw ?: return@update it
+        val landed = localLanding(raw, pick)
+        it.copy(
+            standing = landed.net,
+            standingRaw = StancePair(
+                raw.pDirected + pick.pDirected,
+                raw.pInterest + pick.pInterest,
+            ),
+            standingRecords = it.standingRecords + 1,
+            standingPending = true,
+        )
     }
 
     /**
@@ -366,9 +390,14 @@ class StanceViewModel @Inject constructor(
             is Outcome.Success -> update(target) {
                 it.copy(
                     standing = outcome.value.net.takeIf { _ -> outcome.value.records > 0 },
+                    standingRaw = outcome.value.raw,
                     standingRecords = outcome.value.records,
                     standingRead = true,
                     standingPending = false,
+                    // The pick standing on an open pad now folds onto a
+                    // newer history, so the landing it shows has to
+                    // follow the numbers it was folded from.
+                    landing = it.landingForRaw(outcome.value.raw),
                 )
             }
             // A missing standing is not a failure the reader has to act
