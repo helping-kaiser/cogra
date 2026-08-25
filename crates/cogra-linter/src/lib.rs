@@ -81,7 +81,8 @@ pub use judge::kinds::{
 pub use migrate::{Migration, Remaining, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use registers::{
-    Freshness, Register, RegisterScope, Scope, Written, compare, regenerate_all, write_all,
+    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of,
+    regenerate_all, write_all,
 };
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
