@@ -137,11 +137,23 @@ token presence alone, no `me` bootstrap — Android's `AuthPhase`.
 Guarded calls follow Android's `AuthGuard`: on an UNAUTHENTICATED
 refusal, refresh once and replay once; a still-unauthenticated
 replay is surfaced, never looped. UNAUTHENTICATED arrives two
-ways, and the guard handles both: a null `me` on a viewer read,
-and an errors-array entry with `extensions.code` — the backend's
-only emission for guarded mutations
+ways, and the guard handles both: a null on any viewer-scoped
+field — `me`, `viewerStance`, every field the backend resolves
+against the viewer — and an errors-array entry with
+`extensions.code`, the backend's only emission for guarded
+mutations
 ([api-spec.md "Errors are tiered"](api-spec.md#errors-are-tiered--transport-faults-vs-expected-outcomes)),
 which the outcome mapping synthesizes into the same refusal shape.
+
+Two rules follow, and both are load-bearing. The null is lifted
+**inside** the guarded block — a lift after `guard.run` returns
+hands the guard a success carrying nothing, and nothing
+refreshes. And a viewer-scoped read always asks the server: the
+cache is keyed by query, not by viewer, so a cached answer
+outlives both the token gap that produced an empty one and the
+account that earned a full one. The access token is per-tab
+memory, minted by a refresh, so the first read on any freshly
+loaded page is exactly the one that goes out without it.
 
 Refresh is single-flight at two levels. In-tab, concurrent
 callers serialize on a mutex and a caller that finds the access
