@@ -119,7 +119,7 @@ The stance comes first: the kickoff keeps every label-shaped reference in double
 
 **Open question (Stray occurrences in the docs trees)** · `open:lint:stray-occurrences`
 
-The adoption data records the three docs trees as carrying no label occurrences and the corpus as having seven label-bearing files; the measurement in (`rep:lint:first-corpus`) finds twenty-nine files and dozens of occurrences, whose targets are names owned upstream and outside this corpus. Three readings are available and the choice is a ruling: the spans are references to an upstream owner that becomes citable when the Layer 1 repository is public, and are known findings until then; or they are defects to be reformed into displayed spans before the linter's first clean run; or the docs trees take promotion to owners of their own. The promotion condition the adoption rulings already state is arguably met — one of the two documents named for promotion the day it takes labels carries a bare label-shaped span today. Whichever reading stands, the adoption data's per-owner notes and its measurement table need the correction, and the file is outside this document's scope to edit.
+The adoption data records the three docs trees as carrying no label occurrences and the corpus as having seven label-bearing files; the measurement in (`rep:lint:first-corpus`) finds twenty-nine files and dozens of occurrences, whose targets are names owned upstream and outside this corpus. Three readings are available and the choice is a ruling: the spans are references to an upstream owner that becomes citable when the Layer 1 repository is public, and are known findings until then; or they are defects to be reformed into displayed spans before the linter's first clean run; or the docs trees take promotion to owners of their own. The promotion condition the adoption rulings already state is arguably met — one of the two documents named for promotion the day it takes labels carries a bare label-shaped span today. Whichever reading stands, the adoption data's per-owner notes and its measurement table need the correction — as does its record of the partition amendment as a pending edit to the architecture, an amendment that landed in the commit recording the rulings — and those files are outside this document's scope to edit.
 
 **Open question (The kind registry's adoption data)** · `open:lint:kinds-adoption-data`
 
@@ -136,10 +136,6 @@ Inventory admits nothing partial: every covered asset carries its derived label 
 **Open question (What a clean run means for v1)** · `open:lint:clean-run-milestone`
 
 Two migrations the architecture already accepted — the ~1210 plain line comments and the ~42 module documentation comments — plus whatever (`open:lint:stray-occurrences`) rules, stand between the linter's first correct run and a corpus-wide exit code of zero. Whether v1's acceptance is a clean run over the whole carrier, or a clean run over the discipline documents and the architecture with the rest carried as known findings against a dated migration plan, decides when the crate can enter CI as a failing gate rather than an advisory one.
-
-**Open question (The partition amendment to the architecture)** · `open:lint:partition-amendment`
-
-The architecture's owner-partition convention still names the Layer 1 interface document among the major documents, while the ruled adoption data places that file outside the carrier entirely — no owner, no prefix. The adoption notes record the amendment and name it a pending edit to the architecture document, taken under the gate clause that admits confirming the convention *as stated or amended*. The edit has not been made. It is one sentence in a document this concept may not edit, and it should land before the architecture's own gate is claimed discharged.
 
 ## Concept gate · `sec:lint:gate`
 
