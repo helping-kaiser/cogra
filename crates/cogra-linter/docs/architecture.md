@@ -189,9 +189,9 @@ The calculus is parametric in seven data (`[LBL-sec:labels:syntax]`), and the li
 
 Ruled in review as the partition's starting shape: one owner per package — each Rust crate, the Android app, the web app — and one owner per major document: each of the four discipline documents and peers of that rank; working notes remain their own owner. The Layer 1 interface document stands outside the carrier as a vendored derived reference — its names are the L1 team's, frozen upstream — until the upstream repository is public and citable as an owner of its own. Refinement — whether Android modules split, how the docs trees group beneath major documents — happens in the adoption data this convention seeds, not here.
 
-**Decision-for-review (Registry as data)** · `dec:linter:registry-as-data`
+**Decision (Registry as data)** · `dec:linter:registry-as-data`
 
-Proposed, standing from the first draft: the classification relation C of the kind registry is not hardcoded. The linter parses the registry document's own Convention tables — with its own Markdown frontend — to obtain the name-to-kind rows, exactly as the registry says an adopting corpus consumes it. One source of truth, no transcription drift, and the frontend gets exercised on the gnarliest real document in the corpus. The cost is a bootstrap dependency: the linter must parse that document before it can validate any head, so a defect there degrades kind validation corpus-wide — mitigated by the registry document itself being linted first, in the same run, by the label rules that need no kinds.
+Ruled in review: the classification relation C of the kind registry is not hardcoded. The linter parses the registry document's own Convention tables — with its own Markdown frontend — to obtain the name-to-kind rows, exactly as the registry says an adopting corpus consumes it. One source of truth, no transcription drift, and the frontend gets exercised on the gnarliest real document in the corpus. The cost is a bootstrap dependency: the linter must parse that document before it can validate any head, so a defect there degrades kind validation corpus-wide — mitigated by the registry document itself being linted first, in the same run, by the label rules that need no kinds.
 
 ## Diagnostics and registers · `sec:linter:output`
 
