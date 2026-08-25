@@ -60,8 +60,6 @@ fn texts(parsed: &Parsed) -> Vec<&str> {
     parsed.regions.iter().map(|region| &*region.text).collect()
 }
 
-// ---------------------------------------------------------------- blocks
-
 /// A block-level element becomes one region.
 #[test]
 fn a_paragraph_is_one_region() {
@@ -178,8 +176,6 @@ fn nested_list_items_are_regions() {
     assert_eq!(texts(&parsed), ["outer", "inner"]);
 }
 
-// ----------------------------------------------------------- text, pieces
-
 /// A region with no structure inside it is one contiguous piece.
 #[test]
 fn an_unstructured_paragraph_is_one_piece() {
@@ -246,8 +242,6 @@ fn a_links_destination_is_not_region_text() {
     let parsed = doc("see [the design](docs/design.md) for it\n");
     assert_eq!(texts(&parsed), ["see the design for it"]);
 }
-
-// ------------------------------------------------------------- code spans
 
 /// A single-backtick span is meant, not displayed.
 #[test]
@@ -338,14 +332,13 @@ fn a_fenced_block_pairs_no_span() {
 /// a fence participate in nothing at all.
 #[test]
 fn a_fenced_illustration_participates_in_nothing() {
-    let parsed = doc("```text\ncitation, from another owner:   (`[SPEC-def:parser:tokenizer]`)\n```\n");
+    let parsed =
+        doc("```text\ncitation, from another owner:   (`[SPEC-def:parser:tokenizer]`)\n```\n");
     assert_eq!(parsed.regions.len(), 1);
     assert!(!parsed.regions[0].participates);
     assert!(parsed.regions[0].spans.is_empty());
     assert_eq!(scan(&parsed.regions[0]), RegionScan::default());
 }
-
-// ------------------------------------------------------- unpaired backtick
 
 /// In prose the backtick belongs to the document format, so an unpaired one
 /// leaves its block's spans undefined and is a hard failure bounded by that
@@ -411,8 +404,6 @@ fn a_fenced_blocks_backticks_are_not_unpaired() {
     let parsed = doc("```text\none ` backtick\n```\n");
     assert!(parsed.diagnostics.is_empty());
 }
-
-// ------------------------------------------------------------------ heads
 
 /// For a heading the head is the rung the format supplies and not the
 /// heading's own text.
@@ -516,8 +507,6 @@ fn a_head_shaped_fence_heads_nothing() {
     assert!(parsed.heads.is_empty());
 }
 
-// ----------------------------------------------------------------- tables
-
 /// A table cell is a region in its own right, classified by the same rules
 /// as any other — there is no special case for tables.
 #[test]
@@ -576,8 +565,6 @@ fn the_tables_accessor_answers_with_the_documents_tables() {
     assert_eq!(frontend_md::tables(&parsed), parsed.tables);
 }
 
-// ------------------------------------------------------------ near-misses
-
 /// A label-shaped interior whose only defect is casing, through real
 /// markdown.
 #[test]
@@ -626,8 +613,6 @@ fn the_backtick_in_code_class_is_unreachable_from_prose() {
             .any(|miss| matches!(miss.why, NearMissKind::BacktickInCode))
     );
 }
-
-// -------------------------------------------------------------- the whole
 
 /// Every region a Markdown source yields carries the prose syntax.
 #[test]
