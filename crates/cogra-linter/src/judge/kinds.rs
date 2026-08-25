@@ -31,9 +31,13 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use petgraph::stable_graph::NodeIndex;
+
 use crate::adopt::{Adoption, Kind, KindExtensions};
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
 use crate::frontend::{Parsed, Table};
+use crate::graph::{Corpus, EdgeW, NodeKind, NodeW, nodes_of, out_along};
+use crate::judge::at;
 
 /// The document carries no catalogue table at all.
 pub const NO_TABLES: RuleId = RuleId::new("registry-no-catalogue-table");
@@ -54,7 +58,9 @@ pub const HYBRID_COLLIDES: RuleId = RuleId::new("registry-hybrid-token-collides"
 pub const HYBRID_MISMATCH: RuleId = RuleId::new("registry-hybrid-token-mismatch");
 
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 6] = [
+pub const RULES: [RuleId; 8] = [
+    HEAD_AMBIGUOUS,
+    HEAD_UNCATALOGUED,
     HYBRID_COLLIDES,
     HYBRID_MISMATCH,
     HYBRID_PART,
@@ -844,4 +850,74 @@ fn kind_token(cell: &str) -> Option<&str> {
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
     word.then_some(inner)
+}
+
+/// A head the relation does not carry with its declared kind
+/// (´[KND-judg:kinds:head-validation]´).
+pub const HEAD_UNCATALOGUED: RuleId = RuleId::new("kind-head-uncatalogued");
+
+/// A head whose presentation reduction reaches more than one base pair
+/// (´[KND-judg:kinds:head-validation]´).
+pub const HEAD_AMBIGUOUS: RuleId = RuleId::new("kind-head-ambiguous");
+
+/// Every head validates as exactly one catalogued pair
+/// (´[KND-judg:kinds:head-validation]´).
+///
+/// The query is the degree: out-degree one over `ValidatesAs` is a validated
+/// head, zero is an uncatalogued pair, and two is an ambiguous reduction
+/// (´tab:lint:judgment-implementation´). Making the pairs nodes rather than a
+/// side table is what puts (´[KND-inv:kinds:catalogued-pairs]´) in the same
+/// query language as every other invariant — an unrecorded pair is an edge
+/// with no target.
+///
+/// The registry is consulted for the *words* of the finding and never for
+/// the verdict: the edges the harvest laid down already carry it, and asking
+/// twice is how a judgment and a resolution come to disagree. Matching is
+/// case-exact, so a head whose only defect is capitalization lands here and
+/// its message names the catalogue spelling (´dec:lint:head-recognition´).
+#[must_use]
+pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
+    let mut found = Vec::new();
+    for head in nodes_of(g, NodeKind::Head) {
+        let Some(NodeW::Head(weight)) = g.node_weight(head) else {
+            continue;
+        };
+        let Some(at) = at(g, head) else { continue };
+        let pairs: Vec<NodeIndex> = out_along(g, head, EdgeW::ValidatesAs).collect();
+        let (rule, message) = match pairs.len() {
+            1 => continue,
+            0 => (
+                HEAD_UNCATALOGUED,
+                uncatalogued(k, &weight.text, &weight.declared),
+            ),
+            _ => (
+                HEAD_AMBIGUOUS,
+                format!(
+                    "the head {} reduces through {} base pairs, and the reduction admits one",
+                    weight.text,
+                    pairs.len()
+                ),
+            ),
+        };
+        found.push(Diagnostic {
+            rule,
+            severity: Severity::Error,
+            enforcement: Enforcement::Advisory,
+            primary: at,
+            related: Vec::new(),
+            message,
+        });
+    }
+    found
+}
+
+/// What an unvalidated head says, with the name it reduced to where the
+/// reduction reached one.
+fn uncatalogued(k: &KindRegistry, head: &str, declared: &Kind) -> String {
+    match k.validate(head, declared) {
+        HeadVerdict::Uncatalogued { base } if &*base != head => {
+            format!("the head {head} reduces to {base}, which the relation does not carry with the kind {declared}")
+        }
+        _ => format!("the relation carries no pair of {head} with the kind {declared}"),
+    }
 }
