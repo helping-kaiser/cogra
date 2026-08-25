@@ -19,16 +19,12 @@ use toml::Spanned;
 
 use crate::diag::{ByteSpan, Enforcement, Location, Severity};
 use crate::error::AdoptionError;
+use crate::scan::Prefix;
 
 /// An owner of the partition Ω, by the stable identifier the adoption data
 /// uses for it everywhere.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
 pub struct OwnerId(Box<str>);
-
-/// A registered prefix of the Signature Σ, as an imported citation writes
-/// it.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
-pub struct Prefix(Box<str>);
 
 /// A registered inventory profile's identifier.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
@@ -75,7 +71,6 @@ macro_rules! token {
 }
 
 token!(OwnerId, "owner");
-token!(Prefix, "prefix");
 token!(ProfileId, "profile");
 token!(Kind, "kind");
 token!(Area, "area");
@@ -316,6 +311,11 @@ impl Signature {
     /// place the family's "every unit the build system names as a package"
     /// becomes a decidable question about an owner identifier.
     ///
+    /// The derived text passes through [`Prefix::parse`] like any other, so
+    /// a family cannot admit a prefix the grammar refuses: a package whose
+    /// name yields no well-formed PREFIX derives nothing, and its owner is
+    /// then registered by a hand-written row or not at all.
+    ///
     /// ```
     /// use cogra_linter::{Adoption, OwnerId, Prefix};
     /// # let source = std::fs::read_to_string(
@@ -325,7 +325,7 @@ impl Signature {
     /// #     .expect("a ruled adoption");
     /// assert_eq!(
     ///     adoption.signature.derived_prefix(&OwnerId::new("pkg.cogra-interchange")),
-    ///     Some(Prefix::new("INTERCHANGE")),
+    ///     Prefix::parse("INTERCHANGE"),
     /// );
     /// assert_eq!(
     ///     adoption.signature.derived_prefix(&OwnerId::new("doc.label-calculus")),
@@ -350,10 +350,14 @@ impl Signature {
             .filter(|character| *character != '-')
             .flat_map(char::to_uppercase)
             .collect();
-        let stripped = derived.strip_prefix("COGRA").filter(|remainder| {
-            !remainder.is_empty() && !self.prefixes.contains_key(&Prefix::new(remainder))
-        });
-        Some(Prefix::new(stripped.unwrap_or(&derived)))
+        let stripped = derived
+            .strip_prefix("COGRA")
+            .and_then(Prefix::parse)
+            .filter(|shorter| !self.prefixes.contains_key(shorter));
+        match stripped {
+            Some(shorter) => Some(shorter),
+            None => Prefix::parse(&derived),
+        }
     }
 }
 
@@ -934,9 +938,12 @@ fn registered_by_default() -> bool {
     true
 }
 
+/// A registration as the file writes it: the prefix arrives as text and
+/// becomes a [`Prefix`] only by the grammar's own parse, so the adoption
+/// data cannot register a prefix no citation could ever name.
 #[derive(serde::Deserialize)]
 struct RawPrefixRow {
-    prefix: Spanned<Prefix>,
+    prefix: Spanned<Box<str>>,
     owner: OwnerId,
 }
 
@@ -1013,7 +1020,13 @@ impl RawSignature {
     fn validate(self, source: &str, origin: &Path) -> Result<Signature, AdoptionError> {
         let mut prefixes = BTreeMap::new();
         for row_data in &self.prefixes {
-            let prefix = row_data.prefix.as_ref().clone();
+            let written = row_data.prefix.as_ref();
+            let Some(prefix) = Prefix::parse(written) else {
+                return Err(AdoptionError::MalformedPrefix {
+                    at: row(&row_data.prefix, source, origin),
+                    prefix: written.to_string(),
+                });
+            };
             if prefixes
                 .insert(prefix.clone(), row_data.owner.clone())
                 .is_some()

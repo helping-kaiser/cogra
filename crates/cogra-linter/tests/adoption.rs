@@ -129,6 +129,11 @@ fn load(source: &str) -> Result<Adoption, AdoptionError> {
     Adoption::from_str(source, Path::new("corpus-adoption.toml"))
 }
 
+/// A registered prefix, through the grammar that owns the production.
+fn prefix(text: &str) -> Prefix {
+    Prefix::parse(text).unwrap_or_else(|| panic!("{text} is prefix-shaped"))
+}
+
 /// The row a located defect names, so that a test asserts the location by
 /// the line's own content rather than by a brittle count.
 fn row(source: &str, error: &AdoptionError) -> String {
@@ -194,11 +199,11 @@ fn the_carrier_decides_what_is_excluded_and_what_is_generated() {
 fn the_signature_section_round_trips() {
     let signature = ruled().signature;
     assert_eq!(
-        signature.prefixes.get(&Prefix::new("LBL")),
+        signature.prefixes.get(&prefix("LBL")),
         Some(&OwnerId::new("doc.label-calculus"))
     );
     assert_eq!(
-        signature.prefixes.get(&Prefix::new("ARCH")),
+        signature.prefixes.get(&prefix("ARCH")),
         Some(&OwnerId::new("doc.linter-architecture"))
     );
     assert_eq!(signature.prefixes.len(), 11);
@@ -222,15 +227,15 @@ fn the_package_family_derives_its_prefixes() {
     let signature = ruled().signature;
     assert_eq!(
         signature.derived_prefix(&OwnerId::new("pkg.api")),
-        Some(Prefix::new("API"))
+        Some(prefix("API"))
     );
     assert_eq!(
         signature.derived_prefix(&OwnerId::new("pkg.postgres-store")),
-        Some(Prefix::new("POSTGRESSTORE"))
+        Some(prefix("POSTGRESSTORE"))
     );
     assert_eq!(
         signature.derived_prefix(&OwnerId::new("pkg.cogra-linter")),
-        Some(Prefix::new("LINTER")),
+        Some(prefix("LINTER")),
         "the leading COGRA goes when what remains is nonempty and unique"
     );
     assert_eq!(
@@ -557,6 +562,27 @@ owner = \"doc.one\"
     assert_eq!(order, 1);
     assert_eq!(owner, "doc.nobody-registers-this");
     assert!(row(&source, &error).contains("doc.nobody-registers-this"));
+}
+
+#[test]
+fn a_registration_the_prefix_grammar_refuses_is_located() {
+    let signature = "[signature]
+
+[[signature.prefix]]
+prefix = \"Lbl\"
+owner = \"doc.one\"
+";
+    let source = document(signature, TOTAL_PARTITION, NO_PROFILES, EMPTY_K);
+    let error = load(&source).expect_err("a prefix no imported citation could name");
+    let AdoptionError::MalformedPrefix {
+        prefix: ref written,
+        ..
+    } = error
+    else {
+        panic!("expected MalformedPrefix, got {error:?}");
+    };
+    assert_eq!(written, "Lbl");
+    assert!(row(&source, &error).contains("Lbl"));
 }
 
 #[test]

@@ -1,0 +1,95 @@
+# The stance surface (api-spec.md "The generic stance", design.md §8):
+# the viewer's own bundle toward a node, the projection of a candidate
+# pick, and severance staging.
+#
+# `viewerStance` hangs off the three concrete types that carry it —
+# Post, Comment, and User — and no interface gathers them, so the read
+# enters through the root that matches the target. Asking `node(id:)`
+# and `user(id:)` in one document instead would issue a lookup known to
+# be null on every post and comment, and a feed page renders one
+# control per card.
+#
+# `pick` omitted leaves `projected` null: the same field answers both
+# the standing read and the landing read, so a projection costs one
+# round trip and carries the standing with it.
+#
+# Field selections are inlined per the house style (content.graphql).
+
+query PostStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean! = true) {
+  post(id: $id) {
+    id
+    viewerStance(pick: $pick, includePending: $includePending) {
+      pDirected
+      pInterest
+      recordCount
+      inert
+      severed
+      severanceCost
+      projected {
+        pDirected
+        pInterest
+        inert
+        severed
+      }
+    }
+  }
+}
+
+query CommentStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean! = true) {
+  comment(id: $id) {
+    id
+    viewerStance(pick: $pick, includePending: $includePending) {
+      pDirected
+      pInterest
+      recordCount
+      inert
+      severed
+      severanceCost
+      projected {
+        pDirected
+        pInterest
+        inert
+        severed
+      }
+    }
+  }
+}
+
+query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean! = true) {
+  user(id: $id) {
+    id
+    viewerStance(pick: $pick, includePending: $includePending) {
+      pDirected
+      pInterest
+      recordCount
+      inert
+      severed
+      severanceCost
+      projected {
+        pDirected
+        pInterest
+        inert
+        severed
+      }
+    }
+  }
+}
+
+# Stages the counter-records that net the bundle to (0, 0) — each its
+# own priced act, so the batch length is the gesture's cost. Refused
+# when the bundle already nets there (api-spec.md "The generic
+# stance").
+mutation PrepareSeverance($input: PrepareSeveranceInput!) {
+  prepareSeverance(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}

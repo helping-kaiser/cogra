@@ -13,113 +13,14 @@
 //! with nothing in the type system to say which copy is right.
 
 use std::collections::HashMap;
-use std::fmt;
 
 use petgraph::Direction;
 use petgraph::stable_graph::{EdgeReference, NodeIndex, StableDiGraph};
 use petgraph::visit::{EdgeFiltered, EdgeRef, NodeFiltered};
 
-use crate::adopt::{Area, Kind, Language, OwnerId, Place, Prefix, ProfileId, ProfileStatus};
+use crate::adopt::{Area, Kind, Language, OwnerId, Place, ProfileId, ProfileStatus};
 use crate::diag::ByteSpan;
-
-/// A label: a colon-joined triple of kind, area, and name.
-///
-/// Held as its rendered text, so `Ord` is the bytewise order every
-/// generated register and every diagnostic sequence is fixed to. The
-/// derived order compares the text first, and the two offsets — functions
-/// of the text — never decide anything (´prop:lint:label-order´).
-///
-/// The label *grammar* — parsing, the near-miss classes, the occurrence
-/// forms — is the span scanner's, and lands with it in slice 2. What
-/// stands here is the value the graph's weights carry, with the
-/// representation the ordering property fixes; the scanner's `parse` is
-/// what will construct it from text, and this definition folds into
-/// the span scanner's module when that module lands.
-///
-/// ```
-/// use cogra_linter::graph::Label;
-///
-/// let label = Label::from_rendered("sig:labels:owners").expect("a triple");
-/// assert_eq!((label.kind(), label.area(), label.name()), ("sig", "labels", "owners"));
-///
-/// // Bytewise, because a digit sorts below the colon: the order every
-/// // generated register is written in and compared under.
-/// let one = Label::from_rendered("a1:x:y").expect("a triple");
-/// let other = Label::from_rendered("a:x:y").expect("a triple");
-/// assert!(one < other);
-/// ```
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Label {
-    text: Box<str>,
-    kind_end: u32,
-    area_end: u32,
-}
-
-impl Label {
-    /// The label rendered by `text`, split at its two colons.
-    ///
-    /// `None` when the text carries no two colons to split at. This is not
-    /// the grammar: it neither accepts nor refuses by the label language's
-    /// productions, and a span that fails here is not thereby ordinary
-    /// text — that judgment is the scanner's.
-    #[must_use]
-    pub fn from_rendered(text: &str) -> Option<Label> {
-        let kind_end = text.find(':')?;
-        let area_end = kind_end + 1 + text.get(kind_end + 1..)?.find(':')?;
-        Some(Label {
-            text: Box::from(text),
-            kind_end: u32::try_from(kind_end).ok()?,
-            area_end: u32::try_from(area_end).ok()?,
-        })
-    }
-
-    /// The kind: the triple's first word.
-    #[must_use]
-    pub fn kind(&self) -> &str {
-        self.text.get(..self.kind_end as usize).unwrap_or_default()
-    }
-
-    /// The area: the triple's second word.
-    #[must_use]
-    pub fn area(&self) -> &str {
-        self.text
-            .get(self.kind_end as usize + 1..self.area_end as usize)
-            .unwrap_or_default()
-    }
-
-    /// The name: the triple's third word.
-    #[must_use]
-    pub fn name(&self) -> &str {
-        self.text
-            .get(self.area_end as usize + 1..)
-            .unwrap_or_default()
-    }
-
-    /// The rendered triple.
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.text
-    }
-}
-
-impl fmt::Display for Label {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.text)
-    }
-}
-
-/// Which concrete syntax a region carries.
-///
-/// The span scanner's, and lands with it in slice 2; carried here because
-/// an occurrence node records which syntax it was written in.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Syntax {
-    /// The prose syntax, where the delimiter belongs to the document
-    /// format.
-    Prose,
-    /// The code syntax, where the acute belongs to the label language.
-    Code,
-}
+use crate::scan::{Label, Prefix, Syntax};
 
 /// The form a language gives a comment.
 ///
@@ -540,11 +441,12 @@ impl Registries {
     /// that is what keeps every key of `mints` a key of `labels`.
     ///
     /// ```
-    /// use cogra_linter::graph::{Corpus, Label, LabelNode, NodeW, Registries};
+    /// use cogra_linter::graph::{Corpus, LabelNode, NodeW, Registries};
+    /// use cogra_linter::scan::Label;
     /// use petgraph::stable_graph::NodeIndex;
     ///
     /// let mut g = Corpus::new();
-    /// let label = Label::from_rendered("sig:labels:owners").expect("a triple");
+    /// let label = Label::parse("sig:labels:owners").expect("a well-formed label");
     /// let owner = NodeIndex::new(0);
     /// let node = g.add_node(NodeW::Label(LabelNode { label: label.clone() }));
     /// let (first, second) = (NodeIndex::new(7), NodeIndex::new(9));
@@ -580,7 +482,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn label(text: &str) -> Label {
-        Label::from_rendered(text).unwrap_or_else(|| panic!("{text} carries two colons"))
+        Label::parse(text).unwrap_or_else(|problem| panic!("{text} is well-formed: {problem:?}"))
     }
 
     fn owner(id: &str) -> NodeW {
@@ -628,26 +530,6 @@ mod tests {
         g.add_edge(s, r, EdgeW::Contains);
         g.add_edge(r, m, EdgeW::Contains);
         (g, o, s, r, m)
-    }
-
-    #[test]
-    fn a_label_splits_at_its_two_colons() {
-        let parsed = label("sig:labels:owners");
-        assert_eq!(parsed.kind(), "sig");
-        assert_eq!(parsed.area(), "labels");
-        assert_eq!(parsed.name(), "owners");
-        assert_eq!(parsed.as_str(), "sig:labels:owners");
-    }
-
-    #[test]
-    fn the_label_order_is_the_bytewise_order_of_the_triple() {
-        let one = label("a1:x:y");
-        let other = label("a:x:y");
-        assert!(one < other);
-        assert_eq!(
-            one.cmp(&other),
-            one.as_str().as_bytes().cmp(other.as_str().as_bytes())
-        );
     }
 
     #[test]

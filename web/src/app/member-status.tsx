@@ -14,7 +14,8 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { DIRECTED_LABEL, INTEREST_LABEL, StanceSlider } from "@/lib/ui/stance-slider";
+import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
+import { StanceSlider } from "@/lib/ui/stance-slider";
 
 type DeviceState = {
   keyOnDevice: boolean;

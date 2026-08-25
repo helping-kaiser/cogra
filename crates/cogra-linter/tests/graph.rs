@@ -12,9 +12,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use cogra_linter::graph::{
-    CitationNode, Corpus, EdgeW, Label, LabelNode, MintNode, NodeW, OwnerNode, RegionKind,
-    RegionNode, Registries, SourceNode, Syntax, owner_of,
+    CitationNode, Corpus, EdgeW, LabelNode, MintNode, NodeW, OwnerNode, RegionKind, RegionNode,
+    Registries, SourceNode, owner_of,
 };
+use cogra_linter::scan::{Label, Syntax};
 use cogra_linter::{ByteSpan, OwnerId, Partition, PartitionRule, PathPrefix};
 use petgraph::stable_graph::NodeIndex;
 use proptest::prelude::*;
@@ -85,7 +86,7 @@ fn any_label() -> impl Strategy<Value = Label> {
         Just("a1:x:y"),
         Just("a:x:y"),
     ]
-    .prop_map(|text| Label::from_rendered(text).expect("a rendered triple"))
+    .prop_map(|text| Label::parse(text).expect("a well-formed label"))
 }
 
 /// The pass-1 staging, as far as slice 1 has it: an owner node per owner of
