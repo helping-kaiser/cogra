@@ -1315,6 +1315,71 @@ mod tests {
         accept(&nested);
     }
 
+    #[test]
+    fn a_deeply_nested_group_entry_parses_without_reparsing() {
+        // Each nested map, array, and inline group is a group entry, and a
+        // group entry's leading `type1` was once parsed to look for a `=>`
+        // and then parsed a second time as the value. That doubling made a
+        // depth-`d` entry cost 2^d work: depth 20 took seconds, depth 26
+        // timed out. With the `type1` parsed once, every level below is far
+        // past where the old parser hung, yet parses in an instant.
+        let depth = 40;
+        let arrays = format!("a = {{{}uint{}}}", "[".repeat(depth), "]".repeat(depth));
+        let maps = format!("a = {}uint{}", "{".repeat(depth), "}".repeat(depth));
+        let content_key = format!(
+            "a = {{{}uint{} => 0}}",
+            "[".repeat(depth),
+            "]".repeat(depth)
+        );
+        // Inline groups nest through the same `grpent`; a two-entry group is
+        // unambiguously a group, not a parenthesized type.
+        let mut inline = String::from("0, 0");
+        for _ in 0..depth {
+            inline = format!("({inline}), 0");
+        }
+        let inline_groups = format!("a = [{inline}]");
+
+        let start = std::time::Instant::now();
+        accept(&arrays);
+        accept(&maps);
+        accept(&content_key);
+        accept(&inline_groups);
+        let elapsed = start.elapsed();
+        // A single descent per level is microseconds; the old doubling
+        // could not have reached this depth before the heat death of the
+        // test runner. The bound is generous so the guard survives a slow
+        // machine, not so wide it would pass under the old behaviour.
+        assert!(
+            elapsed < std::time::Duration::from_secs(2),
+            "deep group entries took {elapsed:?}, far past a single descent"
+        );
+    }
+
+    #[test]
+    fn a_content_key_carries_a_value_with_choices() {
+        // The value after `=>` is a whole `type`, so its first `type1` — the
+        // one the entry parsed while looking for the arrow — must go on to
+        // collect the remaining `/`-choices rather than standing alone.
+        let cddl = accept("a = {2 => x / y / z}");
+        let RuleBody::Type(ty) = &cddl.rules[0].body else {
+            panic!("expected a type rule");
+        };
+        let Type2Kind::Map(group) = &ty.choices[0].target.kind else {
+            panic!("expected a map");
+        };
+        let GroupEntryKind::Member { key, value } = &group.choices[0].entries[0].kind else {
+            panic!("expected a member entry");
+        };
+        assert!(
+            matches!(
+                key.as_ref().map(|k| &k.kind),
+                Some(MemberKeyKind::Type { .. })
+            ),
+            "expected a `=>` type key"
+        );
+        assert_eq!(value.choices.len(), 3, "the value keeps all three choices");
+    }
+
     // -- the ambiguity of `=` ---------------------------------------------
 
     #[test]
