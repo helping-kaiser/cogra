@@ -197,7 +197,15 @@ class StanceViewModel @Inject constructor(
     /** A hold released without drifting parks the pad open (design.md §8.5, §8.6). */
     fun onHold(target: String) = update(target) { it.copy(pad = PadMode.STICKY) }
 
+    /**
+     * Shuts the pad and stages nothing. Called on the way out of a
+     * screen as well as by Cancel, so a shut pad is left strictly alone
+     * — a feed asks this of every control it holds, and a dismissal that
+     * touched state would churn the whole map for nothing.
+     */
     fun onDismissPad(target: String) {
+        val entry = _state.value.targets[target] ?: return
+        if (entry.pad == PadMode.CLOSED) return
         projections.remove(target)?.cancel()
         update(target) {
             it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null, exactValues = false)
