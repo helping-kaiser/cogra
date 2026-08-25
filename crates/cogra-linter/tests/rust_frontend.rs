@@ -178,6 +178,88 @@ fn block_doc_comments_do_not_assemble() {
     assert_eq!(regions("/** a */\n/** b */\nstruct X;\n").len(), 2);
 }
 
+/// `[scanned-regions]` does not scan fenced documentation examples, so a run
+/// carrying a fence is cut into a participating stretch and a fenced one.
+///
+/// The fence lines themselves belong to the fenced stretch: they are the
+/// example's own delimiters, and letting them participate is what used to
+/// give the backtick something to pair across.
+#[test]
+fn f2_a_fenced_example_does_not_participate() {
+    let regions = regions(
+        "/// before\n///\n/// ```\n/// let l = ´def:fx:fenceleak´;\n/// ```\n/// after\nstruct X;\n",
+    );
+    let participating: Vec<&str> = regions
+        .iter()
+        .filter(|one| one.participates)
+        .map(|one| one.text.as_str())
+        .collect();
+    assert_eq!(participating, [" before", " after"]);
+    assert!(
+        regions
+            .iter()
+            .any(|one| !one.participates && one.text.contains("fenceleak")),
+        "the fenced stretch is present and not scanned"
+    );
+}
+
+/// The fence bytes stay in the pieces: a region records the file ranges it
+/// was assembled from, and the cut moves none of them.
+#[test]
+fn f2_the_fence_bytes_stay_in_the_pieces() {
+    let text = "/// a\n/// ```\n/// b\n/// ```\n/// c\nstruct X;\n";
+    let regions = regions(text);
+    let covered: usize = regions
+        .iter()
+        .flat_map(|one| one.pieces.iter())
+        .map(ByteSpan::len)
+        .sum();
+    let assembled: usize = regions.iter().map(|one| one.text.len()).sum();
+    assert_eq!(covered, assembled);
+    let pieces: Vec<ByteSpan> = regions
+        .iter()
+        .flat_map(|one| one.pieces.iter().copied())
+        .collect();
+    assert_eq!(pieces.len(), 5, "one piece per line of the run: {pieces:?}");
+    for piece in &pieces {
+        assert!(text.get(piece.start..piece.end).is_some());
+    }
+}
+
+/// A mint written inside a fenced example is not a mint, so a citation of it
+/// resolves nowhere — the fixture the audit reproduced the leak with.
+#[test]
+fn f2_a_fenced_mint_resolves_no_citation() {
+    let rust = SourceFile {
+        path: PathBuf::from("docs/fence.rs"),
+        owner: OwnerId::new("doc.fenced"),
+        language: Some(Language::new("rust")),
+        generated: false,
+        bytes: Vec::from(
+            "/// Example:\n///\n/// ```\n/// let s = \"`\";\n/// let l = ´def:fx:fenceleak´;\n/// ```\npub fn one() {}\n",
+        ),
+    };
+    let prose = SourceFile {
+        path: PathBuf::from("docs/cites.md"),
+        owner: OwnerId::new("doc.fenced"),
+        language: Some(Language::new("markdown")),
+        generated: false,
+        bytes: Vec::from("**Thing (A)** · `def:fx:a`\n\nfenceleak: (`def:fx:fenceleak`)\n"),
+    };
+    let run = cogra_linter::check_sources(adoption(), vec![rust, prose]);
+    assert!(
+        run.findings
+            .iter()
+            .any(|one| one.rule.as_str() == "label-unresolved-citation"
+                && one.message.contains("def:fx:fenceleak")),
+        "the citation of a fenced mint resolves: {:?}",
+        run.findings
+            .iter()
+            .map(|one| one.message.as_str())
+            .collect::<Vec<_>>()
+    );
+}
+
 /// The leader is resolved away: no region's text carries a `///`.
 #[test]
 fn the_line_leader_is_resolved_away() {
@@ -612,7 +694,12 @@ fn the_frontend_reads_a_real_crate_source() {
 
     let text = std::str::from_utf8(&src.bytes).expect("scan.rs is UTF-8");
     for region in &parsed.regions {
-        assert!(region.participates);
+        assert_eq!(
+            region.participates,
+            !region.text.contains("```"),
+            "a participating region carries a fence, or a fenced one participates: {:?}",
+            region.text
+        );
         assert_eq!(region.syntax, Syntax::Code);
         let sum: usize = region.pieces.iter().map(ByteSpan::len).sum();
         assert_eq!(sum, region.text.len());

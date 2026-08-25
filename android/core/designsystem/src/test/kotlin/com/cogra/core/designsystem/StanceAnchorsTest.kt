@@ -73,4 +73,45 @@ class StanceAnchorsTest {
         // readout is a function of the table's order, not of iteration.
         assertThat(nearestStanceAnchor(StancePoint(0.0, 0.15)).emoji).isEqualTo("🙂")
     }
+
+    // -- The zero bundle (design.md §8.4) --
+
+    @Test
+    fun theTableWouldCallTheZeroBundleNice() {
+        // The bug this rule exists to stop, stated as arithmetic: the
+        // origin's nearest anchor really is 🙂, so a standing read
+        // through the table lies about severance.
+        assertThat(nearestStanceAnchor(StancePoint.Origin).emoji).isEqualTo("🙂")
+    }
+
+    @Test
+    fun aStandingAtZeroShrugsInstead() {
+        assertThat(standingReadout(StancePoint.Origin).emoji).isEqualTo("🤷")
+        assertThat(standingReadout(StancePoint.Origin)).isEqualTo(ZERO_BUNDLE_READOUT)
+    }
+
+    @Test
+    fun negativeZeroIsStillTheZeroBundle() {
+        // A fold that arrives as -0.0 on either axis is the same bundle;
+        // it must not slip past the rule on a sign bit.
+        assertThat(standingReadout(StancePoint(-0.0, 0.0)).emoji).isEqualTo("🤷")
+        assertThat(standingReadout(StancePoint(0.0, -0.0)).emoji).isEqualTo("🤷")
+        assertThat(standingReadout(StancePoint(-0.0, -0.0)).emoji).isEqualTo("🤷")
+    }
+
+    @Test
+    fun aNonZeroStandingStillReadsThroughTheTable() {
+        // The rule is narrow: only exact zero leaves the table.
+        assertThat(standingReadout(StancePoint(0.55, 0.20)).emoji).isEqualTo("😊")
+        assertThat(standingReadout(StancePoint(0.0, 0.15)).emoji).isEqualTo("🙂")
+        assertThat(standingReadout(StancePoint(0.01, 0.0)).emoji).isEqualTo("🙂")
+    }
+
+    @Test
+    fun theZeroReadoutIsNotOneOfTheTwentyAnchors() {
+        // The table maps a felt value onto a face; this is the absence
+        // of one, so it does not belong in it.
+        assertThat(STANCE_ANCHORS).doesNotContain(ZERO_BUNDLE_READOUT)
+        assertThat(STANCE_ANCHORS.map { it.emoji }).doesNotContain("🤷")
+    }
 }
