@@ -172,9 +172,15 @@ class StanceViewModel @Inject constructor(
     }
 
     fun onOpenPad(target: String) {
-        // A hold is the lesson: whoever completed one has no more use for
-        // the mark (design.md §8.7).
+        // A hold IS the lesson. It closes an open mark, and it spends the
+        // teaching tap for a reader who found the gesture without being
+        // told — either way they have met it, and teaching them later
+        // would cost them a tap for nothing (design.md §8.7).
         dismissCoachMark()
+        if (taught == false) {
+            taught = true
+            viewModelScope.launch { identity.markStancePadTaught() }
+        }
         // The pad opens at the origin, untilted — the low default belongs
         // to the tap, not to the considered gesture (design.md §8.3).
         update(target) {

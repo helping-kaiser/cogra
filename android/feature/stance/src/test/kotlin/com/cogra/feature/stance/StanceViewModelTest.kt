@@ -641,6 +641,26 @@ class StanceViewModelTest {
     }
 
     @Test
+    fun findingTheHoldUntaughtSpendsTheTeachingTapToo() = runTest(dispatcher) {
+        // Someone who discovers the gesture on their own has met it; a
+        // coach mark on their next tap would cost them a tap for nothing.
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.stancePadTaught).isTrue()
+
+        vm.onDismissPad(TARGET)
+        vm.onTapDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coachTarget).isNull()
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
+    }
+
+    @Test
     fun aSuccessfulHoldClosesTheMark() = runTest(dispatcher) {
         val vm = viewModel()
         vm.observe(TARGET)
