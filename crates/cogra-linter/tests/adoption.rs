@@ -60,6 +60,7 @@ designations = []
 
 [kinds]
 acceptee = \"the repository owner\"
+registry = \"docs/environment-kinds.md\"
 
 [kinds.extensions]
 rows = []
@@ -143,6 +144,172 @@ fn row(source: &str, error: &AdoptionError) -> String {
         .nth(at.line as usize - 1)
         .expect("the row the defect names")
         .to_owned()
+}
+
+/// A tree of files at `paths`, under a root of its own, for the spelling
+/// check to resolve configured paths against.
+fn tree(name: &str, paths: &[&str]) -> PathBuf {
+    let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = std::fs::remove_dir_all(&root);
+    for path in paths {
+        let file = root.join(path);
+        if let Some(parent) = file.parent() {
+            std::fs::create_dir_all(parent).expect("a directory for the fixture");
+        }
+        std::fs::write(&file, "fixture\n").expect("a fixture file");
+    }
+    root
+}
+
+/// A minimal adoption whose partition configures one path beside the
+/// catch-all, so a spelling can be planted in a row the test can name.
+fn configuring(path: &str) -> String {
+    let partition = format!(
+        "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"{path}\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 2
+path = \"\"
+owner = \"doc.one\"
+"
+    );
+    document(ONE_PREFIX, &partition, NO_PROFILES, EMPTY_K)
+}
+
+/// Matching is byte-exact, so a prefix the tree spells differently matches
+/// nothing at all — and on a case-insensitive filesystem the author sees the
+/// tree exactly where the prefix says it is. The check is what makes the
+/// byte-exactness say so.
+#[test]
+fn a_configured_path_the_tree_spells_otherwise_is_located() {
+    let root = tree("spelling-case", &["docs/README.md"]);
+    let source = configuring("Docs/");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it docs/");
+    let AdoptionError::PathSpelling {
+        ref configured,
+        ref found,
+        ..
+    } = error
+    else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert!(configured.contains("Docs/"), "{configured}");
+    assert_eq!(found, "docs/");
+    assert!(row(&source, &error).contains("Docs/"));
+}
+
+/// The mismatch may sit at any component, and the finding names the whole
+/// path as the tree spells it rather than the one component that differs.
+#[test]
+fn a_misspelling_deeper_in_a_path_names_the_whole_spelling() {
+    let root = tree("spelling-deep", &["docs/primitive/layers.md"]);
+    let source = configuring("docs/Primitive/");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it primitive/");
+    let AdoptionError::PathSpelling { ref found, .. } = error else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert_eq!(found, "docs/primitive/");
+}
+
+/// A file path is checked the same way, and reported without a trailing
+/// separator it never carried.
+#[test]
+fn a_misspelled_file_path_is_reported_as_a_file() {
+    let root = tree("spelling-file", &["docs/Layers.md"]);
+    let source = configuring("docs/layers.md");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it Layers.md");
+    let AdoptionError::PathSpelling { ref found, .. } = error else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert_eq!(found, "docs/Layers.md");
+}
+
+/// Absence is not a misspelling. A configured root that is simply not in the
+/// tree — a build output, a gitignored junction — passes here; whether its
+/// absence matters is the walk's question.
+#[test]
+fn a_configured_path_that_is_simply_absent_is_no_misspelling() {
+    let root = tree("spelling-absent", &["docs/README.md"]);
+    for absent in ["android/", "web/out/", "docs/nowhere/", "Cargo.lock"] {
+        let source = configuring(absent);
+        let adoption = load(&source).expect("the fixture loads");
+        assert!(
+            adoption.verify_spellings(&root).is_ok(),
+            "{absent} is absent, not misspelled"
+        );
+    }
+}
+
+/// The path that is spelled right passes, which is what keeps the check from
+/// being vacuous.
+#[test]
+fn a_configured_path_the_tree_spells_the_same_way_passes() {
+    let root = tree("spelling-exact", &["docs/primitive/layers.md"]);
+    for spelled in ["docs/", "docs/primitive/", "docs/primitive/layers.md"] {
+        let source = configuring(spelled);
+        let adoption = load(&source).expect("the fixture loads");
+        assert!(
+            adoption.verify_spellings(&root).is_ok(),
+            "{spelled} is the tree's own spelling"
+        );
+    }
+}
+
+/// Every section that configures a path is collected, so none of them can be
+/// checked by accident and none forgotten.
+#[test]
+fn every_configuring_section_contributes_its_paths() {
+    let adoption = ruled();
+    let sections: std::collections::BTreeSet<&str> = adoption
+        .configured_paths
+        .iter()
+        .map(|one| one.section)
+        .collect();
+    for expected in [
+        "[partition]",
+        "[carrier] exclude_trees",
+        "[carrier] generated_files",
+        "[carrier] vendored_files",
+        "[enforcement] failing",
+        "[kinds] registry",
+    ] {
+        assert!(sections.contains(expected), "{expected} contributes none");
+    }
+    assert!(
+        !adoption
+            .configured_paths
+            .iter()
+            .any(|one| one.path.as_str().is_empty()),
+        "the empty prefix configures no path"
+    );
+}
+
+/// The ruled adoption is spelled the way this repository spells its own
+/// trees — the check over the corpus it was written for.
+#[test]
+fn the_ruled_adoption_is_spelled_the_way_the_corpus_root_spells_it() {
+    let root = corpus_adoption_path()
+        .parent()
+        .expect("the corpus root")
+        .to_path_buf();
+    ruled()
+        .verify_spellings(&root)
+        .expect("every configured path is spelled as the tree spells it");
 }
 
 #[test]
@@ -468,6 +635,74 @@ fn the_banned_token_section_round_trips() {
     assert_eq!(&*banned.rules[1].id, "rust-plain-block-comment");
 }
 
+/// Each row's `class` is the lexer's own vocabulary token, and it arrives
+/// as written — the key the rule is read from, beside the `token` prose
+/// that no code reads.
+#[test]
+fn every_banned_token_row_names_its_class_in_the_lexers_vocabulary() {
+    let banned = ruled().banned_tokens;
+    assert_eq!(&*banned.rules[0].class, "plain line comment");
+    assert_eq!(&*banned.rules[1].class, "plain block comment");
+    for row in &banned.rules {
+        assert!(
+            row.token.starts_with(&*row.class),
+            "the prose {:?} spells a different class than {:?}",
+            row.token,
+            row.class
+        );
+    }
+}
+
+/// The registry document is named by its own key, and `registry_document`
+/// reads that key and nothing else — no prose, no compiled-in path, and no
+/// positional read of `[meta] discipline_docs`.
+#[test]
+fn the_registry_document_is_read_from_its_key() {
+    let adoption = ruled();
+    assert_eq!(
+        &*adoption.kinds.registry,
+        "crates/cogra-linter/docs/environment-kinds.md"
+    );
+    assert_eq!(
+        adoption.registry_document(),
+        PathBuf::from("crates/cogra-linter/docs/environment-kinds.md")
+    );
+    assert!(
+        corpus_adoption_path()
+            .parent()
+            .expect("the corpus root")
+            .join(adoption.registry_document())
+            .is_file(),
+        "the key names a document the corpus carries"
+    );
+}
+
+/// A fixture naming a different registry gets that one: the key is the
+/// datum, so the reading follows the file rather than this corpus.
+#[test]
+fn the_registry_document_follows_the_key() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K);
+    let adoption = load(&source).expect("the fixture loads");
+    assert_eq!(
+        adoption.registry_document(),
+        PathBuf::from("docs/environment-kinds.md")
+    );
+}
+
+/// `[kinds]` without its registry key names no document, so the data will
+/// not load at all rather than leaving the bootstrap to guess one.
+#[test]
+fn a_kinds_section_with_no_registry_key_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        .replace("registry = \"docs/environment-kinds.md\"\n", "");
+    let error = load(&source).expect_err("no registry key");
+    assert!(matches!(error, AdoptionError::Syntax(_)), "{error:?}");
+    assert!(
+        error.to_string().contains("TOML"),
+        "the message names the parse: {error}"
+    );
+}
+
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
@@ -629,6 +864,83 @@ owner = \"doc.one\"
     let error = load(&source).expect_err("Ω is not total");
     assert!(matches!(error, AdoptionError::PartitionNotTotal { .. }));
     assert!(row(&source, &error).contains("docs/"));
+}
+
+/// `order` is the document's claim about the matching order, and matching
+/// walks the stored array — so a rule whose order is not its position would
+/// match in an order its own row contradicts. The campaign that found this
+/// flipped `order = 4` to `order = 8`; the loader now refuses it.
+#[test]
+fn a_rule_whose_order_is_not_its_position_is_located() {
+    let partition = "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"docs/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 8
+path = \"crates/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 3
+path = \"\"
+owner = \"doc.one\"
+";
+    let source = document(ONE_PREFIX, partition, NO_PROFILES, EMPTY_K);
+    let error = load(&source).expect_err("an order that is not its position");
+    let AdoptionError::RuleOrderMismatch {
+        order, position, ..
+    } = error
+    else {
+        panic!("expected RuleOrderMismatch, got {error:?}");
+    };
+    assert_eq!(order, 8);
+    assert_eq!(position, 2);
+    assert!(row(&source, &error).contains("order = 8"));
+}
+
+/// A repeated order is the same defect: two rules claiming one position, and
+/// the row named is the one that is wrong.
+#[test]
+fn a_repeated_order_is_refused_at_the_second_rule() {
+    let partition = "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"docs/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 1
+path = \"\"
+owner = \"doc.one\"
+";
+    let source = document(ONE_PREFIX, partition, NO_PROFILES, EMPTY_K);
+    let error = load(&source).expect_err("two rules claiming one position");
+    let AdoptionError::RuleOrderMismatch { position, .. } = error else {
+        panic!("expected RuleOrderMismatch, got {error:?}");
+    };
+    assert_eq!(position, 2);
+}
+
+/// The ruled adoption's own orders are its positions, which is what the
+/// check asserts of every file it loads.
+#[test]
+fn the_ruled_partition_states_each_rules_position() {
+    for (index, rule) in ruled().partition.rules.iter().enumerate() {
+        assert_eq!(
+            rule.order as usize,
+            index + 1,
+            "the rule at position {} states order {}",
+            index + 1,
+            rule.order
+        );
+    }
 }
 
 #[test]

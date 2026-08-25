@@ -20,34 +20,25 @@
 //! prefix matching is where a path that normalises differently would escape
 //! the last rule.
 //!
-//! # The `order` check, and why it is opt-in
+//! # The `order` check
 //!
 //! `PartitionRule::order` documents itself as "the rule's position; first
-//! match wins, in this order", but [`Partition::owner_for`] matches down the
-//! stored array and the loader never reads `order` at all. The coupling
-//! between the declared position and the matching order is therefore
-//! unenforced: adoption data whose `order` values are shuffled or repeated
-//! loads clean and matches in an order its own document contradicts, with no
-//! diagnostic. The campaign found this by flipping one integer of the ruled
+//! match wins, in this order", and [`Partition::owner_for`] matches down the
+//! stored array. The campaign found the two uncoupled — the loader never
+//! read `order` at all, so data whose orders were shuffled or repeated
+//! loaded clean and matched in an order its own document contradicted, with
+//! no diagnostic — by flipping one integer of the ruled
 //! `corpus-adoption.toml` from `order = 4` to `order = 8`.
 //!
-//! That is a finding about the loader, not one of the four assertions the
-//! plan names, and it aborts every run it reaches — which would leave the
-//! plan's own assertions with no campaign at all. So it is kept, exactly as
-//! it was when it fired, behind `COGRA_FUZZ_STRICT_ORDER=1`: reproducible on
-//! demand, and out of the way of the totality campaign until the finding is
-//! dispositioned.
+//! The loader now checks it and refuses the data with `RuleOrderMismatch`,
+//! so this is no longer a finding held behind an environment gate but an
+//! ordinary invariant of the target: on anything that loaded, the orders are
+//! exactly `1..=n` in position order.
 
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 
 use cogra_linter::Adoption;
 use libfuzzer_sys::fuzz_target;
-
-fn strict_order() -> bool {
-    static STRICT: OnceLock<bool> = OnceLock::new();
-    *STRICT.get_or_init(|| std::env::var_os("COGRA_FUZZ_STRICT_ORDER").is_some())
-}
 
 const PROBES: [&str; 8] = [
     "",
@@ -90,10 +81,11 @@ fuzz_target!(|data: &[u8]| {
         );
     }
 
-    if strict_order() {
-        assert!(
-            rules.windows(2).all(|w| w[0].order <= w[1].order),
-            "the rules must be held in their own order"
+    for (index, rule) in rules.iter().enumerate() {
+        let position = u32::try_from(index + 1).unwrap_or(u32::MAX);
+        assert_eq!(
+            rule.order, position,
+            "a loaded rule's order must be its position, and the loader must refuse anything else"
         );
     }
 });
