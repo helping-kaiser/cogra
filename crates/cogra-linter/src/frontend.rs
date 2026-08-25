@@ -89,11 +89,18 @@ pub struct Region {
 impl Region {
     /// The file span enclosing a region-local span.
     ///
-    /// A logical span may cross a piece boundary — a wrapped occurrence, a
-    /// quotation whose markers were resolved away — and the file range
-    /// between its ends then covers structure the logical text does not
-    /// hold. That range is what a diagnostic points at: the whole of what
-    /// the author wrote, markers included.
+    /// A logical span may cross a piece boundary — an occurrence inside a run
+    /// of line documentation comments, whose leaders were resolved away and
+    /// took the line breaks with them, or a quotation whose markers were
+    /// removed — and the file range between its ends then covers structure
+    /// the logical text does not hold. That range is what a diagnostic points
+    /// at: the whole of what the author wrote, markers included.
+    ///
+    /// A prose span wrapped across lines is not one of those cases. Only
+    /// structure is resolved away, so the line break stays inside the span,
+    /// which then parses as no form and is text
+    /// (´[LBL-gram:labels:well-formed]´); what crosses a boundary here is a
+    /// near-miss's span, not an occurrence's.
     #[must_use]
     pub fn locate(&self, local: ByteSpan) -> ByteSpan {
         ByteSpan::new(self.at(local.start, false), self.at(local.end, true))

@@ -21,9 +21,10 @@
 //! **pass 1** harvests: every carrier source is walked in path order,
 //! pre-tokenized, parsed by the frontend its language names, scanned region
 //! by region, and turned into nodes, with the minting registries completed
-//! as it goes. Only then does **pass 2** resolve, adding the three edges
-//! that are judgments about completed registries — `Cites`, `ResolvesTo`,
-//! and `ValidatesAs` — and only then do the judgments run.
+//! as it goes. Only then does **pass 2** resolve, adding the edges that are
+//! judgments about completed registries — `Cites`, `ResolvesTo`,
+//! `ValidatesAs`, and the `Derives` warrant of an effective profile — and
+//! only then do the judgments run.
 //!
 //! Nothing in pass 2 depends on the order pass 1 visited anything. The
 //! sources are sorted by path before the harvest whatever order they arrive
@@ -80,7 +81,8 @@ pub use judge::kinds::{
 pub use migrate::{Migration, Remaining, distances};
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
 pub use registers::{
-    Freshness, Register, RegisterScope, Scope, Written, compare, regenerate_all, write_all,
+    Freshness, Register, RegisterScope, Scope, Written, compare, label_registers_of,
+    regenerate_all, write_all,
 };
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
@@ -112,7 +114,10 @@ pub const NEAR_MISS_SPACING: RuleId = RuleId::new("label-near-miss-spacing");
 pub const NEAR_MISS_BRACKET: RuleId = RuleId::new("label-near-miss-bracket");
 
 /// A label-shaped backtick span in scanned code text, where the acute is the
-/// label syntax. The corpus carries 88 of these.
+/// label syntax.
+///
+/// How many the corpus carries is a measurement, and a measurement moves with
+/// every commit: it is what a run reports, never what this comment says.
 pub const NEAR_MISS_BACKTICK: RuleId = RuleId::new("label-backtick-in-code");
 
 /// Several label-shaped spans inside one parenthesis, which is no citation
@@ -310,7 +315,29 @@ struct Harvest<'a> {
     pairs: BTreeMap<(Box<str>, Kind), NodeIndex>,
     citations: Vec<NodeIndex>,
     heads: Vec<NodeIndex>,
+    derivations: Vec<Derivation>,
     registry: Option<(Parsed, String)>,
+}
+
+/// One covered asset's derivation, queued for pass 2.
+///
+/// The label an asset derives is known the moment the census reports it; the
+/// mint that carries it is not. A register-placed profile puts that mint in a
+/// file of its own, harvested in path order like any other, so the warrant is
+/// a fact about a completed minting registry exactly as resolution is
+/// (´[ARCH-rule:linter:two-pass]´).
+struct Derivation {
+    /// The asset node the census produced.
+    asset: NodeIndex,
+    /// The owner that owns it, where the partition names one.
+    owner: Option<NodeIndex>,
+    /// The label the profile's name transformation derives from it.
+    label: Label,
+    /// The owner's register, where the profile's standard place is one.
+    register: Option<PathBuf>,
+    /// The source the asset sits in, which is where a comment-placed
+    /// profile's standard place lies.
+    source: PathBuf,
 }
 
 impl<'a> Harvest<'a> {
@@ -330,6 +357,7 @@ impl<'a> Harvest<'a> {
             pairs: BTreeMap::new(),
             citations: Vec::new(),
             heads: Vec::new(),
+            derivations: Vec::new(),
             registry: None,
         };
         let mut ids: BTreeSet<OwnerId> = a
@@ -425,7 +453,7 @@ impl<'a> Harvest<'a> {
             self.heads.push(node);
         }
 
-        self.assets(owner, &parsed);
+        self.assets(src, owner, &parsed);
 
         if src.path == self.a.registry_document() {
             self.registry = Some((parsed, String::from_utf8_lossy(&src.bytes).into_owned()));
@@ -515,13 +543,18 @@ impl<'a> Harvest<'a> {
         node
     }
 
-    /// The covered assets of the effective profiles.
+    /// The covered assets of the effective profiles, and the derivation each
+    /// one queues for pass 2.
     ///
     /// Empty in this corpus: both profiles are staged, so the frontends
     /// compute their censuses and report none of them
     /// (´dec:lint:staged-profiles´). The wiring is here so that entering Π
     /// flips two fields rather than writing code.
-    fn assets(&mut self, owner: Option<NodeIndex>, parsed: &Parsed) {
+    ///
+    /// An asset whose transformed identifier is no well-formed name queues
+    /// nothing: it derives no label, which is what the inventory judgment
+    /// reports rather than what the harvest invents.
+    fn assets(&mut self, src: &SourceFile, owner: Option<NodeIndex>, parsed: &Parsed) {
         for asset in &parsed.assets {
             let node = self.g.add_node(NodeW::Asset(AssetNode {
                 identifier: Box::from(asset.identifier.as_str()),
@@ -533,6 +566,64 @@ impl<'a> Harvest<'a> {
             }
             if let Some(profile) = self.profiles.get(&asset.profile).copied() {
                 self.g.add_edge(profile, node, EdgeW::Covers);
+            }
+            let Some(profile) = self
+                .a
+                .profiles
+                .profiles
+                .iter()
+                .find(|one| one.id == asset.profile)
+            else {
+                continue;
+            };
+            let Some(label) = registers::derived_label(profile, &asset.identifier, &asset.area)
+            else {
+                continue;
+            };
+            self.derivations.push(Derivation {
+                asset: node,
+                owner,
+                label,
+                register: profile
+                    .standard_place
+                    .register
+                    .as_ref()
+                    .map(|_| registers::register_path(&registers::owner_root(self.a, &src.owner))),
+                source: src.path.clone(),
+            });
+        }
+    }
+
+    /// The derivation warrants: one `Derives` edge from each covered asset to
+    /// the mint of its derived label at its profile's standard place, and the
+    /// census side of the inventory bijection recorded beside them
+    /// (´dec:lint:staged-profiles´).
+    ///
+    /// The edge runs to the *mint* and never to the label, because the
+    /// derivation warrants a label at an occurrence: an occurrence at the
+    /// standard place whose text differs from the derivation warrants
+    /// nothing, and an edge into the label would have asserted the agreement
+    /// the invariant exists to check (´sig:lint:edge-weights´).
+    ///
+    /// A label the owner mints more than once at the standard place takes an
+    /// edge per mint rather than the registry's first, so that the degree the
+    /// inventory reads is what the corpus actually carries.
+    fn derive(&mut self) {
+        for one in std::mem::take(&mut self.derivations) {
+            let Some(owner) = one.owner else { continue };
+            self.r
+                .derived
+                .entry((owner, one.label.clone()))
+                .or_insert(one.asset);
+            let Some(carried) = self.r.labels.get(&(owner, one.label.clone())).copied() else {
+                continue;
+            };
+            let mut mints: Vec<NodeIndex> = in_along(&self.g, carried, EdgeW::Mints)
+                .filter(|mint| at_standard_place(&self.g, *mint, &one))
+                .collect();
+            mints.sort_unstable();
+            for mint in mints {
+                self.g.add_edge(one.asset, mint, EdgeW::Derives);
             }
         }
     }
@@ -592,8 +683,15 @@ impl<'a> Harvest<'a> {
         }
     }
 
-    /// Pass 2: the three edges that judge completed registries.
+    /// Pass 2: the edges that judge completed registries.
+    ///
+    /// Four rather than the ruled three: `Derives` joins `Cites`,
+    /// `ResolvesTo`, and `ValidatesAs` because it is the same species of
+    /// fact. A derived label's mint may sit in any source of its owner — the
+    /// register of a register-placed profile is one — so the warrant can only
+    /// be laid once every mint is registered (´dec:lint:staged-profiles´).
     fn resolve(&mut self, kinds: Option<&KindRegistry>) {
+        self.derive();
         for citation in std::mem::take(&mut self.citations) {
             let Some(NodeW::Citation(weight)) = self.g.node_weight(citation) else {
                 continue;
@@ -660,6 +758,46 @@ fn validates_as(k: &KindRegistry, head: &str, declared: &Kind) -> Vec<Box<str>> 
         HeadVerdict::Uncatalogued { .. } | HeadVerdict::Beyond { .. } => Vec::new(),
         HeadVerdict::Ambiguous { bases } => bases,
     }
+}
+
+/// Whether one mint lies at the standard place a derivation names.
+///
+/// `[profiles]` records the place as free text with one machine-readable
+/// half — the register, where the place is one — so the question is answered
+/// over that half and over the two places this corpus's profiles choose: the
+/// owner's generated register, or the asset's own inner documentation
+/// comment. A mint of a derived label anywhere else takes no edge, which is
+/// what leaves it the inventory label away from its place that
+/// (´[LBL-inv:labels:warrant-totality]´) reports.
+///
+/// For a comment-placed profile the source is checked and the comment's
+/// position within it is not: that the comment opens the definition's own
+/// body is a pairing this run does not make, exactly as the migration
+/// measurement says of the same place (´dec:lint:migrations-subcommand´).
+fn at_standard_place(g: &Corpus, mint: NodeIndex, derivation: &Derivation) -> bool {
+    let Some(source) = source_of(g, mint) else {
+        return false;
+    };
+    let Some(NodeW::Source(weight)) = g.node_weight(source) else {
+        return false;
+    };
+    match &derivation.register {
+        Some(register) => weight.path == *register,
+        None => weight.path == derivation.source && inner_doc(g, mint),
+    }
+}
+
+/// Whether a mint sits inside an inner documentation comment.
+fn inner_doc(g: &Corpus, mint: NodeIndex) -> bool {
+    in_along(g, mint, EdgeW::Contains).any(|region| {
+        matches!(
+            g.node_weight(region),
+            Some(NodeW::Region(weight)) if matches!(
+                weight.kind,
+                RegionKind::Comment(CommentForm::LineInnerDoc | CommentForm::BlockInnerDoc)
+            )
+        )
+    })
 }
 
 /// Every prefix Σ registers for one owner, hand-registered or derived.

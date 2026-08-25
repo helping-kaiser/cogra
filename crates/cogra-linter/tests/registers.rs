@@ -8,11 +8,12 @@
 //!
 //! Trace convention: every test's doc comment names the clause it traces to.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use cogra_linter::registers::{Freshness, Register, RegisterScope, Scope, compare, regenerate_all};
-use cogra_linter::{Adoption, Run};
+use cogra_linter::{Adoption, Asset, OwnerId, ProfileId, Run, migrate};
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -188,4 +189,140 @@ fn an_owner_scope_touches_no_corpus_wide_register() {
         generated().iter().all(|reg| !scope.admits(reg)),
         "nothing generated today belongs to one owner"
     );
+}
+
+/// The test profile, which `[profiles]` registers and stages.
+fn staged() -> ProfileId {
+    ProfileId::new("rust-test")
+}
+
+/// That profile's census over the whole corpus, walked once.
+fn census() -> &'static BTreeMap<OwnerId, Vec<Asset>> {
+    static MEASURED: OnceLock<BTreeMap<OwnerId, Vec<Asset>>> = OnceLock::new();
+    MEASURED.get_or_init(|| {
+        migrate::census(adoption(), &root(), &staged()).expect("the repository root is a directory")
+    })
+}
+
+/// The registers the named regeneration emits for it.
+fn named() -> &'static Vec<Register> {
+    static EMITTED: OnceLock<Vec<Register>> = OnceLock::new();
+    EMITTED.get_or_init(|| {
+        let profile = adoption()
+            .profiles
+            .profiles
+            .iter()
+            .find(|one| one.id == staged())
+            .expect("the test profile is registered");
+        cogra_linter::label_registers_of(adoption(), profile, census())
+    })
+}
+
+/// (´dec:lint:staged-profiles´): the named regeneration emits a staged
+/// profile's per-owner registers, one for each owner with covered assets,
+/// while the profile is still staged — which is what its entry condition
+/// asks for and what a run computing nothing for it could never supply.
+#[test]
+fn a_named_regeneration_emits_a_staged_profiles_registers() {
+    let spelled: Vec<String> = named()
+        .iter()
+        .map(|reg| format!("{} · {} bytes", reg.path.display(), reg.bytes.len()))
+        .collect();
+    println!("{}", spelled.join("\n"));
+
+    assert_eq!(named().len(), census().len(), "one per owner: {spelled:?}");
+    assert!(named().len() > 1, "the corpus's tests span several owners");
+    for reg in named() {
+        let RegisterScope::LabelRegister { owner, profile } = &reg.scope else {
+            panic!("a label register, not {:?}", reg.scope);
+        };
+        assert_eq!(*profile, staged());
+        assert!(
+            reg.path.starts_with("crates/"),
+            "a register lies in the tree of the owner it presents: {}",
+            reg.path.display()
+        );
+        assert!(census().contains_key(owner));
+        assert_eq!(
+            compare(reg, run().sources.get(&reg.path).map(Vec::as_slice)),
+            Freshness::Staged,
+            "no register is committed yet, and this lane commits none"
+        );
+    }
+}
+
+/// (´[ARCH-req:linter:determinism]´): a second census over the same corpus
+/// produces the same bytes, which is the property the exact comparison rests
+/// on the day the registers are committed.
+#[test]
+fn a_named_regeneration_is_byte_identical_on_a_second_walk() {
+    let profile = adoption()
+        .profiles
+        .profiles
+        .iter()
+        .find(|one| one.id == staged())
+        .expect("the test profile is registered");
+    let again = migrate::census(adoption(), &root(), &staged()).expect("a second census");
+    assert_eq!(&again, census(), "the census itself is deterministic");
+    assert_eq!(
+        cogra_linter::label_registers_of(adoption(), profile, &again),
+        *named()
+    );
+}
+
+/// (´dec:lint:one-generator´): the measurement and the named regeneration
+/// read one census — the same machinery, so the registers a migration
+/// generates are the ones the measurement counted its distance against.
+#[test]
+fn the_measurement_and_the_named_regeneration_agree_on_the_census() {
+    let measured = migrate::distances(adoption(), &root(), Some(&staged()))
+        .expect("one profile measured")
+        .pop()
+        .expect("the test profile is staged");
+    let covered: usize = census().values().map(Vec::len).sum();
+    println!("{covered} covered, {} remaining", measured.remaining.len());
+    assert_eq!(measured.covered, covered);
+
+    let mut waiting: Vec<PathBuf> = measured
+        .remaining
+        .iter()
+        .map(|step| step.at.path.clone())
+        .collect();
+    waiting.sort();
+    let mut emitted: Vec<PathBuf> = named().iter().map(|reg| reg.path.clone()).collect();
+    emitted.sort();
+    assert_eq!(
+        waiting, emitted,
+        "every register the measurement waits on is one the regeneration emits"
+    );
+}
+
+/// (´dec:lint:staged-profiles´): a whole-corpus regeneration does not sweep a
+/// staged profile up. Generating its registers is a step in a migration, and
+/// the profile has to be named.
+#[test]
+fn a_whole_corpus_regeneration_sweeps_no_staged_profile_up() {
+    assert!(
+        generated()
+            .iter()
+            .all(|reg| !matches!(reg.scope, RegisterScope::LabelRegister { .. })),
+        "the check's own generation emits a register only for a profile in force"
+    );
+    assert!(!named().is_empty(), "and the named one emits them");
+}
+
+/// (`[profiles]`): the register's rows are ordered bytewise by label, which
+/// is the form the profile's standard place fixes.
+#[test]
+fn every_register_orders_its_rows_bytewise_by_label() {
+    for reg in named() {
+        let labels: Vec<&str> = text(reg)
+            .lines()
+            .filter_map(|line| line.split('`').nth(1))
+            .collect();
+        let mut sorted = labels.clone();
+        sorted.sort_unstable();
+        assert_eq!(labels, sorted, "{}", reg.path.display());
+        assert!(!labels.is_empty(), "{}", reg.path.display());
+    }
 }

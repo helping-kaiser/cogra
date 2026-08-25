@@ -379,7 +379,12 @@ pub struct Registries {
     /// Owner id to owner node, for the partition's own diagnostics.
     pub owners: HashMap<OwnerId, NodeIndex>,
     /// Every derived label of every effective profile, for the inventory
-    /// query.
+    /// query: the asset the profile's transformation derived it from.
+    ///
+    /// The census side of the bijection, keyed as `mints` and `labels` are.
+    /// A label two of one owner's assets derive keeps the first, exactly as a
+    /// twice-minted label does — the collision is the graph's to report, and
+    /// reporting it needs both assets, which the `Covers` edges hold.
     pub derived: HashMap<(NodeIndex, Label), NodeIndex>,
 }
 
