@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { stanceHandlers } from "@/test/stance";
+import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
 
 // The header's stance control reads its own standing, so the read is a
@@ -141,6 +141,85 @@ describe("ProfileScreen", () => {
       expect(screen.getByTestId("profile-stance")).toHaveTextContent("Really into this"),
     );
     expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent("+0.60 / +0.65");
+  });
+
+  it("wears that standing on a load that starts with no access token", async () => {
+    // The same arrival the post detail surface has a twin for: refresh
+    // token persisted, access token still unminted in this tab. The
+    // header's own Me read reaches the guard first here, so this surface
+    // was never the one that showed the defect — which is exactly why it
+    // needs pinning: nothing about the stance read itself was making it
+    // work, and a reordering of the header would have taken it too.
+    window.localStorage.setItem("cogra.activeAccount", "u1");
+    window.localStorage.setItem("cogra.refreshToken", "refresh-1");
+    const store = createTokenStore();
+
+    const anonymous: string[] = [];
+    server.use(
+      graphql.query("Me", ({ request }) =>
+        HttpResponse.json({
+          data:
+            request.headers.get("authorization") === null
+              ? { me: null }
+              : {
+                  me: {
+                    __typename: "User",
+                    id: "u1",
+                    handle: "ada",
+                    displayName: { __typename: "ModeratedText", value: null },
+                    accountState: "MEMBER",
+                    hasReciprocated: true,
+                    invitedBy: null,
+                  },
+                },
+        }),
+      ),
+      graphql.mutation("RefreshSession", () =>
+        HttpResponse.json({
+          data: {
+            refreshSession: {
+              __typename: "AuthPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access-2",
+                refreshToken: "refresh-2",
+                user: { __typename: "User", id: "u1" },
+              },
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+      graphql.query("ProfileStance", ({ variables, request }) => {
+        const id = String(variables.id);
+        const authorized = request.headers.get("authorization") !== null;
+        if (!authorized) anonymous.push(id);
+        return HttpResponse.json({
+          data: {
+            user: {
+              __typename: "User",
+              id,
+              viewerStance: authorized
+                ? stanceBundle({ pDirected: 0.6, pInterest: 0.65, recordCount: 4 })
+                : null,
+            },
+          },
+        });
+      }),
+    );
+
+    renderWithProviders(<ProfileScreen handle="ada" />, { store });
+    await waitFor(() =>
+      expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent(
+        "+0.60 / +0.65",
+      ),
+    );
+    expect(store.accessToken()).toBe("access-2");
+    expect(anonymous).not.toContain("u2");
   });
 
   it("offers no stance on one's own profile", async () => {

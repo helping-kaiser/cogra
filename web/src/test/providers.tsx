@@ -1,11 +1,12 @@
 // Renders a surface under the real provider stack: an injectable token
 // store, a real Apollo client pointed at MSW, and the auth runtime.
 
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 
+import { authorizedLink } from "@/lib/apollo-link";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
@@ -34,7 +35,9 @@ export function renderWithProviders(
 ) {
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: new HttpLink({ uri: "http://localhost/graphql" }),
+    // The same chain the browser builds, over the injected store: which
+    // reads carry the viewer's token is part of what a surface does.
+    link: authorizedLink(store, "http://localhost/graphql"),
   });
   const result = render(
     <SessionProvider store={store}>
