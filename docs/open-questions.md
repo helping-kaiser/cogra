@@ -195,6 +195,12 @@ both clients read it, and this face is the same kind of thing —
 so whatever is decided belongs in §8.3 as a named value rather
 than in two apps' source.
 
+Jakob's lean (2026-08-25, hand test): **🫥** — the dotted-line
+face reads as "nothing here yet" better than 😐's neutrality.
+Caveat that defers the call: 🫥 renders very differently across
+platforms (the WhatsApp glyph is not the system one), so the
+choice wants a cross-device look first. 😐 stays until then.
+
 ---
 
 ## Q35 — The profile connection count: which fold counts
