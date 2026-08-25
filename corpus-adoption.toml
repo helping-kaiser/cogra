@@ -278,6 +278,15 @@ reason     = "no records/NNN-*.md tree exists in this corpus"
 
 [partition]
 match = "first-match-wins, in the order listed"
+order_rule = """
+order IS CHECKED AT LOAD and is not decoration: each rule's order must
+equal its 1-based position in this list, or the adoption data fails to
+load with a located error naming both numbers. Matching walks the
+rules in file order, so the list IS the order and `order` is this
+document's claim about it; a shuffled or repeated integer would make a
+rule match in an order its own row contradicts, silently. Inserting a
+rule therefore means renumbering every rule below it.
+"""
 
 # --- 1..5: the discipline documents and the linter architecture ---
 # Each is its own owner though all five sit inside the cogra-linter

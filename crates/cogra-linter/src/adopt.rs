@@ -497,6 +497,13 @@ impl Partition {
 #[derive(Clone, Debug)]
 pub struct PartitionRule {
     /// The rule's position; first match wins, in this order.
+    ///
+    /// Checked at load, and equal to the rule's 1-based position in
+    /// [`Partition::rules`] on any [`Adoption`] that loaded: matching walks
+    /// the stored array, so the array is the order and this field is the
+    /// document's claim about it. The two agreeing is what lets a reader
+    /// cite a rule by its order and a diagnostic name one
+    /// (´conv:lint:owner-assignment´).
     pub order: u32,
     /// The literal prefix the rule matches.
     pub path: PathPrefix,
@@ -1002,7 +1009,7 @@ struct RawPartition {
 
 #[derive(serde::Deserialize)]
 struct RawPartitionRule {
-    order: u32,
+    order: Spanned<u32>,
     path: Spanned<PathPrefix>,
     owner: Spanned<OwnerId>,
     #[serde(default)]
@@ -1107,13 +1114,22 @@ impl RawPartition {
         origin: &Path,
         signature: &Signature,
     ) -> Result<Partition, AdoptionError> {
-        for rule in &self.rules {
+        for (index, rule) in self.rules.iter().enumerate() {
             let owner = rule.owner.as_ref();
             if !signature.registers(owner) {
                 return Err(AdoptionError::UnknownOwner {
                     at: row(&rule.owner, source, origin),
-                    order: rule.order,
+                    order: *rule.order.as_ref(),
                     owner: owner.to_string(),
+                });
+            }
+            let position = u32::try_from(index + 1).unwrap_or(u32::MAX);
+            let stated = *rule.order.as_ref();
+            if stated != position {
+                return Err(AdoptionError::RuleOrderMismatch {
+                    at: row(&rule.order, source, origin),
+                    order: stated,
+                    position,
                 });
             }
         }
@@ -1134,7 +1150,7 @@ impl RawPartition {
             .rules
             .into_iter()
             .map(|rule| PartitionRule {
-                order: rule.order,
+                order: rule.order.into_inner(),
                 path: rule.path.into_inner(),
                 owner: rule.owner.into_inner(),
                 optional: rule.optional,
