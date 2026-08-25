@@ -63,7 +63,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useStanceInputMode } from "@/lib/stance/input-mode";
-import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
 import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
@@ -530,9 +530,10 @@ export function StanceControl({
           onContextMenu={(event) => event.preventDefault()}
           className="flex min-h-12 min-w-12 touch-none select-none items-center justify-center gap-2 rounded-full px-3 text-label-large text-primary [-webkit-touch-callout:none]"
         >
-          {/* Never a bare word (§8.3): a viewer with no bundle gets the
-              same face, muted and translucent — the control visibly
-              waiting to be given a value. */}
+          {/* Never a bare word (§8.3): a viewer with no bundle gets a
+              face outside the table, muted and translucent — the control
+              visibly waiting to be given a value rather than wearing an
+              answer, and never the shrug a zero standing owns (§8.4). */}
           <span
             aria-hidden="true"
             data-testid={`${testIdPrefix}-resting-face`}
@@ -542,7 +543,7 @@ export function StanceControl({
                 : "text-title-large"
             }
           >
-            {restingFace === null ? ZERO_BUNDLE_EMOJI : restingFace.emoji}
+            {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
           </span>
           {/* Colour never carries stance alone: the words say it too
               (design.md §10) — and the exact pair with them, because the

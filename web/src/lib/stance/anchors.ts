@@ -65,6 +65,16 @@ export function nearestAnchor(pair: StancePair): StanceAnchor {
 /** What a bundle standing at exactly `(0, 0)` reads as (design.md §8.4). */
 export const ZERO_BUNDLE_EMOJI = "🤷";
 
+/**
+ * The face an unauthored target wears at rest (design.md §8.3, Q42).
+ * Deliberately outside the table, so an empty control can never read as
+ * a standing the viewer already holds — and deliberately not the shrug,
+ * which means "severed, or netted to zero": a bundle that exists and
+ * came to nothing is a different thing from one that was never given
+ * anything, and the read tells the two apart.
+ */
+export const RESTING_FACE_EMOJI = "😐";
+
 /** Just the emoji and the words — what every readout surface renders. */
 export type StanceReadout = {
   readonly emoji: string;
