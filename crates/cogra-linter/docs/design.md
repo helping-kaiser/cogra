@@ -98,7 +98,14 @@ pub struct RegionNode {
     pub span: ByteSpan,
     pub participates: bool,
     pub generated: bool,
+    /// For a generated region, the set it presents. A region participates in
+    /// nothing it presents (`[LBL-inv:labels:generated-compliance]`). Empty
+    /// domain in version 1: no citation index is designated.
+    pub presents: Option<PresentedSet>,
 }
+
+/// What a generated region displays, and therefore what it may not feed.
+pub enum PresentedSet { CitationIndex { upstream: OwnerId }, LabelRegister { profile: ProfileId } }
 
 pub struct MintNode { pub label: Label, pub span: ByteSpan, pub syntax: Syntax }
 
@@ -611,3 +618,347 @@ The classification rule of the test profile is the Cargo target containing the f
 `syn` reports spans as `proc_macro2::Span`, and the byte range of one is `Span::byte_range`, which is gated behind proc-macro2's `span-locations` feature. Its documentation states the caveat that decides the design: inside a procedural macro the range is accurate only on nightly, but "when executing in contexts like main.rs or build.rs, the byte range is always accurate regardless of toolchain" (docs.rs, proc-macro2 1.0.107, verified 2026-08-25). The linter is such a context — it is a binary parsing files, never a macro expanding — so the ranges are accurate on stable, and the crate depends on `proc-macro2` directly with `features = ["span-locations"]` to turn them on.
 
 Two consequences are named here rather than found in implementation. The feature is additive across a build, so enabling it is a decision about the whole dependency graph rather than about this crate alone; the linter is a binary and its graph is its own, so nothing else in the workspace is affected. And every located Rust diagnostic in the crate rests on this one API — a doc-comment region, an item's span, a census entry's place — so a failure to enable the feature does not produce wrong offsets loudly but zero-width ones quietly. The gate therefore requires a test asserting a known byte range on a fixture before any Rust-frontend code is written (`gate:lint:implementation`).
+
+## The judgments · `sec:lint:judgments`
+
+**Signature (Judgment surface)** · `sig:lint:judgment-api`
+
+Every invariant is one free function over the graph, named for the clause it discharges, returning the diagnostics that clause produces and nothing else. A judgment never mutates the graph and never consults a later stage's output (`[ARCH-rule:linter:two-pass]`).
+
+```rust
+/// Run every judgment the adoption data puts in force, in a fixed order.
+/// The order affects nothing but the collection sequence, which `diag`
+/// re-sorts (`conv:lint:diagnostic-order`).
+pub fn judge_all(
+    g: &Corpus,
+    r: &Registries,
+    a: &Adoption,
+    kinds: Option<&KindRegistry>,
+) -> Vec<Diagnostic>;
+
+pub mod labels {
+    pub fn unique_mint(g: &Corpus, r: &Registries) -> Vec<Diagnostic>;
+    pub fn total_resolution(g: &Corpus, r: &Registries) -> Vec<Diagnostic>;
+    pub fn warrant_totality(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Diagnostic>;
+    pub fn inventory(g: &Corpus, r: &Registries) -> Vec<Diagnostic>;
+    pub fn generated_compliance(g: &Corpus, r: &Registries) -> Vec<Diagnostic>;
+    pub fn anchor_harvest(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
+    pub fn synthetic_citation(g: &Corpus, a: &Adoption) -> Vec<Diagnostic>;
+}
+
+pub mod kinds {
+    pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic>;
+}
+
+pub mod freshness {
+    pub fn registers(g: &Corpus, a: &Adoption, root: &Path) -> Vec<Diagnostic>;
+}
+```
+
+**Table (Each judgment as a query)** · `tab:lint:judgment-implementation`
+
+The architecture states each invariant as a graph query (`[ARCH-tab:linter:judgments-as-queries]`); this table fixes the query against the weights of (`sig:lint:node-weights`) and (`sig:lint:edge-weights`), so that implementation has nothing left to invent.
+
+| Clause | Query |
+| --- | --- |
+| (`[LBL-inv:labels:unique-mint]`) | insertion into `Registries::mints` collides; both `Mint` nodes' spans are reported together, neither is dropped |
+| (`[LBL-inv:labels:total-resolution]`) | every `Citation` node has out-degree exactly one over `ResolvesTo`; zero is unresolved, and a `labels` hit with a `mints` miss elsewhere adds the import-form suggestion |
+| (`[LBL-inf:labels:imported-citation]`) side conditions | every `Citation` with a prefix has out-degree exactly one over `Cites`; zero is an unregistered prefix; a `Cites` target equal to the citing owner is a self-qualified import |
+| (`[LBL-inv:labels:warrant-totality]`) | for each `Mint`: its label's kind lies in K exactly when the mint has an incoming `Derives` edge; a K-kind with no governing effective `Profile` is a hard failure with neither warrant available |
+| (`[LBL-inv:labels:inventory]`) | for each effective `Profile`: the `Covers`→`Derives` composition is a bijection onto the labels carried at the profile's standard place, checked per owner under `owner_view`; non-injectivity names both assets |
+| (`[LBL-inv:labels:generated-compliance]`) | every occurrence in a `generated` region is a `Mint` with an incoming `Derives` or a `Citation` with a `ResolvesTo`; a region's `presents` set is excluded from the harvest it feeds |
+| (`[LBL-inf:labels:anchor-harvest]`) | `EdgeFiltered` view over `Anchors` from a designated document's body regions into the designated upstream owner; empty domain today |
+| (`[LBL-inf:labels:synthetic-citation]`) | designated typed-data strings become `Citation` nodes like any other; empty domain today |
+| (`[KND-judg:kinds:head-validation]`) | every `Head` node has out-degree exactly one over `ValidatesAs`; zero is an uncatalogued pair, two is an ambiguous reduction |
+| (`[IDN-rule:identity:well-founded-graph]`) | `petgraph::algo::is_cyclic_directed` over the relevant view, when identity checking lands; no subject in version 1 |
+
+Two rows are worth their own sentence. Unique minting is caught at *insertion* rather than by a later degree check, because the diagnostic wants both locations and the second one is in hand exactly then; the degree check over `Mints` is the same fact seen later and with less information. And the empty-domain rows are implemented, not skipped: a check whose domain is empty passes vacuously and a check that does not exist passes by absence, and the difference shows up on the day a designation is recorded.
+
+**Convention (Findings are values, errors are the linter's own failure)** · `conv:lint:finding-or-error`
+
+No judgment returns `Result`. A judgment's subject is the corpus, its answer is a list of diagnostics, and an empty list is the positive answer — the same shape the sibling crate gives its verdicts, for the same reason (`[ICX-def:interchange:acceptance]`). What travels in `Err` is only the linter's own inability to proceed, which (`crit:lint:error-or-finding`) fixes and which the taxonomy of (`sig:lint:error-taxonomy`) turns out to be very small.
+
+**Decision (A registry-as-data failure suppresses kind validation loudly)** · `dec:lint:registry-bootstrap`
+
+Parsing the classification relation out of the registry document is a bootstrap dependency: a defect there degrades kind validation corpus-wide (`[ARCH-dec:linter:registry-as-data]`). The design handles it in one place and never silently. `KindRegistry::from_markdown` returns `Result<KindRegistry, Vec<Diagnostic>>`, whose `Err` is a list of located findings on the registry document itself; `judge_all` then takes `kinds: None`, runs every label judgment normally — the registry document is linted first by the rules that need no kinds, exactly as the architecture's mitigation says — and emits one further diagnostic naming kind validation as suppressed and the count of heads not validated. The alternative, treating an unvalidatable head as valid, would make a broken registry look like a clean corpus, which is the failure mode the whole bootstrap must not have.
+
+**Signature (Kind registry surface)** · `sig:lint:kind-registry-api`
+
+```rust
+/// The effective classification relation C_A = C ∪ X_A
+/// (`[KND-sig:kinds:registry-data]`).
+pub struct KindRegistry { /* private */ }
+
+impl KindRegistry {
+    /// Read C from the registry document's own Convention tables, derive the
+    /// hybrid rows from the declared triples, and check their side
+    /// conditions (`[KND-inf:kinds:hybrid]`).
+    pub fn from_markdown(doc: &Parsed, src: &str) -> Result<KindRegistry, Vec<Diagnostic>>;
+    /// Add the acceptee's recorded extensions. Empty in version 1.
+    pub fn with_extensions(self, x: &Extensions) -> KindRegistry;
+    /// The kinds an exact catalogue name carries; several, for a homonym.
+    pub fn classify<'a>(&'a self, name: &str) -> impl Iterator<Item = &'a Kind> + 'a;
+    /// `base_A(h)`: the exact catalogue name after device removal
+    /// (`[KND-def:kinds:presentation-reduction]`).
+    pub fn reduce(&self, head: &str) -> Reduced;
+    /// `C_A ⊢ h ✓ k`, by an exact pair or one reduction through one base pair.
+    pub fn validate(&self, head: &str, declared: &Kind) -> HeadVerdict;
+    /// `Hom(C_A)`, derived and never declared (`[KND-def:kinds:homonymy]`).
+    pub fn homonyms(&self) -> impl Iterator<Item = (&str, &Kind)> + '_;
+    /// The five counts of (`[KND-tab:kinds:headline-counts]`), derived from
+    /// the tables alone.
+    pub fn headline_counts(&self) -> HeadlineCounts;
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum HeadVerdict {
+    /// An exact catalogue name carrying the declared kind.
+    Exact,
+    /// Reduced through exactly one base pair.
+    Reduced { base: Box<str> },
+    /// The head reduces to a name the relation does not carry with this kind.
+    Uncatalogued { base: Box<str> },
+    /// More than one base pair applies: the reduction is ambiguous.
+    Ambiguous { bases: Vec<Box<str>> },
+}
+```
+
+`homonyms` and `headline_counts` are public because they are the generator's inputs (`req:lint:register-generator`): the companion register presents exactly `Hom(C_A)` and the registry document's headline table is a generated region derived from the tables alone. Deriving them from the same parsed relation the validation uses is what makes the register a view of the classification rather than a second copy of it.
+
+**Open Question (Where the presentation-reduction vocabulary lives)** · `open:lint:reduction-vocabulary`
+
+The architecture rules that presentation reduction is applied to tokenized head words with "the modifier list being adoption data, not code" (`[ARCH-conv:linter:markdown-frontend]`). The registry states the vocabulary in the prose of (`[KND-def:kinds:presentation-reduction]`) — numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated `sub-` prefixes, placement, containment, and twelve named emphasis and status modifiers — and in prose only: it is not a table, so registry-as-data cannot reach it, and `corpus-adoption.toml` has no section for it. Three roads exist and the design takes none of them unilaterally: add a `[kinds.reduction]` section to the adoption file transcribing the vocabulary, which reintroduces exactly the transcription drift (`[ARCH-dec:linter:registry-as-data]`) exists to prevent; add the vocabulary to the registry document as a Convention table of its own, which is a new edition of a ratified discipline; or read it from the prose, which is parsing an English sentence and is not a road. The same question governs the overriding rows — Working hypothesis and Standing hypothesis reduce to themselves — which are likewise prose.
+
+**Open Question (Where the head-recognition rule lives)** · `open:lint:head-recognition`
+
+(`[KND-def:kinds:presentation-reduction]`) closes by making two things adoption data: "Which environment class a document format declares for a head, and how a head maps to one". For this corpus the rule is visible in every disciplined document — a bold `Kind (Title)` line followed by the separator and the mint, and a Markdown heading followed by the separator and the mint — and it is written down nowhere. `[scanned-regions]` fixes which regions participate, not which of them are heads. Until it is recorded, the Markdown frontend's head recognizer is a code fact about the corpus, which (`req:lint:adoption-data-only`) forbids.
+
+## Registers · `sec:lint:registers`
+
+**Signature (Register surface)** · `sig:lint:register-api`
+
+One generator produces every generated register the disciplines call for, and the check and the regeneration mode consume the same output (`req:lint:register-generator`), (`[ARCH-rule:linter:register-freshness]`).
+
+```rust
+/// A register as the generator produces it: a path and the exact bytes.
+pub struct Register { pub path: PathBuf, pub bytes: Vec<u8>, pub scope: RegisterScope }
+
+pub enum RegisterScope {
+    /// One per owner with covered assets, for one inventory profile.
+    LabelRegister { owner: OwnerId, profile: ProfileId },
+    /// The companion attestation register (`[KND-req:kinds:attestation-register]`).
+    Attestation,
+    /// A generated region inside an authored file, not a whole file
+    /// (`[KND-tab:kinds:headline-counts]`).
+    Region { host: PathBuf, span: ByteSpan },
+}
+
+/// Regenerate in memory. Total: it reads the completed registries and
+/// writes nothing.
+pub fn regenerate_all(g: &Corpus, r: &Registries, a: &Adoption, k: Option<&KindRegistry>)
+    -> Vec<Register>;
+
+/// Compare one register against what is committed.
+pub fn compare(reg: &Register, committed: Option<&[u8]>) -> Freshness;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Freshness {
+    /// Byte-identical.
+    Current,
+    /// Differs, with the offset of the first differing byte.
+    Stale { at: usize },
+    /// Never generated: no committed bytes exist to compare against
+    /// (`req:lint:register-generator`).
+    Staged,
+}
+
+/// Write, in the regeneration mode only, never from a check.
+pub fn write_all(regs: &[Register], scope: Scope) -> Result<Written, GenerateError>;
+
+/// Which owners a regeneration touches. A scoped regeneration ignores
+/// unrelated owners' defects (`[LBL-cav:labels:coexistence]`).
+pub enum Scope { WholeCorpus, Owner(OwnerId) }
+```
+
+**Decision (Exact bytes, and no digest anywhere)** · `dec:lint:no-digest`
+
+`compare` is `Vec<u8>` against `&[u8]` and there is no hash in the crate — not of a register, not of a file, not as an internal optimization that could later persist. This is the linter's whole share of the identity discipline, taken as its charter states it: the freshness comparison is exact bytes, and the affirmative no-identity outcome is the recorded stop (`[IDN-case:identity:artifact]`), (`[IDN-case:identity:no-identity]`), (`[IDN-crit:identity:benefit]`), (`req:lint:determinism`). A digest here would fail the benefit criterion — it would buy nothing over comparing two byte strings that are both already in memory — and would owe a walked adjudication and an admission record it could not discharge (`[IDN-req:identity:admission-record]`). The design records the stop rather than the absence, which is what (`[IDN-req:identity:stop-record]`) asks, and the gate turns it into a check: the crate's dependency graph carries no hashing library and its source names no digest (`gate:lint:implementation`).
+
+`Stale` carries the offset of the first difference and not a diff, because a diff is a rendering concern and `render` has the two byte strings.
+
+**Decision (Regeneration is idempotent and its output is the check's input)** · `dec:lint:one-generator`
+
+`regenerate_all` is called by both modes and its result is the only description of what a register should contain. The check compares that result against disk; the regeneration mode writes it. Nothing generates a register twice by two routes, which is the concrete content of "one generator" (`req:lint:register-generator`), (`[KND-req:kinds:attestation-register]`). Two properties follow and are obligations rather than remarks: regeneration is idempotent, and a check run immediately after a write reports `Current` for every register it wrote (`tab:lint:metatheorem-tests`).
+
+The headline counts are a generated *region* inside an authored file rather than a generated file, so `RegisterScope::Region` carries its host and span and `write_all` splices rather than replaces — the one place the generator edits a file it does not own end to end, and the reason `environment-kinds.md` is not in `[carrier]` `generated_files`.
+
+## Diagnostics and the command line · `sec:lint:output`
+
+**Signature (Diagnostic)** · `sig:lint:diagnostic-api`
+
+```rust
+/// One finding about the corpus.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Diagnostic {
+    pub rule: RuleId,
+    pub severity: Severity,
+    pub enforcement: Enforcement,
+    pub primary: Location,
+    /// Further locations the finding needs — the other mint of a duplicate,
+    /// the second asset of a collision — each with its own note.
+    pub related: Vec<Related>,
+    pub message: String,
+}
+
+/// A stable rule identifier. Deliberately a plain token and never a label:
+/// `lint` is a reserved kind no profile governs, so a label-shaped rule id
+/// would be a hard failure of the linter's own sources
+/// (`[LBL-sig:labels:reserved-kinds]`), `[reserved-kinds]` of the adoption data.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RuleId(&'static str);
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Severity { Error, Warning }
+
+/// Whether this finding fails the build or is reported only
+/// (`rep:lint:first-corpus`).
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Enforcement { Failing, Advisory }
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Location {
+    pub path: PathBuf,
+    pub span: ByteSpan,
+    /// One-based, computed once at render time from the source bytes.
+    pub line: u32,
+    pub column: u32,
+}
+
+pub struct Related { pub at: Location, pub note: String }
+```
+
+**Convention (The diagnostic order)** · `conv:lint:diagnostic-order`
+
+`Ord` on `Diagnostic` is implemented, not derived, and is exactly path, then the primary span's start offset, then the rule identifier — the three keys (`[ARCH-req:linter:determinism]`) fixes and in that order. A derived `Ord` would compare the fields in declaration order, putting the rule first, and would then have to be kept honest by field order forever. Two runs over one tree emit one output because the walk sorts its sources by path, every judgment collects deterministically, and the whole list is sorted by this comparator before rendering. The comparator is total on the corpus — two diagnostics with the same path, offset, and rule are the same finding — which is a property obligation rather than a claim (`tab:lint:metatheorem-tests`).
+
+**Signature (Command line)** · `sig:lint:cli-api`
+
+Two modes, because the register rule requires exactly two: a check that writes nothing, and an explicit mode that regenerates in place (`[ARCH-rule:linter:register-freshness]`).
+
+```rust
+#[derive(clap::Parser)]
+#[command(name = "cogra-lint")]
+struct Cli {
+    /// The corpus root. Defaults to the working directory.
+    #[arg(long, default_value = ".")]
+    root: PathBuf,
+    /// The adoption data. Defaults to `<root>/corpus-adoption.toml`.
+    #[arg(long)]
+    adoption: Option<PathBuf>,
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(clap::Subcommand)]
+enum Command {
+    /// Check the corpus. Writes nothing, ever.
+    Check {
+        /// Report advisory findings too. Off by default.
+        #[arg(long)]
+        advisory: bool,
+    },
+    /// Regenerate every generated register in place.
+    Regenerate {
+        /// Restrict to one owner (`[LBL-cav:labels:coexistence]`).
+        #[arg(long)]
+        owner: Option<String>,
+        /// Report what would change and write nothing.
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+```
+
+Exit codes are the machine-readable half of (`[ARCH-req:linter:diagnostics-not-panics]`): `0` is a clean corpus, `1` is findings, `2` is the linter's own failure — a malformed adoption file, an unusable root, a write that failed. That findings and crashes are different codes is what lets a CI lane tell "the corpus is wrong" from "the linter is broken", and the concept names that distinction as a consumer requirement (`sig:lint:consumers`).
+
+`clap` with its `derive` feature is the technical answer to a technical question, and it is taken rather than debated: it is the argument parser the Rust ecosystem documents, the derive API is the one its own documentation leads with, and the alternative — hand-rolling two subcommands — buys nothing and loses the help output CI operators read. Version and features are in (`tab:lint:dependencies`).
+
+**Open Question (Whether the failing set lives in the adoption data)** · `open:lint:enforcement-partition`
+
+Acceptance is scoped: version 1 is accepted on a clean run over the material written under the discipline, and the linter enters CI as a failing gate over exactly that set and an advisory one over the rest, the failing set growing as each migration lands (`rep:lint:first-corpus`). `Diagnostic::enforcement` is where that partition lands in the types, but nothing records the partition itself. It is corpus data of exactly the shape `[carrier]` holds — a list of path prefixes — which argues for a section in `corpus-adoption.toml`; it is also a fact about a migration schedule rather than about the corpus's structure, which argues for a CI-lane flag. The design does not choose, because the choice decides whether growing the failing set is a reviewed edit to the adoption file or a change to a CI invocation, and that is a governance question.
+
+**Open Question (Whether continuous integration wants machine-readable findings)** · `open:lint:machine-output`
+
+The design renders one human-readable diagnostic form and nothing else: path, line, column, rule, message, then the related locations. No consumer named in (`sig:lint:consumers`) needs more — CI needs the exit code, and authors read the text. A second, machine-readable form would exist only to feed a code-review annotation surface, which is a question about how this repository wants CI to report and not a question the design can answer. It is asked now rather than later because the answer changes `render`'s surface and nothing else, and doing it in version 1 costs almost nothing while retrofitting it means revisiting every diagnostic site.
+
+**Open Question (Whether a staged profile's census is reported)** · `open:lint:staged-census`
+
+(`dec:lint:staged-profiles`) makes a staged profile inert: no census, no judgment, no output. The migrations the two staged profiles wait on are large and measurable — 284 test functions wanting a generated register, ~42 module definitions wanting an inner documentation comment — and a run that computed the census without judging it could report the distance each migration still has to travel. That is a measurement rather than a lint, and it would put a half-computed pass in a design whose staging exists to forbid one; but it is also the only cheap instrument the corpus has for tracking two migrations it has committed to. Whether the human wants it, and if so whether it belongs behind a separate subcommand rather than in `check`, is not the design's call.
+
+## Errors · `sec:lint:errors`
+
+**Criterion (Error against finding)** · `crit:lint:error-or-finding`
+
+One test decides which surface a failure belongs to. If the input is exactly the kind of thing the operation takes and the answer is negative, it is a **finding** and travels as a `Diagnostic`. If the linter cannot do its job at all, it is an **error** and travels in `Err`.
+
+The criterion cuts unusually far toward findings here, and deliberately: (`req:lint:diagnostics`) and (`[ARCH-req:linter:diagnostics-not-panics]`) put an unreadable tree, an unpaired backtick, a frontend parse error, and a defective foreign owner all on the finding side, each scoped exactly as the discipline scopes it. A file that will not parse is a fact about the corpus, which is what the linter reports. What remains on the error side is small enough to enumerate: the adoption data will not load, the corpus root is not a directory, or a write in the regeneration mode failed. Everything else is a diagnostic, and a taxonomy this small is the design working rather than the design being thin.
+
+**Signature (Error taxonomy)** · `sig:lint:error-taxonomy`
+
+Three leaf enums and one aggregate, all in `error.rs`, all derived with `thiserror`, each `#[non_exhaustive]`, each `Send + Sync + 'static`, each `Display` message lowercase and unpunctuated per the Rust API Guidelines' error conventions.
+
+```rust
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum AdoptionError {
+    #[error("cannot read the adoption data at {path}")]
+    Unreadable { path: PathBuf, #[source] source: io::Error },
+    #[error("adoption data is not well-formed TOML")]
+    Syntax(#[source] toml::de::Error),
+    #[error("partition rule {order} names owner {owner}, which no prefix registers")]
+    UnknownOwner { order: u32, owner: String },
+    #[error("prefix {prefix} is registered twice")]
+    DuplicatePrefix { prefix: String },
+    #[error("the last partition rule does not carry the empty prefix, so Ω is not total")]
+    PartitionNotTotal,
+    #[error("profile {id} is missing its {datum}")]
+    ProfileIncomplete { id: String, datum: &'static str },
+    #[error("profile {id} governs kind {kind}, which is not reserved in K")]
+    UngovernedKindNotReserved { id: String, kind: String },
+    #[error("the effective profile count {stated} disagrees with the {found} profiles not staged")]
+    EffectiveCountMismatch { stated: usize, found: usize },
+}
+
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum WalkError {
+    #[error("corpus root {path} is not a directory")]
+    NotADirectory { path: PathBuf },
+}
+
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum GenerateError {
+    #[error("cannot write the register at {path}")]
+    Write { path: PathBuf, #[source] source: io::Error },
+    #[error("the generated region at {path} has no host span to splice into")]
+    MissingHostRegion { path: PathBuf },
+}
+
+/// One error type for a consumer that wants one.
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum RunError {
+    #[error(transparent)] Adoption(#[from] AdoptionError),
+    #[error(transparent)] Walk(#[from] WalkError),
+    #[error(transparent)] Generate(#[from] GenerateError),
+}
+```
+
+Every variant that can be located is located, which is the linter's own version of the rule it imposes on its dependency (`[ICX-def:interchange:acceptance]`): an adoption defect names the row it sits in, taken from `toml::Spanned` (`dec:lint:toml-parsing`), because an unlocated complaint about a thousand-line configuration file is a worse diagnostic than the linter would accept from anything else.
+
+`AdoptionError::UngovernedKindNotReserved` and `EffectiveCountMismatch` are load-bearing rather than defensive. The first holds `[reserved-kinds]`'s own rule — every kind governed by Π lies in K (`[LBL-sig:labels:profiles]`) — at load time, where a violation is one line in one file rather than a corpus-wide misclassification. The second holds the staged-profile bookkeeping honest: `effective = 0` beside two `status = "staged"` profiles is a consistent file, and `effective = 1` beside two staged ones is not, and R19's "entering is a commit that flips two fields" is only safe if something checks that both were flipped.
+
+`LabelSyntax` (`sig:lint:near-miss-api`) is not in the taxonomy, and its absence is the point: it is the one `Err` the crate routinely discards, because a delimited span that parses as no form is ordinary text and never a failure (`[LBL-gram:labels:well-formed]`). It is public so that a near-miss can say how far the parse got, and its rustdoc says in as many words that surfacing it as a diagnostic is a defect.
+
+`anyhow` appears in `main.rs` and nowhere else — the repository's rule names both crates, and the division is the documented one: `thiserror` for a library's typed surface, `anyhow` for a binary that only wants to print what went wrong and exit `2`.
