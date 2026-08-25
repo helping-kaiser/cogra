@@ -6,3 +6,10 @@
 //! design.md, both ratified. The module map, the public API of every slice,
 //! and the implementation gate are the design's; nothing here deviates from
 //! it without being named in review first.
+
+pub mod scan;
+
+pub use scan::{
+    ByteSpan, DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax,
+    NearMiss, NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
+};
