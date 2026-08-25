@@ -87,6 +87,7 @@ exclude_trees = [
 # (its rows never feed the sets they were generated from). Freshness
 # is byte-exact either way (ARCH rule:linter:register-freshness).
 generated_files = [
+  "crates/cogra-linter/docs/attestation-register.md",  # E_hat_A, see [kinds.register]
   "schema.graphql",             # exported, CI-diffed (CLAUDE.md)
   "Cargo.lock",
   "web/package-lock.json",
@@ -1131,17 +1132,16 @@ region, per KND gate:kinds:adoption.
 standard_place = "crates/cogra-linter/docs/attestation-register.md"
 ordering       = "name, kind, source, locator, record sequence number"
 presents       = ["evidence and status rows", "Hom(C_A), the homonym section"]
-state          = "staged — never generated"
+state          = "generated — compared byte-exact every run"
 note = """
 NAME AND LOCATION ARE IMPLEMENTATION-DEFINED, as the label registers'
 are: the linter's regeneration mode maintains this file and may move
 it. It carries names and kinds, never labels, so no owner constraint
 falls on it and it may live beside the registry document it presents.
-STAGED means exactly this: a register that has never been generated
-has no committed bytes to compare against, so freshness reports it as
-staged rather than stale. The first generation run commits the
-initial register and arms exact byte comparison from then on. It
-joins [carrier] generated_files in that same commit.
+It is a committed generated file of the carrier ([carrier]
+generated_files), regenerated in memory on every run and compared
+byte-exact; hand-editing it is a failure, and regeneration is its only
+repair.
 """
 
 

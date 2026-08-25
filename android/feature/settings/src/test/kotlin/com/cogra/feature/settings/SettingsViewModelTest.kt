@@ -11,6 +11,7 @@ import com.cogra.domain.UserError
 import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.identity.SignOut
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -19,6 +20,7 @@ import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -229,5 +231,29 @@ class SettingsViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
+    }
+
+    // -- The stance input preference (design.md §8.6) --
+
+    @Test
+    fun thePadIsTheStoredDefault() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.stanceInputMode).isEqualTo(StanceInputMode.PAD)
+    }
+
+    @Test
+    fun pickingAnAlternateStoresItAndShowsItAsChosen() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onStanceInputMode(StanceInputMode.ENTRY)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.stanceInputMode).isEqualTo(StanceInputMode.ENTRY)
+        // Stored, not screen state: the choice replaces the pad on every
+        // other surface too.
+        assertThat(identity.stanceInputMode.first()).isEqualTo(StanceInputMode.ENTRY)
     }
 }

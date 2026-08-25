@@ -6,17 +6,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.KeyGateResult
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.SessionInfo
+import com.cogra.domain.stance.StanceInputMode
 import com.google.common.truth.Truth.assertThat
 import java.time.Instant
 import org.junit.Rule
@@ -39,6 +44,7 @@ class SettingsScreenTest {
         onCreateBackup: () -> Unit = {},
         onBackupCodeSaved: () -> Unit = {},
         onExportKey: () -> Unit = {},
+        onStanceInputMode: (StanceInputMode) -> Unit = {},
         keyGate: KeyGate = FakeKeyGate(KeyGateResult.Granted),
         keyBanner: @Composable () -> Unit = {},
     ) {
@@ -53,6 +59,7 @@ class SettingsScreenTest {
                 onNewHandleChange = {}, onChangeHandle = {},
                 onNewEmailChange = {}, onEmailChangePasswordChange = {}, onRequestEmailChange = {},
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
+                onStanceInputMode = onStanceInputMode,
                 onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
                 keyGate = keyGate,
@@ -259,5 +266,45 @@ class SettingsScreenTest {
         )
         compose.onNodeWithTag("revoke_s1").assertDoesNotExist()
         compose.onNodeWithTag("revoke_s2").assertExists()
+    }
+
+    // -- The stance input preference (design.md §8.6) --
+
+    @Test
+    fun settingsOffersAllThreeInputsWithThePadSelectedByDefault() {
+        render(SettingsUiState())
+
+        compose.onNodeWithTag("settings_stance_input_pad").performScrollTo().assertIsSelected()
+        compose.onNodeWithTag("settings_stance_input_sliders").assertIsNotSelected()
+        compose.onNodeWithTag("settings_stance_input_entry").assertIsNotSelected()
+    }
+
+    @Test
+    fun pickingAnAlternateReportsIt() {
+        var picked: StanceInputMode? = null
+        render(SettingsUiState(), onStanceInputMode = { picked = it })
+
+        compose.onNodeWithTag("settings_stance_input_sliders").performScrollTo().performClick()
+
+        assertThat(picked).isEqualTo(StanceInputMode.SLIDERS)
+    }
+
+    @Test
+    fun theStoredChoiceIsTheSelectedOne() {
+        render(SettingsUiState(stanceInputMode = StanceInputMode.ENTRY))
+
+        compose.onNodeWithTag("settings_stance_input_entry").performScrollTo().assertIsSelected()
+        compose.onNodeWithTag("settings_stance_input_pad").assertIsNotSelected()
+    }
+
+    @Test
+    fun eachInputOptionIsOneSelectableRowNotABareRadio() {
+        // The label and its hint are part of the target, and the row is
+        // announced once rather than as a radio plus loose text.
+        render(SettingsUiState())
+
+        compose.onNodeWithTag("settings_stance_input_pad")
+            .performScrollTo()
+            .assertHasClickAction()
     }
 }

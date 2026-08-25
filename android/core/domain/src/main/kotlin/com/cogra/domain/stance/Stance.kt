@@ -32,6 +32,31 @@ data class StancePair(val pDirected: Double, val pInterest: Double) {
 }
 
 /**
+ * Which surface the stance control offers for picking a value
+ * (design.md §8.6). The pad is the default, not the only way; the two
+ * alternates are the same machinery on a different surface, and they
+ * are also the accessible path — the pad is a drag gesture, and
+ * design.md §10 requires a drag to always have a non-drag equivalent.
+ *
+ * The choice replaces the pad EVERYWHERE, not per-screen, which is why
+ * it is a stored preference rather than a control's own state.
+ */
+enum class StanceInputMode {
+    PAD,
+
+    /** One slider per parameter. */
+    SLIDERS,
+
+    /** Typed values, for people who want exact control. */
+    ENTRY,
+    ;
+
+    companion object {
+        val Default = PAD
+    }
+}
+
+/**
  * The viewer's own bundle toward one target, folded — "everything about
  * the bundle is read-side" (design.md §8.1).
  */

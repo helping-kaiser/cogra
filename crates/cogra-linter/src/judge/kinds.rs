@@ -31,9 +31,13 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use petgraph::stable_graph::NodeIndex;
+
 use crate::adopt::{Adoption, Kind, KindExtensions};
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
 use crate::frontend::{Parsed, Table};
+use crate::graph::{Corpus, EdgeW, NodeKind, NodeW, nodes_of, out_along};
+use crate::judge::at;
 
 /// The document carries no catalogue table at all.
 pub const NO_TABLES: RuleId = RuleId::new("registry-no-catalogue-table");
@@ -54,7 +58,9 @@ pub const HYBRID_COLLIDES: RuleId = RuleId::new("registry-hybrid-token-collides"
 pub const HYBRID_MISMATCH: RuleId = RuleId::new("registry-hybrid-token-mismatch");
 
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 6] = [
+pub const RULES: [RuleId; 8] = [
+    HEAD_AMBIGUOUS,
+    HEAD_UNCATALOGUED,
     HYBRID_COLLIDES,
     HYBRID_MISMATCH,
     HYBRID_PART,
@@ -71,6 +77,12 @@ const MODIFIER: &str = "Modifier";
 
 /// The header both tables' kind column carries.
 const KIND: &str = "Kind";
+
+/// The header the generated headline table's measure column carries.
+const MEASURE: &str = "Measure";
+
+/// The header its count column carries.
+const COUNT: &str = "Count";
 
 /// The em dash a device row carries where a kind would stand.
 const NO_KIND: &str = "\u{2014}";
@@ -209,6 +221,42 @@ pub enum HeadVerdict {
     },
 }
 
+/// The status one pair of C_A carries under σ_A
+/// (´[KND-judg:kinds:attestation]´).
+///
+/// Two variants and not three, by the coverage invariant's own words: for
+/// every pair of C_A exactly one of firm and borderline holds, and every
+/// candidate lies outside C_A (´[KND-inv:kinds:attestation-coverage]´). A
+/// candidate is therefore not a status this type can carry — it is a
+/// recorded string with no pair, and `[kinds.statuses] candidates` is where
+/// it lives.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Attestation {
+    /// Ordinary attestation: the evidence is accepted as it stands.
+    Firm,
+    /// The pair is accepted and its evidence qualified — the dagger the
+    /// edition prints at the row.
+    Borderline,
+}
+
+impl Attestation {
+    /// The status's name, as the companion register spells it.
+    ///
+    /// ```
+    /// use cogra_linter::Attestation;
+    ///
+    /// assert_eq!(Attestation::Firm.token(), "firm");
+    /// assert_eq!(Attestation::Borderline.token(), "borderline");
+    /// ```
+    #[must_use]
+    pub const fn token(self) -> &'static str {
+        match self {
+            Attestation::Firm => "firm",
+            Attestation::Borderline => "borderline",
+        }
+    }
+}
+
 /// The five counts of (´[KND-tab:kinds:headline-counts]´), derived from the
 /// tables alone.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
@@ -233,6 +281,8 @@ pub struct HeadlineCounts {
 #[derive(Clone, Debug, Default)]
 pub struct KindRegistry {
     pairs: BTreeMap<Box<str>, BTreeSet<Kind>>,
+    borderline: BTreeSet<(Box<str>, Kind)>,
+    headline: Option<ByteSpan>,
     families: BTreeSet<DeviceFamily>,
     modifiers: BTreeSet<Box<str>>,
     unrecognized: Vec<Box<str>>,
@@ -417,6 +467,47 @@ impl KindRegistry {
             .flat_map(|(name, kinds)| kinds.iter().map(move |kind| (&**name, kind)))
     }
 
+    /// Every pair of C_A with the status σ_A gives it, in the register's own
+    /// order — name, then kind (´[KND-req:kinds:attestation-register]´).
+    ///
+    /// The status is the edition's, read off the row's own dagger rather
+    /// than from a transcribed list: the dagger is a status mark on the row
+    /// (´[KND-judg:kinds:attestation]´), so the document that carries the
+    /// pair carries its status, and `[kinds.statuses] daggered` is a record
+    /// of what the edition says and not a second source of it. No status is
+    /// strengthened in this corpus, so σ_A is the edition's unchanged.
+    ///
+    /// This is the companion register's input, as [`KindRegistry::homonyms`]
+    /// is (´req:lint:register-generator´).
+    pub fn rows(&self) -> impl Iterator<Item = (&str, &Kind, Attestation)> {
+        self.pairs.iter().flat_map(move |(name, kinds)| {
+            kinds.iter().map(move |kind| {
+                let status = if self.borderline.contains(&(name.clone(), kind.clone())) {
+                    Attestation::Borderline
+                } else {
+                    Attestation::Firm
+                };
+                (&**name, kind, status)
+            })
+        })
+    }
+
+    /// Where the headline counts sit in the registry document, if the
+    /// document carries them.
+    ///
+    /// The generated region of (´[KND-tab:kinds:headline-counts]´) is found
+    /// by its own table shape, which is registry-as-data applied to the one
+    /// table the registry does not read as a catalogue
+    /// (´[ARCH-dec:linter:registry-as-data]´). The generator splices its
+    /// regenerated table into exactly this span
+    /// (´sig:lint:register-api´), and it is the only route to that span: a
+    /// second recognizer, in the adoption data or in the generator, would be
+    /// a second reading of one document.
+    #[must_use]
+    pub fn headline_region(&self) -> Option<ByteSpan> {
+        self.headline
+    }
+
     /// The five counts of (´[KND-tab:kinds:headline-counts]´), derived from
     /// the tables alone.
     #[must_use]
@@ -562,7 +653,10 @@ enum Role {
     Catalogue,
     /// `Modifier | Kind`: the emphasis and status modifiers.
     Modifiers,
-    /// Anything else, the generated headline counts included.
+    /// `Measure | Count`: the generated headline counts, which contribute
+    /// no pair and are the generator's to write.
+    Headline,
+    /// Anything else.
     Other,
 }
 
@@ -571,6 +665,7 @@ fn role_of(table: &Table) -> Role {
     match headers.as_slice() {
         [ENVIRONMENT, KIND] => Role::Catalogue,
         [MODIFIER, KIND] => Role::Modifiers,
+        [MEASURE, COUNT] => Role::Headline,
         _ => Role::Other,
     }
 }
@@ -580,6 +675,7 @@ struct Declared {
     name: Box<str>,
     token: Box<str>,
     at: ByteSpan,
+    status: Attestation,
 }
 
 /// The read of one registry document.
@@ -589,6 +685,8 @@ struct Reader<'a> {
     enforcement: Enforcement,
     findings: Vec<Diagnostic>,
     pairs: BTreeMap<Box<str>, BTreeSet<Kind>>,
+    borderline: BTreeSet<(Box<str>, Kind)>,
+    headline: Option<ByteSpan>,
     declared: Vec<Declared>,
     families: BTreeSet<DeviceFamily>,
     modifiers: BTreeSet<Box<str>>,
@@ -605,6 +703,8 @@ impl<'a> Reader<'a> {
             enforcement: a.enforcement.enforcement_for(&doc.path),
             findings: Vec::new(),
             pairs: BTreeMap::new(),
+            borderline: BTreeSet::new(),
+            headline: None,
             declared: Vec::new(),
             families: BTreeSet::new(),
             modifiers: BTreeSet::new(),
@@ -619,6 +719,7 @@ impl<'a> Reader<'a> {
             match role_of(table) {
                 Role::Catalogue => self.catalogue(table),
                 Role::Modifiers => self.modifiers(table),
+                Role::Headline => self.headline = self.headline.or(Some(table.span)),
                 Role::Other => {}
             }
         }
@@ -634,6 +735,8 @@ impl<'a> Reader<'a> {
         if self.findings.is_empty() {
             Ok(KindRegistry {
                 pairs: self.pairs,
+                borderline: self.borderline,
+                headline: self.headline,
                 families: self.families,
                 modifiers: self.modifiers,
                 unrecognized: self.unrecognized,
@@ -654,6 +757,7 @@ impl<'a> Reader<'a> {
                 self.malformed(table, row);
                 continue;
             };
+            let status = status_of(name);
             let name = catalogue_name(name);
             let kind = kind.trim();
             if name.is_empty() {
@@ -661,9 +765,9 @@ impl<'a> Reader<'a> {
             } else if kind == NO_KIND {
                 self.device(&name);
             } else if name.contains(JOIN) {
-                self.hybrid(&name, kind, table);
+                self.hybrid(&name, kind, table, status);
             } else {
-                self.pair(&name, kind, table);
+                self.pair(&name, kind, table, status);
             }
         }
     }
@@ -702,7 +806,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn hybrid(&mut self, name: &str, kind: &str, table: &Table) {
+    fn hybrid(&mut self, name: &str, kind: &str, table: &Table, status: Attestation) {
         let Some(token) = kind_token(kind) else {
             self.not_a_kind(name, kind, table);
             return;
@@ -711,18 +815,25 @@ impl<'a> Reader<'a> {
             name: name.into(),
             token: token.into(),
             at: table.span,
+            status,
         });
     }
 
-    fn pair(&mut self, name: &str, kind: &str, table: &Table) {
+    fn pair(&mut self, name: &str, kind: &str, table: &Table, status: Attestation) {
         let Some(token) = kind_token(kind) else {
             self.not_a_kind(name, kind, table);
             return;
         };
-        self.pairs
-            .entry(name.into())
-            .or_default()
-            .insert(Kind::new(token));
+        let kind = Kind::new(token);
+        self.record(name, &kind, status);
+        self.pairs.entry(name.into()).or_default().insert(kind);
+    }
+
+    /// One row's edition status, kept only where it is not the default.
+    fn record(&mut self, name: &str, kind: &Kind, status: Attestation) {
+        if status == Attestation::Borderline {
+            self.borderline.insert((name.into(), kind.clone()));
+        }
     }
 
     /// Derive the hybrid rows and check the side conditions
@@ -764,6 +875,7 @@ impl<'a> Reader<'a> {
                 self.findings.push(finding);
                 continue;
             }
+            self.record(&one.name, &token, one.status);
             self.pairs
                 .entry(one.name.clone())
                 .or_default()
@@ -830,6 +942,19 @@ fn catalogue_name(cell: &str) -> String {
     cell.trim().trim_end_matches(DAGGER).trim_end().to_owned()
 }
 
+/// The edition status the row's own mark records.
+///
+/// The dagger is a status mark on the row and never a character of the
+/// name, so the same cell carries both the name and its status
+/// (´[KND-judg:kinds:attestation]´). An undaggered row is firm.
+fn status_of(cell: &str) -> Attestation {
+    if cell.trim_end().ends_with(DAGGER) {
+        Attestation::Borderline
+    } else {
+        Attestation::Firm
+    }
+}
+
 /// The kind token a kind cell carries, which the registry writes in a plain
 /// code span.
 fn kind_token(cell: &str) -> Option<&str> {
@@ -844,4 +969,76 @@ fn kind_token(cell: &str) -> Option<&str> {
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
     word.then_some(inner)
+}
+
+/// A head the relation does not carry with its declared kind
+/// (´[KND-judg:kinds:head-validation]´).
+pub const HEAD_UNCATALOGUED: RuleId = RuleId::new("kind-head-uncatalogued");
+
+/// A head whose presentation reduction reaches more than one base pair
+/// (´[KND-judg:kinds:head-validation]´).
+pub const HEAD_AMBIGUOUS: RuleId = RuleId::new("kind-head-ambiguous");
+
+/// Every head validates as exactly one catalogued pair
+/// (´[KND-judg:kinds:head-validation]´).
+///
+/// The query is the degree: out-degree one over `ValidatesAs` is a validated
+/// head, zero is an uncatalogued pair, and two is an ambiguous reduction
+/// (´tab:lint:judgment-implementation´). Making the pairs nodes rather than a
+/// side table is what puts (´[KND-inv:kinds:catalogued-pairs]´) in the same
+/// query language as every other invariant — an unrecorded pair is an edge
+/// with no target.
+///
+/// The registry is consulted for the *words* of the finding and never for
+/// the verdict: the edges the harvest laid down already carry it, and asking
+/// twice is how a judgment and a resolution come to disagree. Matching is
+/// case-exact, so a head whose only defect is capitalization lands here and
+/// its message names the catalogue spelling (´dec:lint:head-recognition´).
+#[must_use]
+pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
+    let mut found = Vec::new();
+    for head in nodes_of(g, NodeKind::Head) {
+        let Some(NodeW::Head(weight)) = g.node_weight(head) else {
+            continue;
+        };
+        let Some(at) = at(g, head) else { continue };
+        let pairs: Vec<NodeIndex> = out_along(g, head, EdgeW::ValidatesAs).collect();
+        let (rule, message) = match pairs.len() {
+            1 => continue,
+            0 => (
+                HEAD_UNCATALOGUED,
+                uncatalogued(k, &weight.text, &weight.declared),
+            ),
+            _ => (
+                HEAD_AMBIGUOUS,
+                format!(
+                    "the head {} reduces through {} base pairs, and the reduction admits one",
+                    weight.text,
+                    pairs.len()
+                ),
+            ),
+        };
+        found.push(Diagnostic {
+            rule,
+            severity: Severity::Error,
+            enforcement: Enforcement::Advisory,
+            primary: at,
+            related: Vec::new(),
+            message,
+        });
+    }
+    found
+}
+
+/// What an unvalidated head says, with the name it reduced to where the
+/// reduction reached one.
+fn uncatalogued(k: &KindRegistry, head: &str, declared: &Kind) -> String {
+    match k.validate(head, declared) {
+        HeadVerdict::Uncatalogued { base } if &*base != head => {
+            format!(
+                "the head {head} reduces to {base}, which the relation does not carry with the kind {declared}"
+            )
+        }
+        _ => format!("the relation carries no pair of {head} with the kind {declared}"),
+    }
 }

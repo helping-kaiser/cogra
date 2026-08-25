@@ -26,6 +26,16 @@
     <string name="key_export_pem">PEM (PKCS#8)</string>
     <string name="key_export_hex">Raw hex — Ed25519 private key</string>
 
+    <!-- Which surface a stance is picked on, everywhere (design.md §8.6). -->
+    <string name="settings_stance_input_title">Taking a stance</string>
+    <string name="settings_stance_input_body">A tap always adds a small positive one. This is what a longer press opens, everywhere.</string>
+    <string name="settings_stance_input_pad">The pad</string>
+    <string name="settings_stance_input_pad_hint">Press and hold, then drift to where you stand.</string>
+    <string name="settings_stance_input_sliders">Sliders</string>
+    <string name="settings_stance_input_sliders_hint">One slider per side of the stance.</string>
+    <string name="settings_stance_input_entry">Typed values</string>
+    <string name="settings_stance_input_entry_hint">Type both numbers exactly.</string>
+
     <string name="settings_sessions_title">Sessions</string>
     <string name="settings_session_unnamed">Unnamed device</string>
     <string name="settings_session_current"> (this device)</string>
