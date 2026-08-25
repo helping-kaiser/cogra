@@ -2060,14 +2060,19 @@ These bind every mutation below.
   net-state.** A stance record carries exactly the two values the
   author picked — one new edge against the bundle, never a
   derived delta ([design.md §8.1](design.md)). The bundle is a
-  read-side per-author fold: current standing and where a pick
-  lands it are shown, never folded into what is written. The one
-  exception is the explicitly named severance gesture ("sever
-  X"): there the client states the intent and the backend
-  assembles the delta record that nets the author's bundle to
-  `(0, 0)` — netting, never removal. Severance's wire shape is
-  settled with the stance slice ([roadmap.md](roadmap.md) slice
-  2.2).
+  read-side per-author fold — `viewerStance` on every stance-able
+  node: current standing and where a pick lands it are shown,
+  never folded into what is written. The one exception is the
+  explicitly named severance gesture, `prepareSeverance`: there
+  the client states the intent and the backend assembles the
+  counter-records that net the author's bundle to `(0, 0)` —
+  netting, never removal. A parameter is capped at `1`, so a
+  bundle carrying more conviction than one record can walk back
+  nets over several — `⌈max(|Σ_d|, |Σ_i|)⌉` of them, each its own
+  priced act
+  ([feed-ranking.md §8.1](../primitive/feed-ranking.md#81-the-act)).
+  The batch is therefore the gesture's cost, legible before
+  signing like any other prepare batch.
 - **Write inputs are raw scalars; moderation is server-assigned.**
   A field read as `ModeratedText` is *written* as a plain `String`:
   the caller never sets a moderation status, so there is no
@@ -2323,10 +2328,84 @@ input PrepareStanceInput {
   actAs: UUID
 }
 
+"Sever the acting identity's bundle toward a node — the explicit
+ gesture that nets it to (0, 0). Stages the counter-records the
+ current bundle needs, each its own priced act, so the batch length
+ is the gesture's cost (conventions). Refused when the bundle
+ already nets to (0, 0)."
+input PrepareSeveranceInput {
+  target: UUID!
+  actAs: UUID
+}
+
 extend type Mutation {
   prepareStance(input: PrepareStanceInput!): PreparePayload!
+  prepareSeverance(input: PrepareSeveranceInput!): PreparePayload!
 }
 ```
+
+**Every passive node class is a stance target**, under this one
+control and one fold — Profile, Content, Comment, Chat, Message,
+Item, Type, Offer ([nodes.md §1](../primitive/nodes.md); Actor is
+the sole active class and is stanced through its Profile). The
+kinds whose slices have not landed yet join as those slices land;
+none of them gets a different gesture, a different family
+selection rule, or a different bundle.
+
+#### The read-side bundle fold
+
+What a pick *writes* is never derived from the bundle; where the
+pick *lands* is, and the control has to show it
+([design.md §8.2](design.md)). Every stance-able node carries the
+viewer's own bundle as a field, folded by the published rule —
+same-author sum-then-clip, keyed (author, target, family), with
+payload-marked records excluded
+([feed-ranking.md §3.2](../primitive/feed-ranking.md#32-the-fold--per-author-net-stance)).
+
+```graphql
+"A candidate pick, for projecting where it would land the bundle
+ without authoring anything."
+input StancePickInput {
+  pDirected: Dimension!
+  pInterest: Dimension!
+}
+
+"Where a bundle stands once a candidate pick folds into it."
+type StanceProjection {
+  pDirected: Dimension!
+  pInterest: Dimension!
+  "Either axis at zero — the stance would carry nothing."
+  inert: Boolean!
+  "Both axes at zero — the pick reaches severance."
+  severed: Boolean!
+}
+
+"The viewer's own stance bundle toward one node: the read-side
+ per-author fold. Null for a viewer who has none."
+type StanceBundle {
+  "The folded pair as it stands."
+  pDirected: Dimension!
+  pInterest: Dimension!
+  "How many records the bundle folds."
+  recordCount: Int!
+  inert: Boolean!
+  severed: Boolean!
+  "How many counter-records severance would stage right now — the
+   gesture's cost. Zero when the bundle already nets to (0, 0)."
+  severanceCost: Int!
+  "Where the supplied pick lands the bundle; null without one."
+  projected: StanceProjection
+}
+```
+
+The field is `viewerStance(pick: StancePickInput, includePending:
+Boolean! = true)` on every stance-able node. `includePending`
+carries the same meaning and default as the content listings: the
+reader chooses the **L1 view** — only what has landed — or the
+**L2 view**, which also counts the viewer's own acts in flight
+from the pre-commitment onward. Severance computes its batch
+against the L2 view, so severing and refetching reads `(0, 0)` at
+once rather than an epoch later.
 
 ### Content authoring
 

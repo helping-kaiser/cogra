@@ -607,13 +607,22 @@ struct RevokeInviteLinkPayload {
 
 #[derive(InputObject)]
 struct PrepareStanceInput {
-    /// The target actor; toward a Profile this is the reciprocation
-    /// gesture completing the CoGra-join mutual pair.
+    /// The passive node the stance points at. The target selects the
+    /// family: Affinity toward a Type, Opinion toward everything else —
+    /// toward a Profile it is the interpersonal stance (and the
+    /// reciprocation gesture completing the CoGra-join mutual pair).
     target: Uuid,
-    /// The intended net state of the author's bundle — (0,0) is
-    /// severance.
+    /// Written as picked — one new edge carrying exactly these values.
+    /// The bundle is a read-side fold (`viewerStance`); severance is its
+    /// own gesture, not a value these fields reach.
     p_directed: Dimension,
     p_interest: Dimension,
+}
+
+#[derive(InputObject)]
+struct PrepareSeveranceInput {
+    /// The node to sever the acting identity's bundle toward.
+    target: Uuid,
 }
 
 #[derive(InputObject)]
@@ -1505,9 +1514,10 @@ impl Mutation {
         })
     }
 
-    /// Prepares the viewer's stance toward a target as the delta record
-    /// whose bundle nets to the stated intent. Toward a Profile this is
-    /// the reciprocation gesture completing the CoGra-join mutual pair.
+    /// Prepares the viewer's stance toward a node — one new edge carrying
+    /// exactly the picked values, never a delta against the bundle
+    /// (design.md §8.1). Toward a Profile this is the interpersonal
+    /// stance, including the reciprocation gesture.
     async fn prepare_stance(
         &self,
         ctx: &Context<'_>,
@@ -1530,6 +1540,57 @@ impl Mutation {
         {
             Ok(prepared) => Ok(PreparePayload {
                 writes: Some(vec![PreparedWrite::from_prepared(prepared)]),
+                user_errors: vec![],
+            }),
+            Err(StanceError::BadInput { field, message }) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::BadInput,
+                    message,
+                    vec![field.to_string()],
+                )],
+            }),
+            Err(StanceError::Prepare(e)) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![UserError::from_onboarding(&OnboardingError::from(e), "")],
+            }),
+            Err(e) => Ok(PreparePayload {
+                writes: None,
+                user_errors: vec![internal(e)],
+            }),
+        }
+    }
+
+    /// Prepares severance toward a node: the counter-records that net the
+    /// viewer's bundle to `(0, 0)`. Each is its own priced act, so the
+    /// batch length is the gesture's cost — a bundle carrying more
+    /// conviction than one record can walk back needs several
+    /// (feed-ranking.md §8.1).
+    async fn prepare_severance(
+        &self,
+        ctx: &Context<'_>,
+        input: PrepareSeveranceInput,
+    ) -> async_graphql::Result<PreparePayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let boundary = ctx.data::<StandInBoundary>()?;
+        let cfg = ctx.data::<OnboardingConfig>()?;
+        match stance::prepare_severance(
+            pool,
+            boundary,
+            cfg.gc_after_epochs,
+            v.user_id,
+            input.target,
+        )
+        .await
+        {
+            Ok(prepared) => Ok(PreparePayload {
+                writes: Some(
+                    prepared
+                        .into_iter()
+                        .map(PreparedWrite::from_prepared)
+                        .collect(),
+                ),
                 user_errors: vec![],
             }),
             Err(StanceError::BadInput { field, message }) => Ok(PreparePayload {
