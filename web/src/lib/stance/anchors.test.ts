@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import {
   bundleReadout,
   nearestAnchor,
+  RESTING_FACE_EMOJI,
   STANCE_ANCHORS,
   ZERO_BUNDLE_EMOJI,
   type StanceAnchor,
@@ -144,5 +145,20 @@ describe("the zero bundle's readout", () => {
     expect(bundleReadout({ pDirected: -0, pInterest: 0 }, "Severed").emoji).toBe(
       ZERO_BUNDLE_EMOJI,
     );
+  });
+});
+
+describe("the resting face an unauthored target wears", () => {
+  it("stands outside the table, so an empty control is never a standing", () => {
+    // §8.3 by way of Q42: the third state is neither a pick nor a
+    // bundle, so no anchor may produce its face.
+    expect(STANCE_ANCHORS.map((anchor) => anchor.emoji)).not.toContain(RESTING_FACE_EMOJI);
+  });
+
+  it("is not the shrug, which a zero standing owns", () => {
+    // A bundle netted to nothing and a target never given anything are
+    // different states, and the read tells them apart — so the glyphs
+    // must too (§8.4).
+    expect(RESTING_FACE_EMOJI).not.toBe(ZERO_BUNDLE_EMOJI);
   });
 });

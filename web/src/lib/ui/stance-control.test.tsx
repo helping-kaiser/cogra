@@ -177,11 +177,13 @@ describe("the stance control at rest", () => {
   it("waits as a muted, translucent face rather than a bare word", async () => {
     // §8.3: "a viewer without one sees a muted, translucent face — the
     // same control at rest, visibly waiting to be given a value — never
-    // a bare word."
+    // a bare word." The face is 😐, outside the table and distinct from
+    // the shrug a zero standing owns (Q42, Android parity).
     mount();
     await settle();
     const affordance = screen.getByTestId(`${PREFIX}-resting-face`);
-    expect(affordance).toHaveTextContent("🤷");
+    expect(affordance).toHaveTextContent("😐");
+    expect(affordance).not.toHaveTextContent("🤷");
     expect(affordance.className).toContain("opacity-40");
     expect(affordance.className).toContain("grayscale");
   });
@@ -210,6 +212,8 @@ describe("the stance control at rest", () => {
       },
     });
     await settle();
+    // The shrug, not the resting face: this bundle exists and came to
+    // nothing, which is not the same as never having been given anything.
     expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🤷");
     expect(control()).not.toHaveTextContent("Nice");
     expect(control()).toHaveTextContent(SEVERED_LABEL);
