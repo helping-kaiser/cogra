@@ -109,8 +109,9 @@ make down         Stop all services (data persists in volumes)
 make reset-db     Wipe all volumes, restart services, re-run migrations
 make migrate      Run pending Postgres migrations only
 make bootstrap    One-time instance setup: seed genesis, land the L1 genesis records
-make ci           Full CI pipeline: lint, sqlx-check, test, then docs-link-check
+make ci           Full CI pipeline: lint, lint-corpus, sqlx-check, test, then docs-link-check
 make lint         cargo clippy (offline) + cargo fmt --check (read-only)
+make lint-corpus  Run the corpus linter over the repository (mirrors the corpus-lint job in ci.yml)
 make fmt          cargo fmt --all (writes files)
 make test         cargo test --all
 make schema       Regenerate schema.graphql (the frontend contract)
