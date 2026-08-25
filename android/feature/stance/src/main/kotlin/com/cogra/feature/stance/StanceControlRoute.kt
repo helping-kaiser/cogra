@@ -9,6 +9,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceControl
@@ -34,6 +36,19 @@ fun StanceControlRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(target) { viewModel.observe(target) }
+    // Leaving the screen dismisses the pad and stages nothing
+    // (design.md §8.3). The pad is a popup — its own window, drawn over
+    // whatever the app navigates to — and the holder outlives the
+    // composition, so without this a pad left open bleeds over the next
+    // destination and is still open on the way back. The lifecycle here
+    // is the destination's own back-stack entry, so this fires when the
+    // screen is covered, not when a card scrolls out of view.
+    // The coach mark is a popup on the same terms, and it is already
+    // spent by the time it is shown, so it goes with the pad.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.onDismissPad(target)
+        viewModel.onCoachMarkDismissed()
+    }
     val entry = state.targets[target] ?: TargetStance()
     StanceControl(
         state = entry.toControlState(
