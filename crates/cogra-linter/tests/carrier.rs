@@ -9,7 +9,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use cogra_linter::{Adoption, Language, OwnerId, SourceFile, Walk};
+use cogra_linter::{Adoption, Language, OwnerId, SourceFile, Walk, carrier};
 
 fn ruled() -> Adoption {
     Adoption::load(Path::new(concat!(
@@ -233,6 +233,113 @@ fn a_present_optional_root_is_walked_like_any_other() {
         found(&sources, "tmp_dev/notes.md").owner,
         OwnerId::new("tree.working-notes"),
         "the working notes are checked when they are there"
+    );
+}
+
+/// The ruled adoption with one more root configured: absent from every tree
+/// and not marked optional — the shape the audit reproduced F8 with.
+///
+/// The row is inserted before the working-note rules rather than appended,
+/// because the last rule's empty prefix is what makes Ω total and the loader
+/// checks that it comes last.
+fn with_an_absent_required_root() -> Adoption {
+    let at = Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../corpus-adoption.toml"
+    ));
+    let text = fs::read_to_string(at).expect("the adoption data is readable");
+    let marker = "# --- 18..19: working notes";
+    let added = text.replacen(
+        marker,
+        concat!(
+            "[[partition.rule]]\norder = 100\npath  = \"absent-required/\"\n",
+            "owner = \"tree.docs-root\"\noptional = false\n\n",
+            "# --- 18..19: working notes",
+        ),
+        1,
+    );
+    assert_ne!(added, text, "the marker still names the working-note block");
+    Adoption::from_str(&added, Path::new("corpus-adoption.toml"))
+        .expect("one more rule leaves the partition loadable")
+}
+
+/// Whether some finding is about exactly this configured root, the message
+/// naming it between "the root" and the comma after it.
+fn about(found: &[cogra_linter::Diagnostic], root: &str) -> bool {
+    let named = format!("the root {root},");
+    found.iter().any(|one| one.message.contains(&named))
+}
+
+/// A source list as the walk would hand it over.
+fn walked(paths: &[&str]) -> Vec<SourceFile> {
+    paths
+        .iter()
+        .map(|path| SourceFile {
+            path: PathBuf::from(*path),
+            owner: OwnerId::new("tree.repo-root"),
+            language: None,
+            generated: false,
+            bytes: Vec::new(),
+        })
+        .collect()
+}
+
+/// A configured root the walk found nothing under is reported: `optional` is
+/// the adoption data's own way of saying an absence is legal, and a row
+/// without it promises a tree the corpus has.
+#[test]
+fn f8_a_non_optional_root_matching_no_source_is_reported() {
+    let adoption = with_an_absent_required_root();
+    let found = carrier::unmatched_roots(&adoption, &walked(&CORPUS));
+    assert!(
+        about(&found, "absent-required/"),
+        "the absent required root went unreported: {:?}",
+        found.iter().map(|one| &one.message).collect::<Vec<_>>()
+    );
+    assert!(found.iter().all(|one| one.rule == carrier::UNMATCHED_ROOT));
+    assert!(
+        found
+            .iter()
+            .all(|one| one.enforcement == cogra_linter::Enforcement::Advisory)
+    );
+}
+
+/// An optional root matching no source stays silent: both of this corpus's
+/// working-note roots are gitignored junctions that are simply absent on
+/// some machines.
+#[test]
+fn f8_an_optional_root_matching_no_source_stays_silent() {
+    let adoption = with_an_absent_required_root();
+    let found = carrier::unmatched_roots(&adoption, &walked(&CORPUS));
+    for silent in ["tmp_dev/", "tmp_research_files/"] {
+        assert!(
+            !about(&found, silent),
+            "{silent} is optional and stays silent"
+        );
+    }
+}
+
+/// A root the walk did reach is silent, and an empty carrier leaves every
+/// configured root unmatched.
+#[test]
+fn f8_a_root_the_walk_reached_is_silent() {
+    let adoption = with_an_absent_required_root();
+    let found = carrier::unmatched_roots(&adoption, &walked(&CORPUS));
+    for reached in [
+        "docs/primitive/",
+        "crates/api/",
+        "crates/cogra-linter/",
+        "crates/cogra-linter/docs/label-calculus.md",
+        "",
+    ] {
+        assert!(
+            !about(&found, reached),
+            "{reached:?} carries a source and stays silent"
+        );
+    }
+    assert!(
+        carrier::unmatched_roots(&adoption, &[]).len() > found.len(),
+        "an empty carrier leaves more roots unmatched, never fewer"
     );
 }
 

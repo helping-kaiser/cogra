@@ -26,6 +26,22 @@ import { useEffect, useRef } from "react";
 import { buttonClassName } from "@/lib/ui/button";
 import { anchoredStyle, useAnchoredPlacement } from "@/lib/ui/use-anchored";
 
+/**
+ * How the gesture works, in one place: the coach mark teaches it on the
+ * first tap ever, and the pad's `?` opens the same words on demand for
+ * anyone meeting the control after that one-time mark is spent (§8.7).
+ * Two copies would drift, and the pad's copy is the one a reader reaches
+ * for precisely because they no longer remember the mark.
+ *
+ * It has to say that releasing changes nothing: that is the part of the
+ * gesture a reader cannot discover safely by trying, since the obvious
+ * guess — release commits — is the one the pad deliberately does not do.
+ */
+export const STANCE_EXPLANATION =
+  "A tap signs a small positive. Press and hold the same button to open the pad and drag to " +
+  "exactly where you stand — letting go changes nothing. Set signs it; Cancel leaves without " +
+  "signing.";
+
 export function StanceCoachMark({
   anchorRef,
   onDismiss,
@@ -67,8 +83,7 @@ export function StanceCoachMark({
       <p className="text-title-small">Press and hold to say more</p>
       {/* Honesty first: the tap that opened this did not spend anything. */}
       <p className="text-body-small text-on-surface-variant">
-        Nothing was signed just now. A tap signs a small positive; press and hold the same
-        button to open the pad and drift to exactly where you stand.
+        Nothing was signed just now. {STANCE_EXPLANATION}
       </p>
       <button
         ref={dismissRef}
