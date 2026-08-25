@@ -19,6 +19,7 @@ pub mod graph;
 pub mod judge;
 pub mod pretokenize;
 pub mod scan;
+pub mod timing;
 
 pub use adopt::{
     Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes, Classification,
@@ -46,3 +47,4 @@ pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
     NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
 };
+pub use timing::{Phase, Timing};
