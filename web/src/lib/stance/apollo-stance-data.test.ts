@@ -51,6 +51,10 @@ function bundleFields(over: Record<string, unknown> = {}) {
     __typename: "StanceBundle",
     pDirected: 0.6,
     pInterest: 0.4,
+    // Past the clip on one axis, so a mapping that read the raw sums off
+    // the folded pair instead of the wire would be caught.
+    rawPDirected: 1.6,
+    rawPInterest: 0.4,
     recordCount: 2,
     inert: false,
     severed: false,
@@ -111,6 +115,9 @@ describe("reading the standing", () => {
       kind: "success",
       value: {
         current: { pDirected: 0.6, pInterest: 0.4 },
+        // Carried through unclipped — the landing line folds against
+        // these, and the clip is what would lose the history (§8.3).
+        rawSum: { pDirected: 1.6, pInterest: 0.4 },
         records: 2,
         inert: true,
         severed: false,

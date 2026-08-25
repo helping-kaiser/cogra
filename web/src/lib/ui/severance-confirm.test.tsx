@@ -6,6 +6,9 @@ import { SeveranceConfirm } from "./severance-confirm";
 
 const STANDING: StanceBundle = {
   current: { pDirected: 0.6, pInterest: 0.4 },
+  // Deliberately past the clip: the fold shows (+0.60, +0.40) but the
+  // walk back is longer, which is the case §8.5 is about.
+  rawSum: { pDirected: 1.6, pInterest: 0.4 },
   records: 2,
   inert: false,
   severed: false,
@@ -63,6 +66,24 @@ describe("the severance confirmation", () => {
   it("states where the reader stands before they decide", () => {
     show();
     expect(screen.getByTestId("severance-standing")).toHaveTextContent("Where you stand now:");
+    // The fold, clipped, is what the standing line shows.
+    expect(screen.getByTestId("severance-standing")).toHaveTextContent("+0.60 / +0.40");
+  });
+
+  it("states the RAW sums, which are what the walk back actually walks", () => {
+    // §8.3, §8.5: "every surface that explains cost — the severance
+    // confirmation above all — states the raw sums". This bundle folds
+    // to (+0.60, +0.40) but sums to (+1.60, +0.40); showing the fold
+    // would understate the walk by a whole unit.
+    show();
+    const raw = screen.getByTestId("severance-raw");
+    expect(raw).toHaveTextContent("What you'd be walking back:");
+    expect(raw).toHaveTextContent("+1.60 / +0.40");
+  });
+
+  it("says there is nothing to walk back where there is no standing", () => {
+    show({ bundle: null });
+    expect(screen.getByTestId("severance-raw")).toHaveTextContent("haven't taken a stance");
   });
 
   it("adds the pick line only when a pick reached it", () => {
