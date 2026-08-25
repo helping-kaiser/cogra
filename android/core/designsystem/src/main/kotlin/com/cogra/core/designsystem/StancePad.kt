@@ -89,6 +89,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /** Where the pad is: shut, following a thumb, or parked open. */
 enum class StancePadMode {
@@ -453,14 +454,21 @@ private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String) {
 }
 
 /**
- * The face and its words, sitting above the pad rather than under the
- * knob — a thumb on the control covers exactly the spot where feedback
- * would otherwise appear (design.md §8.4).
+ * The face, its words, and the exact pair, sitting above the pad rather
+ * than under the knob — a thumb on the control covers exactly the spot
+ * where feedback would otherwise appear (design.md §8.4).
+ *
+ * All three are the default reading (design.md §8.3): the face carries
+ * the feel and the pair carries the fact, and hiding either makes the
+ * other harder to trust. The pair is written compactly, because the
+ * field itself is what names the axes — but it is ANNOUNCED with them
+ * in words, so no reader is handed a bare pair to decode.
  */
 @Composable
 private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
     val anchor = nearestStanceAnchor(pick)
     val words = stringResource(anchor.label)
+    val spoken = pick.reading()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         // One readout, announced once.
@@ -477,6 +485,14 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
             modifier = Modifier.clearAndSetSemantics { },
         )
         Text(words, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = pick.pair(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .semantics { contentDescription = spoken }
+                .testTag("${testTagPrefix}_stance_exact_pair"),
+        )
     }
 }
 
@@ -601,7 +617,25 @@ internal fun StancePoint.reading(): String = stringResource(
     twoPlaces(interest),
 )
 
-internal fun twoPlaces(value: Double): String = String.format(Locale.getDefault(), "%+.2f", value)
+/**
+ * The bare pair, `+0.40 / +0.20`-style (design.md §8.3). Compact because
+ * it sits under a face and a field that already say which axis is which;
+ * every place it is shown names the axes in its accessibility text.
+ */
+@Composable
+internal fun StancePoint.pair(): String =
+    stringResource(R.string.stance_pair, twoPlaces(directed), twoPlaces(interest))
+
+/**
+ * A dimension as the reader reads numbers: always signed, two decimals.
+ * The sign carries the direction, so it is shown even at zero — but a
+ * value that ROUNDS to zero has no direction to report, and `-0.00`
+ * reads as a broken control rather than as a precise one.
+ */
+internal fun twoPlaces(value: Double): String {
+    val rounded = (value * 100).roundToInt() / 100.0
+    return String.format(Locale.getDefault(), "%+.2f", if (rounded == 0.0) 0.0 else rounded)
+}
 
 /**
  * The direct-entry field's text. Root locale, not the reader's: this one

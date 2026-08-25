@@ -2,11 +2,18 @@ package com.cogra.core.designsystem
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
@@ -22,6 +29,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 private const val TAG = "post"
+
+/** The pair sits inside the readout's merged announcement, so it is read unmerged. */
+private fun ComposeContentTestRule.exactPair() =
+    onNodeWithTag("${TAG}_stance_exact_pair", useUnmergedTree = true)
 
 @RunWith(RobolectricTestRunner::class)
 class StancePadTest {
@@ -160,7 +171,82 @@ class StancePadTest {
         }
     }
 
+    /** The same control, but holding its own pick, so a drag moves it. */
+    private fun showLive(initial: StanceControlState = StanceControlState()) {
+        compose.setContent {
+            var state by remember { mutableStateOf(initial) }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                StanceControl(
+                    state = state,
+                    onTapDefault = { tapped++ },
+                    onOpenPad = {
+                        opened++
+                        state = state.copy(pad = StancePadMode.DRAGGING, pick = StancePoint.Origin)
+                    },
+                    onPick = {
+                        picks += it
+                        state = state.copy(pick = it)
+                    },
+                    onCommit = { committed++ },
+                    onHold = { held++ },
+                    onDismissPad = { dismissed++ },
+                    onToggleExactValues = { exactToggled++ },
+                    onOpenSeverance = { severOpened++ },
+                    onConfirmSeverance = {},
+                    onDismissSeverance = {},
+                    onCoachMarkDismissed = { coachDismissed++ },
+                    testTagPrefix = TAG,
+                )
+            }
+        }
+    }
+
     // -- The readout (design.md §8.4) --
+
+    @Test
+    fun theExactPairIsPartOfTheDefaultReading() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.4, 0.2)))
+
+        compose.exactPair().assertTextEquals("+0.40 / +0.20")
+    }
+
+    @Test
+    fun theExactPairFollowsTheDragLive() {
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent / 2f, 0f))
+        }
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            moveTo(center + Offset(-extent, -extent / 4f))
+            up()
+        }
+        compose.exactPair().assertTextEquals("-1.00 / +0.25")
+    }
+
+    @Test
+    fun aValueThatRoundsToZeroIsWrittenWithoutANegativeSign() {
+        // Travel straight along one axis leaves the other at negative
+        // zero; "-0.00" reads as a broken control.
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.5, -0.0)))
+
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+    }
+
+    @Test
+    fun theExactPairIsAnnouncedWithItsAxesNamed() {
+        // Compact on screen, never a bare pair to a screen reader: the
+        // readout is announced once, and the axes ride that announcement.
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.4, 0.2)))
+
+        compose.onNodeWithTag("${TAG}_stance_readout")
+            .assertContentDescriptionContains("How you stand +0.40, In your world +0.20")
+    }
 
     @Test
     fun theReadoutSpeaksThePickInWordsNotTheBundle() {
