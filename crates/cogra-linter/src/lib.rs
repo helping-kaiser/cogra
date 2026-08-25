@@ -14,6 +14,7 @@ pub mod diag;
 pub mod error;
 pub mod frontend;
 pub mod frontend_md;
+pub mod frontend_rust;
 pub mod graph;
 pub mod judge;
 pub mod pretokenize;
@@ -32,6 +33,7 @@ pub use carrier::{SourceFile, Walk, WalkOutcome};
 pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
 pub use frontend::{Asset, Head, Parsed, Region, RegionKind, Table};
+pub use frontend_rust::{CargoTarget, Censuses, Declaration};
 pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
