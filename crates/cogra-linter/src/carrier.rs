@@ -91,7 +91,7 @@ impl<'a> Walk<'a> {
         let mut failures = Vec::new();
         let mut entered = HashSet::new();
         self.descend(&self.root, &mut sources, &mut failures, &mut entered);
-        sources.sort_by(|one, other| relative_str(&one.path).cmp(&relative_str(&other.path)));
+        sources.sort_by_key(|one| relative_str(&one.path));
         failures.sort();
         if failures.is_empty() {
             Ok(sources)

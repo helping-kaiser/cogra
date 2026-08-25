@@ -171,7 +171,12 @@ mod tests {
     use crate::diag::ByteSpan;
 
     fn row() -> Location {
-        Location::new(PathBuf::from("corpus-adoption.toml"), ByteSpan::new(0, 1), 7, 3)
+        Location::new(
+            PathBuf::from("corpus-adoption.toml"),
+            ByteSpan::new(0, 1),
+            7,
+            3,
+        )
     }
 
     #[test]
