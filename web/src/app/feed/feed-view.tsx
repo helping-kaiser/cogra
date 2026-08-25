@@ -23,6 +23,7 @@ import { Card } from "@/lib/ui/card";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -169,6 +170,12 @@ export function FeedView({
                   pending post is real content whose place in the order
                   is not yet fixed. */}
               {isPending(post) && <PendingMarker testId={`feed-pending-${post.id}`} />}
+              {/* Part of the post card's own inventory (design.md §6),
+                  outside the link: it acts, it does not navigate. */}
+              <StanceControl
+                target={{ id: post.id, label: "this post" }}
+                testIdPrefix={`feed-stance-${post.id}`}
+              />
             </Card>
           </li>
         ))}

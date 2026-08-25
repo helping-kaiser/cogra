@@ -108,6 +108,30 @@ describe("ProfileScreen", () => {
     expect(row).toHaveTextContent("Hello world");
   });
 
+  it("makes the stance the header's primary action on another actor", async () => {
+    server.use(
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    // The interpersonal stance is the same generic gesture a post takes
+    // (design.md §6 "Profile header"; api-spec.md "The generic stance").
+    expect(await screen.findByTestId("profile-stance")).toBeInTheDocument();
+  });
+
+  it("offers no stance on one's own profile", async () => {
+    server.use(
+      meHandler(),
+      graphql.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    expect(await screen.findByTestId("profile-edit")).toBeInTheDocument();
+    expect(screen.queryByTestId("profile-stance")).not.toBeInTheDocument();
+  });
+
   it("shows not-found for an unknown handle", async () => {
     server.use(
       graphql.query("UserProfile", () => HttpResponse.json({ data: { user: null } })),

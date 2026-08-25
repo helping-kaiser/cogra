@@ -131,6 +131,27 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
   });
 
+  it("carries a stance control on the post and on every comment", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [
+            { id: "c1", body: "First!", replies: [{ id: "c1a", body: "Nested" }] },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+    });
+    // Opinion toward any passive node — a post, a comment, a reply
+    // (design.md §6; roadmap slice 2.2).
+    expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
+    expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
+    expect(screen.getByTestId("comment-stance-c1a")).toBeInTheDocument();
+  });
+
   // The quiet marker in design.md §9's register: the content reads in
   // full either way, and only its place in the order is unsettled.
   it("marks a pending post and a pending comment, leaving landed ones unmarked", async () => {
