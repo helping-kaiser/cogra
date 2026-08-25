@@ -100,6 +100,7 @@ dependencies {
     implementation(project(":feature:invites"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:stance"))
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
