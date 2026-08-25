@@ -76,6 +76,23 @@ pub enum AdoptionError {
         /// The row of the last rule.
         at: Location,
     },
+    /// A partition rule's stated order is not its position in the list.
+    ///
+    /// Ω matches down the stored array, so the array *is* the matching
+    /// order and `order` is the document's claim about it. A rule whose
+    /// claim disagrees with its position would match in an order its own
+    /// row contradicts, silently.
+    #[error(
+        "partition rule states order {order} at position {position}, and matching follows the position"
+    )]
+    RuleOrderMismatch {
+        /// The row the order sits in.
+        at: Location,
+        /// The order the rule states.
+        order: u32,
+        /// The 1-based position it actually occupies.
+        position: u32,
+    },
     /// A profile is missing one of the five data a profile fixes.
     #[error("profile {id} is missing its {datum}")]
     ProfileIncomplete {
@@ -121,6 +138,7 @@ impl AdoptionError {
             | AdoptionError::MalformedPrefix { at, .. }
             | AdoptionError::DuplicatePrefix { at, .. }
             | AdoptionError::PartitionNotTotal { at }
+            | AdoptionError::RuleOrderMismatch { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::EffectiveCountMismatch { at, .. } => Some(at),
@@ -207,6 +225,11 @@ mod tests {
                 prefix: String::from("LBL"),
             },
             AdoptionError::PartitionNotTotal { at: row() },
+            AdoptionError::RuleOrderMismatch {
+                at: row(),
+                order: 8,
+                position: 4,
+            },
             AdoptionError::ProfileIncomplete {
                 at: row(),
                 id: String::from("rust-test"),

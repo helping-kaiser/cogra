@@ -631,6 +631,83 @@ owner = \"doc.one\"
     assert!(row(&source, &error).contains("docs/"));
 }
 
+/// `order` is the document's claim about the matching order, and matching
+/// walks the stored array — so a rule whose order is not its position would
+/// match in an order its own row contradicts. The campaign that found this
+/// flipped `order = 4` to `order = 8`; the loader now refuses it.
+#[test]
+fn a_rule_whose_order_is_not_its_position_is_located() {
+    let partition = "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"docs/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 8
+path = \"crates/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 3
+path = \"\"
+owner = \"doc.one\"
+";
+    let source = document(ONE_PREFIX, partition, NO_PROFILES, EMPTY_K);
+    let error = load(&source).expect_err("an order that is not its position");
+    let AdoptionError::RuleOrderMismatch {
+        order, position, ..
+    } = error
+    else {
+        panic!("expected RuleOrderMismatch, got {error:?}");
+    };
+    assert_eq!(order, 8);
+    assert_eq!(position, 2);
+    assert!(row(&source, &error).contains("order = 8"));
+}
+
+/// A repeated order is the same defect: two rules claiming one position, and
+/// the row named is the one that is wrong.
+#[test]
+fn a_repeated_order_is_refused_at_the_second_rule() {
+    let partition = "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"docs/\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 1
+path = \"\"
+owner = \"doc.one\"
+";
+    let source = document(ONE_PREFIX, partition, NO_PROFILES, EMPTY_K);
+    let error = load(&source).expect_err("two rules claiming one position");
+    let AdoptionError::RuleOrderMismatch { position, .. } = error else {
+        panic!("expected RuleOrderMismatch, got {error:?}");
+    };
+    assert_eq!(position, 2);
+}
+
+/// The ruled adoption's own orders are its positions, which is what the
+/// check asserts of every file it loads.
+#[test]
+fn the_ruled_partition_states_each_rules_position() {
+    for (index, rule) in ruled().partition.rules.iter().enumerate() {
+        assert_eq!(
+            rule.order as usize,
+            index + 1,
+            "the rule at position {} states order {}",
+            index + 1,
+            rule.order
+        );
+    }
+}
+
 #[test]
 fn a_profile_missing_one_of_its_five_data_is_located() {
     let profiles = "
