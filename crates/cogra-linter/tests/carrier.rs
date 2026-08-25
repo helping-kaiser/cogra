@@ -49,7 +49,7 @@ const CORPUS: [&str; 10] = [
 fn found(sources: &[SourceFile], path: &str) -> SourceFile {
     sources
         .iter()
-        .find(|source| source.path == PathBuf::from(path))
+        .find(|source| source.path == *Path::new(path))
         .unwrap_or_else(|| panic!("{path} is in the carrier"))
         .clone()
 }
@@ -143,7 +143,10 @@ fn every_source_takes_its_owner_by_first_match() {
 
 #[test]
 fn ownership_is_total_and_needs_no_diagnostic() {
-    let root = tree("carrier-totality", &["a/tree/nobody/foresaw.txt", "Makefile"]);
+    let root = tree(
+        "carrier-totality",
+        &["a/tree/nobody/foresaw.txt", "Makefile"],
+    );
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
         .sources()
@@ -158,7 +161,11 @@ fn ownership_is_total_and_needs_no_diagnostic() {
 fn a_source_carries_its_language_only_where_a_frontend_reads_it() {
     let root = tree(
         "carrier-languages",
-        &["docs/README.md", "crates/api/src/lib.rs", "migrations/1.sql"],
+        &[
+            "docs/README.md",
+            "crates/api/src/lib.rs",
+            "migrations/1.sql",
+        ],
     );
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
