@@ -178,6 +178,52 @@ describe("reading the standing", () => {
     await data.bundle(POST, { includePending: false });
     expect(flags).toEqual([true, false]);
   });
+
+  it("answers a repeat read from what the last one left behind", async () => {
+    // The ordinary case: a second control on the same target costs no
+    // second round trip.
+    let reads = 0;
+    server.use(
+      graphql.query("PostStance", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
+        });
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    await data.bundle(POST);
+    await data.bundle(POST);
+    expect(reads).toBe(1);
+  });
+
+  it("goes back to the server for a read asked for fresh", async () => {
+    // The defect this exists for: `viewerStance(pick: null)` is its own
+    // cache entry and writing a stance does not invalidate it, so a
+    // re-read after a commit would answer with the standing from BEFORE
+    // the commit — which reads as the gesture having done nothing
+    // (design.md §8.3).
+    let reads = 0;
+    server.use(
+      graphql.query("PostStance", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "post-1",
+              viewerStance: bundleFields({ pDirected: reads === 1 ? 0.6 : 0.7 }),
+            },
+          },
+        });
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    await data.bundle(POST);
+    const after = await data.bundle(POST, { fresh: true });
+    expect(reads).toBe(2);
+    expect(after).toMatchObject({ kind: "success", value: { current: { pDirected: 0.7 } } });
+  });
 });
 
 describe("projecting a pick", () => {

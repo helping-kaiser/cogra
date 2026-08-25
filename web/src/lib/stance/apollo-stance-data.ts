@@ -65,8 +65,13 @@ async function wireBundle(
     includePending: options?.includePending ?? INCLUDE_PENDING_DEFAULT,
   };
   // A pick must not be answered from an earlier read of the same field:
-  // the landing is the whole point of asking.
-  const fetchPolicy = pick === null ? "cache-first" : "network-only";
+  // the landing is the whole point of asking. Neither must a standing
+  // read that was asked for fresh — `viewerStance(pick: null)` is its own
+  // cache entry, and nothing about writing a stance invalidates it, so a
+  // re-read after a commit would otherwise answer with the standing from
+  // before the commit.
+  const fetchPolicy =
+    pick !== null || options?.fresh === true ? "network-only" : "cache-first";
 
   const lift = (viewerStance: WireBundle | null | undefined): Outcome<WireBundle | null> =>
     success(viewerStance ?? null);
