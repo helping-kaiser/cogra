@@ -761,8 +761,17 @@ pub struct BannedToken {
     pub id: Box<str>,
     /// The language it governs.
     pub language: Language,
-    /// The token class, in the words of the adoption data. Detection is
-    /// the pre-tokenizer's, never a pattern match.
+    /// The lexeme class this rule forbids, named in the pre-tokenizer's own
+    /// vocabulary ([`crate::pretokenize::CommentForm::token`],
+    /// [`crate::pretokenize::LiteralForm::token`]).
+    ///
+    /// The machine-readable half of the row: [`crate::bans::BanRule::read`]
+    /// resolves it against the classes the lexer decides, and a name no
+    /// lexer decides leaves the row unreadable rather than silently
+    /// harmless (´sig:lint:bans-api´).
+    pub class: Box<str>,
+    /// The same class in the words of the adoption data, illustration
+    /// included. Read by no code; it is what a diagnostic quotes back.
     pub token: Box<str>,
     /// How grave an occurrence is.
     pub severity: Severity,

@@ -468,6 +468,24 @@ fn the_banned_token_section_round_trips() {
     assert_eq!(&*banned.rules[1].id, "rust-plain-block-comment");
 }
 
+/// Each row's `class` is the lexer's own vocabulary token, and it arrives
+/// as written — the key the rule is read from, beside the `token` prose
+/// that no code reads.
+#[test]
+fn every_banned_token_row_names_its_class_in_the_lexers_vocabulary() {
+    let banned = ruled().banned_tokens;
+    assert_eq!(&*banned.rules[0].class, "plain line comment");
+    assert_eq!(&*banned.rules[1].class, "plain block comment");
+    for row in &banned.rules {
+        assert!(
+            row.token.starts_with(&*row.class),
+            "the prose {:?} spells a different class than {:?}",
+            row.token,
+            row.class
+        );
+    }
+}
+
 #[test]
 fn the_kinds_section_round_trips() {
     let kinds = ruled().kinds;
