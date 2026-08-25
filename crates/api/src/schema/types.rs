@@ -50,6 +50,115 @@ impl ScalarType for Dimension {
     }
 }
 
+/// A candidate pick, for projecting where it would land the bundle
+/// without authoring anything (design.md §8.2).
+#[derive(async_graphql::InputObject)]
+pub struct StancePickInput {
+    pub p_directed: Dimension,
+    pub p_interest: Dimension,
+}
+
+/// Where a bundle stands once a candidate pick folds into it.
+#[derive(SimpleObject)]
+pub struct StanceProjection {
+    /// The folded valence after the pick.
+    pub p_directed: Dimension,
+    /// The folded connection after the pick.
+    pub p_interest: Dimension,
+    /// Either axis at zero — the stance would carry nothing.
+    pub inert: bool,
+    /// Both axes at zero — the pick reaches severance.
+    pub severed: bool,
+}
+
+/// The viewer's own stance bundle toward one node: the read-side
+/// per-author fold (feed-ranking.md §3.2), sum-then-clip over their
+/// records toward it. What a pick writes is never derived from this —
+/// the bundle is shown, never folded into the value (design.md §8.1).
+pub struct StanceBundle {
+    sum: common::l1::fold::BundleSum,
+    pick: Option<(f64, f64)>,
+}
+
+#[Object]
+impl StanceBundle {
+    /// The folded valence as it stands.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.sum.fold().p_d)
+    }
+
+    /// The folded connection as it stands.
+    async fn p_interest(&self) -> Dimension {
+        Dimension(self.sum.fold().p_i)
+    }
+
+    /// How many records the bundle folds.
+    async fn record_count(&self) -> i32 {
+        self.sum.records.try_into().unwrap_or(i32::MAX)
+    }
+
+    /// Either axis at zero — the bundle carries nothing on it.
+    async fn inert(&self) -> bool {
+        self.sum.fold().is_inert()
+    }
+
+    /// Both axes at zero — the bundle is severed.
+    async fn severed(&self) -> bool {
+        self.sum.fold().is_severed()
+    }
+
+    /// How many counter-records severance would stage right now — the
+    /// gesture's cost, since each is its own priced act
+    /// (feed-ranking.md §8.1). Zero when the bundle already nets to
+    /// `(0, 0)`.
+    async fn severance_cost(&self) -> i32 {
+        self.sum
+            .severance_batch()
+            .len()
+            .try_into()
+            .unwrap_or(i32::MAX)
+    }
+
+    /// Where the supplied `pick` would land the bundle; null when the
+    /// field was asked without one.
+    async fn projected(&self) -> Option<StanceProjection> {
+        let (p_d, p_i) = self.pick?;
+        let net = self.sum.project(p_d, p_i);
+        Some(StanceProjection {
+            p_directed: Dimension(net.p_d),
+            p_interest: Dimension(net.p_i),
+            inert: net.is_inert(),
+            severed: net.is_severed(),
+        })
+    }
+}
+
+/// Resolves the `viewerStance` field shared by every stance-able node.
+/// Null for a viewer who has none — an unauthenticated reader, or one
+/// whose account has no actor on the graph yet.
+pub(crate) async fn viewer_stance(
+    ctx: &Context<'_>,
+    target: Uuid,
+    pick: Option<StancePickInput>,
+    include_pending: bool,
+) -> async_graphql::Result<Option<StanceBundle>> {
+    let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+        return Ok(None);
+    };
+    let pool = ctx.data::<PgPool>()?;
+    match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
+        Ok(sum) => Ok(Some(StanceBundle {
+            sum,
+            pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
+        })),
+        // A viewer without an attached actor key has no bundle to read,
+        // and an id this viewer cannot stance is not an error on a read.
+        Err(crate::stance::StanceError::BadInput { .. })
+        | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
 /// One shared error vocabulary across both tiers: transport faults ride
 /// the GraphQL errors array; expected outcomes ride `userErrors`.
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -847,6 +956,19 @@ impl User {
             }))
     }
 
+    /// The viewer's own stance bundle toward this person's Profile, and
+    /// — with `pick` — where a candidate stance would land it. Null for
+    /// a viewer with no bundle to read. `includePending: false` folds
+    /// only what has landed on L1.
+    async fn viewer_stance(
+        &self,
+        ctx: &Context<'_>,
+        pick: Option<StancePickInput>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<StanceBundle>> {
+        viewer_stance(ctx, self.identity.id, pick, include_pending).await
+    }
+
     /// Whether the viewer's reciprocal Opinion toward invitedBy exists —
     /// confirmed in the record mirror (latched on the landed application
     /// row) or in flight as one of the viewer's staged writes. Drives
@@ -1403,6 +1525,19 @@ impl PostType {
     ) -> async_graphql::Result<KeysetConnection<CommentType>> {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
     }
+
+    /// The viewer's own stance bundle toward this post, and — with
+    /// `pick` — where a candidate stance would land it. Null for a
+    /// viewer with no bundle to read. `includePending: false` folds
+    /// only what has landed on L1.
+    async fn viewer_stance(
+        &self,
+        ctx: &Context<'_>,
+        pick: Option<StancePickInput>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<StanceBundle>> {
+        viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
 }
 
 /// The universal threading primitive: an L1 Comment node minted by the
@@ -1482,6 +1617,19 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<KeysetConnection<CommentType>> {
         comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
+    }
+
+    /// The viewer's own stance bundle toward this comment, and — with
+    /// `pick` — where a candidate stance would land it. Null for a
+    /// viewer with no bundle to read. `includePending: false` folds
+    /// only what has landed on L1.
+    async fn viewer_stance(
+        &self,
+        ctx: &Context<'_>,
+        pick: Option<StancePickInput>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<StanceBundle>> {
+        viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
 }
 

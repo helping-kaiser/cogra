@@ -49,6 +49,7 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
+import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
 fun PostDetailRoute(
@@ -94,6 +95,7 @@ fun PostDetailRoute(
         onOpenActor = onOpenActor,
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
+        stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
     )
 }
 
@@ -122,6 +124,8 @@ fun PostDetailScreen(
     onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
+    /** The stance control the post and every comment carry (design.md §6). */
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val signedCopy = stringResource(R.string.content_post_saved)
@@ -248,6 +252,7 @@ fun PostDetailScreen(
                             onSubmitReply = onSubmitReply,
                             onOpenActor = onOpenActor,
                             onSignInOrJoin = onSignInOrJoin,
+                            stanceControl = stanceControl,
                         )
                     }
                 }
@@ -277,6 +282,7 @@ private fun PostWithThread(
     onSubmitReply: () -> Unit,
     onOpenActor: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -312,6 +318,9 @@ private fun PostWithThread(
                 if (post.landing.isPending) {
                     PendingMarker(testTag = "detail_pending")
                 }
+                // The stance control rides the post itself here, the way
+                // it rides the card in the feed (design.md §6).
+                stanceControl(post.id, "detail_post")
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.content_comments_heading),
@@ -344,6 +353,7 @@ private fun PostWithThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onOpenActor = onOpenActor,
+                stanceControl = stanceControl,
             )
         }
         if (state.commentsHaveMore) {
@@ -450,6 +460,7 @@ private fun CommentThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onOpenActor: (String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
     Column(
@@ -534,6 +545,8 @@ private fun CommentThread(
                         PendingMarker(testTag = "comment_pending_${comment.id}")
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // A comment carries the control too (design.md §6).
+                        stanceControl(comment.id, "comment_${comment.id}")
                         if (signedIn == true) {
                             TextButton(
                                 onClick = { onStartReply(comment.id) },
@@ -617,6 +630,7 @@ private fun CommentThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onOpenActor = onOpenActor,
+                stanceControl = stanceControl,
             )
         }
         when {

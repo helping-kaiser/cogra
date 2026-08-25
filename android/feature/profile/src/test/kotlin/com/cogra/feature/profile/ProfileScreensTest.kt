@@ -28,9 +28,11 @@ class ProfileScreensTest {
         onOpenPost: (String) -> Unit = {},
         onFilterChange: (ChronicleFilter) -> Unit = {},
         onBack: (() -> Unit)? = null,
+        onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
             ProfileScreen(
+                stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 profileSavedResult = false,
                 onProfileSavedResultConsumed = {},
@@ -75,6 +77,23 @@ class ProfileScreensTest {
         compose.onNodeWithTag("profile_edit").assertDoesNotExist()
         compose.onNodeWithTag("profile_invites").assertDoesNotExist()
         compose.onNodeWithTag("profile_settings").assertDoesNotExist()
+    }
+
+    // The header's primary action on someone else's profile is the
+    // stance toward them (design.md §6); one's own profile keeps edit
+    // and invites, and nobody stances themself.
+    @Test
+    fun anotherActorsProfileCarriesTheStanceControl() {
+        val stanced = mutableListOf<Pair<String, String>>()
+        render(loaded(own = false), onStance = { target, tag -> stanced += target to tag })
+        assertThat(stanced).containsExactly("u1" to "profile")
+    }
+
+    @Test
+    fun theOwnProfileCarriesNoStanceControl() {
+        val stanced = mutableListOf<Pair<String, String>>()
+        render(loaded(own = true), onStance = { target, tag -> stanced += target to tag })
+        assertThat(stanced).isEmpty()
     }
 
     @Test
