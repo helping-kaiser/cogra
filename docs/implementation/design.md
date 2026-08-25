@@ -641,18 +641,46 @@ positive — **`(+0.1, +0.1)`**, per the repo-wide low-defaults
 policy: defaults sit low so stronger stances stay expressible
 ([invitations.md §3](../primitive/invitations.md)).
 
-Press and hold, and a soft circular pad blooms under the
-thumb. Drift to position; release to commit. Horizontal is
-valence, vertical is connection. **The pad opens at the
-origin**, untilted toward either direction — the low default
-belongs to the tap, not to the considered gesture.
+Press and hold, and the pad blooms. **The field is a soft
+rounded square, and the drawn field is the value space**: the
+knob travels exactly the field, the corners of the field are
+`(±1, ±1)`, and the knob never leaves the drawn shape — what
+the finger sees is what the value does. Drift to position;
+release to commit. Horizontal is valence, vertical is
+connection. **The pad opens at the origin**, untilted toward
+either direction — the low default belongs to the tap, not to
+the considered gesture.
 
-By default the pad shows words and a face — no numbers, axes,
-or gridlines. Exact values stay available to anyone who wants
-them (§8.6); they are simply not the default reading. The
-inert centre-lines are drawn as visibly dead ground rather
-than hidden, so the model reads as legible rather than
-mysterious.
+**The pad positions itself to be read, not under the press.**
+It blooms anchored to the resting target, clamped fully inside
+the viewport, and offset so neither the field nor the readout
+above it (§8.4) sits under the finger or off-screen. The knob
+starts at the field's origin regardless of where the press
+landed; the drag is accumulated travel, so the finger's
+absolute position never matters.
+
+The pad shows the face, the words, and **the exact pair** —
+`+0.40 / +0.20`-style, updating live with the drag. The
+numbers are part of the default reading: the face carries the
+feel and the pair carries the fact, and hiding either makes
+the other harder to trust. The inert centre-lines are drawn as
+visibly dead ground rather than hidden, so the model reads as
+legible rather than mysterious.
+
+**A tap answers immediately.** The resting target updates to
+the new standing at once — the pending-inclusive fold, so the
+answer is visible before the record lands — and a transient
+signed-confirmation appears (the platform's standard transient
+surface). A gesture that stages a priced act must never be
+silent: silence reads as failure and invites the same act
+again.
+
+**At rest the target shows the standing.** A viewer with a
+bundle toward the thing sees its face and folded pair on the
+resting target itself; a viewer without one sees the labelled
+affordance. The bundle is already loaded by the read that
+rendered the surface (§8.2) — showing it costs nothing and is
+the difference between a control and a mystery button.
 
 ### 8.4 The emoji readout
 
@@ -744,10 +772,16 @@ replaces the pad everywhere, not per-screen.
 
 ### 8.7 Teaching it
 
-A held gesture is invisible until taught. The pad gets a
-one-time first-run coach mark, the resting target is labelled,
-and a plain tap always works without ever opening the pad —
-so the feature is discoverable but never blocking.
+A held gesture is invisible until taught, and a tap that
+stages a priced act must not be the teaching moment's
+casualty. **The first tap ever on a stance target teaches
+before it acts**: it opens the coach mark — anchored to the
+target, overlapping nothing, staying until dismissed or until
+the first successful hold — and stages nothing. Every tap
+after that acts, with the immediate feedback of §8.3. The
+resting target is labelled throughout, so the feature is
+discoverable but never blocking — and never silently
+expensive.
 
 ---
 
