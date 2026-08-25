@@ -636,12 +636,52 @@ fn an_authored_regions_occurrences_are_not_judged_here() {
     let (mut build, owner, region) = one_owner();
     build.mint(owner, region, "sig:one:alpha", 10);
     build.citation(region, "sig:one:missing", None, 60);
-    assert!(labels::generated_compliance(&build.g, &build.r).is_empty());
+    assert!(labels::generated_compliance(&build.g, &build.r, adoption()).is_empty());
 }
 
-/// (´[LBL-inv:labels:generated-compliance]´): a generated mint stands on a
-/// derivation, and a generator fills no authorship — an authored label no
-/// author has chosen is an absence, never an opening.
+/// (´[LBL-inv:labels:generated-compliance]´): a generated mint of a kind
+/// outside K stands on its authorship like any other.
+///
+/// "An authorship a generator transcribes from the record of the authors'
+/// choice is that choice still": generation is a fact about the pen, and
+/// warrants attach to no pen. Demanding a derivation here would demand the
+/// one warrant an authored kind does not admit.
+#[test]
+fn f3_a_generated_mint_of_an_authored_kind_is_clean() {
+    let mut build = Build::new();
+    let owner = build.owner("pkg.one", &[]);
+    let source = build.source(owner, "one/register.md");
+    let region = build.region(source, true);
+    build.mint(owner, region, "sig:one:transcribed", 10);
+    assert!(
+        labels::generated_compliance(&build.g, &build.r, adoption()).is_empty(),
+        "an authored kind is warrant-totality's business, not this clause's"
+    );
+}
+
+/// (´[LBL-inv:labels:generated-compliance]´): and a reserved kind beside it
+/// in the same region still fails, so the narrowing narrows and never
+/// silences.
+#[test]
+fn f3_a_reserved_kind_in_the_same_generated_region_still_fails() {
+    let mut build = Build::new();
+    let owner = build.owner("pkg.one", &[]);
+    let source = build.source(owner, "one/register.md");
+    let region = build.region(source, true);
+    build.mint(owner, region, "sig:one:transcribed", 10);
+    build.mint(owner, region, "test:unit:alpha", 40);
+    assert_eq!(
+        rules(&labels::generated_compliance(
+            &build.g,
+            &build.r,
+            adoption()
+        )),
+        vec!["label-generated-unwarranted"]
+    );
+}
+
+/// (´[LBL-inv:labels:generated-compliance]´): a generated mint of a kind in
+/// K stands on a derivation, that being the only warrant its kind admits.
 #[test]
 fn a_generated_mint_with_no_derivation_fails() {
     let mut build = Build::new();
@@ -650,7 +690,11 @@ fn a_generated_mint_with_no_derivation_fails() {
     let region = build.region(source, true);
     build.mint(owner, region, "test:unit:alpha", 10);
     assert_eq!(
-        rules(&labels::generated_compliance(&build.g, &build.r)),
+        rules(&labels::generated_compliance(
+            &build.g,
+            &build.r,
+            adoption()
+        )),
         vec!["label-generated-unwarranted"]
     );
 }
@@ -667,7 +711,7 @@ fn a_generated_mint_with_its_derivation_is_clean() {
     let profile = build.profile("rust-test", "test", ProfileStatus::Effective);
     let asset = build.asset(owner, profile, "alpha");
     build.derives(asset, mint);
-    assert!(labels::generated_compliance(&build.g, &build.r).is_empty());
+    assert!(labels::generated_compliance(&build.g, &build.r, adoption()).is_empty());
 }
 
 /// (´[LBL-inv:labels:generated-compliance]´): an unresolvable span in
@@ -681,7 +725,11 @@ fn a_generated_citation_resolving_nowhere_is_a_generator_defect() {
     let citation = build.citation(region, "sig:one:missing", None, 60);
     build.resolve(citation, owner, "sig:one:missing");
     assert_eq!(
-        rules(&labels::generated_compliance(&build.g, &build.r)),
+        rules(&labels::generated_compliance(
+            &build.g,
+            &build.r,
+            adoption()
+        )),
         vec!["label-generated-dangling"]
     );
 }
@@ -699,7 +747,7 @@ fn a_generated_citation_that_resolves_is_clean() {
     let region = build.region(source, true);
     let citation = build.citation(region, "sig:one:alpha", None, 60);
     build.resolve(citation, owner, "sig:one:alpha");
-    assert!(labels::generated_compliance(&build.g, &build.r).is_empty());
+    assert!(labels::generated_compliance(&build.g, &build.r, adoption()).is_empty());
 }
 
 /// (´[LBL-inf:labels:anchor-harvest]´): the domain is empty in this corpus,
@@ -905,7 +953,7 @@ fn every_judgment_answers_an_empty_corpus_with_an_empty_list() {
     assert!(labels::total_resolution(&g, &r).is_empty());
     assert!(labels::warrant_totality(&g, &r, adoption()).is_empty());
     assert!(labels::inventory(&g, &r).is_empty());
-    assert!(labels::generated_compliance(&g, &r).is_empty());
+    assert!(labels::generated_compliance(&g, &r, adoption()).is_empty());
     assert!(labels::anchor_harvest(&g, adoption()).is_empty());
     assert!(labels::synthetic_citation(&g, adoption()).is_empty());
     assert!(kinds::head_validation(&g, registry()).is_empty());
