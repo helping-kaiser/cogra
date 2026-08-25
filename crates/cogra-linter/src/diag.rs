@@ -7,8 +7,10 @@
 //! (´conv:lint:diagnostic-order´).
 
 use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::fmt;
 use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock, PoisonError};
 
 /// A half-open byte range of a source, in whole-file coordinates.
 ///
@@ -75,6 +77,43 @@ impl RuleId {
     #[must_use]
     pub const fn new(token: &'static str) -> RuleId {
         RuleId(token)
+    }
+
+    /// The rule identified by `token`, which the adoption data supplied.
+    ///
+    /// A [`RuleId`] is a `&'static str` because every rule the crate names
+    /// is a `const` in the module that reports it. `[banned-tokens]` breaks
+    /// that shape on purpose — a future ban is a new row and not new code
+    /// (´sig:lint:bans-api´) — so its identifiers arrive as owned strings
+    /// with no static home.
+    ///
+    /// Interning is the smallest resolution: the token is leaked once, the
+    /// first time it is seen, and every later call answers with the same
+    /// pointer. The set it can grow to is the set of distinct identifiers
+    /// in one adoption file, which is loaded once and is finite, so the
+    /// leak is bounded by the input rather than by the number of calls.
+    /// Making [`RuleId`] owned instead would cost it `Copy`, which every
+    /// `const RULE: RuleId` in the crate rests on.
+    ///
+    /// ```
+    /// use cogra_linter::RuleId;
+    ///
+    /// let once = RuleId::interned("rust-plain-line-comment");
+    /// let twice = RuleId::interned("rust-plain-line-comment");
+    /// assert_eq!(once, twice);
+    /// assert!(std::ptr::eq(once.as_str(), twice.as_str()));
+    /// ```
+    #[must_use]
+    pub fn interned(token: &str) -> RuleId {
+        static TOKENS: OnceLock<Mutex<HashSet<&'static str>>> = OnceLock::new();
+        let held = TOKENS.get_or_init(|| Mutex::new(HashSet::new()));
+        let mut tokens = held.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(found) = tokens.get(token) {
+            return RuleId(found);
+        }
+        let leaked: &'static str = Box::leak(Box::from(token));
+        tokens.insert(leaked);
+        RuleId(leaked)
     }
 
     /// The token itself.
