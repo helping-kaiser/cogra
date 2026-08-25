@@ -110,6 +110,7 @@ describe("reading the standing", () => {
       kind: "success",
       value: {
         current: { pDirected: 0.6, pInterest: 0.4 },
+        records: 2,
         inert: true,
         severed: false,
         severance: { records: 3 },
@@ -117,7 +118,8 @@ describe("reading the standing", () => {
     });
   });
 
-  it("reports no standing for a bundle that folds no records", async () => {
+  it("passes a bundle that folds no records through as itself", async () => {
+    // A never-stanced target is a real bundle at zero, not an absent one.
     server.use(
       graphql.query("PostStance", () =>
         HttpResponse.json({
@@ -125,17 +127,29 @@ describe("reading the standing", () => {
             post: {
               __typename: "Post",
               id: "post-1",
-              viewerStance: bundleFields({ recordCount: 0, severed: true, severanceCost: 0 }),
+              viewerStance: bundleFields({
+                pDirected: 0,
+                pInterest: 0,
+                recordCount: 0,
+                inert: true,
+                severed: true,
+                severanceCost: 0,
+              }),
             },
           },
         }),
       ),
     );
     const data = createApolloStanceData({ client: client(), guard, signer: signer() });
-    expect(await data.bundle(POST)).toEqual({ kind: "success", value: null });
+    expect(await data.bundle(POST)).toMatchObject({
+      kind: "success",
+      value: { records: 0, severed: true, severance: { records: 0 } },
+    });
   });
 
-  it("reports no standing where the viewer has no bundle to read at all", async () => {
+  it("refuses where the viewer has no bundle to read at all", async () => {
+    // Null covers both a stale token and an account with no actor; the
+    // guard's refresh-and-replay handles the common one.
     server.use(
       graphql.query("PostStance", () =>
         HttpResponse.json({
@@ -144,7 +158,9 @@ describe("reading the standing", () => {
       ),
     );
     const data = createApolloStanceData({ client: client(), guard, signer: signer() });
-    expect(await data.bundle(POST)).toEqual({ kind: "success", value: null });
+    const outcome = await data.bundle(POST);
+    expect(outcome.kind).toBe("refused");
+    expect(outcome.kind === "refused" && outcome.errors[0].code).toBe("UNAUTHENTICATED");
   });
 
   it("counts pending stances unless asked otherwise", async () => {

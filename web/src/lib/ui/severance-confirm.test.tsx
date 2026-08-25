@@ -6,6 +6,7 @@ import { SeveranceConfirm } from "./severance-confirm";
 
 const STANDING: StanceBundle = {
   current: { pDirected: 0.6, pInterest: 0.4 },
+  records: 2,
   inert: false,
   severed: false,
   severance: { records: 3 },

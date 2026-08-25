@@ -118,16 +118,14 @@ export function createApolloStanceData(deps: {
   };
 
   return {
-    async bundle(target, options): Promise<Outcome<StanceBundle | null>> {
+    async bundle(target, options): Promise<Outcome<StanceBundle>> {
       const read = await guard.run(() => wireBundle(client, target, null, options));
       if (read.kind !== "success") return read;
       const wire = read.value;
-      // Null is a viewer with no bundle to read at all; a bundle folding
-      // no records is a viewer who simply has not stanced this yet. The
-      // control shows the same "no standing" affordance for both.
-      if (wire === null || wire.recordCount === 0) return success(null);
+      if (wire === null) return unauthenticated();
       return success({
         current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
+        records: wire.recordCount,
         inert: wire.inert,
         severed: wire.severed,
         severance: { records: wire.severanceCost },

@@ -310,7 +310,12 @@ export function StanceControl({
     if (open) closeAll();
   };
 
-  const restingFace = bundle === null || bundle === undefined ? null : nearestAnchor(bundle.current);
+  // A standing nobody has taken, and one this session could not read,
+  // both show the same "no stance yet" affordance.
+  const restingFace =
+    bundle === null || bundle === undefined || bundle.records === 0
+      ? null
+      : nearestAnchor(bundle.current);
   const knob = padPercentOf(pick);
 
   return (
