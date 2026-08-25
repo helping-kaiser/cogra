@@ -11,9 +11,10 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use cogra_linter::frontend::RegionKind;
 use cogra_linter::graph::{
-    CitationNode, Corpus, EdgeW, LabelNode, MintNode, NodeW, OwnerNode, RegionKind, RegionNode,
-    Registries, SourceNode, owner_of,
+    CitationNode, Corpus, EdgeW, LabelNode, MintNode, NodeW, OwnerNode, RegionNode, Registries,
+    SourceNode, owner_of,
 };
 use cogra_linter::scan::{Label, Syntax};
 use cogra_linter::{ByteSpan, OwnerId, Partition, PartitionRule, PathPrefix};
