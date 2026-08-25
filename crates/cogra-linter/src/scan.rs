@@ -477,6 +477,17 @@ pub fn scan_prose(text: &str, base: usize, spans: &[DelimitedSpan]) -> RegionSca
 /// Code: the acute belongs to the label syntax and classifies locally, so the
 /// scanner does its own pairing (´[LBL-judg:labels:participation]´).
 ///
+/// # One pass, and the backtick is not in it
+///
+/// The acute pass is the whole of the reading. The backtick carries no
+/// pairing authority here — the calculus gives the acute the local
+/// classification, and a delimiter with no authority may not decide what a
+/// stretch of code text means, least of all by consuming it. The backtick's
+/// own warning is therefore *derived*: after the acutes are read, the text
+/// they did not consume is the residue, and a label-shaped backtick span
+/// found there can only be the acute written wrongly
+/// (´sig:lint:near-miss-api´).
+///
 /// ```
 /// use cogra_linter::scan::{Occurrence, scan_code};
 ///
@@ -486,6 +497,10 @@ pub fn scan_prose(text: &str, base: usize, spans: &[DelimitedSpan]) -> RegionSca
 ///
 /// let stray = scan_code("it isn´t an occurrence", 0);
 /// assert!(stray.occurrences.is_empty() && stray.delimiter_failure.is_none());
+///
+/// // A backtick span neither hides the occurrence nor pairs across it.
+/// let both = scan_code("the `Foo type and ´def:x:mint´ then `Bar`", 0);
+/// assert_eq!(both.occurrences.len(), 1);
 /// ```
 #[must_use]
 pub fn scan_code(text: &str, base: usize) -> RegionScan {
@@ -493,59 +508,49 @@ pub fn scan_code(text: &str, base: usize) -> RegionScan {
     let mut scan = RegionScan::default();
     let mut shaped = Vec::new();
     let mut delimited = Vec::new();
+    let mut consumed: Vec<ByteSpan> = Vec::new();
     let mut i = 0;
     let mut limit = bytes.len();
     while i < bytes.len() {
-        if is_acute(bytes, i) {
-            let after = i + ACUTE.len();
-            if !opens(text, after) {
-                i = after;
-                continue;
-            }
-            let Some(close) = find_acute(bytes, after) else {
-                scan.delimiter_failure = Some(DelimiterFailure {
-                    at: base + i,
-                    delimiter: Delimiter::Acute,
-                });
-                limit = i;
-                break;
-            };
-            let outer = ByteSpan {
-                start: i,
-                end: close + ACUTE.len(),
-            };
-            let interior = ByteSpan {
-                start: after,
-                end: close,
-            };
-            delimited.push(outer);
-            read_span(text, base, outer, interior, &mut scan, &mut shaped);
-            i = outer.end;
+        if !is_acute(bytes, i) {
+            i += 1;
             continue;
         }
-        if bytes[i] == b'`' {
-            let Some(close) = find_byte(bytes, i + 1, b'`') else {
-                i += 1;
-                continue;
-            };
-            let outer = ByteSpan {
-                start: i,
-                end: close + 1,
-            };
-            delimited.push(outer);
-            if classify(&text[i + 1..close]).is_ok() {
-                shaped.push(outer);
-                let (span, _) = with_parentheses(text, outer);
-                scan.near_misses.push(NearMiss {
-                    span: shift(span, base),
-                    why: NearMissKind::BacktickInCode,
-                });
-            }
-            i = outer.end;
+        let after = i + ACUTE.len();
+        if !opens(text, after) {
+            i = after;
             continue;
         }
-        i += 1;
+        let Some(close) = find_acute(bytes, after) else {
+            scan.delimiter_failure = Some(DelimiterFailure {
+                at: base + i,
+                delimiter: Delimiter::Acute,
+            });
+            limit = i;
+            break;
+        };
+        let outer = ByteSpan {
+            start: i,
+            end: close + ACUTE.len(),
+        };
+        let interior = ByteSpan {
+            start: after,
+            end: close,
+        };
+        delimited.push(outer);
+        consumed.push(outer);
+        read_span(text, base, outer, interior, &mut scan, &mut shaped);
+        i = outer.end;
     }
+    residue_backticks(
+        text,
+        base,
+        limit,
+        &consumed,
+        &mut scan.near_misses,
+        &mut shaped,
+        &mut delimited,
+    );
     delimited.sort_unstable();
     shaped.sort_unstable();
     several_to_one(
@@ -559,6 +564,85 @@ pub fn scan_code(text: &str, base: usize) -> RegionScan {
     scan.near_misses
         .sort_unstable_by_key(|miss| (miss.span.start, miss.span.end));
     scan
+}
+
+/// The backtick's near-miss, read out of the text the acute pass left.
+///
+/// `consumed` is the acute spans in increasing order, and the stretches
+/// between them are the residue. Pairing is per stretch, which needs no rule
+/// of its own: no label-shaped span straddles an acute span, the acute being
+/// no byte of the label alphabet, so a pair that would have to reach across
+/// one was never a candidate.
+///
+/// A delimiter failure ends the region's spans, so the residue ends at
+/// `limit` with everything else.
+fn residue_backticks(
+    text: &str,
+    base: usize,
+    limit: usize,
+    consumed: &[ByteSpan],
+    out: &mut Vec<NearMiss>,
+    shaped: &mut Vec<ByteSpan>,
+    delimited: &mut Vec<ByteSpan>,
+) {
+    let end = limit.min(text.len());
+    let mut from = 0;
+    for span in consumed {
+        if span.start > from {
+            one_stretch(
+                text,
+                base,
+                from,
+                span.start.min(end),
+                out,
+                shaped,
+                delimited,
+            );
+        }
+        from = span.end;
+    }
+    if from < end {
+        one_stretch(text, base, from, end, out, shaped, delimited);
+    }
+}
+
+/// One residue stretch, its backticks paired left to right within it.
+fn one_stretch(
+    text: &str,
+    base: usize,
+    from: usize,
+    to: usize,
+    out: &mut Vec<NearMiss>,
+    shaped: &mut Vec<ByteSpan>,
+    delimited: &mut Vec<ByteSpan>,
+) {
+    let Some(bounded) = text.as_bytes().get(..to) else {
+        return;
+    };
+    let mut i = from;
+    while i < to {
+        if bounded[i] != b'`' {
+            i += 1;
+            continue;
+        }
+        let Some(close) = find_byte(bounded, i + 1, b'`') else {
+            return;
+        };
+        let outer = ByteSpan {
+            start: i,
+            end: close + 1,
+        };
+        delimited.push(outer);
+        if classify(&text[i + 1..close]).is_ok() {
+            shaped.push(outer);
+            let (span, _) = with_parentheses(text, outer);
+            out.push(NearMiss {
+                span: shift(span, base),
+                why: NearMissKind::BacktickInCode,
+            });
+        }
+        i = outer.end;
+    }
 }
 
 /// What a delimited span's interior is, when it is anything.
