@@ -52,6 +52,10 @@
          rather than read through the anchor table as its nearest
          neighbour — which would call it "Nice". -->
     <string name="stance_standing_zero">Nothing you\'ve said here carries</string>
+    <!-- The raw sums, on the surfaces that explain cost (design.md §8.3).
+         A bundle clipped at +1.00 whose raw sum is +6.00 costs a batch
+         sized by the six, so the six is what gets stated. -->
+    <string name="stance_standing_raw">Everything you\'ve said here adds up to</string>
     <string name="stance_landing">This leaves you at</string>
     <string name="stance_landing_working">Working out where this leaves you…</string>
     <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>

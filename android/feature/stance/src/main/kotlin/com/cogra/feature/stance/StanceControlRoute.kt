@@ -103,6 +103,7 @@ internal fun TargetStance.toControlState(
     severance = severance?.let {
         SeverancePrompt(
             standing = it.quote.standing.toPoint(),
+            raw = it.quote.raw.toPoint(),
             records = it.quote.records,
             alreadySevered = it.quote.alreadySevered,
             fromPick = it.fromPick,
