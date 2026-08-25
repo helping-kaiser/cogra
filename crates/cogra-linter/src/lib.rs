@@ -21,9 +21,10 @@
 //! **pass 1** harvests: every carrier source is walked in path order,
 //! pre-tokenized, parsed by the frontend its language names, scanned region
 //! by region, and turned into nodes, with the minting registries completed
-//! as it goes. Only then does **pass 2** resolve, adding the three edges
-//! that are judgments about completed registries — `Cites`, `ResolvesTo`,
-//! and `ValidatesAs` — and only then do the judgments run.
+//! as it goes. Only then does **pass 2** resolve, adding the edges that are
+//! judgments about completed registries — `Cites`, `ResolvesTo`,
+//! `ValidatesAs`, and the `Derives` warrant of an effective profile — and
+//! only then do the judgments run.
 //!
 //! Nothing in pass 2 depends on the order pass 1 visited anything. The
 //! sources are sorted by path before the harvest whatever order they arrive
