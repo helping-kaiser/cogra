@@ -742,6 +742,14 @@ extremes, where finer distinctions carry no meaning. A regular
 grid cannot express that, and puts visible seams in a
 continuous field.
 
+**The zero bundle never speaks through the table.** A bundle
+standing at exactly `(0, 0)` — severed, or netted there — is
+the absence of a feeling, and reading it as its nearest
+neighbour ("🙂 Nice") is a lie. It gets its own readout: **🤷**
+with the severed/no-standing wording, on every surface that
+shows a standing. The anchor table reads picks and non-zero
+bundles only.
+
 | `p_d` | `p_i` | Readout | Label |
 |---:|---:|:---:|---|
 | +0.15 | +0.15 | 🙂 | Nice |
