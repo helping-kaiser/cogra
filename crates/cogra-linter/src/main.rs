@@ -58,6 +58,10 @@ enum Command {
         /// Restrict to one owner.
         #[arg(long)]
         owner: Option<String>,
+        /// Generate one registered profile's label registers from its own
+        /// census, staged or in force.
+        #[arg(long)]
+        profile: Option<String>,
         /// Report what would change and write nothing.
         #[arg(long)]
         dry_run: bool,
@@ -101,9 +105,16 @@ fn run() -> Result<u8> {
 
     match &cli.command {
         Command::Check { advisory } => check(&adoption, &cli.root, *advisory),
-        Command::Regenerate { owner, dry_run } => {
-            regenerate(&adoption, &cli.root, owner.as_deref(), *dry_run)
-        }
+        Command::Regenerate {
+            owner,
+            profile: Some(profile),
+            dry_run,
+        } => named(&adoption, &cli.root, owner.as_deref(), profile, *dry_run),
+        Command::Regenerate {
+            owner,
+            profile: None,
+            dry_run,
+        } => regenerate(&adoption, &cli.root, owner.as_deref(), *dry_run),
         Command::Migrations { profile } => migrations(&adoption, &cli.root, profile.as_deref()),
     }
 }
@@ -153,6 +164,78 @@ fn regenerate(a: &Adoption, root: &Path, owner: Option<&str>, dry_run: bool) -> 
     }
     if dry_run {
         println!("{} registers, nothing written", regs.len());
+        return Ok(CLEAN);
+    }
+
+    let writing = Instant::now();
+    let written = write_all(&regs, &scope, root)?;
+    println!(
+        "{} files written in {:?}",
+        written.paths.len(),
+        writing.elapsed()
+    );
+    for path in &written.paths {
+        println!("  {}", path.display());
+    }
+    Ok(CLEAN)
+}
+
+/// The named regeneration: one profile's label registers, generated from its
+/// own census while it is still staged (´dec:lint:staged-profiles´).
+///
+/// It judges nothing. A profile whose entry condition names its own registers
+/// cannot meet it out of a run that computes nothing for it, so this mode
+/// computes that profile's census by the machinery the measurement uses,
+/// emits, and exits. The whole-corpus regeneration does not sweep a staged
+/// profile up: generating its registers is a step in a migration, taken
+/// deliberately and by name.
+///
+/// The committed bytes come from this mode's own read of the target. There is
+/// no check behind a named regeneration to have read them, and nothing here
+/// feeds a judgment — the read decides what a dry run reports and nothing
+/// else, so it cannot make a register current against a file nobody linted
+/// (´dec:lint:no-digest´).
+fn named(
+    a: &Adoption,
+    root: &Path,
+    owner: Option<&str>,
+    profile: &str,
+    dry_run: bool,
+) -> Result<u8> {
+    let id = ProfileId::new(profile);
+    let registered = a
+        .profiles
+        .profiles
+        .iter()
+        .find(|one| one.id == id)
+        .with_context(|| format!("{profile} is not a profile `[profiles]` registers"))?;
+
+    let census = migrate::census(a, root, &id)
+        .with_context(|| format!("the census of {profile} at {}", root.display()))?;
+    let covered: usize = census.values().map(Vec::len).sum();
+    let scope = owner.map_or(Scope::WholeCorpus, |one| Scope::Owner(OwnerId::new(one)));
+    let regs: Vec<Register> = cogra_linter::label_registers_of(a, registered, &census)
+        .into_iter()
+        .filter(|reg| scope.admits(reg))
+        .collect();
+
+    println!(
+        "profile {profile} · {covered} covered assets · {} registers",
+        regs.len()
+    );
+    if registered.standard_place.register.is_none() {
+        println!("  its standard place is the asset itself, so it has no register to generate");
+    }
+    for reg in &regs {
+        let held = std::fs::read(root.join(&reg.path)).ok();
+        println!(
+            "{} · {} bytes",
+            render::freshness(reg, &compare(reg, held.as_deref())),
+            reg.bytes.len()
+        );
+    }
+    if dry_run {
+        println!("nothing written");
         return Ok(CLEAN);
     }
 

@@ -144,6 +144,64 @@ pub fn distances(
     Ok(out)
 }
 
+/// One registered profile's census, by the owner whose tree each asset sits
+/// in.
+///
+/// The measurement's own machinery, exposed because the named regeneration
+/// needs exactly it: a profile whose entry condition names its own registers
+/// cannot meet it out of a run that computes nothing for it, so the
+/// regeneration mode asks for the profile by name and generates its registers
+/// while it is still staged (´dec:lint:staged-profiles´). It judges nothing —
+/// it walks, computes, and returns — which is what makes it safe to call from
+/// a mode that is not the check.
+///
+/// Status is not consulted. A profile in force has its census computed by the
+/// harvest as well, and the two agree; a staged one has this and nothing
+/// else. An unregistered name has an empty census, which is a fact about the
+/// name and not about the corpus.
+///
+/// ```no_run
+/// use cogra_linter::{ProfileId, migrate};
+/// use std::path::Path;
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let root = Path::new(".");
+/// let adoption = cogra_linter::Adoption::load(&root.join("corpus-adoption.toml"))?;
+///
+/// for (owner, held) in migrate::census(&adoption, root, &ProfileId::new("rust-test"))? {
+///     println!("{} covers {} assets", owner.as_str(), held.len());
+/// }
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # Errors
+///
+/// [`RunError::Walk`] when `root` is not a directory, exactly as
+/// [`distances`] reports it.
+pub fn census(
+    a: &Adoption,
+    root: &Path,
+    profile: &ProfileId,
+) -> Result<BTreeMap<OwnerId, Vec<Asset>>, RunError> {
+    if !root.is_dir() {
+        return Err(RunError::Walk(WalkError::NotADirectory {
+            path: root.to_path_buf(),
+        }));
+    }
+    let sources = match Walk::new(a, root).sources() {
+        Ok(sources) => sources,
+        Err(outcome) => outcome.sources,
+    };
+    let Some(registered) = a.profiles.profiles.iter().find(|one| one.id == *profile) else {
+        return Ok(BTreeMap::new());
+    };
+    let mut out: BTreeMap<OwnerId, Vec<Asset>> = BTreeMap::new();
+    for (src, held) in census_of(a, registered, &sources) {
+        out.entry(src.owner.clone()).or_default().extend(held);
+    }
+    Ok(out)
+}
+
 /// One profile's census, by the source each asset sits in.
 ///
 /// The censuses are computed here and nowhere else in the run, which is what
