@@ -71,16 +71,18 @@ author for account deletion to touch.
   Authorship is unconstrained: the content author's tag declares
   the content's own topics, and anyone else's tag is a
   third-party topic claim the feed reads through its author,
-  mirroring the reference channels (§4).
+  mirroring the reference channels (§5). Tagging is revisable: the
+  newest record per (author, content, Type) bundle is the author's
+  current claim, and relevance `0` withdraws it (§4).
 - **Following a topic** — an **Affinity** record (Actor → Type):
   relevance, not verdict — its sign is coherence, never a
   standing vouch. Affinity is the follow gesture the topic feed
-  reads (§4).
+  reads (§5).
 - **Stances** — Opinion → Type is native: liking or rejecting a
   topic is an ordinary graph act, full vocabulary. The old
   no-actor-edges-to-Hashtag prohibition is gone — what it
   protected against is handled as feed policy, not topology
-  (§4).
+  (§5).
 - **Commentary** — Reviews of a Type mint Comments like
   anywhere else and change nothing about the Type: no semantics,
   no tags, no standing, no gates
@@ -90,7 +92,38 @@ author for account deletion to touch.
 
 ---
 
-## 4. Feed role
+## 4. The current-topics fold
+
+Tag records accumulate; what "current" means is CoGra's declared
+read rule
+([graph-model.md §3](../primitive/graph-model.md#3-revision-and-current-state)).
+
+**The fold: newest-wins per (author, content, Type) bundle.** A Tag
+is a standing claim about how the content relates to the topic, not
+an event — the author's latest record in the bundle is their current
+claim, and the earlier ones are history
+([graph-model.md §4](../primitive/graph-model.md#4-stances-not-events)).
+
+**Relevance `0` reads as withdrawn.** Un-tagging is re-tagging at
+relevance `r = 0` — an ordinary priced, visible record, never an
+erasure. The census bounds Tag confidence to `c ∈ [0, 1]`
+([layer1-interface.md §9](../primitive/layer1-interface.md#9-node-and-edge-type-inventory)),
+so no counter-record can net accumulated confidence back down: a
+net-over-bundle read could not express withdrawal at all. Newest-wins
+needs no arithmetic — the withdrawal is declared.
+
+**A content node's current topics are the union of the current
+non-zero bundles across all authors** — the content author's own
+declarations and every third-party claim alike, each still reaching a
+viewer only through its author (§5).
+
+The moderation verdict mark is this fold at another surface: The
+Moderator's Tag toward a moderation Type is `(0,0)` + payload, so it
+declares no topic and carries its verdict in the payload (§6).
+
+---
+
+## 5. Feed role
 
 **Types are forward-traversal sinks — CoGra's declared traversal
 policy.** A ranking path may end *at* a Type (topics are rankable
@@ -113,7 +146,7 @@ The default feed stays untouched by follows.
 
 ---
 
-## 5. Moderation and lifecycle
+## 6. Moderation and lifecycle
 
 **A Type's name is unerasable from the shared graph.**
 A Type has no records of its own — nothing mints it, no payload
