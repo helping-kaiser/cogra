@@ -427,6 +427,91 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_entry_interest").assertExists()
     }
 
+    // -- The alternates as the chosen input (design.md §8.6) --
+
+    @Test
+    fun choosingSlidersReplacesTheFieldWithThem() {
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                inputMode = StanceInputSurface.SLIDERS,
+            ),
+        )
+
+        compose.onNodeWithTag("stance_field").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_slider_directed").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_slider_interest").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertDoesNotExist()
+        // The toggle belongs to the pad; the chosen surface is not a
+        // panel to open and shut.
+        compose.onNodeWithTag("${TAG}_stance_exact").assertDoesNotExist()
+    }
+
+    @Test
+    fun choosingTypedValuesReplacesTheFieldWithThem() {
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                inputMode = StanceInputSurface.ENTRY,
+            ),
+        )
+
+        compose.onNodeWithTag("stance_field").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_slider_directed").assertDoesNotExist()
+    }
+
+    @Test
+    fun thePadIsStillDrawnWhenThePadIsTheChosenInput() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("stance_field").assertExists()
+    }
+
+    @Test
+    fun anAlternateParksOnTheHoldRatherThanDriftingAField() {
+        // There is no field to drift across, so the hold opens the
+        // chosen surface and a release commits nothing by accident.
+        show(StanceControlState(inputMode = StanceInputSurface.SLIDERS))
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { longClick() }
+
+        assertThat(opened).isEqualTo(1)
+        assertThat(held).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
+        assertThat(picks).isEmpty()
+    }
+
+    @Test
+    fun anAlternateStillCommitsThroughItsOwnButton() {
+        show(StanceControlState(pad = StancePadMode.STICKY, inputMode = StanceInputSurface.ENTRY))
+
+        compose.onNodeWithTag("${TAG}_stance_set").performScrollTo().performClick()
+
+        assertThat(committed).isEqualTo(1)
+    }
+
+    @Test
+    fun anAlternateKeepsTheSeveranceRouteFindable() {
+        // The pad never opens for this reader, so severance has to be
+        // reachable from the surface that replaced it (design.md §8.5).
+        show(StanceControlState(pad = StancePadMode.STICKY, inputMode = StanceInputSurface.SLIDERS))
+
+        compose.onNodeWithTag("${TAG}_stance_sever").performScrollTo().performClick()
+
+        assertThat(severOpened).isEqualTo(1)
+    }
+
+    @Test
+    fun aTapStillCommitsTheDefaultWhateverTheChosenInput() {
+        show(StanceControlState(inputMode = StanceInputSurface.ENTRY))
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+
+        assertThat(tapped).isEqualTo(1)
+    }
+
     @Test
     fun theParkedPadCommitsThroughItsOwnButton() {
         show(StanceControlState(pad = StancePadMode.STICKY))

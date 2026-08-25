@@ -7,6 +7,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
@@ -524,6 +525,30 @@ class StanceViewModelTest {
 
         assertThat(entry(vm).severance).isNull()
         assertThat(stances.severanceCalls).isEqualTo(0)
+    }
+
+    // -- The chosen input surface (design.md §8.6) --
+
+    @Test
+    fun thePadIsTheInputUntilAnAlternateIsChosen() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.inputMode).isEqualTo(StanceInputMode.PAD)
+    }
+
+    @Test
+    fun choosingAnAlternateReachesControlsAlreadyOnScreen() = runTest(dispatcher) {
+        // The choice replaces the pad everywhere, not per-screen, so a
+        // control composed before the change still has to follow it.
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        identity.setStanceInputMode(StanceInputMode.SLIDERS)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.inputMode).isEqualTo(StanceInputMode.SLIDERS)
     }
 
     // -- Teaching the held gesture (design.md §8.7) --

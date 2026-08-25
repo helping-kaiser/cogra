@@ -50,6 +50,7 @@ import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
@@ -57,6 +58,7 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import java.time.Instant
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class FakeTokenStore : TokenStore {
@@ -122,6 +124,14 @@ class FakeIdentityStore : IdentityStore {
         stancePadTaught = true
     }
 
+    private val inputMode = MutableStateFlow(StanceInputMode.Default)
+
+    override val stanceInputMode: Flow<StanceInputMode> = inputMode
+
+    override suspend fun setStanceInputMode(mode: StanceInputMode) {
+        inputMode.value = mode
+    }
+
     override suspend fun forgetOnSignOut(): Boolean = forgetOnSignOut
 
     override suspend fun setForgetOnSignOut(value: Boolean) {
@@ -134,6 +144,7 @@ class FakeIdentityStore : IdentityStore {
         dismissedReciprocation = false
         stancePadTaught = false
         forgetOnSignOut = false
+        inputMode.value = StanceInputMode.Default
         handshakes.clear()
     }
 }
