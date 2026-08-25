@@ -144,7 +144,7 @@ pub enum ProfileStatus { Effective, Staged { enters_when: Box<str> } }
 
 A `Label` node exists once per owner that carries the label, never once per corpus: two owners minting one label text is expressly not a collision (`[LBL-cav:labels:coexistence]`), and one shared node would make it one. The `Source` node's `language` is `Option` because the carrier contains files no frontend reads — the nine languages of `[scanned-regions]` with no frontend, and everything else — and those files are in the carrier and owned, carrying no occurrences and vacuously in good standing (`[LBL-judg:labels:minting]`). Representing them as sources without a language is what keeps R17's walk honest; dropping them would make the partition's totality unobservable.
 
-`RegionKind` and `CommentForm` sit in `graph`, which is where the region node needs them. They are the frontend contract's vocabulary (`sig:lint:frontend-api`) and the pre-tokenizer's (`sig:lint:pretokenizer-api`), and they move to `frontend.rs` and `pretokenize` with those modules.
+`RegionKind` lives in `frontend.rs`, the frontend contract's vocabulary (`sig:lint:frontend-api`), and `graph` imports it. `CommentForm`, the pre-tokenizer's (`sig:lint:pretokenizer-api`), sits in `graph` — where the region node needs it — until `pretokenize` lands and takes it.
 
 **Signature (Edge weights)** · `sig:lint:edge-weights`
 
