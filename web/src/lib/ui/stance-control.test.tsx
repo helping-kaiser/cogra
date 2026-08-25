@@ -13,7 +13,7 @@ import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-
 import { renderWithProviders } from "@/test/providers";
 import { PAD_PARK_INSET_PX } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
-import { LONG_PRESS_MS, PROJECTION_SETTLE_MS, StanceControl } from "./stance-control";
+import { LONG_PRESS_MS, StanceControl } from "./stance-control";
 
 const TARGET: StanceTargetRef = { id: "post-1", kind: "post", label: "this post" };
 const PREFIX = "stance-post-1";
@@ -994,16 +994,18 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: -HALF, clientY: HALF });
-    await settle(PROJECTION_SETTLE_MS + 1);
+    await act(async () => {});
+    // The PICK's face, from the anchor table (§8.4).
     expect(screen.getByTestId(`${PREFIX}-face`)).toHaveTextContent("Absolutely not");
+    // The LANDING is its own line and its own number: the raw sums are
+    // (+0.90, +0.90), so a (−1, −1) pick lands at (−0.10, −0.10). Face,
+    // words, AND the exact pair — the emoji alone is half a reading.
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This leaves you at:");
-    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Absolutely not");
-    // Face, words, AND the exact pair — the same three the standing
-    // carries (§8.3). The emoji alone is half a reading.
-    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("-1.00 / -1.00");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Meh");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("-0.10 / -0.10");
+    // The STANDING is still the fold's own answer, never derived here.
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("Where you stand now:");
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("All in");
-    // The standing carries its numbers too.
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("+0.90 / +0.90");
   });
 
@@ -1028,7 +1030,6 @@ describe("the readout", () => {
     layOutPad();
     // Valence at zero, connection alive: the axis wording follows.
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: 0, clientY: -HALF });
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "Where you stand would carry nothing.",
     );
@@ -1040,17 +1041,86 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "What reaches you would carry nothing.",
     );
   });
 
-  it("says it is still working the landing out rather than showing a stale one", async () => {
-    mount({ fold: lastWins });
+  it("moves the landing with the drag, without waiting on a round trip", async () => {
+    // §8.3: "the landing is a local fold (clip of sum plus pick)
+    // recomputed live under the drag, with no round trip and no visible
+    // lag." No timer is advanced anywhere in this test.
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.3, pInterest: 0.2 }] } } });
     await settle();
     await hold();
-    // The settle has not elapsed, so no landing has been read yet.
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.4, clientY: -HALF * 0.2 });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.70 / +0.40");
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.6, clientY: -HALF * 0.4 });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.90 / +0.60");
+  });
+
+  it("folds against the served RAW sums, not the fold the standing shows", async () => {
+    // The guard: raw sums that no client-side arithmetic on `current`
+    // could produce. The standing is the LAST record, the raw sum is a
+    // different number again, and only one of them gives this landing.
+    mount({
+      fold: lastWins,
+      rawSum: () => ({ pDirected: 0.25, pInterest: -0.5 }),
+      seed: {
+        "post-1": {
+          records: [
+            { pDirected: 0.9, pInterest: 0.9 },
+            { pDirected: -0.8, pInterest: 0.1 },
+          ],
+        },
+      },
+    });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.5, clientY: 0 });
+    await act(async () => {});
+    // 0.25 + 0.50 and −0.50 + 0.00 — neither the standing (−0.80, +0.10)
+    // nor a sum of the records (+0.10, +1.00) lands here.
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.75 / -0.50");
+  });
+
+  it("clips a landing the raw sums push past the edge", async () => {
+    // "Clipped is not hidden" (§8.3): the raw sum carries the history,
+    // and the landing shows the fold the graph actually reads.
+    mount({ rawSum: () => ({ pDirected: 4, pInterest: 4 }), seed: { "post-1": { records: [ORIGIN] } } });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: -HALF });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+1.00 / +1.00");
+  });
+
+  it("does not call a pick severance when the raw sums say it is nowhere near", async () => {
+    // The bug raw sums exist to stop: against a CLIPPED (+1, +1) a
+    // (−1, −1) pick reads as severance, while the graph lands at
+    // (+4, +4) and nothing of the sort happens.
+    mount({ rawSum: () => ({ pDirected: 5, pInterest: 5 }), seed: { "post-1": { records: [ORIGIN] } } });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: -HALF, clientY: HALF });
+    await act(async () => {});
+    const line = screen.getByTestId(`${PREFIX}-landing`);
+    expect(line).not.toHaveTextContent("back to nothing");
+    expect(line).toHaveTextContent("+1.00 / +1.00");
+  });
+
+  it("says nothing about a landing while the standing is still unknown", async () => {
+    // A landing needs a bundle to land in; guessing at one is worse than
+    // saying so.
+    mount({ offline: true });
+    await settle();
+    await hold();
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "Working out where this leaves you…",
     );
@@ -1062,7 +1132,6 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     // The origin: both axes at zero, which the fold flags as severance.
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "This pick nets everything you've said about it back to nothing.",
     );
@@ -1072,7 +1141,6 @@ describe("the readout", () => {
     const data = mount({ seed: { "post-1": { records: [TAP_DEFAULT] } } });
     await settle();
     await hold();
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(data.pendingFlags.length).toBeGreaterThan(0);
     expect(data.pendingFlags.every((flag) => flag)).toBe(true);
   });
@@ -1300,6 +1368,7 @@ describe("a supplied bundle", () => {
         target={TARGET}
         bundle={{
           current: { pDirected: 0.9, pInterest: 0.25 },
+          rawSum: { pDirected: 0.9, pInterest: 0.25 },
           records: 3,
           inert: false,
           severed: false,
@@ -1325,6 +1394,7 @@ describe("a supplied bundle", () => {
         target={TARGET}
         bundle={{
           current: { pDirected: 0.4, pInterest: 0.1 },
+          rawSum: { pDirected: 0.4, pInterest: 0.1 },
           records: 1,
           inert: false,
           severed: false,
@@ -1347,7 +1417,7 @@ describe("a supplied bundle", () => {
 describe("the pick that never happened", () => {
   it("leaves the pad closed and the seam untouched while at rest", async () => {
     const data = mount();
-    await settle(PROJECTION_SETTLE_MS * 4);
+    await settle(1000);
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
     expect(data.severed).toEqual([]);
