@@ -1,6 +1,9 @@
-// The profile surface (roadmap "Slice 2.1"): the public profile screen
-// with its authored chronicle, and the parallel-Registration profile
-// edit signed on this device.
+// The stance control (roadmap "Slice 2.2"): the state holder behind
+// CoGra's signature interaction, plus the composable that binds it to
+// the design system's pad. It is a feature module rather than a screen
+// because the control embeds in other surfaces — post cards, comments,
+// profiles — and one shared home is what keeps it from being copied
+// three ways (design.md §6).
 
 plugins {
     alias(libs.plugins.android.library)
@@ -12,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cogra.feature.profile"
+    namespace = "com.cogra.feature.stance"
 
     buildFeatures {
         compose = true
@@ -28,8 +31,6 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
-    // The header's primary action on someone else's profile.
-    implementation(project(":feature:stance"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

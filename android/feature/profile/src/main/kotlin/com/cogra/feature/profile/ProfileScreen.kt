@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
+import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.launch
 
 @Composable
@@ -98,6 +99,7 @@ fun ProfileRoute(
         onBack = onBack,
         keyBanner = keyBanner,
         banners = banners,
+        stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
     )
 }
 
@@ -117,6 +119,8 @@ fun ProfileScreen(
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /** The header's stance control on someone else's profile (design.md §6). */
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -221,6 +225,7 @@ fun ProfileScreen(
                             state = state,
                             onEdit = onEdit,
                             onOpenInvites = openInvites,
+                            stanceControl = stanceControl,
                         )
                     }
                     item(key = "filters") {
@@ -290,6 +295,7 @@ private fun ProfileHeader(
     state: ProfileUiState,
     onEdit: () -> Unit,
     onOpenInvites: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val profile = state.profile ?: return
     val name = profile.displayName.value?.takeIf { it.isNotBlank() } ?: profile.handle
@@ -330,6 +336,15 @@ private fun ProfileHeader(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 4.dp).testTag("profile_website"),
                 )
+            }
+            // The header's primary action (design.md §6). On someone
+            // else's profile that action is the stance toward them — the
+            // interpersonal Opinion (api-spec.md "The generic stance");
+            // one's own profile keeps edit and invites instead.
+            if (!state.own) {
+                Box(Modifier.padding(top = 12.dp)) {
+                    stanceControl(profile.id, "profile")
+                }
             }
             if (state.own) {
                 Row(
