@@ -6,9 +6,13 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
 
-const server = startMswServer();
+// Every signed-in card reads its own standing, so the read is a default
+// rather than something each test remembers: an unhandled one degrades
+// the control silently instead of failing the test.
+const server = startMswServer(...stanceHandlers());
 
 function signedInStore() {
   const store = createTokenStore();
@@ -102,6 +106,28 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-post-p1")).not.toContainElement(
       screen.getByTestId("feed-stance-p1"),
     );
+  });
+
+  it("wears the viewer's own standing on each card it has one for", async () => {
+    // §8.3: at rest the target shows the standing — face, words, and the
+    // folded pair — for every card the viewer has a bundle toward.
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First"), post("p2", "Second")], null, false) }),
+      ),
+    );
+    server.use(
+      meHandler(),
+      ...stanceHandlers({ p1: { pDirected: 0.55, pInterest: 0.2, recordCount: 2 } }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await waitFor(() =>
+      expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("Like this"),
+    );
+    expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("😊");
+    expect(screen.getByTestId("feed-stance-p1-resting-exact")).toHaveTextContent("+0.55 / +0.20");
+    // A card the viewer has no bundle toward keeps the affordance.
+    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("Stance");
   });
 
   it("offers a guest the stance control, which asks them to join", async () => {
