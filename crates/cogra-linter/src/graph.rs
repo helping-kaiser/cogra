@@ -34,7 +34,20 @@ use crate::diag::ByteSpan;
 /// stands here is the value the graph's weights carry, with the
 /// representation the ordering property fixes; the scanner's `parse` is
 /// what will construct it from text, and this definition folds into
-/// ´scan´ when that module lands.
+/// the span scanner's module when that module lands.
+///
+/// ```
+/// use cogra_linter::graph::Label;
+///
+/// let label = Label::from_rendered("sig:labels:owners").expect("a triple");
+/// assert_eq!((label.kind(), label.area(), label.name()), ("sig", "labels", "owners"));
+///
+/// // Bytewise, because a digit sorts below the colon: the order every
+/// // generated register is written in and compared under.
+/// let one = Label::from_rendered("a1:x:y").expect("a triple");
+/// let other = Label::from_rendered("a:x:y").expect("a triple");
+/// assert!(one < other);
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Label {
     text: Box<str>,
@@ -384,6 +397,27 @@ pub type Corpus = StableDiGraph<NodeW, EdgeW>;
 ///
 /// Two `edges_directed` calls of degree one at each step up the structure,
 /// which is the cost of holding the partition exactly once.
+///
+/// ```
+/// use cogra_linter::graph::{Corpus, EdgeW, NodeW, OwnerNode, SourceNode, owner_of};
+/// use cogra_linter::OwnerId;
+/// use std::path::PathBuf;
+///
+/// let mut g = Corpus::new();
+/// let owner = g.add_node(NodeW::Owner(OwnerNode {
+///     id: OwnerId::new("doc.label-calculus"),
+///     prefixes: Vec::new(),
+/// }));
+/// let source = g.add_node(NodeW::Source(SourceNode {
+///     path: PathBuf::from("docs/labels.md"),
+///     language: None,
+///     generated: false,
+/// }));
+/// g.add_edge(owner, source, EdgeW::Owns);
+///
+/// assert_eq!(owner_of(&g, source), Some(owner));
+/// assert_eq!(owner_of(&g, owner), None);
+/// ```
 #[must_use]
 pub fn owner_of(g: &Corpus, n: NodeIndex) -> Option<NodeIndex> {
     let mut current = n;
@@ -504,6 +538,26 @@ impl Registries {
     /// where duplicate minting fails, with both locations to hand
     /// (´sig:lint:index-maps´). Recording a mint records its label too:
     /// that is what keeps every key of `mints` a key of `labels`.
+    ///
+    /// ```
+    /// use cogra_linter::graph::{Corpus, Label, LabelNode, NodeW, Registries};
+    /// use petgraph::stable_graph::NodeIndex;
+    ///
+    /// let mut g = Corpus::new();
+    /// let label = Label::from_rendered("sig:labels:owners").expect("a triple");
+    /// let owner = NodeIndex::new(0);
+    /// let node = g.add_node(NodeW::Label(LabelNode { label: label.clone() }));
+    /// let (first, second) = (NodeIndex::new(7), NodeIndex::new(9));
+    ///
+    /// let mut registries = Registries::new();
+    /// assert_eq!(registries.record_mint(owner, label.clone(), first, node), None);
+    /// assert_eq!(
+    ///     registries.record_mint(owner, label.clone(), second, node),
+    ///     Some(first),
+    ///     "the collision hands back the first mint, so both locations are to hand",
+    /// );
+    /// assert!(registries.labels.contains_key(&(owner, label)));
+    /// ```
     pub fn record_mint(
         &mut self,
         owner: NodeIndex,

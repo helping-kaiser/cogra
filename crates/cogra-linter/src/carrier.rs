@@ -78,6 +78,24 @@ impl<'a> Walk<'a> {
     /// Every carrier source, in a deterministic order: sorted by path,
     /// never by directory-iteration order.
     ///
+    /// ```no_run
+    /// use cogra_linter::{Adoption, Walk};
+    /// use std::path::Path;
+    ///
+    /// let adoption = Adoption::load(Path::new("corpus-adoption.toml"))?;
+    /// let walk = Walk::new(&adoption, Path::new("."));
+    ///
+    /// match walk.sources() {
+    ///     Ok(sources) => println!("{} sources, every one owned", sources.len()),
+    ///     Err(outcome) => println!(
+    ///         "{} sources beside {} traversal failures",
+    ///         outcome.sources.len(),
+    ///         outcome.failures.len(),
+    ///     ),
+    /// }
+    /// # Ok::<(), cogra_linter::AdoptionError>(())
+    /// ```
+    ///
     /// # Errors
     ///
     /// A [`WalkOutcome`] whenever the traversal failed anywhere. It carries
