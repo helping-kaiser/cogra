@@ -257,6 +257,23 @@ pub fn compare(reg: &Register, committed: Option<&[u8]>) -> Freshness {
 /// several regions in one host are spliced from the last to the first, so
 /// that no splice moves a span not yet applied.
 ///
+/// ```no_run
+/// use cogra_linter::registers::{Scope, regenerate_all, write_all};
+/// use std::path::Path;
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let root = Path::new(".");
+/// let adoption = cogra_linter::Adoption::load(&root.join("corpus-adoption.toml"))?;
+/// let checked = cogra_linter::check(&adoption, root)?;
+///
+/// let regs = regenerate_all(
+///     &checked.graph, &checked.registries, &adoption, checked.kinds.as_ref());
+/// let written = write_all(&regs, &Scope::WholeCorpus, root)?;
+///
+/// println!("{} files written", written.paths.len());
+/// # Ok(())
+/// # }
+/// ```
+///
 /// # Errors
 ///
 /// [`GenerateError::Write`] when a register or its host cannot be read or
