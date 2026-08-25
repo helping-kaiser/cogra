@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -131,6 +131,20 @@ fuzz-interchange: ## Run the cogra-interchange fuzz targets (needs nightly + car
 	@echo "cddl_parse is expected to end in a timeout on the recorded parser-DoS:"
 	cd crates/cogra-interchange && $(FUZZ_CARGO) fuzz run cddl_parse -- -max_total_time=$(FUZZ_TIME) -timeout=10 \
 		|| echo "cddl_parse ended in a libfuzzer timeout (expected: the recorded parser-DoS)"
+
+# The linter's audit-phase fuzz lane (crates/cogra-linter/docs/design.md
+# preview:lint:fuzz-plan). The toolchain rule is fuzz-interchange's: nightly
+# for -Zsanitizer, a separate lane from `ci`, run by hand. FUZZ_CARGO and
+# FUZZ_TIME are shared with that lane. pretokenize_rust and markdown_regions
+# are the two deferred hazards the design names, so a real campaign gives
+# them the longer share rather than splitting FUZZ_TIME four ways.
+fuzz-linter: ## Run the cogra-linter fuzz targets (needs nightly + cargo-fuzz; not a CI gate)
+	@command -v cargo-fuzz >/dev/null 2>&1 || { echo "Error: cargo-fuzz not found (cargo install cargo-fuzz; needs a nightly toolchain)"; exit 1; }
+	cd crates/cogra-linter && bash fuzz/seed.sh
+	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run pretokenize_rust -- -max_total_time=$(FUZZ_TIME) -timeout=10
+	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run scan_region -- -max_total_time=$(FUZZ_TIME) -timeout=10
+	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run markdown_regions -- -max_total_time=$(FUZZ_TIME) -timeout=10
+	cd crates/cogra-linter && $(FUZZ_CARGO) fuzz run adoption_load -- -max_total_time=$(FUZZ_TIME) -timeout=10
 
 android-ci: android-test android-build ## Run the Android CI checks (mirrors the android job in ci.yml; needs JDK 17 + JDK 21 + Android SDK)
 
