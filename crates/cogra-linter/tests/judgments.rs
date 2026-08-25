@@ -919,7 +919,7 @@ fn no_judgment_rule_identifier_is_label_shaped() {
         .iter()
         .chain(&kinds::RULES)
         .chain(&judge::RULES)
-        .chain(&cogra_linter::run::RULES)
+        .chain(&cogra_linter::RULES)
     {
         assert!(
             !rule.as_str().contains(':'),

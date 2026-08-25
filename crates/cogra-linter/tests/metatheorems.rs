@@ -210,7 +210,7 @@ fn the_generated_documents_carry_occurrences() {
         citations: vec![String::from("sig:ab:cd")],
     };
     for reformed in [false, true] {
-        let run = cogra_linter::run::check_sources(
+        let run = cogra_linter::check_sources(
             adoption(),
             sources(std::slice::from_ref(&document), reformed),
         );
@@ -250,8 +250,8 @@ proptest! {
         if held > 0 {
             shuffled.rotate_left(rotate % held);
         }
-        let one = cogra_linter::run::check_sources(adoption(), forward);
-        let other = cogra_linter::run::check_sources(adoption(), shuffled);
+        let one = cogra_linter::check_sources(adoption(), forward);
+        let other = cogra_linter::check_sources(adoption(), shuffled);
         prop_assert_eq!(rendered(&one.findings), rendered(&other.findings));
         prop_assert_eq!(minted(&one), minted(&other));
     }
@@ -260,8 +260,8 @@ proptest! {
     /// emit the same sequence.
     #[test]
     fn two_runs_emit_the_same_sequence(corpus in any_corpus()) {
-        let one = cogra_linter::run::check_sources(adoption(), sources(&corpus, false));
-        let other = cogra_linter::run::check_sources(adoption(), sources(&corpus, false));
+        let one = cogra_linter::check_sources(adoption(), sources(&corpus, false));
+        let other = cogra_linter::check_sources(adoption(), sources(&corpus, false));
         prop_assert_eq!(rendered(&one.findings), rendered(&other.findings));
     }
 
@@ -270,7 +270,7 @@ proptest! {
     /// with the same path, offset, and rule being the same finding.
     #[test]
     fn the_diagnostic_order_is_total(corpus in any_corpus()) {
-        let run = cogra_linter::run::check_sources(adoption(), sources(&corpus, false));
+        let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
         let findings = &run.findings;
         for (at, one) in findings.iter().enumerate() {
             for other in &findings[at..] {
@@ -293,8 +293,8 @@ proptest! {
     /// theorem fixes is the registries, and that is what is compared.
     #[test]
     fn a_re_forming_that_preserves_labels_preserves_the_registries(corpus in any_corpus()) {
-        let before = cogra_linter::run::check_sources(adoption(), sources(&corpus, false));
-        let after = cogra_linter::run::check_sources(adoption(), sources(&corpus, true));
+        let before = cogra_linter::check_sources(adoption(), sources(&corpus, false));
+        let after = cogra_linter::check_sources(adoption(), sources(&corpus, true));
         prop_assert_eq!(minted(&before), minted(&after));
         prop_assert_eq!(
             before.registries.mints.len(),
@@ -314,7 +314,7 @@ proptest! {
     /// entry rather than by hand: every key of `mints` is a key of `labels`.
     #[test]
     fn every_minted_label_is_a_carried_label(corpus in any_corpus()) {
-        let run = cogra_linter::run::check_sources(adoption(), sources(&corpus, false));
+        let run = cogra_linter::check_sources(adoption(), sources(&corpus, false));
         for key in run.registries.mints.keys() {
             prop_assert!(run.registries.labels.contains_key(key));
         }
@@ -551,7 +551,7 @@ fn a_generated_occurrence_enters_the_registries_in_full() {
             bytes: Vec::from("It cites (`sig:gen:one`) here.\n"),
         },
     ];
-    let run = cogra_linter::run::check_sources(adoption(), sources);
+    let run = cogra_linter::check_sources(adoption(), sources);
     assert!(
         !run.registries.mints.is_empty(),
         "the generated mint is in the registry like any other"
