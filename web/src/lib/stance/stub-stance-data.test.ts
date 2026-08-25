@@ -5,16 +5,25 @@
 
 import { describe, expect, it } from "vitest";
 
-import { TAP_DEFAULT } from "./model";
+import { ORIGIN, TAP_DEFAULT } from "./model";
 import { createStubStanceData, sumFold } from "./stub-stance-data";
 import type { StanceTarget } from "./stance-data";
 
 const T: StanceTarget = { id: "t", kind: "post" };
 
 describe("the stance stand-in", () => {
-  it("reports no standing toward a target never stanced", async () => {
+  it("folds no records toward a target never stanced", async () => {
     const data = createStubStanceData();
-    expect(await data.bundle(T)).toEqual({ kind: "success", value: null });
+    expect(await data.bundle(T)).toEqual({
+      kind: "success",
+      value: {
+        current: ORIGIN,
+        records: 0,
+        inert: true,
+        severed: true,
+        severance: { records: 0 },
+      },
+    });
   });
 
   it("reports the folded standing and what reaching zero would take", async () => {
@@ -26,6 +35,7 @@ describe("the stance stand-in", () => {
       kind: "success",
       value: {
         current: sumFold([TAP_DEFAULT, { pDirected: 0.4, pInterest: -0.5 }]),
+        records: 2,
         inert: false,
         severed: false,
         severance: { records: 2 },
@@ -81,7 +91,7 @@ describe("the stance stand-in", () => {
     });
     expect(await data.sever(T)).toEqual({ kind: "success", value: { records: 3 } });
     expect(data.severed).toEqual(["t"]);
-    expect(await data.bundle(T)).toEqual({ kind: "success", value: null });
+    expect(await data.bundle(T)).toMatchObject({ value: { records: 0, severed: true } });
   });
 
   it("records how each read asked about pending stances", async () => {

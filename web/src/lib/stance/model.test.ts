@@ -23,6 +23,13 @@ describe("stance model", () => {
     });
   });
 
+  it("never yields a negative zero, which is not a direction", () => {
+    // The pad's vertical axis is inverted, so any drag that never moved
+    // vertically produces -0 before this normalises it.
+    expect(Object.is(clampDimension(-0), 0)).toBe(true);
+    expect(Object.is(clampPair({ pDirected: 1, pInterest: -0 }).pInterest, 0)).toBe(true);
+  });
+
   it("compares pairs by value", () => {
     expect(samePair(TAP_DEFAULT, { pDirected: 0.1, pInterest: 0.1 })).toBe(true);
     expect(samePair(TAP_DEFAULT, ORIGIN)).toBe(false);

@@ -61,6 +61,8 @@ export type SeveranceCost = {
 export type StanceBundle = {
   /** Where the bundle currently nets — never a value the client computed. */
   readonly current: StancePair;
+  /** How many records the bundle folds; zero is a target never stanced. */
+  readonly records: number;
   /** Either axis at zero, as the fold reports it. */
   readonly inert: boolean;
   /** Both axes at zero, as the fold reports it. */
@@ -95,8 +97,13 @@ export type StanceReadOptions = {
 export const INCLUDE_PENDING_DEFAULT = true;
 
 export interface StanceData {
-  /** The viewer's standing toward `target`; null where they hold none yet. */
-  bundle(target: StanceTarget, options?: StanceReadOptions): Promise<Outcome<StanceBundle | null>>;
+  /**
+   * The viewer's standing toward `target`. A bundle folding no records is
+   * a target never stanced, not an absent one; a viewer with no bundle to
+   * read at all — a stale token, or an account with no actor on the graph
+   * — is the shared UNAUTHENTICATED refusal, as every viewer-only read is.
+   */
+  bundle(target: StanceTarget, options?: StanceReadOptions): Promise<Outcome<StanceBundle>>;
 
   /** Where `pick` would land the bundle — the fold's answer, not a sum. */
   project(

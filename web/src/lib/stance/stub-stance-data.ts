@@ -89,14 +89,14 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     pendingFlags,
     recordsOf,
 
-    async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle | null>> {
+    async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       const records = recordsOf(target.id);
-      if (records.length === 0) return success(null);
-      const net = fold(records);
+      const net = records.length === 0 ? ORIGIN : fold(records);
       return success({
         current: net,
+        records: records.length,
         inert: inertOf(net),
         severed: severedOf(net),
         // One counter-record per live record: the real count is the

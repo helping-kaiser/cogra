@@ -30,12 +30,19 @@ function face(pair: StancePair): string {
   return `${anchor.emoji} ${anchor.label}`;
 }
 
-/** `undefined` while the standing is still being read. */
+/** `undefined` while the standing is still being read, `null` where it could not be. */
 export type BundleState = StanceBundle | null | undefined;
+
+/** Nothing to show: never stanced, or a standing this session could not read. */
+export function noStanding(bundle: BundleState): boolean {
+  return bundle === null || bundle === undefined || bundle.records === 0;
+}
 
 export function standingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
-  if (bundle === null) return `You haven't taken a stance on ${targetLabel} yet.`;
+  if (bundle === null || bundle.records === 0) {
+    return `You haven't taken a stance on ${targetLabel} yet.`;
+  }
   if (bundle.severed) return `You've severed ${targetLabel}.`;
   return `Where you stand now: ${face(bundle.current)}`;
 }

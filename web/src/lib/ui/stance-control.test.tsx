@@ -568,6 +568,7 @@ describe("a supplied bundle", () => {
         target={TARGET}
         bundle={{
           current: { pDirected: 0.9, pInterest: 0.25 },
+          records: 3,
           inert: false,
           severed: false,
           severance: { records: 3 },

@@ -27,7 +27,11 @@ export const TAP_DEFAULT: StancePair = { pDirected: 0.1, pInterest: 0.1 };
 
 export function clampDimension(value: number): number {
   if (Number.isNaN(value)) return 0;
-  return Math.min(DIMENSION_MAX, Math.max(DIMENSION_MIN, value));
+  const bounded = Math.min(DIMENSION_MAX, Math.max(DIMENSION_MIN, value));
+  // Negative zero is not a direction. It arises from the pad's inverted
+  // vertical axis on any drag that never moved vertically, and it would
+  // otherwise travel into a record as a value of its own.
+  return bounded === 0 ? 0 : bounded;
 }
 
 export function clampPair(pair: StancePair): StancePair {
