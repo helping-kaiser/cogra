@@ -426,7 +426,7 @@ export function PostView({
               )}
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
-                target={{ id: comment.id, label: "this comment" }}
+                target={{ id: comment.id, kind: "comment", label: "this comment" }}
                 testIdPrefix={`comment-stance-${comment.id}`}
               />
               <div className="flex gap-2">
@@ -559,7 +559,7 @@ export function PostView({
           marks the post too — the text on screen is that edit. */}
       {isPending(post) && <PendingMarker testId="post-pending" />}
       {/* The post card's stance control, on the detail surface (design.md §6). */}
-      <StanceControl target={{ id: postId, label: "this post" }} testIdPrefix="post-stance" />
+      <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Comments</h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
