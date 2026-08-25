@@ -28,6 +28,8 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    // The header's primary action on someone else's profile.
+    implementation(project(":feature:stance"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

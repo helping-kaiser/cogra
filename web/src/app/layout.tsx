@@ -6,6 +6,7 @@ import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { RegistrationProvider } from "@/lib/signing/provider";
+import { StanceDataProvider } from "@/lib/stance/provider";
 
 import { AppShell } from "./shell";
 
@@ -44,7 +45,9 @@ export default function RootLayout({
           <ApolloWrapper>
             <AuthRuntimeProvider>
               <RegistrationProvider>
-                <AppShell>{children}</AppShell>
+                <StanceDataProvider>
+                  <AppShell>{children}</AppShell>
+                </StanceDataProvider>
               </RegistrationProvider>
             </AuthRuntimeProvider>
           </ApolloWrapper>
