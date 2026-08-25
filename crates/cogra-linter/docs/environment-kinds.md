@@ -526,21 +526,44 @@ The labeled constructs of code: the units a codebase names and keeps — the pac
 | Type                 | `type`       |
 | Workflow             | `pipeline`   |
 
-## Hybrids, variants, and numbering devices · `sec:kinds:hybrids`
+## Hybrids, variants, and presentation devices · `sec:kinds:hybrids`
 
-**Convention (Hybrids, variants, and numbering devices)** · `conv:kinds:hybrids`
+**Convention (Hybrids, variants, and presentation devices)** · `conv:kinds:hybrids`
 
-Compound environments, classified by the declared instances of (`inf:kinds:hybrid`), beside the device classes — families of spellings, not single names — that are presentation rather than genre (`def:kinds:presentation-reduction`).
+Compound environments, classified by the declared instances of (`inf:kinds:hybrid`), beside the device classes — families of spellings, not single names — that are presentation rather than genre (`def:kinds:presentation-reduction`). A device row carries no kind and contributes no member to C (`sig:kinds:registry-data`). The two tables below are the whole of the admitted device vocabulary: the first its families, the second its emphasis and status modifiers.
 
 | Environment                                        | Kind      |
 | -------------------------------------------------- | --------- |
 | Definition–Proposition                             | `defprop` |
 | Definition–Theorem                                 | `defthm`  |
 | Lemma–Definition                                   | `lemdef`  |
+| Containers (a Box, a Panel, a Callout)             | —         |
+| Continued environments                             | —         |
+| Iterated sub- prefixes                             | —         |
 | Lettered main theorems (Theorem A, Theorem B, …)   | —         |
 | Named theorem notes (e.g., Theorem (Riemann–Roch)) | —         |
+| Numbered environments                              | —         |
+| Overriding rows (Working hypothesis, Standing hypothesis) | —  |
+| Placed remarks (a Footnote, an Endnote, a Marginal note) | —   |
 | Restated theorems (Theorem 1.1, restated)          | —         |
 | Starred/unnumbered variants (theorem*, etc.)       | —         |
+
+The emphasis and status modifiers, each stripped from a head before its base is read:
+
+| Modifier    | Kind |
+| ----------- | ---- |
+| Blanket     | —    |
+| Concrete    | —    |
+| Fundamental | —    |
+| Key         | —    |
+| Main        | —    |
+| Motivating  | —    |
+| Numerical   | —    |
+| Running     | —    |
+| Standing    | —    |
+| Toy         | —    |
+| Worked      | —    |
+| Working     | —    |
 
 ## Whimsical and rare · `sec:kinds:whimsy`
 
@@ -571,7 +594,7 @@ Attested but unusual environments, mostly from lecture notes and playful authors
 
 **Definition (Presentation reduction)** · `def:kinds:presentation-reduction`
 
-For an authored head h, base_A(h) is the exact catalogue name obtained after removing the devices this registry admits: numbering, lettering, attached names, stars and unnumbering, restatement, continuation, iterated sub- prefixes, placement, containment, and the catalogued emphasis and status modifiers — Main, Key, Fundamental, Working, Standing, Blanket, Concrete, Motivating, Numerical, Toy, Worked, and Running. Which environment class a document format declares for a head, and how a head maps to one, are adoption data. An expressly catalogued overriding row takes precedence over reduction: Working hypothesis and Standing hypothesis reduce to themselves and carry `assum`. Where a name is both an exact row and a division head, the label's kind token selects the sense (`cav:kinds:homonymy`), and reduction supplies the rung. For named divisions — an Introduction, a Conclusion — the underlying rung supplied by the format is the base. Reduction changes no member of C_A and creates no pair.
+For an authored head h, base_A(h) is the exact catalogue name obtained after removing the devices this registry admits, which are the device rows of (`conv:kinds:hybrids`) — its families and its emphasis and status modifiers alike. Which environment class a document format declares for a head, and how a head maps to one, are adoption data. An expressly catalogued overriding row takes precedence over reduction. Where a name is both an exact row and a division head, the label's kind token selects the sense (`cav:kinds:homonymy`), and reduction supplies the rung. For named divisions — an Introduction, a Conclusion — the underlying rung supplied by the format is the base. Reduction changes no member of C_A and creates no pair.
 
 **Judgment (Head validation)** · `judg:kinds:head-validation`
 

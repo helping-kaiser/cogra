@@ -533,6 +533,22 @@ worth naming — because the spans become displayed rather than live,
 the docs trees do not thereby take labels, so R5's promotion condition
 for `api-spec.md` and `data-model.md` is not tripped by them.
 
+**R21 — The presentation-reduction vocabulary is registry data, not
+adoption data.** ``def:kinds:presentation-reduction`` leaves the format's
+head mapping to adoption and the admitted device set to the registry — but
+the set was stated in prose only, so no checker could reach it.
+Transcribing it into `corpus-adoption.toml` would have recreated exactly
+the drift ``dec:linter:registry-as-data`` exists to prevent, the registry
+and the corpus each holding a copy of one vocabulary. It is tabulated in
+the registry instead, as device rows of ``conv:kinds:hybrids`` — the home
+``sig:kinds:registry-data`` already names for rows contributing no member
+to C — so registry-as-data reaches it by the same path as every other
+table, and the definition's prose cites the rows rather than restating
+them. Neither B, nor H, nor the evidence base moves, so this is an
+amendment and not a new edition. What does move is the generated count of
+device rows in ``tab:kinds:headline-counts``, which no hand touches and
+the linter's first generation run reconciles.
+
 ---
 
 ## Measurements
