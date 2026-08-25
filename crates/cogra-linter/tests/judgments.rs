@@ -919,6 +919,8 @@ fn no_judgment_rule_identifier_is_label_shaped() {
         .iter()
         .chain(&kinds::RULES)
         .chain(&judge::RULES)
+        .chain(&judge::freshness::RULES)
+        .chain(&cogra_linter::registers::RULES)
         .chain(&cogra_linter::RULES)
     {
         assert!(

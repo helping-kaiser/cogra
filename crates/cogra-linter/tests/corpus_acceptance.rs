@@ -260,6 +260,42 @@ fn every_head_in_the_corpus_validates() {
     assert!(unvalidated.is_empty(), "{}", unvalidated.join("\n"));
 }
 
+/// (´dec:lint:one-generator´), (´[ARCH-rule:linter:register-freshness]´):
+/// every register the generator produces is byte-identical to what is
+/// committed — the check-after-write property, over the real corpus rather
+/// than a fixture.
+///
+/// This is what the first generation run armed: before it, the companion
+/// register had never been generated and the headline table carried a count
+/// no derivation produced. From it on, an edit to either is a finding, and
+/// regeneration is its only repair.
+#[test]
+fn every_committed_register_is_current() {
+    let registers = cogra_linter::registers::regenerate_all(
+        &run().graph,
+        &run().registries,
+        adoption(),
+        run().kinds.as_ref(),
+    );
+    assert_eq!(registers.len(), 2, "the companion register and the region");
+    for reg in &registers {
+        let (held, _) = cogra_linter::registers::committed(reg, &run().sources);
+        assert_eq!(
+            cogra_linter::registers::compare(reg, held),
+            cogra_linter::Freshness::Current,
+            "{} is not current",
+            reg.path.display()
+        );
+    }
+    let reported: Vec<String> = run()
+        .findings
+        .iter()
+        .filter(|one| one.rule.as_str().starts_with("register-"))
+        .map(spell)
+        .collect();
+    assert!(reported.is_empty(), "{}", reported.join("\n"));
+}
+
 /// (´sig:lint:index-maps´) over the real run: every key of `mints` is a key
 /// of `labels`, and every `ResolvesTo` target is a node `labels` holds.
 #[test]
@@ -316,6 +352,6 @@ fn the_full_corpus_run_reports_its_wall_time() {
     assert!(counted > 100, "the carrier is the repository");
     assert!(
         checked.timing.of(cogra_linter::Phase::Render).is_none(),
-        "there is no renderer yet, and the report says so rather than reporting zero"
+        "a run that only collects its findings performs no render phase, and the report says so rather than reporting zero"
     );
 }
