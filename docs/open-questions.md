@@ -25,8 +25,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
-| 2b. Tagging surface | 1 | **Q34** | Topic un-tagging and the current-topics fold — Tag confidence is census-bounded to [0, 1], so a (0,0)-style severance is only partially expressible; no fold for "this content's current topics" is declared. Blocks the tag sub-surface staged behind slice 2. |
-| 2c. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
+| 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 
@@ -36,6 +35,7 @@ questions are closed.
 
 **Resolved:**
 
+- Q34 — see [hashtag.md §4](instances/hashtag.md#4-the-current-topics-fold), pointed at from [post.md §3](instances/post.md#3-acts-around-a-post), [edges.md §3](primitive/edges.md#3-hyper-edge-families-cogra-authors), and [graph-model.md §3](primitive/graph-model.md#3-revision-and-current-state)'s declared-fold index. The fold is **newest-wins per (author, content, Type) bundle** — a Tag is a standing claim about the content-topic relevance, not an event, so the author's latest declaration is their current one, the same snapshot reading content edits carry. **Relevance `0` reads as withdrawn:** the un-tag gesture is re-tagging at relevance 0, a visible priced record like any other rather than an erasure — the `[0, 1]`-bounded family's analog of the `(0,0)` severance shape, which confidence's non-negative bound cannot otherwise express. A content node's current topics are the union of the current non-zero bundles across authors. A net-over-bundle fold (the Opinion shape) was rejected: it fits signed axes, and with confidence census-bounded to `c ∈ [0, 1]` no counter-record can net an accumulated bundle back down, so withdrawal would have needed special-casing.
 - Q39 — see [platform-guidelines.md §5](instances/platform-guidelines.md#5-license-and-provenance-obligations) and [layer1-interface.md §10](primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only): both axes are degrees on `[0, 1]` — attribution `a` credits the maker, provenance `o` requires a public, auditable record of uses — and `prop:content:closure-exclusion` grants their whole interpretation to Layer 2. CoGra publishes a reading for three degrees per axis (0, 0.5 "commercial uses only", 1), offers exactly those in its composers, defaults to Public Domain `(0, 0)`, and shows the pair on every content surface.
 - Q37 — see [design.md §6](implementation/design.md#6-components), [android.md "Screens"](implementation/android.md#screens), and [web.md "Routes"](implementation/web.md#routes): the bar rides every **read** surface — the tab roots and the read drill-ins (post detail, any actor's profile) — and leaves the **task** flows (compose, profile edit, settings, invites, the key and auth surfaces), which carry a back arrow instead. A read drill-in is still reading, so the frame that got the reader there stays; a flow owns the screen until it finishes or is backed out of, and a tab tap mid-write is an accidental abandon. One rule for both clients, purely presentational — no graph or economics contact.
 - Q38 — see [substrate.md §6](primitive/substrate.md#6-authoring-path-and-admission) and [design.md §9](implementation/design.md#9-honesty-surfaces): expired pending content vanishes for every reader (nothing ever existed on the graph, so nothing is marked); the author gets a calm did-not-land notice.
@@ -157,35 +157,6 @@ signed" to "what SOME holder of this key signed", so it is a
 deliberate design change, not an implementation shortcut. The
 whole interim handshake is stand-in-scoped (Q30); decide only if
 the wait proves painful before the substrate swap.
-
----
-
-## Q34 — Topic un-tagging and the current-topics fold
-
-**Where it shows up:**
-[post.md §3](instances/post.md#3-acts-around-a-post),
-[hashtag.md §3](instances/hashtag.md),
-[api-spec.md "Content authoring"](implementation/api-spec.md#content-authoring)
-**Status:** open (deferred — blocks the tag sub-surface staged behind slice 2)
-
-### Context
-
-A topic tag is a Tag hyper-record (Actor → content → Type), each
-its own priced act, authorable at creation or later. The census
-bounds Tag confidence to `[0, 1]`, so the `(0, 0)` severance shape
-other families use for withdrawal is only partially expressible —
-relevance can go to zero, confidence cannot go negative. No doc
-declares a fold for "this content's current topics", and no
-removal gesture is specified.
-
-### The question
-
-What is the declared read fold for a content node's current
-topics, and what gesture un-tags? Candidates: newest-wins per
-(author, content, Type) bundle with relevance 0 reading as
-removed; or a net-over-bundle read like Opinions. The answer
-gates the tag inputs already specced on the content-authoring
-surface.
 
 ---
 
