@@ -11,6 +11,7 @@ pub mod params;
 pub mod profile;
 pub mod rate_limit;
 pub mod staged;
+pub mod stance;
 
 /// Re-exported so callers don't need a direct sqlx dependency.
 pub use sqlx::PgPool;
