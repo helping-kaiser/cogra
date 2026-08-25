@@ -440,17 +440,30 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # No web, Kotlin, or Markdown profile in v1: their frontends are later
 # slices (ARCH gate:linter:architecture-review, sequencing clause),
 # and a profile whose frontend does not exist cannot compute a census.
+#
+# STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
+# nothing partial: every covered asset carries its label at the
+# standard place or the run fails. Both profiles below are therefore
+# unsatisfiable on the day they are switched on — one wants a register
+# no generator has yet written, the other ~42 inner doc comments that
+# do not yet exist. So a profile ENTERS Pi together with the migration
+# that makes it satisfiable, and not before: registered here, staged
+# until its own condition holds. Entering is a commit that flips
+# status and effective, nothing more.
 ####################################################################
 
 [profiles]
-count = 2
+count     = 2   # registered below
+effective = 0   # in Pi today; each profile's status says what it waits on
 
 # ---------------------------------------------------------------
 # Profile 1: Rust tests
 # ---------------------------------------------------------------
 [[profiles.profile]]
-id   = "rust-test"
-kind = "test"
+id     = "rust-test"
+kind   = "test"
+status = "staged"
+enters_when = "the linter's first register generation commits a label-register.md for every owner with covered assets"
 # 'test' is the Assets-family row of KND conv:kinds:assets (Test ->
 # test). Note the homonym: KND conv:kinds:examples also rows Test, as
 # quiz. The kind token at the label is the disambiguation (KND
@@ -542,8 +555,10 @@ from the first slice; nothing here waits on a later one.
 # Profile 2: Rust modules
 # ---------------------------------------------------------------
 [[profiles.profile]]
-id   = "rust-module"
-kind = "mod"
+id     = "rust-module"
+kind   = "mod"
+status = "staged"
+enters_when = "the ~42 module definitions carry the //! inner doc comment of this profile's standard place"
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -660,6 +675,12 @@ precondition of enabling the profile, not a cleanup after it.
 source = "KND conv:kinds:assets — distinct kind tokens of that table"
 count  = 36
 
+# STAGING (2026-08-25): the two kinds below are governed by profiles
+# that are REGISTERED AND STAGED ([profiles]). Until each enters Pi
+# with its migration, no profile governs its kind — and LBL
+# sig:labels:reserved-kinds then makes a bare occurrence of it a hard
+# failure awaiting its derivation, which is the same outcome by a
+# different clause. The lists record registration, not entry.
 governed = [
   "test",   # profile rust-test
   "mod",    # profile rust-module
