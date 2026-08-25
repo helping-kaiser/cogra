@@ -820,6 +820,25 @@ revisit_when = "an inventory profile derives mints for one of these asset classe
 # inf:labels:anchor-harvest, closing clause; IDN).
 ####################################################################
 
+# THE SHAPE A DESIGNATION WILL CARRY — RULED 2026-08-25, NOT A SCHEMA
+# CHANGE. When the first designation is recorded, it carries the
+# UPSTREAM OWNER ID beside the document and the index section: the
+# owners U that LBL inf:labels:anchor-harvest ranges over. The field
+# is named now because it is the one the linter cannot do without and
+# the one a designation written without it would silently omit — a
+# PresentedSet is built from the harvested set of a NAMED upstream
+# owner, and "the owners designated upstream of D" is not recoverable
+# from the document alone.
+#
+# UNTIL THEN THE EXCLUSION IS VACUOUSLY DISCHARGED. LBL
+# inv:labels:generated-compliance's one exclusion — a generated region
+# participates in nothing it presents — needs a presented set to
+# exclude, and with no designation there is none: no Anchors edge is
+# harvested, no PresentedSet is built, and the judgment passes over an
+# empty domain rather than by absence. That is why the linter
+# implements the query today against nothing (ARCH
+# tab:lint:judgment-implementation): the day a designation is recorded
+# is the day the domain becomes non-empty, and nothing else changes.
 [citation-indexes]
 designations = []
 empty_in_v1 = true
