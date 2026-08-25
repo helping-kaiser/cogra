@@ -81,6 +81,12 @@ pub fn report(findings: &[&Diagnostic]) -> String {
 /// A run that is clean on the failing set reads as clean: the advisory
 /// findings are counted here and listed only when they are asked for
 /// (´dec:lint:enforcement-partition´).
+///
+/// ```
+/// use cogra_linter::render;
+///
+/// assert_eq!(render::summary(&[], 869), "869 sources · 0 failing · 0 advisory");
+/// ```
 #[must_use]
 pub fn summary(findings: &[Diagnostic], sources: usize) -> String {
     let failing = findings

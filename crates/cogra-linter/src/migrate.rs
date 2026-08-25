@@ -83,6 +83,20 @@ pub struct Remaining {
 /// that is not staged is not measured: an effective profile's distance is
 /// zero by the inventory judgment that already runs over it.
 ///
+/// ```no_run
+/// use cogra_linter::migrate::distances;
+/// use std::path::Path;
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let root = Path::new(".");
+/// let adoption = cogra_linter::Adoption::load(&root.join("corpus-adoption.toml"))?;
+///
+/// for one in distances(&adoption, root, None)? {
+///     println!("{} is {} steps away", one.profile.as_str(), one.remaining.len());
+/// }
+/// # Ok(())
+/// # }
+/// ```
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory. A source that will not

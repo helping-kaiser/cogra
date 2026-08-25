@@ -241,6 +241,13 @@ pub enum Attestation {
 
 impl Attestation {
     /// The status's name, as the companion register spells it.
+    ///
+    /// ```
+    /// use cogra_linter::Attestation;
+    ///
+    /// assert_eq!(Attestation::Firm.token(), "firm");
+    /// assert_eq!(Attestation::Borderline.token(), "borderline");
+    /// ```
     #[must_use]
     pub const fn token(self) -> &'static str {
         match self {
