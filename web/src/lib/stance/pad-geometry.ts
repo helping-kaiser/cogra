@@ -24,7 +24,7 @@
 // Horizontal is valence, vertical is connection (§8.3). Screen y grows
 // downward and connection grows upward, so the vertical mapping inverts.
 
-import { clampDimension, type StancePair } from "./model";
+import { clampDimension, clampPair, ORIGIN, type StancePair } from "./model";
 
 /**
  * The field's corner radius, in pixels — Material's `large` rung, which
@@ -91,12 +91,33 @@ export function padPairFromTravel(
   travel: PadTravel,
   inset: number = knobTravelInset(),
 ): StancePair {
+  return padPairFrom(ORIGIN, rect, travel, inset);
+}
+
+/**
+ * The pair this much travel picks STARTING FROM `base`. The pad now
+ * parks and stays open (§8.3), so a second drag on the field adjusts the
+ * pick that is already standing rather than starting over — and it
+ * adjusts it by the same accumulated travel the opening drag uses, so
+ * there is one rule for how a finger moves the knob rather than two.
+ *
+ * A field with no travel in it — an unlaid-out pad, or one smaller than
+ * its own knob — keeps the base rather than dividing by zero.
+ */
+export function padPairFrom(
+  base: StancePair,
+  rect: PadRect,
+  travel: PadTravel,
+  inset: number = knobTravelInset(),
+): StancePair {
   const halfExtent = padTravelHalfExtent(rect, inset);
-  if (halfExtent === 0) return { pDirected: 0, pInterest: 0 };
-  return {
-    pDirected: clampDimension(travel.dx / halfExtent),
-    pInterest: clampDimension(-travel.dy / halfExtent),
-  };
+  if (halfExtent === 0) return clampPair(base);
+  // Clamped once, on the sum: clamping the travel first would stop the
+  // knob short whenever the base already sat off centre.
+  return clampPair({
+    pDirected: base.pDirected + travel.dx / halfExtent,
+    pInterest: base.pInterest - travel.dy / halfExtent,
+  });
 }
 
 /**

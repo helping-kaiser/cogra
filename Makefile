@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-apk guest-apk web-ci fuzz-interchange
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -145,6 +145,9 @@ android-lint: ## Run Android lint (./gradlew lint; not a CI gate, convenience on
 
 web-dev: ## Start the web app dev server (needs Node from web/.nvmrc)
 	cd web && npm run dev
+
+web-prod: ## Build the web app and serve it over https — the hand-test path (development.md)
+	cd web && npm run codegen && npm run build && npm run prod
 
 web-apk: ## Stage the Android debug APK where the web app serves it (run make android-build first)
 	@[ -f $(ANDROID_DEBUG_APK) ] || { \

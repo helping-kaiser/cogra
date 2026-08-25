@@ -8,6 +8,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
+    "prod": "node scripts/prod.mjs",
     "lint": "eslint --max-warnings 0",
     "codegen": "graphql-codegen --config codegen.ts",
     "test": "vitest run"

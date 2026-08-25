@@ -61,3 +61,33 @@ export function nearestAnchor(pair: StancePair): StanceAnchor {
   }
   return best;
 }
+
+/** What a bundle standing at exactly `(0, 0)` reads as (design.md §8.4). */
+export const ZERO_BUNDLE_EMOJI = "🤷";
+
+/** Just the emoji and the words — what every readout surface renders. */
+export type StanceReadout = {
+  readonly emoji: string;
+  readonly label: string;
+};
+
+/**
+ * The readout a STANDING wears. A bundle at exactly `(0, 0)` is the
+ * absence of a feeling, and drawing it as its nearest neighbour — "🙂
+ * Nice", which is what the table returns at the origin — is a lie
+ * (design.md §8.4). It gets the shrug and the caller's own severed or
+ * no-standing wording instead; the table reads picks and non-zero
+ * bundles only.
+ *
+ * This is not the zero test `stance-data.ts` forbids. That rule is about
+ * SEMANTICS: whether a bundle is inert or severed is the fold's
+ * statement about itself and still arrives as a flag, never as a
+ * comparison made here. This is about which glyph a pair may be drawn
+ * as, and the table simply does not cover the origin.
+ */
+export function bundleReadout(pair: StancePair, zeroLabel: string): StanceReadout {
+  if (pair.pDirected === 0 && pair.pInterest === 0) {
+    return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  }
+  return nearestAnchor(pair);
+}
