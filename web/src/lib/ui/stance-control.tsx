@@ -26,7 +26,7 @@
 // claiming the drag as a scroll, and pointer capture is what keeps the
 // events coming after the finger leaves the button it started on.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { nearestAnchor } from "@/lib/stance/anchors";
@@ -109,18 +109,26 @@ export function StanceControl({
 
   const considered = open || alternates;
 
+  // Every host builds `target` inline, so its identity changes on each
+  // render. The seam's copy is keyed on the two fields that actually
+  // name the target, or the read effect below would re-run forever.
+  const seamTarget = useMemo(
+    () => ({ id: target.id, kind: target.kind }),
+    [target.id, target.kind],
+  );
+
   const readBundle = useCallback(() => {
     if (suppliedBundle !== undefined || phase !== "signedIn") return;
     // Every signed gesture re-reads; the generation drops an older read
     // that answers after a newer one, so the standing never goes back.
     const generation = ++bundleRead.current;
-    void data.bundle(target).then((outcome) => {
+    void data.bundle(seamTarget).then((outcome) => {
       if (generation !== bundleRead.current) return;
       // A failed standing read leaves the control usable: it degrades to
       // "no standing known" rather than blanking the affordance.
       setFetched(outcome.kind === "success" ? outcome.value : null);
     });
-  }, [data, phase, suppliedBundle, target]);
+  }, [data, phase, suppliedBundle, seamTarget]);
 
   useEffect(() => {
     readBundle();
@@ -132,7 +140,7 @@ export function StanceControl({
     if (!considered) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      void data.project(target, pick).then((outcome) => {
+      void data.project(seamTarget, pick).then((outcome) => {
         if (cancelled) return;
         setLanding(outcome.kind === "success" ? outcome.value : null);
       });
@@ -141,7 +149,7 @@ export function StanceControl({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [considered, data, pick, target]);
+  }, [considered, data, pick, seamTarget]);
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -186,7 +194,7 @@ export function StanceControl({
   /** Signs the picked edge. Reports whether the gesture completed. */
   const runCommit = async (chosen: StancePair): Promise<boolean> => {
     setBusy(true);
-    const outcome = await data.commit(target, chosen);
+    const outcome = await data.commit(seamTarget, chosen);
     setBusy(false);
     if (outcome.kind !== "success") return false;
     setSigned(outcome.value.records);
@@ -197,7 +205,7 @@ export function StanceControl({
   /** Signs the whole counter-record batch. Reports whether it completed. */
   const runSever = async (): Promise<boolean> => {
     setBusy(true);
-    const outcome = await data.sever(target);
+    const outcome = await data.sever(seamTarget);
     setBusy(false);
     if (outcome.kind !== "success") return false;
     setSigned(outcome.value.records);
@@ -223,7 +231,7 @@ export function StanceControl({
     setSigned(null);
     setFailed(false);
     setConfirmFailed(false);
-    const landed = await data.project(target, chosen);
+    const landed = await data.project(seamTarget, chosen);
     if (landed.kind !== "success") {
       setFailed(true);
       return;
