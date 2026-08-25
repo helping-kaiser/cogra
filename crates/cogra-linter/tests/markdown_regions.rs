@@ -480,6 +480,15 @@ fn a_bold_run_inside_a_block_is_no_head() {
     assert!(parsed.heads.is_empty());
 }
 
+/// A bold run inside the head's own bold run closes the inner one, not the
+/// head: the head text runs to where the run that opened the block ends.
+#[test]
+fn a_nested_bold_run_does_not_close_the_head() {
+    let parsed = doc("**Convention (__A__ title)** \u{b7} `conv:kinds:results`\n");
+    assert_eq!(parsed.heads.len(), 1);
+    assert_eq!(parsed.heads[0].text, "Convention");
+}
+
 /// The mint is bare; a parenthesized span after the separator is a citation
 /// and declares nothing.
 #[test]
