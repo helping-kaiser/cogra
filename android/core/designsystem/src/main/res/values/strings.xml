@@ -44,6 +44,8 @@
     <string name="stance_landing">This leaves you at</string>
     <string name="stance_landing_working">Working out where this leaves you…</string>
     <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>
+    <!-- The exact pair, part of the default reading (design.md §8.3). -->
+    <string name="stance_pair">%1$s / %2$s</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
