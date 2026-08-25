@@ -20,8 +20,15 @@ export type SeededStance = {
   readonly recordCount?: number;
 };
 
-function viewerStance(stance: SeededStance | undefined) {
-  if (stance === undefined) return null;
+/**
+ * A target the viewer has never stanced: a real bundle folding no
+ * records. Null is a different answer — it says there is no viewer at
+ * all — and reserving it for that is what lets a test tell the two apart.
+ */
+const NEVER_STANCED: SeededStance = { pDirected: 0, pInterest: 0, recordCount: 0 };
+
+/** The `viewerStance` payload for a standing. */
+export function stanceBundle(stance: SeededStance) {
   const recordCount = stance.recordCount ?? 1;
   return {
     __typename: "StanceBundle",
@@ -39,15 +46,21 @@ function root(operation: string, field: string, typename: string, seeded: Record
   return graphql.query(operation, ({ variables }) => {
     const id = String(variables.id);
     return HttpResponse.json({
-      data: { [field]: { __typename: typename, id, viewerStance: viewerStance(seeded[id]) } },
+      data: {
+        [field]: {
+          __typename: typename,
+          id,
+          viewerStance: stanceBundle(seeded[id] ?? NEVER_STANCED),
+        },
+      },
     });
   });
 }
 
 /**
  * Handlers for all three roots, keyed by target id. An id with nothing
- * seeded answers with no bundle at all, which is the unauthenticated
- * shape — the control degrades to the affordance, as it should.
+ * seeded answers as a target this viewer has never stanced, so the
+ * control shows the affordance — the ordinary case, not a refusal.
  */
 export function stanceHandlers(seeded: Record<string, SeededStance> = {}): RequestHandler[] {
   return [
