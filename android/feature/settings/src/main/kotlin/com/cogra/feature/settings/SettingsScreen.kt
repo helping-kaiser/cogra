@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -30,9 +33,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,6 +55,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
 import com.cogra.domain.identity.recoveryCodeTypedBack
+import com.cogra.domain.stance.StanceInputMode
 
 @Composable
 fun SettingsRoute(
@@ -85,6 +91,7 @@ fun SettingsRoute(
         onRequestEmailChange = viewModel::onRequestEmailChange,
         onEmailChangeCodeChange = viewModel::onEmailChangeCodeChange,
         onConfirmEmailChange = viewModel::onConfirmEmailChange,
+        onStanceInputMode = viewModel::onStanceInputMode,
         onFeedbackShown = viewModel::onFeedbackShown,
         onSignOut = viewModel::onSignOut,
         keyBanner = keyBanner,
@@ -111,6 +118,7 @@ fun SettingsScreen(
     onRequestEmailChange: () -> Unit,
     onEmailChangeCodeChange: (String) -> Unit,
     onConfirmEmailChange: () -> Unit,
+    onStanceInputMode: (StanceInputMode) -> Unit,
     onFeedbackShown: () -> Unit,
     onSignOut: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
@@ -173,6 +181,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BackupSection(state, onCreateBackup, onBackupCodeSaved, onExportKey, keyGate)
+            StanceInputSection(state.stanceInputMode, onStanceInputMode)
             SessionsSection(state, onRevokeSession, onRevokeOthers)
             CredentialsSection(
                 state,
@@ -190,6 +199,71 @@ fun SettingsScreen(
             ) {
                 Text(stringResource(R.string.settings_sign_out))
             }
+        }
+    }
+}
+
+/**
+ * Where design.md §8.6 puts the choice: the same value through the pad,
+ * paired sliders, or typed entry, and picking one replaces the pad
+ * EVERYWHERE rather than per-screen. A radio group, because it is one
+ * choice out of three — Material's `selectableGroup` carries the group
+ * semantics and the single-selection announcement for free.
+ */
+@Composable
+private fun StanceInputSection(
+    mode: StanceInputMode,
+    onStanceInputMode: (StanceInputMode) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.settings_stance_input_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(
+                text = stringResource(R.string.settings_stance_input_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(Modifier.selectableGroup()) {
+                for (option in StanceInputMode.entries) {
+                    StanceInputOption(option, option == mode) { onStanceInputMode(option) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StanceInputOption(mode: StanceInputMode, selected: Boolean, onSelect: () -> Unit) {
+    val (label, hint) = when (mode) {
+        StanceInputMode.PAD -> R.string.settings_stance_input_pad to
+            R.string.settings_stance_input_pad_hint
+        StanceInputMode.SLIDERS -> R.string.settings_stance_input_sliders to
+            R.string.settings_stance_input_sliders_hint
+        StanceInputMode.ENTRY -> R.string.settings_stance_input_entry to
+            R.string.settings_stance_input_entry_hint
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            // The whole row is the target, and the radio itself leaves
+            // the semantics tree so the row is announced once.
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect)
+            .padding(vertical = 4.dp)
+            .testTag("settings_stance_input_${mode.name.lowercase()}"),
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Column(Modifier.padding(start = 12.dp)) {
+            Text(stringResource(label), style = MaterialTheme.typography.labelLarge)
+            Text(
+                text = stringResource(hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
