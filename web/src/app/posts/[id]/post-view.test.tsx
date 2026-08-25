@@ -7,9 +7,13 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
+import { stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 
-const server = startMswServer();
+// The post and every comment read their own standing, so the read is a
+// default rather than something each test remembers: an unhandled one
+// degrades the control silently instead of failing the test.
+const server = startMswServer(...stanceHandlers());
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -150,6 +154,32 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1a")).toBeInTheDocument();
+  });
+
+  it("wears the viewer's own standing on the post and on a comment", async () => {
+    // §8.3: at rest the target shows the standing — on every surface
+    // that carries a control, not only on the one it was built for.
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: detail("u1", [{ id: "c1", body: "First!" }]),
+        }),
+      ),
+      ...stanceHandlers({
+        p1: { pDirected: 0.9, pInterest: 0.25, recordCount: 3 },
+        c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await waitFor(() => expect(screen.getByTestId("post-stance")).toHaveTextContent("Love this"));
+    expect(screen.getByTestId("post-stance-resting-exact")).toHaveTextContent("+0.90 / +0.25");
+    expect(screen.getByTestId("comment-stance-c1")).toHaveTextContent("Don't like this");
+    expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
+      "-0.55 / +0.25",
+    );
   });
 
   // The quiet marker in design.md §9's register: the content reads in
