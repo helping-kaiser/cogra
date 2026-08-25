@@ -653,9 +653,29 @@ fn read_span(
 /// so an interior carrying whitespace as well is the spacing warning — which
 /// is why the spacing test folds case, an interior defective both ways having
 /// to land somewhere and the wider warning being the spacing one.
+///
+/// A malformed bracket warns only where the interior is reaching for a
+/// label, and the label's own alphabet is the test: every byte drawn from
+/// it — whitespace admitted, since spacing is itself one of the defects
+/// warned about — and at least one colon, its separator. The calculus asks
+/// for warnings on "label-shaped interiors with wrong casing, brackets, or
+/// spacing" (´[LBL-inv:labels:total-resolution]´), and a delimited span that
+/// parses as no form is text and never a failure
+/// (´[LBL-gram:labels:well-formed]´); a span holding a byte no label holds,
+/// or holding no separator at all, is therefore text. Both cases are
+/// everywhere in this corpus — a code span naming an adoption-data table is
+/// written `[carrier]`, and a Rust attribute is written `#[sqlx::test]` —
+/// and warning on those would make the checker unusable on the documents
+/// that specify it.
 fn near_miss(interior: &str, defect: &Defect, at: usize) -> Option<NearMissKind> {
     let syntax = match defect {
-        Defect::Bracket => return Some(NearMissKind::MisplacedBracket),
+        Defect::Bracket => {
+            let alphabet = interior
+                .bytes()
+                .all(|b| is_interior_byte(b) || b.is_ascii_whitespace());
+            let shaped = alphabet && interior.bytes().any(|b| b == b':');
+            return shaped.then_some(NearMissKind::MisplacedBracket);
+        }
         Defect::NotLabel(syntax) => syntax,
     };
     if interior.bytes().any(|b| b.is_ascii_whitespace()) {
