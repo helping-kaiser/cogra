@@ -78,8 +78,14 @@ Behind it landed two hardening passes: key custody (the signed
 key-backup upload, the on-device key gate, key export, the
 recovery-code confirm — [auth.md](auth.md)) and the design
 system ([design.md](design.md)): palette, type, shape, and
-components, with web brought to parity. The rest of the content
-era is sliced below (2.1–2.7).
+components, with web brought to parity.
+
+**Slice 2.1 is closed** (hand-tested 2026-08-18): the app shell —
+bottom bar, compact top bars, one shell for every viewer — and the
+profile surface (reads, editing, actor chips) on all three fronts,
+with the bottom-bar placement rule settled as Q37 (the bar rides
+read surfaces, task flows carry a back arrow). The rest of the
+content era is sliced below (2.2–2.7).
 
 ## The stand-in and the swap
 
