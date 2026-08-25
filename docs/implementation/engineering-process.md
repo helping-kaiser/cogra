@@ -71,3 +71,34 @@ Phase artifacts live with the thing they describe: a crate's
 that crate's `docs/` folder, committed and PR'd like any other
 docs. Working notes that produced them stay in the gitignored
 working folders as usual.
+
+## Lessons (fed back from each run)
+
+From the `cogra-interchange` build — the process's first full run:
+
+- **Read-back gating earns its round-trip.** A worker's first
+  output restating the brief caught real misreads before they
+  became mis-built work, more than once.
+- **Every implementation lane runs in its own git worktree**, off
+  current `origin/main`, with a per-lane `CARGO_TARGET_DIR`. Two
+  lanes sharing one checkout collided once and cost a recovery —
+  worktree isolation is non-negotiable, not a nicety.
+- **Verify every Critical/Major finding by your own reproduction**
+  before trusting a lane's report and before dispositioning it in
+  an audit. The interchange audit's two stack-overflow findings
+  and the parser DoS were each reproduced by the orchestrator.
+- **The audit phase is where deferred hazards come due.** A
+  design that writes "a candidate for the audit phase's
+  attention" is scheduling a real finding — the interchange audit
+  found two safe-API stack overflows exactly at such a note. Plan
+  the phase; never skip it.
+- **A worker that dies mid-run may still have written its
+  deliverable.** Check the output file before assuming loss — the
+  spec-conformance audit report was intact despite a missing
+  completion signal.
+- **Fuzz the trust boundaries.** cargo-fuzz (nightly) over the
+  decoder and parser found the robustness holes that unit tests
+  and properties did not; keep it a manual lane, out of `make ci`.
+- Operational: `WebFetch` cannot reach deep sections of very
+  large spec pages — `curl` the raw text and grep locally; and
+  re-sync a PR body when its branch outgrows it.
