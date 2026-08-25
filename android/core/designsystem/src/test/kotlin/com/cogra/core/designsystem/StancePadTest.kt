@@ -15,7 +15,6 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -99,14 +98,14 @@ class StancePadTest {
     @Test
     fun driftingMapsValenceAcrossAndConnectionUpThenCommitsOnRelease() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
-        // The field's radius is 120dp: half of that to the right and a
-        // quarter of it upward should read as (+0.5, +0.25).
-        val radius = with(compose.density) { 120.dp.toPx() }
+        // One unit of either parameter is FIELD_EXTENT of travel: half
+        // of that to the right and a quarter of it up reads (+0.5, +0.25).
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         compose.onNodeWithTag("${TAG}_stance").performTouchInput {
             down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
-            moveTo(center + Offset(radius / 2f, -radius / 4f))
+            moveTo(center + Offset(extent / 2f, -extent / 4f))
             up()
         }
 
@@ -119,18 +118,46 @@ class StancePadTest {
     @Test
     fun theSquareStaysReachableAndTravelBeyondItClamps() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
-        val radius = with(compose.density) { 120.dp.toPx() }
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         compose.onNodeWithTag("${TAG}_stance").performTouchInput {
             down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
             // Past the corner: the far corner is still expressible, and
             // nothing beyond it exists (design.md §8.2).
-            moveTo(center + Offset(radius * 1.4f, -radius * 1.4f))
+            moveTo(center + Offset(extent * 1.4f, -extent * 1.4f))
             up()
         }
 
         assertThat(picks.last()).isEqualTo(StancePoint(1.0, 1.0))
+    }
+
+    @Test
+    fun noDragAnywhereEverPutsTheKnobOutsideTheDrawnField() {
+        // The adversarial sweep, driven through the real gesture rather
+        // than the mapping alone: whatever the thumb does, the picks it
+        // reports keep the knob inside the drawing (design.md §8.3).
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+        val half = with(compose.density) { (FIELD_SIZE / 2).toPx() }
+        val corner = with(compose.density) { FIELD_CORNER.toPx() }
+        val knob = with(compose.density) { KNOB_RADIUS.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            for (i in -3..3) {
+                for (j in -3..3) {
+                    moveTo(center + Offset(extent * i * 1.7f, extent * j * 1.7f))
+                }
+            }
+            up()
+        }
+
+        assertThat(picks).isNotEmpty()
+        for (pick in picks) {
+            assertThat(knobInsideField(pick, half, corner, knob, extent)).isTrue()
+        }
     }
 
     // -- The readout (design.md §8.4) --
