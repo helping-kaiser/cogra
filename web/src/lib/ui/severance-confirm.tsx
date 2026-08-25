@@ -22,7 +22,7 @@ import { useEffect, useRef } from "react";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { buttonClassName } from "@/lib/ui/button";
-import { standingLine, type BundleState } from "@/lib/ui/stance-readout";
+import { severanceStandingLine, standingLine, type BundleState } from "@/lib/ui/stance-readout";
 
 export function SeveranceConfirm({
   pick,
@@ -87,6 +87,11 @@ export function SeveranceConfirm({
         className="mt-2 text-body-small text-on-surface-variant"
       >
         {standingLine(bundle, targetLabel)}
+      </p>
+      {/* The RAW sums, not the clipped fold: they are what a walk back
+          to zero actually walks (design.md §8.3, §8.5). */}
+      <p data-testid="severance-raw" className="mt-1 text-body-small text-on-surface-variant">
+        {severanceStandingLine(bundle, targetLabel)}
       </p>
       <p data-testid="severance-cost" className="mt-2 text-body-medium">
         {alreadySevered
