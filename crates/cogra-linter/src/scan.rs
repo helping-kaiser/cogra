@@ -518,6 +518,7 @@ pub fn scan_code(text: &str, base: usize) -> RegionScan {
         }
         let after = i + ACUTE.len();
         if !opens(text, after) {
+            spacing_look(text, base, i, after, &mut scan.near_misses);
             i = after;
             continue;
         }
@@ -642,6 +643,60 @@ fn one_stretch(
             });
         }
         i = outer.end;
+    }
+}
+
+/// How far past an acute that opened nothing to look for a closer, in bytes.
+///
+/// The bound is what keeps the look a look and not a second scan: an
+/// interior a label would fit in is short, and this is far longer than the
+/// longest this corpus writes.
+const SPACING_LOOKAHEAD: usize = 96;
+
+/// The interior-spacing warning an acute that opened nothing still earns.
+///
+/// [`opens`] deliberately keeps whitespace out of the run it tests, so an
+/// interior a space has squeezed apart opens no span at all:
+///
+/// ```text
+/// ´def: fx:spaced´
+/// ```
+///
+/// Without this look the warning (´[LBL-inv:labels:total-resolution]´) asks
+/// for would be unreachable in scanned code text.
+///
+/// The look does not reintroduce what [`opens`] guards against, because that
+/// rationale is about *consumption*: admitting whitespace into the run would
+/// let an apostrophe accident open a span and swallow the real occurrence
+/// after it. This emits a warning and nothing else — no delimited span, no
+/// entry in the shaped or delimited sets, and no advance of the scan past
+/// the acute that failed — so the closing acute it looked at is examined on
+/// its own turn exactly as if the look had never happened.
+fn spacing_look(text: &str, base: usize, at: usize, after: usize, out: &mut Vec<NearMiss>) {
+    let window = text.len().min(after + SPACING_LOOKAHEAD);
+    let Some(bounded) = text.as_bytes().get(..window) else {
+        return;
+    };
+    let Some(close) = find_acute(bounded, after) else {
+        return;
+    };
+    let inner = &text[after..close];
+    let Err(defect) = classify(inner) else {
+        return;
+    };
+    if let Some(why @ NearMissKind::InteriorSpacing { .. }) =
+        near_miss(inner, &defect, base + after)
+    {
+        out.push(NearMiss {
+            span: shift(
+                ByteSpan {
+                    start: at,
+                    end: close + ACUTE.len(),
+                },
+                base,
+            ),
+            why,
+        });
     }
 }
 
@@ -886,6 +941,10 @@ fn well_formed(text: &str, span: &DelimitedSpan) -> bool {
 /// about at all. Whitespace is deliberately outside the run: admitting it
 /// would let an apostrophe accident swallow the opening acute of the real
 /// occurrence that follows it.
+///
+/// The interior a space squeezed apart is therefore not read here, and it is
+/// not lost either: [`spacing_look`] warns about it without opening
+/// anything, which is the whole difference.
 fn opens(text: &str, after: usize) -> bool {
     let bytes = text.as_bytes();
     let mut i = after;
