@@ -457,7 +457,7 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # nothing partial: every covered asset carries its label at the
 # standard place or the run fails. Both profiles below are therefore
 # unsatisfiable on the day they are switched on — one wants a register
-# no generator has yet written, the other ~42 inner doc comments that
+# no generator has yet written, the other 84 inner doc comments that
 # do not yet exist. So a profile ENTERS Pi together with the migration
 # that makes it satisfiable, and not before: registered here, staged
 # until its own condition holds. Entering is a commit that flips
@@ -490,8 +490,10 @@ enters_when = "the linter's first register generation commits a label-register.m
 LBL cav:labels:assets: "A test is what the harness recognizes." The
 three attributes above are what this corpus's harnesses recognize;
 the open rule keeps a fourth harness from needing a code change.
-MEASURED 2026-08-20: 284 test-attributed functions across the four
-Cargo packages (98 #[test], 171 #[sqlx::test], 15 #[tokio::test]).
+MEASURED 2026-08-25 by the linter's own migrations subcommand, on its
+first run over this corpus: 1444 test-attributed functions. The
+census is the linter's now, so the number is read off the tool that
+will enforce it rather than off a sweep beside it.
 """
 
   [profiles.profile.classification]
@@ -540,9 +542,9 @@ the owner (LBL inv:labels:generated-compliance) — one choice per
 profile. The register is this profile's place.
 WHAT IT COSTS: one generator and zero source edits. LBL
 inv:labels:inventory admits nothing partial — every covered asset
-carries its label or the run fails — and at 284 functions that is the
+carries its label or the run fails — and at 1444 functions that is the
 difference between a profile that is adoptable now and one that waits
-on a 284-function migration.
+on a 1444-function migration.
 WHY IT IS SOUND: a generated mint stands on its warrant exactly as an
 authored one does, and a derivation "is attested wherever the
 profile's standard place lies, a generated register included" (LBL
@@ -570,7 +572,7 @@ from the first slice; nothing here waits on a later one.
 id     = "rust-module"
 kind   = "mod"
 status = "staged"
-enters_when = "the ~42 module definitions carry the //! inner doc comment of this profile's standard place"
+enters_when = "the 84 module definitions carry the //! inner doc comment of this profile's standard place"
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -629,11 +631,13 @@ must share it. The inner doc comment is the only form both can carry:
 `mod foo { ... }` body. An outer /// would work for inline items only.
 The label sits at the asset, which is what this place buys over a
 register.
-PENDING TASK: ~42 module definitions (63 `mod` declarations, minus 13
-`mod tests`, minus the 8 surplus `mod rig;` declarations) each need an
-inner doc comment before this profile can pass. LBL
-inv:labels:inventory admits nothing partial, so the migration is a
-precondition of enabling the profile, not a cleanup after it.
+PENDING TASK, MEASURED 2026-08-25 by the linter's own migrations
+subcommand on its first run: 84 module definitions, every one of them
+still needing an inner doc comment before this profile can pass —
+the census and the remainder coincide because not one carries its
+label yet. LBL inv:labels:inventory admits nothing partial, so the
+migration is a precondition of enabling the profile, not a cleanup
+after it.
 """
 
 # --- Profiles deliberately NOT in v1 ----------------------------
