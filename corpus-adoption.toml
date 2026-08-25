@@ -1143,3 +1143,66 @@ staged rather than stale. The first generation run commits the
 initial register and arms exact byte comparison from then on. It
 joins [carrier] generated_files in that same commit.
 """
+
+
+####################################################################
+# [enforcement] — the failing set, and the advisory remainder
+#
+# RULED 2026-08-25.
+#
+# LINTER rep:lint:first-corpus scopes acceptance: version 1 is
+# accepted on a clean run over the material WRITTEN UNDER the
+# discipline, and the linter enters CI as a FAILING gate over exactly
+# that set and an ADVISORY one over the rest. The failing set grows as
+# each migration lands, and when the last one has, the advisory half
+# is empty and the gate enforces corpus-wide.
+#
+# The partition lives here, and not in a CI invocation, because
+# growing it is a claim about the corpus: a migration completed. A
+# reviewed edit to this file is how every other such claim is made.
+####################################################################
+
+[enforcement]
+default = "advisory"
+match   = "first-match-wins over literal path prefixes, as [carrier]"
+note = """
+SEMANTICS ARE [carrier]'s: a prefix ending in "/" matches a tree, a
+prefix naming a file matches that file, and there is no pattern
+dialect (ARCH dec:linter:no-regex).
+ENFORCEMENT IS NOT SEVERITY. An error is an error wherever it is
+found, and the diagnostic says so; enforcement decides only whether
+the lane fails on it. A finding outside every failing prefix is
+reported and does not fail the build.
+WHY SCOPED AT ALL: a gate that is red on arrival teaches a team to
+route around the gate (R20). The corpus migrates before the linter
+enforces, and each completed migration is a commit that adds a prefix
+below.
+"""
+
+failing = [
+  "crates/cogra-linter/docs/",
+  "crates/cogra-interchange/docs/",
+]
+
+# What those two prefixes carry, and what they deliberately do not.
+#
+# crates/cogra-linter/docs/ — the four discipline documents, the
+#   linter architecture, and the linter's own phase artifacts. The
+#   tree also holds kickoff.md and adoption-notes.md, which write
+#   every label-shaped reference in displayed double backticks and so
+#   participate in nothing; including them costs nothing and keeps the
+#   prefix one line instead of seven.
+# crates/cogra-interchange/docs/ — that crate's phase artifacts, whose
+#   concept and design are written under the discipline and whose
+#   audit and commissioning notes join them.
+#
+# DELIBERATELY ADVISORY, each awaiting its own migration:
+#   docs/            — 61 label-shaped spans queued for reforming (R20)
+#   crates/*/src/    — ~1210 plain comments queued for the ban sweep
+#   android/, web/   — no frontend before slices 7 and 8
+# The linter's own src/ joins the failing set when it exists: it is
+# written under the ban from its first line, so it has no sweep to
+# wait for. That is a reviewed edit to this section, taken then.
+
+
+

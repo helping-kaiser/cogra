@@ -566,6 +566,20 @@ head the ruling breaks is the architecture's at
 catalogue's "Open Question"; correcting one head is cheaper than a
 folding rule and leaves N as the registry wrote it.
 
+**R23 — The failing set is adoption data, not a CI flag.**
+``rep:lint:first-corpus`` rules acceptance scoped and nothing recorded
+the scope. `[enforcement]` records it as literal path prefixes in
+`[carrier]`'s own semantics: the two documentation trees written under
+the discipline fail the build, everything else is reported and does
+not. The choice between this file and a lane invocation is the choice
+between two claims — that a migration has completed, and that a
+command line changed — and only the first is a fact about the corpus.
+Recording it here also puts the growth on the review path every other
+adoption datum travels: each completed migration is one commit adding
+one prefix. Enforcement never touches severity; an error is an error
+wherever it is found, and the partition decides only whether the lane
+fails on it.
+
 ---
 
 ## Measurements
