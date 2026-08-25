@@ -43,7 +43,7 @@ fn adoption() -> &'static Adoption {
 fn run() -> &'static Run {
     static CHECKED: OnceLock<Run> = OnceLock::new();
     CHECKED.get_or_init(|| {
-        cogra_linter::run::check(adoption(), &root()).expect("the repository root is a directory")
+        cogra_linter::check(adoption(), &root()).expect("the repository root is a directory")
     })
 }
 
@@ -262,7 +262,7 @@ fn advisory_findings_keep_their_severity() {
 /// output, byte for byte.
 #[test]
 fn two_runs_emit_byte_identical_findings() {
-    let again = cogra_linter::run::check(adoption(), &root()).expect("a second run");
+    let again = cogra_linter::check(adoption(), &root()).expect("a second run");
     let spelled = |findings: &[Diagnostic]| -> String {
         findings.iter().map(spell).collect::<Vec<_>>().join("\n")
     };
@@ -330,7 +330,7 @@ fn the_full_corpus_run_reports_its_wall_time() {
     let counted = sources.len();
 
     let analysing = Instant::now();
-    let checked = cogra_linter::run::check_sources(adoption(), sources);
+    let checked = cogra_linter::check_sources(adoption(), sources);
     let analysed = analysing.elapsed();
 
     println!(
