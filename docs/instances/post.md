@@ -94,8 +94,10 @@ The rule behind the split: the shared graph holds what the Post
 **By the author, with the Post:**
 
 - **Topic tagging** — a **Tag** hyper-edge (Actor → Post → Type),
-  at creation or later; each tag is its own priced act. See
-  [hashtag.md](hashtag.md).
+  at creation or later; each tag is its own priced act. Un-tagging
+  is a further tag at relevance `0`, which the current-topics fold
+  reads as withdrawn
+  ([hashtag.md §4](hashtag.md#4-the-current-topics-fold)).
 - **Quoting, embedding, mentioning** — a **Reference** hyper-edge
   (Actor → Post → target) per cited node, authored alongside the
   Publish or later; nothing is minted, both endpoints pre-exist. A
