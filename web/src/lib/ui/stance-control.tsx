@@ -93,24 +93,26 @@ export function StanceControl({
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressClick = useRef(false);
   const capturedPointer = useRef<number | null>(null);
+  const bundleRead = useRef(0);
 
   const considered = open || alternates;
 
   const readBundle = useCallback(() => {
     if (suppliedBundle !== undefined || phase !== "signedIn") return;
-    let cancelled = false;
+    // Every signed gesture re-reads; the generation drops an older read
+    // that answers after a newer one, so the standing never goes back.
+    const generation = ++bundleRead.current;
     void data.bundle(target.id).then((outcome) => {
-      if (cancelled) return;
+      if (generation !== bundleRead.current) return;
       // A failed standing read leaves the control usable: it degrades to
       // "no standing known" rather than blanking the affordance.
       setFetched(outcome.kind === "success" ? outcome.value : null);
     });
-    return () => {
-      cancelled = true;
-    };
   }, [data, phase, suppliedBundle, target.id]);
 
-  useEffect(() => readBundle(), [readBundle]);
+  useEffect(() => {
+    readBundle();
+  }, [readBundle]);
 
   // The landing is read once the pick settles, and only while a
   // considered gesture is open — a resting control asks nothing.
