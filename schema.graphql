@@ -1522,6 +1522,17 @@ type StanceBundle {
 	"""
 	pInterest: Dimension!
 	"""
+	The raw valence sum, before the clip — beyond `±1` where the
+	bundle carries more than the fold shows. Not a `Dimension`: the
+	sum is unbounded by construction, and clipping it here would
+	serve the folded number twice.
+	"""
+	rawPDirected: Float!
+	"""
+	The raw connection sum, before the clip.
+	"""
+	rawPInterest: Float!
+	"""
 	How many records the bundle folds.
 	"""
 	recordCount: Int!

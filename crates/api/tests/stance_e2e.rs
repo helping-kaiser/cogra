@@ -311,7 +311,8 @@ impl Rig {
                      user(id: $id) { viewerStance(pick: $pick) { ...B } }
                    }
                    fragment B on StanceBundle {
-                     pDirected pInterest recordCount inert severed severanceCost
+                     pDirected pInterest rawPDirected rawPInterest
+                     recordCount inert severed severanceCost
                      projected { pDirected pInterest inert severed }
                    }"#,
                 json!({ "id": id, "pick": pick }),
@@ -609,6 +610,64 @@ async fn an_empty_bundle_reads_as_zero_and_costs_no_severance(pool: PgPool) {
     assert_eq!(bundle["severed"], true);
     assert_eq!(bundle["severanceCost"], 0);
     assert!(bundle["projected"].is_null(), "no pick, no projection");
+}
+
+/// The clip is the read rule, not the storage. A bundle carrying more
+/// conviction than `±1` still has to serve that history: clients fold
+/// the landing locally under the drag and price severance off the sum
+/// (design.md §8.3), and neither is derivable from the clipped pair.
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_raw_sums_serve_what_the_fold_clips(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    // Sum (2.4, 1.5) — both axes driven past the clip.
+    for _ in 0..3 {
+        rig.land_stance(&token, &ak, &target, 0.8, 0.5).await;
+    }
+
+    let bundle = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(f(&bundle["pDirected"]), 1.0, "the fold clips: {bundle}");
+    assert_eq!(f(&bundle["pInterest"]), 1.0);
+    assert!(
+        (f(&bundle["rawPDirected"]) - 2.4).abs() < 1e-9,
+        "the raw sum does not: {bundle}"
+    );
+    assert!((f(&bundle["rawPInterest"]) - 1.5).abs() < 1e-9);
+    assert_eq!(bundle["recordCount"], 3);
+}
+
+/// Severance is priced off the sum: `⌈max(|Σ_d|, |Σ_i|)⌉`. Serving the
+/// raw pair is what lets a cost surface state that number without
+/// asking the backend to price a bundle it is already showing.
+#[sqlx::test(migrations = "../../migrations")]
+async fn severance_cost_agrees_with_the_served_raw_sums(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    // Inside the clip, past it, and past it on the negative side.
+    for (handle, p_d, p_i, reps) in [("a", 0.4, 0.6, 1), ("b", 0.8, 0.5, 3), ("c", -0.9, -0.2, 3)] {
+        let (id, _) = rig
+            .seed_member(handle, &format!("{handle}@example.com"))
+            .await;
+        let target = id.to_string();
+        for _ in 0..reps {
+            rig.land_stance(&token, &ak, &target, p_d, p_i).await;
+        }
+
+        let bundle = rig.user_bundle(&token, &target, None).await;
+        let raw_d = f(&bundle["rawPDirected"]);
+        let raw_i = f(&bundle["rawPInterest"]);
+        let expected = raw_d.abs().max(raw_i.abs()).ceil() as i64;
+        assert_eq!(
+            bundle["severanceCost"], expected,
+            "⌈max(|{raw_d}|, |{raw_i}|)⌉ for {handle}: {bundle}"
+        );
+    }
 }
 
 #[sqlx::test(migrations = "../../migrations")]
