@@ -21,6 +21,8 @@ query PostStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean! =
     viewerStance(pick: $pick, includePending: $includePending) {
       pDirected
       pInterest
+      rawPDirected
+      rawPInterest
       recordCount
       inert
       severed
@@ -41,6 +43,8 @@ query CommentStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean
     viewerStance(pick: $pick, includePending: $includePending) {
       pDirected
       pInterest
+      rawPDirected
+      rawPInterest
       recordCount
       inert
       severed
@@ -61,6 +65,8 @@ query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean
     viewerStance(pick: $pick, includePending: $includePending) {
       pDirected
       pInterest
+      rawPDirected
+      rawPInterest
       recordCount
       inert
       severed

@@ -6,12 +6,14 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { DEFAULT_STANCE_INPUT_MODE, writeStanceInputMode } from "@/lib/stance/input-mode";
 import { ORIGIN, TAP_DEFAULT } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX } from "@/lib/stance/pad-geometry";
-import { PAD_ANCHOR_GAP_PX, PAD_VIEWPORT_MARGIN_PX } from "@/lib/stance/pad-placement";
+import { PAD_ANCHOR_GAP_PX } from "@/lib/stance/pad-placement";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
 import { renderWithProviders } from "@/test/providers";
-import { LONG_PRESS_MS, PROJECTION_SETTLE_MS, StanceControl } from "./stance-control";
+import { PAD_PARK_INSET_PX } from "./pad-parking";
+import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
+import { LONG_PRESS_MS, StanceControl } from "./stance-control";
 
 const TARGET: StanceTargetRef = { id: "post-1", kind: "post", label: "this post" };
 const PREFIX = "stance-post-1";
@@ -24,8 +26,6 @@ const PREFIX = "stance-post-1";
 const FIELD = 200;
 const HALF = FIELD / 2 - KNOB_TRAVEL_INSET_PX;
 
-/** The pad as laid out: `w-64` and about as tall again. */
-const PAD_BOX = { width: 256, height: 340 };
 const BUTTON_BOX = { width: 120, height: 48 };
 
 function signedInStore() {
@@ -74,6 +74,33 @@ async function settle(ms = 0) {
 async function hold() {
   fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
   await settle(LONG_PRESS_MS + 1);
+}
+
+/**
+ * The release, which now parks rather than committing (§8.3), followed
+ * by the browser's click for the press that held.
+ */
+async function release() {
+  await act(async () => {
+    fireEvent.pointerUp(control(), { pointerId: 1 });
+    fireEvent.click(control());
+  });
+}
+
+/** The explicit commit — the only thing on the pad that signs (§8.3). */
+async function pressSet() {
+  await act(async () => {
+    fireEvent.click(screen.getByTestId(`${PREFIX}-set`));
+  });
+}
+
+/** Drag, let go, and sign — the whole considered gesture. */
+async function dragAndSet(clientX: number, clientY: number) {
+  layOutPad();
+  fireEvent.pointerMove(control(), { pointerId: 1, clientX, clientY });
+  await settle();
+  await release();
+  await pressSet();
 }
 
 /**
@@ -130,7 +157,6 @@ beforeEach(() => {
   window.localStorage.clear();
   stubbedBoxes.clear();
   setViewport(1024, 768);
-  stubBox(`${PREFIX}-pad`, PAD_BOX);
   stubBox(PREFIX, { left: 400, top: 500, ...BUTTON_BOX });
   stubBox(`${PREFIX}-field`, { width: FIELD, height: FIELD });
   vi.useFakeTimers();
@@ -144,8 +170,50 @@ describe("the stance control at rest", () => {
   it("offers a stance where the viewer holds none", async () => {
     mount();
     await settle();
-    expect(control()).toHaveTextContent("Stance");
+    expect(control()).toHaveTextContent(NO_STANDING_LABEL);
     expect(control()).toHaveAccessibleName(/Take a stance on this post/);
+  });
+
+  it("waits as a muted, translucent face rather than a bare word", async () => {
+    // §8.3: "a viewer without one sees a muted, translucent face — the
+    // same control at rest, visibly waiting to be given a value — never
+    // a bare word."
+    mount();
+    await settle();
+    const affordance = screen.getByTestId(`${PREFIX}-resting-face`);
+    expect(affordance).toHaveTextContent("🤷");
+    expect(affordance.className).toContain("opacity-40");
+    expect(affordance.className).toContain("grayscale");
+  });
+
+  it("drops the muting the moment there is a standing to show", async () => {
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
+    await settle();
+    const face = screen.getByTestId(`${PREFIX}-resting-face`);
+    expect(face).toHaveTextContent("😊");
+    expect(face.className).not.toContain("opacity-40");
+  });
+
+  it("shrugs at a standing of exactly nothing rather than borrowing a face", async () => {
+    // §8.4: the zero bundle is the absence of a feeling, and the table's
+    // nearest neighbour at the origin is "🙂 Nice" — a lie. A bundle
+    // folding two records that cancel is a real standing, not an absent
+    // one, so it takes the shrug and the severed wording.
+    mount({
+      seed: {
+        "post-1": {
+          records: [
+            { pDirected: 0.5, pInterest: 0.5 },
+            { pDirected: -0.5, pInterest: -0.5 },
+          ],
+        },
+      },
+    });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🤷");
+    expect(control()).not.toHaveTextContent("Nice");
+    expect(control()).toHaveTextContent(SEVERED_LABEL);
+    expect(control()).toHaveAccessibleName(/Severed, \+0\.00 \/ \+0\.00/);
   });
 
   it("wears the current standing's face, words, and exact pair", async () => {
@@ -260,17 +328,9 @@ describe("teaching the gesture", () => {
     const data = mount();
     await settle();
     await hold();
-    layOutPad();
     // Off the origin, or the fold reads the pick as severance and asks
     // rather than committing.
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF / 2, clientY: 0 });
-    await settle();
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-      // The browser's click for the press that held, which the release
-      // already consumed.
-      fireEvent.click(control());
-    });
+    await dragAndSet(HALF / 2, 0);
     await act(async () => {
       fireEvent.click(control());
     });
@@ -456,12 +516,7 @@ describe("the press-and-hold pad", () => {
     const data = mount();
     await settle();
     await hold();
-    layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF / 2, clientY: -HALF });
-    await settle();
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-    });
+    await dragAndSet(HALF / 2, -HALF);
     expect(data.sent).toHaveLength(1);
     expect(data.sent[0].pick.pDirected).toBeCloseTo(0.5, 10);
     expect(data.sent[0].pick.pInterest).toBeCloseTo(1, 10);
@@ -478,9 +533,8 @@ describe("the press-and-hold pad", () => {
     await settle();
     expect(percent(knob().style.left)).toBeCloseTo(0, 10);
     expect(percent(knob().style.top)).toBeCloseTo(100, 10);
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-    });
+    await release();
+    await pressSet();
     expect(data.sent[0].pick).toEqual({ pDirected: -1, pInterest: -1 });
   });
 
@@ -533,12 +587,7 @@ describe("the press-and-hold pad", () => {
     await settle();
     fireEvent.pointerDown(control(), { pointerId: 1, clientX: 640, clientY: 480 });
     await settle(LONG_PRESS_MS + 1);
-    layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: 640 + HALF / 2, clientY: 480 });
-    await settle();
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-    });
+    await dragAndSet(640 + HALF / 2, 480);
     expect(data.sent[0].pick.pDirected).toBeCloseTo(0.5, 10);
     expect(data.sent[0].pick.pInterest).toBeCloseTo(0, 10);
   });
@@ -552,20 +601,6 @@ describe("the press-and-hold pad", () => {
     expect(knob().style.top).toBe("50%");
   });
 
-  it("commits the release, and does not also fire the tap default", async () => {
-    const data = mount();
-    await settle();
-    await hold();
-    layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
-    await settle();
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-      fireEvent.click(control());
-    });
-    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 1, pInterest: 0 } }]);
-  });
-
   it("cancels on Escape without writing anything", async () => {
     const data = mount();
     await settle();
@@ -576,16 +611,130 @@ describe("the press-and-hold pad", () => {
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
   });
+});
 
-  it("cancels on a lost pointer without writing anything", async () => {
+describe("the release that never commits", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("leaves the pick standing and the pad open, and signs nothing", async () => {
+    // §8.3: "an accidental lift must never sign a priced act."
     const data = mount();
     await settle();
     await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
+    await settle();
+    await release();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+1.00 / +0.00");
+    expect(data.sent).toEqual([]);
+  });
+
+  it("signs the standing pick when Set is pressed, and closes", async () => {
+    const data = mount();
+    await settle();
+    await hold();
+    await dragAndSet(HALF, 0);
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 1, pInterest: 0 } }]);
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+  });
+
+  it("adjusts the standing pick on a second drag rather than starting over", async () => {
+    // The pad parks, so the field is the surface a further adjustment
+    // happens on — and it moves the knob by the same accumulated travel.
+    const data = mount();
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF / 2, clientY: 0 });
+    await settle();
+    await release();
+    const field = screen.getByTestId(`${PREFIX}-field`);
+    fireEvent.pointerDown(field, { pointerId: 2, clientX: 0, clientY: 0 });
+    fireEvent.pointerMove(field, { pointerId: 2, clientX: HALF / 4, clientY: 0 });
+    await settle();
     await act(async () => {
-      fireEvent.pointerCancel(control(), { pointerId: 1 });
+      fireEvent.pointerUp(field, { pointerId: 2 });
+    });
+    await pressSet();
+    expect(data.sent[0].pick.pDirected).toBeCloseTo(0.75, 10);
+  });
+
+  it("dismisses on Cancel and stages nothing", async () => {
+    const data = mount();
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
+    await settle();
+    await release();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
     });
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
+  });
+
+  it("dismisses on a press outside and stages nothing", async () => {
+    const data = mount();
+    await settle();
+    await hold();
+    await release();
+    await act(async () => {
+      fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("keeps the pad open on a lost pointer, so nothing is lost or signed", async () => {
+    // A pointer the platform took away is not a decision. The pick
+    // stands and the reader still has Set and Cancel in front of them.
+    const data = mount();
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
+    await settle();
+    await act(async () => {
+      fireEvent.pointerCancel(control(), { pointerId: 1 });
+    });
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+1.00 / +0.00");
+    expect(data.sent).toEqual([]);
+  });
+
+  it("explains the gesture on demand, and says releasing changes nothing", async () => {
+    // §8.3: the `?` is for anyone meeting the control after the one-time
+    // coach mark is spent.
+    mount();
+    await settle();
+    await hold();
+    await release();
+    expect(screen.queryByTestId(`${PREFIX}-explanation`)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-explain`));
+    });
+    const explanation = screen.getByTestId(`${PREFIX}-explanation`);
+    expect(explanation).toHaveTextContent("letting go changes nothing");
+    expect(explanation).toHaveTextContent("Set signs it");
+    expect(screen.getByTestId(`${PREFIX}-explain`)).toHaveAccessibleName("How stances work");
+  });
+
+  it("closes the explanation again rather than trapping the reader in it", async () => {
+    mount();
+    await settle();
+    await hold();
+    await release();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-explain`));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-explain`));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-explanation`)).toBeNull();
   });
 });
 
@@ -616,47 +765,133 @@ describe("the touch path", () => {
   });
 });
 
+describe("the touches the control owns", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  /**
+   * The control inside a surface that acts on the same events — a feed
+   * card wrapping its content in a link is the real case. §8.3: opening
+   * the pad must never also open the post, and dismissing it must never
+   * navigate.
+   */
+  function mountInHost() {
+    const data = createStubStanceData();
+    const host = vi.fn();
+    renderWithProviders(
+      <div data-testid="host-surface" onClick={host} onPointerDown={host} onPointerUp={host}>
+        <StanceControl target={TARGET} testIdPrefix={PREFIX} />
+      </div>,
+      { store: signedInStore(), stanceData: data },
+    );
+    return { data, host };
+  }
+
+  it("keeps a tap on the resting target off the surface underneath", async () => {
+    const { host } = mountInHost();
+    await settle();
+    await act(async () => {
+      fireEvent.pointerDown(control(), { pointerId: 1, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(control(), { pointerId: 1 });
+      fireEvent.click(control());
+    });
+    expect(host).not.toHaveBeenCalled();
+  });
+
+  it("keeps the hold that opens the pad off the surface underneath", async () => {
+    const { host } = mountInHost();
+    await settle();
+    await hold();
+    await release();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(host).not.toHaveBeenCalled();
+  });
+
+  it("keeps the open pad's own touches off the surface underneath", async () => {
+    const { host } = mountInHost();
+    await settle();
+    await hold();
+    await release();
+    const field = screen.getByTestId(`${PREFIX}-field`);
+    await act(async () => {
+      fireEvent.pointerDown(field, { pointerId: 2, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(field, { pointerId: 2 });
+    });
+    expect(host).not.toHaveBeenCalled();
+  });
+
+  it("keeps the dismissal off the surface underneath", async () => {
+    const { host } = mountInHost();
+    await settle();
+    await hold();
+    await release();
+    await act(async () => {
+      fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(host).not.toHaveBeenCalled();
+  });
+
+  it("covers everything behind the open pad rather than a patch of it", async () => {
+    mount();
+    await settle();
+    await hold();
+    const scrim = screen.getByTestId(`${PREFIX}-scrim`);
+    expect(scrim.className).toContain("fixed");
+    expect(scrim.className).toContain("inset-0");
+    // Under the pad, over everything else.
+    expect(scrim.className).toContain("z-10");
+    expect(screen.getByTestId(`${PREFIX}-pad`).className).toContain("z-20");
+  });
+
+  it("takes the scrim away with the pad, so a closed control blocks nothing", async () => {
+    mount();
+    await settle();
+    await hold();
+    await release();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
+    });
+    expect(screen.queryByTestId(`${PREFIX}-scrim`)).toBeNull();
+  });
+});
+
 describe("where the pad blooms", () => {
   beforeEach(() => {
     alreadyTaught();
   });
 
-  const padBox = () => {
-    const pad = screen.getByTestId(`${PREFIX}-pad`);
-    const left = Number(pad.style.left.replace("px", ""));
-    const top = Number(pad.style.top.replace("px", ""));
-    return { left, top, right: left + PAD_BOX.width, bottom: top + PAD_BOX.height };
-  };
-
-  const expectOnScreen = (width: number, height: number) => {
-    const box = padBox();
-    expect(box.left).toBeGreaterThanOrEqual(PAD_VIEWPORT_MARGIN_PX);
-    expect(box.top).toBeGreaterThanOrEqual(PAD_VIEWPORT_MARGIN_PX);
-    expect(box.right).toBeLessThanOrEqual(width - PAD_VIEWPORT_MARGIN_PX);
-    expect(box.bottom).toBeLessThanOrEqual(height - PAD_VIEWPORT_MARGIN_PX);
-  };
-
-  it("anchors to the resting target rather than the press", async () => {
-    mount();
-    await settle();
-    // The press lands far from the target the pad belongs to.
-    fireEvent.pointerDown(control(), { pointerId: 1, clientX: 900, clientY: 40 });
-    await settle(LONG_PRESS_MS + 1);
+  /** The parked spot: lower centre, whatever the viewport (§8.3). */
+  const expectParked = () => {
     const pad = screen.getByTestId(`${PREFIX}-pad`);
     expect(pad.style.position).toBe("fixed");
-    // Centred on the target at x=400 width=120, not on the pointer.
-    expect(padBox().left).toBe(400 + BUTTON_BOX.width / 2 - PAD_BOX.width / 2);
-  });
+    expect(pad.style.left).toBe("50%");
+    expect(pad.style.transform).toBe("translateX(-50%)");
+    expect(pad.style.bottom).toBe(`${PAD_PARK_INSET_PX}px`);
+    // Nothing is anchored, so nothing measured a target into a `top`.
+    expect(pad.style.top).toBe("");
+  };
 
-  it("stays clear of the finger on the target", async () => {
+  it("parks at the lower centre on a desktop viewport", async () => {
+    setViewport(1280, 800);
     mount();
     await settle();
     await hold();
-    expect(screen.getByTestId(`${PREFIX}-pad`).dataset.side).toBe("above");
-    expect(padBox().bottom).toBe(500 - PAD_ANCHOR_GAP_PX);
+    expectParked();
   });
 
-  it("clamps fully inside the viewport at every edge", async () => {
+  it("parks at the same lower centre on a phone viewport", async () => {
+    setViewport(360, 640);
+    mount();
+    await settle();
+    await hold();
+    expectParked();
+  });
+
+  it("takes the same spot wherever the target and the press are", async () => {
+    // §8.3: "the same place every time, regardless of which control
+    // opened it" — muscle memory is part of the control.
     for (const [left, top] of [
       [0, 0],
       [1024 - BUTTON_BOX.width, 0],
@@ -666,37 +901,38 @@ describe("where the pad blooms", () => {
       stubBox(PREFIX, { left, top, ...BUTTON_BOX });
       mount();
       await settle();
-      await hold();
-      expectOnScreen(1024, 768);
+      // The press lands far from the target the pad belongs to.
+      fireEvent.pointerDown(control(), { pointerId: 1, clientX: 900, clientY: 40 });
+      await settle(LONG_PRESS_MS + 1);
+      expectParked();
       await act(async () => {
-        fireEvent.pointerCancel(control(), { pointerId: 1 });
+        fireEvent.click(screen.getByTestId(`${PREFIX}-cancel`));
       });
       screen.getByTestId(PREFIX).remove();
     }
   });
 
-  it("clamps fully inside a narrow phone viewport", async () => {
-    setViewport(360, 640);
-    stubBox(PREFIX, { left: 360 - BUTTON_BOX.width, top: 24, ...BUTTON_BOX });
+  it("does not move when the viewport changes under it", async () => {
+    // The keyboard, a rotation: an anchored pad re-measures and jumps.
+    // A parked one has no measurement to invalidate.
     mount();
     await settle();
     await hold();
-    expectOnScreen(360, 640);
-    // Too near the top to bloom above, so it drops below the target.
-    expect(screen.getByTestId(`${PREFIX}-pad`).dataset.side).toBe("below");
-  });
-
-  it("re-places itself when the viewport changes under it", async () => {
-    mount();
-    await settle();
-    await hold();
-    const before = padBox().left;
     setViewport(360, 640);
     await act(async () => {
       window.dispatchEvent(new Event("resize"));
     });
-    expect(padBox().left).not.toBe(before);
-    expectOnScreen(360, 640);
+    expectParked();
+  });
+
+  it("keeps a pad taller than the screen scrollable rather than off it", async () => {
+    setViewport(360, 380);
+    mount();
+    await settle();
+    await hold();
+    const pad = screen.getByTestId(`${PREFIX}-pad`);
+    expect(pad.style.maxHeight).toBe(`calc(100dvh - ${PAD_PARK_INSET_PX * 2}px)`);
+    expect(pad.className).toContain("overflow-y-auto");
   });
 });
 
@@ -758,13 +994,18 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: -HALF, clientY: HALF });
-    await settle(PROJECTION_SETTLE_MS + 1);
+    await act(async () => {});
+    // The PICK's face, from the anchor table (§8.4).
     expect(screen.getByTestId(`${PREFIX}-face`)).toHaveTextContent("Absolutely not");
+    // The LANDING is its own line and its own number: the raw sums are
+    // (+0.90, +0.90), so a (−1, −1) pick lands at (−0.10, −0.10). Face,
+    // words, AND the exact pair — the emoji alone is half a reading.
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("This leaves you at:");
-    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Absolutely not");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("Meh");
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("-0.10 / -0.10");
+    // The STANDING is still the fold's own answer, never derived here.
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("Where you stand now:");
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("All in");
-    // The standing carries its numbers too.
     expect(screen.getByTestId(`${PREFIX}-standing`)).toHaveTextContent("+0.90 / +0.90");
   });
 
@@ -789,7 +1030,6 @@ describe("the readout", () => {
     layOutPad();
     // Valence at zero, connection alive: the axis wording follows.
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: 0, clientY: -HALF });
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "Where you stand would carry nothing.",
     );
@@ -801,17 +1041,86 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: 0 });
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "What reaches you would carry nothing.",
     );
   });
 
-  it("says it is still working the landing out rather than showing a stale one", async () => {
-    mount({ fold: lastWins });
+  it("moves the landing with the drag, without waiting on a round trip", async () => {
+    // §8.3: "the landing is a local fold (clip of sum plus pick)
+    // recomputed live under the drag, with no round trip and no visible
+    // lag." No timer is advanced anywhere in this test.
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.3, pInterest: 0.2 }] } } });
     await settle();
     await hold();
-    // The settle has not elapsed, so no landing has been read yet.
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.4, clientY: -HALF * 0.2 });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.70 / +0.40");
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.6, clientY: -HALF * 0.4 });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.90 / +0.60");
+  });
+
+  it("folds against the served RAW sums, not the fold the standing shows", async () => {
+    // The guard: raw sums that no client-side arithmetic on `current`
+    // could produce. The standing is the LAST record, the raw sum is a
+    // different number again, and only one of them gives this landing.
+    mount({
+      fold: lastWins,
+      rawSum: () => ({ pDirected: 0.25, pInterest: -0.5 }),
+      seed: {
+        "post-1": {
+          records: [
+            { pDirected: 0.9, pInterest: 0.9 },
+            { pDirected: -0.8, pInterest: 0.1 },
+          ],
+        },
+      },
+    });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF * 0.5, clientY: 0 });
+    await act(async () => {});
+    // 0.25 + 0.50 and −0.50 + 0.00 — neither the standing (−0.80, +0.10)
+    // nor a sum of the records (+0.10, +1.00) lands here.
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+0.75 / -0.50");
+  });
+
+  it("clips a landing the raw sums push past the edge", async () => {
+    // "Clipped is not hidden" (§8.3): the raw sum carries the history,
+    // and the landing shows the fold the graph actually reads.
+    mount({ rawSum: () => ({ pDirected: 4, pInterest: 4 }), seed: { "post-1": { records: [ORIGIN] } } });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: HALF, clientY: -HALF });
+    await act(async () => {});
+    expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent("+1.00 / +1.00");
+  });
+
+  it("does not call a pick severance when the raw sums say it is nowhere near", async () => {
+    // The bug raw sums exist to stop: against a CLIPPED (+1, +1) a
+    // (−1, −1) pick reads as severance, while the graph lands at
+    // (+4, +4) and nothing of the sort happens.
+    mount({ rawSum: () => ({ pDirected: 5, pInterest: 5 }), seed: { "post-1": { records: [ORIGIN] } } });
+    await settle();
+    await hold();
+    layOutPad();
+    fireEvent.pointerMove(control(), { pointerId: 1, clientX: -HALF, clientY: HALF });
+    await act(async () => {});
+    const line = screen.getByTestId(`${PREFIX}-landing`);
+    expect(line).not.toHaveTextContent("back to nothing");
+    expect(line).toHaveTextContent("+1.00 / +1.00");
+  });
+
+  it("says nothing about a landing while the standing is still unknown", async () => {
+    // A landing needs a bundle to land in; guessing at one is worse than
+    // saying so.
+    mount({ offline: true });
+    await settle();
+    await hold();
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "Working out where this leaves you…",
     );
@@ -823,7 +1132,6 @@ describe("the readout", () => {
     await hold();
     layOutPad();
     // The origin: both axes at zero, which the fold flags as severance.
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
       "This pick nets everything you've said about it back to nothing.",
     );
@@ -833,7 +1141,6 @@ describe("the readout", () => {
     const data = mount({ seed: { "post-1": { records: [TAP_DEFAULT] } } });
     await settle();
     await hold();
-    await settle(PROJECTION_SETTLE_MS + 1);
     expect(data.pendingFlags.length).toBeGreaterThan(0);
     expect(data.pendingFlags.every((flag) => flag)).toBe(true);
   });
@@ -848,12 +1155,7 @@ describe("severance", () => {
   // against a (+1, +1) history is exactly (0, 0) — the assertion is about
   // the branch, not about floating point.
   const dragToFarCorner = async () => {
-    layOutPad();
-    fireEvent.pointerMove(control(), { pointerId: 1, clientX: -500, clientY: 700 });
-    await settle();
-    await act(async () => {
-      fireEvent.pointerUp(control(), { pointerId: 1 });
-    });
+    await dragAndSet(-500, 700);
   };
 
   it("confirms a pick that lands at zero rather than refusing it", async () => {
@@ -1066,6 +1368,7 @@ describe("a supplied bundle", () => {
         target={TARGET}
         bundle={{
           current: { pDirected: 0.9, pInterest: 0.25 },
+          rawSum: { pDirected: 0.9, pInterest: 0.25 },
           records: 3,
           inert: false,
           severed: false,
@@ -1091,6 +1394,7 @@ describe("a supplied bundle", () => {
         target={TARGET}
         bundle={{
           current: { pDirected: 0.4, pInterest: 0.1 },
+          rawSum: { pDirected: 0.4, pInterest: 0.1 },
           records: 1,
           inert: false,
           severed: false,
@@ -1113,7 +1417,7 @@ describe("a supplied bundle", () => {
 describe("the pick that never happened", () => {
   it("leaves the pad closed and the seam untouched while at rest", async () => {
     const data = mount();
-    await settle(PROJECTION_SETTLE_MS * 4);
+    await settle(1000);
     expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
     expect(data.sent).toEqual([]);
     expect(data.severed).toEqual([]);
