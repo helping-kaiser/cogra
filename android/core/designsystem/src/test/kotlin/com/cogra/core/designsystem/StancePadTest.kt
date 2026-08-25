@@ -601,7 +601,10 @@ class StancePadTest {
         compose.waitForIdle()
 
         assertThat(host.currentSnackbarData?.visuals?.message)
-            .isEqualTo("Signed. Where you stand now: How you stand +0.10, In your world +0.10")
+            .isEqualTo(
+                "Signed, still settling. " +
+                    "Where you stand now: How you stand +0.10, In your world +0.10",
+            )
         // The one-shot is spent, so a recomposition cannot repeat it.
         assertThat(confirmationsShown).isEqualTo(1)
     }
