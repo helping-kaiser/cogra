@@ -66,37 +66,6 @@ const LINTER_ARTIFACTS: [&str; 5] = [
     "crates/cogra-linter/docs/kickoff.md",
 ];
 
-/// The defects the interchange crate's phase artifacts carry today, each a
-/// bare occurrence where the author meant a citation, plus one import form
-/// that shares its parenthesis with prose.
-///
-/// Recorded here rather than tolerated: the linter reports them, they are
-/// the corpus's to repair, and this list is what says so. Repairing them
-/// fails this test, which is the intended coupling — the record moves when
-/// the corpus does.
-const RECORDED_INTERCHANGE_DEFECTS: [(&str, &str); 5] = [
-    (
-        "crates/cogra-interchange/docs/audit.md",
-        "label-near-miss-bracket",
-    ),
-    (
-        "crates/cogra-interchange/docs/audit.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/commissioning.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/design.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/design.md",
-        "label-duplicate-mint",
-    ),
-];
-
 fn under(prefix: &str) -> Vec<&'static Diagnostic> {
     run()
         .findings
@@ -166,27 +135,28 @@ fn the_linters_own_phase_artifacts_lint_clean() {
     );
 }
 
-/// (´dec:lint:enforcement-partition´): the failing set is exactly the two
-/// documentation trees, and every finding in it is either clean or one of
-/// the recorded interchange defects.
+/// (´dec:lint:enforcement-partition´), (´rep:lint:first-corpus´): the
+/// failing set is clean.
+///
+/// This is what version 1 is accepted on — a clean run over the material
+/// written under the discipline — and it is now the plain assertion rather
+/// than a list of tolerated defects. The two documentation trees under
+/// `[enforcement]` `failing` are the whole scope, and the lane's exit code
+/// reads exactly this predicate.
+///
+/// Each completed migration adds a prefix to that list, and this test grows
+/// with it by construction: it names no path, so widening the failing set
+/// widens what it asserts.
 #[test]
-fn the_failing_set_carries_only_the_recorded_defects() {
-    let mut failing: Vec<(String, &str)> = run()
-        .failing()
-        .map(|one| (one.primary.path.display().to_string(), one.rule.as_str()))
-        .collect();
-    failing.sort();
-    let mut recorded: Vec<(String, &str)> = RECORDED_INTERCHANGE_DEFECTS
-        .iter()
-        .map(|(path, rule)| ((*path).to_owned(), *rule))
-        .collect();
-    recorded.sort();
-    assert_eq!(
-        failing,
-        recorded,
-        "the failing set moved:\n{}",
-        run().failing().map(spell).collect::<Vec<_>>().join("\n")
+fn the_failing_set_is_clean() {
+    let against: Vec<String> = run().failing().map(spell).collect();
+    assert!(
+        against.is_empty(),
+        "the failing set carries {} findings:\n{}",
+        against.len(),
+        against.join("\n")
     );
+    assert!(run().is_clean(), "the lane exits zero on this corpus");
 }
 
 /// (´rep:lint:first-corpus´): the advisory remainder produces the classes
