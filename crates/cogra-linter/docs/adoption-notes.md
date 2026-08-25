@@ -144,6 +144,13 @@ does not exist cannot compute a census — ``inv:labels:two-pass``
 requires every census computed before any resolution runs, so a
 half-available Π is not a smaller Π, it is a broken one.
 
+The same reasoning stages the two that are here (R19). Both are
+registered and neither is in force: ``inv:labels:inventory`` admits
+nothing partial, and on the day either is switched on it fails at
+every covered asset, because the places their labels must occupy do
+not exist yet. A profile therefore enters Π in the commit that lands
+its migration; `status` and `effective` are what move.
+
 Each profile fixes exactly the five data ``sig:labels:profiles``
 demands. Three of the five were genuinely hard:
 
@@ -489,6 +496,16 @@ compare mechanism. A register that has never been generated reports as
 **staged**, not stale: it has no committed bytes to compare against,
 and the first generation run commits it and arms exact comparison
 thereafter.
+
+**R19 — Profiles enter Π with their migrations, staged until then.**
+``inv:labels:inventory`` admits nothing partial, so both profiles are
+unsatisfiable the day they are switched on: the test profile's
+standard place is a register no generator has written, and the module
+profile's is an inner doc comment ~42 definitions lack. Registering
+them and staging entry keeps the file honest about both facts — the
+profiles are decided, and neither is in force. The test profile enters
+when the first register generation lands (R18), the module profile
+when its comments do. Entering is a commit that flips two fields.
 
 ---
 
