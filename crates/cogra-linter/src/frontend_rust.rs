@@ -189,9 +189,8 @@ pub fn parse(
         ..Parsed::default()
     };
     out.diagnostics = effective_assets(src, a, &walk, enforcement, &mut out.assets);
-    let mut lexical = pre.clone();
-    lexical.stamp(&src.path, &src.bytes, enforcement);
-    out.diagnostics.extend(lexical.unclassified);
+    out.diagnostics
+        .extend(pre.stamped(&src.path, &src.bytes, enforcement));
     out.diagnostics.sort();
     Ok(out)
 }
