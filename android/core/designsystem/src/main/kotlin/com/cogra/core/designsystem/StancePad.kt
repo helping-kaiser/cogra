@@ -92,6 +92,13 @@ import androidx.compose.ui.window.PopupProperties
 import java.util.Locale
 import kotlin.math.roundToInt
 
+/**
+ * Which surface the control offers for picking (design.md §8.6), as the
+ * design system's own vocabulary — `core:designsystem` holds no domain
+ * types, so the feature module maps the stored preference onto this.
+ */
+enum class StanceInputSurface { PAD, SLIDERS, ENTRY }
+
 /** Where the pad is: shut, following a thumb, or parked open. */
 enum class StancePadMode {
     CLOSED,
@@ -148,6 +155,8 @@ data class StanceControlState(
     /** The failure was a husk device: the key has to come back first. */
     val needsKey: Boolean = false,
     val exactValues: Boolean = false,
+    /** The reader's chosen input surface (design.md §8.6). */
+    val inputMode: StanceInputSurface = StanceInputSurface.PAD,
     val severance: SeverancePrompt? = null,
     /** The one-time teaching mark for the held gesture (design.md §8.7). */
     val coachMark: Boolean = false,
@@ -223,6 +232,10 @@ fun StanceControl(
                 .clip(RoundedCornerShape(50))
                 .stanceGesture(
                     enabled = !state.busy,
+                    // An alternate replaces the pad, so the hold has no
+                    // field to drift across: it parks the chosen surface
+                    // open instead (design.md §8.6).
+                    drifts = state.inputMode == StanceInputSurface.PAD,
                     extentPx = extentPx,
                     onTapDefault = onTapDefault,
                     onOpenPad = onOpenPad,
@@ -317,6 +330,7 @@ fun StanceControl(
  */
 private fun Modifier.stanceGesture(
     enabled: Boolean,
+    drifts: Boolean,
     extentPx: Float,
     onTapDefault: () -> Unit,
     onOpenPad: () -> Unit,
@@ -324,7 +338,7 @@ private fun Modifier.stanceGesture(
     onCommit: () -> Unit,
     onHold: () -> Unit,
     onCancel: () -> Unit,
-): Modifier = if (!enabled) this else pointerInput(extentPx) {
+): Modifier = if (!enabled) this else pointerInput(extentPx, drifts) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
         var held = false
@@ -337,6 +351,10 @@ private fun Modifier.stanceGesture(
             null
         }
         when {
+            held && !drifts -> {
+                onOpenPad()
+                onHold()
+            }
             held -> {
                 onOpenPad()
                 var travel = Offset.Zero
@@ -433,11 +451,16 @@ private fun StancePadOverlay(
         ) {
             StanceStandingLine(state.standing, testTagPrefix)
             StanceReadout(state.pick, testTagPrefix)
-            StanceField(state.pick)
+            // The chosen surface replaces the pad, it does not sit beside
+            // it: an alternate is the input, not a second opinion
+            // (design.md §8.6).
+            if (state.inputMode == StanceInputSurface.PAD) StanceField(state.pick)
             StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
-                if (state.exactValues) {
-                    StanceExactValues(state.pick, onPick, testTagPrefix)
+                // The alternates are the accessible path, so the way into
+                // them is present whatever the stored preference is.
+                if (state.exactValues || state.inputMode != StanceInputSurface.PAD) {
+                    StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix)
                 }
                 if (state.failed) {
                     StanceFailure(state.needsKey, testTagPrefix)
@@ -457,19 +480,21 @@ private fun StancePadOverlay(
                         Text(stringResource(R.string.stance_cancel))
                     }
                 }
-                TextButton(
-                    onClick = onToggleExactValues,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
-                ) {
-                    Text(
-                        stringResource(
-                            if (state.exactValues) {
-                                R.string.stance_exact_values_hide
-                            } else {
-                                R.string.stance_exact_values_show
-                            },
-                        ),
-                    )
+                if (state.inputMode == StanceInputSurface.PAD) {
+                    TextButton(
+                        onClick = onToggleExactValues,
+                        modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.exactValues) {
+                                    R.string.stance_exact_values_hide
+                                } else {
+                                    R.string.stance_exact_values_show
+                                },
+                            ),
+                        )
+                    }
                 }
                 // The route for the reader who came here to sever: it has
                 // to be findable from the open pad (design.md §8.5).
@@ -770,9 +795,14 @@ private fun entryText(value: Double): String = String.format(Locale.ROOT, "%.2f"
 /**
  * The alternates (design.md §8.6): paired sliders and direct entry, the
  * same machinery on a surface a screen-reader or switch user can drive.
+ *
+ * Which of the two shows follows the reader's chosen input: an alternate
+ * they picked is the input, so it stands alone. While the pad is still
+ * the chosen input neither has been picked, so both are offered.
  */
 @Composable
 private fun StanceExactValues(
+    mode: StanceInputSurface,
     pick: StancePoint,
     onPick: (StancePoint) -> Unit,
     testTagPrefix: String,
@@ -783,30 +813,34 @@ private fun StanceExactValues(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        StanceSlider(
-            label = directedLabel,
-            value = pick.directed,
-            onChange = { onPick(pick.copy(directed = it)) },
-            testTag = "${testTagPrefix}_stance_slider_directed",
-        )
-        StanceSlider(
-            label = interestLabel,
-            value = pick.interest,
-            onChange = { onPick(pick.copy(interest = it)) },
-            testTag = "${testTagPrefix}_stance_slider_interest",
-        )
-        StanceEntry(
-            label = directedLabel,
-            value = pick.directed,
-            onChange = { onPick(pick.copy(directed = it)) },
-            testTag = "${testTagPrefix}_stance_entry_directed",
-        )
-        StanceEntry(
-            label = interestLabel,
-            value = pick.interest,
-            onChange = { onPick(pick.copy(interest = it)) },
-            testTag = "${testTagPrefix}_stance_entry_interest",
-        )
+        if (mode != StanceInputSurface.ENTRY) {
+            StanceSlider(
+                label = directedLabel,
+                value = pick.directed,
+                onChange = { onPick(pick.copy(directed = it)) },
+                testTag = "${testTagPrefix}_stance_slider_directed",
+            )
+            StanceSlider(
+                label = interestLabel,
+                value = pick.interest,
+                onChange = { onPick(pick.copy(interest = it)) },
+                testTag = "${testTagPrefix}_stance_slider_interest",
+            )
+        }
+        if (mode != StanceInputSurface.SLIDERS) {
+            StanceEntry(
+                label = directedLabel,
+                value = pick.directed,
+                onChange = { onPick(pick.copy(directed = it)) },
+                testTag = "${testTagPrefix}_stance_entry_directed",
+            )
+            StanceEntry(
+                label = interestLabel,
+                value = pick.interest,
+                onChange = { onPick(pick.copy(interest = it)) },
+                testTag = "${testTagPrefix}_stance_entry_interest",
+            )
+        }
     }
 }
 

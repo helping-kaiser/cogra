@@ -23,6 +23,7 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.store.IdentityStore
@@ -84,6 +85,8 @@ data class StanceUiState(
     val targets: Map<String, TargetStance> = emptyMap(),
     /** The control whose first tap opened the teaching mark, if any. */
     val coachTarget: String? = null,
+    /** The reader's chosen input surface, the same on every control (design.md §8.6). */
+    val inputMode: StanceInputMode = StanceInputMode.Default,
 )
 
 /**
@@ -115,6 +118,16 @@ class StanceViewModel @Inject constructor(
      * moment's casualty (design.md §8.7).
      */
     private var taught: Boolean? = null
+
+    init {
+        // Collected, not read once: choosing an alternate in Settings has
+        // to reach controls already composed here (design.md §8.6).
+        viewModelScope.launch {
+            identity.stanceInputMode.collect { mode ->
+                _state.update { it.copy(inputMode = mode) }
+            }
+        }
+    }
 
     /**
      * Registers a control and reads the standing behind it. A read that

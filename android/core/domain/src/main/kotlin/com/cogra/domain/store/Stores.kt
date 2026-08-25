@@ -8,6 +8,7 @@ package com.cogra.domain.store
 
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.stance.StanceInputMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -89,6 +90,17 @@ interface IdentityStore {
     suspend fun stancePadTaught(): Boolean
 
     suspend fun markStancePadTaught()
+
+    /**
+     * Which surface the stance control offers, everywhere (design.md
+     * §8.6). A rendering preference with nothing private in it, kept
+     * here because this is the device's preference store; a Flow because
+     * changing it in Settings has to reach controls already composed on
+     * another destination.
+     */
+    val stanceInputMode: Flow<StanceInputMode>
+
+    suspend fun setStanceInputMode(mode: StanceInputMode)
 
     /**
      * The "don't remember me" opt-in (auth.md "Sign-out"): whether the
