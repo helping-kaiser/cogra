@@ -59,6 +59,10 @@ export function standingLine(bundle: BundleState, targetLabel: string): string {
  * half: that standing is the pending-inclusive fold, counting a record
  * not yet on L1 (§9). The batch count rides along where there was one,
  * because the cost the reader agreed to is part of what completed.
+ *
+ * The axes are named rather than compacted: a transient surface is read
+ * away from the pad that would otherwise say which number is which, so
+ * it takes the same words Android's `stance_signed` is handed.
  */
 export function signedLine(
   standing: StancePair,
@@ -67,11 +71,11 @@ export function signedLine(
   targetLabel: string,
 ): string {
   const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
-  // Severance says itself; a face and a pair at the origin would read as
-  // a stance taken rather than one walked back.
+  // Severance says itself; a pair at the origin would read as a stance
+  // taken rather than one walked back.
   const where = severed
     ? `You've severed ${targetLabel}.`
-    : `Where you stand now: ${reading(standing)}`;
+    : `Where you stand now: ${formatStanceWords(standing)}`;
   return `${acts}, still settling. ${where}`;
 }
 

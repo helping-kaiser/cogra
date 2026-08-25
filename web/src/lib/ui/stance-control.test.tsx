@@ -351,7 +351,7 @@ describe("the tap", () => {
     // sentence names the standing and would keep naming it if a prior
     // bundle made the two differ.
     expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
-      "Signed, still settling. Where you stand now: 🙂 Nice +0.10 / +0.10",
+      "Signed, still settling. Where you stand now: How you stand +0.10, In your world +0.10",
     );
   });
 
@@ -366,7 +366,7 @@ describe("the tap", () => {
     // the standing rather than echoing the pick back.
     expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 0.1, pInterest: 0.1 } }]);
     expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
-      "Where you stand now: 🤩 Really into this +0.60 / +0.50",
+      "Where you stand now: How you stand +0.60, In your world +0.50",
     );
   });
 
