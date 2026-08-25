@@ -451,6 +451,12 @@ impl Document {
     /// decoder's own located refusal, while bytes that name a value which
     /// is not a document fail as the corresponding envelope refusal.
     ///
+    /// Memory: a decoded value costs up to ~48× its encoded size (a hostile
+    /// input of nested one-byte heads buys a tree of nodes), linearly and
+    /// without a cap — the data language admits every depth, so the crate
+    /// bounds none. A consumer decoding untrusted bytes bounds its *input
+    /// size*, which bounds the memory by this factor.
+    ///
     /// ```
     /// use cogra_interchange::{Document, EnvelopeError};
     ///

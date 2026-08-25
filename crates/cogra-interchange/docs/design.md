@@ -242,6 +242,8 @@ The decoder refuses a major-type-3 item whose payload is not valid UTF-8, with `
 
 The decoder bounds nesting depth nowhere: depth is bounded by the length of the input and by nothing else, and membership stays exact. A bound, however generous, would refuse a legal name — and unlike a theory the crate cannot evaluate, for which the conventions supply a refusal clause and a truncation rule, the data language offers none: membership is exact. The price is paid in the implementation rather than in the specification: every recursive walk in the crate, teardown included, is written iteratively (`impl:xchg:iterative-teardown`), and the one-million-deep property of (`tab:xchg:metatheorem-tests`) is what keeps that honest instead of aspirational.
 
+The policy's second price is memory, measured and accepted (ruled 2026-08-21): a decoded value costs roughly forty-eight times its encoded size in the worst case — a hostile input of nested one-byte heads buys a tree of allocated nodes — linearly and without a cap, because a cap is a bound by another name. A consumer decoding untrusted bytes sizes its input limit, not this crate's depth: bounding the *bytes it accepts* bounds the memory by this factor, and the crate's rustdoc says so where the decoder is documented.
+
 ## The envelope · `sec:xchg:envelope`
 
 **Signature (Namespace labels)** · `sig:xchg:label-api`
