@@ -7,7 +7,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
-import { stanceHandlers } from "@/test/stance";
+import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 
 // The post and every comment read their own standing, so the read is a
@@ -670,6 +670,84 @@ describe("PostView", () => {
     // A reply is a genesis Review targeting the comment (comment.md §1).
     expect((variables as { input: { target: string } }).input.target).toBe("c1");
     expect(screen.queryByTestId("comment-reply-input")).not.toBeInTheDocument();
+  });
+
+  it("wears the standing on a load that starts with no access token", async () => {
+    // The state every direct arrival at this URL begins in: the refresh
+    // token is persisted, the access token is per-tab memory and this tab
+    // has none yet. Nothing on this surface is viewer-scoped except the
+    // stance controls — the post and its thread read fine anonymously —
+    // so the stance read is the first request that needs a viewer, and it
+    // is the one that has to notice it is not carrying one.
+    window.localStorage.setItem("cogra.activeAccount", "u2");
+    window.localStorage.setItem("cogra.refreshToken", "refresh-1");
+    const store = createTokenStore();
+    expect(store.accessToken()).toBeNull();
+
+    const anonymous: string[] = [];
+    const seeded = {
+      p1: { pDirected: 1, pInterest: 0.2, recordCount: 3 },
+      c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
+    };
+    const stanceRoot = (operation: string, field: string, typename: string) =>
+      graphql.query(operation, ({ variables, request }) => {
+        const id = String(variables.id);
+        const authorized = request.headers.get("authorization") !== null;
+        if (!authorized) anonymous.push(id);
+        return HttpResponse.json({
+          data: {
+            [field]: {
+              __typename: typename,
+              id,
+              // What the server actually answers a request it did not
+              // authenticate: a null field, not an error (types.rs
+              // `viewer_stance`). Nothing in the errors array means
+              // nothing for the guard to react to on its own.
+              viewerStance: authorized ? stanceBundle(seeded[id as keyof typeof seeded]) : null,
+            },
+          },
+        });
+      });
+
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+      graphql.mutation("RefreshSession", () =>
+        HttpResponse.json({
+          data: {
+            refreshSession: {
+              __typename: "AuthPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access-2",
+                refreshToken: "refresh-2",
+                user: { __typename: "User", id: "u2" },
+              },
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      stanceRoot("PostStance", "post", "Post"),
+      stanceRoot("CommentStance", "comment", "Comment"),
+    );
+
+    renderWithProviders(<PostView postId="p1" />, { store, writeSigner: fakeWriteSigner() });
+
+    // Both controls, because both are viewer-scoped reads on this surface
+    // and the defect took the whole class, not the post alone.
+    expect(await screen.findByTestId("post-stance-resting-exact")).toHaveTextContent("+1.00 / +0.20");
+    await waitFor(() =>
+      expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
+        "-0.55 / +0.25",
+      ),
+    );
+    expect(screen.getByTestId("post-stance")).toHaveAccessibleName(/Love this/);
+    // The reads really did start out anonymous — the standing arrived by
+    // refreshing and replaying, not because the rig handed it a token.
+    expect(anonymous).toContain("p1");
+    expect(store.accessToken()).toBe("access-2");
   });
 
   it("links authors as chips into their profiles", async () => {

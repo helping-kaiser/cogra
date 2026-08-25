@@ -62,7 +62,12 @@ import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
 import { StanceCoachMark } from "@/lib/ui/stance-coach-mark";
 import { formatStancePair } from "@/lib/ui/stance-format";
-import { StanceLandingLine, StanceStanding, type BundleState } from "@/lib/ui/stance-readout";
+import {
+  signedLine,
+  StanceLandingLine,
+  StanceStanding,
+  type BundleState,
+} from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
 import { anchoredStyle, useAnchoredPlacement } from "@/lib/ui/use-anchored";
 
@@ -86,7 +91,12 @@ type Confirming = {
   pick: StancePair | null;
   records: number;
   alreadySevered: boolean;
+  /** Where confirming leaves the bundle — the fold's answer, for the receipt. */
+  landing: StanceLanding;
 };
+
+/** Everything reaching severance lands at the origin, by definition. */
+const SEVERED: StanceLanding = { landing: ORIGIN, inert: true, severed: true };
 
 export function StanceControl({
   target,
@@ -247,15 +257,13 @@ export function StanceControl({
   };
 
   /** Signs the picked edge. Reports whether the gesture completed. */
-  const runCommit = async (chosen: StancePair): Promise<boolean> => {
+  const runCommit = async (chosen: StancePair, landed: StanceLanding): Promise<boolean> => {
     setBusy(true);
     const outcome = await data.commit(seamTarget, chosen);
     setBusy(false);
     if (outcome.kind !== "success") return false;
     setSigned(
-      outcome.value.records === 1
-        ? "Signed — still settling."
-        : `Signed ${outcome.value.records} actions — still settling.`,
+      signedLine(landed.landing, outcome.value.records, landed.severed, target.label),
     );
     readBundle({ fresh: true });
     return true;
@@ -267,7 +275,7 @@ export function StanceControl({
     const outcome = await data.sever(seamTarget);
     setBusy(false);
     if (outcome.kind !== "success") return false;
-    setSigned(`Signed ${outcome.value.records} actions — still settling.`);
+    setSigned(signedLine(SEVERED.landing, outcome.value.records, true, target.label));
     readBundle({ fresh: true });
     return true;
   };
@@ -278,7 +286,7 @@ export function StanceControl({
     setFailed(false);
     setConfirmFailed(false);
     const records = bundle === null || bundle === undefined ? 0 : bundle.severance.records;
-    setConfirming({ pick: null, records, alreadySevered: records === 0 });
+    setConfirming({ pick: null, records, alreadySevered: records === 0, landing: SEVERED });
   };
 
   /**
@@ -298,11 +306,11 @@ export function StanceControl({
     }
     closeAll();
     if (landed.value.severed) {
-      setConfirming({ pick: chosen, records: 1, alreadySevered: false });
+      setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: landed.value });
       return;
     }
     setPending(landed.value.landing);
-    if (!(await runCommit(chosen))) {
+    if (!(await runCommit(chosen, landed.value))) {
       // Nothing was staged, so the target must not keep claiming it was.
       setPending(null);
       setFailed(true);
@@ -313,7 +321,8 @@ export function StanceControl({
     const pending = confirming;
     if (pending === null) return;
     setConfirmFailed(false);
-    const completed = pending.pick === null ? await runSever() : await runCommit(pending.pick);
+    const completed =
+      pending.pick === null ? await runSever() : await runCommit(pending.pick, pending.landing);
     // A failure keeps the dialog up and says so, rather than dropping the
     // reader back to a control that looks like nothing happened.
     if (completed) setConfirming(null);

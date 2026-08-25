@@ -52,6 +52,34 @@ export function standingLine(bundle: BundleState, targetLabel: string): string {
 }
 
 /**
+ * The confirmation a signed gesture leaves (design.md §8.3; Android's
+ * `stance_signed`). It names where the gesture LEFT the viewer, never
+ * the pick that got them there — the pick is already behind them, and
+ * the standing is what they now carry. "Still settling" is the honest
+ * half: that standing is the pending-inclusive fold, counting a record
+ * not yet on L1 (§9). The batch count rides along where there was one,
+ * because the cost the reader agreed to is part of what completed.
+ *
+ * The axes are named rather than compacted: a transient surface is read
+ * away from the pad that would otherwise say which number is which, so
+ * it takes the same words Android's `stance_signed` is handed.
+ */
+export function signedLine(
+  standing: StancePair,
+  records: number,
+  severed: boolean,
+  targetLabel: string,
+): string {
+  const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
+  // Severance says itself; a pair at the origin would read as a stance
+  // taken rather than one walked back.
+  const where = severed
+    ? `You've severed ${targetLabel}.`
+    : `Where you stand now: ${formatStanceWords(standing)}`;
+  return `${acts}, still settling. ${where}`;
+}
+
+/**
  * The landing, in the precedence Android fixes: severance first, then
  * inertness, then the ordinary reading. `null` is a landing not yet
  * known — it says so rather than showing a stale one.
