@@ -17,7 +17,10 @@
 //     bundle or a landing carries nothing is the fold's statement about
 //     itself (`inert`, `severed` on `StanceBundle` and
 //     `StanceProjection`). No caller re-derives either by testing a
-//     value against zero.
+//     value against zero. The one thing that does is the LIVE LANDING
+//     LINE, which §8.3 makes a local fold of the served raw sums so it
+//     can keep up with a drag; that line is display, and `project` is
+//     still what answers before anything is signed.
 //   - SEVERANCE IS ITS OWN GESTURE. `sever` states the intent; the batch
 //     of counter-records that nets the bundle to (0, 0) is assembled on
 //     the far side. Each record is its own priced act, so the batch size
@@ -61,6 +64,18 @@ export type SeveranceCost = {
 export type StanceBundle = {
   /** Where the bundle currently nets — never a value the client computed. */
   readonly current: StancePair;
+  /**
+   * The raw sums behind that fold, before the clip at `±1` — beyond it
+   * where the bundle carries more than the fold shows (design.md §8.3,
+   * "clipped is not hidden"). Two surfaces need them: the landing line,
+   * which folds them locally against the pick so it can keep up with a
+   * drag, and every surface that explains cost, because the raw sums are
+   * what a walk back to zero actually walks (§8.5).
+   *
+   * Served, never derived: a client cannot recover them from `current`,
+   * which is exactly why they are on the wire.
+   */
+  readonly rawSum: StancePair;
   /** How many records the bundle folds; zero is a target never stanced. */
   readonly records: number;
   /** Either axis at zero, as the fold reports it. */
