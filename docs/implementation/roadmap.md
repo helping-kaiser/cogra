@@ -84,8 +84,19 @@ components, with web brought to parity.
 bottom bar, compact top bars, one shell for every viewer — and the
 profile surface (reads, editing, actor chips) on all three fronts,
 with the bottom-bar placement rule settled as Q37 (the bar rides
-read surfaces, task flows carry a back arrow). The rest of the
-content era is sliced below (2.2–2.7).
+read surfaces, task flows carry a back arrow).
+
+**Slice 2.2 is closed** (hand-tested 2026-08-25, three rounds):
+the generic `prepareStance` toward posts, comments, and profiles
+with the raw-edge semantic, the read-side bundle fold serving both
+the clipped pair and the raw sums, batch severance, and the pad on
+both clients per [design.md §8](design.md) — explicit-Set commits,
+fixed lower-centre placement, re-draggable field, local realtime
+landing, first-tap coach, and the 🤷 zero-bundle readout. The
+current visual treatment is accepted as interim: the feed, detail,
+and creation surfaces get their full redesign when media lands
+(2.5) and the ranked-feed rework (slice 3). The rest of the
+content era is sliced below (2.3–2.7).
 
 ## The stand-in and the swap
 
