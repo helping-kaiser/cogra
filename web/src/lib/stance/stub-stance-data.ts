@@ -1,13 +1,12 @@
-// The stand-in behind the `StanceData` seam while slice 2.2's backend
-// half is unmerged: an in-memory store the control can be driven against
-// in tests and mounted against in the app.
+// A `StanceData` stand-in for tests: an in-memory store the control can
+// be driven against without a network.
 //
-// It plays the BACKEND, not the client. The arithmetic below is
-// therefore the stand-in's, not a claim about L1's published fold, and it
-// is injectable precisely so no test depends on the guess: the wiring
-// follow-up deletes this file's fold along with the rest of it. The
-// client-side rule the seam exists to protect — the control never
-// computes a delta or a projection — is unaffected either way.
+// It plays the BACKEND, not the client. The arithmetic below — the fold,
+// and the inertness and severance flags read off it — is therefore the
+// stand-in's own, which is exactly why the fold is injectable: no test
+// depends on the guess. The client-side rule the seam exists to protect
+// — the control never computes a delta, a projection, or a zero test of
+// its own — is unaffected either way.
 
 import { failed, success, type Outcome } from "@/lib/api/outcome";
 import { clampPair, ORIGIN, type StancePair } from "./model";
@@ -15,7 +14,9 @@ import type {
   StanceBundle,
   StanceCommit,
   StanceData,
+  StanceLanding,
   StanceReadOptions,
+  StanceTarget,
 } from "./stance-data";
 
 /** The records one viewer has authored toward one target, oldest first. */
@@ -36,6 +37,16 @@ export const sumFold: StubFold = (records) =>
       ORIGIN,
     ),
   );
+
+/** The backend's own reading of its fold — "either axis at zero". */
+function inertOf(pair: StancePair): boolean {
+  return pair.pDirected === 0 || pair.pInterest === 0;
+}
+
+/** The backend's own reading of its fold — "both axes at zero". */
+function severedOf(pair: StancePair): boolean {
+  return pair.pDirected === 0 && pair.pInterest === 0;
+}
 
 export type StubStanceOptions = {
   /** Seed standing, by target id. */
@@ -78,37 +89,41 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     pendingFlags,
     recordsOf,
 
-    async bundle(target, readOptions): Promise<Outcome<StanceBundle | null>> {
+    async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
-      const records = recordsOf(target);
-      if (records.length === 0) return success(null);
+      const records = recordsOf(target.id);
+      const net = records.length === 0 ? ORIGIN : fold(records);
       return success({
-        current: fold(records),
+        current: net,
+        records: records.length,
+        inert: inertOf(net),
+        severed: severedOf(net),
         // One counter-record per live record: the real count is the
         // fold's to state, and the control only ever renders it.
-        severance: { records: records.length },
+        severance: { records: severedOf(net) ? 0 : records.length },
       });
     },
 
-    async project(target, pick, readOptions): Promise<Outcome<StancePair>> {
+    async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceLanding>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
-      return success(fold([...recordsOf(target), pick]));
+      const net = fold([...recordsOf(target.id), pick]);
+      return success({ landing: net, inert: inertOf(net), severed: severedOf(net) });
     },
 
-    async commit(target, pick): Promise<Outcome<StanceCommit>> {
+    async commit(target: StanceTarget, pick): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
-      sent.push({ target, pick });
-      state.set(target, [...recordsOf(target), pick]);
+      sent.push({ target: target.id, pick });
+      state.set(target.id, [...recordsOf(target.id), pick]);
       return success({ records: 1 });
     },
 
-    async sever(target): Promise<Outcome<StanceCommit>> {
+    async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
-      const walked = recordsOf(target).length;
-      severed.push(target);
-      state.set(target, []);
+      const walked = recordsOf(target.id).length;
+      severed.push(target.id);
+      state.set(target.id, []);
       return success({ records: walked });
     },
   };

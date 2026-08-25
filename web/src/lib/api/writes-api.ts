@@ -8,6 +8,7 @@ import type { ApolloClient } from "@apollo/client";
 import {
   ApproveActsDocument,
   HostPublicKeyDocument,
+  PrepareSeveranceDocument,
   PrepareStanceDocument,
   StagedWriteDocument,
   SubmitProposalsDocument,
@@ -128,6 +129,29 @@ export async function prepareStance(
       }),
     (data) => data.prepareStance.userErrors,
     (data) => data.prepareStance.writes,
+  );
+  if (outcome.kind !== "success") return outcome;
+  return success(outcome.value.map(stagedFromPrepared));
+}
+
+/**
+ * Prepares severance toward a target: the counter-records that net the
+ * viewer's bundle to `(0, 0)`, each its own priced act, so the batch
+ * length is the gesture's cost (api-spec.md "The generic stance").
+ * Refused when the bundle already nets there.
+ */
+export async function prepareSeverance(
+  client: ApolloClient,
+  target: string,
+): Promise<Outcome<readonly StagedWriteView[]>> {
+  const outcome = await payloadOutcome(
+    () =>
+      client.mutate({
+        mutation: PrepareSeveranceDocument,
+        variables: { input: { target } },
+      }),
+    (data) => data.prepareSeverance.userErrors,
+    (data) => data.prepareSeverance.writes,
   );
   if (outcome.kind !== "success") return outcome;
   return success(outcome.value.map(stagedFromPrepared));

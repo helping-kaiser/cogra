@@ -49,6 +49,19 @@ pub enum AdoptionError {
         /// The owner it names.
         owner: String,
     },
+    /// A registered prefix is not prefix-shaped.
+    ///
+    /// The PREFIX production belongs to the label grammar, and Σ is
+    /// validated against it at load: a registration the grammar refuses
+    /// could never be named by an imported citation, so Σ would hold a
+    /// prefix no occurrence can reach.
+    #[error("prefix {prefix} is not an uppercase letter followed by uppercase letters and digits")]
+    MalformedPrefix {
+        /// The row the registration sits in.
+        at: Location,
+        /// The prefix as the file writes it.
+        prefix: String,
+    },
     /// One prefix is registered twice.
     #[error("prefix {prefix} is registered twice")]
     DuplicatePrefix {
@@ -105,6 +118,7 @@ impl AdoptionError {
         match self {
             AdoptionError::Unreadable { .. } | AdoptionError::Syntax(_) => None,
             AdoptionError::UnknownOwner { at, .. }
+            | AdoptionError::MalformedPrefix { at, .. }
             | AdoptionError::DuplicatePrefix { at, .. }
             | AdoptionError::PartitionNotTotal { at }
             | AdoptionError::ProfileIncomplete { at, .. }

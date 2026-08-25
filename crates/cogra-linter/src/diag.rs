@@ -18,8 +18,8 @@ use std::path::PathBuf;
 /// ```
 /// use cogra_linter::ByteSpan;
 ///
-/// let span = ByteSpan::new(4, 9);
-/// assert_eq!(span.len(), 5);
+/// assert_eq!(ByteSpan::new(4, 9).len(), 5);
+/// assert_eq!(ByteSpan { start: 4, end: 9 }.len(), 5);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ByteSpan {
@@ -36,7 +36,9 @@ impl ByteSpan {
         ByteSpan { start, end }
     }
 
-    /// The span's length in bytes, saturating when `end` precedes `start`.
+    /// The span's length in bytes, saturating: a span whose end precedes its
+    /// start has no length rather than a negative one, so a malformed span
+    /// from a frontend cannot panic a scan.
     #[must_use]
     pub const fn len(&self) -> usize {
         self.end.saturating_sub(self.start)
