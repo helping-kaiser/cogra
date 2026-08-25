@@ -64,20 +64,36 @@ private const val SQRT_2 = 1.4142135f
 internal val FIELD_EXTENT = FIELD_SIZE / 2 - knobTravelInset()
 
 /**
- * The pair this much accumulated travel picks. Each axis clamps on its
- * own — never by distance — because the whole square is reachable,
- * corners included, and the control never refuses a choice (design.md
- * §8.2). Screen y grows downward and connection grows upward, so the
- * vertical mapping inverts.
- *
- * A zero extent — an unmeasured field — picks the origin rather than
- * dividing by zero.
+ * The pair this much accumulated travel picks, starting from the origin
+ * the pad opens at (design.md §8.3).
  */
-internal fun stancePointFromTravel(travel: Offset, extentPx: Float): StancePoint {
-    if (extentPx <= 0f) return StancePoint.Origin
+internal fun stancePointFromTravel(travel: Offset, extentPx: Float): StancePoint =
+    stancePointFrom(StancePoint.Origin, travel, extentPx)
+
+/**
+ * The pair this much accumulated travel picks STARTING FROM [base]. A
+ * release parks the pad with the pick standing (design.md §8.3), so a
+ * second drag on the parked field adjusts the pick already standing
+ * rather than starting over — by the same accumulated travel the opening
+ * drag uses, so there is one rule for how a finger moves the knob rather
+ * than two. The same derivation runs on web (`padPairFrom`).
+ *
+ * Each axis clamps on its own — never by distance — because the whole
+ * square is reachable, corners included, and the control never refuses a
+ * choice (design.md §8.2). Screen y grows downward and connection grows
+ * upward, so the vertical mapping inverts.
+ *
+ * Clamped once, on the SUM: clamping the travel first would stop the knob
+ * short whenever the base already sat off centre. A zero extent — an
+ * unmeasured field — keeps the base rather than dividing by zero.
+ */
+internal fun stancePointFrom(base: StancePoint, travel: Offset, extentPx: Float): StancePoint {
+    if (extentPx <= 0f) {
+        return StancePoint(base.directed.coerceIn(-1.0, 1.0), base.interest.coerceIn(-1.0, 1.0))
+    }
     return StancePoint(
-        directed = (travel.x / extentPx).coerceIn(-1f, 1f).toDouble(),
-        interest = (-travel.y / extentPx).coerceIn(-1f, 1f).toDouble(),
+        directed = (base.directed + travel.x / extentPx).coerceIn(-1.0, 1.0),
+        interest = (base.interest - travel.y / extentPx).coerceIn(-1.0, 1.0),
     )
 }
 
