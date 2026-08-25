@@ -33,6 +33,10 @@
 
     <string name="stance_target">Stance</string>
     <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
+    <!-- A target that already carries a standing says so first. -->
+    <string name="stance_target_with_standing">%1$s: %2$s. %3$s</string>
+    <!-- The transient confirmation a signed stance leaves (design.md §8.3). -->
+    <string name="stance_signed">Signed. %1$s: %2$s</string>
     <string name="stance_pick_exactly">Pick exactly</string>
 
     <!-- The two things a reader is told apart: what this pick says, and

@@ -2,8 +2,12 @@ package com.cogra.app
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.fragment.app.FragmentActivity
 import com.cogra.app.navigation.CograNavGraph
+import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.app.ui.theme.CograTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,7 +23,14 @@ class MainActivity : FragmentActivity() {
         // for onNewIntent deliveries.
         setContent {
             CograTheme {
-                CograNavGraph()
+                // The shell's snackbar host is the one surface every
+                // destination shares, so it is what a leaf component
+                // confirms through (core:designsystem's
+                // LocalSnackbarHostState; design.md §8.3).
+                val snackbar = remember { SnackbarHostState() }
+                CompositionLocalProvider(LocalSnackbarHostState provides snackbar) {
+                    CograNavGraph(shellSnackbar = snackbar)
+                }
             }
         }
     }
