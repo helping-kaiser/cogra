@@ -280,7 +280,12 @@ fun StanceControl(
                 // always has a non-drag equivalent (design.md §10): the
                 // node reads as a button, double-tap commits the
                 // default, and the alternates ride custom actions.
-                .semantics {
+                // One node for the whole target: the face and the pair
+                // inside it are a readout of what this description
+                // already says in words, so they are absorbed rather
+                // than announced again — an emoji read out by its own
+                // name is noise (design.md §10).
+                .semantics(mergeDescendants = true) {
                     role = Role.Button
                     contentDescription = description
                     onClick(label = tapLabel) {
@@ -648,7 +653,6 @@ private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .alpha(RESTING_FACE_ALPHA)
-                .clearAndSetSemantics { }
                 .testTag("${testTagPrefix}_stance_empty_face"),
         )
         return
@@ -663,7 +667,6 @@ private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
         Text(
             text = standingReadout(standing).emoji,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.clearAndSetSemantics { },
         )
         Text(
             text = standing.pair(),
