@@ -108,7 +108,7 @@ impl<'a> Walk<'a> {
         let mut sources = Vec::new();
         let mut failures = Vec::new();
         let mut entered = HashSet::new();
-        self.descend(&self.root, &mut sources, &mut failures, &mut entered);
+        self.descend(&self.root, false, &mut sources, &mut failures, &mut entered);
         sources.sort_by_key(|one| relative_str(&one.path));
         failures.sort();
         if failures.is_empty() {
@@ -118,22 +118,34 @@ impl<'a> Walk<'a> {
         }
     }
 
+    /// One directory, its entries in path order.
+    ///
+    /// `linked` says the walk arrived here through a symbolic link, and it
+    /// is the only case that pays for a canonical path: a plain tree
+    /// reaches every directory once, and the two configured roots of this
+    /// corpus are links, so the guard against a link cycle costs one
+    /// resolution per link rather than one per directory. The entry's own
+    /// `file_type` decides what it is, and only a link is resolved further
+    /// — measured on this corpus, an extra `metadata` per entry more than
+    /// doubled the walk.
     fn descend(
         &self,
         directory: &Path,
+        linked: bool,
         sources: &mut Vec<SourceFile>,
         failures: &mut Vec<Diagnostic>,
         entered: &mut HashSet<PathBuf>,
     ) {
-        let mark = fs::canonicalize(directory).unwrap_or_else(|_| directory.to_path_buf());
-        if !entered.insert(mark) {
-            return;
+        if linked {
+            let mark = fs::canonicalize(directory).unwrap_or_else(|_| directory.to_path_buf());
+            if !entered.insert(mark) {
+                return;
+            }
         }
         let mut entries = match fs::read_dir(directory) {
             Ok(entries) => entries
                 .filter_map(Result::ok)
-                .map(|entry| entry.path())
-                .collect::<Vec<PathBuf>>(),
+                .collect::<Vec<fs::DirEntry>>(),
             Err(problem) => {
                 failures.push(self.failure(
                     UNREADABLE_TREE,
@@ -143,19 +155,27 @@ impl<'a> Walk<'a> {
                 return;
             }
         };
-        entries.sort();
+        entries.sort_by_key(fs::DirEntry::path);
         for entry in entries {
-            let Ok(relative) = entry.strip_prefix(&self.root) else {
+            let path = entry.path();
+            let Ok(relative) = path.strip_prefix(&self.root) else {
                 continue;
             };
             if self.adoption.carrier.excludes(relative) {
                 continue;
             }
-            match fs::metadata(&entry) {
-                Ok(metadata) if metadata.is_dir() => {
-                    self.descend(&entry, sources, failures, entered);
+            let kind = entry.file_type().and_then(|kind| {
+                if kind.is_symlink() {
+                    fs::metadata(&path).map(|resolved| (resolved.file_type(), true))
+                } else {
+                    Ok((kind, false))
                 }
-                Ok(_) => match fs::read(&entry) {
+            });
+            match kind {
+                Ok((kind, linked)) if kind.is_dir() => {
+                    self.descend(&path, linked, sources, failures, entered);
+                }
+                Ok(_) => match fs::read(&path) {
                     Ok(bytes) => sources.push(self.source(relative, bytes)),
                     Err(problem) => failures.push(self.failure(
                         UNREADABLE_SOURCE,
