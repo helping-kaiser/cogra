@@ -5,6 +5,13 @@ name: CI
 # touched; the `lint` and `test` jobs are gated at the job level on that
 # output and skip entirely on docs-only changes — services and all.
 #
+# `corpus-lint` is deliberately NOT gated. The linter's carrier is the
+# whole repository minus the exclusions in corpus-adoption.toml, so any
+# committed file can change its verdict and a path filter admitting
+# everything would be gating in name only. It needs no database and
+# finishes in seconds, which is what makes "always" the cheap answer as
+# well as the correct one.
+#
 # GitHub treats a skipped job's check_run as a passing required status
 # check, so branch protection accepts the skipped state. Workflow-level
 # `paths-ignore` does NOT have this property: a path-skipped workflow
@@ -40,7 +47,6 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       android: ${{ steps.frontends.outputs.android }}
       web: ${{ steps.frontends.outputs.web }}
-      fixtures: ${{ steps.fixtures.outputs.fixtures }}
     steps:
       - uses: actions/checkout@v7
       # The Rust gate. `android/**` and `web/**` are subtracted alongside docs
@@ -80,17 +86,36 @@ jobs:
               - 'schema.graphql'
               - 'client-crypto-vectors.json'
               - '.github/workflows/**'
-      # The linter-fixture gate. cogra-linter's tests read these doc trees
-      # as fixtures (registry_as_data pins their head census), so a change
-      # to them must run the Rust test job even when the Rust gate above
-      # subtracts it as markdown.
-      - uses: dorny/paths-filter@v4
-        id: fixtures
-        with:
-          filters: |
-            fixtures:
-              - 'crates/cogra-interchange/docs/**'
-              - 'crates/cogra-linter/docs/**'
+  # The corpus linter over its own repository, and the suite that reads the
+  # same tree. Ungated on purpose (see the header): the carrier is the whole
+  # repository, so no path filter can express "might change the verdict".
+  #
+  # This lane is also what closes the docs gate's blind spot. Five of the
+  # crate's test binaries — corpus_acceptance, migrations, registers,
+  # registry_as_data, metatheorems — read the real tree rather than a
+  # fixture, so a docs-only PR can break them while the Rust gate above
+  # subtracts it as markdown and skips `test` entirely. Running the suite
+  # here costs seconds and covers every doc, where widening the Rust gate
+  # would spin up Postgres and install sqlx-cli to reach the same tests.
+  corpus-lint:
+    name: Corpus lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Debug rather than release: the suite below compiles the crate in
+      # debug anyway, so the check binary is a by-product. Release buys
+      # about two seconds of runtime for a separate optimized build of the
+      # crate and its dependencies — measured in commissioning.md.
+      #
+      # Exit 0 is a clean corpus, 1 is findings on the failing set, and 2 is
+      # the linter itself failing; the lane reds on either nonzero code and
+      # the code says which happened.
+      - name: Check the corpus
+        run: cargo run -p cogra-linter --bin cogra-lint -- check
+      - name: Run the linter's test suite
+        run: cargo test -p cogra-linter
 
   lint:
     name: Lint
@@ -117,7 +142,7 @@ jobs:
   test:
     name: Test
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.fixtures == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
