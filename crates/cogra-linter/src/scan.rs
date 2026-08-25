@@ -29,40 +29,10 @@
 use core::fmt;
 use core::str::FromStr;
 
+use crate::diag::ByteSpan;
+
 /// The acute accent, U+00B4: the delimiter of the code syntax.
 const ACUTE: &str = "´";
-
-/// A half-open range of bytes.
-///
-/// ```
-/// use cogra_linter::scan::ByteSpan;
-///
-/// let span = ByteSpan { start: 4, end: 9 };
-/// assert_eq!(span.len(), 5);
-/// ```
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ByteSpan {
-    /// The first byte of the span.
-    pub start: usize,
-    /// One past the span's last byte.
-    pub end: usize,
-}
-
-impl ByteSpan {
-    /// The span's length in bytes, saturating: a span whose end precedes its
-    /// start has no length rather than a negative one, so a malformed span
-    /// from a frontend cannot panic a scan.
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.end.saturating_sub(self.start)
-    }
-
-    /// Whether the span covers no bytes.
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
 
 /// A registered owner prefix: an uppercase letter followed by uppercase
 /// letters and digits (´[LBL-lang:labels:label-language]´).
@@ -454,7 +424,8 @@ pub struct RegionScan {
 /// Prose: the frontend supplies the format's own code spans, in order.
 ///
 /// ```
-/// use cogra_linter::scan::{ByteSpan, DelimitedSpan, Occurrence, scan_prose};
+/// use cogra_linter::ByteSpan;
+/// use cogra_linter::scan::{DelimitedSpan, Occurrence, scan_prose};
 ///
 /// let text = "as (`inv:labels:unique-mint`) has it";
 /// let spans = [DelimitedSpan {

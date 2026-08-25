@@ -12,9 +12,10 @@
 //! is the whole content of "the scanner never counts a backtick": what the
 //! frontend does not pair, the scanner cannot read.
 
+use cogra_linter::ByteSpan;
 use cogra_linter::scan::{
-    ByteSpan, DelimitedSpan, Delimiter, DelimiterFailure, NearMissKind, Occurrence, RegionScan,
-    scan_code, scan_prose,
+    DelimitedSpan, Delimiter, DelimiterFailure, NearMissKind, Occurrence, RegionScan, scan_code,
+    scan_prose,
 };
 
 /// A paired, participating span.
