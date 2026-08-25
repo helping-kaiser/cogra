@@ -58,6 +58,7 @@ class StanceStandInRepository @Inject constructor(
                 StanceStanding(
                     target = target,
                     net = fold(own),
+                    raw = rawSum(own),
                     records = own.size,
                     includePending = includePending,
                 ),
@@ -89,6 +90,7 @@ class StanceStandInRepository @Inject constructor(
                 SeveranceQuote(
                     target = target,
                     standing = net,
+                    raw = rawSum(own),
                     records = own.size,
                     alreadySevered = net == StancePair.Origin,
                 ),
@@ -108,5 +110,11 @@ class StanceStandInRepository @Inject constructor(
     private fun fold(pairs: List<StancePair>): StancePair = StancePair(
         pDirected = pairs.sumOf { it.pDirected }.coerceIn(-1.0, 1.0),
         pInterest = pairs.sumOf { it.pInterest }.coerceIn(-1.0, 1.0),
+    )
+
+    /** The same sum without the clip — what a walk back to zero walks. */
+    private fun rawSum(pairs: List<StancePair>): StancePair = StancePair(
+        pDirected = pairs.sumOf { it.pDirected },
+        pInterest = pairs.sumOf { it.pInterest },
     )
 }

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.semantics.SemanticsProperties
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -40,8 +41,11 @@ class SeveranceConfirmTest {
         fromPick: Boolean = false,
         working: Boolean = false,
         failed: Boolean = false,
+        standing: StancePoint = StancePoint(0.6, 0.4),
+        raw: StancePoint = StancePoint(0.6, 0.4),
     ) = SeverancePrompt(
-        standing = StancePoint(0.6, 0.4),
+        standing = standing,
+        raw = raw,
         records = records,
         alreadySevered = alreadySevered,
         fromPick = fromPick,
@@ -72,7 +76,55 @@ class SeveranceConfirmTest {
         show(prompt())
 
         compose.onNodeWithTag("${TAG}_severance_standing")
-            .assertTextContains("Where you stand now", substring = true)
+            .assertTextContains("adds up to", substring = true)
+    }
+
+    @Test
+    fun theCostAndTheNumbersBesideItComeFromTheSameHistory() {
+        // The incoherence this replaces: a bundle clipped at +1.00
+        // quoted beside a count of six signed acts, which no reader can
+        // make add up. The confirm states the RAW sums (design.md §8.3).
+        show(
+            prompt(
+                records = 6,
+                standing = StancePoint(1.0, 1.0),
+                raw = StancePoint(6.0, 4.5),
+            ),
+        )
+
+        compose.onNodeWithTag("${TAG}_severance_standing")
+            .assertTextContains("+6.00", substring = true)
+        compose.onNodeWithTag("${TAG}_severance_standing")
+            .assertTextContains("+4.50", substring = true)
+        compose.onNodeWithTag("${TAG}_severance_cost")
+            .assertTextContains("6 signed actions", substring = true)
+    }
+
+    @Test
+    fun aClippedFoldIsNeverTheNumberTheConfirmQuotes() {
+        show(prompt(records = 6, standing = StancePoint(1.0, 1.0), raw = StancePoint(6.0, 4.5)))
+
+        val quoted = compose.onNodeWithTag("${TAG}_severance_standing")
+            .fetchSemanticsNode()
+            .config[SemanticsProperties.Text]
+            .joinToString(" ")
+
+        assertThat(quoted).doesNotContain("+1.00")
+    }
+
+    @Test
+    fun aBundleAlreadyAtZeroShrugsRatherThanReadingAsNice() {
+        show(
+            prompt(
+                records = 0,
+                alreadySevered = true,
+                standing = StancePoint.Origin,
+                raw = StancePoint.Origin,
+            ),
+        )
+
+        compose.onNodeWithTag("${TAG}_severance_standing")
+            .assertTextContains("🤷", substring = true)
     }
 
     @Test

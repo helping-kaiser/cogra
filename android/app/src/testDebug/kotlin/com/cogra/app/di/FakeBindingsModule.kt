@@ -16,6 +16,7 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
+import com.cogra.crypto.ActorKey
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
@@ -45,7 +46,7 @@ import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
-import com.cogra.domain.testing.ThrowingWriteRepository
+import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.network.di.NetworkBindsModule
 import dagger.Module
 import dagger.Provides
@@ -190,12 +191,27 @@ class ScriptedOnboardingRepository : ThrowingOnboardingRepository() {
 /**
  * Every screen that renders content renders stance controls with it, so
  * the nav graph needs a stance read side that answers rather than
- * throws. It reports an unauthored bundle: the control shows, and
- * nothing about it is scripted unless a test asks.
+ * throws. It reports an unauthored bundle by default: the control shows,
+ * and nothing about it is scripted unless a test asks.
+ *
+ * The staging leg goes through the real [WriteRepository], exactly as
+ * the production repository does, so a test that commits a stance runs
+ * the whole signing chain rather than a shortcut around it.
  */
-class ScriptedStanceRepository : ThrowingStanceRepository() {
+class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingStanceRepository() {
+    var net = StancePair.Origin
+    var raw: StancePair? = null
+    var records = 0
+
+    override suspend fun prepareStance(
+        target: String,
+        pick: StancePair,
+    ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pick.pDirected, pick.pInterest)
+
     override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
-        Outcome.Success(StanceStanding(target, StancePair.Origin, records = 0, includePending = includePending))
+        Outcome.Success(
+            StanceStanding(target, net, raw ?: net, records, includePending = includePending),
+        )
 
     override suspend fun projection(
         target: String,
@@ -212,7 +228,15 @@ class ScriptedStanceRepository : ThrowingStanceRepository() {
     )
 
     override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
-        Outcome.Success(SeveranceQuote(target, StancePair.Origin, records = 0, alreadySevered = true))
+        Outcome.Success(
+            SeveranceQuote(
+                target = target,
+                standing = net,
+                raw = raw ?: net,
+                records = records,
+                alreadySevered = net == StancePair.Origin,
+            ),
+        )
 }
 
 @Module
@@ -261,9 +285,18 @@ object FakeBindingsModule {
     @Singleton
     fun sessionRepository(): SessionRepository = ScriptedSessionRepository()
 
+    /**
+     * The actor the sealing write repository signs as. A test that wants
+     * a write to land seeds the identity store from this same key, so
+     * the device's signature and the host's expectation agree.
+     */
     @Provides
     @Singleton
-    fun writeRepository(): WriteRepository = ThrowingWriteRepository()
+    fun signingActor(): ActorKey = ActorKey.generate()
+
+    @Provides
+    @Singleton
+    fun writeRepository(actor: ActorKey): WriteRepository = SealingWriteRepository(actor)
 
     @Provides
     @Singleton
@@ -281,7 +314,8 @@ object FakeBindingsModule {
 
     @Provides
     @Singleton
-    fun scriptedStanceRepository(): ScriptedStanceRepository = ScriptedStanceRepository()
+    fun scriptedStanceRepository(writes: WriteRepository): ScriptedStanceRepository =
+        ScriptedStanceRepository(writes)
 
     @Provides
     fun stanceRepository(fake: ScriptedStanceRepository): StanceRepository = fake

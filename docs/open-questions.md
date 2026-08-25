@@ -25,6 +25,7 @@ within a phase, order is flexible.
 |:---:|:---:|:---:|---|
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
+| 2a. Stance control (slice 2.2, both clients) | 1 | **Q42** | The resting face an unauthored stance target wears. Cheap to answer and worth answering soon: the two clients are shipping the control now, and a face is a shared contract exactly as §8.4's anchor table is. |
 | 2b. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable once the stance control makes Affinity real), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
@@ -157,6 +158,42 @@ signed" to "what SOME holder of this key signed", so it is a
 deliberate design change, not an implementation shortcut. The
 whole interim handshake is stand-in-scoped (Q30); decide only if
 the wait proves painful before the substrate swap.
+
+---
+
+## Q42 — The resting face an unauthored stance target wears
+
+**Where it shows up:**
+[design.md §8.3](implementation/design.md#8-the-stance-control)
+(the resting target), §8.4 (the anchor table)
+**Status:** open (Android ships 😐; web has to match whatever is
+decided)
+
+### Context
+
+§8.3 settles that a viewer with no bundle sees "a **muted,
+translucent face** … never a bare word", and §8.4 settles the
+zero bundle's readout as 🤷. Neither names the emoji for the
+third state — the target nobody has authored anything toward.
+
+The constraints are real and narrow it a long way. It cannot come
+from the anchor table, or an empty control would read as a
+standing the viewer already holds. It cannot be 🤷, which now
+means "severed, or netted to zero" — a state the ViewModel
+deliberately tells apart from "never authored"
+(`standingRecords`). And §8.4 fixes the vocabulary as system
+emoji rather than drawn faces.
+
+Android ships 😐 at M3's 0.38 disabled-content opacity: a face
+outside the table, carrying no valence, muted so it reads as
+waiting rather than as an answer.
+
+### The question
+
+Is 😐 the resting face? The table in §8.4 is the contract because
+both clients read it, and this face is the same kind of thing —
+so whatever is decided belongs in §8.3 as a named value rather
+than in two apps' source.
 
 ---
 
