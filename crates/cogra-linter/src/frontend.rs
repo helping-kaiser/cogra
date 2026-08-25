@@ -206,7 +206,7 @@ pub struct Parsed {
 /// the regions that did parse.
 pub fn parse(src: &SourceFile, a: &Adoption) -> Result<Parsed, Vec<Diagnostic>> {
     match src.language.as_ref().map(crate::adopt::Language::as_str) {
-        Some("markdown") => crate::frontend_md::parse(src, a),
+        Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
         _ => Ok(Parsed {
             path: src.path.clone(),
             ..Parsed::default()
