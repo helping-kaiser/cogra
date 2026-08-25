@@ -20,8 +20,14 @@ use cogra_linter::scan::{
 /// A paired, participating span.
 fn span(outer: (usize, usize), interior: (usize, usize)) -> DelimitedSpan {
     DelimitedSpan {
-        outer: ByteSpan { start: outer.0, end: outer.1 },
-        interior: ByteSpan { start: interior.0, end: interior.1 },
+        outer: ByteSpan {
+            start: outer.0,
+            end: outer.1,
+        },
+        interior: ByteSpan {
+            start: interior.0,
+            end: interior.1,
+        },
         displayed: false,
     }
 }
@@ -51,7 +57,11 @@ fn prose_unpaired_backtick_bounds_its_block() {
 fn prose_reports_no_delimiter_failure() {
     let text = "` an unpaired backtick";
     assert!(scan_prose(text, 0, &[]).delimiter_failure.is_none());
-    assert!(scan_prose("(`a:b:c`)", 0, &frontend_pair()).delimiter_failure.is_none());
+    assert!(
+        scan_prose("(`a:b:c`)", 0, &frontend_pair())
+            .delimiter_failure
+            .is_none()
+    );
 }
 
 /// One well-formed span over the text of the test above.
@@ -94,9 +104,24 @@ fn prose_empty_interior_is_text() {
 fn prose_base_reaches_every_span() {
     let text = "`a:b:c` `D:e:f`";
     let scan = scan_prose(text, 1_000, &[span((0, 7), (1, 6)), span((8, 15), (9, 14))]);
-    assert_eq!(scan.occurrences[0].span(), ByteSpan { start: 1_000, end: 1_007 });
-    assert_eq!(scan.near_misses[0].span, ByteSpan { start: 1_008, end: 1_015 });
-    assert_eq!(scan.near_misses[0].why, NearMissKind::WrongCase { at: 1_009 });
+    assert_eq!(
+        scan.occurrences[0].span(),
+        ByteSpan {
+            start: 1_000,
+            end: 1_007
+        }
+    );
+    assert_eq!(
+        scan.near_misses[0].span,
+        ByteSpan {
+            start: 1_008,
+            end: 1_015
+        }
+    );
+    assert_eq!(
+        scan.near_misses[0].why,
+        NearMissKind::WrongCase { at: 1_009 }
+    );
 }
 
 /// Prose: a displayed span is skipped whole, so its parentheses cite nothing.
@@ -126,7 +151,10 @@ fn code_acute_opens_on_label_shaped_text() {
 /// overwhelmingly an apostrophe accident.
 #[test]
 fn code_acute_opening_nothing_is_text() {
-    assert_eq!(scan_code("it isn´t an occurrence", 0), RegionScan::default());
+    assert_eq!(
+        scan_code("it isn´t an occurrence", 0),
+        RegionScan::default()
+    );
 }
 
 /// Code: an acute opening a non-label run is text, both acutes included.
@@ -154,7 +182,10 @@ fn code_unclosed_opening_acute_fails() {
     let scan = scan_code("the mint ´def:parser:tokenizer", 100);
     assert_eq!(
         scan.delimiter_failure,
-        Some(DelimiterFailure { at: 109, delimiter: Delimiter::Acute })
+        Some(DelimiterFailure {
+            at: 109,
+            delimiter: Delimiter::Acute
+        })
     );
 }
 
@@ -164,7 +195,10 @@ fn code_unclosed_bracketed_acute_fails() {
     let scan = scan_code("(´[SPEC-a:b:c]", 0);
     assert_eq!(
         scan.delimiter_failure,
-        Some(DelimiterFailure { at: 1, delimiter: Delimiter::Acute })
+        Some(DelimiterFailure {
+            at: 1,
+            delimiter: Delimiter::Acute
+        })
     );
 }
 
@@ -186,7 +220,10 @@ fn code_failure_ends_the_regions_spans() {
     assert!(scan.near_misses.is_empty());
     assert_eq!(
         scan.delimiter_failure,
-        Some(DelimiterFailure { at: 0, delimiter: Delimiter::Acute })
+        Some(DelimiterFailure {
+            at: 0,
+            delimiter: Delimiter::Acute
+        })
     );
 }
 
@@ -221,7 +258,11 @@ fn code_apostrophe_does_not_swallow_the_next_occurrence() {
 fn code_consecutive_spans_pair_in_order() {
     let text = "´a:b:c´ ´d:e:f´ ´g:h:i´";
     let scan = scan_code(text, 0);
-    let labels: Vec<&str> = scan.occurrences.iter().map(|o| o.label().as_str()).collect();
+    let labels: Vec<&str> = scan
+        .occurrences
+        .iter()
+        .map(|o| o.label().as_str())
+        .collect();
     assert_eq!(labels, ["a:b:c", "d:e:f", "g:h:i"]);
 }
 
