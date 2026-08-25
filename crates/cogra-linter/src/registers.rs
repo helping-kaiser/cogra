@@ -37,7 +37,8 @@ use petgraph::stable_graph::NodeIndex;
 use crate::adopt::{Adoption, Area, OwnerId, Profile, ProfileId};
 use crate::diag::ByteSpan;
 use crate::error::GenerateError;
-use crate::graph::{Corpus, EdgeW, NodeW, Registries, out_along};
+use crate::frontend::Asset;
+use crate::graph::{AssetNode, Corpus, EdgeW, NodeW, Registries, out_along};
 use crate::judge::kinds::{HeadlineCounts, KindRegistry};
 use crate::scan::Label;
 
@@ -417,6 +418,39 @@ pub fn derived_label(profile: &Profile, identifier: &str, area: &Area) -> Option
     .ok()
 }
 
+/// The per-owner label registers one profile's census yields.
+///
+/// The census reaches the generator as a value, from whichever run computed
+/// it: the check's own harvest for a profile in force, and the measurement's
+/// walk for the named regeneration of one still staged
+/// (´dec:lint:staged-profiles´). Neither route builds a register's bytes —
+/// both hand their rows to the one that does, which is what keeps a register
+/// from being generated twice by two routes (´dec:lint:one-generator´).
+///
+/// Empty for a profile whose standard place is not a generated register: a
+/// label carried at the definition itself is authored there, and generating
+/// a file for it would put the label in a second place.
+#[must_use]
+pub fn label_registers_of(
+    a: &Adoption,
+    profile: &Profile,
+    census: &BTreeMap<OwnerId, Vec<Asset>>,
+) -> Vec<Register> {
+    if profile.standard_place.register.is_none() {
+        return Vec::new();
+    }
+    census
+        .iter()
+        .filter_map(|(owner, held)| {
+            let rows = rows_of(
+                profile,
+                held.iter().map(|one| (one.identifier.as_str(), &one.area)),
+            );
+            label_register(a, profile, owner, rows)
+        })
+        .collect()
+}
+
 /// The per-owner label registers of every effective profile whose standard
 /// place is a generated register.
 ///
@@ -438,35 +472,64 @@ fn label_registers(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Register> {
         let owners: BTreeMap<&OwnerId, NodeIndex> =
             r.owners.iter().map(|(id, at)| (id, *at)).collect();
         for (id, owner) in owners {
-            let mut rows: Vec<(Label, String)> = Vec::new();
-            for asset in &covered {
-                if crate::graph::owner_of(g, *asset) != Some(owner) {
-                    continue;
-                }
-                let Some(NodeW::Asset(weight)) = g.node_weight(*asset) else {
-                    continue;
-                };
-                let Some(label) = derived_label(profile, &weight.identifier, &weight.area) else {
-                    continue;
-                };
-                rows.push((label, weight.identifier.to_string()));
-            }
-            if rows.is_empty() {
-                continue;
-            }
-            rows.sort();
-            rows.dedup();
-            out.push(Register {
-                path: register_path(&owner_root(a, id)),
-                bytes: label_register_bytes(id, profile, &rows),
-                scope: RegisterScope::LabelRegister {
-                    owner: id.clone(),
-                    profile: profile.id.clone(),
-                },
-            });
+            let held: Vec<&AssetNode> = covered
+                .iter()
+                .filter(|asset| crate::graph::owner_of(g, **asset) == Some(owner))
+                .filter_map(|asset| match g.node_weight(*asset) {
+                    Some(NodeW::Asset(weight)) => Some(weight),
+                    _ => None,
+                })
+                .collect();
+            let rows = rows_of(
+                profile,
+                held.iter().map(|one| (&*one.identifier, &one.area)),
+            );
+            out.extend(label_register(a, profile, id, rows));
         }
     }
     out
+}
+
+/// The rows one owner's covered assets contribute, ordered bytewise by label.
+///
+/// An asset whose transformed identifier is no well-formed name contributes
+/// none: it derives no label, and a generator that invented one would put a
+/// label in the register the inventory judgment could not find at the asset.
+fn rows_of<'i>(
+    profile: &Profile,
+    assets: impl Iterator<Item = (&'i str, &'i Area)>,
+) -> Vec<(Label, String)> {
+    let mut rows: Vec<(Label, String)> = assets
+        .filter_map(|(identifier, area)| {
+            derived_label(profile, identifier, area).map(|label| (label, identifier.to_owned()))
+        })
+        .collect();
+    rows.sort();
+    rows.dedup();
+    rows
+}
+
+/// One owner's label register, or nothing where that owner covers no asset.
+///
+/// The one place a label register's bytes are produced, whichever run
+/// supplied the rows (´dec:lint:one-generator´).
+fn label_register(
+    a: &Adoption,
+    profile: &Profile,
+    owner: &OwnerId,
+    rows: Vec<(Label, String)>,
+) -> Option<Register> {
+    if rows.is_empty() {
+        return None;
+    }
+    Some(Register {
+        path: register_path(&owner_root(a, owner)),
+        bytes: label_register_bytes(owner, profile, &rows),
+        scope: RegisterScope::LabelRegister {
+            owner: owner.clone(),
+            profile: profile.id.clone(),
+        },
+    })
 }
 
 /// The tree an owner's own registers live in.
