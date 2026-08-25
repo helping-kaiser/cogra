@@ -31,6 +31,15 @@
 //! into a single region with one piece per line. A blank line ends the run,
 //! and so does anything that is not whitespace.
 //!
+//! # Fenced examples
+//!
+//! `[scanned-regions]` puts fenced documentation examples outside what is
+//! scanned, and an assembled run is therefore cut at its fence lines into
+//! participating and non-participating regions
+//! (´[LBL-judg:labels:participation]´). The cut is made on the lines, before
+//! the join resolves the leaders away, and it moves no bytes: every fence
+//! line stays in the pieces of the stretch it bounds.
+//!
 //! # Heads
 //!
 //! None. A code comment is a scanned region that carries occurrences and
@@ -431,7 +440,11 @@ fn asset(profile: &Profile, identifier: &str, area: Area, span: ByteSpan) -> Ass
     }
 }
 
-/// The scanned regions: the documentation comments, runs assembled.
+/// The three-backtick fence that opens and closes a documentation example.
+const FENCE: &str = "```";
+
+/// The scanned regions: the documentation comments, runs assembled, each
+/// split at the fence boundaries its lines carry.
 fn regions(src: &SourceFile, pre: &PreTokenized, text: &str, walk: &Walk) -> Vec<Region> {
     let mut docs = walk.docs.clone();
     docs.sort_by_key(|one| one.outer.start);
@@ -475,7 +488,7 @@ fn regions(src: &SourceFile, pre: &PreTokenized, text: &str, walk: &Walk) -> Vec
     if let Some((_, _, region)) = open {
         out.push(region);
     }
-    out
+    out.iter().flat_map(split_fences).collect()
 }
 
 /// Copy one file range onto a region's logical text.
@@ -483,11 +496,85 @@ fn extend(region: &mut Region, text: &str, piece: ByteSpan) {
     let Some(slice) = text.get(piece.start..piece.end) else {
         return;
     };
+    append(region, slice, piece);
+}
+
+/// Copy one already-cut slice onto a region's logical text.
+///
+/// Adjacent pieces merge, which is what keeps a contiguous block comment one
+/// piece and a run of line comments one piece per line.
+fn append(region: &mut Region, slice: &str, piece: ByteSpan) {
     region.text.push_str(slice);
     match region.pieces.last_mut() {
         Some(last) if last.end == piece.start => last.end = piece.end,
         _ => region.pieces.push(piece),
     }
+}
+
+/// One assembled region, cut into participating and non-participating
+/// stretches at its fence lines.
+///
+/// `[scanned-regions]` puts fenced documentation examples outside what is
+/// scanned, alongside string and character literals
+/// (´[LBL-judg:labels:participation]´). A fence is a property of a *line*,
+/// and a run's logical text joins its lines directly — the leaders resolved
+/// away take the newlines with them — so the decision is made on the pieces,
+/// which are the lines, and never on the text the join produced.
+///
+/// The fence bytes stay in the pieces of the stretch they open and close: a
+/// region records the file ranges it was assembled from, and dropping them
+/// would make [`Region::locate`] inexact for everything after. What the
+/// fenced stretch loses is participation, which is the region contract's own
+/// way of saying present but not scanned — the same thing the Markdown
+/// frontend says about a fenced block.
+///
+/// An empty piece is an empty `///` line and stays one line: splitting an
+/// empty slice yields nothing, so the empty line is supplied rather than
+/// lost, and a run keeps its one piece per line.
+fn split_fences(region: &Region) -> Vec<Region> {
+    if region.pieces.is_empty() {
+        return vec![region.clone()];
+    }
+    let mut out: Vec<Region> = Vec::new();
+    let mut open: Option<Region> = None;
+    let mut fenced = false;
+    let mut consumed = 0;
+    for piece in &region.pieces {
+        let Some(slice) = region.text.get(consumed..consumed + piece.len()) else {
+            continue;
+        };
+        consumed += piece.len();
+        let mut at = piece.start;
+        let empty = slice.is_empty();
+        for line in slice.split_inclusive('\n').chain(empty.then_some("")) {
+            let fence = line.trim_start().starts_with(FENCE);
+            let participates = !(fenced || fence);
+            fenced ^= fence;
+            let cut = ByteSpan::new(at, at + line.len());
+            at += line.len();
+            match open.as_mut() {
+                Some(current) if current.participates == participates => {
+                    append(current, line, cut);
+                }
+                _ => {
+                    out.extend(open.take());
+                    let mut fresh = Region {
+                        kind: region.kind,
+                        text: String::new(),
+                        pieces: Vec::new(),
+                        syntax: region.syntax,
+                        participates,
+                        generated: region.generated,
+                        spans: region.spans.clone(),
+                    };
+                    append(&mut fresh, line, cut);
+                    open = Some(fresh);
+                }
+            }
+        }
+    }
+    out.extend(open);
+    out
 }
 
 /// The region kind one doc attribute makes, and the file range its content
