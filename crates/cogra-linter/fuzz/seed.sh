@@ -21,7 +21,10 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
-root="$here/../../.."
+# Resolved, not "$here/../../..": the unresolved form still spells `/fuzz/`
+# inside it, so every `-not -path '*/fuzz/*'` below would match the prefix
+# and exclude the whole tree.
+root="$(cd "$here/../../.." && pwd)"
 
 mkdir -p "$here/corpus/pretokenize_rust" \
          "$here/corpus/scan_region" \
