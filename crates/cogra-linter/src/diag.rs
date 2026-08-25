@@ -1,7 +1,7 @@
 //! Diagnostics: the one value every finding about the corpus travels as.
 //!
 //! A judgment's answer is a list of these and never an `Err`
-//! (´conv:lint:finding-or-error´); ´error´ carries what remains — the
+//! (´conv:lint:finding-or-error´); [`crate::error`] carries what remains — the
 //! linter's own inability to proceed. The order here is implemented and
 //! not derived, because its three keys are not the declaration order
 //! (´conv:lint:diagnostic-order´).

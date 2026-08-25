@@ -200,6 +200,18 @@ impl Adoption {
     /// The one operation of the crate whose failure is an error and not a
     /// finding (´crit:lint:error-or-finding´).
     ///
+    /// ```
+    /// use cogra_linter::Adoption;
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    ///
+    /// assert_eq!(adoption.profiles.profiles.len(), 2);
+    /// assert_eq!(adoption.profiles.effective_count, 0);
+    /// assert_eq!(adoption.partition.rules.len(), 20);
+    /// ```
+    ///
     /// # Errors
     ///
     /// [`AdoptionError`] when the file cannot be read, is not well-formed
@@ -378,6 +390,30 @@ impl Partition {
     /// empty prefix, checked when the adoption data loads, so totality is a
     /// property of the data and there is no unowned-source state to
     /// represent (´conv:lint:owner-assignment´).
+    ///
+    /// ```
+    /// use cogra_linter::{Adoption, OwnerId};
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    /// let omega = &adoption.partition;
+    ///
+    /// // The document rules precede the package rule that would take them.
+    /// assert_eq!(
+    ///     omega.owner_for(Path::new("crates/cogra-linter/docs/label-calculus.md")),
+    ///     OwnerId::new("doc.label-calculus"),
+    /// );
+    /// assert_eq!(
+    ///     omega.owner_for(Path::new("crates/cogra-linter/src/adopt.rs")),
+    ///     OwnerId::new("pkg.cogra-linter"),
+    /// );
+    /// // The last rule's empty prefix is what makes Ω total.
+    /// assert_eq!(
+    ///     omega.owner_for(Path::new("a/tree/nobody/foresaw.txt")),
+    ///     OwnerId::new("tree.repo-root"),
+    /// );
+    /// ```
     ///
     /// # Panics
     ///
@@ -820,6 +856,24 @@ impl EnforcementPartition {
     ///
     /// Enforcement is orthogonal to severity: an error is an error wherever
     /// it is found, and only the exit code differs.
+    ///
+    /// ```
+    /// use cogra_linter::{Adoption, Enforcement};
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    /// let partition = &adoption.enforcement;
+    ///
+    /// assert_eq!(
+    ///     partition.enforcement_for(Path::new("crates/cogra-linter/docs/design.md")),
+    ///     Enforcement::Failing,
+    /// );
+    /// assert_eq!(
+    ///     partition.enforcement_for(Path::new("docs/primitive/layers.md")),
+    ///     Enforcement::Advisory,
+    /// );
+    /// ```
     #[must_use]
     pub fn enforcement_for(&self, path: &Path) -> Enforcement {
         let relative = relative_str(path);

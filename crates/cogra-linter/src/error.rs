@@ -2,7 +2,8 @@
 //!
 //! One test decides which surface a failure belongs to: if the input is
 //! exactly the kind of thing the operation takes and the answer is
-//! negative, it is a finding and travels as a ´Diagnostic´; if the linter
+//! negative, it is a finding and travels as a [`crate::diag::Diagnostic`];
+//! if the linter
 //! cannot do its job at all, it is an error and travels in `Err`
 //! (´crit:lint:error-or-finding´). The criterion cuts far toward findings,
 //! which is why the taxonomy is this small.
