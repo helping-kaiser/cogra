@@ -23,6 +23,10 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.stance.SeveranceQuote
+import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceStanding
 import java.time.Instant
 
 /**
@@ -205,6 +209,48 @@ interface ContentRepository {
         after: String?,
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
+}
+
+/**
+ * Everything the stance control needs (roadmap "Slice 2.2"; design.md
+ * §8): the pick it stages, the bundle fold it *shows* — current
+ * standing, where a pick lands it, the severance quote — and severance's
+ * own staging, the one gesture stated as an intent rather than as a
+ * pair.
+ *
+ * Every read defaults to counting records that have not landed on L1:
+ * a stance still settling is one the author already made.
+ */
+interface StanceRepository {
+    /**
+     * Stages the stance record for [pick] toward [target]. The record
+     * carries the two values verbatim — the client never computes a
+     * delta against the bundle (design.md §8.1).
+     */
+    suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>>
+
+    /** The viewer's current netted stance toward [target]. */
+    suspend fun standing(target: String, includePending: Boolean = true): Outcome<StanceStanding>
+
+    /**
+     * Where [pick] would land the viewer's bundle toward [target] — the
+     * backend's fold, never the client's arithmetic (design.md §8.1).
+     */
+    suspend fun projection(
+        target: String,
+        pick: StancePair,
+        includePending: Boolean = true,
+    ): Outcome<StanceProjection>
+
+    /** What reaching `(0, 0)` toward [target] would take — the confirm's read side. */
+    suspend fun severanceQuote(target: String, includePending: Boolean = true): Outcome<SeveranceQuote>
+
+    /**
+     * Stages the severance batch: the counter-records that net the
+     * viewer's bundle toward [target] to `(0, 0)`, each its own priced
+     * act for this device to sign.
+     */
+    suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>>
 }
 
 /**

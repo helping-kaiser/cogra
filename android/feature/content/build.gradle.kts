@@ -28,6 +28,8 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    // The stance control embeds in post cards and comments (design.md §6).
+    implementation(project(":feature:stance"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

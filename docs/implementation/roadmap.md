@@ -238,10 +238,16 @@ can land in any order — 2.3 (topics) needs only the text core.
   exactly the picked values — the client never computes, and
   the backend never derives, a delta against the author's
   bundle ([design.md §8.1](design.md)). Severance is the one
-  explicit gesture that does net the bundle to `(0, 0)`. The
-  shipped `prepareStance` is reworked to match.
+  explicit gesture that does net the bundle to `(0, 0)`, over
+  `⌈max(|Σ_d|, |Σ_i|)⌉` counter-records — each its own priced
+  act, so the batch is the gesture's cost. The shipped
+  `prepareStance` is reworked to match.
 - The read-side bundle fold: current standing toward a target
   and where a pick lands it — what the pad's readout shows.
+  `viewerStance` takes the reader's choice of view, landed-only
+  or pending-inclusive, on the `includePending` convention;
+  severance computes against the pending-inclusive one, so a
+  sever reads through immediately.
 - The pad on both clients ([design.md §8](design.md)): tap for
   the `(+0.1, +0.1)` default, the press-and-hold pad, the face
   readout, the severance confirm.
@@ -340,6 +346,14 @@ can land in any order — 2.3 (topics) needs only the text core.
   the composer's unchanged-snapshot guard (disable save when the
   edit is byte-identical; the protocol keeps accepting priced
   no-ops).
+- **The L1-view / L2-view toggle on the feed.** The stance bundle
+  already lets a reader choose which view they read — landed only,
+  or landed plus what is still in flight (slice 2.2). The ranked
+  feed offers the same choice as a user control, for the two cases
+  that motivate it: after severing a bot cluster the L2 view gives
+  a clean feed immediately instead of an epoch later, and when the
+  pending layer is being flooded the L1 view is the retreat to
+  what has actually settled.
 - **Hand test:** ranked feed on the device; later, the same feed
   ranked by the container and on-device (web ranks backend-direct
   until the Wasm stage — [web.md](web.md)).

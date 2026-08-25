@@ -7,4 +7,69 @@
     <string name="recovery_code_type_back">Type or paste the code to confirm</string>
     <string name="recovery_code_saved">I\'ve written it down</string>
     <string name="pending_settling">Still settling</string>
+
+    <!-- The stance control (design.md §8). The twenty readout anchors
+         are the doc's table; a change there changes both apps. -->
+    <string name="stance_anchor_nice">Nice</string>
+    <string name="stance_anchor_like_this">Like this</string>
+    <string name="stance_anchor_love_this">Love this</string>
+    <string name="stance_anchor_show_me_more">Show me more</string>
+    <string name="stance_anchor_really_into_this">Really into this</string>
+    <string name="stance_anchor_tell_me_everything">Tell me everything</string>
+    <string name="stance_anchor_all_in">All in</string>
+    <string name="stance_anchor_not_for_me">Not for me</string>
+    <string name="stance_anchor_dont_like_this">Don\'t like this</string>
+    <string name="stance_anchor_really_against_this">Really against this</string>
+    <string name="stance_anchor_against_keep_posted">Against, but keep me posted</string>
+    <string name="stance_anchor_against_want_all">Against, and I want all of it</string>
+    <string name="stance_anchor_fine_not_for_me">Fine, just not for me</string>
+    <string name="stance_anchor_good_not_my_world">Good, but not in my world</string>
+    <string name="stance_anchor_rather_not_see">Rather not see this</string>
+    <string name="stance_anchor_good_keep_it_away">Good, keep it away</string>
+    <string name="stance_anchor_meh">Meh</string>
+    <string name="stance_anchor_dislike_keep_away">Dislike, keep away</string>
+    <string name="stance_anchor_keep_this_away">Keep this away</string>
+    <string name="stance_anchor_absolutely_not">Absolutely not</string>
+
+    <string name="stance_target">Stance</string>
+    <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
+    <string name="stance_pick_exactly">Pick exactly</string>
+
+    <!-- The two things a reader is told apart: what this pick says, and
+         where it leaves them (design.md §8.2). -->
+    <string name="stance_axis_directed">How you stand</string>
+    <string name="stance_axis_interest">In your world</string>
+    <string name="stance_standing">Where you stand now</string>
+    <string name="stance_standing_none">You haven\'t said anything about this yet</string>
+    <string name="stance_landing">This leaves you at</string>
+    <string name="stance_landing_working">Working out where this leaves you…</string>
+    <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>
+    <string name="stance_carries_nothing">This would carry nothing.</string>
+    <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
+    <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
+
+    <string name="stance_exact_values_show">Set exact values</string>
+    <string name="stance_exact_values_hide">Hide exact values</string>
+    <string name="stance_set">Set this stance</string>
+    <string name="stance_cancel">Cancel</string>
+    <string name="stance_failed">That didn\'t go through. Try again.</string>
+    <string name="stance_failed_no_key">This device can\'t sign yet. Restore your key first.</string>
+
+    <!-- Severance: the one gesture that nets a bundle back to nothing
+         (design.md §8.5). The route is findable from the open pad. -->
+    <string name="stance_severance_open">Sever this</string>
+    <string name="stance_severance_title">Sever this?</string>
+    <string name="stance_severance_reached">This pick nets everything you\'ve said about it back to nothing.</string>
+    <string name="stance_severance_body">Nothing you\'ve said about it carries any more: it stops reaching you, it earns you nothing, and nothing you vouch for travels through it.</string>
+    <plurals name="stance_severance_cost">
+        <item quantity="one">It takes %d signed action, each paid for separately.</item>
+        <item quantity="other">It takes %d signed actions, each paid for separately.</item>
+    </plurals>
+    <string name="stance_severance_already">You are already at nothing here.</string>
+    <string name="stance_severance_confirm">Sever</string>
+    <string name="stance_severance_keep">Keep it</string>
+    <string name="stance_severance_failed">Severing didn\'t go through. Try again.</string>
+
+    <string name="stance_coach">Press and hold to pick exactly where you stand.</string>
+    <string name="stance_coach_dismiss">Got it</string>
 </resources>

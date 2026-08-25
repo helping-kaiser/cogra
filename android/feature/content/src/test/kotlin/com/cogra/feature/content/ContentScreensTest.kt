@@ -43,9 +43,11 @@ class ContentScreensTest {
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
+        onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
             FeedScreen(
+                stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 signedIn = signedIn,
                 onRefresh = onRefresh,
@@ -404,9 +406,11 @@ class ContentScreensTest {
         onSubmitCommentEdit: () -> Unit = {},
         onStartReply: (String) -> Unit = {},
         onSubmitReply: () -> Unit = {},
+        onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
             PostDetailScreen(
+                stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 viewerId = viewerId,
                 signedIn = signedIn,
@@ -431,6 +435,35 @@ class ContentScreensTest {
                 onBack = {},
             )
         }
+    }
+
+    // Post cards, the post itself, and every comment carry the stance
+    // control (design.md §6), each on its own target.
+    @Test
+    fun everyPostCardCarriesAStanceControlForItsOwnPost() {
+        val stanced = mutableListOf<Pair<String, String>>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
+            onStance = { target, tag -> stanced += target to tag },
+        )
+        assertThat(stanced).containsExactly(
+            "p1" to "feed_post_p1",
+            "p2" to "feed_post_p2",
+        )
+    }
+
+    @Test
+    fun theDetailCarriesAStanceControlForThePostAndForEveryComment() {
+        val stanced = mutableListOf<String>()
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1"), testComment("c2")),
+            ),
+            onStance = { target, _ -> stanced += target },
+        )
+        assertThat(stanced).containsExactly("p1", "c1", "c2")
     }
 
     @Test

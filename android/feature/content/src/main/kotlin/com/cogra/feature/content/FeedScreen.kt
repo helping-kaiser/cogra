@@ -42,6 +42,7 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.PostView
 import com.cogra.feature.content.R
+import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
 fun FeedRoute(
@@ -71,6 +72,7 @@ fun FeedRoute(
         onSignInOrJoin = onSignInOrJoin,
         keyBanner = keyBanner,
         banners = banners,
+        stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
     )
 }
 
@@ -86,6 +88,11 @@ fun FeedScreen(
     onSignInOrJoin: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /**
+     * The stance control a post card carries (design.md §6), hoisted so
+     * the screen stays free of DI and previewable.
+     */
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the key
@@ -190,6 +197,7 @@ fun FeedScreen(
                                     post = post,
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
+                                    stanceControl = stanceControl,
                                 )
                             }
                             if (state.hasNextPage) {
@@ -258,7 +266,12 @@ private fun GuestBanner(onSignInOrJoin: () -> Unit) {
 }
 
 @Composable
-private fun PostCard(post: PostView, onClick: () -> Unit, onOpenActor: (String) -> Unit) {
+private fun PostCard(
+    post: PostView,
+    onClick: () -> Unit,
+    onOpenActor: (String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,6 +306,8 @@ private fun PostCard(post: PostView, onClick: () -> Unit, onOpenActor: (String) 
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
+            // The post card carries the stance control (design.md §6).
+            stanceControl(post.id, "feed_post_${post.id}")
         }
     }
 }
