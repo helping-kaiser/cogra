@@ -13,9 +13,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceControl
 import com.cogra.core.designsystem.StanceControlState
+import com.cogra.core.designsystem.StanceInputSurface
 import com.cogra.core.designsystem.StanceLanding
 import com.cogra.core.designsystem.StancePadMode
 import com.cogra.core.designsystem.StancePoint
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 
 /**
@@ -34,7 +36,10 @@ fun StanceControlRoute(
     LaunchedEffect(target) { viewModel.observe(target) }
     val entry = state.targets[target] ?: TargetStance()
     StanceControl(
-        state = entry.toControlState(coachMark = state.coachTarget == target),
+        state = entry.toControlState(
+            coachMark = state.coachTarget == target,
+            inputMode = state.inputMode,
+        ),
         onTapDefault = { viewModel.onTapDefault(target) },
         onOpenPad = { viewModel.onOpenPad(target) },
         onPick = { viewModel.onPick(target, it.toPair()) },
@@ -46,12 +51,16 @@ fun StanceControlRoute(
         onConfirmSeverance = { viewModel.onConfirmSeverance(target) },
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
         onCoachMarkDismissed = viewModel::onCoachMarkDismissed,
+        onConfirmationShown = { viewModel.onConfirmationShown(target) },
         testTagPrefix = testTagPrefix,
         modifier = modifier,
     )
 }
 
-internal fun TargetStance.toControlState(coachMark: Boolean) = StanceControlState(
+internal fun TargetStance.toControlState(
+    coachMark: Boolean,
+    inputMode: StanceInputMode,
+) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
         PadMode.CLOSED -> StancePadMode.CLOSED
@@ -71,6 +80,11 @@ internal fun TargetStance.toControlState(coachMark: Boolean) = StanceControlStat
     failed = failed,
     needsKey = needsKey,
     exactValues = exactValues,
+    inputMode = when (inputMode) {
+        StanceInputMode.PAD -> StanceInputSurface.PAD
+        StanceInputMode.SLIDERS -> StanceInputSurface.SLIDERS
+        StanceInputMode.ENTRY -> StanceInputSurface.ENTRY
+    },
     severance = severance?.let {
         SeverancePrompt(
             standing = it.quote.standing.toPoint(),
@@ -82,6 +96,7 @@ internal fun TargetStance.toControlState(coachMark: Boolean) = StanceControlStat
         )
     },
     coachMark = coachMark,
+    confirmation = confirmation?.toPoint(),
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

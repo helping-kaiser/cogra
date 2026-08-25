@@ -9,6 +9,7 @@ import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -31,6 +32,8 @@ data class SettingsUiState(
     val emailChangePassword: String = "",
     val emailChangeCode: String = "",
     val emailChangeRequested: Boolean = false,
+    /** Which surface the stance control offers, everywhere (design.md §8.6). */
+    val stanceInputMode: StanceInputMode = StanceInputMode.Default,
     /** One-shot snackbar message; consumed via onFeedbackShown after display. */
     val feedback: SettingsFeedback? = null,
 )
@@ -62,6 +65,16 @@ class SettingsViewModel @Inject constructor(
 
     init {
         refresh()
+        viewModelScope.launch {
+            identity.stanceInputMode.collect { mode ->
+                _state.update { it.copy(stanceInputMode = mode) }
+            }
+        }
+    }
+
+    /** Picking an alternate replaces the pad everywhere (design.md §8.6). */
+    fun onStanceInputMode(mode: StanceInputMode) {
+        viewModelScope.launch { identity.setStanceInputMode(mode) }
     }
 
     fun refresh() {
