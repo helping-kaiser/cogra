@@ -13,19 +13,19 @@
 //!
 //! # Where a rule's class comes from
 //!
-//! A `[banned-tokens]` row carries `id`, `language`, `token`, and
-//! `severity`, and the class is read off `token` by its leading name — the
-//! text before the row's parenthetical, matched against the vocabulary the
-//! pre-tokenizer actually decides ([`CommentForm::token`],
-//! [`LiteralForm::token`]). A row naming a class no lexer decides is
+//! A `[banned-tokens]` row carries `class` — the pre-tokenizer's own
+//! vocabulary token for the lexeme class the rule forbids
+//! ([`CommentForm::token`], [`LiteralForm::token`]) — beside the `token`
+//! prose that spells the same class for a reader. The class key is what the
+//! rule is read from, and the prose is read by nobody.
+//!
+//! The two are separate keys because they answer to different readers, and
+//! the row that carried only prose made the machine read what was written
+//! for the person: the class had to be recovered from `token` by taking the
+//! text before its parenthetical. A row naming a class no lexer decides is
 //! readable by nobody and produces no rule; [`unreadable`] lists those rows
 //! so the corpus suite can assert there are none, which is where such a
 //! defect should surface — in the adoption data, not silently at a source.
-//!
-//! The reading is a *gap in the adoption data*, named rather than hidden:
-//! `[banned-tokens]` has no machine-readable class key, so the class name
-//! has to be recovered from prose written for a human. A `class` field
-//! beside `token` would remove the recovery entirely.
 
 use crate::adopt::{BannedToken, BannedTokens, Language};
 use crate::carrier::SourceFile;
@@ -74,7 +74,7 @@ impl BanRule {
         Some(BanRule {
             id: RuleId::interned(&row.id),
             language: row.language.clone(),
-            forbids: class_named(class_name(&row.token))?,
+            forbids: class_named(&row.class)?,
             severity: row.severity,
         })
     }
@@ -177,14 +177,6 @@ fn message(banned: &BannedTokens, rule: &BanRule) -> String {
     format!("{token} is banned in {} sources", rule.language.as_str())
 }
 
-/// The class name at the head of a `[banned-tokens]` row's `token` value.
-///
-/// The rows read `plain line comment (// not followed by / or !)`: the name
-/// is what precedes the parenthetical that illustrates it.
-fn class_name(token: &str) -> &str {
-    token.split('(').next().unwrap_or(token).trim()
-}
-
 /// The lexeme class one vocabulary name denotes.
 fn class_named(name: &str) -> Option<LexClass> {
     if let Some(form) = CommentForm::ALL.iter().find(|form| form.token() == name) {
@@ -199,15 +191,6 @@ fn class_named(name: &str) -> Option<LexClass> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn a_class_name_is_the_text_before_the_illustration() {
-        assert_eq!(
-            class_name("plain line comment (// not followed by / or !)"),
-            "plain line comment"
-        );
-        assert_eq!(class_name("plain block comment"), "plain block comment");
-    }
 
     #[test]
     fn the_vocabulary_covers_every_comment_form() {
