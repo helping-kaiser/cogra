@@ -347,7 +347,8 @@ pub fn inventory(g: &Corpus, _r: &Registries) -> Vec<Diagnostic> {
         for asset in out_along(g, profile, EdgeW::Covers) {
             by_owner.entry(owner_of(g, asset)).or_default().push(asset);
         }
-        for (owner, assets) in by_owner {
+        for (owner, mut assets) in by_owner {
+            assets.sort_unstable();
             found.extend(inventory_of_owner(g, &weight.kind, owner, &assets));
         }
     }

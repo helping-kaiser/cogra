@@ -137,12 +137,17 @@ fn suppressed(g: &Corpus, a: &Adoption) -> Diagnostic {
 /// other route into a file: (´sig:lint:node-weights´) gives `AssetNode` an
 /// identifier, an area, and a place and no span, and (´sig:lint:edge-weights´)
 /// runs `Owns` from the owner to the asset and no `Contains` from its
-/// source. An asset carrying no label — the inventory finding that matters
-/// most — therefore has no location to report, which is a gap in the ruled
-/// weights and not a choice of this module.
+/// source. An asset carrying no label therefore has nothing to point at, and
+/// is reported unlocated rather than not reported — a silently dropped
+/// finding would be worse than an unlocated one, and the inventory clause's
+/// most important case is exactly the asset with no mint. The gap is in the
+/// ruled weights and not a choice of this module.
 pub(crate) fn at(g: &Corpus, n: NodeIndex) -> Option<Location> {
     let anchor = match g.node_weight(n) {
-        Some(NodeW::Asset(_)) => out_along(g, n, EdgeW::Derives).next()?,
+        Some(NodeW::Asset(_)) => match out_along(g, n, EdgeW::Derives).next() {
+            Some(mint) => mint,
+            None => return Some(Location::new(PathBuf::new(), ByteSpan::new(0, 0), 0, 0)),
+        },
         _ => n,
     };
     let span = span_of(g, anchor)?;
