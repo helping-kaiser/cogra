@@ -5,9 +5,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
 
-const server = startMswServer();
+// The header's stance control reads its own standing, so the read is a
+// default rather than something each test remembers: an unhandled one
+// degrades the control silently instead of failing the test.
+const server = startMswServer(...stanceHandlers());
 
 function signedInStore() {
   const store = createTokenStore();
@@ -119,6 +123,24 @@ describe("ProfileScreen", () => {
     // The interpersonal stance is the same generic gesture a post takes
     // (design.md §6 "Profile header"; api-spec.md "The generic stance").
     expect(await screen.findByTestId("profile-stance")).toBeInTheDocument();
+  });
+
+  it("wears the viewer's own standing toward that actor", async () => {
+    // §8.3: at rest the target shows the standing — an interpersonal
+    // bundle reads exactly the way a post's does.
+    server.use(
+      meHandler(),
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+      ...stanceHandlers({ u2: { pDirected: 0.6, pInterest: 0.65, recordCount: 4 } }),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await waitFor(() =>
+      expect(screen.getByTestId("profile-stance")).toHaveTextContent("Really into this"),
+    );
+    expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent("+0.60 / +0.65");
   });
 
   it("offers no stance on one's own profile", async () => {
