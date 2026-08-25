@@ -10,7 +10,8 @@
 //! Building the sources is the point. Entering Π is a commit that flips two
 //! fields, and the only way to know that before the commit is to flip them in
 //! a fixture and run the real harvest over a real census. The corpus is never
-//! touched: nothing here writes, and no profile of the ruled data changes.
+//! touched: what writes, writes into a temporary root of its own, and no
+//! profile of the ruled data changes.
 //!
 //! Trace convention: every test's doc comment names the clause it traces to.
 
@@ -468,4 +469,66 @@ fn the_named_generation_and_the_harvest_produce_one_register() {
         from_census[0].bytes, from_graph.bytes,
         "one generator, whichever run supplied the census"
     );
+}
+
+/// A corpus root of its own: the adoption data and one owner's source tree.
+///
+/// The named regeneration walks a root, so proving that it writes needs one —
+/// and the corpus's own root is exactly where this lane must not write
+/// (´dec:lint:staged-profiles´).
+fn temporary(name: &str) -> PathBuf {
+    let at = std::env::temp_dir().join(format!("cogra-lint-{name}"));
+    let _ = std::fs::remove_dir_all(&at);
+    let src = at.join("crates").join("l1-standin").join("src");
+    std::fs::create_dir_all(&src).expect("a temporary corpus root");
+    std::fs::write(at.join("corpus-adoption.toml"), adoption_text()).expect("the adoption data");
+    std::fs::write(src.join("lib.rs"), tested("alpha")).expect("one covered asset");
+    at
+}
+
+/// (´dec:lint:staged-profiles´): the named regeneration writes the register
+/// the migration's entry condition names, at the place the measurement waits
+/// on it, while the profile is still staged.
+#[test]
+fn a_named_regeneration_writes_the_register_a_staged_migration_waits_on() {
+    let at = temporary("named-regeneration");
+    let ruled = Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
+        .expect("the ruled adoption loads");
+    let staged = ProfileId::new("rust-test");
+    let profile = ruled
+        .profiles
+        .profiles
+        .iter()
+        .find(|one| one.id == staged)
+        .expect("the test profile is registered");
+    assert!(
+        ruled.profiles.effective().next().is_none(),
+        "still staged when its registers are generated"
+    );
+
+    let census = cogra_linter::migrate::census(&ruled, &at, &staged).expect("a census");
+    let regs = cogra_linter::label_registers_of(&ruled, profile, &census);
+    assert_eq!(regs.len(), 1, "one owner covers an asset here");
+
+    let written = cogra_linter::write_all(&regs, &cogra_linter::Scope::WholeCorpus, &at)
+        .expect("the register is written");
+    assert_eq!(written.paths, vec![PathBuf::from(REGISTER)]);
+
+    let landed = std::fs::read(at.join(REGISTER)).expect("the register is on disk");
+    assert_eq!(landed, regs[0].bytes, "what was produced is what landed");
+    assert!(
+        String::from_utf8_lossy(&landed).contains("`test:unit:alpha`"),
+        "the row carries the label in the Markdown mint form"
+    );
+
+    let measured = cogra_linter::distances(&ruled, &at, Some(&staged))
+        .expect("the measurement runs over the same root")
+        .pop()
+        .expect("the test profile is staged");
+    assert!(
+        measured.arrived(),
+        "the entry condition holds once the register is committed: {:?}",
+        measured.remaining
+    );
+    let _ = std::fs::remove_dir_all(&at);
 }
