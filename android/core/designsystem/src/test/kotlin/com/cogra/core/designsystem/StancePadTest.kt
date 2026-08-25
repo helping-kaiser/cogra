@@ -8,12 +8,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -207,13 +208,13 @@ class StancePadTest {
     fun theParkedPadCarriesTheAlternatesAndTheSeveranceRoute() {
         show(StanceControlState(pad = StancePadMode.STICKY))
 
-        compose.onNodeWithTag("${TAG}_stance_exact").performClick()
+        compose.onNodeWithTag("${TAG}_stance_exact").performScrollTo().performClick()
         assertThat(exactToggled).isEqualTo(1)
 
-        compose.onNodeWithTag("${TAG}_stance_sever").performClick()
+        compose.onNodeWithTag("${TAG}_stance_sever").performScrollTo().performClick()
         assertThat(severOpened).isEqualTo(1)
 
-        compose.onNodeWithTag("${TAG}_stance_cancel").performClick()
+        compose.onNodeWithTag("${TAG}_stance_cancel").performScrollTo().performClick()
         assertThat(dismissed).isEqualTo(1)
     }
 
@@ -231,7 +232,7 @@ class StancePadTest {
     fun theParkedPadCommitsThroughItsOwnButton() {
         show(StanceControlState(pad = StancePadMode.STICKY))
 
-        compose.onNodeWithTag("${TAG}_stance_set").performClick()
+        compose.onNodeWithTag("${TAG}_stance_set").performScrollTo().performClick()
 
         assertThat(committed).isEqualTo(1)
     }
@@ -274,7 +275,7 @@ class StancePadTest {
         node.performSemanticsAction(SemanticsActions.OnClick)
         assertThat(tapped).isEqualTo(1)
 
-        val actions = node.fetchSemanticsNode().config[SemanticsProperties.CustomActions]
+        val actions = node.fetchSemanticsNode().config[SemanticsActions.CustomActions]
         assertThat(actions.map { it.label }).containsExactly("Pick exactly", "Sever this")
 
         compose.runOnUiThread { actions.first { it.label == "Sever this" }.action() }
