@@ -66,7 +66,7 @@ A generated region: the five counts below are derived from the Convention tables
 | Rows             | 349   |
 | Kinds            | 208   |
 | Declared hybrids | 3     |
-| Device classes   | 4     |
+| Device classes   | 10    |
 
 ## Assignment · `sec:kinds:assignment`
 

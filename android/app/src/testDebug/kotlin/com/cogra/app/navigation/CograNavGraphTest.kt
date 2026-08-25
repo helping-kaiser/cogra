@@ -12,7 +12,9 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
@@ -81,6 +83,9 @@ class CograNavGraphTest {
     @Inject lateinit var notices: SecurityNotices
 
     @Inject lateinit var storageHealth: FakeStorageHealth
+
+    /** The key the fake write repository seals against. */
+    @Inject lateinit var actor: ActorKey
 
     private lateinit var navController: TestNavHostController
 
@@ -780,5 +785,99 @@ class CograNavGraphTest {
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
+    }
+
+    // -- The stance control inside the real shell (design.md §8.3) --
+    //
+    // These exist because the component-level tests all passed while the
+    // device did the opposite. A stance control is a leaf buried in a
+    // feed card: it confirms through the shell's snackbar host, its
+    // touches land on a card that navigates, and its pad is a window of
+    // its own. None of that is visible until the whole frame is real, so
+    // these drive the real graph, the real scaffold and the real
+    // ViewModels.
+
+    /** A signed-in reader on a feed with one post, past the coach mark. */
+    private fun feedWithAPost() {
+        signIn()
+        identity.seed = actor.seed()
+        identity.stancePadTaught = true
+        account.profile = member()
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        content.details["p1"] = com.cogra.domain.PostDetail(
+            post = com.cogra.domain.testing.testPost("p1"),
+            comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
+        )
+        render()
+        waitForTag("feed_post_p1")
+    }
+
+    private fun stanceTarget() =
+        compose.onNodeWithTag("feed_post_p1_stance", useUnmergedTree = true)
+
+    @Test
+    fun aSignedStanceConfirmsOnTheShellsOwnSnackbar() {
+        // The confirmation was silent on the device while six component
+        // tests said otherwise: the shell published one host and drew
+        // another, and nothing composed both until here.
+        feedWithAPost()
+
+        stanceTarget().performClick()
+
+        waitForTag("shell_snackbar")
+    }
+
+    @Test
+    fun holdingAStanceTargetOpensThePadAndNeverThePost() {
+        // The reported leak: hold, let go, and the post detail opened
+        // underneath the pad that should have parked.
+        feedWithAPost()
+
+        stanceTarget().performTouchInput { longClick() }
+        waitForTag("feed_post_p1_stance_pad")
+
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
+    fun aParkedPadNeverFollowsTheReaderOffTheScreen() {
+        // The pad is a window of its own, so an open one drew over
+        // whatever the app navigated to next, and was still standing on
+        // the way back. Leaving the screen dismisses it and stages
+        // nothing (design.md §8.3).
+        feedWithAPost()
+        stanceTarget().performTouchInput { longClick() }
+        waitForTag("feed_post_p1_stance_pad")
+
+        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>() == true
+        }
+
+        // Not over the detail screen...
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes().isEmpty()
+        }
+
+        // ...and not waiting for the reader when they come back.
+        navController.popBackStack()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true
+        }
+        waitForTag("feed_post_p1")
+        assertThat(
+            compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes(),
+        ).isEmpty()
+    }
+
+    @Test
+    fun anUnauthoredTargetWearsAMutedFaceRatherThanTheWordStance() {
+        feedWithAPost()
+
+        compose.onNodeWithTag("feed_post_p1_stance_empty_face", useUnmergedTree = true)
+            .assertExists()
+        assertThat(
+            compose.onAllNodesWithText("Stance", useUnmergedTree = true).fetchSemanticsNodes(),
+        ).isEmpty()
     }
 }

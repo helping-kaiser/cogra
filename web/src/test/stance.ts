@@ -18,6 +18,13 @@ export type SeededStance = {
   readonly pDirected: number;
   readonly pInterest: number;
   readonly recordCount?: number;
+  /**
+   * The raw sums behind the fold (design.md §8.3). They default to the
+   * folded pair, which is the ordinary case of a bundle inside the clip;
+   * a fixture pinning "clipped is not hidden" sets them beyond `±1`.
+   */
+  readonly rawPDirected?: number;
+  readonly rawPInterest?: number;
 };
 
 /**
@@ -34,6 +41,8 @@ export function stanceBundle(stance: SeededStance) {
     __typename: "StanceBundle",
     pDirected: stance.pDirected,
     pInterest: stance.pInterest,
+    rawPDirected: stance.rawPDirected ?? stance.pDirected,
+    rawPInterest: stance.rawPInterest ?? stance.pInterest,
     recordCount,
     inert: stance.pDirected === 0 || stance.pInterest === 0,
     severed: stance.pDirected === 0 && stance.pInterest === 0,

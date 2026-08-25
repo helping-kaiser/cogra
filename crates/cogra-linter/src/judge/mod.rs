@@ -20,6 +20,7 @@
 //! pre-tokenizer already makes for the same reason
 //! (´[ARCH-req:linter:diagnostics-not-panics]´).
 
+pub mod freshness;
 pub mod kinds;
 pub mod labels;
 
@@ -41,6 +42,11 @@ pub const VALIDATION_SUPPRESSED: RuleId = RuleId::new("kind-validation-suppresse
 pub const RULES: [RuleId; 1] = [VALIDATION_SUPPRESSED];
 
 /// Run every judgment the adoption data puts in force, in a fixed order.
+///
+/// Every judgment but one: register freshness needs the committed bytes and
+/// the one generator's own inputs, which this ruled signature does not
+/// carry, so [`freshness::registers`] is called from the run beside this
+/// function and its module says why.
 ///
 /// `kinds` is `None` when the registry document would not parse, and equally
 /// when the carrier does not hold it — a fixture corpus of two files, say.
@@ -80,7 +86,7 @@ pub fn judge_all(
     found.extend(labels::total_resolution(g, r));
     found.extend(labels::warrant_totality(g, r, a));
     found.extend(labels::inventory(g, r));
-    found.extend(labels::generated_compliance(g, r));
+    found.extend(labels::generated_compliance(g, r, a));
     found.extend(labels::anchor_harvest(g, a));
     found.extend(labels::synthetic_citation(g, a));
     match kinds {

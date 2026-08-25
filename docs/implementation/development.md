@@ -125,6 +125,7 @@ make android-test Run Android unit tests; scope to one module with m=feature:hom
 make android-build  Assemble the debug APK
 make android-lint Run Android lint (not a CI gate, convenience only)
 make web-dev      Start the web app dev server over https (needs Node from web/.nvmrc)
+make web-prod     Build the web app and serve it over https — the hand-test path
 make web-apk      Stage the Android debug APK where the web app serves it
 make guest-apk    Build that APK against this machine's dev server, and stage it
 make web-ci       Run the web CI checks (mirrors the web job in ci.yml)
@@ -194,6 +195,43 @@ Both the address and the CA are compiled in, so a guest phone that
 followed the dev machine onto a different network needs a new APK:
 re-run `scripts/stamp-net.sh`, restart the dev server, `make guest-apk`,
 and have the guest download and install it again.
+
+### Hand-testing against a production build
+
+Hand tests run against the production build, not the dev server. The dev
+server compiles each route the first time it is asked for, so on a phone
+over the LAN the first visit to every screen is a wait rather than a
+test; `next build` output answers at once and is what the app ships as.
+
+```bash
+make web-prod    # codegen, next build, then serve https on :3000
+```
+
+One command, and it stays in the foreground serving until interrupted.
+The origin is the same one the dev server uses —
+`https://<the machine's LAN address>:3000` — so a phone that already
+stepped past the certificate warning, and a guest APK built against that
+address, both keep working.
+
+`next start` serves plain http only, and
+[Next's self-hosting guide](https://nextjs.org/docs/app/guides/self-hosting)
+puts a reverse proxy in front of it rather than teaching the server TLS.
+`web/scripts/prod.mjs` is that proxy, built from `node:https` and
+`node:http` alone: it terminates TLS with the mkcert pair
+`scripts/stamp-net.sh` stamped into `web/certificates/` — the same pair
+`next dev` is handed — and forwards to `next start` bound to the
+loopback, so only the TLS front is ever on the LAN. Responses are piped
+rather than collected, because the App Router streams them.
+
+There is no stamped pair on a fresh clone, and the script says so and
+stops rather than generating one: a self-signed stand-in would name
+neither this machine's address nor the CA the guest APK pins. Run
+`scripts/stamp-net.sh` first.
+
+Ports come from the environment where the defaults collide: `PORT` is
+the https port (3000), `WEB_UPSTREAM_PORT` the loopback port `next start`
+takes (3001). The dev path is untouched — `make web-dev` still runs
+`next dev --experimental-https` against the same certificates.
 
 ---
 

@@ -13,6 +13,11 @@
 fragment StanceBundleFields on StanceBundle {
   pDirected
   pInterest
+  # The sums before the clip. The landing line folds them locally so it
+  # can move with the thumb, and every surface that explains cost states
+  # them rather than the clipped fold (design.md §8.3).
+  rawPDirected
+  rawPInterest
   recordCount
   severed
   severanceCost
