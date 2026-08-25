@@ -29,8 +29,12 @@ pub const UNREADABLE_TREE: RuleId = RuleId::new("carrier-unreadable-tree");
 /// A file inside the carrier that could not be read.
 pub const UNREADABLE_SOURCE: RuleId = RuleId::new("carrier-unreadable-source");
 
+/// A configured root the walk found nothing under, where the adoption data
+/// does not say its absence is legal (´conv:lint:owner-assignment´).
+pub const UNMATCHED_ROOT: RuleId = RuleId::new("carrier-unmatched-root");
+
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 2] = [UNREADABLE_TREE, UNREADABLE_SOURCE];
+pub const RULES: [RuleId; 3] = [UNREADABLE_TREE, UNREADABLE_SOURCE, UNMATCHED_ROOT];
 
 /// One carrier source, with everything the harvest needs about it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,6 +61,50 @@ pub struct WalkOutcome {
     pub sources: Vec<SourceFile>,
     /// What it could not read, each located.
     pub failures: Vec<Diagnostic>,
+}
+
+/// The configured roots the walk reached nothing under.
+///
+/// `optional` is a promise the adoption data makes in both directions: a row
+/// carrying it says an absent root is legal and silent — the two working-note
+/// roots of this corpus are gitignored junctions that simply do not exist on
+/// some machines — and a row not carrying it says the tree is one the corpus
+/// has. A rule matching no source is that second promise broken, and saying
+/// nothing about it is what made `optional = false` a key with no check
+/// behind it.
+///
+/// Prefix matching decides this and precedence does not: the question is
+/// whether the root is *there*, not which rule would win a file inside it, so
+/// a rule shadowed by a more specific one before it stays silent. The last
+/// rule's empty prefix matches everything, so a corpus with any source at all
+/// never reports its own root.
+///
+/// The finding carries no path, [`Adoption`] not retaining the file it was
+/// read from (´sig:lint:adoption-api´); the rule's own order names the row.
+///
+/// [`crate::check`] is the one caller, and deliberately: this answers "did
+/// the traversal find the trees the adoption data configures", which only a
+/// traversal can be asked. A source list handed over from elsewhere made no
+/// such claim.
+#[must_use]
+pub fn unmatched_roots(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> {
+    a.partition
+        .rules
+        .iter()
+        .filter(|rule| !rule.optional)
+        .filter(|rule| !sources.iter().any(|src| rule.path.matches(&src.path)))
+        .map(|rule| Diagnostic {
+            rule: UNMATCHED_ROOT,
+            severity: Severity::Error,
+            enforcement: a.enforcement.enforcement_for(Path::new("")),
+            primary: Location::new(PathBuf::new(), ByteSpan::new(0, 0), 0, 0),
+            related: Vec::new(),
+            message: format!(
+                "the partition rule at order {} configures the root {}, which the walk found nothing under, and the row does not mark it optional",
+                rule.order, rule.path
+            ),
+        })
+        .collect()
 }
 
 /// The carrier walk, over one corpus root under one adoption.
