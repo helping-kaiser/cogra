@@ -996,6 +996,22 @@ reason    = "code comments carry occurrences, never environment heads"
 # must not occur in carrier sources; every occurrence is a hard,
 # located diagnostic. Detection is the pre-tokenizer's (ARCH
 # dec:linter:pretokenizer), never a pattern match.
+#
+# EACH ROW CARRIES BOTH class AND token, AND THEY DO DIFFERENT WORK:
+#   class = the pre-tokenizer's own vocabulary token for the lexeme
+#           class this rule forbids. THE LINTER READS THIS ONE, and
+#           it must be a name the lexer decides — "plain line
+#           comment", "plain block comment", "outer line doc
+#           comment", "string literal", and so on. A class no lexer
+#           decides makes the row UNREADABLE: it bans nothing, and
+#           the acceptance suite fails on it rather than letting it
+#           sit here quietly.
+#   token = the same class in this document's own words, with the
+#           illustration a human wants. NO CODE READS IT; it is what
+#           a diagnostic quotes back to a reader.
+# class replaced a recovery that read the class off token's leading
+# name — a machine reading prose written for a person. Adding a row
+# now means naming its class from the lexer's vocabulary.
 ####################################################################
 
 [banned-tokens]
@@ -1003,6 +1019,7 @@ reason    = "code comments carry occurrences, never environment heads"
 [[banned-tokens.rule]]
 id       = "rust-plain-line-comment"
 language = "rust"
+class    = "plain line comment"
 token    = "plain line comment (// not followed by / or !)"
 severity = "error"
 status   = "ruled"
@@ -1020,6 +1037,7 @@ one-time migration sweep — a separate task; the linter only reports."
 [[banned-tokens.rule]]
 id       = "rust-plain-block-comment"
 language = "rust"
+class    = "plain block comment"
 token    = "plain block comment (/* not followed by * or !)"
 severity = "error"
 status   = "ruled"
