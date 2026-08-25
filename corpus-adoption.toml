@@ -189,12 +189,12 @@ note   = "provisional in ARCH preamble; kept verbatim"
 [[signature.prefix]]
 prefix = "ICX"
 owner  = "doc.interchange-conventions"
-note   = "provisional in ARCH preamble; kept verbatim; already in live use — 65 imported citations from the interchange crate's docs and 4 from ARCH itself"
+note   = "provisional in ARCH preamble; kept verbatim; the corpus's most-cited prefix — 70 imported citations in prose (65 from the interchange crate's docs, 4 from ARCH, 1 from the linter's concept) plus 1 in the interchange crate's Rust sources, measured 2026-08-25"
 
 [[signature.prefix]]
 prefix = "ARCH"
 owner  = "doc.linter-architecture"
-note   = "the linter's architecture document is its own owner; prefix already in live use — 16 imported citations from the interchange crate's docs"
+note   = "the linter's architecture document is its own owner; prefix in live use — 60 imported citations, 43 from the linter crate's concept and 17 from the interchange crate's docs, measured 2026-08-25"
 
 # Doc-tree owners. These are NOT major documents; they are the
 # residual groups that make Omega total over docs/ without inventing
@@ -208,22 +208,22 @@ note   = "the linter's architecture document is its own owner; prefix already in
 [[signature.prefix]]
 prefix = "PRIM"
 owner  = "tree.docs-primitive"
-note   = "docs/primitive/ — 17 files, 0 label occurrences today; layer1-interface.md is outside the carrier, see [carrier] vendored_files"
+note   = "docs/primitive/ — 17 files in the carrier; 10 of them carry 42 label-shaped spans, 29 in citation form (measured 2026-08-25). Every one names the Layer 1 document, and all are queued for reforming into displayed spans (R20); layer1-interface.md itself is outside the carrier, see [carrier] vendored_files"
 
 [[signature.prefix]]
 prefix = "INST"
 owner  = "tree.docs-instances"
-note   = "docs/instances/ — 10 files, 0 label occurrences today"
+note   = "docs/instances/ — 10 files; 6 carry 13 label-shaped spans, 7 in citation form (2026-08-25), all queued under R20"
 
 [[signature.prefix]]
 prefix = "IMPL"
 owner  = "tree.docs-implementation"
-note   = "docs/implementation/ — 12 files, 0 label occurrences today. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
+note   = "docs/implementation/ — 13 files; 2 carry 3 label-shaped spans, 1 in citation form (2026-08-25), queued under R20 — reforming them to displayed spans is what keeps them from becoming labels. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
 
 [[signature.prefix]]
 prefix = "DOCS"
 owner  = "tree.docs-root"
-note   = "docs/README.md and docs/open-questions.md"
+note   = "docs/README.md and docs/open-questions.md; the latter carries 3 label-shaped spans, none in citation form (2026-08-25), queued under R20"
 
 [[signature.prefix]]
 prefix = "NOTES"

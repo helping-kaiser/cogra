@@ -359,6 +359,18 @@ crate the prefix `INTERCHANGE`. Prefixes and areas are separate
 namespaces, the three tokens are distinct, and no pair now invites the
 assumption that it names one thing.
 
+**F4. The docs trees carry label-shaped spans, and their targets are
+upstream.** Measured 2026-08-25: 19 files under `docs/` carry 61
+label-shaped spans — 37 in citation form, 24 not, the latter either
+bare in running text or several to a parenthesis, which is no citation
+form at all. Every target is a name of `layer1-interface.md`. Under
+``inv:labels:total-resolution`` each citation-form span resolves
+nowhere, because R2 puts that file outside the carrier; each of the
+others would be read as a **mint**, so prose about the L1 surface would
+become the conceptual home of the L1 team's names. This is F1's hazard
+on the CoGra side of the boundary, and it is the whole distance between
+the linter's first correct run and a green one.
+
 ---
 
 ## Rulings
@@ -505,6 +517,22 @@ profiles are decided, and neither is in force. The test profile enters
 when the first register generation lands (R18), the module profile
 when its comments do. Entering is a commit that flips two fields.
 
+**R20 — The docs trees' label-shaped spans are reformed into displayed
+spans (F4).** They mean what they look like — references to the Layer 1
+surface — and the meaning survives the reforming: a double-backtick
+span shows the name and participates in nothing, so the prose keeps
+saying what it said while the label graph stops seeing it. When the L1
+repository becomes public and its specification joins Σ as a citable
+owner, those spans are promoted to imported citations, the form they
+always wanted (R2's future path). Reforming rather than promotion is
+what happens now, for one reason: the linter runs in CI, the corpus
+migrates before the linter enforces, and a gate that is red on arrival
+teaches a team to route around the gate. The sweep is a queued
+migration, verified by the linter once it exists. One consequence
+worth naming — because the spans become displayed rather than live,
+the docs trees do not thereby take labels, so R5's promotion condition
+for `api-spec.md` and `data-model.md` is not tripped by them.
+
 ---
 
 ## Measurements
@@ -525,6 +553,8 @@ Taken 2026-08-20 unless noted, on the branch as checked out.
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
 | TypeScript sources | 162 `.ts`/`.tsx` |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
-| Files carrying labels today | 7, all in the carrier |
-| Live imported citations | `ICX` 65, `LBL` 21, `ARCH` 16, `IDN` 6, `KND` 5 |
+| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, queued under R20 |
+| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them in citation form |
+| Live imported citations (2026-08-25) | `ICX` 70, `ARCH` 60, `LBL` 59, `KND` 19, `IDN` 14 in prose, plus 1 `ICX` in Rust; `SPEC` and `CODEC` occur once each inside fenced illustrations and participate in nothing |
+| Label-shaped backtick spans in `.rs` doc comments (2026-08-25) | 88 — near-miss warnings, since the code syntax is the acute |
 | Label spans in `layer1-interface.md` | ~364, across 15 areas, 14 kind tokens (outside the carrier) |
