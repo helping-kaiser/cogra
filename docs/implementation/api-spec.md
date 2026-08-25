@@ -2386,6 +2386,10 @@ type StanceBundle {
   "The folded pair as it stands."
   pDirected: Dimension!
   pInterest: Dimension!
+  "The raw sums the fold clips — unbounded, so Float rather than
+   Dimension. What a walk back to zero actually walks."
+  rawPDirected: Float!
+  rawPInterest: Float!
   "How many records the bundle folds."
   recordCount: Int!
   inert: Boolean!
@@ -2397,6 +2401,16 @@ type StanceBundle {
   projected: StanceProjection
 }
 ```
+
+**Both sides of the fold are served.** The clip is the read rule,
+not the storage — a bundle summing to `2.4` on valence folds to
+`1.0`, and the `2.4` is what a walk back to zero actually walks.
+Severance is priced off it: `severanceCost` is
+`⌈max(|Σ_d|, |Σ_i|)⌉`, which the folded pair alone cannot yield.
+Clients recompute the landing the same way, folding `raw + pick`
+locally under the drag so the pad answers with no round trip
+([design.md §8.3](design.md)); `projected` gives a caller the same
+fold server-side in the read that already fetched the bundle.
 
 The field is `viewerStance(pick: StancePickInput, includePending:
 Boolean! = true)` on every stance-able node. `includePending`
