@@ -1,8 +1,10 @@
-//! The open companion: an assigned theory with exactly two relaxations.
+//! The open companion: an assigned theory with two relaxations and a cut.
 //!
 //! For an assigned theory S, Open(S) is S with the minor position of key 1
-//! freed to `uint` and the closure replaced by the base theory's wildcard
-//! `* (uint .gt 1) => any`. Nothing else moves: every content key S names
+//! freed to `uint`, the closure replaced by the base theory's wildcard
+//! `* (uint .gt 1) => any`, and each enumerated content key matched with a
+//! cut, so a present-but-mistyped known key fails rather than falling
+//! through to the wildcard. Nothing else moves: every content key S names
 //! keeps its type and its requiredness
 //! (`design.md`, `alg:xchg:companion`).
 //!
@@ -13,9 +15,10 @@
 //! theories go through the same normalized printer, and the difference
 //! between the two printed forms is the whole of what the derivation did.
 //! An edit of the source string would be a second, unchecked definition of
-//! the same relaxation. The obligation that the difference is exactly two
-//! places is discharged in `tests/companion.rs`, which diffs the two
-//! printed forms and reads the hunks.
+//! the same rewrite. The obligation that the difference is exactly the
+//! freed minor, the added wildcard, and one cut per enumerated key is
+//! discharged in `tests/companion.rs`, which diffs the two printed forms
+//! and reads the hunks.
 //!
 //! # Totality
 //!
@@ -40,8 +43,8 @@ use crate::NamespaceLabel;
 use crate::regexp::XsdPattern;
 
 /// The open companion of an assigned theory: the minor position freed to
-/// `uint`, the closure replaced by the base theory's wildcard, nothing else
-/// moved.
+/// `uint`, the closure replaced by the base theory's wildcard, each
+/// enumerated content key cut, nothing else moved.
 ///
 /// Derived, never assigned. That this is a type distinct from
 /// [`Theory`] is how the crate carries "Open(S) is derived, never assigned
@@ -122,7 +125,7 @@ impl OpenTheory {
     }
 }
 
-/// Derive the companion: clone the parsed tree and apply the two edits.
+/// Derive the companion: clone the parsed tree and apply the rewrite.
 ///
 /// The patterns come across by clone rather than by recompilation: the tree
 /// is a clone, so every `.regexp` operand stands where it stood, and the
@@ -145,7 +148,7 @@ pub(crate) fn derive(theory: &Theory) -> OpenTheory {
     }
 }
 
-/// The two edits, and no third.
+/// The two relaxations and the cut, and nothing more.
 fn relax(cddl: &mut Cddl) -> Option<()> {
     let root = cddl.rules.first_mut()?;
     let span = root.name.span;
@@ -163,11 +166,12 @@ fn relax(cddl: &mut Cddl) -> Option<()> {
     };
 
     free_the_minor(&mut choice.entries)?;
+    cut_content_keys(&mut choice.entries);
     choice.entries.push(wildcard(span));
     Some(())
 }
 
-/// The first edit: the minor position of key 1 becomes the name `uint`.
+/// The first relaxation: the minor position of key 1 becomes the name `uint`.
 fn free_the_minor(entries: &mut [GroupEntry]) -> Option<()> {
     let entry = entries
         .iter_mut()
@@ -195,7 +199,33 @@ fn free_the_minor(entries: &mut [GroupEntry]) -> Option<()> {
     Some(())
 }
 
-/// The second edit: the base theory's wildcard, `* (uint .gt 1) => any`.
+/// The cut: each enumerated content key is pinned with a cut `^`, so a
+/// member present under a key S enumerates is held to S's type there rather
+/// than falling through to the wildcard added below.
+///
+/// Keys 0 and 1 are the envelope, not enumerated content, and the wildcard
+/// cannot reach them anyway — its key is `(uint .gt 1)` — so they are left
+/// as they stand. A content key written in the colon form already carries
+/// an implicit cut (RFC 8610 §3.5.4), so only the `=>` form is touched
+/// here; the `_` arm is the total function's answer where an entry is
+/// neither.
+fn cut_content_keys(entries: &mut [GroupEntry]) {
+    for entry in entries.iter_mut() {
+        if !matches!(fragment::entry_key(entry), Some(key) if key > 1) {
+            continue;
+        }
+        if let GroupEntryKind::Member {
+            key: Some(member_key),
+            ..
+        } = &mut entry.kind
+            && let MemberKeyKind::Type { cut, .. } = &mut member_key.kind
+        {
+            *cut = true;
+        }
+    }
+}
+
+/// The second relaxation: the base theory's wildcard, `* (uint .gt 1) => any`.
 ///
 /// Built as a tree rather than parsed from the schema text, so that the
 /// companion carries no second parse to keep in step with the first. That
