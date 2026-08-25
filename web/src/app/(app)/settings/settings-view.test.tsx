@@ -146,6 +146,17 @@ describe("SettingsView backup", () => {
     expect(await screen.findByTestId("settings_back")).toHaveAttribute("href", "/profile");
   });
 
+  // design.md §8.6: settings are where the alternates to the pad are
+  // offered, and choosing one replaces the pad everywhere.
+  it("offers the alternates to the stance pad, and remembers the choice", async () => {
+    renderSettings();
+    const pad = await screen.findByTestId("settings_stance_input_pad");
+    expect(pad).toBeChecked();
+    fireEvent.click(screen.getByTestId("settings_stance_input_sliders"));
+    await waitFor(() => expect(screen.getByTestId("settings_stance_input_sliders")).toBeChecked());
+    expect(window.localStorage.getItem("cogra.stanceInputMode")).toBe("sliders");
+  });
+
   it("collapses the restore card into the header for a keyless browser", async () => {
     // The key banner rides settings like every main surface
     // (design.md §6).

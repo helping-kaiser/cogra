@@ -1,10 +1,10 @@
 "use client";
 
-// The profile screen (roadmap "Slice 2.1"; design.md §6 "Profile
-// header"): monogram avatar, name, handle, bio, link — and the
-// authored chronicle under filter chips. The header's
-// connection count and the connections sections arrive with the
-// stance slice (open-questions Q35); media covers with slice 2.5.
+// The profile screen (design.md §6 "Profile header"): monogram
+// avatar, name, handle, bio, link, the primary action — and the
+// authored chronicle under filter chips. The header's connection
+// count and the connections sections wait on the fold
+// open-questions Q35 asks for; media covers with slice 2.5.
 // Shared by /u/<handle> (public) and /profile (the viewer's own tab).
 
 import Link from "next/link";
@@ -31,6 +31,7 @@ import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
+import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError } from "@/lib/ui/transport-error";
 
 const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
@@ -208,6 +209,17 @@ export function ProfileScreen({
               >
                 {profile.websiteUrl.value}
               </a>
+            )}
+            {/* The header's primary action on someone else's profile
+                (design.md §6): the interpersonal stance, the same generic
+                gesture a post or a comment takes. */}
+            {!own && (
+              <div className="pt-2">
+                <StanceControl
+                  target={{ id: profile.id, label: `@${profile.handle}` }}
+                  testIdPrefix="profile-stance"
+                />
+              </div>
             )}
             {own && (
               <div className="flex flex-wrap items-center gap-2 pt-2">
