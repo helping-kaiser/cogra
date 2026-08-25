@@ -145,8 +145,9 @@ pub fn tables(parsed: &Parsed) -> Vec<Table> {
 enum Strong {
     /// No bold run opened this block.
     Absent,
-    /// One is open.
-    Open,
+    /// One is open, at this nesting depth — a bold run inside a bold run
+    /// closes the inner one, not the head.
+    Open(usize),
     /// One opened the block and closed at this offset of the region text.
     Closed(usize),
 }
@@ -309,11 +310,12 @@ impl<'a> Walker<'a> {
                 }
             }
             Tag::Strong => {
-                if let Some(frame) = self.frames.last_mut()
-                    && frame.text.is_empty()
-                    && frame.strong == Strong::Absent
-                {
-                    frame.strong = Strong::Open;
+                if let Some(frame) = self.frames.last_mut() {
+                    frame.strong = match frame.strong {
+                        Strong::Absent if frame.text.is_empty() => Strong::Open(1),
+                        Strong::Open(depth) => Strong::Open(depth + 1),
+                        other => other,
+                    };
                 }
             }
             _ => {}
@@ -355,10 +357,12 @@ impl<'a> Walker<'a> {
                 }
             }
             TagEnd::Strong => {
-                if let Some(frame) = self.frames.last_mut()
-                    && frame.strong == Strong::Open
-                {
-                    frame.strong = Strong::Closed(frame.text.len());
+                if let Some(frame) = self.frames.last_mut() {
+                    frame.strong = match frame.strong {
+                        Strong::Open(1) => Strong::Closed(frame.text.len()),
+                        Strong::Open(depth) => Strong::Open(depth - 1),
+                        other => other,
+                    };
                 }
             }
             _ => {}
