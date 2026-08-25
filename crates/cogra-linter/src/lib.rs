@@ -195,6 +195,13 @@ impl Run {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
+/// The configured roots the walk reached nothing under are reported here and
+/// not in [`check_sources`], because they are a fact about *this walk over
+/// this root*: a caller handing over a source list of its own never claimed
+/// to have traversed the corpus, and telling it that the trees it did not
+/// supply are missing would be answering a question it did not ask
+/// (´conv:lint:owner-assignment´).
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory. Nothing else: a
@@ -213,10 +220,12 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         Err(outcome) => (outcome.sources, outcome.failures),
     };
     let walked = walking.elapsed();
+    let roots = crate::carrier::unmatched_roots(a, &sources);
 
     let mut run = check_sources(a, sources);
     run.timing.record(Phase::Harvest, walked);
     run.findings.extend(failures);
+    run.findings.extend(roots);
     run.findings.sort();
     Ok(run)
 }
