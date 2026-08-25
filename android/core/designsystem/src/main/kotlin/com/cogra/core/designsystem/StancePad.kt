@@ -36,7 +36,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -367,7 +369,11 @@ private fun StancePadOverlay(
 ) {
     Card(modifier = Modifier.width(288.dp).testTag("${testTagPrefix}_stance_pad")) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            // A parked pad carries its alternates and the severance
+            // route, which is more than a short screen holds upright.
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
