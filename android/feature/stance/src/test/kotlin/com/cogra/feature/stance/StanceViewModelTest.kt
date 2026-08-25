@@ -14,6 +14,7 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -45,18 +46,26 @@ class StanceViewModelTest {
         var landsOnSeverance = false
         var severanceCalls = 0
 
+        /** Holds the write open, so the pending answer is observable. */
+        var gate: CompletableDeferred<Unit>? = null
+
         override suspend fun prepareStance(
             target: String,
             pick: StancePair,
         ): Outcome<List<PreparedWriteView>> {
+            gate?.await()
             staged += pick
             return prepareOutcome ?: writes.prepareStance(target, pick.pDirected, pick.pInterest)
         }
 
         var standingCalls = 0
+        var standingFails = false
+        val standingPending = mutableListOf<Boolean>()
 
         override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> {
             standingCalls += 1
+            standingPending += includePending
+            if (standingFails) return Outcome.Failed(IllegalStateException("no route to host"))
             return Outcome.Success(StanceStanding(target, net, records, includePending))
         }
 
@@ -127,6 +136,66 @@ class StanceViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(stances.standingCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun aBundleWithNoRecordsIsNoStandingAtAll() = runTest(dispatcher) {
+        // The difference between the labelled affordance and a folded
+        // pair on the target: the origin is a place, not a silence.
+        stances.net = StancePair.Origin
+        stances.records = 0
+        val vm = viewModel()
+
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).standing).isNull()
+        assertThat(entry(vm).standingRead).isTrue()
+    }
+
+    @Test
+    fun aBundleFoldingToTheOriginIsStillAStanding() = runTest(dispatcher) {
+        stances.net = StancePair.Origin
+        stances.records = 4
+        val vm = viewModel()
+
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).standing).isEqualTo(StancePair.Origin)
+    }
+
+    @Test
+    fun theStandingIsReadPendingInclusive() = runTest(dispatcher) {
+        // A stance still settling is one the author already made.
+        val vm = viewModel()
+
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.standingPending).containsExactly(true)
+    }
+
+    @Test
+    fun aFailedStandingReadIsAskedAgainWhenTheControlComesBack() = runTest(dispatcher) {
+        // One transport blip must not leave that card a mystery button
+        // for the rest of the session.
+        stances.standingFails = true
+        stances.net = StancePair(0.4, 0.2)
+        stances.records = 1
+        val vm = viewModel()
+
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).standing).isNull()
+        assertThat(entry(vm).standingRead).isFalse()
+
+        stances.standingFails = false
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.4, 0.2))
+        assertThat(stances.standingCalls).isEqualTo(2)
     }
 
     // -- Writing: the raw-edge rule (design.md §8.1) --
@@ -214,6 +283,92 @@ class StanceViewModelTest {
 
         assertThat(entry(vm).failed).isTrue()
         assertThat(entry(vm).needsKey).isTrue()
+    }
+
+    // -- A tap answers immediately (design.md §8.3) --
+
+    @Test
+    fun aTapMovesTheTargetBeforeTheRecordLands() = runTest(dispatcher) {
+        // Silence reads as failure and invites the same priced act again.
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val gate = CompletableDeferred<Unit>()
+        stances.gate = gate
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTapDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The write is still open, and the target already answers.
+        assertThat(entry(vm).busy).isTrue()
+        assertThat(stances.staged).isEmpty()
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.1, 0.1))
+        assertThat(entry(vm).standingPending).isTrue()
+
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The landed read is the better answer and replaces it.
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.5, 0.5))
+        assertThat(entry(vm).standingPending).isFalse()
+    }
+
+    @Test
+    fun theAnswerIsTheFoldsOwnNeverTheClientsArithmetic() = runTest(dispatcher) {
+        // The pending value comes from asking where the pick LANDS the
+        // bundle; nothing here adds a pick to a standing.
+        identity.stancePadTaught = true
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTapDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.projected).contains(StancePair.TapDefault)
+    }
+
+    @Test
+    fun aSignedStanceLeavesOneConfirmationCarryingTheNewStanding() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.3, 0.2)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTapDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).confirmation).isEqualTo(StancePair(0.3, 0.2))
+
+        vm.onConfirmationShown(TARGET)
+
+        assertThat(entry(vm).confirmation).isNull()
+    }
+
+    @Test
+    fun aFailedWriteLeavesNoConfirmationAndNoPendingAnswer() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.FORBIDDEN, "no")))
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTapDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).confirmation).isNull()
+        assertThat(entry(vm).failed).isTrue()
+        assertThat(entry(vm).standingPending).isFalse()
+        // The promise the pending answer made was not kept, so the fold
+        // is asked again rather than left showing it.
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.4, 0.4))
     }
 
     // -- The pad's own states (design.md §8.3) --

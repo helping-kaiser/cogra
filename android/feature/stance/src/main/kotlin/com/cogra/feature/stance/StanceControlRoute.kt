@@ -46,6 +46,7 @@ fun StanceControlRoute(
         onConfirmSeverance = { viewModel.onConfirmSeverance(target) },
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
         onCoachMarkDismissed = viewModel::onCoachMarkDismissed,
+        onConfirmationShown = { viewModel.onConfirmationShown(target) },
         testTagPrefix = testTagPrefix,
         modifier = modifier,
     )
@@ -82,6 +83,7 @@ internal fun TargetStance.toControlState(coachMark: Boolean) = StanceControlStat
         )
     },
     coachMark = coachMark,
+    confirmation = confirmation?.toPoint(),
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

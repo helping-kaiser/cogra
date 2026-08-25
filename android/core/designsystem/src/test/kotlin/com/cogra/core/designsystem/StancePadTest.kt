@@ -2,6 +2,9 @@ package com.cogra.core.designsystem
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -9,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -17,6 +21,7 @@ import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
@@ -49,6 +54,7 @@ class StancePadTest {
     private var exactToggled = 0
     private var severOpened = 0
     private var coachDismissed = 0
+    private var confirmationsShown = 0
     private val picks = mutableListOf<StancePoint>()
 
     private fun show(state: StanceControlState) {
@@ -68,10 +74,53 @@ class StancePadTest {
                     onConfirmSeverance = {},
                     onDismissSeverance = {},
                     onCoachMarkDismissed = { coachDismissed++ },
+                    onConfirmationShown = { confirmationsShown++ },
                     testTagPrefix = TAG,
                 )
             }
         }
+    }
+
+    // -- What the resting target reads as (design.md §8.3) --
+
+    @Test
+    fun aTargetWithAStandingShowsItsFaceAndFoldedPairAtRest() {
+        // (+0.55, +0.20) is 😊 "Like this". The reader sees where they
+        // stand without opening anything.
+        show(StanceControlState(standing = StancePoint(0.55, 0.20)))
+
+        compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
+            .assertExists()
+        compose.onNodeWithText("😊", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("+0.55 / +0.20", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aTargetWithNoStandingShowsTheLabelledAffordance() {
+        show(StanceControlState(standing = null))
+
+        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun aStandingAtTheOriginIsStillAStanding() {
+        // Severance folds to the origin; that is a standing, not silence.
+        show(StanceControlState(standing = StancePoint.Origin))
+
+        compose.onNodeWithText("+0.00 / +0.00", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theRestingTargetAnnouncesTheStandingBeforeWhatATouchDoes() {
+        show(StanceControlState(standing = StancePoint(0.55, 0.20)))
+
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Where you stand now: How you stand +0.55, In your world +0.20. " +
+                "Tap for a light yes, or press and hold to pick exactly",
+        )
     }
 
     // -- The gesture (design.md §8.3) --
@@ -196,6 +245,7 @@ class StancePadTest {
                     onConfirmSeverance = {},
                     onDismissSeverance = {},
                     onCoachMarkDismissed = { coachDismissed++ },
+                    onConfirmationShown = { confirmationsShown++ },
                     testTagPrefix = TAG,
                 )
             }
@@ -436,6 +486,46 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_coach").assertExists()
         compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
         compose.onNodeWithTag("${TAG}_stance").assertIsDisplayed()
+    }
+
+    // -- The transient confirmation (design.md §8.3) --
+
+    @Test
+    fun aSignedStanceConfirmsOnTheSurfacesSnackbarHost() {
+        val host = SnackbarHostState()
+        compose.setContent {
+            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+                Box(Modifier.fillMaxSize()) {
+                    StanceControl(
+                        state = StanceControlState(
+                            standing = StancePoint(0.1, 0.1),
+                            confirmation = StancePoint(0.1, 0.1),
+                        ),
+                        onTapDefault = {}, onOpenPad = {}, onPick = {}, onCommit = {},
+                        onHold = {}, onDismissPad = {}, onToggleExactValues = {},
+                        onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
+                        onCoachMarkDismissed = {},
+                        onConfirmationShown = { confirmationsShown++ },
+                        testTagPrefix = TAG,
+                    )
+                    SnackbarHost(host, modifier = Modifier.testTag("host"))
+                }
+            }
+        }
+
+        compose.waitForIdle()
+
+        assertThat(host.currentSnackbarData?.visuals?.message)
+            .isEqualTo("Signed. Where you stand now: How you stand +0.10, In your world +0.10")
+        // The one-shot is spent, so a recomposition cannot repeat it.
+        assertThat(confirmationsShown).isEqualTo(1)
+    }
+
+    @Test
+    fun noConfirmationMeansNoSnackbarAndNothingConsumed() {
+        show(StanceControlState(standing = StancePoint(0.1, 0.1)))
+
+        assertThat(confirmationsShown).isEqualTo(0)
     }
 
     @Test

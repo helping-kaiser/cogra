@@ -151,6 +151,12 @@ data class StanceControlState(
     val severance: SeverancePrompt? = null,
     /** The one-time teaching mark for the held gesture (design.md §8.7). */
     val coachMark: Boolean = false,
+    /**
+     * A stance just signed, as the standing it left the reader at — the
+     * transient confirmation of design.md §8.3. A one-shot: the control
+     * shows it once and reports it back through `onConfirmationShown`.
+     */
+    val confirmation: StancePoint? = null,
 )
 
 /** The resting target keeps the platform's minimum (design.md §4, §10). */
@@ -188,6 +194,7 @@ fun StanceControl(
     onConfirmSeverance: () -> Unit,
     onDismissSeverance: () -> Unit,
     onCoachMarkDismissed: () -> Unit,
+    onConfirmationShown: () -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
 ) {
@@ -198,7 +205,15 @@ fun StanceControl(
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(R.string.stance_severance_open)
-    val description = stringResource(R.string.stance_target_action)
+    val action = stringResource(R.string.stance_target_action)
+    val standingLabel = stringResource(R.string.stance_standing)
+    // A target that already carries a standing says so before it says
+    // what a touch does (design.md §8.3).
+    val description = state.standing?.let {
+        stringResource(R.string.stance_target_with_standing, standingLabel, it.reading(), action)
+    } ?: action
+
+    StanceConfirmation(state.confirmation, standingLabel, onConfirmationShown)
 
     Column(modifier) {
         Box(
@@ -242,12 +257,7 @@ fun StanceControl(
                 }
                 .testTag("${testTagPrefix}_stance"),
         ) {
-            Text(
-                text = tapLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            )
+            StanceRestingFace(state.standing, tapLabel, testTagPrefix)
 
             // Both overlays are children of the TARGET, not siblings of
             // it: a popup anchors to its parent's bounds, and anchoring
@@ -471,6 +481,72 @@ private fun StancePadOverlay(
                 }
             }
         }
+    }
+}
+
+/**
+ * What the resting target reads as (design.md §8.3). A viewer with a
+ * bundle toward the thing sees its face and folded pair right there; a
+ * viewer without one sees the labelled affordance.
+ *
+ * The alternative — a button that says the same word whatever you have
+ * already said — is a mystery button, and the bundle is already loaded
+ * by the read that rendered the surface, so showing it costs nothing.
+ * The whole target is one semantics node, so neither half is announced
+ * separately.
+ */
+@Composable
+private fun StanceRestingFace(standing: StancePoint?, tapLabel: String, testTagPrefix: String) {
+    if (standing == null) {
+        Text(
+            text = tapLabel,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .testTag("${testTagPrefix}_stance_label"),
+        )
+        return
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .testTag("${testTagPrefix}_stance_standing_face"),
+    ) {
+        Text(text = nearestStanceAnchor(standing).emoji, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = standing.pair(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+/**
+ * The transient signed-confirmation of design.md §8.3, on the platform's
+ * standard surface. A gesture that stages a priced act must never be
+ * silent — silence reads as failure and invites the same act again —
+ * and it fires once per commit, never on recomposition, because the
+ * state that carries it is consumed as soon as it is shown.
+ */
+@Composable
+private fun StanceConfirmation(
+    confirmation: StancePoint?,
+    standingLabel: String,
+    onShown: () -> Unit,
+) {
+    val host = LocalSnackbarHostState.current
+    val message = confirmation?.let {
+        stringResource(R.string.stance_signed, standingLabel, it.reading())
+    }
+    LaunchedEffect(confirmation) {
+        if (message == null) return@LaunchedEffect
+        // Consumed first: a surface with no host still spends the
+        // one-shot, and a host that is slow never shows it twice.
+        onShown()
+        host?.showSnackbar(message)
     }
 }
 
