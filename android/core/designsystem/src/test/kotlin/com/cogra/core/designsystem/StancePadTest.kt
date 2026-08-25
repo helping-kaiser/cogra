@@ -29,6 +29,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import com.google.common.truth.Truth.assertThat
@@ -60,6 +61,9 @@ class StancePadTest {
     private var confirmationsShown = 0
     private var underneath = 0
     private val picks = mutableListOf<StancePoint>()
+
+    /** What the pad was standing at when Set was pressed, on the live holder. */
+    private var committedPick: StancePoint? = null
 
     private fun show(state: StanceControlState) {
         compose.setContent {
@@ -357,6 +361,131 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_set").assertExists()
     }
 
+    // -- The parked pad still takes drags (design.md §8.3) --
+
+    /** Hold, drift half a unit to the right, release: the pad parks at (+0.50, +0.00). */
+    private fun TouchInjectionScope.holdAndRelease(extent: Float) {
+        down(center)
+        advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+        moveTo(center + Offset(extent / 2f, 0f))
+        up()
+    }
+
+    /** One fresh drag on the parked field, by the given travel. */
+    private fun dragTheField(by: Offset) {
+        compose.onNodeWithTag("stance_field").performTouchInput {
+            down(center)
+            moveTo(center + by)
+            up()
+        }
+    }
+
+    @Test
+    fun aFreshDragOnTheParkedFieldMovesTheKnobAgain() {
+        // The reported bug: once the finger lifted, the knob was frozen —
+        // only the launching gesture could move it. Release never commits
+        // (design.md §8.3), so the pad it leaves open has to stay usable.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+
+        dragTheField(Offset(-extent / 4f, -extent / 2f))
+
+        // Adjusted from where it stood, not restarted from the origin.
+        compose.exactPair().assertTextEquals("+0.25 / +0.50")
+        // And a drag is still not a signature.
+        assertThat(committed).isEqualTo(0)
+        assertThat(dismissed).isEqualTo(0)
+    }
+
+    @Test
+    fun theParkedFieldTakesAsManyFreshDragsAsTheReaderLikes() {
+        // No budget of one: the knob is repositionable until Set or
+        // Cancel, however long the reader takes to decide.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        repeat(4) { dragTheField(Offset(0f, extent / 8f)) }
+
+        compose.exactPair().assertTextEquals("+0.50 / -0.50")
+        assertThat(committed).isEqualTo(0)
+    }
+
+    @Test
+    fun setCommitsTheLastOfTheFreshDragsRatherThanTheFirstPick() {
+        // What Set signs is what the field last read, not what the
+        // opening gesture happened to leave behind.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        dragTheField(Offset(extent / 4f, -extent / 4f))
+        dragTheField(Offset(0f, -extent / 4f))
+        compose.onNodeWithTag("${TAG}_stance_set").performScrollTo().performClick()
+
+        assertThat(committed).isEqualTo(1)
+        assertThat(committedPick?.directed).isNotNull()
+        assertThat(committedPick!!.directed).isWithin(0.02).of(0.75)
+        assertThat(committedPick!!.interest).isWithin(0.02).of(0.5)
+    }
+
+    @Test
+    fun aFreshDragOnTheParkedFieldNeverReachesTheSurfaceUnderneath() {
+        // The #456 rule holds on this path too: the control owns its
+        // touches, and a second drag is one of them (design.md §8.3).
+        showInsideAClickableCard(StanceControlState(pad = StancePadMode.STICKY))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        dragTheField(Offset(extent / 3f, -extent / 3f))
+
+        assertThat(picks).isNotEmpty()
+        assertThat(underneath).isEqualTo(0)
+        assertThat(dismissed).isEqualTo(0)
+        assertThat(committed).isEqualTo(0)
+    }
+
+    @Test
+    fun aPadMidSignatureTakesNoFurtherDrags() {
+        // Set is in flight: the pick it is signing must not move under it.
+        show(StanceControlState(pad = StancePadMode.STICKY, busy = true))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        dragTheField(Offset(extent / 3f, -extent / 3f))
+
+        assertThat(picks).isEmpty()
+    }
+
+    @Test
+    fun noFreshDragEverPutsTheKnobOutsideTheDrawnField() {
+        // The adversarial sweep again, driven through the SECOND gesture:
+        // whatever the thumb does to a parked pad, the knob stays inside
+        // the drawing (design.md §8.3).
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+        val half = with(compose.density) { (FIELD_SIZE / 2).toPx() }
+        val corner = with(compose.density) { FIELD_CORNER.toPx() }
+        val knob = with(compose.density) { KNOB_RADIUS.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { holdAndRelease(extent) }
+        compose.onNodeWithTag("stance_field").performTouchInput {
+            down(center)
+            for (i in -3..3) {
+                for (j in -3..3) {
+                    moveTo(center + Offset(extent * i * 1.7f, extent * j * 1.7f))
+                }
+            }
+            up()
+        }
+
+        assertThat(picks).isNotEmpty()
+        for (pick in picks) {
+            assertThat(knobInsideField(pick, half, corner, knob, extent)).isTrue()
+        }
+    }
+
     @Test
     fun theQuestionMarkExplainsTheControlOnDemand() {
         // The coach mark is spent on the first hold; the `?` is how
@@ -431,7 +560,10 @@ class StancePadTest {
                         picks += it
                         state = state.copy(pick = it)
                     },
-                    onCommit = { committed++ },
+                    onCommit = {
+                        committed++
+                        committedPick = state.pick
+                    },
                     // What the holder does: park the pad, keep the pick.
                     onHold = {
                         held++
