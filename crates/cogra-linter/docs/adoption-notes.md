@@ -15,14 +15,11 @@ first draft of the adoption data exists — Σ, Ω under
 banned-token sets"*. The data exist and every value in them is a
 recorded decision.
 
-**One amendment travels with the ruling.**
-``conv:linter:owner-partition`` names "the Layer 1 interface document"
-among the major documents, and R2 puts that file outside the carrier
-entirely — it has no owner and no prefix. The same gate provides the
-route: its first bullet confirms the partition convention "as stated or
-amended". The amendment is recorded here and is a pending edit to
-`crates/cogra-linter/docs/architecture.md`, which still names the
-document.
+**One amendment travels with the ruling.** R2 puts
+`docs/primitive/layer1-interface.md` outside the carrier entirely — no
+owner, no prefix — and ``conv:linter:owner-partition`` says so, amended
+in the same commit under the gate bullet that confirms the partition
+convention "as stated or amended".
 
 ## What is fixed, and on what authority
 
