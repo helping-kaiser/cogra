@@ -483,7 +483,10 @@ fn the_kinds_section_round_trips() {
         &*kinds.register.standard_place,
         "crates/cogra-linter/docs/attestation-register.md"
     );
-    assert_eq!(&*kinds.register.state, "staged — never generated");
+    assert_eq!(
+        &*kinds.register.state,
+        "generated — compared byte-exact every run"
+    );
 }
 
 #[test]

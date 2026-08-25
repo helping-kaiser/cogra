@@ -84,7 +84,10 @@ fn findings_on_the_failing_set_exit_one() {
     let held = std::fs::read_to_string(&doc).expect("the registry document");
     std::fs::write(
         &doc,
-        held.replace("| Device classes   | 10    |", "| Device classes   | 4     |"),
+        held.replace(
+            "| Device classes   | 10    |",
+            "| Device classes   | 4     |",
+        ),
     )
     .expect("a stale headline table");
 
@@ -125,7 +128,10 @@ fn a_dry_run_writes_nothing() {
     let held = std::fs::read_to_string(&doc).expect("the registry document");
     std::fs::write(
         &doc,
-        held.replace("| Device classes   | 10    |", "| Device classes   | 4     |"),
+        held.replace(
+            "| Device classes   | 10    |",
+            "| Device classes   | 4     |",
+        ),
     )
     .expect("a stale headline table");
     let stale = std::fs::read(&doc).expect("the stale document");
