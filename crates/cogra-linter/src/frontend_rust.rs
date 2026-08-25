@@ -67,11 +67,14 @@ pub const NOT_TEXT: RuleId = RuleId::new("rust-not-utf8");
 /// A Rust source `syn` cannot parse.
 pub const UNPARSABLE: RuleId = RuleId::new("rust-unparsable");
 
-/// A census that needs the Cargo target and was not given one.
+/// A census that classifies by Cargo target and registers no area for the
+/// target its recognized assets lie in.
 ///
-/// Unreachable while every Rust profile is staged, and deliberately kept:
-/// a check that does not exist passes by absence, and the day a profile
-/// enters Π is the day this must be loud rather than a guessed area.
+/// The target itself is never missing — it is the source's own place in the
+/// Cargo layout — so what this reports is a hole in the profile's
+/// `[profiles]` classification, which is a value no run can guess. Loud
+/// rather than a guessed area, and reached only once a profile of that shape
+/// is in force.
 pub const TARGET_UNKNOWN: RuleId = RuleId::new("rust-target-unknown");
 
 /// Every rule this module can report, for the diagnostic inventory.
@@ -311,6 +314,14 @@ fn read(src: &SourceFile, enforcement: Enforcement) -> Result<(&str, syn::File),
 
 /// The assets of the *effective* profiles only, and the findings the
 /// computation owes.
+///
+/// The Cargo target is taken from the source's own place in the layout, which
+/// is the same datum [`censuses`] is handed by the run that walked the corpus
+/// (´dec:lint:migrations-subcommand´). Taking it here rather than through a
+/// parameter is what keeps entering Π a commit that flips two fields: the
+/// frontend contract carries no target, and a check that could not classify
+/// would report every covered asset unclassifiable on the day a profile
+/// enters (´dec:lint:staged-profiles´).
 fn effective_assets(
     src: &SourceFile,
     a: &Adoption,
@@ -325,8 +336,8 @@ fn effective_assets(
         }
         match recognizer(profile) {
             Some(Recognizer::Attributed(harness)) => {
-                let covered = attributed(walk, profile, &harness, None);
-                if covered.is_empty() && !walk.functions.is_empty() {
+                let covered = attributed(walk, profile, &harness, Some(CargoTarget::of(&src.path)));
+                if covered.is_empty() && recognized(walk, &harness) {
                     findings.push(Diagnostic {
                         rule: TARGET_UNKNOWN,
                         severity: Severity::Error,
@@ -334,7 +345,7 @@ fn effective_assets(
                         primary: Location::new(src.path.clone(), ByteSpan::new(0, 0), 1, 1),
                         related: Vec::new(),
                         message: format!(
-                            "profile {} classifies by Cargo target, which the walk did not supply",
+                            "profile {} classifies by Cargo target and registers no area for the one this source lies in",
                             profile.id.as_str()
                         ),
                     });
@@ -346,6 +357,19 @@ fn effective_assets(
         }
     }
     findings
+}
+
+/// Whether any function of this source carries one of the harness tokens.
+///
+/// The census recognized something and produced nothing exactly when the
+/// area lookup failed, which is the one case [`TARGET_UNKNOWN`] reports; a
+/// source with no test in it produces nothing for the ordinary reason.
+fn recognized(walk: &Walk, harness: &[String]) -> bool {
+    walk.functions.iter().any(|hit| {
+        hit.attributes
+            .iter()
+            .any(|segment| harness.iter().any(|token| token == segment))
+    })
 }
 
 /// Which census a profile's `[profiles]` row asks for.
