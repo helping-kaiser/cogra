@@ -549,6 +549,23 @@ amendment and not a new edition. What does move is the generated count of
 device rows in ``tab:kinds:headline-counts``, which no hand touches and
 the linter's first generation run reconciles.
 
+**R22 — Head recognition is adoption data, and matching is
+case-exact.** ``def:kinds:presentation-reduction`` hands the format's
+head mapping to adoption and nothing had recorded it, while
+``inv:kinds:totality`` demands exactly one validation judgment per
+participating authored head — a demand that cannot be met while "head"
+is undefined. `[head-recognition]` records the two forms this corpus
+writes, a bold `Kind (Title)` run and a Markdown heading, each closed
+by the separator and the mint, and names the languages with no head
+form so their silence is a decision rather than an omission.
+Case-exactness follows from the judgment's own word: h must be an
+*exact* catalogue name, the registry catalogues its names capitalized,
+and folding case would widen N by a rule no row authorizes. The one
+head the ruling breaks is the architecture's at
+``open:linter:latex-frontend``, which read "Open question" against the
+catalogue's "Open Question"; correcting one head is cheaper than a
+folding rule and leaves N as the registry wrote it.
+
 ---
 
 ## Measurements
