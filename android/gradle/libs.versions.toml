@@ -68,7 +68,7 @@ junit = "4.13.2"
 coroutinesTest = "1.11.0"
 turbine = "1.2.1"
 truth = "1.4.5"
-mockwebserver = "5.4.0"
+mockwebserver = "5.5.0"
 robolectric = "4.16.1"
 # Robolectric's android-all sandbox jars, one per API level the suites
 # launch on: the library modules' default (minSdk 26), the two levels
