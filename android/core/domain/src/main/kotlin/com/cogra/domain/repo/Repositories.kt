@@ -234,7 +234,13 @@ interface StanceRepository {
 
     /**
      * Where [pick] would land the viewer's bundle toward [target] — the
-     * backend's fold, never the client's arithmetic (design.md §8.1).
+     * backend's fold, and the authority.
+     *
+     * The stance pad no longer asks this under the thumb: a round trip
+     * per pick put the landing about a second behind the face, so the
+     * pad folds the served raw sums locally for display instead
+     * (design.md §8.3, `localLanding`). This stays as the authoritative
+     * answer for any surface that needs one rather than a live readout.
      */
     suspend fun projection(
         target: String,

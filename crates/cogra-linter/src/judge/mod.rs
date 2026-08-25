@@ -86,7 +86,7 @@ pub fn judge_all(
     found.extend(labels::total_resolution(g, r));
     found.extend(labels::warrant_totality(g, r, a));
     found.extend(labels::inventory(g, r));
-    found.extend(labels::generated_compliance(g, r));
+    found.extend(labels::generated_compliance(g, r, a));
     found.extend(labels::anchor_harvest(g, a));
     found.extend(labels::synthetic_citation(g, a));
     match kinds {

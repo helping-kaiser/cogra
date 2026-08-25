@@ -26,17 +26,19 @@ export type StubTargetState = {
 
 export type StubFold = (records: readonly StancePair[]) => StancePair;
 
-/** Sum the picks and bound the result — a stand-in, replaced at the seam. */
-export const sumFold: StubFold = (records) =>
-  clampPair(
-    records.reduce(
-      (net, record) => ({
-        pDirected: net.pDirected + record.pDirected,
-        pInterest: net.pInterest + record.pInterest,
-      }),
-      ORIGIN,
-    ),
+/** The unclipped sum of the records — the bundle's raw sums (§8.3). */
+export function rawSumOf(records: readonly StancePair[]): StancePair {
+  return records.reduce(
+    (net, record) => ({
+      pDirected: net.pDirected + record.pDirected,
+      pInterest: net.pInterest + record.pInterest,
+    }),
+    ORIGIN,
   );
+}
+
+/** Sum the picks and bound the result — a stand-in, replaced at the seam. */
+export const sumFold: StubFold = (records) => clampPair(rawSumOf(records));
 
 /** The backend's own reading of its fold — "either axis at zero". */
 function inertOf(pair: StancePair): boolean {
@@ -52,6 +54,13 @@ export type StubStanceOptions = {
   /** Seed standing, by target id. */
   readonly seed?: Readonly<Record<string, StubTargetState>>;
   readonly fold?: StubFold;
+  /**
+   * The raw sums the bundle serves, independently of the fold. The two
+   * are separate on the wire precisely because one cannot be recovered
+   * from the other (§8.3), so a fixture that wants to prove which one a
+   * surface reads sets them apart.
+   */
+  readonly rawSum?: StubFold;
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
 };
@@ -72,6 +81,7 @@ const OFFLINE = () => failed(new Error("stub stance data is offline"));
 
 export function createStubStanceData(options: StubStanceOptions = {}): StubStanceData {
   const fold = options.fold ?? sumFold;
+  const rawSum = options.rawSum ?? rawSumOf;
   const state = new Map<string, StancePair[]>(
     Object.entries(options.seed ?? {}).map(([target, seeded]) => [target, [...seeded.records]]),
   );
@@ -101,6 +111,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
       const net = records.length === 0 ? ORIGIN : fold(records);
       return success({
         current: net,
+        rawSum: rawSum(records),
         records: records.length,
         inert: inertOf(net),
         severed: severedOf(net),

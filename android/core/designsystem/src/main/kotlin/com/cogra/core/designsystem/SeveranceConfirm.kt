@@ -49,8 +49,21 @@ fun SeveranceConfirm(
                 Text(stringResource(R.string.stance_severance_body))
                 // This is where the read-side guidance belongs: what the
                 // reader stands at, and what reaching zero takes.
+                //
+                // A standing already at exactly (0, 0) is named, never
+                // read through the anchor table — which would call the
+                // absence of a feeling "Nice" (design.md §8.4).
+                //
+                // The numbers here are the RAW sums, not the clipped
+                // fold: the cost below is counted from the raw history,
+                // and "+1.00" beside "6 signed actions" reads as a
+                // control that cannot add up (design.md §8.3).
                 Text(
-                    text = "${stringResource(R.string.stance_standing)}: ${prompt.standing.reading()}",
+                    text = if (prompt.raw.isZeroBundle) {
+                        "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_zero)}"
+                    } else {
+                        "${stringResource(R.string.stance_standing_raw)}: ${prompt.raw.reading()}"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.testTag("${testTagPrefix}_severance_standing"),
                 )

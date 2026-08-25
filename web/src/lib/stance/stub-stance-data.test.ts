@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ORIGIN, TAP_DEFAULT } from "./model";
-import { createStubStanceData, sumFold } from "./stub-stance-data";
+import { createStubStanceData, rawSumOf, sumFold } from "./stub-stance-data";
 import type { StanceTarget } from "./stance-data";
 
 const T: StanceTarget = { id: "t", kind: "post" };
@@ -18,6 +18,7 @@ describe("the stance stand-in", () => {
       kind: "success",
       value: {
         current: ORIGIN,
+        rawSum: ORIGIN,
         records: 0,
         inert: true,
         severed: true,
@@ -35,11 +36,50 @@ describe("the stance stand-in", () => {
       kind: "success",
       value: {
         current: sumFold([TAP_DEFAULT, { pDirected: 0.4, pInterest: -0.5 }]),
+        rawSum: rawSumOf([TAP_DEFAULT, { pDirected: 0.4, pInterest: -0.5 }]),
         records: 2,
         inert: false,
         severed: false,
         severance: { records: 2 },
       },
+    });
+  });
+
+  it("serves raw sums that survive the clip the fold applies", async () => {
+    // The two are separate on the wire because one cannot be recovered
+    // from the other (§8.3); the stand-in has to keep them separate too,
+    // or no test could tell which one a surface reads.
+    const data = createStubStanceData({
+      seed: {
+        t: {
+          records: [
+            { pDirected: 0.9, pInterest: 0.1 },
+            { pDirected: 0.9, pInterest: 0.1 },
+          ],
+        },
+      },
+    });
+
+    const outcome = await data.bundle(T);
+
+    expect(outcome).toMatchObject({
+      kind: "success",
+      value: {
+        current: { pDirected: 1, pInterest: 0.2 },
+        rawSum: { pDirected: 1.8, pInterest: 0.2 },
+      },
+    });
+  });
+
+  it("lets a fixture set the raw sums apart from the fold", async () => {
+    const data = createStubStanceData({
+      seed: { t: { records: [TAP_DEFAULT] } },
+      rawSum: () => ({ pDirected: 4, pInterest: -4 }),
+    });
+
+    expect(await data.bundle(T)).toMatchObject({
+      kind: "success",
+      value: { current: TAP_DEFAULT, rawSum: { pDirected: 4, pInterest: -4 } },
     });
   });
 
