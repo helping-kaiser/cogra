@@ -198,7 +198,10 @@ mod tests {
         let mut timing = Timing::new();
         timing.record(Phase::Pretokenize, Duration::from_micros(300));
         timing.record(Phase::Pretokenize, Duration::from_micros(700));
-        assert_eq!(timing.of(Phase::Pretokenize), Some(Duration::from_millis(1)));
+        assert_eq!(
+            timing.of(Phase::Pretokenize),
+            Some(Duration::from_millis(1))
+        );
     }
 
     #[test]
