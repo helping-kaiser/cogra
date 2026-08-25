@@ -415,29 +415,6 @@ pub async fn chain_head(
     .await?)
 }
 
-/// The net of one author's Opinion bundle toward one node — the sum of
-/// the authored parameters across their accepted Opinion records
-/// (api-spec "The generic stance": the client states intent as the net;
-/// the backend derives the delta record from this read).
-pub async fn net_opinion(
-    pool: &PgPool,
-    author_source: &str,
-    target: &str,
-) -> Result<(f64, f64), MirrorError> {
-    let row = sqlx::query!(
-        r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
-                  COALESCE(SUM(p_i), 0)::float8 AS "p_i!"
-           FROM mirror_record_legs
-           WHERE family = 'opinion' AND leg = 'binary'
-             AND source = $1 AND target = $2"#,
-        author_source,
-        target,
-    )
-    .fetch_one(pool)
-    .await?;
-    Ok((row.p_d, row.p_i))
-}
-
 /// Whether any accepted Opinion by the author toward the node is in the
 /// mirror — existence, not net: a bundle netting to zero still holds the
 /// gesture (auth.md "Reciprocation is the joiner's own act").
