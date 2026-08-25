@@ -8,6 +8,7 @@ package com.cogra.domain.store
 
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.stance.StanceInputMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -80,13 +81,26 @@ interface IdentityStore {
     suspend fun markReciprocationDismissed()
 
     /**
-     * Device-local UX state: whether the stance pad's one-time coach
-     * mark has been shown. A held gesture is invisible until taught, and
-     * the teaching is per device, not per account (design.md §8.7).
+     * Device-local UX state: whether the tap that teaches the held
+     * gesture has been spent. Set when the coach mark opens, so a
+     * restart cannot swallow a second priced tap in silence
+     * (design.md §8.7). Account-scoped like the rest of this store: the
+     * lesson belongs to the person, not to the hardware.
      */
     suspend fun stancePadTaught(): Boolean
 
     suspend fun markStancePadTaught()
+
+    /**
+     * Which surface the stance control offers, everywhere (design.md
+     * §8.6). A rendering preference with nothing private in it, kept
+     * here because this is the device's preference store; a Flow because
+     * changing it in Settings has to reach controls already composed on
+     * another destination.
+     */
+    val stanceInputMode: Flow<StanceInputMode>
+
+    suspend fun setStanceInputMode(mode: StanceInputMode)
 
     /**
      * The "don't remember me" opt-in (auth.md "Sign-out"): whether the

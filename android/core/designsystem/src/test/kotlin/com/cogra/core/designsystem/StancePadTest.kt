@@ -2,20 +2,32 @@ package com.cogra.core.designsystem
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -23,6 +35,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 private const val TAG = "post"
+
+/** The pair sits inside the readout's merged announcement, so it is read unmerged. */
+private fun ComposeContentTestRule.exactPair() =
+    onNodeWithTag("${TAG}_stance_exact_pair", useUnmergedTree = true)
 
 @RunWith(RobolectricTestRunner::class)
 class StancePadTest {
@@ -38,6 +54,7 @@ class StancePadTest {
     private var exactToggled = 0
     private var severOpened = 0
     private var coachDismissed = 0
+    private var confirmationsShown = 0
     private val picks = mutableListOf<StancePoint>()
 
     private fun show(state: StanceControlState) {
@@ -57,10 +74,53 @@ class StancePadTest {
                     onConfirmSeverance = {},
                     onDismissSeverance = {},
                     onCoachMarkDismissed = { coachDismissed++ },
+                    onConfirmationShown = { confirmationsShown++ },
                     testTagPrefix = TAG,
                 )
             }
         }
+    }
+
+    // -- What the resting target reads as (design.md §8.3) --
+
+    @Test
+    fun aTargetWithAStandingShowsItsFaceAndFoldedPairAtRest() {
+        // (+0.55, +0.20) is 😊 "Like this". The reader sees where they
+        // stand without opening anything.
+        show(StanceControlState(standing = StancePoint(0.55, 0.20)))
+
+        compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
+            .assertExists()
+        compose.onNodeWithText("😊", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("+0.55 / +0.20", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aTargetWithNoStandingShowsTheLabelledAffordance() {
+        show(StanceControlState(standing = null))
+
+        compose.onNodeWithTag("${TAG}_stance_label", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun aStandingAtTheOriginIsStillAStanding() {
+        // Severance folds to the origin; that is a standing, not silence.
+        show(StanceControlState(standing = StancePoint.Origin))
+
+        compose.onNodeWithText("+0.00 / +0.00", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theRestingTargetAnnouncesTheStandingBeforeWhatATouchDoes() {
+        show(StanceControlState(standing = StancePoint(0.55, 0.20)))
+
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Where you stand now: How you stand +0.55, In your world +0.20. " +
+                "Tap for a light yes, or press and hold to pick exactly",
+        )
     }
 
     // -- The gesture (design.md §8.3) --
@@ -99,14 +159,14 @@ class StancePadTest {
     @Test
     fun driftingMapsValenceAcrossAndConnectionUpThenCommitsOnRelease() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
-        // The field's radius is 120dp: half of that to the right and a
-        // quarter of it upward should read as (+0.5, +0.25).
-        val radius = with(compose.density) { 120.dp.toPx() }
+        // One unit of either parameter is FIELD_EXTENT of travel: half
+        // of that to the right and a quarter of it up reads (+0.5, +0.25).
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         compose.onNodeWithTag("${TAG}_stance").performTouchInput {
             down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
-            moveTo(center + Offset(radius / 2f, -radius / 4f))
+            moveTo(center + Offset(extent / 2f, -extent / 4f))
             up()
         }
 
@@ -119,21 +179,125 @@ class StancePadTest {
     @Test
     fun theSquareStaysReachableAndTravelBeyondItClamps() {
         show(StanceControlState(pad = StancePadMode.DRAGGING))
-        val radius = with(compose.density) { 120.dp.toPx() }
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         compose.onNodeWithTag("${TAG}_stance").performTouchInput {
             down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
             // Past the corner: the far corner is still expressible, and
             // nothing beyond it exists (design.md §8.2).
-            moveTo(center + Offset(radius * 1.4f, -radius * 1.4f))
+            moveTo(center + Offset(extent * 1.4f, -extent * 1.4f))
             up()
         }
 
         assertThat(picks.last()).isEqualTo(StancePoint(1.0, 1.0))
     }
 
+    @Test
+    fun noDragAnywhereEverPutsTheKnobOutsideTheDrawnField() {
+        // The adversarial sweep, driven through the real gesture rather
+        // than the mapping alone: whatever the thumb does, the picks it
+        // reports keep the knob inside the drawing (design.md §8.3).
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+        val half = with(compose.density) { (FIELD_SIZE / 2).toPx() }
+        val corner = with(compose.density) { FIELD_CORNER.toPx() }
+        val knob = with(compose.density) { KNOB_RADIUS.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            for (i in -3..3) {
+                for (j in -3..3) {
+                    moveTo(center + Offset(extent * i * 1.7f, extent * j * 1.7f))
+                }
+            }
+            up()
+        }
+
+        assertThat(picks).isNotEmpty()
+        for (pick in picks) {
+            assertThat(knobInsideField(pick, half, corner, knob, extent)).isTrue()
+        }
+    }
+
+    /** The same control, but holding its own pick, so a drag moves it. */
+    private fun showLive(initial: StanceControlState = StanceControlState()) {
+        compose.setContent {
+            var state by remember { mutableStateOf(initial) }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                StanceControl(
+                    state = state,
+                    onTapDefault = { tapped++ },
+                    onOpenPad = {
+                        opened++
+                        state = state.copy(pad = StancePadMode.DRAGGING, pick = StancePoint.Origin)
+                    },
+                    onPick = {
+                        picks += it
+                        state = state.copy(pick = it)
+                    },
+                    onCommit = { committed++ },
+                    onHold = { held++ },
+                    onDismissPad = { dismissed++ },
+                    onToggleExactValues = { exactToggled++ },
+                    onOpenSeverance = { severOpened++ },
+                    onConfirmSeverance = {},
+                    onDismissSeverance = {},
+                    onCoachMarkDismissed = { coachDismissed++ },
+                    onConfirmationShown = { confirmationsShown++ },
+                    testTagPrefix = TAG,
+                )
+            }
+        }
+    }
+
     // -- The readout (design.md §8.4) --
+
+    @Test
+    fun theExactPairIsPartOfTheDefaultReading() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.4, 0.2)))
+
+        compose.exactPair().assertTextEquals("+0.40 / +0.20")
+    }
+
+    @Test
+    fun theExactPairFollowsTheDragLive() {
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent / 2f, 0f))
+        }
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            moveTo(center + Offset(-extent, -extent / 4f))
+            up()
+        }
+        compose.exactPair().assertTextEquals("-1.00 / +0.25")
+    }
+
+    @Test
+    fun aValueThatRoundsToZeroIsWrittenWithoutANegativeSign() {
+        // Travel straight along one axis leaves the other at negative
+        // zero; "-0.00" reads as a broken control.
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.5, -0.0)))
+
+        compose.exactPair().assertTextEquals("+0.50 / +0.00")
+    }
+
+    @Test
+    fun theExactPairIsAnnouncedWithItsAxesNamed() {
+        // Compact on screen, never a bare pair to a screen reader: the
+        // readout is announced once, and the axes ride that announcement.
+        show(StanceControlState(pad = StancePadMode.DRAGGING, pick = StancePoint(0.4, 0.2)))
+
+        compose.onNodeWithTag("${TAG}_stance_readout")
+            .assertContentDescriptionContains("How you stand +0.40, In your world +0.20")
+    }
 
     @Test
     fun theReadoutSpeaksThePickInWordsNotTheBundle() {
@@ -202,6 +366,41 @@ class StancePadTest {
             .assertTextContains("back to nothing", substring = true)
     }
 
+    // -- Where the pad opens (design.md §8.3) --
+    //
+    // WHERE it lands is arithmetic, and PadBesideTargetTest is its
+    // oracle: a popup lives in its own window, so its coordinates in a
+    // Compose test are window-local and say nothing about the screen.
+    // What is worth pinning here is that a pad which opened stays open
+    // for the gesture that opened it.
+
+    @Test
+    fun aBloomedPadOpensBesideTheTargetItBelongsTo() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        // The target itself keeps its place; the pad never replaces it.
+        compose.onNodeWithTag("${TAG}_stance").assertIsDisplayed()
+    }
+
+    @Test
+    fun aDrifitngThumbNeverDismissesItsOwnPad() {
+        // The pad follows one continuous gesture; only a release or a
+        // cancel ends it.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput {
+            down(center)
+            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
+            moveTo(center + Offset(extent, -extent))
+            moveTo(center + Offset(-extent, extent))
+        }
+
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        assertThat(dismissed).isEqualTo(0)
+    }
+
     // -- The parked pad: alternates and the severance route --
 
     @Test
@@ -226,6 +425,91 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_slider_interest").assertExists()
         compose.onNodeWithTag("${TAG}_stance_entry_directed").assertExists()
         compose.onNodeWithTag("${TAG}_stance_entry_interest").assertExists()
+    }
+
+    // -- The alternates as the chosen input (design.md §8.6) --
+
+    @Test
+    fun choosingSlidersReplacesTheFieldWithThem() {
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                inputMode = StanceInputSurface.SLIDERS,
+            ),
+        )
+
+        compose.onNodeWithTag("stance_field").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_slider_directed").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_slider_interest").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertDoesNotExist()
+        // The toggle belongs to the pad; the chosen surface is not a
+        // panel to open and shut.
+        compose.onNodeWithTag("${TAG}_stance_exact").assertDoesNotExist()
+    }
+
+    @Test
+    fun choosingTypedValuesReplacesTheFieldWithThem() {
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                inputMode = StanceInputSurface.ENTRY,
+            ),
+        )
+
+        compose.onNodeWithTag("stance_field").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_entry_directed").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_entry_interest").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_slider_directed").assertDoesNotExist()
+    }
+
+    @Test
+    fun thePadIsStillDrawnWhenThePadIsTheChosenInput() {
+        show(StanceControlState(pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("stance_field").assertExists()
+    }
+
+    @Test
+    fun anAlternateParksOnTheHoldRatherThanDriftingAField() {
+        // There is no field to drift across, so the hold opens the
+        // chosen surface and a release commits nothing by accident.
+        show(StanceControlState(inputMode = StanceInputSurface.SLIDERS))
+
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { longClick() }
+
+        assertThat(opened).isEqualTo(1)
+        assertThat(held).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
+        assertThat(picks).isEmpty()
+    }
+
+    @Test
+    fun anAlternateStillCommitsThroughItsOwnButton() {
+        show(StanceControlState(pad = StancePadMode.STICKY, inputMode = StanceInputSurface.ENTRY))
+
+        compose.onNodeWithTag("${TAG}_stance_set").performScrollTo().performClick()
+
+        assertThat(committed).isEqualTo(1)
+    }
+
+    @Test
+    fun anAlternateKeepsTheSeveranceRouteFindable() {
+        // The pad never opens for this reader, so severance has to be
+        // reachable from the surface that replaced it (design.md §8.5).
+        show(StanceControlState(pad = StancePadMode.STICKY, inputMode = StanceInputSurface.SLIDERS))
+
+        compose.onNodeWithTag("${TAG}_stance_sever").performScrollTo().performClick()
+
+        assertThat(severOpened).isEqualTo(1)
+    }
+
+    @Test
+    fun aTapStillCommitsTheDefaultWhateverTheChosenInput() {
+        show(StanceControlState(inputMode = StanceInputSurface.ENTRY))
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+
+        assertThat(tapped).isEqualTo(1)
     }
 
     @Test
@@ -262,6 +546,74 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_coach_dismiss").performClick()
 
         assertThat(coachDismissed).isEqualTo(1)
+    }
+
+    @Test
+    fun theCoachMarkOutlivesTheTouchesAroundIt() {
+        // It used to vanish before it could be read: a popup that
+        // dismisses on any outside click counts the very touch that
+        // spawned it (design.md §8.7).
+        show(StanceControlState(coachMark = true))
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+        compose.onNodeWithTag("${TAG}_stance").performTouchInput { swipeUp() }
+
+        compose.onNodeWithTag("${TAG}_stance_coach").assertExists()
+        assertThat(coachDismissed).isEqualTo(0)
+    }
+
+    @Test
+    fun theCoachMarkAndThePadShareOneAnchoredSurface() {
+        // Both belong to the target: the mark explains it and the pad
+        // edits it, so neither is a sibling floating over the feed.
+        show(StanceControlState(coachMark = true, pad = StancePadMode.DRAGGING))
+
+        compose.onNodeWithTag("${TAG}_stance_coach").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_pad").assertExists()
+        compose.onNodeWithTag("${TAG}_stance").assertIsDisplayed()
+    }
+
+    // -- The transient confirmation (design.md §8.3) --
+
+    @Test
+    fun aSignedStanceConfirmsOnTheSurfacesSnackbarHost() {
+        val host = SnackbarHostState()
+        compose.setContent {
+            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+                Box(Modifier.fillMaxSize()) {
+                    StanceControl(
+                        state = StanceControlState(
+                            standing = StancePoint(0.1, 0.1),
+                            confirmation = StancePoint(0.1, 0.1),
+                        ),
+                        onTapDefault = {}, onOpenPad = {}, onPick = {}, onCommit = {},
+                        onHold = {}, onDismissPad = {}, onToggleExactValues = {},
+                        onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
+                        onCoachMarkDismissed = {},
+                        onConfirmationShown = { confirmationsShown++ },
+                        testTagPrefix = TAG,
+                    )
+                    SnackbarHost(host, modifier = Modifier.testTag("host"))
+                }
+            }
+        }
+
+        compose.waitForIdle()
+
+        assertThat(host.currentSnackbarData?.visuals?.message)
+            .isEqualTo(
+                "Signed, still settling. " +
+                    "Where you stand now: How you stand +0.10, In your world +0.10",
+            )
+        // The one-shot is spent, so a recomposition cannot repeat it.
+        assertThat(confirmationsShown).isEqualTo(1)
+    }
+
+    @Test
+    fun noConfirmationMeansNoSnackbarAndNothingConsumed() {
+        show(StanceControlState(standing = StancePoint(0.1, 0.1)))
+
+        assertThat(confirmationsShown).isEqualTo(0)
     }
 
     @Test
