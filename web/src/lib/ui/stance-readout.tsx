@@ -8,7 +8,9 @@
 //   - The FACE is the lossy readout of the edge being authored — this
 //     pick, not the bundle it joins (§8.4). Conflating the two would make
 //     the face mean something different depending on history, which is
-//     exactly what a readout must not do.
+//     exactly what a readout must not do. The EXACT PAIR sits with it and
+//     is equally default: the face carries the feel and the pair carries
+//     the fact, and hiding either makes the other harder to trust (§8.3).
 //   - "This leaves you at: …" sits BELOW the field. It is the bundle
 //     after the pick — the fold's answer, read from the backend and
 //     rendered here. The control never derives it, and never decides for
@@ -23,11 +25,16 @@
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
-import { formatStanceWords } from "@/lib/ui/stance-format";
+import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 
 function face(pair: StancePair): string {
   const anchor = nearestAnchor(pair);
   return `${anchor.emoji} ${anchor.label}`;
+}
+
+/** The face, the words, and the exact pair — the default reading (§8.3). */
+export function reading(pair: StancePair): string {
+  return `${face(pair)} ${formatStancePair(pair)}`;
 }
 
 /** `undefined` while the standing is still being read, `null` where it could not be. */
@@ -39,7 +46,9 @@ export function standingLine(bundle: BundleState, targetLabel: string): string {
     return `You haven't taken a stance on ${targetLabel} yet.`;
   }
   if (bundle.severed) return `You've severed ${targetLabel}.`;
-  return `Where you stand now: ${face(bundle.current)}`;
+  // The folded pair rides along with the face: §8.3 makes the numbers
+  // part of the default reading wherever the standing is shown.
+  return `Where you stand now: ${reading(bundle.current)}`;
 }
 
 /**
@@ -71,14 +80,11 @@ export function StanceStanding({
   pick,
   bundle,
   targetLabel,
-  showExact = false,
   testIdPrefix,
 }: {
   pick: StancePair;
   bundle: BundleState;
   targetLabel: string;
-  /** Exact values stay available, but are never the default reading (§8.3). */
-  showExact?: boolean;
   testIdPrefix: string;
 }) {
   return (
@@ -92,14 +98,14 @@ export function StanceStanding({
       <p data-testid={`${testIdPrefix}-face`} className="text-title-large">
         {face(pick)}
       </p>
-      {showExact && (
-        <p
-          data-testid={`${testIdPrefix}-exact`}
-          className="text-body-small text-on-surface-variant"
-        >
-          {formatStanceWords(pick)}
-        </p>
-      )}
+      {/* The numbers are part of the default reading, not an option
+          (§8.3). The compact pair is what the eye tracks against the
+          drag; the axes are named for a reader who has no field in front
+          of them to say which number is which. */}
+      <p data-testid={`${testIdPrefix}-exact`} className="text-body-small text-on-surface-variant">
+        <span aria-hidden="true">{formatStancePair(pick)}</span>
+        <span className="sr-only">{formatStanceWords(pick)}</span>
+      </p>
     </div>
   );
 }
