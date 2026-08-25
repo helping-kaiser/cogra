@@ -63,6 +63,8 @@ export type StubStanceData = StanceData & {
   readonly severed: readonly string[];
   /** `includePending` as each read received it. */
   readonly pendingFlags: readonly boolean[];
+  /** `fresh` as each STANDING read received it — the post-write witness. */
+  readonly freshFlags: readonly boolean[];
   recordsOf(target: string): readonly StancePair[];
 };
 
@@ -76,6 +78,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
   const sent: { target: string; pick: StancePair }[] = [];
   const severed: string[] = [];
   const pendingFlags: boolean[] = [];
+  const freshFlags: boolean[] = [];
 
   const recordsOf = (target: string): StancePair[] => state.get(target) ?? [];
 
@@ -87,11 +90,13 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     sent,
     severed,
     pendingFlags,
+    freshFlags,
     recordsOf,
 
     async bundle(target: StanceTarget, readOptions): Promise<Outcome<StanceBundle>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
+      freshFlags.push(readOptions?.fresh === true);
       const records = recordsOf(target.id);
       const net = records.length === 0 ? ORIGIN : fold(records);
       return success({

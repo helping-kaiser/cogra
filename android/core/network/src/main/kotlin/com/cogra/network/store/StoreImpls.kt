@@ -8,12 +8,16 @@ import com.cogra.crypto.WireException
 import com.cogra.crypto.decodeProposal
 import com.cogra.crypto.encodeProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -78,6 +82,7 @@ class TokenStoreImpl @Inject constructor(private val store: EncryptedStore) : To
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class IdentityStoreImpl @Inject constructor(
     private val store: EncryptedStore,
@@ -198,6 +203,26 @@ class IdentityStoreImpl @Inject constructor(
         key(STANCE_PAD_TAUGHT)?.let { store.put(it, byteArrayOf(1)) }
     }
 
+    // Follows the active account: a Settings change has to reach controls
+    // already composed on another destination, and a sign-in has to bring
+    // that account's own choice with it. An unreadable or unknown value
+    // is the default rather than a fault — this is a rendering
+    // preference, not a secret.
+    override val stanceInputMode: Flow<StanceInputMode> =
+        tokens.tokens.flatMapLatest { pair ->
+            val account = pair?.accountId
+                ?: return@flatMapLatest flowOf(StanceInputMode.Default)
+            store.watch(scoped(account, STANCE_INPUT_MODE)).map { bytes ->
+                bytes?.decodeToString()?.let { name ->
+                    StanceInputMode.entries.firstOrNull { it.name == name }
+                } ?: StanceInputMode.Default
+            }
+        }
+
+    override suspend fun setStanceInputMode(mode: StanceInputMode) {
+        key(STANCE_INPUT_MODE)?.let { store.put(it, mode.name.encodeToByteArray()) }
+    }
+
     // No adoption: the flag arrived with multi-account custody, so no
     // legacy record can exist.
     override suspend fun forgetOnSignOut(): Boolean =
@@ -221,6 +246,7 @@ class IdentityStoreImpl @Inject constructor(
         const val PENDING_BLOB = "pending_backup_blob"
         const val RECIPROCATION = "reciprocation_dismissed"
         const val STANCE_PAD_TAUGHT = "stance_pad_taught"
+        const val STANCE_INPUT_MODE = "stance_input_mode"
         const val FORGET = "forget_on_sign_out"
         const val HS_PREFIX = "handshake:"
     }
