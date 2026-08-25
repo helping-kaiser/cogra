@@ -30,7 +30,7 @@ says which:
    data every profile must fix; the fact that Π ⊆ K; that working
    notes are their own owner.)
 2. **The repository speaks.** Measured, cited with the number.
-   (Example: 284 test-attributed functions; 0 test-name collisions;
+   (Example: 1444 test-attributed functions; 0 test-name collisions;
    `mod rig;` declared nine times for one definition.)
 3. **Neither speaks.** Then it was ruled on 2026-08-21, and the
    **Rulings** section below records what stands and why. No fourth
@@ -172,8 +172,8 @@ tests` definitions; excluding them (R12) leaves every owner clean.
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
 magnitude.** Tests take a **generated register of the owner** (R11):
-284 assets, zero source edits, one generator. Modules keep the **inner
-documentation comment**: the label sits at the asset, and the ~42
+1444 assets, zero source edits, one generator. Modules keep the **inner
+documentation comment**: the label sits at the asset, and the 84
 definitions are a bounded pending task rather than a blocker at the
 scale of the test census. The inner form is the only one a file-backed
 and an inline module can both carry.
@@ -448,13 +448,13 @@ recorded one.
 owner.** ``sig:labels:profiles`` admits it since calculus v2, and
 ``inv:labels:generated-compliance`` makes the generated mint stand on
 its warrant like any other. It costs one generator and zero source
-edits where the alternative costs a 284-function migration, and it is
+edits where the alternative costs a 1444-function migration, and it is
 not circular: the rows derive from the census, never from an occurrence
 set. The register's name and location — `<owner tree
 root>/label-register.md` — are implementation-defined and marked as
 such; what is fixed is that the place is a generated register *of the
 owner*, hence a file inside that owner's tree. The module profile keeps
-the `//!` inner doc comment, whose ~42-definition migration is a
+the `//!` inner doc comment, whose 84-definition migration is a
 recorded pending task. The ~1210 plain-comment sweep remains a separate
 task.
 
@@ -511,7 +511,7 @@ thereafter.
 ``inv:labels:inventory`` admits nothing partial, so both profiles are
 unsatisfiable the day they are switched on: the test profile's
 standard place is a register no generator has written, and the module
-profile's is an inner doc comment ~42 definitions lack. Registering
+profile's is an inner doc comment all 84 definitions lack. Registering
 them and staging entry keeps the file honest about both facts — the
 profiles are decided, and neither is in force. The test profile enters
 when the first register generation lands (R18), the module profile
@@ -584,16 +584,20 @@ fails on it.
 
 ## Measurements
 
-Taken 2026-08-20 unless noted, on the branch as checked out.
+Taken 2026-08-20 unless noted, on the branch as checked out. The two
+census counts dated 2026-08-25 come from the linter's own `migrations`
+subcommand on its first run over this corpus — the tool that will
+enforce the profiles is now the one that counts them, so a census
+figure and the check that reads it can no longer drift apart.
 
 | Fact | Value |
 |---|---|
 | Cargo packages | 4 built (`api`, `common`, `l1-standin`, `postgres-store`) + 2 pending (`cogra-linter`, `cogra-interchange`, docs-only) |
 | Rust sources | 73 `.rs` files |
-| Test-attributed functions | 284 (98 `#[test]`, 171 `#[sqlx::test]`, 15 `#[tokio::test]`) |
+| Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
 | Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
 | `mod` declarations | 63, of which 13 `mod tests` and 9 `mod rig;` for one definition |
-| Module definitions needing a `//!` label | ~42 |
+| Module definitions needing a `//!` label (2026-08-25) | 84, the whole `rust-module` census |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |

@@ -235,6 +235,42 @@ fn every_ruled_row_names_a_class_the_lexer_decides() {
     );
 }
 
+/// A rule is read from the row's `class` key, which carries the lexer's own
+/// vocabulary token — not from the `token` prose beside it, which is
+/// written for a reader and read by no code (´sig:lint:bans-api´).
+#[test]
+fn a_rule_is_read_from_the_class_key() {
+    for row in &adoption().banned_tokens.rules {
+        let rule = bans::BanRule::read(row).expect("a ruled row reads");
+        let form = CommentForm::ALL
+            .into_iter()
+            .find(|one| one.token() == &*row.class)
+            .expect("the class names a comment form of the lexer's vocabulary");
+        assert_eq!(rule.forbids, LexClass::Comment(form));
+    }
+}
+
+/// A class no lexer decides leaves the row unreadable: it bans nothing, and
+/// it is listed rather than passing as harmless.
+#[test]
+fn a_class_no_lexer_decides_leaves_the_row_unreadable() {
+    let at = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus-adoption.toml");
+    let text = std::fs::read_to_string(&at).expect("the corpus carries its adoption data");
+    let broken = text.replacen(
+        "class    = \"plain line comment\"",
+        "class    = \"semicolon\"",
+        1,
+    );
+    assert_ne!(broken, text, "the class key is still spelled this way");
+    let adoption =
+        Adoption::from_str(&broken, Path::new("corpus-adoption.toml")).expect("it still loads");
+    assert_eq!(
+        bans::unreadable(&adoption.banned_tokens),
+        vec!["rust-plain-line-comment"]
+    );
+    assert_eq!(bans::rules(&adoption.banned_tokens).len(), 1);
+}
+
 /// The two ruled entries are the two plain comment classes, which is the
 /// design's own statement of what `[banned-tokens]` says today.
 #[test]

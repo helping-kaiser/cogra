@@ -278,6 +278,15 @@ reason     = "no records/NNN-*.md tree exists in this corpus"
 
 [partition]
 match = "first-match-wins, in the order listed"
+order_rule = """
+order IS CHECKED AT LOAD and is not decoration: each rule's order must
+equal its 1-based position in this list, or the adoption data fails to
+load with a located error naming both numbers. Matching walks the
+rules in file order, so the list IS the order and `order` is this
+document's claim about it; a shuffled or repeated integer would make a
+rule match in an order its own row contradicts, silently. Inserting a
+rule therefore means renumbering every rule below it.
+"""
 
 # --- 1..5: the discipline documents and the linter architecture ---
 # Each is its own owner though all five sit inside the cogra-linter
@@ -448,7 +457,7 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # nothing partial: every covered asset carries its label at the
 # standard place or the run fails. Both profiles below are therefore
 # unsatisfiable on the day they are switched on — one wants a register
-# no generator has yet written, the other ~42 inner doc comments that
+# no generator has yet written, the other 84 inner doc comments that
 # do not yet exist. So a profile ENTERS Pi together with the migration
 # that makes it satisfiable, and not before: registered here, staged
 # until its own condition holds. Entering is a commit that flips
@@ -481,8 +490,10 @@ enters_when = "the linter's first register generation commits a label-register.m
 LBL cav:labels:assets: "A test is what the harness recognizes." The
 three attributes above are what this corpus's harnesses recognize;
 the open rule keeps a fourth harness from needing a code change.
-MEASURED 2026-08-20: 284 test-attributed functions across the four
-Cargo packages (98 #[test], 171 #[sqlx::test], 15 #[tokio::test]).
+MEASURED 2026-08-25 by the linter's own migrations subcommand, on its
+first run over this corpus: 1444 test-attributed functions. The
+census is the linter's now, so the number is read off the tool that
+will enforce it rather than off a sweep beside it.
 """
 
   [profiles.profile.classification]
@@ -531,9 +542,9 @@ the owner (LBL inv:labels:generated-compliance) — one choice per
 profile. The register is this profile's place.
 WHAT IT COSTS: one generator and zero source edits. LBL
 inv:labels:inventory admits nothing partial — every covered asset
-carries its label or the run fails — and at 284 functions that is the
+carries its label or the run fails — and at 1444 functions that is the
 difference between a profile that is adoptable now and one that waits
-on a 284-function migration.
+on a 1444-function migration.
 WHY IT IS SOUND: a generated mint stands on its warrant exactly as an
 authored one does, and a derivation "is attested wherever the
 profile's standard place lies, a generated register included" (LBL
@@ -561,7 +572,7 @@ from the first slice; nothing here waits on a later one.
 id     = "rust-module"
 kind   = "mod"
 status = "staged"
-enters_when = "the ~42 module definitions carry the //! inner doc comment of this profile's standard place"
+enters_when = "the 84 module definitions carry the //! inner doc comment of this profile's standard place"
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -620,11 +631,13 @@ must share it. The inner doc comment is the only form both can carry:
 `mod foo { ... }` body. An outer /// would work for inline items only.
 The label sits at the asset, which is what this place buys over a
 register.
-PENDING TASK: ~42 module definitions (63 `mod` declarations, minus 13
-`mod tests`, minus the 8 surplus `mod rig;` declarations) each need an
-inner doc comment before this profile can pass. LBL
-inv:labels:inventory admits nothing partial, so the migration is a
-precondition of enabling the profile, not a cleanup after it.
+PENDING TASK, MEASURED 2026-08-25 by the linter's own migrations
+subcommand on its first run: 84 module definitions, every one of them
+still needing an inner doc comment before this profile can pass —
+the census and the remainder coincide because not one carries its
+label yet. LBL inv:labels:inventory admits nothing partial, so the
+migration is a precondition of enabling the profile, not a cleanup
+after it.
 """
 
 # --- Profiles deliberately NOT in v1 ----------------------------
@@ -807,6 +820,25 @@ revisit_when = "an inventory profile derives mints for one of these asset classe
 # inf:labels:anchor-harvest, closing clause; IDN).
 ####################################################################
 
+# THE SHAPE A DESIGNATION WILL CARRY — RULED 2026-08-25, NOT A SCHEMA
+# CHANGE. When the first designation is recorded, it carries the
+# UPSTREAM OWNER ID beside the document and the index section: the
+# owners U that LBL inf:labels:anchor-harvest ranges over. The field
+# is named now because it is the one the linter cannot do without and
+# the one a designation written without it would silently omit — a
+# PresentedSet is built from the harvested set of a NAMED upstream
+# owner, and "the owners designated upstream of D" is not recoverable
+# from the document alone.
+#
+# UNTIL THEN THE EXCLUSION IS VACUOUSLY DISCHARGED. LBL
+# inv:labels:generated-compliance's one exclusion — a generated region
+# participates in nothing it presents — needs a presented set to
+# exclude, and with no designation there is none: no Anchors edge is
+# harvested, no PresentedSet is built, and the judgment passes over an
+# empty domain rather than by absence. That is why the linter
+# implements the query today against nothing (ARCH
+# tab:lint:judgment-implementation): the day a designation is recorded
+# is the day the domain becomes non-empty, and nothing else changes.
 [citation-indexes]
 designations = []
 empty_in_v1 = true
@@ -987,6 +1019,22 @@ reason    = "code comments carry occurrences, never environment heads"
 # must not occur in carrier sources; every occurrence is a hard,
 # located diagnostic. Detection is the pre-tokenizer's (ARCH
 # dec:linter:pretokenizer), never a pattern match.
+#
+# EACH ROW CARRIES BOTH class AND token, AND THEY DO DIFFERENT WORK:
+#   class = the pre-tokenizer's own vocabulary token for the lexeme
+#           class this rule forbids. THE LINTER READS THIS ONE, and
+#           it must be a name the lexer decides — "plain line
+#           comment", "plain block comment", "outer line doc
+#           comment", "string literal", and so on. A class no lexer
+#           decides makes the row UNREADABLE: it bans nothing, and
+#           the acceptance suite fails on it rather than letting it
+#           sit here quietly.
+#   token = the same class in this document's own words, with the
+#           illustration a human wants. NO CODE READS IT; it is what
+#           a diagnostic quotes back to a reader.
+# class replaced a recovery that read the class off token's leading
+# name — a machine reading prose written for a person. Adding a row
+# now means naming its class from the lexer's vocabulary.
 ####################################################################
 
 [banned-tokens]
@@ -994,6 +1042,7 @@ reason    = "code comments carry occurrences, never environment heads"
 [[banned-tokens.rule]]
 id       = "rust-plain-line-comment"
 language = "rust"
+class    = "plain line comment"
 token    = "plain line comment (// not followed by / or !)"
 severity = "error"
 status   = "ruled"
@@ -1011,6 +1060,7 @@ one-time migration sweep — a separate task; the linter only reports."
 [[banned-tokens.rule]]
 id       = "rust-plain-block-comment"
 language = "rust"
+class    = "plain block comment"
 token    = "plain block comment (/* not followed by * or !)"
 severity = "error"
 status   = "ruled"
@@ -1056,6 +1106,16 @@ pre-tokenizer and its own diagnostic for a reader.
 
 [kinds]
 acceptee = "jakob"
+registry = "crates/cogra-linter/docs/environment-kinds.md"
+registry_note = """
+The document the classification relation C is read out of (ARCH
+dec:linter:registry-as-data). Named here as a key because the linter
+READS it: a compiled-in path would be this corpus reaching the code by
+another route, and before this key existed the path had to be
+recovered from the prose of [kinds.evidence] adopted — a machine
+reading a sentence written for a person. Its spelling is checked
+against the corpus root at load, like every other configured path.
+"""
 note = """
 KND sig:kinds:acceptee requires a NAMED authority, not a role, and the
 repository owner is the registry authority for the four discipline

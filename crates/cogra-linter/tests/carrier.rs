@@ -241,7 +241,9 @@ fn a_present_optional_root_is_walked_like_any_other() {
 ///
 /// The row is inserted before the working-note rules rather than appended,
 /// because the last rule's empty prefix is what makes Ω total and the loader
-/// checks that it comes last.
+/// checks that it comes last. Inserting shifts every later rule's position,
+/// and the loader checks `order` against position too, so the fixture
+/// renumbers rather than hand-maintaining twenty integers.
 fn with_an_absent_required_root() -> Adoption {
     let at = Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -252,15 +254,45 @@ fn with_an_absent_required_root() -> Adoption {
     let added = text.replacen(
         marker,
         concat!(
-            "[[partition.rule]]\norder = 100\npath  = \"absent-required/\"\n",
+            "[[partition.rule]]\norder = 0\npath  = \"absent-required/\"\n",
             "owner = \"tree.docs-root\"\noptional = false\n\n",
             "# --- 18..19: working notes",
         ),
         1,
     );
     assert_ne!(added, text, "the marker still names the working-note block");
-    Adoption::from_str(&added, Path::new("corpus-adoption.toml"))
+    Adoption::from_str(&renumbered(&added), Path::new("corpus-adoption.toml"))
         .expect("one more rule leaves the partition loadable")
+}
+
+/// Every partition rule's `order` set to its 1-based position.
+///
+/// The loader checks the two agree, so a fixture that inserts a rule has to
+/// renumber the rules below it. Only `order` keys inside a
+/// `[[partition.rule]]` block are touched, which is what keeps the prose of
+/// the other sections — `ordering`, and the notes that use the word — out of
+/// it.
+fn renumbered(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 64);
+    let mut position = 0;
+    let mut in_rule = false;
+    for line in text.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("[[partition.rule]]") {
+            in_rule = true;
+            position += 1;
+        } else if trimmed.starts_with('[') {
+            in_rule = false;
+        }
+        let key = line.split('=').next().map(str::trim);
+        if in_rule && key == Some("order") {
+            out.push_str(&format!("order = {position}\n"));
+            continue;
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    out
 }
 
 /// Whether some finding is about exactly this configured root, the message
