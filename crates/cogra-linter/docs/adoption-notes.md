@@ -114,8 +114,8 @@ Three choices in this section rest on measurement rather than taste:
 **The interchange crate's docs belong to the crate's owner (rule 7).**
 `concept.md` mints 16 labels and `design.md` mints 76, with **zero
 collisions** between them, both in area `xchg`; and `design.md` cites
-`req:xchg:determinism` — a mint of `concept.md` — in the **unprefixed**
-form. Under ``inf:labels:same-owner-citation`` an unprefixed citation
+``req:xchg:determinism`` — a mint of `concept.md` — in the
+**unprefixed** form. Under ``inf:labels:same-owner-citation`` an unprefixed citation
 "never resolves into another owner", so that citation resolves *only
 if* the two files are one owner. Meanwhile both files cite `ARCH` and
 `ICX` with brackets. The corpus has already answered where this
@@ -336,8 +336,9 @@ parenthesized form — which ``lang:labels:label-language`` reads as a
 the file. Adopting the calculus over the file unchanged produces
 roughly 360 unresolved citations, each a hard failure under
 ``inv:labels:total-resolution``. Worse, the handful of bare spans (for
-instance `tbl:symbols:boundary` inside a table cell at line 69) would
-be read as **mints** — accidental conceptual homes for upstream names.
+instance ``tbl:symbols:boundary`` inside a table cell at line 69,
+displayed here so that quoting the hazard does not commit it) would be
+read as **mints** — accidental conceptual homes for upstream names.
 This finding is the ground of R2.
 
 **F2. That file's kind tokens are not in the registry.** It uses `post`
