@@ -49,6 +49,25 @@ use crate::scan::Label;
 /// owner.
 const LABEL_REGISTER: &str = "label-register.md";
 
+/// Where one owner's label register sits, given that owner's tree.
+///
+/// One function so that the generator and the migration measurement cannot
+/// disagree about where a register would be found.
+///
+/// ```
+/// use cogra_linter::registers::register_path;
+/// use std::path::Path;
+///
+/// assert_eq!(
+///     register_path(Path::new("crates/api")),
+///     Path::new("crates/api/label-register.md"),
+/// );
+/// ```
+#[must_use]
+pub fn register_path(owner_tree: &Path) -> PathBuf {
+    owner_tree.join(LABEL_REGISTER)
+}
+
 /// A register as the generator produces it: a path and the exact bytes.
 ///
 /// For a whole-file register the path is the file. For a
@@ -299,6 +318,34 @@ pub fn write_all(regs: &[Register], scope: &Scope, root: &Path) -> Result<Writte
     Ok(Written { paths: touched })
 }
 
+/// What is committed where a register sits, and the file offset that span
+/// begins at.
+///
+/// A whole-file register is compared against the whole file; a generated
+/// region against exactly its host's span, whose start is the second half of
+/// the answer so that an offset can be reported in the host's own
+/// coordinates. `None` means nothing is committed there, which is
+/// [`Freshness::Staged`] and never staleness.
+///
+/// `sources` is what the run read, never a second read of the tree: two
+/// reads could disagree, and the freshness answer would then be about a file
+/// nobody linted.
+#[must_use]
+pub fn committed<'s>(
+    reg: &Register,
+    sources: &'s BTreeMap<PathBuf, Vec<u8>>,
+) -> (Option<&'s [u8]>, usize) {
+    match &reg.scope {
+        RegisterScope::Region { host, span } => (
+            sources
+                .get(host)
+                .and_then(|bytes| bytes.get(span.start..span.end)),
+            span.start,
+        ),
+        _ => (sources.get(&reg.path).map(Vec::as_slice), 0),
+    }
+}
+
 /// The host span a region register carries, if it is one.
 fn span_of(reg: &Register) -> Option<ByteSpan> {
     match reg.scope {
@@ -393,7 +440,7 @@ fn label_registers(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Register> {
             rows.sort();
             rows.dedup();
             out.push(Register {
-                path: owner_root(a, id).join(LABEL_REGISTER),
+                path: register_path(&owner_root(a, id)),
                 bytes: label_register_bytes(id, profile, &rows),
                 scope: RegisterScope::LabelRegister {
                     owner: id.clone(),
@@ -414,7 +461,12 @@ fn label_registers(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Register> {
 /// only file rules — a single document — has no tree, and its register would
 /// have nowhere to live; it also has no covered assets, so the case does not
 /// arise and is not invented around.
-fn owner_root(a: &Adoption, owner: &OwnerId) -> PathBuf {
+///
+/// Public because the migration measurement asks the same question — where
+/// an owner's register would sit — and asking it twice is how two answers
+/// come to differ (´dec:lint:migrations-subcommand´).
+#[must_use]
+pub fn owner_root(a: &Adoption, owner: &OwnerId) -> PathBuf {
     a.partition
         .rules
         .iter()
