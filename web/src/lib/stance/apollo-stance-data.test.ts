@@ -7,7 +7,8 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
-import type { AuthGuard } from "@/lib/session/guard";
+import { createGuard, type AuthGuard } from "@/lib/session/guard";
+import { createTokenStore } from "@/lib/session/token-store";
 import type { WriteResult, WriteSigner } from "@/lib/signing/write-signer";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { startMswServer } from "@/test/msw";
@@ -177,6 +178,63 @@ describe("reading the standing", () => {
     await data.bundle(POST);
     await data.bundle(POST, { includePending: false });
     expect(flags).toEqual([true, false]);
+  });
+
+  it("asks the server every time — a viewer's own field is never answered from the cache", async () => {
+    // `viewerStance` depends on who is asking, and the cache is keyed by
+    // the query, not by the viewer. A cached answer therefore outlives
+    // the reason it was that answer: the anonymous null a read issued
+    // before this tab minted an access token gets, and the standing the
+    // account that earned it left behind.
+    let reads = 0;
+    server.use(
+      graphql.query("PostStance", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "post-1",
+              viewerStance: bundleFields({ pDirected: reads === 1 ? 0.6 : 0.7 }),
+            },
+          },
+        });
+      }),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    await data.bundle(POST);
+    const after = await data.bundle(POST);
+    expect(reads).toBe(2);
+    expect(after).toMatchObject({ kind: "success", value: { current: { pDirected: 0.7 } } });
+  });
+
+  it("hands the null to the guard, so a tab with no access token yet refreshes and replays", async () => {
+    // The whole defect: the server answers a request it did not
+    // authenticate with a null field, not an error. Lifted anywhere but
+    // inside the guarded block, that null is invisible to the guard —
+    // nothing refreshes, and the viewer's standing never appears.
+    let reads = 0;
+    server.use(
+      graphql.query("PostStance", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "post-1",
+              viewerStance: reads === 1 ? null : bundleFields(),
+            },
+          },
+        });
+      }),
+    );
+    const replaying = createGuard(createTokenStore(), { refresh: async () => true });
+    const data = createApolloStanceData({ client: client(), guard: replaying, signer: signer() });
+    expect(await data.bundle(POST)).toMatchObject({
+      kind: "success",
+      value: { current: { pDirected: 0.6, pInterest: 0.4 }, records: 2 },
+    });
+    expect(reads).toBe(2);
   });
 });
 

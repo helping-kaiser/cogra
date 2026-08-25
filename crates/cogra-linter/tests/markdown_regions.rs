@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use cogra_linter::frontend::{Parsed, Region, RegionKind};
+use cogra_linter::pretokenize::pretokenize;
 use cogra_linter::scan::{NearMissKind, Occurrence, RegionScan, Syntax, scan_prose};
 use cogra_linter::{Adoption, ByteSpan, Language, OwnerId, SourceFile, frontend, frontend_md};
 
@@ -651,7 +652,12 @@ fn a_generated_sources_regions_are_generated() {
 fn a_language_with_no_frontend_yields_nothing() {
     let mut src = source("`inv:x:y`\n");
     src.language = Some(Language::new("sql"));
-    let parsed = frontend::parse(&src, adoption()).expect("no frontend, no failure");
+    let parsed = frontend::parse(
+        &src,
+        &pretokenize(src.language.as_ref(), &src.bytes),
+        adoption(),
+    )
+    .expect("no frontend, no failure");
     assert!(parsed.regions.is_empty() && parsed.heads.is_empty());
     assert_eq!(parsed.path, src.path);
 }
@@ -661,7 +667,12 @@ fn a_language_with_no_frontend_yields_nothing() {
 fn a_source_with_no_language_yields_nothing() {
     let mut src = source("`inv:x:y`\n");
     src.language = None;
-    let parsed = frontend::parse(&src, adoption()).expect("no frontend, no failure");
+    let parsed = frontend::parse(
+        &src,
+        &pretokenize(src.language.as_ref(), &src.bytes),
+        adoption(),
+    )
+    .expect("no frontend, no failure");
     assert!(parsed.regions.is_empty());
 }
 
@@ -669,7 +680,12 @@ fn a_source_with_no_language_yields_nothing() {
 #[test]
 fn the_dispatcher_reaches_the_markdown_frontend() {
     let src = source("## Syntax \u{b7} `sec:kinds:syntax`\n");
-    let parsed = frontend::parse(&src, adoption()).expect("parses");
+    let parsed = frontend::parse(
+        &src,
+        &pretokenize(src.language.as_ref(), &src.bytes),
+        adoption(),
+    )
+    .expect("parses");
     assert_eq!(parsed.heads.len(), 1);
 }
 

@@ -18,11 +18,29 @@ petgraph = "0.8.3"
 # The Markdown frontend (design, markdown-surface convention); driven
 # through into_offset_iter, with ENABLE_TABLES the only extension.
 pulldown-cmark = { version = "0.13.4", default-features = false }
+# The Rust frontend (design, rust-surface convention): parse_file plus the
+# visit::Visit walk. `full` and `visit` are optional, and a linter parsing
+# whole files and walking them needs both; `parsing` comes from the
+# defaults. Verified against docs.rs/syn 3.0.4 on 2026-08-25.
+syn = { version = "3.0.4", features = ["full", "visit", "extra-traits"] }
+# Byte ranges out of syn spans (design, syn-spans decision). Direct rather
+# than transitive precisely so `span-locations` is switched on where a
+# reader can see it. Verified against docs.rs/proc-macro2 1.0.107 on
+# 2026-08-25: outside a procedural macro the range is accurate on stable.
+proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
 serde = { workspace = true }
 thiserror = { workspace = true }
+# The three modes of the command line (design, CLI signature). The derive
+# API is the one clap's own documentation leads with, and it is behind the
+# `derive` feature; nothing else is enabled. Verified against
+# docs.rs/clap 4.6.6 on 2026-08-25.
+clap = { version = "4.6.6", features = ["derive"] }
+# main.rs only, per the repository's error rule: thiserror for a library's
+# typed surface, anyhow for a binary that prints what went wrong and exits.
+anyhow = { workspace = true }
 
 [dev-dependencies]
 # Property obligations of the design's metatheorem table.
