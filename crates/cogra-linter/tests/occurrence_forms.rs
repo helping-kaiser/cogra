@@ -48,8 +48,14 @@ fn frontend_spans(text: &str) -> Vec<DelimitedSpan> {
         };
         let Some(close) = close else { break };
         spans.push(DelimitedSpan {
-            outer: ByteSpan { start: open, end: close + run },
-            interior: ByteSpan { start: open + run, end: close },
+            outer: ByteSpan {
+                start: open,
+                end: close + run,
+            },
+            interior: ByteSpan {
+                start: open + run,
+                end: close,
+            },
             displayed: run > 1,
         });
         i = close + run;
@@ -64,13 +70,21 @@ fn prose(text: &str) -> RegionScan {
 
 /// The one occurrence a region is expected to carry.
 fn only(scan: &RegionScan) -> &Occurrence {
-    assert_eq!(scan.occurrences.len(), 1, "expected exactly one occurrence: {scan:?}");
+    assert_eq!(
+        scan.occurrences.len(),
+        1,
+        "expected exactly one occurrence: {scan:?}"
+    );
     &scan.occurrences[0]
 }
 
 /// The one near-miss a region is expected to carry.
 fn only_miss(scan: &RegionScan) -> &NearMiss {
-    assert_eq!(scan.near_misses.len(), 1, "expected exactly one near-miss: {scan:?}");
+    assert_eq!(
+        scan.near_misses.len(),
+        1,
+        "expected exactly one near-miss: {scan:?}"
+    );
     &scan.near_misses[0]
 }
 
@@ -85,7 +99,9 @@ fn covered(text: &str, span: ByteSpan) -> &str {
 fn prose_mint() {
     let text = "the head carries `sec:labels:syntax` and nothing else";
     let scan = prose(text);
-    let Occurrence::Mint { label, span } = only(&scan) else { panic!("mint expected: {scan:?}") };
+    let Occurrence::Mint { label, span } = only(&scan) else {
+        panic!("mint expected: {scan:?}")
+    };
     assert_eq!(label.as_str(), "sec:labels:syntax");
     assert_eq!(covered(text, *span), "`sec:labels:syntax`");
 }
@@ -108,7 +124,12 @@ fn prose_same_owner_citation() {
 fn prose_imported_citation() {
     let text = "see (`[SPEC-def:parser:tokenizer]`) upstream";
     let scan = prose(text);
-    let Occurrence::Imported { prefix, label, span } = only(&scan) else {
+    let Occurrence::Imported {
+        prefix,
+        label,
+        span,
+    } = only(&scan)
+    else {
         panic!("imported citation expected: {scan:?}")
     };
     assert_eq!(prefix.as_str(), "SPEC");
@@ -121,7 +142,9 @@ fn prose_imported_citation() {
 fn code_mint() {
     let text = "mints ´def:parser:tokenizer´ here";
     let scan = scan_code(text, 0);
-    let Occurrence::Mint { label, span } = only(&scan) else { panic!("mint expected: {scan:?}") };
+    let Occurrence::Mint { label, span } = only(&scan) else {
+        panic!("mint expected: {scan:?}")
+    };
     assert_eq!(label.as_str(), "def:parser:tokenizer");
     assert_eq!(covered(text, *span), "´def:parser:tokenizer´");
 }
@@ -135,7 +158,10 @@ fn code_same_owner_citation() {
         panic!("same-owner citation expected: {scan:?}")
     };
     assert_eq!(label.name(), "decode-roundtrip");
-    assert_eq!(covered(text, *span), "(´test:integration:decode-roundtrip´)");
+    assert_eq!(
+        covered(text, *span),
+        "(´test:integration:decode-roundtrip´)"
+    );
 }
 
 /// Imported citation, code.
@@ -143,7 +169,12 @@ fn code_same_owner_citation() {
 fn code_imported_citation() {
     let text = "(´[CODEC-test:integration:decode-roundtrip]´)";
     let scan = scan_code(text, 0);
-    let Occurrence::Imported { prefix, label, span } = only(&scan) else {
+    let Occurrence::Imported {
+        prefix,
+        label,
+        span,
+    } = only(&scan)
+    else {
         panic!("imported citation expected: {scan:?}")
     };
     assert_eq!(prefix.as_str(), "CODEC");
@@ -156,7 +187,13 @@ fn code_imported_citation() {
 fn spans_are_whole_file() {
     let text = "(`a:b:c`)";
     let scan = scan_prose(text, 4_096, &frontend_spans(text));
-    assert_eq!(only(&scan).span(), ByteSpan { start: 4_096, end: 4_105 });
+    assert_eq!(
+        only(&scan).span(),
+        ByteSpan {
+            start: 4_096,
+            end: 4_105
+        }
+    );
 }
 
 /// Every span is reported in whole-file coordinates in code too.
@@ -371,14 +408,20 @@ fn wrong_case_throughout() {
 fn interior_spacing_around_the_label() {
     let scan = prose("` a:b:c `");
     assert!(scan.occurrences.is_empty());
-    assert_eq!(only_miss(&scan).why, NearMissKind::InteriorSpacing { at: 1 });
+    assert_eq!(
+        only_miss(&scan).why,
+        NearMissKind::InteriorSpacing { at: 1 }
+    );
 }
 
 /// Near-miss, InteriorSpacing: whitespace before a colon.
 #[test]
 fn interior_spacing_before_a_colon() {
     let scan = prose("(`a:b :c`)");
-    assert_eq!(only_miss(&scan).why, NearMissKind::InteriorSpacing { at: 5 });
+    assert_eq!(
+        only_miss(&scan).why,
+        NearMissKind::InteriorSpacing { at: 5 }
+    );
 }
 
 /// Near-miss, InteriorSpacing: whitespace inside a bracketed interior.
@@ -396,7 +439,10 @@ fn interior_spacing_inside_a_bracket() {
 #[test]
 fn spacing_beats_casing() {
     let scan = prose("` A:b:c `");
-    assert_eq!(only_miss(&scan).why, NearMissKind::InteriorSpacing { at: 1 });
+    assert_eq!(
+        only_miss(&scan).why,
+        NearMissKind::InteriorSpacing { at: 1 }
+    );
 }
 
 /// An interior that is neither label-shaped nor near it is text, not a warning.
@@ -422,7 +468,10 @@ fn several_to_one_parenthesis() {
 #[test]
 fn several_to_one_parenthesis_counts_three() {
     let scan = prose("(`a:b:c`, `d:e:f`, `g:h:i`)");
-    assert_eq!(only_miss(&scan).why, NearMissKind::SeveralToOneParenthesis { count: 3 });
+    assert_eq!(
+        only_miss(&scan).why,
+        NearMissKind::SeveralToOneParenthesis { count: 3 }
+    );
 }
 
 /// One label-shaped span in one parenthesis is the citation form and no
@@ -468,7 +517,10 @@ fn backtick_in_code() {
 fn backtick_in_code_with_parentheses() {
     let text = "see (`inv:labels:unique-mint`) above";
     let scan = scan_code(text, 0);
-    assert_eq!(covered(text, only_miss(&scan).span), "(`inv:labels:unique-mint`)");
+    assert_eq!(
+        covered(text, only_miss(&scan).span),
+        "(`inv:labels:unique-mint`)"
+    );
 }
 
 /// Near-miss, BacktickInCode: the bracketed form too.
@@ -489,7 +541,11 @@ fn ordinary_backtick_in_code_is_text() {
 #[test]
 fn near_misses_are_ordered() {
     let scan = prose("`Sec:labels:syntax` then ` a:b:c ` then `[P-d:e:f]`");
-    let starts: Vec<usize> = scan.near_misses.iter().map(|miss| miss.span.start).collect();
+    let starts: Vec<usize> = scan
+        .near_misses
+        .iter()
+        .map(|miss| miss.span.start)
+        .collect();
     let mut sorted = starts.clone();
     sorted.sort_unstable();
     assert_eq!(starts, sorted);

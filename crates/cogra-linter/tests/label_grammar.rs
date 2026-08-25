@@ -31,7 +31,10 @@ fn minimal_triple() {
 #[test]
 fn corpus_label() {
     let label = accept("sec:labels:syntax");
-    assert_eq!((label.kind(), label.area(), label.name()), ("sec", "labels", "syntax"));
+    assert_eq!(
+        (label.kind(), label.area(), label.name()),
+        ("sec", "labels", "syntax")
+    );
 }
 
 /// Accept: `kind ::= word`, `word ::= [a-z0-9]+` with a trailing digit.
@@ -112,7 +115,10 @@ fn long_kind() {
 #[test]
 fn inventory_label() {
     let label = accept("test:integration:decode-roundtrip");
-    assert_eq!((label.kind(), label.area(), label.name()), ("test", "integration", "decode-roundtrip"));
+    assert_eq!(
+        (label.kind(), label.area(), label.name()),
+        ("test", "integration", "decode-roundtrip")
+    );
 }
 
 /// Accept: `label`, a rejected-Ansatz label of the calculus.
@@ -474,13 +480,21 @@ fn fourth_field_with_hyphens() {
 /// Accept: `PREFIX ::= [A-Z][A-Z0-9]*`, the shortest form.
 #[test]
 fn prefix_one_letter() {
-    assert_eq!(Prefix::parse("L").map(|p| p.to_string()).as_deref(), Some("L"));
+    assert_eq!(
+        Prefix::parse("L").map(|p| p.to_string()).as_deref(),
+        Some("L")
+    );
 }
 
 /// Accept: `PREFIX` of several uppercase letters, as the corpus registers.
 #[test]
 fn prefix_letters() {
-    assert_eq!(Prefix::parse("LBL").map(|p| p.as_str().to_owned()).as_deref(), Some("LBL"));
+    assert_eq!(
+        Prefix::parse("LBL")
+            .map(|p| p.as_str().to_owned())
+            .as_deref(),
+        Some("LBL")
+    );
 }
 
 /// Accept: `PREFIX` carrying digits after its first letter — the numbered
