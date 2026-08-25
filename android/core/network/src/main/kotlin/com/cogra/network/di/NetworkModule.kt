@@ -25,7 +25,7 @@ import com.cogra.network.repo.ContentRepositoryImpl
 import com.cogra.network.repo.ProfileRepositoryImpl
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
-import com.cogra.network.repo.StanceStandInRepository
+import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
@@ -110,8 +110,6 @@ abstract class NetworkBindsModule {
     @Binds
     abstract fun profileRepository(impl: ProfileRepositoryImpl): ProfileRepository
 
-    // The stance reads are not on the schema yet; the stand-in answers
-    // them locally and this binding is what the wiring PR re-points.
     @Binds
-    abstract fun stanceRepository(impl: StanceStandInRepository): StanceRepository
+    abstract fun stanceRepository(impl: StanceRepositoryImpl): StanceRepository
 }
