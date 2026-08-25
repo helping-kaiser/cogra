@@ -18,6 +18,7 @@ pub mod frontend_rust;
 pub mod graph;
 pub mod judge;
 pub mod pretokenize;
+pub mod run;
 pub mod scan;
 pub mod timing;
 
@@ -43,6 +44,7 @@ pub use judge::kinds::{
     Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced, Reduction,
 };
 pub use pretokenize::{CommentForm, LexClass, Lexeme, LiteralForm, PreTokenized, pretokenize};
+pub use run::{Run, check, check_sources};
 pub use scan::{
     DelimitedSpan, Delimiter, DelimiterFailure, Expectation, Label, LabelSyntax, NearMiss,
     NearMissKind, Occurrence, Prefix, RegionScan, Syntax, scan_code, scan_prose,
