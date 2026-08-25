@@ -77,7 +77,9 @@ impl Label {
     /// The name: the triple's third word.
     #[must_use]
     pub fn name(&self) -> &str {
-        self.text.get(self.area_end as usize + 1..).unwrap_or_default()
+        self.text
+            .get(self.area_end as usize + 1..)
+            .unwrap_or_default()
     }
 
     /// The rendered triple.
@@ -457,9 +459,7 @@ pub fn edge_view<'g>(
     g: &'g Corpus,
     w: EdgeW,
 ) -> EdgeFiltered<&'g Corpus, impl Fn(EdgeReference<'g, EdgeW>) -> bool> {
-    EdgeFiltered(g, move |edge: EdgeReference<'g, EdgeW>| {
-        *edge.weight() == w
-    })
+    EdgeFiltered(g, move |edge: EdgeReference<'g, EdgeW>| *edge.weight() == w)
 }
 
 /// The registries the harvest completes and the resolution consults
@@ -652,7 +652,10 @@ mod tests {
         g.add_edge(m, l, EdgeW::Mints);
         assert_eq!(degree_along(&g, m, EdgeW::Mints, Direction::Outgoing), 1);
         assert_eq!(degree_along(&g, l, EdgeW::Mints, Direction::Incoming), 1);
-        assert_eq!(degree_along(&g, l, EdgeW::ResolvesTo, Direction::Incoming), 0);
+        assert_eq!(
+            degree_along(&g, l, EdgeW::ResolvesTo, Direction::Incoming),
+            0
+        );
     }
 
     #[test]

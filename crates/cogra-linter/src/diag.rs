@@ -156,7 +156,11 @@ impl Location {
         let start = span.start.min(source.len());
         let upto = &source.as_bytes()[..start];
         let line = 1 + upto.iter().filter(|byte| **byte == b'\n').count();
-        let column = 1 + start - upto.iter().rposition(|byte| *byte == b'\n').map_or(0, |at| at + 1);
+        let column = 1 + start
+            - upto
+                .iter()
+                .rposition(|byte| *byte == b'\n')
+                .map_or(0, |at| at + 1);
         Location {
             path,
             span,

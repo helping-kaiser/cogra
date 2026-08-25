@@ -205,11 +205,10 @@ impl Adoption {
     /// [`AdoptionError`] when the file cannot be read, is not well-formed
     /// TOML, or states an adoption that contradicts itself.
     pub fn load(path: &Path) -> Result<Adoption, AdoptionError> {
-        let source =
-            std::fs::read_to_string(path).map_err(|source| AdoptionError::Unreadable {
-                path: path.to_path_buf(),
-                source,
-            })?;
+        let source = std::fs::read_to_string(path).map_err(|source| AdoptionError::Unreadable {
+            path: path.to_path_buf(),
+            source,
+        })?;
         Adoption::from_str(&source, path)
     }
 
@@ -292,8 +291,7 @@ impl Signature {
     /// `owner`.
     #[must_use]
     pub fn registers(&self, owner: &OwnerId) -> bool {
-        self.prefixes.values().any(|named| named == owner)
-            || self.derived_prefix(owner).is_some()
+        self.prefixes.values().any(|named| named == owner) || self.derived_prefix(owner).is_some()
     }
 
     /// The prefix a registered family derives for `owner`, if one does.
@@ -936,7 +934,9 @@ impl RawAdoption {
     fn validate(self, source: &str, origin: &Path) -> Result<Adoption, AdoptionError> {
         let signature = self.signature.validate(source, origin)?;
         let partition = self.partition.validate(source, origin, &signature)?;
-        let profiles = self.profiles.validate(source, origin, &self.reserved_kinds)?;
+        let profiles = self
+            .profiles
+            .validate(source, origin, &self.reserved_kinds)?;
         Ok(Adoption {
             meta: self.meta,
             carrier: self.carrier,
@@ -960,7 +960,10 @@ impl RawSignature {
         let mut prefixes = BTreeMap::new();
         for row_data in &self.prefixes {
             let prefix = row_data.prefix.as_ref().clone();
-            if prefixes.insert(prefix.clone(), row_data.owner.clone()).is_some() {
+            if prefixes
+                .insert(prefix.clone(), row_data.owner.clone())
+                .is_some()
+            {
                 return Err(AdoptionError::DuplicatePrefix {
                     at: row(&row_data.prefix, source, origin),
                     prefix: prefix.to_string(),
