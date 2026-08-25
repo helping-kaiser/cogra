@@ -25,7 +25,8 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
-import { DIRECTED_LABEL, INTEREST_LABEL, StanceSlider } from "@/lib/ui/stance-slider";
+import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
+import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
 
 function invitesMessage(code: ErrorCode): string {

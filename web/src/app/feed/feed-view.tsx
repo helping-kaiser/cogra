@@ -173,7 +173,7 @@ export function FeedView({
               {/* Part of the post card's own inventory (design.md §6),
                   outside the link: it acts, it does not navigate. */}
               <StanceControl
-                target={{ id: post.id, label: "this post" }}
+                target={{ id: post.id, kind: "post", label: "this post" }}
                 testIdPrefix={`feed-stance-${post.id}`}
               />
             </Card>

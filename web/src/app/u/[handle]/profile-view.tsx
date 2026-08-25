@@ -216,7 +216,7 @@ export function ProfileScreen({
             {!own && (
               <div className="pt-2">
                 <StanceControl
-                  target={{ id: profile.id, label: `@${profile.handle}` }}
+                  target={{ id: profile.id, kind: "profile", label: `@${profile.handle}` }}
                   testIdPrefix="profile-stance"
                 />
               </div>
