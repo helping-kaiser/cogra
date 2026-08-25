@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -18,10 +19,40 @@ class StanceFieldGeometryTest {
     private val extent = FIELD_EXTENT.value
 
     @Test
-    fun oneUnitOfTravelIsTheHalfSideLessTheKnob() {
-        // What makes the knob's EDGE land on the field's edge at ±1
-        // rather than hanging over it.
-        assertThat(extent).isWithin(0.001f).of(halfSide - knob)
+    fun oneUnitOfTravelIsTheHalfSideLessTheInset() {
+        assertThat(extent).isWithin(0.001f).of(halfSide - knobTravelInset().value)
+    }
+
+    @Test
+    fun theFieldTakesTheShapeScalesSixteenRung() {
+        // design.md §4: the M3 rungs are the only radii that exist, and
+        // an off-scale corner is how the two clients drift apart.
+        assertThat(corner).isIn(listOf(4f, 8f, 12f, 16f, 28f))
+    }
+
+    @Test
+    fun theInsetIsTheKnobRadiusWhenTheCornerIsNoSofterThanTheKnob() {
+        // A flat edge — or a corner tighter than the knob — asks for the
+        // knob's own radius and nothing more.
+        assertThat(knobTravelInset(corner = 4.dp, knob = 10.dp).value).isWithin(0.001f).of(10f)
+        assertThat(knobTravelInset(corner = 10.dp, knob = 10.dp).value).isWithin(0.001f).of(10f)
+    }
+
+    @Test
+    fun aSofterCornerAsksForMoreInsetThanTheKnobRadius() {
+        assertThat(knobTravelInset(corner = 28.dp, knob = 10.dp).value)
+            .isGreaterThan(knobTravelInset(corner = 16.dp, knob = 10.dp).value)
+    }
+
+    @Test
+    fun theDerivedInsetContainsTheKnobForEveryCornerOnTheShapeScale() {
+        // The formula, not the chosen numbers: whatever rung the field
+        // takes, the knob it derives an inset for stays inside it.
+        for (rung in listOf(4f, 8f, 12f, 16f, 28f)) {
+            val inset = knobTravelInset(corner = rung.dp, knob = knob.dp).value
+            val travel = halfSide - inset
+            assertThat(knobInsideField(StancePoint(1.0, 1.0), halfSide, rung, knob, travel)).isTrue()
+        }
     }
 
     @Test
@@ -92,14 +123,19 @@ class StanceFieldGeometryTest {
     }
 
     @Test
-    fun theKnobRadiusIsTheSoftestCornerAKnobParkedInItStillFits() {
-        // Why the two constants are one number: at the knob radius the
-        // knob fills the corner exactly, and any softer corner cuts into
-        // a knob parked there.
+    fun theInsetIsTheSmallestOneThatContainsTheKnob() {
+        // Tight, not generous: a hair less and the corner cuts in.
         val cornered = StancePoint(1.0, 1.0)
+        val looser = halfSide - (knobTravelInset().value - 0.5f)
 
         assertThat(knobInsideField(cornered, halfSide, corner, knob, extent)).isTrue()
-        assertThat(knobInsideField(cornered, halfSide, corner * 1.5f, knob, extent)).isFalse()
+        assertThat(knobInsideField(cornered, halfSide, corner, knob, looser)).isFalse()
+    }
+
+    @Test
+    fun aSofterCornerThanTheFieldWasInsetForWouldCutIntoTheKnob() {
+        val cornered = StancePoint(1.0, 1.0)
+
         assertThat(knobInsideField(cornered, halfSide, corner * 2f, knob, extent)).isFalse()
     }
 
