@@ -59,6 +59,25 @@ export function standingReading(pair: StancePair): string {
 /** `undefined` while the standing is still being read, `null` where it could not be. */
 export type BundleState = StanceBundle | null | undefined;
 
+/**
+ * What severance actually walks back (design.md §8.3, §8.5). The fold
+ * the graph reads clips at `±1`, but a bundle whose raw sum lies beyond
+ * the clip still carries that history, and "every surface that explains
+ * cost — the severance confirmation above all — states the RAW sums,
+ * because they are what a walk back to zero actually walks".
+ *
+ * So this line is deliberately NOT `standingLine`: showing the clipped
+ * fold here would understate the walk on exactly the bundles where the
+ * difference matters most.
+ */
+export function severanceStandingLine(bundle: BundleState, targetLabel: string): string {
+  if (bundle === undefined) return "Checking where you stand…";
+  if (bundle === null || bundle.records === 0) {
+    return `${ZERO_BUNDLE_EMOJI} You haven't taken a stance on ${targetLabel} yet.`;
+  }
+  return `What you'd be walking back: ${formatStancePair(bundle.rawSum)}`;
+}
+
 export function standingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
   if (bundle === null || bundle.records === 0) {
