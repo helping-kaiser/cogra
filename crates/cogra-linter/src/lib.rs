@@ -74,7 +74,7 @@ pub use graph::{
     out_along, owner_of, owner_view, source_of,
 };
 pub use judge::kinds::{
-    Attestation, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
+    Attestation, Bound, Device, DeviceFamily, HeadVerdict, HeadlineCounts, KindRegistry, Reduced,
     Reduction,
 };
 pub use migrate::{Migration, Remaining, distances};
@@ -636,14 +636,17 @@ impl<'a> Harvest<'a> {
 
 /// Which catalogue names a head validates as, one per `ValidatesAs` edge.
 ///
-/// Zero names is an uncatalogued pair and two is an ambiguous reduction,
-/// which is exactly what the degree check reads off the edges
-/// (´[KND-judg:kinds:head-validation]´).
+/// Zero names is a head that did not validate and two is an ambiguous
+/// reduction, which is exactly what the degree check reads off the edges
+/// (´[KND-judg:kinds:head-validation]´). Which *kind* of failure zero was —
+/// the relation carrying no such pair, or the reduction stopping at one of
+/// its bounds before asking — is the judgment's affair and not the edge's:
+/// an edge that does not exist looks the same either way.
 fn validates_as(k: &KindRegistry, head: &str, declared: &Kind) -> Vec<Box<str>> {
     match k.validate(head, declared) {
         HeadVerdict::Exact => vec![Box::from(head)],
         HeadVerdict::Reduced { base } => vec![base],
-        HeadVerdict::Uncatalogued { .. } => Vec::new(),
+        HeadVerdict::Uncatalogued { .. } | HeadVerdict::Beyond { .. } => Vec::new(),
         HeadVerdict::Ambiguous { bases } => bases,
     }
 }
