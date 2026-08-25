@@ -66,37 +66,6 @@ const LINTER_ARTIFACTS: [&str; 5] = [
     "crates/cogra-linter/docs/kickoff.md",
 ];
 
-/// The defects the interchange crate's phase artifacts carry today, each a
-/// bare occurrence where the author meant a citation, plus one import form
-/// that shares its parenthesis with prose.
-///
-/// Recorded here rather than tolerated: the linter reports them, they are
-/// the corpus's to repair, and this list is what says so. Repairing them
-/// fails this test, which is the intended coupling — the record moves when
-/// the corpus does.
-const RECORDED_INTERCHANGE_DEFECTS: [(&str, &str); 5] = [
-    (
-        "crates/cogra-interchange/docs/audit.md",
-        "label-near-miss-bracket",
-    ),
-    (
-        "crates/cogra-interchange/docs/audit.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/commissioning.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/design.md",
-        "label-duplicate-mint",
-    ),
-    (
-        "crates/cogra-interchange/docs/design.md",
-        "label-duplicate-mint",
-    ),
-];
-
 fn under(prefix: &str) -> Vec<&'static Diagnostic> {
     run()
         .findings
@@ -166,27 +135,28 @@ fn the_linters_own_phase_artifacts_lint_clean() {
     );
 }
 
-/// (´dec:lint:enforcement-partition´): the failing set is exactly the two
-/// documentation trees, and every finding in it is either clean or one of
-/// the recorded interchange defects.
+/// (´dec:lint:enforcement-partition´), (´rep:lint:first-corpus´): the
+/// failing set is clean.
+///
+/// This is what version 1 is accepted on — a clean run over the material
+/// written under the discipline — and it is now the plain assertion rather
+/// than a list of tolerated defects. The two documentation trees under
+/// `[enforcement]` `failing` are the whole scope, and the lane's exit code
+/// reads exactly this predicate.
+///
+/// Each completed migration adds a prefix to that list, and this test grows
+/// with it by construction: it names no path, so widening the failing set
+/// widens what it asserts.
 #[test]
-fn the_failing_set_carries_only_the_recorded_defects() {
-    let mut failing: Vec<(String, &str)> = run()
-        .failing()
-        .map(|one| (one.primary.path.display().to_string(), one.rule.as_str()))
-        .collect();
-    failing.sort();
-    let mut recorded: Vec<(String, &str)> = RECORDED_INTERCHANGE_DEFECTS
-        .iter()
-        .map(|(path, rule)| ((*path).to_owned(), *rule))
-        .collect();
-    recorded.sort();
-    assert_eq!(
-        failing,
-        recorded,
-        "the failing set moved:\n{}",
-        run().failing().map(spell).collect::<Vec<_>>().join("\n")
+fn the_failing_set_is_clean() {
+    let against: Vec<String> = run().failing().map(spell).collect();
+    assert!(
+        against.is_empty(),
+        "the failing set carries {} findings:\n{}",
+        against.len(),
+        against.join("\n")
     );
+    assert!(run().is_clean(), "the lane exits zero on this corpus");
 }
 
 /// (´rep:lint:first-corpus´): the advisory remainder produces the classes
@@ -290,6 +260,42 @@ fn every_head_in_the_corpus_validates() {
     assert!(unvalidated.is_empty(), "{}", unvalidated.join("\n"));
 }
 
+/// (´dec:lint:one-generator´), (´[ARCH-rule:linter:register-freshness]´):
+/// every register the generator produces is byte-identical to what is
+/// committed — the check-after-write property, over the real corpus rather
+/// than a fixture.
+///
+/// This is what the first generation run armed: before it, the companion
+/// register had never been generated and the headline table carried a count
+/// no derivation produced. From it on, an edit to either is a finding, and
+/// regeneration is its only repair.
+#[test]
+fn every_committed_register_is_current() {
+    let registers = cogra_linter::registers::regenerate_all(
+        &run().graph,
+        &run().registries,
+        adoption(),
+        run().kinds.as_ref(),
+    );
+    assert_eq!(registers.len(), 2, "the companion register and the region");
+    for reg in &registers {
+        let (held, _) = cogra_linter::registers::committed(reg, &run().sources);
+        assert_eq!(
+            cogra_linter::registers::compare(reg, held),
+            cogra_linter::Freshness::Current,
+            "{} is not current",
+            reg.path.display()
+        );
+    }
+    let reported: Vec<String> = run()
+        .findings
+        .iter()
+        .filter(|one| one.rule.as_str().starts_with("register-"))
+        .map(spell)
+        .collect();
+    assert!(reported.is_empty(), "{}", reported.join("\n"));
+}
+
 /// (´sig:lint:index-maps´) over the real run: every key of `mints` is a key
 /// of `labels`, and every `ResolvesTo` target is a node `labels` holds.
 #[test]
@@ -346,6 +352,6 @@ fn the_full_corpus_run_reports_its_wall_time() {
     assert!(counted > 100, "the carrier is the repository");
     assert!(
         checked.timing.of(cogra_linter::Phase::Render).is_none(),
-        "there is no renderer yet, and the report says so rather than reporting zero"
+        "a run that only collects its findings performs no render phase, and the report says so rather than reporting zero"
     );
 }
