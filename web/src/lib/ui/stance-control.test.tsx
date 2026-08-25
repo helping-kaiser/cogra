@@ -345,7 +345,29 @@ describe("the tap", () => {
     await act(async () => {
       fireEvent.click(control());
     });
-    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("still settling");
+    // What it says is where the gesture LEFT them, not what they picked
+    // (Android's `stance_signed`, PR #443 item 7): the tap's own pair is
+    // (+0.10, +0.10) and the standing here folds to the same, but the
+    // sentence names the standing and would keep naming it if a prior
+    // bundle made the two differ.
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
+      "Signed, still settling. Where you stand now: How you stand +0.10, In your world +0.10",
+    );
+  });
+
+  it("names the standing the gesture produced, not the pick that produced it", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.4 }] } } });
+    await settle();
+    await act(async () => {
+      fireEvent.click(control());
+    });
+    // The tap sends (+0.10, +0.10) and the fold answers (+0.60, +0.50) —
+    // the receipt carries the second, which is the whole point of naming
+    // the standing rather than echoing the pick back.
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 0.1, pInterest: 0.1 } }]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
+      "Where you stand now: How you stand +0.60, In your world +0.50",
+    );
   });
 
   it("clears the confirmation rather than leaving it on the screen", async () => {
@@ -906,7 +928,12 @@ describe("severance", () => {
       fireEvent.click(screen.getByTestId("severance-proceed"));
     });
     expect(data.severed).toEqual(["post-1"]);
-    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent("2 actions");
+    // The batch count stays in the receipt — the cost the reader agreed
+    // to is part of what completed — and severance says itself rather
+    // than reading out a face and a pair at the origin.
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
+      "Signed 2 actions, still settling. You've severed this post.",
+    );
   });
 
   it("writes nothing when the confirmation is declined", async () => {

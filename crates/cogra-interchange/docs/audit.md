@@ -21,7 +21,7 @@ Severity: **Critical** = a wrong result or a crash reachable from safe public AP
 
 - **M1 — `uint .size N` rejects every unsigned integer for N ≥ 9.** `cddl/control.rs` caps its probe at `MAX_UINT_SIZE = 8`, so a theory writing `uint .size 9` (or larger) refuses all uints, though RFC 8610 §3.8.1 defines `uint .size N ≡ 0…256**N` — every uint conforms. Under-acceptance of conforming documents; never a false accept, never wrong bytes, which is why it is Major and not Critical. The `MAX_UINT_SIZE` "vacuous" docstring is the mistaken reasoning. (L1 M1, orchestrator-verified.)
 - **M2 — The CDDL recursive-descent parser has no depth guard.** Deeply-nested bracket/paren theory text overflows the stack in `Theory::parse`. Reachable via the public parse entry on untrusted theory text. Reproduced: SIGABRT at parenthesis depth 100 000. (L2, orchestrator-verified.)
-- **M3 — Memory amplification under the no-nesting-bound policy.** An *n*-byte input forces ~48 *n* bytes of decoder state, linear and uncapped — a design consequence of `dec:xchg:nesting-policy`'s deliberate choice of no bound, quantified here at ~48× (the design estimated ~100×, same order). Not a crash; a resource-use fact a consumer of untrusted bytes must know. (L2.)
+- **M3 — Memory amplification under the no-nesting-bound policy.** An *n*-byte input forces ~48 *n* bytes of decoder state, linear and uncapped — a design consequence of the deliberate choice of no bound (`dec:xchg:nesting-policy`), quantified here at ~48× (the design estimated ~100×, same order). Not a crash; a resource-use fact a consumer of untrusted bytes must know. (L2.)
 - **M4 — Post-budget public surface is unreconciled in the design.** The op-budget feature added `RegexpError::BudgetExhausted`, `MismatchKind`, and `Mismatch::kind()` to the public API; the design's error-taxonomy sketch still shows the old arms, and the `Restrained` enum with the `Provision`/`ImplicitReach` accessors is public but undocumented in the design. The design preamble promises it fixes "the complete public API surface," so these are genuine unrecorded deviations. (L3 M1–M3.)
 
 ### Minor
@@ -35,18 +35,18 @@ Severity: **Critical** = a wrong result or a crash reachable from safe public AP
 
 Fixes the orchestrator lands without a ruling, all design-consistent:
 
-- **C1 + C2** — make `Clone`, `PartialEq`, and `Hash` iterative, and the evaluator/`to_value` walks iterative or depth-guarded. This *completes* the pattern `impl:xchg:iterative-teardown` established for `Drop`/`Ord` and which the design already named as a candidate for this phase; it does **not** touch the ratified no-bound nesting policy. Fuzzing follows the fix.
+- **C1 + C2** — make `Clone`, `PartialEq`, and `Hash` iterative, and the evaluator/`to_value` walks iterative or depth-guarded. This *completes* the pattern (`impl:xchg:iterative-teardown`) established for `Drop`/`Ord` and which the design already named as a candidate for this phase; it does **not** touch the ratified no-bound nesting policy. Fuzzing follows the fix.
 - **M1** — remove the `MAX_UINT_SIZE = 8` cap; probe the full uint range per §3.8.1.
 - **M2** — a generous documented recursion-depth bound in the parser, returning a located `TheoryError`; standard hand-written-parser practice, distinct from data-language membership.
 - **M4, m1, m2** — reconcile the design's API sketches to the shipped surface, sweep the stale comments, strengthen the float property to minimality.
 
-Ruled already and landing in the same wave: the **open-companion cut** (`[ICX-def:interchange:open-companion]` gains a cut on the enumerated keys, per the conventions owner's decision).
+Ruled already and landing in the same wave: the **open-companion cut** — (`[ICX-def:interchange:open-companion]`) gains a cut on the enumerated keys, per the conventions owner's decision.
 
 Deferred to the audit's own tooling: the three **fuzz targets** (`decode_canonical`, `cddl_parse`, `accept_document`) and a `make fuzz-interchange` lane, run after C1/C2/M2 so the fuzzer explores past the known overflow.
 
 Wants the conventions/design owner's ruling (non-blocking; not fixed here):
 
-- **M3** — the memory-amplification factor is inherent to the no-bound policy. Accepting it (documented) or introducing a size/depth cap is a change to `dec:xchg:nesting-policy`, the owner's to make. The orchestrator's C1/C2 fix removes the *crash* without capping *depth*, so M3 stands as a resource-use disclosure either way.
+- **M3** — the memory-amplification factor is inherent to the no-bound policy. Accepting it (documented) or introducing a size/depth cap is a change to (`dec:xchg:nesting-policy`), the owner's to make. The orchestrator's C1/C2 fix removes the *crash* without capping *depth*, so M3 stands as a resource-use disclosure either way.
 
 ## Disposition (close-out)
 
