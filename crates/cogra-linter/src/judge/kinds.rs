@@ -30,6 +30,7 @@
 //! out.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::fmt;
 
 use petgraph::stable_graph::NodeIndex;
 
@@ -58,8 +59,9 @@ pub const HYBRID_COLLIDES: RuleId = RuleId::new("registry-hybrid-token-collides"
 pub const HYBRID_MISMATCH: RuleId = RuleId::new("registry-hybrid-token-mismatch");
 
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 8] = [
+pub const RULES: [RuleId; 9] = [
     HEAD_AMBIGUOUS,
+    HEAD_BEYOND_BOUNDS,
     HEAD_UNCATALOGUED,
     HYBRID_COLLIDES,
     HYBRID_MISMATCH,
@@ -175,16 +177,47 @@ pub struct Reduction {
     pub devices: Vec<Device>,
 }
 
+/// Which bound stopped a reduction before its search was done.
+///
+/// Reduction is a search over spelling rules and a search over arbitrary
+/// text needs bounds to be total, so both of these exist and neither is a
+/// statement about the catalogue. A search that hit one has not finished
+/// asking, and the difference between "the relation carries no such pair"
+/// and "the search never got there" is the whole of why this type exists.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum Bound {
+    /// The candidate budget: how many spellings one reduction may visit.
+    Budget(usize),
+    /// The device depth: how many devices one head may carry.
+    Depth(usize),
+}
+
+impl fmt::Display for Bound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Bound::Budget(many) => write!(f, "a budget of {many} candidate spellings"),
+            Bound::Depth(many) => write!(f, "a depth of {many} devices"),
+        }
+    }
+}
+
 /// `base_A(h)`: what a head reduces to
 /// (´[KND-def:kinds:presentation-reduction]´).
 ///
 /// Usually one route, often none. Several routes reaching one name are one
 /// base; several routes reaching different names carrying the declared kind
 /// are what [`HeadVerdict::Ambiguous`] reports.
+///
+/// `bound` records that the search stopped short of exhausting its
+/// candidates. `None` is a search that finished, and only then does "no
+/// route" mean the reduction reaches nothing.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Reduced {
     /// The routes found, in the order the search met them.
     pub routes: Vec<Reduction>,
+    /// The bound that stopped the search, where one did.
+    pub bound: Option<Bound>,
 }
 
 impl Reduced {
@@ -218,6 +251,17 @@ pub enum HeadVerdict {
     Ambiguous {
         /// The names reached, sorted.
         bases: Vec<Box<str>>,
+    },
+    /// The reduction stopped at one of its bounds without reaching a pair,
+    /// so the relation was never asked about this head at all.
+    ///
+    /// This is not [`HeadVerdict::Uncatalogued`] and must never be reported
+    /// as one: the catalogue said nothing here, the search did — and a
+    /// finding that names the catalogue sends its reader to the registry to
+    /// look for a row that was never consulted.
+    Beyond {
+        /// The bound that stopped the search.
+        bound: Bound,
     },
 }
 
@@ -355,19 +399,25 @@ impl KindRegistry {
                 base: head.into(),
                 devices: Vec::new(),
             });
-            return Reduced { routes };
+            return Reduced {
+                routes,
+                bound: None,
+            };
         }
         let mut seen: BTreeSet<String> = BTreeSet::new();
         seen.insert(head.to_owned());
         let mut queue: VecDeque<(String, Vec<Device>)> = VecDeque::new();
         queue.push_back((head.to_owned(), Vec::new()));
         let mut visited = 0;
+        let mut bound = None;
         while let Some((candidate, devices)) = queue.pop_front() {
             visited += 1;
             if visited > BUDGET {
+                bound = Some(Bound::Budget(BUDGET));
                 break;
             }
             if devices.len() >= DEPTH {
+                bound = bound.or(Some(Bound::Depth(DEPTH)));
                 continue;
             }
             for (next, device) in self.successors(&candidate) {
@@ -386,7 +436,7 @@ impl KindRegistry {
                 }
             }
         }
-        Reduced { routes }
+        Reduced { routes, bound }
     }
 
     /// `C_A ⊢ h ✓ k`, by an exact pair or one reduction through one base
@@ -426,6 +476,15 @@ impl KindRegistry {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # What the bounds are allowed to say
+    ///
+    /// A reduction that stopped at one of its bounds *and reached no name at
+    /// all* is [`HeadVerdict::Beyond`] and never
+    /// [`HeadVerdict::Uncatalogued`]: nothing was asked of the relation, so
+    /// nothing may be reported about it. A bounded search that did reach a
+    /// name keeps the uncatalogued verdict, because the name it names is one
+    /// the relation was genuinely asked about.
     #[must_use]
     pub fn validate(&self, head: &str, declared: &Kind) -> HeadVerdict {
         if self.carries(head, declared) {
@@ -445,6 +504,9 @@ impl KindRegistry {
         match matching.len() {
             0 => {
                 let mut bases = distinct(reduced.routes.iter().map(|route| route.base.clone()));
+                if let (true, Some(bound)) = (bases.is_empty(), reduced.bound) {
+                    return HeadVerdict::Beyond { bound };
+                }
                 let base = if bases.len() == 1 {
                     bases.remove(0)
                 } else {
@@ -979,6 +1041,17 @@ pub const HEAD_UNCATALOGUED: RuleId = RuleId::new("kind-head-uncatalogued");
 /// (´[KND-judg:kinds:head-validation]´).
 pub const HEAD_AMBIGUOUS: RuleId = RuleId::new("kind-head-ambiguous");
 
+/// A head whose reduction stopped at one of its bounds without reaching any
+/// catalogue name (´[KND-def:kinds:presentation-reduction]´).
+///
+/// Its own rule and not [`HEAD_UNCATALOGUED`], because the two ask for
+/// different repairs: an uncatalogued head is answered at the registry, and
+/// this one is answered at the head — a head carrying more devices than the
+/// reduction may remove is a head to write more plainly, and the finding
+/// says which bound it passed rather than sending its reader to look for a
+/// row nothing consulted.
+pub const HEAD_BEYOND_BOUNDS: RuleId = RuleId::new("kind-head-beyond-reduction-bounds");
+
 /// Every head validates as exactly one catalogued pair
 /// (´[KND-judg:kinds:head-validation]´).
 ///
@@ -1005,10 +1078,7 @@ pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
         let pairs: Vec<NodeIndex> = out_along(g, head, EdgeW::ValidatesAs).collect();
         let (rule, message) = match pairs.len() {
             1 => continue,
-            0 => (
-                HEAD_UNCATALOGUED,
-                uncatalogued(k, &weight.text, &weight.declared),
-            ),
+            0 => unvalidated(k, &weight.text, &weight.declared),
             _ => (
                 HEAD_AMBIGUOUS,
                 format!(
@@ -1030,15 +1100,31 @@ pub fn head_validation(g: &Corpus, k: &KindRegistry) -> Vec<Diagnostic> {
     found
 }
 
-/// What an unvalidated head says, with the name it reduced to where the
-/// reduction reached one.
-fn uncatalogued(k: &KindRegistry, head: &str, declared: &Kind) -> String {
+/// What a head with no `ValidatesAs` edge says, and under which rule.
+///
+/// The graph decides *that* the head failed — out-degree zero over
+/// `ValidatesAs`, as the degree check reads it — and the registry is asked
+/// only *which* failure it was, which is the same "consulted for the words"
+/// the traversal above describes. The two are different findings because
+/// they are answered in different places: an uncatalogued head at the
+/// registry, a head beyond the bounds at the head.
+fn unvalidated(k: &KindRegistry, head: &str, declared: &Kind) -> (RuleId, String) {
     match k.validate(head, declared) {
-        HeadVerdict::Uncatalogued { base } if &*base != head => {
+        HeadVerdict::Beyond { bound } => (
+            HEAD_BEYOND_BOUNDS,
+            format!(
+                "the reduction of the head {head} stopped at {bound} without reaching a catalogue name, so the relation was never asked about it"
+            ),
+        ),
+        HeadVerdict::Uncatalogued { base } if &*base != head => (
+            HEAD_UNCATALOGUED,
             format!(
                 "the head {head} reduces to {base}, which the relation does not carry with the kind {declared}"
-            )
-        }
-        _ => format!("the relation carries no pair of {head} with the kind {declared}"),
+            ),
+        ),
+        _ => (
+            HEAD_UNCATALOGUED,
+            format!("the relation carries no pair of {head} with the kind {declared}"),
+        ),
     }
 }
