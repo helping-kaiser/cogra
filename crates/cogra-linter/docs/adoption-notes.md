@@ -533,6 +533,53 @@ worth naming — because the spans become displayed rather than live,
 the docs trees do not thereby take labels, so R5's promotion condition
 for `api-spec.md` and `data-model.md` is not tripped by them.
 
+**R21 — The presentation-reduction vocabulary is registry data, not
+adoption data.** ``def:kinds:presentation-reduction`` leaves the format's
+head mapping to adoption and the admitted device set to the registry — but
+the set was stated in prose only, so no checker could reach it.
+Transcribing it into `corpus-adoption.toml` would have recreated exactly
+the drift ``dec:linter:registry-as-data`` exists to prevent, the registry
+and the corpus each holding a copy of one vocabulary. It is tabulated in
+the registry instead, as device rows of ``conv:kinds:hybrids`` — the home
+``sig:kinds:registry-data`` already names for rows contributing no member
+to C — so registry-as-data reaches it by the same path as every other
+table, and the definition's prose cites the rows rather than restating
+them. Neither B, nor H, nor the evidence base moves, so this is an
+amendment and not a new edition. What does move is the generated count of
+device rows in ``tab:kinds:headline-counts``, which no hand touches and
+the linter's first generation run reconciles.
+
+**R22 — Head recognition is adoption data, and matching is
+case-exact.** ``def:kinds:presentation-reduction`` hands the format's
+head mapping to adoption and nothing had recorded it, while
+``inv:kinds:totality`` demands exactly one validation judgment per
+participating authored head — a demand that cannot be met while "head"
+is undefined. `[head-recognition]` records the two forms this corpus
+writes, a bold `Kind (Title)` run and a Markdown heading, each closed
+by the separator and the mint, and names the languages with no head
+form so their silence is a decision rather than an omission.
+Case-exactness follows from the judgment's own word: h must be an
+*exact* catalogue name, the registry catalogues its names capitalized,
+and folding case would widen N by a rule no row authorizes. The one
+head the ruling breaks is the architecture's at
+``open:linter:latex-frontend``, which read "Open question" against the
+catalogue's "Open Question"; correcting one head is cheaper than a
+folding rule and leaves N as the registry wrote it.
+
+**R23 — The failing set is adoption data, not a CI flag.**
+``rep:lint:first-corpus`` rules acceptance scoped and nothing recorded
+the scope. `[enforcement]` records it as literal path prefixes in
+`[carrier]`'s own semantics: the two documentation trees written under
+the discipline fail the build, everything else is reported and does
+not. The choice between this file and a lane invocation is the choice
+between two claims — that a migration has completed, and that a
+command line changed — and only the first is a fact about the corpus.
+Recording it here also puts the growth on the review path every other
+adoption datum travels: each completed migration is one commit adding
+one prefix. Enforcement never touches severity; an error is an error
+wherever it is found, and the partition decides only whether the lane
+fails on it.
+
 ---
 
 ## Measurements
