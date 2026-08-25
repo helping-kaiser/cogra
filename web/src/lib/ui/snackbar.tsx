@@ -41,7 +41,9 @@ export function Snackbar({
       {message !== null && (
         <div
           data-testid={testId}
-          className="fixed inset-x-4 bottom-20 z-30 mx-auto w-fit max-w-[min(92vw,24rem)] rounded-extra-small bg-inverse-surface px-4 py-3 text-body-medium text-inverse-on-surface shadow-lg"
+          // Elevation is tonal (design.md §4): the inverse surface is
+          // what lifts a snackbar off the page, not a drop shadow.
+          className="fixed inset-x-4 bottom-20 z-30 mx-auto w-fit max-w-[min(92vw,24rem)] rounded-extra-small bg-inverse-surface px-4 py-3 text-body-medium text-inverse-on-surface"
         >
           {message}
         </div>
