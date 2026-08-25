@@ -146,6 +146,172 @@ fn row(source: &str, error: &AdoptionError) -> String {
         .to_owned()
 }
 
+/// A tree of files at `paths`, under a root of its own, for the spelling
+/// check to resolve configured paths against.
+fn tree(name: &str, paths: &[&str]) -> PathBuf {
+    let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = std::fs::remove_dir_all(&root);
+    for path in paths {
+        let file = root.join(path);
+        if let Some(parent) = file.parent() {
+            std::fs::create_dir_all(parent).expect("a directory for the fixture");
+        }
+        std::fs::write(&file, "fixture\n").expect("a fixture file");
+    }
+    root
+}
+
+/// A minimal adoption whose partition configures one path beside the
+/// catch-all, so a spelling can be planted in a row the test can name.
+fn configuring(path: &str) -> String {
+    let partition = format!(
+        "
+[partition]
+
+[[partition.rule]]
+order = 1
+path = \"{path}\"
+owner = \"doc.one\"
+
+[[partition.rule]]
+order = 2
+path = \"\"
+owner = \"doc.one\"
+"
+    );
+    document(ONE_PREFIX, &partition, NO_PROFILES, EMPTY_K)
+}
+
+/// Matching is byte-exact, so a prefix the tree spells differently matches
+/// nothing at all — and on a case-insensitive filesystem the author sees the
+/// tree exactly where the prefix says it is. The check is what makes the
+/// byte-exactness say so.
+#[test]
+fn a_configured_path_the_tree_spells_otherwise_is_located() {
+    let root = tree("spelling-case", &["docs/README.md"]);
+    let source = configuring("Docs/");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it docs/");
+    let AdoptionError::PathSpelling {
+        ref configured,
+        ref found,
+        ..
+    } = error
+    else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert!(configured.contains("Docs/"), "{configured}");
+    assert_eq!(found, "docs/");
+    assert!(row(&source, &error).contains("Docs/"));
+}
+
+/// The mismatch may sit at any component, and the finding names the whole
+/// path as the tree spells it rather than the one component that differs.
+#[test]
+fn a_misspelling_deeper_in_a_path_names_the_whole_spelling() {
+    let root = tree("spelling-deep", &["docs/primitive/layers.md"]);
+    let source = configuring("docs/Primitive/");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it primitive/");
+    let AdoptionError::PathSpelling { ref found, .. } = error else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert_eq!(found, "docs/primitive/");
+}
+
+/// A file path is checked the same way, and reported without a trailing
+/// separator it never carried.
+#[test]
+fn a_misspelled_file_path_is_reported_as_a_file() {
+    let root = tree("spelling-file", &["docs/Layers.md"]);
+    let source = configuring("docs/layers.md");
+    let adoption = load(&source).expect("the fixture loads");
+    let error = adoption
+        .verify_spellings(&root)
+        .expect_err("the tree spells it Layers.md");
+    let AdoptionError::PathSpelling { ref found, .. } = error else {
+        panic!("expected PathSpelling, got {error:?}");
+    };
+    assert_eq!(found, "docs/Layers.md");
+}
+
+/// Absence is not a misspelling. A configured root that is simply not in the
+/// tree — a build output, a gitignored junction — passes here; whether its
+/// absence matters is the walk's question.
+#[test]
+fn a_configured_path_that_is_simply_absent_is_no_misspelling() {
+    let root = tree("spelling-absent", &["docs/README.md"]);
+    for absent in ["android/", "web/out/", "docs/nowhere/", "Cargo.lock"] {
+        let source = configuring(absent);
+        let adoption = load(&source).expect("the fixture loads");
+        assert!(
+            adoption.verify_spellings(&root).is_ok(),
+            "{absent} is absent, not misspelled"
+        );
+    }
+}
+
+/// The path that is spelled right passes, which is what keeps the check from
+/// being vacuous.
+#[test]
+fn a_configured_path_the_tree_spells_the_same_way_passes() {
+    let root = tree("spelling-exact", &["docs/primitive/layers.md"]);
+    for spelled in ["docs/", "docs/primitive/", "docs/primitive/layers.md"] {
+        let source = configuring(spelled);
+        let adoption = load(&source).expect("the fixture loads");
+        assert!(
+            adoption.verify_spellings(&root).is_ok(),
+            "{spelled} is the tree's own spelling"
+        );
+    }
+}
+
+/// Every section that configures a path is collected, so none of them can be
+/// checked by accident and none forgotten.
+#[test]
+fn every_configuring_section_contributes_its_paths() {
+    let adoption = ruled();
+    let sections: std::collections::BTreeSet<&str> = adoption
+        .configured_paths
+        .iter()
+        .map(|one| one.section)
+        .collect();
+    for expected in [
+        "[partition]",
+        "[carrier] exclude_trees",
+        "[carrier] generated_files",
+        "[carrier] vendored_files",
+        "[enforcement] failing",
+        "[kinds] registry",
+    ] {
+        assert!(sections.contains(expected), "{expected} contributes none");
+    }
+    assert!(
+        !adoption
+            .configured_paths
+            .iter()
+            .any(|one| one.path.as_str().is_empty()),
+        "the empty prefix configures no path"
+    );
+}
+
+/// The ruled adoption is spelled the way this repository spells its own
+/// trees — the check over the corpus it was written for.
+#[test]
+fn the_ruled_adoption_is_spelled_the_way_the_corpus_root_spells_it() {
+    let root = corpus_adoption_path()
+        .parent()
+        .expect("the corpus root")
+        .to_path_buf();
+    ruled()
+        .verify_spellings(&root)
+        .expect("every configured path is spelled as the tree spells it");
+}
+
 #[test]
 fn the_ruled_adoption_loads() {
     let adoption = ruled();
