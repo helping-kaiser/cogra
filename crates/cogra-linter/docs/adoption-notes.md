@@ -281,6 +281,43 @@ string is not a comment — which is the whole reason
 sweep, which can only over-count; zero raw hits means zero lexical
 hits.)
 
+### `[kinds]` — the kind registry's adoption data
+
+A second discipline with parameters of its own. ``sig:kinds:acceptee``
+names exactly one acceptee owning five things — X_A, E_A, σ_A, G_A,
+Ê_A — and ``gate:kinds:adoption`` blocks adoption until the decision
+names them. Nothing validates a head without them, since head
+validation reads the effective relation C_A = C ∪ X_A.
+
+The registry answers the question in its own closing sentence: *"For
+the corpus in which this registry itself travels, the registry
+authority is the acceptee, and the edition evidence base is E_A
+entire."* `environment-kinds.md` lives in this corpus, so the default
+fits exactly and the ruling adopts it rather than composing something
+new. What the record adds is that it is a record: a default nobody
+wrote down is not a recorded decision, and the gate asks for a
+decision. The acceptee is named rather than described because
+``sig:kinds:acceptee`` requires an authority, and the corpus's
+no-personal-names rule governs the L1 team — an external party — not
+this corpus's own acceptee.
+
+Three consequences, plainly. **X_A is empty**, so C_A = C and every
+head validates against the published relation — a claim the linter
+checks rather than one this file asserts. **Nothing is strengthened**,
+so σ_A is the edition's statuses unchanged and the corpus clause of
+``inv:kinds:attestation-coverage`` holds trivially; the daggered rows
+and the single candidate are recorded so that clause has something to
+be checked against. And **one generator serves every generated
+register**, because ``rule:linter:register-freshness`` already fixes
+regeneration plus exact byte compare as the mechanism, and a second
+generator would be a second source of truth.
+
+The headline counts need one distinction. ``tab:kinds:headline-counts``
+is a generated *region* inside an authored file, not a generated file:
+`environment-kinds.md` stays out of `[carrier]` `generated_files`, and
+what is regenerated and compared is that one table — the registry
+document's only generated region, as its gate says.
+
 ---
 
 ## Findings that are not questions
@@ -321,7 +358,9 @@ assumption that it names one thing.
 
 ## Rulings
 
-Ruled 2026-08-21. Each entry says what stands and why.
+Ruled 2026-08-21 through R17, and 2026-08-25 from R18 — the concept
+review's rulings, whose adoption-data half lands here. Each entry says
+what stands and why.
 
 **R1 — The `[carrier]` section is adoption data.** Ω cannot be shown
 total without a stated domain, and ``sig:linter:adoption-data`` reads
@@ -437,6 +476,19 @@ infrastructure rather than app source, and the zero-error precondition
 of ``dec:linter:kotlin-tree-sitter`` was measured over the 138 `.kt`
 files only. Revisited at the Kotlin slice, when the grammar that would
 parse them arrives.
+
+**R18 — The kind registry's adoption takes the registry's own
+defaults.** jakob is the acceptee, owning X_A, E_A, σ_A, G_A and Ê_A;
+X_A is empty; E_A is the edition evidence base entire, by reference;
+σ_A strengthens nothing. This is what ``sig:kinds:acceptee`` prescribes
+for the corpus a registry travels in, and this is that corpus. The
+linter's regeneration mode is G_A for every generated register,
+Ê_A and the headline counts included, since
+``rule:linter:register-freshness`` already owns the regenerate-and-
+compare mechanism. A register that has never been generated reports as
+**staged**, not stale: it has no committed bytes to compare against,
+and the first generation run commits it and arms exact comparison
+thereafter.
 
 ---
 
