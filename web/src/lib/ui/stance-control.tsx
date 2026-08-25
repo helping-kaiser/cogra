@@ -41,10 +41,11 @@
 // a host happens to place it.
 //
 // What it writes (§8.1): exactly the pair picked. There is no delta in
-// this file. Current standing and where a pick lands the bundle are both
-// READS, rendered around the field and never folded into it. Whether a
-// landing carries nothing is the fold's own flag, never a comparison
-// made here.
+// this file. The current standing is a READ, rendered around the field
+// and never folded into the value. The LANDING is folded here — locally,
+// from the raw sums the same read served, so it keeps up with the drag
+// (`landing.ts`) — but it is display only: `commitChecked` asks the
+// backend for the authoritative projection before anything is signed.
 //
 // What it never does (§8.2): prevent a choice. The whole square is
 // reachable, corners included. A pick that nets the bundle to (0, 0) is
@@ -63,6 +64,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
@@ -93,14 +95,6 @@ import { TransportError } from "@/lib/ui/transport-error";
  * the same thumb.
  */
 export const LONG_PRESS_MS = 500;
-
-/**
- * How long the pick has to settle before its landing is read. The
- * projection is a backend fold, so it cannot ride every pointer move; a
- * short settle keeps it one read per pause instead of one per pixel. The
- * landing line says it is still working the gap out.
- */
-export const PROJECTION_SETTLE_MS = 150;
 
 /** An open severance confirmation. A null pick is the explicit gesture. */
 type Confirming = {
@@ -151,7 +145,6 @@ export function StanceControl({
   const [coach, setCoach] = useState(false);
   const [explaining, setExplaining] = useState(false);
   const [pick, setPick] = useState<StancePair>(ORIGIN);
-  const [landing, setLanding] = useState<StanceLanding | null>(null);
   /**
    * Where the gesture just put the standing, as the fold projected it.
    * It holds the resting target until a fresh read replaces it, which is
@@ -217,22 +210,19 @@ export function StanceControl({
     readBundle();
   }, [readBundle]);
 
-  // The landing is read once the pick settles, and only while a
-  // considered gesture is open — a resting control asks nothing.
-  useEffect(() => {
-    if (!considered) return;
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      void data.project(seamTarget, pick).then((outcome) => {
-        if (cancelled) return;
-        setLanding(outcome.kind === "success" ? outcome.value : null);
-      });
-    }, PROJECTION_SETTLE_MS);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [considered, data, pick, seamTarget]);
+  /**
+   * Where the pick lands the bundle, folded locally against the SERVED
+   * raw sums and recomputed on every pointer move (§8.3). There is no
+   * round trip on this path and so no lag: the read that rendered the
+   * surface already carried everything the fold needs.
+   *
+   * Null until the standing is known — a landing needs a bundle to land
+   * in, and guessing at one would be worse than saying so.
+   */
+  const landing: StanceLanding | null =
+    !considered || bundle === undefined || bundle === null
+      ? null
+      : localLanding(bundle.rawSum, pick);
 
   const clearHold = () => {
     if (holdTimer.current !== null) {
@@ -266,7 +256,6 @@ export function StanceControl({
     setOpen(false);
     setAlternates(false);
     setExplaining(false);
-    setLanding(null);
   }, [releasePointer]);
 
   // Escape cancels the open pad. The pad takes no focus of its own while
@@ -394,7 +383,6 @@ export function StanceControl({
       holdTimer.current = null;
       suppressClick.current = true;
       setPick(ORIGIN);
-      setLanding(null);
       setSigned(null);
       markTaught();
       // The pad opens at the origin, so that is what this drag builds on.
@@ -581,7 +569,6 @@ export function StanceControl({
             disabled={busy}
             onClick={() => {
               setPick(ORIGIN);
-              setLanding(null);
               setSigned(null);
               markTaught();
               setAlternates(true);
