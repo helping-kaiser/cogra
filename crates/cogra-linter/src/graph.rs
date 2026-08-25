@@ -23,26 +23,6 @@ use crate::diag::ByteSpan;
 use crate::frontend::RegionKind;
 use crate::scan::{Label, Prefix, Syntax};
 
-/// The form a language gives a comment.
-///
-/// The pre-tokenizer's, and lands with it in slice 4; carried here because
-/// a region records which comment it came from.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum CommentForm {
-    /// `///`
-    LineOuterDoc,
-    /// `//!`
-    LineInnerDoc,
-    /// `//`
-    LinePlain,
-    /// `/** */`
-    BlockOuterDoc,
-    /// `/*! */`
-    BlockInnerDoc,
-    /// `/* */`
-    BlockPlain,
-}
-
 /// One entity of the disciplines, held as a node weight of the corpus
 /// graph (´sig:lint:node-weights´).
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -21,7 +21,7 @@ use std::path::PathBuf;
 use crate::adopt::{Adoption, Area, Kind, Place, ProfileId};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic};
-use crate::graph::CommentForm;
+use crate::pretokenize::CommentForm;
 use crate::scan::{DelimitedSpan, Syntax};
 
 /// What kind of logical region a frontend produced.
