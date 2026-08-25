@@ -49,8 +49,16 @@ fun SeveranceConfirm(
                 Text(stringResource(R.string.stance_severance_body))
                 // This is where the read-side guidance belongs: what the
                 // reader stands at, and what reaching zero takes.
+                //
+                // A standing already at exactly (0, 0) is named, never
+                // read through the anchor table — which would call the
+                // absence of a feeling "Nice" (design.md §8.4).
                 Text(
-                    text = "${stringResource(R.string.stance_standing)}: ${prompt.standing.reading()}",
+                    text = if (prompt.standing.isZeroBundle) {
+                        "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_zero)}"
+                    } else {
+                        "${stringResource(R.string.stance_standing)}: ${prompt.standing.reading()}"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.testTag("${testTagPrefix}_severance_standing"),
                 )
