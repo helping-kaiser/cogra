@@ -57,11 +57,11 @@ pub mod timing;
 
 pub use adopt::{
     Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes, Classification,
-    EnforcementPartition, HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages, Kind,
-    KindEvidence, KindExtensions, KindGenerator, KindRegister, KindStatuses, KindsAdoption,
-    Language, Meta, NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place,
-    PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles, ReservedKinds, ScannedLanguage,
-    ScannedRegions, Signature, TypedData, UnscannedLanguages,
+    ConfiguredPath, EnforcementPartition, HeadForm, HeadMatching, HeadRecognition,
+    HeadlessLanguages, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister,
+    KindStatuses, KindsAdoption, Language, Meta, NameTransformation, OwnerId, Partition,
+    PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
+    ReservedKinds, ScannedLanguage, ScannedRegions, Signature, TypedData, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -202,18 +202,29 @@ impl Run {
 /// supply are missing would be answering a question it did not ask
 /// (´conv:lint:owner-assignment´).
 ///
+/// The configured paths' *spellings* are checked here for the same reason
+/// and one more: [`Adoption::load`] is handed the adoption file and never
+/// the corpus root, so the check cannot run at load however much it belongs
+/// to the data. This is the first place the two meet, and a misspelling
+/// stops the run rather than travelling as a finding — a prefix that matches
+/// nothing silently mis-owns, mis-excludes, or mis-enforces a whole tree,
+/// which is the linter unable to do its job and not a fact about the corpus
+/// (´crit:lint:error-or-finding´).
+///
 /// # Errors
 ///
-/// [`RunError::Walk`] when `root` is not a directory. Nothing else: a
-/// traversal failure inside a directory that exists is a diagnostic beside a
-/// shorter source list, never an empty carrier
-/// (´[LBL-cav:labels:coexistence]´).
+/// [`RunError::Walk`] when `root` is not a directory, and
+/// [`RunError::Adoption`] when a configured path is spelled otherwise than
+/// the root spells it. Nothing else: a traversal failure inside a directory
+/// that exists is a diagnostic beside a shorter source list, never an empty
+/// carrier (´[LBL-cav:labels:coexistence]´).
 pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     if !root.is_dir() {
         return Err(RunError::Walk(WalkError::NotADirectory {
             path: root.to_path_buf(),
         }));
     }
+    a.verify_spellings(root)?;
     let walking = Instant::now();
     let (sources, failures) = match Walk::new(a, root).sources() {
         Ok(sources) => (sources, Vec::new()),

@@ -187,6 +187,24 @@ pub struct Adoption {
     /// The failing set, as literal path prefixes
     /// (´dec:lint:enforcement-partition´).
     pub enforcement: EnforcementPartition,
+    /// Every path the data configures, each with the row it sits in, so
+    /// that a spelling check can be located (´sig:lint:adoption-api´).
+    pub configured_paths: Vec<ConfiguredPath>,
+}
+
+/// One path the adoption data configures, with the row that writes it.
+///
+/// The rows are collected at load because that is the only moment the file's
+/// own spans are in hand; what is *done* with them needs the corpus root and
+/// therefore happens later (´conv:lint:owner-assignment´).
+#[derive(Clone, Debug)]
+pub struct ConfiguredPath {
+    /// The prefix as the adoption data writes it.
+    pub path: PathPrefix,
+    /// The section that writes it, for a message that says where to look.
+    pub section: &'static str,
+    /// The row it sits in.
+    pub at: Location,
 }
 
 impl Adoption {
@@ -233,17 +251,11 @@ impl Adoption {
     /// The registry document the classification relation is read out of
     /// (´[ARCH-dec:linter:registry-as-data]´).
     ///
-    /// Recovered from the prose of `[kinds.evidence] adopted`, which is the
-    /// only place in the adoption data that names the document at all. No
-    /// key of `[kinds]` carries it, so the recovery is what
-    /// (´req:lint:adoption-data-only´) leaves available: a compiled-in path
-    /// would be this corpus reaching the code by another route, and a
-    /// positional read of `[meta] discipline_docs` would name the registry
-    /// by where it sits in a list.
-    ///
-    /// The gap is named rather than hidden, as `[banned-tokens]`' missing
-    /// class key is (´sig:lint:bans-api´): a `registry` key beside
-    /// `acceptee` would remove the recovery entirely.
+    /// Read from `[kinds] registry`, the key that names it. The path is
+    /// adoption data and nothing else: a compiled-in one would be this
+    /// corpus reaching the code by another route, and a positional read of
+    /// `[meta] discipline_docs` would name the registry by where it sits in
+    /// a list (´req:lint:adoption-data-only´).
     ///
     /// ```
     /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
@@ -256,26 +268,100 @@ impl Adoption {
     /// ```
     #[must_use]
     pub fn registry_document(&self) -> PathBuf {
-        markdown_path_in(&self.kinds.evidence.adopted).unwrap_or_default()
+        PathBuf::from(&*self.kinds.registry)
+    }
+
+    /// Every configured path is spelled the way the corpus root spells it.
+    ///
+    /// Matching is byte-exact everywhere in this crate — a prefix carries no
+    /// pattern dialect and no case rule (´sig:lint:adoption-api´) — so a
+    /// path written `Docs/` against a tree written `docs/` matches nothing
+    /// whatever. On a case-insensitive filesystem that is invisible: the
+    /// author sees the tree exactly where the prefix says it is, and the
+    /// linter silently owns, excludes, or enforces nothing there. This is
+    /// the check that makes the byte-exactness say so out loud, and it is
+    /// why byte-exact matching can stay byte-exact.
+    ///
+    /// **Absence is not a misspelling.** A configured root that is simply
+    /// not in the tree — a build output, a gitignored junction — passes
+    /// here; whether its absence matters is the walk's question, answered by
+    /// `carrier-unmatched-root` against the row's own `optional`. Only a
+    /// path that *exists under another spelling* is reported.
+    ///
+    /// Comparison folds ASCII case and nothing else. That is the hazard the
+    /// case-insensitive filesystems actually pose, and a Unicode folding
+    /// would be a larger claim about names than the adoption data makes.
+    ///
+    /// # Errors
+    ///
+    /// [`AdoptionError::PathSpelling`], located at the row that writes the
+    /// path, naming both spellings.
+    pub fn verify_spellings(&self, root: &Path) -> Result<(), AdoptionError> {
+        let mut listings: BTreeMap<PathBuf, Vec<String>> = BTreeMap::new();
+        for configured in &self.configured_paths {
+            if let Some(found) = misspelling(root, configured.path.as_str(), &mut listings) {
+                return Err(AdoptionError::PathSpelling {
+                    at: configured.at.clone(),
+                    configured: format!("{} {}", configured.section, configured.path),
+                    found,
+                });
+            }
+        }
+        Ok(())
     }
 }
 
-/// The first Markdown path a free-text adoption value names.
+/// The on-disk spelling of `configured`, when the tree carries it under one
+/// that differs.
 ///
-/// Trimming is by the characters a path is spelled with rather than by a
-/// pattern, so a path followed by a comma survives and no dialect enters
-/// (´[ARCH-dec:linter:no-regex]´).
-fn markdown_path_in(prose: &str) -> Option<PathBuf> {
-    prose
-        .split_whitespace()
-        .map(|word| word.trim_matches(|one: char| !path_byte(one)))
-        .find(|word| word.ends_with(".md"))
-        .map(PathBuf::from)
+/// The walk stops at the first component the tree does not carry at all,
+/// which is the absence case and no finding of this check.
+fn misspelling(
+    root: &Path,
+    configured: &str,
+    listings: &mut BTreeMap<PathBuf, Vec<String>>,
+) -> Option<String> {
+    let mut here = root.to_path_buf();
+    let mut spelled = String::new();
+    let mut differs = false;
+    for component in configured.split('/').filter(|one| !one.is_empty()) {
+        let entries = listings
+            .entry(here.clone())
+            .or_insert_with(|| entry_names(&here));
+        let exact = entries.iter().any(|name| name == component);
+        let name = if exact {
+            String::from(component)
+        } else {
+            let folded = entries
+                .iter()
+                .find(|name| name.eq_ignore_ascii_case(component))?;
+            differs = true;
+            folded.clone()
+        };
+        if !spelled.is_empty() {
+            spelled.push('/');
+        }
+        spelled.push_str(&name);
+        here.push(&name);
+    }
+    if configured.ends_with('/') {
+        spelled.push('/');
+    }
+    differs.then_some(spelled)
 }
 
-/// Whether a character is one a corpus-relative path is spelled with.
-fn path_byte(one: char) -> bool {
-    one.is_ascii_alphanumeric() || matches!(one, '/' | '.' | '-' | '_')
+/// The entry names one directory carries, or none where it cannot be read.
+///
+/// An unreadable directory is no evidence about a spelling, so it yields an
+/// empty listing and the walk treats the path as absent.
+fn entry_names(at: &Path) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(at) else {
+        return Vec::new();
+    };
+    entries
+        .filter_map(|one| one.ok())
+        .map(|one| one.file_name().to_string_lossy().into_owned())
+        .collect()
 }
 
 /// When the adoption was drafted and ruled, and where its rationale lives.
@@ -497,6 +583,13 @@ impl Partition {
 #[derive(Clone, Debug)]
 pub struct PartitionRule {
     /// The rule's position; first match wins, in this order.
+    ///
+    /// Checked at load, and equal to the rule's 1-based position in
+    /// [`Partition::rules`] on any [`Adoption`] that loaded: matching walks
+    /// the stored array, so the array is the order and this field is the
+    /// document's claim about it. The two agreeing is what lets a reader
+    /// cite a rule by its order and a diagnostic name one
+    /// (´conv:lint:owner-assignment´).
     pub order: u32,
     /// The literal prefix the rule matches.
     pub path: PathPrefix,
@@ -754,8 +847,17 @@ pub struct BannedToken {
     pub id: Box<str>,
     /// The language it governs.
     pub language: Language,
-    /// The token class, in the words of the adoption data. Detection is
-    /// the pre-tokenizer's, never a pattern match.
+    /// The lexeme class this rule forbids, named in the pre-tokenizer's own
+    /// vocabulary ([`crate::pretokenize::CommentForm::token`],
+    /// [`crate::pretokenize::LiteralForm::token`]).
+    ///
+    /// The machine-readable half of the row: [`crate::bans::BanRule::read`]
+    /// resolves it against the classes the lexer decides, and a name no
+    /// lexer decides leaves the row unreadable rather than silently
+    /// harmless (´sig:lint:bans-api´).
+    pub class: Box<str>,
+    /// The same class in the words of the adoption data, illustration
+    /// included. Read by no code; it is what a diagnostic quotes back.
     pub token: Box<str>,
     /// How grave an occurrence is.
     pub severity: Severity,
@@ -770,6 +872,10 @@ pub struct BannedToken {
 pub struct KindsAdoption {
     /// The named acceptee, who owns the five data below.
     pub acceptee: Box<str>,
+    /// The registry document the classification relation is read out of
+    /// (´[ARCH-dec:linter:registry-as-data]´), as the corpus spells the
+    /// path.
+    pub registry: Box<str>,
     /// X_A: the local extension set.
     pub extensions: KindExtensions,
     /// E_A: the evidence base.
@@ -943,7 +1049,7 @@ impl EnforcementPartition {
 #[derive(serde::Deserialize)]
 struct RawAdoption {
     meta: Meta,
-    carrier: Carrier,
+    carrier: RawCarrier,
     signature: RawSignature,
     partition: RawPartition,
     profiles: RawProfiles,
@@ -957,10 +1063,38 @@ struct RawAdoption {
     scanned_regions: ScannedRegions,
     #[serde(rename = "banned-tokens")]
     banned_tokens: BannedTokens,
-    kinds: KindsAdoption,
+    kinds: RawKinds,
     #[serde(rename = "head-recognition")]
     head_recognition: HeadRecognition,
-    enforcement: EnforcementPartition,
+    enforcement: RawEnforcement,
+}
+
+/// `[carrier]`, with each prefix's row kept for the spelling check.
+#[derive(serde::Deserialize)]
+struct RawCarrier {
+    exclude_trees: Vec<Spanned<PathPrefix>>,
+    generated_files: Vec<Spanned<PathPrefix>>,
+    vendored_trees: Vec<Spanned<PathPrefix>>,
+    vendored_files: Vec<Spanned<PathPrefix>>,
+}
+
+/// `[enforcement]`, likewise.
+#[derive(serde::Deserialize)]
+struct RawEnforcement {
+    default: Enforcement,
+    failing: Vec<Spanned<PathPrefix>>,
+}
+
+/// `[kinds]`, whose `registry` key names a path like any other.
+#[derive(serde::Deserialize)]
+struct RawKinds {
+    acceptee: Box<str>,
+    registry: Spanned<Box<str>>,
+    extensions: KindExtensions,
+    evidence: KindEvidence,
+    statuses: KindStatuses,
+    generator: KindGenerator,
+    register: KindRegister,
 }
 
 #[derive(serde::Deserialize)]
@@ -1002,7 +1136,7 @@ struct RawPartition {
 
 #[derive(serde::Deserialize)]
 struct RawPartitionRule {
-    order: u32,
+    order: Spanned<u32>,
     path: Spanned<PathPrefix>,
     owner: Spanned<OwnerId>,
     #[serde(default)]
@@ -1041,13 +1175,38 @@ fn row<T>(spanned: &Spanned<T>, source: &str, origin: &Path) -> Location {
 impl RawAdoption {
     fn validate(self, source: &str, origin: &Path) -> Result<Adoption, AdoptionError> {
         let signature = self.signature.validate(source, origin)?;
+        let mut configured = Vec::new();
+        for rule in &self.partition.rules {
+            keep(&mut configured, "[partition]", &rule.path, source, origin);
+        }
         let partition = self.partition.validate(source, origin, &signature)?;
         let profiles = self
             .profiles
             .validate(source, origin, &self.reserved_kinds)?;
+        for (section, prefixes) in [
+            ("[carrier] exclude_trees", &self.carrier.exclude_trees),
+            ("[carrier] generated_files", &self.carrier.generated_files),
+            ("[carrier] vendored_trees", &self.carrier.vendored_trees),
+            ("[carrier] vendored_files", &self.carrier.vendored_files),
+            ("[enforcement] failing", &self.enforcement.failing),
+        ] {
+            for prefix in prefixes {
+                keep(&mut configured, section, prefix, source, origin);
+            }
+        }
+        configured.push(ConfiguredPath {
+            path: PathPrefix::new(self.kinds.registry.as_ref()),
+            section: "[kinds] registry",
+            at: row(&self.kinds.registry, source, origin),
+        });
         Ok(Adoption {
             meta: self.meta,
-            carrier: self.carrier,
+            carrier: Carrier {
+                exclude_trees: inner(self.carrier.exclude_trees),
+                generated_files: inner(self.carrier.generated_files),
+                vendored_trees: inner(self.carrier.vendored_trees),
+                vendored_files: inner(self.carrier.vendored_files),
+            },
             signature,
             partition,
             profiles,
@@ -1056,11 +1215,46 @@ impl RawAdoption {
             citation_indexes: self.citation_indexes,
             scanned_regions: self.scanned_regions,
             banned_tokens: self.banned_tokens,
-            kinds: self.kinds,
+            kinds: KindsAdoption {
+                acceptee: self.kinds.acceptee,
+                registry: self.kinds.registry.into_inner(),
+                extensions: self.kinds.extensions,
+                evidence: self.kinds.evidence,
+                statuses: self.kinds.statuses,
+                generator: self.kinds.generator,
+                register: self.kinds.register,
+            },
             head_recognition: self.head_recognition,
-            enforcement: self.enforcement,
+            enforcement: EnforcementPartition {
+                default: self.enforcement.default,
+                failing: inner(self.enforcement.failing),
+            },
+            configured_paths: configured,
         })
     }
+}
+
+/// Record one configured prefix and the row it sits in. The empty prefix
+/// configures no path — it is what makes Ω total — so it is not one.
+fn keep(
+    into: &mut Vec<ConfiguredPath>,
+    section: &'static str,
+    prefix: &Spanned<PathPrefix>,
+    source: &str,
+    origin: &Path,
+) {
+    if prefix.as_ref().as_str().is_empty() {
+        return;
+    }
+    into.push(ConfiguredPath {
+        path: prefix.as_ref().clone(),
+        section,
+        at: row(prefix, source, origin),
+    });
+}
+
+fn inner(spanned: Vec<Spanned<PathPrefix>>) -> Vec<PathPrefix> {
+    spanned.into_iter().map(Spanned::into_inner).collect()
 }
 
 impl RawSignature {
@@ -1107,13 +1301,22 @@ impl RawPartition {
         origin: &Path,
         signature: &Signature,
     ) -> Result<Partition, AdoptionError> {
-        for rule in &self.rules {
+        for (index, rule) in self.rules.iter().enumerate() {
             let owner = rule.owner.as_ref();
             if !signature.registers(owner) {
                 return Err(AdoptionError::UnknownOwner {
                     at: row(&rule.owner, source, origin),
-                    order: rule.order,
+                    order: *rule.order.as_ref(),
                     owner: owner.to_string(),
+                });
+            }
+            let position = u32::try_from(index + 1).unwrap_or(u32::MAX);
+            let stated = *rule.order.as_ref();
+            if stated != position {
+                return Err(AdoptionError::RuleOrderMismatch {
+                    at: row(&rule.order, source, origin),
+                    order: stated,
+                    position,
                 });
             }
         }
@@ -1134,7 +1337,7 @@ impl RawPartition {
             .rules
             .into_iter()
             .map(|rule| PartitionRule {
-                order: rule.order,
+                order: rule.order.into_inner(),
                 path: rule.path.into_inner(),
                 owner: rule.owner.into_inner(),
                 optional: rule.optional,
