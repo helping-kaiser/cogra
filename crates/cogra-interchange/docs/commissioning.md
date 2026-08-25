@@ -20,7 +20,7 @@ Measured 2026-08-21 in the `claude-cogra` toolbox (debug build): the full `cargo
 
 ## Open against the crate (owner decisions, non-blocking)
 
-- **M3** — the ~48× memory amplification inherent to the no-nesting-bound policy: documented-as-is or capped, a change to `dec:xchg:nesting-policy`.
+- **M3** — the ~48× memory amplification inherent to the no-nesting-bound policy: documented-as-is or capped, a change to (`dec:xchg:nesting-policy`).
 - **F1** — the exponential-backtracking parser DoS: a reviewed refactor slice (lookahead instead of rewind-and-reparse).
 - The **open-companion cut** change is implemented and awaiting the conventions owner's review of its wording.
 
