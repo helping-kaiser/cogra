@@ -4,7 +4,8 @@
 // commits the modest positive default, and a press-and-hold blooms a
 // pad — at one fixed spot, the lower centre of the viewport, whichever
 // control opened it — that the reader drifts across. Releasing leaves
-// the pick standing and the pad open; an explicit Set is what signs.
+// the pick standing and the pad open, and the field goes on taking
+// drags for as long as it stands; an explicit Set is what signs.
 // Horizontal is valence, vertical is connection, the pad opens at the
 // origin, and the whole square stays reachable — corners included,
 // because someone dragging to the far corner means it. The drawn field
@@ -56,6 +57,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -437,6 +439,45 @@ private fun Modifier.stanceGesture(
 }
 
 /**
+ * The open pad's own drag, on the field itself.
+ *
+ * The pad outlives the gesture that opened it — release parks it with the
+ * pick standing and only Set signs (design.md §8.3) — so the field has to
+ * accept drags of its own, as many as the reader likes, or the knob is
+ * frozen the moment the finger lifts. The launching gesture and this one
+ * are the same rule with a different starting point: **accumulated
+ * travel**, here from the pick already standing rather than from the
+ * origin, so the knob never jumps to the finger and one dp of travel is
+ * one dp of knob either way.
+ *
+ * **The control owns its touches** (design.md §8.3), on this path too:
+ * the down is consumed as it arrives and every move with it, so a drag
+ * meant for the field can reach neither the surface behind the pad nor
+ * the scrolling column the field sits in — the field IS the value space,
+ * and a vertical drag across it is connection, not a scroll.
+ */
+private fun Modifier.fieldGesture(
+    enabled: Boolean,
+    extentPx: Float,
+    pick: State<StancePoint>,
+    onPick: State<(StancePoint) -> Unit>,
+): Modifier = if (!enabled) this else pointerInput(extentPx) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        down.consume()
+        // Read once, at the down: the base is what was standing when this
+        // drag began, and the picks it reports must not feed back into it.
+        val base = pick.value
+        var travel = Offset.Zero
+        drag(down.id) { change ->
+            travel += change.positionChange()
+            change.consume()
+            onPick.value(stancePointFrom(base, travel, extentPx))
+        }
+    }
+}
+
+/**
  * The pad's one fixed spot: **the lower centre of the viewport**
  * (design.md §8.3), the same place every time regardless of which
  * control opened it.
@@ -581,7 +622,9 @@ private fun StancePadOverlay(
             // The chosen surface replaces the pad, it does not sit beside
             // it: an alternate is the input, not a second opinion
             // (design.md §8.6).
-            if (state.inputMode == StanceInputSurface.PAD) StanceField(state.pick)
+            if (state.inputMode == StanceInputSurface.PAD) {
+                StanceField(state.pick, enabled = !state.busy, onPick = onPick)
+            }
             StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
                 // The alternates are the accessible path, so the way into
@@ -802,13 +845,30 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
  * The field: a soft rounded square whose own box is the value space,
  * with its inert centre-lines drawn as visibly dead rather than hidden,
  * and the knob at the pick — never outside the drawing (design.md §8.3).
+ *
+ * It takes drags of its own, because the pad outlives the gesture that
+ * opened it: release parks the pad with the pick standing, and the knob
+ * stays repositionable until Set signs or Cancel dismisses (design.md
+ * §8.3). A field that only moved under the launching gesture would freeze
+ * the moment the finger lifted.
  */
 @Composable
-private fun StanceField(pick: StancePoint) {
+private fun StanceField(
+    pick: StancePoint,
+    enabled: Boolean,
+    onPick: (StancePoint) -> Unit,
+) {
     val ground = MaterialTheme.colorScheme.surfaceVariant
     val dead = MaterialTheme.colorScheme.outlineVariant
     val knob = MaterialTheme.colorScheme.primary
     val knobRing = MaterialTheme.colorScheme.onPrimary
+    val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
+    // The gesture is keyed on the extent alone, so it survives every pick
+    // it reports; these are what let it read the current pick and the
+    // current callback without being restarted mid-drag — the documented
+    // way to hold a changing lambda inside `pointerInput`.
+    val standing = rememberUpdatedState(pick)
+    val report = rememberUpdatedState(onPick)
     // The bloom: M3 standard easing over a short duration. Compose scales
     // every animation by the platform's own animator duration scale, so
     // "remove animations" is honoured without a branch here (design.md §4).
@@ -819,6 +879,9 @@ private fun StanceField(pick: StancePoint) {
     Canvas(
         modifier = Modifier
             .size(FIELD_SIZE)
+            // Outside the bloom's layer: the drag is measured in travel,
+            // and a half-grown field would otherwise scale that travel.
+            .fieldGesture(enabled, extentPx, standing, report)
             // The bloom scales the whole field, knob included, so the
             // knob is inside the drawing at every frame of it and not
             // only once it has finished growing.
