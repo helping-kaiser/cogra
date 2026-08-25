@@ -4,10 +4,12 @@
 // An entity row is written at the pre-commitment signature and carries a
 // pending mark — absent landing coordinates — until confirm fills them in
 // (substrate.md §6: a prepared record is its author's content from the
-// moment they sign it). The landing-order columns cache the genesis
-// record's authoritative causal key; like every mirror-derived column
-// they are rebuildable and never authoritative (data-model.md "The
-// Boundary Rule").
+// moment they sign it). Version rows carry the same coordinates, of the
+// record that promoted them, and that is what orders the versions of a
+// node: the newest version is the one whose record landed last, not the
+// one whose row was written last. Like every mirror-derived column the
+// coordinates are rebuildable and never authoritative (data-model.md
+// "The Boundary Rule").
 
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
@@ -181,14 +183,18 @@ pub async fn insert_post(
     }
     sqlx::query!(
         "INSERT INTO post_versions
-             (post_id, title, description, content, pending, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6)",
+             (post_id, title, description, content, pending, created_at,
+              landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         id,
         title,
         description,
         content,
         order.is_none(),
         created_at,
+        order.map(|o| o.landed_epoch),
+        order.map(|o| o.act_time),
+        order.map(|o| o.position),
     )
     .execute(&mut **tx)
     .await?;
@@ -198,8 +204,8 @@ pub async fn insert_post(
 /// Appends a post version row — an edit. The caller supplies the full
 /// merged field set (an edit's unchanged fields are copied forward so the
 /// newest row alone renders the post — data-model.md "Display-content
-/// versioning"). `pending` marks a version whose edit record has not
-/// landed.
+/// versioning"). `order` is None at the pre-commitment — the version is
+/// pending — and Some for an edit promoted without one.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert_post_version(
     tx: &mut Transaction<'_, Postgres>,
@@ -207,20 +213,24 @@ pub async fn insert_post_version(
     title: Option<&str>,
     description: Option<&str>,
     content: &str,
-    pending: bool,
+    order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<(), ContentError> {
     sqlx::query!(
         "INSERT INTO post_versions
-             (post_id, title, description, content, pending, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6)
+             (post_id, title, description, content, pending, created_at,
+              landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (post_id, created_at) DO NOTHING",
         post_id,
         title,
         description,
         content,
-        pending,
+        order.is_none(),
         created_at,
+        order.map(|o| o.landed_epoch),
+        order.map(|o| o.act_time),
+        order.map(|o| o.position),
     )
     .execute(&mut **tx)
     .await?;
@@ -267,12 +277,17 @@ pub async fn insert_comment(
         return Ok(false);
     }
     sqlx::query!(
-        "INSERT INTO comment_versions (comment_id, content, pending, created_at)
-         VALUES ($1, $2, $3, $4)",
+        "INSERT INTO comment_versions
+             (comment_id, content, pending, created_at,
+              landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)",
         id,
         content,
         order.is_none(),
         created_at,
+        order.map(|o| o.landed_epoch),
+        order.map(|o| o.act_time),
+        order.map(|o| o.position),
     )
     .execute(&mut **tx)
     .await?;
@@ -284,17 +299,22 @@ pub async fn insert_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     content: &str,
-    pending: bool,
+    order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<(), ContentError> {
     sqlx::query!(
-        "INSERT INTO comment_versions (comment_id, content, pending, created_at)
-         VALUES ($1, $2, $3, $4)
+        "INSERT INTO comment_versions
+             (comment_id, content, pending, created_at,
+              landed_epoch, act_time, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (comment_id, created_at) DO NOTHING",
         comment_id,
         content,
-        pending,
+        order.is_none(),
         created_at,
+        order.map(|o| o.landed_epoch),
+        order.map(|o| o.act_time),
+        order.map(|o| o.position),
     )
     .execute(&mut **tx)
     .await?;
@@ -324,22 +344,29 @@ pub async fn land_post(
         == 1)
 }
 
-/// Confirm: drops the pending mark from the version row the landing
-/// write itself staged, named by its authoring instant — `(post_id,
-/// created_at)` is the version row's key, so a node carrying more than
-/// one unlanded version never lands a write's text on another's record.
-/// False when there is none — the edit landed without ever being staged
-/// here, and the promotion path appends the version instead.
+/// Confirm: writes the edit record's landing coordinates onto the version
+/// row the landing write itself staged and drops its pending mark. The
+/// row is named by its authoring instant — `(post_id, created_at)` is
+/// unique, so a node carrying more than one unlanded version never lands
+/// a write's text on another's record. False when there is none — the
+/// edit landed without ever being staged here, and the promotion path
+/// appends the version instead.
 pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
     created_at: Timestamp,
+    order: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE post_versions SET pending = FALSE
+        "UPDATE post_versions
+            SET pending = FALSE, landed_epoch = $3, act_time = $4,
+                position = $5
          WHERE post_id = $1 AND created_at = $2 AND pending",
         post_id,
         created_at,
+        order.landed_epoch,
+        order.act_time,
+        order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -372,12 +399,18 @@ pub async fn land_comment_version(
     tx: &mut Transaction<'_, Postgres>,
     comment_id: Uuid,
     created_at: Timestamp,
+    order: LandingOrder,
 ) -> Result<bool, ContentError> {
     Ok(sqlx::query!(
-        "UPDATE comment_versions SET pending = FALSE
+        "UPDATE comment_versions
+            SET pending = FALSE, landed_epoch = $3, act_time = $4,
+                position = $5
          WHERE comment_id = $1 AND created_at = $2 AND pending",
         comment_id,
         created_at,
+        order.landed_epoch,
+        order.act_time,
+        order.position,
     )
     .execute(&mut **tx)
     .await?
@@ -621,7 +654,12 @@ pub async fn post(pool: &PgPool, id: Uuid) -> Result<Option<Post>, ContentError>
                SELECT title, description, content, redaction_reason, pending,
                       created_at
                FROM post_versions WHERE post_id = p.id
-               ORDER BY created_at DESC LIMIT 1
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
            ) v ON TRUE
            WHERE p.id = $1"#,
         id,
@@ -647,7 +685,12 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
                SELECT title, description, content, redaction_reason, pending,
                       created_at
                FROM post_versions WHERE post_id = p.id
-               ORDER BY created_at DESC LIMIT 1
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
            ) v ON TRUE
            WHERE p.l1_node_id = $1"#,
         l1_node_id,
@@ -828,7 +871,12 @@ async fn list_posts_landed(
                           pending, created_at
                    FROM post_versions
                    WHERE post_id = p.id AND ($6 OR NOT pending)
-                   ORDER BY created_at DESC LIMIT 1
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            act_time DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NOT NULL
                  AND ($1::bigint IS NULL
@@ -881,7 +929,12 @@ async fn list_posts_pending(
                    SELECT title, description, content, redaction_reason,
                           pending, created_at
                    FROM post_versions WHERE post_id = p.id
-                   ORDER BY created_at DESC LIMIT 1
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            act_time DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
                ) v ON TRUE
                WHERE p.landed_epoch IS NULL
                  AND ($1::timestamptz IS NULL
@@ -956,7 +1009,12 @@ pub async fn comment(pool: &PgPool, id: Uuid) -> Result<Option<Comment>, Content
            JOIN LATERAL (
                SELECT content, redaction_reason, pending, created_at
                FROM comment_versions WHERE comment_id = c.id
-               ORDER BY created_at DESC LIMIT 1
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
            ) v ON TRUE
            WHERE c.id = $1"#,
         id,
@@ -983,7 +1041,12 @@ pub async fn comment_by_node(
            JOIN LATERAL (
                SELECT content, redaction_reason, pending, created_at
                FROM comment_versions WHERE comment_id = c.id
-               ORDER BY created_at DESC LIMIT 1
+               ORDER BY pending DESC,
+                        landed_epoch DESC NULLS LAST,
+                        act_time DESC NULLS LAST,
+                        position DESC NULLS LAST,
+                        created_at DESC, version_id DESC
+               LIMIT 1
            ) v ON TRUE
            WHERE c.l1_node_id = $1"#,
         l1_node_id,
@@ -1046,7 +1109,12 @@ async fn comments_landed(
                    SELECT content, redaction_reason, pending, created_at
                    FROM comment_versions
                    WHERE comment_id = c.id AND ($7 OR NOT pending)
-                   ORDER BY created_at DESC LIMIT 1
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            act_time DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
                ) v ON TRUE
                WHERE c.target_id = $6
                  AND c.landed_epoch IS NOT NULL
@@ -1097,7 +1165,12 @@ async fn comments_pending(
                JOIN LATERAL (
                    SELECT content, redaction_reason, pending, created_at
                    FROM comment_versions WHERE comment_id = c.id
-                   ORDER BY created_at DESC LIMIT 1
+                   ORDER BY pending DESC,
+                            landed_epoch DESC NULLS LAST,
+                            act_time DESC NULLS LAST,
+                            position DESC NULLS LAST,
+                            created_at DESC, version_id DESC
+                   LIMIT 1
                ) v ON TRUE
                WHERE c.target_id = $5
                  AND c.landed_epoch IS NULL

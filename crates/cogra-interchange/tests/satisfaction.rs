@@ -422,6 +422,26 @@ fn arrays_nest() {
     ));
 }
 
+/// A rule that recurses through a value descends one call frame per level of
+/// the document it matches. A document nested past the matcher's depth bound
+/// is answered as a mismatch rather than overflowing the stack: a theory and
+/// a document a hostile party controls must not crash the judge.
+#[test]
+fn a_recursive_theory_against_a_deep_document_is_bounded() {
+    let theory = theory_with("nest", "nest = [nest] / 0");
+
+    let deep = |levels: usize| {
+        let mut bytes = vec![0x81u8; levels];
+        bytes.push(0x00);
+        Value::from_canonical_bytes(&bytes).expect("nesting is bounded by the input")
+    };
+
+    // Shallow enough to match within the bound.
+    assert!(satisfies(&document_of(deep(64)), &theory).holds());
+    // Far past the bound: a verdict, not a crash.
+    assert!(!satisfies(&document_of(deep(500_000)), &theory).holds());
+}
+
 #[test]
 fn an_array_member_key_is_documentary() {
     assert!(admits(
@@ -676,6 +696,23 @@ fn size_on_an_unsigned_integer_is_a_range() {
     assert!(admits("uint .size 3", Value::Unsigned(16_777_215)));
     assert!(!admits("uint .size 3", Value::Unsigned(16_777_216)));
     assert!(admits("uint .size 1", Value::Unsigned(255)));
+    assert!(!admits("uint .size 1", Value::Unsigned(256)));
+    assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
+}
+
+/// `uint .size N` ≡ `0…256**N`, and `256**9 > 2**64`, so a width of nine
+/// bytes or more admits every unsigned integer — where the byte count a
+/// value happens to need would say nothing of the kind.
+#[test]
+fn size_on_an_unsigned_integer_admits_every_uint_past_eight_bytes() {
+    assert!(admits("uint .size 9", Value::Unsigned(5)));
+    assert!(admits("uint .size 9", Value::Unsigned(u64::MAX)));
+    assert!(admits("uint .size 20", Value::Unsigned(5)));
+    assert!(admits("uint .size 20", Value::Unsigned(u64::MAX)));
+    // A range of oversized widths is satisfied the same way.
+    assert!(admits("uint .size (9..12)", Value::Unsigned(u64::MAX)));
+    assert!(admits("uint .size (10..20)", Value::Unsigned(5)));
+    // Eight is unchanged: the widths at or below it still bound the value.
     assert!(!admits("uint .size 1", Value::Unsigned(256)));
     assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
 }

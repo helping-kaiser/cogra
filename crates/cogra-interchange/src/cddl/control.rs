@@ -30,21 +30,21 @@
 
 use std::cmp::Ordering;
 
-use super::ast::{Name, Operation, Type2};
+use super::ast::{Name, Operation, Operator, Type2, Type2Kind};
 use super::eval::Evaluator;
 use super::fragment;
 use super::lex::NumberToken;
 use crate::error::RegexpError;
 use crate::value::Value;
 
-/// The greatest `.size` a `uint` control probes.
+/// The greatest `.size` width that distinguishes one unsigned integer from
+/// another.
 ///
-/// Every unsigned integer of the data language fits in eight bytes, so no
-/// size above eight can change an answer that a size of eight does not
-/// already give. The one shape this does not reach is a control type
-/// admitting no size at or below eight and some size above it — `uint
-/// .size (9..12)`, which the RFC's equivalence makes vacuous — and it is
-/// answered `false` rather than by an unbounded search.
+/// Every unsigned integer of the data language fits in eight bytes, so the
+/// widths that matter — the ones a value can be too large for — are one
+/// through eight. A width of nine or more is wider than any uint can need
+/// (`256**9 > 2**64`), so it admits every uint; a control type naming only
+/// such widths is satisfied by every uint rather than by none.
 const MAX_UINT_SIZE: u64 = 8;
 
 /// A number of the data language or of a CDDL literal, for the comparisons
@@ -106,13 +106,53 @@ fn size<'a>(evaluator: &mut Evaluator<'a>, value: &Value, operand: &'a Type2) ->
             evaluator.match_type2(&Value::Unsigned(length), operand)
         }
         Value::Unsigned(number) => {
+            // `uint .size N` ≡ `0…256**N` (RFC 8610 §3.8.1), so the value
+            // conforms at every width at or above the one it needs. The
+            // control type is satisfied where it admits any such width.
+            // Widths one through eight are the ones a uint can be too large
+            // for, so those are probed; a width of nine or more admits every
+            // uint, so a type naming one is satisfied outright.
             for probe in needed_bytes(*number)..=MAX_UINT_SIZE {
                 if evaluator.match_type2(&Value::Unsigned(probe), operand) {
                     return true;
                 }
             }
-            false
+            admits_oversized_width(evaluator, operand)
         }
+        _ => false,
+    }
+}
+
+/// Whether a `.size` control type admits a width of nine bytes or more,
+/// each of which admits every unsigned integer.
+///
+/// Reached only after the widths one through eight are ruled out, so the
+/// type admits no width a uint can fit in exactly; the question left is
+/// whether it names a vacuously wide one. A literal width says so directly,
+/// and a parenthesized range through its upper bound. `uint` and the other
+/// unbounded width types never arrive here — they admit width eight, which
+/// the probe already found.
+fn admits_oversized_width<'a>(evaluator: &Evaluator<'a>, operand: &'a Type2) -> bool {
+    if let Some(Num::Int(width)) = evaluator.bound(operand) {
+        return width > i128::from(MAX_UINT_SIZE);
+    }
+    let Type2Kind::Parenthesized(inner) = &operand.kind else {
+        return false;
+    };
+    let [choice] = inner.choices.as_slice() else {
+        return false;
+    };
+    let Some(operation) = &choice.operation else {
+        return false;
+    };
+    let inclusive = match operation.operator {
+        Operator::RangeInclusive => true,
+        Operator::RangeExclusive => false,
+        Operator::Control(_) => return false,
+    };
+    match evaluator.bound(&operation.operand) {
+        // The exclusive upper bound is not itself admitted.
+        Some(Num::Int(high)) => high - i128::from(!inclusive as u8) > i128::from(MAX_UINT_SIZE),
         _ => false,
     }
 }

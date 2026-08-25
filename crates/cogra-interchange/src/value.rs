@@ -9,6 +9,7 @@
 //! which is why encoding has no failure mode.
 
 use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use std::mem;
 
 use crate::encode::initial_byte;
@@ -30,7 +31,7 @@ use crate::error::ValueError;
 /// assert_eq!(v.to_canonical_bytes(), [0x39, 0x01, 0xf3]);
 /// assert_eq!(Value::from_canonical_bytes(&[0x39, 0x01, 0xf3]).expect("canonical"), v);
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Eq)]
 pub enum Value {
     /// Major type 0: an integer in `[0, 2^64)`.
     Unsigned(u64),
@@ -162,6 +163,197 @@ impl Ord for Value {
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Value) -> Option<Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+// The derived `Clone`, `PartialEq`, and `Hash` recurse to the nesting depth,
+// so a value a hostile input nests deeply enough overflows the stack on the
+// walk the compiler generates — the same hazard `Drop` and `Ord` already
+// answer with an explicit worklist (`impl:xchg:iterative-teardown`). These
+// three are hand-written to the same discipline: the walk is a worklist, and
+// the call depth stays constant however deep the value nested.
+
+impl Clone for Value {
+    fn clone(&self) -> Value {
+        clone_iter(self)
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Value) -> bool {
+        eq_iter(vec![(self, other)])
+    }
+}
+
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        hash_iter(vec![self], state);
+    }
+}
+
+/// A deep clone that never recurses to the nesting depth.
+///
+/// The rebuild is post-order over an explicit instruction stack: a `Clone`
+/// step for a container pushes a matching build step and then its children,
+/// so every child is fully rebuilt into `results` before the build step that
+/// consumes it runs. `results` therefore holds exactly the finished clone
+/// when the stack empties, and the call depth stays constant.
+fn clone_iter(root: &Value) -> Value {
+    enum Step<'a> {
+        Clone(&'a Value),
+        BuildArray(usize),
+        BuildMap(usize),
+        BuildTag(u64),
+    }
+
+    let mut work = vec![Step::Clone(root)];
+    let mut results: Vec<Value> = Vec::new();
+    while let Some(step) = work.pop() {
+        match step {
+            // A container defers to a build step and pushes its children; a
+            // leaf clones directly. The children finish before the build
+            // step, so it finds them waiting on `results`.
+            Step::Clone(Value::Array(array)) => {
+                work.push(Step::BuildArray(array.0.len()));
+                for child in array.0.iter().rev() {
+                    work.push(Step::Clone(child));
+                }
+            }
+            Step::Clone(Value::Map(map)) => {
+                work.push(Step::BuildMap(map.0.len()));
+                for (key, value) in map.0.iter().rev() {
+                    work.push(Step::Clone(value));
+                    work.push(Step::Clone(key));
+                }
+            }
+            Step::Clone(Value::Tag(tag)) => {
+                work.push(Step::BuildTag(tag.number));
+                work.push(Step::Clone(&tag.item));
+            }
+            Step::Clone(Value::Unsigned(n)) => results.push(Value::Unsigned(*n)),
+            Step::Clone(Value::Negative(n)) => results.push(Value::Negative(*n)),
+            Step::Clone(Value::Bytes(b)) => results.push(Value::Bytes(b.clone())),
+            Step::Clone(Value::Text(t)) => results.push(Value::Text(t.clone())),
+            Step::Clone(Value::Bool(b)) => results.push(Value::Bool(*b)),
+            Step::Clone(Value::Null) => results.push(Value::Null),
+            Step::Clone(Value::Simple(s)) => results.push(Value::Simple(*s)),
+            Step::Clone(Value::Float(f)) => results.push(Value::Float(*f)),
+            Step::BuildArray(len) => {
+                let start = results.len().saturating_sub(len);
+                let items = results.split_off(start);
+                results.push(Value::Array(Array(items)));
+            }
+            Step::BuildMap(len) => {
+                let start = results.len().saturating_sub(len * 2);
+                let mut flat = results.split_off(start).into_iter();
+                let mut entries = Vec::with_capacity(len);
+                while let (Some(key), Some(value)) = (flat.next(), flat.next()) {
+                    entries.push((key, value));
+                }
+                results.push(Value::Map(Map::from_sorted(entries)));
+            }
+            Step::BuildTag(number) => {
+                let item = results.pop().unwrap_or(Value::Null);
+                results.push(Value::Tag(Tag {
+                    number,
+                    item: Box::new(item),
+                }));
+            }
+        }
+    }
+    // The worklist rebuilds exactly one value for the root.
+    debug_assert_eq!(results.len(), 1, "the clone leaves the root on the stack");
+    results.pop().unwrap_or(Value::Null)
+}
+
+/// Structural equality over an explicit worklist of pairs, in the shape of
+/// [`Value`]'s `Ord`. The first inequality met settles the answer.
+fn eq_iter(mut work: Vec<(&Value, &Value)>) -> bool {
+    while let Some((a, b)) = work.pop() {
+        match (a, b) {
+            (Value::Unsigned(x), Value::Unsigned(y)) if x == y => {}
+            (Value::Negative(x), Value::Negative(y)) if x == y => {}
+            (Value::Bytes(x), Value::Bytes(y)) if x == y => {}
+            (Value::Text(x), Value::Text(y)) if x == y => {}
+            (Value::Bool(x), Value::Bool(y)) if x == y => {}
+            (Value::Null, Value::Null) => {}
+            (Value::Simple(x), Value::Simple(y)) if x == y => {}
+            (Value::Float(x), Value::Float(y)) if x == y => {}
+            (Value::Array(x), Value::Array(y)) if x.0.len() == y.0.len() => {
+                work.extend(x.0.iter().zip(y.0.iter()));
+            }
+            (Value::Map(x), Value::Map(y)) if x.0.len() == y.0.len() => {
+                for ((xk, xv), (yk, yv)) in x.0.iter().zip(y.0.iter()) {
+                    work.push((xk, yk));
+                    work.push((xv, yv));
+                }
+            }
+            (Value::Tag(x), Value::Tag(y)) if x.number == y.number => {
+                work.push((&x.item, &y.item));
+            }
+            _ => return false,
+        }
+    }
+    true
+}
+
+/// Hash the forest in `work` in a fixed pre-order, feeding the hasher a
+/// discriminant and the scalar payload of every node.
+///
+/// Equal values feed the hasher identical sequences — the discriminant and
+/// the length prefix of every container make the traversal a faithful
+/// serialization of the tree — so the `Hash`/`PartialEq` contract holds.
+fn hash_iter<H: Hasher>(mut work: Vec<&Value>, state: &mut H) {
+    while let Some(value) = work.pop() {
+        match value {
+            Value::Unsigned(n) => {
+                state.write_u8(0);
+                n.hash(state);
+            }
+            Value::Negative(n) => {
+                state.write_u8(1);
+                n.argument().hash(state);
+            }
+            Value::Bytes(b) => {
+                state.write_u8(2);
+                b.as_slice().hash(state);
+            }
+            Value::Text(t) => {
+                state.write_u8(3);
+                t.as_str().hash(state);
+            }
+            Value::Array(a) => {
+                state.write_u8(4);
+                a.0.len().hash(state);
+                work.extend(a.0.iter().rev());
+            }
+            Value::Map(m) => {
+                state.write_u8(5);
+                m.0.len().hash(state);
+                for (key, value) in m.0.iter().rev() {
+                    work.push(value);
+                    work.push(key);
+                }
+            }
+            Value::Tag(t) => {
+                state.write_u8(6);
+                t.number.hash(state);
+                work.push(&t.item);
+            }
+            Value::Bool(b) => {
+                state.write_u8(7);
+                b.hash(state);
+            }
+            Value::Null => state.write_u8(8),
+            Value::Simple(s) => {
+                state.write_u8(9);
+                s.get().hash(state);
+            }
+            Value::Float(f) => {
+                state.write_u8(10);
+                f.hash(state);
+            }
+        }
     }
 }
 
@@ -361,8 +553,29 @@ impl TryFrom<Vec<u8>> for Text {
 /// assert_eq!(a.len(), 2);
 /// assert_eq!(a.as_slice()[0], Value::Unsigned(1));
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Eq, Default)]
 pub struct Array(Vec<Value>);
+
+// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
+// to the nesting depth. Each delegates to the shared worklist helpers.
+impl Clone for Array {
+    fn clone(&self) -> Array {
+        Array(self.0.iter().map(clone_iter).collect())
+    }
+}
+
+impl PartialEq for Array {
+    fn eq(&self, other: &Array) -> bool {
+        self.0.len() == other.0.len() && eq_iter(self.0.iter().zip(other.0.iter()).collect())
+    }
+}
+
+impl Hash for Array {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.len().hash(state);
+        hash_iter(self.0.iter().collect(), state);
+    }
+}
 
 impl Array {
     /// Collect a sequence. Total: a sequence carries no invariant beyond
@@ -454,8 +667,46 @@ impl Drop for Array {
 /// .expect_err("the key repeats");
 /// assert!(matches!(err, ValueError::DuplicateMapKey { index: 1 }));
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Eq, Default)]
 pub struct Map(Vec<(Value, Value)>);
+
+// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
+// to the nesting depth. Each delegates to the shared worklist helpers.
+impl Clone for Map {
+    fn clone(&self) -> Map {
+        Map(self
+            .0
+            .iter()
+            .map(|(key, value)| (clone_iter(key), clone_iter(value)))
+            .collect())
+    }
+}
+
+impl PartialEq for Map {
+    fn eq(&self, other: &Map) -> bool {
+        if self.0.len() != other.0.len() {
+            return false;
+        }
+        let mut work = Vec::with_capacity(self.0.len() * 2);
+        for ((xk, xv), (yk, yv)) in self.0.iter().zip(other.0.iter()) {
+            work.push((xk, yk));
+            work.push((xv, yv));
+        }
+        eq_iter(work)
+    }
+}
+
+impl Hash for Map {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.len().hash(state);
+        let mut work = Vec::with_capacity(self.0.len() * 2);
+        for (key, value) in &self.0 {
+            work.push(key);
+            work.push(value);
+        }
+        hash_iter(work, state);
+    }
+}
 
 impl Map {
     /// Sort into canonical order and refuse duplicate keys.
@@ -604,10 +855,34 @@ fn tear_down(mut work: Vec<Value>) {
 /// assert_eq!(t.number(), 1);
 /// assert_eq!(t.item(), &Value::Unsigned(1_363_896_240));
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Eq)]
 pub struct Tag {
     number: u64,
     item: Box<Value>,
+}
+
+// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
+// down a chain of tags. Each delegates to the shared worklist helpers.
+impl Clone for Tag {
+    fn clone(&self) -> Tag {
+        Tag {
+            number: self.number,
+            item: Box::new(clone_iter(&self.item)),
+        }
+    }
+}
+
+impl PartialEq for Tag {
+    fn eq(&self, other: &Tag) -> bool {
+        self.number == other.number && eq_iter(vec![(&self.item, &other.item)])
+    }
+}
+
+impl Hash for Tag {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.number.hash(state);
+        hash_iter(vec![&self.item], state);
+    }
 }
 
 impl Tag {

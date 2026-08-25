@@ -52,6 +52,25 @@ fn a_source_that_is_not_cddl_is_a_located_syntax_refusal() {
 }
 
 #[test]
+fn a_type_nested_past_the_bound_is_a_located_refusal() {
+    // Deeply nested parentheses would overflow the recursive descent; the
+    // parser refuses them as a located syntax error rather than a crash.
+    let source = format!("a = {}1{}", "(".repeat(400), ")".repeat(400));
+    match refuse(&source) {
+        TheoryError::Syntax {
+            line,
+            column,
+            detail,
+        } => {
+            assert_eq!(line, 1);
+            assert!(column > 1);
+            assert!(detail.contains("nested deeper"));
+        }
+        other => panic!("expected a syntax refusal, got {other}"),
+    }
+}
+
+#[test]
 fn an_undefined_rule_is_a_located_refusal() {
     let error = refuse(concat!(
         "example = {\n",
