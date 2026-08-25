@@ -1,0 +1,60 @@
+# The stance control's two legs beyond the generic prepare
+# (api-spec.md "The generic stance"): the read-side bundle fold, and
+# severance's own staging.
+#
+# `viewerStance` is a FIELD on each stance-able node, not a root read,
+# and the control holds an opaque target id — a post, a comment, or the
+# person whose Profile it points at. So one document asks every
+# stance-able root and the caller keeps whichever answered. The three
+# flags let a target whose class is already known ask only its own root:
+# a node never changes class, so the probe is a one-time cost per target
+# rather than one per drag-time projection.
+
+fragment StanceBundleFields on StanceBundle {
+  pDirected
+  pInterest
+  recordCount
+  severed
+  severanceCost
+  projected {
+    pDirected
+    pInterest
+    severed
+  }
+}
+
+query ViewerStance(
+  $target: UUID!
+  $pick: StancePickInput
+  $includePending: Boolean!
+  $asPost: Boolean!
+  $asComment: Boolean!
+  $asUser: Boolean!
+) {
+  post(id: $target) @include(if: $asPost) {
+    viewerStance(pick: $pick, includePending: $includePending) {
+      ...StanceBundleFields
+    }
+  }
+  comment(id: $target) @include(if: $asComment) {
+    viewerStance(pick: $pick, includePending: $includePending) {
+      ...StanceBundleFields
+    }
+  }
+  user(id: $target) @include(if: $asUser) {
+    viewerStance(pick: $pick, includePending: $includePending) {
+      ...StanceBundleFields
+    }
+  }
+}
+
+mutation PrepareSeverance($input: PrepareSeveranceInput!) {
+  prepareSeverance(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

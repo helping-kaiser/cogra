@@ -1,21 +1,16 @@
-// The stance read side, standing in until the backend contract lands.
+// An in-memory `StanceRepository` for runs with no backend behind them.
+// `StanceRepositoryImpl` is what the app binds; this one answers the
+// same reads from process-local memory, so a screen can be exercised
+// without a server.
 //
-// `StanceRepository` is the seam slice 2.2's UI is built against
-// (design.md §8). The reads it needs — the viewer's folded standing
-// toward a target, where a candidate pick lands it, and the severance
-// quote — are not on `schema.graphql` yet, so this class answers them
-// from process-local memory. When the API ships, this file is where the
-// Apollo calls replace the in-memory bookkeeping; nothing above the
-// interface moves.
-//
-// It is a STAND-IN FOR THE BACKEND, not client-side arithmetic that the
-// real build would keep: the raw-edge rule says the *record* carries the
-// picked values verbatim and the client never derives a delta
-// (api-spec.md "Stance prepares write the picked values"), and that rule
-// is untouched here — `prepareStance` still writes what was picked. What
-// this class fakes is the read-side fold, which is the backend's job.
-// Its arithmetic is a plain clamped sum, deliberately NOT a claim about
-// the published fold rule.
+// It is a STAND-IN FOR THE BACKEND, not client-side arithmetic the real
+// build keeps: the raw-edge rule says the *record* carries the picked
+// values verbatim and the client never derives a delta (api-spec.md
+// "Stance prepares write the picked values"), and that rule is untouched
+// here — `prepareStance` still writes what was picked. What this class
+// fakes is the read-side fold, which is the backend's job. Its
+// arithmetic is a plain clamped sum, deliberately NOT a claim about the
+// published fold rule.
 
 package com.cogra.network.repo
 
@@ -107,7 +102,7 @@ class StanceStandInRepository @Inject constructor(
      */
     override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> =
         Outcome.Refused(
-            listOf(UserError(ErrorCode.INTERNAL, "severance staging is not on the API yet")),
+            listOf(UserError(ErrorCode.INTERNAL, "no backend to stage a severance batch")),
         )
 
     private fun fold(pairs: List<StancePair>): StancePair = StancePair(
