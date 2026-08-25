@@ -78,8 +78,14 @@ Behind it landed two hardening passes: key custody (the signed
 key-backup upload, the on-device key gate, key export, the
 recovery-code confirm — [auth.md](auth.md)) and the design
 system ([design.md](design.md)): palette, type, shape, and
-components, with web brought to parity. The rest of the content
-era is sliced below (2.1–2.7).
+components, with web brought to parity.
+
+**Slice 2.1 is closed** (hand-tested 2026-08-18): the app shell —
+bottom bar, compact top bars, one shell for every viewer — and the
+profile surface (reads, editing, actor chips) on all three fronts,
+with the bottom-bar placement rule settled as Q37 (the bar rides
+read surfaces, task flows carry a back arrow). The rest of the
+content era is sliced below (2.2–2.7).
 
 ## The stand-in and the swap
 
@@ -253,8 +259,10 @@ can land in any order — 2.3 (topics) needs only the text core.
 - Affinity toward a Hashtag — the follow-topic gesture — rides
   the same `prepareStance`; the tap default suffices until the
   pad (2.2) reaches it.
-- Settles the un-tag read: Tag confidence is bounded `[0, 1]`,
-  so `(0, 0)` severance is only partially expressible there.
+- Carries the current-topics fold: newest-wins per (author,
+  content, Type) bundle, and the un-tag gesture is a further tag
+  at relevance `0`
+  ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold)).
 - **Hand test:** tag a post at creation; open the topic from
   its chip; follow it.
 - **Surfaces:** backend, API, Android, web.
