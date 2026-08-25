@@ -2,10 +2,12 @@
 //
 // The shape of the thing: a single tap target at rest, a plain tap
 // commits the modest positive default, and a press-and-hold blooms a
-// soft pad under the thumb that the reader drifts across and releases to
-// commit. Horizontal is valence, vertical is connection, the pad opens
-// at the origin, and the whole square stays reachable — corners
-// included, because someone dragging to the far corner means it.
+// pad — anchored to the target and clear of the finger, never under the
+// press — that the reader drifts across and releases to commit.
+// Horizontal is valence, vertical is connection, the pad opens at the
+// origin, and the whole square stays reachable — corners included,
+// because someone dragging to the far corner means it. The drawn field
+// IS the value space; its geometry lives in StanceFieldGeometry.kt.
 //
 // Two numbers are kept apart on purpose. The FACE is a lossy readout of
 // the edge being authored — this pick — and moves with the thumb. WHERE
@@ -57,9 +59,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -146,9 +151,6 @@ data class StanceControlState(
     val coachMark: Boolean = false,
 )
 
-/** The pad's drawn diameter; its radius is the whole `[-1, +1]` range. */
-private val PAD_SIZE = 240.dp
-
 /** The resting target keeps the platform's minimum (design.md §4, §10). */
 private val TARGET_MIN = 48.dp
 
@@ -178,8 +180,8 @@ fun StanceControl(
     testTagPrefix: String,
     modifier: Modifier = Modifier,
 ) {
-    val radiusPx = with(LocalDensity.current) { (PAD_SIZE / 2).toPx() }
-    val padPx = with(LocalDensity.current) { PAD_SIZE.roundToPx() }
+    val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
+    val padPx = with(LocalDensity.current) { FIELD_SIZE.roundToPx() }
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(R.string.stance_severance_open)
@@ -193,7 +195,7 @@ fun StanceControl(
                 .clip(RoundedCornerShape(50))
                 .stanceGesture(
                     enabled = !state.busy,
-                    radiusPx = radiusPx,
+                    extentPx = extentPx,
                     onTapDefault = onTapDefault,
                     onOpenPad = onOpenPad,
                     onPick = onPick,
@@ -287,14 +289,14 @@ fun StanceControl(
  */
 private fun Modifier.stanceGesture(
     enabled: Boolean,
-    radiusPx: Float,
+    extentPx: Float,
     onTapDefault: () -> Unit,
     onOpenPad: () -> Unit,
     onPick: (StancePoint) -> Unit,
     onCommit: () -> Unit,
     onHold: () -> Unit,
     onCancel: () -> Unit,
-): Modifier = if (!enabled) this else pointerInput(radiusPx) {
+): Modifier = if (!enabled) this else pointerInput(extentPx) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
         var held = false
@@ -315,7 +317,7 @@ private fun Modifier.stanceGesture(
                     travel += change.positionChange()
                     change.consume()
                     if (travel.getDistance() > viewConfiguration.touchSlop) drifted = true
-                    onPick(travel.toStancePoint(radiusPx))
+                    onPick(stancePointFromTravel(travel, extentPx))
                 }
                 when {
                     !completed -> onCancel()
@@ -328,12 +330,6 @@ private fun Modifier.stanceGesture(
         }
     }
 }
-
-/** Screen travel to a field position: y inverted, each axis clamped. */
-private fun Offset.toStancePoint(radiusPx: Float): StancePoint = StancePoint(
-    directed = (x / radiusPx).coerceIn(-1f, 1f).toDouble(),
-    interest = (-y / radiusPx).coerceIn(-1f, 1f).toDouble(),
-)
 
 /**
  * Puts the field's centre on the target's centre — the pad blooms under
@@ -485,9 +481,9 @@ private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
 }
 
 /**
- * The field: a soft round ground with its inert centre-lines drawn as
- * visibly dead rather than hidden, and the knob at the pick. No numbers,
- * axes, or gridlines — those are the alternates' job (design.md §8.3).
+ * The field: a soft rounded square whose own box is the value space,
+ * with its inert centre-lines drawn as visibly dead rather than hidden,
+ * and the knob at the pick — never outside the drawing (design.md §8.3).
  */
 @Composable
 private fun StanceField(pick: StancePoint) {
@@ -502,8 +498,29 @@ private fun StanceField(pick: StancePoint) {
     LaunchedEffect(Unit) {
         bloom.animateTo(1f, tween(durationMillis = 200, easing = FastOutSlowInEasing))
     }
-    Canvas(modifier = Modifier.size(PAD_SIZE)) {
-        drawStanceField(pick, ground, dead, knob, knobRing, bloom.value)
+    Canvas(
+        modifier = Modifier
+            .size(FIELD_SIZE)
+            // The bloom scales the whole field, knob included, so the
+            // knob is inside the drawing at every frame of it and not
+            // only once it has finished growing.
+            .graphicsLayer {
+                scaleX = bloom.value
+                scaleY = bloom.value
+            }
+            .testTag("stance_field"),
+    ) {
+        drawStanceField(
+            pick = pick,
+            ground = ground,
+            dead = dead,
+            knob = knob,
+            knobRing = knobRing,
+            cornerPx = FIELD_CORNER.toPx(),
+            knobPx = KNOB_RADIUS.toPx(),
+            dotPx = KNOB_DOT_RADIUS.toPx(),
+            extentPx = FIELD_EXTENT.toPx(),
+        )
     }
 }
 
@@ -513,22 +530,39 @@ private fun DrawScope.drawStanceField(
     dead: Color,
     knob: Color,
     knobRing: Color,
-    scale: Float,
+    cornerPx: Float,
+    knobPx: Float,
+    dotPx: Float,
+    extentPx: Float,
 ) {
-    val radius = size.minDimension / 2f
     val centre = Offset(size.width / 2f, size.height / 2f)
-    drawCircle(color = ground, radius = radius * scale, center = centre)
-    // Dead ground: a bundle whose folded parameter is zero carries
-    // nothing, so the centre-lines are drawn rather than hidden.
-    val band = radius * 0.04f
-    drawLine(dead, Offset(0f, centre.y), Offset(size.width, centre.y), strokeWidth = band)
-    drawLine(dead, Offset(centre.x, 0f), Offset(centre.x, size.height), strokeWidth = band)
-    val at = Offset(
-        x = centre.x + (pick.directed.toFloat() * radius),
-        y = centre.y - (pick.interest.toFloat() * radius),
+    val side = size.minDimension
+    drawRoundRect(
+        color = ground,
+        topLeft = Offset(centre.x - side / 2f, centre.y - side / 2f),
+        size = Size(side, side),
+        cornerRadius = CornerRadius(cornerPx),
     )
-    drawCircle(color = knobRing, radius = radius * 0.11f, center = at)
-    drawCircle(color = knob, radius = radius * 0.08f, center = at)
+    // Dead ground: a bundle whose folded parameter is zero carries
+    // nothing, so the centre-lines are drawn rather than hidden. They
+    // stop at the field's edge, because the field is the value space.
+    val band = side * 0.02f
+    val half = side / 2f
+    drawLine(
+        dead,
+        Offset(centre.x - half, centre.y),
+        Offset(centre.x + half, centre.y),
+        strokeWidth = band,
+    )
+    drawLine(
+        dead,
+        Offset(centre.x, centre.y - half),
+        Offset(centre.x, centre.y + half),
+        strokeWidth = band,
+    )
+    val at = centre + knobOffset(pick, extentPx)
+    drawCircle(color = knobRing, radius = knobPx, center = at)
+    drawCircle(color = knob, radius = dotPx, center = at)
 }
 
 /**
