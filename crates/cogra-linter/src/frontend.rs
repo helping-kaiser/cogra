@@ -1,3 +1,5 @@
+//! ´mod:module:frontend´
+//!
 //! The shared frontend contract: what every frontend produces, and the
 //! dispatcher that picks one.
 //!

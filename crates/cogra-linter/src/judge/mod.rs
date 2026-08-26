@@ -1,3 +1,5 @@
+//! ´mod:module:judge´
+//!
 //! The judgment surface: every invariant as one free function over the
 //! graph.
 //!

@@ -1,3 +1,5 @@
+//! ´mod:module:registers´
+//!
 //! The generators: label registers, the companion attestation register, and
 //! the headline counts.
 //!

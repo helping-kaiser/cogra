@@ -1,3 +1,5 @@
+//! ´mod:module:error´
+//!
 //! The crate's error taxonomy.
 //!
 //! One test decides which surface a failure belongs to: if the input is

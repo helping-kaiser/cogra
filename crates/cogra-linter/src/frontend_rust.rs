@@ -1,3 +1,5 @@
+//! ´mod:module:frontend-rust´
+//!
 //! `syn`: doc-comment regions, the two profiles' censuses.
 //!
 //! One [`syn::parse_file`] and one [`syn::visit::Visit`] walk feed both
