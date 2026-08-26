@@ -26,6 +26,10 @@ async fn landed(pool: &PgPool, parameter: &str, value: i64, epoch: i64, position
     .expect("carrier row");
 }
 
+/// The rows are written in the opposite order from their records — the one
+/// appended second was ordered first by L1, which is what a fold replayed
+/// out of epoch order produces — so only the landing coordinates can put
+/// the right value in force.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_finalization_that_landed_last_is_in_force(pool: PgPool) {
     let mut conn = pool.acquire().await.expect("conn");
@@ -33,9 +37,6 @@ async fn the_finalization_that_landed_last_is_in_force(pool: PgPool) {
         .await
         .expect("seed");
 
-    // The rows are written in the opposite order from their records: the
-    // one appended second was ordered first by L1, which is what a fold
-    // replayed out of epoch order produces.
     landed(&pool, "quorum", 9, 9, 0).await;
     landed(&pool, "quorum", 2, 2, 0).await;
 
