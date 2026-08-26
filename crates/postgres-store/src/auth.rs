@@ -1,8 +1,9 @@
-// Authentication and onboarding state (auth.md; data-model.md
-// "Authentication state"): invite links, accounts and their
-// applications, credentials, refresh-token sessions, and key backups.
-// Auth gates the service, never the graph — nothing in this module is
-// authoritative about any record.
+//! Authentication and onboarding state: invite links, accounts and their
+//! applications, credentials, refresh-token sessions, and key backups
+//! (auth.md; data-model.md "Authentication state").
+//!
+//! Auth gates the service, never the graph — nothing here is authoritative
+//! about any record.
 
 use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
@@ -137,10 +138,6 @@ pub struct Credentials {
     pub email_verified_at: Option<DateTime<Utc>>,
 }
 
-// ---------------------------------------------------------------------
-// Invite links
-// ---------------------------------------------------------------------
-
 /// Maps one auth_invite_links row (a sqlx anonymous record) onto the
 /// struct — the queries all select the same field set.
 macro_rules! invite_link_from_row {
@@ -257,10 +254,6 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
     .fetch_one(pool)
     .await
 }
-
-// ---------------------------------------------------------------------
-// Registration and applications
-// ---------------------------------------------------------------------
 
 /// The outcome of a registration against the two uniqueness constraints
 /// (auth.md "Registration collision").
@@ -761,10 +754,6 @@ pub async fn reap_unverified_accounts(
     Ok(count)
 }
 
-// ---------------------------------------------------------------------
-// Credentials and sessions
-// ---------------------------------------------------------------------
-
 pub async fn credentials_by_email(
     pool: &PgPool,
     email: &str,
@@ -911,9 +900,10 @@ pub async fn session(pool: &PgPool, id: Uuid) -> Result<Option<Session>, sqlx::E
 /// invalidates the old token, bounding a stolen token to a single use.
 /// The consumed row links the successor and stores it sealed under the
 /// consumed token (`successor_enc`), so a grace-window replay can be
-/// answered idempotently. Returns false when a concurrent refresh
-/// consumed the row first — the caller re-reads and takes the replay
-/// path instead of erroring.
+/// answered idempotently; that link is set after the insert, since the
+/// foreign key needs the successor row to exist. Returns false when a
+/// concurrent refresh consumed the row first — the caller re-reads and
+/// takes the replay path instead of erroring.
 pub async fn rotate_session(
     pool: &PgPool,
     old_id: Uuid,
@@ -923,8 +913,6 @@ pub async fn rotate_session(
     successor_enc: &[u8],
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    // Consume first; the successor link lands after the insert because
-    // the FK needs the successor row to exist.
     let Some(row) = sqlx::query!(
         "UPDATE auth_refresh_tokens
          SET revoked_at = NOW(), last_used_at = NOW(),
@@ -1064,10 +1052,6 @@ pub async fn take_reuse_detected(
     Ok(pending)
 }
 
-// ---------------------------------------------------------------------
-// Password reset
-// ---------------------------------------------------------------------
-
 pub async fn create_password_reset(
     pool: &PgPool,
     id: Uuid,
@@ -1104,10 +1088,8 @@ pub async fn consume_password_reset(
     .await
 }
 
-// ---------------------------------------------------------------------
-// Email change (the two-sided proof — auth.md "Email change")
-// ---------------------------------------------------------------------
-
+/// Opens an email change, arming both halves of the two-sided proof
+/// (auth.md "Email change").
 pub async fn create_email_change(
     pool: &PgPool,
     id: Uuid,
@@ -1226,10 +1208,6 @@ pub async fn apply_email_change_if_complete(
     }
 }
 
-// ---------------------------------------------------------------------
-// Handle change and key backups
-// ---------------------------------------------------------------------
-
 /// Renames the account in the one actor namespace. False on a uniqueness
 /// collision (surfaced as HANDLE_TAKEN).
 pub async fn change_handle(
@@ -1337,10 +1315,6 @@ pub async fn latest_key_backup(
     .fetch_optional(pool)
     .await
 }
-
-// ---------------------------------------------------------------------
-// Actor reads the auth flows need
-// ---------------------------------------------------------------------
 
 /// The identity association of one actor row. The key halves are None
 /// for a user-kind actor between registration and the key ceremony's
