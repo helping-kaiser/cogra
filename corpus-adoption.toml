@@ -1245,19 +1245,22 @@ below.
 """
 
 failing = [
-  "crates/cogra-linter/docs/",
+  "crates/cogra-linter/",
   "crates/cogra-interchange/docs/",
   "docs/",
 ]
 
 # What those three prefixes carry, and what they deliberately do not.
 #
-# crates/cogra-linter/docs/ — the four discipline documents, the
-#   linter architecture, and the linter's own phase artifacts. The
-#   tree also holds kickoff.md and adoption-notes.md, which write
-#   every label-shaped reference in displayed double backticks and so
-#   participate in nothing; including them costs nothing and keeps the
-#   prefix one line instead of seven.
+# crates/cogra-linter/ — the whole crate, by first-match prefix: the
+#   four discipline documents, the linter architecture, the linter's
+#   own phase artifacts, and its src/, tests/, and fuzz/ trees, plus
+#   the generated label register. src/ was written under the ban from
+#   its first line, so it joins with no sweep to wait for. The tree
+#   also holds kickoff.md and adoption-notes.md, which write every
+#   label-shaped reference in displayed double backticks and so
+#   participate in nothing; including them costs nothing and keeps
+#   the prefix one line instead of many.
 # crates/cogra-interchange/docs/ — that crate's phase artifacts, whose
 #   concept and design are written under the discipline and whose
 #   audit and commissioning notes join them.
@@ -1271,9 +1274,6 @@ failing = [
 # DELIBERATELY ADVISORY, each awaiting its own migration:
 #   crates/*/src/    — ~1210 plain comments queued for the ban sweep
 #   android/, web/   — no frontend before slices 7 and 8
-# The linter's own src/ joins the failing set when it exists: it is
-# written under the ban from its first line, so it has no sweep to
-# wait for. That is a reviewed edit to this section, taken then.
 
 
 

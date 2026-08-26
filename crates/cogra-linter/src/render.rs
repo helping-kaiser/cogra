@@ -132,7 +132,7 @@ pub fn freshness(reg: &Register, found: &Freshness) -> String {
     format!("{}: {what} — {standing}", reg.path.display())
 }
 
-/// One location, in the ruled `path:line:col` shape.
+/// One location, in the ruled `path`:`line`:`col` shape.
 fn at(one: &Location) -> String {
     format!("{}:{}:{}", display(&one.path), one.line, one.column)
 }
