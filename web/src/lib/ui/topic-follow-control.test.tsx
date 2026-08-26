@@ -4,7 +4,7 @@
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
@@ -22,6 +22,14 @@ function signedInStore() {
 }
 
 describe("TopicFollowControl", () => {
+  // The token store persists to localStorage (web.md "Session tokens in
+  // the browser"); without a clear, a prior test's signedInStore() leaks
+  // into the next one, exactly the way feed-view.test.tsx and
+  // post-view.test.tsx guard against.
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("shows Follow for a topic the viewer has never stanced", async () => {
     server.use(...hashtagStanceHandlers());
     renderWithProviders(<TopicFollowControl name="rust" testIdPrefix="topic-follow" />, {
