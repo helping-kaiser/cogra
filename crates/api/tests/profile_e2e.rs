@@ -252,6 +252,10 @@ const USER_QUERY: &str = r#"query($id: UUID, $handle: String) {
     }
 }"#;
 
+/// Both lookups reach the same user, and handle resolution is
+/// case-insensitive and trimmed (auth.md "Handle and email format"). A
+/// handle that matches nothing resolves to null, as does one that could
+/// never have been registered.
 #[sqlx::test(migrations = "../../migrations")]
 async fn user_resolves_by_id_and_handle(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -266,7 +270,6 @@ async fn user_resolves_by_id_and_handle(pool: PgPool) {
     assert_eq!(by_handle["user"]["displayName"]["status"], "NORMAL");
     assert_eq!(by_handle["user"]["bio"]["value"], Value::Null);
 
-    // Case-insensitive resolution (auth.md "Handle and email format").
     let folded = rig
         .gql(None, USER_QUERY, json!({ "handle": "  AdA " }))
         .await;
@@ -275,7 +278,6 @@ async fn user_resolves_by_id_and_handle(pool: PgPool) {
     let by_id = rig.gql(None, USER_QUERY, json!({ "id": id })).await;
     assert_eq!(by_id["user"]["handle"], "ada");
 
-    // No match and never-registrable handles resolve to null.
     assert_eq!(
         rig.gql(None, USER_QUERY, json!({ "handle": "nobody" }))
             .await["user"],
@@ -288,6 +290,9 @@ async fn user_resolves_by_id_and_handle(pool: PgPool) {
     );
 }
 
+/// `actor` resolves to the concrete type behind the interface, and takes
+/// exactly one argument: passing both or neither is a transport fault,
+/// not a userError.
 #[sqlx::test(migrations = "../../migrations")]
 async fn actor_resolves_and_argument_rule_holds(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -305,7 +310,6 @@ async fn actor_resolves_and_argument_rule_holds(pool: PgPool) {
     assert_eq!(actor["actor"]["__typename"], "User");
     assert_eq!(actor["actor"]["id"].as_str(), Some(id.to_string().as_str()));
 
-    // Exactly one argument — both or neither is a transport fault.
     let both = rig
         .gql_raw(
             None,
@@ -323,6 +327,9 @@ async fn actor_resolves_and_argument_rule_holds(pool: PgPool) {
     );
 }
 
+/// An authored bio edit goes the whole way — prepare, sign, relay,
+/// ingest — and then reads back to an anonymous caller, because the
+/// shared graph is public.
 #[sqlx::test(migrations = "../../migrations")]
 async fn bio_edit_lands_through_the_write_path(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -350,7 +357,6 @@ async fn bio_edit_lands_through_the_write_path(pool: PgPool) {
         .await;
     rig.close_and_ingest().await;
 
-    // Read back anonymously — the shared graph is public.
     let user = rig.gql(None, USER_QUERY, json!({ "handle": "ada" })).await;
     assert_eq!(user["user"]["bio"]["value"], "Hello from the hand test.");
     assert_eq!(user["user"]["displayName"]["value"], "ada");
