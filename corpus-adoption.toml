@@ -1246,7 +1246,7 @@ below.
 
 failing = [
   "crates/cogra-linter/",
-  "crates/cogra-interchange/docs/",
+  "crates/cogra-interchange/",
   "crates/postgres-store/",
   "docs/",
 ]
@@ -1262,9 +1262,12 @@ failing = [
 #   label-shaped reference in displayed double backticks and so
 #   participate in nothing; including them costs nothing and keeps
 #   the prefix one line instead of many.
-# crates/cogra-interchange/docs/ — that crate's phase artifacts, whose
-#   concept and design are written under the discipline and whose
-#   audit and commissioning notes join them.
+# crates/cogra-interchange/ — the whole crate: its phase artifacts, whose
+#   concept and design are written under the discipline and whose audit and
+#   commissioning notes join them, together with its src/, tests/, and fuzz/
+#   trees, now swept of plain comments and carrying documentation comments
+#   only. Its own xchg mints resolve from those sources, so the crate is one
+#   prefix rather than a tree and an exception.
 # crates/postgres-store/ — the whole crate, the first to complete the ban
 #   sweep of ARCH dec:linter:rust-comment-ban. Its src/ and tests/ carry
 #   documentation comments only: every why a plain comment held now
@@ -1278,12 +1281,10 @@ failing = [
 #   writes it.
 #
 # DELIBERATELY ADVISORY, each awaiting its own migration:
-#   crates/api/, crates/cogra-interchange/, crates/common/,
-#   crates/l1-standin/ — 1688 plain comments still queued for the ban
-#                    sweep, MEASURED 2026-08-26 by the linter itself:
-#                    api 795, cogra-interchange 541, common 197,
-#                    l1-standin 155. src/ and tests/ alike; that crate's
-#                    docs/ is already failing, above.
+#   crates/api/, crates/common/, crates/l1-standin/ — 1147 plain comments
+#                    still queued for the ban sweep, MEASURED 2026-08-26 by
+#                    the linter itself: api 795, common 197, l1-standin 155.
+#                    src/ and tests/ alike.
 #   android/, web/   — no frontend before slices 7 and 8
 
 
