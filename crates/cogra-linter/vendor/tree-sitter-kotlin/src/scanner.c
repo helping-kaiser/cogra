@@ -24,6 +24,7 @@
 
 #include "tree_sitter/parser.h"
 
+#include <string.h>
 #include <wctype.h>
 
 enum TokenType {
@@ -237,6 +238,30 @@ static bool scan_word_tail(TSLexer *lexer, const char *tail) {
   return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
 }
 
+// A visibility modifier followed by an accessor keyword, as in
+// `private set`. Enters with the modifier's first letter unconsumed.
+static bool scan_modified_accessor(TSLexer *lexer) {
+  char word[16];
+  unsigned n = 0;
+  while (n < sizeof(word) - 1 &&
+         (is_ident_start(lexer->lookahead) || iswdigit(lexer->lookahead))) {
+    word[n++] = (char)lexer->lookahead;
+    advance(lexer);
+  }
+  word[n] = '\0';
+
+  if (strcmp(word, "private") != 0 && strcmp(word, "protected") != 0 &&
+      strcmp(word, "public") != 0 && strcmp(word, "internal") != 0) {
+    return false;
+  }
+
+  while (is_horizontal_space(lexer->lookahead)) advance(lexer);
+  if (lexer->lookahead == 'g' || lexer->lookahead == 's') {
+    return scan_word_tail(lexer, "et");
+  }
+  return false;
+}
+
 // Whether the token beginning at the current position may continue the
 // previous line's expression.
 //
@@ -287,6 +312,23 @@ static bool at_statement_continuation(TSLexer *lexer) {
       return scan_word_tail(lexer, "et");
     case 's':
       return scan_word_tail(lexer, "et");
+    case 'e':
+      // `else` continues the `if` on the line before it. A `when` entry's
+      // `else ->` does not — there the terminator separates it from the
+      // entry before, so only the arrow tells the two apart.
+      if (!scan_word_tail(lexer, "lse")) return false;
+      while (is_horizontal_space(lexer->lookahead) || lexer->lookahead == '\n') {
+        advance(lexer);
+      }
+      if (lexer->lookahead != '-') return true;
+      advance(lexer);
+      return lexer->lookahead != '>';
+    case 'p':
+    case 'i':
+      // `private set`: an accessor may carry a visibility modifier, and
+      // the word that follows the newline is then the modifier rather
+      // than the accessor keyword.
+      return scan_modified_accessor(lexer);
     default:
       return false;
   }
