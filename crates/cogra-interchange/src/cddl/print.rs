@@ -119,6 +119,8 @@ fn print_generic_args_opt(args: &Option<GenericArgs>, out: &mut String) {
     }
 }
 
+/// One `type1`. The spaces printed around an operator are the load-bearing
+/// ones of the normal form, never cosmetic.
 fn print_type1(type1: &Type1, out: &mut String) {
     print_type2(&type1.target, out);
     if let Some(operation) = &type1.operation {
@@ -126,8 +128,6 @@ fn print_type1(type1: &Type1, out: &mut String) {
             Operator::RangeInclusive => out.push_str(" .. "),
             Operator::RangeExclusive => out.push_str(" ... "),
             Operator::Control(name) => {
-                // The leading space keeps the dot out of the name before
-                // it; the trailing one keeps the operand off the name.
                 out.push_str(" .");
                 out.push_str(&name.text);
                 out.push(' ');
@@ -138,6 +138,9 @@ fn print_type1(type1: &Type1, out: &mut String) {
 }
 
 /// One `type2`, for a diagnostic naming the form at a position.
+///
+/// A tag's head touches its parenthesis, and generic arguments touch their
+/// name: the ABNF admits no `S` in either place.
 pub(crate) fn print_type2(type2: &Type2, out: &mut String) {
     match &type2.kind {
         Type2Kind::Value(value) => print_value(value, out),
@@ -178,7 +181,6 @@ pub(crate) fn print_type2(type2: &Type2, out: &mut String) {
         Type2Kind::Tagged { number, inner } => {
             out.push_str("#6");
             print_ai(number, out);
-            // No `S` stands between the head and its parenthesis.
             out.push('(');
             print_type(inner, out);
             out.push(')');
@@ -218,11 +220,12 @@ fn print_group_choice(choice: &GroupChoice, out: &mut String) {
 }
 
 /// One group entry, for the companion display and for diagnostics.
+///
+/// The space after an occurrence indicator is load bearing, not layout: it is
+/// what keeps the entry from reading back as the indicator's bound.
 pub(crate) fn print_group_entry(entry: &GroupEntry, out: &mut String) {
     if let Some(occur) = &entry.occur {
         print_occur(occur, out);
-        // The space is required: `*3` against the entry `3` would read
-        // back as the upper bound of the indicator.
         out.push(' ');
     }
     match &entry.kind {
@@ -240,10 +243,11 @@ pub(crate) fn print_group_entry(entry: &GroupEntry, out: &mut String) {
     }
 }
 
+/// An occurrence indicator, whose bounds touch the star: `occur` admits no
+/// `S` inside it.
 fn print_occur(occur: &Occur, out: &mut String) {
     match &occur.kind {
         OccurKind::Bounded { min, max } => {
-            // No `S` anywhere inside `occur`, so the bounds touch the star.
             if let Some(min) = min {
                 out.push_str(&min.text);
             }
@@ -403,10 +407,10 @@ mod tests {
         }
     }
 
+    /// Not required for the fixed point, but it keeps the snippets honest
+    /// about what the normal form actually is.
     #[test]
     fn the_tour_is_already_in_normal_form() {
-        // Not required for the fixed point, but it keeps the snippets
-        // honest about what the normal form actually is.
         for source in TOUR {
             assert_eq!(normalize(source), format!("{source}\n"), "{source}");
         }
@@ -443,29 +447,30 @@ mod tests {
         assert_eq!(normalize("a = \"\\q\""), "a = \"\\q\"\n");
     }
 
+    /// Printed without the leading space, this would read back as the single
+    /// name `text.size`.
     #[test]
     fn a_control_operator_keeps_the_space_that_makes_it_one() {
-        // Printed without the leading space this would read back as the
-        // single name `text.size`.
         let printed = normalize("a = text .size 4");
         assert_eq!(printed, "a = text .size 4\n");
         let reparsed = normalize(&printed);
         assert_eq!(reparsed, printed);
     }
 
+    /// `min..max` is one name and was never a range at all; written with the
+    /// spaces it is one, and it stays one.
     #[test]
     fn a_range_over_names_keeps_its_spaces() {
         let printed = normalize("a = min..max");
-        // `min..max` is one name, so this was never a range at all.
         assert_eq!(printed, "a = min..max\n");
-        // Written with the spaces, it is one, and it stays one.
         assert_eq!(normalize("a = min .. max"), "a = min .. max\n");
     }
 
+    /// The bounds stay against the star, and the space that stops the entry
+    /// joining the bound stays too.
     #[test]
     fn an_occurrence_indicator_keeps_its_bounds_against_the_star() {
         assert_eq!(normalize("a = [2*3 b]"), "a = [2*3 b]\n");
-        // And keeps the space that stops the entry joining the bound.
         assert_eq!(normalize("a = [* 3]"), "a = [* 3]\n");
     }
 
@@ -475,11 +480,11 @@ mod tests {
         assert_eq!(normalize("m<x> = [x]"), "m<x> = [x]\n");
     }
 
+    /// A head held off its parenthesis by a space is not a tag but two group
+    /// entries, and printing must not let them join into one.
     #[test]
     fn a_tag_stays_against_its_parenthesis() {
         assert_eq!(normalize("a = #6.24(bstr)"), "a = #6.24(bstr)\n");
-        // The one held off by a space is not a tag but two group entries,
-        // and printing must not let them join into one.
         assert_eq!(normalize("a = [#6 (b)]"), "a = [#6, (b)]\n");
     }
 

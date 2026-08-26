@@ -4,8 +4,7 @@
 //!
 //! The rows the design sizes: explicit provisions with and without a fixed
 //! canonical form, and implicit reach through `any`, through a major-type
-//! reference, and through a prelude type (`design.md`,
-//! `tab:xchg:test-sizing`).
+//! reference, and through a prelude type (´tab:xchg:test-sizing´).
 
 use cogra_interchange::{Restrained, RestraintReport, Theory};
 
@@ -46,8 +45,6 @@ fn reaches(report: &RestraintReport) -> Vec<(Restrained, Vec<&str>)> {
         .map(|reach| (reach.kind(), reach.path().collect()))
         .collect()
 }
-
-// -- explicit provisions --------------------------------------------------
 
 #[test]
 fn a_named_float_width_is_a_provision_that_fixes_its_form() {
@@ -140,7 +137,6 @@ fn a_named_simple_value_is_a_provision() {
         provisions(&report("#7.23")),
         [(Restrained::Simple, "#7.23", true)]
     );
-    // Simple value 19, which no name of the prelude carries.
     assert_eq!(
         provisions(&report("#7.19")),
         [(Restrained::Simple, "#7.19", true)]
@@ -179,8 +175,6 @@ fn the_freely_admitted_values_are_not_reported() {
         );
     }
 }
-
-// -- implicit reaches -----------------------------------------------------
 
 #[test]
 fn any_reaches_all_three_kinds_without_naming_one() {
@@ -330,8 +324,6 @@ fn a_recursive_rule_terminates() {
     assert_eq!(reaches(&report).len(), 3);
     assert!(!report.is_restrained());
 }
-
-// -- the report as a whole ------------------------------------------------
 
 /// The clean case: a theory of integers and text reaches nothing
 /// restrained, so it has nothing to report and is restrained vacuously.
