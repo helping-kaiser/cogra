@@ -305,6 +305,35 @@ impl Rig {
             .await;
     }
 
+    async fn prepare_stance(&self, token: &str, target: Value, p_d: f64, p_i: f64) -> Value {
+        let mut input = json!({ "pDirected": p_d, "pInterest": p_i });
+        merge(&mut input, target);
+        self.gql(Some(token), PREPARE_STANCE, json!({ "input": input }))
+            .await
+    }
+
+    /// A follow, landed. `target` names the topic the way a client
+    /// would — by name, since a topic page reaches an untagged topic.
+    async fn follow_topic(&self, token: &str, key: &ActorKey, name: &str, p_d: f64, p_i: f64) {
+        let prepared = self
+            .prepare_stance(token, json!({ "topicName": name }), p_d, p_i)
+            .await;
+        assert_eq!(
+            prepared["prepareStance"]["userErrors"]
+                .as_array()
+                .expect("array"),
+            &Vec::<Value>::new(),
+            "follow refused: {prepared}"
+        );
+        self.land(token, key, &prepared["prepareStance"]["writes"])
+            .await;
+    }
+
+    async fn prepare_severance(&self, token: &str, target: Value) -> Value {
+        self.gql(Some(token), PREPARE_SEVERANCE, json!({ "input": target }))
+            .await
+    }
+
     /// The registry rows CoGra's naming service holds.
     async fn registry_names(&self) -> Vec<String> {
         sqlx::query_scalar::<_, String>("SELECT name FROM hashtags ORDER BY name")
@@ -337,6 +366,18 @@ const PREPARE_COMMENT: &str = r#"mutation($input: PrepareCommentInput!) {
 
 const PREPARE_TAG: &str = r#"mutation($input: PrepareTagInput!) {
   prepareTag(input: $input) {
+    writes { id family canonicalProposal } userErrors { code message field }
+  }
+}"#;
+
+const PREPARE_STANCE: &str = r#"mutation($input: PrepareStanceInput!) {
+  prepareStance(input: $input) {
+    writes { id family canonicalProposal } userErrors { code message field }
+  }
+}"#;
+
+const PREPARE_SEVERANCE: &str = r#"mutation($input: PrepareSeveranceInput!) {
+  prepareSeverance(input: $input) {
     writes { id family canonicalProposal } userErrors { code message field }
   }
 }"#;
@@ -744,5 +785,209 @@ async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
         listing["records"]["edges"].as_array().expect("edges").len(),
         2,
         "the withdrawal is a record of its own: {listing}"
+    );
+}
+
+// ---------------------------------------------------------------------
+// Following a topic: the generic stance, with the family the target
+// fixes (D1), and the severance that undoes it (D9).
+// ---------------------------------------------------------------------
+
+/// The target selects the family, so the same `prepareStance` that
+/// carries an Opinion toward a Post carries an Affinity toward a Type —
+/// no per-act family choice anywhere (edges.md §1).
+#[sqlx::test(migrations = "../../migrations")]
+async fn following_a_topic_writes_an_affinity(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    rig.follow_topic(&token, &ak, "rust", 0.1, 0.1).await;
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, first: 10) {
+                   edges { node { family targetId terminalId pDirected pInterest } }
+                 }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    let node = &listing["records"]["edges"][0]["node"];
+    assert_eq!(node["family"], "AFFINITY", "{listing}");
+    // Affinity is binary: the Type is the target leg, and there is no
+    // terminal leg to carry it.
+    assert_eq!(node["targetId"], "name:rust");
+    assert!(node["terminalId"].is_null(), "{node}");
+    assert_eq!(node["pDirected"], 0.1);
+    assert_eq!(node["pInterest"], 0.1);
+}
+
+/// A topic nobody has tagged has no registry row, and its id derives
+/// one-way from its name — so the id spelling cannot reach it and the
+/// name spelling must (D4).
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_never_tagged_topic_is_followable_by_name(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    assert!(rig.registry_names().await.is_empty());
+
+    rig.follow_topic(&token, &ak, "#Untouched", 0.1, 0.1).await;
+
+    assert_eq!(
+        rig.registry_names().await,
+        vec!["untouched".to_string()],
+        "the follow registers the canonical name, as any record naming it does"
+    );
+}
+
+/// Once a name has a registry row the id spelling works too — which is
+/// what lets a chip carry an id straight into the follow control.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_registered_topic_is_followable_by_id(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    rig.landed_post(&token, &ak, "A post", json!([tag("rust")]))
+        .await;
+
+    let id = common::hashtag_uuid("rust").to_string();
+    let prepared = rig
+        .prepare_stance(&token, json!({ "target": id }), 0.1, 0.1)
+        .await;
+    assert_eq!(
+        errors(&prepared, "prepareStance")
+            .as_array()
+            .expect("array"),
+        &Vec::<Value>::new(),
+        "{prepared}"
+    );
+    rig.land(&token, &ak, &prepared["prepareStance"]["writes"])
+        .await;
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, family: AFFINITY, first: 10) {
+                   edges { node { targetId } }
+                 }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    assert_eq!(
+        listing["records"]["edges"][0]["node"]["targetId"],
+        "name:rust"
+    );
+}
+
+/// Unfollowing is `prepareSeverance` on the topic — the same generic
+/// gesture every other stance target gets (D9).
+#[sqlx::test(migrations = "../../migrations")]
+async fn unfollowing_a_topic_severs_the_affinity_bundle(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    rig.follow_topic(&token, &ak, "rust", 0.1, 0.1).await;
+    let severed = rig
+        .prepare_severance(&token, json!({ "topicName": "rust" }))
+        .await;
+    let writes = severed["prepareSeverance"]["writes"]
+        .as_array()
+        .unwrap_or_else(|| panic!("severance refused: {severed}"));
+    assert_eq!(writes.len(), 1, "one counter-record suffices: {severed}");
+    assert_eq!(writes[0]["family"], "AFFINITY");
+    rig.land(&token, &ak, &severed["prepareSeverance"]["writes"])
+        .await;
+
+    let listing = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, family: AFFINITY, first: 10) {
+                   edges { node { pDirected pInterest } }
+                 }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    let edges = listing["records"]["edges"].as_array().expect("edges");
+    assert_eq!(edges.len(), 2, "nothing was erased: {listing}");
+    let sum: f64 = edges
+        .iter()
+        .map(|e| e["node"]["pDirected"].as_f64().expect("number"))
+        .sum();
+    assert!(sum.abs() < 1e-9, "the bundle nets to zero: {listing}");
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn severing_an_unfollowed_topic_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let refused = rig
+        .prepare_severance(&token, json!({ "topicName": "rust" }))
+        .await;
+    assert_eq!(errors(&refused, "prepareSeverance")[0]["code"], "BAD_INPUT");
+    assert!(refused["prepareSeverance"]["writes"].is_null(), "{refused}");
+}
+
+/// Exactly one spelling of the target, in both stance mutations: naming
+/// neither leaves the gesture pointing nowhere, and naming both makes
+/// the record's endpoint a guess.
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_stance_names_exactly_one_target(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let id = common::hashtag_uuid("rust").to_string();
+
+    for target in [json!({}), json!({ "target": id, "topicName": "rust" })] {
+        let refused = rig.prepare_stance(&token, target.clone(), 0.1, 0.1).await;
+        assert_eq!(
+            errors(&refused, "prepareStance")[0]["code"],
+            "BAD_INPUT",
+            "for {target}: {refused}"
+        );
+        assert_eq!(
+            errors(&refused, "prepareStance")[0]["field"],
+            json!(["target"]),
+            "for {target}"
+        );
+        assert!(refused["prepareStance"]["writes"].is_null());
+
+        let refused = rig.prepare_severance(&token, target.clone()).await;
+        assert_eq!(
+            errors(&refused, "prepareSeverance")[0]["code"],
+            "BAD_INPUT",
+            "for {target}: {refused}"
+        );
+    }
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_illegal_topic_name_refuses_the_follow(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let refused = rig
+        .prepare_stance(&token, json!({ "topicName": "has space" }), 0.1, 0.1)
+        .await;
+    assert_eq!(errors(&refused, "prepareStance")[0]["code"], "BAD_INPUT");
+    assert_eq!(
+        errors(&refused, "prepareStance")[0]["field"],
+        json!(["topicName"]),
+        "{refused}"
+    );
+    assert!(
+        rig.registry_names().await.is_empty(),
+        "a refused follow registers nothing"
     );
 }
