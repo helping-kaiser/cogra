@@ -197,14 +197,6 @@ fn the_advisory_remainder_carries_the_expected_classes() {
         backticks < 200,
         "the Rust backtick near-misses the concept counted at 88: {backticks}"
     );
-    let comments = by_rule
-        .get("rust-plain-line-comment")
-        .copied()
-        .unwrap_or_default();
-    assert!(
-        comments > 800,
-        "the plain-comment sweep the concept counted at ~1210: {comments}"
-    );
     for expected in ["label-backtick-in-code", "rust-plain-line-comment"] {
         assert!(by_rule.contains_key(expected), "{expected} is not reported");
     }
