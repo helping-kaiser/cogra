@@ -1,3 +1,5 @@
+//! ´mod:module:mailer´
+//!
 //! Outbound mail (auth.md: verification, reset, and email-change
 //! messages).
 //!
