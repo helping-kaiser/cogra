@@ -139,20 +139,20 @@ async fn page(pool: &PgPool, cursor: Option<ContentCursor>, limit: i64) -> Vec<P
         .expect("lists")
 }
 
+/// Two pre-commitment signatures can fall in the same microsecond —
+/// nothing serializes two authors' signing apart — so the authoring instant
+/// alone cannot key the walk. Walking one entry at a time must visit both
+/// without the exclusive cursor swallowing the sibling that shares its
+/// instant, and must then end rather than loop on the tie.
 #[sqlx::test(migrations = "../../migrations")]
 async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     let author = actor(&pool, "author").await;
-    // Two pre-commitment signatures in the same microsecond: nothing
-    // serializes two authors' signing apart, so the authoring instant
-    // alone cannot key the walk.
     let one = post(&pool, author, None, at(0), "one").await;
     let two = post(&pool, author, None, at(0), "two").await;
 
     let all = page(&pool, None, 10).await;
     assert_eq!(all.len(), 2, "both pending entries are listed");
 
-    // Walking one at a time must visit both — the exclusive cursor may
-    // not swallow the sibling sharing its instant.
     let first = page(&pool, None, 1).await;
     assert_eq!(first.len(), 1);
     let second = page(&pool, Some(cursor_of(&first[0])), 1).await;
@@ -168,10 +168,14 @@ async fn same_instant_pending_entries_paginate_without_loss(pool: PgPool) {
     expected.sort();
     assert_eq!(walked, expected);
 
-    // And the walk ends there, rather than looping on the tie.
     assert!(page(&pool, Some(cursor_of(&second[0])), 1).await.is_empty());
 }
 
+/// A page boundary can fall inside the pending set and then have its own
+/// entry land underneath it: the key moves out of the pending namespace
+/// into the landed one, under the cursor the client is still holding. Page
+/// two must resume where that entry actually sits now, serving the rest and
+/// nothing twice.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -180,7 +184,6 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     let pending_first = post(&pool, author, None, at(20), "p1").await;
     let pending_second = post(&pool, author, None, at(30), "p2").await;
 
-    // Page one ends inside the pending set.
     let page1 = page(&pool, None, 2).await;
     assert_eq!(
         page1.iter().map(|p| p.id).collect::<Vec<_>>(),
@@ -188,9 +191,6 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     );
     let boundary = cursor_of(&page1[1]);
 
-    // Both pending entries land before the client asks for page two —
-    // their keys move out of the pending namespace and into the landed
-    // one, under the cursor the client is holding.
     let mut tx = pool.begin().await.expect("tx");
     content::land_post(&mut tx, pending_first, order(2, 0))
         .await
@@ -200,8 +200,6 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
         .expect("lands");
     tx.commit().await.expect("commit");
 
-    // Page two resumes where the cursor's entry actually sits now, so it
-    // serves the rest and nothing twice.
     let page2 = page(&pool, Some(boundary), 10).await;
     assert_eq!(
         page2.iter().map(|p| p.id).collect::<Vec<_>>(),
@@ -210,13 +208,14 @@ async fn a_page_boundary_survives_the_entry_landing_under_it(pool: PgPool) {
     );
 }
 
+/// A node can carry two unlanded edits, each staged by its own write and
+/// dated from its own pre-commitment. Landing the earlier one drops its
+/// pending mark and only its own.
 #[sqlx::test(migrations = "../../migrations")]
 async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     let author = actor(&pool, "author").await;
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
 
-    // Two unlanded edits sit on the node, each staged by its own write
-    // and dated from its own pre-commitment.
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(&mut tx, id, Some("title"), None, "first edit", None, at(10))
         .await
@@ -234,7 +233,6 @@ async fn landing_one_write_leaves_another_writes_pending_version(pool: PgPool) {
     .expect("second");
     tx.commit().await.expect("commit");
 
-    // Landing the earlier one drops its mark and only its mark.
     let mut tx = pool.begin().await.expect("tx");
     assert!(
         content::land_post_version(&mut tx, id, at(10), order(2, 0))
@@ -276,13 +274,16 @@ async fn discarding_one_write_leaves_another_writes_pending_version(pool: PgPool
     );
 }
 
+/// Discarding a pending post takes the pending thread beneath it — the
+/// pending comment on it, and the pending reply under that comment. A
+/// comment that already landed is ordered fact and not expiry's to remove:
+/// it stays, and reads as an orphan whose `target` resolves to null
+/// (data-model.md "Content nodes").
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPool) {
     let author = actor(&pool, "author").await;
     let commenter = actor(&pool, "commenter").await;
 
-    // A pending post, a pending comment on it, and a pending reply to
-    // that comment: one thread, three staged writes, none landed.
     let host = post(&pool, author, None, at(0), "host").await;
     let reply = comment(&pool, commenter, host, None, at(10), "on a pending post").await;
     let nested = comment(
@@ -295,8 +296,6 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
     )
     .await;
 
-    // Plus a comment that already landed on the pending post — ordered
-    // fact, and not expiry's to remove.
     let landed = comment(
         &pool,
         commenter,
@@ -329,9 +328,6 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
         "and so does the pending reply under that comment"
     );
 
-    // The landed comment stays and reads as an orphan: its target is
-    // gone, so `target` resolves to null (data-model.md "Content
-    // nodes").
     let orphan = content::comment(&pool, landed)
         .await
         .expect("read")
@@ -345,15 +341,16 @@ async fn discarding_a_pending_post_takes_the_pending_thread_under_it(pool: PgPoo
     );
 }
 
+/// Two landed edits whose authoring instants run the opposite way from
+/// their records: the edit written second was ordered first by L1, which is
+/// what a promotion pass replaying two epochs out of order produces. The
+/// records decide which one renders, and the listing read resolves the same
+/// version as the single read.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
     let author = actor(&pool, "author").await;
     let id = post(&pool, author, Some(order(1, 0)), at(0), "genesis").await;
 
-    // Two landed edits whose authoring instants run the opposite way
-    // from their records: the edit written second was ordered first by
-    // L1, which is what a promotion pass replaying two epochs out of
-    // order produces.
     let mut tx = pool.begin().await.expect("tx");
     content::insert_post_version(
         &mut tx,
@@ -393,7 +390,6 @@ async fn the_edit_whose_record_landed_last_renders_the_post(pool: PgPool) {
         "updatedAt follows the winning version, not the newest instant"
     );
 
-    // Every listing read resolves the same version as the single read.
     let listed = page(&pool, None, 10).await;
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].content, "landed later");
@@ -433,7 +429,9 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
 
 /// An unlanded edit has no place in the order yet, so it renders above
 /// every landed version regardless of what the coordinates say — the
-/// author's own text, from the moment they signed it (substrate.md §6).
+/// author's own text, from the moment they signed it (substrate.md §6). A
+/// reader who asked for only what the graph has settled skips it and gets
+/// the newest landed version instead.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool: PgPool) {
     let author = actor(&pool, "author").await;
@@ -463,8 +461,6 @@ async fn a_pending_edit_outranks_a_version_that_landed_after_it_was_signed(pool:
     assert_eq!(rendered.content, "pending");
     assert!(rendered.version_pending);
 
-    // A reader who asked for only what the graph has settled skips it
-    // and gets the newest landed version instead.
     let landed_only = content::list_posts(&pool, None, false, 10, false)
         .await
         .expect("lists");

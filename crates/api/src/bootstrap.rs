@@ -1,6 +1,8 @@
-// Genesis bootstrap — the one-shot instance creation (architecture.md
-// "Genesis bootstrap"; network.md §2). Out-of-graph authority is confined
-// to this bootstrap; there is no runtime genesis flow.
+//! Genesis bootstrap — the one-shot instance creation (architecture.md
+//! "Genesis bootstrap"; network.md §2).
+//!
+//! Out-of-graph authority is confined to this bootstrap; there is no
+//! runtime genesis flow.
 
 use common::l1::Family;
 use common::l1::client::ActorKey;
@@ -146,12 +148,34 @@ async fn ingest_or_refuse(boundary: &StandInBoundary, pool: &PgPool) -> Result<(
 /// and the genesis epoch close are substrate-side operations the seam
 /// deliberately does not carry (with the real Layer 1 both happen on the
 /// substrate's side of the boundary).
+///
+/// Re-running is safe. The mirror is caught up first, so the two-sided
+/// gate reads current state; when no service rows exist to key the L1
+/// check on, any ingested record at all means an L1 history exists that
+/// those rows should have described. The CoGra-side half is skipped when
+/// it already stands, and the genesis burn is credited at most once
+/// across re-runs by the same zero-burn funding-idempotency guard the
+/// onboarding flow uses (`ensure_admission_staged`).
+///
+/// The L1-side half puts money first and the genesis sequence second, so
+/// every record's preconditions already stand (network.md §2):
+///
+/// 1. The Genesis Moderator registers — the instance's first record.
+/// 2. The system actors register, each signed by its own custodied key.
+/// 3. The Genesis Moderator endorses The Publisher and The Moderator:
+///    external positive-rate vouches clearing their wall. The Treasury
+///    needs none, because it never writes again.
+/// 4. The Publisher publishes The Charter, whose witnessed payload carries
+///    the pinned guidelines and the genesis value of every governed
+///    parameter — the parameter fold's base case.
+/// 5. The Publisher tags the Genesis Moderator's Profile at the reserved
+///    `moderator` role Type — a Tag at `(0, 0)` with a payload, and the
+///    first record referencing that Type, anchored vacuously.
 pub async fn run(
     standin: &StandIn,
     pool: &PgPool,
     input: GenesisInput,
 ) -> Result<BootstrapOutcome, BootstrapError> {
-    // Catch up the mirror first, so the gate reads current state.
     let boundary = StandInBoundary(standin.clone());
     ingest_or_refuse(&boundary, pool).await?;
 
@@ -161,8 +185,6 @@ pub async fn run(
         .and_then(|publisher| publisher.l0_address);
     let l1_half = match publisher_address {
         Some(address) => mirror::has_record_by(pool, &address, Family::Publish).await?,
-        // No service rows to key the check on: any ingested record at all
-        // means an L1 history exists that these rows should describe.
         None => mirror::last_ingested_epoch(pool).await? >= 0,
     };
 
@@ -172,7 +194,6 @@ pub async fn run(
         _ => {}
     }
 
-    // --- The CoGra-side half (idempotent: skipped when it stands). ---
     let cast = if l2_half {
         load_cast(pool, &input).await?
     } else {
@@ -184,12 +205,8 @@ pub async fn run(
         BootstrapOutcome::Fresh
     };
 
-    // --- The L1-side half: money first, then the genesis sequence, so
-    // every record's preconditions already stand (network.md §2). ---
     let [gm, publisher, moderator, treasury] = &cast;
     for member in &cast {
-        // Credited at most once across re-runs — the zero-burn funding-
-        // idempotency guard (onboarding.rs `ensure_admission_staged`).
         let address = member.key.address();
         if standin.balance(&address).await?.burned_total == 0.0 {
             standin
@@ -206,9 +223,6 @@ pub async fn run(
             let pre = actor.pre_sign(proposal);
             let sealed = match standin.seal(pre.clone()).await {
                 Ok(sealed) => sealed,
-                // An act already stored under this identifier is an
-                // interrupted earlier run (or a diverged substrate):
-                // resume instead of replaying into the same Conflict.
                 Err(l1_standin::StandInError::Conflict(_)) => {
                     return resume_act(standin, &actor, &pre.proposal, &host_key).await;
                 }
@@ -220,12 +234,10 @@ pub async fn run(
         }
     };
 
-    // 1. The Genesis Moderator registers — the instance's first record.
     let gm_registration = registration(&gm.key);
     let gm_reg_id = gm_registration.body.act_id();
     submit(&gm.key, gm_registration).await?;
 
-    // 2. The system actors register, each signed by its own custodied key.
     let pub_registration = registration(&publisher.key);
     let pub_reg_id = pub_registration.body.act_id();
     submit(&publisher.key, pub_registration).await?;
@@ -234,9 +246,6 @@ pub async fn run(
     submit(&moderator.key, mod_registration).await?;
     submit(&treasury.key, registration(&treasury.key)).await?;
 
-    // 3. The Genesis Moderator endorses The Publisher and The Moderator —
-    // external positive-rate vouches clearing their wall. The Treasury
-    // needs none: it never writes again.
     submit(
         &gm.key,
         opinion(
@@ -253,9 +262,6 @@ pub async fn run(
     )
     .await?;
 
-    // 4. The Publisher publishes The Charter: the witnessed payload
-    // carries the pinned guidelines and the genesis value of every
-    // governed parameter — the parameter fold's base case.
     let charter_payload = serde_json::json!({
         "charter": {
             "guidelines_version": input.guidelines_version,
@@ -290,9 +296,6 @@ pub async fn run(
     let charter_id = charter.body.act_id();
     submit(&publisher.key, charter).await?;
 
-    // 5. The genesis role Tag: Tag (0,0) + payload toward The Genesis
-    // Moderator's Profile at the reserved `moderator` role Type — the
-    // first record referencing that Type (anchored vacuously).
     let role_tag = Proposal {
         body: StructuralBody {
             author: publisher.key.address(),
@@ -315,7 +318,6 @@ pub async fn run(
     standin.close_epoch().await?;
     ingest_or_refuse(&boundary, pool).await?;
 
-    // The gate must now hold on both sides.
     let landed = mirror::has_record_by(pool, &publisher.key.address(), Family::Publish).await?;
     if !landed {
         return Err(BootstrapError::Relay(

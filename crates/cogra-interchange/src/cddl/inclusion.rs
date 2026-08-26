@@ -5,14 +5,14 @@
 //! at the later minor is optional. A breach is a *verdict* and not an
 //! error — the `Result` wrapper carries only the case where the two
 //! theories are not comparable at all
-//! (`design.md`, `alg:xchg:inclusion-check`).
+//! (´alg:xchg:inclusion-check´).
 //!
 //! # Identity of type is literal
 //!
 //! "The expression together with every rule it references" is read
 //! literally: the comparison is over expression trees, with rule references
 //! matched by name and same-named rules required to be identical
-//! (`design.md`, `dec:xchg:type-identity`). The comparison runs over the
+//! (´dec:xchg:type-identity´). The comparison runs over the
 //! normalized print of the type expression together with the printed body
 //! of every rule it reaches, transitively — never over the source text and
 //! never over [`KeySlot::type_source`](crate::KeySlot::type_source), which
@@ -193,7 +193,7 @@ pub fn check_inclusion(earlier: &Theory, later: &Theory) -> Result<Inclusion, Th
 /// The registry reaches the check this way: it has established the label,
 /// the major, and the ascending minors before it asks, so the `Result` of
 /// [`check_inclusion`] would carry an arm it cannot reach
-/// (`sig:xchg:registry-api`).
+/// (´sig:xchg:registry-api´).
 pub(crate) fn compare(earlier: &Theory, later: &Theory) -> Inclusion {
     let before = keyed(earlier);
     let after = keyed(later);
@@ -302,8 +302,6 @@ fn own_rule<'t>(table: &'t RuleTable, name: &str) -> Option<&'t super::resolve::
     table.get(name).filter(|rule| !rule.is_from_prelude())
 }
 
-// -- the names a type reaches ---------------------------------------------
-
 fn names_of_body(body: &RuleBody, into: &mut Vec<String>) {
     match body {
         RuleBody::Type(ty) => names_of_type(ty, into),
@@ -370,10 +368,11 @@ fn names_of_entry(entry: &GroupEntry, into: &mut Vec<String>) {
     }
 }
 
+/// The rule names a member key reaches, which only a type key can do: a
+/// bareword key denotes the text string of its spelling and a literal key
+/// denotes itself.
 fn names_of_member_key(key: &MemberKey, into: &mut Vec<String>) {
     match &key.kind {
-        // A bareword key denotes the text string of its spelling and a
-        // literal key denotes itself; neither reaches a rule.
         MemberKeyKind::Bareword(_) | MemberKeyKind::Value(_) => {}
         MemberKeyKind::Type { key, .. } => names_of_type1(key, into),
     }

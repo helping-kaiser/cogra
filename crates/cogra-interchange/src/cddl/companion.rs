@@ -6,7 +6,7 @@
 //! cut, so a present-but-mistyped known key fails rather than falling
 //! through to the wildcard. Nothing else moves: every content key S names
 //! keeps its type and its requiredness
-//! (`design.md`, `alg:xchg:companion`).
+//! (´alg:xchg:companion´).
 //!
 //! # Why the rewrite is a tree rewrite
 //!
@@ -231,6 +231,10 @@ fn cut_content_keys(entries: &mut [GroupEntry]) {
 /// companion carries no second parse to keep in step with the first. That
 /// it prints as the base theory's own wildcard prints is asserted in
 /// `tests/companion.rs`.
+///
+/// The parentheses around the key are the schema's own: the member key is a
+/// whole `type1`, and printing it bare would read back as a key of `uint`
+/// with a stray control.
 fn wildcard(span: Span) -> GroupEntry {
     let one = Type2 {
         kind: Type2Kind::Value(Value {
@@ -271,10 +275,6 @@ fn wildcard(span: Span) -> GroupEntry {
                 kind: MemberKeyKind::Type {
                     key: Box::new(Type1 {
                         target: Type2 {
-                            // The parentheses are the schema's own: the
-                            // member key of the wildcard is a whole
-                            // `type1`, and printing it bare would read back
-                            // as a key of `uint` with a stray control.
                             kind: Type2Kind::Parenthesized(Box::new(above_one)),
                             span,
                         },

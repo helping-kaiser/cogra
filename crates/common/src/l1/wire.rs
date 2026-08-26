@@ -1,11 +1,11 @@
-// Transport encodings for the handshake objects that cross the API —
-// the prepared proposal the device signs, the sealed verified act it
-// approves, and the pre-commitment blob it submits (api-spec.md "The
-// write flow": `canonicalProposal`, `verifiedAct`, and the opaque
-// `signature` input). The wire form is versioned CBOR over the same
-// deterministic subset as the signing bases; the structural body travels
-// as its exact canonical bytes, so what the device parses is what it
-// signs.
+//! Transport encodings for the handshake objects that cross the API — the
+//! prepared proposal the device signs, the sealed verified act it approves,
+//! and the pre-commitment blob it submits (api-spec.md "The write flow":
+//! `canonicalProposal`, `verifiedAct`, and the opaque `signature` input).
+//!
+//! The wire form is versioned CBOR over the same deterministic subset as the
+//! signing bases; the structural body travels as its exact canonical bytes,
+//! so what the device parses is what it signs.
 
 use super::encoding::{DecodeError, Decoder, Encoder};
 use super::handshake::{PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
@@ -217,11 +217,12 @@ mod tests {
         }
     }
 
+    /// A fully populated body and a minimal one — every optional absent —
+    /// both survive the round trip.
     #[test]
     fn proposal_round_trips() {
         let p = proposal();
         assert_eq!(decode_proposal(&encode_proposal(&p)).expect("decodes"), p);
-        // A minimal body (every optional absent) round-trips too.
         let minimal = Proposal {
             body: StructuralBody {
                 author: "a".into(),
@@ -281,30 +282,29 @@ mod tests {
         assert_eq!(sig, vec![7; 64]);
     }
 
+    /// An unsupported version, a wrong array shape, truncated input,
+    /// trailing garbage, and a bad identifier inside an otherwise valid
+    /// envelope each surface as their own error rather than decoding into a
+    /// plausible-looking proposal.
     #[test]
     fn malformed_input_is_refused_not_misread() {
-        // Wrong version.
         let mut e = Encoder::new();
         e.array(4).uint(99).bytes(b"x").bytes(b"").array(0);
         assert!(matches!(
             decode_proposal(&e.finish()),
             Err(WireError::Version(99))
         ));
-        // Wrong shape.
         let mut e = Encoder::new();
         e.array(2).uint(1).bytes(b"x");
         assert!(matches!(
             decode_proposal(&e.finish()),
             Err(WireError::Shape(_))
         ));
-        // Truncated input.
         let good = encode_proposal(&proposal());
         assert!(decode_proposal(&good[..good.len() - 3]).is_err());
-        // Trailing garbage.
         let mut padded = good.clone();
         padded.push(0x00);
         assert!(decode_proposal(&padded).is_err());
-        // A bad identifier inside an otherwise valid envelope.
         let mut body = Encoder::new();
         body.array(9);
         body.text("not-an-act-id");

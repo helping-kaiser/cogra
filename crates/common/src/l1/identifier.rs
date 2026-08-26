@@ -1,11 +1,16 @@
-// Identifier algebra (layer1-interface.md §8.1, `def:graph:identifier-algebra`):
-// node identifiers form the inductive term algebra
-//   I ::= addr(a) | prof(a) | name(s) | mint(α)
-// with α an authored-act identifier act(author, s_q, family). Class is
-// decidable syntactically. The canonical text encoding below is this
-// deployment's verbatim record-identifier form — the mirror stores it
-// unchanged (data-model.md "The record mirror": the mirror never re-mints
-// identity).
+//! Identifier algebra (layer1-interface.md §8.1): node identifiers form the
+//! inductive term algebra
+//!
+//! ```text
+//! I ::= addr(a) | prof(a) | name(s) | mint(α)
+//! ```
+//!
+//! with α an authored-act identifier act(author, s_q, family). Class is
+//! decidable syntactically.
+//!
+//! The canonical text encoding below is this deployment's verbatim
+//! record-identifier form — the mirror stores it unchanged (data-model.md
+//! "The record mirror": the mirror never re-mints identity).
 
 use std::fmt;
 
@@ -40,7 +45,7 @@ pub enum IdentifierError {
 
 /// An authored-act identifier: `act(author, s_q, family)` — chosen by the
 /// actor before submission, no host-assigned component
-/// (`def:graph:act-identifier`).
+/// (layer1-interface.md §8.1).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ActId {
     /// The author's L0 address atom (the `a` of `addr(a)`).
@@ -123,7 +128,7 @@ impl NodeId {
         Ok(NodeId::Name(s.to_string()))
     }
 
-    /// Active (Actor) vs passive (artifact) — `def:graph:partition`.
+    /// Active (Actor) vs passive (artifact) — layer1-interface.md §8.1.
     pub fn is_active(&self) -> bool {
         matches!(self, NodeId::Addr(_))
     }

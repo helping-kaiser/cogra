@@ -1,8 +1,9 @@
-// The client (device) side of the admission handshake
-// (layer1-interface.md §8.2; substrate.md §6 — client-signed,
-// backend-relayed). Used by the dev CLI, the bootstrap's custodied system
-// actors, and tests. The Android client re-implements the same steps
-// on-device from slice 1 on.
+//! The client (device) side of the admission handshake: client-signed,
+//! backend-relayed (layer1-interface.md §8.2; substrate.md §6).
+//!
+//! Used by the dev CLI, the bootstrap's custodied system actors, and tests.
+//! The Android client re-implements the same steps on-device from slice 1
+//! on.
 
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
@@ -48,8 +49,9 @@ impl ActorKey {
         crypto::address_of(&self.key.verifying_key())
     }
 
-    /// Step 2 of the write — pre-sign: bind the exact proposal under a
-    /// fresh private nonce (`def:graph:proposal-pre-commitment`).
+    /// Step 2 of the write — pre-sign: bind the exact proposal under a fresh
+    /// private nonce, forming the proposal pre-commitment of
+    /// layer1-interface.md §8.2.
     pub fn pre_sign(&self, proposal: Proposal) -> PreSignedProposal {
         let mut nonce = vec![0u8; crypto::SALT_LEN];
         OsRng.fill_bytes(&mut nonce);
@@ -72,9 +74,13 @@ impl ActorKey {
 
     /// Step 4 of the write — approve: verify the host seal, the exact
     /// returned body, and both commitment openings, then sign the approval
-    /// witness (`def:graph:approval-witness`). `sent` is the proposal the
-    /// client pre-signed; the check is exact equality against what the
-    /// host returned.
+    /// witness (layer1-interface.md §8.2). `sent` is the proposal the client
+    /// pre-signed; the check is exact equality against what the host
+    /// returned.
+    ///
+    /// The equality check comes first for a reason: it is what lets both
+    /// commitment openings recompute from the returned salts and the bytes
+    /// the client itself holds, those bytes being the sealed act's own.
     pub fn approve(
         &self,
         sent: &PreSignedProposal,
@@ -89,9 +95,6 @@ impl ActorKey {
                 "host returned a different act than was pre-signed".into(),
             ));
         }
-        // Both commitment openings recompute from the returned salts and
-        // the bytes the client itself holds — equal to the sealed act's
-        // own bytes by the equality check above.
         self.verify_host_additions(sealed, host_pubkey)?;
         Ok(self.sign_approval(sealed))
     }
@@ -284,13 +287,14 @@ mod tests {
         );
     }
 
+    /// A host that swaps a salt after sealing leaves an opening the client
+    /// can no longer recompute.
     #[test]
     fn approve_rejects_wrong_commitment_opening() {
         let actor = ActorKey::generate();
         let host = SigningKey::generate(&mut OsRng);
         let pre = actor.pre_sign(proposal(&actor.address()));
         let mut sealed = seal(&pre, &host);
-        // Host swaps the salt after sealing: opening no longer matches.
         sealed.content_salt = vec![9u8; crypto::SALT_LEN];
         assert!(
             actor
@@ -299,18 +303,18 @@ mod tests {
         );
     }
 
+    /// Recovery works from the sealed act alone, without the pre-signed
+    /// proposal, and signs the very same message the ordinary step 4 does.
     #[test]
     fn approve_recovered_happy_path() {
         let actor = ActorKey::generate();
         let host = SigningKey::generate(&mut OsRng);
         let pre = actor.pre_sign(proposal(&actor.address()));
         let sealed = seal(&pre, &host);
-        // The pre is dropped — recovery works from the sealed act alone.
         let witness = actor
             .approve_recovered(&sealed, host.verifying_key().as_bytes())
             .expect("approves");
         assert_eq!(witness.act_id, sealed.proposal.body.act_id());
-        // Same message signed as the ordinary step 4.
         let ordinary = actor
             .approve(&pre, &sealed, host.verifying_key().as_bytes())
             .expect("approves");
@@ -331,13 +335,14 @@ mod tests {
         );
     }
 
+    /// Recovery proves authorship instead of matching it, so a payload this
+    /// key never pre-signed fails the proof.
     #[test]
     fn approve_recovered_rejects_a_tampered_payload() {
         let actor = ActorKey::generate();
         let host = SigningKey::generate(&mut OsRng);
         let pre = actor.pre_sign(proposal(&actor.address()));
         let mut sealed = seal(&pre, &host);
-        // A payload the key never pre-signed fails the authorship proof.
         sealed.proposal.payload = b"tampered".to_vec();
         assert!(
             actor
