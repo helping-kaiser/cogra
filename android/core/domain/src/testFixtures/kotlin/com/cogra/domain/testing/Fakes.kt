@@ -62,6 +62,7 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
+import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -395,7 +396,7 @@ open class ThrowingContentRepository : ContentRepository {
         description: String?,
         content: String,
         license: LicenseChoice,
-        tags: List<String>,
+        tags: List<TagClaim>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,

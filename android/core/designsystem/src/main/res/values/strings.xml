@@ -11,6 +11,13 @@
     <!-- The topic chip (design.md §6). -->
     <string name="topic_chip_remove">Remove %1$s</string>
 
+    <!-- A Tag act's two parameters (api-spec.md `TagInput`). -->
+    <string name="tag_relevance">Relevance</string>
+    <string name="tag_confidence">Confidence</string>
+    <string name="tag_relevance_min">−1.0</string>
+    <string name="tag_relevance_zero">0</string>
+    <string name="tag_relevance_max">+1.0</string>
+
     <!-- The stance control (design.md §8). The twenty readout anchors
          are the doc's table; a change there changes both apps. -->
     <string name="stance_anchor_nice">Nice</string>

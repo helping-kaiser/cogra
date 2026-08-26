@@ -10,6 +10,7 @@ import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.UserError
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
@@ -57,7 +58,7 @@ class ComposePostViewModelTest {
             description: String?,
             content: String,
             license: LicenseChoice,
-            tags: List<String>,
+            tags: List<TagClaim>,
         ): Outcome<PreparedContentView> {
             lastCreate = listOf(title, description, content, license, tags)
             return prepareOutcome ?: Outcome.Success(
