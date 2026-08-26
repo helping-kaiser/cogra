@@ -11,13 +11,17 @@ use std::fmt;
 
 use super::census::Family;
 
+/// The atom length bound from §8.1. Public so the L2 naming service can
+/// classify an over-long name without restating the number.
+pub const MAX_ATOM_BYTES: usize = 128;
+
 /// Charset for L0 addresses and Type names inside identifiers: ASCII
 /// alphanumerics plus `-`, `_`, `.`. Keeps the `:`-separated canonical text
 /// encoding unambiguous and byte-equality trivial (Types are a commons
 /// compared by exact byte equality — §8.1).
 fn valid_atom(s: &str) -> bool {
     !s.is_empty()
-        && s.len() <= 128
+        && s.len() <= MAX_ATOM_BYTES
         && s.bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.')
 }
