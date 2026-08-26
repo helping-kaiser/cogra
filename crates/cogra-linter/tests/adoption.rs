@@ -345,7 +345,12 @@ fn the_carrier_section_round_trips() {
             .generated_files
             .contains(&PathPrefix::new("schema.graphql"))
     );
-    assert!(carrier.vendored_trees.is_empty());
+    assert_eq!(
+        carrier.vendored_trees,
+        vec![PathPrefix::new(
+            "crates/cogra-linter/vendor/tree-sitter-kotlin/"
+        )]
+    );
     assert_eq!(
         carrier.vendored_files,
         vec![PathPrefix::new("docs/primitive/layer1-interface.md")]
