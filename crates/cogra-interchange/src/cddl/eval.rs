@@ -379,6 +379,10 @@ pub fn satisfies_global(d: &Document) -> Satisfaction {
 }
 
 /// The judgment, over any of the three instruments.
+///
+/// [`Document::to_value`] builds a map, so the arm for anything else is
+/// unreachable; it is written rather than assumed away, because a total
+/// function has an answer everywhere.
 fn judge<'a>(
     d: &Document,
     cddl: &'a Cddl,
@@ -387,8 +391,6 @@ fn judge<'a>(
 ) -> Satisfaction {
     let value = d.to_value();
     let Value::Map(map) = &value else {
-        // `Document::to_value` builds a map. The arm is written rather than
-        // assumed away, because a total function has an answer everywhere.
         return Satisfaction::Fails(vec![Mismatch::whole("a map".to_owned(), render(&value))]);
     };
     let Some(group) = root_map(cddl) else {
@@ -518,8 +520,6 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    // -- maps ------------------------------------------------------------
-
     /// Match a map against a group, reporting every way it failed.
     ///
     /// The group choices are tried in order and the first that consumes the
@@ -551,6 +551,15 @@ impl<'a> Evaluator<'a> {
     }
 
     /// Every entry of one group choice, in order.
+    ///
+    /// A repetition that consumed nothing can be repeated any number of times,
+    /// so it meets its lower bound vacuously. An entry that must occur and did
+    /// not is a failure of the whole group, whatever entries follow it — a
+    /// later wildcard picking the member up does not rescue it, which is why
+    /// the extensibility idiom of §3.5.4 writes its enumerated key optional.
+    /// Such a member is marked taken so the leftover pass does not report the
+    /// same failure twice; the verdict is settled either way, since a fault
+    /// stands.
     fn map_entries(
         &mut self,
         entries: &'a [GroupEntry],
@@ -564,9 +573,6 @@ impl<'a> Evaluator<'a> {
             while count < max {
                 match self.map_once(entry, map, consumed, faults) {
                     Some(0) => {
-                        // A repetition that consumed nothing can be
-                        // repeated any number of times, so the lower bound
-                        // is met vacuously.
                         count = count.max(min);
                         break;
                     }
@@ -575,17 +581,9 @@ impl<'a> Evaluator<'a> {
                 }
             }
             if count < min {
-                // An entry that must occur and did not is a failure of the
-                // whole group, whatever entries follow it — a later
-                // wildcard picking the member up does not rescue it. That
-                // is why the extensibility idiom of §3.5.4 writes its
-                // enumerated key optional.
                 let fault = match self.unconsumed_under(entry, map, consumed) {
                     Some(index) => {
                         let (member_key, member_value) = &map.entries()[index];
-                        // The member is marked taken so the leftover pass
-                        // does not report the same failure twice. The
-                        // verdict is settled either way: a fault stands.
                         consumed[index] = true;
                         Fault {
                             key: key_number(member_key),
@@ -632,6 +630,10 @@ impl<'a> Evaluator<'a> {
     ///
     /// `None` where the entry did not match, `Some(n)` where it matched and
     /// consumed `n` members.
+    ///
+    /// "If the memberkey is not given, the entry can only be used for matching
+    /// arrays, not for maps" — except where the type is a group, which is the
+    /// socket idiom `* $$extension`.
     fn map_once(
         &mut self,
         entry: &'a GroupEntry,
@@ -644,9 +646,6 @@ impl<'a> Evaluator<'a> {
                 key: Some(key),
                 value,
             } => self.map_member(key, value, map, consumed, faults),
-            // "If the memberkey is not given, the entry can only be used for
-            // matching arrays, not for maps" — except where the type is a
-            // group, which is the socket idiom `* $$extension`.
             GroupEntryKind::Member { key: None, value } => {
                 let group = self.spliced(value)?;
                 self.map_group(group, map, consumed)
@@ -683,6 +682,10 @@ impl<'a> Evaluator<'a> {
 
     /// One keyed member: pick the first unconsumed member of the map whose
     /// key matches, and whose value matches unless a cut locked the pick in.
+    ///
+    /// Under a cut the pick is locked in by the key alone (§3.5.4), so a value
+    /// that does not match fails the whole map rather than falling through to
+    /// a later entry.
     fn map_member(
         &mut self,
         key: &'a MemberKey,
@@ -708,8 +711,6 @@ impl<'a> Evaluator<'a> {
                 return Some(1);
             }
             if cut_of(key) {
-                // §3.5.4: the pick is locked in by the key alone, so a
-                // value that does not match fails the whole map.
                 consumed[index] = true;
                 faults.push(Fault {
                     key: key_number(member_key),
@@ -805,8 +806,6 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    // -- arrays ----------------------------------------------------------
-
     /// Whether an array matches a group: the group must consume it whole.
     fn match_array(&mut self, values: &[Value], group: &'a Group) -> bool {
         self.array_group(values, 0, group) == Some(values.len())
@@ -853,12 +852,13 @@ impl<'a> Evaluator<'a> {
     }
 
     /// One repetition of one entry against the array from `pos`.
+    ///
+    /// A member key in an array is documentary and plays no part in the match:
+    /// the array's elements are what match the group, "when taken as values
+    /// and complemented by a wildcard key each".
     fn array_once(&mut self, values: &[Value], pos: usize, entry: &'a GroupEntry) -> Option<usize> {
         match &entry.kind {
             GroupEntryKind::Member { value, .. } => {
-                // "the elements of which -- when taken as values and
-                // complemented by a wildcard key each -- match the group":
-                // a member key in an array is documentary.
                 if let Some(group) = self.spliced(value) {
                     return self.array_group(values, pos, group);
                 }
@@ -894,8 +894,6 @@ impl<'a> Evaluator<'a> {
             _ => None,
         }
     }
-
-    // -- types -----------------------------------------------------------
 
     /// Descend into a value strictly smaller than the one in hand, with the
     /// visited set cleared: a rule may legitimately re-enter itself under a
@@ -993,10 +991,16 @@ impl<'a> Evaluator<'a> {
     }
 
     /// A reference to a rule, a generic parameter, or a socket.
+    ///
+    /// An argument was written at the call site, so it is evaluated in the
+    /// scope the call site stood in and not in this rule's. A name the table
+    /// does not hold is an undefined socket, which is the empty choice
+    /// (RFC 8610 §3.9): nothing matches it, and that is an answer rather than
+    /// a failure. So is a rule that reaches itself without consuming anything,
+    /// which denotes no value, and a group, which no data item answers to in a
+    /// type position.
     fn match_name(&mut self, value: &Value, name: &'a Name, args: Option<&'a GenericArgs>) -> bool {
         if let Some(bound) = self.binding(&name.text) {
-            // The argument was written at the call site, so it is evaluated
-            // in the scope the call site stood in and not in this rule's.
             let Some(frame) = self.scopes.pop() else {
                 return false;
             };
@@ -1005,14 +1009,10 @@ impl<'a> Evaluator<'a> {
             return matched;
         }
 
-        // An undefined socket is the empty choice (RFC 8610 §3.9): nothing
-        // matches it, and that is an answer rather than a failure.
         let Some(rule) = self.table.get(&name.text) else {
             return false;
         };
         if self.visiting.contains(&name.text.as_str()) {
-            // A rule that reaches itself without consuming anything denotes
-            // no value.
             return false;
         }
 
@@ -1034,8 +1034,6 @@ impl<'a> Evaluator<'a> {
         self.scopes.push(frame);
         let matched = match rule.body() {
             RuleBody::Type(ty) => self.match_type(value, ty),
-            // A group is not a type, so nothing of the data language
-            // answers to it in this position.
             RuleBody::Group(_) => false,
         };
         self.scopes.pop();
@@ -1133,6 +1131,10 @@ impl<'a> Evaluator<'a> {
 
     /// A range: "matches any value that is between the two values", the
     /// upper bound included for `..` and excluded for `...`.
+    ///
+    /// "CDDL currently only allows ranges between integers ... or between
+    /// floating-point values", so a mixed range like `0..10.0` is NOT DEFINED,
+    /// and an undefined range admits nothing.
     fn match_range(
         &mut self,
         value: &Value,
@@ -1157,9 +1159,6 @@ impl<'a> Evaluator<'a> {
                 let here = float.to_f64();
                 low <= here && (here < high || (inclusive && here == high))
             }
-            // "CDDL currently only allows ranges between integers ... or
-            // between floating-point values"; `0..10.0` is NOT DEFINED, and
-            // an undefined range admits nothing.
             _ => false,
         }
     }
@@ -1210,12 +1209,11 @@ fn bounds(entry: &GroupEntry) -> (u64, u64) {
     }
 }
 
-/// Whether a member key carries a cut, written or implied by the colon.
+/// Whether a member key carries a cut, written or implied by the colon —
+/// "the ':' shortcut is actually defined to include the cut semantics".
 fn cut_of(key: &MemberKey) -> bool {
     match &key.kind {
         MemberKeyKind::Type { cut, .. } => *cut,
-        // "the ':' shortcut is actually defined to include the cut
-        // semantics".
         MemberKeyKind::Bareword(_) | MemberKeyKind::Value(_) => true,
     }
 }
@@ -1268,6 +1266,9 @@ fn budget_fault(key: &Value, value: &Value, exhaustion: &Exhaustion) -> Fault {
 /// admits it and so does `#7.27`. Every other major type fixes its
 /// additional information from the value's canonical name, where the two
 /// readings coincide.
+///
+/// Under major type 7 the additional information 24 names the simple values 32
+/// through 255, those being the ones that spelling carries.
 fn representation(value: &Value, major: u8, ai: Option<&Uint>) -> bool {
     let (initial, _) = value.canonical_head();
     if initial >> 5 != major {
@@ -1288,8 +1289,6 @@ fn representation(value: &Value, major: u8, ai: Option<&Uint>) -> bool {
         (Value::Null, 22) => true,
         (Value::Simple(simple), 23) => simple.get() == 23,
         (Value::Simple(simple), want) if want < 20 => u64::from(simple.get()) == want,
-        // Simple values 32 through 255 are the ones spelled with the
-        // additional information 24.
         (Value::Simple(simple), 24) => simple.get() >= 32,
         (Value::Float(float), 25) => float.width() == FloatWidth::Half,
         (Value::Float(float), 26) => float.width() <= FloatWidth::Single,
