@@ -154,6 +154,10 @@ impl StanceBundle {
 /// Resolves the `viewerStance` field shared by every stance-able node.
 /// Null for a viewer who has none — an unauthenticated reader, or one
 /// whose account has no actor on the graph yet.
+///
+/// Nothing about the viewer's own stance is an error on a read: a viewer
+/// without an attached actor key has no bundle to read, and an id this
+/// viewer could not stance has none either. Both answer null.
 pub(crate) async fn viewer_stance(
     ctx: &Context<'_>,
     target: Uuid,
@@ -169,8 +173,6 @@ pub(crate) async fn viewer_stance(
             sum,
             pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
         })),
-        // A viewer without an attached actor key has no bundle to read,
-        // and an id this viewer cannot stance is not an error on a read.
         Err(crate::stance::StanceError::BadInput { .. })
         | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
         Err(e) => Err(e.into()),
@@ -653,10 +655,6 @@ impl StagedWriteType {
     }
 }
 
-// ---------------------------------------------------------------------
-// Auth and account types
-// ---------------------------------------------------------------------
-
 /// A user account's service state (auth.md "Account states"): it gates
 /// acting through CoGra, never reading, and is distinct from the
 /// mutual-pair membership of invitations.md §2. GUEST is reserved — no
@@ -847,14 +845,14 @@ impl User {
         self.identity.handle.clone()
     }
 
-    /// The current display name (the newest profile version).
+    /// The current display name (the newest profile version). Registration
+    /// seeds every user's first version row, so the handle stands in only
+    /// for actors predating that invariant.
     async fn display_name(&self, ctx: &Context<'_>) -> async_graphql::Result<ModeratedText> {
         Ok(match self.profile(ctx).await? {
             Some(p) => {
                 ModeratedText::from_version(Some(p.display_name), p.redaction_reason.is_some())
             }
-            // Registration seeds every user's first version row; the
-            // handle stands in for actors from before that invariant.
             None => ModeratedText::from_version(Some(self.identity.handle.clone()), false),
         })
     }
@@ -993,7 +991,9 @@ impl User {
     /// the first-login reciprocation prompt (auth.md "Reciprocation is
     /// the joiner's own act"). Vacuously true when invitedBy is null —
     /// and for any viewer but the account's own: the field exists only
-    /// to drive the viewer's own prompt.
+    /// to drive the viewer's own prompt. False needs both addresses to
+    /// exist: without them no Opinion can, because a keyless viewer has
+    /// signed nothing.
     async fn has_reciprocated(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
         if !self.is_viewer(ctx) {
             return Ok(true);
@@ -1005,8 +1005,6 @@ impl User {
         if store::reciprocation_latched(pool, self.identity.id).await? {
             return Ok(true);
         }
-        // Without both addresses no Opinion can exist — a keyless viewer
-        // has signed nothing.
         let (Some(viewer_address), Some(inviter_address)) =
             (&self.identity.l0_address, &inviter.l0_address)
         else {
@@ -1310,10 +1308,6 @@ where
     .await
 }
 
-// ---------------------------------------------------------------------
-// Content read surface (slice 2)
-// ---------------------------------------------------------------------
-
 /// An L1 record identifier, exactly as Layer 1 minted it — stored and
 /// served verbatim (api-spec.md "Scalars").
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1367,22 +1361,22 @@ pub enum PayloadState {
 }
 
 /// The license qualifiers a content node was minted with (§5 of
-/// platform-guidelines.md; layer1-interface.md §10
-/// `def:content:license-qualifiers`) — set by the creator when the node
-/// entered the graph, immutable thereafter, and surviving payload
-/// removal. Both are duties on *downstream use*, never a statement about
-/// how the content was made.
+/// platform-guidelines.md; layer1-interface.md §10) — set by the creator
+/// when the node entered the graph, immutable thereafter, and surviving
+/// payload removal. Both are duties on *downstream use*, never a
+/// statement about how the content was made.
 #[derive(SimpleObject)]
 pub struct License {
     /// `a` — the degree to which a use must credit the maker, on
-    /// `[0, 1]` (`def:content:attribution`). CoGra publishes three
-    /// readings: 0 no credit owed, 0.5 credit on commercial uses only,
-    /// 1 credit on every use.
+    /// `[0, 1]` (attribution, layer1-interface.md §10). CoGra publishes
+    /// three readings: 0 no credit owed, 0.5 credit on commercial uses
+    /// only, 1 credit on every use.
     pub attribution: f64,
     /// `o` — the degree to which a use must be tracked publicly and
-    /// left open to audit, on `[0, 1]` (`def:content:provenance`).
-    /// CoGra publishes three readings: 0 no record owed, 0.5 a public
-    /// record of commercial uses only, 1 a public record of every use.
+    /// left open to audit, on `[0, 1]` (provenance, layer1-interface.md
+    /// §10). CoGra publishes three readings: 0 no record owed, 0.5 a
+    /// public record of commercial uses only, 1 a public record of every
+    /// use.
     pub provenance: f64,
 }
 
@@ -1654,9 +1648,11 @@ impl CommentType {
 /// Every graph-backed thing with an identity and a lifecycle
 /// (api-spec.md "Identity and actor interfaces"). Coverage grows with
 /// the slices; slice 2 carries the content nodes.
-// The allow is a named clippy false positive (rust-clippy #12537):
-// `duplicated_attributes` misfires on derive-helper fields that share a
-// value — createdAt and updatedAt genuinely have the same GraphQL type.
+///
+/// The `duplicated_attributes` allow answers a named clippy false
+/// positive (rust-clippy #12537): the lint misfires on derive-helper
+/// fields that share a value, and `createdAt` and `updatedAt` genuinely
+/// have the same GraphQL type.
 #[allow(clippy::duplicated_attributes)]
 #[derive(Interface)]
 #[graphql(
@@ -1723,12 +1719,9 @@ pub async fn resolve_node_id(
     Ok(None)
 }
 
-// ---------------------------------------------------------------------
-// Keyset pagination (api-spec.md "Pagination")
-// ---------------------------------------------------------------------
-
 /// Connections over mirror-ordered reads carry no `nodes` shortcut —
-/// the connection convention is edges + pageInfo (api-spec.md).
+/// the connection convention is edges + pageInfo (api-spec.md
+/// "Pagination").
 pub type KeysetConnection<G> = Connection<
     String,
     G,
