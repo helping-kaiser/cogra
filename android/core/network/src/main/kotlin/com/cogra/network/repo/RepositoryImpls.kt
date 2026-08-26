@@ -279,11 +279,7 @@ class WriteRepositoryImpl @Inject constructor(
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             PrepareStanceMutation(
-                PrepareStanceInput(
-                    target = Optional.present(targetId),
-                    pDirected = pDirected,
-                    pInterest = pInterest,
-                ),
+                PrepareStanceInput(target = Optional.present(targetId), pDirected = pDirected, pInterest = pInterest),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
             it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }

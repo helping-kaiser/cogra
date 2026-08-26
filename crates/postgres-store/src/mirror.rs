@@ -1,8 +1,10 @@
-// The record mirror (data-model.md "The record mirror"): appends published
-// epoch packages and advances the epoch cursor in one transaction
-// (architecture.md "Record ingestion"). The mirror may lag L1, must never
-// diverge, and is fully rebuildable from the published ordered sequence —
-// nothing here is authoritative and no row is ever precious.
+//! The record mirror: appends published epoch packages and advances the
+//! epoch cursor in one transaction (data-model.md "The record mirror";
+//! architecture.md "Record ingestion").
+//!
+//! The mirror may lag L1, must never diverge, and is fully rebuildable
+//! from the published ordered sequence — nothing here is authoritative and
+//! no row is ever precious.
 
 use common::l1::census::Family;
 use common::l1::handshake::EpochPackage;
@@ -30,6 +32,12 @@ pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
 /// Appends one published epoch and advances the cursor, atomically. The
 /// cursor is re-read under the transaction so concurrent ingestors cannot
 /// double-append.
+///
+/// A leg's domain, mask, and tier are family-fixed and come from the
+/// census, never from the package (`common::l1::census`). A leg the census
+/// does not describe cannot occur in a census-valid package; one that
+/// appears is ingested with minimal fallback metadata and logged loudly,
+/// because a published record is never dropped.
 pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), MirrorError> {
     let mut tx = pool.begin().await?;
     let cursor = sqlx::query_scalar!(
@@ -61,7 +69,6 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
         .execute(&mut *tx)
         .await?;
         for leg in &record.legs {
-            // Domain, mask, and tier are family-fixed (common::l1::census).
             let spec = record
                 .family
                 .legs()
@@ -70,8 +77,6 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
                 .copied();
             let (domain, mask, tier) = match spec {
                 Some(s) => (s.domain.as_str(), s.mask, s.tier.as_str()),
-                // Unreachable for census-valid packages; log the divergence
-                // loudly rather than drop a published record.
                 None => {
                     tracing::error!(
                         record = %record.act_id,
