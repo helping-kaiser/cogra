@@ -1,3 +1,5 @@
+//! ´mod:module:resolve´
+//!
 //! The rule table and reference resolution.
 //!
 //! A parsed theory is a tree of names; a resolved theory is one in which

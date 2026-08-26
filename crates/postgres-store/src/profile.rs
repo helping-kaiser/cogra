@@ -1,3 +1,5 @@
+//! ´mod:module:profile´
+//!
 //! Actor profile display content (data-model.md "Actors"): append-only
 //! version rows over `actor_profile_versions`, newest row wins.
 //!

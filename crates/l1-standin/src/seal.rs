@@ -1,3 +1,5 @@
+//! ´mod:module:seal´
+//!
 //! Host side of the admission handshake's two relay legs
 //! (layer1-interface.md §8.2). `seal` verifies the pre-signed proposal,
 //! adds salts, forms the binding commitments, and seals the verified

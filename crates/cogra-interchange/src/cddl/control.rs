@@ -1,3 +1,5 @@
+//! ´mod:module:control´
+//!
 //! Control-operator evaluation: the ten of RFC 8610 §3.8 the version-1
 //! evaluator implements (´dec:xchg:evaluable-subset´).
 //!

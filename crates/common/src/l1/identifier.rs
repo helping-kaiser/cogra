@@ -1,3 +1,5 @@
+//! ´mod:module:identifier´
+//!
 //! Identifier algebra (layer1-interface.md §8.1): node identifiers form the
 //! inductive term algebra
 //!

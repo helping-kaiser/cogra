@@ -1,3 +1,5 @@
+//! ´mod:module:fold´
+//!
 //! Net stance — the bundle fold (layer1-interface.md §11.3; adopted verbatim
 //! as CoGra's read-side fold in feed-ranking.md §3.2):
 //!

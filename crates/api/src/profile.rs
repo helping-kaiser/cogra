@@ -1,3 +1,5 @@
+//! ´mod:module:profile´
+//!
 //! Profile authoring and promotion — slice 2.1 (api-spec.md "Content
 //! authoring" `prepareProfileUpdate`; substrate.md §9; user.md §4).
 //!

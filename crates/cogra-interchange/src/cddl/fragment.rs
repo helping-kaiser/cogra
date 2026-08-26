@@ -1,3 +1,5 @@
+//! ´mod:module:fragment´
+//!
 //! Assignable-fragment membership.
 //!
 //! The fragment is "structural, not lexical": it constrains the top-level

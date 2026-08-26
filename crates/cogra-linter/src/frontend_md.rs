@@ -1,3 +1,5 @@
+//! ´mod:module:frontend-md´
+//!
 //! The Markdown frontend: blocks, code spans, headings, tables.
 //!
 //! `pulldown-cmark` is driven through [`Parser::into_offset_iter`], which

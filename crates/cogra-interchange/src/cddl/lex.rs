@@ -1,3 +1,5 @@
+//! ´mod:module:lex´
+//!
 //! The CDDL tokenizer: a hand-written scanner over the lexical
 //! productions of RFC 8610 Appendix B.
 //!

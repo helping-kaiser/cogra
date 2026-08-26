@@ -216,7 +216,7 @@ fn in_force() -> ProfileId {
 fn before_entry() -> Adoption {
     let text = std::fs::read_to_string(root().join("corpus-adoption.toml"))
         .expect("the adoption data is readable")
-        .replace("effective = 1", "effective = 0")
+        .replace("effective = 2", "effective = 1")
         .replacen("status = \"effective\"", "status = \"staged\"", 1);
     Adoption::from_str(&text, Path::new("corpus-adoption.toml")).expect("it loads")
 }
@@ -318,7 +318,8 @@ fn the_measurement_and_the_named_regeneration_agree_on_the_census() {
 }
 
 /// (´dec:lint:staged-profiles´): a whole-corpus regeneration emits a register
-/// for the profile in force and sweeps no staged profile up.
+/// only for a profile whose standard place is one — the test profile's, and
+/// not the module profile's, whose labels sit at their own definitions.
 #[test]
 fn a_whole_corpus_regeneration_emits_only_what_is_in_force() {
     let profiles: Vec<ProfileId> = generated()
@@ -334,7 +335,7 @@ fn a_whole_corpus_regeneration_emits_only_what_is_in_force() {
     );
     assert!(
         profiles.iter().all(|one| *one == in_force()),
-        "a staged profile is generated for by name alone: {profiles:?}"
+        "only a register-placed profile is generated for: {profiles:?}"
     );
 }
 
