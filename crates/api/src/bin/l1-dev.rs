@@ -6,14 +6,17 @@
 //! epoch close) plus mirror ingestion.
 //!
 //! Usage:
-//!   l1-dev keygen
-//!   l1-dev burn <address> <micro>
-//!   l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
-//!   l1-dev close
-//!   l1-dev ingest
-//!   l1-dev rebuild
-//!   l1-dev balance <address>
-//!   l1-dev status
+//!
+//! ```text
+//! l1-dev keygen
+//! l1-dev burn <address> <micro>
+//! l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
+//! l1-dev close
+//! l1-dev ingest
+//! l1-dev rebuild
+//! l1-dev balance <address>
+//! l1-dev status
+//! ```
 
 use anyhow::{Context, bail};
 use api::l1::StandInBoundary;

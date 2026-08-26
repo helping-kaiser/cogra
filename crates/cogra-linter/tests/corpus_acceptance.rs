@@ -209,18 +209,21 @@ fn the_advisory_remainder_carries_the_expected_classes() {
 /// (´[LBL-cav:labels:coexistence]´): an advisory tree's defects are visible
 /// in full rather than demoted, and enforcement is orthogonal to severity —
 /// an error is an error wherever it is found.
+///
+/// The example tree is whichever crate is still advisory, so it moves as
+/// crates complete the ban sweep and enter the failing set.
 #[test]
 fn advisory_findings_keep_their_severity() {
-    let advisory = under("crates/api/src/");
+    let advisory = under("crates/l1-standin/src/");
     assert!(
         !advisory.is_empty(),
-        "the api crate's sources report something"
+        "the l1-standin crate's sources report something"
     );
     assert!(
         advisory
             .iter()
             .all(|one| one.enforcement == Enforcement::Advisory),
-        "nothing under crates/api/src/ is in the failing set today"
+        "nothing under crates/l1-standin/src/ is in the failing set today"
     );
     assert!(
         advisory
