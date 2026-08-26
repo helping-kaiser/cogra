@@ -33,6 +33,7 @@ import com.cogra.app.di.ScriptedAccountRepository
 import com.cogra.app.di.ScriptedContentRepository
 import com.cogra.app.di.ScriptedOnboardingRepository
 import com.cogra.app.di.ScriptedProfileRepository
+import com.cogra.app.di.ScriptedTopicRepository
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.sealKeyBackup
@@ -79,6 +80,8 @@ class CograNavGraphTest {
     @Inject lateinit var content: ScriptedContentRepository
 
     @Inject lateinit var profiles: ScriptedProfileRepository
+
+    @Inject lateinit var topics: ScriptedTopicRepository
 
     @Inject lateinit var notices: SecurityNotices
 
@@ -210,6 +213,30 @@ class CograNavGraphTest {
         // (design.md §6); no tab is selected.
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("detail_back").fetchSemanticsNodes()).isNotEmpty()
+    }
+
+    // A topic chip reaches its own screen from wherever it renders — the
+    // feed card here — the way any chip anywhere is meant to (D20).
+    @Test
+    fun aPostCardsTopicChipOpensTheTopicScreen() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(
+            com.cogra.domain.testing.testPost("p1").copy(
+                topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
+            ),
+        )
+        render()
+        waitForTag("feed_post_p1_topic_rust")
+
+        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        waitForTag("topic_title")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+
+        compose.onNodeWithTag("topic_back").performClick()
+        waitForTag("feed_post_p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
     // The reader drills into a still-settling post and reads it landed
