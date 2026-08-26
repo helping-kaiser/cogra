@@ -38,8 +38,8 @@ use crate::adopt::{Adoption, Kind, OwnerId, Profile, ProfileId, ProfileStatus};
 use crate::carrier::{SourceFile, Walk};
 use crate::diag::{ByteSpan, Location};
 use crate::error::{RunError, WalkError};
-use crate::frontend::Asset;
-use crate::frontend_rust::{self, CargoTarget, Declaration};
+use crate::frontend::{Asset, Declaration, backing_definitions};
+use crate::frontend_rust::{self, CargoTarget};
 use crate::pretokenize::rust::RUST;
 use crate::pretokenize::{CommentForm, pretokenize};
 use crate::registers::{derived_label, owner_root, register_path};
@@ -204,8 +204,12 @@ pub fn census(
 
 /// One profile's census, by the source each asset sits in.
 ///
-/// The censuses are computed here and nowhere else in the run, which is what
-/// keeps the check's pass honest (´dec:lint:staged-profiles´).
+/// A *staged* profile's census is computed here and nowhere else, which is
+/// what keeps the check's pass honest (´dec:lint:staged-profiles´). The
+/// cross-source half is not this run's own: the pairing that turns the
+/// corpus's declarations into definitions is one implementation, shared with
+/// the judging run, and this is one of its two callers
+/// (´dec:lint:cross-source-pairing´).
 fn census_of<'s>(
     a: &Adoption,
     profile: &Profile,
@@ -239,94 +243,26 @@ fn census_of<'s>(
                 .map(|one| (&*src.path, one)),
         );
     }
-    for (src, identifier) in backing_files(profile, sources, &declared) {
-        let held = &mut out.entry(&src.path).or_insert((src, Vec::new())).1;
-        if held.iter().any(|one| one.identifier == identifier) {
-            continue;
-        }
-        if let Some(asset) = definition(profile, &identifier) {
-            held.push(asset);
-        }
+    let paired = {
+        let declaring: Vec<(&Path, &str)> = declared
+            .iter()
+            .map(|(path, one)| (*path, one.identifier.as_str()))
+            .collect();
+        let defined: Vec<(&Path, &str)> = out
+            .iter()
+            .flat_map(|(path, (_, held))| {
+                held.iter().map(move |one| (*path, one.identifier.as_str()))
+            })
+            .collect();
+        backing_definitions(profile, sources, &declaring, &defined)
+    };
+    for (src, asset) in paired {
+        out.entry(&src.path)
+            .or_insert((src, Vec::new()))
+            .1
+            .push(asset);
     }
     out.into_values().collect()
-}
-
-/// The sources that back the corpus's `mod name;` declarations, each once.
-///
-/// This is the pairing no frontend can make: a declaration and its
-/// definition sit in different files, and a frontend is handed one source at
-/// a time, which is why [`Declaration`] travels out of it unresolved. The
-/// measurement is the run that holds every source, so the pairing is made
-/// here — once per definition, never per declaration, which is what keeps
-/// the nine `mod rig;` declarations of one tree one asset rather than nine
-/// (`[profiles]`).
-///
-/// Cargo's own module layout is the rule: a declaration in a crate root or a
-/// `mod.rs` is backed from that file's own directory, and one in any other
-/// module file from the directory named after it. A declaration whose
-/// backing file is not in the carrier pairs with nothing and contributes no
-/// asset, rather than an asset pointing at a file the walk never saw.
-fn backing_files<'s>(
-    profile: &Profile,
-    sources: &'s [SourceFile],
-    declared: &[(&Path, Declaration)],
-) -> Vec<(&'s SourceFile, String)> {
-    if profile.census.definition_rule.is_none() {
-        return Vec::new();
-    }
-    let by_path: BTreeMap<&Path, &SourceFile> = sources
-        .iter()
-        .map(|one| (one.path.as_path(), one))
-        .collect();
-    let mut out: BTreeMap<&Path, (&SourceFile, String)> = BTreeMap::new();
-    for (declaring, one) in declared {
-        for candidate in candidates(declaring, &one.identifier) {
-            if let Some(src) = by_path.get(candidate.as_path()) {
-                out.entry(&src.path)
-                    .or_insert((*src, one.identifier.clone()));
-                break;
-            }
-        }
-    }
-    out.into_values().collect()
-}
-
-/// The two files a declaration in `declaring` could be backed by.
-fn candidates(declaring: &Path, name: &str) -> [PathBuf; 2] {
-    let parent = declaring.parent().unwrap_or(Path::new(""));
-    let root = matches!(
-        declaring.file_stem().and_then(std::ffi::OsStr::to_str),
-        Some("lib" | "main" | "mod")
-    );
-    let dir = if root {
-        parent.to_path_buf()
-    } else {
-        match declaring.file_stem().and_then(std::ffi::OsStr::to_str) {
-            Some(stem) => parent.join(stem),
-            None => parent.to_path_buf(),
-        }
-    };
-    [
-        dir.join(format!("{name}.rs")),
-        dir.join(name).join("mod.rs"),
-    ]
-}
-
-/// One file-backed module definition, located at the top of its own file,
-/// which is where the inner documentation comment its standard place names
-/// would sit.
-fn definition(profile: &Profile, identifier: &str) -> Option<Asset> {
-    let mut areas = profile.classification.areas.values();
-    let (Some(area), None) = (areas.next(), areas.next()) else {
-        return None;
-    };
-    Some(Asset {
-        profile: profile.id.clone(),
-        identifier: String::from(identifier),
-        area: area.clone(),
-        place: profile.standard_place.clone(),
-        span: ByteSpan::new(0, 0),
-    })
 }
 
 /// The registers a register-placed profile still waits on, one per owner
@@ -420,47 +356,5 @@ fn enters_when(profile: &Profile) -> Box<str> {
     match &profile.status {
         ProfileStatus::Staged { enters_when } => enters_when.clone(),
         ProfileStatus::Effective => Box::from(""),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn spelled(declaring: &str, name: &str) -> Vec<String> {
-        candidates(Path::new(declaring), name)
-            .iter()
-            .map(|one| one.to_string_lossy().replace('\\', "/"))
-            .collect()
-    }
-
-    #[test]
-    fn a_crate_root_backs_from_its_own_directory() {
-        assert_eq!(
-            spelled("crates/api/src/lib.rs", "auth"),
-            ["crates/api/src/auth.rs", "crates/api/src/auth/mod.rs"]
-        );
-    }
-
-    #[test]
-    fn a_module_file_backs_from_the_directory_named_after_it() {
-        assert_eq!(
-            spelled("crates/api/src/auth.rs", "tokens"),
-            [
-                "crates/api/src/auth/tokens.rs",
-                "crates/api/src/auth/tokens/mod.rs"
-            ]
-        );
-    }
-
-    #[test]
-    fn a_mod_file_backs_from_its_own_directory_like_a_root() {
-        assert_eq!(
-            spelled("crates/api/tests/rig/mod.rs", "seed"),
-            [
-                "crates/api/tests/rig/seed.rs",
-                "crates/api/tests/rig/seed/mod.rs"
-            ]
-        );
     }
 }
