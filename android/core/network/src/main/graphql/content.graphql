@@ -35,6 +35,16 @@ fragment PostFields on Post {
     attribution
     provenance
   }
+  # The author's own current topics — the content-intrinsic channel
+  # this slice shows (hashtag.md §4, §5; D8).
+  topics {
+    hashtag {
+      ...HashtagFields
+    }
+    relevance
+    confidence
+    pending
+  }
 }
 
 fragment CommentFields on Comment {
@@ -60,6 +70,14 @@ fragment CommentFields on Comment {
   license {
     attribution
     provenance
+  }
+  topics {
+    hashtag {
+      ...HashtagFields
+    }
+    relevance
+    confidence
+    pending
   }
 }
 
