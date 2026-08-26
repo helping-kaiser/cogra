@@ -221,7 +221,7 @@ impl Adoption {
     /// let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
     ///
     /// assert_eq!(adoption.profiles.profiles.len(), 2);
-    /// assert_eq!(adoption.profiles.effective_count, 0);
+    /// assert_eq!(adoption.profiles.effective_count, 1);
     /// assert_eq!(adoption.partition.rules.len(), 20);
     /// ```
     ///
