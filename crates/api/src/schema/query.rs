@@ -12,8 +12,8 @@ use postgres_store::{PgPool, auth as store, content as content_store, mirror, st
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, CursorKey, InviteLinkCheck, KeysetConnection, Node, PostType, Record,
-    RecordFamily, RecordId, StagedWriteType, User, connection_cost, content_cursor,
+    Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
+    Record, RecordFamily, RecordId, StagedWriteType, User, connection_cost, content_cursor,
     content_cursor_key, keyset_connection, keyset_page,
 };
 use crate::auth::Viewer;
@@ -182,6 +182,21 @@ impl Query {
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?
             .map(CommentType))
+    }
+
+    /// One topic by name — canonicalized here (lowercase, `#` stripped)
+    /// before anything is looked at.
+    ///
+    /// Every well-formed name already denotes a Type, whether or not any
+    /// record has referenced it: Types are anchored vacuously and their
+    /// ids are a pure function of the name. So this resolves without a
+    /// registry row and without writing one — a client can navigate to
+    /// an empty topic page and follow it from there. Null only for a
+    /// name the substrate could never carry.
+    async fn hashtag(&self, name: String) -> async_graphql::Result<Option<HashtagType>> {
+        Ok(common::hashtag::canonicalize(&name)
+            .ok()
+            .map(|name| HashtagType { name }))
     }
 
     /// Any node by its L2 id, typed. Coverage grows with the slices —

@@ -148,7 +148,7 @@ switched on before the places its labels must occupy exist fails at
 every covered asset. A profile therefore enters Π in the commit that
 lands its migration; `status` and `effective` are what move. The test
 profile entered on 2026-08-26 with its per-owner registers; the module
-profile is registered and staged, waiting on its 84 inner doc
+profile is registered and staged, waiting on its 87 inner doc
 comments.
 
 Each profile fixes exactly the five data ``sig:labels:profiles``
@@ -177,7 +177,7 @@ choose differently, because their costs differ by an order of
 magnitude.** Tests take a **generated register of the owner** (R11):
 the whole rust-test census, zero source edits, one generator. Modules
 keep the **inner documentation comment**: the label sits at the asset,
-and the 84 definitions are a bounded pending task rather than a
+and the 87 definitions are a bounded pending task rather than a
 blocker at the scale of the test census. The inner form is the only
 one a file-backed and an inline module can both carry.
 
@@ -457,7 +457,7 @@ set. The register's name and location — `<owner tree
 root>/label-register.md` — are implementation-defined and marked as
 such; what is fixed is that the place is a generated register *of the
 owner*, hence a file inside that owner's tree. The module profile keeps
-the `//!` inner doc comment, whose 84-definition migration is a
+the `//!` inner doc comment, whose 87-definition migration is a
 recorded pending task. The ~1210 plain-comment sweep remains a separate
 task.
 
@@ -518,7 +518,7 @@ facts — the profile is decided, and it is not yet in force. The test
 profile entered on 2026-08-26, when the first register generation
 committed a label-register.md for each of the six owners with covered
 assets (R18); the module profile enters when the inner doc comments
-all 84 definitions lack are written. Entering is a commit that flips
+all 87 definitions lack are written. Entering is a commit that flips
 two fields.
 
 **R20 — The docs trees' label-shaped spans are reformed into displayed
@@ -606,7 +606,7 @@ figure and the check that reads it can no longer drift apart.
 | Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
 | Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
 | `mod` declarations | 63, of which 13 `mod tests` and 9 `mod rig;` for one definition |
-| Module definitions needing a `//!` label (2026-08-25) | 84, the whole `rust-module` census |
+| Module definitions needing a `//!` label (2026-08-26) | 87, the whole `rust-module` census — it grows with the corpus, so slices that add Rust modules re-measure it |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
