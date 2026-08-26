@@ -416,17 +416,12 @@ async fn stage_tags<B: L1Boundary>(
     }
     let middle = minting.proposal.body.target.clone();
     let deps = vec![minting.proposal.body.act_id()];
-    Ok(topics::stage_tags(
-        pool,
-        boundary,
-        gc_after_epochs,
-        viewer,
-        address,
-        &middle,
-        &deps,
-        tags,
-    )
-    .await?)
+    let site = topics::TagSite {
+        author: address,
+        middle: &middle,
+        deps: &deps,
+    };
+    Ok(topics::stage_tags(pool, boundary, gc_after_epochs, viewer, site, tags).await?)
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing

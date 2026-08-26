@@ -186,7 +186,18 @@ pub fn tag_gesture(
     })
 }
 
-/// Stages one Tag act per declared topic, all behind the same middle.
+/// Where a batch of Tag acts attaches: who declares them, the node they
+/// enter, and the acts they must not be ordered ahead of.
+#[derive(Debug, Clone, Copy)]
+pub struct TagSite<'a> {
+    /// The declaring author's L0 address atom.
+    pub author: &'a str,
+    /// The middle node — the content the claims are about.
+    pub middle: &'a NodeId,
+    pub deps: &'a [ActId],
+}
+
+/// Stages one Tag act per declared topic, all at the same site.
 ///
 /// The registry row for each name is written by `prepare` itself, inside
 /// the transaction that stages the act (D5) — this function never writes
@@ -196,14 +207,12 @@ pub async fn stage_tags<B: L1Boundary>(
     boundary: &B,
     gc_after_epochs: i64,
     viewer: Uuid,
-    author: &str,
-    middle: &NodeId,
-    deps: &[ActId],
+    site: TagSite<'_>,
     planned: &[PlannedTag],
 ) -> Result<Vec<prepare::Prepared>, TopicsError> {
     let mut staged = Vec::with_capacity(planned.len());
     for tag in planned {
-        let gesture = tag_gesture(author, middle.clone(), tag, deps.to_vec())?;
+        let gesture = tag_gesture(site.author, site.middle.clone(), tag, site.deps.to_vec())?;
         staged.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
     }
     Ok(staged)
