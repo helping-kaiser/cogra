@@ -1,17 +1,16 @@
 //! The path into the effective profile family (´dec:lint:staged-profiles´).
 //!
-//! Both of this corpus's profiles are staged, so everything a profile in
-//! force does — the `Derives` warrant the harvest lays, the inventory
-//! bijection over it, the warrant-totality arm that reads it — has no subject
-//! under the ruled adoption data. The fixtures here supply one: the ruled
-//! adoption with the test profile moved into Π, over a handful of sources
-//! built here rather than walked.
+//! The test profile is in Π, so everything a profile in force does — the
+//! `Derives` warrant the harvest lays, the inventory bijection over it, the
+//! warrant-totality arm that reads it — has a subject under the ruled
+//! adoption data. The fixtures run it over a handful of sources built here
+//! rather than walked.
 //!
-//! Building the sources is the point. Entering Π is a commit that flips two
-//! fields, and the only way to know that before the commit is to flip them in
-//! a fixture and run the real harvest over a real census. The corpus is never
-//! touched: what writes, writes into a temporary root of its own, and no
-//! profile of the ruled data changes.
+//! Building the sources is the point: a corpus small enough to state exactly
+//! is what lets a test say which warrant runs where. The corpus itself is
+//! never touched — what writes, writes into a temporary root of its own —
+//! and the module profile, still staged, keeps the staged half of
+//! (´dec:lint:staged-profiles´) under test beside it.
 //!
 //! Trace convention: every test's doc comment names the clause it traces to.
 
@@ -36,20 +35,29 @@ fn adoption_text() -> &'static str {
     })
 }
 
-/// The ruled adoption with the test profile moved into Π.
-///
-/// Exactly the two fields the entry commit flips, through the real loader, so
-/// what these tests judge under is an adoption the loader would accept
+/// The ruled adoption, which carries the test profile in Π
 /// (´dec:lint:staged-profiles´).
 fn entered() -> &'static Adoption {
     static LOADED: OnceLock<Adoption> = OnceLock::new();
     LOADED.get_or_init(|| {
-        let text = adoption_text()
-            .replace("effective = 0", "effective = 1")
-            .replacen("status = \"staged\"", "status = \"effective\"", 1);
-        Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
-            .expect("entering Pi flips two fields and stays loadable")
+        Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
+            .expect("the ruled adoption loads")
     })
+}
+
+/// The ruled adoption with the test profile put back where it entered from.
+///
+/// The named regeneration is a step a staged migration takes, and the test
+/// profile has taken it. The mechanism outlives that one use — the next
+/// profile whose standard place is a register needs it — so the fixture
+/// stages the one profile in this corpus that has a register to generate
+/// (´dec:lint:staged-profiles´).
+fn staged() -> Adoption {
+    let text = adoption_text()
+        .replace("effective = 1", "effective = 0")
+        .replacen("status = \"effective\"", "status = \"staged\"", 1);
+    Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
+        .expect("the condition the test profile entered on is recorded beside it")
 }
 
 /// The owner every fixture source belongs to, and the tree its rule names.
@@ -361,33 +369,54 @@ fn a_register_row_with_no_asset_is_an_orphan() {
     assert!(orphans[0].contains("test:unit:ghost"), "{orphans:?}");
 }
 
-/// (´dec:lint:staged-profiles´): a staged profile still carries no `Covers`
-/// edge and no `Derives` edge, so nothing above fires under the ruled data.
+/// (´dec:lint:staged-profiles´): the staged profile carries no `Covers` edge
+/// and no `Derives` edge, so a module definition beside a covered test puts
+/// nothing of its own in the run.
 #[test]
 fn a_staged_profile_derives_nothing() {
-    let ruled = Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
-        .expect("the ruled adoption loads");
-    assert!(
-        ruled.profiles.effective().next().is_none(),
-        "the ruled data put no profile in force"
+    let body = format!("{}mod inner {{ }}\n", tested("alpha"));
+    let sources = vec![rust("crates/l1-standin/src/lib.rs", &body)];
+    let reg = generated_register(sources.clone());
+    let mut held = sources;
+    held.push(register(reg.bytes));
+    let run = check_sources(entered(), held);
+
+    let assets: Vec<String> = nodes_of(&run.graph, NodeKind::Asset)
+        .filter_map(|node| match run.graph.node_weight(node) {
+            Some(NodeW::Asset(weight)) => Some(weight.identifier.to_string()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        assets,
+        vec![String::from("alpha")],
+        "the module definition is covered by nothing"
     );
-    let run = check_sources(
-        &ruled,
-        vec![rust("crates/l1-standin/src/lib.rs", &tested("alpha"))],
-    );
-    assert_eq!(nodes_of(&run.graph, NodeKind::Asset).count(), 0);
-    assert!(run.registries.derived.is_empty());
+    let derived: Vec<String> = run
+        .registries
+        .derived
+        .keys()
+        .map(|(_, one)| one.to_string())
+        .collect();
+    assert_eq!(derived, vec![String::from("test:unit:alpha")]);
     assert_eq!(
         run.graph
             .edge_indices()
             .filter(|edge| run.graph.edge_weight(*edge) == Some(&EdgeW::Derives))
             .count(),
-        0
+        1
     );
-    assert!(
-        regenerate_all(&run.graph, &run.registries, &ruled, run.kinds.as_ref())
-            .iter()
-            .all(|reg| !matches!(reg.scope, RegisterScope::LabelRegister { .. })),
+    let generated: Vec<ProfileId> =
+        regenerate_all(&run.graph, &run.registries, entered(), run.kinds.as_ref())
+            .into_iter()
+            .filter_map(|one| match one.scope {
+                RegisterScope::LabelRegister { profile, .. } => Some(profile),
+                _ => None,
+            })
+            .collect();
+    assert_eq!(
+        generated,
+        vec![ProfileId::new("rust-test")],
         "a whole-corpus regeneration sweeps no staged profile up"
     );
 }
@@ -492,21 +521,20 @@ fn temporary(name: &str) -> PathBuf {
 #[test]
 fn a_named_regeneration_writes_the_register_a_staged_migration_waits_on() {
     let at = temporary("named-regeneration");
-    let ruled = Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
-        .expect("the ruled adoption loads");
-    let staged = ProfileId::new("rust-test");
+    let ruled = staged();
+    let waiting = ProfileId::new("rust-test");
     let profile = ruled
         .profiles
         .profiles
         .iter()
-        .find(|one| one.id == staged)
+        .find(|one| one.id == waiting)
         .expect("the test profile is registered");
     assert!(
         ruled.profiles.effective().next().is_none(),
         "still staged when its registers are generated"
     );
 
-    let census = cogra_linter::migrate::census(&ruled, &at, &staged).expect("a census");
+    let census = cogra_linter::migrate::census(&ruled, &at, &waiting).expect("a census");
     let regs = cogra_linter::label_registers_of(&ruled, profile, &census);
     assert_eq!(regs.len(), 1, "one owner covers an asset here");
 
@@ -521,10 +549,10 @@ fn a_named_regeneration_writes_the_register_a_staged_migration_waits_on() {
         "the row carries the label in the Markdown mint form"
     );
 
-    let measured = cogra_linter::distances(&ruled, &at, Some(&staged))
+    let measured = cogra_linter::distances(&ruled, &at, Some(&waiting))
         .expect("the measurement runs over the same root")
         .pop()
-        .expect("the test profile is staged");
+        .expect("the test profile is staged in this fixture");
     assert!(
         measured.arrived(),
         "the entry condition holds once the register is committed: {:?}",

@@ -48,25 +48,6 @@ fn adoption() -> &'static Adoption {
     })
 }
 
-/// The ruled adoption with the test profile moved into Π.
-///
-/// Both profiles are staged in this corpus, so the inventory and
-/// warrant-totality clauses that need a *governing* profile have no subject
-/// under the ruled data. Entering Π is a commit that flips two fields
-/// (´dec:lint:staged-profiles´), and this flips exactly those two — through
-/// the real loader, so the adoption a test judges under is one the loader
-/// would accept.
-fn with_an_effective_profile() -> &'static Adoption {
-    static LOADED: OnceLock<Adoption> = OnceLock::new();
-    LOADED.get_or_init(|| {
-        let entered = adoption_text()
-            .replace("effective = 0", "effective = 1")
-            .replacen("status = \"staged\"", "status = \"effective\"", 1);
-        Adoption::from_str(&entered, Path::new("corpus-adoption.toml"))
-            .expect("entering Pi flips two fields and stays loadable")
-    })
-}
-
 fn label(text: &str) -> Label {
     Label::parse(text).unwrap_or_else(|why| panic!("{text} is well-formed: {why:?}"))
 }
@@ -469,7 +450,7 @@ fn a_reserved_kind_no_profile_governs_is_the_hard_failure() {
 fn a_governed_kind_with_no_derivation_is_the_missing_warrant() {
     let (mut build, owner, region) = one_owner();
     build.mint(owner, region, "test:unit:alpha", 10);
-    let found = labels::warrant_totality(&build.g, &build.r, with_an_effective_profile());
+    let found = labels::warrant_totality(&build.g, &build.r, adoption());
     assert_eq!(rules(&found), vec!["label-warrant-missing"]);
 }
 
@@ -482,7 +463,7 @@ fn a_governed_kind_with_its_derivation_is_clean() {
     let profile = build.profile("rust-test", "test", ProfileStatus::Effective);
     let asset = build.asset(owner, profile, "alpha");
     build.derives(asset, mint);
-    assert!(labels::warrant_totality(&build.g, &build.r, with_an_effective_profile()).is_empty());
+    assert!(labels::warrant_totality(&build.g, &build.r, adoption()).is_empty());
 }
 
 /// (´[LBL-inv:labels:warrant-totality]´): every kind admits at most one
@@ -505,7 +486,7 @@ fn a_derivation_behind_an_authored_kind_is_the_species_failure() {
 #[test]
 fn a_staged_profiles_kind_is_ungoverned_not_underived() {
     let (mut build, owner, region) = one_owner();
-    build.mint(owner, region, "test:unit:alpha", 10);
+    build.mint(owner, region, "mod:module:alpha", 10);
     let found = labels::warrant_totality(&build.g, &build.r, adoption());
     assert_eq!(rules(&found), vec!["label-kind-ungoverned"]);
 }
