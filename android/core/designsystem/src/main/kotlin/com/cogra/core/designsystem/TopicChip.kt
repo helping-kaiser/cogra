@@ -49,7 +49,14 @@ fun TopicChip(
             horizontalArrangement = Arrangement.spacedBy((-8).dp),
             modifier = chipModifier,
         ) {
-            AssistChip(onClick = onClick, label = { Text(label) })
+            AssistChip(
+                onClick = onClick,
+                label = { Text(label) },
+                // The row is the group; the chip itself is the tap
+                // target beside the remove button, so it is addressable
+                // on its own.
+                modifier = if (testTag != null) Modifier.testTag("${testTag}_open") else Modifier,
+            )
             IconButton(
                 onClick = onRemove,
                 modifier = if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier,
