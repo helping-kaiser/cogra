@@ -1,9 +1,10 @@
-// Actor profile display content (data-model.md "Actors"): append-only
-// version rows over actor_profile_versions, newest row wins. Reads serve
-// the profile surface; the write is confirm-side promotion of a landed
-// parallel Registration (user.md §4) — the version row appears in the
-// same flow as the record that witnesses it, and carries that record's
-// landing coordinates, which are what decide between versions.
+//! Actor profile display content (data-model.md "Actors"): append-only
+//! version rows over `actor_profile_versions`, newest row wins.
+//!
+//! Reads serve the profile surface; the write is confirm-side promotion of
+//! a landed parallel Registration (user.md §4) — the version row appears in
+//! the same flow as the record that witnesses it, and carries that record's
+//! landing coordinates, which are what decide between versions.
 
 use crate::content::LandingOrder;
 use sqlx::{PgPool, Postgres, Transaction};

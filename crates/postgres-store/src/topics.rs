@@ -1,34 +1,34 @@
-// The current-topics fold (hashtag.md §4): newest-wins per
-// (author, content, Type) bundle, relevance 0 read as withdrawn.
-//
-// A Tag is a standing claim, not an event, so an author's latest record in
-// a bundle is their current claim and the earlier ones are history
-// (graph-model.md §4). Withdrawal is *declared* — re-tagging at relevance
-// 0 — rather than netted: the census bounds Tag confidence to c ∈ [0, 1],
-// so no counter-record could net an accumulated bundle back down. That is
-// why this module picks a winner instead of summing, and why the
-// zero-check happens *after* the pick: a newer 0 has to be able to hide an
-// older non-zero claim.
-//
-// # Which column carries relevance
-//
-// A Tag is a hyper-edge whose act tuple is (relevance, confidence), and
-// the census transposes it on the T-leg (layer1-interface.md §9.6;
-// `common::l1::census::leg_params`). The two halves of the write path
-// therefore store the same claim in *opposite* columns:
-//
-// | half                        | relevance | confidence |
-// |-----------------------------|-----------|------------|
-// | landed T-leg (mirror)       | `p_i`     | `p_d`      |
-// | staged write (act tuple)    | `p_d`     | `p_i`      |
-//
-// Reading the wrong one silently swaps every claim's relevance for its
-// confidence — a fold that still returns rows, just wrong ones. The
-// transposition guard in tests/topics.rs is what holds this table honest.
-//
-// Only T-legs are read. The A-leg (author → content) carries the same act
-// and adds nothing a topic read needs; the author comes from the parent
-// record, which is authoritative for it.
+//! The current-topics fold (hashtag.md §4): newest-wins per
+//! (author, content, Type) bundle, relevance 0 read as withdrawn.
+//!
+//! A Tag is a standing claim, not an event, so an author's latest record
+//! in a bundle is their current claim and the earlier ones are history
+//! (graph-model.md §4). Withdrawal is *declared* — re-tagging at relevance
+//! 0 — rather than netted: the census bounds Tag confidence to c ∈ [0, 1],
+//! so no counter-record could net an accumulated bundle back down. That is
+//! why this module picks a winner instead of summing, and why the
+//! zero-check happens *after* the pick: a newer 0 has to be able to hide
+//! an older non-zero claim.
+//!
+//! # Which column carries relevance
+//!
+//! A Tag is a hyper-edge whose act tuple is (relevance, confidence), and
+//! the census transposes it on the T-leg (layer1-interface.md §9.6;
+//! `common::l1::census::leg_params`). The two halves of the write path
+//! therefore store the same claim in *opposite* columns:
+//!
+//! | half                        | relevance | confidence |
+//! |-----------------------------|-----------|------------|
+//! | landed T-leg (mirror)       | `p_i`     | `p_d`      |
+//! | staged write (act tuple)    | `p_d`     | `p_i`      |
+//!
+//! Reading the wrong one silently swaps every claim's relevance for its
+//! confidence — a fold that still returns rows, just wrong ones. The
+//! transposition guard in tests/topics.rs is what holds this table honest.
+//!
+//! Only T-legs are read. The A-leg (author → content) carries the same act
+//! and adds nothing a topic read needs; the author comes from the parent
+//! record, which is authoritative for it.
 
 use sqlx::PgPool;
 
@@ -212,6 +212,11 @@ pub async fn topics_of(
 /// it here. `channel` decides whose tags count — see [`TagChannel`], and
 /// note that admitting `AnyAuthor` publishes third-party claims with no
 /// forward-path gate on them.
+///
+/// The author-owned gate reads the middle's own author out of its
+/// identifier: a minted node names its genesis act, a Profile names its
+/// actor's atom, and an atom cannot contain a colon — which is what makes
+/// that split unambiguous (`common::l1::identifier`).
 pub async fn tagged_with(
     pool: &PgPool,
     canonical_name: &str,
@@ -223,10 +228,6 @@ pub async fn tagged_with(
     let (with_pending, pending_actor) = view.params();
     let author_owned = channel == TagChannel::AuthorOwned;
     let rows = sqlx::query!(
-        // A minted node names its genesis act, `mint:act:<author>:…`, and a
-        // Profile names its actor's atom — so the middle's own author is a
-        // field of its identifier (common::l1::identifier). Atoms cannot
-        // contain `:`, which is what makes the split unambiguous.
         r#"WITH candidates AS (
                SELECT l.source                AS node,
                       r.author                AS author,
