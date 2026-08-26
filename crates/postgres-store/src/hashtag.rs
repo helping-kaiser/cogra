@@ -1,16 +1,16 @@
-// The naming-service registry (hashtag.md §1): CoGra's own index of the
-// Type names it has seen, keyed by the content-addressed
-// `UUIDv5(HASHTAG_NAMESPACE, canonical_name)`.
-//
-// The registry is an index, never an authority. A Type is anchored
-// vacuously — it exists as soon as an accepted record references its name
-// — so every well-formed name already denotes a Type whether or not a row
-// here exists. Reads therefore never write (D4): a row is created only by
-// the act of tagging, in the same transaction that stages it (D5).
-//
-// Names reaching these functions are canonical: `common::hashtag::
-// canonicalize` is what produces one, and the table's own CHECK constraint
-// re-derives the key as defense-in-depth.
+//! The naming-service registry (hashtag.md §1): CoGra's own index of the
+//! Type names it has seen, keyed by the content-addressed
+//! `UUIDv5(HASHTAG_NAMESPACE, canonical_name)`.
+//!
+//! The registry is an index, never an authority. A Type is anchored
+//! vacuously — it exists as soon as an accepted record references its name
+//! — so every well-formed name already denotes a Type whether or not a row
+//! here exists. Reads therefore never write (D4): a row is created only by
+//! the act of tagging, in the same transaction that stages it (D5).
+//!
+//! Names reaching these functions are canonical:
+//! `common::hashtag::canonicalize` is what produces one, and the table's
+//! own CHECK constraint re-derives the key as defense-in-depth.
 
 use common::hashtag_uuid;
 use sqlx::{PgConnection, PgPool};
