@@ -32,11 +32,14 @@ import type { StancePair } from "./model";
 
 /**
  * Which root the stance read enters through. `viewerStance` is a field
- * on Post, Comment, and User, and no interface gathers the three, so the
- * target's kind is part of naming it — every call site knows it
- * statically.
+ * on Post, Comment, User, and Hashtag, and no interface gathers them, so
+ * the target's kind is part of naming it — every call site knows it
+ * statically. A topic's identity is its canonical name, not a UUID
+ * (hashtag.md §1), so `"topic"` is the one kind whose `StanceTarget.id`
+ * carries a name rather than an id — the field stays named `id` because
+ * every other caller treats it as an opaque identifier already.
  */
-export type StanceTargetKind = "post" | "comment" | "profile";
+export type StanceTargetKind = "post" | "comment" | "profile" | "topic";
 
 /** What the seam needs to name a target. */
 export type StanceTarget = {

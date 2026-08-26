@@ -81,6 +81,31 @@ query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean
   }
 }
 
+# The follow control's own read (hashtag.md §3, D9): a topic's identity
+# is its name, not a UUID, so this root takes `name` where the other
+# three take `id` — otherwise the identical `viewerStance` shape.
+query HashtagStance($name: String!, $pick: StancePickInput, $includePending: Boolean! = true) {
+  hashtag(name: $name) {
+    id
+    viewerStance(pick: $pick, includePending: $includePending) {
+      pDirected
+      pInterest
+      rawPDirected
+      rawPInterest
+      recordCount
+      inert
+      severed
+      severanceCost
+      projected {
+        pDirected
+        pInterest
+        inert
+        severed
+      }
+    }
+  }
+}
+
 # Stages the counter-records that net the bundle to (0, 0) — each its
 # own priced act, so the batch length is the gesture's cost. Refused
 # when the bundle already nets there (api-spec.md "The generic
