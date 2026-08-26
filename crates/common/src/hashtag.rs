@@ -50,10 +50,11 @@ pub enum HashtagNameError {
 /// that is not an atom is refused rather than encoded, because encoding it
 /// would change what the name *means* while leaving it looking the same.
 ///
+/// Only one leading `#` is the sigil; a second is an ordinary character, and
+/// not one the atom admits.
+///
 /// Idempotent: canonical input is returned unchanged.
 pub fn canonicalize(input: &str) -> Result<String, HashtagNameError> {
-    // One `#` is the sigil; a second is an ordinary character, and not one
-    // the atom admits.
     let name = input
         .strip_prefix('#')
         .unwrap_or(input)
@@ -87,9 +88,6 @@ mod tests {
         assert_ne!(hashtag_uuid("Bot-Defense"), hashtag_uuid("bot-defense"));
     }
 
-    /// A golden value locking both the namespace constant and the v5
-    /// derivation. A failure here means previously minted hashtag ids are at
-    /// risk; the expectation is never the thing to update.
     #[test]
     fn canonicalizes_casing_and_the_sigil() {
         for input in ["rust", "Rust", "RUST", "#rust", "#Rust", "#RUST"] {
@@ -113,19 +111,21 @@ mod tests {
         }
     }
 
+    /// A bare sigil is empty too, once the sigil is stripped.
     #[test]
     fn empty_is_refused() {
         assert_eq!(
             canonicalize("").expect_err("refused"),
             HashtagNameError::Empty
         );
-        // A bare sigil is empty once the sigil is stripped.
         assert_eq!(
             canonicalize("#").expect_err("refused"),
             HashtagNameError::Empty
         );
     }
 
+    /// The sigil is not part of the name, so it consumes none of the budget:
+    /// a name at the bound is still legal with a `#` in front of it.
     #[test]
     fn the_length_bound_is_the_atom_bound() {
         let at_bound = "a".repeat(MAX_ATOM_BYTES);
@@ -136,15 +136,14 @@ mod tests {
             canonicalize(&over).expect_err("refused"),
             HashtagNameError::TooLong(MAX_ATOM_BYTES + 1)
         );
-        // The sigil is not part of the name, so it does not consume budget.
         assert!(canonicalize(&format!("#{at_bound}")).is_ok());
     }
 
+    /// D3: non-ASCII is unrepresentable on the substrate, so it is refused
+    /// outright — never punycoded or percent-encoded into something that
+    /// looks like a different name.
     #[test]
     fn non_atoms_are_refused_never_encoded() {
-        // D3: non-ASCII is unrepresentable on the substrate, so it is
-        // refused outright — never punycoded or percent-encoded into
-        // something that looks like a different name.
         for input in [
             "münchen",
             "#münchen",
@@ -162,26 +161,29 @@ mod tests {
         }
     }
 
+    /// ASCII lowercasing leaves `Ü` alone and the atom check then refuses
+    /// it: the refusal must not come to depend on Unicode case folding.
     #[test]
     fn non_ascii_case_is_not_folded() {
-        // ASCII lowercasing leaves `Ü` alone, and the atom check then
-        // refuses it — the refusal must not depend on Unicode case folding.
         assert_eq!(
             canonicalize("MÜNCHEN").expect_err("refused"),
             HashtagNameError::Charset("mÜnchen".to_string())
         );
     }
 
+    /// The reserved Types are seeded by name, so canonicalizing the same
+    /// strings must land on the same content-addressed keys.
     #[test]
     fn canonical_names_derive_the_seeded_reserved_ids() {
-        // The reserved Types are seeded by name; canonicalizing the same
-        // strings must land on the same content-addressed keys.
         assert_eq!(
             hashtag_uuid(&canonicalize("#Bot-Defense").expect("legal")),
             hashtag_uuid("bot-defense")
         );
     }
 
+    /// A golden value locking both the namespace constant and the v5
+    /// derivation. A failure here means previously minted hashtag ids are at
+    /// risk; the expectation is never the thing to update.
     #[test]
     fn derivation_is_pinned() {
         assert_eq!(
