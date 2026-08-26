@@ -1,3 +1,5 @@
+//! ´mod:module:encode´
+//!
 //! The canonical encoder — total, with no failure mode.
 //!
 //! Every `Value` is already a member of the data language, so the encoder
