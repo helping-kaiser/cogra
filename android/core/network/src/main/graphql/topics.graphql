@@ -1,0 +1,106 @@
+# The topic surface (hashtag.md; roadmap "Slice 2.3"): the naming
+# service's own read — a topic's canonical name and its tagged content
+# — the standalone Tag gesture the chip row's add/remove rides, and the
+# follow control.
+#
+# Follow/unfollow reuse the schema's generic `prepareStance` /
+# `prepareSeverance` mutations (writes.graphql, stance.graphql) with
+# `topicName` in place of `target` — a Type is anchored vacuously, so a
+# topic nobody has tagged yet has no id to look up (D4). The read side
+# needs its own query, since `viewerStance` sits on `Hashtag` here
+# rather than on Post/Comment/User.
+
+fragment HashtagFields on Hashtag {
+  id
+  name {
+    value
+    status
+  }
+}
+
+query Hashtag($name: String!, $limit: Int, $includePending: Boolean!) {
+  hashtag(name: $name) {
+    ...HashtagFields
+    taggedContent(limit: $limit, includePending: $includePending) {
+      node {
+        __typename
+        ... on Post {
+          id
+          title {
+            value
+            status
+          }
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+          }
+        }
+        ... on Comment {
+          id
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+          }
+        }
+      }
+      relevance
+      confidence
+      pending
+    }
+  }
+}
+
+query TopicStanding($name: String!, $includePending: Boolean!) {
+  hashtag(name: $name) {
+    viewerStance(includePending: $includePending) {
+      ...StanceBundleFields
+    }
+  }
+}
+
+mutation PrepareTag($input: PrepareTagInput!) {
+  prepareTag(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation PrepareTopicFollow($input: PrepareStanceInput!) {
+  prepareStance(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation PrepareTopicUnfollow($input: PrepareSeveranceInput!) {
+  prepareSeverance(input: $input) {
+    writes {
+      ...PreparedWriteFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

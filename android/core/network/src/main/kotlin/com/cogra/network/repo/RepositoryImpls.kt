@@ -105,6 +105,7 @@ import com.cogra.network.graphql.type.ResendVerificationEmailInput
 import com.cogra.network.graphql.type.RevokeInviteLinkInput
 import com.cogra.network.graphql.type.RevokeSessionInput
 import com.cogra.network.graphql.type.SubmitProposalsInput
+import com.cogra.network.graphql.type.TagInput
 import com.cogra.network.graphql.type.UploadKeyBackupInput
 import com.cogra.network.graphql.type.VerifyEmailInput
 import com.cogra.network.payload
@@ -603,6 +604,7 @@ class ContentRepositoryImpl @Inject constructor(
         description: String?,
         content: String,
         license: LicenseChoice,
+        tags: List<String>,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -611,6 +613,9 @@ class ContentRepositoryImpl @Inject constructor(
                     description = Optional.presentIfNotNull(description),
                     content = content,
                     license = license.toInput(),
+                    // Names only — the composer never picks parameters
+                    // (D15: no autocomplete; api-spec.md `TagInput`).
+                    tags = Optional.presentIfNotNull(tags.takeIf { it.isNotEmpty() }?.map { TagInput(name = it) }),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
