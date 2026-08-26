@@ -2,7 +2,7 @@
 //! `decode_canonical` — the strongest single invariant the crate has:
 //! the canonical decoder accepts nothing it cannot reproduce. Arbitrary
 //! bytes go into the decoder; on success, re-encoding must reproduce the
-//! input exactly (`preview:xchg:fuzz-plan`, design.md).
+//! input exactly (´preview:xchg:fuzz-plan´).
 //!
 //! Both levels are exercised: the envelope [`Document`] (key 0 label,
 //! key 1 version, content) and the bare [`Value`] it wraps, since a

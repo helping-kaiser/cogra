@@ -1,15 +1,21 @@
-// The edge census (layer1-interface.md §9.5–§9.7). The census is normative:
-// where prose and the tables disagree, the tables govern
-// (`rem:nodes:edge-census-normative`). Domain, mask, and tier are
-// family-fixed here, never per-edge choices (the uniform two-parameter
-// grammar). Every act carries the same two authored parameters (p_d, p_i)
-// per leg, rendered from the family parameter tuple by the leg role.
+//! The edge census (layer1-interface.md §9.5–§9.7; bare section references
+//! below are that document's). The census is normative: where prose and the
+//! tables disagree, the tables govern.
+//!
+//! Domain, mask, and tier are family-fixed here, never per-edge choices —
+//! the uniform two-parameter grammar. Every act carries the same two
+//! authored parameters (p_d, p_i) per leg, rendered from the family
+//! parameter tuple by the leg role.
 
 use super::identifier::NodeId;
 
+/// An act family, listed binary families (§9.5) first and hyper ones (§9.6)
+/// after. `kind` decides which group a family is in; `legs` gives its census
+/// rows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Family {
-    // Binary (§9.5)
+    /// The sole family whose endpoints may be fresh grounded identifiers:
+    /// the target is the author's own Profile (§8.1).
     Registration,
     Publish,
     Opinion,
@@ -21,7 +27,6 @@ pub enum Family {
     Withdraw,
     Rescind,
     Leave,
-    // Hyper (§9.6; Participant's legs are the movement act — see `legs`)
     Tag,
     Review,
     Bid,
@@ -29,6 +34,10 @@ pub enum Family {
     DeInvite,
     Send,
     Reference,
+    /// The uniform movement act — A-leg whence, T-leg whither, the
+    /// found/join self-loop legal (A = T). Its T-leg is a weak lineage
+    /// marker, census-forced positive by `params_check` so it can never flip
+    /// a walk's parity; the member's real stance rides the A-leg.
     Participant,
 }
 
@@ -98,7 +107,7 @@ impl Family {
     }
 
     /// Node type minted by this family as a genesis act, if any
-    /// (`def:graph:genesis-act-and-creator`): Item — Owner; Offer — Bid/T;
+    /// (§8.1): Item — Owner; Offer — Bid/T;
     /// Comment — Review/T; Message — Send/T; Chat — the founding member's
     /// Participant; Content — Publish.
     pub fn minted_node(self) -> Option<MintedNode> {
@@ -306,11 +315,6 @@ impl Family {
                     fixed_params: false,
                 },
             ],
-            // The uniform movement act — A-leg whence, T-leg whither;
-            // found/join self-loop (A = T legal). The T-leg is a weak
-            // lineage marker, census-forced positive (`params_check`) so
-            // it can never flip a walk's parity; the member's real stance
-            // rides the A-leg.
             Family::Participant => &[
                 LegSpec {
                     role: LegRole::A,
@@ -332,11 +336,13 @@ impl Family {
 
     /// Endpoint-typing check for the act's incidence (§9.5/§9.6 columns;
     /// `author` is the acting actor's address atom). `middle` is `None` for
-    /// binary families. Minted endpoints whose genesis act is unknown to the
-    /// checker are dangling — permitted, fold-neutral
-    /// (`lem:graph:dangling-neutral-fold`) — so only identifier *class* is
-    /// checked here; genesis-family agreement for anchored minted nodes is
-    /// the host's lookup (l1-standin).
+    /// binary families, and the initiating source is always the author's own
+    /// Actor node, whatever the family.
+    ///
+    /// Minted endpoints whose genesis act is unknown to the checker are
+    /// dangling — permitted, fold-neutral (§8.1) — so only identifier
+    /// *class* is checked here; genesis-family agreement for anchored minted
+    /// nodes is the host's lookup (l1-standin).
     pub fn endpoint_check(
         self,
         author: &str,
@@ -344,7 +350,6 @@ impl Family {
         middle: Option<&NodeId>,
         target: &NodeId,
     ) -> Result<(), String> {
-        // Every authored act's initiating source is its author's Actor node.
         let author_node = NodeId::Addr(author.to_string());
         if *source != author_node {
             return Err(format!(
@@ -369,9 +374,6 @@ impl Family {
         };
         match self {
             Family::Registration => match target {
-                // The sole family whose endpoints may be fresh grounded
-                // identifiers: the author's own Profile
-                // (`def:graph:registration`).
                 NodeId::Prof(a) if a == author => Ok(()),
                 _ => class_err("target", "the author's own Profile", target),
             },
@@ -394,7 +396,6 @@ impl Family {
                 NodeId::Mint(_) => Ok(()),
                 _ => class_err("target", "a Chat (minted node)", target),
             },
-            // Both endpoints are Chats.
             Family::Participant => match (middle, target) {
                 (Some(NodeId::Mint(_)), NodeId::Mint(_)) => Ok(()),
                 (Some(NodeId::Mint(_)), _) => {
@@ -437,17 +438,23 @@ impl Family {
         }
     }
 
-    /// Family parameter-tuple validity. The tuple belongs to the act
-    /// (`def:graph:act-edge-projection`); leg renderings are derived. Both
-    /// components live in [-1, 1]; family-specific constraints narrow that:
-    /// fixed-parameter control records force (1, 1); non-negative second
-    /// components where the census says so.
+    /// Family parameter-tuple validity. The tuple belongs to the act (§8.1);
+    /// leg renderings are derived. Both components live in [-1, 1];
+    /// family-specific constraints narrow that: fixed-parameter control
+    /// records force (1, 1); non-negative second components where the census
+    /// says so.
+    ///
+    /// What the tuple means per family: for Publish and Owner it is an
+    /// attachment in [-1, 1] with p_i fixed at 1; for Tag, relevance and a
+    /// confidence in [0, 1]; for Bid, generosity and an urgency in [0, 1];
+    /// for Participant, the second slot is the T-leg's forced-positive
+    /// rendering. Invitation needs no arm of its own — its stored tuple is
+    /// (u, f), and terminal relevance rides payload renderings only.
     pub fn params_check(self, p_d: f64, p_i: f64) -> Result<(), String> {
         if !(-1.0..=1.0).contains(&p_d) || !(-1.0..=1.0).contains(&p_i) {
             return Err(format!("parameters ({p_d}, {p_i}) outside [-1, 1]"));
         }
         match self {
-            // Type-fixed p_d = p_i = 1, ε = +1 forced.
             Family::Registration
             | Family::Withdraw
             | Family::Rescind
@@ -462,7 +469,6 @@ impl Family {
                     ))
                 }
             }
-            // Publish/Owner: attachment a ∈ [-1,1] with p_i = 1 fixed.
             Family::Publish | Family::Owner => {
                 if p_i == 1.0 {
                     Ok(())
@@ -470,11 +476,6 @@ impl Family {
                     Err(format!("{} fixes p_i = 1, got {p_i}", self.as_str()))
                 }
             }
-            // Tag: relevance r ∈ [-1,1], confidence c ∈ [0,1].
-            // Bid: generosity g ∈ [-1,1], urgency u ∈ [0,1].
-            // Participant: second slot is the T-leg's forced-positive rendering.
-            // Invitation needs no arm — its stored tuple is (u, f); terminal
-            //   relevance rides payload renderings only.
             Family::Tag | Family::Bid | Family::Participant => {
                 if (0.0..=1.0).contains(&p_i) {
                     Ok(())
@@ -699,6 +700,10 @@ mod tests {
         assert!(Family::Tag.endpoint_check("pub", &src, None, &ty).is_err());
     }
 
+    /// The movement act runs between Chats and may self-loop; a Profile at
+    /// either endpoint, or no middle at all, is refused. Its parameter arm
+    /// admits the system actor's inert (0, 0) while still forcing the second
+    /// component non-negative.
     #[test]
     fn participant_moves_between_chats_and_self_loops() {
         let src = NodeId::parse("addr:alice").expect("ok");
@@ -716,7 +721,6 @@ mod tests {
                 .endpoint_check("alice", &src, Some(&c0), &c1)
                 .is_ok()
         );
-        // Both endpoints must be Chats (minted nodes).
         assert!(
             Family::Participant
                 .endpoint_check("alice", &src, Some(&profile), &c1)
@@ -733,7 +737,6 @@ mod tests {
                 .is_err()
         );
 
-        // The system actor's inert (0, 0) passes.
         assert!(Family::Participant.params_check(-0.5, 0.5).is_ok());
         assert!(Family::Participant.params_check(0.0, 0.0).is_ok());
         assert!(Family::Participant.params_check(0.5, -0.1).is_err());

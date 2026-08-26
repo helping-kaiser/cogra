@@ -64,8 +64,6 @@ fn text(s: &str) -> Value {
     Value::Text(s.to_owned().into())
 }
 
-// -- the four dispositions -----------------------------------------------
-
 #[test]
 fn a_held_stamp_is_judged_strictly() {
     let registry = holding(0..3);
@@ -78,10 +76,11 @@ fn a_held_stamp_is_judged_strictly() {
     assert!(accept(&registry, &d).is_accepted());
 }
 
+/// Key 2 is required and typed `tstr` at every held minor, so an integer
+/// there fails the theory the stamp names.
 #[test]
 fn a_held_stamp_the_document_fails_is_rejected_under_that_theory() {
     let registry = holding(0..3);
-    // Key 2 is required and typed `tstr` at every held minor.
     let d = document(Version::new(1, 2, 0), [(2, Value::Unsigned(7))]);
 
     match accept(&registry, &d) {
@@ -94,11 +93,11 @@ fn a_held_stamp_the_document_fails_is_rejected_under_that_theory() {
     }
 }
 
+/// Stamped ahead of the reader, and carrying a key no held theory names: the
+/// companion's wildcard admits it.
 #[test]
 fn a_stamp_above_the_ceiling_is_judged_tolerantly() {
     let registry = holding(0..2);
-    // Stamped ahead of the reader, and carrying a key no held theory
-    // names: the companion's wildcard admits it.
     let d = document(
         Version::new(1, 9, 0),
         [(2, text("hello")), (40, Value::Bool(true))],
@@ -110,10 +109,10 @@ fn a_stamp_above_the_ceiling_is_judged_tolerantly() {
     );
 }
 
+/// Tolerance is not indulgence: a key the floor requires still binds.
 #[test]
 fn a_stamp_above_the_ceiling_still_answers_to_the_floor() {
     let registry = holding(0..2);
-    // Tolerance is not indulgence: a key the floor requires still binds.
     let d = document(Version::new(1, 9, 0), [(2, Value::Unsigned(7))]);
 
     match accept(&registry, &d) {
@@ -125,6 +124,8 @@ fn a_stamp_above_the_ceiling_still_answers_to_the_floor() {
     }
 }
 
+/// The content would satisfy the theory at minor 0 — and the claim the stamp
+/// makes is still checkably false, so the document is rejected whole.
 #[test]
 fn a_stamp_below_the_ceiling_that_was_never_assigned_is_rejected_whole() {
     let mut registry = holding(0..1);
@@ -132,8 +133,6 @@ fn a_stamp_below_the_ceiling_that_was_never_assigned_is_rejected_whole() {
         .acquire(Coordinate::new(label(), 1, 3), theory(3, ", 2 => tstr"))
         .expect("minors 1 and 2 were never assigned");
 
-    // The content would satisfy the theory at minor 0 — and the claim is
-    // still checkably false, so the document is rejected whole.
     let d = document(Version::new(1, 2, 0), [(2, text("hello"))]);
     assert_eq!(
         accept(&registry, &d),
@@ -144,6 +143,7 @@ fn a_stamp_below_the_ceiling_that_was_never_assigned_is_rejected_whole() {
     );
 }
 
+/// And so is every document of a label this reader has never met.
 #[test]
 fn a_major_nothing_is_held_of_is_rejected_whole() {
     let registry = holding(0..2);
@@ -154,7 +154,6 @@ fn a_major_nothing_is_held_of_is_rejected_whole() {
         Verdict::Rejected(Rejection::UnheldMajor { major: 7 })
     );
 
-    // And so is every document of a label this reader has never met.
     let stranger = Document::new(
         Envelope::new(
             NamespaceLabel::parse("com.other").expect("a label"),
@@ -200,8 +199,6 @@ fn the_patch_position_does_not_occur_in_the_condition() {
         "the patch moved a verdict: {verdicts:?}"
     );
 }
-
-// -- routing -------------------------------------------------------------
 
 #[test]
 fn dispatch_names_the_instrument_for_each_disposition() {
@@ -302,18 +299,18 @@ fn the_prefix_path_agrees_with_the_full_envelope() {
     assert_eq!(format!("{early:?}"), format!("{full:?}"));
 }
 
+/// A well-formed envelope with a tail outside the data language: the routing
+/// answers, and the bytes are still no document at all.
 #[test]
 fn the_prefix_path_certifies_no_membership() {
     let registry = holding(0..2);
     let mut bytes = document(Version::new(1, 1, 0), [(2, text("hello"))]).to_canonical_bytes();
-    // A well-formed envelope with a tail outside the data language.
     bytes.push(0x00);
 
     assert!(matches!(
         dispatch_prefix(&registry, &bytes).expect("the envelope reads"),
         Instrument::Strict { minor: 1, .. }
     ));
-    // The routing answered; the bytes are still no document at all.
     assert!(matches!(
         Document::from_canonical_bytes(&bytes).expect_err("a trailing byte"),
         EnvelopeError::NotCanonical(_)

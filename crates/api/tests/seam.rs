@@ -30,6 +30,11 @@ fn registration(actor: &ActorKey) -> Proposal {
     }
 }
 
+/// Both relay legs go through the boundary trait, and the record lands
+/// only once the epoch closes: an ingestion pass before the close moves
+/// nothing, the pass after it advances the cursor, and a further pass is
+/// a no-op because ingestion resumes from that cursor. The B_i read
+/// through the boundary then shows the debit consummated.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     let standin = StandIn::new(pool.clone(), StandInConfig::default());
@@ -40,7 +45,6 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
         .await
         .expect("burn");
 
-    // The write path's two relay legs, through the boundary trait.
     let proposal = registration(&actor);
     let act_id = proposal.body.act_id();
     let pre = actor.pre_sign(proposal);
@@ -49,7 +53,6 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
     boundary.approve(witness).await.expect("approved");
 
-    // Nothing to ingest before the epoch closes.
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
@@ -59,7 +62,6 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
         -1
     );
 
-    // Close and ingest: the record lands, the cursor advances.
     standin.close_epoch().await.expect("closes").expect("acts");
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
@@ -71,13 +73,11 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
         vec![act_id.to_string()]
     );
 
-    // A second pass is a no-op — ingestion resumes from the cursor.
     let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
         .await
         .expect("pass");
     assert_eq!(outcome.epochs, 0);
 
-    // The B_i read through the boundary sees the consummated debit.
     let balance = boundary.balance(&actor.address()).await.expect("balance");
     assert_eq!(balance.action_count, 1);
     assert!(balance.balance < balance.burned_total);

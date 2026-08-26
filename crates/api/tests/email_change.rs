@@ -201,6 +201,9 @@ fn codes(payload: &Value) -> Vec<&str> {
         .collect()
 }
 
+/// Neither proof alone moves the stored address; the change applies on
+/// the second one whichever side it arrives from. Both orders are run in
+/// turn — original side first, then new side first.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -211,7 +214,6 @@ async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool
         .access_token("old@example.com", "a strong password")
         .await;
 
-    // Original side first, new side second.
     rig.request_change(&token, "first@example.com", "a strong password")
         .await;
     let partial = rig
@@ -225,7 +227,6 @@ async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool
     assert_eq!(codes(&done), Vec::<&str>::new());
     assert_eq!(rig.stored_email(user).await, "first@example.com");
 
-    // New side first, original side second.
     rig.request_change(&token, "second@example.com", "a strong password")
         .await;
     rig.confirm(&token, &rig.mailer.latest_code_for("second@example.com"))
@@ -236,6 +237,12 @@ async fn the_change_applies_once_both_sides_confirm_in_either_order(pool: PgPool
     assert_eq!(rig.stored_email(user).await, "second@example.com");
 }
 
+/// Someone else registers the wanted address between the two proofs, so
+/// the final confirm reports the collision as a userError rather than a
+/// transport error. The change's row stays alive: a retry re-submitting
+/// the consumed code still gets the real reason instead of a token error,
+/// and once the address frees up within the TTL that same retry applies
+/// the fully-proven change.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_collision_surfaces_email_in_use_and_retries_stay_truthful(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -251,8 +258,6 @@ async fn a_collision_surfaces_email_in_use_and_retries_stay_truthful(pool: PgPoo
     let new_code = rig.mailer.latest_code_for("wanted@example.com");
     rig.confirm(&token, &original_code).await;
 
-    // The address gets registered before the second proof lands: the
-    // final confirm reports the collision — no transport error.
     let squatter = rig
         .seed_user("bob", "wanted@example.com", "a strong password")
         .await;
@@ -260,13 +265,9 @@ async fn a_collision_surfaces_email_in_use_and_retries_stay_truthful(pool: PgPoo
     assert_eq!(codes(&collided), vec!["EMAIL_IN_USE"]);
     assert_eq!(rig.stored_email(user).await, "old@example.com");
 
-    // A retry re-submits the consumed code; the answer stays the real
-    // reason, not a token error.
     let retried = rig.confirm(&token, &new_code).await;
     assert_eq!(codes(&retried), vec!["EMAIL_IN_USE"]);
 
-    // Once the address frees up within the TTL, a retry applies the
-    // fully-proven change.
     sqlx::query("UPDATE user_credentials SET email = 'elsewhere@example.com' WHERE actor_id = $1")
         .bind(squatter)
         .execute(&rig.pool)
@@ -289,6 +290,9 @@ async fn a_garbage_code_with_no_pending_change_is_a_token_error(pool: PgPool) {
     assert!(refused["user"].is_null());
 }
 
+/// The new-side token is scoped to its own viewer: another authenticated
+/// account cannot spend it, and the attempt leaves the owner's proof
+/// intact for them to complete afterwards.
 #[sqlx::test(migrations = "../../migrations")]
 async fn another_accounts_new_side_token_is_invalid_and_not_consumed(pool: PgPool) {
     let rig = Rig::new(pool);
@@ -303,8 +307,6 @@ async fn another_accounts_new_side_token_is_invalid_and_not_consumed(pool: PgPoo
         .await;
     let new_code = rig.mailer.latest_code_for("moved@example.com");
 
-    // The owner's token is worthless to another authenticated account —
-    // and its proof survives the attempt.
     let refused = rig.confirm(&intruder_token, &new_code).await;
     assert_eq!(codes(&refused), vec!["VERIFICATION_TOKEN_INVALID"]);
     assert_eq!(rig.stored_email(owner).await, "a@example.com");

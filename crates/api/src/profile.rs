@@ -1,11 +1,13 @@
-// Profile authoring and promotion — slice 2.1 (api-spec.md "Content
-// authoring" `prepareProfileUpdate`; substrate.md §9; user.md §4).
-// Prepare-side: build the parallel-Registration gesture — L1's own
-// profile-update idiom, payload only, never identity — chained behind
-// the current head and staged through the ordinary write path.
-// Confirm-side: promote landed profile updates into carriage and a new
-// actor_profile_versions row, the flow that makes the display row
-// appear alongside the record witnessing it.
+//! Profile authoring and promotion — slice 2.1 (api-spec.md "Content
+//! authoring" `prepareProfileUpdate`; substrate.md §9; user.md §4).
+//!
+//! Prepare-side: build the parallel-Registration gesture — L1's own
+//! profile-update idiom, payload only, never identity — chained behind
+//! the current head and staged through the ordinary write path.
+//!
+//! Confirm-side: promote landed profile updates into carriage and a new
+//! `actor_profile_versions` row, the flow that makes the display row
+//! appear alongside the record witnessing it.
 
 use common::envelope::CograProfile;
 use common::l1::census::Family;
@@ -70,6 +72,11 @@ pub struct ProfileUpdateDraft {
 /// chained behind the current head — the backend populates the causal
 /// parent and serializes updates per (node, author), so CoGra's own
 /// clients never author a branch (substrate.md §9).
+///
+/// That chain roots in the anchoring admission Registration, which landed
+/// before the account became a member — so a missing head is not an empty
+/// profile history but a diverged mirror, and is refused as an internal
+/// fault.
 pub async fn prepare_profile_update<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -101,9 +108,6 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             message: "a profile update is already in flight".into(),
         });
     }
-    // The chain root is the anchoring admission Registration
-    // (substrate.md §9), landed before the account became a member —
-    // a missing head means the mirror diverged.
     let head = mirror::chain_head(pool, &address, Family::Registration, &prof_string)
         .await?
         .ok_or_else(|| {
@@ -171,12 +175,21 @@ pub async fn land_promoted(
     failures
 }
 
+/// Promotes one landed profile update.
+///
+/// The promoting record's coordinates order the new version row against
+/// the others, so two updates by one actor are ordered by their records
+/// rather than by which promotion happened to run first.
+///
+/// The merge is copy-forward (data-model.md "Display-content
+/// versioning"): the newest version row alone renders the profile, so a
+/// present-but-empty field clears and an absent one keeps what stands. An
+/// empty display name never leaves prepare, and one arriving here is
+/// therefore a fault rather than a clear.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
     if !payload.starts_with(&[0xD9, 0xD9, 0xF7]) {
-        // The admission Registration's interim pre-PCE payload
-        // (onboarding.rs) — not a profile update.
         return Ok(());
     }
     let sealed = staged_row
@@ -190,9 +203,6 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             "profile payload names a different actor".into(),
         ));
     }
-    // The promoting record's coordinates order the version row against
-    // the others: two updates by one actor are ordered by the records,
-    // not by which promotion ran first.
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ProfileError::Internal("promoted record missing from mirror".into()))?;
@@ -204,9 +214,6 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
     let current = profile::current_profile(pool, write.actor_id)
         .await?
         .ok_or_else(|| ProfileError::Internal("actor without a seeded profile version".into()))?;
-    // Copy-forward merge (data-model.md "Display-content versioning"):
-    // the newest version row alone renders the profile; present-and-empty
-    // clears, absent keeps. An empty display name never leaves prepare.
     let display_name = match update.display_name {
         None => current.display_name,
         Some(name) if name.is_empty() => {

@@ -6,7 +6,7 @@
 //! representation is what carries that: a major line is a strictly
 //! increasing vector of held minors, so a minor missing below the ceiling
 //! was never assigned, and **its absence is knowledge, not ignorance**
-//! (`[ICX-def:interchange:acceptance]`). Gaps are possible, and they are
+//! (´[ICX-def:interchange:acceptance]´). Gaps are possible, and they are
 //! permanent: assignment proceeds in increasing minor order, and a gap
 //! below an assigned minor is never filled.
 //!
@@ -101,7 +101,7 @@ impl MajorLine {
 ///
 /// Crate-internal, and the one lookup dispatch performs: it exists so that
 /// choosing an instrument costs one descent and no allocation
-/// (`alg:xchg:companion`).
+/// (´alg:xchg:companion´).
 #[derive(Debug)]
 pub(crate) struct Holding<'r> {
     pub(crate) ceiling: u64,

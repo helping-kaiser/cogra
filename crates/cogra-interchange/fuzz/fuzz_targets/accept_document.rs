@@ -2,7 +2,7 @@
 //! `accept_document` — arbitrary bytes decoded against a fixed registry
 //! state, asserting only that acceptance never panics and that a
 //! [`Verdict`] is only ever reached through a successful decode
-//! (`preview:xchg:fuzz-plan`, design.md). Rejection is itself a verdict,
+//! (´preview:xchg:fuzz-plan´). Rejection is itself a verdict,
 //! so the interesting failure here would be a panic inside `accept`.
 //!
 //! The registry is built once and shared across iterations: it holds one

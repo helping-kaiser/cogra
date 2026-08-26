@@ -1,6 +1,6 @@
-// API entry point — Axum HTTP server hosting the async-graphql schema,
-// with the L1 stand-in behind the seam and the mirror-ingestion and
-// account-reaper loops running alongside.
+//! API entry point — the Axum HTTP server hosting the async-graphql
+//! schema, with the L1 stand-in behind the seam and the background loops
+//! running alongside it.
 
 use std::sync::Arc;
 
@@ -43,10 +43,22 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
     }
 }
 
+/// Builds the server from the environment and serves it: the GraphQL
+/// surface, the L1 stand-in behind the seam, and four background loops —
+/// mirror ingestion, the dev epoch clock, the account reaper (auth.md
+/// "Reaper"), and the auth-throttle GC sweep (auth.md "Rate limiting").
+///
+/// `.env` is read before anything else, so a plain `cargo run` matches the
+/// make targets; real environment variables still win, because dotenvy
+/// never overrides. Every knob read here is an operational parameter
+/// documented in development.md, and each has a deployable default except
+/// where absence is itself the setting: an unset
+/// `L1_EPOCH_CLOSE_INTERVAL_SECS` leaves epochs to close on the act budget
+/// or a manual `l1-dev close`, and `BREACH_CHECK=off` exists only so
+/// offline dev can skip the live HIBP range API (auth.md "Password
+/// requirements").
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // .env first, so plain `cargo run` matches the make targets; real
-    // environment variables win over file values (dotenvy never overrides).
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
@@ -67,8 +79,6 @@ async fn main() -> anyhow::Result<()> {
     let ingest_interval: u64 = env_or("L1_INGEST_INTERVAL_SECS", "2")
         .parse()
         .context("L1_INGEST_INTERVAL_SECS must be a number of seconds")?;
-    // The staged-write GC bound (data-model.md "Staged writes" — an
-    // operational parameter; development.md).
     let gc_after_epochs: i64 = env_or(
         "STAGED_WRITE_GC_EPOCHS",
         &api::ingest::DEFAULT_GC_AFTER_EPOCHS.to_string(),
@@ -82,8 +92,6 @@ async fn main() -> anyhow::Result<()> {
         gc_after_epochs,
     ));
 
-    // The dev epoch clock (development.md): unset means no interval close —
-    // epochs then close only on the act budget or manual `l1-dev close`.
     if let Ok(raw) = std::env::var("L1_EPOCH_CLOSE_INTERVAL_SECS") {
         let close_interval: u64 = raw
             .parse()
@@ -95,8 +103,6 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    // The account reaper (auth.md "Reaper"): never-verified accounts
-    // past their bound are deleted whole.
     let reaper_interval: u64 = env_or("ACCOUNT_REAPER_INTERVAL_SECS", "600")
         .parse()
         .context("ACCOUNT_REAPER_INTERVAL_SECS must be a number of seconds")?;
@@ -109,8 +115,6 @@ async fn main() -> anyhow::Result<()> {
     .parse()
     .context("ADMISSION_BURN_MICRO must be an integer of micro-units")?;
 
-    // The auth-endpoint throttle state's GC sweep (auth.md "Rate
-    // limiting").
     let rate_limit_gc_interval: u64 = env_or("RATE_LIMIT_GC_INTERVAL_SECS", "3600")
         .parse()
         .context("RATE_LIMIT_GC_INTERVAL_SECS must be a number of seconds")?;
@@ -119,8 +123,6 @@ async fn main() -> anyhow::Result<()> {
         rate_limit_gc_interval,
     ));
 
-    // The breach corpus (auth.md "Password requirements"): the live HIBP
-    // range API unless explicitly switched off for offline dev.
     let breach: Arc<dyn BreachCorpus> = match env_or("BREACH_CHECK", "hibp").as_str() {
         "hibp" => Arc::new(HibpCorpus::new().context("building the HIBP client")?),
         "off" => {
@@ -130,9 +132,6 @@ async fn main() -> anyhow::Result<()> {
         other => anyhow::bail!("BREACH_CHECK must be 'hibp' or 'off', got '{other}'"),
     };
 
-    // Client-IP derivation (auth.md "Rate limiting"): the socket peer by
-    // default; a forwarded-header source only when a trusted reverse
-    // proxy is the sole ingress.
     let ip_source: axum_client_ip::ClientIpSource = env_or("CLIENT_IP_SOURCE", "ConnectInfo")
         .parse()
         .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
