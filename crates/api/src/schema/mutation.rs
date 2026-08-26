@@ -177,10 +177,6 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
     }
 }
 
-// ---------------------------------------------------------------------
-// Inputs and payloads
-// ---------------------------------------------------------------------
-
 /// Register through an invite link (auth.md §Application step 2): the
 /// invite capability plus the login triple. Creates a real account in
 /// the applicant state and returns an ordinary session — there is no
@@ -295,12 +291,13 @@ struct PreparePayload {
 #[derive(InputObject)]
 struct LicenseInput {
     /// `a` — how far a use must credit the maker, a degree on `[0, 1]`
-    /// (`def:content:attribution`). CoGra's composer offers the three
-    /// readings it publishes: 0, 0.5 (commercial uses only), and 1.
+    /// (attribution, layer1-interface.md §10). CoGra's composer offers
+    /// the three readings it publishes: 0, 0.5 (commercial uses only),
+    /// and 1.
     attribution: f64,
     /// `o` — how far a use must be tracked publicly and left open to
-    /// audit, a degree on `[0, 1]` (`def:content:provenance`), offered
-    /// on the same three readings.
+    /// audit, a degree on `[0, 1]` (provenance, layer1-interface.md §10),
+    /// offered on the same three readings.
     provenance: f64,
 }
 
@@ -667,10 +664,6 @@ struct ApproveActsPayload {
     user_errors: Vec<UserError>,
 }
 
-// ---------------------------------------------------------------------
-// The root
-// ---------------------------------------------------------------------
-
 /// The mutation root.
 pub struct Mutation;
 
@@ -679,7 +672,8 @@ impl Mutation {
     /// Register through an invite link: creates the account — the actor
     /// row (no key yet) and its credentials, in the applicant state —
     /// records the application against the link, sends the verification
-    /// email, and returns an ordinary session.
+    /// email, and returns an ordinary session. Budgeted per IP and per
+    /// invite link (auth.md "Rate limiting").
     async fn register(
         &self,
         ctx: &Context<'_>,
@@ -691,7 +685,6 @@ impl Mutation {
         let web_origin = ctx.data::<WebOrigin>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let corpus = ctx.data::<Arc<dyn BreachCorpus>>()?;
-        // auth.md "Rate limiting".
         guard_window(
             ctx,
             scope::REGISTER_IP,
@@ -796,7 +789,9 @@ impl Mutation {
     }
 
     /// Re-arms an expired, never-approved application with a fresh
-    /// invite link — a new application row for the viewer's account.
+    /// invite link — a new application row for the viewer's account. A
+    /// re-arm is an application submit, so it spends the same budgets
+    /// `register` does (auth.md "Rate limiting").
     async fn apply_with_invite(
         &self,
         ctx: &Context<'_>,
@@ -805,8 +800,6 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // A re-arm is an application submit: the same budgets as register
-        // (auth.md "Rate limiting").
         guard_window(
             ctx,
             scope::REGISTER_IP,
@@ -835,7 +828,9 @@ impl Mutation {
     }
 
     /// Always succeeds, to avoid revealing whether an application
-    /// exists.
+    /// exists. The per-account resend budget (auth.md "Rate limiting")
+    /// trips silently for the same reason: a visible refusal would leak
+    /// exactly what the verb is built to hide.
     async fn resend_verification_email(
         &self,
         ctx: &Context<'_>,
@@ -845,9 +840,6 @@ impl Mutation {
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let web_origin = ctx.data::<WebOrigin>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Per-account resend budget (auth.md "Rate limiting") — tripping
-        // it stays silent, because a visible refusal would leak what the
-        // verb is built to hide.
         if let Ok(email) = auth::normalize_email(&input.email)
             && !ratelimit::within(pool, scope::RESEND_EMAIL, &email, limits.resend_email).await?
         {
@@ -921,6 +913,13 @@ impl Mutation {
     /// A session from credentials; `auth` is null with an
     /// INVALID_CREDENTIALS userError when the email / password pair did
     /// not match.
+    ///
+    /// Two budgets guard it in order — the per-IP window, then the
+    /// per-email consecutive-failure backoff (auth.md "Rate limiting").
+    /// A missing account still pays for a password hash, so it costs the
+    /// same time a wrong password does and the timing tells nothing
+    /// apart. Any pending reuse mark is taken and cleared only behind a
+    /// verified password, so a refusal can never leak it.
     async fn log_in(
         &self,
         ctx: &Context<'_>,
@@ -929,8 +928,6 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let auth_cfg = ctx.data::<AuthConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Per-IP window first, then the per-email consecutive-failure
-        // backoff (auth.md "Rate limiting").
         guard_window(ctx, scope::LOGIN_IP, &request_ip(ctx)?, limits.login_ip).await?;
         let refused = || {
             Ok(LogInPayload {
@@ -949,8 +946,6 @@ impl Mutation {
             return Err(rate_limited());
         }
         let Some(credentials) = store::credentials_by_email(pool, &email).await? else {
-            // Hash anyway so a missing account costs the same time as a
-            // wrong password.
             let _ = auth::verify_password(
                 "$argon2id$v=19$m=19456,t=2,p=1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
                 &input.password,
@@ -963,8 +958,6 @@ impl Mutation {
             return refused();
         }
         ratelimit::login_succeeded(pool, &email).await?;
-        // Take-and-clear only behind a verified password: the pending
-        // mark must never leak through a refusal.
         let reuse_detected_at = store::take_reuse_detected(pool, credentials.actor_id).await?;
         let issued = auth::issue_session(
             pool,
@@ -1059,7 +1052,13 @@ impl Mutation {
     }
 
     /// Always succeeds, to avoid revealing whether an account exists. If
-    /// one does, a single-use reset link goes to its address.
+    /// one does, a single-use reset link goes to its address — and the
+    /// bare token beside it, which native apps accept as a paste
+    /// (auth.md "Link URLs").
+    ///
+    /// The two budgets differ accordingly (auth.md "Rate limiting"): the
+    /// per-IP window refuses visibly, while the per-email one trips
+    /// silently, returning the same `ok: true`.
     async fn request_password_reset(
         &self,
         ctx: &Context<'_>,
@@ -1068,8 +1067,6 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
-        // Per-IP visibly; per-email silently (auth.md "Rate limiting"):
-        // tripping the email budget returns the same `ok: true`.
         guard_window(ctx, scope::RESET_IP, &request_ip(ctx)?, limits.reset_ip).await?;
         if let Ok(email) = auth::normalize_email(&input.email)
             && ratelimit::within(pool, scope::RESET_EMAIL, &email, limits.reset_email).await?
@@ -1089,8 +1086,6 @@ impl Mutation {
                 .send(Mail {
                     to: email,
                     subject: "Reset your CoGra password".into(),
-                    // The link URL (auth.md "Link URLs") plus the bare
-                    // token native apps accept as a paste.
                     body: format!(
                         "Reset your password: {origin}/reset?token={token}\nOr paste the token in the app: {token}\n\nValid {PASSWORD_RESET_TTL_MINUTES} minutes.",
                         origin = web_origin.0,
@@ -1193,7 +1188,8 @@ impl Mutation {
     /// two-sided proof: a confirmation code to the current address, a
     /// verification link to the new one. Always succeeds for a
     /// well-formed request, to avoid revealing whether the new address
-    /// is already registered.
+    /// is already registered. A wrong current password is silent for the
+    /// same reason: it too reads as success.
     async fn request_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1206,7 +1202,6 @@ impl Mutation {
             return Err(unauthenticated());
         };
         if !auth::verify_password(&credentials.password_hash, &input.current_password) {
-            // Silent by design; a wrong password still reads as success.
             return Ok(RequestEmailChangePayload { ok: true });
         }
         let Ok(new_email) = auth::normalize_email(&input.new_email) else {
@@ -1253,6 +1248,12 @@ impl Mutation {
     /// change whose new address was registered by someone else in the
     /// meantime surfaces EMAIL_IN_USE, on this call and on retries,
     /// until the change expires.
+    ///
+    /// Either side's proof may arrive first, so both are tried and the
+    /// apply step runs even when the code matched neither. That is what
+    /// keeps a collided change answerable: its row stays alive, so a
+    /// retry with an already-consumed code still learns the real reason
+    /// instead of a token error.
     async fn confirm_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1263,14 +1264,8 @@ impl Mutation {
         let limits = ctx.data::<RateLimitConfig>()?;
         guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
         let hash = auth::hash_of(&input.code);
-        // Either side's proof may arrive first; the change applies only
-        // once both stand.
         let matched = store::confirm_email_change_new_side(pool, v.user_id, &hash).await?
             || store::confirm_email_change_original_side(pool, v.user_id, &hash).await?;
-        // The apply step runs even when the code matched nothing: a
-        // fully-proven change that collided with another account's email
-        // keeps its row alive, so a retry with an already-consumed code
-        // still learns the real reason instead of a token error.
         let user_errors = match store::apply_email_change_if_complete(pool, v.user_id).await? {
             store::EmailChangeApply::Applied => vec![],
             store::EmailChangeApply::NotReady if matched => vec![],
@@ -1370,6 +1365,13 @@ impl Mutation {
     /// challenge (auth.md "Key recovery"): a session alone could
     /// otherwise overwrite the blob and silently destroy the account's
     /// recovery path. Replacing an existing blob mails a notice.
+    ///
+    /// An account with no attached key is refused outright: there is
+    /// nothing to verify against, and no legitimate caller either, since
+    /// the ceremony attaches before it uploads. The signature is checked
+    /// before the challenge is spent, so a bad one does not burn it — a
+    /// wrong-key client would otherwise need a fresh round trip per
+    /// attempt for no security gain.
     async fn upload_key_backup(
         &self,
         ctx: &Context<'_>,
@@ -1401,17 +1403,12 @@ impl Mutation {
             ));
         }
 
-        // No attached key means nothing to verify against, and no
-        // legitimate caller — the ceremony attaches before it uploads.
         let Some(pubkey) = actor_pubkey(pool, v.user_id).await? else {
             return Err(forbidden());
         };
         let Some(verifying) = crypto::verifying_key_from_bytes(&pubkey) else {
             return refuse(internal("the stored actor pubkey is not an Ed25519 key"));
         };
-        // Verify before spending: a bad signature must not burn the
-        // challenge, or a wrong-key client would need a fresh round trip
-        // per attempt for no security gain.
         if !key_backup::verify_upload(&verifying, &challenge, &blob, &signature) {
             return refuse(UserError::at(
                 ErrorCode::SignatureInvalid,
@@ -1793,6 +1790,10 @@ impl Mutation {
     /// failures surface as SIGNATURE_INVALID userErrors per proposal.
     /// Resubmitting a sealed proposal is idempotent only for the exact
     /// signature that was sealed; differing bytes refuse as BAD_INPUT.
+    ///
+    /// A keyless account is refused rather than rendered: no staged write
+    /// can exist for one, because the Registration stages only after the
+    /// attach proof, so a missing key here is a client bug.
     async fn submit_proposals(
         &self,
         ctx: &Context<'_>,
@@ -1804,9 +1805,6 @@ impl Mutation {
         let identity = store::actor_identity(pool, v.user_id)
             .await?
             .ok_or_else(unauthenticated)?;
-        // No staged write exists for a keyless account — the Registration
-        // stages only after the attach proof — so a missing key here is a
-        // client bug, not a state to render.
         let author_pubkey = identity.actor_pubkey.ok_or_else(forbidden)?;
         let mut writes = Vec::with_capacity(input.proposals.len());
         let mut user_errors = Vec::new();
