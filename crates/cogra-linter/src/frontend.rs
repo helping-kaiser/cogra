@@ -244,11 +244,12 @@ pub struct Parsed {
 /// the carrier and stay owned, carrying no occurrences
 /// (´[LBL-judg:labels:minting]´).
 ///
-/// `pre` is the source's own pre-tokenizing, and the two frontends use it
-/// differently by their languages' own shapes: Markdown has no lexical
-/// pre-pass and ignores it, while the Rust frontend reads a doc attribute's
-/// comment form out of it rather than re-deciding one `syn` already dropped
-/// (´conv:lint:rust-surface´).
+/// `pre` is the source's own pre-tokenizing, and one frontend of the three
+/// uses it: the Rust frontend reads a doc attribute's comment form out of it
+/// rather than re-deciding one `syn` already dropped
+/// (´conv:lint:rust-surface´). Markdown has no lexical pre-pass at all, and
+/// `swc` keeps the comments it lexes, so neither of the other two needs a
+/// second reading of the bytes.
 ///
 /// # Errors
 ///
@@ -264,6 +265,7 @@ pub fn parse(
     match src.language.as_ref().map(crate::adopt::Language::as_str) {
         Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
         Some(crate::pretokenize::rust::RUST) => crate::frontend_rust::parse(src, pre, a),
+        Some(crate::frontend_web::TYPESCRIPT) => crate::frontend_web::parse(src, a),
         _ => Ok(Parsed {
             path: src.path.clone(),
             ..Parsed::default()
