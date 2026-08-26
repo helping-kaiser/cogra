@@ -87,16 +87,18 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
                 println!("approved: {act_id}");
                 return Ok(());
             }
-            Err(l1_standin::StandInError::Conflict(_)) => continue, // seq taken
+            Err(l1_standin::StandInError::Conflict(_)) => continue,
             Err(e) => bail!("seal rejected: {e}"),
         }
     }
     bail!("no free sequence value found")
 }
 
+/// Dispatches one hand-test command. `.env` is read first, with the same
+/// precedence the server uses (main.rs); an unrecognized command prints
+/// the usage list rather than failing, since this is a hand tool.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // .env first — precedence rationale in main.rs.
     dotenvy::dotenv().ok();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = args.first().map(String::as_str).unwrap_or("help");
