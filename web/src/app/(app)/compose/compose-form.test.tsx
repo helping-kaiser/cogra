@@ -43,6 +43,62 @@ function preparedPayload(field: string, node: string) {
   };
 }
 
+function topicClaim(name: string, relevance = 0.1, confidence = 1) {
+  return {
+    __typename: "TopicClaim",
+    hashtag: {
+      __typename: "Hashtag",
+      id: `ht-${name}`,
+      name: { __typename: "ModeratedText", value: name, status: "NORMAL" },
+    },
+    relevance,
+    confidence,
+    pending: false,
+  };
+}
+
+/** The edit screen's own read, with whatever tags the post carries. */
+function editablePost(topics: ReturnType<typeof topicClaim>[] = []) {
+  return {
+    post: {
+      __typename: "Post",
+      id: "p1",
+      title: { __typename: "ModeratedText", value: "Old title", status: "NORMAL" },
+      description: { __typename: "ModeratedText", value: null, status: "NORMAL" },
+      content: { __typename: "ModeratedText", value: "Old body", status: "NORMAL" },
+      author: { __typename: "User", id: "u1", handle: "alice" },
+      createdAt: "2026-08-12T10:00:00Z",
+      updatedAt: "2026-08-12T10:00:00Z",
+      landing: { __typename: "Landing", state: "LANDED" },
+      moderationStatus: "NORMAL",
+      license: { __typename: "License", attribution: 0, provenance: 0 },
+      topics,
+      comments: {
+        __typename: "CommentConnection",
+        edges: [],
+        pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+      },
+    },
+  };
+}
+
+function tagPayload(id: string) {
+  return {
+    prepareTag: {
+      __typename: "PreparePayload",
+      writes: [
+        {
+          __typename: "PreparedWrite",
+          id,
+          family: "TAG",
+          canonicalProposal: "cHJvcG9zYWw=",
+        },
+      ],
+      userErrors: [],
+    },
+  };
+}
+
 describe("ComposeForm", () => {
   beforeEach(() => {
     push.mockClear();
@@ -293,6 +349,137 @@ describe("ComposeForm", () => {
     expect(editVariables).toEqual({
       input: { id: "p1", title: null, description: null, content: "New body" },
     });
+  });
+
+  // F3: tag editing lives on the edit screen now. Tags are still never
+  // fields of the edit record — each change is its own Tag act.
+  it("loads the post's current tags as adjustable, removable chips", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: editablePost([topicClaim("rust", 0.4, 0.8)]) }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-tag-0")).toHaveTextContent("#rust");
+    expect(screen.getByTestId("compose-tag-0-remove")).toBeInTheDocument();
+    // The chip opens on the values the claim actually carries.
+    fireEvent.click(screen.getByTestId("compose-tag-0-select"));
+    expect(screen.getByTestId("compose-tag-0-relevance")).toHaveValue("0.4");
+    expect(screen.getByTestId("compose-tag-0-confidence")).toHaveValue("0.8");
+    // No creation batch here, so no batch cap.
+    expect(screen.queryByTestId("compose-tag-cap")).not.toBeInTheDocument();
+  });
+
+  it("stages the edit record and one Tag act per change, in one signing pass", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    const tagInputs: Record<string, unknown>[] = [];
+    let editCalled = false;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: editablePost([topicClaim("wasm")]) }),
+      ),
+      graphql.mutation("PreparePostEdit", () => {
+        editCalled = true;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+      graphql.mutation("PrepareTag", ({ variables }) => {
+        tagInputs.push(variables.input as Record<string, unknown>);
+        return HttpResponse.json({ data: tagPayload(`w-tag-${tagInputs.length}`) });
+      }),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+
+    await screen.findByTestId("compose-tag-0");
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "New body" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    // Drop the tag the post came with.
+    fireEvent.click(screen.getByTestId("compose-tag-0-remove"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(editCalled).toBe(true);
+    expect(tagInputs).toEqual([
+      { target: "p1", name: "rust", pDirected: 0.1, pInterest: 1 },
+      // A withdrawal is a Tag act at relevance 0, never a deletion.
+      { target: "p1", name: "wasm", pDirected: 0, pInterest: null },
+    ]);
+    // The edit record plus both Tag acts, all signed in the one pass.
+    expect(signer.signStaged).toHaveBeenCalledTimes(3);
+  });
+
+  it("stages no edit record when only the tags moved", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let editCalled = false;
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      graphql.mutation("PreparePostEdit", () => {
+        editCalled = true;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+      graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+
+    await screen.findByTestId("compose-tag-input");
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(editCalled).toBe(false);
+    expect(signer.signStaged).toHaveBeenCalledTimes(1);
+  });
+
+  // F2: a prepare refusal is a field error. Nothing was staged, so the
+  // signing line would be a lie — and nothing is signed either.
+  it("routes a refused Tag act onto its chip, signing nothing", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      graphql.mutation("PreparePostEdit", () =>
+        HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") }),
+      ),
+      graphql.mutation("PrepareTag", () =>
+        HttpResponse.json({
+          data: {
+            prepareTag: {
+              __typename: "PreparePayload",
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "`a-b` is not a legal topic name: reserved",
+                  code: "BAD_INPUT",
+                  field: ["name"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+
+    await screen.findByTestId("compose-tag-input");
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "a-b" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    expect(await screen.findByTestId("compose-tag-error-0")).toHaveTextContent(
+      "`a-b` is not a legal topic name: reserved",
+    );
+    expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("compose-signing-failed")).not.toBeInTheDocument();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("reports an unfinished signing without navigating", async () => {
