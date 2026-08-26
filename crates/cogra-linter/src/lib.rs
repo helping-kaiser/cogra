@@ -578,13 +578,7 @@ impl<'a> Harvest<'a> {
     /// An asset whose transformed identifier is no well-formed name queues
     /// nothing: it derives no label, which is what the inventory judgment
     /// reports rather than what the harvest invents.
-    fn asset(
-        &mut self,
-        path: &Path,
-        owned_by: &OwnerId,
-        owner: Option<NodeIndex>,
-        asset: &Asset,
-    ) {
+    fn asset(&mut self, path: &Path, owned_by: &OwnerId, owner: Option<NodeIndex>, asset: &Asset) {
         let node = self.g.add_node(NodeW::Asset(AssetNode {
             identifier: Box::from(asset.identifier.as_str()),
             area: asset.area.clone(),

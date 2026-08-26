@@ -172,7 +172,10 @@ fn a_module_file_backs_from_the_directory_named_after_it() {
 fn many_declarations_of_one_definition_are_one_asset() {
     let held = vec![
         rust("crates/l1-standin/src/lib.rs", "mod shared;\n"),
-        rust("crates/l1-standin/src/main.rs", "mod shared;\nfn main() {}\n"),
+        rust(
+            "crates/l1-standin/src/main.rs",
+            "mod shared;\nfn main() {}\n",
+        ),
         rust("crates/l1-standin/src/shared.rs", "pub fn one() {}\n"),
     ];
     assert_eq!(census_of(held), vec![String::from("shared")]);
@@ -239,8 +242,11 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     let src = at.join("crates").join("l1-standin").join("src");
     std::fs::create_dir_all(src.join("beta")).expect("a temporary corpus root");
     std::fs::write(at.join("corpus-adoption.toml"), adoption_text()).expect("the adoption data");
-    std::fs::write(src.join("lib.rs"), "mod alpha;\nmod beta;\nmod inline { }\n")
-        .expect("the declaring root");
+    std::fs::write(
+        src.join("lib.rs"),
+        "mod alpha;\nmod beta;\nmod inline { }\n",
+    )
+    .expect("the declaring root");
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("a file-backed module");
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
