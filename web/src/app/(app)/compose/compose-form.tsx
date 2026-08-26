@@ -5,6 +5,13 @@
 // (?post=<id>) is the ordinary-role Publish behind the chain head and
 // never shows the immutable license. The backend prepares; this browser
 // signs.
+//
+// Tagging lives here and nowhere else (F3): cards and detail views show
+// read-only chips, and the author changes their tags on the screen where
+// they change the rest. Tags are still never FIELDS of the edit record
+// (D14, api-spec.md `PreparePostEditInput`) — each change is prepared as
+// its own Tag act, and the whole batch goes through the one signing
+// pass, so the submit either stages everything or stages nothing.
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -16,15 +23,21 @@ import {
   preparePost,
   preparePostEdit,
 } from "@/lib/api/content-api";
+import type { StagedWriteView } from "@/lib/api/writes-api";
+import { prepareTag } from "@/lib/api/topics-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
+import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { LicenseChooser } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
+import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
@@ -64,10 +77,15 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [description, setDescription] = useState("");
   const [body, setBody] = useState("");
   const [license, setLicense] = useState<License>(PUBLIC_DOMAIN);
-  // Tags never carry into edit mode (D14): new tags are their own
-  // gesture, not an edit field — the create-only state below is simply
-  // unused once `editingId` is set.
-  const [tags, setTags] = useState<readonly string[]>([]);
+  const [tags, setTags] = useState<readonly TagDraft[]>([]);
+  // What the post carried when it loaded: the baseline both the tag
+  // changes and the "did the content change at all" question read.
+  const [loadedTags, setLoadedTags] = useState<readonly TagDraft[]>([]);
+  const [loadedContent, setLoadedContent] = useState<{
+    title: string;
+    description: string;
+    body: string;
+  } | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [emptyBody, setEmptyBody] = useState(false);
@@ -75,6 +93,8 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [signingNeedsKey, setSigningNeedsKey] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
+  const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (editingId === null) return;
@@ -87,9 +107,24 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       } else if (outcome.value === null) {
         setNotFound(true);
       } else {
-        setTitle(outcome.value.post.title.value ?? "");
-        setDescription(outcome.value.post.description.value ?? "");
-        setBody(outcome.value.post.content.value ?? "");
+        const post = outcome.value.post;
+        const loaded = {
+          title: post.title.value ?? "",
+          description: post.description.value ?? "",
+          body: post.content.value ?? "",
+        };
+        setTitle(loaded.title);
+        setDescription(loaded.description);
+        setBody(loaded.body);
+        setLoadedContent(loaded);
+        // A pending claim is a current tag too — the author declared it.
+        const current = post.topics.map((claim) => ({
+          name: claim.hashtag.name.value ?? "",
+          relevance: claim.relevance,
+          confidence: claim.confidence,
+        }));
+        setLoadedTags(current);
+        setTags(current);
       }
     });
     return () => {
@@ -97,32 +132,49 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     };
   }, [client, editingId]);
 
-  const onSubmit = async () => {
-    if (submitting) return;
-    if (body.trim() === "" && editingId === null) {
-      setEmptyBody(true);
-      return;
+  // What an edit would actually stage: the record only when the content
+  // moved, and one Tag act per tag change.
+  const changes = editingId === null ? [] : tagChanges(loadedTags, tags);
+  const contentChanged =
+    loadedContent === null ||
+    title !== loadedContent.title ||
+    description !== loadedContent.description ||
+    body !== loadedContent.body;
+
+  // What pressing submit right now would sign (F4). Creating mints the
+  // post and batches one Tag act per drafted topic; editing signs the
+  // edit record only if the content moved, plus one act per tag change.
+  const signedActions =
+    editingId === null ? 1 + tags.length : (contentChanged ? 1 : 0) + changes.length;
+
+  const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
+    const results = [];
+    for (const staged of writes) {
+      results.push(await signer.signStaged(staged));
     }
-    setSubmitting(true);
-    setRefusedMessage(null);
-    setTagErrors({});
-    setSignIncomplete(false);
-    setTransportFailed(false);
+    return results.every((result) => result.kind === "done");
+  };
+
+  const finish = async (writes: readonly StagedWriteView[]) => {
+    const done = await signAll(writes);
+    setSubmitting(false);
+    if (done) {
+      router.push(editingId === null ? "/feed" : `/posts/${editingId}`);
+    } else {
+      setSigningNeedsKey((await store.actorKey()) === null);
+      setSignIncomplete(true);
+    }
+  };
+
+  const submitCreate = async () => {
     const prepared = await guard.run(() =>
-      editingId === null
-        ? preparePost(client, {
-            title: title.trim() === "" ? null : title,
-            description: description.trim() === "" ? null : description,
-            content: body,
-            license,
-            tags: tags.map((name) => ({ name })),
-          })
-        : preparePostEdit(client, {
-            id: editingId,
-            title: title.trim() === "" ? null : title,
-            description: description.trim() === "" ? null : description,
-            content: body,
-          }),
+      preparePost(client, {
+        title: title.trim() === "" ? null : title,
+        description: description.trim() === "" ? null : description,
+        content: body,
+        license,
+        tags,
+      }),
     );
     if (prepared.kind === "refused") {
       setSubmitting(false);
@@ -137,7 +189,9 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         else general = general ?? error.message;
       }
       setTagErrors(perTag);
-      setRefusedMessage(general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."));
+      setRefusedMessage(
+        general ?? (Object.keys(perTag).length > 0 ? null : "The server refused this write."),
+      );
       return;
     }
     if (prepared.kind === "failed") {
@@ -145,17 +199,103 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       setTransportFailed(true);
       return;
     }
-    const results = [];
-    for (const staged of prepared.value.writes) {
-      results.push(await signer.signStaged(staged));
+    await finish(prepared.value.writes);
+  };
+
+  /**
+   * Prepares everything BEFORE signing anything: a refusal on the third
+   * tag must not leave the first two signed. Staged writes nobody signs
+   * are collected by the server's own GC.
+   */
+  const submitEdit = async (id: string) => {
+    const writes: StagedWriteView[] = [];
+    const perTag: Record<number, string> = {};
+    let general: string | null = null;
+
+    if (contentChanged) {
+      const prepared = await guard.run(() =>
+        preparePostEdit(client, {
+          id,
+          title: title.trim() === "" ? null : title,
+          description: description.trim() === "" ? null : description,
+          content: body,
+        }),
+      );
+      if (prepared.kind === "failed") {
+        setSubmitting(false);
+        setTransportFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        general = prepared.errors[0]?.message ?? "The server refused this write.";
+      } else {
+        writes.push(...prepared.value.writes);
+      }
     }
-    setSubmitting(false);
-    if (results.every((result) => result.kind === "done")) {
-      router.push(editingId === null ? "/feed" : `/posts/${editingId}`);
-    } else {
-      setSigningNeedsKey((await store.actorKey()) === null);
-      setSignIncomplete(true);
+
+    for (const change of changes) {
+      const prepared = await guard.run(() =>
+        prepareTag(client, {
+          target: id,
+          name: change.kind === "tag" ? change.tag.name : change.name,
+          // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
+          relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
+          confidence: change.kind === "tag" ? change.tag.confidence : undefined,
+        }),
+      );
+      if (prepared.kind === "failed") {
+        setSubmitting(false);
+        setTransportFailed(true);
+        return;
+      }
+      if (prepared.kind === "refused") {
+        // A PRE-STAGING refusal is a field error, never the signing line
+        // (F2): nothing was staged, so nothing stays pending. An added
+        // tag carries it on its own chip; a withdrawal has no chip left
+        // to carry it, so it reads on the general line.
+        const message = prepared.errors[0]?.message ?? "The server refused this write.";
+        const index =
+          change.kind === "tag" ? tags.findIndex((tag) => tag.name === change.tag.name) : -1;
+        if (index >= 0) perTag[index] = message;
+        else general = general ?? message;
+      } else {
+        writes.push(...prepared.value);
+      }
     }
+
+    if (general !== null || Object.keys(perTag).length > 0) {
+      setSubmitting(false);
+      setTagErrors(perTag);
+      setRefusedMessage(general);
+      return;
+    }
+    await finish(writes);
+  };
+
+  const run = async () => {
+    setSubmitting(true);
+    setRefusedMessage(null);
+    setTagErrors({});
+    setSignIncomplete(false);
+    setTransportFailed(false);
+    if (editingId === null) await submitCreate();
+    else await submitEdit(editingId);
+  };
+
+  const onSubmit = async () => {
+    if (submitting) return;
+    if (body.trim() === "" && editingId === null) {
+      setEmptyBody(true);
+      return;
+    }
+    // More than one signed action is more than one price, so it is asked
+    // about before it is signed (F4) — unless the reader turned the
+    // asking off.
+    if (signedActions > 1 && confirmMultiAction) {
+      setConfirming(true);
+      return;
+    }
+    await run();
   };
 
   // Leaving is plain back navigation, no discard confirm — the Android
@@ -225,11 +365,16 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           </p>
         )}
       </div>
-      {/* Tags never ride the edit form (D14): new tags are their own
-          gesture, not an edit field. */}
-      {editingId === null && (
-        <TagEntryField tags={tags} onChange={setTags} fieldErrors={tagErrors} testIdPrefix="compose" />
-      )}
+      {/* Creation batches its tags onto the minting record, so the batch
+          cap applies; an edit stages one act per change, which is not a
+          batch and carries no cap. */}
+      <TagEntryField
+        tags={tags}
+        onChange={setTags}
+        fieldErrors={tagErrors}
+        cap={editingId === null ? TAG_BATCH_CAP : null}
+        testIdPrefix="compose"
+      />
       {editingId === null && (
         <LicenseChooser value={license} onChange={setLicense} testIdPrefix="compose" />
       )}
@@ -242,9 +387,28 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         <SigningPending needsKey={signingNeedsKey} testIdPrefix="compose" />
       )}
       {transportFailed && <TransportError testId="compose-transport-error" />}
-      <Button testId="compose-submit" onClick={() => void onSubmit()} disabled={submitting}>
+      {/* The cost, beside the control that pays it (F4). */}
+      <SignedActionsIndicator count={signedActions} testId="compose-signed-actions" />
+      <Button
+        testId="compose-submit"
+        onClick={() => void onSubmit()}
+        disabled={submitting || signedActions === 0}
+      >
         {editingId === null ? "Sign and publish" : "Sign the edit"}
       </Button>
+      {confirming && (
+        <MultiActionConfirm
+          count={signedActions}
+          busy={submitting}
+          testIdPrefix="compose"
+          onCancel={() => setConfirming(false)}
+          onConfirm={(stopAsking) => {
+            if (stopAsking) setConfirmMultiAction(false);
+            setConfirming(false);
+            void run();
+          }}
+        />
+      )}
     </main>
   );
 }

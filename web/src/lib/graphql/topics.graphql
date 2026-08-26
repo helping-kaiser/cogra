@@ -1,8 +1,8 @@
 # The topic surface (api-spec.md "Content authoring", hashtag.md): the
-# topic page's own read, and the standalone tag/un-tag gesture. The
-# follow control's own read/write rides `viewerStance` on `Hashtag` —
+# topic page's own read, and the tag/un-tag gesture the edit screen
+# stages. A stance toward a topic rides `viewerStance` on `Hashtag` —
 # see `stance.graphql`'s `HashtagStance`, the same seam every other
-# stance-able node uses.
+# stance-able node uses — which no surface offers before slice 3.
 #
 # `hashtag(name:)` resolves any well-formed name (D4): a Type is
 # anchored vacuously, so a topic nobody has tagged yet still renders —

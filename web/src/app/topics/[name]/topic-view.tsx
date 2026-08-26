@@ -1,8 +1,9 @@
 "use client";
 
-// The topic route (D20, roadmap "Slice 2.3 — Topics"): the name, the
-// follow control (D9, D10 — plain toggle, no pad), and the tagged
-// content list — the content-intrinsic channel only this slice (D8).
+// The topic route (D20, roadmap "Slice 2.3 — Topics"): the name and the
+// tagged content list — the content-intrinsic channel only this slice
+// (D8). Following a topic waits for slice 3; the backend accepts the
+// stance either way, the surface simply does not offer it yet.
 // Ships deliberately plain: jakob is re-thinking the rest of slice 2's
 // visual design, so this surface hits it once at the redesign.
 //
@@ -21,7 +22,6 @@ import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
-import { TopicFollowControl } from "@/lib/ui/topic-follow-control";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function TopicView({ name }: { name: string }) {
@@ -104,8 +104,6 @@ export function TopicView({ name }: { name: string }) {
       <h1 className="text-headline-small" data-testid="topic-name">
         #{hashtag.name.value}
       </h1>
-      {/* D10: no pad, no axis labels for a topic — a plain toggle. */}
-      <TopicFollowControl name={hashtag.name.value ?? name} testIdPrefix="topic-follow" />
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Tagged</h2>
       {hashtag.taggedContent.length === 0 && (

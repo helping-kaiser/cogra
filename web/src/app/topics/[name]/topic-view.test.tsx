@@ -1,14 +1,14 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
-import { hashtagStanceHandlers, stanceHandlers } from "@/test/stance";
+import { stanceHandlers } from "@/test/stance";
 import { TopicView } from "./topic-view";
 
-const server = startMswServer(...stanceHandlers(), ...hashtagStanceHandlers());
+const server = startMswServer(...stanceHandlers());
 
 function moderated(value: string | null) {
   return { __typename: "ModeratedText", value, status: "NORMAL" };
@@ -67,12 +67,16 @@ describe("TopicView", () => {
     expect(screen.getByTestId("topic-stance-p1")).toBeInTheDocument();
   });
 
-  it("carries the follow control", async () => {
+  // Follow waits for slice 3 (F5): the backend still accepts the stance,
+  // the surface simply does not offer it.
+  it("offers no follow gesture", async () => {
     server.use(
       graphql.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
-    await waitFor(() => expect(screen.getByTestId("topic-follow")).toBeInTheDocument());
+    await screen.findByTestId("topic-name");
+    expect(screen.queryByTestId("topic-follow")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /follow/i })).not.toBeInTheDocument();
   });
 
   it("shows the empty copy for a never-tagged but well-formed name (D4)", async () => {
