@@ -774,6 +774,7 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/common/"),
             PathPrefix::new("crates/api/"),
             PathPrefix::new("docs/"),
+            PathPrefix::new("web/"),
         ]
     );
 }
