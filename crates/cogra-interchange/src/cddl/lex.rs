@@ -393,9 +393,9 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// The unread source. Slicing is safe because `pos` only ever advances by
+    /// whole characters, so it is always on a character boundary.
     fn rest(&self) -> &'a str {
-        // `pos` only ever advances by whole characters, so it is always a
-        // character boundary.
         &self.src[self.pos..]
     }
 
@@ -441,6 +441,9 @@ impl<'a> Lexer<'a> {
     /// ```abnf
     /// S = *WS   WS = SP / NL   NL = COMMENT / CRLF
     /// ```
+    ///
+    /// `CRLF = %x0A / %x0D.0A`, so a carriage return is a line ending only in
+    /// front of a line feed, and alone it is an error.
     fn skip_trivia(&mut self) -> Result<(), SyntaxError> {
         loop {
             match self.peek() {
@@ -448,8 +451,6 @@ impl<'a> Lexer<'a> {
                     self.bump();
                 }
                 Some('\r') => {
-                    // CRLF = %x0A / %x0D.0A: a carriage return is a line
-                    // ending only in front of a line feed.
                     if self.peek_at(1) == Some('\n') {
                         self.bump();
                         self.bump();
@@ -751,6 +752,11 @@ impl<'a> Lexer<'a> {
     }
 
     /// `number = hexfloat / (int ["." fraction] ["e" exponent])`.
+    ///
+    /// `fraction = 1*DIGIT`, so the dot belongs to the number only when a
+    /// decimal digit follows it — which is what keeps `1..2` a range. An `e`
+    /// the exponent does not complete is rewound: `1e` is the integer 1
+    /// followed by the name `e`.
     fn scan_number(&mut self) -> Result<TokenKind, SyntaxError> {
         let start = self.mark();
         if self.scan_hexfloat() {
@@ -764,8 +770,6 @@ impl<'a> Lexer<'a> {
             return Err(self.error_at(start, "expected a number"));
         }
         let mut is_float = false;
-        // `fraction = 1*DIGIT`: the dot belongs to the number only when a
-        // decimal digit follows it, which is what keeps `1..2` a range.
         if self.peek() == Some('.') && self.peek_at(1).is_some_and(|c| c.is_ascii_digit()) {
             self.bump();
             while self.peek().is_some_and(|c| c.is_ascii_digit()) {
@@ -779,7 +783,6 @@ impl<'a> Lexer<'a> {
             if self.scan_exponent() {
                 is_float = true;
             } else {
-                // `1e` is the integer 1 followed by the name `e`.
                 self.reset(mark);
             }
         }
@@ -984,9 +987,9 @@ mod tests {
         );
     }
 
+    /// The reading RFC 8610 states in its comment on `type1`.
     #[test]
     fn names_swallow_interior_dots_and_hyphens() {
-        // The reading RFC 8610 states in its comment on `type1`.
         assert_eq!(kinds("a.size"), [ident("a.size")]);
         assert_eq!(
             kinds("a .size"),
@@ -996,10 +999,10 @@ mod tests {
         assert_eq!(kinds("a--b..c"), [ident("a--b..c")]);
     }
 
+    /// `id` requires a letter or digit after every run of separators, so the
+    /// trailing hyphen is not part of the name.
     #[test]
     fn a_name_never_ends_on_a_separator() {
-        // `id` requires a letter or digit after every run of separators,
-        // so the trailing hyphen is not part of the name.
         let error = refuse("a-");
         assert_eq!((error.line, error.column), (1, 2));
     }
@@ -1013,9 +1016,9 @@ mod tests {
         assert_eq!(kinds("@at _under"), [ident("@at"), ident("_under")]);
     }
 
+    /// `fraction = 1*DIGIT`: the dot needs a digit behind it.
     #[test]
     fn a_range_is_not_a_float() {
-        // `fraction = 1*DIGIT`: the dot needs a digit behind it.
         assert_eq!(
             kinds("1..2"),
             [int("1"), TokenKind::RangeInclusive, int("2")]
@@ -1030,6 +1033,8 @@ mod tests {
         );
     }
 
+    /// The upper-case prefixes are read too, ABNF string literals being case
+    /// insensitive.
     #[test]
     fn integers_in_every_base() {
         assert_eq!(kinds("0"), [int("0")]);
@@ -1037,17 +1042,16 @@ mod tests {
         assert_eq!(kinds("-42"), [int("-42")]);
         assert_eq!(kinds("0x1f"), [int("0x1f")]);
         assert_eq!(kinds("0b1011"), [int("0b1011")]);
-        // ABNF string literals are case insensitive.
         assert_eq!(kinds("0X1F"), [int("0X1F")]);
         assert_eq!(kinds("0B01"), [int("0B01")]);
     }
 
+    /// The ordered choice in `uint` falls through to `"0"`. And since
+    /// `DIGIT1 *DIGIT` cannot start at 0, `01` is two numbers.
     #[test]
     fn a_prefix_without_digits_is_the_integer_zero_and_a_name() {
-        // The ordered choice in `uint` falls through to "0".
         assert_eq!(kinds("0x"), [int("0"), ident("x")]);
         assert_eq!(kinds("0bz"), [int("0"), ident("bz")]);
-        // `DIGIT1 *DIGIT` cannot start at 0, so `01` is two numbers.
         assert_eq!(kinds("01"), [int("0"), int("1")]);
     }
 
@@ -1067,29 +1071,32 @@ mod tests {
         assert_eq!(kinds("1e+"), [int("1"), ident("e"), TokenKind::Plus]);
     }
 
+    /// Without the `p` the hexfloat alternative fails and the integer
+    /// alternative takes `0x1`, leaving the name `p` behind. And `e` is a
+    /// hexadecimal digit, so the digits swallow it rather than reading an
+    /// exponent.
     #[test]
     fn hexadecimal_floats_need_their_exponent() {
         assert_eq!(kinds("0x1p3"), [float("0x1p3")]);
         assert_eq!(kinds("0x1.8p3"), [float("0x1.8p3")]);
         assert_eq!(kinds("-0xa.bP-2"), [float("-0xa.bP-2")]);
-        // Without the `p` the hexfloat alternative fails and the integer
-        // alternative takes `0x1`, leaving the name `p` behind.
         assert_eq!(kinds("0x1p"), [int("0x1"), ident("p")]);
-        // `e` is a hexadecimal digit, so it is swallowed by the digits.
         assert_eq!(kinds("0x1e5"), [int("0x1e5")]);
     }
 
+    /// An escape the lexer does not recognize is still an escape: SESC names a
+    /// character class, not a list of letters.
     #[test]
     fn text_literals_keep_their_escapes() {
         assert_eq!(kinds(r#""hi""#), [TokenKind::Text("hi".to_owned())]);
         assert_eq!(kinds(r#""""#), [TokenKind::Text(String::new())]);
         assert_eq!(kinds(r#""a\"b""#), [TokenKind::Text(r#"a\"b"#.to_owned())]);
         assert_eq!(kinds(r#""a\\b""#), [TokenKind::Text(r"a\\b".to_owned())]);
-        // SESC names a character class, not a list of letters.
         assert_eq!(kinds(r#""\q""#), [TokenKind::Text(r"\q".to_owned())]);
         assert_eq!(kinds("\"\u{e4}\""), [TokenKind::Text("\u{e4}".to_owned())]);
     }
 
+    /// The qualifiers are case insensitive, per the preamble to Appendix B.
     #[test]
     fn byte_strings_in_all_three_qualifications() {
         assert_eq!(
@@ -1113,7 +1120,6 @@ mod tests {
                 raw: "aGVsbG8=".to_owned()
             }]
         );
-        // Case insensitive, per the preamble to Appendix B.
         assert_eq!(
             kinds("H'ff'"),
             [TokenKind::Bytes {
@@ -1139,9 +1145,10 @@ mod tests {
         );
     }
 
+    /// BCHAR admits CRLF where SCHAR does not, and the line count survives the
+    /// literal.
     #[test]
     fn byte_strings_may_span_lines() {
-        // BCHAR admits CRLF; SCHAR does not.
         let tokens = tokenize("'a\nb'").expect("BCHAR admits a line feed");
         assert_eq!(
             tokens[0].kind,
@@ -1150,10 +1157,11 @@ mod tests {
                 raw: "a\nb".to_owned()
             }
         );
-        // The line count survives the literal.
         assert_eq!(tokens[1].span.line, 2);
     }
 
+    /// Without a digit behind the dot the head ends and a control operator
+    /// begins.
     #[test]
     fn representation_type_heads_are_scanned_whole() {
         assert_eq!(
@@ -1184,8 +1192,6 @@ mod tests {
                 ai: Some("0x18".to_owned())
             }]
         );
-        // Without a digit behind the dot the head ends and a control
-        // operator begins.
         assert_eq!(
             kinds("#6 .size"),
             [
@@ -1198,12 +1204,12 @@ mod tests {
         );
     }
 
+    /// The ABNF ends COMMENT at a CRLF; the scanner also lets the end of the
+    /// source end it.
     #[test]
     fn comments_run_to_the_line_ending() {
         assert_eq!(kinds("a ; comment\nb"), [ident("a"), ident("b")]);
         assert_eq!(kinds("; only a comment\n"), []);
-        // The ABNF ends COMMENT at a CRLF; the scanner also lets the end
-        // of the source end it.
         assert_eq!(kinds("a ; trailing"), [ident("a")]);
         assert_eq!(kinds("; trailing"), []);
     }
@@ -1236,9 +1242,9 @@ mod tests {
         assert!(error.detail.contains("unterminated byte-string"));
     }
 
+    /// SCHAR excludes the control characters.
     #[test]
     fn refuses_a_line_ending_inside_a_text_literal() {
-        // SCHAR excludes the control characters.
         let error = refuse("\"a\nb\"");
         assert_eq!((error.line, error.column), (1, 3));
     }
