@@ -930,6 +930,12 @@ type Post implements Node {
    genesis, so edits never reorder the thread). The named view over
    records(target:, family: REVIEW)."
   comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
+  "This post's current topics — the author's own declarations, as
+   the current-topics fold reads them: newest record per (author,
+   content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+   Third-party claims wait on the forward-path weight that gates
+   them (slice 3)."
+  topics(includePending: Boolean! = true): [TopicClaim!]!
 }
 
 "A threaded response — minted by a Review record targeting whatever
@@ -949,6 +955,10 @@ type Comment implements Node {
   license: License!
   "This comment's direct replies, newest-first."
   replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
+  "This comment's current topics — the same fold and the same
+   author-owned channel as `Post.topics`; a Comment is Taggable
+   like any other content node."
+  topics(includePending: Boolean! = true): [TopicClaim!]!
 }
 
 "What a Review can respond to — root content, another Comment, a
@@ -1057,18 +1067,66 @@ type Offer implements Node {
 
 "A topic — on the substrate an L1 Type node: named identity,
  compared by byte equality, anchored vacuously, owned by nobody
- (hashtag.md). CoGra's naming service canonicalizes (lowercase, no
- '#') and keys its registry by UUIDv5 of the canonical name.
- Authorless and, by CoGra's declared traversal policy, a
- forward-traversal sink: rankable, never transit. Content reaches
- it through Tag records; follows are Affinity records; a
- ChatMessage cites it by Reference."
-type Hashtag implements Node {
+ (hashtag.md). CoGra's naming service canonicalizes (one leading
+ '#' stripped, ASCII-lowercased) and keys its registry by UUIDv5 of
+ the canonical name; a name outside the identifier atom is refused
+ at the field that carried it. Authorless and, by CoGra's declared
+ traversal policy, a forward-traversal sink: rankable, never
+ transit. Content reaches it through Tag records; follows are
+ Affinity records; a ChatMessage cites it by Reference.
+
+ Not a `Node`: the interface's createdAt, updatedAt, and landing
+ are substrate facts about a minted node, and nothing mints a Type
+ — there is nothing to date and nothing to land. Its id is the
+ derivation itself, a pure function of the name."
+type Hashtag {
+  "UUIDv5(HASHTAG_NAMESPACE, name) — the same id on every instance
+   and fork."
+  id: UUID!
   "Canonical tag, lowercase and without '#'."
   name: ModeratedText!
   moderationStatus: ModerationStatus!
+  "The content currently tagged with this topic, newest claim
+   first — the current-topics fold read from the Type's side, over
+   the content-intrinsic channel: claims whose author is the
+   content's own author. A stranger's tag reaches a viewer only
+   through the tagger, at the viewer's forward-path weight, and
+   that weight is the ranker's (slice 3, feed-ranking.md §4). A
+   plain list rather than a connection — the fold is limit-bounded,
+   not cursor-bounded, and a Relay connection would promise a
+   pagination the read cannot honour."
+  taggedContent(limit: Int, includePending: Boolean! = true): [TaggedContent!]!
+  "The viewer's own Affinity bundle toward this topic — the follow
+   control's read, and with `pick` where a candidate would land it."
+  viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+}
+
+"One node currently tagged with a topic."
+type TaggedContent {
+  node: Node!
+  relevance: Dimension!
+  confidence: Dimension!
+  pending: Boolean!
+}
+
+"One current topic claim on a node — a chip in the chip row. The
+ bundle key is (author, content, Type) and the newest record in it
+ wins; relevance 0 is a withdrawal and never appears here."
+type TopicClaim {
+  hashtag: Hashtag!
+  "Relevance `r` — how much the topic is the content's."
+  relevance: Dimension!
+  "Confidence `c` — how firmly the claim is held."
+  confidence: Dimension!
+  "True while the winning record is still in flight."
+  pending: Boolean!
 }
 ```
+
+The registry row is written where a record first names the Type,
+inside the transaction that stages the act — family-blind, so a
+Tag's terminal leg and an Affinity's follow both index the name.
+Reads never write one.
 
 ### Membership views
 
@@ -1736,7 +1794,13 @@ type Query {
   chat(id: UUID!): Chat
   chatMessage(id: UUID!): ChatMessage
   item(id: UUID!): Item
-  "Look up a hashtag by its canonical name (lowercase, no '#')."
+  "One topic by name, canonicalized here before anything is looked
+   at. Every well-formed name already denotes a Type, whether or
+   not a record has referenced it — Types anchor vacuously and
+   their ids are a pure function of the name — so this resolves
+   without a registry row and without writing one, and a client can
+   navigate to an empty topic page and follow it from there. Null
+   only for a name the substrate could never carry."
   hashtag(name: String!): Hashtag
   proposal(id: UUID!): Proposal
   campaign(id: UUID!): Campaign
@@ -2438,6 +2502,17 @@ sub-surfaces: the inputs below are the target contract, and each
 arrives with the work that carries it (media with the media
 follow-up, `actAs` with collectives).
 
+A tag batch is checked whole before a single act is staged, each
+refusal a field-level `userError` naming the offender: at most
+**ten** tags per batch, a named constant; names compared after
+canonicalization, so `["rust", "Rust", "#rust"]` is one claim
+submitted three times and is refused rather than deduplicated —
+silently dropping an act the author asked for, or charging three θ
+for one claim the fold reads once, are both worse than saying no;
+and confidence outside `[0, 1]`, which the census would refuse as a
+formation fault, refused on the `pInterest` path instead. A
+malformed batch must not leave half its acts in flight.
+
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
  first via uploadMedia; the envelope commits their digests."
@@ -2449,14 +2524,17 @@ input AttachmentInput {
 
 "A topic declaration — one Tag record toward the canonical Type
  (names are normalized by the naming service; a new name needs no
- creation act, Types anchor vacuously — hashtag.md). Parameters
- default per the low-defaults policy; Tag confidence is
- census-bounded to [0, 1]. Re-tagging a name revises the claim —
- the newest record per (author, content, Type) wins, and relevance
- 0 is the un-tag, read as withdrawn (hashtag.md §4)."
+ creation act, Types anchor vacuously — hashtag.md). Re-tagging a
+ name revises the claim — the newest record per (author, content,
+ Type) wins, and relevance 0 is the un-tag, read as withdrawn
+ (hashtag.md §4)."
 input TagInput {
   name: String!
+  "Relevance `r`; defaults to +0.1, the low-defaults value."
   pDirected: Dimension
+  "Confidence `c`, census-bounded to [0, 1]; defaults to 1 — an
+   author believes their own declaration, and confidence is not a
+   stance whose headroom needs preserving."
   pInterest: Dimension
 }
 
@@ -2545,6 +2623,21 @@ input PrepareCommentEditInput {
   attachments: [AttachmentInput!]
 }
 
+"One standalone topic declaration on existing content — the gesture
+ that adds a topic after creation, and, at pDirected: 0, the one
+ that withdraws it. There is no un-tag mutation: withdrawal is a
+ further Tag. Tags are never edit fields; changing a post's topics
+ is its own priced act (post.md §3). Tagging is not restricted to
+ the content's author — the read side separates the author's own
+ declarations from third-party claims."
+input PrepareTagInput {
+  "The content being tagged."
+  target: UUID!
+  name: String!
+  pDirected: Dimension
+  pInterest: Dimension
+}
+
 "Update the acting identity's profile — stages a parallel
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
@@ -2590,6 +2683,7 @@ extend type Mutation {
   preparePost(input: PreparePostInput!): PrepareContentPayload!
   preparePostEdit(input: PreparePostEditInput!): PrepareContentPayload!
   prepareComment(input: PrepareCommentInput!): PrepareContentPayload!
+  prepareTag(input: PrepareTagInput!): PreparePayload!
   prepareCommentEdit(input: PrepareCommentEditInput!): PrepareContentPayload!
   prepareProfileUpdate(input: PrepareProfileUpdateInput!): PreparePayload!
   uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
