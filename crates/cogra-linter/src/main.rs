@@ -257,7 +257,18 @@ fn named(
 /// It always exits `0` on a corpus it could read, because it reports no
 /// verdict — a distance is a fact, and a fact is not a failure.
 fn migrations(a: &Adoption, root: &Path, profile: Option<&str>) -> Result<u8> {
-    let wanted = profile.map(ProfileId::new);
+    let wanted = match profile {
+        Some(name) => {
+            let id = ProfileId::new(name);
+            a.profiles
+                .profiles
+                .iter()
+                .find(|one| one.id == id)
+                .with_context(|| format!("{name} is not a profile `[profiles]` registers"))?;
+            Some(id)
+        }
+        None => None,
+    };
     let measuring = Instant::now();
     let found = migrate::distances(a, root, wanted.as_ref())
         .with_context(|| format!("measuring the migrations at {}", root.display()))?;
@@ -287,4 +298,51 @@ fn migrations(a: &Adoption, root: &Path, profile: Option<&str>) -> Result<u8> {
     }
     println!("measured in {measured:?}");
     Ok(CLEAN)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The corpus's own adoption data, the ruled fixture the crate's other
+    /// tests already load rather than hand-write a partial one.
+    fn adoption() -> Adoption {
+        let source = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpus-adoption.toml"
+        ))
+        .expect("the corpus's own adoption data");
+        Adoption::from_str(&source, Path::new("corpus-adoption.toml")).expect("a ruled adoption")
+    }
+
+    /// An id no `[profiles]` row registers, refused before either subcommand
+    /// touches the corpus root — so a root that does not exist is fine here.
+    const UNREGISTERED: &str = "not-a-real-profile";
+
+    /// (´dec:lint:staged-profiles´): the named regeneration refuses an id
+    /// `[profiles]` does not register.
+    #[test]
+    fn a_named_regeneration_refuses_an_unregistered_profile() {
+        let root = Path::new("does-not-need-to-exist");
+        let err = named(&adoption(), root, None, UNREGISTERED, true)
+            .expect_err("the id is not in `[profiles]`");
+        assert!(
+            format!("{err:#}").contains("not-a-real-profile is not a profile `[profiles]` registers"),
+            "{err:#}"
+        );
+    }
+
+    /// (´dec:lint:staged-profiles´): the migrations measurement refuses the
+    /// same unregistered id through the same lookup, rather than reporting
+    /// nothing to measure.
+    #[test]
+    fn a_migrations_measurement_refuses_an_unregistered_profile() {
+        let root = Path::new("does-not-need-to-exist");
+        let err = migrations(&adoption(), root, Some(UNREGISTERED))
+            .expect_err("the id is not in `[profiles]`");
+        assert!(
+            format!("{err:#}").contains("not-a-real-profile is not a profile `[profiles]` registers"),
+            "{err:#}"
+        );
+    }
 }
