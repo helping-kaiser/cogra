@@ -456,11 +456,11 @@ pub fn label_registers_of(
 /// The per-owner label registers of every effective profile whose standard
 /// place is a generated register.
 ///
-/// Empty in this corpus, and by a fact of the adoption data rather than by
-/// omission: both registered profiles are staged, a staged profile carries
-/// no `Covers` edges (´dec:lint:staged-profiles´), and a profile with no
-/// covered assets has no owner with covered assets. The machinery is here so
-/// that entering Π flips fields rather than writing code.
+/// One profile of this corpus has such a place, and these are its registers.
+/// The module profile's standard place is the definition itself, so it
+/// contributes none; a staged profile carries no `Covers` edges and
+/// contributes none either (´dec:lint:staged-profiles´), which is what keeps
+/// entering Π a matter of flipping fields rather than writing code.
 fn label_registers(g: &Corpus, r: &Registries, a: &Adoption) -> Vec<Register> {
     let mut out = Vec::new();
     for profile in a.profiles.effective() {

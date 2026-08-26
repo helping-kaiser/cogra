@@ -8,9 +8,11 @@
 //!
 //! Building the sources is the point: a corpus small enough to state exactly
 //! is what lets a test say which warrant runs where. The corpus itself is
-//! never touched — what writes, writes into a temporary root of its own —
-//! and the module profile, still staged, keeps the staged half of
-//! (´dec:lint:staged-profiles´) under test beside it.
+//! never touched — what writes, writes into a temporary root of its own.
+//! Both profiles are in force under the ruled data, so the staged half of
+//! (´dec:lint:staged-profiles´) is held by inverted fixtures: the ruled
+//! adoption with a profile put back where it entered from, which is the one
+//! way a test can still ask what staging does.
 //!
 //! Trace convention: every test's doc comment names the clause it traces to.
 
@@ -35,7 +37,7 @@ fn adoption_text() -> &'static str {
     })
 }
 
-/// The ruled adoption, which carries the test profile in Π
+/// The ruled adoption, which carries both profiles in Π
 /// (´dec:lint:staged-profiles´).
 fn entered() -> &'static Adoption {
     static LOADED: OnceLock<Adoption> = OnceLock::new();
@@ -45,19 +47,39 @@ fn entered() -> &'static Adoption {
     })
 }
 
-/// The ruled adoption with the test profile put back where it entered from.
+/// The ruled adoption with every profile put back where it entered from.
 ///
-/// The named regeneration is a step a staged migration takes, and the test
-/// profile has taken it. The mechanism outlives that one use — the next
+/// The named regeneration is a step a staged migration takes, and both
+/// profiles have taken it. The mechanism outlives those two uses — the next
 /// profile whose standard place is a register needs it — so the fixture
-/// stages the one profile in this corpus that has a register to generate
+/// stages what the ruled data no longer stages, and Π is empty
 /// (´dec:lint:staged-profiles´).
 fn staged() -> Adoption {
     let text = adoption_text()
-        .replace("effective = 1", "effective = 0")
-        .replacen("status = \"effective\"", "status = \"staged\"", 1);
+        .replace("effective = 2", "effective = 0")
+        .replace("status = \"effective\"", "status = \"staged\"");
     Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
-        .expect("the condition the test profile entered on is recorded beside it")
+        .expect("the condition each profile entered on is recorded beside it")
+}
+
+/// The ruled adoption with the module profile alone put back where it entered
+/// from, leaving the test profile in Π.
+///
+/// The module profile is the last one `[profiles]` registers, so the last
+/// effective status in the file is its own. Staging exactly one is what lets
+/// a test put a staged census and an effective one in the same run
+/// (´dec:lint:staged-profiles´).
+fn module_staged() -> Adoption {
+    let text = adoption_text().replace("effective = 2", "effective = 1");
+    let mark = "status = \"effective\"";
+    let at = text.rfind(mark).expect("the module profile is effective");
+    let text = format!(
+        "{}status = \"staged\"{}",
+        &text[..at],
+        &text[at + mark.len()..]
+    );
+    Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
+        .expect("the condition the module profile entered on is recorded beside it")
 }
 
 /// The owner every fixture source belongs to, and the tree its rule names.
@@ -112,15 +134,16 @@ fn of(run: &Run, rule: &str) -> Vec<String> {
 /// with exactly those bytes committed — is the check-after-a-write of
 /// (´dec:lint:one-generator´).
 fn generated_register(sources: Vec<SourceFile>) -> Register {
-    let before = check_sources(entered(), sources);
-    let mut produced = regenerate_all(
-        &before.graph,
-        &before.registries,
-        entered(),
-        before.kinds.as_ref(),
-    )
-    .into_iter()
-    .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }));
+    generated_register_under(entered(), sources)
+}
+
+/// The same, under an adoption a fixture built rather than the ruled one.
+fn generated_register_under(a: &Adoption, sources: Vec<SourceFile>) -> Register {
+    let before = check_sources(a, sources);
+    let mut produced =
+        regenerate_all(&before.graph, &before.registries, a, before.kinds.as_ref())
+            .into_iter()
+            .filter(|reg| matches!(reg.scope, RegisterScope::LabelRegister { .. }));
     let one = produced.next().expect("one owner's label register");
     assert!(produced.next().is_none(), "one owner, one register");
     assert_eq!(one.path, PathBuf::from(REGISTER));
@@ -374,12 +397,13 @@ fn a_register_row_with_no_asset_is_an_orphan() {
 /// nothing of its own in the run.
 #[test]
 fn a_staged_profile_derives_nothing() {
+    let staging = module_staged();
     let body = format!("{}mod inner {{ }}\n", tested("alpha"));
     let sources = vec![rust("crates/l1-standin/src/lib.rs", &body)];
-    let reg = generated_register(sources.clone());
+    let reg = generated_register_under(&staging, sources.clone());
     let mut held = sources;
     held.push(register(reg.bytes));
-    let run = check_sources(entered(), held);
+    let run = check_sources(&staging, held);
 
     let assets: Vec<String> = nodes_of(&run.graph, NodeKind::Asset)
         .filter_map(|node| match run.graph.node_weight(node) {
@@ -407,7 +431,7 @@ fn a_staged_profile_derives_nothing() {
         1
     );
     let generated: Vec<ProfileId> =
-        regenerate_all(&run.graph, &run.registries, entered(), run.kinds.as_ref())
+        regenerate_all(&run.graph, &run.registries, &staging, run.kinds.as_ref())
             .into_iter()
             .filter_map(|one| match one.scope {
                 RegisterScope::LabelRegister { profile, .. } => Some(profile),
