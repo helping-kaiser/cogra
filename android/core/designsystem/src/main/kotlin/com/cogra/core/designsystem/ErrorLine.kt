@@ -22,8 +22,22 @@ fun ErrorLine(
     testTag: String,
     modifier: Modifier = Modifier,
 ) {
+    ErrorLine(stringResource(text), testTag, modifier)
+}
+
+/**
+ * The same line carrying words this client did not write — a
+ * field-level refusal, verbatim, so the reader sees what the server
+ * actually objected to rather than a house paraphrase of it.
+ */
+@Composable
+fun ErrorLine(
+    text: String,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
     Text(
-        text = stringResource(text),
+        text = text,
         color = MaterialTheme.colorScheme.error,
         modifier = modifier
             .semantics { liveRegion = LiveRegionMode.Polite }

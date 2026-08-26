@@ -45,6 +45,7 @@ class SettingsScreenTest {
         onBackupCodeSaved: () -> Unit = {},
         onExportKey: () -> Unit = {},
         onStanceInputMode: (StanceInputMode) -> Unit = {},
+        onConfirmMultiActionSubmits: (Boolean) -> Unit = {},
         keyGate: KeyGate = FakeKeyGate(KeyGateResult.Granted),
         keyBanner: @Composable () -> Unit = {},
     ) {
@@ -60,6 +61,7 @@ class SettingsScreenTest {
                 onNewEmailChange = {}, onEmailChangePasswordChange = {}, onRequestEmailChange = {},
                 onEmailChangeCodeChange = {}, onConfirmEmailChange = {},
                 onStanceInputMode = onStanceInputMode,
+                onConfirmMultiActionSubmits = onConfirmMultiActionSubmits,
                 onFeedbackShown = onFeedbackShown,
                 onSignOut = {},
                 keyGate = keyGate,
@@ -306,5 +308,18 @@ class SettingsScreenTest {
         compose.onNodeWithTag("settings_stance_input_pad")
             .performScrollTo()
             .assertHasClickAction()
+    }
+
+    /** F4: the way back from the confirm's own "don't ask me again". */
+    @Test
+    fun theMultiActionConfirmTogglesFromSettings() {
+        var value: Boolean? = null
+        render(
+            SettingsUiState(confirmMultiActionSubmits = false),
+            onConfirmMultiActionSubmits = { value = it },
+        )
+
+        compose.onNodeWithTag("settings_confirm_multi_action").performScrollTo().performClick()
+        assertThat(value).isTrue()
     }
 }

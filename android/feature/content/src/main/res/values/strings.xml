@@ -9,13 +9,32 @@
     <string name="content_field_description">Description</string>
     <string name="content_field_body">What do you want to publish?</string>
 
-    <!-- Topic entry at creation (hashtag.md; D15: no autocomplete). -->
+    <!-- The tags section, on the composer and the edit screen
+         (hashtag.md; D15: no autocomplete). -->
     <string name="content_topics_heading">Topics</string>
     <string name="content_topics_field">Add a topic</string>
     <string name="content_topics_add">Add</string>
     <string name="content_topics_preview">Will be added as #%1$s</string>
     <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
-    <string name="content_topics_chip_row_add">Add a topic</string>
+    <string name="content_topics_params_done">Done</string>
+    <!-- What a topic name may be — L1\'s identifier atom (D3). -->
+    <string name="content_topics_illegal_whitespace">Spaces aren\'t allowed in topic names.</string>
+    <string name="content_topics_illegal_charset">Only ASCII letters, digits, and . _ -</string>
+    <string name="content_topics_illegal_too_long">That name is too long.</string>
+
+    <!-- What a submit will sign, and the confirm a batch earns (F4). -->
+    <plurals name="content_signed_actions">
+        <item quantity="one">Creates %d signed action</item>
+        <item quantity="other">Creates %d signed actions</item>
+    </plurals>
+    <string name="content_confirm_title">Sign this batch?</string>
+    <plurals name="content_confirm_body">
+        <item quantity="one">This signs %d action, paid for separately.</item>
+        <item quantity="other">This signs %d actions, each paid for separately.</item>
+    </plurals>
+    <string name="content_confirm_dont_ask">Don\'t ask me again</string>
+    <string name="content_confirm_proceed">Sign</string>
+    <string name="content_confirm_cancel">Cancel</string>
 
     <string name="content_license_heading">License</string>
     <string name="content_license_caption">Terms for anyone who reuses this — not a statement about how you made it.</string>

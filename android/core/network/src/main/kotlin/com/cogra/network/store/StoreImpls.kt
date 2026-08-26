@@ -223,6 +223,20 @@ class IdentityStoreImpl @Inject constructor(
         key(STANCE_INPUT_MODE)?.let { store.put(it, mode.name.encodeToByteArray()) }
     }
 
+    // Absent means on: a reader who has never answered still gets asked
+    // before a batch of priced acts is signed.
+    override val confirmMultiActionSubmits: Flow<Boolean> =
+        tokens.tokens.flatMapLatest { pair ->
+            val account = pair?.accountId ?: return@flatMapLatest flowOf(true)
+            store.watch(scoped(account, CONFIRM_MULTI_ACTION)).map { bytes ->
+                bytes?.firstOrNull()?.let { it != ZERO } ?: true
+            }
+        }
+
+    override suspend fun setConfirmMultiActionSubmits(value: Boolean) {
+        key(CONFIRM_MULTI_ACTION)?.let { store.put(it, byteArrayOf(if (value) 1 else ZERO)) }
+    }
+
     // No adoption: the flag arrived with multi-account custody, so no
     // legacy record can exist.
     override suspend fun forgetOnSignOut(): Boolean =
@@ -247,7 +261,9 @@ class IdentityStoreImpl @Inject constructor(
         const val RECIPROCATION = "reciprocation_dismissed"
         const val STANCE_PAD_TAUGHT = "stance_pad_taught"
         const val STANCE_INPUT_MODE = "stance_input_mode"
+        const val CONFIRM_MULTI_ACTION = "confirm_multi_action_submits"
         const val FORGET = "forget_on_sign_out"
+        const val ZERO: Byte = 0
         const val HS_PREFIX = "handshake:"
     }
 }
