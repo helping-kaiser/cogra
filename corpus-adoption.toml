@@ -451,9 +451,12 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 # Two profiles in v1, both Rust, both named by ARCH
 # conv:linter:rust-frontend ("a test profile recognizing
 # test-attributed functions, a module profile recognizing mod items").
-# No web, Kotlin, or Markdown profile in v1: their frontends are later
-# slices (ARCH gate:linter:architecture-review, sequencing clause),
-# and a profile whose frontend does not exist cannot compute a census.
+# No web, Kotlin, or Markdown profile in v1. A frontend is a
+# PRECONDITION and not a cause: Kotlin's is still a later slice (ARCH
+# gate:linter:architecture-review, sequencing clause) and could not
+# compute a census if a profile asked, while Markdown's and the web's
+# both exist and carry no profile all the same. What Pi registers is
+# what a migration has landed, per the staged-entry rule below.
 #
 # STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
 # nothing partial: every covered asset carries its label at the
