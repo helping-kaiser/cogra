@@ -57,8 +57,9 @@ class ComposePostViewModelTest {
             description: String?,
             content: String,
             license: LicenseChoice,
+            tags: List<String>,
         ): Outcome<PreparedContentView> {
-            lastCreate = listOf(title, description, content, license)
+            lastCreate = listOf(title, description, content, license, tags)
             return prepareOutcome ?: Outcome.Success(
                 PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
             )
@@ -133,6 +134,7 @@ class ComposePostViewModelTest {
             null,
             "The body",
             LicenseChoice(attribution = 1.0, provenance = 0.5),
+            emptyList<String>(),
         ).inOrder()
     }
 
@@ -181,6 +183,74 @@ class ComposePostViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.transportFailed).isTrue()
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- Topics (D15: no autocomplete; D18: cap at 10) --
+
+    @Test
+    fun addingATagNormalizesAndStagesAChip() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("  #Rust  ")
+        vm.onAddTag()
+        assertThat(vm.state.value.tags).containsExactly("rust")
+        assertThat(vm.state.value.tagInput).isEmpty()
+    }
+
+    @Test
+    fun addingBlankOrHashOnlyTextStagesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("   ")
+        vm.onAddTag()
+        vm.onTagInputChange("#")
+        vm.onAddTag()
+        assertThat(vm.state.value.tags).isEmpty()
+    }
+
+    @Test
+    fun reAddingANormalizedDuplicateDoesNotDoubleTheChip() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onTagInputChange("RUST")
+        vm.onAddTag()
+        assertThat(vm.state.value.tags).containsExactly("rust")
+    }
+
+    @Test
+    fun removingATagTakesItOutOfTheBatch() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onTagInputChange("kotlin")
+        vm.onAddTag()
+        vm.onRemoveTag("rust")
+        assertThat(vm.state.value.tags).containsExactly("kotlin")
+    }
+
+    @Test
+    fun theBatchCapsAtTenAndRefusesLocally() = runTest(dispatcher) {
+        val vm = viewModel()
+        repeat(11) { i ->
+            vm.onTagInputChange("tag$i")
+            vm.onAddTag()
+        }
+        assertThat(vm.state.value.tags).hasSize(10)
+        assertThat(vm.state.value.tagCapReached).isTrue()
+        // The 11th entry's text is still sitting in the field, unconsumed.
+        assertThat(vm.state.value.tagInput).isEqualTo("tag10")
+    }
+
+    @Test
+    fun submittingSendsTheStagedTagsAlongsideTheCreate() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("The body")
+        vm.onTagInputChange("rust")
+        vm.onAddTag()
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastCreate).containsExactly(null, null, "The body", LicenseChoice.PublicDomain, listOf("rust"))
+            .inOrder()
     }
 
     @Test
