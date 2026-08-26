@@ -43,7 +43,6 @@ fn peek_agrees_with_a_full_decode() {
         assert!(consumed <= MAX_ENVELOPE_PREFIX, "consumed {consumed}");
         assert!(consumed <= bytes.len());
 
-        // The same answer from the bounded prefix alone.
         let cut = bytes.len().min(MAX_ENVELOPE_PREFIX);
         assert_eq!(
             Envelope::peek(&bytes[..cut]).expect("an envelope").0,
@@ -167,16 +166,16 @@ fn a_value_that_is_not_a_map_is_refused() {
 
 /// Preferred serialization is checked on every head the prefix path reads,
 /// which is what makes its answer agree with a full decode's.
+///
+/// The cases, in order: a map count spelled with a uint8 argument, an
+/// indefinite-length map, a key spelled with a uint8 argument, and a label
+/// length spelled with one. Each names the offset it is refused at.
 #[test]
 fn a_head_outside_preferred_serialization_is_refused() {
     let cases: [(Vec<u8>, usize); 4] = [
-        // A map count of 2 spelled with a uint8 argument.
         (vec![0xb8, 0x02, 0x00], 0),
-        // An indefinite-length map.
         (vec![0xbf, 0x00], 0),
-        // Key 0 spelled with a uint8 argument.
         (vec![0xa2, 0x18, 0x00], 1),
-        // A label length of 3 spelled with a uint8 argument.
         (vec![0xa2, 0x00, 0x78, 0x03, 0x61, 0x2e, 0x62], 2),
     ];
 
@@ -189,45 +188,42 @@ fn a_head_outside_preferred_serialization_is_refused() {
     }
 }
 
+/// Sortedness puts the least key first, so a first key greater than 0 means 0
+/// is absent altogether rather than merely later. The cases run from an empty
+/// map through one entry and two, and end at a key outside the unsigned
+/// integers.
 #[test]
 fn the_first_two_keys_must_be_0_and_1_in_that_order() {
-    // An empty map has no key 0.
     let error = Envelope::peek(&[0xa0]).expect_err("no keys at all");
     assert!(matches!(error, EnvelopeError::MissingKey { key: 0 }));
 
-    // Sortedness puts the least key first, so a greater first key means 0
-    // is absent altogether.
     let error = Envelope::peek(&[0xa1, 0x05, 0x00]).expect_err("key 0 absent");
     assert!(matches!(error, EnvelopeError::MissingKey { key: 0 }));
 
-    // One entry: key 0 present, key 1 cannot be.
     let error = Envelope::peek(&[0xa1, 0x00, 0x63, 0x61, 0x2e, 0x62]).expect_err("key 1 absent");
     assert!(matches!(error, EnvelopeError::MissingKey { key: 1 }));
 
-    // Two entries, the second above 1.
     let error = Envelope::peek(&[0xa2, 0x00, 0x63, 0x61, 0x2e, 0x62, 0x02, 0x00])
         .expect_err("key 1 absent");
     assert!(matches!(error, EnvelopeError::MissingKey { key: 1 }));
 
-    // A key outside the unsigned integers.
     let error = Envelope::peek(&[0xa1, 0x61, 0x61, 0x00]).expect_err("a text key");
     assert!(matches!(error, EnvelopeError::NonIntegerKey { .. }));
 }
 
+/// Key 0 is refused for holding an integer and for holding a text string that
+/// is no label; key 1 for holding anything other than a version triple.
 #[test]
 fn key_0_holds_a_label_and_key_1_a_version() {
-    // Key 0 holds an integer.
     let error = Envelope::peek(&[0xa2, 0x00, 0x01]).expect_err("no text at key 0");
     assert!(matches!(error, EnvelopeError::BadLabelType));
 
-    // Key 0 holds a text string that is not a label.
     let error = Envelope::peek(&[0xa2, 0x00, 0x63, 0x63, 0x6f, 0x6d]).expect_err("one atom");
     assert!(matches!(
         error,
         EnvelopeError::BadLabel(LabelError::TooFewAtoms)
     ));
 
-    // Key 1 holds something other than a version triple.
     for tail in [
         vec![0x01, 0x01],
         vec![0x01, 0x82, 0x01, 0x00],
@@ -243,7 +239,8 @@ fn key_0_holds_a_label_and_key_1_a_version() {
 
 /// An over-long label is refused from its declared length alone: the
 /// payload is never reached for, which is what keeps the read inside the
-/// bound however long the label claims to be.
+/// bound however long the label claims to be — an eight-byte declared length
+/// far beyond any prefix included.
 #[test]
 fn an_over_long_label_is_refused_without_reading_it() {
     let mut bytes = vec![0xa2, 0x00, 0x79, 0x01, 0x00];
@@ -254,7 +251,6 @@ fn an_over_long_label_is_refused_without_reading_it() {
         EnvelopeError::BadLabel(LabelError::TooLong { length: 256 })
     ));
 
-    // The same refusal with an eight-byte length far beyond any prefix.
     bytes = vec![0xa2, 0x00, 0x7b];
     bytes.extend_from_slice(&u64::MAX.to_be_bytes());
     let error = Envelope::peek(&bytes).expect_err("an impossible label");
