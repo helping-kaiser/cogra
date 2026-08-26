@@ -731,7 +731,7 @@ fn the_enforcement_section_round_trips() {
     assert_eq!(
         enforcement.failing,
         vec![
-            PathPrefix::new("crates/cogra-linter/docs/"),
+            PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
         ]
     );
