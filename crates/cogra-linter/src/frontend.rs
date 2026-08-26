@@ -153,6 +153,60 @@ impl Region {
     }
 }
 
+/// Copy one file range onto a region's logical text.
+///
+/// Adjacent pieces merge, which keeps a comment with no structure to resolve
+/// one piece and makes [`Region::locate`] a single addition over it.
+pub(crate) fn append(region: &mut Region, text: &str, piece: ByteSpan) {
+    let Some(slice) = text.get(piece.start..piece.end) else {
+        return;
+    };
+    region.text.push_str(slice);
+    match region.pieces.last_mut() {
+        Some(last) if last.end == piece.start => last.end = piece.end,
+        _ => region.pieces.push(piece),
+    }
+}
+
+/// Copy a block documentation comment's interior onto a region, line by
+/// line, with each line's gutter resolved away.
+///
+/// The gutter — the whitespace and `*` that open every line of such a
+/// comment after the first — is a leader in exactly the sense
+/// (´[ARCH-def:linter:logical-region]´) means, and both conventions that use
+/// this shape agree a reader never sees it. What is not a leader is the line
+/// break: it sits inside one comment, where a line comment run's breaks sit
+/// between two, so it stays in the logical text and the region keeps the
+/// shape its author gave it.
+///
+/// Shared because the convention is: JSDoc and KDoc are the same three
+/// characters opening the same gutter, and the two frontends that read them
+/// would otherwise resolve it twice.
+pub(crate) fn degutter(region: &mut Region, text: &str, interior: ByteSpan) {
+    let Some(whole) = text.get(interior.start..interior.end) else {
+        return;
+    };
+    let mut at = interior.start;
+    for line in whole.split_inclusive('\n') {
+        let cut = gutter(line);
+        append(region, text, ByteSpan::new(at + cut, at + line.len()));
+        at += line.len();
+    }
+}
+
+/// How many bytes of one gutter-carrying line the gutter occupies.
+///
+/// A gutter is leading whitespace followed by one `*`, and a line without
+/// that shape has none — the first line of a comment written `/** text`,
+/// most often, whose text starts where the leader ended.
+fn gutter(line: &str) -> usize {
+    let blanks = line.len() - line.trim_start().len();
+    match line.as_bytes().get(blanks) {
+        Some(b'*') => blanks + 1,
+        _ => 0,
+    }
+}
+
 /// A participating authored environment head, with the kind its label
 /// declares (´[KND-judg:kinds:head-validation]´).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -266,6 +320,7 @@ pub fn parse(
         Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
         Some(crate::pretokenize::rust::RUST) => crate::frontend_rust::parse(src, pre, a),
         Some(crate::frontend_web::TYPESCRIPT) => crate::frontend_web::parse(src, a),
+        Some(crate::frontend_kotlin::KOTLIN) => crate::frontend_kotlin::parse(src, a),
         _ => Ok(Parsed {
             path: src.path.clone(),
             ..Parsed::default()
