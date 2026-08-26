@@ -5,4 +5,4 @@ pub mod envelope;
 pub mod hashtag;
 pub mod l1;
 
-pub use hashtag::{HASHTAG_NAMESPACE, hashtag_uuid};
+pub use hashtag::{HASHTAG_NAMESPACE, HashtagNameError, hashtag_uuid};
