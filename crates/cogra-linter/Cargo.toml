@@ -43,6 +43,21 @@ swc_common = "26.0.0"
 # so the AST's only duty is to have been built. Verified against
 # docs.rs/swc_ecma_ast 29.0.0 on 2026-08-26.
 swc_ecma_ast = "29.0.0"
+# The Kotlin frontend runtime (architecture, kotlin-tree-sitter decision):
+# Parser, Tree and Node over the vendored first-party grammar. The version
+# is the one whose CLI generated the committed parser.c, which the grammar's
+# PROGRESS.md records as 0.26.13 — runtime and generator from one release
+# rather than two. Verified against docs.rs/tree-sitter 0.26.13 on
+# 2026-08-26; the parser declares ABI 14, which the runtime's own
+# MIN_COMPATIBLE_LANGUAGE_VERSION admits (asserted in the suite).
+tree-sitter = "0.26.13"
+# `LanguageFn`, which is what the vendored grammar's `tree_sitter_kotlin()`
+# becomes before it is a `Language`. Direct rather than transitive because
+# this crate names the type: the vendored tree carries no `bindings/rust`,
+# so the binding tree-sitter's CLI would have generated is written here
+# instead. Verified against docs.rs/tree-sitter-language 0.1.7 on
+# 2026-08-26.
+tree-sitter-language = "0.1.7"
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
@@ -56,6 +71,12 @@ clap = { version = "4.6.6", features = ["derive"] }
 # main.rs only, per the repository's error rule: thiserror for a library's
 # typed surface, anyhow for a binary that prints what went wrong and exits.
 anyhow = { workspace = true }
+
+[build-dependencies]
+# Compiles the vendored grammar's parser.c and scanner.c, in the shape
+# tree-sitter's own generated bindings use (see build.rs). Verified against
+# crates.io/crates/cc 1.4.4 on 2026-08-26.
+cc = "1.4.4"
 
 [dev-dependencies]
 # Property obligations of the design's metatheorem table.
