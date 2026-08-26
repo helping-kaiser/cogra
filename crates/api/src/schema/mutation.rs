@@ -151,6 +151,21 @@ fn decode_b64(field: &'static str, value: &str) -> Result<Vec<u8>, UserError> {
     })
 }
 
+/// A refused stance gesture as its payload. Both stance mutations map
+/// every refusal the same way, so the mapping lives once.
+fn stance_refusal(e: StanceError) -> PreparePayload {
+    PreparePayload {
+        writes: None,
+        user_errors: vec![match e {
+            StanceError::BadInput { field, message } => {
+                UserError::at(ErrorCode::BadInput, message, vec![field.to_string()])
+            }
+            StanceError::Prepare(e) => UserError::from_onboarding(&OnboardingError::from(e), ""),
+            e => internal(e),
+        }],
+    }
+}
+
 fn relay_error(e: RelayError, index: usize) -> UserError {
     let path = vec!["proposals".to_string(), index.to_string()];
     match e {
@@ -684,7 +699,14 @@ struct PrepareStanceInput {
     /// family: Affinity toward a Type, Opinion toward everything else —
     /// toward a Profile it is the interpersonal stance (and the
     /// reciprocation gesture completing the CoGra-join mutual pair).
-    target: Uuid,
+    /// Exactly one of `target` and `topicName`.
+    target: Option<Uuid>,
+    /// A topic by name, for the follow gesture. A Type is anchored
+    /// vacuously and its id derives one-way from its name, so a topic
+    /// nobody has tagged yet has no id to look up — and is followable
+    /// anyway. Naming it here registers the name, as any record that
+    /// references it does.
+    topic_name: Option<String>,
     /// Written as picked — one new edge carrying exactly these values.
     /// The bundle is a read-side fold (`viewerStance`); severance is its
     /// own gesture, not a value these fields reach.
@@ -694,8 +716,11 @@ struct PrepareStanceInput {
 
 #[derive(InputObject)]
 struct PrepareSeveranceInput {
-    /// The node to sever the acting identity's bundle toward.
-    target: Uuid,
+    /// The node to sever the acting identity's bundle toward. Exactly
+    /// one of `target` and `topicName`.
+    target: Option<Uuid>,
+    /// A topic by name — unfollowing is severance toward the Type.
+    topic_name: Option<String>,
 }
 
 #[derive(InputObject)]
@@ -1600,12 +1625,16 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let target = match stance::TargetRef::of(input.target, input.topic_name) {
+            Ok(target) => target,
+            Err(e) => return Ok(stance_refusal(e)),
+        };
         match stance::prepare_stance(
             pool,
             boundary,
             cfg.gc_after_epochs,
             v.user_id,
-            input.target,
+            &target,
             input.p_directed.0,
             input.p_interest.0,
         )
@@ -1615,22 +1644,7 @@ impl Mutation {
                 writes: Some(vec![PreparedWrite::from_prepared(prepared)]),
                 user_errors: vec![],
             }),
-            Err(StanceError::BadInput { field, message }) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![UserError::at(
-                    ErrorCode::BadInput,
-                    message,
-                    vec![field.to_string()],
-                )],
-            }),
-            Err(StanceError::Prepare(e)) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![UserError::from_onboarding(&OnboardingError::from(e), "")],
-            }),
-            Err(e) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![internal(e)],
-            }),
+            Err(e) => Ok(stance_refusal(e)),
         }
     }
 
@@ -1648,14 +1662,12 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
-        match stance::prepare_severance(
-            pool,
-            boundary,
-            cfg.gc_after_epochs,
-            v.user_id,
-            input.target,
-        )
-        .await
+        let target = match stance::TargetRef::of(input.target, input.topic_name) {
+            Ok(target) => target,
+            Err(e) => return Ok(stance_refusal(e)),
+        };
+        match stance::prepare_severance(pool, boundary, cfg.gc_after_epochs, v.user_id, &target)
+            .await
         {
             Ok(prepared) => Ok(PreparePayload {
                 writes: Some(
@@ -1666,22 +1678,7 @@ impl Mutation {
                 ),
                 user_errors: vec![],
             }),
-            Err(StanceError::BadInput { field, message }) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![UserError::at(
-                    ErrorCode::BadInput,
-                    message,
-                    vec![field.to_string()],
-                )],
-            }),
-            Err(StanceError::Prepare(e)) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![UserError::from_onboarding(&OnboardingError::from(e), "")],
-            }),
-            Err(e) => Ok(PreparePayload {
-                writes: None,
-                user_errors: vec![internal(e)],
-            }),
+            Err(e) => Ok(stance_refusal(e)),
         }
     }
 
