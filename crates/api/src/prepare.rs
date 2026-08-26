@@ -8,7 +8,7 @@ use common::l1::census::Family;
 use common::l1::handshake::{Proposal, StructuralBody};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::staged;
-use postgres_store::{PgPool, mirror};
+use postgres_store::{PgPool, hashtag as hashtag_store, mirror};
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};
@@ -145,6 +145,16 @@ pub async fn prepare<B: L1Boundary>(
             &target,
         )
         .map_err(PrepareError::Formation)?;
+    // A Type exists as soon as an accepted record references its name, so
+    // the naming-service row is written by the act that names it, in the
+    // transaction that stages that act (hashtag.md §2; D5). Family-blind
+    // on purpose: whatever gesture points at a `name(s)` — a Tag's
+    // terminal leg, an Affinity's follow — is the record that puts the
+    // name into CoGra's index. Reads never write, which is what keeps a
+    // vacuously anchored Type resolvable without one.
+    if let NodeId::Name(name) = &target {
+        hashtag_store::upsert(&mut tx, name).await?;
+    }
     let proposal = Proposal {
         body: StructuralBody {
             author: gesture.author,
