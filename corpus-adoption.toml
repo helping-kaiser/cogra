@@ -211,22 +211,22 @@ note   = "the linter's architecture document is its own owner; prefix in live us
 [[signature.prefix]]
 prefix = "PRIM"
 owner  = "tree.docs-primitive"
-note   = "docs/primitive/ — 17 files in the carrier; 10 of them carry 42 label-shaped spans, 29 in citation form (measured 2026-08-25). Every one names the Layer 1 document, and all are queued for reforming into displayed spans (R20); layer1-interface.md itself is outside the carrier, see [carrier] vendored_files"
+note   = "docs/primitive/ — 17 files in the carrier; 10 of them carry 42 label-shaped spans, every one naming the Layer 1 document and every one displayed in double backticks (R20), so the tree holds no occurrence at all; layer1-interface.md itself is outside the carrier, see [carrier] vendored_files"
 
 [[signature.prefix]]
 prefix = "INST"
 owner  = "tree.docs-instances"
-note   = "docs/instances/ — 10 files; 6 carry 13 label-shaped spans, 7 in citation form (2026-08-25), all queued under R20"
+note   = "docs/instances/ — 10 files; 6 carry 13 label-shaped spans, all displayed in double backticks (R20): 11 name the Layer 1 document, 2 are governance action keys, which are data strings rather than labels and are displayed with the casing near-misses of their own family"
 
 [[signature.prefix]]
 prefix = "IMPL"
 owner  = "tree.docs-implementation"
-note   = "docs/implementation/ — 13 files; 2 carry 3 label-shaped spans, 1 in citation form (2026-08-25), queued under R20 — reforming them to displayed spans is what keeps them from becoming labels. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
+note   = "docs/implementation/ — 13 files; 2 carry 3 label-shaped spans, all displayed in double backticks (R20) — displaying them is what keeps them from becoming labels. api-spec.md (3479 lines) and data-model.md (1417 lines) are of major-document rank by function and are promoted the day they take labels"
 
 [[signature.prefix]]
 prefix = "DOCS"
 owner  = "tree.docs-root"
-note   = "docs/README.md and docs/open-questions.md; the latter carries 3 label-shaped spans, none in citation form (2026-08-25), queued under R20"
+note   = "docs/README.md and docs/open-questions.md; the latter carries 3 label-shaped spans, all displayed in double backticks (R20)"
 
 [[signature.prefix]]
 prefix = "NOTES"
