@@ -152,7 +152,11 @@ fn the_module_profile_waits_on_its_inner_comments() {
 #[test]
 fn the_module_migration_has_arrived_over_this_corpus() {
     let found = one("rust-module");
-    println!("{} definitions, {} without their comment", found.covered, found.remaining.len());
+    println!(
+        "{} definitions, {} without their comment",
+        found.covered,
+        found.remaining.len()
+    );
     assert!(found.covered > 40, "the census is the corpus's modules");
     assert!(found.arrived(), "{:?}", found.remaining);
 }
@@ -193,8 +197,7 @@ fn two_measurements_agree() {
 #[test]
 fn a_named_profile_is_measured_alone() {
     let only = ProfileId::new("rust-module");
-    let found =
-        migrate::distances(staging(), &root(), Some(&only)).expect("one profile measured");
+    let found = migrate::distances(staging(), &root(), Some(&only)).expect("one profile measured");
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].profile, only);
 }
