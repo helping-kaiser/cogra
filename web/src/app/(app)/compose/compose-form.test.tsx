@@ -101,8 +101,91 @@ describe("ComposeForm", () => {
         description: null,
         content: "The body",
         license: { attribution: 1, provenance: 0.5 },
+        tags: [],
       },
     });
+  });
+
+  it("stages the drafted tags as names only", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PreparePost", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({ data: preparedPayload("preparePost", "node-1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "The body" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "#Rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "webdev" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-license-attribution-1"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+    expect(variables).toMatchObject({
+      input: { tags: [{ name: "rust" }, { name: "webdev" }] },
+    });
+  });
+
+  it("surfaces a batched tag refusal on its own chip", async () => {
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: null,
+              writes: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "not a legal topic name",
+                  code: "BAD_INPUT",
+                  field: ["tags", "1", "name"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "a-b" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    expect(await screen.findByTestId("compose-tag-error-1")).toHaveTextContent(
+      "not a legal topic name",
+    );
+    // A field error is not the general refusal line.
+    expect(screen.queryByTestId("compose-refused")).not.toBeInTheDocument();
+  });
+
+  it("blocks an 11th topic client-side", async () => {
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    for (let i = 0; i < 10; i += 1) {
+      fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: `t${i}` } });
+      fireEvent.click(screen.getByTestId("compose-tag-add"));
+    }
+    expect(screen.getAllByTestId(/^compose-tag-\d+$/)).toHaveLength(10);
+    expect(screen.getByTestId("compose-tag-cap")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "eleventh" } });
+    expect(screen.getByTestId("compose-tag-add")).toBeDisabled();
   });
 
   it("refuses an empty body locally", async () => {
@@ -166,6 +249,7 @@ describe("ComposeForm", () => {
               landing: { __typename: "Landing", state: "LANDED" },
               moderationStatus: "NORMAL",
               license: { __typename: "License", attribution: 0, provenance: 0 },
+              topics: [],
               comments: {
                 __typename: "CommentConnection",
                 edges: [],

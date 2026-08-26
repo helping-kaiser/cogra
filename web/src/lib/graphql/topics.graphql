@@ -1,0 +1,118 @@
+# The topic surface (api-spec.md "Content authoring", hashtag.md): the
+# topic page's own read, and the standalone tag/un-tag gesture. The
+# follow control's own read/write rides `viewerStance` on `Hashtag` —
+# see `stance.graphql`'s `HashtagStance`, the same seam every other
+# stance-able node uses.
+#
+# `hashtag(name:)` resolves any well-formed name (D4): a Type is
+# anchored vacuously, so a topic nobody has tagged yet still renders —
+# null answers only a substrate-illegal name. Field selections are
+# inlined per the house style (content.graphql).
+
+query HashtagDetail($name: String!, $includePending: Boolean! = true) {
+  hashtag(name: $name) {
+    id
+    name {
+      value
+      status
+    }
+    moderationStatus
+    taggedContent(includePending: $includePending) {
+      relevance
+      confidence
+      pending
+      node {
+        __typename
+        ... on Post {
+          id
+          title {
+            value
+            status
+          }
+          description {
+            value
+            status
+          }
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+          }
+          createdAt
+          updatedAt
+          landing {
+            state
+          }
+          moderationStatus
+          license {
+            attribution
+            provenance
+          }
+          topics(includePending: $includePending) {
+            hashtag {
+              id
+              name {
+                value
+                status
+              }
+            }
+            relevance
+            confidence
+            pending
+          }
+        }
+        ... on Comment {
+          id
+          content {
+            value
+            status
+          }
+          author {
+            id
+            handle
+            displayName {
+              value
+            }
+          }
+          createdAt
+          updatedAt
+          landing {
+            state
+          }
+          moderationStatus
+          target {
+            __typename
+            ... on Post {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# One standalone topic declaration on existing content (D6) — the
+# gesture that adds a topic after creation, and, at `pDirected: 0`, the
+# one that withdraws it (post.md §3; PrepareTagInput). Never rides the
+# post/comment edit form (D14).
+mutation PrepareTag($input: PrepareTagInput!) {
+  prepareTag(input: $input) {
+    writes {
+      id
+      family
+      canonicalProposal
+    }
+    userErrors {
+      message
+      code
+      field
+    }
+  }
+}
