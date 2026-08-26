@@ -21,7 +21,10 @@
 //! **pass 1** harvests: every carrier source is walked in path order,
 //! pre-tokenized, parsed by the frontend its language names, scanned region
 //! by region, and turned into nodes, with the minting registries completed
-//! as it goes. Only then does **pass 2** resolve, adding the edges that are
+//! as it goes; the pass closes with the one census step no single source
+//! could take, pairing the corpus's module declarations with the files that
+//! define them (´dec:lint:cross-source-pairing´). Only then does **pass 2**
+//! resolve, adding the edges that are
 //! judgments about completed registries — `Cites`, `ResolvesTo`,
 //! `ValidatesAs`, and the `Derives` warrant of an effective profile — and
 //! only then do the judgments run.
@@ -68,8 +71,10 @@ pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
 pub use diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 pub use error::{AdoptionError, GenerateError, RunError, WalkError};
-pub use frontend::{Asset, Head, Parsed, Region, RegionKind, Table};
-pub use frontend_rust::{CargoTarget, Censuses, Declaration};
+pub use frontend::{
+    Asset, Declaration, Head, Parsed, Region, RegionKind, Table, backing_definitions,
+};
+pub use frontend_rust::{CargoTarget, Censuses};
 pub use graph::{
     Corpus, EdgeW, NodeKind, NodeW, Registries, degree_along, edge_view, in_along, nodes_of,
     out_along, owner_of, owner_view, source_of,
@@ -272,6 +277,7 @@ pub fn check_sources(a: &Adoption, mut sources: Vec<SourceFile>) -> Run {
         Phase::Harvest,
         harvesting.elapsed().saturating_sub(pretokenizing),
     );
+    timing.time(Phase::Harvest, || harvest.paired(&sources));
 
     let kinds = timing.time(Phase::Resolve, || harvest.registry());
     timing.time(Phase::Resolve, || harvest.resolve(kinds.as_ref()));
@@ -316,6 +322,8 @@ struct Harvest<'a> {
     citations: Vec<NodeIndex>,
     heads: Vec<NodeIndex>,
     derivations: Vec<Derivation>,
+    declared: Vec<(PathBuf, String)>,
+    defined: Vec<(ProfileId, PathBuf, String)>,
     registry: Option<(Parsed, String)>,
 }
 
@@ -358,6 +366,8 @@ impl<'a> Harvest<'a> {
             citations: Vec::new(),
             heads: Vec::new(),
             derivations: Vec::new(),
+            declared: Vec::new(),
+            defined: Vec::new(),
             registry: None,
         };
         let mut ids: BTreeSet<OwnerId> = a
@@ -543,54 +553,119 @@ impl<'a> Harvest<'a> {
         node
     }
 
-    /// The covered assets of the effective profiles, and the derivation each
-    /// one queues for pass 2.
+    /// The covered assets of the effective profiles this one source settles,
+    /// and the declarations it leaves for the pairing.
     ///
-    /// Empty in this corpus: both profiles are staged, so the frontends
-    /// compute their censuses and report none of them
-    /// (´dec:lint:staged-profiles´). The wiring is here so that entering Π
-    /// flips two fields rather than writing code.
+    /// A source settles every asset of an attribute-recognized census and
+    /// only the inline half of a definition-recognized one; the file-backed
+    /// half is [`Harvest::paired`]'s, once pass 1 holds every source
+    /// (´dec:lint:cross-source-pairing´). A staged profile settles nothing
+    /// here or there: the frontends compute its census and the harvest
+    /// reports none of it (´dec:lint:staged-profiles´).
+    fn assets(&mut self, src: &SourceFile, owner: Option<NodeIndex>, parsed: &Parsed) {
+        for asset in &parsed.assets {
+            self.asset(&src.path, &src.owner, owner, asset);
+        }
+        for one in &parsed.declarations {
+            self.declared
+                .push((src.path.clone(), one.identifier.clone()));
+        }
+    }
+
+    /// One covered asset: its node, its two edges, and the derivation it
+    /// queues for pass 2.
     ///
     /// An asset whose transformed identifier is no well-formed name queues
     /// nothing: it derives no label, which is what the inventory judgment
     /// reports rather than what the harvest invents.
-    fn assets(&mut self, src: &SourceFile, owner: Option<NodeIndex>, parsed: &Parsed) {
-        for asset in &parsed.assets {
-            let node = self.g.add_node(NodeW::Asset(AssetNode {
-                identifier: Box::from(asset.identifier.as_str()),
-                area: asset.area.clone(),
-                place: asset.place.clone(),
-            }));
-            if let Some(owner) = owner {
-                self.g.add_edge(owner, node, EdgeW::Owns);
-            }
-            if let Some(profile) = self.profiles.get(&asset.profile).copied() {
-                self.g.add_edge(profile, node, EdgeW::Covers);
-            }
-            let Some(profile) = self
-                .a
-                .profiles
-                .profiles
+    fn asset(
+        &mut self,
+        path: &Path,
+        owned_by: &OwnerId,
+        owner: Option<NodeIndex>,
+        asset: &Asset,
+    ) {
+        let node = self.g.add_node(NodeW::Asset(AssetNode {
+            identifier: Box::from(asset.identifier.as_str()),
+            area: asset.area.clone(),
+            place: asset.place.clone(),
+        }));
+        if let Some(owner) = owner {
+            self.g.add_edge(owner, node, EdgeW::Owns);
+        }
+        if let Some(profile) = self.profiles.get(&asset.profile).copied() {
+            self.g.add_edge(profile, node, EdgeW::Covers);
+        }
+        let Some(profile) = self
+            .a
+            .profiles
+            .profiles
+            .iter()
+            .find(|one| one.id == asset.profile)
+        else {
+            return;
+        };
+        if profile.census.definition_rule.is_some() {
+            self.defined.push((
+                profile.id.clone(),
+                path.to_path_buf(),
+                asset.identifier.clone(),
+            ));
+        }
+        let Some(label) = registers::derived_label(profile, &asset.identifier, &asset.area) else {
+            return;
+        };
+        self.derivations.push(Derivation {
+            asset: node,
+            owner,
+            label,
+            register: profile
+                .standard_place
+                .register
+                .as_ref()
+                .map(|_| registers::register_path(&registers::owner_root(self.a, owned_by))),
+            source: path.to_path_buf(),
+        });
+    }
+
+    /// The covered assets no single source could settle: the file-backed
+    /// definitions of every effective definition-recognized profile.
+    ///
+    /// This closes pass 1 rather than opening pass 2, and the distinction is
+    /// the two-pass rule's own: pass 2 adds the edges that judge completed
+    /// registries and adds no nodes (´[ARCH-rule:linter:two-pass]´). A
+    /// file-backed definition is a census fact, known as soon as the corpus's
+    /// declarations are all in hand and before any registry is read, so it
+    /// enters the graph with the assets a source settled — through the same
+    /// [`Harvest::asset`], so that a paired asset and an inline one are the
+    /// same thing to every judgment that follows
+    /// (´dec:lint:cross-source-pairing´).
+    fn paired(&mut self, sources: &[SourceFile]) {
+        let a = self.a;
+        let mut found: Vec<(PathBuf, OwnerId, Asset)> = Vec::new();
+        {
+            let declaring: Vec<(&Path, &str)> = self
+                .declared
                 .iter()
-                .find(|one| one.id == asset.profile)
-            else {
-                continue;
-            };
-            let Some(label) = registers::derived_label(profile, &asset.identifier, &asset.area)
-            else {
-                continue;
-            };
-            self.derivations.push(Derivation {
-                asset: node,
-                owner,
-                label,
-                register: profile
-                    .standard_place
-                    .register
-                    .as_ref()
-                    .map(|_| registers::register_path(&registers::owner_root(self.a, &src.owner))),
-                source: src.path.clone(),
-            });
+                .map(|(path, identifier)| (path.as_path(), identifier.as_str()))
+                .collect();
+            for profile in a.profiles.effective() {
+                let defined: Vec<(&Path, &str)> = self
+                    .defined
+                    .iter()
+                    .filter(|(id, _, _)| *id == profile.id)
+                    .map(|(_, path, identifier)| (path.as_path(), identifier.as_str()))
+                    .collect();
+                found.extend(
+                    frontend::backing_definitions(profile, sources, &declaring, &defined)
+                        .into_iter()
+                        .map(|(src, asset)| (src.path.clone(), src.owner.clone(), asset)),
+                );
+            }
+        }
+        for (path, owned_by, asset) in found {
+            let owner = self.r.owners.get(&owned_by).copied();
+            self.asset(&path, &owned_by, owner, &asset);
         }
     }
 

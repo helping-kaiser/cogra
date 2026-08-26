@@ -15,10 +15,21 @@
 //! ranges it was assembled from, in order, and [`Region::locate`] maps a
 //! region-local span back into the file — which is how a scan of the logical
 //! text produces a diagnostic that points into the source.
+//!
+//! # The one step no frontend takes
+//!
+//! A definition-recognized census is not computable from one source: the
+//! file backing a `mod name;` holds the definition and the declaring file
+//! holds the name. The unresolved half travels as a [`Declaration`], and
+//! [`backing_definitions`] completes it once every source is in hand
+//! (´dec:lint:cross-source-pairing´). It lives here because its input and
+//! its output are both this contract's own types, and because the two runs
+//! that need it must share one implementation rather than grow one each.
 
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
-use crate::adopt::{Adoption, Area, Kind, Place, ProfileId};
+use crate::adopt::{Adoption, Area, Kind, Place, Profile, ProfileId};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic};
 use crate::pretokenize::{CommentForm, PreTokenized};
@@ -167,6 +178,20 @@ pub struct Asset {
     pub span: ByteSpan,
 }
 
+/// A `mod name;` declaration, which is not a definition and not an asset.
+///
+/// A definition census counts definitions once and never declarations, and
+/// the definition backing a declaration is another file — which is why this
+/// travels out of a frontend unresolved and
+/// [`backing_definitions`] resolves it (´dec:lint:cross-source-pairing´).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Declaration {
+    /// The declared module's bare identifier.
+    pub identifier: String,
+    /// Where the declaration sits, in whole-file coordinates.
+    pub span: ByteSpan,
+}
+
 /// One table of a document, as its cells' regions spell it.
 ///
 /// The cell texts are the regions' own logical text, so a cell holding a
@@ -197,8 +222,12 @@ pub struct Parsed {
     pub regions: Vec<Region>,
     /// Its participating authored heads, in document order.
     pub heads: Vec<Head>,
-    /// The covered assets of every effective profile's census.
+    /// The covered assets of every effective profile's census, as far as
+    /// this one source settles them.
     pub assets: Vec<Asset>,
+    /// The declarations whose definitions lie in other sources, in document
+    /// order (´dec:lint:cross-source-pairing´).
+    pub declarations: Vec<Declaration>,
     /// Its tables, in document order. Empty for a format with no tables.
     pub tables: Vec<Table>,
     /// What the frontend found wrong, each bounded as its discipline bounds
@@ -237,6 +266,98 @@ pub fn parse(
             ..Parsed::default()
         }),
     }
+}
+
+/// The sources that back a profile's `mod name;` declarations, each once,
+/// as the covered assets they are.
+///
+/// This is the pairing no frontend can make: a declaration and its
+/// definition sit in different files, and a frontend is handed one source at
+/// a time (´sig:lint:frontend-api´). A run that holds every source makes it
+/// here — once per definition, never per declaration, which is what keeps
+/// the nine `mod rig;` declarations of one tree one asset rather than nine
+/// (´dec:lint:cross-source-pairing´).
+///
+/// `declared` is every declaration of the corpus as the pair of the
+/// declaring source's path and the declared identifier; `defined` is every
+/// definition of this profile a source settled on its own, so that a file
+/// already carrying an inline definition of the name it is backed under
+/// yields one asset and not two. Neither wants the declaration's span: the
+/// asset is located at the backing file, which is where its standard place
+/// lies.
+///
+/// Cargo's own module layout is the rule: a declaration in a crate root or a
+/// `mod.rs` is backed from that file's own directory, and one in any other
+/// module file from the directory named after it. A declaration whose
+/// backing file is not in the carrier pairs with nothing and contributes no
+/// asset, rather than an asset pointing at a file no run saw. The result is
+/// ordered by the backing source's path (´[ARCH-req:linter:determinism]´).
+#[must_use]
+pub fn backing_definitions<'s>(
+    profile: &Profile,
+    sources: &'s [SourceFile],
+    declared: &[(&Path, &str)],
+    defined: &[(&Path, &str)],
+) -> Vec<(&'s SourceFile, Asset)> {
+    if profile.census.definition_rule.is_none() {
+        return Vec::new();
+    }
+    let mut areas = profile.classification.areas.values();
+    let (Some(area), None) = (areas.next(), areas.next()) else {
+        return Vec::new();
+    };
+    let by_path: BTreeMap<&Path, &SourceFile> = sources
+        .iter()
+        .map(|one| (one.path.as_path(), one))
+        .collect();
+    let mut paired: BTreeMap<&Path, (&SourceFile, &str)> = BTreeMap::new();
+    for (declaring, identifier) in declared {
+        for candidate in candidates(declaring, identifier) {
+            if let Some(src) = by_path.get(candidate.as_path()) {
+                paired.entry(src.path.as_path()).or_insert((*src, identifier));
+                break;
+            }
+        }
+    }
+    paired
+        .into_values()
+        .filter(|(src, identifier)| {
+            !defined
+                .iter()
+                .any(|(path, held)| *path == src.path.as_path() && held == identifier)
+        })
+        .map(|(src, identifier)| {
+            let asset = Asset {
+                profile: profile.id.clone(),
+                identifier: String::from(identifier),
+                area: area.clone(),
+                place: profile.standard_place.clone(),
+                span: ByteSpan::new(0, 0),
+            };
+            (src, asset)
+        })
+        .collect()
+}
+
+/// The two files a declaration in `declaring` could be backed by.
+fn candidates(declaring: &Path, name: &str) -> [PathBuf; 2] {
+    let parent = declaring.parent().unwrap_or(Path::new(""));
+    let root = matches!(
+        declaring.file_stem().and_then(std::ffi::OsStr::to_str),
+        Some("lib" | "main" | "mod")
+    );
+    let dir = if root {
+        parent.to_path_buf()
+    } else {
+        match declaring.file_stem().and_then(std::ffi::OsStr::to_str) {
+            Some(stem) => parent.join(stem),
+            None => parent.to_path_buf(),
+        }
+    };
+    [
+        dir.join(format!("{name}.rs")),
+        dir.join(name).join("mod.rs"),
+    ]
 }
 
 #[cfg(test)]
@@ -286,5 +407,42 @@ mod tests {
         let one = region(Vec::new(), "");
         assert_eq!(one.span(), ByteSpan::new(0, 0));
         assert_eq!(one.locate(ByteSpan::new(0, 1)), ByteSpan::new(0, 0));
+    }
+
+    fn spelled(declaring: &str, name: &str) -> Vec<String> {
+        candidates(Path::new(declaring), name)
+            .iter()
+            .map(|one| one.to_string_lossy().replace('\\', "/"))
+            .collect()
+    }
+
+    #[test]
+    fn a_crate_root_backs_from_its_own_directory() {
+        assert_eq!(
+            spelled("crates/api/src/lib.rs", "auth"),
+            ["crates/api/src/auth.rs", "crates/api/src/auth/mod.rs"]
+        );
+    }
+
+    #[test]
+    fn a_module_file_backs_from_the_directory_named_after_it() {
+        assert_eq!(
+            spelled("crates/api/src/auth.rs", "tokens"),
+            [
+                "crates/api/src/auth/tokens.rs",
+                "crates/api/src/auth/tokens/mod.rs"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_mod_file_backs_from_its_own_directory_like_a_root() {
+        assert_eq!(
+            spelled("crates/api/tests/rig/mod.rs", "seed"),
+            [
+                "crates/api/tests/rig/seed.rs",
+                "crates/api/tests/rig/seed/mod.rs"
+            ]
+        );
     }
 }
