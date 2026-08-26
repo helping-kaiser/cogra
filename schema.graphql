@@ -446,6 +446,10 @@ type Hashtag {
 	limit-bounded, not cursor-bounded, and a Relay connection would
 	promise a pagination the read cannot honour.
 	`includePending: false` serves only what has landed on L1.
+	
+	A claim whose node CoGra carries no display row for is dropped:
+	the fold is over the mirror, which reaches further than the
+	display store, and there is nothing for this surface to render.
 	"""
 	taggedContent(limit: Int, includePending: Boolean! = true): [TaggedContent!]!
 	"""
