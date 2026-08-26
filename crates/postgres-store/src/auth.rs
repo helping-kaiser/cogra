@@ -1,3 +1,5 @@
+//! ´mod:module:auth´
+//!
 //! Authentication and onboarding state: invite links, accounts and their
 //! applications, credentials, refresh-token sessions, and key backups
 //! (auth.md; data-model.md "Authentication state").

@@ -1,3 +1,5 @@
+//! ´mod:module:topics´
+//!
 //! The current-topics fold (hashtag.md §4): newest-wins per
 //! (author, content, Type) bundle, relevance 0 read as withdrawn.
 //!

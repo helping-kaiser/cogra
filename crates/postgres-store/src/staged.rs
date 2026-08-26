@@ -1,3 +1,5 @@
+//! ´mod:module:staged´
+//!
 //! Staged writes (data-model.md "Staged writes"): the L2 row a write
 //! occupies from prepare until confirm — the canonical proposal, joined by
 //! the pre-commitment and the host-sealed verified act as the handshake
