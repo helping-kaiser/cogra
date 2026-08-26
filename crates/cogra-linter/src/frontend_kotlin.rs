@@ -35,10 +35,22 @@
 //!
 //! String literals, string templates and character literals carry no scanned
 //! region. Nothing filters them out: they are their own node kinds, and this
-//! module visits three. A `//` inside a string is part of that string's node
-//! and is never a comment node, so it cannot become an occurrence — which is
-//! the property an AST frontend has and a text search does not
+//! module visits three. A `//` inside a string's content is part of that
+//! string's node and never a comment node, so it cannot become an occurrence
+//! — which is the property an AST frontend has and a text search does not
 //! (´[ARCH-dec:linter:ast-frontends]´).
+//!
+//! One gap in that guarantee is known and parked, and it belongs to the
+//! grammar rather than to this module: at a *token boundary* inside a line
+//! string — directly after the opening quote, or directly after an
+//! interpolation's closing brace — the grammar admits a comment token, so a
+//! leader there is lexed as a comment rather than as content. Where the
+//! comment is a block comment the string still closes and no error node is
+//! produced, which would make a label written there an occurrence
+//! `[scanned-regions]` promises cannot exist. No source of this corpus
+//! reaches it: every string here that contains `//` contains it mid-content,
+//! where the lexer never stops. `tests/kotlin_frontend.rs` carries the three
+//! ignored repros and the corpus-wide guard that fails the day one appears.
 //!
 //! # Error nodes are findings, forever
 //!
@@ -144,7 +156,7 @@ const KDOC: &str = "kdoc";
 ///     owner: OwnerId::new("android"),
 ///     language: Some(Language::new("kotlin")),
 ///     generated: false,
-///     bytes: Vec::from("// one\n// two\nval x = \"// three\"\n"),
+///     bytes: Vec::from("// one\n// two\nval x = \"https://three\"\n"),
 /// };
 /// let parsed = frontend_kotlin::parse(&source, &adoption)
 ///     .map_err(|d| format!("{d:?}"))?;

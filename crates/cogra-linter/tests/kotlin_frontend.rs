@@ -89,7 +89,7 @@ fn the_vendored_grammar_loads_into_the_runtime() {
 
 /// `[scanned-regions]`, first scanned form: line comments.
 #[test]
-fn a_line_comment_is_a_region() {
+fn a_kotlin_line_comment_is_a_region() {
     assert_eq!(
         kinds("// one\nval x = 1\n"),
         vec![RegionKind::Comment(CommentForm::LinePlain)]
@@ -99,7 +99,7 @@ fn a_line_comment_is_a_region() {
 
 /// Second scanned form: block comments.
 #[test]
-fn a_block_comment_is_a_region() {
+fn a_kotlin_block_comment_is_a_region() {
     assert_eq!(
         kinds("/* one */\nval x = 1\n"),
         vec![RegionKind::Comment(CommentForm::BlockPlain)]
@@ -121,7 +121,7 @@ fn a_kdoc_comment_is_a_region() {
 /// scanner's own rule is that `/**/` closes where a KDoc leader would still
 /// be opening.
 #[test]
-fn an_empty_block_comment_is_plain() {
+fn an_empty_kotlin_block_comment_is_plain() {
     assert_eq!(
         kinds("/**/\nval x = 1\n"),
         vec![RegionKind::Comment(CommentForm::BlockPlain)]
@@ -156,7 +156,7 @@ fn a_nested_block_comment_is_one_region() {
 /// grammar": a run of `//` lines is that many nodes and therefore that many
 /// regions, where a `///` run in Rust is one.
 #[test]
-fn a_run_of_line_comments_is_one_region_each() {
+fn a_run_of_kotlin_line_comments_is_one_region_each() {
     assert_eq!(
         texts("// one\n// two\n// three\nval x = 1\n"),
         vec![
@@ -180,7 +180,7 @@ fn a_kdoc_gutter_is_resolved_away() {
 /// A plain block comment has no gutter convention, so a `*` inside one is
 /// content and survives.
 #[test]
-fn a_plain_block_comment_keeps_its_stars() {
+fn a_plain_kotlin_block_comment_keeps_its_stars() {
     assert_eq!(
         texts("/*\n * one\n */\nval x = 1\n"),
         vec![String::from("\n * one\n ")]
@@ -200,7 +200,7 @@ fn a_bare_kdoc_gutter_line_contributes_its_break() {
 /// A line comment ends at the newline and does not include it: the region's
 /// last byte is the comment's, so a diagnostic never points one line on.
 #[test]
-fn a_line_comment_stops_before_its_newline() {
+fn a_kotlin_line_comment_stops_before_its_newline() {
     let regions = regions("// one\nval x = 1\n");
     assert_eq!(regions[0].span(), ByteSpan::new(2, 6));
 }
@@ -217,7 +217,7 @@ fn a_line_comment_stops_before_its_newline() {
 /// assertion is what the adoption data promises.
 #[test]
 #[ignore = "grammar: a comment leader at a token boundary inside a line string is lexed as a comment"]
-fn a_line_leader_inside_a_string_is_not_a_comment() {
+fn a_line_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"// not a comment\"\n").is_empty());
 }
 
@@ -231,7 +231,7 @@ fn a_line_leader_inside_a_string_is_not_a_comment() {
 /// happen. Silent, where the line-comment case at least announces itself.
 #[test]
 #[ignore = "grammar: a block comment inside a line string parses as a comment node, with no error"]
-fn a_block_leader_inside_a_string_is_not_a_comment() {
+fn a_block_leader_inside_a_kotlin_string_is_not_a_comment() {
     assert!(regions("val x = \"/* not a comment */\"\n").is_empty());
 }
 
@@ -275,7 +275,7 @@ fn a_raw_string_is_not_scanned() {
 /// code, and this is the boundary an AST frontend gets right and a pattern
 /// search does not (´[ARCH-ansatz:linter:regex-scanning]´).
 #[test]
-fn a_comment_inside_an_interpolation_is_a_comment() {
+fn a_comment_inside_a_kotlin_interpolation_is_a_comment() {
     assert_eq!(
         texts("val x = \"a ${y /* real */} b\"\n"),
         vec![String::from(" real ")]
@@ -286,7 +286,7 @@ fn a_comment_inside_an_interpolation_is_a_comment() {
 /// is scanned code text, where the acute is the label delimiter
 /// (´dec:lint:two-scan-entries´).
 #[test]
-fn an_acute_label_in_a_comment_scans_as_an_occurrence() {
+fn an_acute_label_in_a_kotlin_comment_scans_as_an_occurrence() {
     let regions = regions("// mints \u{b4}def:android:widget\u{b4} here\nval x = 1\n");
     let scan = scan_code(&regions[0].text, 0);
     assert!(matches!(scan.occurrences[0], Occurrence::Mint { .. }));
@@ -304,7 +304,7 @@ fn an_acute_label_in_kdoc_scans_as_an_occurrence() {
 /// The same label inside a string literal scans as nothing, because the
 /// literal is no region at all.
 #[test]
-fn an_acute_label_in_a_string_scans_as_nothing() {
+fn an_acute_label_in_a_kotlin_string_scans_as_nothing() {
     assert!(regions("val x = \"\u{b4}def:android:widget\u{b4}\"\n").is_empty());
 }
 
@@ -321,7 +321,7 @@ fn a_kotlin_region_carries_the_code_syntax() {
 /// A region's pieces are file ranges copied verbatim, so their lengths sum
 /// to the logical text's length and each is a slice of the file.
 #[test]
-fn a_region_s_pieces_reconstruct_its_text() {
+fn a_kotlin_region_s_pieces_reconstruct_its_text() {
     let text = "/**\n * one\n * two\n */\nval x = 1\n";
     for region in regions(text) {
         let sum: usize = region.pieces.iter().map(ByteSpan::len).sum();
@@ -338,7 +338,7 @@ fn a_region_s_pieces_reconstruct_its_text() {
 /// Byte offsets are the file's own: a label after a multibyte character
 /// locates at the bytes it was written at, not at the characters.
 #[test]
-fn an_occurrence_after_a_multibyte_character_locates_exactly() {
+fn a_kotlin_occurrence_after_a_multibyte_character_locates_exactly() {
     let text = "// \u{e4}\u{f6}\u{fc} \u{b4}def:android:widget\u{b4}\nval x = 1\n";
     let regions = regions(text);
     let scan = scan_code(&regions[0].text, 0);
@@ -451,7 +451,7 @@ fn the_dispatcher_reaches_the_kotlin_frontend() {
 /// Regions come out in file order, which is what makes the frontend's output
 /// byte-deterministic (´[ARCH-req:linter:determinism]´).
 #[test]
-fn regions_are_ordered_by_position() {
+fn kotlin_regions_are_ordered_by_position() {
     let mut text = String::new();
     for one in 0..40 {
         text.push_str(&format!("// c{one}\nval x{one} = {one}\n"));
@@ -465,7 +465,7 @@ fn regions_are_ordered_by_position() {
 
 /// A trailing comment is one region, wherever the grammar hangs its node.
 #[test]
-fn a_trailing_comment_is_one_region() {
+fn a_trailing_kotlin_comment_is_one_region() {
     assert_eq!(
         texts("val x = 1 // trailing\nval y = 2\n"),
         vec![String::from(" trailing")]
@@ -586,7 +586,9 @@ fn collect_kt(at: &Path, out: &mut Vec<PathBuf>) {
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            let name = path.file_name().map(|one| one.to_string_lossy().into_owned());
+            let name = path
+                .file_name()
+                .map(|one| one.to_string_lossy().into_owned());
             if matches!(name.as_deref(), Some("build" | ".gradle")) {
                 continue;
             }
