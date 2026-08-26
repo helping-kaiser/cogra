@@ -1,7 +1,9 @@
-// PostgreSQL access layer for CoGra's stores — the record mirror, the
-// overlay, and the authoritative L2 state (data-model.md). All of CoGra's
-// SQL lives here, nowhere else; the one exception is the l1-standin crate,
-// which owns its own L1-side tables behind the seam.
+//! PostgreSQL access layer for CoGra's stores.
+//!
+//! Covers the record mirror, the overlay, and the authoritative L2 state
+//! (data-model.md). All of CoGra's SQL lives here and nowhere else; the one
+//! exception is the `l1-standin` crate, which owns its own L1-side tables
+//! behind the seam.
 
 pub mod auth;
 pub mod content;
