@@ -1,3 +1,5 @@
+//! ´mod:module:hashtag´
+//!
 //! The naming-service registry (hashtag.md §1): CoGra's own index of the
 //! Type names it has seen, keyed by the content-addressed
 //! `UUIDv5(HASHTAG_NAMESPACE, canonical_name)`.

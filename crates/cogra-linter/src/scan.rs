@@ -1,3 +1,5 @@
+//! ´mod:module:scan´
+//!
 //! The label grammar: labels, the three occurrence forms of both concrete
 //! syntaxes, and the near-miss warnings the calculus asks for.
 //!

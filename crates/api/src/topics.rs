@@ -1,3 +1,5 @@
+//! ´mod:module:topics´
+//!
 //! Topic declarations — the Tag act (hashtag.md §3; edges.md §3): a
 //! hyper-edge Actor → content → Type, one priced act per topic, staged
 //! either inside a content-creation batch or on its own.

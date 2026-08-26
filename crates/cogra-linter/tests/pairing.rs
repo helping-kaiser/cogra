@@ -26,28 +26,12 @@ fn adoption_text() -> &'static str {
     })
 }
 
-/// The ruled adoption, which carries the module profile staged.
+/// The ruled adoption, which carries the module profile in Π.
 fn ruled() -> &'static Adoption {
     static LOADED: OnceLock<Adoption> = OnceLock::new();
     LOADED.get_or_init(|| {
         Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
             .expect("the ruled adoption loads")
-    })
-}
-
-/// The ruled adoption with the module profile put into Π.
-///
-/// Entering is a commit that flips two fields (´dec:lint:staged-profiles´),
-/// and flipping them here is what lets a test ask what a check would judge
-/// on the day the migration lands — before the migration lands.
-fn entered() -> &'static Adoption {
-    static LOADED: OnceLock<Adoption> = OnceLock::new();
-    LOADED.get_or_init(|| {
-        let text = adoption_text()
-            .replace("effective = 1", "effective = 2")
-            .replace("status = \"staged\"", "status = \"effective\"");
-        Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
-            .expect("the module profile enters by two fields")
     })
 }
 
@@ -92,7 +76,7 @@ fn covered(run: &Run) -> Vec<String> {
 
 /// What a check with the module profile in Π covers over these sources.
 fn census_of(sources: Vec<SourceFile>) -> Vec<String> {
-    covered(&check_sources(entered(), sources))
+    covered(&check_sources(ruled(), sources))
 }
 
 /// (´dec:lint:cross-source-pairing´): an inline definition is settled by the
@@ -181,6 +165,48 @@ fn many_declarations_of_one_definition_are_one_asset() {
     assert_eq!(census_of(held), vec![String::from("shared")]);
 }
 
+/// (´dec:lint:cross-source-pairing´): every file directly under a package's
+/// `tests` directory is a crate root, so the shared rig many suites declare
+/// is backed from beside them and counts once — the corpus's own eleven
+/// `mod rig;` in miniature.
+#[test]
+fn many_test_roots_declaring_one_tree_are_one_asset() {
+    let held = vec![
+        rust("crates/l1-standin/tests/one.rs", "mod rig;\n"),
+        rust("crates/l1-standin/tests/two.rs", "mod rig;\n"),
+        rust("crates/l1-standin/tests/three.rs", "mod rig;\n"),
+        rust("crates/l1-standin/tests/rig/mod.rs", "pub fn one() {}\n"),
+    ];
+    assert_eq!(census_of(held), vec![String::from("rig")]);
+}
+
+/// (´dec:lint:cross-source-pairing´): the same rule reaches a support tree
+/// backed by a file rather than a directory, which is the other half of
+/// Cargo's layout under a test root.
+#[test]
+fn a_test_root_backs_a_support_file_beside_it() {
+    let held = vec![
+        rust("crates/l1-standin/tests/one.rs", "mod support;\n"),
+        rust("crates/l1-standin/tests/support.rs", "pub fn one() {}\n"),
+    ];
+    assert_eq!(census_of(held), vec![String::from("support")]);
+}
+
+/// (´dec:lint:cross-source-pairing´): a `tests` directory inside a `src` tree
+/// is a module of the lib target and roots nothing, so a declaration in one
+/// is backed from the directory named after it like any module file.
+#[test]
+fn a_tests_module_inside_a_lib_target_is_not_a_root() {
+    let held = vec![
+        rust("crates/l1-standin/src/tests/helper.rs", "mod inner;\n"),
+        rust(
+            "crates/l1-standin/src/tests/helper/inner.rs",
+            "pub fn one() {}\n",
+        ),
+    ];
+    assert_eq!(census_of(held), vec![String::from("inner")]);
+}
+
 /// (´dec:lint:cross-source-pairing´): a file that is backed under a name it
 /// also defines inline yields one asset, not two.
 #[test]
@@ -251,10 +277,10 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
 
-    let walked = cogra_linter::Walk::new(entered(), &at)
+    let walked = cogra_linter::Walk::new(ruled(), &at)
         .sources()
         .expect("the fixture root walks cleanly");
-    let judged = covered(&check_sources(entered(), walked));
+    let judged = covered(&check_sources(ruled(), walked));
 
     assert_eq!(
         judged,
@@ -273,8 +299,8 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
 #[test]
 fn the_check_and_the_measurement_agree_over_this_corpus() {
     let reported = measured(ruled(), &root());
-    assert_eq!(reported.len(), 87, "the size `[profiles]` records");
+    assert_eq!(reported.len(), 89, "the size `[profiles]` records");
 
-    let run = cogra_linter::check(entered(), &root()).expect("the check runs over the corpus");
+    let run = cogra_linter::check(ruled(), &root()).expect("the check runs over the corpus");
     assert_eq!(covered(&run), reported, "one pairing, one census");
 }

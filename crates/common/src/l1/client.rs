@@ -1,3 +1,5 @@
+//! ´mod:module:client´
+//!
 //! The client (device) side of the admission handshake: client-signed,
 //! backend-relayed (layer1-interface.md §8.2; substrate.md §6).
 //!

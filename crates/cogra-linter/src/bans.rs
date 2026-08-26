@@ -1,3 +1,5 @@
+//! ´mod:module:bans´
+//!
 //! Banned-token classes as data; findings over pre-tokenizer output.
 //!
 //! The ban subsystem is generic and its classes are data: a future ban is a

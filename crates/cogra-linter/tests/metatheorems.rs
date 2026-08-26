@@ -11,15 +11,17 @@
 //! # What is owed later, and why
 //!
 //! (´[LBL-metathm:labels:no-self-support]´) is stated over a *designated*
-//! citation index or a generated label register, and this corpus has
+//! citation index or a generated label register, and this corpus designates
 //! neither: `[citation-indexes]` designates nothing and carries its
 //! designations as free text with no upstream owner a `PresentedSet` could
-//! be built from, and no label register is generated while both profiles
-//! are staged. Two halves are exercisable and both are asserted below: that
-//! a generated region's occurrences are occurrences in full, and that the
-//! one register this corpus does generate feeds nothing it presents. The
-//! third — the exclusion a `PresentedSet` performs — has no subject here
-//! and is owed to the designation that would create one.
+//! be built from, and the label registers of the test profile designate
+//! nothing either — their rows come from the census, an AST fact, never
+//! from an occurrence set, so nothing they present could feed them. Two
+//! halves are exercisable and both are asserted below: that a generated
+//! region's occurrences are occurrences in full, and that the registers
+//! this corpus generates feed nothing they present. The third — the
+//! exclusion a `PresentedSet` performs — has no subject here and is owed to
+//! the designation that would create one.
 //!
 //! # No regular expressions in the generators
 //!

@@ -1,3 +1,5 @@
+//! ´mod:module:mutation´
+//!
 //! The slice-1 mutation surface (api-spec.md "Auth and accounts", "The
 //! write flow"): registration and the session-authorized admission
 //! steps, sessions and credentials, invite links, and the generic

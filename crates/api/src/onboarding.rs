@@ -1,3 +1,5 @@
+//! ´mod:module:onboarding´
+//!
 //! The applicant-as-account admission flow (auth.md "Account lifecycle";
 //! invitations.md §4): link → registration (a real account + session) →
 //! the key ceremony as a logged-in attach → funding burn at approval →
