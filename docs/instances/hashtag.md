@@ -25,9 +25,18 @@ L1 compares names by **byte equality** and nothing else —
 Canonicalization is therefore CoGra's job, the **L2 naming
 service**:
 
-- **Normalization.** Tag strings are normalized (lowercase, no
-  `#`) before any record is submitted, so every CoGra-authored
-  reference to a topic lands on the canonical Type.
+- **Normalization.** Tag strings are normalized before any record
+  is submitted — one leading `#` stripped, ASCII-lowercased — so
+  every CoGra-authored reference to a topic lands on the canonical
+  Type.
+- **Legality.** A legal name is exactly an L1 identifier atom:
+  ASCII `[A-Za-z0-9._-]`, 1 to 128 bytes
+  ([layer1-interface.md §8.1](../primitive/layer1-interface.md#81-acts-projections-partition-and-passivity)).
+  A string outside that charset names no Type and is refused at
+  the field that carried it — never punycoded, percent-encoded, or
+  otherwise transformed into a name that is legal: encoding
+  changes what a name means while leaving it looking the same, in
+  the one identifier meant to stay human-legible.
 - **The registry.** CoGra keys its own stores by
   `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` — a deterministic
   function of the name, so the Postgres registry row and every
