@@ -42,6 +42,7 @@ module.exports = grammar({
     $.kdoc,
     $._raw_string_content,
     $._raw_string_end,
+    $._line_string_content,
     $._error_sentinel,
   ],
 
@@ -951,18 +952,34 @@ module.exports = grammar({
 
     string_literal: $ => choice($.line_string_literal, $.multiline_string_literal),
 
+    // The content is the scanner's, not a token of its own — the same
+    // arrangement the raw string already had, and for the same reason.
+    //
+    // `extras` are global in tree-sitter: a comment is a candidate
+    // wherever the lexer may begin a token, and `token.immediate` only
+    // stops the *internal* lexer from skipping trivia — the external
+    // scanner is still consulted, and comments are external tokens
+    // because Kotlin's nest. So a `//` at a position where a content
+    // token began — right after the opening quote, or right after an
+    // interpolation's `}` — was lexed as a comment. Mid-content it never
+    // was, because one greedy token spanned it, which is why every URL in
+    // the corpus stayed clean and the defect stayed hidden.
+    //
+    // With the content scanner-owned, the scanner knows it is inside a
+    // string and refuses to produce anything else there, so a comment
+    // node inside a string is not merely unlikely but unreachable. That
+    // is what `[scanned-regions]` promises: string literals are never
+    // scanned.
     line_string_literal: $ => seq(
       '"',
       repeat(choice(
-        $._line_string_text,
+        $._line_string_content,
         $.escape_sequence,
         $.string_reference,
         $.string_interpolation,
       )),
       token.immediate('"'),
     ),
-
-    _line_string_text: _ => token.immediate(prec(1, /[^\\"$\n\r]+/)),
 
     multiline_string_literal: $ => seq(
       '"""',
