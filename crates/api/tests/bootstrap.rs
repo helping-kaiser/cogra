@@ -28,13 +28,17 @@ fn standin(pool: &PgPool) -> StandIn {
     StandIn::new(pool.clone(), StandInConfig::default())
 }
 
+/// The L2 half is the cast rows, the reserved Types and the parameter
+/// carrier; the L1 half is the genesis records landing as the instance's
+/// first accepted acts — four Registrations, two endorsement Opinions,
+/// The Charter, and the genesis role Tag, with the Genesis Moderator's
+/// Registration first.
 #[sqlx::test(migrations = "../../migrations")]
 async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
     let host = standin(&pool);
     let outcome = run(&host, &pool, input()).await.expect("bootstraps");
     assert_eq!(outcome, BootstrapOutcome::Fresh);
 
-    // L2 half: cast rows, reserved Types, the parameter carrier.
     assert!(genesis::system_actors_present(&pool).await.expect("gate"));
     assert!(genesis::parameters_seeded(&pool).await.expect("seeded"));
     let hashtags: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM hashtags")
@@ -48,9 +52,6 @@ async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
         .expect("operator row");
     assert_eq!(operator.kind, "user");
 
-    // L1 half: the genesis records landed as the instance's first accepted
-    // acts — 4 Registrations, 2 endorsement Opinions, The Charter, the
-    // genesis role Tag.
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     let ids = mirror::record_ids_in_epoch(&pool, 0).await.expect("ids");
     assert_eq!(ids.len(), 8);
@@ -75,17 +76,17 @@ async fn fresh_bootstrap_creates_both_halves(pool: PgPool) {
             .expect("gate")
     );
 
-    // The first record is the Genesis Moderator's Registration.
     assert_eq!(ids[0], format!("act:{operator_address}:0:registration"));
 }
 
+/// A second run reports AlreadyComplete and lands nothing new: still
+/// exactly one epoch of eight records.
 #[sqlx::test(migrations = "../../migrations")]
 async fn rerun_is_idempotent(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("first run");
     let outcome = run(&host, &pool, input()).await.expect("second run");
     assert_eq!(outcome, BootstrapOutcome::AlreadyComplete);
-    // Nothing new landed: still exactly one epoch of eight records.
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 0);
     assert_eq!(
         mirror::record_ids_in_epoch(&pool, 0)
@@ -96,13 +97,15 @@ async fn rerun_is_idempotent(pool: PgPool) {
     );
 }
 
+/// The crash window where the L2 half committed and the L1 half never
+/// happened — simulated by wiping the substrate and the mirror's
+/// projection of it. The re-run completes the missing half, keyed on the
+/// stored identities.
 #[sqlx::test(migrations = "../../migrations")]
 async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("first run");
 
-    // Simulate the crash window: the L2 half committed, the L1 half never
-    // happened (wipe the substrate and the mirror projection of it).
     for table in [
         "mirror_record_legs",
         "mirror_records",
@@ -122,7 +125,6 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
         .await
         .expect("cursor reset");
 
-    // The re-run completes the missing half keyed on the stored identities.
     let outcome = run(&host, &pool, input()).await.expect("repairs");
     assert_eq!(outcome, BootstrapOutcome::Repaired);
     let publisher_address = genesis::actor_by_handle(&pool, genesis::PUBLISHER_HANDLE)
@@ -190,6 +192,10 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
         .expect("cursor reset");
 }
 
+/// The crash window inside the sequence: burns landed, the four
+/// Registrations and the first endorsement Opinion approved, then nothing
+/// more. The re-run finishes the sequence, and the genesis burn is
+/// credited at most once per cast member across both runs.
 #[sqlx::test(migrations = "../../migrations")]
 async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
     let host = standin(&pool);
@@ -199,8 +205,6 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
     let moderator = address_of(&pool, genesis::MODERATOR_HANDLE).await;
     let treasury = address_of(&pool, genesis::TREASURY_HANDLE).await;
 
-    // The crash window: burns landed, the four Registrations and the
-    // first endorsement Opinion approved, then nothing more.
     rewind_to_partial_genesis(
         &pool,
         &[
@@ -228,13 +232,15 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
             .await
             .expect("gate")
     );
-    // The genesis burn was credited at most once per cast member.
     for address in [&operator, &publisher, &moderator, &treasury] {
         let balance = host.balance(address).await.expect("balance");
         assert_eq!(balance.burned_total, 10.0);
     }
 }
 
+/// The narrowest crash window: The Treasury's Registration was sealed but
+/// the crash hit before its approval was recorded. The re-run recovers
+/// the approval from the custodied key rather than re-sealing.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     let host = standin(&pool);
@@ -254,8 +260,6 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
         ],
     )
     .await;
-    // The narrowest window: The Treasury's Registration was sealed but the
-    // crash hit before its approval was recorded.
     sqlx::query(
         "UPDATE l1_acts SET status = 'sealed', approval_signature = NULL, approved_at = NULL
          WHERE act_id = $1",
@@ -282,6 +286,9 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     );
 }
 
+/// The same identifier holding different content — what a re-run with
+/// changed genesis input would produce — is refused as divergence rather
+/// than replayed.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
     let host = standin(&pool);
@@ -301,8 +308,6 @@ async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
         ],
     )
     .await;
-    // Same identifier, different content — as a re-run with changed
-    // genesis input would produce.
     sqlx::query("UPDATE l1_acts SET p_d = 0.5 WHERE act_id = $1")
         .bind(format!("act:{operator}:0:registration"))
         .execute(&pool)
@@ -313,6 +318,9 @@ async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
 }
 
+/// A different act holds the author-local sequence, so the identifier the
+/// genesis sequence needs does not exist and the seal conflicts. That too
+/// is refused truthfully rather than replayed.
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
     let host = standin(&pool);
@@ -332,8 +340,6 @@ async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
         ],
     )
     .await;
-    // A different act holds the author-local sequence: the identifier the
-    // genesis sequence needs does not exist, and the seal conflicts.
     sqlx::query("UPDATE l1_acts SET act_id = $2, family = 'opinion' WHERE act_id = $1")
         .bind(format!("act:{treasury}:0:registration"))
         .bind(format!("act:{treasury}:0:opinion"))
@@ -418,13 +424,16 @@ async fn clear_profile_versions(pool: &PgPool, actor: Uuid) {
 /// promotion failure instead of walking on into the gate: a genesis the
 /// operator is told completed must not sit on a promotion that silently
 /// never happened.
+///
+/// The window is the one a re-run on a live instance walks into: an epoch
+/// closed and not yet ingested, carrying a write whose promotion will
+/// fail. The refusal is a refusal to complete, not a rollback — the
+/// record landed and the mirror governs, exactly as ingestion left it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("first run");
 
-    // The window a re-run on a live instance walks into: an epoch closed
-    // and not yet ingested, carrying a write whose promotion will fail.
     let (operator, staged_id) = relay_operator_profile_update(&host, &pool).await;
     host.close_epoch().await.expect("closes");
     clear_profile_versions(&pool, operator).await;
@@ -446,28 +455,27 @@ async fn a_failed_promotion_refuses_the_catch_up_ingestion(pool: PgPool) {
         message.contains(&staged_id.to_string()),
         "the failing staged write must name itself: {message}"
     );
-    // The refusal is a refusal to complete, not a rollback — the record
-    // landed and the mirror governs, exactly as ingestion left it.
     assert_eq!(mirror::last_ingested_epoch(&pool).await.expect("cursor"), 1);
 }
 
 /// The bootstrap's second ingestion — the one that lands the genesis
 /// sequence it just wrote — refuses on the same terms.
+///
+/// The write is left approved and unordered so the bootstrap's own epoch
+/// close is what orders it, putting the promotion in that second
+/// ingestion. Getting the re-run there needs the gate pointed down the
+/// repair path: the mirror is a rebuildable cache, so dropping the record
+/// that keys the L1 half of the gate — while the cursor stands, leaving
+/// the catch-up ingestion nothing to do — sends the run through the epoch
+/// close to the second ingestion.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_failed_promotion_refuses_the_genesis_ingestion(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("first run");
 
-    // Approved and unordered, so the bootstrap's own epoch close is what
-    // orders it — putting the promotion in the second ingestion.
     let (operator, staged_id) = relay_operator_profile_update(&host, &pool).await;
     clear_profile_versions(&pool, operator).await;
 
-    // The mirror is a rebuildable cache, and the record keying the L1
-    // half of the gate is gone from it. The cursor stands, so the
-    // catch-up ingestion has nothing to do and the gate sends the re-run
-    // down the repair path — through the epoch close, to the second
-    // ingestion.
     let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
     let charter = format!("act:{publisher}:1:publish");
     sqlx::query("DELETE FROM mirror_record_legs WHERE record_id = $1")
@@ -496,12 +504,14 @@ async fn a_failed_promotion_refuses_the_genesis_ingestion(pool: PgPool) {
     );
 }
 
+/// With the L2 half wiped — custodied keys included — while the L1
+/// records stand, there is nothing left to sign with and the instance is
+/// beyond repair.
 #[sqlx::test(migrations = "../../migrations")]
 async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     let host = standin(&pool);
     run(&host, &pool, input()).await.expect("first run");
 
-    // Wipe the L2 half (keys included) while the L1 records stand.
     for table in [
         "system_actor_keys",
         "actor_profile_versions",
@@ -519,6 +529,12 @@ async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     assert!(matches!(err, BootstrapError::Unrepairable));
 }
 
+/// The credentials verify like any login, and the uploaded blob is a
+/// standard key-backup blob: the printed code opens it, and inside is the
+/// custodied genesis seed — recovered here by re-parsing the code's
+/// display form the way a client would, stripping the separators and
+/// decoding Crockford base32. Re-running mints nothing new: credentials
+/// stand, the blob stands, and no second code is printed.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
     let host = standin(&pool);
@@ -530,7 +546,6 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
     assert!(login.credentials_created);
     let code = login.recovery_code.expect("a fresh code on first run");
 
-    // The credentials verify like any login.
     let credentials = postgres_store::auth::credentials_by_email(&pool, "op@example.com")
         .await
         .expect("query")
@@ -540,15 +555,11 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
         "a strong password"
     ));
 
-    // The uploaded blob is a standard key-backup blob: the printed code
-    // opens it, and inside is the custodied genesis seed.
     let blob = postgres_store::auth::latest_key_backup(&pool, credentials.actor_id)
         .await
         .expect("query")
         .expect("blob row");
     let code_bytes: [u8; 16] = {
-        // Re-parse the display form the way a client would: strip the
-        // separators and decode Crockford base32.
         const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
         let mut bits: u64 = 0;
         let mut nbits = 0u32;
@@ -578,8 +589,6 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
         .expect("custodied seed");
     assert_eq!(opened.as_slice(), custodied.as_slice());
 
-    // Re-running mints nothing new: credentials stand, the blob stands,
-    // no second code is printed.
     let rerun = ensure_operator_login(&pool, "operator", "other@example.com", "another password")
         .await
         .expect("rerun");

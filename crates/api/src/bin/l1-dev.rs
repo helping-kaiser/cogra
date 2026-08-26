@@ -6,14 +6,17 @@
 //! epoch close) plus mirror ingestion.
 //!
 //! Usage:
-//!   l1-dev keygen
-//!   l1-dev burn <address> <micro>
-//!   l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
-//!   l1-dev close
-//!   l1-dev ingest
-//!   l1-dev rebuild
-//!   l1-dev balance <address>
-//!   l1-dev status
+//!
+//! ```text
+//! l1-dev keygen
+//! l1-dev burn <address> <micro>
+//! l1-dev submit <seed-hex> <family> <target> [middle] [p_d] [p_i] [payload]
+//! l1-dev close
+//! l1-dev ingest
+//! l1-dev rebuild
+//! l1-dev balance <address>
+//! l1-dev status
+//! ```
 
 use anyhow::{Context, bail};
 use api::l1::StandInBoundary;
@@ -87,16 +90,18 @@ async fn submit(standin: &StandIn, actor: &ActorKey, args: SubmitArgs) -> anyhow
                 println!("approved: {act_id}");
                 return Ok(());
             }
-            Err(l1_standin::StandInError::Conflict(_)) => continue, // seq taken
+            Err(l1_standin::StandInError::Conflict(_)) => continue,
             Err(e) => bail!("seal rejected: {e}"),
         }
     }
     bail!("no free sequence value found")
 }
 
+/// Dispatches one hand-test command. `.env` is read first, with the same
+/// precedence the server uses (main.rs); an unrecognized command prints
+/// the usage list rather than failing, since this is a hand tool.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // .env first — precedence rationale in main.rs.
     dotenvy::dotenv().ok();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = args.first().map(String::as_str).unwrap_or("help");

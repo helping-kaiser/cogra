@@ -109,6 +109,9 @@ impl Rig {
     }
 }
 
+/// The whole write path in order. Confirmation is asynchronous — the
+/// ingestion pass is what lands the record — and the landed act has
+/// debited θ from the author's residual balance.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -142,7 +145,6 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
         StagedState::Relaying
     );
 
-    // Confirm is asynchronous: the ingestion pass lands it.
     let outcome = rig.close_and_ingest().await;
     assert_eq!(outcome.epochs, 1);
     assert_eq!(outcome.promoted.len(), 1);
@@ -162,7 +164,6 @@ async fn the_five_steps_land_a_record_and_confirm_the_staged_write(pool: PgPool)
         vec![prepared.proposal.body.act_id().to_string()]
     );
 
-    // The act debited θ from the author's residual balance.
     let balance = rig.boundary.balance(&key.address()).await.expect("balance");
     assert_eq!(balance.action_count, 1);
     assert!(balance.balance < balance.burned_total);
@@ -186,12 +187,15 @@ async fn prepare_allocates_consecutive_sequence_values(pool: PgPool) {
     }
 }
 
+/// Three formation faults are refused at prepare, before anything is
+/// staged: parameters off Registration's census-fixed `(1, 1)`, an
+/// Opinion aimed at a raw address atom, and a payload past the published
+/// carriage bound M_payload. No refusal leaves a staged write behind.
 #[sqlx::test(migrations = "../../migrations")]
 async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor_id, key) = rig.funded_actor("alice").await;
 
-    // Registration's parameters are census-fixed at (1, 1).
     let mut bad_params = rig.registration(&key);
     bad_params.p_d = 0.5;
     assert!(matches!(
@@ -199,7 +203,6 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         Err(PrepareError::Formation(_))
     ));
 
-    // An Opinion cannot target a raw address atom.
     let mut bad_target = rig.registration(&key);
     bad_target.family = Family::Opinion;
     bad_target.target = prepare::Target::Node(NodeId::Addr(key.address()));
@@ -208,7 +211,6 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         Err(PrepareError::Formation(_))
     ));
 
-    // A payload past the published carriage bound M_payload.
     let mut oversized = rig.registration(&key);
     oversized.payload = vec![0; StandInConfig::default().max_payload_bytes + 1];
     assert!(matches!(
@@ -216,7 +218,6 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
         Err(PrepareError::Formation(_))
     ));
 
-    // Nothing was staged by any refusal.
     let staged_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes")
         .fetch_one(&rig.pool)
         .await
@@ -224,6 +225,8 @@ async fn prepare_refuses_a_malformed_gesture_before_staging(pool: PgPool) {
     assert_eq!(staged_count, 0);
 }
 
+/// An author with no burn has b_i = 0 < θ. That is a normal, visible
+/// account state rather than an auth fault, and prepare says so.
 #[sqlx::test(migrations = "../../migrations")]
 async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -241,7 +244,6 @@ async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool)
     .await
     .expect("actor row");
 
-    // No burn: b_i = 0 < θ — a normal, visible account state.
     match prepare::prepare(&rig.boundary, &rig.pool, GC, id, rig.registration(&key)).await {
         Err(PrepareError::WriteRule { balance, theta }) => {
             assert_eq!(balance, 0.0);
@@ -251,6 +253,9 @@ async fn prepare_surfaces_an_unfunded_author_as_a_write_rule_state(pool: PgPool)
     }
 }
 
+/// A garbage signature is refused per act and leaves nothing on L1. The
+/// write returns to `awaiting_pre_sign`, so the honest signature then
+/// seals on the retry.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -265,7 +270,6 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
     .await
     .expect("prepares");
 
-    // Garbage signature: refused per act, nothing exists on L1.
     let garbage = PreSignedParts {
         author_pubkey: key.public_key_bytes(),
         nonce: vec![0; 32],
@@ -275,7 +279,6 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
         relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, garbage).await,
         Err(RelayError::SignatureInvalid(_))
     ));
-    // The write returned to awaiting_pre_sign for the retry…
     assert_eq!(
         staged::load(&rig.pool, prepared.id)
             .await
@@ -283,10 +286,12 @@ async fn a_bad_pre_signature_is_refused_and_the_device_can_retry(pool: PgPool) {
             .state,
         StagedState::AwaitingPreSign
     );
-    // …and the honest signature then seals.
     rig.sign_and_relay(prepared.id, &key).await;
 }
 
+/// A client that lost the response re-submits and gets the stored act
+/// back rather than a substrate conflict. Approval retries are
+/// idempotent the same way.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -311,14 +316,11 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     let first = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts.clone())
         .await
         .expect("seals");
-    // The client re-submits after losing the response: the stored act
-    // comes back instead of a substrate conflict.
     let second = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts)
         .await
         .expect("replays");
     assert_eq!(first, second);
 
-    // Approval retries are idempotent too.
     let host_key = rig.boundary.host_public_key().await.expect("host key");
     let witness = key.approve(&pre, &first, &host_key).expect("approves");
     relay::submit_approval(
@@ -339,6 +341,10 @@ async fn a_lost_response_replays_the_stored_seal(pool: PgPool) {
     .expect("relays again");
 }
 
+/// A re-signing client submitting different bytes is refused: answering
+/// with the stored act would tell it that its new bytes were sealed. The
+/// sealed handshake survives the refusal, so the exact replay still
+/// answers.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -364,8 +370,6 @@ async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
         .await
         .expect("seals");
 
-    // A re-signing client submits different bytes: answering with the
-    // stored act would claim the new bytes were sealed, so it refuses.
     let differing = PreSignedParts {
         nonce: vec![9; 32],
         ..parts.clone()
@@ -375,13 +379,15 @@ async fn a_differing_resubmission_is_refused_not_answered(pool: PgPool) {
         Err(RelayError::ReplayMismatch(id)) if id == prepared.id
     ));
 
-    // The sealed handshake is untouched: the exact replay still answers.
     let replayed = relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts)
         .await
         .expect("replays");
     assert_eq!(sealed, replayed);
 }
 
+/// Approval before the seal exists is refused on state, and an approval
+/// of a sealed act carrying a garbage witness signature is refused by the
+/// host.
 #[sqlx::test(migrations = "../../migrations")]
 async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -396,13 +402,11 @@ async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
     .await
     .expect("prepares");
 
-    // Approval before the seal exists.
     assert!(matches!(
         relay::submit_approval(&rig.boundary, &rig.pool, prepared.id, vec![0; 64]).await,
         Err(RelayError::Staged(staged::StagedError::WrongState { .. }))
     ));
 
-    // Sealed, but the witness signature is garbage: the host refuses it.
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
     let pre = key.pre_sign(write.proposal);
     relay::submit_pre_signed(
@@ -430,6 +434,12 @@ async fn approval_is_refused_out_of_order_and_on_a_bad_witness(pool: PgPool) {
     );
 }
 
+/// Simulates a relay crash between the substrate's seal and our store:
+/// the act is sealed on L1 directly while the staged write still believes
+/// it is awaiting the pre-signature. The relay's own submission then
+/// conflicts, and because the salts are gone no approval can ever be
+/// produced — terminal, so the device re-prepares and gets a fresh
+/// sequence value.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -444,9 +454,6 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
     .await
     .expect("prepares");
 
-    // Simulate a relay crash between the substrate's seal and our store:
-    // the act is sealed on L1 directly, while the staged write still
-    // believes it is awaiting the pre-signature.
     let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
     let pre = key.pre_sign(write.proposal);
     rig.boundary.seal(pre.clone()).await.expect("seals on L1");
@@ -456,8 +463,6 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
         nonce: pre.nonce.clone(),
         pre_signature: pre.pre_signature.clone(),
     };
-    // The relay's own submission now conflicts: the salts are gone, no
-    // approval can ever be produced — terminal, re-prepare.
     assert!(matches!(
         relay::submit_pre_signed(&rig.boundary, &rig.pool, prepared.id, parts).await,
         Err(RelayError::Wedged(id)) if id == prepared.id
@@ -470,7 +475,6 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
         StagedState::Expired
     );
 
-    // The re-prepare mints a fresh sequence value.
     let again = prepare::prepare(
         &rig.boundary,
         &rig.pool,
@@ -483,13 +487,18 @@ async fn a_seal_lost_before_storing_expires_the_write(pool: PgPool) {
     assert_eq!(again.proposal.body.seq, 1);
 }
 
+/// A write prepared and abandoned before its device ever signs is
+/// collected once the epoch clock — driven here by another actor's writes
+/// — passes the GC bound. Expiry is the first phase of that: the write
+/// reaches its terminal state and stops serving content, while the
+/// payload rides the row until the reap, so a record landing in that
+/// window still promotes (data-model.md "Staged writes").
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor_id, key) = rig.funded_actor("alice").await;
     let (walker_id, walker) = rig.funded_actor("walker").await;
 
-    // A write prepared and abandoned before its device ever signs.
     let abandoned = prepare::prepare(
         &rig.boundary,
         &rig.pool,
@@ -500,7 +509,6 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
     .await
     .expect("prepares");
 
-    // Walk the epoch clock past the GC bound with another actor's writes.
     for _ in 0..GC {
         let w = prepare::prepare(
             &rig.boundary,
@@ -515,10 +523,6 @@ async fn the_ingestion_pass_collects_writes_that_never_land(pool: PgPool) {
         rig.close_and_ingest().await;
     }
 
-    // Expiry is the first phase: the write reaches its terminal state and
-    // stops serving content, while the payload rides the row until the
-    // reap — a record landing in that window still promotes
-    // (data-model.md "Staged writes").
     let w = staged::load(&rig.pool, abandoned.id).await.expect("loads");
     assert_eq!(w.state, StagedState::Expired);
     assert!(!w.proposal.payload.is_empty());

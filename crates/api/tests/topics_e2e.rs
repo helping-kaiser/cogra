@@ -444,10 +444,8 @@ fn errors(payload: &Value, mutation: &str) -> Value {
     payload[mutation]["userErrors"].clone()
 }
 
-// ---------------------------------------------------------------------
-// The creation batch: one act per topic, on top of the minting record.
-// ---------------------------------------------------------------------
-
+/// The creation batch stages one act per topic, on top of the minting
+/// record.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_post_with_topics_stages_one_act_per_topic(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -581,6 +579,9 @@ async fn the_batch_lands_whole(pool: PgPool) {
     );
 }
 
+/// Prepare only — no signing, no landing. The registry row is written in
+/// the transaction that stages the act (D5), because the composer needs
+/// the name the moment it is declared.
 #[sqlx::test(migrations = "../../migrations")]
 async fn staging_a_tag_registers_its_name(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -589,9 +590,6 @@ async fn staging_a_tag_registers_its_name(pool: PgPool) {
     let before = rig.registry_names().await;
     assert!(!before.contains(&"rust".to_string()));
 
-    // Prepare only — no signing, no landing. The row is written in the
-    // transaction that stages the act (D5), because the composer needs
-    // the name the moment it is declared.
     rig.prepare_post(&token, "A post", json!([tag("#Rust")]))
         .await;
 
@@ -601,10 +599,8 @@ async fn staging_a_tag_registers_its_name(pool: PgPool) {
     );
 }
 
-// ---------------------------------------------------------------------
-// The refusals — every one before a single act is staged.
-// ---------------------------------------------------------------------
-
+/// The first of the refusals, every one of which lands before a single
+/// act is staged.
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_illegal_name_refuses_the_whole_batch(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -739,10 +735,8 @@ async fn a_parameter_off_the_dimension_scale_is_a_transport_fault(pool: PgPool) 
     assert!(refused.get("errors").is_some(), "{refused}");
 }
 
-// ---------------------------------------------------------------------
-// The standalone gesture, and the un-tag that rides it.
-// ---------------------------------------------------------------------
-
+/// The standalone gesture: a tag declared on its own rather than inside
+/// a creation batch stages exactly one act.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_standalone_tag_stages_one_act(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -842,14 +836,11 @@ async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
     );
 }
 
-// ---------------------------------------------------------------------
-// Following a topic: the generic stance, with the family the target
-// fixes (D1), and the severance that undoes it (D9).
-// ---------------------------------------------------------------------
-
 /// The target selects the family, so the same `prepareStance` that
 /// carries an Opinion toward a Post carries an Affinity toward a Type —
-/// no per-act family choice anywhere (edges.md §1).
+/// no per-act family choice anywhere (edges.md §1). Affinity is binary,
+/// so the Type is the target leg and there is no terminal leg to carry
+/// it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn following_a_topic_writes_an_affinity(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -871,8 +862,6 @@ async fn following_a_topic_writes_an_affinity(pool: PgPool) {
         .await;
     let node = &listing["records"]["edges"][0]["node"];
     assert_eq!(node["family"], "AFFINITY", "{listing}");
-    // Affinity is binary: the Type is the target leg, and there is no
-    // terminal leg to carry it.
     assert_eq!(node["targetId"], "name:rust");
     assert!(node["terminalId"].is_null(), "{node}");
     assert_eq!(node["pDirected"], 0.1);
@@ -1046,10 +1035,6 @@ async fn an_illegal_topic_name_refuses_the_follow(pool: PgPool) {
     );
 }
 
-// ---------------------------------------------------------------------
-// The read surface: the fold, served.
-// ---------------------------------------------------------------------
-
 /// Every well-formed name already denotes a Type, and a read never
 /// writes the registry (D4).
 #[sqlx::test(migrations = "../../migrations")]
@@ -1152,7 +1137,9 @@ async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
 }
 
 /// The un-tag, read through the fold: relevance 0 is a record like any
-/// other, and the chip is gone without anything being erased.
+/// other, and the chip is gone without anything being erased. Re-tagging
+/// brings it back, the fold reading the newest record rather than a
+/// tombstone.
 #[sqlx::test(migrations = "../../migrations")]
 async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1182,8 +1169,6 @@ async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
     assert_eq!(chips.len(), 1, "the withdrawn claim is gone: {topics}");
     assert_eq!(chips[0]["hashtag"]["name"]["value"], "graphs");
 
-    // And re-tagging brings it back — the fold reads the newest record,
-    // not a tombstone.
     rig.land_tag(&token, &ak, &post, tag("rust")).await;
     assert_eq!(
         rig.post_topics(None, &post, true)
@@ -1195,7 +1180,8 @@ async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
 }
 
 /// Third-party claims are the ranker's to weight, so 2.3's chip row
-/// carries only the content-intrinsic channel (D8).
+/// carries only the content-intrinsic channel (D8) — and neither does
+/// such a claim reach the topic page's author-owned channel.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_strangers_tag_stays_off_the_chip_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1218,7 +1204,6 @@ async fn a_strangers_tag_stays_off_the_chip_row(pool: PgPool) {
     );
     assert_eq!(chips[0]["hashtag"]["name"]["value"], "rust");
 
-    // Nor does it reach the topic page's author-owned channel.
     let spam = rig.hashtag(None, "spam").await;
     assert_eq!(
         spam["taggedContent"].as_array().expect("array"),
