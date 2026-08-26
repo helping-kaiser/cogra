@@ -96,8 +96,6 @@ struct Parser {
 const MAX_PARSE_DEPTH: usize = 128;
 
 impl Parser {
-    // -- cursor -----------------------------------------------------------
-
     fn kind(&self) -> &TokenKind {
         self.kind_at(self.pos)
     }
@@ -170,8 +168,6 @@ impl Parser {
         self.pos > 0 && self.span().start == self.span_at(self.pos - 1).end
     }
 
-    // -- cddl -------------------------------------------------------------
-
     /// `cddl = S 1*(rule S)`
     fn cddl(&mut self) -> Result<Cddl, SyntaxError> {
         let start = self.pos;
@@ -195,10 +191,12 @@ impl Parser {
     /// rule = typename [genericparm] S assignt S type
     ///      / groupname [genericparm] S assigng S grpent
     /// ```
+    ///
+    /// The generic parameters are taken only where they touch the name: no `S`
+    /// stands between the two.
     fn rule(&mut self) -> Result<Rule, SyntaxError> {
         let start = self.pos;
         let name = self.name("a rule name")?;
-        // No `S` stands between a name and its generic parameters.
         let params = if self.at(&TokenKind::Lt) && self.adjacent_to_previous() {
             Some(self.generic_params()?)
         } else {
@@ -257,6 +255,9 @@ impl Parser {
 
     /// Whether the source has reached the end or the head of another rule:
     /// `id [genericparm]` followed by an assignment operator.
+    ///
+    /// The lookahead can scan the parameters flatly because `genericparm`
+    /// holds only names and commas, so it cannot nest.
     fn at_rule_boundary(&self) -> bool {
         if self.at(&TokenKind::Eof) {
             return true;
@@ -265,7 +266,6 @@ impl Parser {
             return false;
         }
         let mut index = self.pos + 1;
-        // `genericparm` holds only names and commas, so it cannot nest.
         if self.kind_at(index) == &TokenKind::Lt
             && self.span_at(index).start == self.span_at(self.pos).end
         {
@@ -283,8 +283,6 @@ impl Parser {
             TokenKind::Assign | TokenKind::TypeChoiceAssign | TokenKind::GroupChoiceAssign
         )
     }
-
-    // -- names and generics -----------------------------------------------
 
     /// `id`, in any of its roles.
     fn name(&mut self, what: &str) -> Result<Name, SyntaxError> {
@@ -339,8 +337,6 @@ impl Parser {
             Ok(None)
         }
     }
-
-    // -- types ------------------------------------------------------------
 
     /// `type = type1 *(S "/" S type1)`
     fn ty(&mut self) -> Result<Type, SyntaxError> {
@@ -536,8 +532,6 @@ impl Parser {
         Ok(Value { kind, span })
     }
 
-    // -- groups -----------------------------------------------------------
-
     /// `group = grpchoice *(S "//" S grpchoice)`
     fn group(&mut self) -> Result<Group, SyntaxError> {
         let start = self.pos;
@@ -557,6 +551,9 @@ impl Parser {
     /// at whatever closes the construct that contains it — a group only
     /// ever appears between brackets — or at the `//` that starts the next
     /// choice.
+    ///
+    /// `optcom = S ["," S]`, so the comma between entries is optional and
+    /// carries no meaning: it is consumed and not recorded.
     fn grpchoice(&mut self) -> Result<GroupChoice, SyntaxError> {
         let start = self.pos;
         let mut entries = Vec::new();
@@ -569,8 +566,6 @@ impl Parser {
                 | TokenKind::Eof
         ) {
             entries.push(self.grpent()?);
-            // `optcom = S ["," S]`: the comma is optional and carries no
-            // meaning, so it is consumed and not recorded.
             self.eat(&TokenKind::Comma);
         }
         Ok(GroupChoice {
@@ -642,7 +637,8 @@ impl Parser {
     /// lookahead. The `=>` form is only known to be a key once its arrow
     /// is reached, but the leading `type1` is parsed a single time: if an
     /// arrow follows it is the key and the value is read after it;
-    /// otherwise that `type1` is handed on as the value's first choice.
+    /// otherwise that `type1` is handed on as the value's first choice, and a
+    /// cut marker eaten along the way belongs to no one and is given back.
     fn member(&mut self) -> Result<GroupEntryKind, SyntaxError> {
         if let Some(key) = self.colon_memberkey() {
             let value = self.ty()?;
@@ -669,8 +665,6 @@ impl Parser {
                 value,
             });
         }
-        // No arrow: the `type1` was the value, not a key. The cut marker,
-        // if it was eaten, belongs to no one here — give it back.
         self.pos = after_first;
         let value = self.ty_from_first(first, start)?;
         Ok(GroupEntryKind::Member { key: None, value })
@@ -682,6 +676,10 @@ impl Parser {
     /// Returns `None` — position untouched — when the entry has no colon
     /// key, leaving the caller to read the `type1 "=>"` form or a plain
     /// value.
+    ///
+    /// The literal arm reads its value with `ok()?` rather than an unwrap:
+    /// the token is already known to be a literal, so [`Parser::value`] cannot
+    /// fail there, and this is that certainty spelled without a panic.
     fn colon_memberkey(&mut self) -> Option<MemberKey> {
         if self.kind_at(self.pos + 1) != &TokenKind::Colon {
             return None;
@@ -697,8 +695,6 @@ impl Parser {
                 bareword
             }
             TokenKind::Number(_) | TokenKind::Text(_) | TokenKind::Bytes { .. } => {
-                // The token is a literal, so `value` cannot fail; `ok()?`
-                // is the no-`unwrap` spelling of that certainty.
                 MemberKeyKind::Value(self.value().ok()?)
             }
             _ => return None,
@@ -846,119 +842,133 @@ mod tests {
         }
     }
 
+    /// Figure 14 defines 40 rules, `any` through `undefined`, the first of
+    /// them `any = #`.
     #[test]
     fn the_prelude_is_read_the_way_the_rfc_wrote_it() {
         let (_, prelude) = CORPUS[2];
         let cddl = accept(prelude);
-        // Figure 14 defines 40 rules, `any` through `undefined`.
         assert_eq!(cddl.rules.len(), 40);
         assert_eq!(cddl.rules[0].name.text, "any");
         assert_eq!(cddl.rules[39].name.text, "undefined");
-        // `any = #`, the first of them.
         assert!(matches!(
             &cddl.rules[0].body,
             RuleBody::Type(ty) if matches!(ty.choices[0].target.kind, Type2Kind::Any)
         ));
     }
 
-    // -- accepts, one family per test -------------------------------------
-
+    /// `cddl` and `rule`: one rule and many, leading and trailing `S`,
+    /// comments as `S`, a rule boundary without a newline, and each assignment
+    /// operator. `a = (1)` is the parenthesis that is a type rather than a
+    /// group, and the two socket rules take a plug through `/=` and `//=`.
     #[test]
     fn cddl_and_rule() {
         assert_eq!(
             accept_all(&[
-                "a = 1",                   // cddl: one rule
-                "a = 1\nb = 2",            // cddl: 1*(rule S)
-                "  \n a = 1 \n ",          // cddl: leading and trailing S
-                "; comment\na = 1",        // cddl: S admits comments
-                "a = 1 b = 2",             // rule boundary without a newline
-                "a = int",                 // rule: typename assignt type
-                "a /= 2",                  // rule: assignt "/="
-                "a //= (b: 1)",            // rule: assigng "//="
-                "a = (b: 1, c: 2)",        // rule: groupname assigng grpent
-                "a = (1)",                 // rule: the parenthesis that is a type
-                "$$plug //= (sack: true)", // rule: a group socket taking a plug
-                "$socket /= text",         // rule: a type socket taking a plug
+                "a = 1",
+                "a = 1\nb = 2",
+                "  \n a = 1 \n ",
+                "; comment\na = 1",
+                "a = 1 b = 2",
+                "a = int",
+                "a /= 2",
+                "a //= (b: 1)",
+                "a = (b: 1, c: 2)",
+                "a = (1)",
+                "$$plug //= (sack: true)",
+                "$socket /= text",
             ]),
             12
         );
     }
 
+    /// `genericparm` and `genericarg`: one parameter and several, `S` inside
+    /// the angle brackets, an argument that is a whole `type1`, and arguments
+    /// after `~`, after `&`, and inside a group.
     #[test]
     fn generic_parameters_and_arguments() {
         assert_eq!(
             accept_all(&[
-                "messages<a> = [a]",       // genericparm: one
-                "messages<a, b> = [a, b]", // genericparm: several
-                "messages< a , b > = [a]", // genericparm: S inside
-                "a = messages<int>",       // genericarg: one
-                "a = messages<int, text>", // genericarg: several
-                "a = messages<1 .. 2>",    // genericarg: a type1
-                "a = ~envelope<int>",      // genericarg after `~`
-                "a = &choices<int>",       // genericarg after `&`
-                "a = [* messages<int>]",   // genericarg in a group
+                "messages<a> = [a]",
+                "messages<a, b> = [a, b]",
+                "messages< a , b > = [a]",
+                "a = messages<int>",
+                "a = messages<int, text>",
+                "a = messages<1 .. 2>",
+                "a = ~envelope<int>",
+                "a = &choices<int>",
+                "a = [* messages<int>]",
             ]),
             9
         );
     }
 
+    /// `type` and `type1`: one alternative and several, both range operators,
+    /// a range over names, and control operators — including `.lorem`, a
+    /// control name no one defines, which the grammar admits all the same.
     #[test]
     fn types_and_choices() {
         assert_eq!(
             accept_all(&[
-                "a = int",                 // type: one type1
-                "a = int / text",          // type: a choice
-                "a = int / text / bool",   // type: several
-                "a = 1 .. 10",             // type1: rangeop ".."
-                "a = 1 ... 10",            // type1: rangeop "..."
-                "a = min .. max",          // type1: a range over names
-                "a = text .size 4",        // type1: ctlop
-                "a = text .regexp \"a+\"", // type1: ctlop with a text operand
-                "a = uint .lorem 1",       // type1: a control name no one defines
+                "a = int",
+                "a = int / text",
+                "a = int / text / bool",
+                "a = 1 .. 10",
+                "a = 1 ... 10",
+                "a = min .. max",
+                "a = text .size 4",
+                "a = text .regexp \"a+\"",
+                "a = uint .lorem 1",
             ]),
             9
         );
     }
 
+    /// Every alternative of `type2`: a value, a typename, the parenthesized
+    /// type, a map, an array, `~`, both `&` forms, and each tag and
+    /// major-type head down to the bare `#`. A tag number may be written in
+    /// another base, and the grammar's `DIGIT` reaches 9.
     #[test]
     fn type2_alternatives() {
         assert_eq!(
             accept_all(&[
-                "a = 1",             // type2: value
-                "a = b",             // type2: typename
-                "a = (int)",         // type2: "(" type ")"
-                "a = {b: 1}",        // type2: "{" group "}"
-                "a = [1, 2]",        // type2: "[" group "]"
-                "a = ~b",            // type2: "~" typename
-                "a = &(x: 1, y: 2)", // type2: "&" "(" group ")"
-                "a = &b",            // type2: "&" groupname
-                "a = #6.24(bstr)",   // type2: "#" "6" "." uint "(" type ")"
-                "a = #6(bstr)",      // type2: "#" "6" "(" type ")"
-                "a = #7.25",         // type2: "#" DIGIT "." uint
-                "a = #2",            // type2: "#" DIGIT
-                "a = #",             // type2: "#"
-                "a = #6.0x18(bstr)", // a tag number in another base
-                "a = #9",            // the grammar's DIGIT reaches 9
+                "a = 1",
+                "a = b",
+                "a = (int)",
+                "a = {b: 1}",
+                "a = [1, 2]",
+                "a = ~b",
+                "a = &(x: 1, y: 2)",
+                "a = &b",
+                "a = #6.24(bstr)",
+                "a = #6(bstr)",
+                "a = #7.25",
+                "a = #2",
+                "a = #",
+                "a = #6.0x18(bstr)",
+                "a = #9",
             ]),
             15
         );
     }
 
+    /// `group` and `grpchoice`: one choice and several, the empty group that
+    /// makes `{}` and `[]` groups at all, and `optcom` with a comma, without
+    /// one, and trailing. Since `grpchoice = *(grpent optcom)` admits no
+    /// entries, a choice may be empty on either side of the `//`.
     #[test]
     fn group_and_grpchoice() {
         assert_eq!(
             accept_all(&[
-                "a = {b: 1}",         // group: one grpchoice
-                "a = {b: 1 // c: 2}", // group: a group choice
+                "a = {b: 1}",
+                "a = {b: 1 // c: 2}",
                 "a = {b: 1 // c: 2 // d: 3}",
-                "a = {}",           // grpchoice: empty
-                "a = []",           // grpchoice: empty
-                "a = {b: 1, c: 2}", // grpchoice: optcom with a comma
-                "a = {b: 1 c: 2}",  // grpchoice: optcom without one
-                "a = {b: 1,}",      // grpchoice: a trailing comma
-                "a = [1 2 3]",      // grpchoice: no commas at all
-                // `grpchoice = *(grpent optcom)` admits none, so a choice
-                // may be empty on either side of the `//`.
+                "a = {}",
+                "a = []",
+                "a = {b: 1, c: 2}",
+                "a = {b: 1 c: 2}",
+                "a = {b: 1,}",
+                "a = [1 2 3]",
                 "a = {b: 1 //}",
                 "a = {//}",
             ]),
@@ -966,110 +976,120 @@ mod tests {
         );
     }
 
+    /// Every alternative of `grpent`: a type alone, an occurrence indicator
+    /// before it, a member key, both together, and an inline group with and
+    /// without an occurrence indicator or a choice. `a = [group-name]` is the
+    /// alternative the RFC marks preempted, reached through the first.
     #[test]
     fn grpent_alternatives() {
         assert_eq!(
             accept_all(&[
-                "a = [b]",          // grpent: type alone
-                "a = [? b]",        // grpent: occur then type
-                "a = {b: 1}",       // grpent: memberkey then type
-                "a = {? b: 1}",     // grpent: occur, memberkey, type
-                "a = [(b, c)]",     // grpent: an inline group
-                "a = [* (b, c)]",   // grpent: occur then inline group
-                "a = [group-name]", // grpent: the preempted alternative
-                "a = [(b // c)]",   // an inline group with a choice
+                "a = [b]",
+                "a = [? b]",
+                "a = {b: 1}",
+                "a = {? b: 1}",
+                "a = [(b, c)]",
+                "a = [* (b, c)]",
+                "a = [group-name]",
+                "a = [(b // c)]",
             ]),
             8
         );
     }
 
+    /// Every `memberkey` form: `type1 "=>"` plain, with the cut marker, with a
+    /// literal key type, with a range, and with a type as the key; and the
+    /// colon form after a bareword, a number, a text literal, and a byte
+    /// string.
     #[test]
     fn memberkey_forms() {
         assert_eq!(
             accept_all(&[
-                "a = {b => 1}",        // memberkey: type1 "=>"
-                "a = {b ^ => 1}",      // memberkey: the cut marker
-                "a = {\"b\" => 1}",    // memberkey: a literal key type
-                "a = {(1 .. 2) => 3}", // memberkey: a type1 with a range
-                "a = {b: 1}",          // memberkey: bareword ":"
-                "a = {1: 2}",          // memberkey: a number value ":"
-                "a = {\"b\": 1}",      // memberkey: a text value ":"
-                "a = {h'ff': 1}",      // memberkey: a byte-string value ":"
-                "a = {text => any}",   // memberkey: a type as the key
+                "a = {b => 1}",
+                "a = {b ^ => 1}",
+                "a = {\"b\" => 1}",
+                "a = {(1 .. 2) => 3}",
+                "a = {b: 1}",
+                "a = {1: 2}",
+                "a = {\"b\": 1}",
+                "a = {h'ff': 1}",
+                "a = {text => any}",
             ]),
             9
         );
     }
 
+    /// Every `occur` form: `*`, `+`, `?`, and the bounded indicator with a
+    /// lower bound, an upper bound, and both — the bounds writable in another
+    /// base. The last has the indicator standing before a member key.
     #[test]
     fn occur_forms() {
         assert_eq!(
             accept_all(&[
-                "a = [* b]",           // occur: "*"
-                "a = [+ b]",           // occur: "+"
-                "a = [? b]",           // occur: "?"
-                "a = [2* b]",          // occur: uint "*"
-                "a = [*3 b]",          // occur: "*" uint
-                "a = [2*3 b]",         // occur: uint "*" uint
-                "a = [0x2*0x3 b]",     // occur: bounds in another base
-                "a = {* text => any}", // occur before a member key
+                "a = [* b]",
+                "a = [+ b]",
+                "a = [? b]",
+                "a = [2* b]",
+                "a = [*3 b]",
+                "a = [2*3 b]",
+                "a = [0x2*0x3 b]",
+                "a = {* text => any}",
             ]),
             8
         );
     }
 
+    /// Every `value` form: numbers in each base and each float spelling,
+    /// including a hexfloat; text plain, empty, and carrying an escape; and
+    /// byte strings unqualified, base 16, and base 64.
     #[test]
     fn value_forms() {
         assert_eq!(
             accept_all(&[
-                "a = 0",                   // value: number, uint "0"
-                "a = 42",                  // value: number, DIGIT1 *DIGIT
-                "a = -42",                 // value: number, a negative int
-                "a = 0x2a",                // value: number, hexadecimal
-                "a = 0b101010",            // value: number, binary
-                "a = 1.5",                 // value: number, a fraction
-                "a = 1e3",                 // value: number, an exponent
-                "a = 0x1.8p3",             // value: number, a hexfloat
-                "a = \"text\"",            // value: text
-                "a = \"\"",                // value: the empty text
-                "a = \"quote \\\" here\"", // value: text with an escape
-                "a = 'bytes'",             // value: bytes, unqualified
-                "a = h'0f0f'",             // value: bytes, base 16
-                "a = b64'aGVsbG8='",       // value: bytes, base 64
+                "a = 0",
+                "a = 42",
+                "a = -42",
+                "a = 0x2a",
+                "a = 0b101010",
+                "a = 1.5",
+                "a = 1e3",
+                "a = 0x1.8p3",
+                "a = \"text\"",
+                "a = \"\"",
+                "a = \"quote \\\" here\"",
+                "a = 'bytes'",
+                "a = h'0f0f'",
+                "a = b64'aGVsbG8='",
             ]),
             14
         );
     }
 
+    /// Each of these parses, and parses as something other than what it
+    /// resembles. `#6 (b)` is not a tag — the ABNF puts no `S` before the
+    /// parenthesis — so it is the major type 6 and then a group of its own.
+    /// `2 *3` is not one occurrence indicator but the value 2 and then
+    /// three-or-more of `b`, and `-1*3` is the same, `-1` being no `uint` and
+    /// so no lower bound. A control operator needs the space that keeps it out
+    /// of the name in front of it; without that space `text.size` is one name,
+    /// and a legal one.
     #[test]
     fn the_absence_of_space_is_load_bearing() {
         assert_eq!(
             accept_all(&[
-                // `#6 (a)` is not a tag: the ABNF puts no S before the
-                // parenthesis, so this is the major type 6 and then a
-                // group of its own.
                 "a = [#6 (b)]",
-                // `2 * 3` is not an occurrence indicator, so this array
-                // holds the value 2 and then three-or-more of b.
                 "a = [2 *3 b]",
-                // A control operator needs the space that keeps it out of
-                // the name in front of it.
                 "a = text .size 4",
-                // Without the space it is one name, and a legal one.
                 "a = text.size",
-                // `-1` is not a `uint`, so it cannot be a lower bound; the
-                // array holds the value -1 and then three-or-more of b.
                 "a = [-1*3 b]",
             ]),
             5
         );
     }
 
-    // -- refusals ---------------------------------------------------------
-
+    /// `cddl = S 1*(rule S)` requires a rule.
     #[test]
     fn refuses_an_empty_document() {
-        // `cddl = S 1*(rule S)` requires a rule.
         let error = refuse("");
         assert_eq!((error.line, error.column), (1, 1));
         assert!(error.detail.contains("at least one rule"));
@@ -1137,9 +1157,9 @@ mod tests {
         assert!(error.detail.contains("`>`"));
     }
 
+    /// `genericparm` requires at least one id.
     #[test]
     fn refuses_empty_generic_parameters() {
-        // `genericparm` requires at least one id.
         let error = refuse("a<> = 1");
         assert_eq!((error.line, error.column), (1, 3));
     }
@@ -1150,9 +1170,9 @@ mod tests {
         assert_eq!((error.line, error.column), (1, 7));
     }
 
+    /// `genericarg` holds `type1`, which cannot be a choice.
     #[test]
     fn refuses_a_generic_argument_that_is_a_type_choice() {
-        // `genericarg` holds `type1`, which cannot be a choice.
         let error = refuse("a = b<int / text>");
         assert!(error.detail.contains("`>`"));
     }
@@ -1163,9 +1183,9 @@ mod tests {
         assert!(error.detail.contains("expected a type"));
     }
 
+    /// `type1` admits one operation, so the second is unexpected.
     #[test]
     fn refuses_a_chained_range() {
-        // `type1` admits one operation, so the second is unexpected.
         let error = refuse("a = 1 .. 2 .. 3");
         assert_eq!((error.line, error.column), (1, 12));
     }
@@ -1213,9 +1233,9 @@ mod tests {
         assert_eq!((error.line, error.column), (1, 8));
     }
 
+    /// `optcom` follows an entry; it does not precede one.
     #[test]
     fn refuses_a_leading_comma_in_a_group() {
-        // `optcom` follows an entry; it does not precede one.
         let error = refuse("a = {, b: 1}");
         assert_eq!((error.line, error.column), (1, 6));
     }
@@ -1226,10 +1246,10 @@ mod tests {
         assert_eq!((error.line, error.column), (1, 7));
     }
 
+    /// `occur = [uint] "*" [uint]` admits no space, so the `2` here is an
+    /// entry of its own and `*3` is left wanting one.
     #[test]
     fn refuses_an_occurrence_indicator_held_off_from_its_bound() {
-        // `occur = [uint] "*" [uint]` admits no space, so the `2` here is
-        // an entry of its own and `*3` is left wanting one.
         let error = refuse("a = [2 *3]");
         assert_eq!((error.line, error.column), (1, 10));
         assert!(error.detail.contains("expected a type"));
@@ -1265,23 +1285,21 @@ mod tests {
         assert_eq!((error.line, error.column), (1, 7));
     }
 
+    /// A group entry may sit beside another; a rule body may not.
     #[test]
     fn refuses_two_types_juxtaposed_at_the_top_level() {
-        // A group entry may sit beside another; a rule body may not.
         let error = refuse("a = 1 2");
         assert_eq!((error.line, error.column), (1, 7));
     }
 
+    /// `rule = typename [genericparm] S assignt`: no `S` before the
+    /// parameters.
     #[test]
     fn refuses_generic_parameters_held_off_by_a_space() {
-        // `rule = typename [genericparm] S assignt`: no S before the
-        // parameters.
         let error = refuse("a <b> = 1");
         assert_eq!((error.line, error.column), (1, 3));
         assert!(error.detail.contains("`=`"));
     }
-
-    // -- located refusals from the tokenizer reach the parser -------------
 
     #[test]
     fn refuses_lexical_faults_through_the_same_channel() {
@@ -1296,33 +1314,31 @@ mod tests {
         assert_eq!((error.line, error.column), (3, 7));
     }
 
-    // -- bounded nesting --------------------------------------------------
-
+    /// Located, not a panic: the refusal points at where the descent gave up.
     #[test]
     fn refuses_a_type_nested_past_the_depth_bound() {
         let deep = format!("a = {}1{}", "(".repeat(400), ")".repeat(400));
         let error = refuse(&deep);
         assert!(error.detail.contains("nested deeper"));
-        // Located, not a panic: the refusal points at where it gave up.
         assert!(error.line >= 1 && error.column >= 1);
     }
 
+    /// Eight levels of array nesting — deeper than any real theory — is well
+    /// within the bound.
     #[test]
     fn a_realistically_nested_theory_still_parses() {
-        // Eight levels of array nesting — deeper than any real theory — is
-        // well within the bound.
         let nested = format!("a = {}uint{}", "[".repeat(8), "]".repeat(8));
         accept(&nested);
     }
 
+    /// Each nested map, array, and inline group is a group entry, and a group
+    /// entry's leading `type1` is parsed exactly once. A parser that parsed it
+    /// twice — once to look for a `=>` and again as the value — would cost a
+    /// depth-`d` entry 2^d work, and forty levels of any of these shapes would
+    /// not finish. The time bound is generous, so the guard survives a slow
+    /// machine without ever admitting a parser that doubles.
     #[test]
     fn a_deeply_nested_group_entry_parses_without_reparsing() {
-        // Each nested map, array, and inline group is a group entry, and a
-        // group entry's leading `type1` was once parsed to look for a `=>`
-        // and then parsed a second time as the value. That doubling made a
-        // depth-`d` entry cost 2^d work: depth 20 took seconds, depth 26
-        // timed out. With the `type1` parsed once, every level below is far
-        // past where the old parser hung, yet parses in an instant.
         let depth = 40;
         let arrays = format!("a = {{{}uint{}}}", "[".repeat(depth), "]".repeat(depth));
         let maps = format!("a = {}uint{}", "{".repeat(depth), "}".repeat(depth));
@@ -1331,8 +1347,6 @@ mod tests {
             "[".repeat(depth),
             "]".repeat(depth)
         );
-        // Inline groups nest through the same `grpent`; a two-entry group is
-        // unambiguously a group, not a parenthesized type.
         let mut inline = String::from("0, 0");
         for _ in 0..depth {
             inline = format!("({inline}), 0");
@@ -1345,21 +1359,17 @@ mod tests {
         accept(&content_key);
         accept(&inline_groups);
         let elapsed = start.elapsed();
-        // A single descent per level is microseconds; the old doubling
-        // could not have reached this depth before the heat death of the
-        // test runner. The bound is generous so the guard survives a slow
-        // machine, not so wide it would pass under the old behaviour.
         assert!(
             elapsed < std::time::Duration::from_secs(2),
             "deep group entries took {elapsed:?}, far past a single descent"
         );
     }
 
+    /// The value after `=>` is a whole `type`, so its first `type1` — the one
+    /// the entry parsed while looking for the arrow — must go on to collect
+    /// the remaining `/`-choices rather than standing alone.
     #[test]
     fn a_content_key_carries_a_value_with_choices() {
-        // The value after `=>` is a whole `type`, so its first `type1` — the
-        // one the entry parsed while looking for the arrow — must go on to
-        // collect the remaining `/`-choices rather than standing alone.
         let cddl = accept("a = {2 => x / y / z}");
         let RuleBody::Type(ty) = &cddl.rules[0].body else {
             panic!("expected a type rule");
@@ -1379,8 +1389,6 @@ mod tests {
         );
         assert_eq!(value.choices.len(), 3, "the value keeps all three choices");
     }
-
-    // -- the ambiguity of `=` ---------------------------------------------
 
     #[test]
     fn an_equals_rule_takes_the_type_reading_when_there_is_one() {
@@ -1417,8 +1425,6 @@ mod tests {
         let cddl = accept("a /= 1");
         assert!(matches!(cddl.rules[0].body, RuleBody::Type(_)));
     }
-
-    // -- spans -------------------------------------------------------------
 
     #[test]
     fn a_rule_spans_the_text_it_was_read_from() {
