@@ -25,6 +25,7 @@ import com.cogra.domain.ApplicationView
 import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.HashtagView
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
@@ -34,11 +35,16 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
+import com.cogra.domain.TaggedContentKind
+import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
+import com.cogra.network.graphql.HashtagQuery
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
+import com.cogra.network.graphql.fragment.HashtagFields
 import com.cogra.network.graphql.fragment.PostFields
 import com.cogra.network.graphql.fragment.ProfileFields
 import com.cogra.network.graphql.fragment.PreparedWriteFields
@@ -176,6 +182,56 @@ internal fun PostFields.Description.toDomain() = ModeratedField(value, status.to
 internal fun PostFields.Content.toDomain() = ModeratedField(value, status.toDomain())
 internal fun CommentFields.Content.toDomain() = ModeratedField(value, status.toDomain())
 
+internal fun HashtagFields.toDomain(): HashtagView = HashtagView(
+    id = id,
+    name = ModeratedField(name.value, name.status.toDomain()),
+)
+
+internal fun PostFields.Topic.toDomain(): TopicClaimView = TopicClaimView(
+    hashtag = hashtag.hashtagFields.toDomain(),
+    relevance = relevance,
+    confidence = confidence,
+    pending = pending,
+)
+
+internal fun CommentFields.Topic.toDomain(): TopicClaimView = TopicClaimView(
+    hashtag = hashtag.hashtagFields.toDomain(),
+    relevance = relevance,
+    confidence = confidence,
+    pending = pending,
+)
+
+/** Null for a node class this build does not yet render on the topic screen. */
+internal fun HashtagQuery.TaggedContent.toDomain(): TaggedContentView? {
+    val post = node.onPost
+    val comment = node.onComment
+    return when {
+        post != null -> TaggedContentView(
+            kind = TaggedContentKind.POST,
+            id = post.id,
+            title = post.title.value,
+            snippet = post.content.value,
+            authorHandle = post.author?.handle,
+            authorDisplayName = post.author?.displayName?.value,
+            relevance = relevance,
+            confidence = confidence,
+            pending = pending,
+        )
+        comment != null -> TaggedContentView(
+            kind = TaggedContentKind.COMMENT,
+            id = comment.id,
+            title = null,
+            snippet = comment.content.value,
+            authorHandle = comment.author?.handle,
+            authorDisplayName = comment.author?.displayName?.value,
+            relevance = relevance,
+            confidence = confidence,
+            pending = pending,
+        )
+        else -> null
+    }
+}
+
 /** An unknown state is never presented as pending. */
 internal fun com.cogra.network.graphql.type.LandingState.toDomain(): LandingState =
     runCatching { LandingState.valueOf(rawValue) }.getOrDefault(LandingState.UNKNOWN)
@@ -193,6 +249,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     updatedAt = updatedAt,
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
+    topics = topics.map { it.toDomain() },
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -203,6 +260,7 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     updatedAt = updatedAt,
     landing = landing.toDomain(),
     license = LicenseChoice(license.attribution, license.provenance),
+    topics = topics.map { it.toDomain() },
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
