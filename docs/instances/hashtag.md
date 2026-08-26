@@ -25,9 +25,18 @@ L1 compares names by **byte equality** and nothing else —
 Canonicalization is therefore CoGra's job, the **L2 naming
 service**:
 
-- **Normalization.** Tag strings are normalized (lowercase, no
-  `#`) before any record is submitted, so every CoGra-authored
-  reference to a topic lands on the canonical Type.
+- **Normalization.** Tag strings are normalized before any record
+  is submitted — one leading `#` stripped, ASCII-lowercased — so
+  every CoGra-authored reference to a topic lands on the canonical
+  Type.
+- **Legality.** A legal name is exactly an L1 identifier atom:
+  ASCII `[A-Za-z0-9._-]`, 1 to 128 bytes
+  ([layer1-interface.md §8.1](../primitive/layer1-interface.md#81-acts-projections-partition-and-passivity)).
+  A string outside that charset names no Type and is refused at
+  the field that carried it — never punycoded, percent-encoded, or
+  otherwise transformed into a name that is legal: encoding
+  changes what a name means while leaving it looking the same, in
+  the one identifier meant to stay human-legible.
 - **The registry.** CoGra keys its own stores by
   `UUIDv5(HASHTAG_NAMESPACE, canonical_name)` — a deterministic
   function of the name, so the Postgres registry row and every
@@ -76,13 +85,11 @@ author for account deletion to touch.
   current claim, and relevance `0` withdraws it (§4).
 - **Following a topic** — an **Affinity** record (Actor → Type):
   relevance, not verdict — its sign is coherence, never a
-  standing vouch. Affinity is the follow gesture the topic feed
-  reads (§5).
-- **Stances** — Opinion → Type is native: liking or rejecting a
-  topic is an ordinary graph act, full vocabulary. The old
-  no-actor-edges-to-Hashtag prohibition is gone — what it
-  protected against is handled as feed policy, not topology
-  (§5).
+  standing vouch. The target selects the family
+  ([edges.md §1](../primitive/edges.md#1-the-edge-record-and-cogras-two-axes)),
+  so
+  the stance gesture toward a Type is Affinity, and it is the
+  follow gesture the topic feed reads (§5).
 - **Commentary** — Reviews of a Type mint Comments like
   anywhere else and change nothing about the Type: no semantics,
   no tags, no standing, no gates
