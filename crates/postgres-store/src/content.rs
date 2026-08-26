@@ -709,7 +709,8 @@ pub async fn post_by_node(pool: &PgPool, l1_node_id: &str) -> Result<Option<Post
 /// (results always come back newest-first). `include_pending` false
 /// serves only what has landed on L1. `limit` is capped by the resolver.
 /// The cursor is re-resolved against its entry's current state before the
-/// walk — see [`resolve_post_cursor`].
+/// walk, so an entry that lands between two pages is not served a second
+/// time out of the other namespace.
 pub async fn list_posts(
     pool: &PgPool,
     cursor: Option<ContentCursor>,
