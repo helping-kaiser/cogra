@@ -41,6 +41,7 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.PostView
+import com.cogra.domain.TopicClaimView
 import com.cogra.feature.content.R
 import com.cogra.feature.stance.StanceControlRoute
 
@@ -48,8 +49,11 @@ import com.cogra.feature.stance.StanceControlRoute
 fun FeedRoute(
     /** Null while the auth phase resolves; the write/join affordances wait. */
     signedIn: Boolean?,
+    /** Null when signed out; gates the chip row's add/remove gesture to the viewer's own posts. */
+    viewerId: String?,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     refreshSignal: Boolean = false,
@@ -65,14 +69,26 @@ fun FeedRoute(
     FeedScreen(
         state = state,
         signedIn = signedIn,
+        viewerId = viewerId,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
+        onOpenTopic = onOpenTopic,
         onSignInOrJoin = onSignInOrJoin,
         keyBanner = keyBanner,
         banners = banners,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
+        topicChipRow = { target, topics, editable, tag ->
+            TopicChipRowRoute(
+                target = target,
+                topics = topics,
+                editable = editable,
+                onOpenTopic = onOpenTopic,
+                onChanged = viewModel::refresh,
+                testTagPrefix = tag,
+            )
+        },
     )
 }
 
@@ -81,10 +97,12 @@ fun FeedRoute(
 fun FeedScreen(
     state: FeedUiState,
     signedIn: Boolean?,
+    viewerId: String?,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
@@ -93,6 +111,13 @@ fun FeedScreen(
      * the screen stays free of DI and previewable.
      */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /** The topic chip row a post card carries (hashtag.md §4), likewise hoisted. */
+    topicChipRow: @Composable (
+        target: String,
+        topics: List<TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit = { _, _, _, _ -> },
 ) {
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the key
@@ -195,9 +220,11 @@ fun FeedScreen(
                             items(state.posts, key = { it.id }) { post ->
                                 PostCard(
                                     post = post,
+                                    editable = viewerId != null && post.author?.id == viewerId,
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
                                     stanceControl = stanceControl,
+                                    topicChipRow = topicChipRow,
                                 )
                             }
                             if (state.hasNextPage) {
@@ -268,9 +295,16 @@ private fun GuestBanner(onSignInOrJoin: () -> Unit) {
 @Composable
 private fun PostCard(
     post: PostView,
+    editable: Boolean,
     onClick: () -> Unit,
     onOpenActor: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    topicChipRow: @Composable (
+        target: String,
+        topics: List<TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -306,6 +340,7 @@ private fun PostCard(
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
+            topicChipRow(post.id, post.topics, editable, "feed_post_${post.id}")
             // The post card carries the stance control (design.md §6).
             stanceControl(post.id, "feed_post_${post.id}")
         }
