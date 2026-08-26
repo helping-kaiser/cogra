@@ -1,7 +1,9 @@
-// The admission-handshake objects and the epoch package
-// (layer1-interface.md §8.2, §8.4, §11.6). These are the seam's data
-// transfer shapes: what crosses the boundary between CoGra and the
-// substrate, in both directions.
+//! The admission-handshake objects and the epoch package
+//! (layer1-interface.md §8.2, §8.4, §11.6).
+//!
+//! These are the seam's data transfer shapes: what crosses the boundary
+//! between CoGra and the substrate, in both directions. Bare section
+//! references below are that document's.
 
 use super::census::{Family, LegRole};
 use super::encoding::Encoder;
@@ -26,10 +28,10 @@ pub struct StructuralBody {
     /// The act's family parameter tuple; leg renderings are census-derived.
     pub p_d: f64,
     pub p_i: f64,
-    /// Public protocol references (`def:graph:public-protocol-reference`).
+    /// Public protocol references (§8.2).
     pub settlement_ref: Option<ActId>,
     pub license: Option<String>,
-    /// Asserted causal parents (`def:graph:act-causal-parents`).
+    /// Asserted causal parents (§8.2).
     pub asserted_parents: Vec<ActId>,
 }
 
@@ -48,7 +50,8 @@ impl StructuralBody {
     }
 
     /// Canonical bytes: the signing base of the pre-commitment and, with
-    /// the host additions, of the seal and approval.
+    /// the host additions, of the seal and approval. The encoding closes on
+    /// a schema version, so the body shape can evolve forward.
     pub fn canonical_bytes(&self) -> Vec<u8> {
         let mut e = Encoder::new();
         e.array(9);
@@ -72,14 +75,13 @@ impl StructuralBody {
         for p in &self.asserted_parents {
             e.text(&p.to_string());
         }
-        // Trailing schema version for forward evolution of the body shape.
         e.uint(1);
         e.finish()
     }
 }
 
 /// Canonical encoding of the dependency list — the dependency projection's
-/// bytes (`def:graph:act-dependency-projection`).
+/// bytes (§8.2).
 pub fn canonical_deps(deps: &[ActId]) -> Vec<u8> {
     let mut e = Encoder::new();
     e.array(deps.len() as u64);
@@ -100,7 +102,7 @@ pub struct Proposal {
 }
 
 /// The actor's signed pre-commitment over the canonical structural body
-/// plus both pre-digests (`def:graph:proposal-pre-commitment`).
+/// plus both pre-digests (§8.2).
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreSignedProposal {
     pub proposal: Proposal,
@@ -127,7 +129,7 @@ pub fn pre_commitment_msg(
     e.finish()
 }
 
-/// The host-sealed verified act (`def:graph:verified-act`): the exact
+/// The host-sealed verified act (§8.2): the exact
 /// proposal plus host salts and the binding commitments, sealed by the
 /// host signature. No host order fields.
 #[derive(Debug, Clone, PartialEq)]
@@ -159,7 +161,8 @@ impl VerifiedAct {
 
 /// The seal frame from its parts — the one encoding of the message
 /// `VerifiedAct::seal_msg` covers, callable where only stored columns
-/// exist rather than an assembled act.
+/// exist rather than an assembled act. Like the body, the frame closes on a
+/// schema version so its shape can evolve forward.
 pub fn seal_message(
     body: &StructuralBody,
     pre_signature: &[u8],
@@ -172,7 +175,6 @@ pub fn seal_message(
     e.bytes(pre_signature);
     e.bytes(content_commitment);
     e.bytes(deps_commitment);
-    // Trailing schema version for forward evolution of the frame shape.
     e.uint(1);
     e.finish()
 }
@@ -186,8 +188,8 @@ pub struct ApprovalWitness {
 }
 
 /// One published record of an epoch package — the self-sufficient edge
-/// record of `subsec:deployment:sufficiency`, in the §8.4 field set the
-/// mirror stores (data-model.md "The record mirror").
+/// record of §13, in the §8.4 field set the mirror stores (data-model.md
+/// "The record mirror").
 #[derive(Debug, Clone, PartialEq)]
 pub struct PublishedRecord {
     pub act_id: ActId,
@@ -195,7 +197,7 @@ pub struct PublishedRecord {
     pub family: Family,
     /// Landing epoch.
     pub epoch: i64,
-    /// Authoritative causal key (`def:graph:authoritative-act-order`).
+    /// Authoritative causal key (§8.3).
     pub act_time: i64,
     pub position: i64,
     /// Non-empty payload committed under the witness.
@@ -214,7 +216,7 @@ pub struct PublishedLeg {
     /// The leg's rendering of the act parameter tuple.
     pub p_d: f64,
     pub p_i: f64,
-    /// Host-cached edge-projection maturity (`def:graph:edge-projection-maturity`).
+    /// Host-cached edge-projection maturity (§8.3).
     pub tau: f64,
 }
 
