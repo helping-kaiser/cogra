@@ -1029,7 +1029,7 @@ impl EnforcementPartition {
     ///     Enforcement::Failing,
     /// );
     /// assert_eq!(
-    ///     partition.enforcement_for(Path::new("android/app/src/main/AndroidManifest.xml")),
+    ///     partition.enforcement_for(Path::new("tmp_dev/2026-08-26-hand-test.md")),
     ///     Enforcement::Advisory,
     /// );
     /// ```
