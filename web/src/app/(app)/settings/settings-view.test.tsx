@@ -157,6 +157,18 @@ describe("SettingsView backup", () => {
     expect(window.localStorage.getItem("cogra.stanceInputMode")).toBe("sliders");
   });
 
+  // F4: the way back to a confirmation switched off from the dialog.
+  it("offers the multi-action confirmation toggle, and remembers it", async () => {
+    renderSettings();
+    const toggle = await screen.findByTestId("settings_confirm_multi_action");
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    await waitFor(() =>
+      expect(screen.getByTestId("settings_confirm_multi_action")).not.toBeChecked(),
+    );
+    expect(window.localStorage.getItem("cogra.confirmMultiActionSubmits")).toBe("false");
+  });
+
   it("collapses the restore card into the header for a keyless browser", async () => {
     // The key banner rides settings like every main surface
     // (design.md §6).
