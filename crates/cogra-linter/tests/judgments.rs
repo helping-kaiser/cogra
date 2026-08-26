@@ -48,6 +48,30 @@ fn adoption() -> &'static Adoption {
     })
 }
 
+/// The ruled adoption with the module profile put back where it entered from
+/// (´dec:lint:staged-profiles´).
+///
+/// Both profiles are in force today, so a reserved-but-ungoverned inventory
+/// kind is what the ruled data no longer supplies, and the staged arm of
+/// warrant totality needs one. The module profile is the last one
+/// `[profiles]` registers, so the last effective status in the file is its
+/// own.
+fn module_staged() -> &'static Adoption {
+    static LOADED: OnceLock<Adoption> = OnceLock::new();
+    LOADED.get_or_init(|| {
+        let text = adoption_text().replace("effective = 2", "effective = 1");
+        let mark = "status = \"effective\"";
+        let at = text.rfind(mark).expect("the module profile is effective");
+        let text = format!(
+            "{}status = \"staged\"{}",
+            &text[..at],
+            &text[at + mark.len()..]
+        );
+        Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
+            .expect("the condition the module profile entered on is recorded beside it")
+    })
+}
+
 fn label(text: &str) -> Label {
     Label::parse(text).unwrap_or_else(|why| panic!("{text} is well-formed: {why:?}"))
 }
@@ -487,8 +511,19 @@ fn a_derivation_behind_an_authored_kind_is_the_species_failure() {
 fn a_staged_profiles_kind_is_ungoverned_not_underived() {
     let (mut build, owner, region) = one_owner();
     build.mint(owner, region, "mod:module:alpha", 10);
-    let found = labels::warrant_totality(&build.g, &build.r, adoption());
+    let found = labels::warrant_totality(&build.g, &build.r, module_staged());
     assert_eq!(rules(&found), vec!["label-kind-ungoverned"]);
+}
+
+/// (´[LBL-inv:labels:warrant-totality]´): once the profile is in force the
+/// same bare mint fails by the other arm — the kind is governed, so what the
+/// mint lacks is its derivation.
+#[test]
+fn a_governed_kinds_bare_mint_is_underived_not_ungoverned() {
+    let (mut build, owner, region) = one_owner();
+    build.mint(owner, region, "mod:module:alpha", 10);
+    let found = labels::warrant_totality(&build.g, &build.r, adoption());
+    assert_eq!(rules(&found), vec!["label-warrant-missing"]);
 }
 
 /// (´dec:lint:staged-profiles´): no inventory judgment runs over a staged

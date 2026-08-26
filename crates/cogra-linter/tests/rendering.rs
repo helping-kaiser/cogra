@@ -149,12 +149,13 @@ fn a_dry_run_writes_nothing() {
 }
 
 /// (´dec:lint:migrations-subcommand´): the measurement exits `0` on a corpus
-/// it could read, because it reports no verdict.
+/// it could read, because it reports no verdict — and with every profile of
+/// `[profiles]` in force it says so rather than printing an empty report.
 #[test]
 fn the_measurement_always_exits_zero() {
     let at = fixture("migrations");
     let (code, text) = ran(&at, &["migrations"]);
     assert_eq!(code, 0, "{text}");
-    assert!(text.contains("profile rust-module"), "{text}");
+    assert!(text.contains("no staged profile to measure"), "{text}");
     let _ = std::fs::remove_dir_all(&at);
 }

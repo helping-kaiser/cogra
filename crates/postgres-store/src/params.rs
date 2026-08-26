@@ -1,3 +1,5 @@
+//! ´mod:module:params´
+//!
 //! The network parameter carrier's read side (data-model.md
 //! `network_parameter_versions`): append-only version rows per governed
 //! parameter, the newest in force.

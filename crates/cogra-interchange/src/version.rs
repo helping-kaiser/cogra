@@ -1,3 +1,5 @@
+//! ´mod:module:version´
+//!
 //! Versions and coordinates.
 //!
 //! A version is the triple (major, minor, patch), carried in a document as

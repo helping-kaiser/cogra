@@ -50,6 +50,7 @@ pub mod error;
 pub mod frontend;
 pub mod frontend_md;
 pub mod frontend_rust;
+pub mod frontend_web;
 pub mod graph;
 pub mod judge;
 pub mod migrate;
@@ -887,9 +888,11 @@ fn prefixes_of(a: &Adoption, owner: &OwnerId) -> Vec<Prefix> {
 /// What a generated region presents, and therefore may not feed.
 ///
 /// `None` throughout this corpus, and by a fact of the adoption data rather
-/// than by omission: `[citation-indexes]` designates nothing, and the label
-/// registers of the one profile that would own a `LabelRegister` region are
-/// not generated until slice 6 (´dec:lint:staged-profiles´).
+/// than by omission. `[citation-indexes]` designates nothing. And a label
+/// register designates nothing either: its rows are generated from the
+/// census, an AST fact, never from an occurrence set, so no row can feed a
+/// set it was generated from and (´[LBL-metathm:labels:no-self-support]´)
+/// stays a theorem without the exclusion ever being engaged.
 ///
 /// The gap is named: a recorded designation is a free-text row of
 /// `[citation-indexes] designations`, which carries no upstream owner a

@@ -1,3 +1,5 @@
+//! ´mod:module:rate-limit´
+//!
 //! Auth-endpoint throttle state (auth.md "Rate limiting") — the SQL half
 //! of the api crate's ratelimit module.
 //!

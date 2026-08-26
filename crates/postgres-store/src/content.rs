@@ -1,3 +1,5 @@
+//! ´mod:module:content´
+//!
 //! Display content for the content slice: immutable entity rows bound to
 //! their minted L1 node, append-only version rows, and the act payload
 //! carriage (data-model.md "Content nodes", "Display-content versioning").

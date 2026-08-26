@@ -1,3 +1,5 @@
+//! ´mod:module:migrate´
+//!
 //! How far each staged profile's migration still has to travel.
 //!
 //! A profile is registered and staged until the migration that makes it

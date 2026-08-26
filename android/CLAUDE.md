@@ -35,7 +35,10 @@ endpoint/web-origin build config), `core:crypto`, `core:designsystem`,
 `core:network`, the slice-1 feature surfaces `feature:onboarding`,
 `feature:auth`, `feature:home` (the shell's account-status
 banners), `feature:invites`, `feature:settings`, slice 2's
-`feature:content`, and slice 2.1's `feature:profile`.
+`feature:content`, slice 2.1's `feature:profile`, slice 2.2's
+`feature:stance` (the stance control, embedded in post cards,
+comments, and profiles), and slice 2.3's `feature:topics` (the topic
+screen — name, follow control, tagged content).
 `core:ranker` arrives with slice 3.
 
 The split:

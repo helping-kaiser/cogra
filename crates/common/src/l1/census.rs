@@ -1,3 +1,5 @@
+//! ´mod:module:census´
+//!
 //! The edge census (layer1-interface.md §9.5–§9.7; bare section references
 //! below are that document's). The census is normative: where prose and the
 //! tables disagree, the tables govern.

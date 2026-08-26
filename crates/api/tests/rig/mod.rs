@@ -1,3 +1,5 @@
+//! ´mod:module:rig´
+//!
 //! The shared HTTP test rig: every integration suite builds the same
 //! ApiContext and router over a throwaway database; the mailer, the
 //! rate limits, and the client-IP source are the per-suite knobs.

@@ -1,3 +1,5 @@
+//! ´mod:module:pretokenize´
+//!
 //! The pre-tokenizer contract: comment regions and ban findings.
 //!
 //! The pre-tokenizer is a lexer with a small, testable contract, held to the
@@ -16,7 +18,7 @@
 //! silently skips a byte has classified nothing and reported nothing.
 //!
 //! It is guaranteed structurally rather than by inspection. A language's
-//! lexer never appends a lexeme itself: it hands spans to [`Partitioning`],
+//! lexer never appends a lexeme itself: it hands spans to `Partitioning`,
 //! which fills the run before each one with a [`LexClass::Code`] lexeme and
 //! closes the tail at the end of the input. A lexer that forgets a stretch
 //! therefore produces `Code` over it, which is the invariant's own failure
@@ -95,9 +97,12 @@ impl LexClass {
 
 /// The form a language gives a comment.
 ///
-/// Rust's six, which are the classes `[banned-tokens]` and
-/// `[scanned-regions]` both name: the two plain forms are contraband, and
-/// the four documentation forms are this corpus's scanned regions.
+/// The variants are named by how a comment is *written*, so a language
+/// sharing a spelling shares the variant: Rust's six are the classes
+/// `[banned-tokens]` and `[scanned-regions]` both name — the two plain forms
+/// contraband and the four documentation forms this corpus's scanned regions
+/// — and TypeScript's three are the three of those six it spells the same
+/// way.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CommentForm {
     /// `///`
@@ -313,8 +318,11 @@ fn stamp_one(one: &mut Diagnostic, path: &Path, source: &[u8], enforcement: Enfo
 /// Pre-tokenize one source's bytes under the language that reads it.
 ///
 /// A language with no pre-tokenizer — every language of `[scanned-regions]`
-/// but Rust in this slice, and every file with no language at all — yields
-/// one `Code` lexeme over the whole input and no diagnostics. That is the
+/// but Rust, and every file with no language at all — yields one `Code`
+/// lexeme over the whole input and no diagnostics. Rust is the only one that
+/// needs a second reading of the bytes: `syn` drops the comments that decide
+/// its bans, where `swc` keeps its own and Markdown has no lexical pre-pass
+/// at all. That is the
 /// partition's answer for "nothing is known about this file's lexical
 /// structure", and it is why the invariant is stated over the input rather
 /// than over the languages.

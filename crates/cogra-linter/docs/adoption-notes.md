@@ -30,8 +30,8 @@ says which:
    data every profile must fix; the fact that Π ⊆ K; that working
    notes are their own owner.)
 2. **The repository speaks.** Measured, cited with the number.
-   (Example: 1444 test-attributed functions; 0 test-name collisions;
-   `mod rig;` declared nine times for one definition.)
+   (Example: 1579 test-attributed functions; 0 test-name collisions;
+   `mod rig;` declared eleven times for one definition.)
 3. **Neither speaks.** Then it was ruled on 2026-08-21, and the
    **Rulings** section below records what stands and why. No fourth
    category was allowed, and nothing in the file is left proposed.
@@ -137,19 +137,23 @@ exempting the working notes from resolution.
 Two profiles, both Rust, both named by ``conv:linter:rust-frontend``
 ("a test profile recognizing test-attributed functions, a module
 profile recognizing `mod` items"). Nothing for Markdown, TypeScript or
-Kotlin: their frontends are later slices, and a profile whose frontend
-does not exist cannot compute a census — ``inv:labels:two-pass``
-requires every census computed before any resolution runs, so a
-half-available Π is not a smaller Π, it is a broken one.
+Kotlin. A frontend is a **precondition and not a cause**: Kotlin's is
+still a later slice, and a profile whose frontend does not exist cannot
+compute a census — ``inv:labels:two-pass`` requires every census
+computed before any resolution runs, so a half-available Π is not a
+smaller Π, it is a broken one. Markdown's frontend and the web's both
+exist and carry no profile all the same, because what Π registers is
+what a migration has landed (R19).
 
 The same reasoning governs the two that are here (R19):
 ``inv:labels:inventory`` admits nothing partial, and a profile
 switched on before the places its labels must occupy exist fails at
 every covered asset. A profile therefore enters Π in the commit that
-lands its migration; `status` and `effective` are what move. The test
-profile entered on 2026-08-26 with its per-owner registers; the module
-profile is registered and staged, waiting on its 87 inner doc
-comments.
+lands its migration; `status` and `effective` are what move. Both
+entered on 2026-08-26: the test profile with its per-owner registers,
+the module profile with the 89 inner doc comments its definitions
+carry. Π is the whole registered family, and the next profile
+registered here will take the same path.
 
 Each profile fixes exactly the five data ``sig:labels:profiles``
 demands. Three of the five were genuinely hard:
@@ -157,29 +161,33 @@ demands. Three of the five were genuinely hard:
 **Census must count definitions, not declarations.** The calculus says
 the census may cover "a container such as a module or namespace
 **definition**", and the repository proves the word matters: `mod rig;`
-is declared in nine separate integration-test binaries under
+is declared in eleven separate integration-test binaries under
 `crates/api/tests/`, all naming the single definition at
-`crates/api/tests/rig/`. A declaration-census derives `mod:*:rig` nine
-times in one owner and fails ``inv:labels:inventory`` on day one; a
-definition-census sees one asset. This is the clearest case in the file
-of measurement resolving a reading of the discipline.
+`crates/api/tests/rig/`. A declaration-census derives `mod:*:rig`
+eleven times in one owner and fails ``inv:labels:inventory`` on day
+one; a definition-census sees one asset. This is the clearest case in
+the file of measurement resolving a reading of the discipline. It is
+also why the pairing reads every file directly under a package's
+`tests` directory as a crate root: Cargo compiles each as its own
+crate, so the tree they share is backed from beside them.
 
 **Injectivity is already satisfied for tests, and for modules only
-after the exclusion.** Measured per owner: `api` 160 distinct test
-names of 160, `common` 81/81, `l1-standin` 15/15, `postgres-store`
-26/26 — **no renaming needed anywhere**. ``inv:labels:inventory`` calls
-a collision "a naming defect of the assets", and this corpus has none.
-The module profile would fail immediately on 13 `#[cfg(test)] mod
-tests` definitions; excluding them (R12) leaves every owner clean.
+after the exclusion.** Measured per owner: `api` 239 distinct test names
+of 239, `cogra-interchange` 474/474, `cogra-linter` 690/690, `common`
+101/101, `l1-standin` 15/15, `postgres-store` 60/60 — **no renaming
+needed anywhere**. ``inv:labels:inventory`` calls a collision "a naming
+defect of the assets", and this corpus has none. The module profile
+would fail immediately on the 36 `#[cfg(test)] mod tests` definitions;
+excluding them (R12) leaves every owner clean.
 
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
 magnitude.** Tests take a **generated register of the owner** (R11):
 the whole rust-test census, zero source edits, one generator. Modules
 keep the **inner documentation comment**: the label sits at the asset,
-and the 87 definitions are a bounded pending task rather than a
-blocker at the scale of the test census. The inner form is the only
-one a file-backed and an inline module can both carry.
+and 89 definitions were a bounded migration rather than a blocker at
+the scale of the test census. The inner form is the only one a
+file-backed and an inline module can both carry.
 
 The register deserves one line of justification beyond cost.
 ``inv:labels:generated-compliance`` makes a generated mint stand on its
@@ -457,15 +465,14 @@ set. The register's name and location — `<owner tree
 root>/label-register.md` — are implementation-defined and marked as
 such; what is fixed is that the place is a generated register *of the
 owner*, hence a file inside that owner's tree. The module profile keeps
-the `//!` inner doc comment, whose 87-definition migration is a
-recorded pending task. The ~1210 plain-comment sweep remains a separate
-task.
+the `//!` inner doc comment, and its 89-definition migration landed
+with its entry. The ~1210 plain-comment sweep remains a separate task.
 
 **R12 — `#[cfg(test)]` modules stay out of the module census.** They
 are test scaffolding, and their contents are the test profile's
-business; including them would derive `mod:*:tests` thirteen times and
-fail injectivity in two owners on day one. The consequence is accepted:
-an inline test module carries no label.
+business; including them would derive `mod:*:tests` thirty-eight times
+and fail injectivity in every owner. The consequence is accepted: an
+inline test module carries no label.
 
 **R13 — Module labels take one constant area: `mod:module:<name>`.** A
 visibility-derived area would make visibility a citation-visible facet
@@ -517,9 +524,9 @@ registering it and staging entry keeps the file honest about both
 facts — the profile is decided, and it is not yet in force. The test
 profile entered on 2026-08-26, when the first register generation
 committed a label-register.md for each of the six owners with covered
-assets (R18); the module profile enters when the inner doc comments
-all 87 definitions lack are written. Entering is a commit that flips
-two fields.
+assets (R18); the module profile entered the same day, when its 89
+definitions were given the inner doc comments they lacked. Entering is
+a commit that flips two fields.
 
 **R20 — The docs trees' label-shaped spans are reformed into displayed
 spans (F4).** They mean what they look like — references to the Layer 1
@@ -593,25 +600,28 @@ fails on it.
 
 ## Measurements
 
-Taken 2026-08-20 unless noted, on the branch as checked out. The two
-census counts dated 2026-08-25 come from the linter's own `migrations`
-subcommand on its first run over this corpus — the tool that will
-enforce the profiles is now the one that counts them, so a census
-figure and the check that reads it can no longer drift apart.
+Taken 2026-08-20 unless noted, on the branch as checked out. The census
+counts come from the linter's own standard places, both now in force —
+the `rust-test` census from the committed per-owner registers and the
+`rust-module` census from the `//!` labels the definitions carry, each
+read by the same `check` that enforces the profile, so a census figure
+and the check that reads it cannot drift apart. Both grow with the
+corpus: a slice that adds Rust sources re-measures them.
 
 | Fact | Value |
 |---|---|
 | Cargo packages | 4 built (`api`, `common`, `l1-standin`, `postgres-store`) + 2 pending (`cogra-linter`, `cogra-interchange`, docs-only) |
-| Rust sources | 73 `.rs` files |
-| Test-attributed functions (2026-08-25) | 1444, the `rust-test` census |
-| Test-name collisions per owner | 0 (160/160, 81/81, 15/15, 26/26) |
-| `mod` declarations | 63, of which 13 `mod tests` and 9 `mod rig;` for one definition |
-| Module definitions needing a `//!` label (2026-08-26) | 87, the whole `rust-module` census — it grows with the corpus, so slices that add Rust modules re-measure it |
+| Rust sources (2026-08-26) | 171 `.rs` files |
+| Test-attributed functions (2026-08-26) | 1579, the `rust-test` census |
+| Test-name collisions per owner (2026-08-26) | 0 (239/239, 474/474, 690/690, 101/101, 15/15, 60/60) |
+| `mod name;` declarations (2026-08-26) | 98, of which 11 `mod rig;` for one definition |
+| Module definitions (2026-08-26) | 90, the whole `rust-module` census, every one carrying its `//!` label — it grows with the corpus, so slices that add Rust modules re-measure it, and a new module carries its label in the commit that adds it |
+| `#[cfg(test)] mod tests` definitions (2026-08-26) | 36, all excluded from that census |
 | Plain `//` comment occurrences | ~1210 |
 | Plain `/*` occurrences under `crates/` (2026-08-21) | 0 |
 | Files in `docs/primitive/` (2026-08-21) | 18, of which 1 (`layer1-interface.md`) is outside the carrier |
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
-| TypeScript sources | 162 `.ts`/`.tsx` |
+| TypeScript sources (2026-08-26) | 215: 105 `.ts` and 110 `.tsx`, all under `web/`, all scanned, and none carrying an occurrence |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
 | Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
 | Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |

@@ -77,7 +77,8 @@ class ContentRepositoryTest {
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "landing":$landing,
          "moderationStatus":"NORMAL",
-         "license":{"__typename":"License","attribution":0.5,"provenance":1.0}}
+         "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
+         "topics":[]}
     """.trimIndent()
 
     @Test
@@ -154,6 +155,7 @@ class ContentRepositoryTest {
                "landing":${landingJson("LANDED", 3)},
                "moderationStatus":"NORMAL",
                "license":{"__typename":"License","attribution":0.0,"provenance":0.0},
+               "topics":[],
                "comments":{"__typename":"CommentConnection",
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
@@ -163,6 +165,7 @@ class ContentRepositoryTest {
                    "landing":${landingJson("PENDING", null)},
                    "moderationStatus":"NORMAL",
                    "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
+                   "topics":[],
                    "replies":{"__typename":"CommentConnection","edges":[],
                      "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}],
                  "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":"cc"}}}}}""",

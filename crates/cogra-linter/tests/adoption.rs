@@ -492,8 +492,8 @@ fn the_two_optional_roots_are_the_working_notes() {
 fn the_profiles_section_round_trips() {
     let profiles = ruled().profiles;
     assert_eq!(profiles.profiles.len(), 2);
-    assert_eq!(profiles.effective_count, 1);
-    assert_eq!(profiles.effective().count(), 1);
+    assert_eq!(profiles.effective_count, 2);
+    assert_eq!(profiles.effective().count(), 2);
 
     let test = &profiles.profiles[0];
     assert_eq!(test.id, ProfileId::new("rust-test"));
@@ -520,6 +520,7 @@ fn the_profiles_section_round_trips() {
     let module = &profiles.profiles[1];
     assert_eq!(module.id, ProfileId::new("rust-module"));
     assert_eq!(module.kind, Kind::new("mod"));
+    assert_eq!(module.status, ProfileStatus::Effective);
     assert_eq!(module.census.exclude.len(), 1);
     assert!(module.census.definition_rule.is_some());
     assert_eq!(
@@ -534,11 +535,46 @@ fn the_profiles_section_round_trips() {
 
 #[test]
 fn a_staged_profile_carries_the_condition_it_waits_on() {
-    let profiles = ruled().profiles;
-    let ProfileStatus::Staged { enters_when } = &profiles.profiles[1].status else {
-        panic!("the module profile is staged");
+    let profiles = "
+[profiles]
+count = 1
+effective = 0
+
+[[profiles.profile]]
+id = \"rust-module\"
+kind = \"mod\"
+status = \"staged\"
+enters_when = \"every module definition carries its inner doc comment\"
+
+  [profiles.profile.census]
+  language = \"rust\"
+  recognizer = \"module definitions\"
+  definition_rule = \"an inline mod item, or the file backing a declaration\"
+
+  [profiles.profile.classification]
+  rule = \"one constant area\"
+  areas = { all = \"module\" }
+
+  [profiles.profile.name_transformation]
+  rule = \"the bare identifier, hyphenated\"
+
+  [profiles.profile.standard_place]
+  place = \"the module's INNER documentation comment\"
+";
+    let reserved = "
+[reserved-kinds]
+source = \"the assets family\"
+count = 1
+governed = [\"mod\"]
+reserved_ungoverned = []
+";
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, profiles, reserved);
+    let adoption = load(&source).expect("a consistent staged profile");
+    let ProfileStatus::Staged { enters_when } = &adoption.profiles.profiles[0].status else {
+        panic!("the profile is staged");
     };
     assert!(enters_when.contains("inner doc comment"));
+    assert_eq!(adoption.profiles.effective().count(), 0);
 }
 
 #[test]
@@ -738,6 +774,7 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/common/"),
             PathPrefix::new("crates/api/"),
             PathPrefix::new("docs/"),
+            PathPrefix::new("web/"),
         ]
     );
 }

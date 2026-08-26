@@ -256,6 +256,13 @@ data class PostView(
     val landing: Landing,
     /** The qualifiers the minting Publish record carried. */
     val license: LicenseChoice,
+    /**
+     * This post's current topics — the author's own declarations only
+     * (hashtag.md §4, §5): third-party tag claims reach a viewer only
+     * through the tagger, at a forward-path weight the ranker computes,
+     * and the ranker arrives in slice 3.
+     */
+    val topics: List<TopicClaimView> = emptyList(),
 )
 
 /** One comment with its current display version. */
@@ -275,6 +282,60 @@ data class CommentView(
      * expand). Null when the read did not ask.
      */
     val replies: Page<CommentView>? = null,
+    /** This comment's current topics — the same author-owned channel as [PostView.topics]. */
+    val topics: List<TopicClaimView> = emptyList(),
+)
+
+/**
+ * One current topic claim on a piece of content — a chip in the chip
+ * row (hashtag.md §4). The bundle key is (author, content, Type); the
+ * newest record in it wins, and relevance 0 is a withdrawal that never
+ * appears here.
+ */
+data class TopicClaimView(
+    val hashtag: HashtagView,
+    /** Relevance `r` — how much the topic is the content's. */
+    val relevance: Double,
+    /** Confidence `c` — how firmly the claim is held. */
+    val confidence: Double,
+    val pending: Boolean,
+)
+
+/**
+ * A topic: the naming service's canonical Type (hashtag.md §1). Not a
+ * `Node` — a Type is anchored vacuously, with no minting record and no
+ * author (D2).
+ */
+data class HashtagView(
+    val id: String,
+    /** The canonical tag — lowercase, without `#`. */
+    val name: ModeratedField,
+)
+
+/** Which kind of node a [TaggedContentView] entry names — the topic screen's list. */
+enum class TaggedContentKind {
+    POST,
+    COMMENT,
+
+    /** A node class this build does not yet render on the topic screen. */
+    UNKNOWN,
+}
+
+/**
+ * One node currently tagged with a topic — an entry in
+ * [HashtagView]'s content list (`Hashtag.taggedContent`), read from the
+ * Type's side of the same current-topics fold.
+ */
+data class TaggedContentView(
+    val kind: TaggedContentKind,
+    val id: String,
+    val title: String?,
+    val snippet: String?,
+    val authorHandle: String?,
+    val authorDisplayName: String?,
+    val relevance: Double,
+    val confidence: Double,
+    val pending: Boolean,
 )
 
 /** One forward page of a keyset connection. */

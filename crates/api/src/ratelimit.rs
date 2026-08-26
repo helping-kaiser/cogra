@@ -1,3 +1,5 @@
+//! ´mod:module:ratelimit´
+//!
 //! Auth-endpoint rate limiting (auth.md "Rate limiting"): per-IP and
 //! per-key fixed windows plus the login backoff.
 //!
@@ -19,8 +21,10 @@ use postgres_store::{PgPool, rate_limit as store};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RequestIp(pub IpAddr);
 
-/// One limited verb class: the scope string keys the state rows.
 pub mod scope {
+    //! ´mod:module:scope´
+    //!
+    //! One limited verb class: the scope string keys the state rows.
     pub const LOGIN_IP: &str = "login_ip";
     pub const LOGIN_EMAIL: &str = "login_email";
     pub const REGISTER_IP: &str = "register_ip";

@@ -1,3 +1,5 @@
+//! ´mod:module:auth´
+//!
 //! Service-side authentication (auth.md): Argon2id password hashing, the
 //! JWT access + rotating opaque refresh token pair, session issuance and
 //! rotation with reuse detection, and the handle/email/password

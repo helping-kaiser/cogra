@@ -1,3 +1,5 @@
+//! ´mod:module:freshness´
+//!
 //! Exact byte comparison of every generated register.
 //!
 //! The generator is [`crate::registers::regenerate_all`] and this module is
