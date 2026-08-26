@@ -1,3 +1,5 @@
+//! ´mod:module:bootstrap´
+//!
 //! Genesis bootstrap — the one-shot instance creation (architecture.md
 //! "Genesis bootstrap"; network.md §2).
 //!

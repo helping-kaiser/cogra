@@ -1,3 +1,5 @@
+//! ´mod:module:envelope´
+//!
 //! Documents: the envelope at keys 0 and 1, the content above them.
 //!
 //! A document is a map whose keys are unsigned integers, in which key 0

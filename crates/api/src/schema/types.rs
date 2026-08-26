@@ -1,3 +1,5 @@
+//! ´mod:module:types´
+//!
 //! The slice-1 GraphQL vocabulary (api-spec.md): scalars, enums, the
 //! tiered error model, the write-flow objects, and the auth/account
 //! types. Every payload's named result field is nullable — null exactly

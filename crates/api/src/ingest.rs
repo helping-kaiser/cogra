@@ -1,3 +1,5 @@
+//! ´mod:module:ingest´
+//!
 //! Record ingestion (architecture.md "Record ingestion (the mirror
 //! contract)"): per epoch, pull the accepted ordered act sequence through
 //! the seam and append it to the mirror, advancing the stored epoch

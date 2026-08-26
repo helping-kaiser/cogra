@@ -1,3 +1,5 @@
+//! ´mod:module:content´
+//!
 //! Content authoring and promotion — slice 2 (post.md, comment.md,
 //! api-spec.md "Content authoring").
 //!

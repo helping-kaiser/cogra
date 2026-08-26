@@ -1,3 +1,5 @@
+//! ´mod:module:frontend´
+//!
 //! The shared frontend contract: what every frontend produces, and the
 //! dispatcher that picks one.
 //!
@@ -32,6 +34,7 @@ use std::path::{Path, PathBuf};
 use crate::adopt::{Adoption, Area, Kind, Place, Profile, ProfileId};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic};
+use crate::frontend_rust::CargoTarget;
 use crate::pretokenize::{CommentForm, PreTokenized};
 use crate::scan::{DelimitedSpan, Syntax};
 
@@ -241,11 +244,12 @@ pub struct Parsed {
 /// the carrier and stay owned, carrying no occurrences
 /// (´[LBL-judg:labels:minting]´).
 ///
-/// `pre` is the source's own pre-tokenizing, and the two frontends use it
-/// differently by their languages' own shapes: Markdown has no lexical
-/// pre-pass and ignores it, while the Rust frontend reads a doc attribute's
-/// comment form out of it rather than re-deciding one `syn` already dropped
-/// (´conv:lint:rust-surface´).
+/// `pre` is the source's own pre-tokenizing, and one frontend of the three
+/// uses it: the Rust frontend reads a doc attribute's comment form out of it
+/// rather than re-deciding one `syn` already dropped
+/// (´conv:lint:rust-surface´). Markdown has no lexical pre-pass at all, and
+/// `swc` keeps the comments it lexes, so neither of the other two needs a
+/// second reading of the bytes.
 ///
 /// # Errors
 ///
@@ -261,6 +265,7 @@ pub fn parse(
     match src.language.as_ref().map(crate::adopt::Language::as_str) {
         Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
         Some(crate::pretokenize::rust::RUST) => crate::frontend_rust::parse(src, pre, a),
+        Some(crate::frontend_web::TYPESCRIPT) => crate::frontend_web::parse(src, a),
         _ => Ok(Parsed {
             path: src.path.clone(),
             ..Parsed::default()
@@ -292,6 +297,10 @@ pub fn parse(
 /// backing file is not in the carrier pairs with nothing and contributes no
 /// asset, rather than an asset pointing at a file no run saw. The result is
 /// ordered by the backing source's path (´[ARCH-req:linter:determinism]´).
+///
+/// A file directly under a package's `tests` directory is a crate root as
+/// well, because Cargo compiles each as its own crate, which is why the
+/// `mod rig;` of eleven integration suites pairs to the one tree beside them.
 #[must_use]
 pub fn backing_definitions<'s>(
     profile: &Profile,
@@ -341,14 +350,35 @@ pub fn backing_definitions<'s>(
         .collect()
 }
 
+/// Whether a source is a crate root, in Cargo's own sense.
+///
+/// Three roots are named by their file stem — a package's `lib.rs` and
+/// `main.rs`, and the `mod.rs` that roots a directory. The fourth is named by
+/// its place in a target: "Files located under the `tests` directory are
+/// integration tests", and "Cargo will compile each of these files as a
+/// separate crate" (The Cargo Book, *Cargo Targets*, verified 2026-08-26), so
+/// a file directly under one is an entry point and not a module file. Which
+/// directory that is comes from [`CargoTarget::of`], the one reading of the
+/// layout this crate has: a `tests` directory inside a `src` tree belongs to
+/// a lib target and roots nothing.
+fn is_crate_root(path: &Path) -> bool {
+    if matches!(
+        path.file_stem().and_then(std::ffi::OsStr::to_str),
+        Some("lib" | "main" | "mod")
+    ) {
+        return true;
+    }
+    CargoTarget::of(path) == CargoTarget::IntegrationTest
+        && path
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|dir| dir == std::ffi::OsStr::new("tests"))
+}
+
 /// The two files a declaration in `declaring` could be backed by.
 fn candidates(declaring: &Path, name: &str) -> [PathBuf; 2] {
     let parent = declaring.parent().unwrap_or(Path::new(""));
-    let root = matches!(
-        declaring.file_stem().and_then(std::ffi::OsStr::to_str),
-        Some("lib" | "main" | "mod")
-    );
-    let dir = if root {
+    let dir = if is_crate_root(declaring) {
         parent.to_path_buf()
     } else {
         match declaring.file_stem().and_then(std::ffi::OsStr::to_str) {
@@ -444,6 +474,25 @@ mod tests {
             [
                 "crates/api/tests/rig/seed.rs",
                 "crates/api/tests/rig/seed/mod.rs"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_test_target_entry_point_backs_from_its_own_directory() {
+        assert_eq!(
+            spelled("crates/api/tests/server.rs", "rig"),
+            ["crates/api/tests/rig.rs", "crates/api/tests/rig/mod.rs"]
+        );
+    }
+
+    #[test]
+    fn a_tests_directory_inside_a_lib_target_roots_nothing() {
+        assert_eq!(
+            spelled("crates/api/src/tests/helper.rs", "inner"),
+            [
+                "crates/api/src/tests/helper/inner.rs",
+                "crates/api/src/tests/helper/inner/mod.rs"
             ]
         );
     }

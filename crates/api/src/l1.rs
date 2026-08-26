@@ -1,3 +1,5 @@
+//! ´mod:module:l1´
+//!
 //! The single L1 interface boundary (architecture.md §5 "The seam is one
 //! boundary").
 //!

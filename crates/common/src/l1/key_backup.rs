@@ -1,3 +1,5 @@
+//! ´mod:module:key-backup´
+//!
 //! The key-backup blob, format v1: the actor seed sealed under a generated
 //! recovery code (auth.md "Blob format (v1)").
 //!

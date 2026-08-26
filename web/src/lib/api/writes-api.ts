@@ -110,14 +110,27 @@ export async function approveAct(
 }
 
 /**
+ * Names the node a stance gesture reaches: a minted node by id, or a
+ * topic by its canonical name — a Type is anchored vacuously and its
+ * id derives one-way from the name, so a topic nobody has tagged yet
+ * has no id to look up (`PrepareStanceInput`/`PrepareSeveranceInput`,
+ * "Exactly one of `target` and `topicName`").
+ */
+export type StanceSelector = { readonly target: string } | { readonly topicName: string };
+
+function stanceInputOf(selector: StanceSelector): { target?: string; topicName?: string } {
+  return "target" in selector ? { target: selector.target } : { topicName: selector.topicName };
+}
+
+/**
  * Prepares the viewer's stance toward a target — toward a Profile this
- * is the reciprocation gesture completing the CoGra-join mutual pair
- * (api-spec.md "The generic stance"). Returns the staged writes for the
- * device to sign.
+ * is the reciprocation gesture completing the CoGra-join mutual pair;
+ * toward a topic (`topicName`) this is the follow gesture (D9, api-spec.md
+ * "The generic stance"). Returns the staged writes for the device to sign.
  */
 export async function prepareStance(
   client: ApolloClient,
-  target: string,
+  selector: StanceSelector,
   pDirected: number,
   pInterest: number,
 ): Promise<Outcome<readonly StagedWriteView[]>> {
@@ -125,7 +138,7 @@ export async function prepareStance(
     () =>
       client.mutate({
         mutation: PrepareStanceDocument,
-        variables: { input: { target, pDirected, pInterest } },
+        variables: { input: { ...stanceInputOf(selector), pDirected, pInterest } },
       }),
     (data) => data.prepareStance.userErrors,
     (data) => data.prepareStance.writes,
@@ -138,17 +151,18 @@ export async function prepareStance(
  * Prepares severance toward a target: the counter-records that net the
  * viewer's bundle to `(0, 0)`, each its own priced act, so the batch
  * length is the gesture's cost (api-spec.md "The generic stance").
- * Refused when the bundle already nets there.
+ * Refused when the bundle already nets there. Toward a topic
+ * (`topicName`) this is the unfollow gesture (D9).
  */
 export async function prepareSeverance(
   client: ApolloClient,
-  target: string,
+  selector: StanceSelector,
 ): Promise<Outcome<readonly StagedWriteView[]>> {
   const outcome = await payloadOutcome(
     () =>
       client.mutate({
         mutation: PrepareSeveranceDocument,
-        variables: { input: { target } },
+        variables: { input: stanceInputOf(selector) },
       }),
     (data) => data.prepareSeverance.userErrors,
     (data) => data.prepareSeverance.writes,

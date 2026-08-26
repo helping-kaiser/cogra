@@ -25,6 +25,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Landing
@@ -41,6 +42,9 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
+import com.cogra.domain.TaggedContentKind
+import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
@@ -48,6 +52,7 @@ import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
@@ -390,6 +395,7 @@ open class ThrowingContentRepository : ContentRepository {
         description: String?,
         content: String,
         license: LicenseChoice,
+        tags: List<String>,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun preparePostEdit(
         id: String,
@@ -429,6 +435,30 @@ open class ThrowingProfileRepository : ProfileRepository {
         bio: String?,
         websiteUrl: String?,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+}
+
+/** Topic-repository base: every call throws until overridden. */
+open class ThrowingTopicRepository : TopicRepository {
+    override suspend fun hashtag(name: String): Outcome<HashtagView?> = throw UnsupportedOperationException()
+    override suspend fun taggedContent(
+        name: String,
+        limit: Int?,
+        includePending: Boolean,
+    ): Outcome<List<TaggedContentView>> = throw UnsupportedOperationException()
+    override suspend fun prepareTag(
+        target: String,
+        name: String,
+        pDirected: Double?,
+        pInterest: Double?,
+    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+    override suspend fun followStanding(name: String, includePending: Boolean): Outcome<StanceStanding> =
+        throw UnsupportedOperationException()
+    override suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
+        throw UnsupportedOperationException()
+    override suspend fun followSeveranceQuote(name: String, includePending: Boolean): Outcome<SeveranceQuote> =
+        throw UnsupportedOperationException()
+    override suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>> =
+        throw UnsupportedOperationException()
 }
 
 fun testProfile(
@@ -480,4 +510,43 @@ fun testComment(
     updatedAt = Instant.EPOCH,
     landing = landing,
     license = license,
+)
+
+fun testHashtag(name: String, id: String = "hashtag-$name"): HashtagView = HashtagView(
+    id = id,
+    name = testModeratedField(name),
+)
+
+fun testTopicClaim(
+    name: String,
+    relevance: Double = 0.1,
+    confidence: Double = 1.0,
+    pending: Boolean = false,
+): TopicClaimView = TopicClaimView(
+    hashtag = testHashtag(name),
+    relevance = relevance,
+    confidence = confidence,
+    pending = pending,
+)
+
+fun testTaggedContent(
+    id: String,
+    kind: TaggedContentKind = TaggedContentKind.POST,
+    title: String? = "Title $id",
+    snippet: String? = "Body $id",
+    authorHandle: String? = "author",
+    authorDisplayName: String? = "Author",
+    relevance: Double = 0.1,
+    confidence: Double = 1.0,
+    pending: Boolean = false,
+): TaggedContentView = TaggedContentView(
+    kind = kind,
+    id = id,
+    title = title,
+    snippet = snippet,
+    authorHandle = authorHandle,
+    authorDisplayName = authorDisplayName,
+    relevance = relevance,
+    confidence = confidence,
+    pending = pending,
 )

@@ -1,3 +1,5 @@
+//! ´mod:module:breach´
+//!
 //! The breach-corpus password check (auth.md "Password requirements"): a
 //! haveibeenpwned-style hash-prefix lookup at registration and password
 //! change.

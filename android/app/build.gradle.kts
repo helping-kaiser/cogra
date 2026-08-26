@@ -101,6 +101,7 @@ dependencies {
     implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:stance"))
+    implementation(project(":feature:topics"))
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)

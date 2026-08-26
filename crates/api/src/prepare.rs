@@ -1,3 +1,5 @@
+//! ´mod:module:prepare´
+//!
 //! Prepare — step 1 of the write path (substrate.md §6; architecture.md
 //! "The write path"): validate the gesture, pre-check L1's write rule,
 //! assemble the canonical proposal, and store it as a staged write for

@@ -1,3 +1,5 @@
+//! ´mod:module:hashtag´
+//!
 //! Hashtag identity — content-addressed UUIDs.
 //!
 //! Hashtags are "identity is a canonical string" nodes

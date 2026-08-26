@@ -2,6 +2,8 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
@@ -66,6 +70,9 @@ fun ComposePostRoute(
         onDescriptionChange = viewModel::onDescriptionChange,
         onBodyChange = viewModel::onBodyChange,
         onLicenseChange = viewModel::onLicenseChange,
+        onTagInputChange = viewModel::onTagInputChange,
+        onAddTag = viewModel::onAddTag,
+        onRemoveTag = viewModel::onRemoveTag,
         onSubmit = viewModel::onSubmit,
         onBack = onBack,
         keyBanner = keyBanner,
@@ -80,6 +87,9 @@ fun ComposePostScreen(
     onDescriptionChange: (String) -> Unit,
     onBodyChange: (String) -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
+    onTagInputChange: (String) -> Unit,
+    onAddTag: () -> Unit,
+    onRemoveTag: (String) -> Unit,
     onSubmit: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
@@ -167,6 +177,20 @@ fun ComposePostScreen(
             if (state.emptyBody) {
                 ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
             }
+            // Tags, like the license, are genesis-only: they are their
+            // own priced gesture, never an edit field (post.md §3, D14)
+            // — changing an existing post's topics rides the chip
+            // row's own add/remove gestures instead.
+            if (!editing) {
+                TopicEntry(
+                    tagInput = state.tagInput,
+                    tags = state.tags,
+                    capReached = state.tagCapReached,
+                    onTagInputChange = onTagInputChange,
+                    onAddTag = onAddTag,
+                    onRemoveTag = onRemoveTag,
+                )
+            }
             // License qualifiers are genesis-only and immutable
             // (post.md §4) — the edit form carries none.
             if (!editing) {
@@ -199,6 +223,82 @@ fun ComposePostScreen(
                     stringResource(
                         if (editing) R.string.content_save_edit else R.string.content_submit,
                     ),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Topic entry at creation (D15: free text, no autocomplete): a field
+ * with a live normalization preview, add-as-chip, remove-before-send,
+ * capped at 10 (D18). Tags ride the create mutation as plain names —
+ * the composer never picks relevance or confidence (api-spec.md
+ * `TagInput`'s per-field defaults).
+ */
+@Composable
+internal fun TopicEntry(
+    tagInput: String,
+    tags: List<String>,
+    capReached: Boolean,
+    onTagInputChange: (String) -> Unit,
+    onAddTag: () -> Unit,
+    onRemoveTag: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.content_topics_heading),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        if (tags.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.testTag("compose_tags"),
+            ) {
+                tags.forEach { name ->
+                    TopicChip(
+                        name = name,
+                        onClick = {},
+                        onRemove = { onRemoveTag(name) },
+                        testTag = "compose_tag_$name",
+                    )
+                }
+            }
+        }
+        if (capReached) {
+            Text(
+                stringResource(R.string.content_topics_cap_reached, MAX_TAGS),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("compose_tags_cap"),
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                OutlinedTextField(
+                    value = tagInput,
+                    onValueChange = onTagInputChange,
+                    label = { Text(stringResource(R.string.content_topics_field)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("compose_tag_input"),
+                )
+                TextButton(onClick = onAddTag, modifier = Modifier.testTag("compose_tag_add")) {
+                    Text(stringResource(R.string.content_topics_add))
+                }
+            }
+            val preview = normalizeTagPreview(tagInput)
+            if (tagInput.isNotBlank()) {
+                Text(
+                    stringResource(R.string.content_topics_preview, preview),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("compose_tag_preview"),
                 )
             }
         }

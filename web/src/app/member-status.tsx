@@ -77,7 +77,9 @@ export function MemberStatus({
     if (signing || inviter === null) return;
     setSigning(true);
     setSigningFailed(false);
-    const prepared = await guard.run(() => prepareStance(client, inviter.id, pDirected, pInterest));
+    const prepared = await guard.run(() =>
+      prepareStance(client, { target: inviter.id }, pDirected, pInterest),
+    );
     if (prepared.kind !== "success") {
       setSigning(false);
       setSigningFailed(true);

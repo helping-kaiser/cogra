@@ -78,3 +78,25 @@ export function stanceHandlers(seeded: Record<string, SeededStance> = {}): Reque
     root("ProfileStance", "user", "User", seeded),
   ];
 }
+
+/**
+ * `HashtagStance` handler for the follow control — the one root keyed
+ * by `name` rather than `id` (hashtag.md §1: a topic's identity is its
+ * canonical name).
+ */
+export function hashtagStanceHandlers(seeded: Record<string, SeededStance> = {}): RequestHandler[] {
+  return [
+    graphql.query("HashtagStance", ({ variables }) => {
+      const name = String(variables.name);
+      return HttpResponse.json({
+        data: {
+          hashtag: {
+            __typename: "Hashtag",
+            id: `ht-${name}`,
+            viewerStance: stanceBundle(seeded[name] ?? NEVER_STANCED),
+          },
+        },
+      });
+    }),
+  ];
+}
