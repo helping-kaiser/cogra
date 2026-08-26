@@ -95,7 +95,7 @@ on CoGra's rail, off-graph
 ([ledger.md](../implementation/ledger.md)). Updating profile
 content or the payout address is a **parallel Registration** —
 same grounded pair, fresh payload, newest-wins per field
-(`edge:nodes:registration`); every prior state stays witnessed.
+(``edge:nodes:registration``); every prior state stays witnessed.
 "Newest" is chain-read: the current value is the head of the
 declared causal-parent chain rooted at the **anchoring
 Registration**, and a parallel Registration without its chain is
@@ -122,7 +122,7 @@ One account = one L0 address, self-custodied.
   [data-model.md](../implementation/data-model.md).
 
 Cold start: with no vouches a fresh account's standing is exactly
-its own commitment rate, `α = r` (`prop:epoch:final-standing-embedding`).
+its own commitment rate, `α = r` (``prop:epoch:final-standing-embedding``).
 Registration is an ordinary final-set act whose stamp is that
 rate, so the funded burn clears the write rule through the stamp;
 vouches then lift or dilute standing from that baseline

@@ -16,7 +16,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint lint-corpus fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate api api-release bootstrap run ci lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-test android-build web-dev web-prod web-apk guest-apk web-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -108,6 +108,9 @@ lint: ## Run clippy and fmt check (read-only, matches CI)
 # Exit 1 is findings on the failing set, 2 is the linter itself failing.
 lint-corpus: ## Run the corpus linter over the repository (mirrors the corpus-lint job in ci.yml)
 	$(CARGO) run -p cogra-linter --bin cogra-lint -- check
+
+regenerate: ## Regenerate every generated register the corpus linter maintains, over the whole corpus
+	$(CARGO) run -p cogra-linter --bin cogra-lint -- regenerate
 
 fmt: ## Format all code
 	$(CARGO) fmt --all
