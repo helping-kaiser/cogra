@@ -1,3 +1,5 @@
+//! ´mod:module:kinds´
+//!
 //! Registry-as-data: the classification relation, presentation reduction,
 //! and head validation.
 //!

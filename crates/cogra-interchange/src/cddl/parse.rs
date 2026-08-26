@@ -1,3 +1,5 @@
+//! ´mod:module:parse´
+//!
 //! Recursive descent over the productions of RFC 8610 Appendix B.
 //!
 //! One function per production, named after it, in the order the ABNF

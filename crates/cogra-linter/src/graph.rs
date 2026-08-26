@@ -1,3 +1,5 @@
+//! ´mod:module:graph´
+//!
 //! The corpus graph: one `StableDiGraph` holding the entire analysis.
 //!
 //! This module exports the two weight enums, the index maps, and free

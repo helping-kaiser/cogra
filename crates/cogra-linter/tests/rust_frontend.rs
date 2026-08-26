@@ -7,8 +7,10 @@
 //! (´crit:lint:error-or-finding´).
 //!
 //! Every test drives the real adoption data: which forms are scanned, what
-//! the harnesses are, and which profiles are staged are all
-//! `corpus-adoption.toml`'s, never this file's.
+//! the harnesses are, and which profiles are in force are all
+//! `corpus-adoption.toml`'s, never this file's. The one clause it no longer
+//! supplies a subject for — a staged profile — is held by an inverted
+//! fixture built from the same file.
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -46,11 +48,38 @@ fn pre_of(src: &SourceFile) -> PreTokenized {
     pretokenize(src.language.as_ref(), &src.bytes)
 }
 
+/// The ruled adoption with the module profile put back where it entered from
+/// (´dec:lint:staged-profiles´).
+///
+/// Both profiles are in force today, so the staged half of the decision has
+/// no subject in the ruled data and a fixture supplies one. The module
+/// profile is the last one `[profiles]` registers, so the last effective
+/// status in the file is its own.
+fn module_staged() -> Adoption {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let text = std::fs::read_to_string(root.join("corpus-adoption.toml"))
+        .expect("the corpus carries its adoption data")
+        .replace("effective = 2", "effective = 1");
+    let mark = "status = \"effective\"";
+    let at = text.rfind(mark).expect("the module profile is effective");
+    let text = format!(
+        "{}status = \"staged\"{}",
+        &text[..at],
+        &text[at + mark.len()..]
+    );
+    Adoption::from_str(&text, Path::new("corpus-adoption.toml")).expect("it loads")
+}
+
 /// Parse a fixture, asserting it parses.
 fn parse(text: &str) -> Parsed {
+    parse_under(adoption(), text)
+}
+
+/// The same, under an adoption a fixture built rather than the ruled one.
+fn parse_under(a: &Adoption, text: &str) -> Parsed {
     let src = source(text);
     let pre = pre_of(&src);
-    frontend_rust::parse(&src, &pre, adoption()).expect("the fixture parses")
+    frontend_rust::parse(&src, &pre, a).expect("the fixture parses")
 }
 
 /// The regions of a fixture.
@@ -664,12 +693,14 @@ fn both_ruled_rust_profiles_are_recognized() {
     assert_eq!(recognized, vec!["rust-test", "rust-module"]);
 }
 
-/// The module profile is staged, so the run computes nothing over it
-/// (´dec:lint:staged-profiles´): `Parsed::assets` carries the test profile's
-/// covered function alone, though the fixture defines a module beside it.
+/// A staged profile puts nothing in the run (´dec:lint:staged-profiles´):
+/// under a fixture that stages the module profile, `Parsed::assets` carries
+/// the test profile's covered function alone, though the source defines a
+/// module beside it.
 #[test]
 fn a_staged_profile_puts_nothing_in_the_run() {
-    let staged: Vec<&str> = adoption()
+    let staging = module_staged();
+    let staged: Vec<&str> = staging
         .profiles
         .profiles
         .iter()
@@ -678,14 +709,22 @@ fn a_staged_profile_puts_nothing_in_the_run() {
         .collect();
     assert_eq!(staged, vec!["rust-module"]);
 
-    let parsed = parse("#[test]\nfn one() {}\nmod two { }\n");
+    let parsed = parse_under(&staging, "#[test]\nfn one() {}\nmod two { }\n");
     assert_eq!(covered(&parsed.assets), vec!["one"]);
-    assert_eq!(adoption().profiles.effective_count, 1);
+    assert_eq!(staging.profiles.effective_count, 1);
 }
 
-/// But the censuses themselves are not empty: computing is not judging, and
-/// the functions exist so that entering Π flips fields rather than writing
-/// code.
+/// (´dec:lint:staged-profiles´): entering Π flipped fields and nothing else,
+/// so the same source read under the ruled data carries both censuses.
+#[test]
+fn a_profile_in_force_puts_its_census_in_the_run() {
+    let parsed = parse("#[test]\nfn one() {}\nmod two { }\n");
+    assert_eq!(covered(&parsed.assets), vec!["one", "two"]);
+    assert_eq!(adoption().profiles.effective_count, 2);
+}
+
+/// The censuses are computed whatever a profile's status is: computing is not
+/// judging, which is why entering Π flips fields rather than writing code.
 #[test]
 fn the_census_is_computed_even_though_it_is_inert() {
     let out = censuses("#[test]\nfn one() {}\nmod two { }\n", CargoTarget::LibOrBin);

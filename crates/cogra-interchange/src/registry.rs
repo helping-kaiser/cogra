@@ -1,3 +1,5 @@
+//! ´mod:module:registry´
+//!
 //! The held state: assigned coordinates with their immutable theory
 //! objects, acquisition, refusal, ceilings, targeting, and stamping.
 //!

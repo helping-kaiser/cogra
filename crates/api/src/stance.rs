@@ -1,3 +1,5 @@
+//! ´mod:module:stance´
+//!
 //! The generic stance gesture (api-spec.md "The generic stance"): one
 //! write for sentiment and connection toward any passive node. The target
 //! selects the family — Affinity toward a Type, Opinion toward everything

@@ -1,3 +1,5 @@
+//! ´mod:module:error´
+//!
 //! The crate's error taxonomy.
 //!
 //! Every enum here is `#[non_exhaustive]`, derives [`std::error::Error`]

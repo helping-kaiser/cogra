@@ -1,3 +1,5 @@
+//! ´mod:module:eval´
+//!
 //! Satisfaction: the judgment `d ⊨ S`, and the matching of one [`Value`]
 //! against one resolved type.
 //!

@@ -1,3 +1,5 @@
+//! ´mod:module:envelope´
+//!
 //! The Peer Content Envelope (PCE v0.1.0) — the payload format every
 //! content-bearing act carries through the seam. The normative spec is the
 //! L1 team's draft (Peer Content Envelope v0.1.0; adopted for slice 2,

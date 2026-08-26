@@ -1,3 +1,5 @@
+//! ´mod:module:stance´
+//!
 //! The stance bundle fold (feed-ranking.md §3.2): the sum of one author's
 //! own parameters toward one node, per family. The clip that turns the sum
 //! into the folded pair is the read rule and lives with the math, in

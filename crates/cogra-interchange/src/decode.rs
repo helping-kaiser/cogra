@@ -1,3 +1,5 @@
+//! ´mod:module:decode´
+//!
 //! The validating decoder — refuses everything outside the data language.
 //!
 //! One pass checks everything membership requires: preferred
