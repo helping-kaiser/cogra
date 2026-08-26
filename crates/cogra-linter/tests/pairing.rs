@@ -26,28 +26,12 @@ fn adoption_text() -> &'static str {
     })
 }
 
-/// The ruled adoption, which carries the module profile staged.
+/// The ruled adoption, which carries the module profile in Π.
 fn ruled() -> &'static Adoption {
     static LOADED: OnceLock<Adoption> = OnceLock::new();
     LOADED.get_or_init(|| {
         Adoption::from_str(adoption_text(), Path::new("corpus-adoption.toml"))
             .expect("the ruled adoption loads")
-    })
-}
-
-/// The ruled adoption with the module profile put into Π.
-///
-/// Entering is a commit that flips two fields (´dec:lint:staged-profiles´),
-/// and flipping them here is what lets a test ask what a check would judge
-/// on the day the migration lands — before the migration lands.
-fn entered() -> &'static Adoption {
-    static LOADED: OnceLock<Adoption> = OnceLock::new();
-    LOADED.get_or_init(|| {
-        let text = adoption_text()
-            .replace("effective = 1", "effective = 2")
-            .replace("status = \"staged\"", "status = \"effective\"");
-        Adoption::from_str(&text, Path::new("corpus-adoption.toml"))
-            .expect("the module profile enters by two fields")
     })
 }
 
@@ -92,7 +76,7 @@ fn covered(run: &Run) -> Vec<String> {
 
 /// What a check with the module profile in Π covers over these sources.
 fn census_of(sources: Vec<SourceFile>) -> Vec<String> {
-    covered(&check_sources(entered(), sources))
+    covered(&check_sources(ruled(), sources))
 }
 
 /// (´dec:lint:cross-source-pairing´): an inline definition is settled by the
@@ -293,10 +277,10 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
 
-    let walked = cogra_linter::Walk::new(entered(), &at)
+    let walked = cogra_linter::Walk::new(ruled(), &at)
         .sources()
         .expect("the fixture root walks cleanly");
-    let judged = covered(&check_sources(entered(), walked));
+    let judged = covered(&check_sources(ruled(), walked));
 
     assert_eq!(
         judged,
@@ -317,6 +301,6 @@ fn the_check_and_the_measurement_agree_over_this_corpus() {
     let reported = measured(ruled(), &root());
     assert_eq!(reported.len(), 89, "the size `[profiles]` records");
 
-    let run = cogra_linter::check(entered(), &root()).expect("the check runs over the corpus");
+    let run = cogra_linter::check(ruled(), &root()).expect("the check runs over the corpus");
     assert_eq!(covered(&run), reported, "one pairing, one census");
 }
