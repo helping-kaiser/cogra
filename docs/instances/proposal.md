@@ -42,7 +42,7 @@ The opening gesture comprises:
   Envelope ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
 - **The subject Reference** — a `(0,0)` Reference from the anchor
   to the subject node. Undefined parity, `w̃ = 0`, never vouches
-  (`rem:graph:zero-parameter-degeneracy`) — pure public naming.
+  (``rem:graph:zero-parameter-degeneracy``) — pure public naming.
   Subjects within a scope (a chat member, a collective member)
   are named by the member's **Profile**, with the scope in the
   payload; overlay-only targets are named through their owning

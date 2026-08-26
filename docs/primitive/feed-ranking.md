@@ -73,12 +73,12 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
         coherence            maturity      boundary
 ```
 
-(`def:epoch:damped-edge-weight`;
+(``def:epoch:damped-edge-weight``;
 [layer1-interface.md §8.7](layer1-interface.md#87-path-view-tiers-parity-and-the-damped-weight)).
 Adopting rather than re-deriving buys the proven structure:
 
 - **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
-  (`prop:epoch:damped-weight-bounds`), and determinant magnitudes
+  (``prop:epoch:damped-weight-bounds``), and determinant magnitudes
   top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
   products only shrink with depth.
 - **The tier ladder is built in.** Full / Half / Marginal routing
@@ -87,7 +87,7 @@ Adopting rather than re-deriving buys the proven structure:
   default.
 - **Determinism.** `w̃(e)` is a function of the published
   authoritative act order `𝒬_k` and the constants alone
-  (`lem:graph:ordered-replay-determinism`) — every consumer
+  (``lem:graph:ordered-replay-determinism``) — every consumer
   holding the same ordered history computes the same value.
 - **One formula, three consumers.** Backend, miner, and on-device
   ranker all evaluate this same primitive; there is no CoGra-side
@@ -95,7 +95,7 @@ Adopting rather than re-deriving buys the proven structure:
 
 **Invariant: zero is inert.** If either effective parameter is zero, `ε(e)`
 is undefined and `w̃(e) = 0`
-(`rem:graph:zero-parameter-degeneracy`) — the edge carries no
+(``rem:graph:zero-parameter-degeneracy``) — the edge carries no
 path. Indifference is magnitude zero, not a third sign; nothing
 downstream can revive a dead hop.
 
@@ -115,10 +115,10 @@ contains a De-invite — ties within an epoch favouring the
 revocation; a later complete Invitation at a subsequent epoch
 re-establishes the act. The rule is epoch-quantized, not
 order-read — L1's inviter-revocation rule
-(`def:epoch:inviter-revocation`), adopted as the fold's rule
+(``def:epoch:inviter-revocation``), adopted as the fold's rule
 here.
 
-This mirrors L1's net-stance fold (`def:epoch:net-stance`;
+This mirrors L1's net-stance fold (``def:epoch:net-stance``;
 [layer1-interface.md §11.3](layer1-interface.md#113-act-folding-and-the-base-allocation-matrix))
 deliberately, with the scope stated honestly: **L1's math makes a
 `(0,0)`-netted bundle inert in the standing projection; its
@@ -131,7 +131,7 @@ The fold gives revision its economics: stances are chronicles
 ([graph-model.md §3](graph-model.md#3-revision-and-current-state)),
 so walking back accumulated conviction costs counter-records in
 proportion to it, each one a priced act
-(`rem:epoch:conviction-inertia`). Flip-flops are expensive;
+(``rem:epoch:conviction-inertia``). Flip-flops are expensive;
 severance is burn-priced.
 
 ---
@@ -160,7 +160,7 @@ nodes.
 
 **Direction-forward, not time-forward.** L1's raw services measure
 connectivity in the current public snapshot — raw path viability
-does not require ascending times (`def:graph:raw-snapshot-path`) —
+does not require ascending times (``def:graph:raw-snapshot-path``) —
 and CoGra's feed is the same: a stance recorded today must be able
 to reach content published years ago, or no new connection would
 ever surface an existing body of work. Staleness is `f(Δt)`'s job
@@ -173,10 +173,10 @@ orders each bundle for the fold and anchors epoch age.
 | Family | Feed traversal |
 |---|---|
 | Opinion, Publish, Affinity, Owner, Join Request, Accept, Ratify | Traversable at the folded `w̃` (handshake edges per-record). |
-| Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (`thm:graph:hyper-edge-reduction`). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); genesis legs are ordinary hops. |
+| Hyper-edges: Review, Send, Bid, Invitation, Participant | Traversable as their two legs — one hop each, each with its own leg parameters (``thm:graph:hyper-edge-reduction``). An **ordinary-role** Review's T-leg — a comment edit — is channel-gated (**Edit legs**, below), and so is a Participant's movement T-leg (**Chat lineages**, below); genesis legs are ordinary hops. |
 | Reference | A-leg an ordinary hop; the citation T-leg is channel-gated (**References**, below) — not a free out-edge of the carrier. |
 | Tag | A-leg an ordinary hop; the topic T-leg is channel-gated exactly like a citation (**Tags**, below). |
-| Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors `rem:epoch:control-acts-resolve-to-self`. |
+| Control records: Withdraw, Rescind, Leave, De-invite | **Never traversed.** They carry procedure, not stance (type-fixed parameters); routing feed signal along a De-invite would surface an expellee *because* they were expelled. Mirrors ``rem:epoch:control-acts-resolve-to-self``. |
 | Derived Self-edge bond | **Never traversed** (person fold, above). |
 
 Ballots need no row of their own: a vote is a payload-marked
@@ -193,7 +193,7 @@ following a topic cannot amplify anything "behind" it. The stop
 is CoGra's declared traversal policy, not an L1 census fact — a
 Type sources Tag and Review terminal legs and author-fixed
 Reference legs like any passive node
-(`lem:graph:passive-out-degree`); the ranker simply never walks
+(``lem:graph:passive-out-degree``); the ranker simply never walks
 them. Topic-scoped browsing is a named feed (§10), with
 **Affinity** (Actor → Type) as the follow gesture.
 
@@ -334,12 +334,12 @@ defined (a zero parameter is already inert, §3.1).
   avoidances never compose into an endorsement.
 
 **Why not L1's parity `ε(π)`.** The Quadrant Law
-(`lem:graph:quadrant-law`) makes `ε(e) = sgn(p_d · p_i)`: a
-coherence bit, never a favor bit (`rem:graph:sign-semantics`) —
+(``lem:graph:quadrant-law``) makes `ε(e) = sgn(p_d · p_i)`: a
+coherence bit, never a favor bit (``rem:graph:sign-semantics``) —
 `(−1, −1)` is gauge-equivalent to `(+1, +1)` for routing. That is
 right for standing (coherent condemnation is a strong coherent
 signal, and recipient resolution
-(`def:epoch:standing-recipient-resolution`) reads stance separately) and wrong
+(``def:epoch:standing-recipient-resolution``) reads stance separately) and wrong
 for a feed: hate-and-avoid must rank *opposite* to love-and-seek,
 not identical. The stance survives in the stored slice's marginal
 row precisely for terminal read-sites — and the feed is one: it
@@ -438,8 +438,8 @@ would silently reintroduce it.
   default — and it follows the precedent L1's standing side sets by
   conserving each source's allocation across all recipients, so
   multiplicity redistributes rather than accumulates
-  (`post:epoch:standing-pair-mass-conservation`,
-  `prop:epoch:dilution-cost`).
+  (``post:epoch:standing-pair-mass-conservation``,
+  ``prop:epoch:dilution-cost``).
 - **Disjoint-sum is the principled middle.** By Menger's theorem
   the number of internally disjoint `u→c` paths is capped by the
   minimum node cut, so breadth counts exactly when it is realized
@@ -451,7 +451,7 @@ would silently reintroduce it.
   `k`-th independent real entry.
 - **`q` stays at ½, unexposed.** `q = ½` is the canonical raw
   default; a guild may expose other values for its own sorting
-  (`rem:sorting:matrix-bfs`). The disjoint-sum already is the
+  (``rem:sorting:matrix-bfs``). The disjoint-sum already is the
   diversity mechanism; exposing `q` would add a redundant dial at
   roughly 3× compute. At most a future named opt-in feed.
 

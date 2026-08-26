@@ -19,7 +19,7 @@ how a database table would:
   references it in an endpoint field. There is no node-creation
   operation, no node table, no node attribute store — the graph's
   primitive history is authored acts and their edge projections,
-  nothing else (`ax:graph:authored-act-ontology`).
+  nothing else (``ax:graph:authored-act-ontology``).
 - **Identity is an algebra.** Every node identifier is **grounded**
   (`addr(a)` Actor, `prof(a)` Profile — anchored by a Registration),
   **named** (`name(s)` Type — a commons compared by byte equality),

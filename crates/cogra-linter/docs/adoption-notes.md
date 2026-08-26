@@ -531,8 +531,13 @@ owner, those spans are promoted to imported citations, the form they
 always wanted (R2's future path). Reforming rather than promotion is
 what happens now, for one reason: the linter runs in CI, the corpus
 migrates before the linter enforces, and a gate that is red on arrival
-teaches a team to route around the gate. The sweep is a queued
-migration, verified by the linter once it exists. One consequence
+teaches a team to route around the gate. The sweep landed 2026-08-26
+and the linter verified it: 61 label-shaped spans across 19 files,
+together with the governance action keys standing beside them —
+colon-triple data strings, three of them label-shaped enough to have
+been minting silently and eleven near-missing on casing alone — which
+leaves the four trees carrying no occurrence at all and `docs/` in the
+failing set. One consequence
 worth naming — because the spans become displayed rather than live,
 the docs trees do not thereby take labels, so R5's promotion condition
 for `api-spec.md` and `data-model.md` is not tripped by them.
@@ -608,8 +613,8 @@ figure and the check that reads it can no longer drift apart.
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
 | TypeScript sources | 162 `.ts`/`.tsx` |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
-| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, queued under R20 |
-| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them in citation form |
+| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
+| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |
 | Live imported citations (2026-08-25) | `ICX` 70, `ARCH` 60, `LBL` 59, `KND` 19, `IDN` 14 in prose, plus 1 `ICX` in Rust; `SPEC` and `CODEC` occur once each inside fenced illustrations and participate in nothing |
 | Label-shaped backtick spans in `.rs` doc comments (2026-08-25) | 88 — near-miss warnings, since the code syntax is the acute |
 | Label spans in `layer1-interface.md` | ~364, across 15 areas, 14 kind tokens (outside the carrier) |
