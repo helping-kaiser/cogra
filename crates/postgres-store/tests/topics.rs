@@ -438,6 +438,9 @@ async fn the_topic_page_gates_third_party_claims(pool: PgPool) {
     assert_eq!(owned.len(), 1);
     assert_eq!(owned[0].node, alices.to_string());
     assert_eq!(owned[0].author, "alice");
+    // The topic page reads the same transposed leg as the chip row.
+    assert_eq!(owned[0].relevance, 0.5);
+    assert_eq!(owned[0].confidence, 0.9);
 
     let all = topics::tagged_with(&pool, "rust", TagChannel::AnyAuthor, TopicView::Landed, 50)
         .await
@@ -485,6 +488,39 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
             .expect("folds");
     assert_eq!(limited.len(), 1);
     assert_eq!(limited[0].node, second.to_string());
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
+    // The same guard as the chip row, at the other read direction: a
+    // withdrawal held at full confidence must drop the node, and a claim
+    // held at zero confidence must keep it. Swapping the two columns
+    // inverts both.
+    let withdrawn = content_of("alice", 0);
+    let kept = content_of("bob", 0);
+    land(
+        &pool,
+        0,
+        vec![tag("alice", 0, &withdrawn, "rust", 0.6, 0.9, 0, 1, 0)],
+    )
+    .await;
+    land(
+        &pool,
+        1,
+        vec![
+            tag("alice", 1, &withdrawn, "rust", 0.0, 1.0, 1, 2, 0),
+            tag("bob", 0, &kept, "rust", 1.0, 0.0, 1, 3, 0),
+        ],
+    )
+    .await;
+
+    let listed = topics::tagged_with(&pool, "rust", TagChannel::AuthorOwned, TopicView::Landed, 50)
+        .await
+        .expect("folds");
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].node, kept.to_string());
+    assert_eq!(listed[0].relevance, 1.0);
+    assert_eq!(listed[0].confidence, 0.0);
 }
 
 // ---------------------------------------------------------- pending vs landed
