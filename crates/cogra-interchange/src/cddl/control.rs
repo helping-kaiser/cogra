@@ -61,6 +61,9 @@ pub(crate) enum Num {
 ///
 /// The target must match and the control must be satisfied; neither alone
 /// is a match.
+///
+/// `.default` shares `.ne`'s arm because it *is* `.ne` with an intent the
+/// wire cannot carry.
 pub(crate) fn apply<'a>(
     evaluator: &mut Evaluator<'a>,
     value: &Value,
@@ -81,7 +84,6 @@ pub(crate) fn apply<'a>(
         "gt" => ordered(evaluator, value, operand, Ordering::Greater, false),
         "ge" => ordered(evaluator, value, operand, Ordering::Greater, true),
         "eq" => equals(evaluator, value, operand),
-        // `.default` is `.ne` with an intent the wire cannot carry.
         "ne" | "default" => !equals(evaluator, value, operand),
         other => {
             debug_assert!(
@@ -95,6 +97,12 @@ pub(crate) fn apply<'a>(
 
 /// `.size`: the number of bytes of a string, or the range an unsigned
 /// integer's width fixes.
+///
+/// `uint .size N` ≡ `0…256**N` (RFC 8610 §3.8.1), so an unsigned integer
+/// conforms at every width at or above the one it needs, and the control type
+/// is satisfied where it admits any such width. Widths one through eight are
+/// the ones a uint can be too large for, so those are probed; a width of nine
+/// or more admits every uint, so a type naming one is satisfied outright.
 fn size<'a>(evaluator: &mut Evaluator<'a>, value: &Value, operand: &'a Type2) -> bool {
     match value {
         Value::Text(text) => {
@@ -106,12 +114,6 @@ fn size<'a>(evaluator: &mut Evaluator<'a>, value: &Value, operand: &'a Type2) ->
             evaluator.match_type2(&Value::Unsigned(length), operand)
         }
         Value::Unsigned(number) => {
-            // `uint .size N` ≡ `0…256**N` (RFC 8610 §3.8.1), so the value
-            // conforms at every width at or above the one it needs. The
-            // control type is satisfied where it admits any such width.
-            // Widths one through eight are the ones a uint can be too large
-            // for, so those are probed; a width of nine or more admits every
-            // uint, so a type naming one is satisfied outright.
             for probe in needed_bytes(*number)..=MAX_UINT_SIZE {
                 if evaluator.match_type2(&Value::Unsigned(probe), operand) {
                     return true;
@@ -129,9 +131,9 @@ fn size<'a>(evaluator: &mut Evaluator<'a>, value: &Value, operand: &'a Type2) ->
 /// Reached only after the widths one through eight are ruled out, so the
 /// type admits no width a uint can fit in exactly; the question left is
 /// whether it names a vacuously wide one. A literal width says so directly,
-/// and a parenthesized range through its upper bound. `uint` and the other
-/// unbounded width types never arrive here — they admit width eight, which
-/// the probe already found.
+/// and a parenthesized range through its upper bound, an exclusive one not
+/// admitting the bound itself. `uint` and the other unbounded width types
+/// never arrive here — they admit width eight, which the probe already found.
 fn admits_oversized_width<'a>(evaluator: &Evaluator<'a>, operand: &'a Type2) -> bool {
     if let Some(Num::Int(width)) = evaluator.bound(operand) {
         return width > i128::from(MAX_UINT_SIZE);
@@ -151,7 +153,6 @@ fn admits_oversized_width<'a>(evaluator: &Evaluator<'a>, operand: &'a Type2) -> 
         Operator::Control(_) => return false,
     };
     match evaluator.bound(&operation.operand) {
-        // The exclusive upper bound is not itself admitted.
         Some(Num::Int(high)) => high - i128::from(!inclusive as u8) > i128::from(MAX_UINT_SIZE),
         _ => false,
     }
@@ -173,13 +174,14 @@ fn needed_bytes(value: u64) -> u64 {
 /// its operand stands; nothing here compiles one. A match that exhausts the
 /// seam's operation budget is recorded rather than answered, and the
 /// evaluator renders it as a mismatch of its own kind.
+///
+/// An operand that is no text literal compiled to nothing, and no match
+/// follows: RFC 8610 §3.8.3 gives `.regexp` a text-string control value, and
+/// a theory offering something else has a type error at that position.
 fn regexp<'a>(evaluator: &mut Evaluator<'a>, value: &Value, operation: &'a Operation) -> bool {
     let Value::Text(text) = value else {
         return false;
     };
-    // An operand that is no text literal compiled to nothing: RFC 8610
-    // §3.8.3 gives `.regexp` a text-string control value, and a theory
-    // offering something else has a type error at that position.
     let Some(pattern) = evaluator.pattern(operation.operand.span.start) else {
         return false;
     };
