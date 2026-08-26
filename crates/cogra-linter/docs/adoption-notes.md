@@ -137,10 +137,13 @@ exempting the working notes from resolution.
 Two profiles, both Rust, both named by ``conv:linter:rust-frontend``
 ("a test profile recognizing test-attributed functions, a module
 profile recognizing `mod` items"). Nothing for Markdown, TypeScript or
-Kotlin: their frontends are later slices, and a profile whose frontend
-does not exist cannot compute a census — ``inv:labels:two-pass``
-requires every census computed before any resolution runs, so a
-half-available Π is not a smaller Π, it is a broken one.
+Kotlin. A frontend is a **precondition and not a cause**: Kotlin's is
+still a later slice, and a profile whose frontend does not exist cannot
+compute a census — ``inv:labels:two-pass`` requires every census
+computed before any resolution runs, so a half-available Π is not a
+smaller Π, it is a broken one. Markdown's frontend and the web's both
+exist and carry no profile all the same, because what Π registers is
+what a migration has landed (R19).
 
 The same reasoning governs the two that are here (R19):
 ``inv:labels:inventory`` admits nothing partial, and a profile
