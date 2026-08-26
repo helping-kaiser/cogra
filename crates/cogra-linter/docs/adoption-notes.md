@@ -60,8 +60,9 @@ for the generated Kotlin parser of ``dec:linter:kotlin-tree-sitter``;
 `vendored_files` holds `docs/primitive/layer1-interface.md` (R2).
 
 The per-owner label registers of the test profile are generated files
-of the first sort — committed, in the carrier, byte-compared — and join
-`generated_files` as the generator creates them.
+of the first sort — committed, in the carrier, byte-compared — and
+`generated_files` lists the six the generator has created, one per
+owner with covered assets.
 
 ### `[signature]` — Σ
 
@@ -141,12 +142,14 @@ does not exist cannot compute a census — ``inv:labels:two-pass``
 requires every census computed before any resolution runs, so a
 half-available Π is not a smaller Π, it is a broken one.
 
-The same reasoning stages the two that are here (R19). Both are
-registered and neither is in force: ``inv:labels:inventory`` admits
-nothing partial, and on the day either is switched on it fails at
-every covered asset, because the places their labels must occupy do
-not exist yet. A profile therefore enters Π in the commit that lands
-its migration; `status` and `effective` are what move.
+The same reasoning governs the two that are here (R19):
+``inv:labels:inventory`` admits nothing partial, and a profile
+switched on before the places its labels must occupy exist fails at
+every covered asset. A profile therefore enters Π in the commit that
+lands its migration; `status` and `effective` are what move. The test
+profile entered on 2026-08-26 with its per-owner registers; the module
+profile is registered and staged, waiting on its 84 inner doc
+comments.
 
 Each profile fixes exactly the five data ``sig:labels:profiles``
 demands. Three of the five were genuinely hard:
@@ -172,11 +175,11 @@ tests` definitions; excluding them (R12) leaves every owner clean.
 **The standard place is one choice per profile — and the two profiles
 choose differently, because their costs differ by an order of
 magnitude.** Tests take a **generated register of the owner** (R11):
-1444 assets, zero source edits, one generator. Modules keep the **inner
-documentation comment**: the label sits at the asset, and the 84
-definitions are a bounded pending task rather than a blocker at the
-scale of the test census. The inner form is the only one a file-backed
-and an inline module can both carry.
+the whole rust-test census, zero source edits, one generator. Modules
+keep the **inner documentation comment**: the label sits at the asset,
+and the 84 definitions are a bounded pending task rather than a
+blocker at the scale of the test census. The inner form is the only
+one a file-backed and an inline module can both carry.
 
 The register deserves one line of justification beyond cost.
 ``inv:labels:generated-compliance`` makes a generated mint stand on its
@@ -508,14 +511,15 @@ and the first generation run commits it and arms exact comparison
 thereafter.
 
 **R19 — Profiles enter Π with their migrations, staged until then.**
-``inv:labels:inventory`` admits nothing partial, so both profiles are
-unsatisfiable the day they are switched on: the test profile's
-standard place is a register no generator has written, and the module
-profile's is an inner doc comment all 84 definitions lack. Registering
-them and staging entry keeps the file honest about both facts — the
-profiles are decided, and neither is in force. The test profile enters
-when the first register generation lands (R18), the module profile
-when its comments do. Entering is a commit that flips two fields.
+``inv:labels:inventory`` admits nothing partial, so a profile is
+unsatisfiable until the places its labels must occupy exist:
+registering it and staging entry keeps the file honest about both
+facts — the profile is decided, and it is not yet in force. The test
+profile entered on 2026-08-26, when the first register generation
+committed a label-register.md for each of the six owners with covered
+assets (R18); the module profile enters when the inner doc comments
+all 84 definitions lack are written. Entering is a commit that flips
+two fields.
 
 **R20 — The docs trees' label-shaped spans are reformed into displayed
 spans (F4).** They mean what they look like — references to the Layer 1
@@ -527,8 +531,13 @@ owner, those spans are promoted to imported citations, the form they
 always wanted (R2's future path). Reforming rather than promotion is
 what happens now, for one reason: the linter runs in CI, the corpus
 migrates before the linter enforces, and a gate that is red on arrival
-teaches a team to route around the gate. The sweep is a queued
-migration, verified by the linter once it exists. One consequence
+teaches a team to route around the gate. The sweep landed 2026-08-26
+and the linter verified it: 61 label-shaped spans across 19 files,
+together with the governance action keys standing beside them —
+colon-triple data strings, three of them label-shaped enough to have
+been minting silently and eleven near-missing on casing alone — which
+leaves the four trees carrying no occurrence at all and `docs/` in the
+failing set. One consequence
 worth naming — because the spans become displayed rather than live,
 the docs trees do not thereby take labels, so R5's promotion condition
 for `api-spec.md` and `data-model.md` is not tripped by them.
@@ -604,8 +613,8 @@ figure and the check that reads it can no longer drift apart.
 | Kotlin sources | 138 `.kt`, 16 `.kts`, 12 Gradle modules |
 | TypeScript sources | 162 `.ts`/`.tsx` |
 | Markdown in carrier | 58 files (4 more in the working-note trees) |
-| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, queued under R20 |
-| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them in citation form |
+| Files carrying label-shaped spans (2026-08-25) | 29 in the carrier: 10 under `crates/`, written under the discipline; 19 under `docs/`, displayed under R20 |
+| Label-shaped spans in the docs trees (2026-08-25) | 61 across those 19 files, 37 of them parenthesized; all displayed spans (R20) |
 | Live imported citations (2026-08-25) | `ICX` 70, `ARCH` 60, `LBL` 59, `KND` 19, `IDN` 14 in prose, plus 1 `ICX` in Rust; `SPEC` and `CODEC` occur once each inside fenced illustrations and participate in nothing |
 | Label-shaped backtick spans in `.rs` doc comments (2026-08-25) | 88 — near-miss warnings, since the code syntax is the acute |
 | Label spans in `layer1-interface.md` | ~364, across 15 areas, 14 kind tokens (outside the carrier) |

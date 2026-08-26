@@ -703,7 +703,7 @@ fn a_source_that_is_not_utf8_is_an_error() {
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
 #[test]
-fn no_rule_identifier_is_label_shaped() {
+fn no_markdown_rule_identifier_is_label_shaped() {
     for rule in frontend_md::RULES {
         assert!(!rule.as_str().contains(':'), "{rule} is label-shaped");
     }

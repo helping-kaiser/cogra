@@ -36,7 +36,7 @@ fn parse(text: &str) -> Label {
 }
 
 /// The design's own counterexample: bytewise, a digit sorts below the colon,
-/// so `a1:x:y` precedes `a:x:y`.
+/// so `a1`:`x`:`y` precedes `a`:`x`:`y`.
 #[test]
 fn the_counterexample_pair() {
     let (first, second) = (parse("a1:x:y"), parse("a:x:y"));

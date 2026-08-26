@@ -630,23 +630,23 @@ fn both_ruled_rust_profiles_are_recognized() {
     assert_eq!(recognized, vec!["rust-test", "rust-module"]);
 }
 
-/// Both are staged today, so the run computes nothing over them
-/// (´dec:lint:staged-profiles´): `Parsed::assets` is empty even for a
-/// source full of covered assets.
+/// The module profile is staged, so the run computes nothing over it
+/// (´dec:lint:staged-profiles´): `Parsed::assets` carries the test profile's
+/// covered function alone, though the fixture defines a module beside it.
 #[test]
 fn a_staged_profile_puts_nothing_in_the_run() {
-    for profile in &adoption().profiles.profiles {
-        if frontend_rust::governs(profile) {
-            assert!(
-                matches!(profile.status, ProfileStatus::Staged { .. }),
-                "{} is no longer staged; this test's premise moved",
-                profile.id.as_str()
-            );
-        }
-    }
+    let staged: Vec<&str> = adoption()
+        .profiles
+        .profiles
+        .iter()
+        .filter(|one| matches!(one.status, ProfileStatus::Staged { .. }))
+        .map(|one| one.id.as_str())
+        .collect();
+    assert_eq!(staged, vec!["rust-module"]);
+
     let parsed = parse("#[test]\nfn one() {}\nmod two { }\n");
-    assert!(parsed.assets.is_empty());
-    assert_eq!(adoption().profiles.effective_count, 0);
+    assert_eq!(covered(&parsed.assets), vec!["one"]);
+    assert_eq!(adoption().profiles.effective_count, 1);
 }
 
 /// But the censuses themselves are not empty: computing is not judging, and
@@ -750,7 +750,7 @@ fn a_real_source_s_occurrences_locate_into_the_file() {
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
 #[test]
-fn no_rule_identifier_is_label_shaped() {
+fn no_rust_frontend_rule_identifier_is_label_shaped() {
     for rule in frontend_rust::RULES {
         assert!(!rule.as_str().contains(':'), "{rule} is label-shaped");
     }

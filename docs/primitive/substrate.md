@@ -83,7 +83,7 @@ reimplementation grant
 The obligation that comes with the grant: **every terminal default
 CoGra replaces, CoGra specifies in public** — a published, complete
 spec any participant can reproduce (the formula-completeness
-invariant, `subsec:deployment:completeness`). Reproducibility of
+invariant, ``subsec:deployment:completeness``). Reproducibility of
 CoGra's feed and reward is CoGra's own published commitment, not a
 consumed L1 guarantee.
 
@@ -260,7 +260,7 @@ only if its author clears the two-gate write rule
   actor's residual balance. Capacity *is* the balance — remaining
   acts are `⌊b_i/θ⌋`, restored immediately by committing burns.
 - **W2a — the wall:** the actor's act-owned stamp, evaluated once
-  at final-set closure (`def:epoch:final-act-stamps`), clears the
+  at final-set closure (``def:epoch:final-act-stamps``), clears the
   safety floor, `ρ_act ≥ ρ_θ`. Individual, never averaged.
 - **W2b — the door:** the epoch's action-weighted stamp average
   clears the effective floor, `ρ_ep ≥ ρ_eff`, within the epoch

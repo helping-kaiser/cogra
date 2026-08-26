@@ -8,8 +8,9 @@
 //! a fixture: a fixture would be evidence about a fixture.
 //!
 //! Acceptance is scoped by (´dec:lint:enforcement-partition´). The failing
-//! set is the two documentation trees written under the discipline; the
-//! advisory remainder is reported and counted and does not fail the lane.
+//! set is the two documentation trees written under the discipline and the
+//! `docs/` trees their R20 sweep cleared; the advisory remainder is
+//! reported and counted and does not fail the lane.
 //! The advisory assertions below are therefore about *classes and rough
 //! magnitudes*, never exact counts: those drift with every commit to main,
 //! and a suite that pinned them would fail for the wrong reason.
@@ -140,7 +141,7 @@ fn the_linters_own_phase_artifacts_lint_clean() {
 ///
 /// This is what version 1 is accepted on — a clean run over the material
 /// written under the discipline — and it is now the plain assertion rather
-/// than a list of tolerated defects. The two documentation trees under
+/// than a list of tolerated defects. The trees listed under
 /// `[enforcement]` `failing` are the whole scope, and the lane's exit code
 /// reads exactly this predicate.
 ///
@@ -160,13 +161,15 @@ fn the_failing_set_is_clean() {
 }
 
 /// (´rep:lint:first-corpus´): the advisory remainder produces the classes
-/// the concept predicted — the docs trees' stray spans, the Rust backtick
-/// near-misses, and the plain-comment sweep — at the magnitudes it named.
+/// the concept predicted — the Rust backtick near-misses and the
+/// plain-comment sweep — at the magnitudes it named, while the
+/// unresolved-citation class is empty, every span that fed it being a
+/// displayed one (R20).
 ///
-/// The concept's own figures were a raw-text sweep of 2026-08-25, which can
-/// only over-count on the citation side and under-counts the comment sweep,
-/// participation being an AST fact no sweep sees. The bounds here are wide
-/// enough to be about classes rather than about a commit.
+/// The concept's own figures were a raw-text sweep of 2026-08-25, which
+/// under-counts the comment sweep, participation being an AST fact no
+/// sweep sees. The bounds here are wide enough to be about classes rather
+/// than about a commit.
 #[test]
 fn the_advisory_remainder_carries_the_expected_classes() {
     let by_rule = counted();
@@ -178,9 +181,9 @@ fn the_advisory_remainder_carries_the_expected_classes() {
         .get("label-unresolved-citation")
         .copied()
         .unwrap_or_default();
-    assert!(
-        (10..100).contains(&unresolved),
-        "the docs trees' unresolved same-owner citations: {unresolved}"
+    assert_eq!(
+        unresolved, 0,
+        "no citation in the corpus resolves nowhere: {unresolved}"
     );
     let backticks = by_rule
         .get("label-backtick-in-code")
@@ -198,11 +201,7 @@ fn the_advisory_remainder_carries_the_expected_classes() {
         comments > 800,
         "the plain-comment sweep the concept counted at ~1210: {comments}"
     );
-    for expected in [
-        "label-unresolved-citation",
-        "label-backtick-in-code",
-        "rust-plain-line-comment",
-    ] {
+    for expected in ["label-backtick-in-code", "rust-plain-line-comment"] {
         assert!(by_rule.contains_key(expected), "{expected} is not reported");
     }
 }
@@ -212,13 +211,16 @@ fn the_advisory_remainder_carries_the_expected_classes() {
 /// an error is an error wherever it is found.
 #[test]
 fn advisory_findings_keep_their_severity() {
-    let advisory = under("docs/");
-    assert!(!advisory.is_empty(), "the docs trees report something");
+    let advisory = under("crates/api/src/");
+    assert!(
+        !advisory.is_empty(),
+        "the api crate's sources report something"
+    );
     assert!(
         advisory
             .iter()
             .all(|one| one.enforcement == Enforcement::Advisory),
-        "nothing under docs/ is in the failing set today"
+        "nothing under crates/api/src/ is in the failing set today"
     );
     assert!(
         advisory
@@ -277,7 +279,12 @@ fn every_committed_register_is_current() {
         adoption(),
         run().kinds.as_ref(),
     );
-    assert_eq!(registers.len(), 2, "the companion register and the region");
+    assert_eq!(
+        registers.len(),
+        8,
+        "the companion register, the headline region, and the test profile's \
+         label register for each of the six owners with covered assets"
+    );
     for reg in &registers {
         let (held, _) = cogra_linter::registers::committed(reg, &run().sources);
         assert_eq!(

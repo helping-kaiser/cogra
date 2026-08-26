@@ -715,7 +715,7 @@ fn class_at_answers_at_a_lexeme_start_only() {
 /// No rule identifier of this module is label-shaped: `lint` is a reserved
 /// kind no profile governs (´sig:lint:diagnostic-api´).
 #[test]
-fn no_rule_identifier_is_label_shaped() {
+fn no_pretokenizer_rule_identifier_is_label_shaped() {
     for rule in cogra_linter::pretokenize::RULES {
         assert!(!rule.as_str().contains(':'), "{rule} is label-shaped");
     }

@@ -873,7 +873,7 @@ fn every_declared_family_is_recognized() {
 
 /// No rule identifier of this module is label-shaped.
 #[test]
-fn no_rule_identifier_is_label_shaped() {
+fn no_registry_rule_identifier_is_label_shaped() {
     for rule in judge::kinds::RULES {
         assert!(!rule.as_str().contains(':'), "{rule} is label-shaped");
     }
@@ -904,7 +904,7 @@ fn every_head_written_under_the_discipline_validates() {
         }
     }
     assert_eq!(failed, [] as [String; 0]);
-    assert_eq!(heads, 428);
+    assert_eq!(heads, 429);
 }
 
 /// Every heading anchor in the corpus carries `sec`, which is the rung the
