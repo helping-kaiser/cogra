@@ -1,3 +1,5 @@
+//! ´mod:module:relay´
+//!
 //! The relay legs of the write path — steps 3 and 5 of substrate.md §6:
 //! submit the device's pre-signed proposal to the seal, store the sealed
 //! verified act, relay the approval witness, and — driven off the
