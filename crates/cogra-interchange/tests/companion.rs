@@ -42,8 +42,6 @@ fn text(s: &str) -> Value {
     Value::Text(s.to_owned().into())
 }
 
-// -- the diff -------------------------------------------------------------
-
 /// One run of removed and inserted tokens standing between two matches.
 #[derive(Debug, PartialEq, Eq)]
 struct Hunk {
@@ -55,7 +53,8 @@ struct Hunk {
 ///
 /// Coarser than characters, so that a one-token substitution reads as one
 /// substitution rather than as a scatter of letters; finer than lines, so
-/// that two edits on the root rule's single line stay two.
+/// that two edits on the root rule's single line stay two. A text literal is
+/// one token however it is spelled inside.
 fn tokens(printed: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut chars = printed.chars().peekable();
@@ -69,7 +68,6 @@ fn tokens(printed: &str) -> Vec<String> {
             continue;
         }
         let mut token = String::from(c);
-        // A text literal is one token however it is spelled inside.
         if c == '"' {
             for c in chars.by_ref() {
                 token.push(c);
@@ -146,8 +144,9 @@ fn hunks_between(theory: &Theory) -> Vec<Hunk> {
 }
 
 /// The check the diff exists for: the freed minor first, one cut marker on
-/// each of the `cut_keys` enumerated keys, and the wildcard last — and
-/// nothing else. Each is exactly the edit the derivation is allowed.
+/// each of the `cut_keys` enumerated keys in key order, and the wildcard
+/// last — and nothing else. Each is exactly the edit the derivation is
+/// allowed.
 fn assert_the_expected_edits(source: &str, minor: &str, cut_keys: usize) {
     let theory = parse(source);
     let found = hunks_between(&theory);
@@ -168,7 +167,6 @@ fn assert_the_expected_edits(source: &str, minor: &str, cut_keys: usize) {
         "the first edit is not the minor position freed to `uint`"
     );
 
-    // One cut marker inserted on each enumerated content key, in key order.
     let cut = Hunk {
         removed: Vec::new(),
         inserted: vec!["^".to_owned()],
@@ -192,8 +190,6 @@ fn assert_the_expected_edits(source: &str, minor: &str, cut_keys: usize) {
         "the last edit is not the base theory's wildcard joining the map"
     );
 }
-
-// -- the two relaxations and the cut, and no more -------------------------
 
 #[test]
 fn the_companion_frees_the_minor_cuts_each_key_and_adds_the_wildcard() {
@@ -242,8 +238,6 @@ fn the_wildcard_is_the_base_theorys() {
     assert!(cogra_interchange::global().to_cddl().contains(wildcard));
 }
 
-// -- what survives the derivation -----------------------------------------
-
 #[test]
 fn the_companion_keeps_the_label_and_the_floor() {
     let theory = parse(ASSIGNED);
@@ -253,11 +247,11 @@ fn the_companion_keeps_the_label_and_the_floor() {
     assert_eq!(open.floor(), (1, 2));
 }
 
+/// The type and the requiredness stand; what the key gains is the cut.
 #[test]
 fn every_content_key_keeps_its_type_and_its_requiredness() {
     let theory = parse(ASSIGNED);
     let printed = theory.open_companion().to_cddl();
-    // The type and the requiredness stand; the key now carries the cut.
     assert!(printed.contains("2 ^ => tstr"));
     assert!(printed.contains("? 7 ^ => bstr"));
 }
@@ -265,18 +259,17 @@ fn every_content_key_keeps_its_type_and_its_requiredness() {
 /// The cut binds an optional key's type under tolerant validation: a
 /// document carrying a value outside the enumerated type at a known
 /// optional key is rejected, where the companion's wildcard would
-/// otherwise have readmitted it (´alg:xchg:companion´).
+/// otherwise have readmitted it (´alg:xchg:companion´). A conforming value
+/// there still holds, and so does the key's absence.
 #[test]
 fn a_mistyped_optional_key_is_rejected_tolerantly() {
     let theory = parse(r#"e = {0 => "com.example", 1 => [1, 2, uint], ? 2 => tstr}"#);
     let open = theory.open_companion();
     let stamped_above = Version::new(1, 9, 0);
 
-    // An integer at key 2, where the theory names tstr: now rejected.
     let mistyped = document(stamped_above, vec![(2, Value::Unsigned(7))]);
     assert!(!satisfies_open(&mistyped, &open).holds());
 
-    // A tstr at key 2 still holds, and the key absent still holds.
     let conforming = document(stamped_above, vec![(2, text("hello"))]);
     assert!(satisfies_open(&conforming, &open).holds());
     let absent = document(stamped_above, Vec::new());
@@ -318,8 +311,6 @@ fn deriving_twice_gives_the_same_companion() {
     assert_eq!(first, second);
     assert_eq!(theory.to_cddl(), before);
 }
-
-// -- the diff helper itself -----------------------------------------------
 
 /// The obligation is only as good as the diff behind it, so the diff is
 /// exercised on cases whose answer is known by hand.
