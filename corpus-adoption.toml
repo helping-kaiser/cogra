@@ -1274,9 +1274,10 @@ failing = [
   "crates/api/",
   "docs/",
   "web/",
+  "android/",
 ]
 
-# What those eight prefixes carry, and what they deliberately do not.
+# What those nine prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1341,9 +1342,31 @@ failing = [
 #   it is not an occurrence and never becomes one. The prefix
 #   therefore enforces emptiness the way docs/ does, and catches the
 #   first web comment to write a label on the commit that writes it.
+# android/ — the whole app, joining on the day its frontend did, and the
+#   prefix that closes the partition. Its 170 .kt sources were already
+#   in the carrier and already owned; what the Kotlin frontend added is
+#   that their 1,708 line comments and 681 KDoc blocks are read, and the
+#   read found nothing to sweep — no acute occurrence anywhere in the
+#   tree and no label-shaped backtick in any comment. The prefix
+#   enforces emptiness the way docs/ and web/ do. Its 18 .kts build
+#   scripts sit under the same prefix and carry no occurrence either:
+#   they have no frontend ([scanned-regions] no-frontend row), so they
+#   are owned, scanned for nothing, and cannot fail. The day one gets a
+#   frontend is the day that changes, and it is a ruling, not a
+#   consequence.
 #
-# DELIBERATELY ADVISORY, awaiting its own migration:
-#   android/   — the Kotlin frontend is still ahead of it
+# THE ADVISORY REMAINDER, which is now only what is never committed:
+#   Every tree of the carrier is failing. What the default still covers
+#   is the working-notes owner — tmp_dev/ and tmp_research_files/ —
+#   whose two roots are gitignored junctions, present on a developer's
+#   machine and in no commit. They are owned so that a note written
+#   there resolves rather than falling outside the partition, and they
+#   are advisory because a working note is not corpus material: a
+#   finding in one is worth reporting and worth nobody's build failing.
+#
+#   So the gate now enforces corpus-wide, which is what
+#   LINTER rep:lint:first-corpus scoped acceptance towards: the failing
+#   set grew with each migration, and this was the last one.
 
 
 
