@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -103,6 +104,9 @@ describe("ComposeForm", () => {
   beforeEach(() => {
     push.mockClear();
     searchParams = new URLSearchParams();
+    // The multi-action confirmation has its own tests below; everywhere
+    // else it would only stand between the test and the submit.
+    writeConfirmMultiAction(false);
   });
 
   it("backs to the feed when composing fresh", () => {
@@ -480,6 +484,144 @@ describe("ComposeForm", () => {
     expect(screen.queryByTestId("compose-signing-failed")).not.toBeInTheDocument();
     expect(signer.signStaged).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+  });
+
+  // F4: the cost is on screen before the press, and a batch is asked
+  // about rather than signed on the reader's behalf.
+  it("counts the signed actions a creation would stage, live", () => {
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 1 signed action",
+    );
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "wasm" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 3 signed actions",
+    );
+    fireEvent.click(screen.getByTestId("compose-tag-1-remove"));
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 2 signed actions",
+    );
+  });
+
+  it("counts an edit as the record only when the content moved", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: editablePost([topicClaim("wasm")]) }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    // Untouched: nothing to sign, and nothing to press.
+    expect(await screen.findByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates no signed actions",
+    );
+    expect(screen.getByTestId("compose-submit")).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId("compose-tag-0-remove"));
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 1 signed action",
+    );
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "New body" } });
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 2 signed actions",
+    );
+  });
+
+  it("asks before a submit that signs more than one action", async () => {
+    writeConfirmMultiAction(true);
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    expect(screen.getByTestId("compose-multi-action-count")).toHaveTextContent(
+      "creates 2 signed actions",
+    );
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("compose-multi-action-proceed"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+  });
+
+  it("does not ask for a single signed action", () => {
+    writeConfirmMultiAction(true);
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+    expect(screen.queryByTestId("compose-multi-action-confirm")).not.toBeInTheDocument();
+  });
+
+  it("cancelling the confirmation signs nothing", () => {
+    writeConfirmMultiAction(true);
+    const signer = fakeWriteSigner();
+    renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+    fireEvent.click(screen.getByTestId("compose-multi-action-cancel"));
+    expect(screen.queryByTestId("compose-multi-action-confirm")).not.toBeInTheDocument();
+    expect(signer.signStaged).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("remembers a don't-show-again, and stops asking", async () => {
+    writeConfirmMultiAction(true);
+    server.use(
+      graphql.mutation("PreparePost", () =>
+        HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
+      ),
+    );
+    const { unmount } = renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+    fireEvent.click(screen.getByTestId("compose-multi-action-remember"));
+    fireEvent.click(screen.getByTestId("compose-multi-action-proceed"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+    unmount();
+
+    push.mockClear();
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
+    fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId("compose-tag-add"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+    expect(screen.queryByTestId("compose-multi-action-confirm")).not.toBeInTheDocument();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
   });
 
   it("reports an unfinished signing without navigating", async () => {
