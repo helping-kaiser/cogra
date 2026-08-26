@@ -1,3 +1,5 @@
+//! ´mod:module:restraint´
+//!
 //! The restraint report over an assigned theory.
 //!
 //! The invariant: an assigned theory admits floating-point values, tags, or

@@ -1,3 +1,5 @@
+//! ´mod:module:regexp´
+//!
 //! The `.regexp` seam: the only module in the crate that names the
 //! regular-expression library.
 //!

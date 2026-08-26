@@ -1,3 +1,5 @@
+//! ´mod:module:close´
+//!
 //! Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
 //!
 //! Selection among valid ordered sequences is host discretion (§11.6):

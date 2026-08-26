@@ -1,3 +1,5 @@
+//! ´mod:module:support´
+//!
 //! Shared test support.
 
 use cogra_interchange::DecodeError;

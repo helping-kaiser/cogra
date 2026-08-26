@@ -1,3 +1,5 @@
+//! ´mod:module:l1´
+//!
 //! The L1 seam data model — the shared vocabulary of the Layer 1 → Layer 2
 //! interface (docs/primitive/layer1-interface.md).
 //!

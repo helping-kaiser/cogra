@@ -1,3 +1,5 @@
+//! ´mod:module:print´
+//!
 //! The normalized printer: a syntax tree back to CDDL, laid out one way.
 //!
 //! Two jobs. It renders a theory for a human reading a diagnostic, and it

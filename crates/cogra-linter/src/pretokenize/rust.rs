@@ -1,3 +1,5 @@
+//! ´mod:module:rust´
+//!
 //! Rust's lexical structure: strings, raw strings, chars, comments.
 //!
 //! A hand-written lexer, over bytes, total on arbitrary input. It exists

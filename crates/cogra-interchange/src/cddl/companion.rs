@@ -1,3 +1,5 @@
+//! ´mod:module:companion´
+//!
 //! The open companion: an assigned theory with two relaxations and a cut.
 //!
 //! For an assigned theory S, Open(S) is S with the minor position of key 1

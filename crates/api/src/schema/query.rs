@@ -1,3 +1,5 @@
+//! ´mod:module:query´
+//!
 //! The query root: the health probe, the viewer (`me`), the staged-write
 //! observation read, and — from slice 2 — the content reads: typed
 //! nodes, the chronological listing, and the generic record chronicle.

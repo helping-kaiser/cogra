@@ -457,17 +457,18 @@ note  = "empty prefix matches everything not matched above: README.md, CONTRIBUT
 #
 # STAGED ENTRY — RULED 2026-08-25. LBL inv:labels:inventory admits
 # nothing partial: every covered asset carries its label at the
-# standard place or the run fails. The module profile below is
-# therefore unsatisfiable on the day it is switched on: it wants 87
-# inner doc comments that do not yet exist. So a profile ENTERS Pi
-# together with the migration that makes it satisfiable, and not
-# before: registered here, staged until its own condition holds.
-# Entering is a commit that flips status and effective, nothing more.
+# standard place or the run fails, so a profile is unsatisfiable on
+# the day it is switched on and before its own migration has landed.
+# A profile therefore ENTERS Pi together with the migration that makes
+# it satisfiable, and not before: registered here, staged until its
+# own condition holds. Entering is a commit that flips status and
+# effective, nothing more. Both profiles of v1 came in that way, and
+# the next one will.
 ####################################################################
 
 [profiles]
 count     = 2   # registered below
-effective = 1   # in Pi today; each profile's status says what it waits on
+effective = 2   # in Pi today; each profile's status says where it stands
 
 # ---------------------------------------------------------------
 # Profile 1: Rust tests
@@ -575,8 +576,11 @@ from the first slice; nothing here waits on a later one.
 [[profiles.profile]]
 id     = "rust-module"
 kind   = "mod"
-status = "staged"
-enters_when = "the 87 module definitions carry the //! inner doc comment of this profile's standard place"
+status = "effective"
+enters_when = "every module definition carries the //! inner doc comment of this profile's standard place"
+# ENTERED PI 2026-08-26, its condition discharged by the migration
+# that put the derived label in the inner doc comment of all 89
+# definitions, in six owners, leaving the measurement 0 remaining.
 # KND conv:kinds:assets: Module -> mod.
 
   [profiles.profile.census]
@@ -587,19 +591,24 @@ enters_when = "the 87 module definitions carry the //! inner doc comment of this
   note = """
 LBL sig:labels:profiles admits "a container such as a module or
 namespace DEFINITION" — the word decides the census, and measurement
-confirms it must: `mod rig;` is declared NINE times in
+confirms it must: `mod rig;` is declared ELEVEN times in
 crates/api/tests/*.rs, all naming the ONE definition at
-crates/api/tests/rig/. Under a declaration-census that is a 9-way
+crates/api/tests/rig/. Under a declaration-census that is an 11-way
 injectivity violation of LBL inv:labels:inventory; under a
 definition-census it is one asset.
 #[cfg(test)] modules are EXCLUDED from the census: they are test
 scaffolding, and what lives inside them is the test profile's
-business. 13 files declare `mod tests`, so a census that kept them
-would derive mod:*:tests thirteen times and fail injectivity in two
-owners on day one. The consequence is accepted plainly — an inline
-test module carries no label of its own.
-MEASURED after the exclusion: no duplicate module name remains in any
-owner (api, common, l1-standin, postgres-store all clean).
+business. 38 files declare `mod tests`, so a census that kept them
+would derive mod:*:tests thirty-eight times and fail injectivity in
+every owner. The consequence is accepted plainly — an inline test
+module carries no label of its own.
+MEASURED 2026-08-26 by the linter's own migrations subcommand: 89
+module definitions, and after the exclusion no duplicate module name
+in any owner (api, cogra-interchange, cogra-linter, common,
+l1-standin, postgres-store all clean). The census grows with the
+corpus, so the number is re-measured whenever a slice adds Rust
+modules; what the inventory judgment enforces from now on is the
+bijection, never a number recorded here.
 """
 
   [profiles.profile.classification]
@@ -635,15 +644,11 @@ must share it. The inner doc comment is the only form both can carry:
 `mod foo { ... }` body. An outer /// would work for inline items only.
 The label sits at the asset, which is what this place buys over a
 register.
-PENDING TASK, MEASURED by the linter's own migrations subcommand
-(2026-08-26): 87 module definitions, every one of them
-still needing an inner doc comment before this profile can pass —
-a census that grows with the corpus, so the number is re-measured
-whenever a slice adds Rust modules —
-the census and the remainder coincide because not one carries its
-label yet. LBL inv:labels:inventory admits nothing partial, so the
-migration is a precondition of enabling the profile, not a cleanup
-after it.
+WHAT IT COST: 89 inner doc comments, one per definition, written
+before the profile entered Pi. LBL inv:labels:inventory admits
+nothing partial, so the migration was a precondition of enabling the
+profile rather than a cleanup after it, and a module added from here
+on carries its label in the commit that adds it.
 """
 
 # --- Profiles deliberately NOT in v1 ----------------------------
@@ -697,13 +702,11 @@ after it.
 source = "KND conv:kinds:assets — distinct kind tokens of that table"
 count  = 36
 
-# STAGING (2026-08-25): the kinds below are governed by the profiles
-# of [profiles], test by one in Pi since 2026-08-26 and mod by one
-# still registered and staged. Until that profile enters Pi with its
-# migration, no profile governs mod — and LBL
-# sig:labels:reserved-kinds then makes a bare occurrence of it a hard
-# failure awaiting its derivation, which is the same outcome by a
-# different clause. The lists record registration, not entry.
+# The kinds below are governed by profiles in force: test since
+# 2026-08-26 and mod since 2026-08-26, each by a profile of [profiles]
+# that entered Pi with its own migration. Every other kind of K is
+# reserved and ungoverned, and LBL sig:labels:reserved-kinds makes a
+# bare occurrence of one a hard failure awaiting its derivation.
 governed = [
   "test",   # profile rust-test
   "mod",    # profile rust-module

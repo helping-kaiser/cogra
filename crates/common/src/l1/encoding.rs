@@ -1,3 +1,5 @@
+//! ´mod:module:encoding´
+//!
 //! Canonical serialization for seam objects.
 //!
 //! L1 declares serialization a deployment concern (layer1-interface.md

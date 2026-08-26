@@ -1,3 +1,5 @@
+//! ´mod:module:carrier´
+//!
 //! The walk: which files are in the carrier, and who owns each.
 //!
 //! Every carrier source and every covered asset takes its owner from the

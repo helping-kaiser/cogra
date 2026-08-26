@@ -1,3 +1,5 @@
+//! ´mod:module:value´
+//!
 //! The value model of the data language, canonical by construction.
 //!
 //! [`Value`] denotes every structure the data language admits and nothing

@@ -1,3 +1,5 @@
+//! ´mod:module:schema´
+//!
 //! The GraphQL schema — the exported `schema.graphql` is generated from
 //! here and is the frontend contract (checked in, CI-diffed; Apollo
 //! Kotlin and GraphQL Code Generator both generate from it).
