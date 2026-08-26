@@ -196,15 +196,15 @@ witnessed on the shared graph via the platform-document anchor.
 Every content node carries license qualifiers, set by the
 creating actor when the node enters the graph and immutable
 thereafter: **attribution** `a ∈ [0, 1]` (credit requirement,
-`def:content:attribution`) and **provenance** `o ∈ [0, 1]` (public
-use-record requirement, `def:content:provenance`). Neither axis
+``def:content:attribution``) and **provenance** `o ∈ [0, 1]` (public
+use-record requirement, ``def:content:provenance``). Neither axis
 is a switch — each is a judgment of degree. Both are terms over
 *downstream use* — what others must do when they adopt, quote, or
 build on the content — never a statement about how the content
 was made. Severity `l = a + o` constrains adoption, nothing else.
 They are content-governance metadata of the Publish record
-(`def:content:license-qualifiers`); no L1 formula consumes them,
-and `prop:content:closure-exclusion` grants the whole
+(``def:content:license-qualifiers``); no L1 formula consumes them,
+and ``prop:content:closure-exclusion`` grants the whole
 interpretation to Layer 2 — judging a degree, checking
 compliance, and enforcing terms are CoGra's acts
 ([layer1-interface.md §10](../primitive/layer1-interface.md#10-content-governance-metadata-pn-full-9-seccontent--full-paper-only)).
@@ -216,7 +216,7 @@ CoGra enforces them through four planks:
    as envelope conformance
    ([substrate.md §7](../primitive/substrate.md#7-payload-carriage)).
    The default is Public Domain `(0, 0)`, the unique point of
-   zero severity (`rem:content:public-domain`).
+   zero severity (``rem:content:public-domain``).
 2. **CoGra's published reading of the degrees.** The record
    carries the whole square; CoGra publishes a reading for three
    degrees per axis and offers exactly those in its composers,

@@ -66,7 +66,7 @@ public face is a proposer-authored **Content anchor** — the
 proposal text and machine-readable terms ride it as witnessed
 payload — plus a **`(0,0)` Reference from the anchor to the
 subject node**. The zero-parameter Reference is routing-inert and
-never vouches (`rem:graph:zero-parameter-degeneracy`); its only
+never vouches (``rem:graph:zero-parameter-degeneracy``); its only
 job is to name the subject as replayable public structure. Ballots
 point at the anchor — never at the subject itself.
 
