@@ -713,14 +713,16 @@ impl<'ast> Visit<'ast> for Walk {
     }
 
     fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+        if item.attrs.iter().any(is_cfg_test) {
+            syn::visit::visit_item_mod(self, item);
+            return;
+        }
         if item.content.is_some() {
-            if !item.attrs.iter().any(is_cfg_test) {
-                self.modules.push(Hit {
-                    identifier: item.ident.to_string(),
-                    span: range(item.span()),
-                    attributes: item.attrs.iter().filter_map(final_segment).collect(),
-                });
-            }
+            self.modules.push(Hit {
+                identifier: item.ident.to_string(),
+                span: range(item.span()),
+                attributes: item.attrs.iter().filter_map(final_segment).collect(),
+            });
         } else {
             self.declarations.push(Declaration {
                 identifier: item.ident.to_string(),
@@ -741,6 +743,12 @@ fn final_segment(attr: &syn::Attribute) -> Option<String> {
 }
 
 /// Whether an attribute is exactly `#[cfg(test)]`.
+///
+/// The exclusion reads on the item and not on its shape: a declaration
+/// attributed `#[cfg(test)]` names a module the census excludes, so it is not
+/// reported for pairing either (´dec:lint:cross-source-pairing´). Either way
+/// the attribute is read on the item itself, which is what the inline half
+/// has always done.
 ///
 /// Exactly: `[profiles]` excludes "modules attributed `#[cfg(test)]`", and
 /// a broader reading would swallow `#[cfg(feature = "test")]`, which names
