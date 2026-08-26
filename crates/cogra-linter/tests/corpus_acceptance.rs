@@ -279,7 +279,12 @@ fn every_committed_register_is_current() {
         adoption(),
         run().kinds.as_ref(),
     );
-    assert_eq!(registers.len(), 2, "the companion register and the region");
+    assert_eq!(
+        registers.len(),
+        8,
+        "the companion register, the headline region, and the test profile's \
+         label register for each of the six owners with covered assets"
+    );
     for reg in &registers {
         let (held, _) = cogra_linter::registers::committed(reg, &run().sources);
         assert_eq!(
