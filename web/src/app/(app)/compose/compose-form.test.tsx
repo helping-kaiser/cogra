@@ -106,7 +106,7 @@ describe("ComposeForm", () => {
     });
   });
 
-  it("stages the drafted tags as names only", async () => {
+  it("stages the drafted tags with the parameters their sliders hold", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
       graphql.mutation("PreparePost", ({ variables: v }) => {
@@ -122,6 +122,13 @@ describe("ComposeForm", () => {
     fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "The body" } });
     fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "#Rust" } });
     fireEvent.click(screen.getByTestId("compose-tag-add"));
+    // The second tag goes in with moved sliders (F6).
+    fireEvent.change(screen.getByTestId("compose-tag-new-relevance"), {
+      target: { value: "0.75" },
+    });
+    fireEvent.change(screen.getByTestId("compose-tag-new-confidence"), {
+      target: { value: "0.5" },
+    });
     fireEvent.change(screen.getByTestId("compose-tag-input"), { target: { value: "webdev" } });
     fireEvent.click(screen.getByTestId("compose-tag-add"));
     fireEvent.click(screen.getByTestId("compose-license-attribution-1"));
@@ -129,7 +136,12 @@ describe("ComposeForm", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
     expect(variables).toMatchObject({
-      input: { tags: [{ name: "rust" }, { name: "webdev" }] },
+      input: {
+        tags: [
+          { name: "rust", pDirected: 0.1, pInterest: 1 },
+          { name: "webdev", pDirected: 0.75, pInterest: 0.5 },
+        ],
+      },
     });
   });
 
