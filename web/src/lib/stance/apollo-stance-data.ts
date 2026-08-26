@@ -29,11 +29,17 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   CommentStanceDocument,
+  HashtagStanceDocument,
   PostStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
 import { failed, success, viewerField, type Outcome } from "@/lib/api/outcome";
-import { prepareSeverance, prepareStance, type StagedWriteView } from "@/lib/api/writes-api";
+import {
+  prepareSeverance,
+  prepareStance,
+  type StagedWriteView,
+  type StanceSelector,
+} from "@/lib/api/writes-api";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { WriteSigner } from "@/lib/signing/write-signer";
 import type { StancePair } from "./model";
@@ -68,33 +74,62 @@ type WireBundle = {
   } | null;
 };
 
+/** `{ target: id }` for the id-keyed roots; a topic's own name for the rest. */
+function selectorOf(target: StanceTarget): StanceSelector {
+  return target.kind === "topic" ? { topicName: target.id } : { target: target.id };
+}
+
 function wireBundle(
   client: ApolloClient,
   target: StanceTarget,
   pick: StancePair | null,
   options?: StanceReadOptions,
 ): Promise<Outcome<WireBundle>> {
-  const variables = {
-    id: target.id,
-    pick: pick === null ? null : { pDirected: pick.pDirected, pInterest: pick.pInterest },
-    includePending: options?.includePending ?? INCLUDE_PENDING_DEFAULT,
-  };
+  const pickVar = pick === null ? null : { pDirected: pick.pDirected, pInterest: pick.pInterest };
+  const includePending = options?.includePending ?? INCLUDE_PENDING_DEFAULT;
 
   switch (target.kind) {
     case "post":
       return viewerField(
-        () => client.query({ query: PostStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        () =>
+          client.query({
+            query: PostStanceDocument,
+            variables: { id: target.id, pick: pickVar, includePending },
+            fetchPolicy: READ_POLICY,
+          }),
         (data) => data.post?.viewerStance,
       );
     case "comment":
       return viewerField(
-        () => client.query({ query: CommentStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        () =>
+          client.query({
+            query: CommentStanceDocument,
+            variables: { id: target.id, pick: pickVar, includePending },
+            fetchPolicy: READ_POLICY,
+          }),
         (data) => data.comment?.viewerStance,
       );
     case "profile":
       return viewerField(
-        () => client.query({ query: ProfileStanceDocument, variables, fetchPolicy: READ_POLICY }),
+        () =>
+          client.query({
+            query: ProfileStanceDocument,
+            variables: { id: target.id, pick: pickVar, includePending },
+            fetchPolicy: READ_POLICY,
+          }),
         (data) => data.user?.viewerStance,
+      );
+    // A topic's identity is its name, not a UUID (hashtag.md §1) — the
+    // one root that takes `name` where the other three take `id`.
+    case "topic":
+      return viewerField(
+        () =>
+          client.query({
+            query: HashtagStanceDocument,
+            variables: { name: target.id, pick: pickVar, includePending },
+            fetchPolicy: READ_POLICY,
+          }),
+        (data) => data.hashtag?.viewerStance,
       );
   }
 }
@@ -157,14 +192,14 @@ export function createApolloStanceData(deps: {
     async commit(target, pick): Promise<Outcome<StanceCommit>> {
       // Exactly the pick, verbatim — the bundle is the fold's business.
       const prepared = await guard.run(() =>
-        prepareStance(client, target.id, pick.pDirected, pick.pInterest),
+        prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
       );
       if (prepared.kind !== "success") return prepared;
       return signAll(prepared.value);
     },
 
     async sever(target): Promise<Outcome<StanceCommit>> {
-      const prepared = await guard.run(() => prepareSeverance(client, target.id));
+      const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
       if (prepared.kind !== "success") return prepared;
       return signAll(prepared.value);
     },

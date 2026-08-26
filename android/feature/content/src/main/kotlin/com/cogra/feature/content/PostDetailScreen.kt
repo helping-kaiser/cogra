@@ -48,6 +48,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
+import com.cogra.domain.TopicClaimView
 import com.cogra.feature.content.R
 import com.cogra.feature.stance.StanceControlRoute
 
@@ -60,6 +61,7 @@ fun PostDetailRoute(
     signedIn: Boolean?,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     refreshSignal: Boolean = false,
@@ -93,9 +95,20 @@ fun PostDetailRoute(
         onSubmitReply = viewModel::onSubmitReply,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
+        onOpenTopic = onOpenTopic,
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
+        topicChipRow = { target, topics, editable, tag ->
+            TopicChipRowRoute(
+                target = target,
+                topics = topics,
+                editable = editable,
+                onOpenTopic = onOpenTopic,
+                onChanged = viewModel::refresh,
+                testTagPrefix = tag,
+            )
+        },
     )
 }
 
@@ -122,10 +135,18 @@ fun PostDetailScreen(
     onSubmitReply: () -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     /** The stance control the post and every comment carry (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /** The topic chip row the post and every comment carry (hashtag.md §4). */
+    topicChipRow: @Composable (
+        target: String,
+        topics: List<TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit = { _, _, _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val signedCopy = stringResource(R.string.content_post_saved)
@@ -251,8 +272,10 @@ fun PostDetailScreen(
                             onCancelReply = onCancelReply,
                             onSubmitReply = onSubmitReply,
                             onOpenActor = onOpenActor,
+                            onOpenTopic = onOpenTopic,
                             onSignInOrJoin = onSignInOrJoin,
                             stanceControl = stanceControl,
+                            topicChipRow = topicChipRow,
                         )
                     }
                 }
@@ -281,8 +304,15 @@ private fun PostWithThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    topicChipRow: @Composable (
+        target: String,
+        topics: List<TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -318,6 +348,7 @@ private fun PostWithThread(
                 if (post.landing.isPending) {
                     PendingMarker(testTag = "detail_pending")
                 }
+                topicChipRow(post.id, post.topics, viewerId != null && post.author?.id == viewerId, "detail_post")
                 // The stance control rides the post itself here, the way
                 // it rides the card in the feed (design.md §6).
                 stanceControl(post.id, "detail_post")
@@ -353,7 +384,9 @@ private fun PostWithThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,
+                topicChipRow = topicChipRow,
             )
         }
         if (state.commentsHaveMore) {
@@ -460,7 +493,14 @@ private fun CommentThread(
     onCancelReply: () -> Unit,
     onSubmitReply: () -> Unit,
     onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    topicChipRow: @Composable (
+        target: String,
+        topics: List<TopicClaimView>,
+        editable: Boolean,
+        testTagPrefix: String,
+    ) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
     Column(
@@ -544,6 +584,12 @@ private fun CommentThread(
                     if (comment.landing.isPending) {
                         PendingMarker(testTag = "comment_pending_${comment.id}")
                     }
+                    topicChipRow(
+                        comment.id,
+                        comment.topics,
+                        viewerId != null && comment.author?.id == viewerId,
+                        "comment_${comment.id}",
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // A comment carries the control too (design.md §6).
                         stanceControl(comment.id, "comment_${comment.id}")
@@ -630,7 +676,9 @@ private fun CommentThread(
                 onCancelReply = onCancelReply,
                 onSubmitReply = onSubmitReply,
                 onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
                 stanceControl = stanceControl,
+                topicChipRow = topicChipRow,
             )
         }
         when {

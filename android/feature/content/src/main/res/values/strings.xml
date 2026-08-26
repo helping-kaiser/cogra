@@ -8,6 +8,15 @@
     <string name="content_field_title">Title</string>
     <string name="content_field_description">Description</string>
     <string name="content_field_body">What do you want to publish?</string>
+
+    <!-- Topic entry at creation (hashtag.md; D15: no autocomplete). -->
+    <string name="content_topics_heading">Topics</string>
+    <string name="content_topics_field">Add a topic</string>
+    <string name="content_topics_add">Add</string>
+    <string name="content_topics_preview">Will be added as #%1$s</string>
+    <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
+    <string name="content_topics_chip_row_add">Add a topic</string>
+
     <string name="content_license_heading">License</string>
     <string name="content_license_caption">Terms for anyone who reuses this — not a statement about how you made it.</string>
     <string name="content_license_attribution_label">Credit</string>

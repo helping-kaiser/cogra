@@ -9,6 +9,7 @@ package com.cogra.app.di
 
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.HashtagView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -21,6 +22,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
+import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
@@ -28,6 +30,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
@@ -43,6 +46,7 @@ import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
@@ -104,6 +108,7 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         description: String?,
         content: String,
         license: LicenseChoice,
+        tags: List<String>,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -239,6 +244,57 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
         )
 }
 
+/**
+ * A topic surface enough for the nav graph to render: an empty topic
+ * (no content, unfollowed) unless a test scripts otherwise. The follow
+ * leg goes through the real [WriteRepository], the same as
+ * [ScriptedStanceRepository], so a test that commits a follow runs the
+ * whole signing chain.
+ */
+class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTopicRepository() {
+    var hashtags: MutableMap<String, HashtagView> = mutableMapOf()
+    var content: MutableMap<String, List<TaggedContentView>> = mutableMapOf()
+    var net = StancePair.Origin
+    var raw: StancePair? = null
+    var records = 0
+
+    override suspend fun hashtag(name: String): Outcome<HashtagView?> =
+        Outcome.Success(hashtags[name] ?: HashtagView(id = "hashtag-$name", name = testModeratedField(name)))
+
+    override suspend fun taggedContent(
+        name: String,
+        limit: Int?,
+        includePending: Boolean,
+    ): Outcome<List<TaggedContentView>> = Outcome.Success(content[name].orEmpty())
+
+    override suspend fun prepareTag(
+        target: String,
+        name: String,
+        pDirected: Double?,
+        pInterest: Double?,
+    ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pDirected ?: 0.1, pInterest ?: 1.0)
+
+    override suspend fun followStanding(name: String, includePending: Boolean): Outcome<StanceStanding> =
+        Outcome.Success(StanceStanding(name, net, raw ?: net, records, includePending = includePending))
+
+    override suspend fun prepareFollow(name: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
+        writes.prepareStance(name, pick.pDirected, pick.pInterest)
+
+    override suspend fun followSeveranceQuote(name: String, includePending: Boolean): Outcome<SeveranceQuote> =
+        Outcome.Success(
+            SeveranceQuote(
+                target = name,
+                standing = net,
+                raw = raw ?: net,
+                records = records,
+                alreadySevered = net == StancePair.Origin,
+            ),
+        )
+
+    override suspend fun prepareUnfollow(name: String): Outcome<List<PreparedWriteView>> =
+        Outcome.Success(emptyList())
+}
+
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -319,4 +375,12 @@ object FakeBindingsModule {
 
     @Provides
     fun stanceRepository(fake: ScriptedStanceRepository): StanceRepository = fake
+
+    @Provides
+    @Singleton
+    fun scriptedTopicRepository(writes: WriteRepository): ScriptedTopicRepository =
+        ScriptedTopicRepository(writes)
+
+    @Provides
+    fun topicRepository(fake: ScriptedTopicRepository): TopicRepository = fake
 }
