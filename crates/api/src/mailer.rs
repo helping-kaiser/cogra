@@ -1,9 +1,11 @@
-// Outbound mail (auth.md: verification, reset, and email-change
-// messages). The trait is the seam; the dev implementation logs the full
-// message — which is also how links and codes surface during hand
-// testing — and, when a log file is configured, appends it there too
-// (`DEV_MAILER_LOG`, development.md). A real SMTP transport is chosen
-// when deployment nears (development.md).
+//! Outbound mail (auth.md: verification, reset, and email-change
+//! messages).
+//!
+//! The trait is the seam. The dev implementation logs the full message —
+//! which is also how links and codes surface during hand testing — and,
+//! when a log file is configured, appends it there too (`DEV_MAILER_LOG`,
+//! development.md). A real SMTP transport is chosen when deployment nears
+//! (development.md).
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
@@ -33,7 +35,9 @@ pub trait Mailer: Send + Sync {
 
 /// Development delivery: the message lands in the log and, when a log
 /// file is configured, is appended there — one place to read out-of-band
-/// secrets during hand tests instead of grepping the process log.
+/// secrets during hand tests instead of grepping the process log. The
+/// append is best-effort like the send itself: a file problem is logged
+/// and the flow that mailed carries on.
 pub struct DevMailer {
     log_file: Option<PathBuf>,
 }
@@ -55,8 +59,6 @@ impl Mailer for DevMailer {
                 "dev mailer: outbound message"
             );
             if let Some(path) = &self.log_file {
-                // Best-effort like the send itself: a file problem must
-                // never fail the flow that mailed.
                 if let Err(e) = append(path, &mail).await {
                     tracing::warn!(
                         error = %e,
@@ -104,10 +106,12 @@ mod tests {
         }
     }
 
+    /// Messages append in send order under an RFC 3339 header, and the
+    /// configured path is created on the way — a nested target exercises
+    /// that, since the usual `tmp_dev/` does not exist on a fresh
+    /// checkout.
     #[tokio::test]
     async fn appends_each_message_to_the_configured_file() {
-        // A missing parent directory is part of the test: tmp_dev/ does
-        // not exist on a fresh checkout.
         let dir = std::env::temp_dir().join(format!("cogra-mailer-{}", uuid::Uuid::new_v4()));
         let path = dir.join("nested").join("mailer.log");
         let mailer = DevMailer::new(Some(path.clone()));
@@ -134,10 +138,10 @@ mod tests {
         tokio::fs::remove_dir_all(&dir).await.ok();
     }
 
+    /// The unset path stays a plain log-and-return: no file, no directory,
+    /// no error.
     #[tokio::test]
     async fn without_a_configured_file_only_the_log_line_is_emitted() {
-        // The unset path must stay a plain log-and-return: no file, no
-        // directory, no error.
         DevMailer::new(None)
             .send(mail("a@example.com", "subject", "body"))
             .await;
