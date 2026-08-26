@@ -138,7 +138,7 @@ class FakeIdentityStore : IdentityStore {
         inputMode.value = mode
     }
 
-    private val confirmMultiAction = MutableStateFlow(true)
+    val confirmMultiAction = MutableStateFlow(true)
 
     override val confirmMultiActionSubmits: Flow<Boolean> = confirmMultiAction
 
