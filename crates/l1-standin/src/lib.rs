@@ -1,20 +1,21 @@
-// The L1 stand-in: an implementation of the layer1-interface.md contract
-// that plays the substrate behind the seam until PeerNetworks Layer 1
-// ships (roadmap.md "The stand-in and the swap"). Named simplifications,
-// both documented there:
-//
-// - Money is honored as numbers — the B_i surface and θ-debits are integer
-//   micro-unit balances with no real Layer 0 economy behind them.
-// - Standing is simplified — formation, the admission handshake, ordering,
-//   causal keys, maturity, and the θ-ledger are implemented in full, while
-//   the conserved standing solve of §11.3–11.5 is not: every act's stamp is
-//   taken as 1, so the W2a wall and W2b door pass trivially. The gates'
-//   call-sites are real; the real substrate brings the real stamps.
-//
-// The stand-in owns the l1_* tables (its own SQL — the named exception to
-// "SQL only in postgres-store", CLAUDE.md) and is the only code that
-// touches them. It is replaced wholesale at the swap; no CoGra slice
-// reopens.
+//! The L1 stand-in plays the substrate behind the seam, implementing the
+//! layer1-interface.md contract until PeerNetworks Layer 1 ships
+//! (roadmap.md "The stand-in and the swap"). Two simplifications are
+//! named there and carried here:
+//!
+//! - Money is numbers only: the B_i surface and θ-debits are integer
+//!   micro-unit balances, with no real Layer 0 economy behind them.
+//! - Standing is partial: formation, the admission handshake, ordering,
+//!   causal keys, maturity, and the θ-ledger are implemented in full, but
+//!   the conserved standing solve of §11.3–11.5 is not — every act's
+//!   stamp is taken as 1, so the W2a wall and W2b door pass trivially.
+//!   The gates' call-sites are real; the real substrate supplies the
+//!   real stamps.
+//!
+//! This crate owns the l1_* tables directly — the named exception to "SQL
+//! only in postgres-store" (CLAUDE.md) — and is the only code that
+//! touches them. It is replaced wholesale at the swap; no CoGra slice
+//! reopens on top of it.
 
 mod close;
 mod seal;
@@ -34,10 +35,10 @@ use sqlx::PgPool;
 pub struct StandInConfig {
     /// θ in integer micro-units (1e-6).
     pub theta_micro: i64,
-    /// N_epoch — the epoch target act budget (`def:epoch:epoch-act-budget`).
+    /// N_epoch — the epoch target act budget (layer1-interface.md §11.6).
     pub epoch_target_acts: i64,
     /// M_payload — per-act payload bound, aggregate over a hyper-edge's
-    /// projections (`def:graph:act-payload-projection`).
+    /// projections (layer1-interface.md §8.4).
     pub max_payload_bytes: usize,
 }
 
@@ -54,13 +55,13 @@ impl Default for StandInConfig {
 #[derive(Debug, thiserror::Error)]
 pub enum StandInError {
     /// The submission is not a well-formed act; no Layer-1 object exists
-    /// for it (`def:graph:verified-act` — a failure produces no object).
+    /// for it (layer1-interface.md §8.2 — a failure produces no object).
     #[error("formation: {0}")]
     Formation(String),
     /// A signature, commitment, or key binding failed.
     #[error("authentication: {0}")]
     Authentication(String),
-    /// Equivocation or identifier reuse (`def:graph:act-identifier`).
+    /// Equivocation or identifier reuse (layer1-interface.md §8.1).
     #[error("conflict: {0}")]
     Conflict(String),
     #[error("unknown act {0}")]
@@ -96,11 +97,12 @@ impl StandIn {
     }
 
     /// The host signing key — generated on first use, persisted so every
-    /// process sees one host identity.
+    /// process sees one host identity. Insert-if-absent, then read
+    /// whatever won: a process that loses the race for the singleton row
+    /// reads back the seed that did land, rather than minting a second one.
     pub(crate) async fn host_key(&self) -> Result<SigningKey, StandInError> {
         let mut seed = [0u8; 32];
         OsRng.fill_bytes(&mut seed);
-        // Insert-if-absent, then read whatever won.
         sqlx::query!(
             "INSERT INTO l1_host (singleton, signing_seed) VALUES (TRUE, $1)
              ON CONFLICT (singleton) DO NOTHING",
