@@ -734,6 +734,7 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
             PathPrefix::new("crates/postgres-store/"),
+            PathPrefix::new("crates/l1-standin/"),
             PathPrefix::new("docs/"),
         ]
     );

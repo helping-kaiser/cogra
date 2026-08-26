@@ -1,12 +1,12 @@
-// Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
-//
-// Selection among valid ordered sequences is host discretion (§11.6): this
-// host takes approved acts in approval order, defers any act whose
-// declared dependencies or asserted parents are not yet in history, defers
-// any act whose author cannot pay θ (W1 — the author stays free to burn
-// and land later), and caps the epoch at the act budget. The W2a/W2b
-// evaluation points are here so the real substrate's verdicts slot in at
-// the swap (stamps ≡ 1 — see the crate header).
+//! Epoch close and publication (layer1-interface.md §11.6, §8.3, §11.7).
+//!
+//! Selection among valid ordered sequences is host discretion (§11.6):
+//! this host takes approved acts in approval order, defers any act whose
+//! declared dependencies or asserted parents are not yet in history,
+//! defers any act whose author cannot pay θ (W1 — the author stays free
+//! to burn and land later), and caps the epoch at the act budget. The
+//! W2a/W2b evaluation points are here so the real substrate's verdicts
+//! slot in at the swap (stamps ≡ 1 — see the crate root).
 
 use std::collections::{HashMap, HashSet};
 
@@ -27,10 +27,41 @@ struct Candidate {
     act_time: i64,
 }
 
+/// Closes the current epoch: selects among approved acts, assigns Lamport
+/// causal times, and persists the accepted set as a published package
+/// (layer1-interface.md §11.6, §8.3, §11.7). The lock taken first
+/// serializes concurrent closes on the epoch table.
+///
+/// Selection is a multi-pass fixpoint over the approval order, with
+/// author balances locked (`FOR UPDATE`) for its duration since W1
+/// solvency is debited as it proceeds — only the actor's own balance
+/// pays θ. Acts sharing an endpoint or a dependency get strictly
+/// increasing Lamport times, so the stable sort by time below never
+/// reorders a causally related pair, and an act whose same-close
+/// dependency was approved after it is picked up on a later pass —
+/// approval order never forces a causally satisfiable act to defer.
+/// Dependency validity at each position requires every named act already
+/// in history or earlier in this selection: dependent sets land whole or
+/// not at all, so a member whose dependency was deferred defers with it.
+/// Deferral remains only for dependencies outside the close (unknown
+/// acts, insolvent dependency authors); a deferred act simply stays
+/// 'approved' for a later close. A selected act's Lamport time is one
+/// more than the maximum over its incident endpoints' frontiers and its
+/// dependencies' and parents' times.
+///
+/// The authoritative order is the stable sort by Lamport time — position
+/// totalizes equal frontiers, per layer1-interface.md §8.3's
+/// authoritative-order rule. Replay in that published order derives
+/// maturities from the pre-act projected degrees; both legs of a
+/// hyper-edge see the same pre-act state and do not mature one another.
+/// Persisted with the accepted acts' causal keys and legs: the θ-debit
+/// and count increment, consummated at the writing epoch's price and
+/// never re-calculated (§11.7); node state; and the epoch row. A debug
+/// assertion then checks that every selected dependency's ordering was
+/// honored, which the selection loop above guarantees.
 pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage>, StandInError> {
     let mut tx = standin.pool().begin().await?;
 
-    // Serialize concurrent closes on the epoch table.
     sqlx::query!("LOCK TABLE l1_epochs IN EXCLUSIVE MODE")
         .execute(&mut *tx)
         .await?;
@@ -38,7 +69,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         .fetch_one(&mut *tx)
         .await?;
 
-    // Approved acts in approval order — the host's selection order.
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
@@ -53,7 +83,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         return Ok(None);
     }
 
-    // History: acts already accepted, with their times (dependency targets).
     let mut accepted_times: HashMap<String, i64> = sqlx::query!(
         r#"SELECT act_id, act_time AS "act_time!" FROM l1_acts WHERE status = 'accepted'"#
     )
@@ -63,7 +92,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     .map(|r| (r.act_id, r.act_time))
     .collect();
 
-    // Author balances, exclusive while selecting (W1 is debited).
     let authors: HashSet<String> = rows.iter().map(|r| r.author.clone()).collect();
     let author_list: Vec<String> = authors.into_iter().collect();
     let mut balances: HashMap<String, i64> = sqlx::query!(
@@ -77,7 +105,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     .map(|r| (r.address, r.balance_micro))
     .collect();
 
-    // Node replay state: Lamport frontiers and projected degrees.
     let mut frontiers: HashMap<String, i64> = HashMap::new();
     let mut degrees: HashMap<String, i64> = HashMap::new();
     for r in sqlx::query!("SELECT node_id, frontier, degree FROM l1_node_state")
@@ -88,16 +115,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         degrees.insert(r.node_id, r.degree);
     }
 
-    // Selection + Lamport assignment in selection order. Acts sharing an
-    // endpoint or a dependency get strictly increasing times, so the
-    // stable sort by time below never reorders a causally related pair —
-    // the published order linearizes every declared dependency and
-    // asserted parent at a strictly lower key (§8.3).
-    // Multi-pass over the approval order until a fixpoint: an act whose
-    // same-close dependency was approved after it is picked up on a later
-    // pass, so approval order never forces a causally satisfiable act to
-    // defer. Deferral remains for dependencies outside the close (unknown
-    // acts, insolvent dependency authors).
     let theta = standin.config().theta_micro;
     let target_budget = standin.config().epoch_target_acts;
     let mut selected: Vec<Candidate> = Vec::new();
@@ -114,10 +131,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
             }
             let mut parents_and_deps = row.deps.clone();
             parents_and_deps.extend(row.asserted_parents.iter().cloned());
-            // Dependency validity at this position: every named act already
-            // in history or earlier in this selection (dependent sets land
-            // whole or not at all — a member whose dep was deferred defers
-            // with it).
             if !parents_and_deps
                 .iter()
                 .all(|d| accepted_times.contains_key(d) || selected_ids.contains(d))
@@ -125,7 +138,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
                 deferred.push(row);
                 continue;
             }
-            // W1 — solvency, debited: only the actor's own balance pays θ.
             let balance = balances.entry(row.author.clone()).or_insert(0);
             if *balance < theta {
                 deferred.push(row);
@@ -145,8 +157,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
                 &row.asserted_parents,
             )?;
 
-            // Lamport time: one more than the maximum over the incident
-            // endpoints' frontiers and the predecessors' times.
             let legs = projection_legs(&body);
             let mut max_base: i64 = 0;
             for (_, src, tgt, _, _) in &legs {
@@ -191,13 +201,8 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         return Ok(None);
     }
 
-    // The authoritative order: stable sort by Lamport time (position
-    // totalizes equal frontiers — `def:graph:authoritative-act-order`).
     selected.sort_by_key(|c| c.act_time);
 
-    // Authoritative replay in the published order: maturities from the
-    // pre-act projected degrees; both legs of a hyper-edge see the same
-    // pre-act state and do not mature one another (§8.3).
     let mut records: Vec<PublishedRecord> = Vec::with_capacity(selected.len());
     for (position, cand) in selected.iter().enumerate() {
         let legs = projection_legs(&cand.body);
@@ -236,8 +241,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         });
     }
 
-    // Persist: accepted acts with their causal keys, legs, θ-debits and
-    // count increments, node state, and the epoch row.
     for record in &records {
         sqlx::query!(
             "UPDATE l1_acts
@@ -265,8 +268,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
             .execute(&mut *tx)
             .await?;
         }
-        // θ-debit + count increment, consummated at the writing epoch's
-        // price and never re-calculated (§11.7).
         sqlx::query!(
             "UPDATE l1_accounts
              SET balance_micro = balance_micro - $2, action_count = action_count + 1
@@ -301,9 +302,6 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     .await?;
     tx.commit().await?;
 
-    // Selection consumed candidates in order; a deferred act stays
-    // 'approved' for a later close. Sanity: every selected dependency was
-    // honored (debug builds only — the selection loop guarantees it).
     debug_assert!(
         records.iter().enumerate().all(|(i, r)| {
             let earlier: HashSet<String> =
@@ -336,6 +334,9 @@ pub(crate) async fn epochs_since(
     Ok(packages)
 }
 
+/// Rebuilds one published epoch's records from storage, in position
+/// order. Each record's legs are read back ordered by role ('a' before
+/// 't' lexically), matching `projection_legs`'s own ordering.
 async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
@@ -371,8 +372,6 @@ async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage,
                 tau: l.tau,
             });
         }
-        // Hyper legs order: A before T ('a' < 't' lexically) — matches the
-        // projection order.
         records.push(PublishedRecord {
             act_id: common::l1::ActId::parse(&row.act_id)
                 .map_err(|e| StandInError::Formation(e.to_string()))?,
