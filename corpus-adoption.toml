@@ -1248,10 +1248,12 @@ failing = [
   "crates/cogra-linter/",
   "crates/cogra-interchange/",
   "crates/postgres-store/",
+  "crates/l1-standin/",
+  "crates/common/",
   "docs/",
 ]
 
-# What those four prefixes carry, and what they deliberately do not.
+# What those six prefixes carry, and what they deliberately do not.
 #
 # crates/cogra-linter/ — the whole crate, by first-match prefix: the
 #   four discipline documents, the linter architecture, the linter's
@@ -1273,6 +1275,24 @@ failing = [
 #   documentation comments only: every why a plain comment held now
 #   documents the item it governs, and what merely narrated the next line
 #   is gone. The prefix is the crate's, not one tree's, because the ban is.
+# crates/l1-standin/ — the whole crate, swept 2026-08-26: its src/ and
+#   tests/ carried 155 plain-comment occurrences and 6 label-backtick
+#   near-misses, now zero. Real rationale moved into doc comments,
+#   reworded rather than relocated verbatim; the near-misses were
+#   citations of layer1-interface.md section names, which only look
+#   label-shaped — that file is outside the carrier ([carrier]
+#   vendored_files) and mints nothing here, so acute-quoting them
+#   would cite a mint resolving nowhere in this corpus. Reworded to
+#   plain-prose section citations instead.
+# crates/common/ — the whole crate, having completed the ban sweep of ARCH
+#   dec:linter:rust-comment-ban. Its src/ and tests/ carry documentation
+#   comments only: every why a plain comment held now documents the item it
+#   governs, and what merely narrated the next line is gone. The crate also
+#   holds the L1 seam's Rust surface, where doc comments name the L1
+#   document by section rather than by its label anchors — that document is
+#   outside the carrier ([carrier] vendored_files), so its names never
+#   become citations here. The prefix is the crate's, not one tree's,
+#   because the ban is.
 # docs/ — the four doc-tree owners at once, since one prefix covers
 #   what four would and the partition's own rules decide ownership
 #   below it. R20 left the trees carrying no occurrence: every
@@ -1281,10 +1301,9 @@ failing = [
 #   writes it.
 #
 # DELIBERATELY ADVISORY, each awaiting its own migration:
-#   crates/api/, crates/common/, crates/l1-standin/ — 1147 plain comments
-#                    still queued for the ban sweep, MEASURED 2026-08-26 by
-#                    the linter itself: api 795, common 197, l1-standin 155.
-#                    src/ and tests/ alike.
+#   crates/api/ — the one crate still queued for the ban sweep,
+#     MEASURED 2026-08-26 by the linter itself: 805 findings, src/ and
+#     tests/ alike.
 #   android/, web/   — no frontend before slices 7 and 8
 
 
