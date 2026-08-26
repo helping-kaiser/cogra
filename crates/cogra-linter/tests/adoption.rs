@@ -732,7 +732,7 @@ fn the_enforcement_section_round_trips() {
         enforcement.failing,
         vec![
             PathPrefix::new("crates/cogra-linter/"),
-            PathPrefix::new("crates/cogra-interchange/docs/"),
+            PathPrefix::new("crates/cogra-interchange/"),
             PathPrefix::new("crates/postgres-store/"),
             PathPrefix::new("docs/"),
         ]
