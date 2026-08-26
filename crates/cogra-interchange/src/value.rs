@@ -24,6 +24,13 @@ use crate::error::ValueError;
 /// major types define, and a `match` over the value model is meant to
 /// handle them completely.
 ///
+/// `Clone`, `PartialEq`, `Hash`, `Ord`, and `Drop` are hand-written rather
+/// than derived. A derived walk recurses to the nesting depth, so a value a
+/// hostile input nests deeply enough overflows the stack on the walk the
+/// compiler generates; each of these instead walks an explicit worklist, and
+/// the call depth stays constant however deep the value nested
+/// (´impl:xchg:iterative-teardown´).
+///
 /// ```
 /// use cogra_interchange::Value;
 ///
@@ -166,13 +173,6 @@ impl PartialOrd for Value {
     }
 }
 
-// The derived `Clone`, `PartialEq`, and `Hash` recurse to the nesting depth,
-// so a value a hostile input nests deeply enough overflows the stack on the
-// walk the compiler generates — the same hazard `Drop` and `Ord` already
-// answer with an explicit worklist (`impl:xchg:iterative-teardown`). These
-// three are hand-written to the same discipline: the walk is a worklist, and
-// the call depth stays constant however deep the value nested.
-
 impl Clone for Value {
     fn clone(&self) -> Value {
         clone_iter(self)
@@ -210,9 +210,6 @@ fn clone_iter(root: &Value) -> Value {
     let mut results: Vec<Value> = Vec::new();
     while let Some(step) = work.pop() {
         match step {
-            // A container defers to a build step and pushes its children; a
-            // leaf clones directly. The children finish before the build
-            // step, so it finds them waiting on `results`.
             Step::Clone(Value::Array(array)) => {
                 work.push(Step::BuildArray(array.0.len()));
                 for child in array.0.iter().rev() {
@@ -261,7 +258,6 @@ fn clone_iter(root: &Value) -> Value {
             }
         }
     }
-    // The worklist rebuilds exactly one value for the root.
     debug_assert_eq!(results.len(), 1, "the clone leaves the root on the stack");
     results.pop().unwrap_or(Value::Null)
 }
@@ -544,7 +540,9 @@ impl TryFrom<Vec<u8>> for Text {
 /// The newtype exists for the teardown duty rather than for an invariant
 /// of its own: dropping a deeply nested sequence dismantles it with an
 /// explicit worklist, where the compiler's derived drop glue would recurse
-/// to the nesting depth and overflow the stack.
+/// to the nesting depth and overflow the stack. `Clone`, `PartialEq`, and
+/// `Hash` are hand-written for that same reason, each delegating to the
+/// shared worklist helpers.
 ///
 /// ```
 /// use cogra_interchange::{Array, Value};
@@ -556,8 +554,6 @@ impl TryFrom<Vec<u8>> for Text {
 #[derive(Debug, Eq, Default)]
 pub struct Array(Vec<Value>);
 
-// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
-// to the nesting depth. Each delegates to the shared worklist helpers.
 impl Clone for Array {
     fn clone(&self) -> Array {
         Array(self.0.iter().map(clone_iter).collect())
@@ -650,6 +646,10 @@ impl Drop for Array {
 /// A map whose entries stand in the bytewise-lexicographic order of their
 /// encoded keys, keys pairwise distinct.
 ///
+/// `Clone`, `PartialEq`, and `Hash` are hand-written for the same reason as
+/// [`Value`]'s — a derived walk recurses to the nesting depth — and each
+/// delegates to the shared worklist helpers.
+///
 /// ```
 /// use cogra_interchange::{Map, Value, ValueError};
 ///
@@ -670,8 +670,6 @@ impl Drop for Array {
 #[derive(Debug, Eq, Default)]
 pub struct Map(Vec<(Value, Value)>);
 
-// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
-// to the nesting depth. Each delegates to the shared worklist helpers.
 impl Clone for Map {
     fn clone(&self) -> Map {
         Map(self
@@ -848,6 +846,10 @@ fn tear_down(mut work: Vec<Value>) {
 
 /// A tagged item — restrained.
 ///
+/// `Clone`, `PartialEq`, and `Hash` are hand-written for the same reason as
+/// [`Value`]'s — a derived walk recurses down a chain of tags — and each
+/// delegates to the shared worklist helpers.
+///
 /// ```
 /// use cogra_interchange::{Tag, Value};
 ///
@@ -861,8 +863,6 @@ pub struct Tag {
     item: Box<Value>,
 }
 
-// Hand-written for the same reason as [`Value`]'s: the derived walks recurse
-// down a chain of tags. Each delegates to the shared worklist helpers.
 impl Clone for Tag {
     fn clone(&self) -> Tag {
         Tag {
@@ -944,13 +944,12 @@ impl Tag {
     }
 }
 
+/// Breaks a chain of tags, which is the one chain left for drop glue to
+/// descend: a tag is recursive, while arrays and maps dismantle themselves
+/// iteratively already and the worklist reaches a tag inside one of them
+/// without recursing.
 impl Drop for Tag {
     fn drop(&mut self) {
-        // A tag is recursive, so a chain of them is a chain the compiler's
-        // drop glue would descend. Arrays and maps dismantle themselves
-        // iteratively already, and the worklist reaches a tag inside one
-        // of them without recursing; tag directly inside tag is the one
-        // chain left, and this is where it is broken.
         if matches!(*self.item, Value::Tag(_)) {
             tear_down(vec![self.take_item()]);
         }
@@ -1079,6 +1078,9 @@ impl Float {
     /// value the crate holds. Note that on some targets the NaN an invalid
     /// operation produces carries a sign bit and so is refused here.
     ///
+    /// Narrowing is decided on bit equality rather than `==`, so that negative
+    /// zero is not mistaken for zero: the two are the same number under `==`.
+    ///
     /// ```
     /// use cogra_interchange::{Float, FloatWidth, ValueError};
     ///
@@ -1102,8 +1104,6 @@ impl Float {
             };
         }
         let single = v as f32;
-        // Bit equality, not `==`: negative zero must not be mistaken for
-        // zero, and the two are the same number under `==`.
         if f64::from(single).to_bits() != bits {
             return Ok(Float {
                 width: FloatWidth::Double,
@@ -1154,6 +1154,11 @@ impl Float {
 ///
 /// NaNs never reach here: [`Float::from_f64`] settles them first, so the
 /// all-ones exponent means an infinity and nothing else.
+///
+/// A binary32 subnormal is smaller than 2^-126, far below the least binary16
+/// subnormal 2^-24, so of those only zero narrows exactly. A binary16
+/// subnormal is `m * 2^-24` for an integer `1 <= m <= 1023`, which the
+/// significand reaches only by shifting down exactly.
 fn half_from_single(bits: u32) -> Option<u16> {
     let sign = ((bits >> 16) & 0x8000) as u16;
     let exponent = ((bits >> 23) & 0xff) as i32;
@@ -1163,8 +1168,6 @@ fn half_from_single(bits: u32) -> Option<u16> {
         return Some(sign | 0x7c00);
     }
     if exponent == 0 {
-        // A binary32 subnormal is smaller than 2^-126, far below the least
-        // binary16 subnormal 2^-24; only zero narrows exactly.
         return (mantissa == 0).then_some(sign);
     }
 
@@ -1180,8 +1183,6 @@ fn half_from_single(bits: u32) -> Option<u16> {
         return Some(sign | (biased << 10) | (mantissa >> 13) as u16);
     }
 
-    // Subnormal binary16: the value is `m * 2^-24` for an integer
-    // `1 <= m <= 1023`, so the significand must shift down exactly.
     let shift = (-unbiased - 1) as u32;
     if shift >= 24 {
         return None;
@@ -1230,10 +1231,12 @@ fn half_to_f64(bits: u16) -> f64 {
     f64::from_bits(widened)
 }
 
+/// A binary32 pattern as a binary64 value.
+///
+/// A NaN is widened by hand rather than cast, since a cast is not required to
+/// carry the payload across.
 fn single_to_f64(bits: u32) -> f64 {
     if bits & 0x7f80_0000 == 0x7f80_0000 && bits & 0x007f_ffff != 0 {
-        // A NaN: widen by hand, since a cast is not required to carry the
-        // payload across.
         let sign = (u64::from(bits) & 0x8000_0000) << 32;
         let mantissa = u64::from(bits & 0x007f_ffff) << 29;
         return f64::from_bits(sign | 0x7ff0_0000_0000_0000 | mantissa);
