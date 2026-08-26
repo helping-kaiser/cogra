@@ -1,3 +1,5 @@
+//! ´mod:module:handshake´
+//!
 //! The admission-handshake objects and the epoch package
 //! (layer1-interface.md §8.2, §8.4, §11.6).
 //!

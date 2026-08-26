@@ -1,3 +1,5 @@
+//! ´mod:module:crypto´
+//!
 //! The interim act-authentication realization: Ed25519 signatures, SHA-256
 //! salted hash commitments, domain-separated throughout. It is scoped to
 //! the stand-in and resolves nothing of open-questions.md Q30.
@@ -12,6 +14,7 @@ use sha2::{Digest, Sha256};
 /// Domain-separation tags. Every signed or hashed object is prefixed so no
 /// artifact of one role verifies in another.
 pub mod tags {
+    //! ´mod:module:tags´
     pub const PRE_DIGEST_CONTENT: &[u8] = b"cogra-l1:pre-digest:content:v1";
     pub const PRE_DIGEST_DEPS: &[u8] = b"cogra-l1:pre-digest:deps:v1";
     pub const PRE_COMMITMENT: &[u8] = b"cogra-l1:pre-commitment:v1";

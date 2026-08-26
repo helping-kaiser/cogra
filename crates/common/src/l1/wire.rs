@@ -1,3 +1,5 @@
+//! ´mod:module:wire´
+//!
 //! Transport encodings for the handshake objects that cross the API — the
 //! prepared proposal the device signs, the sealed verified act it approves,
 //! and the pre-commitment blob it submits (api-spec.md "The write flow":
