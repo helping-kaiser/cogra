@@ -189,11 +189,11 @@ impl RuleTable {
         Ok(())
     }
 
+    /// Only the operand of an operation is walked: a control operator's name
+    /// is an operator, never a rule reference, so nothing resolves it.
     fn walk_type1(&self, ty: &Type1, scope: &[String]) -> Result<(), TheoryError> {
         self.walk_type2(&ty.target, scope)?;
         match &ty.operation {
-            // A control operator's name is an operator, never a rule
-            // reference, so it is not resolved here.
             Some(operation) => self.walk_type2(&operation.operand, scope),
             None => Ok(()),
         }
@@ -233,10 +233,10 @@ impl RuleTable {
         }
     }
 
+    /// Only a type key can reference a rule: a bareword key denotes the text
+    /// string of its spelling, and a literal key denotes itself.
     fn walk_member_key(&self, key: &MemberKey, scope: &[String]) -> Result<(), TheoryError> {
         match &key.kind {
-            // A bareword key denotes the text string of its spelling, and a
-            // literal key denotes itself; neither is a reference.
             MemberKeyKind::Bareword(_) | MemberKeyKind::Value(_) => Ok(()),
             MemberKeyKind::Type { key, .. } => self.walk_type1(key, scope),
         }
