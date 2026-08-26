@@ -144,7 +144,7 @@ design error:
 A Collective the community defunds (severance netting its
 inbound stances to `(0,0)`) falls back to its own commitment
 rate — the standing its treasury-funded burns buy, every
-relational lift gone (`prop:epoch:final-standing-embedding`) — no
+relational lift gone (``prop:epoch:final-standing-embedding``) — no
 matter how healthy its internal membership; a thriving internal
 membership buys no protocol standing by itself. Each authority is
 earned and lost on its own terms.
@@ -282,7 +282,7 @@ Keys are constructed from the gesture, never invented ad hoc:
 (member operations, `set:<field>` property changes, composite
 operations like `admit_shareholder` / `transfer_shares` with
 handler-validated `_from`/`_to` bundles, and gated outward
-gestures like `decision:transfer:Item`); `actas:<gesture>` for
+gestures like ``decision:transfer:Item``); `actas:<gesture>` for
 outgoing-gesture eligibility, with `actas:content_default` and
 `actas:governance_default` as class-level fallbacks. Dispatch
 walks most-specific → class-general → the in-prose defaults of
@@ -313,9 +313,9 @@ Role vocabularies below are collective-specific; tables show
 | `decision:remove_member:CEO` | `role = board_member` | ≥ 2/3 |
 | `decision:admit_shareholder` *(composite)* | `role IN (founder, shareholder)`, weighted by stake | ≥ 75% |
 | `decision:transfer_shares` *(composite)* | `role = shareholder`, weighted by `ownership_pct` | ≥ 75% |
-| `actas:author:Post` | `role = press_officer` *(overrides any-member default)* | — |
-| `actas:vote:Proposal` | `role IN (CEO, board_member)` | — |
-| `decision:transfer:Item` | `role IN (founder, board_member)` | ≥ 2/3 |
+| ``actas:author:Post`` | `role = press_officer` *(overrides any-member default)* | — |
+| ``actas:vote:Proposal`` | `role IN (CEO, board_member)` | — |
+| ``decision:transfer:Item`` | `role IN (founder, board_member)` | ≥ 2/3 |
 
 Amendment cost calibrates per rule: the CEO-can-hire entry might
 amend at board majority while `transfer_shares` amends at ≥ 90%
@@ -327,8 +327,8 @@ of shareholders — each rule self-describes its mutability.
 |---|---|---|
 | `decision:add_member` | all active members | 100% cast, 100% quorum |
 | `decision:remove_member` | all members, `exclude_subject` | ≥ 90% cast, 100% remaining quorum |
-| `decision:transfer:Item` | all active members | 100% cast, 100% quorum |
-| `actas:vote:Proposal` | all active members | — |
+| ``decision:transfer:Item`` | all active members | 100% cast, 100% quorum |
+| ``actas:vote:Proposal`` | all active members | — |
 
 The two outward governance-acts split on how binding one
 member's gesture is: a ballot the household casts in someone
@@ -345,8 +345,8 @@ so it routes through a unanimous decision.
 | `decision:remove_member` | all members, `exclude_subject` | ≥ 2/3 |
 | `decision:routine_operations` | `role = officer` | > 50% |
 | `decision:change_capital_structure` | all active members | ≥ 75% |
-| `decision:transfer:Item` | all active members | ≥ 2/3 |
-| `actas:vote:Proposal` | all active members | — |
+| ``decision:transfer:Item`` | all active members | ≥ 2/3 |
+| ``actas:vote:Proposal`` | all active members | — |
 
 ---
 

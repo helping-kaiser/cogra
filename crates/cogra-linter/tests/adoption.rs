@@ -731,8 +731,9 @@ fn the_enforcement_section_round_trips() {
     assert_eq!(
         enforcement.failing,
         vec![
-            PathPrefix::new("crates/cogra-linter/docs/"),
+            PathPrefix::new("crates/cogra-linter/"),
             PathPrefix::new("crates/cogra-interchange/docs/"),
+            PathPrefix::new("docs/"),
         ]
     );
 }
@@ -746,7 +747,7 @@ fn enforcement_is_decided_by_the_finding_s_path() {
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("docs/primitive/layers.md")),
-        Enforcement::Advisory
+        Enforcement::Failing
     );
     assert_eq!(
         enforcement.enforcement_for(Path::new("crates/api/src/lib.rs")),
