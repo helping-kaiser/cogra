@@ -297,4 +297,3 @@ fn shape(raw: &str, kind: CommentKind) -> (CommentForm, usize, usize) {
         (CommentForm::BlockPlain, "/*".len(), "*/".len())
     }
 }
-
