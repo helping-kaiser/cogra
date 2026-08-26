@@ -75,12 +75,11 @@ static void consume_block_comment_body(TSLexer *lexer, unsigned depth) {
   }
 }
 
-// Scans a comment at the current position. Returns false when what
-// follows is not a comment at all.
-static bool scan_comment(TSLexer *lexer) {
-  if (lexer->lookahead != '/') return false;
-  advance(lexer);
-
+// Scans a comment whose opening `/` has already been consumed. Split
+// out because the statement-terminator scan discovers a comment only
+// after stepping onto that slash, and within one scan call the lexer
+// cannot be wound back.
+static bool scan_comment_after_slash(TSLexer *lexer) {
   if (lexer->lookahead == '/') {
     while (!lexer->eof(lexer) && lexer->lookahead != '\n') advance(lexer);
     lexer->result_symbol = LINE_COMMENT;
@@ -112,6 +111,13 @@ static bool scan_comment(TSLexer *lexer) {
   }
 
   return false;
+}
+
+// Scans a comment at the current position.
+static bool scan_comment(TSLexer *lexer) {
+  if (lexer->lookahead != '/') return false;
+  advance(lexer);
+  return scan_comment_after_slash(lexer);
 }
 
 // ---------------------------------------------------------------------
@@ -238,28 +244,63 @@ static bool scan_word_tail(TSLexer *lexer, const char *tail) {
   return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
 }
 
-// A visibility modifier followed by an accessor keyword, as in
-// `private set`. Enters with the modifier's first letter unconsumed.
-static bool scan_modified_accessor(TSLexer *lexer) {
-  char word[16];
-  unsigned n = 0;
-  while (n < sizeof(word) - 1 &&
+// Reads an identifier into `out`, which is left empty if there is none.
+static void scan_word(TSLexer *lexer, char *out, size_t cap) {
+  size_t n = 0;
+  while (n < cap - 1 &&
          (is_ident_start(lexer->lookahead) || iswdigit(lexer->lookahead))) {
-    word[n++] = (char)lexer->lookahead;
+    out[n++] = (char)lexer->lookahead;
     advance(lexer);
   }
-  word[n] = '\0';
+  out[n] = '\0';
+}
 
-  if (strcmp(word, "private") != 0 && strcmp(word, "protected") != 0 &&
-      strcmp(word, "public") != 0 && strcmp(word, "internal") != 0) {
+// Steps over a balanced `( ... )`, so an annotation's arguments do not
+// stop the look-ahead. Enters on the opening paren.
+static void skip_balanced_parens(TSLexer *lexer) {
+  unsigned depth = 0;
+  do {
+    if (lexer->eof(lexer)) return;
+    if (lexer->lookahead == '(') depth++;
+    else if (lexer->lookahead == ')') depth--;
+    advance(lexer);
+  } while (depth > 0);
+}
+
+// Whether an accessor begins here, possibly behind the annotations and
+// visibility modifiers Kotlin lets it carry: `private set`,
+// `@Composable get() = ...`.
+static bool scan_accessor_ahead(TSLexer *lexer) {
+  char word[32];
+
+  for (;;) {
+    while (is_horizontal_space(lexer->lookahead)) advance(lexer);
+
+    if (lexer->lookahead == '@') {
+      advance(lexer);
+      scan_word(lexer, word, sizeof(word));
+      if (word[0] == '\0') return false;
+      // A use-site target, or a dotted annotation name.
+      while (lexer->lookahead == ':' || lexer->lookahead == '.') {
+        advance(lexer);
+        scan_word(lexer, word, sizeof(word));
+      }
+      if (lexer->lookahead == '(') skip_balanced_parens(lexer);
+      continue;
+    }
+
+    if (!is_ident_start(lexer->lookahead)) return false;
+
+    scan_word(lexer, word, sizeof(word));
+    if (strcmp(word, "get") == 0 || strcmp(word, "set") == 0) {
+      return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
+    }
+    if (strcmp(word, "private") == 0 || strcmp(word, "protected") == 0 ||
+        strcmp(word, "public") == 0 || strcmp(word, "internal") == 0) {
+      continue;
+    }
     return false;
   }
-
-  while (is_horizontal_space(lexer->lookahead)) advance(lexer);
-  if (lexer->lookahead == 'g' || lexer->lookahead == 's') {
-    return scan_word_tail(lexer, "et");
-  }
-  return false;
 }
 
 // Whether the token beginning at the current position may continue the
@@ -309,9 +350,13 @@ static bool at_statement_continuation(TSLexer *lexer) {
       if (lexer->lookahead == '?') return true;
       return !is_ident_start(lexer->lookahead) && !iswdigit(lexer->lookahead);
     case 'g':
-      return scan_word_tail(lexer, "et");
     case 's':
-      return scan_word_tail(lexer, "et");
+    case 'p':
+    case 'i':
+    case '@':
+      // An accessor continues the property on the line before it, behind
+      // any annotations and visibility modifiers it carries.
+      return scan_accessor_ahead(lexer);
     case 'e':
       // `else` continues the `if` on the line before it. A `when` entry's
       // `else ->` does not — there the terminator separates it from the
@@ -323,12 +368,6 @@ static bool at_statement_continuation(TSLexer *lexer) {
       if (lexer->lookahead != '-') return true;
       advance(lexer);
       return lexer->lookahead != '>';
-    case 'p':
-    case 'i':
-      // `private set`: an accessor may carry a visibility modifier, and
-      // the word that follows the newline is then the modifier rather
-      // than the accessor keyword.
-      return scan_modified_accessor(lexer);
     default:
       return false;
   }
@@ -361,6 +400,23 @@ static bool scan_automatic_semicolon(TSLexer *lexer) {
   // The terminator ends here, after the newline; everything the
   // look-ahead below consumes is only inspected, never taken.
   lexer->mark_end(lexer);
+
+  // A comment next: emit it instead of deciding. The decision needs to
+  // see what follows the comment, but looking there means advancing past
+  // it, and the internal lexer has no comment token to fall back on —
+  // the comment would simply be dropped and the parse would fail on it.
+  // Emitting it here costs nothing: the question is put again at the
+  // position after it, where the newline that follows a comment supplies
+  // the terminator if one is still wanted.
+  if (lexer->lookahead == '/') {
+    advance(lexer);
+    if (lexer->lookahead == '/' || lexer->lookahead == '*') {
+      return scan_comment_after_slash(lexer);
+    }
+    // Division, which the grammar never lets continue a statement.
+    lexer->result_symbol = AUTOMATIC_SEMICOLON;
+    return true;
+  }
 
   peek_past_trivia(lexer);
   if (at_statement_continuation(lexer)) return false;
