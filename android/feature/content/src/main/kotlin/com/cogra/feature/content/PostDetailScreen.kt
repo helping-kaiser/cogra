@@ -517,19 +517,20 @@ private fun CommentThread(
                             "comment_edit_signing_failed",
                         )
                     }
+                    // The confirming action sits on the right (F7).
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(
+                            onClick = onCancelEditComment,
+                            modifier = Modifier.testTag("comment_edit_cancel"),
+                        ) {
+                            Text(stringResource(R.string.content_comment_edit_cancel))
+                        }
                         Button(
                             onClick = onSubmitCommentEdit,
                             enabled = !state.editSubmitting && state.editDraft.isNotBlank(),
                             modifier = Modifier.testTag("comment_edit_save"),
                         ) {
                             Text(stringResource(R.string.content_comment_edit_save))
-                        }
-                        TextButton(
-                            onClick = onCancelEditComment,
-                            modifier = Modifier.testTag("comment_edit_cancel"),
-                        ) {
-                            Text(stringResource(R.string.content_comment_edit_cancel))
                         }
                     }
                 } else {
@@ -603,18 +604,18 @@ private fun CommentThread(
                     ErrorLine(R.string.content_error_transport, "comment_reply_transport")
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = onCancelReply,
+                        modifier = Modifier.testTag("comment_reply_cancel"),
+                    ) {
+                        Text(stringResource(R.string.content_comment_edit_cancel))
+                    }
                     Button(
                         onClick = onSubmitReply,
                         enabled = !state.replySubmitting && state.replyDraft.isNotBlank(),
                         modifier = Modifier.testTag("comment_reply_submit"),
                     ) {
                         Text(stringResource(R.string.content_comment_submit))
-                    }
-                    TextButton(
-                        onClick = onCancelReply,
-                        modifier = Modifier.testTag("comment_reply_cancel"),
-                    ) {
-                        Text(stringResource(R.string.content_comment_edit_cancel))
                     }
                 }
             }
