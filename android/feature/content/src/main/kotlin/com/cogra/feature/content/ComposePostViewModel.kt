@@ -23,6 +23,14 @@ data class ComposePostUiState(
     val description: String = "",
     val body: String = "",
     val license: LicenseChoice = LicenseChoice.PublicDomain,
+    /** The tag entry field's raw text — [normalizeTagPreview] shows what it will become. */
+    val tagInput: String = "",
+    /**
+     * The staged topics, already normalized — chips ready to send with
+     * the post. Never offered on the edit form: tags are their own
+     * gesture, not an edit field (post.md §3, D14).
+     */
+    val tags: List<String> = emptyList(),
     val submitting: Boolean = false,
     val emptyBody: Boolean = false,
     val refused: Boolean = false,
@@ -33,7 +41,21 @@ data class ComposePostUiState(
     val notFound: Boolean = false,
     /** One-shot: the write signed; the caller leaves the composer. */
     val saved: Boolean = false,
-)
+) {
+    /** The batch cap (D18) — the composer blocks the 11th chip itself. */
+    val tagCapReached: Boolean get() = tags.size >= MAX_TAGS
+}
+
+/** Mirrors the API's batch cap (D18) so the composer refuses locally, not with a round trip. */
+const val MAX_TAGS = 10
+
+/**
+ * A live preview of the naming service's canonicalization (hashtag.md
+ * §1): lowercase, `#` stripped. Preview only — legality is the
+ * server's call (D3's ASCII charset); a name this build cannot vet
+ * locally is still sent, and a refusal surfaces as a field error.
+ */
+fun normalizeTagPreview(raw: String): String = raw.trim().removePrefix("#").lowercase()
 
 /**
  * The composer, in create and edit mode. Create is a genesis Publish;
@@ -83,6 +105,28 @@ class ComposePostViewModel @Inject constructor(
     fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 
+    fun onTagInputChange(v: String) = _state.update { it.copy(tagInput = v) }
+
+    /**
+     * Adds the current entry as a chip: normalized, capped at 10
+     * (D18), and never duplicated — re-entering a name already staged
+     * just clears the field, the same as a successful add would.
+     */
+    fun onAddTag() {
+        val s = _state.value
+        if (s.tagCapReached) return
+        val normalized = normalizeTagPreview(s.tagInput)
+        if (normalized.isEmpty()) return
+        _state.update {
+            it.copy(
+                tagInput = "",
+                tags = if (normalized in it.tags) it.tags else it.tags + normalized,
+            )
+        }
+    }
+
+    fun onRemoveTag(name: String) = _state.update { it.copy(tags = it.tags - name) }
+
     fun onSubmit() {
         val s = _state.value
         if (s.submitting) return
@@ -106,6 +150,7 @@ class ComposePostViewModel @Inject constructor(
                     description = s.description.ifBlank { null },
                     content = s.body,
                     license = s.license,
+                    tags = s.tags,
                 )
             } else {
                 content.preparePostEdit(
