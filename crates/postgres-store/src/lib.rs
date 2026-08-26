@@ -8,12 +8,14 @@
 pub mod auth;
 pub mod content;
 pub mod genesis;
+pub mod hashtag;
 pub mod mirror;
 pub mod params;
 pub mod profile;
 pub mod rate_limit;
 pub mod staged;
 pub mod stance;
+pub mod topics;
 
 /// Re-exported so callers don't need a direct sqlx dependency.
 pub use sqlx::PgPool;
