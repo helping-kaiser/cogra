@@ -267,6 +267,11 @@ impl Envelope {
     /// short to carry the envelope is [`EnvelopeError::Truncated`], which
     /// is a request for more bytes and not a rejection.
     ///
+    /// The read is bounded to [`MAX_ENVELOPE_PREFIX`] bytes, and the window is
+    /// never the reason a read runs out: every path below refuses what it
+    /// cannot read inside the bound — an over-long label by its declared
+    /// length, a wide head by preferred serialization.
+    ///
     /// ```
     /// use cogra_interchange::{
     ///     Content, Document, Envelope, EnvelopeError, MAX_ENVELOPE_PREFIX, NamespaceLabel, Version,
@@ -285,10 +290,6 @@ impl Envelope {
     /// ```
     pub fn peek(prefix: &[u8]) -> Result<(Envelope, usize), EnvelopeError> {
         let given = prefix.len();
-        // Every path below refuses what it cannot read inside the bound —
-        // an over-long label by its declared length, a wide head by
-        // preferred serialization — so the window is never the reason a
-        // read runs out.
         let window = &prefix[..given.min(MAX_ENVELOPE_PREFIX)];
         let mut position = 0usize;
 
@@ -349,6 +350,10 @@ fn expect_envelope_key(
     Ok(())
 }
 
+/// The label at key 0.
+///
+/// The declared length alone refuses an over-long label, so no payload beyond
+/// the bound is ever reached for.
 fn read_label(
     window: &[u8],
     position: &mut usize,
@@ -358,8 +363,6 @@ fn read_label(
     if head.major != 3 {
         return Err(EnvelopeError::BadLabelType);
     }
-    // The declared length alone refuses an over-long label, so no payload
-    // beyond the bound is ever reached for.
     let declared = usize::try_from(head.argument).unwrap_or(usize::MAX);
     if declared > MAX_LABEL_BYTES {
         return Err(EnvelopeError::BadLabel(LabelError::TooLong {
@@ -519,6 +522,11 @@ impl Document {
 
     /// The map view of the document, which satisfaction consumes.
     ///
+    /// The entries are handed over as already sorted: bytewise-lexicographic
+    /// order on the canonical names of unsigned integers coincides with
+    /// numeric order, so the ascending content keys, under 0 and 1 in that
+    /// order, are canonical map order already.
+    ///
     /// ```
     /// use cogra_interchange::{Content, Document, Envelope, NamespaceLabel, Value, Version};
     ///
@@ -537,10 +545,6 @@ impl Document {
         for (key, value) in self.content.iter() {
             entries.push((Value::Unsigned(key), value.clone()));
         }
-        // Bytewise-lexicographic order on the canonical names of unsigned
-        // integers coincides with numeric order, so the ascending keys the
-        // BTreeMap yields — below them 0 and 1, in that order — are already
-        // in canonical map order.
         Value::Map(Map::from_sorted(entries))
     }
 

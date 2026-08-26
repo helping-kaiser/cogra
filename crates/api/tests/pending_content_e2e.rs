@@ -404,6 +404,11 @@ const PREPARE_POST_EDIT: &str = r#"mutation($input: PreparePostEditInput!) {
   }
 }"#;
 
+/// Anonymously — no session at all — the listing serves pending content
+/// whole, marked pending and with no epoch, because a pending write has
+/// no causal key. The typed reads agree. The chronicle holds only ordered
+/// fact, so for a node whose record has not landed it is well-formed and
+/// empty: not an actor match, and not an error.
 #[sqlx::test(migrations = "../../migrations")]
 async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -413,8 +418,6 @@ async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
         .pending_post(&token, &key, "Still settling", "Signed, not yet ordered.")
         .await;
 
-    // Anonymously — no session at all — the listing serves it whole,
-    // marked pending, with no epoch: a pending write has no causal key.
     let edges = rig.listed(None, "first: 10").await;
     assert_eq!(edges.len(), 1, "the pending post is in the listing");
     let node = &edges[0]["node"];
@@ -428,7 +431,6 @@ async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
         "a pending node has no epoch: {node}"
     );
 
-    // The typed reads agree, still anonymously.
     let single = rig
         .gql(
             None,
@@ -443,9 +445,6 @@ async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
     assert_eq!(single["node"]["__typename"], "Post");
     assert_eq!(single["node"]["landing"]["state"], "PENDING");
 
-    // The chronicle holds only ordered fact, so it is well-formed and
-    // empty for a node whose record has not landed — not an actor match
-    // and not an error.
     let records = rig
         .gql(
             None,
@@ -459,6 +458,8 @@ async fn pending_content_reads_in_full_to_every_viewer(pool: PgPool) {
     );
 }
 
+/// The content is public; the handshake handle is not. Nothing on the
+/// content surface carries the staged-write id.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_handshake_stays_the_authors_own_business(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -472,7 +473,6 @@ async fn the_handshake_stays_the_authors_own_business(pool: PgPool) {
 
     const STAGED: &str = r#"query($id: UUID!) { stagedWrite(id: $id) { id state } }"#;
 
-    // The content is public; the handshake handle is not.
     let anonymous = rig.gql(None, STAGED, json!({ "id": staged_id })).await;
     assert!(anonymous["stagedWrite"].is_null());
     let other = rig
@@ -484,7 +484,6 @@ async fn the_handshake_stays_the_authors_own_business(pool: PgPool) {
         .await;
     assert_eq!(own["stagedWrite"]["id"], staged_id);
 
-    // Nothing on the content surface carries the handshake handle.
     let leak = rig
         .gql_raw(
             None,
@@ -534,6 +533,10 @@ async fn landing_drops_the_mark_without_moving_the_authoring_date(pool: PgPool) 
     );
 }
 
+/// Expiry takes the content out of every view unmarked, because on the
+/// graph nothing ever existed to redact. The author's own staged row
+/// stays observable in its terminal state until the reap — that surface
+/// is the handshake, not the content.
 #[sqlx::test(migrations = "../../migrations")]
 async fn expired_pending_content_leaves_every_view(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -548,7 +551,6 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
 
     rig.expire_everything().await;
 
-    // Nothing is marked, because on the graph nothing ever existed.
     let edges = rig.listed(None, "first: 10").await;
     assert_eq!(edges.len(), 1, "only the landed post remains: {edges:?}");
     assert_eq!(edges[0]["node"]["id"], landed);
@@ -563,9 +565,6 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
     assert!(gone["post"].is_null(), "the post row is gone: {gone}");
     assert!(gone["node"].is_null());
 
-    // The author's own staged row stays observable in its terminal
-    // state until the reap — that surface is the handshake, not the
-    // content.
     let staged = rig
         .gql(
             Some(&token),
@@ -576,6 +575,12 @@ async fn expired_pending_content_leaves_every_view(pool: PgPool) {
     assert_eq!(staged["stagedWrite"]["state"], "EXPIRED");
 }
 
+/// A structurally valid pre-commitment whose signature covers nothing:
+/// the relay records it and stages the content, and then the substrate
+/// refuses the seal. Nothing that pre-commitment staged is readable — the
+/// content was never the author's, because the substrate never took it.
+/// The write is back in the device's hands, retryable, and a proper
+/// signature re-stages the very same content.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -587,9 +592,6 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     let write = &prepared["preparePost"]["writes"][0];
     let staged_id = write["id"].as_str().expect("id");
 
-    // A structurally valid pre-commitment whose signature covers
-    // nothing: the relay records it and stages the content, then the
-    // substrate refuses the seal.
     let proposal = wire::decode_proposal(
         &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
             .expect("b64"),
@@ -610,8 +612,6 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
         "the seal must refuse a forged pre-commitment: {refused}"
     );
 
-    // Nothing the refused pre-commitment staged is readable: the content
-    // was never the author's, because the substrate never took it.
     let gone = rig
         .gql(
             None,
@@ -626,8 +626,6 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     assert!(gone["node"].is_null());
     assert!(rig.listed(None, "first: 10").await.is_empty());
 
-    // The write is back in the device's hands, retryable — and a proper
-    // signature re-stages the very same content.
     let staged = rig
         .gql(
             Some(&token),
@@ -644,6 +642,10 @@ async fn a_refused_seal_leaves_no_readable_pending_content(pool: PgPool) {
     assert_eq!(retried[0]["node"]["id"], post_id);
 }
 
+/// A comment prepared against a pending post whose parent then expires:
+/// staging it can never succeed, because the parent it would hang under
+/// is gone. The refusal leaves the write where the device can act on it,
+/// rather than stranded in `sealing` until GC.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -651,9 +653,6 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
     let token = rig.log_in("author@example.com").await;
     let (post_id, post_staged) = rig.pending_post(&token, &key, "host", "b").await;
 
-    // A comment prepared against the pending post, whose parent then
-    // expires: staging it can never succeed, because the parent it would
-    // hang under is gone.
     let (_, commenter_key) = rig.seed_member("commenter", "commenter@example.com").await;
     let commenter = rig.log_in("commenter@example.com").await;
     let prepared = rig
@@ -699,8 +698,6 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
         "staging a comment with no parent must fail the leg: {refused}"
     );
 
-    // The refusal leaves the write where the device can act on it, not
-    // stranded in `sealing` until GC.
     let staged = rig
         .gql(
             Some(&commenter),
@@ -714,6 +711,12 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
     );
 }
 
+/// Both pending entries sort ahead of the newest landed one, newest
+/// authored first among themselves. The cursor namespace carries a walk
+/// across that boundary: page one ends inside the pending set and page
+/// two crosses into the landed one, while walking backward from the same
+/// cursor serves the newer neighbours — the pending set — still
+/// newest-first.
 #[sqlx::test(migrations = "../../migrations")]
 async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -725,8 +728,6 @@ async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgP
     let (pending_first, _) = rig.pending_post(&token, &key, "pending-1", "b").await;
     let (pending_second, _) = rig.pending_post(&token, &key, "pending-2", "b").await;
 
-    // Both pending entries sort ahead of the newest landed one, newest
-    // authored first among themselves.
     let all = rig.listed(None, "first: 10").await;
     let order: Vec<&str> = all
         .iter()
@@ -742,8 +743,6 @@ async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgP
         ]
     );
 
-    // The cursor namespace carries a walk across the boundary: page one
-    // ends inside the pending set, page two crosses into the landed one.
     let page1 = rig.listed(None, "first: 2").await;
     assert_eq!(page1.len(), 2);
     let cursor = page1[1]["cursor"].as_str().expect("cursor");
@@ -756,8 +755,6 @@ async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgP
         .collect();
     assert_eq!(page2_ids, vec![new.as_str(), old.as_str()]);
 
-    // Backward from that cursor walks the newer neighbours — the
-    // pending set — and still comes back newest-first.
     let back = rig
         .listed(None, &format!("last: 2, before: \"{cursor}\""))
         .await;
@@ -768,6 +765,8 @@ async fn pending_entries_lead_the_listing_and_page_by_their_own_cursor(pool: PgP
     assert_eq!(back_ids, vec![pending_second.as_str()]);
 }
 
+/// The default is the canon — pending content shows — and the opt-out
+/// serves only what has landed.
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -781,10 +780,14 @@ async fn include_pending_false_serves_only_what_landed(pool: PgPool) {
     assert_eq!(settled[0]["node"]["id"], landed);
     assert_eq!(settled[0]["node"]["landing"]["state"], "LANDED");
 
-    // The default is the canon: pending content shows.
     assert_eq!(rig.listed(None, "first: 10").await.len(), 2);
 }
 
+/// The default view is the canon: the pending edit's text, marked pending
+/// on a node whose own record landed (D4). The opt-out is the settled
+/// graph — the version that landed, and a landing state that says so. The
+/// epoch contract holds there, because nothing on screen is unlanded any
+/// more.
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -802,15 +805,10 @@ async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
     rig.pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
         .await;
 
-    // The default view is the canon: the pending edit's text, marked
-    // pending on a node whose own record landed (D4).
     let default = rig.listed(None, "first: 10").await;
     assert_eq!(default[0]["node"]["title"]["value"], "New title");
     assert_eq!(default[0]["node"]["landing"]["state"], "PENDING");
 
-    // The opt-out is the settled graph: the version that landed, and a
-    // landing state that says so — the epoch contract holds, because
-    // nothing on screen is unlanded any more.
     let settled = rig.listed(None, "first: 10, includePending: false").await;
     assert_eq!(settled.len(), 1);
     let node = &settled[0]["node"];
@@ -826,6 +824,11 @@ async fn include_pending_false_serves_the_version_that_landed(pool: PgPool) {
     );
 }
 
+/// The record set carries no pending namespace — a record is in the
+/// chronicle exactly when it is ordered fact — so the listing needs no
+/// opt-out to serve the settled graph, and a signed-but-unordered Publish
+/// is simply not there. The pending node's own chronicle is well-formed
+/// and empty; landing is what puts a record in it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -842,10 +845,6 @@ async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
         .pre_sign(&token, &key, &prepared["preparePost"]["writes"])
         .await;
 
-    // The record set carries no pending namespace — a record is in the
-    // chronicle exactly when it is ordered fact — so the listing needs no
-    // opt-out to serve the settled graph. The signed-but-unordered
-    // Publish is simply not there.
     let edges = rig.chronicle(&author).await;
     assert_eq!(edges.len(), 1, "only ordered fact is listed: {edges:#?}");
     assert_eq!(edges[0]["node"]["family"], "PUBLISH");
@@ -855,13 +854,11 @@ async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
         "a chronicle row always carries its landing epoch: {edges:#?}"
     );
 
-    // The pending node's own chronicle is well-formed and empty.
     assert!(
         rig.records_on(&pending).await.is_empty(),
         "a pending node has no record yet"
     );
 
-    // Landing is what puts a record in the chronicle.
     rig.approve_and_close(&token, &key, &signed).await;
     let edges = rig.chronicle(&author).await;
     assert_eq!(edges.len(), 2);
@@ -873,6 +870,12 @@ async fn the_chronicle_omits_a_pending_record_until_it_lands(pool: PgPool) {
     assert_eq!(rig.records_on(&pending).await.len(), 1);
 }
 
+/// With the edit signed but unordered, the chronicle still holds only the
+/// one Publish that landed, at its own landing epoch. A row does point at
+/// the node, and a node read is always current, so the target carries the
+/// pending edit's text marked PENDING: the chronicle's landed-only
+/// guarantee is over which records exist, not over which version the node
+/// they name serves. Landing the edit is what adds the edit's own row.
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -891,23 +894,16 @@ async fn an_unlanded_edit_adds_no_chronicle_row(pool: PgPool) {
         .pre_sign(&token, &key, &edit["preparePostEdit"]["writes"])
         .await;
 
-    // The edit is signed but unordered: the chronicle still holds the one
-    // Publish that landed, at its own landing epoch.
     let edges = rig.chronicle(&author).await;
     assert_eq!(edges.len(), 1, "the unlanded edit is not fact: {edges:#?}");
     let row = &edges[0]["node"];
     assert_eq!(row["family"], "PUBLISH");
     assert!(row["landingEpoch"].is_i64());
 
-    // A row points at the node, and a node read is always current: the
-    // target carries the pending edit's text, marked PENDING. The
-    // chronicle's landed-only guarantee is over which records exist, not
-    // over which version the node they name serves.
     assert_eq!(row["target"]["id"], post_id.as_str());
     assert_eq!(row["target"]["title"]["value"], "New title");
     assert_eq!(row["target"]["landing"]["state"], "PENDING");
 
-    // Landing the edit is what adds the edit's own row.
     rig.approve_and_close(&token, &key, &signed).await;
     let edges = rig.chronicle(&author).await;
     assert_eq!(edges.len(), 2, "the landed edit is its own record");
@@ -973,6 +969,10 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
     );
 }
 
+/// An edit is a record, and a prepared record is its author's content
+/// from the moment they sign it: the new title is on screen at once, the
+/// node reads pending, and the body reads as the snapshot has it. The
+/// node keeps its landing position — an edit never moves it.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1002,16 +1002,12 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
          title { value } content { value } landing { state epoch }
        } }"#;
 
-    // An edit is a record, and a prepared record is its author's content
-    // from the moment they sign it: the new title is on screen at once,
-    // the node reads pending, and the body reads as the snapshot has it.
     let pending = rig.gql(None, READ, json!({ "id": post_id })).await;
     assert_eq!(pending["post"]["title"]["value"], "New title");
     assert_eq!(pending["post"]["content"]["value"], "Old body");
     assert_eq!(pending["post"]["landing"]["state"], "PENDING");
     assert!(pending["post"]["landing"]["epoch"].is_null());
 
-    // The node keeps its landing position — an edit never moves it.
     let listing = rig.listed(None, "first: 10").await;
     assert_eq!(listing.len(), 1);
     assert_eq!(listing[0]["node"]["id"], post_id);
@@ -1024,6 +1020,11 @@ async fn a_pending_edit_shows_its_new_text_marked_pending(pool: PgPool) {
     assert!(landed["post"]["landing"]["epoch"].is_i64());
 }
 
+/// The act is approved — orderable, but not yet ordered — and GC's first
+/// phase runs in that window: the content leaves every view while the
+/// staged row stays behind, unreaped. Then the epoch closes over the act
+/// after all. The mirror governs, so the content comes back, this time
+/// with its real landing order.
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -1038,19 +1039,14 @@ async fn a_record_landing_after_expiry_but_before_the_reap_still_promotes(pool: 
         .pre_sign(&token, &key, &prepared["preparePost"]["writes"])
         .await;
 
-    // The act is approved — orderable, but not yet ordered.
     rig.approve(&token, &key, &signed).await;
 
-    // GC's first phase runs in that window: the content leaves every
-    // view, and the staged row stays behind, unreaped.
     rig.expire_everything().await;
     assert!(
         rig.listed(None, "first: 10").await.is_empty(),
         "expiry takes the content off screen"
     );
 
-    // Then the epoch closes over the act after all — the mirror governs,
-    // so the content comes back, this time with its real landing order.
     rig.close_and_ingest().await;
 
     let edges = rig.listed(None, "first: 10").await;

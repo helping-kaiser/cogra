@@ -260,6 +260,40 @@ fn f2_a_fenced_mint_resolves_no_citation() {
     );
 }
 
+/// (´[LBL-cav:labels:coexistence]´): enforcement is orthogonal to
+/// severity — an error is an error wherever it is found, and only the
+/// exit code differs.
+///
+/// The witness is a fixture rather than the corpus: every Rust crate has
+/// completed the ban sweep and entered the failing set, so no advisory
+/// tree in the corpus carries a finding to read this off any more.
+#[test]
+fn an_advisory_finding_keeps_its_severity() {
+    let banned = SourceFile {
+        path: PathBuf::from("outside/every/failing/prefix.rs"),
+        owner: OwnerId::new("linter"),
+        language: Some(Language::new("rust")),
+        generated: false,
+        bytes: Vec::from("// narration the ban refuses\npub fn one() {}\n"),
+    };
+    let run = cogra_linter::check_sources(adoption(), vec![banned]);
+    let found = run
+        .findings
+        .iter()
+        .find(|one| one.rule.as_str() == "rust-plain-line-comment")
+        .expect("the plain comment is reported");
+    assert_eq!(
+        found.enforcement,
+        Enforcement::Advisory,
+        "a path under no failing prefix is advisory"
+    );
+    assert_eq!(
+        found.severity,
+        cogra_linter::Severity::Error,
+        "an error outside the failing set is still an error"
+    );
+}
+
 /// The leader is resolved away: no region's text carries a `///`.
 #[test]
 fn the_line_leader_is_resolved_away() {

@@ -30,8 +30,6 @@ fn refuse(source: &str) -> TheoryError {
     }
 }
 
-// -- the pipeline ---------------------------------------------------------
-
 #[test]
 fn an_assigned_theory_carries_its_pins() {
     let theory = parse(ASSIGNED);
@@ -51,10 +49,10 @@ fn a_source_that_is_not_cddl_is_a_located_syntax_refusal() {
     }
 }
 
+/// Deeply nested parentheses would overflow the recursive descent; the parser
+/// refuses them as a located syntax error rather than a crash.
 #[test]
 fn a_type_nested_past_the_bound_is_a_located_refusal() {
-    // Deeply nested parentheses would overflow the recursive descent; the
-    // parser refuses them as a located syntax error rather than a crash.
     let source = format!("a = {}1{}", "(".repeat(400), ")".repeat(400));
     match refuse(&source) {
         TheoryError::Syntax {
@@ -122,8 +120,6 @@ fn the_rfc_examples_parse_as_cddl_and_are_not_assignable() {
     assert!(matches!(refuse(prelude), TheoryError::NotInFragment { .. }));
 }
 
-// -- the evaluable subset -------------------------------------------------
-
 #[test]
 fn an_operator_outside_the_subset_is_unevaluable() {
     let error = refuse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => bstr .cbor any}"#);
@@ -163,8 +159,6 @@ fn the_conventions_pattern_compiles_inside_a_theory() {
     ));
 }
 
-// -- the slot surface -----------------------------------------------------
-
 #[test]
 fn slots_are_in_ascending_key_order_with_their_requiredness() {
     let theory = parse(ASSIGNED);
@@ -191,8 +185,9 @@ fn a_slot_is_reachable_by_key() {
 }
 
 /// `type_source` is the author's spelling, for display. Two theories whose
-/// types are the same up to layout produce different strings here, which is
-/// why identity of type is the printer's question and not this one.
+/// types are the same up to layout produce different strings here — and the
+/// printer says what the two spellings share, which is why identity of type is
+/// the printer's question and not this one.
 #[test]
 fn type_source_is_the_spelling_and_not_an_identity() {
     let spaced = parse(r#"e = {0 => "com.example", 1 => [0, 0, uint], 2 => uint  /  tstr}"#);
@@ -208,7 +203,6 @@ fn type_source_is_the_spelling_and_not_an_identity() {
         tight.slot(2).expect("key 2").type_source()
     );
 
-    // The printer says what the two spellings share.
     assert_eq!(spaced.to_cddl(), tight.to_cddl());
 }
 
@@ -229,8 +223,6 @@ fn a_theory_clones_without_recompiling_anything() {
     assert_eq!(copy.source(), theory.source());
     assert_eq!(copy.to_cddl(), theory.to_cddl());
 }
-
-// -- the base theory ------------------------------------------------------
 
 /// The base theory's text is the conventions' schema, byte for byte. The
 /// expected string is the conventions' own, so this test fails if either

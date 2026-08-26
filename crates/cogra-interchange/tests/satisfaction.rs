@@ -3,7 +3,7 @@
 //!
 //! The matching rules are RFC 8610 Appendix C together with the PEG
 //! semantics of its Appendix A and the cuts of its §3.5.4; the control
-//! operators are the ten of `dec:xchg:evaluable-subset`. Where the RFC's
+//! operators are the ten of (´dec:xchg:evaluable-subset´). Where the RFC's
 //! own text fixes an outcome, the test quotes it, so a later reader can see
 //! what the assertion is evidence for.
 
@@ -12,8 +12,6 @@ use cogra_interchange::{
     NamespaceLabel, Satisfaction, Simple, Tag, Text, Theory, Value, Version, satisfies,
     satisfies_global, satisfies_open,
 };
-
-// -- fixtures -------------------------------------------------------------
 
 /// A theory of one content key at 2, typed as given, at `com.example` 1.0.
 fn theory_of(ty: &str) -> Theory {
@@ -82,8 +80,6 @@ fn mismatches(verdict: Satisfaction) -> Vec<cogra_interchange::Mismatch> {
     }
 }
 
-// -- the base theory ------------------------------------------------------
-
 #[test]
 fn the_base_theory_admits_a_document_with_no_content() {
     let document = document("com.example", Version::new(1, 0, 0), Vec::new());
@@ -114,8 +110,6 @@ fn the_base_theory_runs_the_conventions_pattern() {
         assert!(satisfies_global(&document).holds(), "{label}");
     }
 }
-
-// -- an assigned theory ---------------------------------------------------
 
 #[test]
 fn a_document_of_the_theorys_shape_satisfies_it() {
@@ -207,8 +201,6 @@ fn every_failing_key_is_reported_in_ascending_order() {
     assert_eq!(keys, [Some(2), Some(4)]);
 }
 
-// -- the open companion ---------------------------------------------------
-
 #[test]
 fn the_companion_frees_the_minor_and_admits_unknown_keys() {
     let theory = theory(r#"e = {0 => "com.example", 1 => [1, 2, uint], 2 => tstr}"#);
@@ -257,8 +249,6 @@ fn the_companion_runs_the_theorys_patterns() {
     assert!(satisfies_open(&document_of(text("abc")), &open).holds());
     assert!(!satisfies_open(&document_of(text("ABC")), &open).holds());
 }
-
-// -- literals and the prelude ---------------------------------------------
 
 #[test]
 fn a_literal_matches_only_that_value() {
@@ -315,14 +305,14 @@ fn the_prelude_number_types_admit_both_kinds() {
 /// §2.2.3: "`#7.25` specifies the set of values that can be represented as
 /// half-precision floats; it does not mandate that these values also do
 /// have to be serialized as half-precision floats". A value representable
-/// in binary16 is representable in binary32 and binary64 too.
+/// in binary16 is representable in binary32 and binary64 too, while 1.1 needs
+/// binary64.
 #[test]
 fn the_float_widths_are_sets_of_values_and_not_serializations() {
     assert!(admits("float16", float(1.5)));
     assert!(admits("float32", float(1.5)));
     assert!(admits("float64", float(1.5)));
 
-    // 1.1 needs binary64.
     assert!(!admits("float16", float(1.1)));
     assert!(!admits("float32", float(1.1)));
     assert!(admits("float64", float(1.1)));
@@ -335,8 +325,6 @@ fn a_tagged_prelude_type_matches_its_tag() {
     assert!(!admits("uri", text("a:b")));
     assert!(admits("time", Value::Tag(Tag::new(1, Value::Unsigned(0)))));
 }
-
-// -- representation types -------------------------------------------------
 
 #[test]
 fn a_major_type_matches_by_major_type() {
@@ -352,9 +340,10 @@ fn a_major_type_matches_by_major_type() {
     assert!(admits("#", Value::Unsigned(1)));
 }
 
+/// The additional information 0 through 23 stands in the head; 24 and above
+/// takes an argument byte.
 #[test]
 fn an_additional_information_narrows_a_major_type() {
-    // 0 through 23 stand in the head; 24 and above take an argument byte.
     assert!(admits("#0.5", Value::Unsigned(5)));
     assert!(!admits("#0.5", Value::Unsigned(6)));
     assert!(admits("#0.24", Value::Unsigned(200)));
@@ -366,6 +355,7 @@ fn an_additional_information_narrows_a_major_type() {
     assert!(!admits("#7.23", Value::Null));
 }
 
+/// A bare `#6(...)` tags with any number.
 #[test]
 fn a_tagged_type_matches_its_number_and_its_content() {
     assert!(admits("#6.42(tstr)", Value::Tag(Tag::new(42, text("a")))));
@@ -374,11 +364,8 @@ fn a_tagged_type_matches_its_number_and_its_content() {
         Value::Tag(Tag::new(42, Value::Null))
     ));
     assert!(!admits("#6.42(tstr)", Value::Tag(Tag::new(43, text("a")))));
-    // `#6(...)` tags with any number.
     assert!(admits("#6(tstr)", Value::Tag(Tag::new(9, text("a")))));
 }
-
-// -- choices, arrays, maps ------------------------------------------------
 
 #[test]
 fn a_type_choice_matches_any_alternative() {
@@ -436,9 +423,7 @@ fn a_recursive_theory_against_a_deep_document_is_bounded() {
         Value::from_canonical_bytes(&bytes).expect("nesting is bounded by the input")
     };
 
-    // Shallow enough to match within the bound.
     assert!(satisfies(&document_of(deep(64)), &theory).holds());
-    // Far past the bound: a verdict, not a crash.
     assert!(!satisfies(&document_of(deep(500_000)), &theory).holds());
 }
 
@@ -450,6 +435,8 @@ fn an_array_member_key_is_documentary() {
     ));
 }
 
+/// Order in the map is no part of the question: the entries pick members
+/// wherever they sit.
 #[test]
 fn a_map_matches_by_picking_members() {
     assert!(admits(
@@ -459,7 +446,6 @@ fn a_map_matches_by_picking_members() {
             (text("b"), text("x")),
         ])
     ));
-    // Order in the map is no part of the question.
     assert!(admits(
         "{b: tstr, a: uint}",
         map(vec![
@@ -503,28 +489,25 @@ fn a_cut_locks_in_a_pick_by_key_alone() {
 
     assert!(admits(without, document.clone()));
     assert!(!admits(with, document.clone()));
-    // "the ':' shortcut is actually defined to include the cut semantics".
     assert!(!admits(colon, document));
 }
 
-/// A prioritized choice picks *between* alternatives, so an alternative
-/// that fails half way must give back the members it had already taken.
+/// A prioritized choice picks *between* alternatives, so an alternative that
+/// fails half way must give back the members it had already taken: here the
+/// first takes `a` and then wants a `b` that is not there, and the second
+/// wants the `a` the first had taken.
 #[test]
 fn a_failed_group_choice_in_a_map_gives_its_members_back() {
     let both = map(vec![
         (text("a"), Value::Unsigned(1)),
         (text("c"), Value::Unsigned(2)),
     ]);
-    // The first alternative takes `a` and then wants a `b` that is not
-    // there; the second wants the `a` the first had taken.
     assert!(admits("{(a: uint, b: uint // a: uint, c: uint)}", both));
     assert!(!admits(
         "{(a: uint, b: uint // a: uint, c: uint)}",
         map(vec![(text("a"), Value::Unsigned(1))])
     ));
 }
-
-// -- occurrence -----------------------------------------------------------
 
 #[test]
 fn the_occurrence_indicators_bound_repetition() {
@@ -588,7 +571,9 @@ fn a_group_repeats_as_a_unit() {
 
 /// Appendix A, which the RFC marks normative: the occurrence indicators are
 /// greedy and PEG does not backtrack, so "`*a a` in CDDL syntax never can
-/// match anything".
+/// match anything". The same shape with the repetition bounded away from the
+/// last element matches, which is what says the failure is the greed and not a
+/// defect of the matcher.
 #[test]
 fn a_greedy_occurrence_leaves_nothing_for_what_follows() {
     assert!(!admits("[* uint, uint]", array(vec![Value::Unsigned(1)])));
@@ -596,9 +581,6 @@ fn a_greedy_occurrence_leaves_nothing_for_what_follows() {
         "[* uint, uint]",
         array(vec![Value::Unsigned(1), Value::Unsigned(2)])
     ));
-    // The same shape with the repetition bounded away from the last element
-    // matches, which is what says the failure above is the greed and not a
-    // defect of the matcher.
     assert!(admits(
         "[* tstr, uint]",
         array(vec![text("a"), Value::Unsigned(1)])
@@ -614,8 +596,6 @@ fn a_group_choice_takes_the_first_alternative_that_matches() {
     assert!(admits("[uint, uint // tstr]", array(vec![text("a")])));
     assert!(!admits("[uint, uint // tstr]", array(vec![Value::Null])));
 }
-
-// -- ranges ---------------------------------------------------------------
 
 #[test]
 fn an_inclusive_range_includes_its_upper_bound() {
@@ -646,29 +626,27 @@ fn a_range_spans_the_negative_integers() {
 
 /// "CDDL currently only allows ranges between integers (matching integer
 /// values) or between floating-point values (matching floating-point
-/// values)."
+/// values)." The RFC's own `BAD-range1 = 0..10.0` is NOT DEFINED, and admits
+/// nothing on either side of the line.
 #[test]
 fn integer_and_floating_point_ranges_do_not_mix() {
     assert!(admits("0.0..1.0", float(0.5)));
     assert!(!admits("0.0..1.0", Value::Unsigned(0)));
     assert!(!admits("0..10", float(1.0)));
-    // `BAD-range1 = 0..10.0 ; NOT DEFINED`
     assert!(!admits("0..10.0", Value::Unsigned(1)));
     assert!(!admits("0..10.0", float(1.0)));
 }
 
-// -- .size ----------------------------------------------------------------
-
 /// "A `.size` control controls the size of the target in bytes ... where it
 /// directly controls the number of bytes in the string." Bytes, not
-/// characters: three two-byte characters are six.
+/// characters: three two-byte characters are six, and "a€" is two characters
+/// and four bytes.
 #[test]
 fn size_on_a_text_string_counts_bytes() {
     assert!(admits("tstr .size 3", text("abc")));
     assert!(!admits("tstr .size 3", text("ab")));
     assert!(!admits("tstr .size 3", text("äöü")));
     assert!(admits("tstr .size 6", text("äöü")));
-    // "a€" is two characters and four bytes.
     assert!(admits("tstr .size 4", text("a€")));
     assert!(!admits("tstr .size 2", text("a€")));
 }
@@ -702,17 +680,17 @@ fn size_on_an_unsigned_integer_is_a_range() {
 
 /// `uint .size N` ≡ `0…256**N`, and `256**9 > 2**64`, so a width of nine
 /// bytes or more admits every unsigned integer — where the byte count a
-/// value happens to need would say nothing of the kind.
+/// value happens to need would say nothing of the kind. A range of oversized
+/// widths is satisfied the same way, and eight is unchanged: the widths at or
+/// below it still bound the value.
 #[test]
 fn size_on_an_unsigned_integer_admits_every_uint_past_eight_bytes() {
     assert!(admits("uint .size 9", Value::Unsigned(5)));
     assert!(admits("uint .size 9", Value::Unsigned(u64::MAX)));
     assert!(admits("uint .size 20", Value::Unsigned(5)));
     assert!(admits("uint .size 20", Value::Unsigned(u64::MAX)));
-    // A range of oversized widths is satisfied the same way.
     assert!(admits("uint .size (9..12)", Value::Unsigned(u64::MAX)));
     assert!(admits("uint .size (10..20)", Value::Unsigned(5)));
-    // Eight is unchanged: the widths at or below it still bound the value.
     assert!(!admits("uint .size 1", Value::Unsigned(256)));
     assert!(admits("uint .size 8", Value::Unsigned(u64::MAX)));
 }
@@ -722,8 +700,6 @@ fn size_refuses_a_target_it_is_not_defined_for() {
     assert!(!admits("any .size 1", Value::Null));
     assert!(!admits("any .size 1", array(vec![Value::Unsigned(1)])));
 }
-
-// -- .regexp --------------------------------------------------------------
 
 #[test]
 fn regexp_matches_the_whole_string() {
@@ -754,7 +730,7 @@ fn regexp_reaches_its_pattern_through_a_rule_reference() {
 /// The one runtime refusal: a pattern that exhausts the seam's operation
 /// budget is a mismatch of its own kind, naming the budget and the pattern
 /// — never a panic, and never a silent `false`
-/// (`design.md`, `dec:xchg:regexp-engine`).
+/// (´dec:xchg:regexp-engine´).
 #[test]
 fn an_exhausted_regexp_budget_is_a_located_mismatch() {
     let theory = theory_of(r#"tstr .regexp "(a+)+b""#);
@@ -784,8 +760,6 @@ fn the_same_pattern_answers_a_short_subject() {
     assert!(satisfies(&document_of(text("aaab")), &theory).holds());
     assert!(!satisfies(&document_of(text("aaa")), &theory).holds());
 }
-
-// -- .bits ----------------------------------------------------------------
 
 /// "a `.bits` control on an unsigned integer `i` indicates that for all
 /// unsigned integers `n` where `(i & (1 << n)) != 0`, `n` must be in the
@@ -823,8 +797,6 @@ fn bits_takes_a_range_as_a_control_type() {
     assert!(!admits("uint .bits (0..3)", Value::Unsigned(0b1_0000)));
 }
 
-// -- the comparisons ------------------------------------------------------
-
 #[test]
 fn the_orderings_compare_numerically() {
     assert!(admits("uint .gt 3", Value::Unsigned(4)));
@@ -846,7 +818,8 @@ fn the_orderings_are_defined_only_for_numeric_types() {
 
 /// §3.8.6: numbers compare numerically across the integer/floating-point
 /// line, and everything else compares as the structure it is — "text
-/// strings are equal ... if they are bytewise identical".
+/// strings are equal ... if they are bytewise identical". "All other cases are
+/// not equal (e.g., comparing a text string with a byte string).
 #[test]
 fn equality_is_numeric_for_numbers_and_structural_otherwise() {
     assert!(admits("uint .eq 3", Value::Unsigned(3)));
@@ -859,8 +832,6 @@ fn equality_is_numeric_for_numbers_and_structural_otherwise() {
         "[* uint] .eq [1, 2]",
         array(vec![Value::Unsigned(1), Value::Unsigned(2)])
     ));
-    // "All other cases are not equal (e.g., comparing a text string with a
-    // byte string)."
     assert!(!admits(r#"any .eq "a""#, bytes(b"a")));
 }
 
@@ -874,7 +845,8 @@ fn ne_is_the_negation_of_eq() {
 /// §3.8.6 makes `.default` "a variant of the `.ne` control", whose named
 /// value "the implied .ne control is there to prevent ... from being sent
 /// over the wire". So a present value equal to the default fails, and an
-/// absent optional member stays absent — nothing materializes a default.
+/// absent optional member stays absent — nothing materializes a default. The
+/// target still has to match: zero fails the `.gt 0` and not the default.
 #[test]
 fn default_is_the_ne_it_implies() {
     let theory = theory(concat!(
@@ -889,10 +861,11 @@ fn default_is_the_ne_it_implies() {
     let defaulted = satisfies(&document_of(Value::Unsigned(1)), &theory);
     assert!(!defaulted.holds(), "the default value is not sent");
 
-    // The target still has to match: zero fails `.gt 0` and not the default.
     assert!(!satisfies(&document_of(Value::Unsigned(0)), &theory).holds());
 }
 
+/// Nothing puts a 7 at key 2: the document is unchanged by the judgment, and a
+/// 7 arriving on the wire is refused.
 #[test]
 fn an_absent_optional_member_stays_absent_under_a_default() {
     let theory = theory(concat!(
@@ -901,8 +874,6 @@ fn an_absent_optional_member_stays_absent_under_a_default() {
     ));
     let absent = document("com.example", Version::new(1, 0, 0), vec![(3, text("a"))]);
     assert!(satisfies(&absent, &theory).holds());
-    // Nothing put a 7 at key 2: the document is unchanged by the judgment,
-    // and a 7 arriving on the wire is refused.
     let sent = document(
         "com.example",
         Version::new(1, 0, 0),
@@ -910,8 +881,6 @@ fn an_absent_optional_member_stays_absent_under_a_default() {
     );
     assert!(!satisfies(&sent, &theory).holds());
 }
-
-// -- names, groups, generics ----------------------------------------------
 
 #[test]
 fn a_rule_reference_stands_for_its_definition() {
@@ -939,6 +908,8 @@ fn a_group_rule_splices_into_an_array() {
     );
 }
 
+/// The prelude's `time = #6.1(number)`, so `~time` is `number`.
+///
 /// §3.7: unwrapping "strip[s] the type defined for a name by one layer,
 /// exposing the underlying group (for maps and arrays) or type (for tags)".
 #[test]
@@ -952,7 +923,6 @@ fn unwrapping_strips_one_layer() {
         .holds()
     );
 
-    // `time = #6.1(number)`, so `~time` is `number`.
     assert!(admits("~time", Value::Unsigned(1)));
     assert!(!admits(
         "~time",

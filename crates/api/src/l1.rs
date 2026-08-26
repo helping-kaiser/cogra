@@ -1,10 +1,12 @@
-// The single L1 interface boundary (architecture.md §5 "The seam is one
-// boundary"): all substrate access — relaying signed records (the two
-// handshake legs), ingesting accepted records, reading the B_i export —
-// flows through this trait. Nothing else in CoGra speaks to the
-// substrate; swapping the stand-in for the real Layer 1 means one new
-// implementation here and nothing else
-// (roadmap.md "The stand-in and the swap").
+//! The single L1 interface boundary (architecture.md §5 "The seam is one
+//! boundary").
+//!
+//! All substrate access — relaying signed records over the two handshake
+//! legs, ingesting accepted records, reading the B_i export — flows
+//! through this trait, and nothing else in CoGra speaks to the substrate.
+//! Swapping the stand-in for the real Layer 1 is therefore one new
+//! implementation here and nothing else (roadmap.md "The stand-in and the
+//! swap").
 
 use std::future::Future;
 
@@ -83,8 +85,8 @@ pub trait L1Boundary: Send + Sync {
     fn host_public_key(&self) -> impl Future<Output = Result<Vec<u8>, BoundaryError>> + Send;
 
     /// The θ price the next act debits, in the units `balance` reports —
-    /// the published value the prepare pre-check reads
-    /// (`def:epoch:safety-threshold`; substrate.md §6 "an L2 estimate from
+    /// the published safety price the prepare pre-check reads
+    /// (layer1-interface.md §11.8; substrate.md §6 "an L2 estimate from
     /// the last published certificate").
     fn current_theta(&self) -> impl Future<Output = Result<f64, BoundaryError>> + Send;
 

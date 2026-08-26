@@ -192,6 +192,12 @@ enum Item {
     Container(Frame),
 }
 
+/// One item, complete or the head of a container.
+///
+/// A container's declared count is checked against the bytes that remain
+/// before any capacity is reserved for it: an array item is at least one byte
+/// and a map entry at least two, one for each half, so a count exceeding that
+/// bound cannot be met however the rest is spelled.
 fn read_item(input: &[u8], position: &mut usize) -> Result<Item, DecodeError> {
     let start = *position;
     let head = read_head(input, position)?;
@@ -221,8 +227,6 @@ fn read_item(input: &[u8], position: &mut usize) -> Result<Item, DecodeError> {
             }
         }
         4 => {
-            // An item is at least one byte, so a count exceeding the bytes
-            // that remain cannot be met however the rest is spelled.
             if argument > remaining_bytes(input, *position) {
                 return Err(DecodeError::Truncated {
                     offset: input.len(),
@@ -243,7 +247,6 @@ fn read_item(input: &[u8], position: &mut usize) -> Result<Item, DecodeError> {
             }
         }
         5 => {
-            // An entry is at least two bytes, one for each of its halves.
             if argument > remaining_bytes(input, *position) / 2 {
                 return Err(DecodeError::Truncated {
                     offset: input.len(),
@@ -274,6 +277,11 @@ fn read_item(input: &[u8], position: &mut usize) -> Result<Item, DecodeError> {
     Ok(item)
 }
 
+/// The values of major type 7: the booleans, null, the simple values, and the
+/// floats.
+///
+/// A two-byte simple value whose second byte is below 0x20 is not well-formed
+/// (RFC 8949 §3.3), the one-byte form being the only spelling of those values.
 fn read_major_seven(additional: u8, argument: u64, start: usize) -> Result<Value, DecodeError> {
     match additional {
         20 => Ok(Value::Bool(false)),
@@ -283,9 +291,6 @@ fn read_major_seven(additional: u8, argument: u64, start: usize) -> Result<Value
             .map(Value::Simple)
             .map_err(|_| DecodeError::IllFormed { offset: start }),
         24 => {
-            // RFC 8949 §3.3: a two-byte simple value whose second byte is
-            // below 0x20 is not well-formed, the one-byte form being the
-            // only spelling of those values.
             if argument < 32 {
                 return Err(DecodeError::IllFormed { offset: start });
             }
@@ -331,6 +336,16 @@ pub(crate) const fn head_span(initial: u8) -> usize {
     }
 }
 
+/// One head, read and checked against preferred serialization.
+///
+/// Additional information 31 is the indefinite-length marker for major types
+/// 2 through 5 and the break stop code under major type 7; major types 0, 1,
+/// and 6 have no indefinite form, and no definite-length item admits the
+/// break, so both of those are ill-formed rather than indefinite.
+///
+/// Preferred serialization governs the arguments of major types 0 through 6
+/// only: major type 7's additional information is not an argument magnitude,
+/// and §3.3 rules it instead.
 pub(crate) fn read_head(input: &[u8], position: &mut usize) -> Result<Head, DecodeError> {
     let start = *position;
     let &initial = input.get(start).ok_or(DecodeError::Truncated {
@@ -351,17 +366,11 @@ pub(crate) fn read_head(input: &[u8], position: &mut usize) -> Result<Head, Deco
             return Err(if (2..=5).contains(&major) {
                 DecodeError::IndefiniteLength { offset: start }
             } else {
-                // Major types 0, 1, and 6 have no indefinite form, and
-                // major type 7's additional information 31 is the break
-                // stop code, which no definite-length item admits.
                 DecodeError::IllFormed { offset: start }
             });
         }
     };
 
-    // Preferred serialization governs the arguments of major types 0
-    // through 6. Major type 7's additional information is not an argument
-    // magnitude, and §3.3 rules it instead.
     if major != 7 && additional >= 24 && initial_byte(0, argument) & 0x1f != additional {
         return Err(DecodeError::NonPreferredHead { offset: start });
     }

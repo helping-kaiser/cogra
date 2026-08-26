@@ -1,18 +1,16 @@
-// The generic stance gesture (api-spec.md "The generic stance"): one write
-// for sentiment and connection toward any passive node. The target selects
-// the family — Affinity toward a Type, Opinion toward everything else
-// (edges.md §2).
-//
-// The record carries exactly the values picked. It is one new edge against
-// the author's bundle, never a delta derived from it: "the pad writes a
-// single record carrying exactly the values picked... It never computes a
-// delta against your history" (design.md §8.1). Where the bundle lands is a
-// read-side fold the picker shows (`bundle`), never folded into what is
-// written.
-//
-// Severance is the one gesture that does state a net: it walks the bundle
-// to (0,0) with counter-records, each its own priced act
-// (feed-ranking.md §8.1).
+//! The generic stance gesture (api-spec.md "The generic stance"): one
+//! write for sentiment and connection toward any passive node. The target
+//! selects the family — Affinity toward a Type, Opinion toward everything
+//! else (edges.md §2).
+//!
+//! The record carries exactly the values picked: one new edge against the
+//! author's bundle, never a delta derived from it (design.md §8.1). Where
+//! the bundle lands is a read-side fold the picker shows (`bundle`), never
+//! folded into what is written.
+//!
+//! Severance is the one gesture that does state a net: it walks the bundle
+//! to `(0, 0)` with counter-records, each its own priced act
+//! (feed-ranking.md §8.1).
 
 use common::hashtag::canonicalize;
 use common::l1::census::Family;
@@ -105,9 +103,14 @@ pub async fn resolve_target(
     Ok(StanceTarget { node, family })
 }
 
+/// Resolves an L2 id to the node it names, trying each class in turn.
+///
+/// A keyless account — an applicant before its ceremony — has no Profile
+/// on the graph to point at, and so meets the same refusal as an unknown
+/// id. A Type is reached last and only through the registry: the row is
+/// what makes the one-way derivation invertible, so a name with no row
+/// yet is reachable by `topicName` alone.
 async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> {
-    // A keyless account (an applicant before its ceremony) has no Profile on
-    // the graph to point at — the same refusal as an unknown id.
     if let Some(address) = store::actor_identity(pool, target)
         .await?
         .and_then(|identity| identity.l0_address)
@@ -127,8 +130,6 @@ async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> 
     if let Some(minted) = minted {
         return NodeId::parse(&minted).map_err(|e| StanceError::Internal(e.to_string()));
     }
-    // A registry row is what makes the one-way derivation invertible; a
-    // name with no row yet is reachable only by `topicName`.
     if let Some(name) = hashtag_store::name_by_id(pool, target).await? {
         return NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()));
     }
