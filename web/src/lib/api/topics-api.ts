@@ -1,8 +1,8 @@
 // The topic surface (topics.graphql; hashtag.md): the topic page's own
-// read, and the standalone tag/un-tag gesture (D6). The follow
-// control's read/write rides `viewerStance` on `Hashtag` through the
-// ordinary stance seam (`@/lib/stance`) — this module does not repeat
-// it.
+// read, and the tag/un-tag gesture (D6) the edit screen stages. A stance
+// toward a topic rides the ordinary stance seam (`@/lib/stance`), which
+// this module does not repeat — no surface offers that gesture before
+// slice 3.
 
 import type { ApolloClient } from "@apollo/client";
 

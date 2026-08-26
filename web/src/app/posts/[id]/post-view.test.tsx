@@ -788,42 +788,9 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
   });
 
-  it("adds a topic to the viewer's own post via the standalone tag gesture", async () => {
-    let variables: Record<string, unknown> | null = null;
-    server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
-      graphql.mutation("PrepareTag", ({ variables: v }) => {
-        variables = v;
-        return HttpResponse.json({
-          data: {
-            prepareTag: {
-              __typename: "PreparePayload",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "TAG",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                },
-              ],
-              userErrors: [],
-            },
-          },
-        });
-      }),
-    );
-    const signer = fakeWriteSigner();
-    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
-    fireEvent.change(await screen.findByTestId("post-tag-input"), { target: { value: "#Rust" } });
-    fireEvent.click(screen.getByTestId("post-tag-add"));
-    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
-    expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: null, pInterest: null },
-    });
-  });
-
-  it("removes a topic from the viewer's own post at relevance 0", async () => {
-    let variables: Record<string, unknown> | null = null;
+  // F3: tag editing moved onto the edit screen, so the detail view is
+  // read-only for the author too — the Edit affordance is the way in.
+  it("shows read-only chips on the viewer's OWN post, with no tag gestures", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
@@ -843,33 +810,55 @@ describe("PostView", () => {
           },
         }),
       ),
-      graphql.mutation("PrepareTag", ({ variables: v }) => {
-        variables = v;
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topic-rust-link")).toHaveAttribute("href", "/topics/rust");
+    expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-edit")).toHaveAttribute("href", "/compose?post=p1");
+  });
+
+  it("shows read-only chips on the viewer's own COMMENT too", async () => {
+    server.use(
+      graphql.query("PostDetail", () => {
+        const base = detail("author-1", [{ id: "c1", body: "mine", authorId: "acct-1" }]);
         return HttpResponse.json({
           data: {
-            prepareTag: {
-              __typename: "PreparePayload",
-              writes: [
-                {
-                  __typename: "PreparedWrite",
-                  id: "w1",
-                  family: "TAG",
-                  canonicalProposal: "cHJvcG9zYWw=",
-                },
-              ],
-              userErrors: [],
+            post: {
+              ...base.post,
+              comments: {
+                ...base.post.comments,
+                edges: base.post.comments.edges.map((edge) => ({
+                  ...edge,
+                  node: {
+                    ...edge.node,
+                    topics: [
+                      {
+                        __typename: "TopicClaim",
+                        hashtag: { __typename: "Hashtag", id: "ht-1", name: moderated("rust") },
+                        relevance: 0.1,
+                        confidence: 1,
+                        pending: false,
+                      },
+                    ],
+                  },
+                })),
+              },
             },
           },
         });
       }),
     );
-    const signer = fakeWriteSigner();
-    renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
-    fireEvent.click(await screen.findByTestId("post-topic-rust-remove"));
-    await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(1));
-    expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: 0, pInterest: null },
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
     });
+    expect(await screen.findByTestId("comment-c1-topic-rust")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-c1-tag-input")).not.toBeInTheDocument();
   });
 
   it("links authors as chips into their profiles", async () => {
